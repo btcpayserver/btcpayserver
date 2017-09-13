@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -39,6 +40,12 @@ namespace BTCPayServer.Models.InvoicingModels
 		public string BuyerEmail
 		{
 			get; set;
+		}
+
+		public SelectList Stores
+		{
+			get;
+			set;
 		}
 	}
 }

@@ -4,6 +4,7 @@ using BTCPayServer.Invoicing;
 using BTCPayServer.Models.InvoicingModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using NBitcoin;
 using NBitpayClient;
 using System;
@@ -123,9 +124,9 @@ namespace BTCPayServer.Controllers
 		[Route("invoices/create")]
 		[Authorize(AuthenticationSchemes = "Identity.Application")]
 		[BitpayAPIConstraint(false)]
-		public IActionResult CreateInvoice()
+		public async Task<IActionResult> CreateInvoice()
 		{
-			return View();
+			return View(new CreateInvoiceModel() { Stores = await GetStores(GetUserId()) });
 		}
 
 		[HttpPost]
@@ -136,9 +137,18 @@ namespace BTCPayServer.Controllers
 		{
 			if(!ModelState.IsValid)
 			{
+				model.Stores = await GetStores(GetUserId(), model.StoreId);
 				return View(model);
 			}
 			var store = await _StoreRepository.FindStore(model.StoreId, GetUserId());
+			if(string.IsNullOrEmpty(store.DerivationStrategy))
+			{
+				StatusMessage = "Error: You need to configure the derivation scheme in order to create an invoice";
+				return RedirectToAction(nameof(StoresController.UpdateStore), "Stores", new
+				{
+					storeId = store.Id
+				});
+			}
 			var result = await CreateInvoiceCore(new Invoice()
 			{
 				Price = model.Amount.Value,
@@ -149,11 +159,16 @@ namespace BTCPayServer.Controllers
 				//NotificationURL = CallbackUri + "/notification",
 				ItemDesc = model.ItemDesc,
 				FullNotifications = true,
-				BuyerEmail = model.BuyerEmail
+				BuyerEmail = model.BuyerEmail,
 			}, store);
 			
 			StatusMessage = $"Invoice {result.Data.Id} just created!";
 			return RedirectToAction(nameof(ListInvoices));
+		}
+
+		private async Task<SelectList> GetStores(string userId, string storeId = null)
+		{
+			return new	SelectList(await _StoreRepository.GetStoresByUserId(userId), nameof(StoreData.Id), nameof(StoreData.StoreName), storeId);
 		}
 
 		[HttpPost]

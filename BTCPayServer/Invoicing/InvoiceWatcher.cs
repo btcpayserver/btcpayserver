@@ -71,14 +71,14 @@ namespace BTCPayServer.Invoicing
 
 		private async Task<(bool NeedSave, UTXOChanges Changes)> UpdateInvoice(UTXOChanges changes, InvoiceEntity invoice)
 		{			
-			if(invoice.Status == "invalid" && (invoice.Status == "new" || invoice.Status == "paidPartial"))
+			if(invoice.Status == "invalid")
 			{
 				return (false, changes);
 			}
 			bool needSave = false;
 			bool shouldWait = true;
 
-			if(invoice.ExpirationTime < DateTimeOffset.UtcNow)
+			if(invoice.ExpirationTime < DateTimeOffset.UtcNow && (invoice.Status == "new" || invoice.Status == "paidPartial"))
 			{
 				needSave = true;
 				invoice.Status = "invalid";

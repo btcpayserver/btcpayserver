@@ -90,6 +90,10 @@ namespace BTCPayServer.Models.InvoicingModels
 		{
 			get; set;
 		}
+		public string BTCPaid
+		{
+			get; set;
+		}
 		public string StoreEmail
 		{
 			get; set;

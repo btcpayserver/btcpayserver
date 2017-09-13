@@ -10121,7 +10121,7 @@ All mobile class names should be prefixed by m- */
 .paid-partial .top-header,
 .refund-complete .top-header,
 .archived .top-header {
-	max-height: 49px;
+	max-height: 59px;
 }
 
 .paid .timer-row,
@@ -11068,7 +11068,7 @@ line-items {
 }
 
 	line-items.expanded {
-		height: 110px;
+		height: 120px;
 		border-top: 1px solid rgba(238, 238, 238, 0.5);
 	}
 

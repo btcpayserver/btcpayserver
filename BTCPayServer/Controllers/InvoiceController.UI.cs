@@ -48,7 +48,8 @@ namespace BTCPayServer.Controllers
 				StoreName = store.StoreName,
 				TxFees = invoice.TxFee.ToString(),
 				InvoiceBitcoinUrl = dto.PaymentUrls.BIP72,
-				TxCount = invoice.Payments.Count + 1,
+				TxCount = invoice.GetTxCount(),
+				BTCPaid = invoice.GetTotalPaid().ToString(),
 				Status = invoice.Status
 			};
 

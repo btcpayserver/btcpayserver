@@ -104,6 +104,12 @@ namespace BTCPayServer.Invoicing
 		{
 			get; set;
 		}
+
+		public int GetTxCount()
+		{
+			return Calculate().TxCount;
+		}
+
 		public string OrderId
 		{
 			get; set;
@@ -114,10 +120,11 @@ namespace BTCPayServer.Invoicing
 			return Calculate().TotalDue;
 		}
 
-		private (Money TotalDue, Money Paid) Calculate()
+		private (Money TotalDue, Money Paid, int TxCount) Calculate()
 		{
 			var totalDue = Money.Coins((decimal)(ProductInformation.Price / Rate)) + TxFee;
 			var paid = Money.Zero;
+			int txCount = 1;
 			var payments =
 				Payments
 				.OrderByDescending(p => p.ReceivedTime)
@@ -130,11 +137,14 @@ namespace BTCPayServer.Invoicing
 				{
 					var paidEnough = totalDue <= paid;
 					if(!paidEnough)
+					{
+						txCount++;
 						totalDue += TxFee;
+					}
 					return !paidEnough;
 				})
 				.ToArray();
-			return (totalDue, paid);
+			return (totalDue, paid, txCount);
 		}
 
 		public Money GetTotalPaid()

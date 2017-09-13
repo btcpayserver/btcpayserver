@@ -127,7 +127,7 @@
 										<!---->
 										<div class="single-item-order__right">
 											<div class="single-item-order__right__btc-price clickable" id="buyerTotalBtcAmount">
-												<span>@Model.BTCDue</span>
+												<span>@Model.BTCTotalDue</span>
 												<!---->
 												<img class="single-item-order__right__btc-price__chevron" src="~/img/chevron.svg">
 											</div>
@@ -152,9 +152,15 @@
 												</div>
 												<div class="line-items__item__value" i18n="">@Model.TxCount transaction x @Model.TxFees BTC</div>
 											</div>
+											<div class="line-items__item">
+												<div class="line-items__item__label">
+													<span i18n="">Already Paid</span>
+												</div>
+												<div class="line-items__item__value" i18n="">-@Model.BTCPaid BTC</div>
+											</div>
 											<div class="line-items__item line-items__item--total">
-												<div class="line-items__item__label" i18n="">Total</div>
-												<div class="line-items__item__value">@Model.BTCTotalDue BTC</div>
+												<div class="line-items__item__label" i18n="">Due	</div>
+												<div class="line-items__item__value">@Model.BTCDue BTC</div>
 											</div>
 											<!---->
 										</div>

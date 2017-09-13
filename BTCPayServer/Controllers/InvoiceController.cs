@@ -88,7 +88,7 @@ namespace BTCPayServer.Controllers
 			var entity = new InvoiceEntity
 			{
 				InvoiceTime = DateTimeOffset.UtcNow,
-				DerivationStrategy = derivationStrategy ?? throw new BitpayHttpException(400, "This user has not configured his derivation strategy")
+				DerivationStrategy = derivationStrategy ?? throw new BitpayHttpException(400, "This store has not configured the derivation strategy")
 			};
 			EmailAddressAttribute emailValidator = new EmailAddressAttribute();
 			entity.ExpirationTime = entity.InvoiceTime + TimeSpan.FromMinutes(15.0);

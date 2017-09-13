@@ -12,42 +12,26 @@ namespace BTCPayServer.Models.ManageViewModels
     {
         public string Username { get; set; }
 
-        public bool IsEmailConfirmed { get; set; }
 
-        [Required]
-        [EmailAddress]
+		[Required]
+		[EmailAddress]
 		[MaxLength(50)]
-		public string Email { get; set; }
-
-		[ExtPubKeyValidator]
-		public string ExtPubKey { get; set; }
-
-		[Display(Name = "Store Name")]
-		[MaxLength(50)]
-		public string StoreName
+		public string Email
 		{
 			get; set;
 		}
 
-		[Display(Name = "Consider the invoice confirmed when the payment transaction...")]
-		public SpeedPolicy SpeedPolicy
-		{
-			get; set;
-		}
+		public bool IsEmailConfirmed { get; set; }
 
 		[Phone]
         [Display(Name = "Phone number")]
 		[MaxLength(50)]
 		public string PhoneNumber { get; set; }
 
-        public string StatusMessage { get; set; }
-
-		[Url]
-		[Display(Name = "Store Website")]
-		public string StoreWebsite
+		public string StatusMessage
 		{
-			get;
-			set;
+			get; set;
 		}
+
 	}
 }

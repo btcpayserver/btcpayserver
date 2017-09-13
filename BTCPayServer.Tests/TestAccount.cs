@@ -1,6 +1,7 @@
 ﻿using BTCPayServer.Controllers;
 using BTCPayServer.Invoicing;
 using BTCPayServer.Models.AccountViewModels;
+using BTCPayServer.Models.StoreViewModels;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBitpayClient;
@@ -37,15 +38,18 @@ namespace BTCPayServer.Tests
 				Password = "Kitten0@",
 			});
 			UserId = account.RegisteredUserId;
-			StoreId = account.RegisteredStoreId;
-			var manage = parent.PayTester.GetController<ManageController>(account.RegisteredUserId);
-			await manage.Index(new Models.ManageViewModels.IndexViewModel()
+
+			var store = parent.PayTester.GetController<StoresController>(account.RegisteredUserId);
+			await store.CreateStore(new CreateStoreViewModel() { Name = "Test Store" });
+			StoreId = store.CreatedStoreId;
+
+			await store.UpdateStore(StoreId, new StoreViewModel()
 			{
 				ExtPubKey = extKey.Neuter().ToString(),
 				SpeedPolicy = SpeedPolicy.MediumSpeed
 			});
-			Assert.IsType<ViewResult>(await manage.AskPairing(pairingCode.ToString()));
-			await manage.Pairs(pairingCode.ToString());
+			Assert.IsType<ViewResult>(await store.RequestPairing(pairingCode.ToString()));
+			await store.Pair(pairingCode.ToString(), StoreId);
 		}
 
 		public Bitpay BitPay

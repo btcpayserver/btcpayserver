@@ -1,0 +1,52 @@
+﻿@model StoresViewModel
+@{
+	Layout = "/Views/Shared/_Layout.cshtml";
+	ViewData["Title"] = "Stores";
+}
+
+<section>
+	<div class="container">
+
+		<div class="row">
+			<div class="col-lg-12 text-center">
+				@Html.Partial("_StatusMessage", Model.StatusMessage)
+			</div>
+		</div>
+
+		<div class="row">
+			<div class="col-lg-12 text-center">
+				<h2 class="section-heading">@ViewData["Title"]</h2>
+				<hr class="primary">
+				<p>Create and manage store settings.</p>
+			</div>
+		</div>
+
+		<div class="row">
+			<a asp-action="CreateStore" class="btn btn-success" role="button"><span class="glyphicon glyphicon-plus"></span> Create a new store</a>
+			<table class="table">
+				<thead class="thead-inverse">
+					<tr>
+						<th>Name</th>
+						<th>Website</th>
+						<th>Actions</th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach(var store in Model.Stores)
+			{
+						<tr>
+							<td>@store.Name</td>
+							<td>
+							@if(!string.IsNullOrEmpty(store.WebSite))
+							{
+								<a href="@store.WebSite">@store.WebSite</a>
+							}</td>
+							<td><a asp-action="UpdateStore" asp-route-storeId="@store.Id">Settings</a></td>
+						</tr>
+			}
+				</tbody>
+			</table>
+		</div>
+
+	</div>
+</section>

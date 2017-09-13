@@ -50,7 +50,8 @@
 				<ul class="navbar-nav ml-auto">
 					@if(SignInManager.IsSignedIn(User))
 					{
-						<li class="nav-item"><a asp-area="" asp-controller="Invoices" asp-action="Index" class="nav-link js-scroll-trigger">Invoices</a></li>
+						<li class="nav-item"><a asp-area="" asp-controller="Stores" asp-action="ListStores" class="nav-link js-scroll-trigger">Stores</a></li>
+						<li class="nav-item"><a asp-area="" asp-controller="Invoice" asp-action="ListInvoices" class="nav-link js-scroll-trigger">Invoices</a></li>
 						<li class="nav-item">
 							<a asp-area="" asp-controller="Manage" asp-action="Index" title="Manage" class="nav-link js-scroll-trigger">My settings</a>
 						</li>

@@ -40,6 +40,11 @@ namespace BTCPayServer.Data
 			get; set;
 		}
 
+		public DbSet<UserStore> UserStore
+		{
+			get; set;
+		}
+
 		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 		{
 			var options = optionsBuilder.Options.FindExtension<SqliteOptionsExtension>();

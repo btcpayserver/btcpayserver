@@ -26,34 +26,60 @@ namespace BTCPayServer.Stores
 			}
 		}
 
-		public async Task<StoreData> CreateStore(string userId)
+		public async Task<StoreData> FindStore(string storeId, string userId)
 		{
+			if(userId == null)
+				throw new ArgumentNullException(nameof(userId));
+			using(var ctx = _ContextFactory.CreateContext())
+			{
+				return (await ctx
+					.UserStore
+					.Where(us => us.ApplicationUserId == userId && us.StoreDataId == storeId)
+					.Select(us => new
+					{
+						Store = us.StoreData,
+						Role = us.Role
+					}).ToArrayAsync())
+					.Select(us =>
+					{
+						us.Store.Role = us.Role;
+						return us.Store;
+					}).FirstOrDefault();
+			}
+		}
+
+		public async Task<StoreData[]> GetStoresByUserId(string userId)
+		{
+			using(var ctx = _ContextFactory.CreateContext())
+			{
+				return await ctx.UserStore
+					.Where(u => u.ApplicationUserId == userId)
+					.Select(u => u.StoreData)
+					.ToArrayAsync();
+			}
+		}
+
+		public async Task<StoreData> CreateStore(string ownerId, string name)
+		{
+			if(string.IsNullOrEmpty(name))
+				throw new ArgumentException("name should not be empty", nameof(name));
 			using(var ctx = _ContextFactory.CreateContext())
 			{
 				StoreData store = new StoreData
 				{
-					Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(32))
+					Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(32)),
+					StoreName = name
 				};
 				var userStore = new UserStore
 				{
 					StoreDataId = store.Id,
-					ApplicationUserId = userId
+					ApplicationUserId = ownerId,
+					Role = "Owner"
 				};
 				await ctx.AddAsync(store).ConfigureAwait(false);
 				await ctx.AddAsync(userStore).ConfigureAwait(false);
 				await ctx.SaveChangesAsync().ConfigureAwait(false);
 				return store;
-			}
-		}
-
-		public async Task<StoreData> GetStore(string userId)
-		{
-			using(var ctx = _ContextFactory.CreateContext())
-			{
-				return await ctx
-					.Stores
-					.Where(s => s.UserStores.Any(us => us.ApplicationUserId == userId))
-					.FirstOrDefaultAsync().ConfigureAwait(false);
 			}
 		}
 

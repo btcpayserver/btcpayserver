@@ -199,7 +199,8 @@ namespace BTCPayServer.Migrations
                 columns: table => new
                 {
                     ApplicationUserId = table.Column<string>(type: "TEXT", nullable: false),
-                    StoreDataId = table.Column<string>(type: "TEXT", nullable: false)
+                    StoreDataId = table.Column<string>(type: "TEXT", nullable: false),
+                    Role = table.Column<string>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {

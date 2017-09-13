@@ -1,0 +1,44 @@
+﻿@model PairingModel
+@{
+	Layout = "/Views/Shared/_Layout.cshtml";
+	ViewData["Title"] = "Pairing permission";
+}
+
+<section>
+	<div class="container">
+		<div class="row">
+			<div class="col-lg-12 text-center">
+				<h2 class="section-heading">@ViewData["Title"]</h2>
+				<hr class="primary">
+				<p>Create and manage store settings.</p>
+			</div>
+		</div>
+		<div class="row">
+			<table class="table">
+				<tr>
+					<th>Label</th>
+					<td>@Model.Label</td>
+				</tr>
+				<tr>
+					<th>Facade</th>
+					<td>@Model.Facade</td>
+				</tr>
+				<tr>
+					<th>SIN</th>
+					<td>@Model.SIN</td>
+				</tr>
+			</table>
+		</div>
+		<div class="row">
+			<form asp-action="Pair" method="post">
+				<div class="form-group">
+					<label asp-for="SelectedStore"></label>
+					<select asp-for="SelectedStore" asp-items="@(new SelectList(Model.Stores,"Id","Name"))" class="form-control"></select>
+					<span asp-validation-for="SelectedStore" class="text-danger"></span>
+				</div>
+				<input type="hidden" name="pairingCode" value="@Model.Id" />
+				<button type="submit" class="btn btn-info" title="Approve this pairing demand">Approve</button>
+			</form>
+		</div>
+	</div>
+</section>

@@ -2,6 +2,7 @@
 using BTCPayServer.Models;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -41,6 +42,12 @@ namespace BTCPayServer.Data
 		}
 
 		public byte[] StoreCertificate
+		{
+			get; set;
+		}
+
+		[NotMapped]
+		public string Role
 		{
 			get; set;
 		}

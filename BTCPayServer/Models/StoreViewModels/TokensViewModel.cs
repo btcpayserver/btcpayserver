@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace BTCPayServer.Models.ManageViewModels
+namespace BTCPayServer.Models.StoreViewModels
 {
 	public class CreateTokenViewModel
 	{

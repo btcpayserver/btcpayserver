@@ -148,9 +148,11 @@ namespace BTCPayServer.Authentication
 		}
 
 
-		public async Task DeleteToken(string sin, string tokenName)
+		public async Task<bool> DeleteToken(string sin, string tokenName, string storeId)
 		{
 			var token = await GetToken(sin, tokenName);
+			if(token == null || (token.PairedId != null && token.PairedId != storeId))
+				return false;
 			using(var tx = _Engine.GetTransaction())
 			{
 				tx.RemoveKey<string>($"T_{sin}", tokenName);
@@ -158,6 +160,7 @@ namespace BTCPayServer.Authentication
 					tx.RemoveKey<string>($"TbP_" + token.PairedId, token.Value);
 				tx.Commit();
 			}
+			return true;
 		}
 
 		public Task<BitTokenEntity> GetToken(string sin, string tokenName)

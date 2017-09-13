@@ -106,6 +106,8 @@ namespace BTCPayServer.Migrations
 
                     b.Property<string>("StoreDataId");
 
+                    b.Property<string>("Role");
+
                     b.HasKey("ApplicationUserId", "StoreDataId");
 
                     b.HasIndex("StoreDataId");

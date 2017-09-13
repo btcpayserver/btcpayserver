@@ -12,7 +12,7 @@ using System;
 namespace BTCPayServer.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20170901023716_Init")]
+    [Migration("20170913143004_Init")]
     partial class Init
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -106,6 +106,8 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("ApplicationUserId");
 
                     b.Property<string>("StoreDataId");
+
+                    b.Property<string>("Role");
 
                     b.HasKey("ApplicationUserId", "StoreDataId");
 

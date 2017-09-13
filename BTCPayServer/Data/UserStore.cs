@@ -25,5 +25,10 @@ namespace BTCPayServer.Data
 		{
 			get; set;
 		}
+		public string Role
+		{
+			get;
+			set;
+		}
 	}
 }

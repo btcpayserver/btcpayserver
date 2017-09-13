@@ -34,7 +34,7 @@ namespace BTCPayServer.Controllers
 		TokenRepository _TokenRepository;
 		private readonly BTCPayWallet _Wallet;
 		IHostingEnvironment _Env;
-		IExternalUrlProvider _UrlProvider;
+		private readonly IExternalUrlProvider _UrlProvider;
 		StoreRepository _StoreRepository;
 
 
@@ -78,7 +78,6 @@ namespace BTCPayServer.Controllers
 			{
 				throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
 			}
-			var store = await _StoreRepository.GetStore(user.Id);
 
 			var model = new IndexViewModel
 			{
@@ -86,11 +85,7 @@ namespace BTCPayServer.Controllers
 				Email = user.Email,
 				PhoneNumber = user.PhoneNumber,
 				IsEmailConfirmed = user.EmailConfirmed,
-				StatusMessage = StatusMessage,
-				ExtPubKey = store.DerivationStrategy,
-				StoreWebsite = store.StoreWebsite,
-				StoreName = store.StoreName,
-				SpeedPolicy = store.SpeedPolicy
+				StatusMessage = StatusMessage
 			};
 			return View(model);
 		}
@@ -111,33 +106,7 @@ namespace BTCPayServer.Controllers
 			{
 				throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
 			}
-			var store = await _StoreRepository.GetStore(user.Id);
-
-			if(model.ExtPubKey != store.DerivationStrategy)
-			{
-				store.DerivationStrategy = model.ExtPubKey;
-				await _Wallet.TrackAsync(store.DerivationStrategy);
-				needUpdate = true;
-			}
-
-			if(model.SpeedPolicy != store.SpeedPolicy)
-			{
-				store.SpeedPolicy = model.SpeedPolicy;
-				needUpdate = true;
-			}
-
-			if(model.StoreName != store.StoreName)
-			{
-				store.StoreName = model.StoreName;
-				needUpdate = true;
-			}
-
-			if(model.StoreWebsite != store.StoreWebsite)
-			{
-				store.StoreWebsite = model.StoreWebsite;
-				needUpdate = true;
-			}
-
+			
 			var email = user.Email;
 			if(model.Email != email)
 			{
@@ -161,7 +130,6 @@ namespace BTCPayServer.Controllers
 			if(needUpdate)
 			{
 				var result = await _userManager.UpdateAsync(user);
-				await _StoreRepository.UpdateStore(store);
 				if(!result.Succeeded)
 				{
 					throw new ApplicationException($"Unexpected error occurred updating user with ID '{user.Id}'.");
@@ -352,45 +320,6 @@ namespace BTCPayServer.Controllers
 			return RedirectToAction(nameof(ExternalLogins));
 		}
 
-		[HttpGet]
-		[Route("/api-access-request")]
-		public async Task<IActionResult> AskPairing(string pairingCode)
-		{
-			var pairing = await _TokenRepository.GetPairingAsync(pairingCode);
-			if(pairing == null)
-			{
-				StatusMessage = "Unknown pairing code";
-				return RedirectToAction(nameof(Pairs));
-			}
-			else
-			{
-				return View(new PairingModel()
-				{
-					Id = pairing.Id,
-					Facade = pairing.Facade,
-					Label = pairing.Label,
-					SIN = pairing.SIN
-				});
-			}
-		}
-
-		[HttpPost]
-		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> Pairs(string pairingCode)
-		{
-			var store = await _StoreRepository.GetStore(_userManager.GetUserId(User));
-			if(pairingCode != null && await _TokenRepository.PairWithAsync(pairingCode, store.Id))
-			{
-				StatusMessage = "Pairing is successfull";
-				return RedirectToAction(nameof(ListTokens));
-			}
-			else
-			{
-				StatusMessage = "Pairing failed";
-				return RedirectToAction(nameof(ListTokens));
-			}
-		}
-
 		[HttpPost]
 		[ValidateAntiForgeryToken]
 		public async Task<IActionResult> RemoveLogin(RemoveLoginViewModel model)
@@ -524,74 +453,7 @@ namespace BTCPayServer.Controllers
 			_logger.LogInformation("User with ID {UserId} has enabled 2FA with an authenticator app.", user.Id);
 			return RedirectToAction(nameof(GenerateRecoveryCodes));
 		}
-
-
-		[HttpPost]
-		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> CreateToken(CreateTokenViewModel model)
-		{
-			if(!ModelState.IsValid)
-			{
-				return View(model);
-			}
-			string storeId = await GetStoreId();
-
-			var url = new Uri(_UrlProvider.GetAbsolute(""));
-			var bitpay = new Bitpay(new NBitcoin.Key(), url);
-			var pairing = await bitpay.RequestClientAuthorizationAsync(model.Label, new Facade(model.Facade));
-			var link = pairing.CreateLink(url).ToString();
-			await _TokenRepository.PairWithAsync(pairing.ToString(), storeId);
-			StatusMessage = "New access token paired to this store";
-			return RedirectToAction(nameof(ListTokens));
-		}
-
-		private async Task<string> GetStoreId()
-		{
-			var user = await _userManager.GetUserAsync(User);
-			if(user == null)
-			{
-				throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
-			}
-			return (await _StoreRepository.GetStore(user.Id)).Id;
-		}
-
-		[HttpGet]
-		public IActionResult CreateToken()
-		{
-			var model = new CreateTokenViewModel();
-			model.Facade = "merchant";
-			if(_Env.IsDevelopment())
-			{
-				model.PublicKey = new Key().PubKey.ToHex();
-			}
-			return View(model);
-		}
-
-		[HttpPost]
-		public async Task<IActionResult> DeleteToken(string name, string sin)
-		{
-			await _TokenRepository.DeleteToken(sin, name);
-			StatusMessage = "Token revoked";
-			return RedirectToAction(nameof(ListTokens));
-		}
-
-		[HttpGet]
-		public async Task<IActionResult> ListTokens()
-		{
-			var model = new TokensViewModel();
-			var tokens = await _TokenRepository.GetTokensByPairedIdAsync(await GetStoreId());
-			model.StatusMessage = StatusMessage;
-			model.Tokens = tokens.Select(t => new TokenViewModel()
-			{
-				Facade = t.Name,
-				Label = t.Label,
-				SIN = t.SIN,
-				Id = t.Value
-			}).ToArray();
-			return View(model);
-		}
-
-
+		
 		[HttpGet]
 		public IActionResult ResetAuthenticatorWarning()
 		{

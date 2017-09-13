@@ -2,6 +2,7 @@
 using BTCPayServer.Filters;
 using BTCPayServer.Invoicing;
 using BTCPayServer.Models.InvoicingModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBitpayClient;
@@ -89,18 +90,18 @@ namespace BTCPayServer.Controllers
 		}
 
 		[HttpGet]
-		[Route("Invoices")]
+		[Route("invoices")]
+		[Authorize(AuthenticationSchemes = "Identity.Application")]
 		[BitpayAPIConstraint(false)]
 		public async Task<IActionResult> ListInvoices(string searchTerm = null, int skip = 0, int count = 20)
 		{
-			var store = await FindStore(User);
 			var model = new InvoicesModel();
 			foreach(var invoice in await _InvoiceRepository.GetInvoices(new InvoiceQuery()
 			{
 				TextSearch = searchTerm,
 				Count = count,
 				Skip = skip,
-				StoreId = store.Id
+				UserId = GetUserId()
 			}))
 			{
 				model.SearchTerm = searchTerm;
@@ -119,7 +120,8 @@ namespace BTCPayServer.Controllers
 		}
 
 		[HttpGet]
-		[Route("Invoices/Create")]
+		[Route("invoices/create")]
+		[Authorize(AuthenticationSchemes = "Identity.Application")]
 		[BitpayAPIConstraint(false)]
 		public IActionResult CreateInvoice()
 		{
@@ -127,7 +129,8 @@ namespace BTCPayServer.Controllers
 		}
 
 		[HttpPost]
-		[Route("Invoices/Create")]
+		[Route("invoices/create")]
+		[Authorize(AuthenticationSchemes = "Identity.Application")]
 		[BitpayAPIConstraint(false)]
 		public async Task<IActionResult> CreateInvoice(CreateInvoiceModel model)
 		{
@@ -135,7 +138,7 @@ namespace BTCPayServer.Controllers
 			{
 				return View(model);
 			}
-			var store = await FindStore(User);
+			var store = await _StoreRepository.FindStore(model.StoreId, GetUserId());
 			var result = await CreateInvoiceCore(new Invoice()
 			{
 				Price = model.Amount.Value,
@@ -154,6 +157,7 @@ namespace BTCPayServer.Controllers
 		}
 
 		[HttpPost]
+		[Authorize(AuthenticationSchemes = "Identity.Application")]
 		[BitpayAPIConstraint(false)]
 		public IActionResult SearchInvoice(InvoicesModel invoices)
 		{
@@ -172,14 +176,9 @@ namespace BTCPayServer.Controllers
 			set;
 		}
 
-		private async Task<StoreData> FindStore(ClaimsPrincipal user)
+		private string GetUserId()
 		{
-			var usr = await _UserManager.GetUserAsync(User);
-			if(user == null)
-			{
-				throw new ApplicationException($"Unable to load user with ID '{_UserManager.GetUserId(User)}'.");
-			}
-			return await _StoreRepository.GetStore(usr.Id);
+			return _UserManager.GetUserId(User);
 		}
 	}
 }

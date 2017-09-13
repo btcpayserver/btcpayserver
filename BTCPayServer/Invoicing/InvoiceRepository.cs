@@ -225,6 +225,11 @@ namespace BTCPayServer.Invoicing
 					query = query.Where(i => i.StoreDataId == queryObject.StoreId);
 				}
 
+				if(queryObject.UserId != null)
+				{
+					query = query.Where(i => i.StoreData.UserStores.Any(u => u.ApplicationUserId == queryObject.UserId));
+				}
+
 				if(!string.IsNullOrEmpty(queryObject.TextSearch))
 				{
 					var ids = new HashSet<string>(SearchInvoice(queryObject.TextSearch));
@@ -337,6 +342,10 @@ namespace BTCPayServer.Invoicing
 	public class InvoiceQuery
 	{
 		public string StoreId
+		{
+			get; set;
+		}
+		public string UserId
 		{
 			get; set;
 		}

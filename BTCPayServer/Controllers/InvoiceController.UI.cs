@@ -150,14 +150,14 @@ namespace BTCPayServer.Controllers
 			}, store);
 			
 			StatusMessage = $"Invoice {result.Data.Id} just created!";
-			return RedirectToAction("ListInvoices");
+			return RedirectToAction(nameof(ListInvoices));
 		}
 
 		[HttpPost]
 		[BitpayAPIConstraint(false)]
 		public IActionResult SearchInvoice(InvoicesModel invoices)
 		{
-			return RedirectToAction("Index", new
+			return RedirectToAction(nameof(ListInvoices), new
 			{
 				searchTerm = invoices.SearchTerm,
 				skip = invoices.Skip,

@@ -1,4 +1,4 @@
-﻿@model AddTokenViewModel
+﻿@model CreateTokenViewModel
 @{
 	ViewData["Title"] = "Create a new token";
 	ViewData.AddActivePage(ManageNavPages.Tokens);
@@ -8,7 +8,7 @@
 
 <div class="row">
 	<div class="col-md-6">
-		<form asp-action="AddToken" method="post">
+		<form asp-action="CreateToken" method="post">
 			<div class="form-group">
 				<label asp-for="Label"></label>
 				<input asp-for="Label" class="form-control" />

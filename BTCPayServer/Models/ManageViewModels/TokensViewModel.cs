@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace BTCPayServer.Models.ManageViewModels
 {
-	public class AddTokenViewModel
+	public class CreateTokenViewModel
 	{
 		[PubKeyValidatorAttribute]
 		public string PublicKey

@@ -21,7 +21,7 @@ namespace BTCPayServer.Controllers
 		[HttpGet]
 		[Route("i/{invoiceId}")]
 		[AcceptMediaTypeConstraint("application/bitcoin-paymentrequest", false)]
-		public async Task<IActionResult> Payment(string invoiceId)
+		public async Task<IActionResult> Checkout(string invoiceId)
 		{
 			var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
 			if(invoice == null)
@@ -91,7 +91,7 @@ namespace BTCPayServer.Controllers
 		[HttpGet]
 		[Route("Invoices")]
 		[BitpayAPIConstraint(false)]
-		public async Task<IActionResult> Index(string searchTerm = null, int skip = 0, int count = 20)
+		public async Task<IActionResult> ListInvoices(string searchTerm = null, int skip = 0, int count = 20)
 		{
 			var store = await FindStore(User);
 			var model = new InvoicesModel();
@@ -150,7 +150,7 @@ namespace BTCPayServer.Controllers
 			}, store);
 			
 			StatusMessage = $"Invoice {result.Data.Id} just created!";
-			return RedirectToAction("Index");
+			return RedirectToAction("ListInvoices");
 		}
 
 		[HttpPost]

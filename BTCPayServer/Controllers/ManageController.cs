@@ -382,12 +382,12 @@ namespace BTCPayServer.Controllers
 			if(pairingCode != null && await _TokenRepository.PairWithAsync(pairingCode, store.Id))
 			{
 				StatusMessage = "Pairing is successfull";
-				return RedirectToAction(nameof(Tokens));
+				return RedirectToAction(nameof(ListTokens));
 			}
 			else
 			{
 				StatusMessage = "Pairing failed";
-				return RedirectToAction(nameof(Tokens));
+				return RedirectToAction(nameof(ListTokens));
 			}
 		}
 
@@ -528,7 +528,7 @@ namespace BTCPayServer.Controllers
 
 		[HttpPost]
 		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> AddToken(AddTokenViewModel model)
+		public async Task<IActionResult> CreateToken(CreateTokenViewModel model)
 		{
 			if(!ModelState.IsValid)
 			{
@@ -542,7 +542,7 @@ namespace BTCPayServer.Controllers
 			var link = pairing.CreateLink(url).ToString();
 			await _TokenRepository.PairWithAsync(pairing.ToString(), storeId);
 			StatusMessage = "New access token paired to this store";
-			return RedirectToAction("Tokens");
+			return RedirectToAction(nameof(ListTokens));
 		}
 
 		private async Task<string> GetStoreId()
@@ -556,9 +556,9 @@ namespace BTCPayServer.Controllers
 		}
 
 		[HttpGet]
-		public IActionResult AddToken()
+		public IActionResult CreateToken()
 		{
-			var model = new AddTokenViewModel();
+			var model = new CreateTokenViewModel();
 			model.Facade = "merchant";
 			if(_Env.IsDevelopment())
 			{
@@ -572,11 +572,11 @@ namespace BTCPayServer.Controllers
 		{
 			await _TokenRepository.DeleteToken(sin, name);
 			StatusMessage = "Token revoked";
-			return RedirectToAction("Tokens");
+			return RedirectToAction(nameof(ListTokens));
 		}
 
 		[HttpGet]
-		public async Task<IActionResult> Tokens()
+		public async Task<IActionResult> ListTokens()
 		{
 			var model = new TokensViewModel();
 			var tokens = await _TokenRepository.GetTokensByPairedIdAsync(await GetStoreId());

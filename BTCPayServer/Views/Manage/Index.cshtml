@@ -1,0 +1,74 @@
+﻿@model IndexViewModel
+@{
+	ViewData["Title"] = "Profile";
+	ViewData.AddActivePage(ManageNavPages.Index);
+}
+
+<h4>@ViewData["Title"]</h4>
+@Html.Partial("_StatusMessage", Model.StatusMessage)
+
+<div class="row">
+	<div class="col-md-6">
+		<div asp-validation-summary="All" class="text-danger"></div>
+	</div>
+</div>
+<div class="row">
+	<div class="col-md-6">
+		<form method="post">
+			<div class="form-group">
+				<label asp-for="Username"></label>
+				<input asp-for="Username" class="form-control" disabled />
+			</div>
+			<div class="form-group">
+				<label asp-for="StoreName"></label>
+				<input asp-for="StoreName" class="form-control" />
+				<span asp-validation-for="StoreName" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="StoreWebsite"></label>
+				<input asp-for="StoreWebsite" class="form-control" />
+				<span asp-validation-for="StoreWebsite" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="SpeedPolicy"></label>
+				<select asp-for="SpeedPolicy" class="form-control">
+					<option value="0">Is unconfirmed</option>
+					<option value="1">Has at least 1 confirmation</option>
+					<option value="2">Has at least 6 confirmations</option>
+				</select>
+				<span asp-validation-for="SpeedPolicy" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Email"></label>
+				@if(Model.IsEmailConfirmed)
+				{
+					<div class="input-group">
+						<input asp-for="Email" class="form-control" />
+						<span class="input-group-addon" aria-hidden="true"><span class="glyphicon glyphicon-ok text-success"></span></span>
+					</div>
+				}
+				else
+				{
+					<input asp-for="Email" class="form-control" />
+							<button asp-action="SendVerificationEmail" class="btn btn-link">Send verification email</button>
+				}
+				<span asp-validation-for="Email" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="ExtPubKey"></label>
+				<input asp-for="ExtPubKey" class="form-control" />
+				<span asp-validation-for="ExtPubKey" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="PhoneNumber"></label>
+				<input asp-for="PhoneNumber" class="form-control" />
+				<span asp-validation-for="PhoneNumber" class="text-danger"></span>
+			</div>
+			<button type="submit" class="btn btn-default">Save</button>
+		</form>
+	</div>
+</div>
+
+@section Scripts {
+	@await Html.PartialAsync("_ValidationScriptsPartial")
+}

@@ -1,0 +1,89 @@
+﻿@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<meta name="description" content="">
+	<meta name="author" content="">
+
+	<title>BTCPay Server</title>
+
+	<!-- Bootstrap core CSS -->
+	<link href="~/vendor/bootstrap/css/bootstrap.css" rel="stylesheet">
+
+	<!-- Custom fonts for this template -->
+	@*<link href="~/vendor/font-awesome/css/font-awesome.css" rel="stylesheet" type="text/css">
+	<link href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+	<link href='https://fonts.googleapis.com/css?family=Merriweather:400,300,300italic,400italic,700,700italic,900,900italic' rel='stylesheet' type='text/css'>*@
+
+	<!-- Plugin CSS -->
+	<link href="~/vendor/magnific-popup/magnific-popup.css" rel="stylesheet">
+
+	<!-- Custom styles for this template -->
+	<link href="~/css/creative.css" rel="stylesheet" />
+
+</head>
+
+<body id="page-top">
+
+	@{
+		if(ViewBag.AlwaysShrinkNavBar == null)
+		{
+			ViewBag.AlwaysShrinkNavBar = true;
+		}
+		var additionalStyle = ViewBag.AlwaysShrinkNavBar ? "navbar-shrink always-shrinked" : "";
+	}
+
+	<!-- Navigation -->
+	<nav class='navbar navbar-expand-lg navbar-light fixed-top @additionalStyle' id="mainNav">
+		<div class="container">
+			<a class="navbar-brand js-scroll-trigger" href="~/"><img src="~/img/logo.png" height="45"></a>
+			<button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+			<div class="collapse navbar-collapse" id="navbarResponsive">
+				<ul class="navbar-nav ml-auto">
+					@if(SignInManager.IsSignedIn(User))
+					{
+						<li class="nav-item"><a asp-area="" asp-controller="Invoices" asp-action="Index" class="nav-link js-scroll-trigger">Invoices</a></li>
+						<li class="nav-item">
+							<a asp-area="" asp-controller="Manage" asp-action="Index" title="Manage" class="nav-link js-scroll-trigger">My settings</a>
+						</li>
+						<li class="nav-item">
+							<a asp-area="" asp-controller="Account" asp- asp-action="Logout" title="Manage" class="nav-link js-scroll-trigger">Log out</a>
+						</li>
+					}
+					else
+					{
+						<li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Register" class="nav-link js-scroll-trigger">Register</a></li>
+						<li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Login" class="nav-link js-scroll-trigger">Log in</a></li>
+					}
+
+				</ul>
+			</div>
+		</div>
+	</nav>
+	@RenderBody()
+
+	<!-- Bootstrap core JavaScript -->
+	<script src="~/vendor/jquery/jquery.min.js"></script>
+	<script src="~/vendor/popper/popper.min.js"></script>
+	<script src="~/vendor/bootstrap/js/bootstrap.min.js"></script>
+
+	<!-- Plugin JavaScript -->
+	<script src="~/vendor/jquery-easing/jquery.easing.min.js"></script>
+	<script src="~/vendor/scrollreveal/scrollreveal.min.js"></script>
+	<script src="~/vendor/magnific-popup/jquery.magnific-popup.min.js"></script>
+
+	<!-- Custom scripts for this template -->
+	<script src="~/js/creative.js"></script>
+
+	@RenderSection("Scripts", required: false)
+</body>
+
+</html>

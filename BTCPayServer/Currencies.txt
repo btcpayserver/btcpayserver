@@ -1,0 +1,269 @@
+﻿Afghani	AFN		2
+Bitcoin	BTC	8	Ƀ
+Euro	EUR		2	€
+Lek	ALL		2
+Algerian Dinar	DZD		2
+US Dollar	USD		2	$
+Euro	EUR		2
+Kwanza	AOA		2
+East Caribbean Dollar	XCD		2
+No universal currency			
+East Caribbean Dollar	XCD		2
+Argentine Peso	ARS		2
+Armenian Dram	AMD		2
+Aruban Florin	AWG		2
+Australian Dollar	AUD		2	A$
+Euro	EUR		2
+Azerbaijanian Manat	AZN		2
+Bahamian Dollar	BSD		2
+Bahraini Dinar	BHD		3
+Taka	BDT		2
+Barbados Dollar	BBD		2
+Belarusian Ruble	BYN		2
+Belarusian Ruble	BYR		0
+Euro	EUR		2
+Belize Dollar	BZD		2
+CFA Franc BCEAO	XOF		0
+Bermudian Dollar	BMD		2
+Indian Rupee	INR		2
+Ngultrum	BTN		2
+Boliviano	BOB		2
+Mvdol	BOV		2
+US Dollar	USD		2
+Convertible Mark	BAM		2
+Pula	BWP		2
+Norwegian Krone	NOK		2
+Brazilian Real	BRL		2
+US Dollar	USD		2
+Brunei Dollar	BND		2
+Bulgarian Lev	BGN		2
+CFA Franc BCEAO	XOF		0
+Burundi Franc	BIF		0
+Cabo Verde Escudo	CVE		2
+Riel	KHR		2
+CFA Franc BEAC	XAF		0
+Canadian Dollar	CAD		2	CA$
+Cayman Islands Dollar	KYD		2
+CFA Franc BEAC	XAF		0
+CFA Franc BEAC	XAF		0
+Chilean Peso	CLP		0
+Unidad de Fomento	CLF		4
+Yuan Renminbi	CNY		2	CN¥
+Australian Dollar	AUD		2	A$
+Colombian Peso	COP		2
+Unidad de Valor Real	COU		2
+Comoro Franc	KMF		0
+Congolese Franc	CDF		2
+CFA Franc BEAC	XAF		0
+New Zealand Dollar	NZD		2	NZ$
+Costa Rican Colon	CRC		2
+CFA Franc BCEAO	XOF		0
+Kuna	HRK		2
+Cuban Peso	CUP		2
+Peso Convertible	CUC		2
+Netherlands Antillean Guilder	ANG		2
+Euro	EUR		2
+Czech Koruna	CZK		2
+Danish Krone	DKK		2
+Djibouti Franc	DJF		0
+East Caribbean Dollar	XCD		2
+Dominican Peso	DOP		2
+US Dollar	USD		2
+Egyptian Pound	EGP		2
+El Salvador Colon	SVC		2
+US Dollar	USD		2
+CFA Franc BEAC	XAF		0
+Nakfa	ERN		2
+Euro	EUR		2
+Ethiopian Birr	ETB		2
+Euro	EUR		2
+Falkland Islands Pound	FKP		2
+Danish Krone	DKK		2
+Fiji Dollar	FJD		2
+Euro	EUR		2
+Euro	EUR		2
+Euro	EUR		2
+CFP Franc	XPF		0
+Euro	EUR		2
+CFA Franc BEAC	XAF		0
+Dalasi	GMD		2
+Lari	GEL		2
+Euro	EUR		2
+Ghana Cedi	GHS		2
+Gibraltar Pound	GIP		2
+Euro	EUR		2
+Danish Krone	DKK		2
+East Caribbean Dollar	XCD		2
+Euro	EUR		2
+US Dollar	USD		2
+Quetzal	GTQ		2
+Pound Sterling	GBP		2	£
+Guinea Franc	GNF		0
+CFA Franc BCEAO	XOF		0
+Guyana Dollar	GYD		2
+Gourde	HTG		2
+US Dollar	USD		2
+Australian Dollar	AUD		2
+Euro	EUR		2
+Lempira	HNL		2
+Hong Kong Dollar	HKD		2
+Forint	HUF		2
+Iceland Krona	ISK		0
+Indian Rupee	INR		2
+Rupiah	IDR		2
+SDR (Special Drawing Right)	XDR		N.A.
+Iranian Rial	IRR		2
+Iraqi Dinar	IQD		3
+Euro	EUR		2
+Pound Sterling	GBP		2
+New Israeli Sheqel	ILS		2
+Euro	EUR		2
+Jamaican Dollar	JMD		2
+Yen	JPY		0	¥
+Pound Sterling	GBP		2
+Jordanian Dinar	JOD		3
+Tenge	KZT		2
+Kenyan Shilling	KES		2
+Australian Dollar	AUD		2
+North Korean Won	KPW		2
+Won	KRW		0	₩
+Kuwaiti Dinar	KWD		3
+Som	KGS		2
+Kip	LAK		2
+Euro	EUR		2
+Lebanese Pound	LBP		2
+Loti	LSL		2
+Rand	ZAR		2
+Liberian Dollar	LRD		2
+Libyan Dinar	LYD		3
+Swiss Franc	CHF		2
+Euro	EUR		2
+Euro	EUR		2
+Pataca	MOP		2
+Denar	MKD		2
+Malagasy Ariary	MGA		2
+Malawi Kwacha	MWK		2
+Malaysian Ringgit	MYR		2
+Rufiyaa	MVR		2
+CFA Franc BCEAO	XOF		0
+Euro	EUR		2
+US Dollar	USD		2
+Euro	EUR		2
+Ouguiya	MRO		2
+Mauritius Rupee	MUR		2
+Euro	EUR		2
+ADB Unit of Account	XUA		N.A.
+Mexican Peso	MXN		2
+Mexican Unidad de Inversion (UDI)	MXV		2
+US Dollar	USD		2
+Moldovan Leu	MDL		2
+Euro	EUR		2
+Tugrik	MNT		2
+Euro	EUR		2
+East Caribbean Dollar	XCD		2
+Moroccan Dirham	MAD		2
+Mozambique Metical	MZN		2
+Kyat	MMK		2
+Namibia Dollar	NAD		2
+Rand	ZAR		2
+Australian Dollar	AUD		2
+Nepalese Rupee	NPR		2
+Euro	EUR		2
+CFP Franc	XPF		0
+New Zealand Dollar	NZD		2
+Cordoba Oro	NIO		2
+CFA Franc BCEAO	XOF		0
+Naira	NGN		2
+New Zealand Dollar	NZD		2
+Australian Dollar	AUD		2
+US Dollar	USD		2
+Norwegian Krone	NOK		2
+Rial Omani	OMR		3
+Pakistan Rupee	PKR		2
+US Dollar	USD		2
+No universal currency			
+Balboa	PAB		2
+US Dollar	USD		2
+Kina	PGK		2
+Guarani	PYG		0
+Sol	PEN		2
+Philippine Peso	PHP		2
+New Zealand Dollar	NZD		2
+Zloty	PLN		2
+Euro	EUR		2
+US Dollar	USD		2
+Qatari Rial	QAR		2
+Euro	EUR		2
+Romanian Leu	RON		2
+Russian Ruble	RUB		2
+Rwanda Franc	RWF		0
+Euro	EUR		2
+Saint Helena Pound	SHP		2
+East Caribbean Dollar	XCD		2
+East Caribbean Dollar	XCD		2
+Euro	EUR		2
+Euro	EUR		2
+East Caribbean Dollar	XCD		2
+Tala	WST		2
+Euro	EUR		2
+Dobra	STD		2
+Saudi Riyal	SAR		2
+CFA Franc BCEAO	XOF		0
+Serbian Dinar	RSD		2
+Seychelles Rupee	SCR		2
+Leone	SLL		2
+Singapore Dollar	SGD		2
+Netherlands Antillean Guilder	ANG		2
+Sucre	XSU		N.A.
+Euro	EUR		2
+Euro	EUR		2
+Solomon Islands Dollar	SBD		2
+Somali Shilling	SOS		2
+Rand	ZAR		2
+No universal currency			
+South Sudanese Pound	SSP		2
+Euro	EUR		2
+Sri Lanka Rupee	LKR		2
+Sudanese Pound	SDG		2
+Surinam Dollar	SRD		2
+Norwegian Krone	NOK		2
+Lilangeni	SZL		2
+Swedish Krona	SEK		2
+Swiss Franc	CHF		2
+WIR Euro	CHE		2
+WIR Franc	CHW		2
+Syrian Pound	SYP		2
+New Taiwan Dollar	TWD		2
+Somoni	TJS		2
+Tanzanian Shilling	TZS		2
+Baht	THB		2
+US Dollar	USD		2
+CFA Franc BCEAO	XOF		0
+New Zealand Dollar	NZD		2
+Pa’anga	TOP		2
+Trinidad and Tobago Dollar	TTD		2
+Tunisian Dinar	TND		3
+Turkish Lira	TRY		2
+Turkmenistan New Manat	TMT		2
+US Dollar	USD		2
+Australian Dollar	AUD		2
+Uganda Shilling	UGX		0
+Hryvnia	UAH		2
+UAE Dirham	AED		2
+Pound Sterling	GBP		2
+US Dollar	USD		2
+US Dollar	USD		2
+US Dollar (Next day)	USN		2
+Peso Uruguayo	UYU		2
+Uruguay Peso en Unidades Indexadas (URUIURUI)	UYI		0
+Uzbekistan Sum	UZS		2
+Vatu	VUV		0
+Bolívar	VEF		2
+Dong	VND		0
+US Dollar	USD		2
+US Dollar	USD		2
+CFP Franc	XPF		0
+Moroccan Dirham	MAD		2
+Yemeni Rial	YER		2
+Zambian Kwacha	ZMW		2
+Zimbabwe Dollar	ZWL		2

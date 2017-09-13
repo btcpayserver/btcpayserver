@@ -1,0 +1,89 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Remove="Currencies.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Currencies.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.2" />
+    <PackageReference Include="NBitcoin" Version="4.0.0.34" />
+    <PackageReference Include="NBitpayClient" Version="1.0.0.6" />	  
+    <PackageReference Include="DBreeze" Version="1.87.0" />
+    <PackageReference Include="NBXplorer.Client" Version="1.0.0.7" />
+    <PackageReference Include="System.ValueTuple" Version="4.4.0" />
+    <PackageReference Include="System.Xml.XmlSerializer" Version="4.0.11" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="2.0.0" PrivateAssets="All" />
+		<PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.0.0" PrivateAssets="All" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<DotNetCliToolReference Include="Microsoft.EntityFrameworkCore.Tools.DotNet" Version="2.0.0" />
+		<DotNetCliToolReference Include="Microsoft.Extensions.SecretManager.Tools" Version="2.0.0" />
+		<DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Migrations\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="wwwroot\img\bitcoin-symbol.svg" />
+	  <None Include="wwwroot\js\core.js" />
+	  <None Include="wwwroot\js\creative.js" />
+	  <None Include="wwwroot\js\creative.min.js" />
+	  <None Include="wwwroot\js\site.js" />
+	  <None Include="wwwroot\js\site.min.js" />
+	  <None Include="wwwroot\vendor\bootstrap\js\bootstrap.js" />
+	  <None Include="wwwroot\vendor\bootstrap\js\bootstrap.min.js" />
+	  <None Include="wwwroot\vendor\font-awesome\fonts\fontawesome-webfont.svg" />
+	  <None Include="wwwroot\vendor\font-awesome\fonts\fontawesome-webfont.woff2" />
+	  <None Include="wwwroot\vendor\font-awesome\less\animated.less" />
+	  <None Include="wwwroot\vendor\font-awesome\less\bordered-pulled.less" />
+	  <None Include="wwwroot\vendor\font-awesome\less\core.less" />
+	  <None Include="wwwroot\vendor\font-awesome\less\fixed-width.less" />
+	  <None Include="wwwroot\vendor\font-awesome\less\font-awesome.less" />
+	  <None Include="wwwroot\vendor\font-awesome\less\icons.less" />
+	  <None Include="wwwroot\vendor\font-awesome\less\larger.less" />
+	  <None Include="wwwroot\vendor\font-awesome\less\list.less" />
+	  <None Include="wwwroot\vendor\font-awesome\less\mixins.less" />
+	  <None Include="wwwroot\vendor\font-awesome\less\path.less" />
+	  <None Include="wwwroot\vendor\font-awesome\less\rotated-flipped.less" />
+	  <None Include="wwwroot\vendor\font-awesome\less\screen-reader.less" />
+	  <None Include="wwwroot\vendor\font-awesome\less\stacked.less" />
+	  <None Include="wwwroot\vendor\font-awesome\less\variables.less" />
+	  <None Include="wwwroot\vendor\font-awesome\scss\font-awesome.scss" />
+	  <None Include="wwwroot\vendor\font-awesome\scss\_animated.scss" />
+	  <None Include="wwwroot\vendor\font-awesome\scss\_bordered-pulled.scss" />
+	  <None Include="wwwroot\vendor\font-awesome\scss\_core.scss" />
+	  <None Include="wwwroot\vendor\font-awesome\scss\_fixed-width.scss" />
+	  <None Include="wwwroot\vendor\font-awesome\scss\_icons.scss" />
+	  <None Include="wwwroot\vendor\font-awesome\scss\_larger.scss" />
+	  <None Include="wwwroot\vendor\font-awesome\scss\_list.scss" />
+	  <None Include="wwwroot\vendor\font-awesome\scss\_mixins.scss" />
+	  <None Include="wwwroot\vendor\font-awesome\scss\_path.scss" />
+	  <None Include="wwwroot\vendor\font-awesome\scss\_rotated-flipped.scss" />
+	  <None Include="wwwroot\vendor\font-awesome\scss\_screen-reader.scss" />
+	  <None Include="wwwroot\vendor\font-awesome\scss\_stacked.scss" />
+	  <None Include="wwwroot\vendor\font-awesome\scss\_variables.scss" />
+	  <None Include="wwwroot\vendor\jquery-easing\jquery.easing.compatibility.js" />
+	  <None Include="wwwroot\vendor\jquery-easing\jquery.easing.js" />
+	  <None Include="wwwroot\vendor\jquery-easing\jquery.easing.min.js" />
+	  <None Include="wwwroot\vendor\jquery\jquery.js" />
+	  <None Include="wwwroot\vendor\jquery\jquery.min.js" />
+	  <None Include="wwwroot\vendor\magnific-popup\jquery.magnific-popup.js" />
+	  <None Include="wwwroot\vendor\magnific-popup\jquery.magnific-popup.min.js" />
+	  <None Include="wwwroot\vendor\popper\popper.js" />
+	  <None Include="wwwroot\vendor\popper\popper.min.js" />
+	  <None Include="wwwroot\vendor\scrollreveal\scrollreveal.js" />
+	  <None Include="wwwroot\vendor\scrollreveal\scrollreveal.min.js" />
+	</ItemGroup>
+</Project>

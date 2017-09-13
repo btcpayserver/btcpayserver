@@ -47,6 +47,12 @@ namespace BTCPayServer.Tests
 				launcher.PopDirectory();
 				launcher.Run("git", "pull");
 				launcher.Run("git", "checkout master");
+				try
+				{
+					//Need to do that or VS insist in adding this repo as submodules :/
+					Utils.DeleteDirectory(Path.GetFullPath(Path.Combine(launcher.CurrentDirectory, "..", ".git")));
+				}
+				catch { }
 
 				launcher.Run("dotnet", "build /p:Configuration=Release");
 				Assert.True(launcher.GoTo(new[] { "bin", "Release", "netcoreapp2.0" }), "Could not build NBXplorer");

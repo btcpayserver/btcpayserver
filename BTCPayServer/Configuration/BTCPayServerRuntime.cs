@@ -34,8 +34,11 @@ namespace BTCPayServer.Configuration
 		{
 			Network = opts.Network;
 			Explorer = new ExplorerClient(opts.Network, opts.Explorer);
-			Explorer.SetCookieFile(opts.CookieFile);
-			CancellationTokenSource cts = new CancellationTokenSource(5000);
+
+			if(!Explorer.SetCookieAuth(opts.CookieFile))
+				Explorer.SetNoAuth();
+
+			CancellationTokenSource cts = new CancellationTokenSource(10000);
 			try
 			{
 				Logs.Configuration.LogInformation("Trying to connect to explorer " + Explorer.Address.AbsoluteUri);
@@ -84,7 +87,7 @@ namespace BTCPayServer.Configuration
 				_Resources.Clear();
 			}
 		}
-		
+
 		public Network Network
 		{
 			get;

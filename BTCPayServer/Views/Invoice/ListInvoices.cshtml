@@ -58,14 +58,14 @@
 			<span>
 				@if(Model.Skip != 0)
 				{
-					<a href="@Url.Action("Index", new
+					<a href="@Url.Action("ListInvoices", new
 		{
 			searchTerm = Model.SearchTerm,
 			skip = Math.Max(0, Model.Skip - Model.Count),
 			count = Model.Count,
 		})"><<</a><span> - </span>
 				}
-				<a href="@Url.Action("Index", new
+				<a href="@Url.Action("ListInvoices", new
 		{
 			searchTerm = Model.SearchTerm,
 			skip = Model.Skip + Model.Count,

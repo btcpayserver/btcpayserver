@@ -1,5 +1,6 @@
 ﻿@inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
+@inject RoleManager<IdentityRole> RoleManager
 
 <!DOCTYPE html>
 <html lang="en">
@@ -50,6 +51,10 @@
 				<ul class="navbar-nav ml-auto">
 					@if(SignInManager.IsSignedIn(User))
 					{
+						@if(User.IsInRole(Roles.ServerAdmin))
+						{
+							<li class="nav-item"><a asp-area="" asp-controller="Server" asp-action="Settings" class="nav-link js-scroll-trigger">Server settings</a></li>
+						}
 						<li class="nav-item"><a asp-area="" asp-controller="Stores" asp-action="ListStores" class="nav-link js-scroll-trigger">Stores</a></li>
 						<li class="nav-item"><a asp-area="" asp-controller="Invoice" asp-action="ListInvoices" class="nav-link js-scroll-trigger">Invoices</a></li>
 						<li class="nav-item">

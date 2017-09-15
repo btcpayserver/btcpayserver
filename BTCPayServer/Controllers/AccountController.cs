@@ -27,10 +27,11 @@ namespace BTCPayServer.Controllers
         private readonly IEmailSender _emailSender;
         private readonly ILogger _logger;
 		StoreRepository storeRepository;
-
+		RoleManager<IdentityRole> _RoleManager;
 
 		public AccountController(
             UserManager<ApplicationUser> userManager,
+			RoleManager<IdentityRole> roleManager,
 			StoreRepository storeRepository,
 			SignInManager<ApplicationUser> signInManager,
             IEmailSender emailSender,
@@ -41,7 +42,9 @@ namespace BTCPayServer.Controllers
             _signInManager = signInManager;
             _emailSender = emailSender;
             _logger = logger;
-        }
+			_RoleManager = roleManager;
+
+		}
 
         [TempData]
         public string ErrorMessage { get; set; }
@@ -232,7 +235,15 @@ namespace BTCPayServer.Controllers
                 {
                     _logger.LogInformation("User created a new account with password.");
 
-                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+					var admin = await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin);
+					if(admin.Count == 0)
+					{
+						_logger.LogInformation("Admin created.");
+						await _RoleManager.CreateAsync(new IdentityRole(Roles.ServerAdmin));
+						await _userManager.AddToRoleAsync(user, Roles.ServerAdmin);
+					}
+
+					var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
 					var callbackUrl = Url.EmailConfirmationLink(user.Id, code, Request.Scheme);
 					RegisteredUserId = user.Id;
                     await _emailSender.SendEmailConfirmationAsync(model.Email, callbackUrl);

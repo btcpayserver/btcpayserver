@@ -82,12 +82,13 @@ body {
   -webkit-tap-highlight-color: #222222; }
 
 #mainNav {
-  border-color: rgba(34, 34, 34, 0.05);
-  background-color: white;
-  font-family: 'Open Sans', 'Helvetica Neue', Arial, sans-serif;
-  -webkit-transition: all 0.2s;
-  -moz-transition: all 0.2s;
-  transition: all 0.2s; }
+	border-color: rgba(34, 34, 34, 0.05);
+	background-color: #0F3723;
+	font-family: 'Open Sans', 'Helvetica Neue', Arial, sans-serif;
+	-webkit-transition: all 0.2s;
+	-moz-transition: all 0.2s;
+	transition: all 0.2s;
+}
   #mainNav .navbar-brand {
     font-weight: 700;
     text-transform: uppercase;
@@ -105,13 +106,13 @@ body {
     font-size: 13px;
     font-weight: 700;
     text-transform: uppercase;
-    color: #222222; }
+    color: white; }
     #mainNav .navbar-nav > li.nav-item > a.nav-link:focus:hover,
     #mainNav .navbar-nav > li.nav-item > a.nav-link:hover {
-      color: #0F3B21; }
+      color: white; }
     #mainNav .navbar-nav > li.nav-item > a.nav-link:focus.active,
     #mainNav .navbar-nav > li.nav-item > a.nav-link.active {
-      color: #0F3B21 !important;
+      color: white !important;
       background-color: transparent; }
       #mainNav .navbar-nav > li.nav-item > a.nav-link:focus.active:hover,
       #mainNav .navbar-nav > li.nav-item > a.nav-link.active:hover {

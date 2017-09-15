@@ -1,5 +1,6 @@
 ﻿using BTCPayServer.Models;
 using BTCPayServer.Models.ServerViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -9,6 +10,7 @@ using System.Threading.Tasks;
 
 namespace BTCPayServer.Controllers
 {
+	[Authorize(Roles=Roles.ServerAdmin)]
 	public class ServerController : Controller
 	{
 		private UserManager<ApplicationUser> _UserManager;

@@ -20,6 +20,8 @@ using BTCPayServer.Servcices.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Fees;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Rewrite;
 
 namespace BTCPayServer.Hosting
 {
@@ -43,6 +45,15 @@ namespace BTCPayServer.Hosting
 						runtime.Configure(options);
 						return runtime;
 					});
+
+					if(options.RequireHttps)
+					{
+						c.Configure<MvcOptions>(o =>
+						{
+							o.Filters.Add(new RequireHttpsAttribute());
+						});
+					}
+
 					c.AddSingleton<Network>(options.Network);
 					c.AddSingleton(o => o.GetRequiredService<BTCPayServerRuntime>().TokenRepository);
 					c.AddSingleton(o => o.GetRequiredService<BTCPayServerRuntime>().InvoiceRepository);
@@ -79,6 +90,12 @@ namespace BTCPayServer.Hosting
 
 		public static IApplicationBuilder UsePayServer(this IApplicationBuilder app)
 		{
+			if(app.ApplicationServices.GetRequiredService<BTCPayServerOptions>().RequireHttps)
+			{
+				var options = new RewriteOptions().AddRedirectToHttps();
+				app.UseRewriter(options);
+			}
+
 			using(var scope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
 			{
 				scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.Migrate();

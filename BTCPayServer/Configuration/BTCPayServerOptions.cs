@@ -108,6 +108,13 @@ namespace BTCPayServer.Configuration
 						?? new IPEndPoint(IPAddress.Parse("127.0.0.1"), defaultPort);
 				ExternalUrl = new Uri($"http://{ip.Address}:{ip.Port}/");
 			}
+
+			RequireHttps = config.GetOrDefault<bool>("requirehttps", false);
+		}
+
+		public bool RequireHttps
+		{
+			get; set;
 		}
 
 		public Uri ExternalUrl

@@ -14,7 +14,7 @@
     <PackageReference Include="NBitcoin" Version="4.0.0.38" />
     <PackageReference Include="NBitpayClient" Version="1.0.0.6" />	  
     <PackageReference Include="DBreeze" Version="1.87.0" />
-    <PackageReference Include="NBXplorer.Client" Version="1.0.0.9" />
+    <PackageReference Include="NBXplorer.Client" Version="1.0.0.12" />
     <PackageReference Include="System.ValueTuple" Version="4.4.0" />
     <PackageReference Include="System.Xml.XmlSerializer" Version="4.0.11" />
   </ItemGroup>

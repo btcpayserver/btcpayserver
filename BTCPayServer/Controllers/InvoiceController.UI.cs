@@ -127,7 +127,13 @@ namespace BTCPayServer.Controllers
 		[BitpayAPIConstraint(false)]
 		public async Task<IActionResult> CreateInvoice()
 		{
-			return View(new CreateInvoiceModel() { Stores = await GetStores(GetUserId()) });
+			var stores = await GetStores(GetUserId());
+			if(stores.Count() == 0)
+			{
+				StatusMessage = "Error: You need to create at least one store before creating a transaction";
+				return RedirectToAction(nameof(StoresController.ListStores), "Stores");
+			}
+			return View(new CreateInvoiceModel() { Stores = stores });
 		}
 
 		[HttpPost]

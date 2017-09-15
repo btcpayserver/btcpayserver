@@ -75,7 +75,7 @@ namespace BTCPayServer.Tests
 			ExplorerClient = new NBXplorer.ExplorerClient(Node.Network, new Uri($"http://127.0.0.1:{port}/"));
 			CookieFile = Path.Combine(launcher2.CurrentDirectory, ".cookie");
 			File.Create(CookieFile).Close(); //Will be wipedout when the client starts
-			ExplorerClient.SetCookieFile(CookieFile);
+			ExplorerClient.SetCookieAuth(CookieFile);
 			try
 			{
 				var cancellationSource = new CancellationTokenSource(10000);

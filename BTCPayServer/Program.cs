@@ -11,6 +11,8 @@ using System.Linq;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
+using System.Collections.Generic;
+using System.Collections;
 
 namespace BTCPayServer
 {
@@ -23,7 +25,9 @@ namespace BTCPayServer
 			try
 			{
 				var conf = new BTCPayServerOptions();
-				conf.LoadArgs(new TextFileConfiguration(args));
+				var arguments = new TextFileConfiguration(args);
+				arguments = LoadEnvironmentVariables(arguments);
+				conf.LoadArgs(arguments);
 
 				host = new WebHostBuilder()
 					.AddPayServer(conf)
@@ -59,6 +63,27 @@ namespace BTCPayServer
 				if(host != null)
 					host.Dispose();
 			}
+		}
+
+		private static TextFileConfiguration LoadEnvironmentVariables(TextFileConfiguration args)
+		{
+			var variables = Environment.GetEnvironmentVariables();
+			List<string> values = new List<string>();
+			foreach(DictionaryEntry variable in variables)
+			{
+				var key = (string)variable.Key;
+				var value = (string)variable.Value;
+				if(key.StartsWith("APPSETTING_", StringComparison.Ordinal))
+				{
+					key = key.Substring("APPSETTING_".Length);
+					values.Add("-" + key);
+					values.Add(value);
+				}
+			}
+
+			TextFileConfiguration envConfig = new TextFileConfiguration(values.ToArray());
+			args.MergeInto(envConfig, true);
+			return envConfig;
 		}
 
 		public static void OpenBrowser(string url)

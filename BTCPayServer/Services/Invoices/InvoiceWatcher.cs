@@ -12,7 +12,7 @@ using System.Threading;
 using Microsoft.Extensions.Hosting;
 using System.Collections.Concurrent;
 
-namespace BTCPayServer.Invoicing
+namespace BTCPayServer.Servcices.Invoices
 {
 	public class InvoiceWatcher : IHostedService
 	{

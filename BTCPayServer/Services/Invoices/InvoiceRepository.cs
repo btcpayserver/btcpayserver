@@ -17,7 +17,7 @@ using BTCPayServer.Data;
 using System.Globalization;
 using BTCPayServer.Models.InvoicingModels;
 
-namespace BTCPayServer.Invoicing
+namespace BTCPayServer.Servcices.Invoices
 {
 	public class InvoiceRepository
 	{

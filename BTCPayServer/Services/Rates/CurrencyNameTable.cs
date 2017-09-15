@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Linq;
 using System.Text;
 
-namespace BTCPayServer.RateProvider
+namespace BTCPayServer.Services.Rates
 {
 	public class CurrencyData
 	{

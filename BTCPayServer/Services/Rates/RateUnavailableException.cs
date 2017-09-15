@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace BTCPayServer.RateProvider
+namespace BTCPayServer.Services.Rates
 {
     public class RateUnavailableException : Exception
     {

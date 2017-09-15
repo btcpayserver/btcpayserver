@@ -6,13 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace BTCPayServer.Services
+namespace BTCPayServer.Services.Fees
 {
-	public interface IFeeProvider
-	{
-		Task<FeeRate> GetFeeRateAsync();
-	}
-
 	public class NBXplorerFeeProvider : IFeeProvider
 	{
 		public ExplorerClient ExplorerClient
@@ -33,28 +28,10 @@ namespace BTCPayServer.Services
 			{
 				return (await ExplorerClient.GetFeeRateAsync(BlockTarget).ConfigureAwait(false)).FeeRate;
 			}
-			catch(NBXplorerException ex) when( ex.Error.HttpCode == 400 && ex.Error.Code == "fee-estimation-unavailable")
+			catch(NBXplorerException ex) when(ex.Error.HttpCode == 400 && ex.Error.Code == "fee-estimation-unavailable")
 			{
 				return Fallback;
 			}
-		}
-	}
-
-	public class FixedFeeProvider : IFeeProvider
-	{
-		public FixedFeeProvider(FeeRate feeRate)
-		{
-			FeeRate = feeRate;
-		}
-
-		public FeeRate FeeRate
-		{
-			get; set;
-		}
-
-		public Task<FeeRate> GetFeeRateAsync()
-		{
-			return Task.FromResult(FeeRate);
 		}
 	}
 }

@@ -33,19 +33,7 @@
 var display = $(".timer-row__time-left"); // Timer container
 
 // check if the Document expired
-if (expirationTime <= 0 && !(isArchieved)) {
-
-    $(".timer-row__message span").html("Invoice Expired");
-    $(".timer-row__spinner").html("");
-    $("#emailAddressView").removeClass("active");
-    $(".modal-dialog").addClass("expired");
-    $("#expired").addClass("active");
-
-} else if (isArchieved) {
-    $(".modal-dialog").addClass("archived");
-    $("#emailAddressView").removeClass("active");
-    $("#archived").addClass("active");
-} else {
+if (expirationTime > 0) {
 
     progressStart(maxTime); // Progress bar
     startTimer(expirationTime, display); // Timer
@@ -191,6 +179,7 @@ function updateState(status) {
         $(".timer-row").removeClass("expiring-soon");
         $(".timer-row__message span").html("Invoice expired.");
         $(".timer-row__spinner").html("");
+        $("#emailAddressView").removeClass("active");
         $(".modal-dialog").addClass("expired");
         $("#expired").addClass("active");
     }

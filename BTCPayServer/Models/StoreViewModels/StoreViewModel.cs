@@ -1,4 +1,4 @@
-﻿using BTCPayServer.Invoicing;
+﻿using BTCPayServer.Servcices.Invoices;
 using BTCPayServer.Validations;
 using System;
 using System.Collections.Generic;

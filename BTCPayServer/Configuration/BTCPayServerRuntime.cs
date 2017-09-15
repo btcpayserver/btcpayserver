@@ -1,8 +1,6 @@
 ﻿using BTCPayServer.Authentication;
 using Microsoft.Extensions.Logging;
-using BTCPayServer.Invoicing;
 using BTCPayServer.Logging;
-using BTCPayServer.Wallet;
 using DBreeze;
 using NBitcoin;
 using NBXplorer;
@@ -15,6 +13,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using BTCPayServer.Data;
+using BTCPayServer.Servcices.Invoices;
+using BTCPayServer.Services.Wallets;
 
 namespace BTCPayServer.Configuration
 {

@@ -20,8 +20,9 @@ using Microsoft.Extensions.Logging;
 using BTCPayServer.Logging;
 using Microsoft.AspNetCore.Authorization;
 using System.Threading.Tasks;
-using BTCPayServer.Stores;
 using BTCPayServer.Controllers;
+using BTCPayServer.Services.Stores;
+using BTCPayServer.Services.Mails;
 
 namespace BTCPayServer.Hosting
 {

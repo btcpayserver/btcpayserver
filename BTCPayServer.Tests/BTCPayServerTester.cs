@@ -1,7 +1,7 @@
 ﻿using BTCPayServer.Configuration;
 using BTCPayServer.Hosting;
-using BTCPayServer.Invoicing;
-using BTCPayServer.RateProvider;
+using BTCPayServer.Servcices.Invoices;
+using BTCPayServer.Services.Rates;
 using BTCPayServer.Tests.Logging;
 using BTCPayServer.Tests.Mocks;
 using Microsoft.AspNetCore.Hosting;

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Mails;
 
 namespace BTCPayServer.Services
 {

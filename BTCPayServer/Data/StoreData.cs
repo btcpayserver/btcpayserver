@@ -1,5 +1,5 @@
-﻿using BTCPayServer.Invoicing;
-using BTCPayServer.Models;
+﻿using BTCPayServer.Models;
+using BTCPayServer.Servcices.Invoices;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;

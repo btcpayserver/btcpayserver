@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BTCPayServer.RateProvider
+namespace BTCPayServer.Services.Rates
 {
 	public class BitpayRateProvider : IRateProvider
 	{

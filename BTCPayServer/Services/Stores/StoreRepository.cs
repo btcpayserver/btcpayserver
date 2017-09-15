@@ -8,7 +8,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 
-namespace BTCPayServer.Stores
+namespace BTCPayServer.Services.Stores
 {
 	public class StoreRepository
 	{

@@ -14,11 +14,12 @@ using BTCPayServer.Models;
 using BTCPayServer.Models.ManageViewModels;
 using BTCPayServer.Services;
 using BTCPayServer.Authentication;
-using BTCPayServer.Wallet;
 using Microsoft.AspNetCore.Hosting;
 using NBitpayClient;
 using NBitcoin;
-using BTCPayServer.Stores;
+using BTCPayServer.Services.Stores;
+using BTCPayServer.Services.Wallets;
+using BTCPayServer.Services.Mails;
 
 namespace BTCPayServer.Controllers
 {

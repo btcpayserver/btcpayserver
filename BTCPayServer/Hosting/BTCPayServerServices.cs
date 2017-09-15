@@ -6,20 +6,20 @@ using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.AspNetCore.Http;
-using BTCPayServer.Wallet;
-using BTCPayServer.RateProvider;
 using NBitpayClient;
 using NBitcoin;
 using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore;
 using System.IO;
 using Microsoft.Data.Sqlite;
-using BTCPayServer.Invoicing;
 using NBXplorer;
-using BTCPayServer.Stores;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Hosting;
 using BTCPayServer.Services;
+using BTCPayServer.Servcices.Invoices;
+using BTCPayServer.Services.Rates;
+using BTCPayServer.Services.Stores;
+using BTCPayServer.Services.Fees;
 
 namespace BTCPayServer.Hosting
 {

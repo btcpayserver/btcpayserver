@@ -1,7 +1,7 @@
 ﻿using BTCPayServer.Data;
 using BTCPayServer.Filters;
-using BTCPayServer.Invoicing;
 using BTCPayServer.Models.InvoicingModels;
+using BTCPayServer.Servcices.Invoices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;

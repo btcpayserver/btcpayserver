@@ -1,7 +1,7 @@
 ﻿using BTCPayServer.Controllers;
-using BTCPayServer.Invoicing;
 using BTCPayServer.Models.AccountViewModels;
 using BTCPayServer.Models.StoreViewModels;
+using BTCPayServer.Servcices.Invoices;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBitpayClient;

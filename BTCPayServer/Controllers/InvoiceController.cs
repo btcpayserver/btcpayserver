@@ -12,12 +12,9 @@ using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Models;
 using Newtonsoft.Json;
-using BTCPayServer.Invoicing;
-using BTCPayServer.Wallet;
 using System.Globalization;
 using NBitcoin;
 using NBitcoin.DataEncoders;
-using BTCPayServer.RateProvider;
 using BTCPayServer.Filters;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using System.Net;
@@ -26,12 +23,15 @@ using Newtonsoft.Json.Linq;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using NBitcoin.Payment;
 using BTCPayServer.Data;
-using BTCPayServer.Stores;
 using BTCPayServer.Models.InvoicingModels;
 using System.Security.Claims;
 using BTCPayServer.Services;
 using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
+using BTCPayServer.Services.Stores;
+using BTCPayServer.Servcices.Invoices;
+using BTCPayServer.Services.Rates;
+using BTCPayServer.Services.Wallets;
 
 namespace BTCPayServer.Controllers
 {

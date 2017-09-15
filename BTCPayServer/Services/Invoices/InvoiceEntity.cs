@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace BTCPayServer.Invoicing
+namespace BTCPayServer.Servcices.Invoices
 {
 	public class BuyerInformation
 	{

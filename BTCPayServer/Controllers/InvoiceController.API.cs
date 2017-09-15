@@ -1,7 +1,6 @@
 ﻿using BTCPayServer.Authentication;
 using Microsoft.Extensions.Logging;
 using BTCPayServer.Filters;
-using BTCPayServer.Invoicing;
 using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -11,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
+using BTCPayServer.Servcices.Invoices;
 
 namespace BTCPayServer.Controllers
 {

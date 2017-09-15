@@ -1,5 +1,4 @@
 ﻿using BTCPayServer.Models;
-using BTCPayServer.RateProvider;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -7,6 +6,7 @@ using System.Text;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Filters;
+using BTCPayServer.Services.Rates;
 
 namespace BTCPayServer.Controllers
 {

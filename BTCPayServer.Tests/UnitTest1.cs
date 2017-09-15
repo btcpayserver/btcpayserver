@@ -9,7 +9,7 @@ using System.Threading;
 using Xunit;
 using Xunit.Abstractions;
 using Xunit.Sdk;
-using BTCPayServer.Invoicing;
+using BTCPayServer.Servcices.Invoices;
 
 namespace BTCPayServer.Tests
 {
@@ -123,7 +123,7 @@ namespace BTCPayServer.Tests
 					FullNotifications = true
 				}, Facade.Merchant);
 
-				var textSearchResult = tester.PayTester.Runtime.InvoiceRepository.GetInvoices(new Invoicing.InvoiceQuery()
+				var textSearchResult = tester.PayTester.Runtime.InvoiceRepository.GetInvoices(new InvoiceQuery()
 				{
 					StoreId = user.StoreId,
 					TextSearch = invoice.OrderId
@@ -131,7 +131,7 @@ namespace BTCPayServer.Tests
 
 				Assert.Equal(1, textSearchResult.Length);
 
-				textSearchResult = tester.PayTester.Runtime.InvoiceRepository.GetInvoices(new Invoicing.InvoiceQuery()
+				textSearchResult = tester.PayTester.Runtime.InvoiceRepository.GetInvoices(new InvoiceQuery()
 				{
 					StoreId = user.StoreId,
 					TextSearch = invoice.Id

@@ -13,7 +13,8 @@ using Microsoft.Extensions.Options;
 using BTCPayServer.Models;
 using BTCPayServer.Models.AccountViewModels;
 using BTCPayServer.Services;
-using BTCPayServer.Stores;
+using BTCPayServer.Services.Mails;
+using BTCPayServer.Services.Stores;
 
 namespace BTCPayServer.Controllers
 {

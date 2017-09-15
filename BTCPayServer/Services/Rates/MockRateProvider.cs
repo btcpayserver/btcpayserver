@@ -4,7 +4,7 @@ using System.Text;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace BTCPayServer.RateProvider
+namespace BTCPayServer.Services.Rates
 {
 	public class MockRateProvider : IRateProvider
 	{

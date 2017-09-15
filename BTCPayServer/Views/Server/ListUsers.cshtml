@@ -1,0 +1,28 @@
+﻿@model UsersViewModel
+@{
+	ViewData["Title"] = "Users";
+	ViewData.AddActivePage(ServerNavPages.Users);
+}
+
+
+<h4>@ViewData["Title"]</h4>
+@Html.Partial("_StatusMessage", Model.StatusMessage)
+
+
+<table class="table">
+	<thead class="thead-inverse">
+		<tr>
+			<th>Name</th>
+			<th>Email</th>
+		</tr>
+	</thead>
+	<tbody>
+		@foreach(var user in Model.Users)
+			{
+			<tr>
+				<td>@user.Name</td>
+				<td>@user.Email</td>
+			</tr>
+			}
+	</tbody>
+</table>

@@ -7,7 +7,7 @@
 	<div class="container">
 		<div class="row">
 			<div class="col-lg-12 text-center">
-				<h2 class="section-heading">Manage your store</h2>
+				<h2 class="section-heading">@ViewData["MainTitle"]</h2>
 				<hr class="primary">
 			</div>
 		</div>
@@ -15,7 +15,7 @@
 		<div>
 			<div class="row">
 				<div class="col-md-3">
-					@await Html.PartialAsync("_StoreNav")
+					@await Html.PartialAsync("_Nav")
 				</div>
 				<div class="col-md-9">
 					@RenderBody()

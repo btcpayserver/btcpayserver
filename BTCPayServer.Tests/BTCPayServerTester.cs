@@ -77,10 +77,10 @@ namespace BTCPayServer.Tests
 
 			ServerUri = new Uri("http://127.0.0.1:" + port + "/");
 
-			BTCPayServerOptions options = new BTCPayServerOptions();
-			options.LoadArgs(new TextFileConfiguration(new string[] { "-datadir", _Directory }));
+			var conf = new DefaultConfiguration() { Logger = Logs.LogProvider.CreateLogger("Console") }.CreateConfiguration(new[] { "--datadir", _Directory });
 
 			_Host = new WebHostBuilder()
+					.UseConfiguration(conf)
 					.ConfigureServices(s =>
 					{
 						s.AddSingleton<IRateProvider>(new MockRateProvider(new Rate("USD", 5000m)));
@@ -91,7 +91,6 @@ namespace BTCPayServer.Tests
 							.AddProvider(Logs.LogProvider);
 						});
 					})
-					.AddPayServer(options)
 					.UseKestrel()
 					.UseStartup<Startup>()
 					.Build();

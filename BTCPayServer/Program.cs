@@ -13,6 +13,8 @@ using System.IO;
 using System.Net;
 using System.Collections.Generic;
 using System.Collections;
+using Microsoft.AspNetCore.Hosting.Server.Features;
+using System.Threading;
 
 namespace BTCPayServer
 {
@@ -22,18 +24,22 @@ namespace BTCPayServer
 		{
 			ServicePointManager.DefaultConnectionLimit = 100;
 			IWebHost host = null;
+			CustomConsoleLogProvider loggerProvider = new CustomConsoleLogProvider();
+
+			var loggerFactory = new LoggerFactory();
+			loggerFactory.AddProvider(loggerProvider);
+			var logger = loggerFactory.CreateLogger("Configuration");
 			try
 			{
-				var conf = new BTCPayServerOptions();
-				var arguments = new TextFileConfiguration(args);
-				arguments = LoadEnvironmentVariables(arguments);
-				conf.LoadArgs(arguments);
+				var conf = new DefaultConfiguration() { Logger = logger }.CreateConfiguration(args);
+				if(conf == null)
+					return;
 
 				host = new WebHostBuilder()
-					.AddPayServer(conf)
 					.UseKestrel()
 					.UseIISIntegration()
 					.UseContentRoot(Directory.GetCurrentDirectory())
+					.UseConfiguration(conf)
 					.ConfigureServices(services =>
 					{
 						services.AddLogging(l =>
@@ -44,11 +50,19 @@ namespace BTCPayServer
 					})
 					.UseStartup<Startup>()
 					.Build();
-				var running = host.RunAsync();
-				OpenBrowser(conf.GetUrls().Select(url => url.Replace("0.0.0.0", "127.0.0.1")).First());
-				running.GetAwaiter().GetResult();
-			}	
-			catch(ConfigurationException ex)
+				host.StartAsync().GetAwaiter().GetResult();
+				var urls = host.ServerFeatures.Get<IServerAddressesFeature>().Addresses;
+				if(urls.Count != 0)
+				{
+					OpenBrowser(urls.Select(url => url.Replace("0.0.0.0", "127.0.0.1")).First());
+				}
+				foreach(var url in urls)
+				{
+					logger.LogInformation("Listening on " + url);
+				}
+				host.WaitForShutdown();
+			}
+			catch(ConfigException ex)
 			{
 				if(!string.IsNullOrEmpty(ex.Message))
 					Logs.Configuration.LogError(ex.Message);
@@ -62,28 +76,8 @@ namespace BTCPayServer
 			{
 				if(host != null)
 					host.Dispose();
+				loggerProvider.Dispose();
 			}
-		}
-
-		private static TextFileConfiguration LoadEnvironmentVariables(TextFileConfiguration args)
-		{
-			var variables = Environment.GetEnvironmentVariables();
-			List<string> values = new List<string>();
-			foreach(DictionaryEntry variable in variables)
-			{
-				var key = (string)variable.Key;
-				var value = (string)variable.Value;
-				if(key.StartsWith("APPSETTING_", StringComparison.Ordinal))
-				{
-					key = key.Substring("APPSETTING_".Length);
-					values.Add("-" + key);
-					values.Add(value);
-				}
-			}
-
-			TextFileConfiguration envConfig = new TextFileConfiguration(values.ToArray());
-			args.MergeInto(envConfig, true);
-			return envConfig;
 		}
 
 		public static void OpenBrowser(string url)

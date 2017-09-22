@@ -47,7 +47,7 @@ namespace BTCPayServer.Configuration
 			}
 			catch(Exception ex)
 			{
-				throw new ConfigurationException($"Could not connect to NBXplorer, {ex.Message}");
+				throw new ConfigException($"Could not connect to NBXplorer, {ex.Message}");
 			}
 			DBreezeEngine db = new DBreezeEngine(CreateDBPath(opts, "TokensDB"));
 			_Resources.Add(db);

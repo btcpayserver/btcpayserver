@@ -23,45 +23,30 @@ using System.Threading.Tasks;
 using BTCPayServer.Controllers;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Mails;
+using Microsoft.Extensions.Configuration;
 
 namespace BTCPayServer.Hosting
 {
 	public class Startup
 	{
+		public Startup(IConfiguration conf)
+		{
+			Configuration = conf;
+		}
+
+		public IConfiguration Configuration
+		{
+			get; set;
+		}
 		public void ConfigureServices(IServiceCollection services)
 		{
+			services.ConfigureBTCPayServer(Configuration);
 
 			services.AddIdentity<ApplicationUser, IdentityRole>()
 				.AddEntityFrameworkStores<ApplicationDbContext>()
 				.AddDefaultTokenProviders();
 
-			services.AddAuthorization(o =>
-			{
-				o.AddPolicy("CanAccessStore", builder =>
-				{
-					builder.AddRequirements(new OwnStoreAuthorizationRequirement());
-				});
-
-				o.AddPolicy("OwnStore", builder =>
-				{
-					builder.AddRequirements(new OwnStoreAuthorizationRequirement("Owner"));
-				});
-			});
-			services.AddSingleton<IAuthorizationHandler, OwnStoreHandler>();
-			services.AddTransient<AccessTokenController>();
-			// Add application services.
-			services.AddTransient<IEmailSender, EmailSender>();
-
-			//services.AddSingleton<IObjectModelValidator, NoObjectModelValidator>();
-			services.AddMvcCore(o =>
-			{
-				//o.Filters.Add(new NBXplorerExceptionFilter());
-				o.OutputFormatters.Clear();
-				o.InputFormatters.Clear();
-			})
-				.AddJsonFormatters()
-				.AddFormatterMappings();
-
+			services.AddBTCPayServer();
 			services.AddMvc();
 		}
 		public void Configure(
@@ -74,6 +59,8 @@ namespace BTCPayServer.Hosting
 				app.UseDeveloperExceptionPage();
 				app.UseBrowserLink();
 			}
+
+
 			Logs.Configure(loggerFactory);
 			app.UsePayServer();
 			app.UseStaticFiles();
@@ -85,47 +72,6 @@ namespace BTCPayServer.Hosting
 					name: "default",
 					template: "{controller=Home}/{action=Index}/{id?}");
 			});
-		}
-	}
-
-	public class OwnStoreAuthorizationRequirement : IAuthorizationRequirement
-	{
-		public OwnStoreAuthorizationRequirement()
-		{
-		}
-
-		public OwnStoreAuthorizationRequirement(string role)
-		{
-			Role = role;
-		}
-
-		public string Role
-		{
-			get; set;
-		}
-	}
-
-	public class OwnStoreHandler : AuthorizationHandler<OwnStoreAuthorizationRequirement>
-	{
-		StoreRepository _StoreRepository;
-		UserManager<ApplicationUser> _UserManager;
-		public OwnStoreHandler(StoreRepository storeRepository, UserManager<ApplicationUser> userManager)
-		{
-			_StoreRepository = storeRepository;
-			_UserManager = userManager;
-		}
-		protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, OwnStoreAuthorizationRequirement requirement)
-		{
-			object storeId = null;
-			if(!((Microsoft.AspNetCore.Mvc.ActionContext)context.Resource).RouteData.Values.TryGetValue("storeId", out storeId))
-				context.Succeed(requirement);
-			else
-			{
-				var store = await _StoreRepository.FindStore((string)storeId, _UserManager.GetUserId(((Microsoft.AspNetCore.Mvc.ActionContext)context.Resource).HttpContext.User));
-				if(store != null)
-					if(requirement.Role == null || requirement.Role == store.Role)
-						context.Succeed(requirement);
-			}
 		}
 	}
 }

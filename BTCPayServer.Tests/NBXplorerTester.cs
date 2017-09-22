@@ -71,7 +71,7 @@ namespace BTCPayServer.Tests
 			config.AppendLine($"rpc.auth={Node.AuthenticationString}");
 			config.AppendLine($"node.endpoint={Node.NodeEndpoint.Address}:{Node.NodeEndpoint.Port}");
 			File.WriteAllText(Path.Combine(launcher2.CurrentDirectory, "settings.config"), config.ToString());
-			_Process = launcher.Start("dotnet", $"NBXplorer.dll -datadir \"{launcher2.CurrentDirectory}\"");
+			_Process = launcher.Start("dotnet", $"NBXplorer.dll --datadir \"{launcher2.CurrentDirectory}\"");
 			ExplorerClient = new NBXplorer.ExplorerClient(Node.Network, new Uri($"http://127.0.0.1:{port}/"));
 			CookieFile = Path.Combine(launcher2.CurrentDirectory, ".cookie");
 			File.Create(CookieFile).Close(); //Will be wipedout when the client starts

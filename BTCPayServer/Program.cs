@@ -69,8 +69,8 @@ namespace BTCPayServer
 			}
 			catch(Exception exception)
 			{
-				Logs.PayServer.LogError("Exception thrown while running the server");
-				Logs.PayServer.LogError(exception.ToString());
+				logger.LogError("Exception thrown while running the server");
+				logger.LogError(exception.ToString());
 			}
 			finally
 			{

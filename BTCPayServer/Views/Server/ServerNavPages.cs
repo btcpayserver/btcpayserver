@@ -14,8 +14,10 @@ namespace BTCPayServer.Views.Server
 
 
 		public static string Users => "Users";
+		public static string Hangfire => "Hangfire";
 
 		public static string UsersNavClass(ViewContext viewContext) => PageNavClass(viewContext, Users);
+		public static string HangfireNavClass(ViewContext viewContext) => PageNavClass(viewContext, Hangfire);
 
 		public static string IndexNavClass(ViewContext viewContext) => PageNavClass(viewContext, Index);
 

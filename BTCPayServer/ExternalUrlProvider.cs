@@ -49,8 +49,6 @@ namespace BTCPayServer
 		{
 			if(url == null)
 				throw new ArgumentNullException(nameof(url));
-			if(contextAccessor == null)
-				throw new ArgumentNullException(nameof(contextAccessor));
 			_ContextAccessor = contextAccessor;
 			_Url = url.AbsoluteUri;
 		}
@@ -71,7 +69,7 @@ namespace BTCPayServer
 		public string GetEncodedUrl()
 		{
 			var req = _ContextAccessor.HttpContext.Request;
-			return BuildAbsolute(req.Path, req.QueryString); ;
+			return BuildAbsolute(req.Path, req.QueryString);
 		}
 
 		private string BuildAbsolute(PathString path = new PathString(),

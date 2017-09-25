@@ -38,7 +38,7 @@ namespace BTCPayServer.Controllers
 			if(invoice == null)
 				throw new BitpayHttpException(404, "Object not found");
 
-			var resp = EntityToDTO(invoice);
+			var resp = invoice.EntityToDTO(_ExternalUrl);
 			return new DataWrapper<InvoiceResponse>(resp);
 		}
 
@@ -73,23 +73,40 @@ namespace BTCPayServer.Controllers
 
 
 			var entities = (await _InvoiceRepository.GetInvoices(query))
-							.Select(EntityToDTO).ToArray();
+							.Select((o) => o.EntityToDTO(_ExternalUrl)).ToArray();
 
 			return DataWrapper.Create(entities);
 		}
 
-		private async Task<BitTokenEntity> CheckTokenPermissionAsync(Facade facade, string exptectedToken)
+		private async Task<BitTokenEntity> CheckTokenPermissionAsync(Facade facade, string expectedToken)
 		{
 			if(facade == null)
 				throw new ArgumentNullException(nameof(facade));
 
-			var actualToken = await _TokenRepository.GetToken(this.GetBitIdentity().SIN, facade.ToString());
-			if(exptectedToken == null || actualToken == null || !actualToken.Value.Equals(exptectedToken, StringComparison.Ordinal))
+			var actualTokens = (await _TokenRepository.GetTokens(this.GetBitIdentity().SIN)).Where(t => t.Active).ToArray();
+			actualTokens = actualTokens.SelectMany(t => GetCompatibleTokens(t)).ToArray();
+			
+			var actualToken = actualTokens.FirstOrDefault(a => a.Value.Equals(expectedToken, StringComparison.Ordinal));
+			if(expectedToken == null || actualToken == null)
 			{
 				Logs.PayServer.LogDebug($"No token found for facade {facade} for SIN {this.GetBitIdentity().SIN}");
-				throw new BitpayHttpException(401, "This endpoint does not support the `user` facade");
+				throw new BitpayHttpException(401, $"This endpoint does not support the `{actualTokens.Select(a => a.Name).Concat(new[] { "user" }).FirstOrDefault()}` facade");
 			}
 			return actualToken;
+		}
+
+		private IEnumerable<BitTokenEntity> GetCompatibleTokens(BitTokenEntity token)
+		{
+			if(token.Name == Facade.Merchant.ToString())
+			{
+				yield return token.Clone(Facade.User);
+				yield return token.Clone(Facade.PointOfSale);
+			}
+			if(token.Name == Facade.PointOfSale.ToString())
+			{
+				yield return token.Clone(Facade.User);
+			}
+			yield return token;
 		}
 
 		private async Task<StoreData> FindStore(BitTokenEntity bitToken)

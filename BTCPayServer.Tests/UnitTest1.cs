@@ -10,6 +10,9 @@ using Xunit;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 using BTCPayServer.Servcices.Invoices;
+using Newtonsoft.Json;
+using System.IO;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Tests
 {
@@ -102,6 +105,39 @@ namespace BTCPayServer.Tests
 		}
 
 		[Fact]
+		public void CanSendIPN()
+		{
+			using(var callbackServer = new CustomServer())
+			{
+				using(var tester = ServerTester.Create())
+				{
+					tester.Start();
+					var acc = tester.CreateAccount();
+					acc.GrantAccess();
+					var invoice = acc.BitPay.CreateInvoice(new Invoice()
+					{
+						Price = 5.0,
+						Currency = "USD",
+						PosData = "posData",
+						OrderId = "orderId",
+						NotificationURL = callbackServer.GetUri().AbsoluteUri,
+						ItemDesc = "Some description",
+						FullNotifications = true
+					});
+					BitcoinUrlBuilder url = new BitcoinUrlBuilder(invoice.PaymentUrls.BIP21);
+					tester.ExplorerNode.CreateRPCClient().SendToAddress(url.Address, url.Amount);
+					callbackServer.ProcessNextRequest((ctx) =>
+					{
+						var ipn = new StreamReader(ctx.Request.Body).ReadToEnd();
+						JsonConvert.DeserializeObject<InvoicePaymentNotification>(ipn); //can deserialize
+					});
+					var invoice2 = acc.BitPay.GetInvoice(invoice.Id);
+					Assert.NotNull(invoice2);
+				}
+			}
+		}
+
+		[Fact]
 		public void InvoiceFlowThroughDifferentStatesCorrectly()
 		{
 			using(var tester = ServerTester.Create())
@@ -142,7 +178,7 @@ namespace BTCPayServer.Tests
 				invoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
 				Assert.Equal(Money.Coins(0), invoice.BtcPaid);
 				Assert.Equal("new", invoice.Status);
-				Assert.Equal("false", invoice.ExceptionStatus);
+				Assert.Equal(false, (bool)((JValue)invoice.ExceptionStatus).Value);
 
 				Assert.Equal(1, user.BitPay.GetInvoices(invoice.InvoiceTime.DateTime).Length);
 				Assert.Equal(0, user.BitPay.GetInvoices(invoice.InvoiceTime.DateTime + TimeSpan.FromDays(1)).Length);
@@ -181,7 +217,7 @@ namespace BTCPayServer.Tests
 					Assert.Equal("paid", localInvoice.Status);
 					Assert.Equal(firstPayment + secondPayment, localInvoice.BtcPaid);
 					Assert.Equal(Money.Zero, localInvoice.BtcDue);
-					Assert.Equal("false", localInvoice.ExceptionStatus);
+					Assert.Equal(false, (bool)((JValue)localInvoice.ExceptionStatus).Value);
 				});
 
 				cashCow.Generate(1); //The user has medium speed settings, so 1 conf is enough to be confirmed
@@ -220,7 +256,7 @@ namespace BTCPayServer.Tests
 					var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
 					Assert.Equal("paidOver", localInvoice.Status);
 					Assert.Equal(Money.Zero, localInvoice.BtcDue);
-					Assert.Equal("paidOver", localInvoice.ExceptionStatus);
+					Assert.Equal("paidOver", (string)((JValue)localInvoice.ExceptionStatus).Value);
 				});
 
 				cashCow.Generate(1);
@@ -230,7 +266,7 @@ namespace BTCPayServer.Tests
 					var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
 					Assert.Equal("confirmed", localInvoice.Status);
 					Assert.Equal(Money.Zero, localInvoice.BtcDue);
-					Assert.Equal("paidOver", localInvoice.ExceptionStatus);
+					Assert.Equal("paidOver", (string)((JValue)localInvoice.ExceptionStatus).Value);
 				});
 			}
 		}

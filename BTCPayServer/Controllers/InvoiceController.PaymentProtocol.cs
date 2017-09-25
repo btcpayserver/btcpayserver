@@ -23,7 +23,7 @@ namespace BTCPayServer.Controllers
 			if(invoice == null || invoice.IsExpired())
 				return NotFound();
 
-			var dto = EntityToDTO(invoice);
+			var dto = invoice.EntityToDTO(_ExternalUrl);
 			PaymentRequest request = new PaymentRequest
 			{
 				DetailsVersion = 1

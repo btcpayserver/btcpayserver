@@ -163,7 +163,7 @@ namespace BTCPayServer.Authentication
 			return true;
 		}
 
-		public Task<BitTokenEntity> GetToken(string sin, string tokenName)
+		private Task<BitTokenEntity> GetToken(string sin, string tokenName)
 		{
 			using(var tx = _Engine.GetTransaction())
 			{

@@ -11,10 +11,10 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Hangfire" Version="1.6.17" />
-    <PackageReference Include="Hangfire.SQLite" Version="1.4.2" />
+    <PackageReference Include="Hangfire.MemoryStorage" Version="1.5.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.2" />
     <PackageReference Include="NBitcoin" Version="4.0.0.38" />
-    <PackageReference Include="NBitpayClient" Version="1.0.0.6" />	  
+    <PackageReference Include="NBitpayClient" Version="1.0.0.9" />	  
     <PackageReference Include="DBreeze" Version="1.87.0" />
     <PackageReference Include="NBXplorer.Client" Version="1.0.0.12" />
     <PackageReference Include="NicolasDorier.CommandLine" Version="1.0.0.1" />

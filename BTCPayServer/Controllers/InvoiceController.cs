@@ -90,8 +90,14 @@ namespace BTCPayServer.Controllers
 				InvoiceTime = DateTimeOffset.UtcNow,
 				DerivationStrategy = derivationStrategy ?? throw new BitpayHttpException(400, "This store has not configured the derivation strategy")
 			};
+			Uri notificationUri = Uri.IsWellFormedUriString(invoice.NotificationURL, UriKind.Absolute) ? new Uri(invoice.NotificationURL, UriKind.Absolute) : null;
+			if(notificationUri == null || (notificationUri.Scheme != "http" && notificationUri.Scheme != "https")) //TODO: Filer non routable addresses ?
+				notificationUri = null;
 			EmailAddressAttribute emailValidator = new EmailAddressAttribute();
 			entity.ExpirationTime = entity.InvoiceTime + TimeSpan.FromMinutes(15.0);
+			entity.ServerUrl = _ExternalUrl.GetAbsolute("");
+			entity.FullNotifications = invoice.FullNotifications;
+			entity.NotificationURL = notificationUri?.AbsoluteUri;
 			entity.BuyerInformation = Map<Invoice, BuyerInformation>(invoice);
 			entity.RefundMail = IsEmail(entity?.BuyerInformation?.BuyerEmail) ? entity.BuyerInformation.BuyerEmail : null;
 			entity.ProductInformation = Map<Invoice, ProductInformation>(invoice);
@@ -106,60 +112,13 @@ namespace BTCPayServer.Controllers
 			entity = await _InvoiceRepository.CreateInvoiceAsync(store.Id, entity);
 			await _Wallet.MapAsync(entity.DepositAddress, entity.Id);
 			await _Watcher.WatchAsync(entity.Id);
-			var resp = EntityToDTO(entity);
+			var resp = entity.EntityToDTO(_ExternalUrl);
 			return new DataWrapper<InvoiceResponse>(resp) { Facade = "pos/invoice" };
-		}
-
-		private InvoiceResponse EntityToDTO(InvoiceEntity entity)
-		{
-			InvoiceResponse dto = new InvoiceResponse
-			{
-				Id = entity.Id,
-				OrderId = entity.OrderId,
-				PosData = entity.PosData,
-				CurrentTime = DateTimeOffset.UtcNow,
-				InvoiceTime = entity.InvoiceTime,
-				ExpirationTime = entity.ExpirationTime,
-				BTCPrice = Money.Coins((decimal)(1.0 / entity.Rate)).ToString(),
-				Status = entity.Status,
-				Url = _ExternalUrl.GetAbsolute("invoice?id=" + entity.Id),
-				Currency = entity.ProductInformation.Currency,
-				Flags = new Flags() { Refundable = entity.Refundable }
-			};
-			Populate(entity.ProductInformation, dto);
-			Populate(entity.BuyerInformation, dto);
-			dto.ExRates = new Dictionary<string, double>
-			{
-				{ entity.ProductInformation.Currency, entity.Rate }
-			};
-			dto.PaymentUrls = new InvoicePaymentUrls()
-			{
-				BIP72 = $"bitcoin:{entity.DepositAddress}?amount={entity.GetCryptoDue()}&r={_ExternalUrl.GetAbsolute($"i/{entity.Id}")}",
-				BIP72b = $"bitcoin:?r={_ExternalUrl.GetAbsolute($"i/{entity.Id}")}",
-				BIP73 = _ExternalUrl.GetAbsolute($"i/{entity.Id}"),
-				BIP21 = $"bitcoin:{entity.DepositAddress}?amount={entity.GetCryptoDue()}",
-			};
-			dto.BitcoinAddress = entity.DepositAddress.ToString();
-			dto.Token = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16)); //No idea what it is useful for
-			dto.Guid = Guid.NewGuid().ToString();
-
-			var paid = entity.Payments.Select(p => p.Output.Value).Sum();
-			dto.BTCPaid = paid.ToString();
-			dto.BTCDue = entity.GetCryptoDue().ToString();
-			dto.ExceptionStatus = entity.ExceptionStatus == null ? new JValue(false) : new JValue(entity.ExceptionStatus);
-			return dto;
 		}
 
 		private TDest Map<TFrom, TDest>(TFrom data)
 		{
 			return JsonConvert.DeserializeObject<TDest>(JsonConvert.SerializeObject(data));
 		}
-		private void Populate<TFrom, TDest>(TFrom from, TDest dest)
-		{
-			var str = JsonConvert.SerializeObject(from);
-			JsonConvert.PopulateObject(str, dest);
-		}
-
-	
 	}
 }

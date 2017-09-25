@@ -4,6 +4,10 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using BTCPayServer.Models;
+using NBitpayClient;
+using Newtonsoft.Json.Linq;
+using NBitcoin.DataEncoders;
 
 namespace BTCPayServer.Servcices.Invoices
 {
@@ -229,12 +233,75 @@ namespace BTCPayServer.Servcices.Invoices
 			get;
 			set;
 		}
+		public bool FullNotifications
+		{
+			get;
+			set;
+		}
+		public string NotificationURL
+		{
+			get;
+			set;
+		}
+		public string ServerUrl
+		{
+			get;
+			set;
+		}
 
 		public bool IsExpired()
 		{
 			return DateTimeOffset.UtcNow > ExpirationTime;
 		}
 
+
+		public InvoiceResponse EntityToDTO(IExternalUrlProvider urlProvider = null)
+		{
+			urlProvider = urlProvider ?? new FixedExternalUrlProvider(new Uri(ServerUrl, UriKind.Absolute), null);
+			InvoiceResponse dto = new InvoiceResponse
+			{
+				Id = Id,
+				OrderId = OrderId,
+				PosData = PosData,
+				CurrentTime = DateTimeOffset.UtcNow,
+				InvoiceTime = InvoiceTime,
+				ExpirationTime = ExpirationTime,
+				BTCPrice = Money.Coins((decimal)(1.0 / Rate)).ToString(),
+				Status = Status,
+				Url = urlProvider.GetAbsolute("invoice?id=" + Id),
+				Currency = ProductInformation.Currency,
+				Flags = new Flags() { Refundable = Refundable }
+			};
+			Populate(ProductInformation, dto);
+			Populate(BuyerInformation, dto);
+			dto.ExRates = new Dictionary<string, double>
+			{
+				{ ProductInformation.Currency, Rate }
+			};
+			dto.PaymentUrls = new InvoicePaymentUrls()
+			{
+				BIP72 = $"bitcoin:{DepositAddress}?amount={GetCryptoDue()}&r={urlProvider.GetAbsolute($"i/{Id}")}",
+				BIP72b = $"bitcoin:?r={urlProvider.GetAbsolute($"i/{Id}")}",
+				BIP73 = urlProvider.GetAbsolute($"i/{Id}"),
+				BIP21 = $"bitcoin:{DepositAddress}?amount={GetCryptoDue()}",
+			};
+			dto.BitcoinAddress = DepositAddress.ToString();
+			dto.Token = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16)); //No idea what it is useful for
+			dto.Guid = Guid.NewGuid().ToString();
+
+			var paid = Payments.Select(p => p.Output.Value).Sum();
+			dto.BTCPaid = paid.ToString();
+			dto.BTCDue = GetCryptoDue().ToString();
+
+			dto.ExceptionStatus = ExceptionStatus == null ? new JValue(false) : new JValue(ExceptionStatus);
+			return dto;
+		}
+
+		private void Populate<TFrom, TDest>(TFrom from, TDest dest)
+		{
+			var str = JsonConvert.SerializeObject(from);
+			JsonConvert.PopulateObject(str, dest);
+		}
 	}
 
 	public class PaymentEntity

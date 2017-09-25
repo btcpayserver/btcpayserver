@@ -11,6 +11,7 @@ using BTCPayServer.Logging;
 using System.Threading;
 using Microsoft.Extensions.Hosting;
 using System.Collections.Concurrent;
+using Hangfire;
 
 namespace BTCPayServer.Servcices.Invoices
 {
@@ -19,12 +20,16 @@ namespace BTCPayServer.Servcices.Invoices
 		InvoiceRepository _InvoiceRepository;
 		ExplorerClient _ExplorerClient;
 		DerivationStrategyFactory _DerivationFactory;
+		InvoiceNotificationManager _NotificationManager;
 
-		public InvoiceWatcher(ExplorerClient explorerClient, InvoiceRepository invoiceRepository)
+		public InvoiceWatcher(ExplorerClient explorerClient, 
+			InvoiceRepository invoiceRepository,
+			InvoiceNotificationManager notificationManager)
 		{
 			_ExplorerClient = explorerClient ?? throw new ArgumentNullException(nameof(explorerClient));
 			_DerivationFactory = new DerivationStrategyFactory(_ExplorerClient.Network);
 			_InvoiceRepository = invoiceRepository ?? throw new ArgumentNullException(nameof(invoiceRepository));
+			_NotificationManager = notificationManager ?? throw new ArgumentNullException(nameof(notificationManager));
 		}
 
 		private async Task StartWatchInvoice(string invoiceId)
@@ -114,6 +119,10 @@ namespace BTCPayServer.Servcices.Invoices
 				if(totalPaid == invoice.GetTotalCryptoDue())
 				{
 					invoice.Status = "paid";
+					if(invoice.FullNotifications)
+					{
+						_NotificationManager.Notify(invoice);
+					}
 					invoice.ExceptionStatus = null;
 					needSave = true;
 				}
@@ -159,6 +168,7 @@ namespace BTCPayServer.Servcices.Invoices
 				if(confirmed)
 				{
 					invoice.Status = "confirmed";
+					_NotificationManager.Notify(invoice);
 					needSave = true;
 				}
 			}
@@ -172,6 +182,8 @@ namespace BTCPayServer.Servcices.Invoices
 				if(minConf >= 6)
 				{
 					invoice.Status = "complete";
+					if(invoice.FullNotifications)
+						_NotificationManager.Notify(invoice);
 					needSave = true;
 				}
 			}

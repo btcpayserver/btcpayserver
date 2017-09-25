@@ -42,6 +42,13 @@ namespace BTCPayServer.Models.InvoicingModels
 			get; set;
 		}
 
+
+		[Url]
+		public string NotificationUrl
+		{
+			get; set;
+		}
+
 		public SelectList Stores
 		{
 			get;

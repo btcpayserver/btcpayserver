@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Hosting;
+using System.Reflection;
 using System.Linq;
 using Microsoft.AspNetCore.Builder;
 using System;
@@ -18,7 +19,7 @@ using Microsoft.AspNetCore.Identity;
 using BTCPayServer.Data;
 using Microsoft.Extensions.Logging;
 using Hangfire;
-using Hangfire.SQLite;
+using Hangfire.MemoryStorage;
 using BTCPayServer.Logging;
 using Microsoft.AspNetCore.Authorization;
 using System.Threading.Tasks;
@@ -31,6 +32,8 @@ using BTCPayServer.Configuration;
 using System.IO;
 using Hangfire.Dashboard;
 using Hangfire.Annotations;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using System.Threading;
 
 namespace BTCPayServer.Hosting
 {
@@ -59,22 +62,48 @@ namespace BTCPayServer.Hosting
 		}
 		public void ConfigureServices(IServiceCollection services)
 		{
+			// Big hack, tests fails because Hangfire fail at initializing at the second test run
+
+
 			services.ConfigureBTCPayServer(Configuration);
 
 			services.AddIdentity<ApplicationUser, IdentityRole>()
 				.AddEntityFrameworkStores<ApplicationDbContext>()
 				.AddDefaultTokenProviders();
 
-			services.AddHangfire(o =>
+			AddHangfireFix(services);
+			services.AddBTCPayServer();
+			services.AddMvc();
+		}
+
+		// Big hack, tests fails if only call AddHangfire because Hangfire fail at initializing at the second test run
+		private void AddHangfireFix(IServiceCollection services)
+		{
+			Action<IGlobalConfiguration> configuration = o =>
 			{
 				var scope = AspNetCoreJobActivator.Current.BeginScope(null);
 				var options = (ApplicationDbContext)scope.Resolve(typeof(ApplicationDbContext));
 				var path = Path.Combine(((BTCPayServerOptions)scope.Resolve(typeof(BTCPayServerOptions))).DataDir, "hangfire.db");
-				o.UseSQLiteStorage("Data Source=" + path + ";");
-			});
-			services.AddBTCPayServer();
-			services.AddMvc();
+				o.UseMemoryStorage(); //SQLite provider can work with only one background job :/
+	};
+
+			ServiceCollectionDescriptorExtensions.TryAddSingleton<Action<IGlobalConfiguration>>(services, (IServiceProvider serviceProvider) => new Action<IGlobalConfiguration>((config) =>
+		   {
+			   ILoggerFactory service = ServiceProviderServiceExtensions.GetService<ILoggerFactory>(serviceProvider);
+			   if(service != null)
+			   {
+				   Hangfire.GlobalConfigurationExtensions.UseLogProvider<AspNetCoreLogProvider>(config, new AspNetCoreLogProvider(service));
+			   }
+			   IServiceScopeFactory service2 = ServiceProviderServiceExtensions.GetService<IServiceScopeFactory>(serviceProvider);
+			   if(service2 != null)
+			   {
+				   Hangfire.GlobalConfigurationExtensions.UseActivator<AspNetCoreJobActivator>(config, new AspNetCoreJobActivator(service2));
+			   }
+			   configuration(config);
+		   }));
+			services.AddHangfire(configuration);
 		}
+
 		public void Configure(
 			IApplicationBuilder app,
 			IHostingEnvironment env,
@@ -91,6 +120,7 @@ namespace BTCPayServer.Hosting
 			app.UsePayServer();
 			app.UseStaticFiles();
 			app.UseAuthentication();
+
 			app.UseHangfireServer();
 			app.UseHangfireDashboard("/hangfire", new DashboardOptions() { Authorization = new[] { new NeedRole(Roles.ServerAdmin) } });
 			app.UseMvc(routes =>

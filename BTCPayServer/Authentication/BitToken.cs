@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using NBitpayClient;
 
 namespace BTCPayServer.Authentication
 {
@@ -39,6 +40,21 @@ namespace BTCPayServer.Authentication
 		{
 			get;
 			set;
+		}
+
+		public BitTokenEntity Clone(Facade facade)
+		{
+			return new BitTokenEntity()
+			{
+				Active = Active,
+				DateCreated = DateCreated,
+				Label = Label,
+				Name = Name,
+				PairedId = PairedId,
+				PairingTime = PairingTime,
+				SIN = SIN,
+				Value = Value
+			};
 		}
 	}
 }

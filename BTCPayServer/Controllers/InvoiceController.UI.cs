@@ -29,7 +29,7 @@ namespace BTCPayServer.Controllers
 			if(invoice == null)
 				return NotFound();
 			var store = await _StoreRepository.FindStore(invoice.StoreId);
-			var dto = EntityToDTO(invoice);
+			var dto = invoice.EntityToDTO(_ExternalUrl);
 
 			var model = new PaymentModel()
 			{
@@ -163,7 +163,7 @@ namespace BTCPayServer.Controllers
 				PosData = model.PosData,
 				OrderId = model.OrderId,
 				//RedirectURL = redirect + "redirect",
-				//NotificationURL = CallbackUri + "/notification",
+				NotificationURL = model.NotificationUrl,
 				ItemDesc = model.ItemDesc,
 				FullNotifications = true,
 				BuyerEmail = model.BuyerEmail,

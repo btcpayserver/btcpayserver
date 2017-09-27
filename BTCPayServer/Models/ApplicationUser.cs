@@ -15,5 +15,10 @@ namespace BTCPayServer.Models
 			get;
 			set;
 		}
+
+		public bool RequiresEmailConfirmation
+		{
+			get; set;
+		}
 	}
 }

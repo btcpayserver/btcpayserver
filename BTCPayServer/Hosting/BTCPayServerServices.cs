@@ -30,6 +30,7 @@ using BTCPayServer.Services.Mails;
 using Microsoft.AspNetCore.Identity;
 using BTCPayServer.Models;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace BTCPayServer.Hosting
 {
@@ -166,10 +167,32 @@ namespace BTCPayServer.Hosting
 
 			using(var scope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
 			{
-				scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.Migrate();
+				//Wait the DB is ready
+				Retry(() =>
+				{
+					scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.Migrate();
+				});
 			}
 			app.UseMiddleware<BTCPayMiddleware>();
 			return app;
+		}
+
+		static void Retry(Action act)
+		{
+			CancellationTokenSource cts = new CancellationTokenSource(10000);
+			while(true)
+			{
+				try
+				{
+					act();
+				}
+				catch
+				{
+					if(cts.IsCancellationRequested)
+						throw;
+					Thread.Sleep(1000);
+				}
+			}
 		}
 	}
 

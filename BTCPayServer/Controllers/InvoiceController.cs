@@ -33,6 +33,7 @@ using BTCPayServer.Servcices.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Validations;
+using Microsoft.AspNetCore.Mvc.Routing;
 
 namespace BTCPayServer.Controllers
 {
@@ -40,7 +41,6 @@ namespace BTCPayServer.Controllers
 	{
 		TokenRepository _TokenRepository;
 		InvoiceRepository _InvoiceRepository;
-		IExternalUrlProvider _ExternalUrl;
 		BTCPayWallet _Wallet;
 		IRateProvider _RateProvider;
 		private InvoiceWatcher _Watcher;
@@ -55,7 +55,6 @@ namespace BTCPayServer.Controllers
 			UserManager<ApplicationUser> userManager,
 			TokenRepository tokenRepository,
 			BTCPayWallet wallet,
-			IExternalUrlProvider externalUrl,
 			IRateProvider rateProvider,
 			StoreRepository storeRepository,
 			InvoiceWatcher watcher,
@@ -65,7 +64,6 @@ namespace BTCPayServer.Controllers
 			_Network = network ?? throw new ArgumentNullException(nameof(network));
 			_TokenRepository = tokenRepository ?? throw new ArgumentNullException(nameof(tokenRepository));
 			_InvoiceRepository = invoiceRepository ?? throw new ArgumentNullException(nameof(invoiceRepository));
-			_ExternalUrl = externalUrl;
 			_Wallet = wallet ?? throw new ArgumentNullException(nameof(wallet));
 			_RateProvider = rateProvider ?? throw new ArgumentNullException(nameof(rateProvider));
 			_Watcher = watcher ?? throw new ArgumentNullException(nameof(watcher));
@@ -86,7 +84,7 @@ namespace BTCPayServer.Controllers
 				notificationUri = null;
 			EmailAddressAttribute emailValidator = new EmailAddressAttribute();
 			entity.ExpirationTime = entity.InvoiceTime + TimeSpan.FromMinutes(15.0);
-			entity.ServerUrl = _ExternalUrl.GetAbsolute("");
+			entity.ServerUrl = HttpContext.Request.GetAbsoluteRoot();
 			entity.FullNotifications = invoice.FullNotifications;
 			entity.NotificationURL = notificationUri?.AbsoluteUri;
 			entity.BuyerInformation = Map<Invoice, BuyerInformation>(invoice);
@@ -103,7 +101,7 @@ namespace BTCPayServer.Controllers
 			entity = await _InvoiceRepository.CreateInvoiceAsync(store.Id, entity);
 			await _Wallet.MapAsync(entity.DepositAddress, entity.Id);
 			await _Watcher.WatchAsync(entity.Id);
-			var resp = entity.EntityToDTO(_ExternalUrl);
+			var resp = entity.EntityToDTO();
 			return new DataWrapper<InvoiceResponse>(resp) { Facade = "pos/invoice" };
 		}
 

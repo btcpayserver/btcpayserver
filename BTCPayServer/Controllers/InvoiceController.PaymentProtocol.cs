@@ -23,7 +23,7 @@ namespace BTCPayServer.Controllers
 			if(invoice == null || invoice.IsExpired())
 				return NotFound();
 
-			var dto = invoice.EntityToDTO(_ExternalUrl);
+			var dto = invoice.EntityToDTO();
 			PaymentRequest request = new PaymentRequest
 			{
 				DetailsVersion = 1
@@ -34,7 +34,7 @@ namespace BTCPayServer.Controllers
 			request.Details.Outputs.Add(new PaymentOutput() { Amount = dto.BTCDue, Script = BitcoinAddress.Create(dto.BitcoinAddress, _Network).ScriptPubKey });
 			request.Details.MerchantData = Encoding.UTF8.GetBytes(invoice.Id);
 			request.Details.Time = DateTimeOffset.UtcNow;
-			request.Details.PaymentUrl = new Uri(_ExternalUrl.GetAbsolute($"i/{invoice.Id}"), UriKind.Absolute);
+			request.Details.PaymentUrl = new Uri(invoice.ServerUrl.WithTrailingSlash() + ($"i/{invoice.Id}"), UriKind.Absolute);
 
 			var store = await _StoreRepository.FindStore(invoice.StoreId);
 			if(store == null)

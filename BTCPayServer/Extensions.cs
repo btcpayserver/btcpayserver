@@ -1,5 +1,6 @@
 ﻿using BTCPayServer.Authentication;
 using BTCPayServer.Configuration;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,6 +12,21 @@ namespace BTCPayServer
 {
     public static class Extensions
     {
+		public static string WithTrailingSlash(this string str)
+		{
+			if(str.EndsWith("/"))
+				return str;
+			return str + "/";
+		}
+
+		public static string GetAbsoluteRoot(this HttpRequest request)
+		{
+			return string.Concat(
+						request.Scheme,
+						"://",
+						request.Host.ToUriComponent(),
+						request.PathBase.ToUriComponent());
+		}
 
 		public static IServiceCollection ConfigureBTCPayServer(this IServiceCollection services, IConfiguration conf)
 		{

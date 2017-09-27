@@ -255,9 +255,9 @@ namespace BTCPayServer.Servcices.Invoices
 		}
 
 
-		public InvoiceResponse EntityToDTO(IExternalUrlProvider urlProvider = null)
+		public InvoiceResponse EntityToDTO()
 		{
-			urlProvider = urlProvider ?? new FixedExternalUrlProvider(new Uri(ServerUrl, UriKind.Absolute), null);
+			ServerUrl = ServerUrl ?? "";
 			InvoiceResponse dto = new InvoiceResponse
 			{
 				Id = Id,
@@ -268,7 +268,7 @@ namespace BTCPayServer.Servcices.Invoices
 				ExpirationTime = ExpirationTime,
 				BTCPrice = Money.Coins((decimal)(1.0 / Rate)).ToString(),
 				Status = Status,
-				Url = urlProvider.GetAbsolute("invoice?id=" + Id),
+				Url = ServerUrl.WithTrailingSlash() +  "invoice?id=" + Id,
 				Currency = ProductInformation.Currency,
 				Flags = new Flags() { Refundable = Refundable }
 			};
@@ -280,9 +280,9 @@ namespace BTCPayServer.Servcices.Invoices
 			};
 			dto.PaymentUrls = new InvoicePaymentUrls()
 			{
-				BIP72 = $"bitcoin:{DepositAddress}?amount={GetCryptoDue()}&r={urlProvider.GetAbsolute($"i/{Id}")}",
-				BIP72b = $"bitcoin:?r={urlProvider.GetAbsolute($"i/{Id}")}",
-				BIP73 = urlProvider.GetAbsolute($"i/{Id}"),
+				BIP72 = $"bitcoin:{DepositAddress}?amount={GetCryptoDue()}&r={ServerUrl.WithTrailingSlash() + ($"i/{Id}")}",
+				BIP72b = $"bitcoin:?r={ServerUrl.WithTrailingSlash() + ($"i/{Id}")}",
+				BIP73 = ServerUrl.WithTrailingSlash() + ($"i/{Id}"),
 				BIP21 = $"bitcoin:{DepositAddress}?amount={GetCryptoDue()}",
 			};
 			dto.BitcoinAddress = DepositAddress.ToString();

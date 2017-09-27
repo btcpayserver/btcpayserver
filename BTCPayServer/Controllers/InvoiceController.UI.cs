@@ -29,7 +29,7 @@ namespace BTCPayServer.Controllers
 			if(invoice == null)
 				return NotFound();
 			var store = await _StoreRepository.FindStore(invoice.StoreId);
-			var dto = invoice.EntityToDTO(_ExternalUrl);
+			var dto = invoice.EntityToDTO();
 
 			var model = new PaymentModel()
 			{

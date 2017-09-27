@@ -55,16 +55,10 @@ namespace BTCPayServer.Configuration
 
 			Explorer = conf.GetOrDefault<Uri>("explorer.url", networkInfo.DefaultExplorerUrl);
 			CookieFile = conf.GetOrDefault<string>("explorer.cookiefile", networkInfo.DefaultExplorerCookieFile);
-			ExternalUrl = conf.GetOrDefault<Uri>("externalurl", null);
 			RequireHttps = conf.GetOrDefault<bool>("requirehttps", false);
 		}
 
 		public bool RequireHttps
-		{
-			get; set;
-		}
-
-		public Uri ExternalUrl
 		{
 			get; set;
 		}

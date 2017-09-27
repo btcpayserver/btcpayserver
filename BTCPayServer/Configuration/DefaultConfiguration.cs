@@ -27,7 +27,6 @@ namespace BTCPayServer.Configuration
 			app.Option("--testnet | -testnet", $"Use testnet", CommandOptionType.BoolValue);
 			app.Option("--regtest | -regtest", $"Use regtest", CommandOptionType.BoolValue);
 			app.Option("--requirehttps", $"Will redirect to https version of the website (default: false)", CommandOptionType.BoolValue);
-			app.Option("--externalurl", $"The external url of the website", CommandOptionType.SingleValue);
 			app.Option("--explorerurl", $"Url of the NBxplorer (default: : Default setting of NBXplorer for the network)", CommandOptionType.SingleValue);
 			app.Option("--explorercookiefile", $"Path to the cookie file (default: Default setting of NBXplorer for the network)", CommandOptionType.SingleValue);
 
@@ -78,7 +77,6 @@ namespace BTCPayServer.Configuration
 			builder.AppendLine("#requirehttps=0");
 			builder.AppendLine("#port=" + network.DefaultPort);
 			builder.AppendLine("#bind=127.0.0.1");
-			builder.AppendLine("#externalurl=http://127.0.0.1/");
 			builder.AppendLine();
 			builder.AppendLine("### NBXplorer settings ###");
 			builder.AppendLine("#explorer.url=" + network.DefaultExplorerUrl.AbsoluteUri);

@@ -18,6 +18,9 @@ using BTCPayServer.Logging;
 using Newtonsoft.Json;
 using BTCPayServer.Models;
 using BTCPayServer.Configuration;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Routing;
+using Microsoft.AspNetCore.Http.Extensions;
 
 namespace BTCPayServer.Hosting
 {
@@ -25,10 +28,8 @@ namespace BTCPayServer.Hosting
 	{
 		TokenRepository _TokenRepository;
 		RequestDelegate _Next;
-		IExternalUrlProvider _ExternalUrl;
-		public BTCPayMiddleware(RequestDelegate next, TokenRepository tokenRepo, IExternalUrlProvider externalUrl)
+		public BTCPayMiddleware(RequestDelegate next, TokenRepository tokenRepo)
 		{
-			_ExternalUrl = externalUrl ?? throw new ArgumentNullException(nameof(externalUrl));
 			_TokenRepository = tokenRepo ?? throw new ArgumentNullException(nameof(tokenRepo));
 			_Next = next ?? throw new ArgumentNullException(nameof(next));
 		}
@@ -53,7 +54,7 @@ namespace BTCPayServer.Hosting
 					httpContext.Request.Body.Position = 0;
 				}
 
-				var url = _ExternalUrl.GetEncodedUrl();
+				var url = httpContext.Request.GetEncodedUrl();
 				try
 				{
 					var key = new PubKey(id);

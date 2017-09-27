@@ -135,13 +135,6 @@ namespace BTCPayServer.Hosting
 			services.TryAddSingleton<InvoiceNotificationManager>();
 			services.TryAddSingleton<IHostedService>(o => o.GetRequiredService<InvoiceWatcher>());
 			services.TryAddScoped<IHttpContextAccessor, HttpContextAccessor>();
-			services.TryAddSingleton<IExternalUrlProvider>(o =>
-			{
-				var op = o.GetRequiredService<BTCPayServerOptions>();
-				if(op.ExternalUrl != null)
-					return new FixedExternalUrlProvider(op.ExternalUrl, o.GetRequiredService<IHttpContextAccessor>());
-				return new DefaultExternalUrlProvider(o.GetRequiredService<IHttpContextAccessor>());
-			});
 			services.TryAddSingleton<IAuthorizationHandler, OwnStoreHandler>();
 			services.AddTransient<AccessTokenController>();
 			// Add application services.

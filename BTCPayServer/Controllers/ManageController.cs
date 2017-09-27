@@ -35,7 +35,6 @@ namespace BTCPayServer.Controllers
 		TokenRepository _TokenRepository;
 		private readonly BTCPayWallet _Wallet;
 		IHostingEnvironment _Env;
-		private readonly IExternalUrlProvider _UrlProvider;
 		StoreRepository _StoreRepository;
 
 
@@ -50,8 +49,7 @@ namespace BTCPayServer.Controllers
 		  TokenRepository tokenRepository,
 		  BTCPayWallet wallet,
 		  StoreRepository storeRepository,
-		  IHostingEnvironment env,
-		  IExternalUrlProvider urlProvider)
+		  IHostingEnvironment env)
 		{
 			_userManager = userManager;
 			_signInManager = signInManager;
@@ -61,7 +59,6 @@ namespace BTCPayServer.Controllers
 			_TokenRepository = tokenRepository;
 			_Wallet = wallet;
 			_Env = env;
-			_UrlProvider = urlProvider;
 			_StoreRepository = storeRepository;
 		}
 

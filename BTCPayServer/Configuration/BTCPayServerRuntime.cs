@@ -58,9 +58,16 @@ namespace BTCPayServer.Configuration
 
 			ApplicationDbContextFactory dbContext = null;
 			if(opts.PostgresConnectionString == null)
-				dbContext = new ApplicationDbContextFactory(DatabaseType.Sqlite, "Data Source=" + Path.Combine(opts.DataDir, "sqllite.db"));
+			{
+				var connStr = "Data Source=" + Path.Combine(opts.DataDir, "sqllite.db");
+				Logs.Configuration.LogInformation($"SQLite DB used ({connStr})");
+				dbContext = new ApplicationDbContextFactory(DatabaseType.Sqlite, connStr);
+			}
 			else
+			{
+				Logs.Configuration.LogInformation($"Postgres DB used ({opts.PostgresConnectionString})");
 				dbContext = new ApplicationDbContextFactory(DatabaseType.Postgres, opts.PostgresConnectionString);
+			}
 			DBFactory = dbContext;
 			InvoiceRepository = new InvoiceRepository(dbContext, db, Network);
 

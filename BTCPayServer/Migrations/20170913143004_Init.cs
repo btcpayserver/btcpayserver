@@ -30,16 +30,16 @@ namespace BTCPayServer.Migrations
                     AccessFailedCount = table.Column<int>(type: "INTEGER", nullable: false),
                     ConcurrencyStamp = table.Column<string>(type: "TEXT", nullable: true),
                     Email = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    EmailConfirmed = table.Column<bool>(type: "INTEGER", nullable: false),
-                    LockoutEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
-                    LockoutEnd = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
+                    EmailConfirmed = table.Column<bool>(nullable: false),
+                    LockoutEnabled = table.Column<bool>(nullable: false),
+                    LockoutEnd = table.Column<DateTimeOffset>(nullable: true),
                     NormalizedEmail = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
                     PasswordHash = table.Column<string>(type: "TEXT", nullable: true),
                     PhoneNumber = table.Column<string>(type: "TEXT", nullable: true),
-                    PhoneNumberConfirmed = table.Column<bool>(type: "INTEGER", nullable: false),
+                    PhoneNumberConfirmed = table.Column<bool>(nullable: false),
                     SecurityStamp = table.Column<string>(type: "TEXT", nullable: true),
-                    TwoFactorEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
+                    TwoFactorEnabled = table.Column<bool>(nullable: false),
                     UserName = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true)
                 },
                 constraints: table =>
@@ -54,7 +54,7 @@ namespace BTCPayServer.Migrations
                     Id = table.Column<string>(type: "TEXT", nullable: false),
                     DerivationStrategy = table.Column<string>(type: "TEXT", nullable: true),
                     SpeedPolicy = table.Column<int>(type: "INTEGER", nullable: false),
-                    StoreCertificate = table.Column<byte[]>(type: "BLOB", nullable: true),
+                    StoreCertificate = table.Column<byte[]>(nullable: true),
                     StoreName = table.Column<string>(type: "TEXT", nullable: true),
                     StoreWebsite = table.Column<string>(type: "TEXT", nullable: true)
                 },
@@ -174,8 +174,8 @@ namespace BTCPayServer.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "TEXT", nullable: false),
-                    Blob = table.Column<byte[]>(type: "BLOB", nullable: true),
-                    Created = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
+                    Blob = table.Column<byte[]>(nullable: true),
+                    Created = table.Column<DateTimeOffset>(nullable: false),
                     CustomerEmail = table.Column<string>(type: "TEXT", nullable: true),
                     ExceptionStatus = table.Column<string>(type: "TEXT", nullable: true),
                     ItemCode = table.Column<string>(type: "TEXT", nullable: true),
@@ -224,7 +224,7 @@ namespace BTCPayServer.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "TEXT", nullable: false),
-                    Blob = table.Column<byte[]>(type: "BLOB", nullable: true),
+                    Blob = table.Column<byte[]>(nullable: true),
                     InvoiceDataId = table.Column<string>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
@@ -243,7 +243,7 @@ namespace BTCPayServer.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "TEXT", nullable: false),
-                    Blob = table.Column<byte[]>(type: "BLOB", nullable: true),
+                    Blob = table.Column<byte[]>(nullable: true),
                     InvoiceDataId = table.Column<string>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>

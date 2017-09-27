@@ -12,6 +12,7 @@
   <ItemGroup>
     <PackageReference Include="Hangfire" Version="1.6.17" />
     <PackageReference Include="Hangfire.MemoryStorage" Version="1.5.1" />
+    <PackageReference Include="Hangfire.PostgreSql" Version="1.4.8.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.2" />
     <PackageReference Include="NBitcoin" Version="4.0.0.38" />
     <PackageReference Include="NBitpayClient" Version="1.0.0.9" />	  
@@ -20,6 +21,7 @@
     <PackageReference Include="NicolasDorier.CommandLine" Version="1.0.0.1" />
     <PackageReference Include="NicolasDorier.CommandLine.Configuration" Version="1.0.0.2" />
     <PackageReference Include="NicolasDorier.StandardConfiguration" Version="1.0.0.11" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.0.0" />
     <PackageReference Include="System.ValueTuple" Version="4.4.0" />
     <PackageReference Include="System.Xml.XmlSerializer" Version="4.0.11" />
   </ItemGroup>
@@ -34,10 +36,6 @@
 		<DotNetCliToolReference Include="Microsoft.EntityFrameworkCore.Tools.DotNet" Version="2.0.0" />
 		<DotNetCliToolReference Include="Microsoft.Extensions.SecretManager.Tools" Version="2.0.0" />
 		<DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.0" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Migrations\" />
 	</ItemGroup>
 
 	<ItemGroup>

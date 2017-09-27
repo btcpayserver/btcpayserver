@@ -19,7 +19,6 @@ using Microsoft.AspNetCore.Identity;
 using BTCPayServer.Data;
 using Microsoft.Extensions.Logging;
 using Hangfire;
-using Hangfire.MemoryStorage;
 using BTCPayServer.Logging;
 using Microsoft.AspNetCore.Authorization;
 using System.Threading.Tasks;
@@ -82,10 +81,9 @@ namespace BTCPayServer.Hosting
 			Action<IGlobalConfiguration> configuration = o =>
 			{
 				var scope = AspNetCoreJobActivator.Current.BeginScope(null);
-				var options = (ApplicationDbContext)scope.Resolve(typeof(ApplicationDbContext));
-				var path = Path.Combine(((BTCPayServerOptions)scope.Resolve(typeof(BTCPayServerOptions))).DataDir, "hangfire.db");
-				o.UseMemoryStorage(); //SQLite provider can work with only one background job :/
-	};
+				var options = (ApplicationDbContextFactory)scope.Resolve(typeof(ApplicationDbContextFactory));
+				options.ConfigureHangfireBuilder(o);
+			};
 
 			ServiceCollectionDescriptorExtensions.TryAddSingleton<Action<IGlobalConfiguration>>(services, (IServiceProvider serviceProvider) => new Action<IGlobalConfiguration>((config) =>
 		   {

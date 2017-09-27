@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using BTCPayServer.Models;
 using Microsoft.EntityFrameworkCore.Infrastructure.Internal;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace BTCPayServer.Data
 {
@@ -52,8 +53,8 @@ namespace BTCPayServer.Data
 
 		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 		{
-			var options = optionsBuilder.Options.FindExtension<SqliteOptionsExtension>();
-			if(options?.ConnectionString == null)
+			var isConfigured = optionsBuilder.Options.Extensions.OfType<RelationalOptionsExtension>().Any();
+			if(!isConfigured)
 				optionsBuilder.UseSqlite("Data Source=temp.db");
 		}
 
@@ -70,7 +71,8 @@ namespace BTCPayServer.Data
 				.HasIndex(o => o.InvoiceDataId);
 
 			builder.Entity<UserStore>()
-				   .HasKey(t => new {
+				   .HasKey(t => new
+				   {
 					   t.ApplicationUserId,
 					   t.StoreDataId
 				   });

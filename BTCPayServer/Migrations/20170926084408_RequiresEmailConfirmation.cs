@@ -11,7 +11,6 @@ namespace BTCPayServer.Migrations
             migrationBuilder.AddColumn<bool>(
                 name: "RequiresEmailConfirmation",
                 table: "AspNetUsers",
-                type: "INTEGER",
                 nullable: false,
                 defaultValue: false);
         }

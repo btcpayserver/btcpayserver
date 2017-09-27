@@ -92,8 +92,8 @@ namespace BTCPayServer.Hosting
 		{
 			services.AddDbContext<ApplicationDbContext>((provider, o) =>
 			{
-				var path = Path.Combine(provider.GetRequiredService<BTCPayServerOptions>().DataDir, "sqllite.db");
-				o.UseSqlite("Data Source=" + path);
+				var factory = provider.GetRequiredService<ApplicationDbContextFactory>();
+				factory.ConfigureBuilder(o);
 			});
 			services.TryAddSingleton<SettingsRepository>();
 			services.TryAddSingleton<InvoicePaymentNotification>();

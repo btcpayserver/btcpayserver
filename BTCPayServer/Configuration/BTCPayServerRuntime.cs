@@ -56,7 +56,11 @@ namespace BTCPayServer.Configuration
 			db = new DBreezeEngine(CreateDBPath(opts, "InvoiceDB"));
 			_Resources.Add(db);
 
-			var dbContext = new ApplicationDbContextFactory(Path.Combine(opts.DataDir, "sqllite.db"));
+			ApplicationDbContextFactory dbContext = null;
+			if(opts.PostgresConnectionString == null)
+				dbContext = new ApplicationDbContextFactory(DatabaseType.Sqlite, "Data Source=" + Path.Combine(opts.DataDir, "sqllite.db"));
+			else
+				dbContext = new ApplicationDbContextFactory(DatabaseType.Postgres, opts.PostgresConnectionString);
 			DBFactory = dbContext;
 			InvoiceRepository = new InvoiceRepository(dbContext, db, Network);
 

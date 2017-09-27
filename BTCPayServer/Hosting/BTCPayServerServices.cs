@@ -185,6 +185,7 @@ namespace BTCPayServer.Hosting
 				try
 				{
 					act();
+					return;
 				}
 				catch
 				{

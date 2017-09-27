@@ -4,6 +4,12 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="Build\dockerfiles\**" />
+    <Content Remove="Build\dockerfiles\**" />
+    <EmbeddedResource Remove="Build\dockerfiles\**" />
+    <None Remove="Build\dockerfiles\**" />
+  </ItemGroup>
+  <ItemGroup>
     <None Remove="Currencies.txt" />
   </ItemGroup>
   <ItemGroup>

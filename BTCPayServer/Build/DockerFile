@@ -1,0 +1,8 @@
+FROM microsoft/dotnet:2.0.0-sdk
+
+RUN mkdir /btcpayserver
+COPY "dockerfiles/" "/btcpayserver/"
+
+ENTRYPOINT ["dotnet", "/btcpayserver/BTCPayServer.dll"]
+ENV POSTGRES="User ID=postgres;Host=postgres;Port=5432;Database=btcpayserver"
+CMD ["--testnet", "--explorercookiefile=/.cookie", "--explorerurl=https://nbxplorer-testnet-public.azurewebsites.net/", "--bind=0.0.0.0"]

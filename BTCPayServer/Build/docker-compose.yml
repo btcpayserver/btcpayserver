@@ -1,0 +1,12 @@
+version: "3"
+
+services:
+  btcpayserver:
+    ports: 
+      - 23001:23001
+    build:
+      context: .
+      dockerfile: DockerFile
+  
+  postgres:
+    image:  postgres:9.6.5

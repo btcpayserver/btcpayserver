@@ -1,6 +1,9 @@
-FROM microsoft/aspnetcore:2.0.0
-
+FROM microsoft/dotnet:2.0.0-sdk as builder
 WORKDIR /app
-COPY "bin/Release/netcoreapp2.0/publish" .
+COPY . .
+RUN dotnet publish -c Release
 
+FROM microsoft/aspnetcore:2.0.0
+WORKDIR /app
+COPY --from=builder "/app/bin/Release/netcoreapp2.0/publish" .
 ENTRYPOINT ["dotnet", "BTCPayServer.dll"]

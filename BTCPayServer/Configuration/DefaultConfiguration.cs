@@ -34,6 +34,8 @@ namespace BTCPayServer.Configuration
 			return app;
 		}
 
+		public override string EnvironmentVariablePrefix => "BTCPAY_";
+
 		protected override string GetDefaultDataDir(IConfiguration conf)
 		{
 			return GetNetwork(conf).DefaultDataDirectory;

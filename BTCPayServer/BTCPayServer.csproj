@@ -95,4 +95,8 @@
 	  <None Include="wwwroot\vendor\scrollreveal\scrollreveal.js" />
 	  <None Include="wwwroot\vendor\scrollreveal\scrollreveal.min.js" />
 	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Build\" />
+	</ItemGroup>
 </Project>

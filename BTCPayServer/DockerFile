@@ -1,7 +1,7 @@
 FROM microsoft/aspnetcore:2.0.0
 
 WORKDIR /app
-COPY "dockerfiles/" .
+COPY "bin/Release/netcoreapp2.0/publish" .
 
 ENV BTCPAY_POSTGRES="User ID=postgres;Host=postgres;Port=5432;Database=btcpayserver"
 ENV BTCPAY_NETWORK="testnet"

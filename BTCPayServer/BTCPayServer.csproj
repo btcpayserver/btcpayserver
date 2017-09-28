@@ -26,7 +26,7 @@
     <PackageReference Include="NBXplorer.Client" Version="1.0.0.12" />
     <PackageReference Include="NicolasDorier.CommandLine" Version="1.0.0.1" />
     <PackageReference Include="NicolasDorier.CommandLine.Configuration" Version="1.0.0.2" />
-    <PackageReference Include="NicolasDorier.StandardConfiguration" Version="1.0.0.12" />
+    <PackageReference Include="NicolasDorier.StandardConfiguration" Version="1.0.0.13" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.0.0" />
     <PackageReference Include="System.ValueTuple" Version="4.4.0" />
     <PackageReference Include="System.Xml.XmlSerializer" Version="4.0.11" />

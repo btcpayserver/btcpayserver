@@ -9,5 +9,10 @@ RUN dotnet publish --output /app/ --configuration Release
 
 FROM microsoft/aspnetcore:2.0.0
 WORKDIR /app
+
+RUN mkdir /datadir
+ENV BTCPAY_DATADIR=/datadir
+VOLUME /datadir
+
 COPY --from=builder "/app" .
 ENTRYPOINT ["dotnet", "BTCPayServer.dll"]

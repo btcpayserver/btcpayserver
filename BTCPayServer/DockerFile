@@ -1,9 +1,13 @@
-FROM microsoft/dotnet:2.0.0-sdk as builder
-WORKDIR /app
+FROM microsoft/aspnetcore-build AS builder
+WORKDIR /source
+ # caches restore result by copying csproj file separately
+COPY *.csproj .
+RUN dotnet restore
+# copies the rest of your code
 COPY . .
-RUN dotnet publish -c Release
+RUN dotnet publish --output /app/ --configuration Release
 
 FROM microsoft/aspnetcore:2.0.0
 WORKDIR /app
-COPY --from=builder "/app/bin/Release/netcoreapp2.0/publish" .
+COPY --from=builder "/app" .
 ENTRYPOINT ["dotnet", "BTCPayServer.dll"]

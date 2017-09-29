@@ -35,7 +35,7 @@ services:
       - bitcoind
 
   bitcoind:
-    image: nicolasdorier/bitcoin:0.15.0.1
+    image: nicolasdorier/docker-bitcoin:0.15.0.1
     environment:
       BITCOIN_EXTRA_ARGS: "regtest=1\nrpcport=43782\nport=8332"
       BITCOIN_RPC_USER: ceiwHEbqWI83

@@ -2,10 +2,12 @@
 using BTCPayServer.Models.AccountViewModels;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
-using NBitcoin.Tests;
+using NBitcoin.RPC;
 using NBitpayClient;
+using NBXplorer;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -21,8 +23,6 @@ namespace BTCPayServer.Tests
 		}
 
 		string _Directory;
-		NodeBuilder _Builder;
-
 		public ServerTester(string scope)
 		{
 			_Directory = scope;
@@ -34,21 +34,21 @@ namespace BTCPayServer.Tests
 				Utils.DeleteDirectory(_Directory);
 			if(!Directory.Exists(_Directory))
 				Directory.CreateDirectory(_Directory);
-			_Builder = NodeBuilder.Create(_Directory, "0.14.2");
-			ExplorerNode = _Builder.CreateNode(false);
-			ExplorerNode.WhiteBind = true;
-			ExplorerNode.Start();
-			ExplorerNode.CreateRPCClient().Generate(101);
-			ExplorerTester = NBXplorerTester.Create(Path.Combine(_Directory, "explorer"));
-			ExplorerTester.Node = ExplorerNode;
-			ExplorerTester.Start();
 
+			ExplorerNode = new RPCClient(RPCCredentialString.Parse(GetEnvironment("TESTS_RPCCONNECTION", "server=http://127.0.0.1:43782;ceiwHEbqWI83:DwubwWsoo3")), Network);
+			ExplorerClient = new ExplorerClient(Network, new Uri(GetEnvironment("TESTS_NBXPLORERURL", "http://127.0.0.1:32838/")));
 			PayTester = new BTCPayServerTester(Path.Combine(_Directory, "pay"))
 			{
-				NBXplorerUri = ExplorerTester.ExplorerClient.Address,
-				CookieFile = ExplorerTester.CookieFile
+				NBXplorerUri = ExplorerClient.Address,
+				Postgres = GetEnvironment("TESTS_POSTGRES", "User ID=postgres;Host=127.0.0.1;Port=39372;Database=btcpayserver")
 			};
 			PayTester.Start();
+		}
+
+		private string GetEnvironment(string variable, string defaultValue)
+		{
+			var var = Environment.GetEnvironmentVariable(variable);
+			return String.IsNullOrEmpty(var) ? defaultValue : var;
 		}
 
 		public TestAccount CreateAccount()
@@ -56,20 +56,23 @@ namespace BTCPayServer.Tests
 			return new TestAccount(this);
 		}
 
-		public CoreNode ExplorerNode
+		public RPCClient ExplorerNode
 		{
 			get; set;
 		}
+
+		public ExplorerClient ExplorerClient
+		{
+			get; set;
+		}
+
+		
 
 		public BTCPayServerTester PayTester
 		{
 			get; set;
 		}
-
-		public NBXplorerTester ExplorerTester
-		{
-			get; set;
-		}
+		
 		public Network Network
 		{
 			get;
@@ -80,10 +83,6 @@ namespace BTCPayServer.Tests
 		{
 			if(PayTester != null)
 				PayTester.Dispose();
-			if(ExplorerTester != null)
-				ExplorerTester.Dispose();
-			if(_Builder != null)
-				_Builder.Dispose();
 		}
 	}
 }

@@ -13,7 +13,6 @@ using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using NBitcoin.Tests;
 using NBXplorer;
 using NBXplorer.DerivationStrategy;
 using System;
@@ -59,6 +58,11 @@ namespace BTCPayServer.Tests
 			get; set;
 		}
 
+		public string Postgres
+		{
+			get; set;
+		}
+
 		IWebHost _Host;
 		public void Start()
 		{
@@ -73,6 +77,8 @@ namespace BTCPayServer.Tests
 			config.AppendLine($"explorer.url={NBXplorerUri.AbsoluteUri}");
 			config.AppendLine($"explorer.cookiefile={CookieFile}");
 			config.AppendLine($"hdpubkey={HDPrivateKey.Neuter().ToString(Network.RegTest)}");
+			if(Postgres != null)
+				config.AppendLine($"postgres=" + Postgres);
 			File.WriteAllText(Path.Combine(_Directory, "settings.config"), config.ToString());
 
 			ServerUri = new Uri("http://127.0.0.1:" + port + "/");

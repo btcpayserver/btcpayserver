@@ -33,7 +33,7 @@ namespace BTCPayServer.Tests
 			var account = parent.PayTester.GetController<AccountController>();
 			await account.Register(new RegisterViewModel()
 			{
-				Email = "Bob@toto.com",
+				Email = Guid.NewGuid() + "@toto.com",
 				ConfirmPassword = "Kitten0@",
 				Password = "Kitten0@",
 			});

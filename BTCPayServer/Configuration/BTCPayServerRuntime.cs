@@ -38,7 +38,7 @@ namespace BTCPayServer.Configuration
 			if(!Explorer.SetCookieAuth(opts.CookieFile))
 				Explorer.SetNoAuth();
 
-			CancellationTokenSource cts = new CancellationTokenSource(10000);
+			CancellationTokenSource cts = new CancellationTokenSource(30000);
 			try
 			{
 				Logs.Configuration.LogInformation("Trying to connect to explorer " + Explorer.Address.AbsoluteUri);

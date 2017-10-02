@@ -2,25 +2,21 @@ version: "3"
 
 services:
 
-  btcpayserver:
-    ports: 
-      - 8080:49392
-    expose:
-      - "49392"
+  tests:
     build:
-      context: .
-      dockerfile: DockerFile
+      context: ..
+      dockerfile: BTCPayServer.Tests/Dockerfile
     environment:
-      BTCPAY_POSTGRES: "User ID=postgres;Host=postgres;Port=5432;Database=btcpayserver"
-      BTCPAY_NETWORK: regtest
-      BTCPAY_EXPLORERURL: http://nbxplorer:32838/
-      BTCPAY_BIND: 0.0.0.0:49392
+      TESTS_RPCCONNECTION: server=http://bitcoind:43782;ceiwHEbqWI83:DwubwWsoo3
+      TESTS_NBXPLORERURL: http://nbxplorer:32838/
+      TESTS_POSTGRES: User ID=postgres;Host=postgres;Port=5432;Database=btcpayserver
     links:
       - nbxplorer
-      - postgres
 
   nbxplorer:
     image: nicolasdorier/nbxplorer:1.0.0.12
+    ports:
+      - "32838:32838"
     expose: 
       - "32838"
     environment:
@@ -28,21 +24,27 @@ services:
       NBXPLORER_RPCURL: http://bitcoind:43782/
       NBXPLORER_RPCUSER: ceiwHEbqWI83
       NBXPLORER_RPCPASSWORD: DwubwWsoo3
-      NBXPLORER_NODEENDPOINT: bitcoind:8332
+      NBXPLORER_NODEENDPOINT: bitcoind:39388
       NBXPLORER_BIND: 0.0.0.0:32838
       NBXPLORER_NOAUTH: 1
     links:
       - bitcoind
+      - postgres
 
   bitcoind:
     image: nicolasdorier/docker-bitcoin:0.15.0.1
+    ports:
+      - "43782:43782"
+      - "39388:39388"
     environment:
-      BITCOIN_EXTRA_ARGS: "regtest=1\nrpcport=43782\nport=8332"
+      BITCOIN_EXTRA_ARGS: "regtest=1\nrpcport=43782\nport=39388\nwhitelist=0.0.0.0/0"
       BITCOIN_RPC_USER: ceiwHEbqWI83
       BITCOIN_RPC_PASSWORD: DwubwWsoo3
     expose:
       - "43782"
-      - "8332"
-  
+      - "39388"
+
   postgres:
     image:  postgres:9.6.5
+    ports:
+      - "39372:5432"

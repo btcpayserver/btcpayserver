@@ -85,7 +85,7 @@ namespace BTCPayServer.Tests
 
 				Transaction tx = new Transaction();
 				tx.Outputs.AddRange(request.Details.Outputs.Select(o => new TxOut(o.Amount, o.Script)));
-				var cashCow = tester.ExplorerNode.CreateRPCClient();
+				var cashCow = tester.ExplorerNode;
 				tx = cashCow.FundRawTransaction(tx).Transaction;
 				tx = cashCow.SignRawTransaction(tx);
 
@@ -125,7 +125,7 @@ namespace BTCPayServer.Tests
 						FullNotifications = true
 					});
 					BitcoinUrlBuilder url = new BitcoinUrlBuilder(invoice.PaymentUrls.BIP21);
-					tester.ExplorerNode.CreateRPCClient().SendToAddress(url.Address, url.Amount);
+					tester.ExplorerNode.SendToAddress(url.Address, url.Amount);
 					callbackServer.ProcessNextRequest((ctx) =>
 					{
 						var ipn = new StreamReader(ctx.Request.Body).ReadToEnd();
@@ -193,7 +193,7 @@ namespace BTCPayServer.Tests
 
 				var rate = user.BitPay.GetRates();
 
-				var cashCow = tester.ExplorerNode.CreateRPCClient();
+				var cashCow = tester.ExplorerNode;
 				var invoiceAddress = BitcoinAddress.Create(invoice.BitcoinAddress, cashCow.Network);
 				cashCow.SendToAddress(invoiceAddress, firstPayment);
 

@@ -52,10 +52,6 @@ namespace BTCPayServer
 					.Build();
 				host.StartAsync().GetAwaiter().GetResult();
 				var urls = host.ServerFeatures.Get<IServerAddressesFeature>().Addresses;
-				if(urls.Count != 0)
-				{
-					OpenBrowser(urls.Select(url => url.Replace("0.0.0.0", "127.0.0.1")).First());
-				}
 				foreach(var url in urls)
 				{
 					logger.LogInformation("Listening on " + url);
@@ -78,30 +74,6 @@ namespace BTCPayServer
 					host.Dispose();
 				loggerProvider.Dispose();
 			}
-		}
-
-		public static void OpenBrowser(string url)
-		{
-			try
-			{
-				if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-				{
-					Process.Start(new ProcessStartInfo("cmd", $"/c start {url}")); // Works ok on windows
-				}
-				else if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-				{
-					Process.Start("xdg-open", url);  // Works ok on linux
-				}
-				else if(RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-				{
-					Process.Start("open", url); // Not tested
-				}
-				else
-				{
-
-				}
-			}
-			catch { }
 		}
 	}
 }

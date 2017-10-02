@@ -1,0 +1,23 @@
+{
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iisExpress": {
+      "applicationUrl": "http://localhost:14139/",
+      "sslPort": 0
+    }
+  },
+  "profiles": {
+    "Docker-Regtest": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "BTCPAY_EXPLORERURL": "http://127.0.0.1:32838/",
+        "BTCPAY_NETWORK": "regtest",
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "BTCPAY_POSTGRES": "User ID=postgres;Host=127.0.0.1;Port=39372;Database=btcpayserver"
+      },
+      "applicationUrl": "http://localhost:14142/"
+    }
+  }
+}

@@ -14,7 +14,7 @@ services:
       - nbxplorer
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:1.0.0.12
+    image: nicolasdorier/nbxplorer:1.0.0.13
     ports:
       - "32838:32838"
     expose: 

@@ -27,8 +27,8 @@ namespace BTCPayServer.Models.StoreViewModels
 			set;
 		}
 
-		[ExtPubKeyValidator]
-		public string ExtPubKey
+		[DerivationStrategyValidator]
+		public string DerivationScheme
 		{
 			get; set;
 		}
@@ -38,6 +38,11 @@ namespace BTCPayServer.Models.StoreViewModels
 		{
 			get; set;
 		}
+
+		public List<(string KeyPath, string Address)> AddressSamples
+		{
+			get; set;
+		} = new List<(string KeyPath, string Address)>();
 
 		public string StatusMessage
 		{

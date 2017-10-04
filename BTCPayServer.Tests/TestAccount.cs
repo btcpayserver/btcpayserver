@@ -45,9 +45,9 @@ namespace BTCPayServer.Tests
 
 			await store.UpdateStore(StoreId, new StoreViewModel()
 			{
-				ExtPubKey = extKey.Neuter().ToString() + "-[legacy]",
+				DerivationScheme = extKey.Neuter().ToString() + "-[legacy]",
 				SpeedPolicy = SpeedPolicy.MediumSpeed
-			});
+			}, "Save");
 			Assert.IsType<ViewResult>(await store.RequestPairing(pairingCode.ToString()));
 			await store.Pair(pairingCode.ToString(), StoreId);
 		}

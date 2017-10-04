@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBitpayClient;
+using NBXplorer.DerivationStrategy;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,6 +29,7 @@ namespace BTCPayServer.Controllers
 			UserManager<ApplicationUser> userManager,
 			AccessTokenController tokenController,
 			BTCPayWallet wallet,
+			Network network,
 			IHostingEnvironment env)
 		{
 			_Repo = repo;
@@ -36,7 +38,9 @@ namespace BTCPayServer.Controllers
 			_TokenController = tokenController;
 			_Wallet = wallet;
 			_Env = env;
+			_Network = network;
 		}
+		Network _Network;
 		BTCPayWallet _Wallet;
 		AccessTokenController _TokenController;
 		StoreRepository _Repo;
@@ -106,7 +110,7 @@ namespace BTCPayServer.Controllers
 			vm.StoreName = store.StoreName;
 			vm.StoreWebsite = store.StoreWebsite;
 			vm.SpeedPolicy = store.SpeedPolicy;
-			vm.ExtPubKey = store.DerivationStrategy;
+			vm.DerivationScheme = store.DerivationStrategy;
 			vm.StatusMessage = StatusMessage;
 			return View(vm);
 		}
@@ -114,7 +118,7 @@ namespace BTCPayServer.Controllers
 		[HttpPost]
 		[ValidateAntiForgeryToken]
 		[Route("{storeId}")]
-		public async Task<IActionResult> UpdateStore(string storeId, StoreViewModel model)
+		public async Task<IActionResult> UpdateStore(string storeId, StoreViewModel model, string command)
 		{
 			if(!ModelState.IsValid)
 			{
@@ -124,48 +128,64 @@ namespace BTCPayServer.Controllers
 			if(store == null)
 				return NotFound();
 
-			bool needUpdate = false;
-			if(store.SpeedPolicy != model.SpeedPolicy)
+			if(command == "Save")
 			{
-				needUpdate = true;
-				store.SpeedPolicy = model.SpeedPolicy;
-			}
-			if(store.StoreName != model.StoreName)
-			{
-				needUpdate = true;
-				store.StoreName = model.StoreName;
-			}
-			if(store.StoreWebsite != model.StoreWebsite)
-			{
-				needUpdate = true;
-				store.StoreWebsite = model.StoreWebsite;
-			}
-
-			if(store.DerivationStrategy != model.ExtPubKey)
-			{
-				needUpdate = true;
-				try
+				bool needUpdate = false;
+				if(store.SpeedPolicy != model.SpeedPolicy)
 				{
-					await _Wallet.TrackAsync(model.ExtPubKey);
-					store.DerivationStrategy = model.ExtPubKey;
+					needUpdate = true;
+					store.SpeedPolicy = model.SpeedPolicy;
 				}
-				catch
+				if(store.StoreName != model.StoreName)
 				{
-					ModelState.AddModelError(nameof(model.ExtPubKey), "Invalid Derivation Scheme");
-					return View(model);
+					needUpdate = true;
+					store.StoreName = model.StoreName;
 				}
-			}
+				if(store.StoreWebsite != model.StoreWebsite)
+				{
+					needUpdate = true;
+					store.StoreWebsite = model.StoreWebsite;
+				}
 
-			if(needUpdate)
-			{
-				await _Repo.UpdateStore(store);
-				StatusMessage = "Store successfully updated";
-			}
+				if(store.DerivationStrategy != model.DerivationScheme)
+				{
+					needUpdate = true;
+					try
+					{
+						await _Wallet.TrackAsync(model.DerivationScheme);
+						store.DerivationStrategy = model.DerivationScheme;
+					}
+					catch
+					{
+						ModelState.AddModelError(nameof(model.DerivationScheme), "Invalid Derivation Scheme");
+						return View(model);
+					}
+				}
 
-			return RedirectToAction(nameof(UpdateStore), new
+				if(needUpdate)
+				{
+					await _Repo.UpdateStore(store);
+					StatusMessage = "Store successfully updated";
+				}
+
+				return RedirectToAction(nameof(UpdateStore), new
+				{
+					storeId = storeId
+				});
+			}
+			else
 			{
-				storeId = storeId
-			});
+				var facto = new DerivationStrategyFactory(_Network);
+				var scheme = facto.Parse(model.DerivationScheme);
+				var line = scheme.GetLineFor(DerivationFeature.Deposit);
+
+				for(int i = 0; i < 10; i++)
+				{
+					var address = line.Derive((uint)i);
+					model.AddressSamples.Add((line.Path.Derive((uint)i).ToString(), address.ScriptPubKey.GetDestinationAddress(_Network).ToString()));
+				}
+				return View(model);
+			}
 		}
 
 		[HttpGet]
@@ -201,7 +221,7 @@ namespace BTCPayServer.Controllers
 				Label = model.Label,
 				Id = NBitpayClient.Extensions.BitIdExtensions.GetBitIDSIN(new PubKey(model.PublicKey))
 			});
-			
+
 			return RedirectToAction(nameof(RequestPairing), new
 			{
 				pairingCode = pairingCode.Data[0].PairingCode,

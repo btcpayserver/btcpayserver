@@ -1,4 +1,5 @@
 ﻿using NBitcoin;
+using NBXplorer.DerivationStrategy;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -6,7 +7,7 @@ using System.Text;
 
 namespace BTCPayServer.Validations
 {
-    public class ExtPubKeyValidatorAttribute :  ValidationAttribute
+    public class DerivationStrategyValidatorAttribute :  ValidationAttribute
 	{
 		protected override ValidationResult IsValid(object value, ValidationContext validationContext)
 		{
@@ -19,7 +20,7 @@ namespace BTCPayServer.Validations
 				return new ValidationResult("No Network specified");
 			try
 			{
-				new BitcoinExtPubKey((string)value, network);
+				new DerivationStrategyFactory(network).Parse((string)value);
 				return ValidationResult.Success;
 			}
 			catch(Exception ex)

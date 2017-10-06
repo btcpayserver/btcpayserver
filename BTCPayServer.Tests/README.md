@@ -24,3 +24,9 @@ You can run the tests inside a container by running
 ```
 docker-compose run --rm tests
 ```
+
+The Bitcoin RPC server is exposed to the host, for example, you can send 0.23111090 BTC to mohu16LH66ptoWGEL1GtP6KHTBJYXMWhEf.
+
+```
+bitcoin-cli -regtest -rpcport=43782 -rpcuser=ceiwHEbqWI83 -rpcpassword=DwubwWsoo3 sendtoaddress "mohu16LH66ptoWGEL1GtP6KHTBJYXMWhEf" 0.23111090
+```

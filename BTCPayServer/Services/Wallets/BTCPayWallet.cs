@@ -73,5 +73,13 @@ namespace BTCPayServer.Services.Wallets
 			var tasks = transactions.Select(t => _Client.BroadcastAsync(t)).ToArray();
 			return Task.WhenAll(tasks);
 		}
+
+		public async Task<Money> GetBalance(string derivationStrategy)
+		{
+			var result = await _Client.SyncAsync(_DerivationStrategyFactory.Parse(derivationStrategy), null, true);
+			return result.Confirmed.UTXOs.Select(u => u.Output.Value)
+						 .Concat(result.Unconfirmed.UTXOs.Select(u => u.Output.Value))
+						 .Sum();
+		}
 	}
 }

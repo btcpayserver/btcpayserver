@@ -86,13 +86,17 @@ namespace BTCPayServer.Controllers
 			StoresViewModel result = new StoresViewModel();
 			result.StatusMessage = StatusMessage;
 			var stores = await _Repo.GetStoresByUserId(GetUserId());
-			foreach(var store in stores)
+			var balances = stores.Select(async s => string.IsNullOrEmpty(s.DerivationStrategy) ? Money.Zero : await _Wallet.GetBalance(s.DerivationStrategy)).ToArray();
+
+			for(int i = 0; i < stores.Length; i++)
 			{
+				var store = stores[i];
 				result.Stores.Add(new StoresViewModel.StoreViewModel()
 				{
 					Id = store.Id,
 					Name = store.StoreName,
-					WebSite = store.StoreWebsite
+					WebSite = store.StoreWebsite,
+					Balance = await balances[i]
 				});
 			}
 			return View(result);

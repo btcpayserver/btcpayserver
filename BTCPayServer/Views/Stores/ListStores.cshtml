@@ -27,6 +27,7 @@
 					<tr>
 						<th>Name</th>
 						<th>Website</th>
+						<th>Balance</th>
 						<th>Actions</th>
 					</tr>
 				</thead>
@@ -40,6 +41,7 @@
 							{
 								<a href="@store.WebSite">@store.WebSite</a>
 							}</td>
+							<td>@store.Balance</td>
 							<td><a asp-action="UpdateStore" asp-route-storeId="@store.Id">Settings</a></td>
 						</tr>
 			}

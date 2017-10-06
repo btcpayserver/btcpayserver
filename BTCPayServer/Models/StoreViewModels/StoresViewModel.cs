@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NBitcoin;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -28,6 +29,10 @@ namespace BTCPayServer.Models.StoreViewModels
 			}
 
 			public string Id
+			{
+				get; set;
+			}
+			public Money Balance
 			{
 				get; set;
 			}

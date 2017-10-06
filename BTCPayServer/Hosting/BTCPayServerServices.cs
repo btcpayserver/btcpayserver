@@ -31,6 +31,7 @@ using Microsoft.AspNetCore.Identity;
 using BTCPayServer.Models;
 using System.Threading.Tasks;
 using System.Threading;
+using BTCPayServer.Services.Wallets;
 
 namespace BTCPayServer.Hosting
 {
@@ -111,7 +112,7 @@ namespace BTCPayServer.Hosting
 			services.TryAddSingleton<Network>(o => o.GetRequiredService<BTCPayServerOptions>().Network);
 			services.TryAddSingleton<ApplicationDbContextFactory>(o => o.GetRequiredService<BTCPayServerRuntime>().DBFactory);
 			services.TryAddSingleton<StoreRepository>();
-			services.TryAddSingleton(o => o.GetRequiredService<BTCPayServerRuntime>().Wallet);
+			services.TryAddSingleton<BTCPayWallet>();
 			services.TryAddSingleton<CurrencyNameTable>();
 			services.TryAddSingleton<IFeeProvider>(o => new NBXplorerFeeProvider()
 			{

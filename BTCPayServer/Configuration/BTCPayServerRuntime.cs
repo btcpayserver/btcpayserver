@@ -74,7 +74,6 @@ namespace BTCPayServer.Configuration
 
 			db = new DBreezeEngine(CreateDBPath(opts, "AddressMapping"));
 			_Resources.Add(db);
-			Wallet = new BTCPayWallet(Explorer, db);
 		}
 
 		private static string CreateDBPath(BTCPayServerOptions opts, string name)
@@ -109,11 +108,6 @@ namespace BTCPayServer.Configuration
 			get; set;
 		}
 		public InvoiceRepository InvoiceRepository
-		{
-			get;
-			set;
-		}
-		public BTCPayWallet Wallet
 		{
 			get;
 			set;

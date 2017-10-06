@@ -46,6 +46,11 @@ namespace BTCPayServer.Data
 			get; set;
 		}
 
+		public DbSet<AddressInvoiceData> AddressInvoices
+		{
+			get; set;
+		}
+
 		public DbSet<SettingData> Settings
 		{
 			get; set;
@@ -86,6 +91,9 @@ namespace BTCPayServer.Data
 				.HasOne(pt => pt.StoreData)
 				.WithMany(t => t.UserStores)
 				.HasForeignKey(pt => pt.StoreDataId);
+
+			builder.Entity<AddressInvoiceData>()
+				.HasKey(o => o.Address);
 		}
 	}
 }

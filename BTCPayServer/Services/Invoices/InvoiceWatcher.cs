@@ -12,6 +12,7 @@ using System.Threading;
 using Microsoft.Extensions.Hosting;
 using System.Collections.Concurrent;
 using Hangfire;
+using BTCPayServer.Services.Wallets;
 
 namespace BTCPayServer.Servcices.Invoices
 {
@@ -21,11 +22,14 @@ namespace BTCPayServer.Servcices.Invoices
 		ExplorerClient _ExplorerClient;
 		DerivationStrategyFactory _DerivationFactory;
 		InvoiceNotificationManager _NotificationManager;
+		BTCPayWallet _Wallet;
 
 		public InvoiceWatcher(ExplorerClient explorerClient, 
 			InvoiceRepository invoiceRepository,
+			BTCPayWallet wallet,
 			InvoiceNotificationManager notificationManager)
 		{
+			_Wallet = wallet ?? throw new ArgumentNullException(nameof(wallet));
 			_ExplorerClient = explorerClient ?? throw new ArgumentNullException(nameof(explorerClient));
 			_DerivationFactory = new DerivationStrategyFactory(_ExplorerClient.Network);
 			_InvoiceRepository = invoiceRepository ?? throw new ArgumentNullException(nameof(invoiceRepository));
@@ -93,10 +97,18 @@ namespace BTCPayServer.Servcices.Invoices
 			{
 				var strategy = _DerivationFactory.Parse(invoice.DerivationStrategy);
 				changes = await _ExplorerClient.SyncAsync(strategy, changes, false, _Cts.Token).ConfigureAwait(false);
+
+				var utxos = changes.Confirmed.UTXOs.Concat(changes.Unconfirmed.UTXOs).ToArray();
+				var invoiceIds = utxos.Select(u => _Wallet.GetInvoiceId(u.Output.ScriptPubKey)).ToArray();
+				utxos =
+					utxos
+					.Where((u,i) => invoiceIds[i].GetAwaiter().GetResult() == invoice.Id)
+					.ToArray();
+
 				shouldWait = false; //should not wait, Sync is blocking call
 
 				List<Coin> receivedCoins = new List<Coin>();
-				foreach(var received in changes.Confirmed.UTXOs.Concat(changes.Unconfirmed.UTXOs))
+				foreach(var received in utxos)
 					if(received.Output.ScriptPubKey == invoice.DepositAddress.ScriptPubKey)
 						receivedCoins.Add(new Coin(received.Outpoint, received.Output));
 

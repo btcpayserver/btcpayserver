@@ -70,10 +70,6 @@ namespace BTCPayServer.Configuration
 			}
 			DBFactory = dbContext;
 			InvoiceRepository = new InvoiceRepository(dbContext, db, Network);
-
-
-			db = new DBreezeEngine(CreateDBPath(opts, "AddressMapping"));
-			_Resources.Add(db);
 		}
 
 		private static string CreateDBPath(BTCPayServerOptions opts, string name)

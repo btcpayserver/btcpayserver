@@ -92,8 +92,9 @@ namespace BTCPayServer.Hosting
 		private static async Task HandleBitpayHttpException(HttpContext httpContext, BitpayHttpException ex)
 		{
 			httpContext.Response.StatusCode = ex.StatusCode;
-			using(var writer = new StreamWriter(httpContext.Response.Body, Encoding.UTF8, 1024, true))
+			using(var writer = new StreamWriter(httpContext.Response.Body, new UTF8Encoding(false), 1024, true))
 			{
+				httpContext.Response.ContentType = "application/json";
 				var result = JsonConvert.SerializeObject(new BitpayErrorsModel(ex));
 				writer.Write(result);
 				await writer.FlushAsync();

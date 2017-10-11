@@ -8,7 +8,7 @@ namespace BTCPayServer.Authentication
 {
     public class BitTokenEntity
     {
-		public string Name
+		public string Facade
 		{
 			get; set;
 		}
@@ -16,15 +16,7 @@ namespace BTCPayServer.Authentication
 		{
 			get; set;
 		}
-		public DateTimeOffset DateCreated
-		{
-			get; set;
-		}
-		public bool Active
-		{
-			get; set;
-		}
-		public string PairedId
+		public string StoreId
 		{
 			get; set;
 		}
@@ -46,11 +38,9 @@ namespace BTCPayServer.Authentication
 		{
 			return new BitTokenEntity()
 			{
-				Active = Active,
-				DateCreated = DateCreated,
 				Label = Label,
-				Name = Name,
-				PairedId = PairedId,
+				Facade = Facade,
+				StoreId = StoreId,
 				PairingTime = PairingTime,
 				SIN = SIN,
 				Value = Value

@@ -51,7 +51,7 @@ namespace BTCPayServer.Tests
 			return String.IsNullOrEmpty(var) ? defaultValue : var;
 		}
 
-		public TestAccount CreateAccount()
+		public TestAccount NewAccount()
 		{
 			return new TestAccount(this);
 		}

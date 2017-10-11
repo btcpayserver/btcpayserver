@@ -33,6 +33,8 @@ using BTCPayServer.Servcices.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Validations;
+
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.Routing;
 
 namespace BTCPayServer.Controllers

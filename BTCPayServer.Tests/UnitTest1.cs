@@ -13,6 +13,8 @@ using BTCPayServer.Servcices.Invoices;
 using Newtonsoft.Json;
 using System.IO;
 using Newtonsoft.Json.Linq;
+using BTCPayServer.Controllers;
+using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Tests
 {
@@ -63,7 +65,7 @@ namespace BTCPayServer.Tests
 			using(var tester = ServerTester.Create())
 			{
 				tester.Start();
-				var user = tester.CreateAccount();
+				var user = tester.NewAccount();
 				user.GrantAccess();
 				var invoice = user.BitPay.CreateInvoice(new Invoice()
 				{
@@ -105,6 +107,31 @@ namespace BTCPayServer.Tests
 		}
 
 		[Fact]
+		public void CanUseServerInitiatedPairingCode()
+		{
+			using(var tester = ServerTester.Create())
+			{
+				tester.Start();
+				var acc = tester.NewAccount();
+				acc.Register();
+				acc.CreateStore();
+				
+				var controller = tester.PayTester.GetController<StoresController>(acc.UserId);
+				var token = (RedirectToActionResult)controller.CreateToken(acc.StoreId, new Models.StoreViewModels.CreateTokenViewModel()
+				{
+					Facade = Facade.Merchant.ToString(),
+					Label = "bla",
+					PublicKey = null
+				}).GetAwaiter().GetResult();
+
+				var pairingCode = (string)token.RouteValues["pairingCode"];
+
+				acc.BitPay.AuthorizeClient(new PairingCode(pairingCode)).GetAwaiter().GetResult();
+				Assert.True(acc.BitPay.TestAccess(Facade.Merchant));
+			}
+		}
+
+		[Fact]
 		public void CanSendIPN()
 		{
 			using(var callbackServer = new CustomServer())
@@ -112,7 +139,7 @@ namespace BTCPayServer.Tests
 				using(var tester = ServerTester.Create())
 				{
 					tester.Start();
-					var acc = tester.CreateAccount();
+					var acc = tester.NewAccount();
 					acc.GrantAccess();
 					var invoice = acc.BitPay.CreateInvoice(new Invoice()
 					{
@@ -143,7 +170,7 @@ namespace BTCPayServer.Tests
 			using(var tester = ServerTester.Create())
 			{
 				tester.Start();
-				var user = tester.CreateAccount();
+				var user = tester.NewAccount();
 				Assert.False(user.BitPay.TestAccess(Facade.Merchant));
 				user.GrantAccess();
 				Assert.True(user.BitPay.TestAccess(Facade.Merchant));

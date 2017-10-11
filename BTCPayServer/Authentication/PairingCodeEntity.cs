@@ -26,17 +26,17 @@ namespace BTCPayServer.Authentication
 			get;
 			set;
 		}
-		public DateTimeOffset PairingTime
+		public DateTimeOffset CreatedTime
 		{
 			get;
 			set;
 		}
-		public DateTimeOffset PairingExpiration
+		public DateTimeOffset Expiration
 		{
 			get;
 			set;
 		}
-		public string Token
+		public string TokenValue
 		{
 			get;
 			set;
@@ -44,7 +44,7 @@ namespace BTCPayServer.Authentication
 
 		public bool IsExpired()
 		{
-			return DateTimeOffset.UtcNow > PairingExpiration;
+			return DateTimeOffset.UtcNow > Expiration;
 		}
 	}
 }

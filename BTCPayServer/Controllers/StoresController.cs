@@ -197,11 +197,11 @@ namespace BTCPayServer.Controllers
 		public async Task<IActionResult> ListTokens(string storeId)
 		{
 			var model = new TokensViewModel();
-			var tokens = await _TokenRepository.GetTokensByPairedIdAsync(storeId);
+			var tokens = await _TokenRepository.GetTokensByStoreIdAsync(storeId);
 			model.StatusMessage = StatusMessage;
 			model.Tokens = tokens.Select(t => new TokenViewModel()
 			{
-				Facade = t.Name,
+				Facade = t.Facade,
 				Label = t.Label,
 				SIN = t.SIN,
 				Id = t.Value
@@ -219,16 +219,34 @@ namespace BTCPayServer.Controllers
 				return View(model);
 			}
 
-			var pairingCode = await _TokenController.GetPairingCode(new PairingCodeRequest()
+			var tokenRequest = new TokenRequest()
 			{
 				Facade = model.Facade,
 				Label = model.Label,
-				Id = NBitpayClient.Extensions.BitIdExtensions.GetBitIDSIN(new PubKey(model.PublicKey))
-			});
+				Id = model.PublicKey == null ? null : NBitpayClient.Extensions.BitIdExtensions.GetBitIDSIN(new PubKey(model.PublicKey))
+			};
+
+			string pairingCode = null;
+			if(model.PublicKey == null)
+			{
+				tokenRequest.PairingCode = await _TokenRepository.CreatePairingCodeAsync();
+				await _TokenRepository.UpdatePairingCode(new PairingCodeEntity()
+				{
+					Id = tokenRequest.PairingCode,
+					Facade = model.Facade,
+					Label = model.Label,
+				});
+				await _TokenRepository.PairWithStoreAsync(tokenRequest.PairingCode, storeId);
+				pairingCode = tokenRequest.PairingCode;
+			}
+			else
+			{
+				pairingCode = ((DataWrapper<List<PairingCodeResponse>>)await _TokenController.Tokens(tokenRequest)).Data[0].PairingCode;
+			}
 
 			return RedirectToAction(nameof(RequestPairing), new
 			{
-				pairingCode = pairingCode.Data[0].PairingCode,
+				pairingCode = pairingCode,
 				selectedStore = storeId
 			});
 		}
@@ -239,22 +257,21 @@ namespace BTCPayServer.Controllers
 		{
 			var model = new CreateTokenViewModel();
 			model.Facade = "merchant";
-			if(_Env.IsDevelopment())
-			{
-				model.PublicKey = new Key().PubKey.ToHex();
-			}
 			return View(model);
 		}
 
 		[HttpPost]
 		[ValidateAntiForgeryToken]
 		[Route("{storeId}/Tokens/Delete")]
-		public async Task<IActionResult> DeleteToken(string storeId, string name, string sin)
+		public async Task<IActionResult> DeleteToken(string storeId, string tokenId)
 		{
-			if(await _TokenRepository.DeleteToken(sin, name, storeId))
-				StatusMessage = "Token revoked";
-			else
+			var token = await _TokenRepository.GetToken(tokenId);
+			if(token == null ||
+				token.StoreId != storeId ||
+			   !await _TokenRepository.DeleteToken(tokenId))
 				StatusMessage = "Failure to revoke this token";
+			else
+				StatusMessage = "Token revoked";
 			return RedirectToAction(nameof(ListTokens));
 		}
 
@@ -277,7 +294,7 @@ namespace BTCPayServer.Controllers
 					Id = pairing.Id,
 					Facade = pairing.Facade,
 					Label = pairing.Label,
-					SIN = pairing.SIN,
+					SIN = pairing.SIN ?? "Server-Initiated Pairing",
 					SelectedStore = selectedStore ?? stores.FirstOrDefault()?.Id,
 					Stores = stores.Select(s => new PairingModel.StoreViewModel()
 					{
@@ -294,11 +311,14 @@ namespace BTCPayServer.Controllers
 		public async Task<IActionResult> Pair(string pairingCode, string selectedStore)
 		{
 			var store = await _Repo.FindStore(selectedStore, GetUserId());
-			if(store == null)
+			var pairing = await _TokenRepository.GetPairingAsync(pairingCode);
+			if(store == null || pairing == null)
 				return NotFound();
-			if(pairingCode != null && await _TokenRepository.PairWithAsync(pairingCode, store.Id))
+			if(pairingCode != null && await _TokenRepository.PairWithStoreAsync(pairingCode, store.Id))
 			{
 				StatusMessage = "Pairing is successfull";
+				if(pairing.SIN == null)
+					StatusMessage = "Server initiated pairing code: " + pairingCode;
 				return RedirectToAction(nameof(ListTokens), new
 				{
 					storeId = store.Id

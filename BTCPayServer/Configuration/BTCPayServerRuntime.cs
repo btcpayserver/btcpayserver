@@ -51,7 +51,6 @@ namespace BTCPayServer.Configuration
 			}
 			DBreezeEngine db = new DBreezeEngine(CreateDBPath(opts, "TokensDB"));
 			_Resources.Add(db);
-			TokenRepository = new TokenRepository(db);
 
 			db = new DBreezeEngine(CreateDBPath(opts, "InvoiceDB"));
 			_Resources.Add(db);
@@ -98,10 +97,6 @@ namespace BTCPayServer.Configuration
 		{
 			get;
 			private set;
-		}
-		public TokenRepository TokenRepository
-		{
-			get; set;
 		}
 		public InvoiceRepository InvoiceRepository
 		{

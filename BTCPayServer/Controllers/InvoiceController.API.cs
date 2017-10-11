@@ -83,26 +83,26 @@ namespace BTCPayServer.Controllers
 			if(facade == null)
 				throw new ArgumentNullException(nameof(facade));
 
-			var actualTokens = (await _TokenRepository.GetTokens(this.GetBitIdentity().SIN)).Where(t => t.Active).ToArray();
+			var actualTokens = (await _TokenRepository.GetTokens(this.GetBitIdentity().SIN)).ToArray();
 			actualTokens = actualTokens.SelectMany(t => GetCompatibleTokens(t)).ToArray();
 			
 			var actualToken = actualTokens.FirstOrDefault(a => a.Value.Equals(expectedToken, StringComparison.Ordinal));
 			if(expectedToken == null || actualToken == null)
 			{
 				Logs.PayServer.LogDebug($"No token found for facade {facade} for SIN {this.GetBitIdentity().SIN}");
-				throw new BitpayHttpException(401, $"This endpoint does not support the `{actualTokens.Select(a => a.Name).Concat(new[] { "user" }).FirstOrDefault()}` facade");
+				throw new BitpayHttpException(401, $"This endpoint does not support the `{actualTokens.Select(a => a.Facade).Concat(new[] { "user" }).FirstOrDefault()}` facade");
 			}
 			return actualToken;
 		}
 
 		private IEnumerable<BitTokenEntity> GetCompatibleTokens(BitTokenEntity token)
 		{
-			if(token.Name == Facade.Merchant.ToString())
+			if(token.Facade == Facade.Merchant.ToString())
 			{
 				yield return token.Clone(Facade.User);
 				yield return token.Clone(Facade.PointOfSale);
 			}
-			if(token.Name == Facade.PointOfSale.ToString())
+			if(token.Facade == Facade.PointOfSale.ToString())
 			{
 				yield return token.Clone(Facade.User);
 			}
@@ -111,7 +111,7 @@ namespace BTCPayServer.Controllers
 
 		private async Task<StoreData> FindStore(BitTokenEntity bitToken)
 		{
-			var store = await _StoreRepository.FindStore(bitToken.PairedId);
+			var store = await _StoreRepository.FindStore(bitToken.StoreId);
 			if(store == null)
 				throw new BitpayHttpException(401, "Unknown store");
 			return store;

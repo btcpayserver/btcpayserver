@@ -38,10 +38,10 @@ namespace BTCPayServer
 		}
 
 
-		public static BitIdentity GetBitIdentity(this Controller controller)
+		public static BitIdentity GetBitIdentity(this Controller controller, bool throws = true)
 		{
 			if(!(controller.User.Identity is BitIdentity))
-				throw new UnauthorizedAccessException("no-bitid");
+				return throws ? throw new UnauthorizedAccessException("no-bitid") : (BitIdentity)null;
 			return (BitIdentity)controller.User.Identity;
 		}
 	}

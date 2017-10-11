@@ -27,8 +27,7 @@
 				<td>@token.Facade</td>
 				<td>
 					<form asp-action="DeleteToken" method="post">
-						<input type="hidden" name="name" value="@token.Facade">
-						<input type="hidden" name="sin" value="@token.SIN">
+						<input type="hidden" name="tokenId" value="@token.Id">
 						<button type="submit" class="btn btn-danger" role="button">Revoke</button>
 					</form>
 				</td>

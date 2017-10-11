@@ -1,4 +1,5 @@
-﻿using DBreeze;
+﻿using BTCPayServer.Data;
+using DBreeze;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using Newtonsoft.Json;
@@ -6,175 +7,177 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
+using System.Linq;
 
 namespace BTCPayServer.Authentication
 {
 	public class TokenRepository
 	{
-		public TokenRepository(DBreezeEngine engine)
+		ApplicationDbContextFactory _Factory;
+		public TokenRepository(ApplicationDbContextFactory dbFactory)
 		{
-			_Engine = engine;
+			if(dbFactory == null)
+				throw new ArgumentNullException(nameof(dbFactory));
+			_Factory = dbFactory;
 		}
 
-
-		private readonly DBreezeEngine _Engine;
-		public DBreezeEngine Engine
+		public async Task<BitTokenEntity[]> GetTokens(string sin)
 		{
-			get
+			using(var ctx = _Factory.CreateContext())
 			{
-				return _Engine;
+				return (await ctx.PairedSINData
+					.Where(p => p.SIN == sin)
+					.ToListAsync())
+					.Select(p => CreateTokenEntity(p))
+					.ToArray();
 			}
 		}
 
-		public Task<BitTokenEntity[]> GetTokens(string sin)
+		private BitTokenEntity CreateTokenEntity(PairedSINData data)
 		{
-			List<BitTokenEntity> tokens = new List<BitTokenEntity>();
-			using(var tx = _Engine.GetTransaction())
+			return new BitTokenEntity()
 			{
-				tx.ValuesLazyLoadingIsOn = false;
-				foreach(var row in tx.SelectForward<string, byte[]>($"T_{sin}"))
-				{
-					var token = ToObject<BitTokenEntity>(row.Value);
-					tokens.Add(token);
-				}
-			}
-			return Task.FromResult(tokens.ToArray());
-		}
-
-		public Task<BitTokenEntity> CreateToken(string sin, string tokenName)
-		{
-			var token = new BitTokenEntity
-			{
-				Name = tokenName,
-				Value = Encoders.Base58.EncodeData(RandomUtils.GetBytes(32)),
-				DateCreated = DateTimeOffset.UtcNow
+				Label = data.Label,
+				Facade = data.Facade,
+				Value = data.Id,
+				SIN = data.SIN,
+				PairingTime = data.PairingTime,
+				StoreId = data.StoreDataId
 			};
-			using(var tx = _Engine.GetTransaction())
-			{
-				tx.Insert<string, byte[]>($"T_{sin}", token.Name, ToBytes(token));
-				tx.Commit();
-			}
-			return Task.FromResult(token);
 		}
 
-		public Task<bool> PairWithAsync(string pairingCode, string pairedId)
+		public async Task<string> CreatePairingCodeAsync()
 		{
-			if(pairedId == null)
-				throw new ArgumentNullException(nameof(pairedId));
-			using(var tx = _Engine.GetTransaction())
+			string pairingCodeId = Encoders.Base58.EncodeData(RandomUtils.GetBytes(6));
+			using(var ctx = _Factory.CreateContext())
 			{
-				var row = tx.Select<string, byte[]>("PairingCodes", pairingCode);
-				if(row == null || !row.Exists)
-					return Task.FromResult(false);
-				tx.RemoveKey<string>("PairingCodes", pairingCode);
-				try
+				var now = DateTime.UtcNow;
+				var expiration = DateTime.UtcNow + TimeSpan.FromMinutes(15);
+				await ctx.PairingCodes.AddAsync(new PairingCodeData()
 				{
-					var pairingEntity = ToObject<PairingCodeEntity>(row.Value);
-					if(pairingEntity.IsExpired())
-						return Task.FromResult(false);
-					row = tx.Select<string, byte[]>($"T_{pairingEntity.SIN}", pairingEntity.Facade);
-					if(row == null || !row.Exists)
-						return Task.FromResult(false);
-					var token = ToObject<BitTokenEntity>(row.Value);
-					if(token.Active)
-						return Task.FromResult(false);
-					token.Active = true;
-					token.PairedId = pairedId;
-					token.SIN = pairingEntity.SIN;
-					token.Label = pairingEntity.Label;
-					token.PairingTime = DateTimeOffset.UtcNow;
-					tx.Insert($"TbP_{pairedId}", token.Value, ToBytes(token));
-					tx.Insert($"T_{pairingEntity.SIN}", pairingEntity.Facade, ToBytes(token));
-				}
-				finally
-				{
-					tx.Commit();
-				}
+					Id = pairingCodeId,
+					DateCreated = now,
+					Expiration = expiration,
+					TokenValue = Encoders.Base58.EncodeData(RandomUtils.GetBytes(32))
+				});
+				await ctx.SaveChangesAsync();
 			}
-			return Task.FromResult(true);
+			return pairingCodeId;
 		}
 
-		public Task<BitTokenEntity[]> GetTokensByPairedIdAsync(string pairedId)
+		public async Task<PairingCodeEntity> UpdatePairingCode(PairingCodeEntity pairingCodeEntity)
 		{
-			List<BitTokenEntity> tokens = new List<BitTokenEntity>();
-			using(var tx = _Engine.GetTransaction())
+			using(var ctx = _Factory.CreateContext())
 			{
-				tx.ValuesLazyLoadingIsOn = false;
-				foreach(var row in tx.SelectForward<string, byte[]>($"TbP_{pairedId}"))
-				{
-					tokens.Add(ToObject<BitTokenEntity>(row.Value));
-				}
-			}
-			return Task.FromResult(tokens.ToArray());
-		}
-
-		public Task<PairingCodeEntity> GetPairingAsync(string pairingCode)
-		{
-			using(var tx = _Engine.GetTransaction())
-			{
-				var row = tx.Select<string, byte[]>("PairingCodes", pairingCode);
-				if(row == null || !row.Exists)
-					return Task.FromResult<PairingCodeEntity>(null);
-				var pairingEntity = ToObject<PairingCodeEntity>(row.Value);
-				if(pairingEntity.IsExpired())
-					return Task.FromResult<PairingCodeEntity>(null);
-				return Task.FromResult(pairingEntity);
+				var pairingCode = await ctx.PairingCodes.FindAsync(pairingCodeEntity.Id);
+				pairingCode.Label = pairingCodeEntity.Label;
+				pairingCode.Facade = pairingCodeEntity.Facade;
+				await ctx.SaveChangesAsync();
+				return CreatePairingCodeEntity(pairingCode);
 			}
 		}
-		public Task<PairingCodeEntity> AddPairingCodeAsync(PairingCodeEntity pairingCodeEntity)
+
+		public async Task<bool> PairWithStoreAsync(string pairingCodeId, string storeId)
 		{
-			pairingCodeEntity = Clone(pairingCodeEntity);
-			pairingCodeEntity.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(6));
-			using(var tx = _Engine.GetTransaction())
+			using(var ctx = _Factory.CreateContext())
 			{
-				tx.Insert("PairingCodes", pairingCodeEntity.Id, ToBytes(pairingCodeEntity));
-				tx.Commit();
-			}
-			return Task.FromResult(pairingCodeEntity);
-		}
-
-		private byte[] ToBytes<T>(T obj)
-		{
-			return ZipUtils.Zip(JsonConvert.SerializeObject(obj));
-		}
-		private T ToObject<T>(byte[] value)
-		{
-			return JsonConvert.DeserializeObject<T>(ZipUtils.Unzip(value));
-		}
-
-		private T Clone<T>(T obj)
-		{
-			return ToObject<T>(ToBytes(obj));
-		}
-
-
-		public async Task<bool> DeleteToken(string sin, string tokenName, string storeId)
-		{
-			var token = await GetToken(sin, tokenName);
-			if(token == null || (token.PairedId != null && token.PairedId != storeId))
-				return false;
-			using(var tx = _Engine.GetTransaction())
-			{
-				tx.RemoveKey<string>($"T_{sin}", tokenName);
-				if(token.PairedId != null)
-					tx.RemoveKey<string>($"TbP_" + token.PairedId, token.Value);
-				tx.Commit();
+				var pairingCode = await ctx.PairingCodes.FindAsync(pairingCodeId);
+				if(pairingCode == null || pairingCode.Expiration < DateTimeOffset.UtcNow)
+					return false;
+				pairingCode.StoreDataId = storeId;
+				await ActivateIfComplete(ctx, pairingCode);
+				await ctx.SaveChangesAsync();
 			}
 			return true;
 		}
 
-		private Task<BitTokenEntity> GetToken(string sin, string tokenName)
+		public async Task<bool> PairWithSINAsync(string pairingCodeId, string sin)
 		{
-			using(var tx = _Engine.GetTransaction())
+			using(var ctx = _Factory.CreateContext())
 			{
-				tx.ValuesLazyLoadingIsOn = true;
-				var row = tx.Select<string, byte[]>($"T_{sin}", tokenName);
-				if(row == null || !row.Exists)
-					return Task.FromResult<BitTokenEntity>(null);
-				var token = ToObject<BitTokenEntity>(row.Value);
-				if(!token.Active)
-					return Task.FromResult<BitTokenEntity>(null);
-				return Task.FromResult(token);
+				var pairingCode = await ctx.PairingCodes.FindAsync(pairingCodeId);
+				if(pairingCode == null || pairingCode.Expiration < DateTimeOffset.UtcNow)
+					return false;
+				pairingCode.SIN = sin;
+				await ActivateIfComplete(ctx, pairingCode);
+				await ctx.SaveChangesAsync();
+			}
+			return true;
+		}
+
+
+		private async Task ActivateIfComplete(ApplicationDbContext ctx, PairingCodeData pairingCode)
+		{
+			if(!string.IsNullOrEmpty(pairingCode.SIN) && !string.IsNullOrEmpty(pairingCode.StoreDataId))
+			{
+				ctx.PairingCodes.Remove(pairingCode);
+				await ctx.PairedSINData.AddAsync(new PairedSINData()
+				{
+					Id = pairingCode.TokenValue,
+					PairingTime = DateTime.UtcNow,
+					Facade = pairingCode.Facade,
+					Label = pairingCode.Label,
+					StoreDataId = pairingCode.StoreDataId,
+					SIN = pairingCode.SIN
+				});
+			}
+		}
+
+
+		public async Task<BitTokenEntity[]> GetTokensByStoreIdAsync(string storeId)
+		{
+			using(var ctx = _Factory.CreateContext())
+			{
+				return (await ctx.PairedSINData.Where(p => p.StoreDataId == storeId).ToListAsync())
+						.Select(c => CreateTokenEntity(c))
+						.ToArray();
+			}
+		}
+
+		public async Task<PairingCodeEntity> GetPairingAsync(string pairingCode)
+		{
+			using(var ctx = _Factory.CreateContext())
+			{
+				return CreatePairingCodeEntity(await ctx.PairingCodes.FindAsync(pairingCode));
+			}
+		}
+
+		private PairingCodeEntity CreatePairingCodeEntity(PairingCodeData data)
+		{
+			return new PairingCodeEntity()
+			{
+				Facade = data.Facade,
+				Id = data.Id,
+				Label = data.Label,
+				Expiration = data.Expiration,
+				CreatedTime = data.DateCreated,
+				TokenValue = data.TokenValue,
+				SIN = data.SIN
+			};
+		}
+
+
+		public async Task<bool> DeleteToken(string tokenId)
+		{
+			using(var ctx = _Factory.CreateContext())
+			{
+				var token = await ctx.PairedSINData.FindAsync(tokenId);
+				if(token == null)
+					return false;
+				ctx.PairedSINData.Remove(token);
+				await ctx.SaveChangesAsync();
+				return true;
+			}
+		}
+
+		public async Task<BitTokenEntity> GetToken(string tokenId)
+		{
+			using(var ctx = _Factory.CreateContext())
+			{
+				var token = await ctx.PairedSINData.FindAsync(tokenId);
+				return CreateTokenEntity(token);
 			}
 		}
 

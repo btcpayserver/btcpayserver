@@ -56,6 +56,17 @@ namespace BTCPayServer.Data
 			get; set;
 		}
 
+
+		public DbSet<PairingCodeData> PairingCodes
+		{
+			get; set;
+		}
+
+		public DbSet<PairedSINData> PairedSINData
+		{
+			get; set;
+		}
+
 		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 		{
 			var isConfigured = optionsBuilder.Options.Extensions.OfType<RelationalOptionsExtension>().Any();
@@ -94,6 +105,15 @@ namespace BTCPayServer.Data
 
 			builder.Entity<AddressInvoiceData>()
 				.HasKey(o => o.Address);
+
+			builder.Entity<PairingCodeData>()
+				.HasKey(o => o.Id);
+
+			builder.Entity<PairedSINData>(b =>
+			{
+				b.HasIndex(o => o.SIN);
+				b.HasIndex(o => o.StoreDataId);
+			});
 		}
 	}
 }

@@ -6,7 +6,7 @@ using NBitcoin;
 
 namespace BTCPayServer.Models
 {
-	public class PairingCodeRequest
+	public class TokenRequest
 	{
 		[JsonProperty(PropertyName = "id")]
 		public string Id
@@ -31,6 +31,12 @@ namespace BTCPayServer.Models
 		}
 		[JsonProperty(PropertyName = "label")]
 		public string Label
+		{
+			get; set;
+		}
+
+		[JsonProperty(PropertyName = "pairingCode")]
+		public string PairingCode
 		{
 			get; set;
 		}

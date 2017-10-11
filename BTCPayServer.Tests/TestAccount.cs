@@ -26,10 +26,45 @@ namespace BTCPayServer.Tests
 		{
 			GrantAccessAsync().GetAwaiter().GetResult();
 		}
+
+		public void Register()
+		{
+			RegisterAsync().GetAwaiter().GetResult();
+		}
+
+		public BitcoinExtKey ExtKey
+		{
+			get; set;
+		}
+
 		public async Task GrantAccessAsync()
 		{
-			var extKey = new ExtKey().GetWif(parent.Network);
+			await RegisterAsync();
+			var store = await CreateStoreAsync();
 			var pairingCode = BitPay.RequestClientAuthorization("test", Facade.Merchant);
+			Assert.IsType<ViewResult>(await store.RequestPairing(pairingCode.ToString()));
+			await store.Pair(pairingCode.ToString(), StoreId);
+		}
+		public StoresController CreateStore()
+		{
+			return CreateStoreAsync().GetAwaiter().GetResult();
+		}
+		public async Task<StoresController> CreateStoreAsync()
+		{
+			ExtKey = new ExtKey().GetWif(parent.Network);
+			var store = parent.PayTester.GetController<StoresController>(UserId);
+			await store.CreateStore(new CreateStoreViewModel() { Name = "Test Store" });
+			StoreId = store.CreatedStoreId;
+			await store.UpdateStore(StoreId, new StoreViewModel()
+			{
+				DerivationScheme = ExtKey.Neuter().ToString() + "-[legacy]",
+				SpeedPolicy = SpeedPolicy.MediumSpeed
+			}, "Save");
+			return store;
+		}
+
+		private async Task RegisterAsync()
+		{
 			var account = parent.PayTester.GetController<AccountController>();
 			await account.Register(new RegisterViewModel()
 			{
@@ -38,18 +73,6 @@ namespace BTCPayServer.Tests
 				Password = "Kitten0@",
 			});
 			UserId = account.RegisteredUserId;
-
-			var store = parent.PayTester.GetController<StoresController>(account.RegisteredUserId);
-			await store.CreateStore(new CreateStoreViewModel() { Name = "Test Store" });
-			StoreId = store.CreatedStoreId;
-
-			await store.UpdateStore(StoreId, new StoreViewModel()
-			{
-				DerivationScheme = extKey.Neuter().ToString() + "-[legacy]",
-				SpeedPolicy = SpeedPolicy.MediumSpeed
-			}, "Save");
-			Assert.IsType<ViewResult>(await store.RequestPairing(pairingCode.ToString()));
-			await store.Pair(pairingCode.ToString(), StoreId);
 		}
 
 		public Bitpay BitPay

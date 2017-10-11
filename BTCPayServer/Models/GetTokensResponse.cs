@@ -39,7 +39,7 @@ namespace BTCPayServer.Models
 			{
 				JObject item = new JObject();
 				jarray.Add(item);
-				JProperty jProp = new JProperty(token.Name);
+				JProperty jProp = new JProperty(token.Facade);
 				item.Add(jProp);
 				jProp.Value = token.Value;
 			}

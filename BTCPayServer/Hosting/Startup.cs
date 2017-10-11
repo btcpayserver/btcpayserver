@@ -61,15 +61,13 @@ namespace BTCPayServer.Hosting
 		}
 		public void ConfigureServices(IServiceCollection services)
 		{
-			// Big hack, tests fails because Hangfire fail at initializing at the second test run
-
-
 			services.ConfigureBTCPayServer(Configuration);
 
 			services.AddIdentity<ApplicationUser, IdentityRole>()
 				.AddEntityFrameworkStores<ApplicationDbContext>()
 				.AddDefaultTokenProviders();
 
+			// Big hack, tests fails because Hangfire fail at initializing at the second test run
 			AddHangfireFix(services);
 			services.AddBTCPayServer();
 			services.AddMvc();

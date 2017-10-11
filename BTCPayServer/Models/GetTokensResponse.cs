@@ -45,7 +45,7 @@ namespace BTCPayServer.Models
 			}
 			context.HttpContext.Response.Headers.Add("Content-Type", new Microsoft.Extensions.Primitives.StringValues("application/json"));
 			var str = JsonConvert.SerializeObject(jobj);
-			using(var writer = new StreamWriter(context.HttpContext.Response.Body, Encoding.UTF8, 1024 * 10, true))
+			using(var writer = new StreamWriter(context.HttpContext.Response.Body, new UTF8Encoding(false), 1024 * 10, true))
 			{
 				await writer.WriteLineAsync(str);
 			}

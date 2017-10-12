@@ -14,6 +14,7 @@ using System.Net;
 using System.Collections.Generic;
 using System.Collections;
 using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.Extensions.Logging;
 using System.Threading;
 
 namespace BTCPayServer
@@ -40,13 +41,11 @@ namespace BTCPayServer
 					.UseIISIntegration()
 					.UseContentRoot(Directory.GetCurrentDirectory())
 					.UseConfiguration(conf)
-					.ConfigureServices(services =>
+					.UseApplicationInsights()
+					.ConfigureLogging(l =>
 					{
-						services.AddLogging(l =>
-						{
-							l.AddFilter("Microsoft", LogLevel.Error);
-							l.AddProvider(new CustomConsoleLogProvider());
-						});
+						l.AddFilter("Microsoft", LogLevel.Error);
+						l.AddProvider(new CustomConsoleLogProvider());
 					})
 					.UseStartup<Startup>()
 					.Build();

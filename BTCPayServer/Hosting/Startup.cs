@@ -34,6 +34,7 @@ using Hangfire.Annotations;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Threading;
 using Microsoft.Extensions.Options;
+using Microsoft.ApplicationInsights.AspNetCore.Extensions;
 
 namespace BTCPayServer.Hosting
 {
@@ -51,11 +52,12 @@ namespace BTCPayServer.Hosting
 				return context.GetHttpContext().User.IsInRole(_Role);
 			}
 		}
-		public Startup(IConfiguration conf)
+		public Startup(IConfiguration conf, IHostingEnvironment env)
 		{
 			Configuration = conf;
+			_Env = env;
 		}
-
+		IHostingEnvironment _Env;
 		public IConfiguration Configuration
 		{
 			get; set;
@@ -99,12 +101,19 @@ namespace BTCPayServer.Hosting
 			   }
 			   configuration(config);
 		   }));
+
 			services.AddHangfire(configuration);
+
+			services.Configure<IOptions<ApplicationInsightsServiceOptions>>(o =>
+			{
+				o.Value.DeveloperMode = _Env.IsDevelopment();
+			});
 		}
 
 		public void Configure(
 			IApplicationBuilder app,
 			IHostingEnvironment env,
+			IServiceProvider prov,
 			ILoggerFactory loggerFactory)
 		{
 			if(env.IsDevelopment())
@@ -115,6 +124,10 @@ namespace BTCPayServer.Hosting
 
 
 			Logs.Configure(loggerFactory);
+
+			//App insight do not that by itself...
+			loggerFactory.AddApplicationInsights(prov, LogLevel.Information);
+
 			app.UsePayServer();
 			app.UseStaticFiles();
 			app.UseAuthentication();

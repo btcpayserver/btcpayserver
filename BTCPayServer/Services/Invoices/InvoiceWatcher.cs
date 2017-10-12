@@ -36,9 +36,23 @@ namespace BTCPayServer.Servcices.Invoices
 			_NotificationManager = notificationManager ?? throw new ArgumentNullException(nameof(notificationManager));
 		}
 
-		private async Task StartWatchInvoice(string invoiceId)
+		public async Task NotifyReceived(Script scriptPubKey)
 		{
-			Logs.PayServer.LogInformation("Watching invoice " + invoiceId);
+			var invoice = await _Wallet.GetInvoiceId(scriptPubKey);
+			_WatchRequests.Add(invoice);
+		}
+
+		public async Task NotifyBlock()
+		{
+			foreach(var invoice in await _InvoiceRepository.GetPendingInvoices())
+			{
+				_WatchRequests.Add(invoice);
+			}
+		}
+
+		private async Task UpdateInvoice(string invoiceId)
+		{
+			Logs.PayServer.LogInformation("Updating invoice " + invoiceId);
 			UTXOChanges changes = null;
 			while(true)
 			{
@@ -53,7 +67,8 @@ namespace BTCPayServer.Servcices.Invoices
 					if(result.NeedSave)
 						await _InvoiceRepository.UpdateInvoiceStatus(invoice.Id, invoice.Status, invoice.ExceptionStatus).ConfigureAwait(false);
 
-					if(stateBefore != invoice.Status)
+					var changed = stateBefore != invoice.Status;
+					if(changed)
 					{
 						Logs.PayServer.LogInformation($"Invoice {invoice.Id}: {stateBefore} => {invoice.Status}");
 					}
@@ -64,6 +79,9 @@ namespace BTCPayServer.Servcices.Invoices
 						Logs.PayServer.LogInformation("Stopped watching invoice " + invoiceId);
 						break;
 					}
+
+					if(!changed || _Cts.Token.IsCancellationRequested)
+						break;
 				}
 				catch(OperationCanceledException) when(_Cts.Token.IsCancellationRequested)
 				{
@@ -96,7 +114,7 @@ namespace BTCPayServer.Servcices.Invoices
 			if(invoice.Status == "new" || invoice.Status == "paidPartial")
 			{
 				var strategy = _DerivationFactory.Parse(invoice.DerivationStrategy);
-				changes = await _ExplorerClient.SyncAsync(strategy, changes, false, _Cts.Token).ConfigureAwait(false);
+				changes = await _ExplorerClient.SyncAsync(strategy, changes, true, _Cts.Token).ConfigureAwait(false);
 
 				var utxos = changes.Confirmed.UTXOs.Concat(changes.Unconfirmed.UTXOs).ToArray();
 				var invoiceIds = utxos.Select(u => _Wallet.GetInvoiceId(u.Output.ScriptPubKey)).ToArray();
@@ -232,34 +250,39 @@ namespace BTCPayServer.Servcices.Invoices
 		Thread _Thread;
 		TaskCompletionSource<bool> _RunningTask;
 		CancellationTokenSource _Cts;
+		Timer _UpdatePendingInvoices;
+
 		public Task StartAsync(CancellationToken cancellationToken)
 		{
-			foreach(var pending in _InvoiceRepository.GetPendingInvoices())
-			{
-				_WatchRequests.Add(pending);
-			}
 			_RunningTask = new TaskCompletionSource<bool>();
 			_Cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 			_Thread = new Thread(Run) { Name = "InvoiceWatcher" };
 			_Thread.Start();
+			_UpdatePendingInvoices = new Timer(async s =>
+			{
+				foreach(var pending in await _InvoiceRepository.GetPendingInvoices())
+				{
+					_WatchRequests.Add(pending);
+				}
+			}, null, 0, (int)TimeSpan.FromMinutes(1.0).TotalMilliseconds);
 			return Task.CompletedTask;
 		}
 
 		void Run()
 		{
 			Logs.PayServer.LogInformation("Start watching invoices");
-			List<Task> watching = new List<Task>();
+			ConcurrentDictionary<string, Lazy<Task>> updating = new ConcurrentDictionary<string, Lazy<Task>>();
 			try
 			{
 				foreach(var item in _WatchRequests.GetConsumingEnumerable(_Cts.Token))
 				{
-					watching.Add(StartWatchInvoice(item));
-					foreach(var task in watching.ToList())
+					var localItem = item;
+
+					// If the invoice is already updating, ignore
+					Lazy<Task> updateInvoice =new Lazy<Task>(() => UpdateInvoice(localItem), false);
+					if(updating.TryAdd(item, updateInvoice))
 					{
-						if(task.Status != TaskStatus.Running)
-						{
-							watching.Remove(task);
-						}
+						updateInvoice.Value.ContinueWith(i => updating.TryRemove(item, out updateInvoice));
 					}
 				}
 			}
@@ -267,7 +290,7 @@ namespace BTCPayServer.Servcices.Invoices
 			{
 				try
 				{
-					Task.WaitAll(watching.ToArray());
+					Task.WaitAll(updating.Select(c => c.Value.Value).ToArray());
 				}
 				catch(AggregateException) { }
 				_RunningTask.TrySetResult(true);
@@ -287,6 +310,7 @@ namespace BTCPayServer.Servcices.Invoices
 
 		public Task StopAsync(CancellationToken cancellationToken)
 		{
+			_UpdatePendingInvoices.Dispose();
 			_Cts.Cancel();
 			return Task.WhenAny(_RunningTask.Task, Task.Delay(-1, cancellationToken));
 		}

@@ -56,38 +56,31 @@ namespace BTCPayServer.Servcices.Invoices
 
 
 
-		public Task AddPendingInvoice(string invoiceId)
+		public async Task AddPendingInvoice(string invoiceId)
 		{
-			using(var tx = _Engine.GetTransaction())
+			using(var ctx = _ContextFactory.CreateContext())
 			{
-				tx.Insert<string, byte[]>("T-Pending", invoiceId, new byte[0]);
-				tx.Commit();
+				ctx.PendingInvoices.Add(new PendingInvoiceData() { Id = invoiceId });
+				await ctx.SaveChangesAsync();
 			}
-			return Task.FromResult(true);
 		}
 
-		public Task RemovePendingInvoice(string invoiceId)
+		public async Task RemovePendingInvoice(string invoiceId)
 		{
-			using(var tx = _Engine.GetTransaction())
+			using(var ctx = _ContextFactory.CreateContext())
 			{
-				tx.RemoveKey("T-Pending", invoiceId);
-				tx.Commit();
+				ctx.PendingInvoices.Remove(new PendingInvoiceData() { Id = invoiceId });
+				await ctx.SaveChangesAsync();
 			}
-			return Task.FromResult(true);
 		}
 
 
-		public string[] GetPendingInvoices()
+		public async Task<string[]> GetPendingInvoices()
 		{
-			List<string> pending = new List<string>();
-			using(var tx = _Engine.GetTransaction())
+			using(var ctx = _ContextFactory.CreateContext())
 			{
-				foreach(var row in tx.SelectForward<string, byte[]>("T-Pending"))
-				{
-					pending.Add(row.Key);
-				}
+				return await ctx.PendingInvoices.Select(p => p.Id).ToArrayAsync();
 			}
-			return pending.ToArray();
 		}
 
 		public async Task UpdateInvoice(string invoiceId, UpdateCustomerModel data)

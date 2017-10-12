@@ -99,6 +99,7 @@ namespace BTCPayServer.Tests
 
 				Eventually(() =>
 				{
+					tester.SimulateCallback(url.Address);
 					var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
 					Assert.Equal("paid", localInvoice.Status);
 					Assert.True(localInvoice.Refundable);
@@ -153,6 +154,8 @@ namespace BTCPayServer.Tests
 					});
 					BitcoinUrlBuilder url = new BitcoinUrlBuilder(invoice.PaymentUrls.BIP21);
 					tester.ExplorerNode.SendToAddress(url.Address, url.Amount);
+					Thread.Sleep(5000);
+					tester.SimulateCallback(url.Address);
 					callbackServer.ProcessNextRequest((ctx) =>
 					{
 						var ipn = new StreamReader(ctx.Request.Body).ReadToEnd();
@@ -228,6 +231,7 @@ namespace BTCPayServer.Tests
 
 				Eventually(() =>
 				{
+					tester.SimulateCallback(invoiceAddress);
 					var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
 					Assert.Equal("paidPartial", localInvoice.Status);
 					Assert.Equal(firstPayment, localInvoice.BtcPaid);
@@ -240,6 +244,7 @@ namespace BTCPayServer.Tests
 
 				Eventually(() =>
 				{
+					tester.SimulateCallback(invoiceAddress);
 					var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
 					Assert.Equal("paid", localInvoice.Status);
 					Assert.Equal(firstPayment + secondPayment, localInvoice.BtcPaid);
@@ -251,6 +256,7 @@ namespace BTCPayServer.Tests
 
 				Eventually(() =>
 				{
+					tester.SimulateCallback();
 					var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
 					Assert.Equal("confirmed", localInvoice.Status);
 				});
@@ -259,6 +265,7 @@ namespace BTCPayServer.Tests
 
 				Eventually(() =>
 				{
+					tester.SimulateCallback();
 					var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
 					Assert.Equal("complete", localInvoice.Status);
 				});
@@ -280,6 +287,7 @@ namespace BTCPayServer.Tests
 
 				Eventually(() =>
 				{
+					tester.SimulateCallback(invoiceAddress);
 					var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
 					Assert.Equal("paidOver", localInvoice.Status);
 					Assert.Equal(Money.Zero, localInvoice.BtcDue);
@@ -290,6 +298,7 @@ namespace BTCPayServer.Tests
 
 				Eventually(() =>
 				{
+					tester.SimulateCallback();
 					var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
 					Assert.Equal("confirmed", localInvoice.Status);
 					Assert.Equal(Money.Zero, localInvoice.BtcDue);

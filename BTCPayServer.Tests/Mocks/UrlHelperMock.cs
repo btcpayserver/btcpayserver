@@ -8,16 +8,21 @@ namespace BTCPayServer.Tests.Mocks
 {
 	public class UrlHelperMock : IUrlHelper
 	{
+		Uri _BaseUrl;
+		public UrlHelperMock(Uri baseUrl)
+		{
+			_BaseUrl = baseUrl;
+		}
 		public ActionContext ActionContext => throw new NotImplementedException();
 
 		public string Action(UrlActionContext actionContext)
 		{
-			return "http://127.0.0.1/mock";
+			return $"{_BaseUrl}mock";
 		}
 
 		public string Content(string contentPath)
 		{
-			return "http://127.0.0.1/mock";
+			return $"{_BaseUrl}{contentPath}";
 		}
 
 		public bool IsLocalUrl(string url)
@@ -27,12 +32,12 @@ namespace BTCPayServer.Tests.Mocks
 
 		public string Link(string routeName, object values)
 		{
-			return "http://127.0.0.1/mock";
+			return _BaseUrl.AbsoluteUri;
 		}
 
 		public string RouteUrl(UrlRouteContext routeContext)
 		{
-			return "http://127.0.0.1/mock";
+			return _BaseUrl.AbsoluteUri;
 		}
 	}
 }

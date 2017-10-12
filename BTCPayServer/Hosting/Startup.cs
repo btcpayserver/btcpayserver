@@ -33,6 +33,7 @@ using Hangfire.Dashboard;
 using Hangfire.Annotations;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Threading;
+using Microsoft.Extensions.Options;
 
 namespace BTCPayServer.Hosting
 {
@@ -59,6 +60,7 @@ namespace BTCPayServer.Hosting
 		{
 			get; set;
 		}
+		
 		public void ConfigureServices(IServiceCollection services)
 		{
 			services.ConfigureBTCPayServer(Configuration);

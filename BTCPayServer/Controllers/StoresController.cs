@@ -26,6 +26,7 @@ namespace BTCPayServer.Controllers
 		public StoresController(
 			StoreRepository repo,
 			TokenRepository tokenRepo,
+			CallbackController callbackController,
 			UserManager<ApplicationUser> userManager,
 			AccessTokenController tokenController,
 			BTCPayWallet wallet,
@@ -39,8 +40,10 @@ namespace BTCPayServer.Controllers
 			_Wallet = wallet;
 			_Env = env;
 			_Network = network;
+			_CallbackController = callbackController;
 		}
 		Network _Network;
+		CallbackController _CallbackController;
 		BTCPayWallet _Wallet;
 		AccessTokenController _TokenController;
 		StoreRepository _Repo;
@@ -86,7 +89,7 @@ namespace BTCPayServer.Controllers
 			StoresViewModel result = new StoresViewModel();
 			result.StatusMessage = StatusMessage;
 			var stores = await _Repo.GetStoresByUserId(GetUserId());
-			var balances = stores.Select(async s => string.IsNullOrEmpty(s.DerivationStrategy) ? Money.Zero : await _Wallet.GetBalance(s.DerivationStrategy)).ToArray();
+			var balances = stores.Select(async s => string.IsNullOrEmpty(s.DerivationStrategy) ? Money.Zero : await _Wallet.GetBalance(ParseDerivationStrategy(s.DerivationStrategy))).ToArray();
 
 			for(int i = 0; i < stores.Length; i++)
 			{
@@ -156,7 +159,9 @@ namespace BTCPayServer.Controllers
 					needUpdate = true;
 					try
 					{
-						await _Wallet.TrackAsync(model.DerivationScheme);
+						var strategy = ParseDerivationStrategy(model.DerivationScheme);
+						await _Wallet.TrackAsync(strategy);
+						await _CallbackController.RegisterCallbackUriAsync(strategy, Request);
 						store.DerivationStrategy = model.DerivationScheme;
 					}
 					catch
@@ -190,6 +195,11 @@ namespace BTCPayServer.Controllers
 				}
 				return View(model);
 			}
+		}
+
+		private DerivationStrategyBase ParseDerivationStrategy(string derivationScheme)
+		{
+			return new DerivationStrategyFactory(_Network).Parse(derivationScheme);
 		}
 
 		[HttpGet]

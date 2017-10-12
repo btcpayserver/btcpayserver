@@ -64,16 +64,20 @@ namespace BTCPayServer.Tests
 		}
 
 		IWebHost _Host;
+		public int Port
+		{
+			get; set;
+		}
+
 		public void Start()
 		{
 			if(!Directory.Exists(_Directory))
 				Directory.CreateDirectory(_Directory);
 
 			HDPrivateKey = new ExtKey();
-			var port = Utils.FreeTcpPort();
 			StringBuilder config = new StringBuilder();
 			config.AppendLine($"regtest=1");
-			config.AppendLine($"port={port}");
+			config.AppendLine($"port={Port}");
 			config.AppendLine($"explorer.url={NBXplorerUri.AbsoluteUri}");
 			config.AppendLine($"explorer.cookiefile={CookieFile}");
 			config.AppendLine($"hdpubkey={HDPrivateKey.Neuter().ToString(Network.RegTest)}");
@@ -81,7 +85,7 @@ namespace BTCPayServer.Tests
 				config.AppendLine($"postgres=" + Postgres);
 			File.WriteAllText(Path.Combine(_Directory, "settings.config"), config.ToString());
 
-			ServerUri = new Uri("http://127.0.0.1:" + port + "/");
+			ServerUri = new Uri("http://" + HostName + ":" + Port + "/");
 
 			var conf = new DefaultConfiguration() { Logger = Logs.LogProvider.CreateLogger("Console") }.CreateConfiguration(new[] { "--datadir", _Directory });
 
@@ -94,6 +98,7 @@ namespace BTCPayServer.Tests
 						{
 							l.SetMinimumLevel(LogLevel.Information)
 							.AddFilter("Microsoft", LogLevel.Error)
+							.AddFilter("Hangfire", LogLevel.Error)
 							.AddProvider(Logs.LogProvider);
 						});
 					})
@@ -109,6 +114,11 @@ namespace BTCPayServer.Tests
 		public BTCPayServerRuntime Runtime
 		{
 			get; set;
+		}
+		public string HostName
+		{
+			get;
+			internal set;
 		}
 
 		public T GetController<T>(string userId = null) where T : Controller
@@ -129,7 +139,8 @@ namespace BTCPayServer.Tests
 			httpAccessor.HttpContext = context;
 
 			var controller = (T)ActivatorUtilities.CreateInstance(provider, typeof(T));
-			controller.Url = new UrlHelperMock();
+
+			controller.Url = new UrlHelperMock(new Uri($"http://{HostName}:{Port}/"));
 			controller.ControllerContext = new ControllerContext()
 			{
 				HttpContext = context

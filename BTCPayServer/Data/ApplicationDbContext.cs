@@ -26,6 +26,10 @@ namespace BTCPayServer.Data
 			get; set;
 		}
 
+		public DbSet<PendingInvoiceData> PendingInvoices
+		{
+			get; set;
+		}
 		public DbSet<RefundAddressesData> RefundAddresses
 		{
 			get; set;

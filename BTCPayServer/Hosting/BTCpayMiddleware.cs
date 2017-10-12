@@ -21,6 +21,7 @@ using BTCPayServer.Configuration;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Http.Extensions;
+using BTCPayServer.Controllers;
 
 namespace BTCPayServer.Hosting
 {
@@ -28,14 +29,27 @@ namespace BTCPayServer.Hosting
 	{
 		TokenRepository _TokenRepository;
 		RequestDelegate _Next;
-		public BTCPayMiddleware(RequestDelegate next, TokenRepository tokenRepo)
+		CallbackController _CallbackController;
+		public BTCPayMiddleware(RequestDelegate next, 
+			TokenRepository tokenRepo, 
+			CallbackController callbackController)
 		{
 			_TokenRepository = tokenRepo ?? throw new ArgumentNullException(nameof(tokenRepo));
 			_Next = next ?? throw new ArgumentNullException(nameof(next));
+			_CallbackController = callbackController;
 		}
 
+
+		bool _Registered;
 		public async Task Invoke(HttpContext httpContext)
 		{
+			if(!_Registered)
+			{
+				var callback = await _CallbackController.RegisterCallbackBlockUriAsync(httpContext.Request);
+				Logs.PayServer.LogInformation($"Registering block callback to " + callback);
+				_Registered = true;
+			}
+
 			httpContext.Request.Headers.TryGetValue("x-signature", out StringValues values);
 			var sig = values.FirstOrDefault();
 			httpContext.Request.Headers.TryGetValue("x-identity", out values);

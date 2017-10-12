@@ -36,6 +36,7 @@ using BTCPayServer.Validations;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.Routing;
+using NBXplorer.DerivationStrategy;
 
 namespace BTCPayServer.Controllers
 {
@@ -98,13 +99,18 @@ namespace BTCPayServer.Controllers
 			entity.TxFee = (await _FeeProvider.GetFeeRateAsync()).GetFee(100); // assume price for 100 bytes
 			entity.Rate = (double)await _RateProvider.GetRateAsync(invoice.Currency);
 			entity.PosData = invoice.PosData;
-			entity.DepositAddress = await _Wallet.ReserveAddressAsync(derivationStrategy);
+			entity.DepositAddress = await _Wallet.ReserveAddressAsync(ParseDerivationStrategy(derivationStrategy));
 
 			entity = await _InvoiceRepository.CreateInvoiceAsync(store.Id, entity);
 			await _Wallet.MapAsync(entity.DepositAddress.ScriptPubKey, entity.Id);
 			await _Watcher.WatchAsync(entity.Id);
 			var resp = entity.EntityToDTO();
 			return new DataWrapper<InvoiceResponse>(resp) { Facade = "pos/invoice" };
+		}
+
+		private DerivationStrategyBase ParseDerivationStrategy(string derivationStrategy)
+		{
+			return new DerivationStrategyFactory(_Network).Parse(derivationStrategy);
 		}
 
 		private TDest Map<TFrom, TDest>(TFrom data)

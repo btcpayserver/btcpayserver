@@ -14,7 +14,6 @@ namespace BTCPayServer.Services.Wallets
 	{
 		private ExplorerClient _Client;
 		private Serializer _Serializer;
-		private DerivationStrategyFactory _DerivationStrategyFactory;
 		ApplicationDbContextFactory _DBFactory;
 
 		public BTCPayWallet(ExplorerClient client, ApplicationDbContextFactory factory)
@@ -26,19 +25,18 @@ namespace BTCPayServer.Services.Wallets
 			_Client = client;
 			_DBFactory = factory;
 			_Serializer = new NBXplorer.Serializer(_Client.Network);
-			_DerivationStrategyFactory = new DerivationStrategyFactory(_Client.Network);
 		}
 
 
-		public async Task<BitcoinAddress> ReserveAddressAsync(string walletIdentifier)
+		public async Task<BitcoinAddress> ReserveAddressAsync(DerivationStrategyBase derivationStrategy)
 		{
-			var pathInfo = await _Client.GetUnusedAsync(_DerivationStrategyFactory.Parse(walletIdentifier), DerivationFeature.Deposit, 0, true).ConfigureAwait(false);
-			return pathInfo.ScriptPubKey.GetDestinationAddress(_DerivationStrategyFactory.Network);
+			var pathInfo = await _Client.GetUnusedAsync(derivationStrategy, DerivationFeature.Deposit, 0, true).ConfigureAwait(false);
+			return pathInfo.ScriptPubKey.GetDestinationAddress(_Client.Network);
 		}
 
-		public Task TrackAsync(string walletIdentifier)
+		public async Task TrackAsync(DerivationStrategyBase derivationStrategy)
 		{
-			return _Client.TrackAsync(_DerivationStrategyFactory.Parse(walletIdentifier));
+			await _Client.TrackAsync(derivationStrategy);
 		}
 
 		public async Task<string> GetInvoiceId(Script scriptPubKey)
@@ -74,9 +72,9 @@ namespace BTCPayServer.Services.Wallets
 			return Task.WhenAll(tasks);
 		}
 
-		public async Task<Money> GetBalance(string derivationStrategy)
+		public async Task<Money> GetBalance(DerivationStrategyBase derivationStrategy)
 		{
-			var result = await _Client.SyncAsync(_DerivationStrategyFactory.Parse(derivationStrategy), null, true);
+			var result = await _Client.SyncAsync(derivationStrategy, null, true);
 			return result.Confirmed.UTXOs.Select(u => u.Output.Value)
 						 .Concat(result.Unconfirmed.UTXOs.Select(u => u.Output.Value))
 						 .Sum();

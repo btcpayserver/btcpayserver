@@ -47,7 +47,7 @@ namespace BTCPayServer.Models
 			var str = JsonConvert.SerializeObject(jobj);
 			using(var writer = new StreamWriter(context.HttpContext.Response.Body, new UTF8Encoding(false), 1024 * 10, true))
 			{
-				await writer.WriteLineAsync(str);
+				await writer.WriteAsync(str);
 			}
 		}
 	}

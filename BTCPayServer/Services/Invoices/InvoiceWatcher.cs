@@ -24,16 +24,23 @@ namespace BTCPayServer.Servcices.Invoices
 		InvoiceNotificationManager _NotificationManager;
 		BTCPayWallet _Wallet;
 
-		public InvoiceWatcher(ExplorerClient explorerClient, 
+		public InvoiceWatcher(ExplorerClient explorerClient,
 			InvoiceRepository invoiceRepository,
 			BTCPayWallet wallet,
 			InvoiceNotificationManager notificationManager)
 		{
+			LongPollingMode = explorerClient.Network == Network.RegTest;
+			PollInterval = explorerClient.Network == Network.RegTest ? TimeSpan.FromSeconds(10.0) : TimeSpan.FromMinutes(1.0);
 			_Wallet = wallet ?? throw new ArgumentNullException(nameof(wallet));
 			_ExplorerClient = explorerClient ?? throw new ArgumentNullException(nameof(explorerClient));
 			_DerivationFactory = new DerivationStrategyFactory(_ExplorerClient.Network);
 			_InvoiceRepository = invoiceRepository ?? throw new ArgumentNullException(nameof(invoiceRepository));
 			_NotificationManager = notificationManager ?? throw new ArgumentNullException(nameof(notificationManager));
+		}
+
+		public bool LongPollingMode
+		{
+			get; set;
 		}
 
 		public async Task NotifyReceived(Script scriptPubKey)
@@ -52,7 +59,6 @@ namespace BTCPayServer.Servcices.Invoices
 
 		private async Task UpdateInvoice(string invoiceId)
 		{
-			Logs.PayServer.LogInformation("Updating invoice " + invoiceId);
 			UTXOChanges changes = null;
 			while(true)
 			{
@@ -75,8 +81,8 @@ namespace BTCPayServer.Servcices.Invoices
 
 					if(invoice.Status == "complete" || invoice.Status == "invalid")
 					{
-						await _InvoiceRepository.RemovePendingInvoice(invoice.Id).ConfigureAwait(false);
-						Logs.PayServer.LogInformation("Stopped watching invoice " + invoiceId);
+						if(await _InvoiceRepository.RemovePendingInvoice(invoice.Id).ConfigureAwait(false))
+							Logs.PayServer.LogInformation("Stopped watching invoice " + invoiceId);
 						break;
 					}
 
@@ -97,33 +103,26 @@ namespace BTCPayServer.Servcices.Invoices
 
 
 		private async Task<(bool NeedSave, UTXOChanges Changes)> UpdateInvoice(UTXOChanges changes, InvoiceEntity invoice)
-		{			
-			if(invoice.Status == "invalid")
-			{
-				return (false, changes);
-			}
+		{
 			bool needSave = false;
-			bool shouldWait = true;
 
-			if(invoice.ExpirationTime < DateTimeOffset.UtcNow && (invoice.Status == "new" || invoice.Status == "paidPartial"))
+			if(invoice.Status != "invalid" && invoice.ExpirationTime < DateTimeOffset.UtcNow && (invoice.Status == "new" || invoice.Status == "paidPartial"))
 			{
 				needSave = true;
 				invoice.Status = "invalid";
 			}
 
-			if(invoice.Status == "new" || invoice.Status == "paidPartial")
+			if(invoice.Status == "invalid" || invoice.Status == "new" || invoice.Status == "paidPartial")
 			{
 				var strategy = _DerivationFactory.Parse(invoice.DerivationStrategy);
-				changes = await _ExplorerClient.SyncAsync(strategy, changes, true, _Cts.Token).ConfigureAwait(false);
+				changes = await _ExplorerClient.SyncAsync(strategy, changes, !LongPollingMode, _Cts.Token).ConfigureAwait(false);
 
 				var utxos = changes.Confirmed.UTXOs.Concat(changes.Unconfirmed.UTXOs).ToArray();
 				var invoiceIds = utxos.Select(u => _Wallet.GetInvoiceId(u.Output.ScriptPubKey)).ToArray();
 				utxos =
 					utxos
-					.Where((u,i) => invoiceIds[i].GetAwaiter().GetResult() == invoice.Id)
+					.Where((u, i) => invoiceIds[i].GetAwaiter().GetResult() == invoice.Id)
 					.ToArray();
-
-				shouldWait = false; //should not wait, Sync is blocking call
 
 				List<Coin> receivedCoins = new List<Coin>();
 				foreach(var received in utxos)
@@ -218,24 +217,31 @@ namespace BTCPayServer.Servcices.Invoices
 				}
 			}
 
-			shouldWait = shouldWait && !needSave;
-
-			if(shouldWait)
-			{
-				await Task.Delay(PollInterval, _Cts.Token).ConfigureAwait(false);
-			}
-
 			return (needSave, changes);
 		}
 
+
+		TimeSpan _PollInterval;
 		public TimeSpan PollInterval
 		{
-			get; set;
-		} = TimeSpan.FromSeconds(10);
+			get
+			{
+				return _PollInterval;
+			}
+			set
+			{
+				_PollInterval = value;
+				if(_UpdatePendingInvoices != null)
+				{
+					_UpdatePendingInvoices.Change(0, (int)value.TotalMilliseconds);
+				}
+			}
+		}
 
-		public async Task WatchAsync(string invoiceId)
+		public async Task WatchAsync(string invoiceId, bool singleShot = false)
 		{
-			await _InvoiceRepository.AddPendingInvoice(invoiceId).ConfigureAwait(false);
+			if(!singleShot)
+				await _InvoiceRepository.AddPendingInvoice(invoiceId).ConfigureAwait(false);
 			_WatchRequests.Add(invoiceId);
 		}
 
@@ -264,7 +270,7 @@ namespace BTCPayServer.Servcices.Invoices
 				{
 					_WatchRequests.Add(pending);
 				}
-			}, null, 0, (int)TimeSpan.FromMinutes(1.0).TotalMilliseconds);
+			}, null, 0, (int)PollInterval.TotalMilliseconds);
 			return Task.CompletedTask;
 		}
 
@@ -279,7 +285,7 @@ namespace BTCPayServer.Servcices.Invoices
 					var localItem = item;
 
 					// If the invoice is already updating, ignore
-					Lazy<Task> updateInvoice =new Lazy<Task>(() => UpdateInvoice(localItem), false);
+					Lazy<Task> updateInvoice = new Lazy<Task>(() => UpdateInvoice(localItem), false);
 					if(updating.TryAdd(item, updateInvoice))
 					{
 						updateInvoice.Value.ContinueWith(i => updating.TryRemove(item, out updateInvoice));

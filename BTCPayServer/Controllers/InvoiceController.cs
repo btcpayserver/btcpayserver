@@ -37,6 +37,7 @@ using BTCPayServer.Validations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.Routing;
 using NBXplorer.DerivationStrategy;
+using NBXplorer;
 
 namespace BTCPayServer.Controllers
 {
@@ -51,6 +52,7 @@ namespace BTCPayServer.Controllers
 		Network _Network;
 		UserManager<ApplicationUser> _UserManager;
 		IFeeProvider _FeeProvider;
+		ExplorerClient _Explorer;
 
 		public InvoiceController(
 			Network network,
@@ -61,8 +63,10 @@ namespace BTCPayServer.Controllers
 			IRateProvider rateProvider,
 			StoreRepository storeRepository,
 			InvoiceWatcher watcher,
+			ExplorerClient explorerClient,
 			IFeeProvider feeProvider)
 		{
+			_Explorer = explorerClient ?? throw new ArgumentNullException(nameof(explorerClient));
 			_StoreRepository = storeRepository ?? throw new ArgumentNullException(nameof(storeRepository));
 			_Network = network ?? throw new ArgumentNullException(nameof(network));
 			_TokenRepository = tokenRepository ?? throw new ArgumentNullException(nameof(tokenRepository));

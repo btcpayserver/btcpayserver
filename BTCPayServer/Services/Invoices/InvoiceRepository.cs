@@ -65,12 +65,17 @@ namespace BTCPayServer.Servcices.Invoices
 			}
 		}
 
-		public async Task RemovePendingInvoice(string invoiceId)
+		public async Task<bool> RemovePendingInvoice(string invoiceId)
 		{
 			using(var ctx = _ContextFactory.CreateContext())
 			{
 				ctx.PendingInvoices.Remove(new PendingInvoiceData() { Id = invoiceId });
-				await ctx.SaveChangesAsync();
+				try
+				{
+					await ctx.SaveChangesAsync();
+					return true;
+				}
+				catch(DbUpdateException) { return false; }
 			}
 		}
 
@@ -207,11 +212,15 @@ namespace BTCPayServer.Servcices.Invoices
 		{
 			using(var context = _ContextFactory.CreateContext())
 			{
-
 				IQueryable<InvoiceData> query = context
 					.Invoices
 					.Include(o => o.Payments)
 					.Include(o => o.RefundAddresses);
+
+				if(!string.IsNullOrEmpty(queryObject.InvoiceId))
+				{
+					query = query.Where(i => i.Id == queryObject.InvoiceId);
+				}
 
 				if(!string.IsNullOrEmpty(queryObject.StoreId))
 				{
@@ -379,6 +388,11 @@ namespace BTCPayServer.Servcices.Invoices
 		public string Status
 		{
 			get; set;
+		}
+		public string InvoiceId
+		{
+			get;
+			set;
 		}
 	}
 }

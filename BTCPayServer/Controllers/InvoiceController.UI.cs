@@ -17,8 +17,79 @@ using System.Threading.Tasks;
 
 namespace BTCPayServer.Controllers
 {
-    public partial class InvoiceController
-    {
+	public partial class InvoiceController
+	{
+
+		[HttpPost]
+		[Route("invoices/{invoiceId}")]
+		public async Task<IActionResult> Invoice(string invoiceId, string command)
+		{
+			if(command == "refresh")
+			{
+				await _Watcher.WatchAsync(invoiceId, true);
+			}
+			StatusMessage = "Invoice is state is being refreshed, please refresh the page soon...";
+			return RedirectToAction(nameof(Invoice), new
+			{
+				invoiceId = invoiceId
+			});
+		}
+
+		[HttpGet]
+		[Route("invoices/{invoiceId}")]
+		public async Task<IActionResult> Invoice(string invoiceId)
+		{
+			var invoice = (await _InvoiceRepository.GetInvoices(new InvoiceQuery()
+			{
+				UserId = GetUserId(),
+				InvoiceId = invoiceId
+			})).FirstOrDefault();
+			if(invoice == null)
+				return NotFound();
+
+			var dto = invoice.EntityToDTO();
+			var store = await _StoreRepository.FindStore(invoice.StoreId);
+			InvoiceDetailsModel model = new InvoiceDetailsModel()
+			{
+				StoreName = store.StoreName,
+				StoreLink = Url.Action(nameof(StoresController.UpdateStore), "Stores", new { storeId = store.Id }),
+				Id = invoice.Id,
+				Status = invoice.Status,
+				RefundEmail = invoice.RefundMail,
+				CreatedDate = invoice.InvoiceTime,
+				ExpirationDate = invoice.ExpirationTime,
+				OrderId = invoice.OrderId,
+				BuyerInformation = invoice.BuyerInformation,
+				Rate = invoice.Rate,
+				Fiat = dto.Price + " " + dto.Currency,
+				BTC = invoice.GetTotalCryptoDue().ToString() + " BTC",
+				BTCDue = invoice.GetCryptoDue().ToString() + " BTC",
+				BTCPaid = invoice.GetTotalPaid().ToString() + " BTC",
+				NetworkFee = invoice.GetNetworkFee().ToString() + " BTC",
+				NotificationUrl = invoice.NotificationURL,
+				ProductInformation = invoice.ProductInformation,
+				BitcoinAddress = invoice.DepositAddress,
+				PaymentUrl = dto.PaymentUrls.BIP72
+			};
+
+			var payments = invoice
+				.Payments
+				.Select(async payment =>
+				{
+					var m = new InvoiceDetailsModel.Payment();
+					m.DepositAddress = payment.Output.ScriptPubKey.GetDestinationAddress(_Network);
+					m.Confirmations = (await _Explorer.GetTransactionAsync(payment.Outpoint.Hash))?.Confirmations ?? 0;
+					m.TransactionId = payment.Outpoint.Hash.ToString();
+					m.ReceivedTime = payment.ReceivedTime;
+					m.TransactionLink = _Network == Network.Main ? $"https://www.smartbit.com.au/tx/{m.TransactionId}" : $"https://testnet.smartbit.com.au/{m.TransactionId}";
+					return m;
+				})
+				.ToArray();
+			await Task.WhenAll(payments);
+			model.Payments = payments.Select(p => p.GetAwaiter().GetResult()).ToList();
+			model.StatusMessage = StatusMessage;
+			return View(model);
+		}
 
 		[HttpGet]
 		[Route("i/{invoiceId}")]
@@ -168,14 +239,14 @@ namespace BTCPayServer.Controllers
 				FullNotifications = true,
 				BuyerEmail = model.BuyerEmail,
 			}, store);
-			
+
 			StatusMessage = $"Invoice {result.Data.Id} just created!";
 			return RedirectToAction(nameof(ListInvoices));
 		}
 
 		private async Task<SelectList> GetStores(string userId, string storeId = null)
 		{
-			return new	SelectList(await _StoreRepository.GetStoresByUserId(userId), nameof(StoreData.Id), nameof(StoreData.StoreName), storeId);
+			return new SelectList(await _StoreRepository.GetStoresByUserId(userId), nameof(StoreData.Id), nameof(StoreData.StoreName), storeId);
 		}
 
 		[HttpPost]

@@ -302,6 +302,12 @@ namespace BTCPayServer.Servcices.Invoices
 			var str = JsonConvert.SerializeObject(from);
 			JsonConvert.PopulateObject(str, dest);
 		}
+
+		public Money GetNetworkFee()
+		{
+			var item = Calculate();
+			return TxFee * item.TxCount;
+		}
 	}
 
 	public class PaymentEntity

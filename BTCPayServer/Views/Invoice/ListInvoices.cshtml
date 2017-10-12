@@ -50,7 +50,7 @@
 							<td>@invoice.InvoiceId</td>
 							<td>@invoice.Status</td>
 							<td>@invoice.AmountCurrency</td>
-							<td><a asp-action="Checkout" asp-route-invoiceId="@invoice.InvoiceId">Checkout</a></td>
+							<td><a asp-action="Checkout" asp-route-invoiceId="@invoice.InvoiceId">Checkout</a> - <a asp-action="Invoice" asp-route-invoiceId="@invoice.InvoiceId">Details</a></td>
 						</tr>
 			}
 				</tbody>

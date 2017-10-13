@@ -74,7 +74,10 @@ namespace BTCPayServer.Hosting
 			// Big hack, tests fails because Hangfire fail at initializing at the second test run
 			AddHangfireFix(services);
 			services.AddBTCPayServer();
-			services.AddMvc();
+			services.AddMvc(o =>
+			{
+				o.Filters.Add(new XFrameOptionsAttribute("DENY"));
+			});
 		}
 
 		// Big hack, tests fails if only call AddHangfire because Hangfire fail at initializing at the second test run

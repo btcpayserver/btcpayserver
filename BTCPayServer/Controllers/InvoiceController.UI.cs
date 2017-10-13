@@ -95,6 +95,7 @@ namespace BTCPayServer.Controllers
 		[Route("i/{invoiceId}")]
 		[Route("invoice")]
 		[AcceptMediaTypeConstraint("application/bitcoin-paymentrequest", false)]
+		[XFrameOptionsAttribute(null)]
 		public async Task<IActionResult> Checkout(string invoiceId, string id = null)
 		{
 			//Keep compatibility with Bitpay

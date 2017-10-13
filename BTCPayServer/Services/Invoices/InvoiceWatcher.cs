@@ -281,38 +281,42 @@ namespace BTCPayServer.Servcices.Invoices
 		{
 			Logs.PayServer.LogInformation("Start watching invoices");
 			ConcurrentDictionary<string, Lazy<Task>> updating = new ConcurrentDictionary<string, Lazy<Task>>();
-			foreach(var item in _WatchRequests.GetConsumingEnumerable(_Cts.Token))
+			try
 			{
-				try
-				{
-					_Cts.Token.ThrowIfCancellationRequested();
-					var localItem = item;
-					// If the invoice is already updating, ignore
-					Lazy<Task> updateInvoice = new Lazy<Task>(() => UpdateInvoice(localItem), false);
-					if(updating.TryAdd(item, updateInvoice))
-					{
-						updateInvoice.Value.ContinueWith(i => updating.TryRemove(item, out updateInvoice));
-					}
-				}
-				catch(OperationCanceledException) when(_Cts.Token.IsCancellationRequested)
+				foreach(var item in _WatchRequests.GetConsumingEnumerable(_Cts.Token))
 				{
 					try
 					{
-						Task.WaitAll(updating.Select(c => c.Value.Value).ToArray());
+						_Cts.Token.ThrowIfCancellationRequested();
+						var localItem = item;
+						// If the invoice is already updating, ignore
+						Lazy<Task> updateInvoice = new Lazy<Task>(() => UpdateInvoice(localItem), false);
+						if(updating.TryAdd(item, updateInvoice))
+						{
+							updateInvoice.Value.ContinueWith(i => updating.TryRemove(item, out updateInvoice));
+						}
 					}
-					catch(AggregateException) { }
-					_RunningTask.TrySetResult(true);
-					break;
-				}
-				catch(Exception ex)
-				{
-					Logs.PayServer.LogCritical(ex, "Error in the InvoiceWatcher loop");
-					_Cts.Token.WaitHandle.WaitOne(2000);
+					catch(Exception ex) when(!_Cts.Token.IsCancellationRequested)
+					{
+						Logs.PayServer.LogCritical(ex, $"Error in the InvoiceWatcher loop (Invoice {item})");
+						_Cts.Token.WaitHandle.WaitOne(2000);
+					}
 				}
 			}
-			Logs.PayServer.LogInformation("Stop watching invoices");
+			catch(OperationCanceledException)
+			{
+				try
+				{
+					Task.WaitAll(updating.Select(c => c.Value.Value).ToArray());
+				}
+				catch(AggregateException) { }
+				_RunningTask.TrySetResult(true);
+			}
+			finally
+			{
+				Logs.PayServer.LogInformation("Stop watching invoices");
+			}
 		}
-
 
 		public Task StopAsync(CancellationToken cancellationToken)
 		{

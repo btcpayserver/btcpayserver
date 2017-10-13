@@ -150,7 +150,6 @@ namespace BTCPayServer.Controllers
 
 		[HttpGet]
 		[Route("i/{invoiceId}/status")]
-		[DisableCors]
 		public async Task<IActionResult> GetStatus(string invoiceId)
 		{
 			var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
@@ -161,7 +160,6 @@ namespace BTCPayServer.Controllers
 
 		[HttpPost]
 		[Route("i/{invoiceId}/UpdateCustomer")]
-		[DisableCors]
 		public async Task<IActionResult> UpdateCustomer(string invoiceId, [FromBody]UpdateCustomerModel data)
 		{
 			if(!ModelState.IsValid)
@@ -248,7 +246,7 @@ namespace BTCPayServer.Controllers
 				ItemDesc = model.ItemDesc,
 				FullNotifications = true,
 				BuyerEmail = model.BuyerEmail,
-			}, store);
+			}, store, HttpContext.Request.GetAbsoluteRoot());
 
 			StatusMessage = $"Invoice {result.Data.Id} just created!";
 			return RedirectToAction(nameof(ListInvoices));

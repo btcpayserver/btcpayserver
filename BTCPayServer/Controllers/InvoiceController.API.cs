@@ -11,25 +11,43 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Servcices.Invoices;
+using Microsoft.AspNetCore.Cors;
+using BTCPayServer.Services.Stores;
 
 namespace BTCPayServer.Controllers
 {
-    public partial class InvoiceController
+	[EnableCors("BitpayAPI")]
+	[BitpayAPIConstraint]
+	public class InvoiceControllerAPI : Controller
     {
+		private InvoiceController _InvoiceController;
+		private InvoiceRepository _InvoiceRepository;
+		private TokenRepository _TokenRepository;
+		private StoreRepository _StoreRepository;
+
+		public InvoiceControllerAPI(InvoiceController invoiceController,
+									InvoiceRepository invoceRepository,
+									TokenRepository tokenRepository,
+									StoreRepository storeRepository)
+		{
+			this._InvoiceController = invoiceController;
+			this._InvoiceRepository = invoceRepository;
+			this._TokenRepository = tokenRepository;
+			this._StoreRepository = storeRepository;
+		}
+
 		[HttpPost]
 		[Route("invoices")]
 		[MediaTypeConstraint("application/json")]
-		[BitpayAPIConstraint]
 		public async Task<DataWrapper<InvoiceResponse>> CreateInvoice([FromBody] Invoice invoice)
 		{
 			var bitToken = await CheckTokenPermissionAsync(Facade.Merchant, invoice.Token);
 			var store = await FindStore(bitToken);
-			return await CreateInvoiceCore(invoice, store);
+			return await _InvoiceController.CreateInvoiceCore(invoice, store, HttpContext.Request.GetAbsoluteRoot());
 		}
 
 		[HttpGet]
 		[Route("invoices/{id}")]
-		[BitpayAPIConstraint]
 		public async Task<DataWrapper<InvoiceResponse>> GetInvoice(string id, string token)
 		{
 			var bitToken = await CheckTokenPermissionAsync(Facade.Merchant, token);
@@ -44,7 +62,6 @@ namespace BTCPayServer.Controllers
 
 		[HttpGet]
 		[Route("invoices")]
-		[BitpayAPIConstraint]
 		public async Task<DataWrapper<InvoiceResponse[]>> GetInvoices(
 			string token,
 			DateTimeOffset? dateStart = null,

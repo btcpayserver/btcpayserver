@@ -35,6 +35,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Threading;
 using Microsoft.Extensions.Options;
 using Microsoft.ApplicationInsights.AspNetCore.Extensions;
+using Microsoft.AspNetCore.Mvc.Cors.Internal;
 
 namespace BTCPayServer.Hosting
 {
@@ -106,7 +107,13 @@ namespace BTCPayServer.Hosting
 		   }));
 
 			services.AddHangfire(configuration);
-			services.AddCors();
+			services.AddCors(o =>
+			{
+				o.AddPolicy("BitpayAPI", b =>
+				{
+					b.AllowAnyMethod().AllowAnyHeader().AllowAnyOrigin();
+				});
+			});
 
 			services.Configure<IOptions<ApplicationInsightsServiceOptions>>(o =>
 			{
@@ -135,10 +142,6 @@ namespace BTCPayServer.Hosting
 			app.UsePayServer();
 			app.UseStaticFiles();
 			app.UseAuthentication();
-			app.UseCors(b =>
-			{
-				b.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
-			});
 			app.UseHangfireServer();
 			app.UseHangfireDashboard("/hangfire", new DashboardOptions() { Authorization = new[] { new NeedRole(Roles.ServerAdmin) } });
 			app.UseMvc(routes =>

@@ -141,6 +141,7 @@ namespace BTCPayServer.Hosting
 			services.TryAddSingleton<IAuthorizationHandler, OwnStoreHandler>();
 			services.AddTransient<AccessTokenController>();
 			services.AddTransient<CallbackController>();
+			services.AddTransient<InvoiceController>();
 			// Add application services.
 			services.AddTransient<IEmailSender, EmailSender>();
 

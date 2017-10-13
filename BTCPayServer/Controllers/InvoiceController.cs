@@ -43,7 +43,6 @@ namespace BTCPayServer.Controllers
 {
 	public partial class InvoiceController : Controller
 	{
-		TokenRepository _TokenRepository;
 		InvoiceRepository _InvoiceRepository;
 		BTCPayWallet _Wallet;
 		IRateProvider _RateProvider;
@@ -58,7 +57,6 @@ namespace BTCPayServer.Controllers
 			Network network,
 			InvoiceRepository invoiceRepository,
 			UserManager<ApplicationUser> userManager,
-			TokenRepository tokenRepository,
 			BTCPayWallet wallet,
 			IRateProvider rateProvider,
 			StoreRepository storeRepository,
@@ -69,7 +67,6 @@ namespace BTCPayServer.Controllers
 			_Explorer = explorerClient ?? throw new ArgumentNullException(nameof(explorerClient));
 			_StoreRepository = storeRepository ?? throw new ArgumentNullException(nameof(storeRepository));
 			_Network = network ?? throw new ArgumentNullException(nameof(network));
-			_TokenRepository = tokenRepository ?? throw new ArgumentNullException(nameof(tokenRepository));
 			_InvoiceRepository = invoiceRepository ?? throw new ArgumentNullException(nameof(invoiceRepository));
 			_Wallet = wallet ?? throw new ArgumentNullException(nameof(wallet));
 			_RateProvider = rateProvider ?? throw new ArgumentNullException(nameof(rateProvider));
@@ -78,7 +75,7 @@ namespace BTCPayServer.Controllers
 			_FeeProvider = feeProvider ?? throw new ArgumentNullException(nameof(feeProvider));
 		}
 
-		private async Task<DataWrapper<InvoiceResponse>> CreateInvoiceCore(Invoice invoice, StoreData store)
+		internal async Task<DataWrapper<InvoiceResponse>> CreateInvoiceCore(Invoice invoice, StoreData store, string serverUrl)
 		{
 			var derivationStrategy = store.DerivationStrategy;
 			var entity = new InvoiceEntity
@@ -91,7 +88,7 @@ namespace BTCPayServer.Controllers
 				notificationUri = null;
 			EmailAddressAttribute emailValidator = new EmailAddressAttribute();
 			entity.ExpirationTime = entity.InvoiceTime + TimeSpan.FromMinutes(15.0);
-			entity.ServerUrl = HttpContext.Request.GetAbsoluteRoot();
+			entity.ServerUrl = serverUrl;
 			entity.FullNotifications = invoice.FullNotifications;
 			entity.NotificationURL = notificationUri?.AbsoluteUri;
 			entity.BuyerInformation = Map<Invoice, BuyerInformation>(invoice);

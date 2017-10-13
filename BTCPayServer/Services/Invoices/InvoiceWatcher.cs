@@ -46,7 +46,8 @@ namespace BTCPayServer.Servcices.Invoices
 		public async Task NotifyReceived(Script scriptPubKey)
 		{
 			var invoice = await _Wallet.GetInvoiceId(scriptPubKey);
-			_WatchRequests.Add(invoice);
+			if(invoice != null)
+				_WatchRequests.Add(invoice);
 		}
 
 		public async Task NotifyBlock()
@@ -240,6 +241,8 @@ namespace BTCPayServer.Servcices.Invoices
 
 		public async Task WatchAsync(string invoiceId, bool singleShot = false)
 		{
+			if(invoiceId == null)
+				throw new ArgumentNullException(nameof(invoiceId));
 			if(!singleShot)
 				await _InvoiceRepository.AddPendingInvoice(invoiceId).ConfigureAwait(false);
 			_WatchRequests.Add(invoiceId);

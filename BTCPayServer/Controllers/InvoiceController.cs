@@ -95,6 +95,9 @@ namespace BTCPayServer.Controllers
 			entity.FullNotifications = invoice.FullNotifications;
 			entity.NotificationURL = notificationUri?.AbsoluteUri;
 			entity.BuyerInformation = Map<Invoice, BuyerInformation>(invoice);
+			//Another way of passing buyer info to support
+			FillBuyerInfo(invoice.Buyer, entity.BuyerInformation);
+
 			entity.RefundMail = EmailValidator.IsEmail(entity?.BuyerInformation?.BuyerEmail) ? entity.BuyerInformation.BuyerEmail : null;
 			entity.ProductInformation = Map<Invoice, ProductInformation>(invoice);
 			entity.RedirectURL = invoice.RedirectURL ?? store.StoreWebsite;
@@ -110,6 +113,21 @@ namespace BTCPayServer.Controllers
 			await _Watcher.WatchAsync(entity.Id);
 			var resp = entity.EntityToDTO();
 			return new DataWrapper<InvoiceResponse>(resp) { Facade = "pos/invoice" };
+		}
+
+		private void FillBuyerInfo(Buyer buyer, BuyerInformation buyerInformation)
+		{
+			if(buyer == null)
+				return;
+			buyerInformation.BuyerAddress1 = buyerInformation.BuyerAddress1 ?? buyer.Address1;
+			buyerInformation.BuyerAddress2 = buyerInformation.BuyerAddress2 ?? buyer.Address2;
+			buyerInformation.BuyerCity = buyerInformation.BuyerCity ?? buyer.City;
+			buyerInformation.BuyerCountry = buyerInformation.BuyerCountry ?? buyer.country;
+			buyerInformation.BuyerEmail = buyerInformation.BuyerEmail ?? buyer.email;
+			buyerInformation.BuyerName = buyerInformation.BuyerName ?? buyer.Name;
+			buyerInformation.BuyerPhone = buyerInformation.BuyerPhone ?? buyer.phone;
+			buyerInformation.BuyerState = buyerInformation.BuyerState ?? buyer.State;
+			buyerInformation.BuyerZip = buyerInformation.BuyerZip ?? buyer.zip;
 		}
 
 		private DerivationStrategyBase ParseDerivationStrategy(string derivationStrategy)

@@ -14,7 +14,6 @@ using System.Net;
 using System.Collections.Generic;
 using System.Collections;
 using Microsoft.AspNetCore.Hosting.Server.Features;
-using Microsoft.Extensions.Logging;
 using System.Threading;
 
 namespace BTCPayServer

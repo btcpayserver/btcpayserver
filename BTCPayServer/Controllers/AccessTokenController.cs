@@ -57,8 +57,10 @@ namespace BTCPayServer.Controllers
 
 				pairingEntity = await _TokenRepository.GetPairingAsync(request.PairingCode);
 				pairingEntity.SIN = sin;
-				if(!await _TokenRepository.PairWithSINAsync(request.PairingCode, sin))
-					throw new BitpayHttpException(400, "Unknown pairing code");
+
+				var result = await _TokenRepository.PairWithSINAsync(request.PairingCode, sin);
+				if(result != PairingResult.Complete && result != PairingResult.Partial)
+					throw new BitpayHttpException(400, $"Error while pairing ({result})");
 				
 			}
 

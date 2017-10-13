@@ -320,14 +320,18 @@ namespace BTCPayServer.Controllers
 		[Route("api-access-request")]
 		public async Task<IActionResult> Pair(string pairingCode, string selectedStore)
 		{
+			if(pairingCode == null)
+				return NotFound();
 			var store = await _Repo.FindStore(selectedStore, GetUserId());
 			var pairing = await _TokenRepository.GetPairingAsync(pairingCode);
 			if(store == null || pairing == null)
 				return NotFound();
-			if(pairingCode != null && await _TokenRepository.PairWithStoreAsync(pairingCode, store.Id))
+
+			var pairingResult = await _TokenRepository.PairWithStoreAsync(pairingCode, store.Id);
+			if(pairingResult == PairingResult.Complete || pairingResult == PairingResult.Partial)
 			{
 				StatusMessage = "Pairing is successfull";
-				if(pairing.SIN == null)
+				if(pairingResult == PairingResult.Partial)
 					StatusMessage = "Server initiated pairing code: " + pairingCode;
 				return RedirectToAction(nameof(ListTokens), new
 				{
@@ -336,7 +340,7 @@ namespace BTCPayServer.Controllers
 			}
 			else
 			{
-				StatusMessage = "Pairing failed";
+				StatusMessage = $"Pairing failed ({pairingResult})";
 				return RedirectToAction(nameof(ListTokens), new
 				{
 					storeId = store.Id

@@ -15,6 +15,7 @@ using System.IO;
 using Newtonsoft.Json.Linq;
 using BTCPayServer.Controllers;
 using Microsoft.AspNetCore.Mvc;
+using BTCPayServer.Authentication;
 
 namespace BTCPayServer.Tests
 {
@@ -165,6 +166,25 @@ namespace BTCPayServer.Tests
 					var invoice2 = acc.BitPay.GetInvoice(invoice.Id);
 					Assert.NotNull(invoice2);
 				}
+			}
+		}
+
+		[Fact]
+		public void CantPairTwiceWithSamePubkey()
+		{
+			using(var tester = ServerTester.Create())
+			{
+				tester.Start();
+				var acc = tester.NewAccount();
+				acc.Register();
+				var store = acc.CreateStore();
+				var pairingCode = acc.BitPay.RequestClientAuthorization("test", Facade.Merchant);
+				Assert.IsType<RedirectToActionResult>(store.Pair(pairingCode.ToString(), acc.StoreId).GetAwaiter().GetResult());
+
+				pairingCode = acc.BitPay.RequestClientAuthorization("test1", Facade.Merchant);
+				var store2 = acc.CreateStore();
+				store2.Pair(pairingCode.ToString(), store2.CreatedStoreId).GetAwaiter().GetResult();
+				Assert.Contains(nameof(PairingResult.ReusedKey), store2.StatusMessage);
 			}
 		}
 

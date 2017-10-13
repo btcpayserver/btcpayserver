@@ -13,6 +13,14 @@ using System.Linq;
 
 namespace BTCPayServer.Authentication
 {
+	public enum PairingResult
+	{
+		Partial,
+		Complete,
+		ReusedKey,
+		Expired
+	}
+
 	public class TokenRepository
 	{
 		ApplicationDbContextFactory _Factory;
@@ -79,40 +87,45 @@ namespace BTCPayServer.Authentication
 			}
 		}
 
-		public async Task<bool> PairWithStoreAsync(string pairingCodeId, string storeId)
+		public async Task<PairingResult> PairWithStoreAsync(string pairingCodeId, string storeId)
 		{
 			using(var ctx = _Factory.CreateContext())
 			{
 				var pairingCode = await ctx.PairingCodes.FindAsync(pairingCodeId);
 				if(pairingCode == null || pairingCode.Expiration < DateTimeOffset.UtcNow)
-					return false;
+					return PairingResult.Expired;
 				pairingCode.StoreDataId = storeId;
-				await ActivateIfComplete(ctx, pairingCode);
+				var result = await ActivateIfComplete(ctx, pairingCode);
 				await ctx.SaveChangesAsync();
+				return result;
 			}
-			return true;
 		}
 
-		public async Task<bool> PairWithSINAsync(string pairingCodeId, string sin)
+		public async Task<PairingResult> PairWithSINAsync(string pairingCodeId, string sin)
 		{
 			using(var ctx = _Factory.CreateContext())
 			{
 				var pairingCode = await ctx.PairingCodes.FindAsync(pairingCodeId);
 				if(pairingCode == null || pairingCode.Expiration < DateTimeOffset.UtcNow)
-					return false;
+					return PairingResult.Expired;
 				pairingCode.SIN = sin;
-				await ActivateIfComplete(ctx, pairingCode);
+				var result = await ActivateIfComplete(ctx, pairingCode);
 				await ctx.SaveChangesAsync();
+				return result;
 			}
-			return true;
 		}
 
 
-		private async Task ActivateIfComplete(ApplicationDbContext ctx, PairingCodeData pairingCode)
+		private async Task<PairingResult> ActivateIfComplete(ApplicationDbContext ctx, PairingCodeData pairingCode)
 		{
 			if(!string.IsNullOrEmpty(pairingCode.SIN) && !string.IsNullOrEmpty(pairingCode.StoreDataId))
 			{
 				ctx.PairingCodes.Remove(pairingCode);
+
+				// Can have concurrency issues... but no harm can be done
+				var alreadyUsed = await ctx.PairedSINData.Where(p => p.SIN == pairingCode.SIN && p.StoreDataId != pairingCode.StoreDataId).AnyAsync();
+				if(alreadyUsed)
+					return PairingResult.ReusedKey;
 				await ctx.PairedSINData.AddAsync(new PairedSINData()
 				{
 					Id = pairingCode.TokenValue,
@@ -122,7 +135,9 @@ namespace BTCPayServer.Authentication
 					StoreDataId = pairingCode.StoreDataId,
 					SIN = pairingCode.SIN
 				});
+				return PairingResult.Complete;
 			}
+			return PairingResult.Partial;
 		}
 
 

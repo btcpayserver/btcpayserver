@@ -93,9 +93,15 @@ namespace BTCPayServer.Controllers
 
 		[HttpGet]
 		[Route("i/{invoiceId}")]
+		[Route("invoice")]
 		[AcceptMediaTypeConstraint("application/bitcoin-paymentrequest", false)]
-		public async Task<IActionResult> Checkout(string invoiceId)
+		public async Task<IActionResult> Checkout(string invoiceId, string id = null)
 		{
+			//Keep compatibility with Bitpay
+			invoiceId = invoiceId ?? id;
+			id = invoiceId;
+			////
+
 			var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
 			if(invoice == null)
 				return NotFound();
@@ -126,7 +132,7 @@ namespace BTCPayServer.Controllers
 
 			var expiration = TimeSpan.FromSeconds((double)model.ExpirationSeconds);
 			model.TimeLeft = PrettyPrint(expiration);
-			return View(model);
+			return View(nameof(Checkout), model);
 		}
 
 		private string PrettyPrint(TimeSpan expiration)

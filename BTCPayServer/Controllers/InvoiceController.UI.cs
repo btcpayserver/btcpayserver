@@ -3,6 +3,7 @@ using BTCPayServer.Filters;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Servcices.Invoices;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using NBitcoin;
@@ -149,6 +150,7 @@ namespace BTCPayServer.Controllers
 
 		[HttpGet]
 		[Route("i/{invoiceId}/status")]
+		[DisableCors]
 		public async Task<IActionResult> GetStatus(string invoiceId)
 		{
 			var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
@@ -159,6 +161,7 @@ namespace BTCPayServer.Controllers
 
 		[HttpPost]
 		[Route("i/{invoiceId}/UpdateCustomer")]
+		[DisableCors]
 		public async Task<IActionResult> UpdateCustomer(string invoiceId, [FromBody]UpdateCustomerModel data)
 		{
 			if(!ModelState.IsValid)

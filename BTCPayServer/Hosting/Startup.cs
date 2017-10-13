@@ -106,6 +106,7 @@ namespace BTCPayServer.Hosting
 		   }));
 
 			services.AddHangfire(configuration);
+			services.AddCors();
 
 			services.Configure<IOptions<ApplicationInsightsServiceOptions>>(o =>
 			{
@@ -134,7 +135,10 @@ namespace BTCPayServer.Hosting
 			app.UsePayServer();
 			app.UseStaticFiles();
 			app.UseAuthentication();
-
+			app.UseCors(b =>
+			{
+				b.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+			});
 			app.UseHangfireServer();
 			app.UseHangfireDashboard("/hangfire", new DashboardOptions() { Authorization = new[] { new NeedRole(Roles.ServerAdmin) } });
 			app.UseMvc(routes =>

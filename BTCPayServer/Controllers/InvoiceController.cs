@@ -97,8 +97,12 @@ namespace BTCPayServer.Controllers
 			entity.BuyerInformation = Map<Invoice, BuyerInformation>(invoice);
 			//Another way of passing buyer info to support
 			FillBuyerInfo(invoice.Buyer, entity.BuyerInformation);
-
-			entity.RefundMail = EmailValidator.IsEmail(entity?.BuyerInformation?.BuyerEmail) ? entity.BuyerInformation.BuyerEmail : null;
+			if(entity?.BuyerInformation?.BuyerEmail != null)
+			{
+				if(!EmailValidator.IsEmail(entity.BuyerInformation.BuyerEmail))
+					throw new BitpayHttpException(400, "Invalid email");
+				entity.RefundMail = entity.BuyerInformation.BuyerEmail;
+			}
 			entity.ProductInformation = Map<Invoice, ProductInformation>(invoice);
 			entity.RedirectURL = invoice.RedirectURL ?? store.StoreWebsite;
 			entity.Status = "new";

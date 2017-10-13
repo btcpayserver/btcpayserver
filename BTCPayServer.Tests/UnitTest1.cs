@@ -69,6 +69,7 @@ namespace BTCPayServer.Tests
 				user.GrantAccess();
 				var invoice = user.BitPay.CreateInvoice(new Invoice()
 				{
+					Buyer = new Buyer() { email = "test@fwf.com" },
 					Price = 5000.0,
 					Currency = "USD",
 					PosData = "posData",

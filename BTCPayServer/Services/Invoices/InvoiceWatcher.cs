@@ -281,12 +281,12 @@ namespace BTCPayServer.Servcices.Invoices
 		{
 			Logs.PayServer.LogInformation("Start watching invoices");
 			ConcurrentDictionary<string, Lazy<Task>> updating = new ConcurrentDictionary<string, Lazy<Task>>();
-			try
+			foreach(var item in _WatchRequests.GetConsumingEnumerable(_Cts.Token))
 			{
-				foreach(var item in _WatchRequests.GetConsumingEnumerable(_Cts.Token))
+				try
 				{
+					_Cts.Token.ThrowIfCancellationRequested();
 					var localItem = item;
-
 					// If the invoice is already updating, ignore
 					Lazy<Task> updateInvoice = new Lazy<Task>(() => UpdateInvoice(localItem), false);
 					if(updating.TryAdd(item, updateInvoice))
@@ -294,26 +294,23 @@ namespace BTCPayServer.Servcices.Invoices
 						updateInvoice.Value.ContinueWith(i => updating.TryRemove(item, out updateInvoice));
 					}
 				}
-			}
-			catch(OperationCanceledException) when(_Cts.Token.IsCancellationRequested)
-			{
-				try
+				catch(OperationCanceledException) when(_Cts.Token.IsCancellationRequested)
 				{
-					Task.WaitAll(updating.Select(c => c.Value.Value).ToArray());
+					try
+					{
+						Task.WaitAll(updating.Select(c => c.Value.Value).ToArray());
+					}
+					catch(AggregateException) { }
+					_RunningTask.TrySetResult(true);
+					break;
 				}
-				catch(AggregateException) { }
-				_RunningTask.TrySetResult(true);
+				catch(Exception ex)
+				{
+					Logs.PayServer.LogCritical(ex, "Error in the InvoiceWatcher loop");
+					_Cts.Token.WaitHandle.WaitOne(2000);
+				}
 			}
-			catch(Exception ex)
-			{
-				_Cts.Cancel();
-				_RunningTask.TrySetException(ex);
-				Logs.PayServer.LogCritical(ex, "Error in the InvoiceWatcher loop");
-			}
-			finally
-			{
-				Logs.PayServer.LogInformation("Stop watching invoices");
-			}
+			Logs.PayServer.LogInformation("Stop watching invoices");
 		}
 
 

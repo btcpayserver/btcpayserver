@@ -82,7 +82,7 @@ namespace BTCPayServer.Controllers
 					m.Confirmations = (await _Explorer.GetTransactionAsync(payment.Outpoint.Hash))?.Confirmations ?? 0;
 					m.TransactionId = payment.Outpoint.Hash.ToString();
 					m.ReceivedTime = payment.ReceivedTime;
-					m.TransactionLink = _Network == Network.Main ? $"https://www.smartbit.com.au/tx/{m.TransactionId}" : $"https://testnet.smartbit.com.au/{m.TransactionId}";
+					m.TransactionLink = _Network == Network.Main ? $"https://www.smartbit.com.au/tx/{m.TransactionId}" : $"https://testnet.smartbit.com.au/tx/{m.TransactionId}";
 					return m;
 				})
 				.ToArray();

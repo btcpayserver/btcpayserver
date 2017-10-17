@@ -69,12 +69,16 @@ namespace BTCPayServer.Hosting
 				object storeId = null;
 				if(!((Microsoft.AspNetCore.Mvc.ActionContext)context.Resource).RouteData.Values.TryGetValue("storeId", out storeId))
 					context.Succeed(requirement);
-				else
+				else if(storeId != null)
 				{
-					var store = await _StoreRepository.FindStore((string)storeId, _UserManager.GetUserId(((Microsoft.AspNetCore.Mvc.ActionContext)context.Resource).HttpContext.User));
-					if(store != null)
-						if(requirement.Role == null || requirement.Role == store.Role)
-							context.Succeed(requirement);
+					var user = _UserManager.GetUserId(((Microsoft.AspNetCore.Mvc.ActionContext)context.Resource).HttpContext.User);
+					if(user != null)
+					{
+						var store = await _StoreRepository.FindStore((string)storeId, user);
+						if(store != null)
+							if(requirement.Role == null || requirement.Role == store.Role)
+								context.Succeed(requirement);
+					}
 				}
 			}
 		}

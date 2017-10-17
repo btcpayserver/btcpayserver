@@ -1,4 +1,5 @@
 ﻿using BTCPayServer.Authentication;
+using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Services.Stores;
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using NBitcoin;
 using NBitpayClient;
 using NBXplorer.DerivationStrategy;
@@ -21,6 +23,7 @@ namespace BTCPayServer.Controllers
 	[Route("stores")]
 	[Authorize(AuthenticationSchemes = "Identity.Application")]
 	[Authorize(Policy = "CanAccessStore")]
+	[AutoValidateAntiforgeryToken]
 	public class StoresController : Controller
 	{
 		public StoresController(
@@ -123,7 +126,6 @@ namespace BTCPayServer.Controllers
 		}
 
 		[HttpPost]
-		[ValidateAntiForgeryToken]
 		[Route("{storeId}")]
 		public async Task<IActionResult> UpdateStore(string storeId, StoreViewModel model, string command)
 		{
@@ -220,13 +222,24 @@ namespace BTCPayServer.Controllers
 		}
 
 		[HttpPost]
-		[ValidateAntiForgeryToken]
+		[Route("/api-tokens")]
 		[Route("{storeId}/Tokens/Create")]
 		public async Task<IActionResult> CreateToken(string storeId, CreateTokenViewModel model)
 		{
 			if(!ModelState.IsValid)
 			{
 				return View(model);
+			}
+
+			if(storeId == null) // Permissions are not checked by Policy if the storeId is not passed by url
+			{
+				storeId = model.StoreId;
+				var userId = GetUserId();
+				if(userId == null)
+					return Unauthorized();
+				var store = await _Repo.FindStore(storeId, userId);
+				if(store == null)
+					return Unauthorized();
 			}
 
 			var tokenRequest = new TokenRequest()
@@ -262,16 +275,29 @@ namespace BTCPayServer.Controllers
 		}
 
 		[HttpGet]
+		[Route("/api-tokens")]
 		[Route("{storeId}/Tokens/Create")]
-		public IActionResult CreateToken()
+		public async Task<IActionResult> CreateToken(string storeId)
 		{
+			var userId = GetUserId();
+			if(string.IsNullOrWhiteSpace(userId))
+				return Unauthorized();
 			var model = new CreateTokenViewModel();
 			model.Facade = "merchant";
+			ViewBag.HidePublicKey = storeId == null;
+			ViewBag.ShowStores = storeId == null;
+			ViewBag.ShowMenu = storeId != null;
+			model.StoreId = storeId;
+			if(storeId == null)
+			{
+				model.Stores = new SelectList(await _Repo.GetStoresByUserId(userId), nameof(StoreData.Id), nameof(StoreData.StoreName), storeId);
+			}
+			
 			return View(model);
 		}
 
+
 		[HttpPost]
-		[ValidateAntiForgeryToken]
 		[Route("{storeId}/Tokens/Delete")]
 		public async Task<IActionResult> DeleteToken(string storeId, string tokenId)
 		{
@@ -316,7 +342,6 @@ namespace BTCPayServer.Controllers
 		}
 
 		[HttpPost]
-		[ValidateAntiForgeryToken]
 		[Route("api-access-request")]
 		public async Task<IActionResult> Pair(string pairingCode, string selectedStore)
 		{

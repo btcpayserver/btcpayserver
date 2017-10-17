@@ -9,18 +9,21 @@
 
 <div class="row">
 	<div class="col-md-6">
-		<form asp-action="CreateToken" method="post">
+		<form method="post">
 			<div class="form-group">
 				<label asp-for="Label"></label>
 				<input asp-for="Label" class="form-control" />
 				<span asp-validation-for="Label" class="text-danger"></span>
 			</div>
-			<div class="form-group">
-				<label asp-for="PublicKey"></label>
-				<small class="text-muted">Keep empty for server-initiated pairing</small>
-				<input asp-for="PublicKey" class="form-control" />
-				<span asp-validation-for="PublicKey" class="text-danger"></span>
-			</div>
+			@if(!ViewBag.HidePublicKey)
+			{
+				<div class="form-group">
+					<label asp-for="PublicKey"></label>
+					<small class="text-muted">Keep empty for server-initiated pairing</small>
+					<input asp-for="PublicKey" class="form-control" />
+					<span asp-validation-for="PublicKey" class="text-danger"></span>
+				</div>
+			}
 			<div class="form-group">
 				<label asp-for="Facade"></label>
 				<select asp-for="Facade" class="form-control">
@@ -29,6 +32,19 @@
 				</select>
 				<span asp-validation-for="Facade" class="text-danger"></span>
 			</div>
+
+			@if(ViewBag.ShowStores)
+			{
+				<div class="form-group">
+					<label asp-for="StoreId" class="control-label"></label>
+					<select asp-for="StoreId" asp-items="Model.Stores" class="form-control"></select>
+					<span asp-validation-for="StoreId" class="text-danger"></span>
+				</div>
+			}
+			else
+			{
+				<input type="hidden" asp-for="StoreId" />
+			}
 			<div class="form-group">
 				<input type="submit" value="Request pairing" class="btn btn-default" />
 			</div>

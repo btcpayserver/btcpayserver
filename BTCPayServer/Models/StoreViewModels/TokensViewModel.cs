@@ -1,4 +1,5 @@
 ﻿using BTCPayServer.Validations;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -22,6 +23,17 @@ namespace BTCPayServer.Models.StoreViewModels
 
 		[Required]
 		public string Facade
+		{
+			get; set;
+		}
+
+		[Required]
+		public string StoreId
+		{
+			get; set;
+		}
+
+		public SelectList Stores
 		{
 			get; set;
 		}

@@ -1,5 +1,6 @@
 ﻿@{
 	Layout = "/Views/Shared/_Layout.cshtml";
+	ViewBag.ShowMenu = ViewBag.ShowMenu ?? true;
 }
 
 
@@ -15,7 +16,10 @@
 		<div>
 			<div class="row">
 				<div class="col-md-3">
-					@await Html.PartialAsync("_Nav")
+					@if(ViewBag.ShowMenu)
+					{
+						@await Html.PartialAsync("_Nav")
+					}
 				</div>
 				<div class="col-md-9">
 					@RenderBody()

@@ -155,9 +155,15 @@ $("#copy-tab").click(function () {
 // Should connect using webhook ?
 // If notification received
 
+var oldStatus = status;
 updateState(status);
 
 function updateState(status) {
+    if (oldStatus != status)
+    {
+        oldStatus = status;
+        window.parent.postMessage({ "invoiceId": invoiceId, "status": status }, "*");
+    }
     if (status == "complete" ||
         status == "paidOver" ||
         status == "confirmed" ||

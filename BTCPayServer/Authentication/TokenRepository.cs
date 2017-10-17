@@ -58,7 +58,13 @@ namespace BTCPayServer.Authentication
 
 		public async Task<string> CreatePairingCodeAsync()
 		{
-			string pairingCodeId = Encoders.Base58.EncodeData(RandomUtils.GetBytes(6));
+			string pairingCodeId = null;
+			while(true)
+			{
+				pairingCodeId = Encoders.Base58.EncodeData(RandomUtils.GetBytes(6));
+				if(pairingCodeId.Length == 7) // woocommerce plugin check for exactly 7 digits
+					break;
+			}
 			using(var ctx = _Factory.CreateContext())
 			{
 				var now = DateTime.UtcNow;

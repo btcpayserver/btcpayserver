@@ -3,6 +3,8 @@
 	Layout = "../Shared/_NavLayout.cshtml";
 	ViewData["Title"] = "Create a new token";
 	ViewData.AddActivePage(StoreNavPages.Tokens);
+	ViewBag.HidePublicKey = ViewBag.HidePublicKey ?? false;
+	ViewBag.ShowStores = ViewBag.ShowStores ?? false;
 }
 
 <h4>@ViewData["Title"]</h4>

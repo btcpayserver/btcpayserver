@@ -27,6 +27,7 @@
 			crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.qrcode/1.0/jquery.qrcode.min.js"></script>
 	<script type="text/javascript">
+		var serverUrl = "@Model.ServerUrl";
 		var invoiceId = "@Model.InvoiceId";
 		var btcAddress = "@Model.BTCAddress";
 		var btcDue = "@Model.BTCDue"; //must be a string

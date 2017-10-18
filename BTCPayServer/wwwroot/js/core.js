@@ -69,7 +69,7 @@ function emailForm() {
             // Push the email to a server, once the reception is confirmed move on
             customerEmail = emailAddress;
 
-            var path = "i/" + invoiceId + "/UpdateCustomer";
+            var path = serverUrl + "/i/" + invoiceId + "/UpdateCustomer";
 
             $.ajax({
                 url: path,
@@ -192,7 +192,7 @@ function updateState(status) {
 }
 
 var watcher = setInterval(function () {
-    var path = "i/" + invoiceId + "/status";
+    var path = serverUrl + "/i/" + invoiceId + "/status";
     $.ajax({
         url: path,
         type: "GET"

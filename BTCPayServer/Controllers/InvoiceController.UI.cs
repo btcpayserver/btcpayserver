@@ -112,6 +112,7 @@ namespace BTCPayServer.Controllers
 
 			var model = new PaymentModel()
 			{
+				ServerUrl = HttpContext.Request.GetAbsoluteRoot(),
 				OrderId = invoice.OrderId,
 				InvoiceId = invoice.Id,
 				BTCAddress = invoice.DepositAddress.ToString(),

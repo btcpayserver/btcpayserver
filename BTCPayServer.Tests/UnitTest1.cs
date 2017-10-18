@@ -118,7 +118,7 @@ namespace BTCPayServer.Tests
 				var acc = tester.NewAccount();
 				acc.Register();
 				acc.CreateStore();
-				
+
 				var controller = tester.PayTester.GetController<StoresController>(acc.UserId);
 				var token = (RedirectToActionResult)controller.CreateToken(acc.StoreId, new Models.StoreViewModels.CreateTokenViewModel()
 				{

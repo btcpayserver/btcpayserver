@@ -230,7 +230,7 @@ namespace BTCPayServer.Controllers
 			{
 				return View(model);
 			}
-
+			model.Label = model.Label ?? String.Empty;
 			if(storeId == null) // Permissions are not checked by Policy if the storeId is not passed by url
 			{
 				storeId = model.StoreId;

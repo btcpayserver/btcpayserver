@@ -121,3 +121,4 @@ bower_components
 output
 
 .vs
+**/launchSettings.json

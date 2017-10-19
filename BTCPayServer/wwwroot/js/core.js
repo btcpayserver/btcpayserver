@@ -171,6 +171,17 @@ function updateState(status) {
         if ($(".modal-dialog").hasClass("expired")) {
             $(".modal-dialog").removeClass("expired");
         }
+
+        if (merchantRefLink != "") {
+            $(".action-button").click(function () {
+                window.location.href = merchantRefLink;
+            });
+        }
+        else
+        {
+            $(".action-button").hide();
+        }
+
         $(".modal-dialog").addClass("paid");
 
         if ($("#scan").hasClass("active")) {
@@ -211,11 +222,6 @@ $(".menu__item").click(function () {
     language();
     $(".selector span").text($(".selected").text());
     // function to load contents in different language should go there
-});
-
-// Redirect
-$("#expired .action-button").click(function () {
-    window.location.href = merchantRefLink;
 });
 
 // Validate Email address

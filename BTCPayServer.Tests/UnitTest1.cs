@@ -345,27 +345,5 @@ namespace BTCPayServer.Tests
                 }
             }
         }
-
-        // NOTE: Unit test that generates temorary checkout Bitpay page
-        // https://forkbitpay.slack.com/archives/C7M093Z55/p1508293682000217
-        //[Fact]
-        //public void Test()
-        //{
-        //    var key = new Key(Encoders.Hex.DecodeData("7b70a06f35562873e3dcb46005ed0fe78e1991ad906e56adaaafa40ba861e056"));
-        //    var url = new Uri("https://test.bitpay.com/");
-        //    var btcpay = new Bitpay(key, url);
-        //    var invoice = btcpay.CreateInvoice(new Invoice()
-        //    {
-
-        //        Price = 5.0,
-        //        Currency = "USD",
-        //        PosData = "posData",
-        //        OrderId = "cdfd8a5f-6928-4c3b-ba9b-ddf438029e73",
-        //        ItemDesc = "Hello from the otherside"
-        //    }, Facade.Merchant);
-
-        //    // go to invoice.Url
-        //    Trace.WriteLine(invoice.Url);
-        //}
     }
 }

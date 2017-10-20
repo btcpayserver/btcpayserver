@@ -13,7 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using BTCPayServer.Data;
-using BTCPayServer.Servcices.Invoices;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Wallets;
 
 namespace BTCPayServer.Configuration

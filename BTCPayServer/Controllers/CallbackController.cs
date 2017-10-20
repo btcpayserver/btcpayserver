@@ -1,5 +1,5 @@
 ﻿using BTCPayServer.Logging;
-using BTCPayServer.Servcices.Invoices;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Http;

@@ -9,7 +9,7 @@ using System.Threading;
 using Xunit;
 using Xunit.Abstractions;
 using Xunit.Sdk;
-using BTCPayServer.Servcices.Invoices;
+using BTCPayServer.Services.Invoices;
 using Newtonsoft.Json;
 using System.IO;
 using Newtonsoft.Json.Linq;

@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
-using BTCPayServer.Servcices.Invoices;
+using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Cors;
 using BTCPayServer.Services.Stores;
 

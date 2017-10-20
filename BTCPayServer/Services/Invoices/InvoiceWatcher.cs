@@ -14,7 +14,7 @@ using System.Collections.Concurrent;
 using Hangfire;
 using BTCPayServer.Services.Wallets;
 
-namespace BTCPayServer.Servcices.Invoices
+namespace BTCPayServer.Services.Invoices
 {
 	public class InvoiceWatcher : IHostedService
 	{

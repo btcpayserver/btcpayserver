@@ -16,7 +16,7 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System.Collections.Concurrent;
 
-namespace BTCPayServer.Servcices.Invoices
+namespace BTCPayServer.Services.Invoices
 {
 	public class InvoiceNotificationManager
 	{

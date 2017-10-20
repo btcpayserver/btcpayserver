@@ -29,7 +29,7 @@ using BTCPayServer.Services;
 using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 using BTCPayServer.Services.Stores;
-using BTCPayServer.Servcices.Invoices;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Validations;

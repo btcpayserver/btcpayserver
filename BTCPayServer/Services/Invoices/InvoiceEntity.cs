@@ -9,7 +9,7 @@ using NBitpayClient;
 using Newtonsoft.Json.Linq;
 using NBitcoin.DataEncoders;
 
-namespace BTCPayServer.Servcices.Invoices
+namespace BTCPayServer.Services.Invoices
 {
 	public class BuyerInformation
 	{

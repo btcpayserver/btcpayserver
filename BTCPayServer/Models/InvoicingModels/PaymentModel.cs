@@ -11,7 +11,10 @@ namespace BTCPayServer.Models.InvoicingModels
 		{
 			get; set;
 		}
-
+		public string ServerUrl
+		{
+			get; set;
+		}
 		public string OrderId
 		{
 			get; set;

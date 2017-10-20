@@ -19,6 +19,12 @@ Once you want to stop
 docker-compose down
 ```
 
+If you want to stop, and remove all existing data
+
+```
+docker-compose down -v
+```
+
 You can run the tests inside a container by running
 
 ```

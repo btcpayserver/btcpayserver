@@ -3,6 +3,8 @@
 	Layout = "../Shared/_NavLayout.cshtml";
 	ViewData["Title"] = "Create a new token";
 	ViewData.AddActivePage(StoreNavPages.Tokens);
+	ViewBag.HidePublicKey = ViewBag.HidePublicKey ?? false;
+	ViewBag.ShowStores = ViewBag.ShowStores ?? false;
 }
 
 <h4>@ViewData["Title"]</h4>
@@ -12,6 +14,10 @@
 		<form method="post">
 			<div class="form-group">
 				<label asp-for="Label"></label>
+				@if(ViewBag.HidePublicKey)
+				{
+					<small class="text-muted">optional</small>
+				}
 				<input asp-for="Label" class="form-control" />
 				<span asp-validation-for="Label" class="text-danger"></span>
 			</div>

@@ -15,7 +15,7 @@ namespace BTCPayServer.Models.StoreViewModels
 		{
 			get; set;
 		}
-		[Required]
+
 		public string Label
 		{
 			get; set;

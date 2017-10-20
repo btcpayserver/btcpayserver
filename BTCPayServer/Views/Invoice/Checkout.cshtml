@@ -27,6 +27,7 @@
 			crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.qrcode/1.0/jquery.qrcode.min.js"></script>
 	<script type="text/javascript">
+		var serverUrl = "@Model.ServerUrl";
 		var invoiceId = "@Model.InvoiceId";
 		var btcAddress = "@Model.BTCAddress";
 		var btcDue = "@Model.BTCDue"; //must be a string
@@ -129,8 +130,6 @@
 										<div class="single-item-order__right">
 											<div class="single-item-order__right__btc-price clickable" id="buyerTotalBtcAmount">
 												<span>@Model.BTCTotalDue</span>
-												<!---->
-												<img class="single-item-order__right__btc-price__chevron" src="~/img/chevron.svg">
 											</div>
 											<!---->
 											<div class="single-item-order__right__ex-rate">
@@ -180,20 +179,20 @@
 									<div class="bp-view payment scan" id="scan" style="opacity: 1;">
 										<div class="payment__scan">
 											@*<div class="payment__details__instruction__open-wallet hidden-sm-up">
-												<!---->
-												<a class="payment__details__instruction__open-wallet__btn action-button action-button--secondary">
-													<span i18n="">Show QR code</span>
-													<img class="m-qr-code-icon" src="~/img/qr-code.svg">
-												</a>
-												<div class="m-qr-code-container hidden-sm-up hide">
-													<p class="m-qr-code-header" i18n="">
-														Hide QR code
-														<img class="m-qr-code-expand" src="~/img/chevron.svg">
-													</p>
 													<!---->
-													<div class="qr-codes"></div>
-												</div>
-											</div>*@
+													<a class="payment__details__instruction__open-wallet__btn action-button action-button--secondary">
+														<span i18n="">Show QR code</span>
+														<img class="m-qr-code-icon" src="~/img/qr-code.svg">
+													</a>
+													<div class="m-qr-code-container hidden-sm-up hide">
+														<p class="m-qr-code-header" i18n="">
+															Hide QR code
+															<img class="m-qr-code-expand" src="~/img/chevron.svg">
+														</p>
+														<!---->
+														<div class="qr-codes"></div>
+													</div>
+												</div>*@
 											<!---->
 											<div class="qr-codes"></div>
 										</div>
@@ -380,7 +379,7 @@
 												<div class="manual-box__amount__label label" i18n="">Amount</div>
 												<!---->
 												<div class="manual-box__amount__value copy-cursor" ngxclipboard="">
-													<span>@Model.BTCDue BTC</span>
+													<span>@Model.BTCDue</span> BTC
 													<div class="copied-label">
 														<span i18n="">Copied</span>
 													</div>
@@ -427,6 +426,11 @@
 												<!---->
 												<div class="success-message" i18n="">This invoice has been paid.</div>
 												<!---->
+												<button class="action-button" style="margin-top: 0px;">
+													<bp-done-text>
+														<span i18n="" class="i18n-return-to-merchant">Return to @Model.StoreName</span>
+													</bp-done-text>
+												</button>
 											</div>
 										</div>
 										<!---->

@@ -92,6 +92,27 @@ namespace BTCPayServer.Controllers
 			return View(model);
 		}
 
+
+		static Dictionary<string, CultureInfo> _CurrencyProviders = new Dictionary<string, CultureInfo>();
+		private IFormatProvider GetCurrencyProvider(string currency)
+		{
+			lock(_CurrencyProviders)
+			{
+				if(_CurrencyProviders.Count == 0)
+				{
+					foreach(var culture in CultureInfo.GetCultures(CultureTypes.AllCultures).Where(c => !c.IsNeutralCulture))
+					{
+						try
+						{
+							_CurrencyProviders.TryAdd(new RegionInfo(culture.LCID).ISOCurrencySymbol, culture);
+						}
+						catch { }
+					}
+				}
+				return _CurrencyProviders.TryGet(currency);
+			}
+		}
+
 		[HttpGet]
 		[Route("i/{invoiceId}")]
 		[Route("invoice")]
@@ -112,6 +133,7 @@ namespace BTCPayServer.Controllers
 
 			var model = new PaymentModel()
 			{
+				ServerUrl = HttpContext.Request.GetAbsoluteRoot(),
 				OrderId = invoice.OrderId,
 				InvoiceId = invoice.Id,
 				BTCAddress = invoice.DepositAddress.ToString(),
@@ -122,7 +144,7 @@ namespace BTCPayServer.Controllers
 				ExpirationSeconds = Math.Max(0, (int)(invoice.ExpirationTime - DateTimeOffset.UtcNow).TotalSeconds),
 				MaxTimeSeconds = (int)(invoice.ExpirationTime - invoice.InvoiceTime).TotalSeconds,
 				ItemDesc = invoice.ProductInformation.ItemDesc,
-				Rate = invoice.Rate.ToString(),
+				Rate = invoice.Rate.ToString("C", GetCurrencyProvider(invoice.ProductInformation.Currency)),
 				RedirectUrl = invoice.RedirectURL,
 				StoreName = store.StoreName,
 				TxFees = invoice.TxFee.ToString(),

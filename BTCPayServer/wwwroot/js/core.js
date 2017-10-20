@@ -69,7 +69,7 @@ function emailForm() {
             // Push the email to a server, once the reception is confirmed move on
             customerEmail = emailAddress;
 
-            var path = "i/" + invoiceId + "/UpdateCustomer";
+            var path = serverUrl + "/i/" + invoiceId + "/UpdateCustomer";
 
             $.ajax({
                 url: path,
@@ -171,6 +171,17 @@ function updateState(status) {
         if ($(".modal-dialog").hasClass("expired")) {
             $(".modal-dialog").removeClass("expired");
         }
+
+        if (merchantRefLink != "") {
+            $(".action-button").click(function () {
+                window.location.href = merchantRefLink;
+            });
+        }
+        else
+        {
+            $(".action-button").hide();
+        }
+
         $(".modal-dialog").addClass("paid");
 
         if ($("#scan").hasClass("active")) {
@@ -192,7 +203,7 @@ function updateState(status) {
 }
 
 var watcher = setInterval(function () {
-    var path = "i/" + invoiceId + "/status";
+    var path = serverUrl + "/i/" + invoiceId + "/status";
     $.ajax({
         url: path,
         type: "GET"
@@ -211,11 +222,6 @@ $(".menu__item").click(function () {
     language();
     $(".selector span").text($(".selected").text());
     // function to load contents in different language should go there
-});
-
-// Redirect
-$("#expired .action-button").click(function () {
-    window.location.href = merchantRefLink;
 });
 
 // Validate Email address

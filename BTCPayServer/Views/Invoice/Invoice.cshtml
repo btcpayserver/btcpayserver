@@ -3,6 +3,15 @@
 	ViewData["Title"] = "Invoice " + Model.Id;
 }
 
+<style type="text/css">
+    .overflowbox {
+        max-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+</style>
+
 <section>
 	<div class="container">
 
@@ -86,7 +95,7 @@
 					</tr>
 					<tr>
 						<th>Payment Url</th>
-						<td><a href="@Model.PaymentUrl">@Model.PaymentUrl</a></td>
+						<td class="overflowbox"><a href="@Model.PaymentUrl">@Model.PaymentUrl</a></td>
 					</tr>
 				</table>
 			</div>

@@ -268,7 +268,7 @@ namespace BTCPayServer.Controllers
 				ItemDesc = model.ItemDesc,
 				FullNotifications = true,
 				BuyerEmail = model.BuyerEmail,
-			}, store, HttpContext.Request.GetAbsoluteRoot());
+			}, store, HttpContext.Request.GetAbsoluteRoot(), 120);
 
 			StatusMessage = $"Invoice {result.Data.Id} just created!";
 			return RedirectToAction(nameof(ListInvoices));

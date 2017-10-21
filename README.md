@@ -14,4 +14,5 @@ If you:
 * Want features BitPay is not willing to consider (Multi-sig + SegWit support soon)
 
 Then head out to the [documentation](https://github.com/btcpayserver/btcpayserver-doc), this project is for you.
+
 If you want to help development, go to [Local Development](Local-Development.md).

@@ -158,7 +158,9 @@ $("#copy-tab").click(function () {
 var oldStat = srvModel.status;
 onDataCallback(srvModel.status);
 
-function onDataCallback(newStatus) {
+function onDataCallback(jsonData) {
+    var newStatus = jsonData.status;
+
     if (oldStat != newStatus) {
         oldStat = newStatus;
         window.parent.postMessage({ "invoiceId": srvModel.invoiceId, "status": newStatus }, "*");
@@ -206,8 +208,7 @@ var watcher = setInterval(function () {
         url: path,
         type: "GET"
     }).done(function (data) {
-        status = data;
-        onDataCallback(status);
+        onDataCallback(data);
     }).fail(function (jqXHR, textStatus, errorThrown) {
 
     });

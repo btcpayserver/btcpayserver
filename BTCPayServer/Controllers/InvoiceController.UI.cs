@@ -125,9 +125,18 @@ namespace BTCPayServer.Controllers
 			id = invoiceId;
 			////
 
-			var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
-			if(invoice == null)
+			var model = await GetInvoiceModel(invoiceId);
+			if (model == null)
 				return NotFound();
+
+			return View(nameof(Checkout), model);
+		}
+
+		private async Task<PaymentModel> GetInvoiceModel(string invoiceId)
+		{
+			var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
+			if (invoice == null)
+				return null;
 			var store = await _StoreRepository.FindStore(invoice.StoreId);
 			var dto = invoice.EntityToDTO();
 
@@ -154,11 +163,9 @@ namespace BTCPayServer.Controllers
 				status = invoice.Status
 			};
 
-			
-
-			var expiration = TimeSpan.FromSeconds((double)model.expirationSeconds);
+			var expiration = TimeSpan.FromSeconds(model.expirationSeconds);
 			model.TimeLeft = PrettyPrint(expiration);
-			return View(nameof(Checkout), model);
+			return model;
 		}
 
 		private string PrettyPrint(TimeSpan expiration)
@@ -176,10 +183,10 @@ namespace BTCPayServer.Controllers
 		[Route("i/{invoiceId}/status")]
 		public async Task<IActionResult> GetStatus(string invoiceId)
 		{
-			var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
-			if(invoice == null)
+			var model = await GetInvoiceModel(invoiceId);
+			if(model == null)
 				return NotFound();
-			return Content(invoice.Status);
+			return Json(model);
 		}
 
 		[HttpPost]

@@ -16,3 +16,7 @@ If you:
 Then head out to the [documentation](https://github.com/btcpayserver/btcpayserver-doc), this project is for you.
 
 If you want to help development, go to [Local Development](https://github.com/btcpayserver/btcpayserver-doc/blob/master/Local-Development.md).
+
+## Additional resources
+
+[Introduction of BTCPay on youtube](https://www.youtube.com/watch?v=npFMOu6tTpA)

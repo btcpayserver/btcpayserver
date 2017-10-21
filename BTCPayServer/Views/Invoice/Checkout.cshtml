@@ -27,7 +27,7 @@
 			crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.qrcode/1.0/jquery.qrcode.min.js"></script>
 	<script type="text/javascript">
-        var srvModel = @Html.Raw(JsonConvert.SerializeObject(Model));
+        var srvModel = @Model.ToJson();
 	</script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.7.1/clipboard.min.js"></script>
 	<script src="~/js/core.js" type="text/javascript" defer="defer"></script>
@@ -113,7 +113,7 @@
 										<!---->
 										<div class="single-item-order__right">
 											<div class="single-item-order__right__btc-price clickable" id="buyerTotalBtcAmount">
-												<span>@Model.BTCTotalDue</span>
+												<span>@Model.BtcTotalDue</span>
 											</div>
 											<!---->
 											<div class="single-item-order__right__ex-rate">
@@ -128,7 +128,7 @@
 											<!---->
 											<div class="line-items__item">
 												<div class="line-items__item__label" i18n="">Payment Amount</div>
-												<div class="line-items__item__value">@Model.BTCAmount BTC</div>
+												<div class="line-items__item__value">@Model.BtcAmount BTC</div>
 											</div>
 											<div class="line-items__item">
 												<div class="line-items__item__label">
@@ -140,11 +140,11 @@
 												<div class="line-items__item__label">
 													<span i18n="">Already Paid</span>
 												</div>
-												<div class="line-items__item__value" i18n="">-@Model.BTCPaid BTC</div>
+												<div class="line-items__item__value" i18n="">-@Model.BtcPaid BTC</div>
 											</div>
 											<div class="line-items__item line-items__item--total">
 												<div class="line-items__item__label" i18n="">Due	</div>
-												<div class="line-items__item__value">@Model.btcDue BTC</div>
+												<div class="line-items__item__value">@Model.BtcDue BTC</div>
 											</div>
 											<!---->
 										</div>
@@ -363,7 +363,7 @@
 												<div class="manual-box__amount__label label" i18n="">Amount</div>
 												<!---->
 												<div class="manual-box__amount__value copy-cursor" ngxclipboard="">
-													<span>@Model.btcDue</span> BTC
+													<span>@Model.BtcDue</span> BTC
 													<div class="copied-label">
 														<span i18n="">Copied</span>
 													</div>
@@ -382,7 +382,7 @@
 																<div class="manual-box__address__wrapper__logo">
 																	<img src="~/img/bitcoin-symbol.svg">
 																</div>
-																<div class="manual-box__address__wrapper__value">@Model.btcAddress</div>
+																<div class="manual-box__address__wrapper__value">@Model.BtcAddress</div>
 															</div>
 															<div class="copied-label" style="top: 5px;">
 																<span i18n="">Copied</span>
@@ -520,7 +520,7 @@
 													hours.
 												</div>
 												<div class="expired__text">
-													<span class="expired__text__bullet" i18n="">Invoice ID:</span> @Model.invoiceId<br>
+													<span class="expired__text__bullet" i18n="">Invoice ID:</span> @Model.InvoiceId<br>
 													<!---->
 													<span>
 														<span class="expired__text__bullet" i18n="">Order ID:</span> @Model.OrderId

@@ -142,28 +142,28 @@ namespace BTCPayServer.Controllers
 
 			var model = new PaymentModel()
 			{
-				serverUrl = HttpContext.Request.GetAbsoluteRoot(),
+				ServerUrl = HttpContext.Request.GetAbsoluteRoot(),
 				OrderId = invoice.OrderId,
-				invoiceId = invoice.Id,
-				btcAddress = invoice.DepositAddress.ToString(),
-				BTCAmount = (invoice.GetTotalCryptoDue() - invoice.TxFee).ToString(),
-				BTCTotalDue = invoice.GetTotalCryptoDue().ToString(),
-				btcDue = invoice.GetCryptoDue().ToString(),
-				customerEmail = invoice.RefundMail,
-				expirationSeconds = Math.Max(0, (int)(invoice.ExpirationTime - DateTimeOffset.UtcNow).TotalSeconds),
-				maxTimeSeconds = (int)(invoice.ExpirationTime - invoice.InvoiceTime).TotalSeconds,
+				InvoiceId = invoice.Id,
+				BtcAddress = invoice.DepositAddress.ToString(),
+				BtcAmount = (invoice.GetTotalCryptoDue() - invoice.TxFee).ToString(),
+				BtcTotalDue = invoice.GetTotalCryptoDue().ToString(),
+				BtcDue = invoice.GetCryptoDue().ToString(),
+				CustomerEmail = invoice.RefundMail,
+				ExpirationSeconds = Math.Max(0, (int)(invoice.ExpirationTime - DateTimeOffset.UtcNow).TotalSeconds),
+				MaxTimeSeconds = (int)(invoice.ExpirationTime - invoice.InvoiceTime).TotalSeconds,
 				ItemDesc = invoice.ProductInformation.ItemDesc,
 				Rate = invoice.Rate.ToString("C", GetCurrencyProvider(invoice.ProductInformation.Currency)),
-				merchantRefLink = invoice.RedirectURL,
+				MerchantRefLink = invoice.RedirectURL,
 				StoreName = store.StoreName,
 				TxFees = invoice.TxFee.ToString(),
 				InvoiceBitcoinUrl = dto.PaymentUrls.BIP72,
 				TxCount = invoice.GetTxCount(),
-				BTCPaid = invoice.GetTotalPaid().ToString(),
-				status = invoice.Status
+				BtcPaid = invoice.GetTotalPaid().ToString(),
+				Status = invoice.Status
 			};
 
-			var expiration = TimeSpan.FromSeconds(model.expirationSeconds);
+			var expiration = TimeSpan.FromSeconds(model.ExpirationSeconds);
 			model.TimeLeft = PrettyPrint(expiration);
 			return model;
 		}

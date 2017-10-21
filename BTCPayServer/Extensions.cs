@@ -1,9 +1,12 @@
 ﻿using BTCPayServer.Authentication;
 using BTCPayServer.Configuration;
+using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -43,6 +46,13 @@ namespace BTCPayServer
 			if(!(controller.User.Identity is BitIdentity))
 				return throws ? throw new UnauthorizedAccessException("no-bitid") : (BitIdentity)null;
 			return (BitIdentity)controller.User.Identity;
+		}
+
+		private static JsonSerializerSettings jsonSettings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
+		public static HtmlString ToJson(this object o)
+		{
+			var res = JsonConvert.SerializeObject(o, Formatting.None, jsonSettings);
+			return new HtmlString(res);
 		}
 	}
 }

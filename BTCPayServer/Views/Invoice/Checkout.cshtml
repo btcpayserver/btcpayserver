@@ -27,23 +27,7 @@
 			crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.qrcode/1.0/jquery.qrcode.min.js"></script>
 	<script type="text/javascript">
-		var serverUrl = "@Model.ServerUrl";
-		var invoiceId = "@Model.InvoiceId";
-		var btcAddress = "@Model.BTCAddress";
-		var btcDue = "@Model.BTCDue"; //must be a string
-		var customerEmail = "@Model.CustomerEmail"; // Place holder
-		var expirationTime = @Model.ExpirationSeconds; // Can be calculted server-side, or fixed
-		var isArchieved = false; // Preferably Bool
-		var status = "@Model.Status"; // Tx listener
-		var merchantRefLink = "@Model.RedirectUrl"; // Merchant link to redect the user
-		var merchantName = "@Model.StoreName";
-		var merchantDesc = "@Model.ItemDesc";
-		var btcRate = "@Model.Rate";
-		var btcAmount = "@Model.BTCAmount";
-		var itemAmount = 1;
-		var txFees = "@Model.TxFees";
-		var noMock = true;
-		var maxTime = @Model.MaxTimeSeconds;
+        var srvModel = @Model.ToJson();
 	</script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.7.1/clipboard.min.js"></script>
 	<script src="~/js/core.js" type="text/javascript" defer="defer"></script>
@@ -57,7 +41,7 @@
 	<noscript>
 		<center style="padding: 2em">
 			<h2>Javascript is currently disabled in your browser.</h2>
-			<h5>Please enable Javascript from &apos;https://bitpay.com/&apos; and refresh this page for the best experience.</h5>
+			<h5>Please enable Javascript and refresh this page for the best experience.</h5>
 
 			<p>Alternatively, click below to continue to our HTML-only invoice.</p>
 
@@ -129,7 +113,7 @@
 										<!---->
 										<div class="single-item-order__right">
 											<div class="single-item-order__right__btc-price clickable" id="buyerTotalBtcAmount">
-												<span>@Model.BTCTotalDue</span>
+												<span>@Model.BtcTotalDue</span>
 											</div>
 											<!---->
 											<div class="single-item-order__right__ex-rate">
@@ -144,7 +128,7 @@
 											<!---->
 											<div class="line-items__item">
 												<div class="line-items__item__label" i18n="">Payment Amount</div>
-												<div class="line-items__item__value">@Model.BTCAmount BTC</div>
+												<div class="line-items__item__value">@Model.BtcAmount BTC</div>
 											</div>
 											<div class="line-items__item">
 												<div class="line-items__item__label">
@@ -156,11 +140,11 @@
 												<div class="line-items__item__label">
 													<span i18n="">Already Paid</span>
 												</div>
-												<div class="line-items__item__value" i18n="">-@Model.BTCPaid BTC</div>
+												<div class="line-items__item__value" i18n="">-@Model.BtcPaid BTC</div>
 											</div>
 											<div class="line-items__item line-items__item--total">
 												<div class="line-items__item__label" i18n="">Due	</div>
-												<div class="line-items__item__value">@Model.BTCDue BTC</div>
+												<div class="line-items__item__value">@Model.BtcDue BTC</div>
 											</div>
 											<!---->
 										</div>
@@ -299,7 +283,7 @@
 									</div>
 									<div class="bp-view confirm-bitcoin-address-view" id="confirm-refund-address">
 										<form class="manual__step-one refund-address-form ng-untouched ng-pristine ng-valid" novalidate="" style="padding-top: 1.6rem;">
-											<div><img src="~/img/mail.svg"></div>
+											<div><img src="~/imlegacy/mail.svg"></div>
 											<div class="manual__step-one__header">
 												<span i18n="">Please confirm your address</span>
 											</div>
@@ -315,7 +299,7 @@
 													</span>
 													<div class="success-text">
 														<!---->
-														<img src="~/img/circle-check.svg">
+														<img src="~/imlegacy/circle-check.svg">
 														<!---->
 														<div i18n="">Email resent</div>
 														<!---->
@@ -347,7 +331,7 @@
 												<bp-refund-address name="refundAddress" ngmodel="" class="ng-untouched ng-pristine ng-invalid">
 													<div class="bp-refund-address">
 														<div class="bitcoin-logo">
-															<div><img src="~/imgs/bitcoin-symbol.svg"></div>
+															<div><img src="~/imlegacy/bitcoin-symbol.svg"></div>
 														</div>
 														<input class="bp-input {'not-empty': addressValue.length &gt; 0} ng-untouched ng-pristine ng-valid" id="refund-address-input" name="refundAddress" ngclass="{'not-empty': addressValue.length &gt; 0}">
 													</div>
@@ -379,7 +363,7 @@
 												<div class="manual-box__amount__label label" i18n="">Amount</div>
 												<!---->
 												<div class="manual-box__amount__value copy-cursor" ngxclipboard="">
-													<span>@Model.BTCDue</span> BTC
+													<span>@Model.BtcDue</span> BTC
 													<div class="copied-label">
 														<span i18n="">Copied</span>
 													</div>
@@ -396,9 +380,9 @@
 														<div class="manual-box__address__value copy-cursor" ngxclipboard="">
 															<div class="manual-box__address__wrapper">
 																<div class="manual-box__address__wrapper__logo">
-																	<img src="~/img/bitcoin-symbol.svg">
+																	<img src="~/imlegacy/bitcoin-symbol.svg">
 																</div>
-																<div class="manual-box__address__wrapper__value">@Model.BTCAddress</div>
+																<div class="manual-box__address__wrapper__value">@Model.BtcAddress</div>
 															</div>
 															<div class="copied-label" style="top: 5px;">
 																<span i18n="">Copied</span>
@@ -417,7 +401,7 @@
 													<div class="status-icon__wrapper">
 														<div class="inner-wrapper">
 															<div class="status-icon__wrapper__icon">
-																<img src="~/img/checkmark.svg">
+																<img src="~/imlegacy/checkmark.svg">
 															</div>
 															<div class="status-icon__wrapper__outline"></div>
 														</div>
@@ -442,7 +426,7 @@
 									<div class="bp-view" id="refund-pending">
 										<div class="status-block">
 											<div class="pending-block" style="position: relative; padding-bottom: 1.6rem;">
-												<img src="~/img/refund-pending.svg">
+												<img src="~/imlegacy/refund-pending.svg">
 												<div class="pending-block__header" i18n="">Processing Refund</div>
 												<span>
 													<!---->
@@ -468,7 +452,7 @@
 														<div class="manual-box__address__label label" i18n="">Will Be Refunded To</div>
 														<div class="manual-box__address__wrapper">
 															<div class="manual-box__address__wrapper__logo">
-																<img src="~/img/bitcoin-symbol.svg">
+																<img src="~/imlegacy/bitcoin-symbol.svg">
 															</div>
 															<div class="manual-box__address__wrapper__value">
 															</div>
@@ -493,13 +477,13 @@
 												<div class="timeline">
 													<div class="timeline__item">
 														<div class="timeline__item__icon timeline__item__icon--complete">
-															<img src="~/img/checkmark-small.svg">
+															<img src="~/imlegacy/checkmark-small.svg">
 														</div>
 														<div class="timeline__item__name" i18n="">Transaction created</div>
 													</div>
 													<div class="timeline__item">
 														<div class="timeline__item__icon timeline__item__icon--pending">
-															<img src="~/img/pending.svg">
+															<img src="~/imlegacy/pending.svg">
 														</div>
 														<div class="timeline__item__name">
 															<span i18n="">Transaction confirming — funds have not yet moved</span>
@@ -556,7 +540,7 @@
 									</div>
 									<div class="bp-view expired" id="archived">
 										<div class="expired-icon">
-											<img src="~/img/archived.svg">
+											<img src="~/imlegacy/archived.svg">
 										</div>
 										<div class="archived__message">
 											<div class="archived__message__header">
@@ -575,7 +559,7 @@
 													<div class="status-icon__wrapper">
 														<div class="inner-wrapper">
 															<div class="status-icon__wrapper__icon">
-																<img src="~/img/checkmark.svg">
+																<img src="~/imlegacy/checkmark.svg">
 															</div>
 															<div class="status-icon__wrapper__outline" style="height: 117px; width: 117px;"></div>
 														</div>
@@ -610,7 +594,7 @@
 														<div class="manual-box__address__label label" i18n="">Refunded To</div>
 														<div class="manual-box__address__wrapper">
 															<div class="manual-box__address__wrapper__logo">
-																<img src="~/img/bitcoin-symbol.svg">
+																<img src="~/imlegacy/bitcoin-symbol.svg">
 															</div>
 															<div class="manual-box__address__wrapper__value">
 															</div>

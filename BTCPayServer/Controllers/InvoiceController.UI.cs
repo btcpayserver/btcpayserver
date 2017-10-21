@@ -125,9 +125,18 @@ namespace BTCPayServer.Controllers
 			id = invoiceId;
 			////
 
-			var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
-			if(invoice == null)
+			var model = await GetInvoiceModel(invoiceId);
+			if (model == null)
 				return NotFound();
+
+			return View(nameof(Checkout), model);
+		}
+
+		private async Task<PaymentModel> GetInvoiceModel(string invoiceId)
+		{
+			var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
+			if (invoice == null)
+				return null;
 			var store = await _StoreRepository.FindStore(invoice.StoreId);
 			var dto = invoice.EntityToDTO();
 
@@ -136,27 +145,27 @@ namespace BTCPayServer.Controllers
 				ServerUrl = HttpContext.Request.GetAbsoluteRoot(),
 				OrderId = invoice.OrderId,
 				InvoiceId = invoice.Id,
-				BTCAddress = invoice.DepositAddress.ToString(),
-				BTCAmount = (invoice.GetTotalCryptoDue() - invoice.TxFee).ToString(),
-				BTCTotalDue = invoice.GetTotalCryptoDue().ToString(),
-				BTCDue = invoice.GetCryptoDue().ToString(),
+				BtcAddress = invoice.DepositAddress.ToString(),
+				BtcAmount = (invoice.GetTotalCryptoDue() - invoice.TxFee).ToString(),
+				BtcTotalDue = invoice.GetTotalCryptoDue().ToString(),
+				BtcDue = invoice.GetCryptoDue().ToString(),
 				CustomerEmail = invoice.RefundMail,
 				ExpirationSeconds = Math.Max(0, (int)(invoice.ExpirationTime - DateTimeOffset.UtcNow).TotalSeconds),
 				MaxTimeSeconds = (int)(invoice.ExpirationTime - invoice.InvoiceTime).TotalSeconds,
 				ItemDesc = invoice.ProductInformation.ItemDesc,
 				Rate = invoice.Rate.ToString("C", GetCurrencyProvider(invoice.ProductInformation.Currency)),
-				RedirectUrl = invoice.RedirectURL,
+				MerchantRefLink = invoice.RedirectURL ?? "/",
 				StoreName = store.StoreName,
 				TxFees = invoice.TxFee.ToString(),
 				InvoiceBitcoinUrl = dto.PaymentUrls.BIP72,
 				TxCount = invoice.GetTxCount(),
-				BTCPaid = invoice.GetTotalPaid().ToString(),
+				BtcPaid = invoice.GetTotalPaid().ToString(),
 				Status = invoice.Status
 			};
 
-			var expiration = TimeSpan.FromSeconds((double)model.ExpirationSeconds);
+			var expiration = TimeSpan.FromSeconds(model.ExpirationSeconds);
 			model.TimeLeft = PrettyPrint(expiration);
-			return View(nameof(Checkout), model);
+			return model;
 		}
 
 		private string PrettyPrint(TimeSpan expiration)
@@ -174,10 +183,10 @@ namespace BTCPayServer.Controllers
 		[Route("i/{invoiceId}/status")]
 		public async Task<IActionResult> GetStatus(string invoiceId)
 		{
-			var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
-			if(invoice == null)
+			var model = await GetInvoiceModel(invoiceId);
+			if(model == null)
 				return NotFound();
-			return Content(invoice.Status);
+			return Json(model);
 		}
 
 		[HttpPost]
@@ -268,7 +277,7 @@ namespace BTCPayServer.Controllers
 				ItemDesc = model.ItemDesc,
 				FullNotifications = true,
 				BuyerEmail = model.BuyerEmail,
-			}, store, HttpContext.Request.GetAbsoluteRoot(), 120);
+			}, store, HttpContext.Request.GetAbsoluteRoot());
 
 			StatusMessage = $"Invoice {result.Data.Id} just created!";
 			return RedirectToAction(nameof(ListInvoices));

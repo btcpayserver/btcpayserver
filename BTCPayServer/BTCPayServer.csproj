@@ -46,7 +46,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Include="wwwroot\img\bitcoin-symbol.svg" />
 	  <None Include="wwwroot\js\core.js" />
 	  <None Include="wwwroot\js\creative.js" />
 	  <None Include="wwwroot\js\creative.min.js" />

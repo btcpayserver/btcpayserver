@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="13px" height="13px" viewBox="0 0 13 13" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 40.1 (33804) - http://www.bohemiancoding.com/sketch -->
+    <title>arrows-24px-outline-1_refresh-69</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Scan---Design-Exploration-(Modal)" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Payment-Success-(Confirming)" transform="translate(-299.000000, -454.000000)" stroke="#D0D0D0">
+            <g id="Group-2" transform="translate(293.000000, 391.000000)">
+                <g id="Group-3" transform="translate(0.000000, 57.000000)">
+                    <g id="arrows-24px-outline-1_refresh-69" transform="translate(7.000000, 7.000000)">
+                        <g id="Group">
+                            <path d="M0,5.5 C0,2.6125 2.475,0.25 5.5,0.25 C7.645,0.25 9.515,1.405 10.395,3.1375" id="Shape"></path>
+                            <path d="M11,5.5 C11,8.3875 8.525,10.75 5.5,10.75 C3.355,10.75 1.485,9.595 0.605,7.8625" id="Shape"></path>
+                            <polyline id="Shape" stroke-linecap="square" points="10.89 0.0925 10.45 3.19 7.15 2.77"></polyline>
+                            <polyline id="Shape" stroke-linecap="square" points="0.11 10.9075 0.55 7.81 3.85 8.23"></polyline>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

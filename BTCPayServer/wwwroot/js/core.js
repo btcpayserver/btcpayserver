@@ -33,12 +33,12 @@
 var display = $(".timer-row__time-left"); // Timer container
 
 // check if the Document expired
-if (expirationTime > 0) {
+if (srvModel.expirationSeconds > 0) {
 
-    progressStart(maxTime); // Progress bar
-    startTimer(expirationTime, display); // Timer
+    progressStart(srvModel.maxTimeSeconds); // Progress bar
+    startTimer(srvModel.expirationSeconds, display); // Timer
 
-    if (!validateEmail(customerEmail))
+    if (!validateEmail(srvModel.customerEmail))
         emailForm(); // Email form Display
     else
         hideEmailForm();
@@ -48,9 +48,9 @@ if (expirationTime > 0) {
 function hideEmailForm() {
     $("[role=document]").removeClass("enter-purchaser-email");
     $("#emailAddressView").removeClass("active");
-    $("placeholder-refundEmail").html(customerEmail);
+    $("placeholder-refundEmail").html(srvModel.customerEmail);
     // to generate a QR-Code : $(<selector>).qrcode("1Dut19quHiJrXEwfmig4hB8RyLss5aTRTC");
-    $('.qr-codes').qrcode(btcAddress);
+    $('.qr-codes').qrcode(srvModel.btcAddress);
 
     // Remove Email mode
     $(".modal-dialog").removeClass("enter-purchaser-email");
@@ -67,14 +67,14 @@ function emailForm() {
         if (validateEmail(emailAddress)) {
             $("#emailAddressForm .input-wrapper bp-loading-button .action-button").addClass("loading");
             // Push the email to a server, once the reception is confirmed move on
-            customerEmail = emailAddress;
+            srvModel.customerEmail = emailAddress;
 
-            var path = serverUrl + "/i/" + invoiceId + "/UpdateCustomer";
+            var path = srvModel.serverUrl + "/i/" + srvModel.invoiceId + "/UpdateCustomer";
 
             $.ajax({
                 url: path,
                 type: "POST",
-                data: JSON.stringify({ Email: customerEmail }),
+                data: JSON.stringify({ Email: srvModel.customerEmail }),
                 contentType: "application/json; charset=utf-8"
             }).done(function () {
                 hideEmailForm();
@@ -94,7 +94,7 @@ function emailForm() {
 }
 
 // Copy Tab Info 
-$("#copy .manual__step-two__instructions span").html("To complete your payment, please send " + btcDue + " BTC to the address below.");
+$("#copy .manual__step-two__instructions span").html("To complete your payment, please send " + srvModel.btcDue + " BTC to the address below.");
 
 
 /* =============== Even listeners =============== */
@@ -155,30 +155,28 @@ $("#copy-tab").click(function () {
 // Should connect using webhook ?
 // If notification received
 
-var oldStatus = status;
-updateState(status);
+var oldStat = srvModel.status;
+onDataCallback(srvModel.status);
 
-function updateState(status) {
-    if (oldStatus != status)
-    {
-        oldStatus = status;
-        window.parent.postMessage({ "invoiceId": invoiceId, "status": status }, "*");
+function onDataCallback(newStatus) {
+    if (oldStat != newStatus) {
+        oldStat = newStatus;
+        window.parent.postMessage({ "invoiceId": srvModel.invoiceId, "status": newStatus }, "*");
     }
-    if (status == "complete" ||
-        status == "paidOver" ||
-        status == "confirmed" ||
-        status =="paid") {
+    if (newStatus == "complete" ||
+        newStatus == "paidOver" ||
+        newStatus == "confirmed" ||
+        newStatus == "paid") {
         if ($(".modal-dialog").hasClass("expired")) {
             $(".modal-dialog").removeClass("expired");
         }
 
-        if (merchantRefLink != "") {
+        if (srvModel.merchantRefLink != "") {
             $(".action-button").click(function () {
-                window.location.href = merchantRefLink;
+                window.location.href = srvModel.merchantRefLink;
             });
         }
-        else
-        {
+        else {
             $(".action-button").hide();
         }
 
@@ -192,7 +190,7 @@ function updateState(status) {
         $("#paid").addClass("active");
     }
 
-    if (status == "invalid") {
+    if (newStatus == "invalid") {
         $(".timer-row").removeClass("expiring-soon");
         $(".timer-row__message span").html("Invoice expired.");
         $(".timer-row__spinner").html("");
@@ -203,17 +201,16 @@ function updateState(status) {
 }
 
 var watcher = setInterval(function () {
-    var path = serverUrl + "/i/" + invoiceId + "/status";
+    var path = srvModel.serverUrl + "/i/" + srvModel.invoiceId + "/status";
     $.ajax({
         url: path,
         type: "GET"
     }).done(function (data) {
         status = data;
-        updateState(status);
-    })
-        .fail(function (jqXHR, textStatus, errorThrown) {
+        onDataCallback(status);
+    }).fail(function (jqXHR, textStatus, errorThrown) {
 
-        });
+    });
 }, 2000);
 
 $(".menu__item").click(function () {
@@ -255,11 +252,11 @@ function startTimer(duration, display) {
 }
 
 // Progress bar
-function progressStart(maxTime) {
+function progressStart(timerMax) {
     var end = new Date(); // Setup Time Variable, should come from server
-    end.setSeconds(end.getSeconds() + expirationTime);
-    maxTime *= 1000; // Usually 15 minutes = 9000 second= 900000 ms
-    var timeoutVal = Math.floor(maxTime / 100); // Timeout calc
+    end.setSeconds(end.getSeconds() + srvModel.expirationSeconds);
+    timerMax *= 1000; // Usually 15 minutes = 9000 second= 900000 ms
+    var timeoutVal = Math.floor(timerMax / 100); // Timeout calc
     animateUpdate(); //Launch it
 
     function updateProgress(percentage) {
@@ -270,7 +267,7 @@ function progressStart(maxTime) {
 
         var now = new Date();
         var timeDiff = end.getTime() - now.getTime();
-        var perc = 100 - Math.round((timeDiff / maxTime) * 100);
+        var perc = 100 - Math.round((timeDiff / timerMax) * 100);
 
         if (perc === 75 && (status == "paidPartial" || status == "new")) {
             $(".timer-row").addClass("expiring-soon");
@@ -282,7 +279,7 @@ function progressStart(maxTime) {
             setTimeout(animateUpdate, timeoutVal);
         }
         if (perc >= 100 && status == "expired") {
-            updateState(status);
+            onDataCallback(status);
         }
     }
 }
@@ -313,4 +310,5 @@ $(document).keypress(
         if (event.which === '13') {
             event.preventDefault();
         }
-    });
+    }
+);

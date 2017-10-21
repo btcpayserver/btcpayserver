@@ -133,28 +133,30 @@ namespace BTCPayServer.Controllers
 
 			var model = new PaymentModel()
 			{
-				ServerUrl = HttpContext.Request.GetAbsoluteRoot(),
+				serverUrl = HttpContext.Request.GetAbsoluteRoot(),
 				OrderId = invoice.OrderId,
-				InvoiceId = invoice.Id,
-				BTCAddress = invoice.DepositAddress.ToString(),
+				invoiceId = invoice.Id,
+				btcAddress = invoice.DepositAddress.ToString(),
 				BTCAmount = (invoice.GetTotalCryptoDue() - invoice.TxFee).ToString(),
 				BTCTotalDue = invoice.GetTotalCryptoDue().ToString(),
-				BTCDue = invoice.GetCryptoDue().ToString(),
-				CustomerEmail = invoice.RefundMail,
-				ExpirationSeconds = Math.Max(0, (int)(invoice.ExpirationTime - DateTimeOffset.UtcNow).TotalSeconds),
-				MaxTimeSeconds = (int)(invoice.ExpirationTime - invoice.InvoiceTime).TotalSeconds,
+				btcDue = invoice.GetCryptoDue().ToString(),
+				customerEmail = invoice.RefundMail,
+				expirationSeconds = Math.Max(0, (int)(invoice.ExpirationTime - DateTimeOffset.UtcNow).TotalSeconds),
+				maxTimeSeconds = (int)(invoice.ExpirationTime - invoice.InvoiceTime).TotalSeconds,
 				ItemDesc = invoice.ProductInformation.ItemDesc,
 				Rate = invoice.Rate.ToString("C", GetCurrencyProvider(invoice.ProductInformation.Currency)),
-				RedirectUrl = invoice.RedirectURL,
+				merchantRefLink = invoice.RedirectURL,
 				StoreName = store.StoreName,
 				TxFees = invoice.TxFee.ToString(),
 				InvoiceBitcoinUrl = dto.PaymentUrls.BIP72,
 				TxCount = invoice.GetTxCount(),
 				BTCPaid = invoice.GetTotalPaid().ToString(),
-				Status = invoice.Status
+				status = invoice.Status
 			};
 
-			var expiration = TimeSpan.FromSeconds((double)model.ExpirationSeconds);
+			
+
+			var expiration = TimeSpan.FromSeconds((double)model.expirationSeconds);
 			model.TimeLeft = PrettyPrint(expiration);
 			return View(nameof(Checkout), model);
 		}

@@ -5,106 +5,38 @@ using System.Threading.Tasks;
 
 namespace BTCPayServer.Models.InvoicingModels
 {
-    public class PaymentModel
-    {
-		public string InvoiceId
-		{
-			get; set;
-		}
-		public string ServerUrl
-		{
-			get; set;
-		}
+	// going with lowercase for property names to enable easy ToJson conversion
+	// down the road I can look into mapper who transforms capital into lower case
+	// because of different conventions between server and client side
+	public class PaymentModel
+	{
+		public string serverUrl { get; set; }
+		public string invoiceId { get; set; }
+		public string btcAddress { get; set; }
+		public string btcDue { get; set; }
+		public string customerEmail { get; set; }
+		public int expirationSeconds { get; set; }
+		public string status { get; set; }
+		public string merchantRefLink { get; set; }
+		public int maxTimeSeconds { get; set; }
+
+		// These properties are still not used in client side code
+		// so will stick with C# notation for now
+		public string StoreName { get; set; }
+		public string ItemDesc { get; set; }
+		public string TimeLeft { get; set; }
+		public string Rate { get; set; }
+		public string BTCAmount { get; set; }
+		public string TxFees { get; set; }
+		public string InvoiceBitcoinUrl { get; set; }
+		public string BTCTotalDue { get; set; }
+		public int TxCount { get; set; }
+		public string BTCPaid { get; set; }
+		public string StoreEmail { get; set; }
+
 		public string OrderId
 		{
 			get; set;
-		}
-		public string BTCAddress
-		{
-			get; set;
-		}
-
-		public string BTCDue
-		{
-			get; set;
-		}
-
-		public string CustomerEmail
-		{
-			get; set;
-		}
-
-		public int ExpirationSeconds
-		{
-			get; set;
-		}
-
-		public int MaxTimeSeconds
-		{
-			get; set;
-		}
-
-		public string TimeLeft
-		{
-			get; set;
-		}
-
-		public string RedirectUrl
-		{
-			get; set;
-		}
-
-
-		public string StoreName
-		{
-			get; set;
-		}
-
-		public string ItemDesc
-		{
-			get; set;
-		}
-
-		public string Rate
-		{
-			get; set;
-		}
-
-		public string BTCAmount
-		{
-			get; set;
-		}
-
-		public string TxFees
-		{
-			get; set;
-		}
-		public string InvoiceBitcoinUrl
-		{
-			get;
-			internal set;
-		}
-		public string BTCTotalDue
-		{
-			get;
-			set;
-		}
-		public int TxCount
-		{
-			get; set;
-		}
-		public string BTCPaid
-		{
-			get; set;
-		}
-		public string StoreEmail
-		{
-			get; set;
-		}
-		public string Status
-		{
-			get;
-			set;
 		}
 	}
 }

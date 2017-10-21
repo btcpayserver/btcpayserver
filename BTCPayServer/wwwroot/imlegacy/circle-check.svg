@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="21px" height="21px" viewBox="0 0 21 21" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 3.7 (28169) - http://www.bohemiancoding.com/sketch -->
+    <title>check</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Overpaid-(Email-receipt-sent)" transform="translate(-384.000000, -628.000000)">
+            <g id="Group-2" transform="translate(384.000000, 628.000000)">
+                <g id="check">
+                    <path d="M10.5,21 C16.2989899,21 21,16.2989899 21,10.5 C21,4.70101013 16.2989899,0 10.5,0 C4.70101013,0 0,4.70101013 0,10.5 C0,16.2989899 4.70101013,21 10.5,21 Z" id="Oval-1" fill="#12E5B6"></path>
+                    <path d="M15.5429276,6.63875598 L9.3656549,12.8605763 L7.02937868,10.5243001 L6.14832536,11.4053534 L8.92017851,14.1772066 C9.04392195,14.30095 9.21221303,14.3999448 9.36070517,14.3999448 C9.5091973,14.3999448 9.67253865,14.30095 9.79628209,14.1821563 L16.4140815,7.52970878 L15.5429276,6.63875598 L15.5429276,6.63875598 Z" id="Shape" fill="#FFFFFF"></path>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

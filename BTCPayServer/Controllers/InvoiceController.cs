@@ -29,7 +29,7 @@ using BTCPayServer.Services;
 using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 using BTCPayServer.Services.Stores;
-using BTCPayServer.Servcices.Invoices;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Validations;
@@ -75,7 +75,7 @@ namespace BTCPayServer.Controllers
 			_FeeProvider = feeProvider ?? throw new ArgumentNullException(nameof(feeProvider));
 		}
 
-		internal async Task<DataWrapper<InvoiceResponse>> CreateInvoiceCore(Invoice invoice, StoreData store, string serverUrl)
+		internal async Task<DataWrapper<InvoiceResponse>> CreateInvoiceCore(Invoice invoice, StoreData store, string serverUrl, double expiryMinutes = 15)
 		{
 			var derivationStrategy = store.DerivationStrategy;
 			var entity = new InvoiceEntity
@@ -87,7 +87,7 @@ namespace BTCPayServer.Controllers
 			if(notificationUri == null || (notificationUri.Scheme != "http" && notificationUri.Scheme != "https")) //TODO: Filer non routable addresses ?
 				notificationUri = null;
 			EmailAddressAttribute emailValidator = new EmailAddressAttribute();
-			entity.ExpirationTime = entity.InvoiceTime + TimeSpan.FromMinutes(15.0);
+			entity.ExpirationTime = entity.InvoiceTime.AddMinutes(expiryMinutes);
 			entity.ServerUrl = serverUrl;
 			entity.FullNotifications = invoice.FullNotifications;
 			entity.NotificationURL = notificationUri?.AbsoluteUri;

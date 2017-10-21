@@ -1,7 +1,7 @@
 ﻿using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Models.InvoicingModels;
-using BTCPayServer.Servcices.Invoices;
+using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
@@ -268,7 +268,7 @@ namespace BTCPayServer.Controllers
 				ItemDesc = model.ItemDesc,
 				FullNotifications = true,
 				BuyerEmail = model.BuyerEmail,
-			}, store, HttpContext.Request.GetAbsoluteRoot());
+			}, store, HttpContext.Request.GetAbsoluteRoot(), 120);
 
 			StatusMessage = $"Invoice {result.Data.Id} just created!";
 			return RedirectToAction(nameof(ListInvoices));

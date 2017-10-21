@@ -16,7 +16,7 @@ using NBXplorer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Hosting;
 using BTCPayServer.Services;
-using BTCPayServer.Servcices.Invoices;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Fees;

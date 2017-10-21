@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using BTCPayServer.Servcices.Invoices;
+using BTCPayServer.Services.Invoices;
 using NBitcoin;
 
 namespace BTCPayServer.Models.InvoicingModels

@@ -39,14 +39,13 @@ services:
       - postgres
 
   bitcoind:
+    container_name: btcpayserver_dev_bitcoind
     image: nicolasdorier/docker-bitcoin:0.15.0.1
     ports:
       - "43782:43782"
       - "39388:39388"
     environment:
-      BITCOIN_EXTRA_ARGS: "regtest=1\nrpcport=43782\nport=39388\nwhitelist=0.0.0.0/0"
-      BITCOIN_RPC_USER: ceiwHEbqWI83
-      BITCOIN_RPC_PASSWORD: DwubwWsoo3
+      BITCOIN_EXTRA_ARGS: "rpcuser=ceiwHEbqWI83\nrpcpassword=DwubwWsoo3\nregtest=1\nrpcport=43782\nport=39388\nwhitelist=0.0.0.0/0"
     expose:
       - "43782"
       - "39388"

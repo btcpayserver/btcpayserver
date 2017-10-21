@@ -154,7 +154,7 @@ namespace BTCPayServer.Controllers
 				MaxTimeSeconds = (int)(invoice.ExpirationTime - invoice.InvoiceTime).TotalSeconds,
 				ItemDesc = invoice.ProductInformation.ItemDesc,
 				Rate = invoice.Rate.ToString("C", GetCurrencyProvider(invoice.ProductInformation.Currency)),
-				MerchantRefLink = invoice.RedirectURL,
+				MerchantRefLink = invoice.RedirectURL ?? "/",
 				StoreName = store.StoreName,
 				TxFees = invoice.TxFee.ToString(),
 				InvoiceBitcoinUrl = dto.PaymentUrls.BIP72,

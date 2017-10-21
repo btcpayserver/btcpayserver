@@ -156,7 +156,7 @@ $("#copy-tab").click(function () {
 // If notification received
 
 var oldStat = srvModel.status;
-onDataCallback(srvModel.status);
+onDataCallback(srvModel);
 
 function onDataCallback(jsonData) {
     var newStatus = jsonData.status;

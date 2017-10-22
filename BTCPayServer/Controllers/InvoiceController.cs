@@ -88,6 +88,7 @@ namespace BTCPayServer.Controllers
 				notificationUri = null;
 			EmailAddressAttribute emailValidator = new EmailAddressAttribute();
 			entity.ExpirationTime = entity.InvoiceTime.AddMinutes(expiryMinutes);
+			entity.OrderId = invoice.OrderId;
 			entity.ServerUrl = serverUrl;
 			entity.FullNotifications = invoice.FullNotifications;
 			entity.NotificationURL = notificationUri?.AbsoluteUri;

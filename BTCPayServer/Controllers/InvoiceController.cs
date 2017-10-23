@@ -119,6 +119,8 @@ namespace BTCPayServer.Controllers
 
 		private SpeedPolicy ParseSpeedPolicy(string transactionSpeed, SpeedPolicy defaultPolicy)
 		{
+			if(transactionSpeed == null)
+				return defaultPolicy;
 			var mappings = new Dictionary<string, SpeedPolicy>();
 			mappings.Add("low", SpeedPolicy.LowSpeed);
 			mappings.Add("medium", SpeedPolicy.MediumSpeed);

@@ -167,6 +167,8 @@ namespace BTCPayServer.Authentication
 
 		private PairingCodeEntity CreatePairingCodeEntity(PairingCodeData data)
 		{
+			if(data == null)
+				return null;
 			return new PairingCodeEntity()
 			{
 				Facade = data.Facade,

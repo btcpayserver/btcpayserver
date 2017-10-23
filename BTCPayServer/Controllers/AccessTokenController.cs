@@ -56,6 +56,8 @@ namespace BTCPayServer.Controllers
 					throw new BitpayHttpException(400, "'id' property is required, alternatively, use BitId");
 
 				pairingEntity = await _TokenRepository.GetPairingAsync(request.PairingCode);
+				if(pairingEntity == null)
+					throw new BitpayHttpException(404, "The specified pairingCode is not found");
 				pairingEntity.SIN = sin;
 
 				if(string.IsNullOrEmpty(pairingEntity.Label) && !string.IsNullOrEmpty(request.Label))

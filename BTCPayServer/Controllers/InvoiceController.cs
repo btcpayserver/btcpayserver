@@ -75,8 +75,9 @@ namespace BTCPayServer.Controllers
 			_FeeProvider = feeProvider ?? throw new ArgumentNullException(nameof(feeProvider));
 		}
 
-		internal async Task<DataWrapper<InvoiceResponse>> CreateInvoiceCore(Invoice invoice, StoreData store, string serverUrl, double expiryMinutes = 15)
+		internal async Task<DataWrapper<InvoiceResponse>> CreateInvoiceCore(Invoice invoice, StoreData store, string serverUrl, double expiryMinutes = 15, double monitoringMinutes = 60)
 		{
+			//TODO: expiryMinutes (time before a new invoice can become paid) and monitoringMinutes (time before a paid invoice becomes invalid)  should be configurable at store level
 			var derivationStrategy = store.DerivationStrategy;
 			var entity = new InvoiceEntity
 			{
@@ -88,6 +89,7 @@ namespace BTCPayServer.Controllers
 				notificationUri = null;
 			EmailAddressAttribute emailValidator = new EmailAddressAttribute();
 			entity.ExpirationTime = entity.InvoiceTime.AddMinutes(expiryMinutes);
+			entity.MonitoringExpiration = entity.InvoiceTime.AddMinutes(monitoringMinutes);
 			entity.OrderId = invoice.OrderId;
 			entity.ServerUrl = serverUrl;
 			entity.FullNotifications = invoice.FullNotifications;

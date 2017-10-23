@@ -248,6 +248,11 @@ namespace BTCPayServer.Services.Invoices
 			get;
 			set;
 		}
+		public DateTimeOffset? MonitoringExpiration
+		{
+			get;
+			set;
+		}
 
 		public bool IsExpired()
 		{

@@ -80,7 +80,9 @@ namespace BTCPayServer.Services.Invoices
 						Logs.PayServer.LogInformation($"Invoice {invoice.Id}: {stateBefore} => {invoice.Status}");
 					}
 
-					if(invoice.Status == "complete" || invoice.Status == "invalid")
+					var expirationMonitoring = invoice.MonitoringExpiration.HasValue ? invoice.MonitoringExpiration.Value : invoice.InvoiceTime + TimeSpan.FromMinutes(60);
+					if(invoice.Status == "complete" || 
+					   ((invoice.Status == "invalid" || invoice.Status == "expired") && expirationMonitoring < DateTimeOffset.UtcNow))
 					{
 						if(await _InvoiceRepository.RemovePendingInvoice(invoice.Id).ConfigureAwait(false))
 							Logs.PayServer.LogInformation("Stopped watching invoice " + invoiceId);
@@ -106,56 +108,56 @@ namespace BTCPayServer.Services.Invoices
 		private async Task<(bool NeedSave, UTXOChanges Changes)> UpdateInvoice(UTXOChanges changes, InvoiceEntity invoice)
 		{
 			bool needSave = false;
-			
+			//Fetch unknown payments
+			var strategy = _DerivationFactory.Parse(invoice.DerivationStrategy);
+			changes = await _ExplorerClient.SyncAsync(strategy, changes, !LongPollingMode, _Cts.Token).ConfigureAwait(false);
+
+			var utxos = changes.Confirmed.UTXOs.Concat(changes.Unconfirmed.UTXOs).ToArray();
+			var invoiceIds = utxos.Select(u => _Wallet.GetInvoiceId(u.Output.ScriptPubKey)).ToArray();
+			utxos =
+				utxos
+				.Where((u, i) => invoiceIds[i].GetAwaiter().GetResult() == invoice.Id)
+				.ToArray();
+
+			List<Coin> receivedCoins = new List<Coin>();
+			foreach(var received in utxos)
+				if(received.Output.ScriptPubKey == invoice.DepositAddress.ScriptPubKey)
+					receivedCoins.Add(new Coin(received.Outpoint, received.Output));
+
+			var alreadyAccounted = new HashSet<OutPoint>(invoice.Payments.Select(p => p.Outpoint));
+			foreach(var coin in receivedCoins.Where(c => !alreadyAccounted.Contains(c.Outpoint)))
+			{
+				var payment = await _InvoiceRepository.AddPayment(invoice.Id, coin).ConfigureAwait(false);
+				invoice.Payments.Add(payment);
+			}
+			//////
+
 			if(invoice.Status == "new" && invoice.ExpirationTime < DateTimeOffset.UtcNow)
 			{
 				needSave = true;
 				invoice.Status = "expired";
 			}
 
-			if(invoice.Status == "expired" || invoice.Status == "new" || invoice.Status == "invalid")
-			{
-				var strategy = _DerivationFactory.Parse(invoice.DerivationStrategy);
-				changes = await _ExplorerClient.SyncAsync(strategy, changes, !LongPollingMode, _Cts.Token).ConfigureAwait(false);
-
-				var utxos = changes.Confirmed.UTXOs.Concat(changes.Unconfirmed.UTXOs).ToArray();
-				var invoiceIds = utxos.Select(u => _Wallet.GetInvoiceId(u.Output.ScriptPubKey)).ToArray();
-				utxos =
-					utxos
-					.Where((u, i) => invoiceIds[i].GetAwaiter().GetResult() == invoice.Id)
-					.ToArray();
-
-				List<Coin> receivedCoins = new List<Coin>();
-				foreach(var received in utxos)
-					if(received.Output.ScriptPubKey == invoice.DepositAddress.ScriptPubKey)
-						receivedCoins.Add(new Coin(received.Outpoint, received.Output));
-
-				var alreadyAccounted = new HashSet<OutPoint>(invoice.Payments.Select(p => p.Outpoint));
-				foreach(var coin in receivedCoins.Where(c => !alreadyAccounted.Contains(c.Outpoint)))
-				{
-					var payment = await _InvoiceRepository.AddPayment(invoice.Id, coin).ConfigureAwait(false);
-					invoice.Payments.Add(payment);
-					if(invoice.Status == "expired")
-					{
-						if(invoice.ExceptionStatus == null)
-							invoice.ExceptionStatus = "paidLate";
-						needSave = true;
-					}
-				}
-			}
-
-			if(invoice.Status == "new")
+			if(invoice.Status == "new" || invoice.Status == "expired")
 			{
 				var totalPaid = invoice.Payments.Select(p => p.Output.Value).Sum();
 				if(totalPaid >= invoice.GetTotalCryptoDue())
 				{
-					invoice.Status = "paid";
-					if(invoice.FullNotifications)
+					if(invoice.Status == "new")
 					{
-						_NotificationManager.Notify(invoice);
+						invoice.Status = "paid";
+						if(invoice.FullNotifications)
+						{
+							_NotificationManager.Notify(invoice);
+						}
+						invoice.ExceptionStatus = null;
+						needSave = true;
 					}
-					invoice.ExceptionStatus = null;
-					needSave = true;
+					else if(invoice.Status == "expired")
+					{
+						invoice.ExceptionStatus = "paidLate";
+						needSave = true;
+					}
 				}
 
 				if(totalPaid > invoice.GetTotalCryptoDue() && invoice.ExceptionStatus != "paidOver")
@@ -173,25 +175,33 @@ namespace BTCPayServer.Services.Invoices
 
 			if(invoice.Status == "paid")
 			{
-				var transactions = await GetPaymentsWithTransaction(invoice);
-				if(invoice.SpeedPolicy == SpeedPolicy.HighSpeed)
+				if(!invoice.MonitoringExpiration.HasValue || invoice.MonitoringExpiration > DateTimeOffset.UtcNow)
 				{
-					transactions = transactions.Where(t => !t.Transaction.Transaction.RBF);
-				}
-				else if(invoice.SpeedPolicy == SpeedPolicy.MediumSpeed)
-				{
-					transactions = transactions.Where(t => t.Transaction.Confirmations >= 1);
-				}
-				else if(invoice.SpeedPolicy == SpeedPolicy.LowSpeed)
-				{
-					transactions = transactions.Where(t => t.Transaction.Confirmations >= 6);
-				}
+					var transactions = await GetPaymentsWithTransaction(invoice);
+					if(invoice.SpeedPolicy == SpeedPolicy.HighSpeed)
+					{
+						transactions = transactions.Where(t => !t.Transaction.Transaction.RBF);
+					}
+					else if(invoice.SpeedPolicy == SpeedPolicy.MediumSpeed)
+					{
+						transactions = transactions.Where(t => t.Transaction.Confirmations >= 1);
+					}
+					else if(invoice.SpeedPolicy == SpeedPolicy.LowSpeed)
+					{
+						transactions = transactions.Where(t => t.Transaction.Confirmations >= 6);
+					}
 
-				var totalConfirmed = transactions.Select(t => t.Payment.Output.Value).Sum();
-				if(totalConfirmed >= invoice.GetTotalCryptoDue())
+					var totalConfirmed = transactions.Select(t => t.Payment.Output.Value).Sum();
+					if(totalConfirmed >= invoice.GetTotalCryptoDue())
+					{
+						invoice.Status = "confirmed";
+						_NotificationManager.Notify(invoice);
+						needSave = true;
+					}
+				}
+				else
 				{
-					invoice.Status = "confirmed";
-					_NotificationManager.Notify(invoice);
+					invoice.Status = "invalid";
 					needSave = true;
 				}
 			}

@@ -255,7 +255,7 @@ namespace BTCPayServer.Tests
                 {
                     tester.SimulateCallback(invoiceAddress);
                     var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
-                    Assert.Equal("paidPartial", localInvoice.Status);
+                    Assert.Equal("new", localInvoice.Status);
                     Assert.Equal(firstPayment, localInvoice.BtcPaid);
                     txFee = localInvoice.BtcDue - invoice.BtcDue;
                     Assert.Equal("paidPartial", localInvoice.ExceptionStatus);
@@ -311,7 +311,7 @@ namespace BTCPayServer.Tests
                 {
                     tester.SimulateCallback(invoiceAddress);
                     var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
-                    Assert.Equal("paidOver", localInvoice.Status);
+                    Assert.Equal("paid", localInvoice.Status);
                     Assert.Equal(Money.Zero, localInvoice.BtcDue);
                     Assert.Equal("paidOver", (string)((JValue)localInvoice.ExceptionStatus).Value);
                 });

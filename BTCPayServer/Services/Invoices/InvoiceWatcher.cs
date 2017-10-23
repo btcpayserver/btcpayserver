@@ -106,14 +106,14 @@ namespace BTCPayServer.Services.Invoices
 		private async Task<(bool NeedSave, UTXOChanges Changes)> UpdateInvoice(UTXOChanges changes, InvoiceEntity invoice)
 		{
 			bool needSave = false;
-
-			if(invoice.Status != "invalid" && invoice.ExpirationTime < DateTimeOffset.UtcNow && (invoice.Status == "new" || invoice.Status == "paidPartial"))
+			
+			if(invoice.Status == "new" && invoice.ExpirationTime < DateTimeOffset.UtcNow)
 			{
 				needSave = true;
-				invoice.Status = "invalid";
+				invoice.Status = "expired";
 			}
 
-			if(invoice.Status == "invalid" || invoice.Status == "new" || invoice.Status == "paidPartial")
+			if(invoice.Status == "expired" || invoice.Status == "new" || invoice.Status == "invalid")
 			{
 				var strategy = _DerivationFactory.Parse(invoice.DerivationStrategy);
 				changes = await _ExplorerClient.SyncAsync(strategy, changes, !LongPollingMode, _Cts.Token).ConfigureAwait(false);
@@ -135,18 +135,19 @@ namespace BTCPayServer.Services.Invoices
 				{
 					var payment = await _InvoiceRepository.AddPayment(invoice.Id, coin).ConfigureAwait(false);
 					invoice.Payments.Add(payment);
-					if(invoice.Status == "new")
+					if(invoice.Status == "expired")
 					{
-						invoice.Status = "paidPartial";
+						if(invoice.ExceptionStatus == null)
+							invoice.ExceptionStatus = "paidLate";
 						needSave = true;
 					}
 				}
 			}
 
-			if(invoice.Status == "paidPartial")
+			if(invoice.Status == "new")
 			{
 				var totalPaid = invoice.Payments.Select(p => p.Output.Value).Sum();
-				if(totalPaid == invoice.GetTotalCryptoDue())
+				if(totalPaid >= invoice.GetTotalCryptoDue())
 				{
 					invoice.Status = "paid";
 					if(invoice.FullNotifications)
@@ -157,45 +158,37 @@ namespace BTCPayServer.Services.Invoices
 					needSave = true;
 				}
 
-				if(totalPaid > invoice.GetTotalCryptoDue())
+				if(totalPaid > invoice.GetTotalCryptoDue() && invoice.ExceptionStatus != "paidOver")
 				{
-					invoice.Status = "paidOver";
 					invoice.ExceptionStatus = "paidOver";
 					needSave = true;
 				}
 
-				if(totalPaid < invoice.GetTotalCryptoDue() && invoice.ExceptionStatus == null)
+				if(totalPaid < invoice.GetTotalCryptoDue() && invoice.Payments.Count != 0 && invoice.ExceptionStatus != "paidPartial")
 				{
 					invoice.ExceptionStatus = "paidPartial";
 					needSave = true;
 				}
 			}
 
-			if(invoice.Status == "paid" || invoice.Status == "paidOver")
+			if(invoice.Status == "paid")
 			{
-				var getTransactions = invoice.Payments.Select(o => o.Outpoint.Hash).Select(o => _ExplorerClient.GetTransactionAsync(o, _Cts.Token)).ToArray();
-				await Task.WhenAll(getTransactions).ConfigureAwait(false);
-				var transactions = getTransactions.Select(c => c.GetAwaiter().GetResult()).ToArray();
-
-				bool confirmed = false;
-				var minConf = transactions.Select(t => t.Confirmations).Min();
+				var transactions = await GetPaymentsWithTransaction(invoice);
 				if(invoice.SpeedPolicy == SpeedPolicy.HighSpeed)
 				{
-					if(minConf > 0)
-						confirmed = true;
-					else
-						confirmed = !transactions.Any(t => t.Transaction.RBF);
+					transactions = transactions.Where(t => !t.Transaction.Transaction.RBF);
 				}
 				else if(invoice.SpeedPolicy == SpeedPolicy.MediumSpeed)
 				{
-					confirmed = minConf >= 1;
+					transactions = transactions.Where(t => t.Transaction.Confirmations >= 1);
 				}
 				else if(invoice.SpeedPolicy == SpeedPolicy.LowSpeed)
 				{
-					confirmed = minConf >= 6;
+					transactions = transactions.Where(t => t.Transaction.Confirmations >= 6);
 				}
 
-				if(confirmed)
+				var totalConfirmed = transactions.Select(t => t.Payment.Output.Value).Sum();
+				if(totalConfirmed >= invoice.GetTotalCryptoDue())
 				{
 					invoice.Status = "confirmed";
 					_NotificationManager.Notify(invoice);
@@ -205,11 +198,10 @@ namespace BTCPayServer.Services.Invoices
 
 			if(invoice.Status == "confirmed")
 			{
-				var getTransactions = invoice.Payments.Select(o => o.Outpoint.Hash).Select(o => _ExplorerClient.GetTransactionAsync(o, _Cts.Token)).ToArray();
-				await Task.WhenAll(getTransactions).ConfigureAwait(false);
-				var transactions = getTransactions.Select(c => c.GetAwaiter().GetResult()).ToArray();
-				var minConf = transactions.Select(t => t.Confirmations).Min();
-				if(minConf >= 6)
+				var transactions = await GetPaymentsWithTransaction(invoice);
+				transactions = transactions.Where(t => t.Transaction.Confirmations >= 6);
+				var totalConfirmed = transactions.Select(t => t.Payment.Output.Value).Sum();
+				if(totalConfirmed >= invoice.GetTotalCryptoDue())
 				{
 					invoice.Status = "complete";
 					if(invoice.FullNotifications)
@@ -221,6 +213,15 @@ namespace BTCPayServer.Services.Invoices
 			return (needSave, changes);
 		}
 
+		private async Task<IEnumerable<(PaymentEntity Payment, TransactionResult Transaction)>> GetPaymentsWithTransaction(InvoiceEntity invoice)
+		{
+			var getPayments = invoice.Payments
+												 .Select(async o => (Payment: o, Transaction: await _ExplorerClient.GetTransactionAsync(o.Outpoint.Hash, _Cts.Token)))
+												 .ToArray();
+			await Task.WhenAll(getPayments).ConfigureAwait(false);
+			var transactions = getPayments.Select(c => (Payment: c.Result.Payment, Transaction: c.Result.Transaction));
+			return transactions;
+		}
 
 		TimeSpan _PollInterval;
 		public TimeSpan PollInterval

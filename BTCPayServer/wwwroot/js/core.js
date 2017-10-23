@@ -166,7 +166,6 @@ function onDataCallback(jsonData) {
         window.parent.postMessage({ "invoiceId": srvModel.invoiceId, "status": newStatus }, "*");
     }
     if (newStatus == "complete" ||
-        newStatus == "paidOver" ||
         newStatus == "confirmed" ||
         newStatus == "paid") {
         if ($(".modal-dialog").hasClass("expired")) {
@@ -192,7 +191,7 @@ function onDataCallback(jsonData) {
         $("#paid").addClass("active");
     }
 
-    if (newStatus == "invalid") {
+    if (newStatus == "expired" || newStatus == "invalid") { //TODO: different state if the invoice is invalid (failed to confirm after timeout)
         $(".timer-row").removeClass("expiring-soon");
         $(".timer-row__message span").html("Invoice expired.");
         $(".timer-row__spinner").html("");

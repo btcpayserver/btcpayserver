@@ -83,6 +83,18 @@ namespace BTCPayServer.Services.Stores
 			}
 		}
 
+		public async Task RemoveStore(string storeId, string userId)
+		{
+			using(var ctx = _ContextFactory.CreateContext())
+			{
+				var storeUser = await ctx.UserStore.FirstOrDefaultAsync(o => o.StoreDataId == storeId && o.ApplicationUserId == userId);
+				if(storeUser == null)
+					return;
+				ctx.UserStore.Remove(storeUser);
+				await ctx.SaveChangesAsync();
+			}
+		}
+
 		public async Task UpdateStore(StoreData store)
 		{
 			using(var ctx = _ContextFactory.CreateContext())

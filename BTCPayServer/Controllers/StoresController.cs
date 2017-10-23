@@ -109,6 +109,34 @@ namespace BTCPayServer.Controllers
 		}
 
 		[HttpGet]
+		[Route("{storeId}/delete")]
+		public async Task<IActionResult> DeleteStore(string storeId)
+		{
+			var store = await _Repo.FindStore(storeId, GetUserId());
+			if(store == null)
+				return NotFound();
+			return View("Confirm", new ConfirmModel()
+			{
+				Title = "Delete store " + store.StoreName,
+				Description = "This store will still be accessible to users sharing it",
+				Action = "Delete"
+			});
+		}
+
+		[HttpPost]
+		[Route("{storeId}/delete")]
+		public async Task<IActionResult> DeleteStorePost(string storeId)
+		{
+			var userId = GetUserId();
+			var store = await _Repo.FindStore(storeId, GetUserId());
+			if(store == null)
+				return NotFound();
+			await _Repo.RemoveStore(storeId, userId);
+			StatusMessage = "Store removed successfully";
+			return RedirectToAction(nameof(ListStores));
+		}
+
+		[HttpGet]
 		[Route("{storeId}")]
 		public async Task<IActionResult> UpdateStore(string storeId)
 		{

@@ -104,7 +104,7 @@ namespace BTCPayServer.Controllers
 			entity.ProductInformation = Map<Invoice, ProductInformation>(invoice);
 			entity.RedirectURL = invoice.RedirectURL ?? store.StoreWebsite;
 			entity.Status = "new";
-			entity.SpeedPolicy = store.SpeedPolicy;
+			entity.SpeedPolicy = ParseSpeedPolicy(invoice.TransactionSpeed, store.SpeedPolicy);
 			entity.TxFee = (await _FeeProvider.GetFeeRateAsync()).GetFee(100); // assume price for 100 bytes
 			entity.Rate = (double)await _RateProvider.GetRateAsync(invoice.Currency);
 			entity.PosData = invoice.PosData;
@@ -115,6 +115,17 @@ namespace BTCPayServer.Controllers
 			await _Watcher.WatchAsync(entity.Id);
 			var resp = entity.EntityToDTO();
 			return new DataWrapper<InvoiceResponse>(resp) { Facade = "pos/invoice" };
+		}
+
+		private SpeedPolicy ParseSpeedPolicy(string transactionSpeed, SpeedPolicy defaultPolicy)
+		{
+			var mappings = new Dictionary<string, SpeedPolicy>();
+			mappings.Add("low", SpeedPolicy.LowSpeed);
+			mappings.Add("medium", SpeedPolicy.MediumSpeed);
+			mappings.Add("high", SpeedPolicy.HighSpeed);
+			if(!mappings.TryGetValue(transactionSpeed, out SpeedPolicy policy))
+				policy = defaultPolicy;
+			return policy;
 		}
 
 		private void FillBuyerInfo(Buyer buyer, BuyerInformation buyerInformation)

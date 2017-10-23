@@ -21,6 +21,7 @@ namespace BTCPayServer.Models.StoreViewModels
 
 		[Url]
 		[Display(Name = "Store Website")]
+		[MaxLength(500)]
 		public string StoreWebsite
 		{
 			get;
@@ -35,6 +36,12 @@ namespace BTCPayServer.Models.StoreViewModels
 
 		[Display(Name = "Consider the invoice confirmed when the payment transaction...")]
 		public SpeedPolicy SpeedPolicy
+		{
+			get; set;
+		}
+
+		[Display(Name = "Add network fee to invoice (vary with mining fees)")]
+		public bool NetworkFee
 		{
 			get; set;
 		}

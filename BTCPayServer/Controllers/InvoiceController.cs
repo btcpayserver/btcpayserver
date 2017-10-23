@@ -107,7 +107,7 @@ namespace BTCPayServer.Controllers
 			entity.RedirectURL = invoice.RedirectURL ?? store.StoreWebsite;
 			entity.Status = "new";
 			entity.SpeedPolicy = ParseSpeedPolicy(invoice.TransactionSpeed, store.SpeedPolicy);
-			entity.TxFee = (await _FeeProvider.GetFeeRateAsync()).GetFee(100); // assume price for 100 bytes
+			entity.TxFee = store.GetStoreBlob(_Network).NetworkFeeDisabled ? Money.Zero : (await _FeeProvider.GetFeeRateAsync()).GetFee(100); // assume price for 100 bytes
 			entity.Rate = (double)await _RateProvider.GetRateAsync(invoice.Currency);
 			entity.PosData = invoice.PosData;
 			entity.DepositAddress = await _Wallet.ReserveAddressAsync(ParseDerivationStrategy(derivationStrategy));

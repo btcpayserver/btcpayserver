@@ -119,6 +119,7 @@ namespace BTCPayServer.Controllers
 			var vm = new StoreViewModel();
 			vm.StoreName = store.StoreName;
 			vm.StoreWebsite = store.StoreWebsite;
+			vm.NetworkFee = !store.GetStoreBlob(_Network).NetworkFeeDisabled;
 			vm.SpeedPolicy = store.SpeedPolicy;
 			vm.DerivationScheme = store.DerivationStrategy;
 			vm.StatusMessage = StatusMessage;
@@ -171,6 +172,14 @@ namespace BTCPayServer.Controllers
 						ModelState.AddModelError(nameof(model.DerivationScheme), "Invalid Derivation Scheme");
 						return View(model);
 					}
+				}
+
+				if(store.GetStoreBlob(_Network).NetworkFeeDisabled != !model.NetworkFee)
+				{
+					var blob = store.GetStoreBlob(_Network);
+					blob.NetworkFeeDisabled = !model.NetworkFee;
+					store.SetStoreBlob(blob, _Network);
+					needUpdate = true;
 				}
 
 				if(needUpdate)

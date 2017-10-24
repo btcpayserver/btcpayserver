@@ -49,10 +49,10 @@ namespace BTCPayServer
 		}
 
 		private static JsonSerializerSettings jsonSettings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
-		public static HtmlString ToJson(this object o)
+		public static string ToJson(this object o)
 		{
 			var res = JsonConvert.SerializeObject(o, Formatting.None, jsonSettings);
-			return new HtmlString(res);
+			return res;
 		}
 	}
 }

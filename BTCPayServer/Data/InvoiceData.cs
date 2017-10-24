@@ -37,6 +37,11 @@ namespace BTCPayServer.Data
 			get; set;
 		}
 
+		public List<HistoricalAddressInvoiceData> HistoricalAddressInvoices
+		{
+			get; set;
+		}
+
 		public byte[] Blob
 		{
 			get; set;

@@ -8,6 +8,7 @@ using BTCPayServer.Models;
 using NBitpayClient;
 using Newtonsoft.Json.Linq;
 using NBitcoin.DataEncoders;
+using BTCPayServer.Data;
 
 namespace BTCPayServer.Services.Invoices
 {
@@ -253,6 +254,11 @@ namespace BTCPayServer.Services.Invoices
 			get;
 			set;
 		}
+		public HistoricalAddressInvoiceData[] HistoricalAddresses
+		{
+			get;
+			set;
+		}
 
 		public bool IsExpired()
 		{
@@ -273,7 +279,7 @@ namespace BTCPayServer.Services.Invoices
 				ExpirationTime = ExpirationTime,
 				BTCPrice = Money.Coins((decimal)(1.0 / Rate)).ToString(),
 				Status = Status,
-				Url = ServerUrl.WithTrailingSlash() +  "invoice?id=" + Id,
+				Url = ServerUrl.WithTrailingSlash() + "invoice?id=" + Id,
 				Currency = ProductInformation.Currency,
 				Flags = new Flags() { Refundable = Refundable }
 			};

@@ -39,28 +39,6 @@ namespace BTCPayServer.Services.Wallets
 			await _Client.TrackAsync(derivationStrategy);
 		}
 
-		public async Task<string> GetInvoiceId(Script scriptPubKey)
-		{
-			using(var db = _DBFactory.CreateContext())
-			{
-				var result = await db.AddressInvoices.FindAsync(scriptPubKey.Hash.ToString());
-				return result?.InvoiceDataId;
-			}
-		}
-
-		public async Task MapAsync(Script address, string invoiceId)
-		{
-			using(var db = _DBFactory.CreateContext())
-			{
-				db.AddressInvoices.Add(new AddressInvoiceData()
-				{
-					Address = address.Hash.ToString(),
-					InvoiceDataId = invoiceId
-				});
-				await db.SaveChangesAsync();
-			}
-		}
-
 		private byte[] ToBytes<T>(T obj)
 		{
 			return ZipUtils.Zip(_Serializer.ToString(obj));

@@ -5,24 +5,24 @@ using System.Threading.Tasks;
 
 namespace BTCPayServer.Data
 {
-	public class AddressInvoiceData
-	{
-		public string Address
-		{
-			get; set;
-		}
-
-		public InvoiceData InvoiceData
-		{
-			get; set;
-		}
-
+    public class HistoricalAddressInvoiceData
+    {
 		public string InvoiceDataId
 		{
 			get; set;
 		}
 
-		public DateTimeOffset? CreatedTime
+		public string Address
+		{
+			get; set;
+		}
+
+		public DateTimeOffset Assigned
+		{
+			get; set;
+		}
+
+		public DateTimeOffset? UnAssigned
 		{
 			get; set;
 		}

@@ -26,6 +26,11 @@ namespace BTCPayServer.Data
 			get; set;
 		}
 
+		public DbSet<HistoricalAddressInvoiceData> HistoricalAddressInvoices
+		{
+			get; set;
+		}
+
 		public DbSet<PendingInvoiceData> PendingInvoices
 		{
 			get; set;
@@ -118,6 +123,13 @@ namespace BTCPayServer.Data
 				b.HasIndex(o => o.SIN);
 				b.HasIndex(o => o.StoreDataId);
 			});
+
+			builder.Entity<HistoricalAddressInvoiceData>()
+				.HasKey(o => new
+				{
+					o.InvoiceDataId,
+					o.Address
+				});
 		}
 	}
 }

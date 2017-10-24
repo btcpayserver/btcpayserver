@@ -121,6 +121,11 @@ namespace BTCPayServer.Tests
 			internal set;
 		}
 
+		public T GetService<T>()
+		{
+			return _Host.Services.GetRequiredService<T>();
+		}
+
 		public T GetController<T>(string userId = null) where T : Controller
 		{
 			var context = new DefaultHttpContext();

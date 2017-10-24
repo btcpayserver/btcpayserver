@@ -54,8 +54,6 @@ namespace BTCPayServer.Services.Invoices
 			_ContextFactory = contextFactory;
 		}
 
-
-
 		public async Task AddPendingInvoice(string invoiceId)
 		{
 			using(var ctx = _ContextFactory.CreateContext())
@@ -79,6 +77,14 @@ namespace BTCPayServer.Services.Invoices
 			}
 		}
 
+		public async Task<string> GetInvoiceIdFromScriptPubKey(Script scriptPubKey)
+		{
+			using(var db = _ContextFactory.CreateContext())
+			{
+				var result = await db.AddressInvoices.FindAsync(scriptPubKey.Hash.ToString());
+				return result?.InvoiceDataId;
+			}
+		}
 
 		public async Task<string[]> GetPendingInvoices()
 		{
@@ -122,11 +128,26 @@ namespace BTCPayServer.Services.Invoices
 					ItemCode = invoice.ProductInformation.ItemCode,
 					CustomerEmail = invoice.RefundMail
 				}).ConfigureAwait(false);
+
+				context.AddressInvoices.Add(new AddressInvoiceData()
+				{
+					Address = invoice.DepositAddress.ScriptPubKey.Hash.ToString(),
+					InvoiceDataId = invoice.Id,
+					CreatedTime = DateTimeOffset.UtcNow,
+				});
+
+				context.HistoricalAddressInvoices.Add(new HistoricalAddressInvoiceData()
+				{
+					InvoiceDataId = invoice.Id,
+					Address = invoice.DepositAddress.ToString(),
+					Assigned = DateTimeOffset.UtcNow
+				});
 				await context.SaveChangesAsync().ConfigureAwait(false);
 			}
 
 			AddToTextSearch(invoice.Id,
 				invoice.Id,
+				invoice.DepositAddress.ToString(),
 				invoice.InvoiceTime.ToString(CultureInfo.InvariantCulture),
 				invoice.ProductInformation.Price.ToString(CultureInfo.InvariantCulture),
 				invoice.GetTotalCryptoDue().ToString(),
@@ -139,6 +160,63 @@ namespace BTCPayServer.Services.Invoices
 			return invoice;
 		}
 
+		public async Task<bool> NewAddress(string invoiceId, BitcoinAddress bitcoinAddress)
+		{
+			using(var context = _ContextFactory.CreateContext())
+			{
+				var invoice = await context.Invoices.FirstOrDefaultAsync(i => i.Id == invoiceId);
+				if(invoice == null)
+					return false;
+				var invoiceEntity = ToObject<InvoiceEntity>(invoice.Blob);
+				var old = invoiceEntity.DepositAddress;
+				invoiceEntity.DepositAddress = bitcoinAddress;
+				invoice.Blob = ToBytes(invoiceEntity);
+				if(old != null)
+				{
+					MarkUnassigned(invoiceId, old, context);
+				}
+				context.AddressInvoices.Add(new AddressInvoiceData() { Address = bitcoinAddress.ScriptPubKey.Hash.ToString(), InvoiceDataId = invoiceId, CreatedTime = DateTimeOffset.UtcNow });
+				context.HistoricalAddressInvoices.Add(new HistoricalAddressInvoiceData()
+				{
+					InvoiceDataId = invoiceId,
+					Address = bitcoinAddress.ToString(),
+					Assigned = DateTimeOffset.UtcNow
+				});
+
+				await context.SaveChangesAsync();
+				AddToTextSearch(invoice.Id, bitcoinAddress.ToString());
+				return true;
+			}
+		}
+
+		private static void MarkUnassigned(string invoiceId, BitcoinAddress old, ApplicationDbContext context)
+		{
+			var historical = new HistoricalAddressInvoiceData();
+			historical.InvoiceDataId = invoiceId;
+			historical.Address = old.ToString();
+			historical.UnAssigned = DateTimeOffset.UtcNow;
+			context.Attach(historical);
+			context.Entry(historical).Property(o => o.UnAssigned).IsModified = true;
+		}
+
+		public async Task UnaffectAddress(string invoiceId)
+		{
+			using(var context = _ContextFactory.CreateContext())
+			{
+				var invoiceData = await context.FindAsync<InvoiceData>(invoiceId).ConfigureAwait(false);
+				if(invoiceData == null)
+					return;
+				var invoiceEntity = ToObject<InvoiceEntity>(invoiceData.Blob);
+				if(invoiceEntity.DepositAddress == null)
+					return;
+				MarkUnassigned(invoiceId, invoiceEntity.DepositAddress, context);
+				try
+				{
+					await context.SaveChangesAsync();
+				}
+				catch(DbUpdateException) { } //Possibly, it was unassigned before
+			}
+		}
 
 		private string[] SearchInvoice(string searchTerms)
 		{
@@ -173,7 +251,7 @@ namespace BTCPayServer.Services.Invoices
 			}
 		}
 
-		public async Task<InvoiceEntity> GetInvoice(string storeId, string id)
+		public async Task<InvoiceEntity> GetInvoice(string storeId, string id, bool includeHistoricalAddresses = false)
 		{
 			using(var context = _ContextFactory.CreateContext())
 			{
@@ -181,8 +259,10 @@ namespace BTCPayServer.Services.Invoices
 					context
 					.Invoices
 					.Include(o => o.Payments)
-					.Include(o => o.RefundAddresses)
-					.Where(i => i.Id == id);
+					.Include(o => o.RefundAddresses);
+				if(includeHistoricalAddresses)
+					query = query.Include(o => o.HistoricalAddressInvoices);
+				query = query.Where(i => i.Id == id);
 
 				if(storeId != null)
 					query = query.Where(i => i.StoreDataId == storeId);
@@ -203,6 +283,10 @@ namespace BTCPayServer.Services.Invoices
 			entity.Status = invoice.Status;
 			entity.RefundMail = invoice.CustomerEmail;
 			entity.Refundable = invoice.RefundAddresses.Count != 0;
+			if(invoice.HistoricalAddressInvoices != null)
+			{
+				entity.HistoricalAddresses = invoice.HistoricalAddressInvoices.ToArray();
+			}
 			return entity;
 		}
 

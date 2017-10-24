@@ -17,6 +17,9 @@ using BTCPayServer.Controllers;
 using Microsoft.AspNetCore.Mvc;
 using BTCPayServer.Authentication;
 using System.Diagnostics;
+using Microsoft.EntityFrameworkCore.Extensions;
+using BTCPayServer.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Tests
 {
@@ -193,143 +196,169 @@ namespace BTCPayServer.Tests
         public void InvoiceFlowThroughDifferentStatesCorrectly()
         {
             using (var tester = ServerTester.Create())
-            {
-                tester.Start();
-                var user = tester.NewAccount();
-                Assert.False(user.BitPay.TestAccess(Facade.Merchant));
-                user.GrantAccess();
-                Assert.True(user.BitPay.TestAccess(Facade.Merchant));
-                var invoice = user.BitPay.CreateInvoice(new Invoice()
-                {
-                    Price = 5000.0,
-                    Currency = "USD",
-                    PosData = "posData",
-                    OrderId = "orderId",
-                    //RedirectURL = redirect + "redirect",
-                    //NotificationURL = CallbackUri + "/notification",
-                    ItemDesc = "Some description",
-                    FullNotifications = true
-                }, Facade.Merchant);
+			{
+				tester.Start();
+				var user = tester.NewAccount();
+				Assert.False(user.BitPay.TestAccess(Facade.Merchant));
+				user.GrantAccess();
+				Assert.True(user.BitPay.TestAccess(Facade.Merchant));
+				var invoice = user.BitPay.CreateInvoice(new Invoice()
+				{
+					Price = 5000.0,
+					Currency = "USD",
+					PosData = "posData",
+					OrderId = "orderId",
+					//RedirectURL = redirect + "redirect",
+					//NotificationURL = CallbackUri + "/notification",
+					ItemDesc = "Some description",
+					FullNotifications = true
+				}, Facade.Merchant);
+				var repo = tester.PayTester.GetService<InvoiceRepository>();
+				var ctx = tester.PayTester.GetService<ApplicationDbContextFactory>().CreateContext();
+				var textSearchResult = tester.PayTester.Runtime.InvoiceRepository.GetInvoices(new InvoiceQuery()
+				{
+					StoreId = user.StoreId,
+					TextSearch = invoice.OrderId
+				}).GetAwaiter().GetResult();
 
-                var textSearchResult = tester.PayTester.Runtime.InvoiceRepository.GetInvoices(new InvoiceQuery()
-                {
-                    StoreId = user.StoreId,
-                    TextSearch = invoice.OrderId
-                }).GetAwaiter().GetResult();
+				Assert.Equal(1, textSearchResult.Length);
 
-                Assert.Equal(1, textSearchResult.Length);
+				textSearchResult = tester.PayTester.Runtime.InvoiceRepository.GetInvoices(new InvoiceQuery()
+				{
+					StoreId = user.StoreId,
+					TextSearch = invoice.Id
+				}).GetAwaiter().GetResult();
 
-                textSearchResult = tester.PayTester.Runtime.InvoiceRepository.GetInvoices(new InvoiceQuery()
-                {
-                    StoreId = user.StoreId,
-                    TextSearch = invoice.Id
-                }).GetAwaiter().GetResult();
+				Assert.Equal(1, textSearchResult.Length);
 
-                Assert.Equal(1, textSearchResult.Length);
+				invoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
+				Assert.Equal(Money.Coins(0), invoice.BtcPaid);
+				Assert.Equal("new", invoice.Status);
+				Assert.Equal(false, (bool)((JValue)invoice.ExceptionStatus).Value);
 
-                invoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
-                Assert.Equal(Money.Coins(0), invoice.BtcPaid);
-                Assert.Equal("new", invoice.Status);
-                Assert.Equal(false, (bool)((JValue)invoice.ExceptionStatus).Value);
-
-                Assert.Equal(1, user.BitPay.GetInvoices(invoice.InvoiceTime.DateTime).Length);
-                Assert.Equal(0, user.BitPay.GetInvoices(invoice.InvoiceTime.DateTime + TimeSpan.FromDays(1)).Length);
-                Assert.Equal(1, user.BitPay.GetInvoices(invoice.InvoiceTime.DateTime - TimeSpan.FromDays(5)).Length);
-                Assert.Equal(1, user.BitPay.GetInvoices(invoice.InvoiceTime.DateTime - TimeSpan.FromDays(5), invoice.InvoiceTime.DateTime).Length);
-                Assert.Equal(0, user.BitPay.GetInvoices(invoice.InvoiceTime.DateTime - TimeSpan.FromDays(5), invoice.InvoiceTime.DateTime - TimeSpan.FromDays(1)).Length);
+				Assert.Equal(1, user.BitPay.GetInvoices(invoice.InvoiceTime.DateTime).Length);
+				Assert.Equal(0, user.BitPay.GetInvoices(invoice.InvoiceTime.DateTime + TimeSpan.FromDays(1)).Length);
+				Assert.Equal(1, user.BitPay.GetInvoices(invoice.InvoiceTime.DateTime - TimeSpan.FromDays(5)).Length);
+				Assert.Equal(1, user.BitPay.GetInvoices(invoice.InvoiceTime.DateTime - TimeSpan.FromDays(5), invoice.InvoiceTime.DateTime).Length);
+				Assert.Equal(0, user.BitPay.GetInvoices(invoice.InvoiceTime.DateTime - TimeSpan.FromDays(5), invoice.InvoiceTime.DateTime - TimeSpan.FromDays(1)).Length);
 
 
-                var firstPayment = Money.Coins(0.04m);
+				var firstPayment = Money.Coins(0.04m);
 
-                var txFee = Money.Zero;
+				var txFee = Money.Zero;
 
-                var rate = user.BitPay.GetRates();
+				var rate = user.BitPay.GetRates();
 
-                var cashCow = tester.ExplorerNode;
-                var invoiceAddress = BitcoinAddress.Create(invoice.BitcoinAddress, cashCow.Network);
-                cashCow.SendToAddress(invoiceAddress, firstPayment);
+				var cashCow = tester.ExplorerNode;
 
-                Money secondPayment = Money.Zero;
+				var invoiceAddress = BitcoinAddress.Create(invoice.BitcoinAddress, cashCow.Network);
+				var iii = ctx.AddressInvoices.ToArray();
+				Assert.True(IsMapped(invoice, ctx));
+				cashCow.SendToAddress(invoiceAddress, firstPayment);
 
-                Eventually(() =>
-                {
-                    tester.SimulateCallback(invoiceAddress);
-                    var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
-                    Assert.Equal("new", localInvoice.Status);
-                    Assert.Equal(firstPayment, localInvoice.BtcPaid);
-                    txFee = localInvoice.BtcDue - invoice.BtcDue;
-                    Assert.Equal("paidPartial", localInvoice.ExceptionStatus);
-                    secondPayment = localInvoice.BtcDue;
-                });
+				var invoiceEntity = repo.GetInvoice(null, invoice.Id, true).GetAwaiter().GetResult();
+				Assert.Equal(1, invoiceEntity.HistoricalAddresses.Length);
+				Assert.Null(invoiceEntity.HistoricalAddresses[0].UnAssigned);
 
-                cashCow.SendToAddress(invoiceAddress, secondPayment);
+				Money secondPayment = Money.Zero;
 
-                Eventually(() =>
-                {
-                    tester.SimulateCallback(invoiceAddress);
-                    var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
-                    Assert.Equal("paid", localInvoice.Status);
-                    Assert.Equal(firstPayment + secondPayment, localInvoice.BtcPaid);
-                    Assert.Equal(Money.Zero, localInvoice.BtcDue);
-                    Assert.Equal(false, (bool)((JValue)localInvoice.ExceptionStatus).Value);
-                });
+				Eventually(() =>
+				{
+					tester.SimulateCallback(invoiceAddress);
+					var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
+					Assert.Equal("new", localInvoice.Status);
+					Assert.Equal(firstPayment, localInvoice.BtcPaid);
+					txFee = localInvoice.BtcDue - invoice.BtcDue;
+					Assert.Equal("paidPartial", localInvoice.ExceptionStatus);
+					Assert.NotEqual(localInvoice.BitcoinAddress, invoice.BitcoinAddress); //New address
+					Assert.True(IsMapped(invoice, ctx));
+					Assert.True(IsMapped(localInvoice, ctx));
 
-                cashCow.Generate(1); //The user has medium speed settings, so 1 conf is enough to be confirmed
+					invoiceEntity = repo.GetInvoice(null, invoice.Id, true).GetAwaiter().GetResult();
+					var historical1 = invoiceEntity.HistoricalAddresses.FirstOrDefault(h => h.Address == invoice.BitcoinAddress.ToString());
+					Assert.NotNull(historical1.UnAssigned);
+					var historical2 = invoiceEntity.HistoricalAddresses.FirstOrDefault(h => h.Address == localInvoice.BitcoinAddress.ToString());
+					Assert.Null(historical2.UnAssigned);
+					invoiceAddress = BitcoinAddress.Create(localInvoice.BitcoinAddress, cashCow.Network);
+					secondPayment = localInvoice.BtcDue;
+				});
 
-                Eventually(() =>
-                {
-                    tester.SimulateCallback();
-                    var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
-                    Assert.Equal("confirmed", localInvoice.Status);
-                });
+				cashCow.SendToAddress(invoiceAddress, secondPayment);
 
-                cashCow.Generate(5); //Now should be complete
+				Eventually(() =>
+				{
+					tester.SimulateCallback(invoiceAddress);
+					var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
+					Assert.Equal("paid", localInvoice.Status);
+					Assert.Equal(firstPayment + secondPayment, localInvoice.BtcPaid);
+					Assert.Equal(Money.Zero, localInvoice.BtcDue);
+					Assert.Equal(localInvoice.BitcoinAddress, invoiceAddress.ToString()); //no new address generated
+					Assert.True(IsMapped(localInvoice, ctx));
+					Assert.Equal(false, (bool)((JValue)localInvoice.ExceptionStatus).Value);
+				});
 
-                Eventually(() =>
-                {
-                    tester.SimulateCallback();
-                    var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
-                    Assert.Equal("complete", localInvoice.Status);
-                });
+				cashCow.Generate(1); //The user has medium speed settings, so 1 conf is enough to be confirmed
 
-                invoice = user.BitPay.CreateInvoice(new Invoice()
-                {
-                    Price = 5000.0,
-                    Currency = "USD",
-                    PosData = "posData",
-                    OrderId = "orderId",
-                    //RedirectURL = redirect + "redirect",
-                    //NotificationURL = CallbackUri + "/notification",
-                    ItemDesc = "Some description",
-                    FullNotifications = true
-                }, Facade.Merchant);
-                invoiceAddress = BitcoinAddress.Create(invoice.BitcoinAddress, cashCow.Network);
+				Eventually(() =>
+				{
+					tester.SimulateCallback();
+					var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
+					Assert.Equal("confirmed", localInvoice.Status);
+				});
 
-                cashCow.SendToAddress(invoiceAddress, invoice.BtcDue + Money.Coins(1));
+				cashCow.Generate(5); //Now should be complete
 
-                Eventually(() =>
-                {
-                    tester.SimulateCallback(invoiceAddress);
-                    var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
-                    Assert.Equal("paid", localInvoice.Status);
-                    Assert.Equal(Money.Zero, localInvoice.BtcDue);
-                    Assert.Equal("paidOver", (string)((JValue)localInvoice.ExceptionStatus).Value);
-                });
+				Eventually(() =>
+				{
+					tester.SimulateCallback();
+					var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
+					Assert.Equal("complete", localInvoice.Status);
+				});
 
-                cashCow.Generate(1);
+				invoice = user.BitPay.CreateInvoice(new Invoice()
+				{
+					Price = 5000.0,
+					Currency = "USD",
+					PosData = "posData",
+					OrderId = "orderId",
+					//RedirectURL = redirect + "redirect",
+					//NotificationURL = CallbackUri + "/notification",
+					ItemDesc = "Some description",
+					FullNotifications = true
+				}, Facade.Merchant);
+				invoiceAddress = BitcoinAddress.Create(invoice.BitcoinAddress, cashCow.Network);
 
-                Eventually(() =>
-                {
-                    tester.SimulateCallback();
-                    var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
-                    Assert.Equal("confirmed", localInvoice.Status);
-                    Assert.Equal(Money.Zero, localInvoice.BtcDue);
-                    Assert.Equal("paidOver", (string)((JValue)localInvoice.ExceptionStatus).Value);
-                });
-            }
-        }
+				cashCow.SendToAddress(invoiceAddress, invoice.BtcDue + Money.Coins(1));
 
-        private void Eventually(Action act)
+				Eventually(() =>
+				{
+					tester.SimulateCallback(invoiceAddress);
+					var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
+					Assert.Equal("paid", localInvoice.Status);
+					Assert.Equal(Money.Zero, localInvoice.BtcDue);
+					Assert.Equal("paidOver", (string)((JValue)localInvoice.ExceptionStatus).Value);
+				});
+
+				cashCow.Generate(1);
+
+				Eventually(() =>
+				{
+					tester.SimulateCallback();
+					var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
+					Assert.Equal("confirmed", localInvoice.Status);
+					Assert.Equal(Money.Zero, localInvoice.BtcDue);
+					Assert.Equal("paidOver", (string)((JValue)localInvoice.ExceptionStatus).Value);
+				});
+			}
+		}
+
+		private static bool IsMapped(Invoice invoice, ApplicationDbContext ctx)
+		{
+			var h = BitcoinAddress.Create(invoice.BitcoinAddress).ScriptPubKey.Hash.ToString();
+			return ctx.AddressInvoices.FirstOrDefault(i => i.InvoiceDataId == invoice.Id && i.Address == h) != null;
+		}
+
+		private void Eventually(Action act)
         {
             CancellationTokenSource cts = new CancellationTokenSource(10000);
             while (true)

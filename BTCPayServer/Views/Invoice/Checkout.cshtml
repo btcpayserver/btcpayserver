@@ -27,7 +27,7 @@
 			crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.qrcode/1.0/jquery.qrcode.min.js"></script>
 	<script type="text/javascript">
-        var srvModel = @Model.ToJson();
+        var srvModel = JSON.parse('@Model.ToJson()');
 	</script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.7.1/clipboard.min.js"></script>
 	<script src="~/js/core.js" type="text/javascript" defer="defer"></script>

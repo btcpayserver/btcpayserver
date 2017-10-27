@@ -6,49 +6,49 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace BTCPayServer.Services.Rates
 {
-	public class CachedRateProvider : IRateProvider
-	{
-		private IRateProvider _Inner;
-		private IMemoryCache _MemoryCache;
+    public class CachedRateProvider : IRateProvider
+    {
+        private IRateProvider _Inner;
+        private IMemoryCache _MemoryCache;
 
-		public CachedRateProvider(IRateProvider inner, IMemoryCache memoryCache)
-		{
-			if(inner == null)
-				throw new ArgumentNullException(nameof(inner));
-			if(memoryCache == null)
-				throw new ArgumentNullException(nameof(memoryCache));
-			this._Inner = inner;
-			this._MemoryCache = memoryCache;
-		}
+        public CachedRateProvider(IRateProvider inner, IMemoryCache memoryCache)
+        {
+            if (inner == null)
+                throw new ArgumentNullException(nameof(inner));
+            if (memoryCache == null)
+                throw new ArgumentNullException(nameof(memoryCache));
+            this._Inner = inner;
+            this._MemoryCache = memoryCache;
+        }
 
-		public TimeSpan CacheSpan
-		{
-			get;
-			set;
-		} = TimeSpan.FromMinutes(1.0);
+        public TimeSpan CacheSpan
+        {
+            get;
+            set;
+        } = TimeSpan.FromMinutes(1.0);
 
-		public Task<decimal> GetRateAsync(string currency)
-		{
-			return _MemoryCache.GetOrCreateAsync("CURR_" + currency, (ICacheEntry entry) =>
-			{
-				entry.AbsoluteExpiration = DateTimeOffset.UtcNow + CacheSpan;
-				return _Inner.GetRateAsync(currency);
-			});
-		}
+        public Task<decimal> GetRateAsync(string currency)
+        {
+            return _MemoryCache.GetOrCreateAsync("CURR_" + currency, (ICacheEntry entry) =>
+            {
+                entry.AbsoluteExpiration = DateTimeOffset.UtcNow + CacheSpan;
+                return _Inner.GetRateAsync(currency);
+            });
+        }
 
-		private bool TryGetFromCache(string key, out object obj)
-		{
-			obj = _MemoryCache.Get(key);
-			return obj != null;
-		}
+        private bool TryGetFromCache(string key, out object obj)
+        {
+            obj = _MemoryCache.Get(key);
+            return obj != null;
+        }
 
-		public Task<ICollection<Rate>> GetRatesAsync()
-		{
-			return _MemoryCache.GetOrCreateAsync("GLOBAL_RATES", (ICacheEntry entry) =>
-			{
-				entry.AbsoluteExpiration = DateTimeOffset.UtcNow + CacheSpan;
-				return _Inner.GetRatesAsync();
-			});
-		}
-	}
+        public Task<ICollection<Rate>> GetRatesAsync()
+        {
+            return _MemoryCache.GetOrCreateAsync("GLOBAL_RATES", (ICacheEntry entry) =>
+            {
+                entry.AbsoluteExpiration = DateTimeOffset.UtcNow + CacheSpan;
+                return _Inner.GetRatesAsync();
+            });
+        }
+    }
 }

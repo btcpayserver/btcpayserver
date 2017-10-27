@@ -12,79 +12,79 @@ using System.Threading.Tasks;
 
 namespace BTCPayServer.Controllers
 {
-	public class AccessTokenController : Controller
-	{
-		TokenRepository _TokenRepository;
-		public AccessTokenController(TokenRepository tokenRepository)
-		{
-			_TokenRepository = tokenRepository ?? throw new ArgumentNullException(nameof(tokenRepository));
-		}
-		[HttpGet]
-		[Route("tokens")]
-		public async Task<GetTokensResponse> Tokens()
-		{
-			var tokens = await _TokenRepository.GetTokens(this.GetBitIdentity().SIN);
-			return new GetTokensResponse(tokens);
-		}
+    public class AccessTokenController : Controller
+    {
+        TokenRepository _TokenRepository;
+        public AccessTokenController(TokenRepository tokenRepository)
+        {
+            _TokenRepository = tokenRepository ?? throw new ArgumentNullException(nameof(tokenRepository));
+        }
+        [HttpGet]
+        [Route("tokens")]
+        public async Task<GetTokensResponse> Tokens()
+        {
+            var tokens = await _TokenRepository.GetTokens(this.GetBitIdentity().SIN);
+            return new GetTokensResponse(tokens);
+        }
 
-		[HttpPost]
-		[Route("tokens")]
-		public async Task<DataWrapper<List<PairingCodeResponse>>> Tokens([FromBody] TokenRequest request)
-		{
-			PairingCodeEntity pairingEntity = null;
-			if(string.IsNullOrEmpty(request.PairingCode))
-			{
-				if(string.IsNullOrEmpty(request.Id) || !NBitpayClient.Extensions.BitIdExtensions.ValidateSIN(request.Id))
-					throw new BitpayHttpException(400, "'id' property is required");
-				if(string.IsNullOrEmpty(request.Facade))
-					throw new BitpayHttpException(400, "'facade' property is required");
+        [HttpPost]
+        [Route("tokens")]
+        public async Task<DataWrapper<List<PairingCodeResponse>>> Tokens([FromBody] TokenRequest request)
+        {
+            PairingCodeEntity pairingEntity = null;
+            if (string.IsNullOrEmpty(request.PairingCode))
+            {
+                if (string.IsNullOrEmpty(request.Id) || !NBitpayClient.Extensions.BitIdExtensions.ValidateSIN(request.Id))
+                    throw new BitpayHttpException(400, "'id' property is required");
+                if (string.IsNullOrEmpty(request.Facade))
+                    throw new BitpayHttpException(400, "'facade' property is required");
 
-				var pairingCode = await _TokenRepository.CreatePairingCodeAsync();
-				await _TokenRepository.PairWithSINAsync(pairingCode, request.Id);
-				pairingEntity = await _TokenRepository.UpdatePairingCode(new PairingCodeEntity()
-				{
-					Id = pairingCode,
-					Facade = request.Facade,
-					Label = request.Label
-				});
+                var pairingCode = await _TokenRepository.CreatePairingCodeAsync();
+                await _TokenRepository.PairWithSINAsync(pairingCode, request.Id);
+                pairingEntity = await _TokenRepository.UpdatePairingCode(new PairingCodeEntity()
+                {
+                    Id = pairingCode,
+                    Facade = request.Facade,
+                    Label = request.Label
+                });
 
-			}
-			else
-			{
-				var sin = this.GetBitIdentity(false)?.SIN ?? request.Id;
-				if(string.IsNullOrEmpty(request.Id) || !NBitpayClient.Extensions.BitIdExtensions.ValidateSIN(request.Id))
-					throw new BitpayHttpException(400, "'id' property is required, alternatively, use BitId");
+            }
+            else
+            {
+                var sin = this.GetBitIdentity(false)?.SIN ?? request.Id;
+                if (string.IsNullOrEmpty(request.Id) || !NBitpayClient.Extensions.BitIdExtensions.ValidateSIN(request.Id))
+                    throw new BitpayHttpException(400, "'id' property is required, alternatively, use BitId");
 
-				pairingEntity = await _TokenRepository.GetPairingAsync(request.PairingCode);
-				if(pairingEntity == null)
-					throw new BitpayHttpException(404, "The specified pairingCode is not found");
-				pairingEntity.SIN = sin;
+                pairingEntity = await _TokenRepository.GetPairingAsync(request.PairingCode);
+                if (pairingEntity == null)
+                    throw new BitpayHttpException(404, "The specified pairingCode is not found");
+                pairingEntity.SIN = sin;
 
-				if(string.IsNullOrEmpty(pairingEntity.Label) && !string.IsNullOrEmpty(request.Label))
-				{
-					pairingEntity.Label = request.Label;
-					await _TokenRepository.UpdatePairingCode(pairingEntity);
-				}
+                if (string.IsNullOrEmpty(pairingEntity.Label) && !string.IsNullOrEmpty(request.Label))
+                {
+                    pairingEntity.Label = request.Label;
+                    await _TokenRepository.UpdatePairingCode(pairingEntity);
+                }
 
-				var result = await _TokenRepository.PairWithSINAsync(request.PairingCode, sin);
-				if(result != PairingResult.Complete && result != PairingResult.Partial)
-					throw new BitpayHttpException(400, $"Error while pairing ({result})");
-				
-			}
+                var result = await _TokenRepository.PairWithSINAsync(request.PairingCode, sin);
+                if (result != PairingResult.Complete && result != PairingResult.Partial)
+                    throw new BitpayHttpException(400, $"Error while pairing ({result})");
 
-			var pairingCodes = new List<PairingCodeResponse>
-				{
-					new PairingCodeResponse()
-					{
-						PairingCode = pairingEntity.Id,
-						PairingExpiration = pairingEntity.Expiration,
-						DateCreated = pairingEntity.CreatedTime,
-						Facade = pairingEntity.Facade,
-						Token = pairingEntity.TokenValue,
-						Label = pairingEntity.Label
-					}
-				};
-			return DataWrapper.Create(pairingCodes);
-		}
-	}
+            }
+
+            var pairingCodes = new List<PairingCodeResponse>
+                {
+                    new PairingCodeResponse()
+                    {
+                        PairingCode = pairingEntity.Id,
+                        PairingExpiration = pairingEntity.Expiration,
+                        DateCreated = pairingEntity.CreatedTime,
+                        Facade = pairingEntity.Facade,
+                        Token = pairingEntity.TokenValue,
+                        Label = pairingEntity.Label
+                    }
+                };
+            return DataWrapper.Create(pairingCodes);
+        }
+    }
 }

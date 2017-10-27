@@ -1,23 +1,23 @@
 ﻿@model ConfirmModel
 @{
-	Layout = "_Layout.cshtml";
+    Layout = "_Layout.cshtml";
 }
 
 <section>
-	<div class="container">
-		<div class="row">
-			<div class="col-lg-12 text-center">
-				<h2 class="section-heading">@Model.Title</h2>
-				<hr class="primary">
-				<p>@Model.Description</p>
-			</div>
-		</div>
-		<div class="row">
-			<div class="col-lg-12 text-center">
-				<form method="post">
-					<button type="submit" class="btn btn-info btn-danger" title="Continue">@Model.Action</button>
-				</form>
-			</div>
-		</div>
-	</div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                <h2 class="section-heading">@Model.Title</h2>
+                <hr class="primary">
+                <p>@Model.Description</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                <form method="post">
+                    <button type="submit" class="btn btn-info btn-danger" title="Continue">@Model.Action</button>
+                </form>
+            </div>
+        </div>
+    </div>
 </section>

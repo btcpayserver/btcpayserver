@@ -7,9 +7,9 @@ namespace BTCPayServer.Data
 {
     public class PendingInvoiceData
     {
-		public string Id
-		{
-			get; set;
-		}
-	}
+        public string Id
+        {
+            get; set;
+        }
+    }
 }

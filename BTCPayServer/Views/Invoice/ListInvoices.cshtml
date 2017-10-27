@@ -1,78 +1,78 @@
 ﻿@model InvoicesModel
 @{
-	ViewData["Title"] = "Invoices";
+    ViewData["Title"] = "Invoices";
 }
 
 <section>
-	<div class="container">
+    <div class="container">
 
-		<div class="row">
-			<div class="col-lg-12 text-center">
-				@Html.Partial("_StatusMessage", Model.StatusMessage)
-			</div>
-		</div>
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                @Html.Partial("_StatusMessage", Model.StatusMessage)
+            </div>
+        </div>
 
-		<div class="row">
-			<div class="col-lg-12 text-center">
-				<h2 class="section-heading">@ViewData["Title"]</h2>
-				<hr class="primary">
-				<p>Create, search or pay an invoice.</p>
-				<div class="form-group">
-					<form asp-action="SearchInvoice" method="post">
-						<input asp-for="SearchTerm" class="form-control" />
-						<input type="hidden" asp-for="Count" />
-						<span asp-validation-for="SearchTerm" class="text-danger"></span>
-						<button type="button" class="btn btn-default" title="Search invoice">
-							<span class="glyphicon glyphicon-search"></span> Search
-						</button>
-					</form>
-				</div>
-			</div>
-		</div>
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                <h2 class="section-heading">@ViewData["Title"]</h2>
+                <hr class="primary">
+                <p>Create, search or pay an invoice.</p>
+                <div class="form-group">
+                    <form asp-action="SearchInvoice" method="post">
+                        <input asp-for="SearchTerm" class="form-control" />
+                        <input type="hidden" asp-for="Count" />
+                        <span asp-validation-for="SearchTerm" class="text-danger"></span>
+                        <button type="button" class="btn btn-default" title="Search invoice">
+                            <span class="glyphicon glyphicon-search"></span> Search
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
 
-		<div class="row">
-			<a asp-action="CreateInvoice" class="btn btn-success" role="button"><span class="glyphicon glyphicon-plus"></span> Create a new invoice</a>
-			<table class="table">
-				<thead class="thead-inverse">
-					<tr>
-						<th>Date</th>
-						<th>InvoiceId</th>
-						<th>Status</th>
-						<th>Amount</th>
-						<th>Actions</th>
-					</tr>
-				</thead>
-				<tbody>
-					@foreach(var invoice in Model.Invoices)
-			{
-						<tr>
-							<td>@invoice.Date</td>
-							<td>@invoice.InvoiceId</td>
-							<td>@invoice.Status</td>
-							<td>@invoice.AmountCurrency</td>
-							<td><a asp-action="Checkout" asp-route-invoiceId="@invoice.InvoiceId">Checkout</a> - <a asp-action="Invoice" asp-route-invoiceId="@invoice.InvoiceId">Details</a></td>
-						</tr>
-			}
-				</tbody>
-			</table>
-			<span>
-				@if(Model.Skip != 0)
-				{
-					<a href="@Url.Action("ListInvoices", new
+        <div class="row">
+            <a asp-action="CreateInvoice" class="btn btn-success" role="button"><span class="glyphicon glyphicon-plus"></span> Create a new invoice</a>
+            <table class="table">
+                <thead class="thead-inverse">
+                    <tr>
+                        <th>Date</th>
+                        <th>InvoiceId</th>
+                        <th>Status</th>
+                        <th>Amount</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach(var invoice in Model.Invoices)
+                    {
+                        <tr>
+                            <td>@invoice.Date</td>
+                            <td>@invoice.InvoiceId</td>
+                            <td>@invoice.Status</td>
+                            <td>@invoice.AmountCurrency</td>
+                            <td><a asp-action="Checkout" asp-route-invoiceId="@invoice.InvoiceId">Checkout</a> - <a asp-action="Invoice" asp-route-invoiceId="@invoice.InvoiceId">Details</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <span>
+                @if(Model.Skip != 0)
+                {
+                    <a href="@Url.Action("ListInvoices", new
 		{
 			searchTerm = Model.SearchTerm,
 			skip = Math.Max(0, Model.Skip - Model.Count),
 			count = Model.Count,
 		})"><<</a><span> - </span>
-				}
-				<a href="@Url.Action("ListInvoices", new
+                }
+                <a href="@Url.Action("ListInvoices", new
 		{
 			searchTerm = Model.SearchTerm,
 			skip = Model.Skip + Model.Count,
 			count = Model.Count,
 		})">>></a>
-			</span>
-		</div>
+            </span>
+        </div>
 
-	</div>
+    </div>
 </section>

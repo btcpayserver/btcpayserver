@@ -9,27 +9,27 @@ namespace BTCPayServer.Authentication
 {
     public class BitIdentity : IIdentity
     {
-		public BitIdentity(PubKey key)
-		{
-			PubKey = key;
-			_Name = Encoders.Base58Check.EncodeData(Encoders.Hex.DecodeData("0f02" + key.Hash.ToString()));
-			SIN = NBitpayClient.Extensions.BitIdExtensions.GetBitIDSIN(key);
-		}
-		string _Name;
+        public BitIdentity(PubKey key)
+        {
+            PubKey = key;
+            _Name = Encoders.Base58Check.EncodeData(Encoders.Hex.DecodeData("0f02" + key.Hash.ToString()));
+            SIN = NBitpayClient.Extensions.BitIdExtensions.GetBitIDSIN(key);
+        }
+        string _Name;
 
-		public string SIN
-		{
-			get;
-		}
-		public PubKey PubKey
-		{
-			get;
-		}
+        public string SIN
+        {
+            get;
+        }
+        public PubKey PubKey
+        {
+            get;
+        }
 
-		public string AuthenticationType => "BitID";
+        public string AuthenticationType => "BitID";
 
-		public bool IsAuthenticated => true;
+        public bool IsAuthenticated => true;
 
-		public string Name => _Name;
-	}
+        public string Name => _Name;
+    }
 }

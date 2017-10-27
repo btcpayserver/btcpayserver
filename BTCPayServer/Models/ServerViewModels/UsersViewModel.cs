@@ -7,27 +7,27 @@ namespace BTCPayServer.Models.ServerViewModels
 {
     public class UsersViewModel
     {
-		public class UserViewModel
-		{
-			public string Name
-			{
-				get; set;
-			}
-			public string Email
-			{
-				get; set;
-			}
-		}
+        public class UserViewModel
+        {
+            public string Name
+            {
+                get; set;
+            }
+            public string Email
+            {
+                get; set;
+            }
+        }
 
-		public string StatusMessage
-		{
-			get; set;
-		}
+        public string StatusMessage
+        {
+            get; set;
+        }
 
-		public List<UserViewModel> Users
-		{
-			get; set;
-		} = new List<UserViewModel>();
-	}
+        public List<UserViewModel> Users
+        {
+            get; set;
+        } = new List<UserViewModel>();
+    }
 
 }

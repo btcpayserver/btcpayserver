@@ -8,8 +8,8 @@ using System.Threading.Tasks;
 
 namespace BTCPayServer.Services
 {
-	public interface IFeeProvider
-	{
-		Task<FeeRate> GetFeeRateAsync();
-	}
+    public interface IFeeProvider
+    {
+        Task<FeeRate> GetFeeRateAsync();
+    }
 }

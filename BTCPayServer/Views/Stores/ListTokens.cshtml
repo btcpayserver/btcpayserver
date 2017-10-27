@@ -1,8 +1,8 @@
 ﻿@model TokensViewModel
 @{
-	Layout = "../Shared/_NavLayout.cshtml";
-	ViewData["Title"] = "Access Tokens";
-	ViewData.AddActivePage(StoreNavPages.Tokens);
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData["Title"] = "Access Tokens";
+    ViewData.AddActivePage(StoreNavPages.Tokens);
 }
 
 <h4>@ViewData["Title"]</h4>
@@ -10,28 +10,27 @@
 @Html.Partial("_StatusMessage", Model.StatusMessage)
 <a asp-action="CreateToken" class="btn btn-success" role="button"><span class="glyphicon glyphicon-plus"></span>Create a new token</a>
 <table class="table">
-	<thead class="thead-inverse">
-		<tr>
-			<th>Label</th>
-			<th>SIN</th>
-			<th>Facade</th>
-			<th>Actions</th>
-		</tr>
-	</thead>
-	<tbody>
-		@foreach(var token in Model.Tokens)
-			{
-			<tr>
-				<td>@token.Label</td>
-				<td>@token.SIN</td>
-				<td>@token.Facade</td>
-				<td>
-					<form asp-action="DeleteToken" method="post">
-						<input type="hidden" name="tokenId" value="@token.Id">
-						<button type="submit" class="btn btn-danger" role="button">Revoke</button>
-					</form>
-				</td>
-			</tr>
-			}
-	</tbody>
+    <thead class="thead-inverse">
+        <tr>
+            <th>Label</th>
+            <th>SIN</th>
+            <th>Facade</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach(var token in Model.Tokens)
+        {
+            <tr>
+                <td>@token.Label</td>
+                <td>@token.SIN</td>
+                <td>@token.Facade</td>
+                <td>
+                    <form asp-action="DeleteToken" method="post">
+                        <input type="hidden" name="tokenId" value="@token.Id">
+                        <button type="submit" class="btn btn-danger" role="button">Revoke</button>
+                    </form>
+                </td>
+            </tr>}
+    </tbody>
 </table>

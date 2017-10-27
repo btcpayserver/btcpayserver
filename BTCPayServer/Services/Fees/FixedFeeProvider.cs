@@ -6,21 +6,21 @@ using System.Threading.Tasks;
 
 namespace BTCPayServer.Services.Fees
 {
-	public class FixedFeeProvider : IFeeProvider
-	{
-		public FixedFeeProvider(FeeRate feeRate)
-		{
-			FeeRate = feeRate;
-		}
+    public class FixedFeeProvider : IFeeProvider
+    {
+        public FixedFeeProvider(FeeRate feeRate)
+        {
+            FeeRate = feeRate;
+        }
 
-		public FeeRate FeeRate
-		{
-			get; set;
-		}
+        public FeeRate FeeRate
+        {
+            get; set;
+        }
 
-		public Task<FeeRate> GetFeeRateAsync()
-		{
-			return Task.FromResult(FeeRate);
-		}
-	}
+        public Task<FeeRate> GetFeeRateAsync()
+        {
+            return Task.FromResult(FeeRate);
+        }
+    }
 }

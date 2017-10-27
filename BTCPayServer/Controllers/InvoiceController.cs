@@ -41,119 +41,119 @@ using NBXplorer;
 
 namespace BTCPayServer.Controllers
 {
-	public partial class InvoiceController : Controller
-	{
-		InvoiceRepository _InvoiceRepository;
-		BTCPayWallet _Wallet;
-		IRateProvider _RateProvider;
-		private InvoiceWatcher _Watcher;
-		StoreRepository _StoreRepository;
-		Network _Network;
-		UserManager<ApplicationUser> _UserManager;
-		IFeeProvider _FeeProvider;
-		ExplorerClient _Explorer;
+    public partial class InvoiceController : Controller
+    {
+        InvoiceRepository _InvoiceRepository;
+        BTCPayWallet _Wallet;
+        IRateProvider _RateProvider;
+        private InvoiceWatcher _Watcher;
+        StoreRepository _StoreRepository;
+        Network _Network;
+        UserManager<ApplicationUser> _UserManager;
+        IFeeProvider _FeeProvider;
+        ExplorerClient _Explorer;
 
-		public InvoiceController(
-			Network network,
-			InvoiceRepository invoiceRepository,
-			UserManager<ApplicationUser> userManager,
-			BTCPayWallet wallet,
-			IRateProvider rateProvider,
-			StoreRepository storeRepository,
-			InvoiceWatcher watcher,
-			ExplorerClient explorerClient,
-			IFeeProvider feeProvider)
-		{
-			_Explorer = explorerClient ?? throw new ArgumentNullException(nameof(explorerClient));
-			_StoreRepository = storeRepository ?? throw new ArgumentNullException(nameof(storeRepository));
-			_Network = network ?? throw new ArgumentNullException(nameof(network));
-			_InvoiceRepository = invoiceRepository ?? throw new ArgumentNullException(nameof(invoiceRepository));
-			_Wallet = wallet ?? throw new ArgumentNullException(nameof(wallet));
-			_RateProvider = rateProvider ?? throw new ArgumentNullException(nameof(rateProvider));
-			_Watcher = watcher ?? throw new ArgumentNullException(nameof(watcher));
-			_UserManager = userManager;
-			_FeeProvider = feeProvider ?? throw new ArgumentNullException(nameof(feeProvider));
-		}
+        public InvoiceController(
+            Network network,
+            InvoiceRepository invoiceRepository,
+            UserManager<ApplicationUser> userManager,
+            BTCPayWallet wallet,
+            IRateProvider rateProvider,
+            StoreRepository storeRepository,
+            InvoiceWatcher watcher,
+            ExplorerClient explorerClient,
+            IFeeProvider feeProvider)
+        {
+            _Explorer = explorerClient ?? throw new ArgumentNullException(nameof(explorerClient));
+            _StoreRepository = storeRepository ?? throw new ArgumentNullException(nameof(storeRepository));
+            _Network = network ?? throw new ArgumentNullException(nameof(network));
+            _InvoiceRepository = invoiceRepository ?? throw new ArgumentNullException(nameof(invoiceRepository));
+            _Wallet = wallet ?? throw new ArgumentNullException(nameof(wallet));
+            _RateProvider = rateProvider ?? throw new ArgumentNullException(nameof(rateProvider));
+            _Watcher = watcher ?? throw new ArgumentNullException(nameof(watcher));
+            _UserManager = userManager;
+            _FeeProvider = feeProvider ?? throw new ArgumentNullException(nameof(feeProvider));
+        }
 
-		internal async Task<DataWrapper<InvoiceResponse>> CreateInvoiceCore(Invoice invoice, StoreData store, string serverUrl, double expiryMinutes = 15, double monitoringMinutes = 60)
-		{
-			//TODO: expiryMinutes (time before a new invoice can become paid) and monitoringMinutes (time before a paid invoice becomes invalid)  should be configurable at store level
-			var derivationStrategy = store.DerivationStrategy;
-			var entity = new InvoiceEntity
-			{
-				InvoiceTime = DateTimeOffset.UtcNow,
-				DerivationStrategy = derivationStrategy ?? throw new BitpayHttpException(400, "This store has not configured the derivation strategy")
-			};
-			Uri notificationUri = Uri.IsWellFormedUriString(invoice.NotificationURL, UriKind.Absolute) ? new Uri(invoice.NotificationURL, UriKind.Absolute) : null;
-			if(notificationUri == null || (notificationUri.Scheme != "http" && notificationUri.Scheme != "https")) //TODO: Filer non routable addresses ?
-				notificationUri = null;
-			EmailAddressAttribute emailValidator = new EmailAddressAttribute();
-			entity.ExpirationTime = entity.InvoiceTime.AddMinutes(expiryMinutes);
-			entity.MonitoringExpiration = entity.InvoiceTime.AddMinutes(monitoringMinutes);
-			entity.OrderId = invoice.OrderId;
-			entity.ServerUrl = serverUrl;
-			entity.FullNotifications = invoice.FullNotifications;
-			entity.NotificationURL = notificationUri?.AbsoluteUri;
-			entity.BuyerInformation = Map<Invoice, BuyerInformation>(invoice);
-			//Another way of passing buyer info to support
-			FillBuyerInfo(invoice.Buyer, entity.BuyerInformation);
-			if(entity?.BuyerInformation?.BuyerEmail != null)
-			{
-				if(!EmailValidator.IsEmail(entity.BuyerInformation.BuyerEmail))
-					throw new BitpayHttpException(400, "Invalid email");
-				entity.RefundMail = entity.BuyerInformation.BuyerEmail;
-			}
-			entity.ProductInformation = Map<Invoice, ProductInformation>(invoice);
-			entity.RedirectURL = invoice.RedirectURL ?? store.StoreWebsite;
-			entity.Status = "new";
-			entity.SpeedPolicy = ParseSpeedPolicy(invoice.TransactionSpeed, store.SpeedPolicy);
-			entity.TxFee = store.GetStoreBlob(_Network).NetworkFeeDisabled ? Money.Zero : (await _FeeProvider.GetFeeRateAsync()).GetFee(100); // assume price for 100 bytes
-			entity.Rate = (double)await _RateProvider.GetRateAsync(invoice.Currency);
-			entity.PosData = invoice.PosData;
-			entity.DepositAddress = await _Wallet.ReserveAddressAsync(ParseDerivationStrategy(derivationStrategy));
+        internal async Task<DataWrapper<InvoiceResponse>> CreateInvoiceCore(Invoice invoice, StoreData store, string serverUrl, double expiryMinutes = 15, double monitoringMinutes = 60)
+        {
+            //TODO: expiryMinutes (time before a new invoice can become paid) and monitoringMinutes (time before a paid invoice becomes invalid)  should be configurable at store level
+            var derivationStrategy = store.DerivationStrategy;
+            var entity = new InvoiceEntity
+            {
+                InvoiceTime = DateTimeOffset.UtcNow,
+                DerivationStrategy = derivationStrategy ?? throw new BitpayHttpException(400, "This store has not configured the derivation strategy")
+            };
+            Uri notificationUri = Uri.IsWellFormedUriString(invoice.NotificationURL, UriKind.Absolute) ? new Uri(invoice.NotificationURL, UriKind.Absolute) : null;
+            if (notificationUri == null || (notificationUri.Scheme != "http" && notificationUri.Scheme != "https")) //TODO: Filer non routable addresses ?
+                notificationUri = null;
+            EmailAddressAttribute emailValidator = new EmailAddressAttribute();
+            entity.ExpirationTime = entity.InvoiceTime.AddMinutes(expiryMinutes);
+            entity.MonitoringExpiration = entity.InvoiceTime.AddMinutes(monitoringMinutes);
+            entity.OrderId = invoice.OrderId;
+            entity.ServerUrl = serverUrl;
+            entity.FullNotifications = invoice.FullNotifications;
+            entity.NotificationURL = notificationUri?.AbsoluteUri;
+            entity.BuyerInformation = Map<Invoice, BuyerInformation>(invoice);
+            //Another way of passing buyer info to support
+            FillBuyerInfo(invoice.Buyer, entity.BuyerInformation);
+            if (entity?.BuyerInformation?.BuyerEmail != null)
+            {
+                if (!EmailValidator.IsEmail(entity.BuyerInformation.BuyerEmail))
+                    throw new BitpayHttpException(400, "Invalid email");
+                entity.RefundMail = entity.BuyerInformation.BuyerEmail;
+            }
+            entity.ProductInformation = Map<Invoice, ProductInformation>(invoice);
+            entity.RedirectURL = invoice.RedirectURL ?? store.StoreWebsite;
+            entity.Status = "new";
+            entity.SpeedPolicy = ParseSpeedPolicy(invoice.TransactionSpeed, store.SpeedPolicy);
+            entity.TxFee = store.GetStoreBlob(_Network).NetworkFeeDisabled ? Money.Zero : (await _FeeProvider.GetFeeRateAsync()).GetFee(100); // assume price for 100 bytes
+            entity.Rate = (double)await _RateProvider.GetRateAsync(invoice.Currency);
+            entity.PosData = invoice.PosData;
+            entity.DepositAddress = await _Wallet.ReserveAddressAsync(ParseDerivationStrategy(derivationStrategy));
 
-			entity = await _InvoiceRepository.CreateInvoiceAsync(store.Id, entity);
-			await _Watcher.WatchAsync(entity.Id);
-			var resp = entity.EntityToDTO();
-			return new DataWrapper<InvoiceResponse>(resp) { Facade = "pos/invoice" };
-		}
+            entity = await _InvoiceRepository.CreateInvoiceAsync(store.Id, entity);
+            await _Watcher.WatchAsync(entity.Id);
+            var resp = entity.EntityToDTO();
+            return new DataWrapper<InvoiceResponse>(resp) { Facade = "pos/invoice" };
+        }
 
-		private SpeedPolicy ParseSpeedPolicy(string transactionSpeed, SpeedPolicy defaultPolicy)
-		{
-			if(transactionSpeed == null)
-				return defaultPolicy;
-			var mappings = new Dictionary<string, SpeedPolicy>();
-			mappings.Add("low", SpeedPolicy.LowSpeed);
-			mappings.Add("medium", SpeedPolicy.MediumSpeed);
-			mappings.Add("high", SpeedPolicy.HighSpeed);
-			if(!mappings.TryGetValue(transactionSpeed, out SpeedPolicy policy))
-				policy = defaultPolicy;
-			return policy;
-		}
+        private SpeedPolicy ParseSpeedPolicy(string transactionSpeed, SpeedPolicy defaultPolicy)
+        {
+            if (transactionSpeed == null)
+                return defaultPolicy;
+            var mappings = new Dictionary<string, SpeedPolicy>();
+            mappings.Add("low", SpeedPolicy.LowSpeed);
+            mappings.Add("medium", SpeedPolicy.MediumSpeed);
+            mappings.Add("high", SpeedPolicy.HighSpeed);
+            if (!mappings.TryGetValue(transactionSpeed, out SpeedPolicy policy))
+                policy = defaultPolicy;
+            return policy;
+        }
 
-		private void FillBuyerInfo(Buyer buyer, BuyerInformation buyerInformation)
-		{
-			if(buyer == null)
-				return;
-			buyerInformation.BuyerAddress1 = buyerInformation.BuyerAddress1 ?? buyer.Address1;
-			buyerInformation.BuyerAddress2 = buyerInformation.BuyerAddress2 ?? buyer.Address2;
-			buyerInformation.BuyerCity = buyerInformation.BuyerCity ?? buyer.City;
-			buyerInformation.BuyerCountry = buyerInformation.BuyerCountry ?? buyer.country;
-			buyerInformation.BuyerEmail = buyerInformation.BuyerEmail ?? buyer.email;
-			buyerInformation.BuyerName = buyerInformation.BuyerName ?? buyer.Name;
-			buyerInformation.BuyerPhone = buyerInformation.BuyerPhone ?? buyer.phone;
-			buyerInformation.BuyerState = buyerInformation.BuyerState ?? buyer.State;
-			buyerInformation.BuyerZip = buyerInformation.BuyerZip ?? buyer.zip;
-		}
+        private void FillBuyerInfo(Buyer buyer, BuyerInformation buyerInformation)
+        {
+            if (buyer == null)
+                return;
+            buyerInformation.BuyerAddress1 = buyerInformation.BuyerAddress1 ?? buyer.Address1;
+            buyerInformation.BuyerAddress2 = buyerInformation.BuyerAddress2 ?? buyer.Address2;
+            buyerInformation.BuyerCity = buyerInformation.BuyerCity ?? buyer.City;
+            buyerInformation.BuyerCountry = buyerInformation.BuyerCountry ?? buyer.country;
+            buyerInformation.BuyerEmail = buyerInformation.BuyerEmail ?? buyer.email;
+            buyerInformation.BuyerName = buyerInformation.BuyerName ?? buyer.Name;
+            buyerInformation.BuyerPhone = buyerInformation.BuyerPhone ?? buyer.phone;
+            buyerInformation.BuyerState = buyerInformation.BuyerState ?? buyer.State;
+            buyerInformation.BuyerZip = buyerInformation.BuyerZip ?? buyer.zip;
+        }
 
-		private DerivationStrategyBase ParseDerivationStrategy(string derivationStrategy)
-		{
-			return new DerivationStrategyFactory(_Network).Parse(derivationStrategy);
-		}
+        private DerivationStrategyBase ParseDerivationStrategy(string derivationStrategy)
+        {
+            return new DerivationStrategyFactory(_Network).Parse(derivationStrategy);
+        }
 
-		private TDest Map<TFrom, TDest>(TFrom data)
-		{
-			return JsonConvert.DeserializeObject<TDest>(JsonConvert.SerializeObject(data));
-		}
-	}
+        private TDest Map<TFrom, TDest>(TFrom data)
+        {
+            return JsonConvert.DeserializeObject<TDest>(JsonConvert.SerializeObject(data));
+        }
+    }
 }

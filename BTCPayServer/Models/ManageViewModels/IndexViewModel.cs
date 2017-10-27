@@ -12,25 +12,25 @@ namespace BTCPayServer.Models.ManageViewModels
         public string Username { get; set; }
 
 
-		[Required]
-		[EmailAddress]
-		[MaxLength(50)]
-		public string Email
-		{
-			get; set;
-		}
+        [Required]
+        [EmailAddress]
+        [MaxLength(50)]
+        public string Email
+        {
+            get; set;
+        }
 
-		public bool IsEmailConfirmed { get; set; }
+        public bool IsEmailConfirmed { get; set; }
 
-		[Phone]
+        [Phone]
         [Display(Name = "Phone number")]
-		[MaxLength(50)]
-		public string PhoneNumber { get; set; }
+        [MaxLength(50)]
+        public string PhoneNumber { get; set; }
 
-		public string StatusMessage
-		{
-			get; set;
-		}
+        public string StatusMessage
+        {
+            get; set;
+        }
 
-	}
+    }
 }

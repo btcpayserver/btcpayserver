@@ -10,15 +10,15 @@ namespace BTCPayServer.Models
     // Add profile data for application users by adding properties to the ApplicationUser class
     public class ApplicationUser : IdentityUser
     {
-		public List<UserStore> UserStores
-		{
-			get;
-			set;
-		}
+        public List<UserStore> UserStores
+        {
+            get;
+            set;
+        }
 
-		public bool RequiresEmailConfirmation
-		{
-			get; set;
-		}
-	}
+        public bool RequiresEmailConfirmation
+        {
+            get; set;
+        }
+    }
 }

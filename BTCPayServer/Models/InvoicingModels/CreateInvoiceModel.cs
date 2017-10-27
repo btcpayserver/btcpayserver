@@ -7,52 +7,52 @@ using System.Threading.Tasks;
 
 namespace BTCPayServer.Models.InvoicingModels
 {
-	public class CreateInvoiceModel
-	{
-		[Required]
-		public double? Amount
-		{
-			get; set;
-		}
+    public class CreateInvoiceModel
+    {
+        [Required]
+        public double? Amount
+        {
+            get; set;
+        }
 
-		[Required]
-		public string StoreId
-		{
-			get; set;
-		}
+        [Required]
+        public string StoreId
+        {
+            get; set;
+        }
 
-		public string OrderId
-		{
-			get; set;
-		}
+        public string OrderId
+        {
+            get; set;
+        }
 
-		public string ItemDesc
-		{
-			get; set;
-		}
+        public string ItemDesc
+        {
+            get; set;
+        }
 
-		public string PosData
-		{
-			get; set;
-		}
+        public string PosData
+        {
+            get; set;
+        }
 
-		[EmailAddress]
-		public string BuyerEmail
-		{
-			get; set;
-		}
+        [EmailAddress]
+        public string BuyerEmail
+        {
+            get; set;
+        }
 
 
-		[Url]
-		public string NotificationUrl
-		{
-			get; set;
-		}
+        [Url]
+        public string NotificationUrl
+        {
+            get; set;
+        }
 
-		public SelectList Stores
-		{
-			get;
-			set;
-		}
-	}
+        public SelectList Stores
+        {
+            get;
+            set;
+        }
+    }
 }

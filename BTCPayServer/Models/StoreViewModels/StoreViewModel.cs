@@ -10,50 +10,50 @@ namespace BTCPayServer.Models.StoreViewModels
 {
     public class StoreViewModel
     {
-		[Display(Name = "Store Name")]
-		[Required]
-		[MaxLength(50)]
-		[MinLength(1)]
-		public string StoreName
-		{
-			get; set;
-		}
+        [Display(Name = "Store Name")]
+        [Required]
+        [MaxLength(50)]
+        [MinLength(1)]
+        public string StoreName
+        {
+            get; set;
+        }
 
-		[Url]
-		[Display(Name = "Store Website")]
-		[MaxLength(500)]
-		public string StoreWebsite
-		{
-			get;
-			set;
-		}
+        [Url]
+        [Display(Name = "Store Website")]
+        [MaxLength(500)]
+        public string StoreWebsite
+        {
+            get;
+            set;
+        }
 
-		[DerivationStrategyValidator]
-		public string DerivationScheme
-		{
-			get; set;
-		}
+        [DerivationStrategyValidator]
+        public string DerivationScheme
+        {
+            get; set;
+        }
 
-		[Display(Name = "Consider the invoice confirmed when the payment transaction...")]
-		public SpeedPolicy SpeedPolicy
-		{
-			get; set;
-		}
+        [Display(Name = "Consider the invoice confirmed when the payment transaction...")]
+        public SpeedPolicy SpeedPolicy
+        {
+            get; set;
+        }
 
-		[Display(Name = "Add network fee to invoice (vary with mining fees)")]
-		public bool NetworkFee
-		{
-			get; set;
-		}
+        [Display(Name = "Add network fee to invoice (vary with mining fees)")]
+        public bool NetworkFee
+        {
+            get; set;
+        }
 
-		public List<(string KeyPath, string Address)> AddressSamples
-		{
-			get; set;
-		} = new List<(string KeyPath, string Address)>();
+        public List<(string KeyPath, string Address)> AddressSamples
+        {
+            get; set;
+        } = new List<(string KeyPath, string Address)>();
 
-		public string StatusMessage
-		{
-			get; set;
-		}
-	}
+        public string StatusMessage
+        {
+            get; set;
+        }
+    }
 }

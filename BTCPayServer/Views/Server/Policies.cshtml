@@ -1,29 +1,29 @@
 ﻿@model BTCPayServer.Services.PoliciesSettings
 @{
-	ViewData["Title"] = ServerNavPages.Policies;
-	ViewData.AddActivePage(ServerNavPages.Policies);
+    ViewData["Title"] = ServerNavPages.Policies;
+    ViewData.AddActivePage(ServerNavPages.Policies);
 }
 
 
 <h4>@ViewData["Title"]</h4>
 @Html.Partial("_StatusMessage", TempData["StatusMessage"])
 <div class="row">
-	<div class="col-md-6">
-		<div asp-validation-summary="All" class="text-danger"></div>
-	</div>
+    <div class="col-md-6">
+        <div asp-validation-summary="All" class="text-danger"></div>
+    </div>
 </div>
 <div class="row">
-	<div class="col-md-6">
-		<form method="post">
-			<div class="form-group">
-				<label asp-for="RequiresConfirmedEmail"></label>
-				<input asp-for="RequiresConfirmedEmail" type="checkbox" class="form-check-inline" />
-			</div>
-			<button type="submit" class="btn btn-success" name="command" value="Save">Save</button>
-		</form>
-	</div>
+    <div class="col-md-6">
+        <form method="post">
+            <div class="form-group">
+                <label asp-for="RequiresConfirmedEmail"></label>
+                <input asp-for="RequiresConfirmedEmail" type="checkbox" class="form-check-inline" />
+            </div>
+            <button type="submit" class="btn btn-success" name="command" value="Save">Save</button>
+        </form>
+    </div>
 </div>
 
 @section Scripts {
-	@await Html.PartialAsync("_ValidationScriptsPartial")
+    @await Html.PartialAsync("_ValidationScriptsPartial")
 }

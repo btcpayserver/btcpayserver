@@ -7,24 +7,24 @@ namespace BTCPayServer.Data
 {
     public class HistoricalAddressInvoiceData
     {
-		public string InvoiceDataId
-		{
-			get; set;
-		}
+        public string InvoiceDataId
+        {
+            get; set;
+        }
 
-		public string Address
-		{
-			get; set;
-		}
+        public string Address
+        {
+            get; set;
+        }
 
-		public DateTimeOffset Assigned
-		{
-			get; set;
-		}
+        public DateTimeOffset Assigned
+        {
+            get; set;
+        }
 
-		public DateTimeOffset? UnAssigned
-		{
-			get; set;
-		}
-	}
+        public DateTimeOffset? UnAssigned
+        {
+            get; set;
+        }
+    }
 }

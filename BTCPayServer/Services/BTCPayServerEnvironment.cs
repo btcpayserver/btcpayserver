@@ -10,37 +10,37 @@ namespace BTCPayServer.Services
 {
     public class BTCPayServerEnvironment
     {
-		public BTCPayServerEnvironment(IHostingEnvironment env)
-		{
-			Version = typeof(BTCPayServerEnvironment).GetTypeInfo().Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>().Version;
+        public BTCPayServerEnvironment(IHostingEnvironment env)
+        {
+            Version = typeof(BTCPayServerEnvironment).GetTypeInfo().Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>().Version;
 #if DEBUG
-			Build = "Debug";
+            Build = "Debug";
 #else
 			Build = "Release";
 #endif
-			Environment = env;
-		}
-		public IHostingEnvironment Environment
-		{
-			get; set;
-		}
-		public string Version
-		{
-			get; set;
-		}
-		public string Build
-		{
-			get; set;
-		}
-		public override string ToString()
-		{
-			StringBuilder txt = new StringBuilder();
-			txt.Append($"@Copyright BTCPayServer v{Version}");
-			if(!Environment.IsProduction() || Build.Equals("Release", StringComparison.OrdinalIgnoreCase))
-			{
-				txt.Append($" Environment: {Environment.EnvironmentName} Build: {Build}");
-			}
-			return txt.ToString();
-		}
-	}
+            Environment = env;
+        }
+        public IHostingEnvironment Environment
+        {
+            get; set;
+        }
+        public string Version
+        {
+            get; set;
+        }
+        public string Build
+        {
+            get; set;
+        }
+        public override string ToString()
+        {
+            StringBuilder txt = new StringBuilder();
+            txt.Append($"@Copyright BTCPayServer v{Version}");
+            if (!Environment.IsProduction() || Build.Equals("Release", StringComparison.OrdinalIgnoreCase))
+            {
+                txt.Append($" Environment: {Environment.EnvironmentName} Build: {Build}");
+            }
+            return txt.ToString();
+        }
+    }
 }

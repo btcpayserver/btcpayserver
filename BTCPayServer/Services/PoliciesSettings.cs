@@ -7,9 +7,9 @@ namespace BTCPayServer.Services
 {
     public class PoliciesSettings
     {
-		public bool RequiresConfirmedEmail
-		{
-			get; set;
-		}
-	}
+        public bool RequiresConfirmedEmail
+        {
+            get; set;
+        }
+    }
 }

@@ -51,11 +51,13 @@ namespace BTCPayServer.Controllers
         Network _Network;
         UserManager<ApplicationUser> _UserManager;
         IFeeProvider _FeeProvider;
+        private CurrencyNameTable _CurrencyNameTable;
         ExplorerClient _Explorer;
 
         public InvoiceController(
             Network network,
             InvoiceRepository invoiceRepository,
+            CurrencyNameTable currencyNameTable,
             UserManager<ApplicationUser> userManager,
             BTCPayWallet wallet,
             IRateProvider rateProvider,
@@ -64,6 +66,7 @@ namespace BTCPayServer.Controllers
             ExplorerClient explorerClient,
             IFeeProvider feeProvider)
         {
+            _CurrencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
             _Explorer = explorerClient ?? throw new ArgumentNullException(nameof(explorerClient));
             _StoreRepository = storeRepository ?? throw new ArgumentNullException(nameof(storeRepository));
             _Network = network ?? throw new ArgumentNullException(nameof(network));

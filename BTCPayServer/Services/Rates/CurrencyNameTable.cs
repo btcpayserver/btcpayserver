@@ -1,9 +1,11 @@
 ﻿using System;
+using NBitcoin;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Linq;
 using System.Text;
+using System.Globalization;
 
 namespace BTCPayServer.Services.Rates
 {
@@ -37,6 +39,41 @@ namespace BTCPayServer.Services.Rates
             _Currencies = LoadCurrency().ToDictionary(k => k.Code);
         }
 
+        static Dictionary<string, IFormatProvider> _CurrencyProviders = new Dictionary<string, IFormatProvider>();
+        public IFormatProvider GetCurrencyProvider(string currency)
+        {
+            lock (_CurrencyProviders)
+            {
+                if (_CurrencyProviders.Count == 0)
+                {
+                    foreach (var culture in CultureInfo.GetCultures(CultureTypes.AllCultures).Where(c => !c.IsNeutralCulture))
+                    {
+                        try
+                        {
+                            _CurrencyProviders.TryAdd(new RegionInfo(culture.LCID).ISOCurrencySymbol, culture);
+                        }
+                        catch { }
+                    }
+                    AddCurrency(_CurrencyProviders, "BTC", 8, "BTC");
+                }
+                return _CurrencyProviders.TryGet(currency);
+            }
+        }
+
+        private void AddCurrency(Dictionary<string, IFormatProvider> currencyProviders, string code, int divisibility, string symbol)
+        {
+            var culture = new CultureInfo("en-US");
+            var number = new NumberFormatInfo();
+            number.CurrencyDecimalDigits = divisibility;
+            number.CurrencySymbol = symbol;
+            number.CurrencyDecimalSeparator = culture.NumberFormat.CurrencyDecimalSeparator;
+            number.CurrencyGroupSeparator = culture.NumberFormat.CurrencyGroupSeparator;
+            number.CurrencyGroupSizes = culture.NumberFormat.CurrencyGroupSizes;
+            number.CurrencyNegativePattern = 8;
+            number.CurrencyPositivePattern = 3;
+            number.NegativeSign = culture.NumberFormat.NegativeSign;
+            currencyProviders.TryAdd(code, number);
+        }
 
         Dictionary<string, CurrencyData> _Currencies;
 

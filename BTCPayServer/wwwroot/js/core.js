@@ -16,6 +16,9 @@
 // TODO: Vue controller... complete migrate to it for binding, animations can stay in jQuery
 var checkoutCtrl = new Vue({
     el: '#checkoutCtrl',
+    components: {
+        qrcode: VueQr
+    },
     data: {
         srvModel: srvModel
     }
@@ -40,8 +43,6 @@ function hideEmailForm() {
     $("[role=document]").removeClass("enter-purchaser-email");
     $("#emailAddressView").removeClass("active");
     $("placeholder-refundEmail").html(srvModel.customerEmail);
-    // to generate a QR-Code : $(<selector>).qrcode("1Dut19quHiJrXEwfmig4hB8RyLss5aTRTC");
-    $('.qr-codes').qrcode(srvModel.btcAddress);
 
     // Remove Email mode
     $(".modal-dialog").removeClass("enter-purchaser-email");
@@ -182,16 +183,11 @@ function onDataCallback(jsonData) {
         $("#expired").addClass("active");
     }
 
-    if (newStatus == "new" && jsonData.btcDue < checkoutCtrl.srvModel.btcDue) {
-        // TODO: Refresh not working as expected
-        $(".qr-codes").html("");
-        $(".qr-codes").qrcode(srvModel.btcAddress);
-    }
-
     if (checkoutCtrl.srvModel.status != newStatus) {
         window.parent.postMessage({ "invoiceId": srvModel.invoiceId, "status": newStatus }, "*");
     }
 
+    // updating ui
     checkoutCtrl.srvModel = jsonData;
 }
 

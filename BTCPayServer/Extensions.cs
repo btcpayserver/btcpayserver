@@ -18,7 +18,7 @@ namespace BTCPayServer
 	{
 		public static string WithTrailingSlash(this string str)
 		{
-			if (str.EndsWith("/"))
+			if(str.EndsWith("/"))
 				return str;
 			return str + "/";
 		}
@@ -44,7 +44,7 @@ namespace BTCPayServer
 
 		public static BitIdentity GetBitIdentity(this Controller controller, bool throws = true)
 		{
-			if (!(controller.User.Identity is BitIdentity))
+			if(!(controller.User.Identity is BitIdentity))
 				return throws ? throw new UnauthorizedAccessException("no-bitid") : (BitIdentity)null;
 			return (BitIdentity)controller.User.Identity;
 		}

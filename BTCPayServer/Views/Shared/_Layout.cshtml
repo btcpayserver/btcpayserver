@@ -75,10 +75,12 @@
 			</div>
 		</div>
 	</nav>
+
 	@RenderBody()
-	<footer class="bg-dark">
-		<div class="container" style="text-align:right;font-size:10px; ">@env.ToString()</div>
+	<footer class="footer bg-dark" style="position:absolute;width:100%;bottom:0;">
+		<div class="container" style="text-align:right;font-size:10px;"><span>@env.ToString()</span></div>
 	</footer>
+
 	<!-- Bootstrap core JavaScript -->
 	<script src="~/vendor/jquery/jquery.min.js"></script>
 	<script src="~/vendor/popper/popper.min.js"></script>

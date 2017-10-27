@@ -20,14 +20,17 @@
 
 	<!-- Custom fonts for this template -->
 	@*<link href="~/vendor/font-awesome/css/font-awesome.css" rel="stylesheet" type="text/css">
-	<link href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
-	<link href='https://fonts.googleapis.com/css?family=Merriweather:400,300,300italic,400italic,700,700italic,900,900italic' rel='stylesheet' type='text/css'>*@
+		<link href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+		<link href='https://fonts.googleapis.com/css?family=Merriweather:400,300,300italic,400italic,700,700italic,900,900italic' rel='stylesheet' type='text/css'>*@
 
 	<!-- Plugin CSS -->
 	<link href="~/vendor/magnific-popup/magnific-popup.css" rel="stylesheet">
 
 	<!-- Custom styles for this template -->
 	<link href="~/css/creative.css" rel="stylesheet" />
+
+	<!-- Custom styles for this template -->
+	<link href="~/css/site.css" rel="stylesheet" />
 
 </head>
 
@@ -63,13 +66,11 @@
 						</li>
 						<li class="nav-item">
 							<a asp-area="" asp-controller="Account" asp- asp-action="Logout" title="Manage" class="nav-link js-scroll-trigger">Log out</a>
-						</li>
-					}
+						</li>}
 					else
 					{
 						<li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Register" class="nav-link js-scroll-trigger">Register</a></li>
-						<li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Login" class="nav-link js-scroll-trigger">Log in</a></li>
-					}
+						<li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Login" class="nav-link js-scroll-trigger">Log in</a></li>}
 
 				</ul>
 			</div>
@@ -77,9 +78,9 @@
 	</nav>
 
 	@RenderBody()
-	@*<footer class="footer bg-dark" style="position:absolute;width:100%;bottom:0;">
-		<div class="container" style="text-align:right;font-size:10px;"><span>@env.ToString()</span></div>
-	</footer>*@
+	<footer class="bg-dark">
+		<div class="container text-right"><span>@env.ToString()</span></div>
+	</footer>
 
 	<!-- Bootstrap core JavaScript -->
 	<script src="~/vendor/jquery/jquery.min.js"></script>

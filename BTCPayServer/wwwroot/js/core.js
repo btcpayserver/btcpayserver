@@ -13,22 +13,16 @@
 
 */
 
-// Setup Base variables from the API
-
-//var btcAddress = "1Dut19quHiJrXEwfmig4hB8RyLss5aTRTC",
-//	btcDue = "0.2254", //must be a string
-//	customerEmail = "", // Place holder
-//	maxTime = 60 * 15 - 1, // Can be calculted server-side, or fixed
-//	isArchieved = false, // Preferably Bool
-//	display = $(".timer-row__time-left"), // Timer container
-//	isPaid = false, // Tx listener
-//	merchantRefLink = "https://merchant.link"; // Merchant link to redect the user
-//	merchantName = "Merchant Name",
-//	merchantDesc = "Item description or Invoice description",
-//	btcRate = "4500",
-//	btcAmount = "0.22";
-//	itemAmount = 1,
-//	txFees = "0.0054";
+// TODO: Vue controller... complete migrate to it for binding, animations can stay in jQuery
+var checkoutCtrl = new Vue({
+    el: '#checkoutCtrl',
+    components: {
+        qrcode: VueQr
+    },
+    data: {
+        srvModel: srvModel
+    }
+})
 
 var display = $(".timer-row__time-left"); // Timer container
 
@@ -49,8 +43,6 @@ function hideEmailForm() {
     $("[role=document]").removeClass("enter-purchaser-email");
     $("#emailAddressView").removeClass("active");
     $("placeholder-refundEmail").html(srvModel.customerEmail);
-    // to generate a QR-Code : $(<selector>).qrcode("1Dut19quHiJrXEwfmig4hB8RyLss5aTRTC");
-    $('.qr-codes').qrcode(srvModel.btcAddress);
 
     // Remove Email mode
     $(".modal-dialog").removeClass("enter-purchaser-email");
@@ -92,10 +84,6 @@ function emailForm() {
         }
     })
 }
-
-// Copy Tab Info 
-$("#copy .manual__step-two__instructions span").html("To complete your payment, please send " + srvModel.btcDue + " BTC to the address below.");
-
 
 /* =============== Even listeners =============== */
 
@@ -155,16 +143,11 @@ $("#copy-tab").click(function () {
 // Should connect using webhook ?
 // If notification received
 
-var oldStat = srvModel.status;
 onDataCallback(srvModel);
 
 function onDataCallback(jsonData) {
     var newStatus = jsonData.status;
 
-    if (oldStat != newStatus) {
-        oldStat = newStatus;
-        window.parent.postMessage({ "invoiceId": srvModel.invoiceId, "status": newStatus }, "*");
-    }
     if (newStatus == "complete" ||
         newStatus == "confirmed" ||
         newStatus == "paid") {
@@ -199,6 +182,13 @@ function onDataCallback(jsonData) {
         $(".modal-dialog").addClass("expired");
         $("#expired").addClass("active");
     }
+
+    if (checkoutCtrl.srvModel.status != newStatus) {
+        window.parent.postMessage({ "invoiceId": srvModel.invoiceId, "status": newStatus }, "*");
+    }
+
+    // updating ui
+    checkoutCtrl.srvModel = jsonData;
 }
 
 var watcher = setInterval(function () {

@@ -1,6 +1,7 @@
 ﻿@inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
 @inject RoleManager<IdentityRole> RoleManager
+@inject BTCPayServer.Services.BTCPayServerEnvironment env
 
 <!DOCTYPE html>
 <html lang="en">
@@ -75,7 +76,9 @@
 		</div>
 	</nav>
 	@RenderBody()
-
+	<footer class="bg-dark">
+		<div class="container" style="text-align:right;font-size:10px; ">@env.ToString()</div>
+	</footer>
 	<!-- Bootstrap core JavaScript -->
 	<script src="~/vendor/jquery/jquery.min.js"></script>
 	<script src="~/vendor/popper/popper.min.js"></script>

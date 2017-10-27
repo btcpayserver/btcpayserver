@@ -113,6 +113,7 @@ namespace BTCPayServer.Hosting
 				runtime.Configure(o.GetRequiredService<BTCPayServerOptions>());
 				return runtime;
 			});
+			services.AddSingleton<BTCPayServerEnvironment>();
 			services.TryAddSingleton<TokenRepository>();
 			services.TryAddSingleton(o => o.GetRequiredService<BTCPayServerRuntime>().InvoiceRepository);
 			services.TryAddSingleton<Network>(o => o.GetRequiredService<BTCPayServerOptions>().Network);

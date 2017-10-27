@@ -10,14 +10,15 @@ using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Encodings.Web;
 
 namespace BTCPayServer
 {
-    public static class Extensions
-    {
+	public static class Extensions
+	{
 		public static string WithTrailingSlash(this string str)
 		{
-			if(str.EndsWith("/"))
+			if (str.EndsWith("/"))
 				return str;
 			return str + "/";
 		}
@@ -43,7 +44,7 @@ namespace BTCPayServer
 
 		public static BitIdentity GetBitIdentity(this Controller controller, bool throws = true)
 		{
-			if(!(controller.User.Identity is BitIdentity))
+			if (!(controller.User.Identity is BitIdentity))
 				return throws ? throw new UnauthorizedAccessException("no-bitid") : (BitIdentity)null;
 			return (BitIdentity)controller.User.Identity;
 		}
@@ -54,5 +55,13 @@ namespace BTCPayServer
 			var res = JsonConvert.SerializeObject(o, Formatting.None, jsonSettings);
 			return res;
 		}
+
+		public static HtmlString ToSrvModel(this object o)
+		{
+			var encodedJson = JavaScriptEncoder.Default.Encode(o.ToJson());
+			return new HtmlString("var srvModel = JSON.parse('" + encodedJson + "');");
+		}
+
+
 	}
 }

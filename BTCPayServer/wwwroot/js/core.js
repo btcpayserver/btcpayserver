@@ -148,14 +148,14 @@ onDataCallback(srvModel);
 function onDataCallback(jsonData) {
     var newStatus = jsonData.status;
 
-    if (newStatus == "complete" ||
-        newStatus == "confirmed" ||
-        newStatus == "paid") {
+    if (newStatus === "complete" ||
+        newStatus === "confirmed" ||
+        newStatus === "paid") {
         if ($(".modal-dialog").hasClass("expired")) {
             $(".modal-dialog").removeClass("expired");
         }
 
-        if (srvModel.merchantRefLink != "") {
+        if (srvModel.merchantRefLink !== "") {
             $(".action-button").click(function () {
                 window.location.href = srvModel.merchantRefLink;
             });
@@ -174,7 +174,7 @@ function onDataCallback(jsonData) {
         $("#paid").addClass("active");
     }
 
-    if (newStatus == "expired" || newStatus == "invalid") { //TODO: different state if the invoice is invalid (failed to confirm after timeout)
+    if (newStatus === "expired" || newStatus === "invalid") { //TODO: different state if the invoice is invalid (failed to confirm after timeout)
         $(".timer-row").removeClass("expiring-soon");
         $(".timer-row__message span").html("Invoice expired.");
         $(".timer-row__spinner").html("");
@@ -183,7 +183,7 @@ function onDataCallback(jsonData) {
         $("#expired").addClass("active");
     }
 
-    if (checkoutCtrl.srvModel.status != newStatus) {
+    if (checkoutCtrl.srvModel.status !== newStatus) {
         window.parent.postMessage({ "invoiceId": srvModel.invoiceId, "status": newStatus }, "*");
     }
 
@@ -259,7 +259,7 @@ function progressStart(timerMax) {
         var timeDiff = end.getTime() - now.getTime();
         var perc = 100 - Math.round((timeDiff / timerMax) * 100);
 
-        if (perc === 75 && (status == "paidPartial" || status == "new")) {
+        if (perc === 75 && (status === "paidPartial" || status === "new")) {
             $(".timer-row").addClass("expiring-soon");
             $(".timer-row__message span").html("Invoice expiring soon ...");
             updateProgress(perc);
@@ -268,7 +268,7 @@ function progressStart(timerMax) {
             updateProgress(perc);
             setTimeout(animateUpdate, timeoutVal);
         }
-        if (perc >= 100 && status == "expired") {
+        if (perc >= 100 && status === "expired") {
             onDataCallback(status);
         }
     }

@@ -20,182 +20,184 @@ using System.Diagnostics;
 using Microsoft.EntityFrameworkCore.Extensions;
 using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore;
+using BTCPayServer.Services.Rates;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace BTCPayServer.Tests
 {
-    public class UnitTest1
-    {
-        public UnitTest1(ITestOutputHelper helper)
-        {
-            Logs.Tester = new XUnitLog(helper) { Name = "Tests" };
-            Logs.LogProvider = new XUnitLogProvider(helper);
-        }
+	public class UnitTest1
+	{
+		public UnitTest1(ITestOutputHelper helper)
+		{
+			Logs.Tester = new XUnitLog(helper) { Name = "Tests" };
+			Logs.LogProvider = new XUnitLogProvider(helper);
+		}
 
-        [Fact]
-        public void CanCalculateCryptoDue()
-        {
-            var entity = new InvoiceEntity();
-            entity.TxFee = Money.Coins(0.1m);
-            entity.Rate = 5000;
-            entity.Payments = new System.Collections.Generic.List<PaymentEntity>();
-            entity.ProductInformation = new ProductInformation() { Price = 5000 };
+		[Fact]
+		public void CanCalculateCryptoDue()
+		{
+			var entity = new InvoiceEntity();
+			entity.TxFee = Money.Coins(0.1m);
+			entity.Rate = 5000;
+			entity.Payments = new System.Collections.Generic.List<PaymentEntity>();
+			entity.ProductInformation = new ProductInformation() { Price = 5000 };
 
-            Assert.Equal(Money.Coins(1.1m), entity.GetCryptoDue());
-            Assert.Equal(Money.Coins(1.1m), entity.GetTotalCryptoDue());
+			Assert.Equal(Money.Coins(1.1m), entity.GetCryptoDue());
+			Assert.Equal(Money.Coins(1.1m), entity.GetTotalCryptoDue());
 
-            entity.Payments.Add(new PaymentEntity() { Output = new TxOut(Money.Coins(0.5m), new Key()) });
+			entity.Payments.Add(new PaymentEntity() { Output = new TxOut(Money.Coins(0.5m), new Key()) });
 
-            //Since we need to spend one more txout, it should be 1.1 - 0,5 + 0.1
-            Assert.Equal(Money.Coins(0.7m), entity.GetCryptoDue());
-            Assert.Equal(Money.Coins(1.2m), entity.GetTotalCryptoDue());
+			//Since we need to spend one more txout, it should be 1.1 - 0,5 + 0.1
+			Assert.Equal(Money.Coins(0.7m), entity.GetCryptoDue());
+			Assert.Equal(Money.Coins(1.2m), entity.GetTotalCryptoDue());
 
-            entity.Payments.Add(new PaymentEntity() { Output = new TxOut(Money.Coins(0.2m), new Key()) });
-            Assert.Equal(Money.Coins(0.6m), entity.GetCryptoDue());
-            Assert.Equal(Money.Coins(1.3m), entity.GetTotalCryptoDue());
+			entity.Payments.Add(new PaymentEntity() { Output = new TxOut(Money.Coins(0.2m), new Key()) });
+			Assert.Equal(Money.Coins(0.6m), entity.GetCryptoDue());
+			Assert.Equal(Money.Coins(1.3m), entity.GetTotalCryptoDue());
 
-            entity.Payments.Add(new PaymentEntity() { Output = new TxOut(Money.Coins(0.6m), new Key()) });
+			entity.Payments.Add(new PaymentEntity() { Output = new TxOut(Money.Coins(0.6m), new Key()) });
 
-            Assert.Equal(Money.Zero, entity.GetCryptoDue());
-            Assert.Equal(Money.Coins(1.3m), entity.GetTotalCryptoDue());
+			Assert.Equal(Money.Zero, entity.GetCryptoDue());
+			Assert.Equal(Money.Coins(1.3m), entity.GetTotalCryptoDue());
 
-            entity.Payments.Add(new PaymentEntity() { Output = new TxOut(Money.Coins(0.2m), new Key()) });
+			entity.Payments.Add(new PaymentEntity() { Output = new TxOut(Money.Coins(0.2m), new Key()) });
 
-            Assert.Equal(Money.Zero, entity.GetCryptoDue());
-            Assert.Equal(Money.Coins(1.3m), entity.GetTotalCryptoDue());
-        }
+			Assert.Equal(Money.Zero, entity.GetCryptoDue());
+			Assert.Equal(Money.Coins(1.3m), entity.GetTotalCryptoDue());
+		}
 
-        [Fact]
-        public void CanPayUsingBIP70()
-        {
-            using (var tester = ServerTester.Create())
-            {
-                tester.Start();
-                var user = tester.NewAccount();
-                user.GrantAccess();
-                var invoice = user.BitPay.CreateInvoice(new Invoice()
-                {
-                    Buyer = new Buyer() { email = "test@fwf.com" },
-                    Price = 5000.0,
-                    Currency = "USD",
-                    PosData = "posData",
-                    OrderId = "orderId",
-                    //RedirectURL = redirect + "redirect",
-                    //NotificationURL = CallbackUri + "/notification",
-                    ItemDesc = "Some description",
-                    FullNotifications = true
-                }, Facade.Merchant);
+		[Fact]
+		public void CanPayUsingBIP70()
+		{
+			using(var tester = ServerTester.Create())
+			{
+				tester.Start();
+				var user = tester.NewAccount();
+				user.GrantAccess();
+				var invoice = user.BitPay.CreateInvoice(new Invoice()
+				{
+					Buyer = new Buyer() { email = "test@fwf.com" },
+					Price = 5000.0,
+					Currency = "USD",
+					PosData = "posData",
+					OrderId = "orderId",
+					//RedirectURL = redirect + "redirect",
+					//NotificationURL = CallbackUri + "/notification",
+					ItemDesc = "Some description",
+					FullNotifications = true
+				}, Facade.Merchant);
 
-                Assert.False(invoice.Refundable);
+				Assert.False(invoice.Refundable);
 
-                var url = new BitcoinUrlBuilder(invoice.PaymentUrls.BIP72);
-                var request = url.GetPaymentRequest();
-                var payment = request.CreatePayment();
+				var url = new BitcoinUrlBuilder(invoice.PaymentUrls.BIP72);
+				var request = url.GetPaymentRequest();
+				var payment = request.CreatePayment();
 
-                Transaction tx = new Transaction();
-                tx.Outputs.AddRange(request.Details.Outputs.Select(o => new TxOut(o.Amount, o.Script)));
-                var cashCow = tester.ExplorerNode;
-                tx = cashCow.FundRawTransaction(tx).Transaction;
-                tx = cashCow.SignRawTransaction(tx);
+				Transaction tx = new Transaction();
+				tx.Outputs.AddRange(request.Details.Outputs.Select(o => new TxOut(o.Amount, o.Script)));
+				var cashCow = tester.ExplorerNode;
+				tx = cashCow.FundRawTransaction(tx).Transaction;
+				tx = cashCow.SignRawTransaction(tx);
 
-                payment.Transactions.Add(tx);
+				payment.Transactions.Add(tx);
 
-                payment.RefundTo.Add(new PaymentOutput(Money.Coins(1.0m), new Key().ScriptPubKey));
-                var ack = payment.SubmitPayment();
-                Assert.NotNull(ack);
+				payment.RefundTo.Add(new PaymentOutput(Money.Coins(1.0m), new Key().ScriptPubKey));
+				var ack = payment.SubmitPayment();
+				Assert.NotNull(ack);
 
-                Eventually(() =>
-                {
-                    tester.SimulateCallback(url.Address);
-                    var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
-                    Assert.Equal("paid", localInvoice.Status);
-                    Assert.True(localInvoice.Refundable);
-                });
-            }
-        }
+				Eventually(() =>
+				{
+					tester.SimulateCallback(url.Address);
+					var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
+					Assert.Equal("paid", localInvoice.Status);
+					Assert.True(localInvoice.Refundable);
+				});
+			}
+		}
 
-        [Fact]
-        public void CanUseServerInitiatedPairingCode()
-        {
-            using (var tester = ServerTester.Create())
-            {
-                tester.Start();
-                var acc = tester.NewAccount();
-                acc.Register();
-                acc.CreateStore();
+		[Fact]
+		public void CanUseServerInitiatedPairingCode()
+		{
+			using(var tester = ServerTester.Create())
+			{
+				tester.Start();
+				var acc = tester.NewAccount();
+				acc.Register();
+				acc.CreateStore();
 
-                var controller = tester.PayTester.GetController<StoresController>(acc.UserId);
-                var token = (RedirectToActionResult)controller.CreateToken(acc.StoreId, new Models.StoreViewModels.CreateTokenViewModel()
-                {
-                    Facade = Facade.Merchant.ToString(),
-                    Label = "bla",
-                    PublicKey = null
-                }).GetAwaiter().GetResult();
+				var controller = tester.PayTester.GetController<StoresController>(acc.UserId);
+				var token = (RedirectToActionResult)controller.CreateToken(acc.StoreId, new Models.StoreViewModels.CreateTokenViewModel()
+				{
+					Facade = Facade.Merchant.ToString(),
+					Label = "bla",
+					PublicKey = null
+				}).GetAwaiter().GetResult();
 
-                var pairingCode = (string)token.RouteValues["pairingCode"];
+				var pairingCode = (string)token.RouteValues["pairingCode"];
 
-                acc.BitPay.AuthorizeClient(new PairingCode(pairingCode)).GetAwaiter().GetResult();
-                Assert.True(acc.BitPay.TestAccess(Facade.Merchant));
-            }
-        }
+				acc.BitPay.AuthorizeClient(new PairingCode(pairingCode)).GetAwaiter().GetResult();
+				Assert.True(acc.BitPay.TestAccess(Facade.Merchant));
+			}
+		}
 
-        [Fact]
-        public void CanSendIPN()
-        {
-            using (var callbackServer = new CustomServer())
-            {
-                using (var tester = ServerTester.Create())
-                {
-                    tester.Start();
-                    var acc = tester.NewAccount();
-                    acc.GrantAccess();
-                    var invoice = acc.BitPay.CreateInvoice(new Invoice()
-                    {
-                        Price = 5.0,
-                        Currency = "USD",
-                        PosData = "posData",
-                        OrderId = "orderId",
-                        NotificationURL = callbackServer.GetUri().AbsoluteUri,
-                        ItemDesc = "Some description",
-                        FullNotifications = true
-                    });
-                    BitcoinUrlBuilder url = new BitcoinUrlBuilder(invoice.PaymentUrls.BIP21);
-                    tester.ExplorerNode.SendToAddress(url.Address, url.Amount);
-                    Thread.Sleep(5000);
-                    tester.SimulateCallback(url.Address);
-                    callbackServer.ProcessNextRequest((ctx) =>
-                    {
-                        var ipn = new StreamReader(ctx.Request.Body).ReadToEnd();
-                        JsonConvert.DeserializeObject<InvoicePaymentNotification>(ipn); //can deserialize
-                    });
-                    var invoice2 = acc.BitPay.GetInvoice(invoice.Id);
-                    Assert.NotNull(invoice2);
-                }
-            }
-        }
+		[Fact]
+		public void CanSendIPN()
+		{
+			using(var callbackServer = new CustomServer())
+			{
+				using(var tester = ServerTester.Create())
+				{
+					tester.Start();
+					var acc = tester.NewAccount();
+					acc.GrantAccess();
+					var invoice = acc.BitPay.CreateInvoice(new Invoice()
+					{
+						Price = 5.0,
+						Currency = "USD",
+						PosData = "posData",
+						OrderId = "orderId",
+						NotificationURL = callbackServer.GetUri().AbsoluteUri,
+						ItemDesc = "Some description",
+						FullNotifications = true
+					});
+					BitcoinUrlBuilder url = new BitcoinUrlBuilder(invoice.PaymentUrls.BIP21);
+					tester.ExplorerNode.SendToAddress(url.Address, url.Amount);
+					Thread.Sleep(5000);
+					tester.SimulateCallback(url.Address);
+					callbackServer.ProcessNextRequest((ctx) =>
+					{
+						var ipn = new StreamReader(ctx.Request.Body).ReadToEnd();
+						JsonConvert.DeserializeObject<InvoicePaymentNotification>(ipn); //can deserialize
+					});
+					var invoice2 = acc.BitPay.GetInvoice(invoice.Id);
+					Assert.NotNull(invoice2);
+				}
+			}
+		}
 
-        [Fact]
-        public void CantPairTwiceWithSamePubkey()
-        {
-            using (var tester = ServerTester.Create())
-            {
-                tester.Start();
-                var acc = tester.NewAccount();
-                acc.Register();
-                var store = acc.CreateStore();
-                var pairingCode = acc.BitPay.RequestClientAuthorization("test", Facade.Merchant);
-                Assert.IsType<RedirectToActionResult>(store.Pair(pairingCode.ToString(), acc.StoreId).GetAwaiter().GetResult());
+		[Fact]
+		public void CantPairTwiceWithSamePubkey()
+		{
+			using(var tester = ServerTester.Create())
+			{
+				tester.Start();
+				var acc = tester.NewAccount();
+				acc.Register();
+				var store = acc.CreateStore();
+				var pairingCode = acc.BitPay.RequestClientAuthorization("test", Facade.Merchant);
+				Assert.IsType<RedirectToActionResult>(store.Pair(pairingCode.ToString(), acc.StoreId).GetAwaiter().GetResult());
 
-                pairingCode = acc.BitPay.RequestClientAuthorization("test1", Facade.Merchant);
-                var store2 = acc.CreateStore();
-                store2.Pair(pairingCode.ToString(), store2.CreatedStoreId).GetAwaiter().GetResult();
-                Assert.Contains(nameof(PairingResult.ReusedKey), store2.StatusMessage);
-            }
-        }
+				pairingCode = acc.BitPay.RequestClientAuthorization("test1", Facade.Merchant);
+				var store2 = acc.CreateStore();
+				store2.Pair(pairingCode.ToString(), store2.CreatedStoreId).GetAwaiter().GetResult();
+				Assert.Contains(nameof(PairingResult.ReusedKey), store2.StatusMessage);
+			}
+		}
 
-        [Fact]
-        public void InvoiceFlowThroughDifferentStatesCorrectly()
-        {
-            using (var tester = ServerTester.Create())
+		[Fact]
+		public void InvoiceFlowThroughDifferentStatesCorrectly()
+		{
+			using(var tester = ServerTester.Create())
 			{
 				tester.Start();
 				var user = tester.NewAccount();
@@ -220,9 +222,7 @@ namespace BTCPayServer.Tests
 					StoreId = user.StoreId,
 					TextSearch = invoice.OrderId
 				}).GetAwaiter().GetResult();
-
 				Assert.Equal(1, textSearchResult.Length);
-
 				textSearchResult = tester.PayTester.Runtime.InvoiceRepository.GetInvoices(new InvoiceQuery()
 				{
 					StoreId = user.StoreId,
@@ -352,6 +352,21 @@ namespace BTCPayServer.Tests
 			}
 		}
 
+		[Fact]
+		public void CheckRatesProvider()
+		{
+			var coinAverage = new CoinAverageRateProvider();
+			var jpy = coinAverage.GetRateAsync("JPY").GetAwaiter().GetResult();
+			var jpy2 = new BitpayRateProvider(new Bitpay(new Key(), new Uri("https://bitpay.com/"))).GetRateAsync("JPY").GetAwaiter().GetResult();
+
+			var cached = new CachedRateProvider(coinAverage, new MemoryCache(new MemoryCacheOptions() { ExpirationScanFrequency = TimeSpan.FromSeconds(1.0) }));
+			cached.CacheSpan = TimeSpan.FromSeconds(10);
+			var a = cached.GetRateAsync("JPY").GetAwaiter().GetResult();
+			var b = cached.GetRateAsync("JPY").GetAwaiter().GetResult();
+			//Manually check that cache get hit after 10 sec
+			var c = cached.GetRateAsync("JPY").GetAwaiter().GetResult();
+		}
+
 		private static bool IsMapped(Invoice invoice, ApplicationDbContext ctx)
 		{
 			var h = BitcoinAddress.Create(invoice.BitcoinAddress).ScriptPubKey.Hash.ToString();
@@ -359,20 +374,20 @@ namespace BTCPayServer.Tests
 		}
 
 		private void Eventually(Action act)
-        {
-            CancellationTokenSource cts = new CancellationTokenSource(10000);
-            while (true)
-            {
-                try
-                {
-                    act();
-                    break;
-                }
-                catch (XunitException) when (!cts.Token.IsCancellationRequested)
-                {
-                    cts.Token.WaitHandle.WaitOne(500);
-                }
-            }
-        }
-    }
+		{
+			CancellationTokenSource cts = new CancellationTokenSource(10000);
+			while(true)
+			{
+				try
+				{
+					act();
+					break;
+				}
+				catch(XunitException) when(!cts.Token.IsCancellationRequested)
+				{
+					cts.Token.WaitHandle.WaitOne(500);
+				}
+			}
+		}
+	}
 }

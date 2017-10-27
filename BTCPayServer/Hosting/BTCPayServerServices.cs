@@ -33,6 +33,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Authentication;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace BTCPayServer.Hosting
 {
@@ -137,7 +138,10 @@ namespace BTCPayServer.Hosting
 				else
 					return new Bitpay(new Key(), new Uri("https://test.bitpay.com/"));
 			});
-			services.TryAddSingleton<IRateProvider, BitpayRateProvider>();
+			services.TryAddSingleton<IRateProvider>(o =>
+			{
+				return new CachedRateProvider(new CoinAverageRateProvider(), o.GetRequiredService<IMemoryCache>()) { CacheSpan = TimeSpan.FromMinutes(1.0) };
+			});
 			services.TryAddSingleton<InvoiceWatcher>();
 			services.TryAddSingleton<InvoiceNotificationManager>();
 			services.TryAddSingleton<IHostedService>(o => o.GetRequiredService<InvoiceWatcher>());

@@ -67,7 +67,7 @@ namespace BTCPayServer.Hosting
 		public void ConfigureServices(IServiceCollection services)
 		{
 			services.ConfigureBTCPayServer(Configuration);
-
+			services.AddMemoryCache();
 			services.AddIdentity<ApplicationUser, IdentityRole>()
 				.AddEntityFrameworkStores<ApplicationDbContext>()
 				.AddDefaultTokenProviders();

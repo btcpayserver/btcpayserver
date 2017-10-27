@@ -155,14 +155,14 @@ function onDataCallback(jsonData) {
             $(".modal-dialog").removeClass("expired");
         }
 
-        //if (srvModel.merchantRefLink != "") {
-        //    $(".action-button").click(function () {
-        //        window.location.href = srvModel.merchantRefLink;
-        //    });
-        //}
-        //else {
-        //    $(".action-button").hide();
-        //}
+        if (srvModel.merchantRefLink != "") {
+            $(".action-button").click(function () {
+                window.location.href = srvModel.merchantRefLink;
+            });
+        }
+        else {
+            $(".action-button").hide();
+        }
 
         $(".modal-dialog").addClass("paid");
 

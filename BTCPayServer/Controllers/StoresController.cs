@@ -190,9 +190,12 @@ namespace BTCPayServer.Controllers
                     needUpdate = true;
                     try
                     {
-                        var strategy = ParseDerivationStrategy(model.DerivationScheme);
-                        await _Wallet.TrackAsync(strategy);
-                        await _CallbackController.RegisterCallbackUriAsync(strategy, Request);
+                        if (!string.IsNullOrEmpty(model.DerivationScheme))
+                        {
+                            var strategy = ParseDerivationStrategy(model.DerivationScheme);
+                            await _Wallet.TrackAsync(strategy);
+                            await _CallbackController.RegisterCallbackUriAsync(strategy, Request);
+                        }
                         store.DerivationStrategy = model.DerivationScheme;
                     }
                     catch

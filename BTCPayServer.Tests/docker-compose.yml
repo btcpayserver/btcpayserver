@@ -21,7 +21,7 @@ services:
       - "tests:127.0.0.1"
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:1.0.0.27
+    image: nicolasdorier/nbxplorer:1.0.0.28
     ports:
       - "32838:32838"
     expose: 

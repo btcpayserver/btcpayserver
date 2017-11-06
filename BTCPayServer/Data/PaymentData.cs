@@ -25,5 +25,9 @@ namespace BTCPayServer.Data
         {
             get; set;
         }
+        public bool Accounted
+        {
+            get; set;
+        }
     }
 }

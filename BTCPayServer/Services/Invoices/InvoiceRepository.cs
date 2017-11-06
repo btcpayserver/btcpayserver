@@ -262,8 +262,7 @@ namespace BTCPayServer.Services.Invoices
                 await context.SaveChangesAsync().ConfigureAwait(false);
             }
         }
-
-        public async Task<InvoiceEntity> GetInvoice(string storeId, string id, bool includeHistoricalAddresses = false)
+        public async Task<InvoiceEntity> GetInvoice(string storeId, string id, bool inludeAddressData = false)
         {
             using (var context = _ContextFactory.CreateContext())
             {
@@ -272,8 +271,8 @@ namespace BTCPayServer.Services.Invoices
                     .Invoices
                     .Include(o => o.Payments)
                     .Include(o => o.RefundAddresses);
-                if (includeHistoricalAddresses)
-                    query = query.Include(o => o.HistoricalAddressInvoices);
+                if (inludeAddressData)
+                    query = query.Include(o => o.HistoricalAddressInvoices).Include(o => o.AddressInvoices);
                 query = query.Where(i => i.Id == id);
 
                 if (storeId != null)
@@ -290,7 +289,12 @@ namespace BTCPayServer.Services.Invoices
         private InvoiceEntity ToEntity(InvoiceData invoice)
         {
             var entity = ToObject<InvoiceEntity>(invoice.Blob);
-            entity.Payments = invoice.Payments.Select(p => ToObject<PaymentEntity>(p.Blob)).ToList();
+            entity.Payments = invoice.Payments.Select(p => 
+            {
+                var paymentEntity = ToObject<PaymentEntity>(p.Blob);
+                paymentEntity.Accounted = p.Accounted;
+                return paymentEntity;
+            }).ToList();
             entity.ExceptionStatus = invoice.ExceptionStatus;
             entity.Status = invoice.Status;
             entity.RefundMail = invoice.CustomerEmail;
@@ -298,6 +302,10 @@ namespace BTCPayServer.Services.Invoices
             if (invoice.HistoricalAddressInvoices != null)
             {
                 entity.HistoricalAddresses = invoice.HistoricalAddressInvoices.ToArray();
+            }
+            if (invoice.AddressInvoices != null)
+            {
+                entity.AvailableAddressHashes = invoice.AddressInvoices.Select(a => a.Address).ToHashSet();
             }
             return entity;
         }
@@ -412,7 +420,26 @@ namespace BTCPayServer.Services.Invoices
                 await context.Payments.AddAsync(data).ConfigureAwait(false);
 
                 await context.SaveChangesAsync().ConfigureAwait(false);
+                AddToTextSearch(invoiceId, receivedCoin.Outpoint.Hash.ToString());
                 return entity;
+            }
+        }
+
+        public async Task UpdatePayments(List<AccountedPaymentEntity> payments)
+        {
+            if (payments.Count == 0)
+                return;
+            using (var context = _ContextFactory.CreateContext())
+            {
+                foreach (var payment in payments)
+                {
+                    var data = new PaymentData();
+                    data.Id = payment.Payment.Outpoint.ToString();
+                    data.Accounted = payment.Payment.Accounted;
+                    context.Attach(data);
+                    context.Entry(data).Property(o => o.Accounted).IsModified = true;
+                }
+                await context.SaveChangesAsync().ConfigureAwait(false);
             }
         }
 

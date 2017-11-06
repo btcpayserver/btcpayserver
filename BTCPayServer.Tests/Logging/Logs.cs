@@ -71,7 +71,7 @@ namespace BTCPayServer.Tests.Logging
         public void LogInformation(string msg)
         {
             if (msg != null)
-                _Helper.WriteLine(Name + ":   " + msg);
+                _Helper.WriteLine(DateTimeOffset.UtcNow + " :" + Name + ":   " + msg);
         }
     }
     public class Logs

@@ -45,22 +45,22 @@ namespace BTCPayServer.Tests
             Assert.Equal(Money.Coins(1.1m), entity.GetCryptoDue());
             Assert.Equal(Money.Coins(1.1m), entity.GetTotalCryptoDue());
 
-            entity.Payments.Add(new PaymentEntity() { Output = new TxOut(Money.Coins(0.5m), new Key()) });
+            entity.Payments.Add(new PaymentEntity() { Output = new TxOut(Money.Coins(0.5m), new Key()), Accounted = true });
 
             //Since we need to spend one more txout, it should be 1.1 - 0,5 + 0.1
             Assert.Equal(Money.Coins(0.7m), entity.GetCryptoDue());
             Assert.Equal(Money.Coins(1.2m), entity.GetTotalCryptoDue());
 
-            entity.Payments.Add(new PaymentEntity() { Output = new TxOut(Money.Coins(0.2m), new Key()) });
+            entity.Payments.Add(new PaymentEntity() { Output = new TxOut(Money.Coins(0.2m), new Key()), Accounted = true });
             Assert.Equal(Money.Coins(0.6m), entity.GetCryptoDue());
             Assert.Equal(Money.Coins(1.3m), entity.GetTotalCryptoDue());
 
-            entity.Payments.Add(new PaymentEntity() { Output = new TxOut(Money.Coins(0.6m), new Key()) });
+            entity.Payments.Add(new PaymentEntity() { Output = new TxOut(Money.Coins(0.6m), new Key()), Accounted = true });
 
             Assert.Equal(Money.Zero, entity.GetCryptoDue());
             Assert.Equal(Money.Coins(1.3m), entity.GetTotalCryptoDue());
 
-            entity.Payments.Add(new PaymentEntity() { Output = new TxOut(Money.Coins(0.2m), new Key()) });
+            entity.Payments.Add(new PaymentEntity() { Output = new TxOut(Money.Coins(0.2m), new Key()), Accounted = true });
 
             Assert.Equal(Money.Zero, entity.GetCryptoDue());
             Assert.Equal(Money.Coins(1.3m), entity.GetTotalCryptoDue());
@@ -191,6 +191,63 @@ namespace BTCPayServer.Tests
                 var store2 = acc.CreateStore();
                 store2.Pair(pairingCode.ToString(), store2.CreatedStoreId).GetAwaiter().GetResult();
                 Assert.Contains(nameof(PairingResult.ReusedKey), store2.StatusMessage);
+            }
+        }
+
+        [Fact]
+        public void CanRBFPayment()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.Start();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                var invoice = user.BitPay.CreateInvoice(new Invoice()
+                {
+                    Price = 5000.0,
+                    Currency = "USD"
+                }, Facade.Merchant);
+
+                var payment1 = Money.Coins(0.04m);
+                var payment2 = Money.Coins(0.08m);
+                var tx1 = new uint256(tester.ExplorerNode.SendCommand("sendtoaddress", new object[]
+                {
+                    invoice.BitcoinAddress.ToString(),
+                    payment1.ToString(),
+                    null, //comment
+                    null, //comment_to
+                    false, //subtractfeefromamount
+                    true, //replaceable
+                }).ResultString);
+                var invoiceAddress = BitcoinAddress.Create(invoice.BitcoinAddress, tester.Network);
+
+                Eventually(() =>
+                {
+                    tester.SimulateCallback(invoiceAddress);
+                    invoice = user.BitPay.GetInvoice(invoice.Id);
+                    Assert.Equal(payment1, invoice.BtcPaid);
+                    invoiceAddress = BitcoinAddress.Create(invoice.BitcoinAddress, tester.Network);
+                });
+
+                var tx = tester.ExplorerNode.GetRawTransaction(new uint256(tx1));
+                foreach (var input in tx.Inputs)
+                {
+                    input.ScriptSig = Script.Empty; //Strip signatures
+                }
+                var change = tx.Outputs.First(o => o.Value != payment1);
+                var output = tx.Outputs.First(o => o.Value == payment1);
+                output.Value = payment2;
+                output.ScriptPubKey = invoiceAddress.ScriptPubKey;
+                change.Value -= (payment2 - payment1) * 2; //Add more fees
+                var replaced = tester.ExplorerNode.SignRawTransaction(tx);
+                tester.ExplorerNode.SendRawTransaction(replaced);
+                var test = tester.ExplorerClient.Sync(user.DerivationScheme, null);
+                Eventually(() =>
+                {
+                    tester.SimulateCallback(invoiceAddress);
+                    invoice = user.BitPay.GetInvoice(invoice.Id);
+                    Assert.Equal(payment2, invoice.BtcPaid);
+                });
             }
         }
 

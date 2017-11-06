@@ -9,6 +9,7 @@ using NBitpayClient;
 using Newtonsoft.Json.Linq;
 using NBitcoin.DataEncoders;
 using BTCPayServer.Data;
+using NBXplorer.Models;
 
 namespace BTCPayServer.Services.Invoices
 {
@@ -132,6 +133,7 @@ namespace BTCPayServer.Services.Invoices
             int txCount = 1;
             var payments =
                 Payments
+                .Where(p => p.Accounted)
                 .OrderByDescending(p => p.ReceivedTime)
                 .Select(_ =>
                 {
@@ -260,6 +262,12 @@ namespace BTCPayServer.Services.Invoices
             set;
         }
 
+        public HashSet<string> AvailableAddressHashes
+        {
+            get;
+            set;
+        }
+
         public bool IsExpired()
         {
             return DateTimeOffset.UtcNow > ExpirationTime;
@@ -300,7 +308,7 @@ namespace BTCPayServer.Services.Invoices
             dto.Token = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16)); //No idea what it is useful for
             dto.Guid = Guid.NewGuid().ToString();
 
-            var paid = Payments.Select(p => p.Output.Value).Sum();
+            var paid = Payments.Where(p => p.Accounted).Select(p => p.Output.Value).Sum();
             dto.BTCPaid = paid.ToString();
             dto.BTCDue = GetCryptoDue().ToString();
 
@@ -321,6 +329,17 @@ namespace BTCPayServer.Services.Invoices
         }
     }
 
+    public class AccountedPaymentEntity
+    {
+        public int Confirmations
+        {
+            get;
+            set;
+        }
+        public PaymentEntity Payment { get; set; }
+        public Transaction Transaction { get; set; }
+    }
+
     public class PaymentEntity
     {
         public DateTimeOffset ReceivedTime
@@ -332,6 +351,10 @@ namespace BTCPayServer.Services.Invoices
             get; set;
         }
         public TxOut Output
+        {
+            get; set;
+        }
+        public bool Accounted
         {
             get; set;
         }

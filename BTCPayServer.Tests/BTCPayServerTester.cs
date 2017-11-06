@@ -108,7 +108,6 @@ namespace BTCPayServer.Tests
             _Host.Start();
             Runtime = (BTCPayServerRuntime)_Host.Services.GetService(typeof(BTCPayServerRuntime));
             var watcher = (InvoiceWatcher)_Host.Services.GetService(typeof(InvoiceWatcher));
-            watcher.PollInterval = TimeSpan.FromMilliseconds(500);
         }
 
         public BTCPayServerRuntime Runtime

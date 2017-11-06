@@ -21,7 +21,7 @@ services:
       - "tests:127.0.0.1"
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:1.0.0.25
+    image: nicolasdorier/nbxplorer:1.0.0.27
     ports:
       - "32838:32838"
     expose: 
@@ -33,6 +33,7 @@ services:
       NBXPLORER_RPCPASSWORD: DwubwWsoo3
       NBXPLORER_NODEENDPOINT: bitcoind:39388
       NBXPLORER_BIND: 0.0.0.0:32838
+      NBXPLORER_VERBOSE: 1
       NBXPLORER_NOAUTH: 1
     links:
       - bitcoind

@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Xunit;
+using NBXplorer.DerivationStrategy;
 
 namespace BTCPayServer.Tests
 {
@@ -55,13 +56,16 @@ namespace BTCPayServer.Tests
             var store = parent.PayTester.GetController<StoresController>(UserId);
             await store.CreateStore(new CreateStoreViewModel() { Name = "Test Store" });
             StoreId = store.CreatedStoreId;
+            DerivationScheme = new DerivationStrategyFactory(parent.Network).Parse(ExtKey.Neuter().ToString() + "-[legacy]");
             await store.UpdateStore(StoreId, new StoreViewModel()
             {
-                DerivationScheme = ExtKey.Neuter().ToString() + "-[legacy]",
+                DerivationScheme = DerivationScheme.ToString(),
                 SpeedPolicy = SpeedPolicy.MediumSpeed
             }, "Save");
             return store;
         }
+
+        public DerivationStrategyBase DerivationScheme { get; set; }
 
         private async Task RegisterAsync()
         {

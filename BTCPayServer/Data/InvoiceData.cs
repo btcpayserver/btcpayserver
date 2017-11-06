@@ -71,5 +71,9 @@ namespace BTCPayServer.Data
             get;
             set;
         }
+        public List<AddressInvoiceData> AddressInvoices
+        {
+            get; set;
+        }
     }
 }

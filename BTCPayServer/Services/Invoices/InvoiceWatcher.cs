@@ -65,7 +65,7 @@ namespace BTCPayServer.Services.Invoices
             {
                 try
                 {
-                    var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId).ConfigureAwait(false);
+                    var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId, true).ConfigureAwait(false);
                     if (invoice == null)
                         break;
                     var stateBefore = invoice.Status;
@@ -113,28 +113,18 @@ namespace BTCPayServer.Services.Invoices
             changes = await _ExplorerClient.SyncAsync(strategy, changes, !LongPollingMode, _Cts.Token).ConfigureAwait(false);
 
             var utxos = changes.Confirmed.UTXOs.Concat(changes.Unconfirmed.UTXOs).ToArray();
-            var invoiceIds = utxos.Select(u => _InvoiceRepository.GetInvoiceIdFromScriptPubKey(u.Output.ScriptPubKey)).ToArray();
-            utxos =
-                utxos
-                .Where((u, i) => invoiceIds[i].GetAwaiter().GetResult() == invoice.Id)
-                .ToArray();
-
             List<Coin> receivedCoins = new List<Coin>();
             foreach (var received in utxos)
-                if (received.Output.ScriptPubKey == invoice.DepositAddress.ScriptPubKey)
+                if (invoice.AvailableAddressHashes.Contains(received.Output.ScriptPubKey.Hash.ToString()))
                     receivedCoins.Add(new Coin(received.Outpoint, received.Output));
 
             var alreadyAccounted = new HashSet<OutPoint>(invoice.Payments.Select(p => p.Outpoint));
-            BitcoinAddress generatedAddress = null;
             bool dirtyAddress = false;
             foreach (var coin in receivedCoins.Where(c => !alreadyAccounted.Contains(c.Outpoint)))
             {
                 var payment = await _InvoiceRepository.AddPayment(invoice.Id, coin).ConfigureAwait(false);
                 invoice.Payments.Add(payment);
-                if (coin.ScriptPubKey == invoice.DepositAddress.ScriptPubKey && generatedAddress == null)
-                {
-                    dirtyAddress = true;
-                }
+                dirtyAddress = true;
             }
             //////
 
@@ -147,7 +137,7 @@ namespace BTCPayServer.Services.Invoices
 
             if (invoice.Status == "new" || invoice.Status == "expired")
             {
-                var totalPaid = invoice.Payments.Select(p => p.Output.Value).Sum();
+                var totalPaid = (await GetPaymentsWithTransaction(invoice)).Select(p => p.Payment.Output.Value).Sum();
                 if (totalPaid >= invoice.GetTotalCryptoDue())
                 {
                     if (invoice.Status == "new")
@@ -196,15 +186,15 @@ namespace BTCPayServer.Services.Invoices
                     var transactions = await GetPaymentsWithTransaction(invoice);
                     if (invoice.SpeedPolicy == SpeedPolicy.HighSpeed)
                     {
-                        transactions = transactions.Where(t => !t.Transaction.Transaction.RBF);
+                        transactions = transactions.Where(t => !t.Transaction.RBF);
                     }
                     else if (invoice.SpeedPolicy == SpeedPolicy.MediumSpeed)
                     {
-                        transactions = transactions.Where(t => t.Transaction.Confirmations >= 1);
+                        transactions = transactions.Where(t => t.Confirmations >= 1);
                     }
                     else if (invoice.SpeedPolicy == SpeedPolicy.LowSpeed)
                     {
-                        transactions = transactions.Where(t => t.Transaction.Confirmations >= 6);
+                        transactions = transactions.Where(t => t.Confirmations >= 6);
                     }
 
                     var totalConfirmed = transactions.Select(t => t.Payment.Output.Value).Sum();
@@ -227,7 +217,7 @@ namespace BTCPayServer.Services.Invoices
             if (invoice.Status == "confirmed")
             {
                 var transactions = await GetPaymentsWithTransaction(invoice);
-                transactions = transactions.Where(t => t.Transaction.Confirmations >= 6);
+                transactions = transactions.Where(t => t.Confirmations >= 6);
                 var totalConfirmed = transactions.Select(t => t.Payment.Output.Value).Sum();
                 if (totalConfirmed >= invoice.GetTotalCryptoDue())
                 {
@@ -237,18 +227,62 @@ namespace BTCPayServer.Services.Invoices
                     needSave = true;
                 }
             }
-
             return (needSave, changes);
         }
 
-        private async Task<IEnumerable<(PaymentEntity Payment, TransactionResult Transaction)>> GetPaymentsWithTransaction(InvoiceEntity invoice)
+        private async Task<IEnumerable<AccountedPaymentEntity>> GetPaymentsWithTransaction(InvoiceEntity invoice)
         {
-            var getPayments = invoice.Payments
-                                                 .Select(async o => (Payment: o, Transaction: await _ExplorerClient.GetTransactionAsync(o.Outpoint.Hash, _Cts.Token)))
-                                                 .ToArray();
-            await Task.WhenAll(getPayments).ConfigureAwait(false);
-            var transactions = getPayments.Select(c => (Payment: c.Result.Payment, Transaction: c.Result.Transaction));
-            return transactions;
+            var transactions = await _ExplorerClient.GetTransactions(invoice.Payments.Select(t => t.Outpoint.Hash).ToArray());
+
+            var spentTxIn = new Dictionary<OutPoint, AccountedPaymentEntity>();
+            var result = invoice.Payments.Select(p => p.Outpoint).ToHashSet();
+            List<AccountedPaymentEntity> payments = new List<AccountedPaymentEntity>();
+            foreach (var payment in invoice.Payments)
+            {
+                TransactionResult tx;
+                if (!transactions.TryGetValue(payment.Outpoint.Hash, out tx))
+                {
+                    result.Remove(payment.Outpoint);
+                    continue;
+                }
+                AccountedPaymentEntity accountedPayment = new AccountedPaymentEntity()
+                {
+                    Confirmations = tx.Confirmations,
+                    Transaction = tx.Transaction,
+                    Payment = payment
+                };
+                payments.Add(accountedPayment);
+                foreach (var txin in tx.Transaction.Inputs)
+                {
+                    if (!spentTxIn.TryAdd(txin.PrevOut, accountedPayment))
+                    {
+                        //We get a double spend
+                        var existing = spentTxIn[txin.PrevOut];
+
+                        //Take the most recent, the full node is already comparing fees correctly so we have the most likely to be confirmed
+                        if (accountedPayment.Confirmations > 1 || existing.Payment.ReceivedTime < accountedPayment.Payment.ReceivedTime)
+                        {
+                            spentTxIn[txin.PrevOut] = accountedPayment;
+                            result.Remove(existing.Payment.Outpoint);
+                        }
+                    }
+                }
+            }
+
+            List<PaymentEntity> updated = new List<PaymentEntity>();
+            var accountedPayments = payments.Where(p =>
+            {
+                var accounted = result.Contains(p.Payment.Outpoint);
+                if (p.Payment.Accounted != accounted)
+                {
+                    p.Payment.Accounted = accounted;
+                    updated.Add(p.Payment);
+                }
+                return accounted;
+            }).ToArray();
+
+            await _InvoiceRepository.UpdatePayments(payments);
+            return accountedPayments;
         }
 
         TimeSpan _PollInterval;

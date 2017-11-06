@@ -256,7 +256,7 @@ namespace BTCPayServer.Services.Invoices
             using (var context = _ContextFactory.CreateContext())
             {
                 var invoiceData = await context.FindAsync<InvoiceData>(invoiceId).ConfigureAwait(false);
-                if (invoiceData == null || invoiceData.Status != "paid")
+                if (invoiceData?.Status != "paid")
                     return;
                 invoiceData.Status = "invalid";
                 await context.SaveChangesAsync().ConfigureAwait(false);

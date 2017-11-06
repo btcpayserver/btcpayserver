@@ -251,6 +251,17 @@ namespace BTCPayServer.Services.Invoices
             }
         }
 
+        public async Task UpdatePaidInvoiceToInvalid(string invoiceId)
+        {
+            using (var context = _ContextFactory.CreateContext())
+            {
+                var invoiceData = await context.FindAsync<InvoiceData>(invoiceId).ConfigureAwait(false);
+                if (invoiceData?.Status != "paid")
+                    return;
+                invoiceData.Status = "invalid";
+                await context.SaveChangesAsync().ConfigureAwait(false);
+            }
+        }
         public async Task<InvoiceEntity> GetInvoice(string storeId, string id, bool inludeAddressData = false)
         {
             using (var context = _ContextFactory.CreateContext())

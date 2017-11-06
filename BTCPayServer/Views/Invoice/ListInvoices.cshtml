@@ -43,12 +43,28 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach(var invoice in Model.Invoices)
+                    @foreach (var invoice in Model.Invoices)
                     {
                         <tr>
                             <td>@invoice.Date</td>
                             <td>@invoice.InvoiceId</td>
-                            <td>@invoice.Status</td>
+                            @if (invoice.Status == "paid")
+                            {
+                                <td>
+                                    <div class="btn-group">
+                                        <a class="dropdown-toggle dropdown-toggle-split" style="cursor: pointer;" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            @invoice.Status <span class="sr-only">Toggle Dropdown</span>
+                                        </a>
+                                        <div class="dropdown-menu pull-right">
+                                            <button class="dropdown-item small" data-toggle="modal" data-target="#myModal" onclick="$('#invoiceId').val('@invoice.InvoiceId')">Make Invalid</button>
+                                        </div>
+                                    </div>
+                                </td>
+                            }
+                            else
+                            {
+                                <td>@invoice.Status</td>
+                            }
                             <td>@invoice.AmountCurrency</td>
                             <td><a asp-action="Checkout" asp-route-invoiceId="@invoice.InvoiceId">Checkout</a> - <a asp-action="Invoice" asp-route-invoiceId="@invoice.InvoiceId">Details</a></td>
                         </tr>
@@ -56,23 +72,48 @@
                 </tbody>
             </table>
             <span>
-                @if(Model.Skip != 0)
+                @if (Model.Skip != 0)
                 {
                     <a href="@Url.Action("ListInvoices", new
-		{
-			searchTerm = Model.SearchTerm,
-			skip = Math.Max(0, Model.Skip - Model.Count),
-			count = Model.Count,
-		})"><<</a><span> - </span>
+                        {
+                            searchTerm = Model.SearchTerm,
+                            skip = Math.Max(0, Model.Skip - Model.Count),
+                            count = Model.Count,
+                        })"><<</a><span> - </span>
                 }
                 <a href="@Url.Action("ListInvoices", new
-		{
-			searchTerm = Model.SearchTerm,
-			skip = Model.Skip + Model.Count,
-			count = Model.Count,
-		})">>></a>
+                    {
+                        searchTerm = Model.SearchTerm,
+                        skip = Model.Skip + Model.Count,
+                        count = Model.Count,
+                    })">>></a>
             </span>
         </div>
 
     </div>
 </section>
+
+<!-- Modal -->
+<div id="myModal" class="modal fade" role="dialog">
+    <form method="post" action="/invoices/invalidatepaid">
+        <input id="invoiceId" name="invoiceId" type="hidden" />
+        <div class="modal-dialog">
+
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Set Invoice status to Invalid</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to invalidate this transaction? This action is NOT undoable!</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-danger">Yes, make invoice Invalid</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+
+        </div>
+    </form>
+</div>

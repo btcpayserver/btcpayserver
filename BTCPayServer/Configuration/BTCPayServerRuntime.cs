@@ -49,11 +49,6 @@ namespace BTCPayServer.Configuration
             {
                 throw new ConfigException($"Could not connect to NBXplorer, {ex.Message}");
             }
-            DBreezeEngine db = new DBreezeEngine(CreateDBPath(opts, "TokensDB"));
-            _Resources.Add(db);
-
-            db = new DBreezeEngine(CreateDBPath(opts, "InvoiceDB"));
-            _Resources.Add(db);
 
             ApplicationDbContextFactory dbContext = null;
             if (opts.PostgresConnectionString == null)
@@ -68,7 +63,9 @@ namespace BTCPayServer.Configuration
                 dbContext = new ApplicationDbContextFactory(DatabaseType.Postgres, opts.PostgresConnectionString);
             }
             DBFactory = dbContext;
-            InvoiceRepository = new InvoiceRepository(dbContext, db, Network);
+
+            InvoiceRepository = new InvoiceRepository(dbContext, CreateDBPath(opts, "InvoiceDB"), Network);
+            _Resources.Add(InvoiceRepository);
         }
 
         private static string CreateDBPath(BTCPayServerOptions opts, string name)

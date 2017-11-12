@@ -274,19 +274,23 @@ namespace BTCPayServer.Tests
                 }, Facade.Merchant);
                 var repo = tester.PayTester.GetService<InvoiceRepository>();
                 var ctx = tester.PayTester.GetService<ApplicationDbContextFactory>().CreateContext();
-                var textSearchResult = tester.PayTester.Runtime.InvoiceRepository.GetInvoices(new InvoiceQuery()
-                {
-                    StoreId = user.StoreId,
-                    TextSearch = invoice.OrderId
-                }).GetAwaiter().GetResult();
-                Assert.Equal(1, textSearchResult.Length);
-                textSearchResult = tester.PayTester.Runtime.InvoiceRepository.GetInvoices(new InvoiceQuery()
-                {
-                    StoreId = user.StoreId,
-                    TextSearch = invoice.Id
-                }).GetAwaiter().GetResult();
 
-                Assert.Equal(1, textSearchResult.Length);
+                Eventually(() =>
+                {
+                    var textSearchResult = tester.PayTester.Runtime.InvoiceRepository.GetInvoices(new InvoiceQuery()
+                    {
+                        StoreId = user.StoreId,
+                        TextSearch = invoice.OrderId
+                    }).GetAwaiter().GetResult();
+                    Assert.Equal(1, textSearchResult.Length);
+                    textSearchResult = tester.PayTester.Runtime.InvoiceRepository.GetInvoices(new InvoiceQuery()
+                    {
+                        StoreId = user.StoreId,
+                        TextSearch = invoice.Id
+                    }).GetAwaiter().GetResult();
+
+                    Assert.Equal(1, textSearchResult.Length);
+                });
 
                 invoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
                 Assert.Equal(Money.Coins(0), invoice.BtcPaid);

@@ -19,7 +19,7 @@ using BTCPayServer.Models.InvoicingModels;
 
 namespace BTCPayServer.Services.Invoices
 {
-    public class InvoiceRepository
+    public class InvoiceRepository : IDisposable
     {
 
 
@@ -45,11 +45,13 @@ namespace BTCPayServer.Services.Invoices
                 _Network = value;
             }
         }
-
+        
         private ApplicationDbContextFactory _ContextFactory;
-        public InvoiceRepository(ApplicationDbContextFactory contextFactory, DBreezeEngine engine, Network network)
+        private CustomThreadPool _IndexerThread;
+        public InvoiceRepository(ApplicationDbContextFactory contextFactory, string dbreezePath, Network network)
         {
-            _Engine = engine;
+            _Engine = new DBreezeEngine(dbreezePath);
+            _IndexerThread = new CustomThreadPool(1, "Invoice Indexer");
             _Network = network;
             _ContextFactory = contextFactory;
         }
@@ -231,11 +233,14 @@ namespace BTCPayServer.Services.Invoices
 
         void AddToTextSearch(string invoiceId, params string[] terms)
         {
-            using (var tx = _Engine.GetTransaction())
+            _IndexerThread.DoAsync(() => 
             {
-                tx.TextInsert("InvoiceSearch", Encoders.Base58.DecodeData(invoiceId), string.Join(" ", terms.Where(t => !String.IsNullOrWhiteSpace(t))));
-                tx.Commit();
-            }
+                using (var tx = _Engine.GetTransaction())
+                {
+                    tx.TextInsert("InvoiceSearch", Encoders.Base58.DecodeData(invoiceId), string.Join(" ", terms.Where(t => !String.IsNullOrWhiteSpace(t))));
+                    tx.Commit();
+                }
+            });
         }
 
         public async Task UpdateInvoiceStatus(string invoiceId, string status, string exceptionStatus)
@@ -450,6 +455,14 @@ namespace BTCPayServer.Services.Invoices
         private string ToString<T>(T data)
         {
             return NBitcoin.JsonConverters.Serializer.ToString(data, Network);
+        }
+
+        public void Dispose()
+        {
+            if (_Engine != null)
+                _Engine.Dispose();
+            if (_IndexerThread != null)
+                _IndexerThread.Dispose();
         }
     }
 

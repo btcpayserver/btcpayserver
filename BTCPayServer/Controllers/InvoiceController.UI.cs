@@ -281,6 +281,16 @@ namespace BTCPayServer.Controllers
             });
         }
 
+        [HttpPost]
+        [Route("invoices/invalidatepaid")]
+        [Authorize(AuthenticationSchemes = "Identity.Application")]
+        [BitpayAPIConstraint(false)]
+        public async Task<IActionResult> InvalidatePaidInvoice(string invoiceId)
+        {
+            await _InvoiceRepository.UpdatePaidInvoiceToInvalid(invoiceId);
+            return RedirectToAction(nameof(ListInvoices));
+        }
+
         [TempData]
         public string StatusMessage
         {

@@ -56,15 +56,6 @@ namespace BTCPayServer.Services.Invoices
             _ContextFactory = contextFactory;
         }
 
-        public async Task AddPendingInvoice(string invoiceId)
-        {
-            using (var ctx = _ContextFactory.CreateContext())
-            {
-                ctx.PendingInvoices.Add(new PendingInvoiceData() { Id = invoiceId });
-                await ctx.SaveChangesAsync();
-            }
-        }
-
         public async Task<bool> RemovePendingInvoice(string invoiceId)
         {
             using (var ctx = _ContextFactory.CreateContext())
@@ -119,7 +110,7 @@ namespace BTCPayServer.Services.Invoices
             invoice.StoreId = storeId;
             using (var context = _ContextFactory.CreateContext())
             {
-                context.Add(new InvoiceData()
+                context.Invoices.Add(new InvoiceData()
                 {
                     StoreDataId = storeId,
                     Id = invoice.Id,
@@ -130,20 +121,19 @@ namespace BTCPayServer.Services.Invoices
                     ItemCode = invoice.ProductInformation.ItemCode,
                     CustomerEmail = invoice.RefundMail
                 });
-
                 context.AddressInvoices.Add(new AddressInvoiceData()
                 {
                     Address = invoice.DepositAddress.ScriptPubKey.Hash.ToString(),
                     InvoiceDataId = invoice.Id,
                     CreatedTime = DateTimeOffset.UtcNow,
                 });
-
                 context.HistoricalAddressInvoices.Add(new HistoricalAddressInvoiceData()
                 {
                     InvoiceDataId = invoice.Id,
                     Address = invoice.DepositAddress.ToString(),
                     Assigned = DateTimeOffset.UtcNow
                 });
+                context.PendingInvoices.Add(new PendingInvoiceData() { Id = invoice.Id });
                 await context.SaveChangesAsync().ConfigureAwait(false);
             }
 

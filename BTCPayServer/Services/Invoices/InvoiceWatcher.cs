@@ -302,12 +302,10 @@ namespace BTCPayServer.Services.Invoices
             }
         }
 
-        public async Task WatchAsync(string invoiceId, bool singleShot = false)
+        public void Watch(string invoiceId)
         {
             if (invoiceId == null)
                 throw new ArgumentNullException(nameof(invoiceId));
-            if (!singleShot)
-                await _InvoiceRepository.AddPendingInvoice(invoiceId).ConfigureAwait(false);
             _WatchRequests.Add(invoiceId);
         }
 

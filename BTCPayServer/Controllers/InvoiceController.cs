@@ -118,9 +118,8 @@ namespace BTCPayServer.Controllers
             entity.Rate = (double)await getRate;
             entity.PosData = invoice.PosData;
             entity.DepositAddress = await getAddress;
-
             entity = await _InvoiceRepository.CreateInvoiceAsync(store.Id, entity);
-            await _Watcher.WatchAsync(entity.Id);
+            _Watcher.Watch(entity.Id);
             var resp = entity.EntityToDTO();
             return new DataWrapper<InvoiceResponse>(resp) { Facade = "pos/invoice" };
         }

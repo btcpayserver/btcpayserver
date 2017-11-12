@@ -23,11 +23,11 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("invoices/{invoiceId}")]
-        public async Task<IActionResult> Invoice(string invoiceId, string command)
+        public IActionResult Invoice(string invoiceId, string command)
         {
             if (command == "refresh")
             {
-                await _Watcher.WatchAsync(invoiceId, true);
+                _Watcher.Watch(invoiceId);
             }
             StatusMessage = "Invoice is state is being refreshed, please refresh the page soon...";
             return RedirectToAction(nameof(Invoice), new

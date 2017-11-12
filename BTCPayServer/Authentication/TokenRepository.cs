@@ -69,7 +69,7 @@ namespace BTCPayServer.Authentication
             {
                 var now = DateTime.UtcNow;
                 var expiration = DateTime.UtcNow + TimeSpan.FromMinutes(15);
-                await ctx.PairingCodes.AddAsync(new PairingCodeData()
+                ctx.PairingCodes.Add(new PairingCodeData()
                 {
                     Id = pairingCodeId,
                     DateCreated = now,

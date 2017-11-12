@@ -119,7 +119,7 @@ namespace BTCPayServer.Services.Invoices
             invoice.StoreId = storeId;
             using (var context = _ContextFactory.CreateContext())
             {
-                await context.AddAsync(new InvoiceData()
+                context.Add(new InvoiceData()
                 {
                     StoreDataId = storeId,
                     Id = invoice.Id,
@@ -129,7 +129,7 @@ namespace BTCPayServer.Services.Invoices
                     Status = invoice.Status,
                     ItemCode = invoice.ProductInformation.ItemCode,
                     CustomerEmail = invoice.RefundMail
-                }).ConfigureAwait(false);
+                });
 
                 context.AddressInvoices.Add(new AddressInvoiceData()
                 {
@@ -389,12 +389,12 @@ namespace BTCPayServer.Services.Invoices
                 int i = 0;
                 foreach (var output in outputs)
                 {
-                    await context.RefundAddresses.AddAsync(new RefundAddressesData()
+                    context.RefundAddresses.Add(new RefundAddressesData()
                     {
                         Id = invoiceId + "-" + i,
                         InvoiceDataId = invoiceId,
                         Blob = ToBytes(output)
-                    }).ConfigureAwait(false);
+                    });
                     i++;
                 }
                 await context.SaveChangesAsync().ConfigureAwait(false);
@@ -422,7 +422,7 @@ namespace BTCPayServer.Services.Invoices
                     InvoiceDataId = invoiceId
                 };
 
-                await context.Payments.AddAsync(data).ConfigureAwait(false);
+                context.Payments.Add(data);
 
                 await context.SaveChangesAsync().ConfigureAwait(false);
                 AddToTextSearch(invoiceId, receivedCoin.Outpoint.Hash.ToString());

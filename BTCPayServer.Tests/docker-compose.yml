@@ -46,7 +46,13 @@ services:
       - "43782:43782"
       - "39388:39388"
     environment:
-      BITCOIN_EXTRA_ARGS: "rpcuser=ceiwHEbqWI83\nrpcpassword=DwubwWsoo3\nregtest=1\nrpcport=43782\nport=39388\nwhitelist=0.0.0.0/0"
+      BITCOIN_EXTRA_ARGS: |
+        rpcuser=ceiwHEbqWI83
+        rpcpassword=DwubwWsoo3
+        regtest=1
+        rpcport=43782
+        port=39388
+        whitelist=0.0.0.0/0
     expose:
       - "43782"
       - "39388"

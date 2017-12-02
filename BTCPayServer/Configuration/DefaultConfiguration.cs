@@ -19,8 +19,8 @@ namespace BTCPayServer.Configuration
         {
             CommandLineApplication app = new CommandLineApplication(true)
             {
-                FullName = "NBXplorer\r\nLightweight block explorer for tracking HD wallets",
-                Name = "NBXplorer"
+                FullName = "BTCPay\r\nOpen source, self-hosted payment processor.",
+                Name = "BTCPay"
             };
             app.HelpOption("-? | -h | --help");
             app.Option("-n | --network", $"Set the network among ({NetworkInformation.ToStringAll()}) (default: {Network.Main.ToString()})", CommandOptionType.SingleValue);
@@ -30,7 +30,7 @@ namespace BTCPayServer.Configuration
             app.Option("--postgres", $"Connection string to postgres database (default: sqlite is used)", CommandOptionType.SingleValue);
             app.Option("--explorerurl", $"Url of the NBxplorer (default: : Default setting of NBXplorer for the network)", CommandOptionType.SingleValue);
             app.Option("--explorercookiefile", $"Path to the cookie file (default: Default setting of NBXplorer for the network)", CommandOptionType.SingleValue);
-
+            app.Option("--externalurl", $"The expected external url of this service, use if BTCPay is behind a reverse proxy (default: empty, use the incoming HTTP request to figure out)", CommandOptionType.SingleValue);
             return app;
         }
 

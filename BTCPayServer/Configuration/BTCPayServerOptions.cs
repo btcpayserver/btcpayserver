@@ -57,6 +57,7 @@ namespace BTCPayServer.Configuration
             CookieFile = conf.GetOrDefault<string>("explorer.cookiefile", networkInfo.DefaultExplorerCookieFile);
             RequireHttps = conf.GetOrDefault<bool>("requirehttps", false);
             PostgresConnectionString = conf.GetOrDefault<string>("postgres", null);
+            ExternalUrl = conf.GetOrDefault<Uri>("externalurl", null);
         }
 
         public bool RequireHttps
@@ -64,6 +65,11 @@ namespace BTCPayServer.Configuration
             get; set;
         }
         public string PostgresConnectionString
+        {
+            get;
+            set;
+        }
+        public Uri ExternalUrl
         {
             get;
             set;

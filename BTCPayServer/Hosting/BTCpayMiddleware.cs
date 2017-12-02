@@ -30,13 +30,16 @@ namespace BTCPayServer.Hosting
         TokenRepository _TokenRepository;
         RequestDelegate _Next;
         CallbackController _CallbackController;
+        BTCPayServerOptions _Options;
         public BTCPayMiddleware(RequestDelegate next,
             TokenRepository tokenRepo,
+            BTCPayServerOptions options,
             CallbackController callbackController)
         {
             _TokenRepository = tokenRepo ?? throw new ArgumentNullException(nameof(tokenRepo));
             _Next = next ?? throw new ArgumentNullException(nameof(next));
             _CallbackController = callbackController;
+            _Options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
 
@@ -48,6 +51,16 @@ namespace BTCPayServer.Hosting
                 var callback = await _CallbackController.RegisterCallbackBlockUriAsync(httpContext.Request);
                 Logs.PayServer.LogInformation($"Registering block callback to " + callback);
                 _Registered = true;
+            }
+
+            // Make sure that code executing after this point think that the external url has been hit.
+            if(_Options.ExternalUrl != null)
+            {
+                httpContext.Request.Scheme = _Options.ExternalUrl.Scheme;
+                if(_Options.ExternalUrl.IsDefaultPort)
+                    httpContext.Request.Host = new HostString(_Options.ExternalUrl.Host);
+                else
+                    httpContext.Request.Host = new HostString(_Options.ExternalUrl.Host, _Options.ExternalUrl.Port);
             }
 
             httpContext.Request.Headers.TryGetValue("x-signature", out StringValues values);

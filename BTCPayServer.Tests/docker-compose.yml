@@ -21,7 +21,7 @@ services:
       - "tests:127.0.0.1"
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:1.0.0.28
+    image: nicolasdorier/nbxplorer:1.0.0.29
     ports:
       - "32838:32838"
     expose: 
@@ -38,6 +38,9 @@ services:
     links:
       - bitcoind
       - postgres
+
+  eclair:
+    image: nicolasdorier/docker-bitcoin:0.15.0.1
 
   bitcoind:
     container_name: btcpayserver_dev_bitcoind

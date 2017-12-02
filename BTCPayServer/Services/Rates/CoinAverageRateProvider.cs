@@ -66,7 +66,7 @@ namespace BTCPayServer.Services.Rates
                 {
                     var rateJson = new RateJson();
                     rateJson.Code = rate.Name;
-                    rateJson.Rate = rate.Value["rate"].Value<decimal>();
+                    rateJson.Rate = decimal.Parse(rate.Value["rate"].Value<string>(), System.Globalization.NumberStyles.AllowExponent | System.Globalization.NumberStyles.AllowDecimalPoint);
                     RatesByCurrency.Add(rate.Name, rateJson.Rate);
                     Rates.Add(rateJson);
                 }

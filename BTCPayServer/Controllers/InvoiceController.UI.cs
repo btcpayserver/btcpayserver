@@ -15,6 +15,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using BTCPayServer.Services.Rates;
 
 namespace BTCPayServer.Controllers
 {
@@ -245,21 +246,30 @@ namespace BTCPayServer.Controllers
                     storeId = store.Id
                 });
             }
-            var result = await CreateInvoiceCore(new Invoice()
-            {
-                Price = model.Amount.Value,
-                Currency = "USD",
-                PosData = model.PosData,
-                OrderId = model.OrderId,
-                //RedirectURL = redirect + "redirect",
-                NotificationURL = model.NotificationUrl,
-                ItemDesc = model.ItemDesc,
-                FullNotifications = true,
-                BuyerEmail = model.BuyerEmail,
-            }, store, HttpContext.Request.GetAbsoluteRoot());
 
-            StatusMessage = $"Invoice {result.Data.Id} just created!";
-            return RedirectToAction(nameof(ListInvoices));
+            try
+            {
+                var result = await CreateInvoiceCore(new Invoice()
+                {
+                    Price = model.Amount.Value,
+                    Currency = model.Currency,
+                    PosData = model.PosData,
+                    OrderId = model.OrderId,
+                    //RedirectURL = redirect + "redirect",
+                    NotificationURL = model.NotificationUrl,
+                    ItemDesc = model.ItemDesc,
+                    FullNotifications = true,
+                    BuyerEmail = model.BuyerEmail,
+                }, store, HttpContext.Request.GetAbsoluteRoot());
+
+                StatusMessage = $"Invoice {result.Data.Id} just created!";
+                return RedirectToAction(nameof(ListInvoices));
+            }
+            catch (RateUnavailableException)
+            {
+                ModelState.TryAddModelError(nameof(model.Currency), "Unsupported currency");
+                return View(model);
+            }
         }
 
         private async Task<SelectList> GetStores(string userId, string storeId = null)

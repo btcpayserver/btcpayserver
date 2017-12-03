@@ -9,8 +9,18 @@ namespace BTCPayServer.Models.InvoicingModels
 {
     public class CreateInvoiceModel
     {
+        public CreateInvoiceModel()
+        {
+            Currency = "USD";
+        }
         [Required]
         public double? Amount
+        {
+            get; set;
+        }
+
+        [Required]
+        public string Currency
         {
             get; set;
         }

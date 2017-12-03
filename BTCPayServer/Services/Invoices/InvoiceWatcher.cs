@@ -80,9 +80,8 @@ namespace BTCPayServer.Services.Invoices
                         Logs.PayServer.LogInformation($"Invoice {invoice.Id}: {stateBefore} => {invoice.Status}");
                     }
 
-                    var expirationMonitoring = invoice.MonitoringExpiration.HasValue ? invoice.MonitoringExpiration.Value : invoice.InvoiceTime + TimeSpan.FromMinutes(60);
                     if (invoice.Status == "complete" ||
-                       ((invoice.Status == "invalid" || invoice.Status == "expired") && expirationMonitoring < DateTimeOffset.UtcNow))
+                       ((invoice.Status == "invalid" || invoice.Status == "expired") && invoice.MonitoringExpiration < DateTimeOffset.UtcNow))
                     {
                         if (await _InvoiceRepository.RemovePendingInvoice(invoice.Id).ConfigureAwait(false))
                             Logs.PayServer.LogInformation("Stopped watching invoice " + invoiceId);
@@ -185,22 +184,39 @@ namespace BTCPayServer.Services.Invoices
 
             if (invoice.Status == "paid")
             {
-                if (!invoice.MonitoringExpiration.HasValue || invoice.MonitoringExpiration > DateTimeOffset.UtcNow)
+                var transactions = await GetPaymentsWithTransaction(invoice);
+                var chainConfirmedTransactions = transactions.Where(t => t.Confirmations >= 1);
+                if (invoice.SpeedPolicy == SpeedPolicy.HighSpeed)
                 {
-                    var transactions = await GetPaymentsWithTransaction(invoice);
-                    if (invoice.SpeedPolicy == SpeedPolicy.HighSpeed)
-                    {
-                        transactions = transactions.Where(t => !t.Transaction.RBF);
-                    }
-                    else if (invoice.SpeedPolicy == SpeedPolicy.MediumSpeed)
-                    {
-                        transactions = transactions.Where(t => t.Confirmations >= 1);
-                    }
-                    else if (invoice.SpeedPolicy == SpeedPolicy.LowSpeed)
-                    {
-                        transactions = transactions.Where(t => t.Confirmations >= 6);
-                    }
+                    transactions = transactions.Where(t => !t.Transaction.RBF);
+                }
+                else if (invoice.SpeedPolicy == SpeedPolicy.MediumSpeed)
+                {
+                    transactions = transactions.Where(t => t.Confirmations >= 1);
+                }
+                else if (invoice.SpeedPolicy == SpeedPolicy.LowSpeed)
+                {
+                    transactions = transactions.Where(t => t.Confirmations >= 6);
+                }
 
+                var chainTotalConfirmed = chainConfirmedTransactions.Select(t => t.Payment.Output.Value).Sum();
+
+                if (// Is after the monitoring deadline
+                   (invoice.MonitoringExpiration < DateTimeOffset.UtcNow)
+                   &&
+                   // And not enough amount confirmed
+                   (chainTotalConfirmed < invoice.GetTotalCryptoDue()))
+                {
+                    await _InvoiceRepository.UnaffectAddress(invoice.Id);
+                    invoice.Status = "invalid";
+                    needSave = true;
+                    if (invoice.FullNotifications)
+                    {
+                        _NotificationManager.Notify(invoice);
+                    }
+                }
+                else
+                {
                     var totalConfirmed = transactions.Select(t => t.Payment.Output.Value).Sum();
                     if (totalConfirmed >= invoice.GetTotalCryptoDue())
                     {
@@ -209,12 +225,6 @@ namespace BTCPayServer.Services.Invoices
                         _NotificationManager.Notify(invoice);
                         needSave = true;
                     }
-                }
-                else
-                {
-                    await _InvoiceRepository.UnaffectAddress(invoice.Id);
-                    invoice.Status = "invalid";
-                    needSave = true;
                 }
             }
 

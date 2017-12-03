@@ -144,13 +144,15 @@ namespace BTCPayServer.Controllers
             if (store == null)
                 return NotFound();
 
+            var storeBlob = store.GetStoreBlob(_Network);
             var vm = new StoreViewModel();
             vm.StoreName = store.StoreName;
             vm.StoreWebsite = store.StoreWebsite;
-            vm.NetworkFee = !store.GetStoreBlob(_Network).NetworkFeeDisabled;
+            vm.NetworkFee = !storeBlob.NetworkFeeDisabled;
             vm.SpeedPolicy = store.SpeedPolicy;
             vm.DerivationScheme = store.DerivationStrategy;
             vm.StatusMessage = StatusMessage;
+            vm.MonitoringExpiration = storeBlob.MonitoringExpiration;
             return View(vm);
         }
 
@@ -205,11 +207,12 @@ namespace BTCPayServer.Controllers
                     }
                 }
 
-                if (store.GetStoreBlob(_Network).NetworkFeeDisabled != !model.NetworkFee)
+                var blob = store.GetStoreBlob(_Network);
+                blob.NetworkFeeDisabled = !model.NetworkFee;
+                blob.MonitoringExpiration = model.MonitoringExpiration;
+
+                if (store.SetStoreBlob(blob, _Network))
                 {
-                    var blob = store.GetStoreBlob(_Network);
-                    blob.NetworkFeeDisabled = !model.NetworkFee;
-                    store.SetStoreBlob(blob, _Network);
                     needUpdate = true;
                 }
 

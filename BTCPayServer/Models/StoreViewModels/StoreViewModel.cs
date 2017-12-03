@@ -34,6 +34,14 @@ namespace BTCPayServer.Models.StoreViewModels
             get; set;
         }
 
+        [Display(Name = "Payment invalid if transactions fails to confirm after ... minutes")]
+        [Range(10, 60 * 24 * 31)]
+        public int MonitoringExpiration
+        {
+            get;
+            set;
+        }
+
         [Display(Name = "Consider the invoice confirmed when the payment transaction...")]
         public SpeedPolicy SpeedPolicy
         {

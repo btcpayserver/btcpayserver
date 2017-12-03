@@ -251,7 +251,8 @@ namespace BTCPayServer.Services.Invoices
             get;
             set;
         }
-        public DateTimeOffset? MonitoringExpiration
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+        public DateTimeOffset MonitoringExpiration
         {
             get;
             set;

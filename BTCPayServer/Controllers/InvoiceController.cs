@@ -78,7 +78,7 @@ namespace BTCPayServer.Controllers
             _FeeProvider = feeProvider ?? throw new ArgumentNullException(nameof(feeProvider));
         }
 
-        internal async Task<DataWrapper<InvoiceResponse>> CreateInvoiceCore(Invoice invoice, StoreData store, string serverUrl, double expiryMinutes = 15, double monitoringMinutes = 60)
+        internal async Task<DataWrapper<InvoiceResponse>> CreateInvoiceCore(Invoice invoice, StoreData store, string serverUrl, double expiryMinutes = 15)
         {
             //TODO: expiryMinutes (time before a new invoice can become paid) and monitoringMinutes (time before a paid invoice becomes invalid)  should be configurable at store level
             var derivationStrategy = store.DerivationStrategy;
@@ -87,12 +87,13 @@ namespace BTCPayServer.Controllers
                 InvoiceTime = DateTimeOffset.UtcNow,
                 DerivationStrategy = derivationStrategy ?? throw new BitpayHttpException(400, "This store has not configured the derivation strategy")
             };
+            var storeBlob = store.GetStoreBlob(_Network);
             Uri notificationUri = Uri.IsWellFormedUriString(invoice.NotificationURL, UriKind.Absolute) ? new Uri(invoice.NotificationURL, UriKind.Absolute) : null;
             if (notificationUri == null || (notificationUri.Scheme != "http" && notificationUri.Scheme != "https")) //TODO: Filer non routable addresses ?
                 notificationUri = null;
             EmailAddressAttribute emailValidator = new EmailAddressAttribute();
             entity.ExpirationTime = entity.InvoiceTime.AddMinutes(expiryMinutes);
-            entity.MonitoringExpiration = entity.InvoiceTime.AddMinutes(monitoringMinutes);
+            entity.MonitoringExpiration = entity.ExpirationTime + TimeSpan.FromMinutes(storeBlob.MonitoringExpiration);
             entity.OrderId = invoice.OrderId;
             entity.ServerUrl = serverUrl;
             entity.FullNotifications = invoice.FullNotifications;
@@ -114,7 +115,7 @@ namespace BTCPayServer.Controllers
             var getFeeRate = _FeeProvider.GetFeeRateAsync();
             var getRate = _RateProvider.GetRateAsync(invoice.Currency);
             var getAddress = _Wallet.ReserveAddressAsync(ParseDerivationStrategy(derivationStrategy));
-            entity.TxFee = store.GetStoreBlob(_Network).NetworkFeeDisabled ? Money.Zero : (await getFeeRate).GetFee(100); // assume price for 100 bytes
+            entity.TxFee = storeBlob.NetworkFeeDisabled ? Money.Zero : (await getFeeRate).GetFee(100); // assume price for 100 bytes
             entity.Rate = (double)await getRate;
             entity.PosData = invoice.PosData;
             entity.DepositAddress = await getAddress;

@@ -133,6 +133,10 @@ namespace BTCPayServer.Services.Invoices
                 needSave = true;
                 await _InvoiceRepository.UnaffectAddress(invoice.Id);
                 invoice.Status = "expired";
+                if (invoice.FullNotifications)
+                {
+                    _NotificationManager.Notify(invoice);
+                }
             }
 
             if (invoice.Status == "new" || invoice.Status == "expired")

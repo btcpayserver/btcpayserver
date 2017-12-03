@@ -118,8 +118,7 @@ namespace BTCPayServer.Controllers
                 return null;
             var store = await _StoreRepository.FindStore(invoice.StoreId);
             var dto = invoice.EntityToDTO();
-
-            var cryptoFormat = _CurrencyNameTable.GetCurrencyProvider("BTC");
+            var currency = invoice.ProductInformation.Currency;
             var model = new PaymentModel()
             {
                 ServerUrl = HttpContext.Request.GetAbsoluteRoot(),
@@ -133,7 +132,7 @@ namespace BTCPayServer.Controllers
                 ExpirationSeconds = Math.Max(0, (int)(invoice.ExpirationTime - DateTimeOffset.UtcNow).TotalSeconds),
                 MaxTimeSeconds = (int)(invoice.ExpirationTime - invoice.InvoiceTime).TotalSeconds,
                 ItemDesc = invoice.ProductInformation.ItemDesc,
-                Rate = invoice.Rate.ToString("C", _CurrencyNameTable.GetCurrencyProvider(invoice.ProductInformation.Currency)),
+                Rate = invoice.Rate.ToString("C", _CurrencyNameTable.GetCurrencyProvider(currency)) + $" ({currency})",
                 MerchantRefLink = invoice.RedirectURL ?? "/",
                 StoreName = store.StoreName,
                 TxFees = invoice.TxFee.ToString(),

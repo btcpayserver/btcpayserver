@@ -235,8 +235,11 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        public IActionResult Register(string returnUrl = null)
+        public async Task<IActionResult> Register(string returnUrl = null)
         {
+            var policies = await _SettingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
+            if (policies.LockSubscription)
+                return RedirectToAction(nameof(HomeController.Index), "Home");
             ViewData["ReturnUrl"] = returnUrl;
             return View();
         }
@@ -247,9 +250,11 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> Register(RegisterViewModel model, string returnUrl = null)
         {
             ViewData["ReturnUrl"] = returnUrl;
+            var policies = await _SettingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
+            if (policies.LockSubscription)
+                return RedirectToAction(nameof(HomeController.Index), "Home");
             if (ModelState.IsValid)
             {
-                var policies = await _SettingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
                 var user = new ApplicationUser { UserName = model.Email, Email = model.Email, RequiresEmailConfirmation = policies.RequiresConfirmedEmail };
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Services
 {
@@ -11,5 +12,8 @@ namespace BTCPayServer.Services
         {
             get; set;
         }
+
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+        public bool LockSubscription { get; set; }
     }
 }

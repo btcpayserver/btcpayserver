@@ -146,6 +146,7 @@ namespace BTCPayServer.Controllers
 
             var storeBlob = store.GetStoreBlob(_Network);
             var vm = new StoreViewModel();
+            vm.Id = store.Id;
             vm.StoreName = store.StoreName;
             vm.StoreWebsite = store.StoreWebsite;
             vm.NetworkFee = !storeBlob.NetworkFeeDisabled;

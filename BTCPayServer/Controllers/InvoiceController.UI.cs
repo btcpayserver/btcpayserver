@@ -188,12 +188,15 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> ListInvoices(string searchTerm = null, int skip = 0, int count = 20)
         {
             var model = new InvoicesModel();
+            var filterString = new SearchString(searchTerm);
             foreach (var invoice in await _InvoiceRepository.GetInvoices(new InvoiceQuery()
             {
-                TextSearch = searchTerm,
+                TextSearch = filterString.TextSearch,
                 Count = count,
                 Skip = skip,
-                UserId = GetUserId()
+                UserId = GetUserId(),
+                Status = filterString.Filters.TryGet("status"),
+                StoreId = filterString.Filters.TryGet("storeid")
             }))
             {
                 model.SearchTerm = searchTerm;

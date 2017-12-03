@@ -17,6 +17,15 @@
     <div class="col-md-6">
         <form method="post">
             <div class="form-group">
+                <label asp-for="Id"></label>
+                <input asp-for="Id" readonly class="form-control" />
+            </div>
+            <div class="form-group">
+                <label asp-for="StoreName"></label>
+                <input asp-for="StoreName" class="form-control" />
+                <span asp-validation-for="StoreName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
                 <label asp-for="StoreName"></label>
                 <input asp-for="StoreName" class="form-control" />
                 <span asp-validation-for="StoreName" class="text-danger"></span>

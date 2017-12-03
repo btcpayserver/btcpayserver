@@ -10,6 +10,7 @@ namespace BTCPayServer.Models.StoreViewModels
 {
     public class StoreViewModel
     {
+        public string Id { get; set; }
         [Display(Name = "Store Name")]
         [Required]
         [MaxLength(50)]

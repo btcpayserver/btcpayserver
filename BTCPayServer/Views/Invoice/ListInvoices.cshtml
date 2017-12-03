@@ -16,7 +16,15 @@
             <div class="col-lg-12 text-center">
                 <h2 class="section-heading">@ViewData["Title"]</h2>
                 <hr class="primary">
-                <p>Create, search or pay an invoice.</p>
+                <p>Create, search or pay an invoice. (<a href="#help" data-toggle="collapse">Help</a>)</p>
+                <div id="help" class="collapse text-left">
+                    <p>You can search for invoice Id, deposit address, price, order id, store id, any buyer information and any product information.</br>
+                    You can also apply filters to your search by searching for `filtername:value`, here is a list of supported filters</p>
+                    <ul>
+                        <li><b>store:id</b> for filtering a specific store</li>
+                        <li><b>status:(expired|invalid|complete|confirmed|paid|new)</b> for filtering a specific status</li>
+                    </ul>
+                </div>
                 <div class="form-group">
                     <form asp-action="SearchInvoice" method="post">
                         <input asp-for="SearchTerm" class="form-control" />
@@ -43,12 +51,12 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var invoice in Model.Invoices)
+                    @foreach(var invoice in Model.Invoices)
                     {
                         <tr>
                             <td>@invoice.Date</td>
                             <td>@invoice.InvoiceId</td>
-                            @if (invoice.Status == "paid")
+                            @if(invoice.Status == "paid")
                             {
                                 <td>
                                     <div class="btn-group">
@@ -72,7 +80,7 @@
                 </tbody>
             </table>
             <span>
-                @if (Model.Skip != 0)
+                @if(Model.Skip != 0)
                 {
                     <a href="@Url.Action("ListInvoices", new
                         {

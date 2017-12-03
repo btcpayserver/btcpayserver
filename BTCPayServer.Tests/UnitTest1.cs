@@ -252,6 +252,17 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        public void CanParseFilter()
+        {
+            var filter = "storeid:abc status:abed blabhbalh ";
+            var search = new SearchString(filter);
+            Assert.Equal("storeid:abc status:abed blabhbalh", search.ToString());
+            Assert.Equal("blabhbalh", search.TextSearch);
+            Assert.Equal("abc", search.Filters["storeid"]);
+            Assert.Equal("abed", search.Filters["status"]);
+        }
+
+        [Fact]
         public void InvoiceFlowThroughDifferentStatesCorrectly()
         {
             using (var tester = ServerTester.Create())

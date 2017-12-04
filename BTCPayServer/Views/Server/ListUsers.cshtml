@@ -14,6 +14,7 @@
         <tr>
             <th>Name</th>
             <th>Email</th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
@@ -22,6 +23,7 @@
             <tr>
                 <td>@user.Name</td>
                 <td>@user.Email</td>
+                <td><a asp-action="DeleteUser" asp-route-userId="@user.Id">Remove</a></td>
             </tr>}
     </tbody>
 </table>

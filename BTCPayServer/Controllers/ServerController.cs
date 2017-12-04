@@ -32,13 +32,48 @@ namespace BTCPayServer.Controllers
         public IActionResult ListUsers()
         {
             var users = new UsersViewModel();
+            users.StatusMessage = StatusMessage;
             users.Users
                 = _UserManager.Users.Select(u => new UsersViewModel.UserViewModel()
                 {
                     Name = u.UserName,
-                    Email = u.Email
+                    Email = u.Email,
+                    Id = u.Id
                 }).ToList();
             return View(users);
+        }
+
+
+        [Route("server/users/{userId}/delete")]
+        public async Task<IActionResult> DeleteUser(string userId)
+        {
+            var user = userId == null ? null : await _UserManager.FindByIdAsync(userId);
+            if (user == null)
+                return NotFound();
+            return View("Confirm", new ConfirmModel()
+            {
+                Title = "Delete user " + user.Email,
+                Description = "This user will be permanently deleted",
+                Action = "Delete"
+            });
+        }
+
+        [Route("server/users/{userId}/delete")]
+        [HttpPost]
+        public async Task<IActionResult> DeleteUserPost(string userId)
+        {
+            var user = userId == null ? null : await _UserManager.FindByIdAsync(userId);
+            if (user == null)
+                return NotFound();
+            await _UserManager.DeleteAsync(user);
+            StatusMessage = "User deleted";
+            return RedirectToAction(nameof(ListUsers));
+        }
+
+        [TempData]
+        public string StatusMessage
+        {
+            get; set;
         }
 
         [Route("server/emails")]

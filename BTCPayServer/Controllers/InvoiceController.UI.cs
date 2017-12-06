@@ -235,9 +235,9 @@ namespace BTCPayServer.Controllers
         [BitpayAPIConstraint(false)]
         public async Task<IActionResult> CreateInvoice(CreateInvoiceModel model)
         {
+            model.Stores = await GetStores(GetUserId(), model.StoreId);
             if (!ModelState.IsValid)
             {
-                model.Stores = await GetStores(GetUserId(), model.StoreId);
                 return View(model);
             }
             var store = await _StoreRepository.FindStore(model.StoreId, GetUserId());

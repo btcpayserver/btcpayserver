@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using NBitcoin;
+using NBitcoin.DataEncoders;
 using NBitpayClient;
 using NBXplorer.DerivationStrategy;
 using System;
@@ -92,7 +93,7 @@ namespace BTCPayServer.Controllers
             StoresViewModel result = new StoresViewModel();
             result.StatusMessage = StatusMessage;
             var stores = await _Repo.GetStoresByUserId(GetUserId());
-            var balances = stores.Select(async s => string.IsNullOrEmpty(s.DerivationStrategy) ? Money.Zero : await _Wallet.GetBalance(ParseDerivationStrategy(s.DerivationStrategy))).ToArray();
+            var balances = stores.Select(async s => string.IsNullOrEmpty(s.DerivationStrategy) ? Money.Zero : await _Wallet.GetBalance(ParseDerivationStrategy(s.DerivationStrategy, null))).ToArray();
 
             for (int i = 0; i < stores.Length; i++)
             {
@@ -195,7 +196,7 @@ namespace BTCPayServer.Controllers
                     {
                         if (!string.IsNullOrEmpty(model.DerivationScheme))
                         {
-                            var strategy = ParseDerivationStrategy(model.DerivationScheme);
+                            var strategy = ParseDerivationStrategy(model.DerivationScheme, model.DerivationSchemeFormat);
                             await _Wallet.TrackAsync(strategy);
                             await _CallbackController.RegisterCallbackUriAsync(strategy, Request);
                         }
@@ -230,21 +231,62 @@ namespace BTCPayServer.Controllers
             }
             else
             {
-                var facto = new DerivationStrategyFactory(_Network);
-                var scheme = facto.Parse(model.DerivationScheme);
-                var line = scheme.GetLineFor(DerivationFeature.Deposit);
-
-                for (int i = 0; i < 10; i++)
+                if (!string.IsNullOrEmpty(model.DerivationScheme))
                 {
-                    var address = line.Derive((uint)i);
-                    model.AddressSamples.Add((line.Path.Derive((uint)i).ToString(), address.ScriptPubKey.GetDestinationAddress(_Network).ToString()));
+                    try
+                    {
+                        var scheme = ParseDerivationStrategy(model.DerivationScheme, model.DerivationSchemeFormat);
+                        var line = scheme.GetLineFor(DerivationFeature.Deposit);
+
+                        for (int i = 0; i < 10; i++)
+                        {
+                            var address = line.Derive((uint)i);
+                            model.AddressSamples.Add((line.Path.Derive((uint)i).ToString(), address.ScriptPubKey.GetDestinationAddress(_Network).ToString()));
+                        }
+                    }
+                    catch
+                    {
+                        ModelState.AddModelError(nameof(model.DerivationScheme), "Invalid Derivation Scheme");
+                    }
                 }
                 return View(model);
             }
         }
 
-        private DerivationStrategyBase ParseDerivationStrategy(string derivationScheme)
+        private DerivationStrategyBase ParseDerivationStrategy(string derivationScheme, string format)
         {
+            if (format == "Electrum")
+            {
+                //Unsupported Electrum
+                //var p2wsh_p2sh = 0x295b43fU;
+                //var p2wsh = 0x2aa7ed3U;
+                Dictionary<uint, string[]> electrumMapping = new Dictionary<uint, string[]>();
+                //Source https://github.com/spesmilo/electrum/blob/9edffd17542de5773e7284a8c8a2673c766bb3c3/lib/bitcoin.py
+                var standard = 0x0488b21eU;
+                electrumMapping.Add(standard, new[] { "legacy" });
+                var p2wpkh_p2sh = 0x049d7cb2U;
+                electrumMapping.Add(p2wpkh_p2sh, new string[] { "p2sh" });
+                var p2wpkh = 0x4b24746U;
+                electrumMapping.Add(p2wpkh, new string[] { });
+
+                var data = Encoders.Base58Check.DecodeData(derivationScheme);
+                if (data.Length < 4)
+                    throw new FormatException("data.Length < 4");
+                var prefix = Utils.ToUInt32(data, false);
+                if (!electrumMapping.TryGetValue(prefix, out string[] labels))
+                    throw new FormatException("!electrumMapping.TryGetValue(prefix, out string[] labels)");
+                var standardPrefix = Utils.ToBytes(standard, false);
+
+                for (int i = 0; i < 4; i++)
+                    data[i] = standardPrefix[i];
+
+                derivationScheme = new BitcoinExtPubKey(Encoders.Base58Check.EncodeData(data), Network.Main).ToNetwork(_Network).ToString();
+                foreach (var label in labels)
+                {
+                    derivationScheme = derivationScheme + $"-[{label}]";
+                }
+            }
+
             return new DerivationStrategyFactory(_Network).Parse(derivationScheme);
         }
 

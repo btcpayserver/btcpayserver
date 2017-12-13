@@ -1,5 +1,8 @@
 version: "3"
 
+# Run `docker-compose up dev` for bootstrapping your development environment
+# Doing so will expose eclair API, NBXplorer, Bitcoind RPC and postgres port to the host so that tests can Run,
+# The Visual Studio launch setting `Docker-Regtest` is configured to use this environment.
 services:
 
   tests:
@@ -17,8 +20,23 @@ services:
       - "80"
     links:
       - nbxplorer
+      - eclair1
+      - eclair2
     extra_hosts: 
       - "tests:127.0.0.1"
+
+  # The dev container is not actually used, it is just handy to run `docker-compose up dev` to start all services
+  dev: 
+    image: nicolasdorier/docker-bitcoin:0.15.0.1
+    environment:
+      BITCOIN_EXTRA_ARGS: |
+        regtest=1
+        connect=bitcoind:39388
+    links:
+      - bitcoind
+      - nbxplorer
+      - eclair1
+      - eclair2
 
   nbxplorer:
     image: nicolasdorier/nbxplorer:1.0.0.29
@@ -39,28 +57,73 @@ services:
       - bitcoind
       - postgres
 
-  eclair:
-    image: nicolasdorier/docker-bitcoin:0.15.0.1
+  eclair1:
+    image: acinq/eclair:latest
+    environment:
+      JAVA_OPTS: >
+        -Xmx512m 
+        -Declair.printToConsole 
+        -Declair.bitcoind.host=bitcoind 
+        -Declair.bitcoind.rpcport=43782 
+        -Declair.bitcoind.rpcuser=ceiwHEbqWI83 
+        -Declair.bitcoind.rpcpassword=DwubwWsoo3 
+        -Declair.bitcoind.zmq=tcp://bitcoind:29000
+        -Declair.chain=regtest
+        -Declair.api.binding-ip=0.0.0.0
+    links:
+      - bitcoind
+    ports:
+      - "30992:8080" # api port
+    expose:
+      - "9735" # server port
+      - "8080" # api port
+
+  eclair2:
+    image: acinq/eclair:latest
+    environment:
+      JAVA_OPTS: >
+        -Xmx512m 
+        -Declair.printToConsole 
+        -Declair.bitcoind.host=bitcoind 
+        -Declair.bitcoind.rpcport=43782 
+        -Declair.bitcoind.rpcuser=ceiwHEbqWI83 
+        -Declair.bitcoind.rpcpassword=DwubwWsoo3 
+        -Declair.bitcoind.zmq=tcp://bitcoind:29000
+        -Declair.chain=regtest
+        -Declair.api.binding-ip=0.0.0.0
+    links:
+      - bitcoind
+    ports:
+      - "30993:8080" # api port
+    expose:
+      - "9735" # server port
+      - "8080" # api port
 
   bitcoind:
     container_name: btcpayserver_dev_bitcoind
     image: nicolasdorier/docker-bitcoin:0.15.0.1
-    ports:
-      - "43782:43782"
-      - "39388:39388"
     environment:
       BITCOIN_EXTRA_ARGS: |
         rpcuser=ceiwHEbqWI83
         rpcpassword=DwubwWsoo3
         regtest=1
+        server=1
         rpcport=43782
         port=39388
         whitelist=0.0.0.0/0
+        zmqpubrawblock=tcp://0.0.0.0:29000
+        zmqpubrawtx=tcp://0.0.0.0:29000
+        txindex=1
+    ports:
+      - "43782:43782" # RPC
     expose:
-      - "43782"
-      - "39388"
+      - "43782" # RPC
+      - "39388" # P2P
+      - "29000" # zmq
 
   postgres:
     image:  postgres:9.6.5
     ports:
       - "39372:5432"
+    expose:
+      - "5432"

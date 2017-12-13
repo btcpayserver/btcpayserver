@@ -1,4 +1,5 @@
 ﻿using BTCPayServer.Controllers;
+using System.Linq;
 using BTCPayServer.Models.AccountViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -16,6 +17,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
+using BTCPayServer.Eclair;
 
 namespace BTCPayServer.Tests
 {
@@ -56,9 +58,42 @@ namespace BTCPayServer.Tests
             PayTester.Port = int.Parse(GetEnvironment("TESTS_PORT", Utils.FreeTcpPort().ToString()));
             PayTester.HostName = GetEnvironment("TESTS_HOSTNAME", "127.0.0.1");
             PayTester.Start();
+
+            MerchantEclair = new EclairTester(this, "TEST_ECLAIR1", "http://127.0.0.1:30992/", "eclair1");
+            CustomerEclair = new EclairTester(this, "TEST_ECLAIR2", "http://127.0.0.1:30993/", "eclair2");
         }
 
-        private string GetEnvironment(string variable, string defaultValue)
+
+        /// <summary>
+        /// This will setup a channel going from customer to merchant
+        /// </summary>
+        public void PrepareLightning()
+        {
+            PrepareLightningAsync().GetAwaiter().GetResult();
+        }
+
+        public async Task PrepareLightningAsync()
+        {
+            // Activate segwit
+            var blockCount = ExplorerNode.GetBlockCountAsync();
+            // Fetch node info, but that in cache
+            var merchant = MerchantEclair.GetNodeInfoAsync();
+            var customer = CustomerEclair.GetNodeInfoAsync();
+            var channels = CustomerEclair.RPC.ChannelsAsync();
+            var connect = CustomerEclair.RPC.ConnectAsync(merchant.Result);
+            await Task.WhenAll(blockCount, merchant, customer, channels, connect);
+
+            // Mine until segwit is activated
+            if (blockCount.Result <= 432)
+            {
+                ExplorerNode.Generate(433 - blockCount.Result);
+            }
+        }
+
+        public EclairTester MerchantEclair { get; set; }
+        public EclairTester CustomerEclair { get; set; }
+
+        internal string GetEnvironment(string variable, string defaultValue)
         {
             var var = Environment.GetEnvironmentVariable(variable);
             return String.IsNullOrEmpty(var) ? defaultValue : var;

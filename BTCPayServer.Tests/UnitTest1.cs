@@ -22,6 +22,7 @@ using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore;
 using BTCPayServer.Services.Rates;
 using Microsoft.Extensions.Caching.Memory;
+using BTCPayServer.Eclair;
 
 namespace BTCPayServer.Tests
 {
@@ -112,6 +113,24 @@ namespace BTCPayServer.Tests
                     Assert.Equal("paid", localInvoice.Status);
                     Assert.True(localInvoice.Refundable);
                 });
+            }
+        }
+
+        [Fact]
+        public void CanUseLightMoney()
+        {
+            var light = LightMoney.MilliSatoshis(1);
+            Assert.Equal("0.00000000001", light.ToString());
+        }
+
+        [Fact]
+        public void CanSendLightningPayment()
+        {
+
+            using (var tester = ServerTester.Create())
+            {
+                tester.Start();
+                tester.PrepareLightning();
             }
         }
 

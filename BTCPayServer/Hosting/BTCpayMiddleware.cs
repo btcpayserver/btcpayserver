@@ -62,6 +62,40 @@ namespace BTCPayServer.Hosting
                 else
                     httpContext.Request.Host = new HostString(_Options.ExternalUrl.Host, _Options.ExternalUrl.Port);
             }
+            // NGINX pass X-Forwarded-Proto and X-Forwarded-Port, so let's use that to have better guess of the real domain
+            else
+            {
+                ushort? p = null;
+                if(httpContext.Request.Headers.TryGetValue("X-Forwarded-Proto", out StringValues proto))
+                {
+                    var scheme = proto.SingleOrDefault();
+                    if(scheme != null)
+                    { 
+                        httpContext.Request.Scheme = scheme;
+                        if (scheme == "http")
+                            p = 80;
+                        if (scheme == "https")
+                            p = 443;
+                    }
+                }
+                if (httpContext.Request.Headers.TryGetValue("X-Forwarded-Port", out StringValues port))
+                {
+                    var portString = port.SingleOrDefault();
+                    if(portString != null && ushort.TryParse(portString, out ushort pp))
+                    {
+                        p = pp;
+                    }
+                }
+                if(p.HasValue)
+                {
+                    bool isDefault = httpContext.Request.Scheme == "http" && p.Value == 80;
+                    isDefault |= httpContext.Request.Scheme == "https" && p.Value == 443;
+                    if (isDefault)
+                        httpContext.Request.Host = new HostString(httpContext.Request.Host.Host);
+                    else
+                        httpContext.Request.Host = new HostString(httpContext.Request.Host.Host, p.Value);
+                }
+            }
 
             httpContext.Request.Headers.TryGetValue("x-signature", out StringValues values);
             var sig = values.FirstOrDefault();

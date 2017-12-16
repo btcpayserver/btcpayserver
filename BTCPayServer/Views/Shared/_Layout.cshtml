@@ -9,10 +9,11 @@
     var lastStatus = waiter.Instance.LastStatus;
 
     var synching = waiterState == NBXplorerState.Synching &&
+        lastStatus != null &&
         lastStatus.NodeBlocks.HasValue &&
         lastStatus.NodeHeaders.HasValue &&
         lastStatus.VerificationProgress.HasValue;
-    var verificationProgress = lastStatus.VerificationProgress.HasValue ? lastStatus.VerificationProgress.Value * 100 : 0.0;
+    var verificationProgress = lastStatus != null && lastStatus.VerificationProgress.HasValue ? lastStatus.VerificationProgress.Value * 100 : 0.0;
 }
 
 <!DOCTYPE html>

@@ -71,10 +71,10 @@ namespace BTCPayServer
             return res;
         }
 
-        public static HtmlString ToSrvModel(this object o)
+        public static HtmlString ToJSVariableModel(this object o, string variableName)
         {
             var encodedJson = JavaScriptEncoder.Default.Encode(o.ToJson());
-            return new HtmlString("var srvModel = JSON.parse('" + encodedJson + "');");
+            return new HtmlString($"var {variableName} = JSON.parse('" + encodedJson + "');");
         }
 
 

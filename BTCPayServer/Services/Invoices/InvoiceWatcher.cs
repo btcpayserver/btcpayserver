@@ -16,6 +16,10 @@ using BTCPayServer.Services.Wallets;
 
 namespace BTCPayServer.Services.Invoices
 {
+    public class InvoiceWatcherAccessor
+    {
+        public InvoiceWatcher Instance { get; set; }
+    }
     public class InvoiceWatcher : IHostedService
     {
         InvoiceRepository _InvoiceRepository;
@@ -23,11 +27,13 @@ namespace BTCPayServer.Services.Invoices
         DerivationStrategyFactory _DerivationFactory;
         InvoiceNotificationManager _NotificationManager;
         BTCPayWallet _Wallet;
+        
 
         public InvoiceWatcher(ExplorerClient explorerClient,
             InvoiceRepository invoiceRepository,
             BTCPayWallet wallet,
-            InvoiceNotificationManager notificationManager)
+            InvoiceNotificationManager notificationManager,
+            InvoiceWatcherAccessor accessor)
         {
             LongPollingMode = explorerClient.Network == Network.RegTest;
             PollInterval = explorerClient.Network == Network.RegTest ? TimeSpan.FromSeconds(10.0) : TimeSpan.FromMinutes(1.0);
@@ -36,6 +42,7 @@ namespace BTCPayServer.Services.Invoices
             _DerivationFactory = new DerivationStrategyFactory(_ExplorerClient.Network);
             _InvoiceRepository = invoiceRepository ?? throw new ArgumentNullException(nameof(invoiceRepository));
             _NotificationManager = notificationManager ?? throw new ArgumentNullException(nameof(notificationManager));
+            accessor.Instance = this;
         }
 
         public bool LongPollingMode

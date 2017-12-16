@@ -307,13 +307,13 @@ namespace BTCPayServer.Tests
 
                 Eventually(() =>
                 {
-                    var textSearchResult = tester.PayTester.Runtime.InvoiceRepository.GetInvoices(new InvoiceQuery()
+                    var textSearchResult = tester.PayTester.InvoiceRepository.GetInvoices(new InvoiceQuery()
                     {
                         StoreId = user.StoreId,
                         TextSearch = invoice.OrderId
                     }).GetAwaiter().GetResult();
                     Assert.Equal(1, textSearchResult.Length);
-                    textSearchResult = tester.PayTester.Runtime.InvoiceRepository.GetInvoices(new InvoiceQuery()
+                    textSearchResult = tester.PayTester.InvoiceRepository.GetInvoices(new InvoiceQuery()
                     {
                         StoreId = user.StoreId,
                         TextSearch = invoice.Id

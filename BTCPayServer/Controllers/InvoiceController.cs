@@ -62,7 +62,7 @@ namespace BTCPayServer.Controllers
             BTCPayWallet wallet,
             IRateProvider rateProvider,
             StoreRepository storeRepository,
-            InvoiceWatcher watcher,
+            InvoiceWatcherAccessor watcher,
             ExplorerClient explorerClient,
             IFeeProvider feeProvider)
         {
@@ -73,7 +73,7 @@ namespace BTCPayServer.Controllers
             _InvoiceRepository = invoiceRepository ?? throw new ArgumentNullException(nameof(invoiceRepository));
             _Wallet = wallet ?? throw new ArgumentNullException(nameof(wallet));
             _RateProvider = rateProvider ?? throw new ArgumentNullException(nameof(rateProvider));
-            _Watcher = watcher ?? throw new ArgumentNullException(nameof(watcher));
+            _Watcher = (watcher ?? throw new ArgumentNullException(nameof(watcher))).Instance;
             _UserManager = userManager;
             _FeeProvider = feeProvider ?? throw new ArgumentNullException(nameof(feeProvider));
         }

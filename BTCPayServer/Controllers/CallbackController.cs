@@ -15,6 +15,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BTCPayServer.Configuration;
 
 namespace BTCPayServer.Controllers
 {
@@ -31,16 +32,19 @@ namespace BTCPayServer.Controllers
         Network _Network;
         InvoiceWatcher _Watcher;
         ExplorerClient _Explorer;
+        BTCPayServerOptions _Options;
 
         public CallbackController(SettingsRepository repo,
                                   ExplorerClient explorer,
-                                  InvoiceWatcher watcher,
+                                  InvoiceWatcherAccessor watcher,
+                                  BTCPayServerOptions options,
                                   Network network)
         {
             _Settings = repo;
             _Network = network;
-            _Watcher = watcher;
+            _Watcher = watcher.Instance;
             _Explorer = explorer;
+            _Options = options;
         }
 
         [Route("callbacks/transactions")]
@@ -79,7 +83,7 @@ namespace BTCPayServer.Controllers
         public async Task<Uri> GetCallbackUriAsync(HttpRequest request)
         {
             string token = await GetToken();
-            return new Uri(request.GetAbsoluteRoot() + "/callbacks/transactions?token=" + token);
+            return BuildCallbackUri(request, "callbacks/transactions?token=" + token);
         }
 
         public async Task RegisterCallbackUriAsync(DerivationStrategyBase derivationScheme, HttpRequest request)
@@ -103,12 +107,18 @@ namespace BTCPayServer.Controllers
         public async Task<Uri> GetCallbackBlockUriAsync(HttpRequest request)
         {
             string token = await GetToken();
-            return new Uri(request.GetAbsoluteRoot() + "/callbacks/blocks?token=" + token);
+            return BuildCallbackUri(request, "callbacks/blocks?token=" + token);
         }
 
-        public async Task<Uri> RegisterCallbackBlockUriAsync(HttpRequest request)
+        private Uri BuildCallbackUri(HttpRequest request, string callbackPath)
         {
-            var uri = await GetCallbackBlockUriAsync(request);
+            string baseUrl = _Options.InternalUrl == null ? request.GetAbsoluteRoot() : _Options.InternalUrl.AbsolutePath;
+            baseUrl = baseUrl.WithTrailingSlash();
+            return new Uri(baseUrl + callbackPath);
+        }
+
+        public async Task<Uri> RegisterCallbackBlockUriAsync(Uri uri)
+        {
             await _Explorer.SubscribeToBlocksAsync(uri);
             return uri;
         }

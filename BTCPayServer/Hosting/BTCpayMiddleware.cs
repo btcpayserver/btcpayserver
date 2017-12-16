@@ -31,71 +31,28 @@ namespace BTCPayServer.Hosting
         RequestDelegate _Next;
         CallbackController _CallbackController;
         BTCPayServerOptions _Options;
+        private NBXplorerWaiterAccessor _NbxplorerAwaiter;
+
         public BTCPayMiddleware(RequestDelegate next,
             TokenRepository tokenRepo,
             BTCPayServerOptions options,
+            NBXplorerWaiterAccessor nbxplorerAwaiter,
             CallbackController callbackController)
         {
             _TokenRepository = tokenRepo ?? throw new ArgumentNullException(nameof(tokenRepo));
             _Next = next ?? throw new ArgumentNullException(nameof(next));
             _CallbackController = callbackController;
             _Options = options ?? throw new ArgumentNullException(nameof(options));
+            _NbxplorerAwaiter = (nbxplorerAwaiter ?? throw new ArgumentNullException(nameof(nbxplorerAwaiter)));
         }
+
 
 
         bool _Registered;
         public async Task Invoke(HttpContext httpContext)
         {
-            if (!_Registered)
-            {
-                var callback = await _CallbackController.RegisterCallbackBlockUriAsync(httpContext.Request);
-                Logs.PayServer.LogInformation($"Registering block callback to " + callback);
-                _Registered = true;
-            }
-
-            // Make sure that code executing after this point think that the external url has been hit.
-            if(_Options.ExternalUrl != null)
-            {
-                httpContext.Request.Scheme = _Options.ExternalUrl.Scheme;
-                if(_Options.ExternalUrl.IsDefaultPort)
-                    httpContext.Request.Host = new HostString(_Options.ExternalUrl.Host);
-                else
-                    httpContext.Request.Host = new HostString(_Options.ExternalUrl.Host, _Options.ExternalUrl.Port);
-            }
-            // NGINX pass X-Forwarded-Proto and X-Forwarded-Port, so let's use that to have better guess of the real domain
-            else
-            {
-                ushort? p = null;
-                if(httpContext.Request.Headers.TryGetValue("X-Forwarded-Proto", out StringValues proto))
-                {
-                    var scheme = proto.SingleOrDefault();
-                    if(scheme != null)
-                    { 
-                        httpContext.Request.Scheme = scheme;
-                        if (scheme == "http")
-                            p = 80;
-                        if (scheme == "https")
-                            p = 443;
-                    }
-                }
-                if (httpContext.Request.Headers.TryGetValue("X-Forwarded-Port", out StringValues port))
-                {
-                    var portString = port.SingleOrDefault();
-                    if(portString != null && ushort.TryParse(portString, out ushort pp))
-                    {
-                        p = pp;
-                    }
-                }
-                if(p.HasValue)
-                {
-                    bool isDefault = httpContext.Request.Scheme == "http" && p.Value == 80;
-                    isDefault |= httpContext.Request.Scheme == "https" && p.Value == 443;
-                    if (isDefault)
-                        httpContext.Request.Host = new HostString(httpContext.Request.Host.Host);
-                    else
-                        httpContext.Request.Host = new HostString(httpContext.Request.Host.Host, p.Value);
-                }
-            }
+            RewriteHostIfNeeded(httpContext);
+            await EnsureBlockCallbackRegistered(httpContext);
 
             httpContext.Request.Headers.TryGetValue("x-signature", out StringValues values);
             var sig = values.FirstOrDefault();
@@ -147,6 +104,75 @@ namespace BTCPayServer.Hosting
             {
                 Logs.PayServer.LogCritical(new EventId(), ex, "Unhandled exception in BTCPayMiddleware");
                 throw;
+            }
+        }
+
+        private void RewriteHostIfNeeded(HttpContext httpContext)
+        {
+            // Make sure that code executing after this point think that the external url has been hit.
+            if (_Options.ExternalUrl != null)
+            {
+                httpContext.Request.Scheme = _Options.ExternalUrl.Scheme;
+                if (_Options.ExternalUrl.IsDefaultPort)
+                    httpContext.Request.Host = new HostString(_Options.ExternalUrl.Host);
+                else
+                    httpContext.Request.Host = new HostString(_Options.ExternalUrl.Host, _Options.ExternalUrl.Port);
+            }
+            // NGINX pass X-Forwarded-Proto and X-Forwarded-Port, so let's use that to have better guess of the real domain
+            else
+            {
+                ushort? p = null;
+                if (httpContext.Request.Headers.TryGetValue("X-Forwarded-Proto", out StringValues proto))
+                {
+                    var scheme = proto.SingleOrDefault();
+                    if (scheme != null)
+                    {
+                        httpContext.Request.Scheme = scheme;
+                        if (scheme == "http")
+                            p = 80;
+                        if (scheme == "https")
+                            p = 443;
+                    }
+                }
+                if (httpContext.Request.Headers.TryGetValue("X-Forwarded-Port", out StringValues port))
+                {
+                    var portString = port.SingleOrDefault();
+                    if (portString != null && ushort.TryParse(portString, out ushort pp))
+                    {
+                        p = pp;
+                    }
+                }
+                if (p.HasValue)
+                {
+                    bool isDefault = httpContext.Request.Scheme == "http" && p.Value == 80;
+                    isDefault |= httpContext.Request.Scheme == "https" && p.Value == 443;
+                    if (isDefault)
+                        httpContext.Request.Host = new HostString(httpContext.Request.Host.Host);
+                    else
+                        httpContext.Request.Host = new HostString(httpContext.Request.Host.Host, p.Value);
+                }
+            }
+        }
+
+        private async Task EnsureBlockCallbackRegistered(HttpContext httpContext)
+        {
+            if (!_Registered)
+            {
+                var callback = await _CallbackController.GetCallbackBlockUriAsync(httpContext.Request);
+                var unused = _NbxplorerAwaiter.Instance.WhenReady(async c =>
+                {
+                    try
+                    {
+                        await _CallbackController.RegisterCallbackBlockUriAsync(callback);
+                        Logs.PayServer.LogInformation($"Registering block callback to " + callback);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logs.PayServer.LogError(ex, "Could not register block callback");
+                    }
+                    return true;
+                });
+                _Registered = true;
             }
         }
 

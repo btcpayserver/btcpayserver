@@ -1,4 +1,5 @@
 ﻿using BTCPayServer.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Hosting;
 using System;
 using System.Collections.Generic;
@@ -34,6 +35,7 @@ using System.Threading;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Authentication;
 using Microsoft.Extensions.Caching.Memory;
+using BTCPayServer.Logging;
 
 namespace BTCPayServer.Hosting
 {
@@ -83,19 +85,6 @@ namespace BTCPayServer.Hosting
                 }
             }
         }
-        class BTCPayServerConfigureOptions : IConfigureOptions<MvcOptions>
-        {
-            BTCPayServerOptions _Options;
-            public BTCPayServerConfigureOptions(BTCPayServerOptions options)
-            {
-                _Options = options;
-            }
-            public void Configure(MvcOptions options)
-            {
-                if (_Options.RequireHttps)
-                    options.Filters.Add(new RequireHttpsAttribute());
-            }
-        }
         public static IServiceCollection AddBTCPayServer(this IServiceCollection services)
         {
             services.AddDbContext<ApplicationDbContext>((provider, o) =>
@@ -106,18 +95,35 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<SettingsRepository>();
             services.TryAddSingleton<InvoicePaymentNotification>();
             services.TryAddSingleton<BTCPayServerOptions>(o => o.GetRequiredService<IOptions<BTCPayServerOptions>>().Value);
-            services.TryAddSingleton<IConfigureOptions<MvcOptions>, BTCPayServerConfigureOptions>();
-            services.TryAddSingleton(o =>
+            services.TryAddSingleton<InvoiceRepository>(o =>
             {
-                var runtime = new BTCPayServerRuntime();
-                runtime.Configure(o.GetRequiredService<BTCPayServerOptions>());
-                return runtime;
+                var opts = o.GetRequiredService<BTCPayServerOptions>();
+                var dbContext = o.GetRequiredService<ApplicationDbContextFactory>();
+                var dbpath = Path.Combine(opts.DataDir, "InvoiceDB");
+                if (!Directory.Exists(dbpath))
+                    Directory.CreateDirectory(dbpath);
+                return new InvoiceRepository(dbContext, dbpath, opts.Network);
             });
             services.AddSingleton<BTCPayServerEnvironment>();
             services.TryAddSingleton<TokenRepository>();
-            services.TryAddSingleton(o => o.GetRequiredService<BTCPayServerRuntime>().InvoiceRepository);
             services.TryAddSingleton<Network>(o => o.GetRequiredService<BTCPayServerOptions>().Network);
-            services.TryAddSingleton<ApplicationDbContextFactory>(o => o.GetRequiredService<BTCPayServerRuntime>().DBFactory);
+            services.TryAddSingleton<ApplicationDbContextFactory>(o => 
+            {
+                var opts = o.GetRequiredService<BTCPayServerOptions>();
+                ApplicationDbContextFactory dbContext = null;
+                if (opts.PostgresConnectionString == null)
+                {
+                    var connStr = "Data Source=" + Path.Combine(opts.DataDir, "sqllite.db");
+                    Logs.Configuration.LogInformation($"SQLite DB used ({connStr})");
+                    dbContext = new ApplicationDbContextFactory(DatabaseType.Sqlite, connStr);
+                }
+                else
+                {
+                    Logs.Configuration.LogInformation($"Postgres DB used ({opts.PostgresConnectionString})");
+                    dbContext = new ApplicationDbContextFactory(DatabaseType.Postgres, opts.PostgresConnectionString);
+                }
+                return dbContext;
+            });
             services.TryAddSingleton<StoreRepository>();
             services.TryAddSingleton<BTCPayWallet>();
             services.TryAddSingleton<CurrencyNameTable>();
@@ -127,10 +133,16 @@ namespace BTCPayServer.Hosting
                 BlockTarget = 20,
                 ExplorerClient = o.GetRequiredService<ExplorerClient>()
             });
+
+            services.TryAddSingleton<NBXplorerWaiterAccessor>();
+            services.AddSingleton<IHostedService, NBXplorerWaiter>();
             services.TryAddSingleton<ExplorerClient>(o =>
             {
-                var runtime = o.GetRequiredService<BTCPayServerRuntime>();
-                return runtime.Explorer;
+                var opts = o.GetRequiredService<BTCPayServerOptions>();
+                var explorer = new ExplorerClient(opts.Network, opts.Explorer);
+                if (!explorer.SetCookieAuth(opts.CookieFile))
+                    explorer.SetNoAuth();
+                return explorer;
             });
             services.TryAddSingleton<Bitpay>(o =>
             {
@@ -145,9 +157,12 @@ namespace BTCPayServer.Hosting
                 var bitpay = new BitpayRateProvider(new Bitpay(new Key(), new Uri("https://bitpay.com/")));
                 return new CachedRateProvider(new FallbackRateProvider(new IRateProvider[] { coinaverage, bitpay }), o.GetRequiredService<IMemoryCache>()) { CacheSpan = TimeSpan.FromMinutes(1.0) };
             });
-            services.TryAddSingleton<InvoiceWatcher>();
+            
             services.TryAddSingleton<InvoiceNotificationManager>();
-            services.TryAddSingleton<IHostedService>(o => o.GetRequiredService<InvoiceWatcher>());
+
+            services.TryAddSingleton<InvoiceWatcherAccessor>();
+            services.AddSingleton<IHostedService, InvoiceWatcher>();
+            
             services.TryAddScoped<IHttpContextAccessor, HttpContextAccessor>();
             services.TryAddSingleton<IAuthorizationHandler, OwnStoreHandler>();
             services.AddTransient<AccessTokenController>();
@@ -174,12 +189,6 @@ namespace BTCPayServer.Hosting
 
         public static IApplicationBuilder UsePayServer(this IApplicationBuilder app)
         {
-            if (app.ApplicationServices.GetRequiredService<BTCPayServerOptions>().RequireHttps)
-            {
-                var options = new RewriteOptions().AddRedirectToHttps();
-                app.UseRewriter(options);
-            }
-
             using (var scope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
             {
                 //Wait the DB is ready

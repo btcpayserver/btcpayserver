@@ -6,7 +6,7 @@ RUN dotnet restore
 COPY BTCPayServer/. .
 RUN dotnet publish --output /app/ --configuration Release
 
-FROM microsoft/aspnetcore:2.0.0
+FROM microsoft/aspnetcore:2.0.3
 WORKDIR /app
 
 RUN mkdir /datadir

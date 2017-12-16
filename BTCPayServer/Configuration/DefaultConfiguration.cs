@@ -26,11 +26,11 @@ namespace BTCPayServer.Configuration
             app.Option("-n | --network", $"Set the network among ({NetworkInformation.ToStringAll()}) (default: {Network.Main.ToString()})", CommandOptionType.SingleValue);
             app.Option("--testnet | -testnet", $"Use testnet", CommandOptionType.BoolValue);
             app.Option("--regtest | -regtest", $"Use regtest", CommandOptionType.BoolValue);
-            app.Option("--requirehttps", $"Will redirect to https version of the website (default: false)", CommandOptionType.BoolValue);
             app.Option("--postgres", $"Connection string to postgres database (default: sqlite is used)", CommandOptionType.SingleValue);
             app.Option("--explorerurl", $"Url of the NBxplorer (default: : Default setting of NBXplorer for the network)", CommandOptionType.SingleValue);
             app.Option("--explorercookiefile", $"Path to the cookie file (default: Default setting of NBXplorer for the network)", CommandOptionType.SingleValue);
-            app.Option("--externalurl", $"The expected external url of this service, use if BTCPay is behind a reverse proxy (default: empty, use the incoming HTTP request to figure out)", CommandOptionType.SingleValue);
+            app.Option("--externalurl", $"The expected external url of this service, to use if BTCPay is behind a reverse proxy (default: empty, use the incoming HTTP request to figure out)", CommandOptionType.SingleValue);
+            app.Option("--internalurl", $"The expected internal url of this service, this set NBXplorer callback addresses (default: empty, use the incoming HTTP request to figure out)", CommandOptionType.SingleValue);
             return app;
         }
 
@@ -77,7 +77,6 @@ namespace BTCPayServer.Configuration
             builder.AppendLine("#regtest=0");
             builder.AppendLine();
             builder.AppendLine("### Server settings ###");
-            builder.AppendLine("#requirehttps=0");
             builder.AppendLine("#port=" + network.DefaultPort);
             builder.AppendLine("#bind=127.0.0.1");
             builder.AppendLine();

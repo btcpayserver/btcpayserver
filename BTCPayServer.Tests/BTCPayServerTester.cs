@@ -106,19 +106,21 @@ namespace BTCPayServer.Tests
                     .UseStartup<Startup>()
                     .Build();
             _Host.Start();
-            Runtime = (BTCPayServerRuntime)_Host.Services.GetService(typeof(BTCPayServerRuntime));
-            var watcher = (InvoiceWatcher)_Host.Services.GetService(typeof(InvoiceWatcher));
-        }
+            InvoiceRepository = (InvoiceRepository)_Host.Services.GetService(typeof(InvoiceRepository));
 
-        public BTCPayServerRuntime Runtime
-        {
-            get; set;
+            var waiter = ((NBXplorerWaiterAccessor)_Host.Services.GetService(typeof(NBXplorerWaiterAccessor))).Instance;
+            while(waiter.State != NBXplorerState.Ready)
+            {
+                Thread.Sleep(10);
+            }
         }
+        
         public string HostName
         {
             get;
             internal set;
         }
+        public InvoiceRepository InvoiceRepository { get; private set; }
 
         public T GetService<T>()
         {

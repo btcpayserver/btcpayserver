@@ -2,6 +2,18 @@
 @inject UserManager<ApplicationUser> UserManager
 @inject RoleManager<IdentityRole> RoleManager
 @inject BTCPayServer.Services.BTCPayServerEnvironment env
+@inject BTCPayServer.NBXplorerWaiterAccessor waiter
+
+@{
+    var waiterState = waiter.Instance.State;
+    var lastStatus = waiter.Instance.LastStatus;
+
+    var synching = waiterState == NBXplorerState.Synching &&
+        lastStatus.NodeBlocks.HasValue &&
+        lastStatus.NodeHeaders.HasValue &&
+        lastStatus.VerificationProgress.HasValue;
+    var verificationProgress = lastStatus.VerificationProgress.HasValue ? lastStatus.VerificationProgress.Value * 100 : 0.0;
+}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -79,31 +91,61 @@
 
     @RenderBody()
 
-    <!-- Modal -->
-    <div id="myModal" class="modal fade" role="dialog">
-        <form method="post" action="/invoices/invalidatepaid">
-            <input id="invoiceId" name="invoiceId" type="hidden" />
+
+    @if(waiterState == NBXplorerState.NotConnected)
+    {
+        <!-- Modal -->
+        <div id="no-nbxplorer" class="modal fade" role="dialog">
             <div class="modal-dialog">
 
                 <!-- Modal content-->
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h4 class="modal-title">Set Invoice status to Invalid</h4>
+                        <h4 class="modal-title">NBXplorer is not running</h4>
                         <button type="button" class="close" data-dismiss="modal">&times;</button>
                     </div>
                     <div class="modal-body">
-                        <p>Are you sure you want to invalidate this transaction? This action is NOT undoable!</p>
+                        <p>NBXplorer is not running, BTCPay Server will not be functional.</p>
                     </div>
                     <div class="modal-footer">
-                        <button type="submit" class="btn btn-danger">Yes, make invoice Invalid</button>
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                     </div>
                 </div>
 
             </div>
-        </form>
-    </div>
+        </div>
+    }
 
+    @if(synching)
+    {
+        <!-- Modal -->
+        <div id="synching-modal" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title">Bitcoin Core node is synching...</h4>
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Bitcoin Core is synching (Chain height: @lastStatus.ChainHeight, Block height: @lastStatus.NodeBlocks)</p>
+                        <p>BTCPay Server will not work correctly until it is over.</p>
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" aria-valuenow="@((int)verificationProgress)"
+                                 aria-valuemin="0" aria-valuemax="100" style="width:@((int)verificationProgress)%">
+                                @((int)verificationProgress)%
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    }
 
     <footer class="bg-dark">
         <div class="container text-right"><span style="font-size:8px;">@env.ToString()</span></div>
@@ -121,6 +163,23 @@
 
     <!-- Custom scripts for this template -->
     <script src="~/js/creative.js"></script>
+
+    @if(waiterState == NBXplorerState.NotConnected)
+    {
+        <script type="text/javascript">
+            $(function () {
+                $("#no-nbxplorer").modal();
+            });
+        </script>
+    }
+    @if(synching)
+    {
+        <script type="text/javascript">
+            $(function () {
+                $("#synching-modal").modal();
+            });
+        </script>
+    }
 
     @RenderSection("Scripts", required: false)
 </body>

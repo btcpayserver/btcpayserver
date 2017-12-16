@@ -262,7 +262,7 @@ namespace BTCPayServer.Controllers
                 //var p2wsh = 0x2aa7ed3U;
                 Dictionary<uint, string[]> electrumMapping = new Dictionary<uint, string[]>();
                 //Source https://github.com/spesmilo/electrum/blob/9edffd17542de5773e7284a8c8a2673c766bb3c3/lib/bitcoin.py
-                var standard = 0x0488b21eU;
+                var standard = _Network == Network.Main ? 0x0488b21eU : 0x043587cf;
                 electrumMapping.Add(standard, new[] { "legacy" });
                 var p2wpkh_p2sh = 0x049d7cb2U;
                 electrumMapping.Add(p2wpkh_p2sh, new string[] { "p2sh" });
@@ -280,7 +280,7 @@ namespace BTCPayServer.Controllers
                 for (int i = 0; i < 4; i++)
                     data[i] = standardPrefix[i];
 
-                derivationScheme = new BitcoinExtPubKey(Encoders.Base58Check.EncodeData(data), Network.Main).ToNetwork(_Network).ToString();
+                derivationScheme = new BitcoinExtPubKey(Encoders.Base58Check.EncodeData(data), _Network).ToString();
                 foreach (var label in labels)
                 {
                     derivationScheme = derivationScheme + $"-[{label}]";

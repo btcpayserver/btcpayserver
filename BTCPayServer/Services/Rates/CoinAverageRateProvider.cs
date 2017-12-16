@@ -17,61 +17,6 @@ namespace BTCPayServer.Services.Rates
     }
     public class CoinAverageRateProvider : IRateProvider
     {
-        public class RatesJson
-        {
-            public class RateJson
-            {
-                public string Code
-                {
-                    get; set;
-                }
-                public decimal Rate
-                {
-                    get; set;
-                }
-            }
-
-            [JsonProperty("rates")]
-            public JObject RatesInternal
-            {
-                get; set;
-            }
-            [JsonIgnore]
-            public List<RateJson> Rates
-            {
-                get; set;
-            }
-
-            [JsonIgnore]
-            public Dictionary<string, decimal> RatesByCurrency
-            {
-                get; set;
-            }
-
-            public decimal GetRate(string currency)
-            {
-                if (!RatesByCurrency.TryGetValue(currency.ToUpperInvariant(), out decimal currUSD))
-                    throw new RateUnavailableException(currency);
-
-                if (!RatesByCurrency.TryGetValue("BTC", out decimal btcUSD))
-                    throw new RateUnavailableException(currency);
-
-                return currUSD / btcUSD;
-            }
-            public void CalculateDictionary()
-            {
-                RatesByCurrency = new Dictionary<string, decimal>();
-                Rates = new List<RateJson>();
-                foreach (var rate in RatesInternal.OfType<JProperty>())
-                {
-                    var rateJson = new RateJson();
-                    rateJson.Code = rate.Name;
-                    rateJson.Rate = decimal.Parse(rate.Value["rate"].Value<string>(), System.Globalization.NumberStyles.AllowExponent | System.Globalization.NumberStyles.AllowDecimalPoint);
-                    RatesByCurrency.Add(rate.Name, rateJson.Rate);
-                    Rates.Add(rateJson);
-                }
-            }
-        }
         static HttpClient _Client = new HttpClient();
 
         public string Market
@@ -80,13 +25,20 @@ namespace BTCPayServer.Services.Rates
         } = "global";
         public async Task<decimal> GetRateAsync(string currency)
         {
-            RatesJson rates = await GetRatesCore();
-            return rates.GetRate(currency);
+            var rates = await GetRatesCore();
+            return GetRate(rates, currency);
         }
 
-        private async Task<RatesJson> GetRatesCore()
+        private decimal GetRate(Dictionary<string, decimal> rates, string currency)
         {
-            var resp = await _Client.GetAsync("https://apiv2.bitcoinaverage.com/constants/exchangerates/" + Market);
+            if (rates.TryGetValue(currency, out decimal result))
+                return result;
+            throw new RateUnavailableException(currency);
+        }
+
+        private async Task<Dictionary<string, decimal>> GetRatesCore()
+        {
+            var resp = await _Client.GetAsync($"https://apiv2.bitcoinaverage.com/indices/{Market}/ticker/short");
             using (resp)
             {
 
@@ -97,19 +49,25 @@ namespace BTCPayServer.Services.Rates
                 if ((int)resp.StatusCode == 403)
                     throw new CoinAverageException("Unauthorized access to the API, premium plan needed");
                 resp.EnsureSuccessStatusCode();
-                var rates = JsonConvert.DeserializeObject<RatesJson>(await resp.Content.ReadAsStringAsync());
-                rates.CalculateDictionary();
-                return rates;
+                var rates = JObject.Parse(await resp.Content.ReadAsStringAsync());
+                return rates.Properties()
+                              .Where(p => p.Name.StartsWith("BTC", StringComparison.OrdinalIgnoreCase))
+                              .ToDictionary(p => p.Name.Substring(3, 3), p => ToDecimal(p.Value["last"]));
             }
+        }
+
+        private decimal ToDecimal(JToken token)
+        {
+            return decimal.Parse(token.Value<string>(), System.Globalization.NumberStyles.AllowExponent | System.Globalization.NumberStyles.AllowDecimalPoint);
         }
 
         public async Task<ICollection<Rate>> GetRatesAsync()
         {
-            RatesJson rates = await GetRatesCore();
-            return rates.Rates.Select(o => new Rate()
+            var rates = await GetRatesCore();
+            return rates.Select(o => new Rate()
             {
-                Currency = o.Code,
-                Value = rates.GetRate(o.Code)
+                Currency = o.Key,
+                Value = o.Value
             }).ToList();
         }
     }

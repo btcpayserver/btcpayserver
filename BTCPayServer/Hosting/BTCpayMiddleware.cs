@@ -31,19 +31,15 @@ namespace BTCPayServer.Hosting
         RequestDelegate _Next;
         CallbackController _CallbackController;
         BTCPayServerOptions _Options;
-        private NBXplorerWaiterAccessor _NbxplorerAwaiter;
 
         public BTCPayMiddleware(RequestDelegate next,
             TokenRepository tokenRepo,
             BTCPayServerOptions options,
-            NBXplorerWaiterAccessor nbxplorerAwaiter,
             CallbackController callbackController)
         {
             _TokenRepository = tokenRepo ?? throw new ArgumentNullException(nameof(tokenRepo));
             _Next = next ?? throw new ArgumentNullException(nameof(next));
-            _CallbackController = callbackController;
             _Options = options ?? throw new ArgumentNullException(nameof(options));
-            _NbxplorerAwaiter = (nbxplorerAwaiter ?? throw new ArgumentNullException(nameof(nbxplorerAwaiter)));
         }
 
 
@@ -52,7 +48,6 @@ namespace BTCPayServer.Hosting
         public async Task Invoke(HttpContext httpContext)
         {
             RewriteHostIfNeeded(httpContext);
-            await EnsureBlockCallbackRegistered(httpContext);
 
             httpContext.Request.Headers.TryGetValue("x-signature", out StringValues values);
             var sig = values.FirstOrDefault();
@@ -151,28 +146,6 @@ namespace BTCPayServer.Hosting
                     else
                         httpContext.Request.Host = new HostString(httpContext.Request.Host.Host, p.Value);
                 }
-            }
-        }
-
-        private async Task EnsureBlockCallbackRegistered(HttpContext httpContext)
-        {
-            if (!_Registered)
-            {
-                var callback = await _CallbackController.GetCallbackBlockUriAsync(httpContext.Request);
-                var unused = _NbxplorerAwaiter.Instance.WhenReady(async c =>
-                {
-                    try
-                    {
-                        await _CallbackController.RegisterCallbackBlockUriAsync(callback);
-                        Logs.PayServer.LogInformation($"Registering block callback to " + callback);
-                    }
-                    catch (Exception ex)
-                    {
-                        Logs.PayServer.LogError(ex, "Could not register block callback");
-                    }
-                    return true;
-                });
-                _Registered = true;
             }
         }
 

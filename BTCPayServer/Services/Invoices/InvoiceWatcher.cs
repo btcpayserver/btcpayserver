@@ -13,6 +13,8 @@ using Microsoft.Extensions.Hosting;
 using System.Collections.Concurrent;
 using Hangfire;
 using BTCPayServer.Services.Wallets;
+using BTCPayServer.Controllers;
+using BTCPayServer.Events;
 
 namespace BTCPayServer.Services.Invoices
 {
@@ -25,14 +27,14 @@ namespace BTCPayServer.Services.Invoices
         InvoiceRepository _InvoiceRepository;
         ExplorerClient _ExplorerClient;
         DerivationStrategyFactory _DerivationFactory;
-        InvoiceNotificationManager _NotificationManager;
+        EventAggregator _EventAggregator;
         BTCPayWallet _Wallet;
         
 
         public InvoiceWatcher(ExplorerClient explorerClient,
             InvoiceRepository invoiceRepository,
+            EventAggregator eventAggregator,
             BTCPayWallet wallet,
-            InvoiceNotificationManager notificationManager,
             InvoiceWatcherAccessor accessor)
         {
             LongPollingMode = explorerClient.Network == Network.RegTest;
@@ -41,23 +43,24 @@ namespace BTCPayServer.Services.Invoices
             _ExplorerClient = explorerClient ?? throw new ArgumentNullException(nameof(explorerClient));
             _DerivationFactory = new DerivationStrategyFactory(_ExplorerClient.Network);
             _InvoiceRepository = invoiceRepository ?? throw new ArgumentNullException(nameof(invoiceRepository));
-            _NotificationManager = notificationManager ?? throw new ArgumentNullException(nameof(notificationManager));
+            _EventAggregator = eventAggregator ?? throw new ArgumentNullException(nameof(eventAggregator));
             accessor.Instance = this;
         }
+        CompositeDisposable leases = new CompositeDisposable();
 
         public bool LongPollingMode
         {
             get; set;
         }
 
-        public async Task NotifyReceived(Script scriptPubKey)
+        async Task NotifyReceived(Script scriptPubKey)
         {
             var invoice = await _InvoiceRepository.GetInvoiceIdFromScriptPubKey(scriptPubKey);
             if (invoice != null)
                 _WatchRequests.Add(invoice);
         }
 
-        public async Task NotifyBlock()
+        async Task NotifyBlock()
         {
             foreach (var invoice in await _InvoiceRepository.GetPendingInvoices())
             {
@@ -76,17 +79,24 @@ namespace BTCPayServer.Services.Invoices
                     if (invoice == null)
                         break;
                     var stateBefore = invoice.Status;
-                    var result = await UpdateInvoice(changes, invoice).ConfigureAwait(false);
+                    var stateChanges = new List<string>();
+                    var result = await UpdateInvoice(changes, invoice, stateChanges).ConfigureAwait(false);
                     changes = result.Changes;
                     if (result.NeedSave)
+                    { 
                         await _InvoiceRepository.UpdateInvoiceStatus(invoice.Id, invoice.Status, invoice.ExceptionStatus).ConfigureAwait(false);
-
-                    var changed = stateBefore != invoice.Status;
-                    if (changed)
-                    {
-                        Logs.PayServer.LogInformation($"Invoice {invoice.Id}: {stateBefore} => {invoice.Status}");
+                        _EventAggregator.Publish(new InvoiceDataChangedEvent() { InvoiceId = invoice.Id });
                     }
 
+                    var changed = stateBefore != invoice.Status;
+
+                    foreach(var stateChange in stateChanges)
+                    {
+                        _EventAggregator.Publish(new InvoiceStatusChangedEvent() { InvoiceId = invoice.Id, NewState = stateChange, OldState = stateBefore });
+                        stateBefore = stateChange;
+                    }
+
+                    
                     if (invoice.Status == "complete" ||
                        ((invoice.Status == "invalid" || invoice.Status == "expired") && invoice.MonitoringExpiration < DateTimeOffset.UtcNow))
                     {
@@ -111,7 +121,7 @@ namespace BTCPayServer.Services.Invoices
         }
 
 
-        private async Task<(bool NeedSave, UTXOChanges Changes)> UpdateInvoice(UTXOChanges changes, InvoiceEntity invoice)
+        private async Task<(bool NeedSave, UTXOChanges Changes)> UpdateInvoice(UTXOChanges changes, InvoiceEntity invoice, List<string> stateChanges)
         {
             bool needSave = false;
             //Fetch unknown payments
@@ -139,10 +149,7 @@ namespace BTCPayServer.Services.Invoices
                 needSave = true;
                 await _InvoiceRepository.UnaffectAddress(invoice.Id);
                 invoice.Status = "expired";
-                if (invoice.FullNotifications)
-                {
-                    _NotificationManager.Notify(invoice);
-                }
+                stateChanges.Add(invoice.Status);
             }
 
             if (invoice.Status == "new" || invoice.Status == "expired")
@@ -153,10 +160,7 @@ namespace BTCPayServer.Services.Invoices
                     if (invoice.Status == "new")
                     {
                         invoice.Status = "paid";
-                        if (invoice.FullNotifications)
-                        {
-                            _NotificationManager.Notify(invoice);
-                        }
+                        stateChanges.Add(invoice.Status);
                         invoice.ExceptionStatus = null;
                         await _InvoiceRepository.UnaffectAddress(invoice.Id);
                         needSave = true;
@@ -216,11 +220,8 @@ namespace BTCPayServer.Services.Invoices
                 {
                     await _InvoiceRepository.UnaffectAddress(invoice.Id);
                     invoice.Status = "invalid";
+                    stateChanges.Add(invoice.Status);
                     needSave = true;
-                    if (invoice.FullNotifications)
-                    {
-                        _NotificationManager.Notify(invoice);
-                    }
                 }
                 else
                 {
@@ -229,7 +230,7 @@ namespace BTCPayServer.Services.Invoices
                     {
                         await _InvoiceRepository.UnaffectAddress(invoice.Id);
                         invoice.Status = "confirmed";
-                        _NotificationManager.Notify(invoice);
+                        stateChanges.Add(invoice.Status);
                         needSave = true;
                     }
                 }
@@ -243,8 +244,7 @@ namespace BTCPayServer.Services.Invoices
                 if (totalConfirmed >= invoice.GetTotalCryptoDue())
                 {
                     invoice.Status = "complete";
-                    if (invoice.FullNotifications)
-                        _NotificationManager.Notify(invoice);
+                    stateChanges.Add(invoice.Status);
                     needSave = true;
                 }
             }
@@ -356,6 +356,10 @@ namespace BTCPayServer.Services.Invoices
                     _WatchRequests.Add(pending);
                 }
             }, null, 0, (int)PollInterval.TotalMilliseconds);
+
+            leases.Add(_EventAggregator.Subscribe<NewBlockEvent>(async b => { await NotifyBlock(); }));
+            leases.Add(_EventAggregator.Subscribe<TxOutReceivedEvent>(async b => { await NotifyReceived(b.ScriptPubKey); }));
+
             return Task.CompletedTask;
         }
 
@@ -402,6 +406,7 @@ namespace BTCPayServer.Services.Invoices
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
+            leases.Dispose();
             _UpdatePendingInvoices.Dispose();
             _Cts.Cancel();
             return Task.WhenAny(_RunningTask.Task, Task.Delay(-1, cancellationToken));

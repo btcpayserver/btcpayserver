@@ -106,6 +106,7 @@ namespace BTCPayServer.Hosting
             });
             services.AddSingleton<BTCPayServerEnvironment>();
             services.TryAddSingleton<TokenRepository>();
+            services.TryAddSingleton<EventAggregator>();
             services.TryAddSingleton<Network>(o => o.GetRequiredService<BTCPayServerOptions>().Network);
             services.TryAddSingleton<ApplicationDbContextFactory>(o => 
             {
@@ -158,11 +159,11 @@ namespace BTCPayServer.Hosting
                 return new CachedRateProvider(new FallbackRateProvider(new IRateProvider[] { coinaverage, bitpay }), o.GetRequiredService<IMemoryCache>()) { CacheSpan = TimeSpan.FromMinutes(1.0) };
             });
             
-            services.TryAddSingleton<InvoiceNotificationManager>();
+            services.AddSingleton<IHostedService, InvoiceNotificationManager>();
 
             services.TryAddSingleton<InvoiceWatcherAccessor>();
             services.AddSingleton<IHostedService, InvoiceWatcher>();
-            
+            services.TryAddSingleton<Initializer>();
             services.TryAddScoped<IHttpContextAccessor, HttpContextAccessor>();
             services.TryAddSingleton<IAuthorizationHandler, OwnStoreHandler>();
             services.AddTransient<AccessTokenController>();
@@ -197,6 +198,11 @@ namespace BTCPayServer.Hosting
                     scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.Migrate();
                 });
             }
+
+
+
+            var initialize = app.ApplicationServices.GetService<Initializer>();
+            initialize.Init();
             app.UseMiddleware<BTCPayMiddleware>();
             return app;
         }

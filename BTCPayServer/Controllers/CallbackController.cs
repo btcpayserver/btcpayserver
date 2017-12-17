@@ -16,6 +16,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Configuration;
+using BTCPayServer.Events;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.AspNetCore.Hosting.Server;
 
 namespace BTCPayServer.Controllers
 {
@@ -30,21 +34,23 @@ namespace BTCPayServer.Controllers
         }
         SettingsRepository _Settings;
         Network _Network;
-        InvoiceWatcher _Watcher;
         ExplorerClient _Explorer;
         BTCPayServerOptions _Options;
-
+        EventAggregator _EventAggregator;
+        IServer _Server;
         public CallbackController(SettingsRepository repo,
                                   ExplorerClient explorer,
-                                  InvoiceWatcherAccessor watcher,
+                                  EventAggregator eventAggregator,
                                   BTCPayServerOptions options,
+                                  IServer server,
                                   Network network)
         {
             _Settings = repo;
             _Network = network;
-            _Watcher = watcher.Instance;
             _Explorer = explorer;
             _Options = options;
+            _EventAggregator = eventAggregator;
+            _Server = server;
         }
 
         [Route("callbacks/transactions")]
@@ -52,7 +58,6 @@ namespace BTCPayServer.Controllers
         public async Task NewTransaction(string token)
         {
             await AssertToken(token);
-            Logs.PayServer.LogInformation("New transaction callback");
             //We don't want to register all the json converter at MVC level, so we parse here
             var serializer = new NBXplorer.Serializer(_Network);
             var content = await new StreamReader(Request.Body, new UTF8Encoding(false), false, 1024, true).ReadToEndAsync();
@@ -60,7 +65,10 @@ namespace BTCPayServer.Controllers
 
             foreach (var output in match.Outputs)
             {
-                await _Watcher.NotifyReceived(output.ScriptPubKey);
+                var evt = new TxOutReceivedEvent();
+                evt.ScriptPubKey = output.ScriptPubKey;
+                evt.Address = output.ScriptPubKey.GetDestinationAddress(_Network);
+                _EventAggregator.Publish(evt);
             }
         }
 
@@ -69,8 +77,7 @@ namespace BTCPayServer.Controllers
         public async Task NewBlock(string token)
         {
             await AssertToken(token);
-            Logs.PayServer.LogInformation("New block callback");
-            await _Watcher.NotifyBlock();
+            _EventAggregator.Publish(new NewBlockEvent());
         }
 
         private async Task AssertToken(string token)
@@ -80,15 +87,15 @@ namespace BTCPayServer.Controllers
                 throw new BTCPayServer.BitpayHttpException(400, "invalid-callback-token");
         }
 
-        public async Task<Uri> GetCallbackUriAsync(HttpRequest request)
+        public async Task<Uri> GetCallbackUriAsync()
         {
             string token = await GetToken();
-            return BuildCallbackUri(request, "callbacks/transactions?token=" + token);
+            return BuildCallbackUri("callbacks/transactions?token=" + token);
         }
 
-        public async Task RegisterCallbackUriAsync(DerivationStrategyBase derivationScheme, HttpRequest request)
+        public async Task RegisterCallbackUriAsync(DerivationStrategyBase derivationScheme)
         {
-            var uri = await GetCallbackUriAsync(request);
+            var uri = await GetCallbackUriAsync();
             await _Explorer.SubscribeToWalletAsync(uri, derivationScheme);
         }
 
@@ -104,17 +111,27 @@ namespace BTCPayServer.Controllers
             return token;
         }
 
-        public async Task<Uri> GetCallbackBlockUriAsync(HttpRequest request)
+        public async Task<Uri> GetCallbackBlockUriAsync()
         {
             string token = await GetToken();
-            return BuildCallbackUri(request, "callbacks/blocks?token=" + token);
+            return BuildCallbackUri("callbacks/blocks?token=" + token);
         }
 
-        private Uri BuildCallbackUri(HttpRequest request, string callbackPath)
+        private Uri BuildCallbackUri(string callbackPath)
         {
-            string baseUrl = _Options.InternalUrl == null ? request.GetAbsoluteRoot() : _Options.InternalUrl.AbsolutePath;
+            var address = _Server.Features.Get<IServerAddressesFeature>().Addresses
+                                 .Select(c => new Uri(TransformToRoutable(c)))
+                                 .First();
+            var baseUrl = _Options.InternalUrl == null ? address.AbsoluteUri : _Options.InternalUrl.AbsoluteUri;
             baseUrl = baseUrl.WithTrailingSlash();
             return new Uri(baseUrl + callbackPath);
+        }
+
+        private string TransformToRoutable(string host)
+        {
+            if (host.StartsWith("http://0.0.0.0"))
+                host = host.Replace("http://0.0.0.0", "http://127.0.0.1");
+            return host;
         }
 
         public async Task<Uri> RegisterCallbackBlockUriAsync(Uri uri)

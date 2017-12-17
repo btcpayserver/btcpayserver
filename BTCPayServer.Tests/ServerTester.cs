@@ -230,7 +230,7 @@ namespace BTCPayServer.Tests
                 var match = new TransactionMatch();
                 match.Outputs.Add(new KeyPathInformation() { ScriptPubKey = address.ScriptPubKey });
                 var content = new StringContent(new NBXplorer.Serializer(Network).ToString(match), new UTF8Encoding(false), "application/json");
-                var uri = controller.GetCallbackUriAsync(req).GetAwaiter().GetResult();
+                var uri = controller.GetCallbackUriAsync().GetAwaiter().GetResult();
 
                 HttpRequestMessage message = new HttpRequestMessage();
                 message.Method = HttpMethod.Post;
@@ -242,7 +242,7 @@ namespace BTCPayServer.Tests
             else
             {
 
-                var uri = controller.GetCallbackBlockUriAsync(req).GetAwaiter().GetResult();
+                var uri = controller.GetCallbackBlockUriAsync().GetAwaiter().GetResult();
                 HttpRequestMessage message = new HttpRequestMessage();
                 message.Method = HttpMethod.Post;
                 message.RequestUri = uri;

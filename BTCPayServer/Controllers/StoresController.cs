@@ -198,7 +198,7 @@ namespace BTCPayServer.Controllers
                         {
                             var strategy = ParseDerivationStrategy(model.DerivationScheme, model.DerivationSchemeFormat);
                             await _Wallet.TrackAsync(strategy);
-                            await _CallbackController.RegisterCallbackUriAsync(strategy, Request);
+                            await _CallbackController.RegisterCallbackUriAsync(strategy);
                         }
                         store.DerivationStrategy = model.DerivationScheme;
                     }

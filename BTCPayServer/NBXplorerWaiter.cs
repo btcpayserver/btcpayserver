@@ -9,6 +9,7 @@ using Microsoft.Extensions.Hosting;
 using NBXplorer;
 using NBXplorer.Models;
 using System.Collections.Concurrent;
+using BTCPayServer.Events;
 
 namespace BTCPayServer
 {
@@ -22,14 +23,17 @@ namespace BTCPayServer
         Synching,
         Ready
     }
+
     public class NBXplorerWaiter : IHostedService
     {
-        public NBXplorerWaiter(ExplorerClient client, NBXplorerWaiterAccessor accessor)
+        public NBXplorerWaiter(ExplorerClient client, EventAggregator aggregator, NBXplorerWaiterAccessor accessor)
         {
             _Client = client;
+            _Aggregator = aggregator;
             accessor.Instance = this;
         }
 
+        EventAggregator _Aggregator;
         ExplorerClient _Client;
         Timer _Timer;
         ManualResetEventSlim _Idle = new ManualResetEventSlim(true);
@@ -64,15 +68,6 @@ namespace BTCPayServer
             {
 
             }
-            List<Task> tasks = new List<Task>();
-            if (State == NBXplorerState.Ready)
-            {
-                while (_WhenReady.TryDequeue(out Func<ExplorerClient, Task> act))
-                {
-                    tasks.Add(act(_Client));
-                }
-            }
-            await Task.WhenAll(tasks);
         }
 
         private async Task<bool> StepAsync()
@@ -123,7 +118,6 @@ namespace BTCPayServer
             LastStatus = status;
             if (oldState != State)
             {
-                Logs.PayServer.LogInformation($"NBXplorerWaiter status changed: {oldState} => {State}");
                 if (State == NBXplorerState.Synching)
                 {
                     SetInterval(TimeSpan.FromSeconds(10));
@@ -132,6 +126,7 @@ namespace BTCPayServer
                 {
                     SetInterval(TimeSpan.FromMinutes(1));
                 }
+                _Aggregator.Publish(new NBXplorerStateChangedEvent(oldState, State));
             }
             return oldState != State;
         }
@@ -144,28 +139,6 @@ namespace BTCPayServer
             }
             catch { }
         }
-
-        public Task<T> WhenReady<T>(Func<ExplorerClient, Task<T>> act)
-        {
-            if (State == NBXplorerState.Ready)
-                return act(_Client);
-            TaskCompletionSource<T> completion = new TaskCompletionSource<T>();
-            _WhenReady.Enqueue(async client =>
-            {
-                try
-                {
-                    var result = await act(client);
-                    completion.SetResult(result);
-                }
-                catch (Exception ex)
-                {
-                    completion.SetException(ex);
-                }
-            });
-            return completion.Task;
-        }
-
-        ConcurrentQueue<Func<ExplorerClient, Task>> _WhenReady = new ConcurrentQueue<Func<ExplorerClient, Task>>();
 
         private async Task<StatusResult> GetStatusWithTimeout()
         {

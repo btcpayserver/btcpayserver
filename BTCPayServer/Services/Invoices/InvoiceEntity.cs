@@ -290,7 +290,8 @@ namespace BTCPayServer.Services.Invoices
                 Status = Status,
                 Url = ServerUrl.WithTrailingSlash() + "invoice?id=" + Id,
                 Currency = ProductInformation.Currency,
-                Flags = new Flags() { Refundable = Refundable }
+                Flags = new Flags() { Refundable = Refundable },
+                Rate = Rate
             };
             Populate(ProductInformation, dto);
             Populate(BuyerInformation, dto);

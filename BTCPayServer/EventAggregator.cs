@@ -18,7 +18,6 @@ namespace BTCPayServer
         {
             private EventAggregator aggregator;
             Type t;
-            Action<object> act;
             public Subscription(EventAggregator aggregator, Type t)
             {
                 this.aggregator = aggregator;

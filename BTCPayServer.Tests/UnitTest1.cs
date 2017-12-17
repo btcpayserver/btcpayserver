@@ -385,7 +385,7 @@ namespace BTCPayServer.Tests
                     Assert.Equal(Money.Zero, localInvoice.BtcDue);
                     Assert.Equal(localInvoice.BitcoinAddress, invoiceAddress.ToString()); //no new address generated
                     Assert.True(IsMapped(localInvoice, ctx));
-                    Assert.Equal(false, (bool)((JValue)localInvoice.ExceptionStatus).Value);
+                    Assert.False((bool)((JValue)localInvoice.ExceptionStatus).Value);
                 });
 
                 cashCow.Generate(1); //The user has medium speed settings, so 1 conf is enough to be confirmed
@@ -404,6 +404,7 @@ namespace BTCPayServer.Tests
                     tester.SimulateCallback();
                     var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
                     Assert.Equal("complete", localInvoice.Status);
+                    Assert.NotEqual(0.0, localInvoice.Rate);
                 });
 
                 invoice = user.BitPay.CreateInvoice(new Invoice()

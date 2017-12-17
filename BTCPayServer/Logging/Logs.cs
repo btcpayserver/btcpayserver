@@ -17,7 +17,7 @@ namespace BTCPayServer.Logging
         {
             Configuration = factory.CreateLogger("Configuration");
             PayServer = factory.CreateLogger("PayServer");
-            Events = factory.CreateLogger("PayServer");
+            Events = factory.CreateLogger("Events");
         }
         public static ILogger Configuration
         {

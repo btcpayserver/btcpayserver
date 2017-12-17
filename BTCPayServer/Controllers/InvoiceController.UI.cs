@@ -235,6 +235,7 @@ namespace BTCPayServer.Controllers
                     await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", cts.Token);
                 }
             }
+            catch { }
             finally { webSocket.Dispose(); }
         }
 

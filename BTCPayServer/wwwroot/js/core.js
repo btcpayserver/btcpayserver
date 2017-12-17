@@ -208,10 +208,16 @@ if (supportsWebSockets) {
     var path = srvModel.serverUrl + "/i/" + srvModel.invoiceId + "/status/ws";
     path = path.replace("https://", "wss://");
     path = path.replace("http://", "ws://");
-    var socket = new WebSocket(path);
-    socket.onmessage = function (e) {
-        fetchStatus();
-    };
+    try {
+        var socket = new WebSocket(path);
+        socket.onmessage = function (e) {
+            fetchStatus();
+        };
+    }
+    catch
+    {
+        console.error("Error while connecting to websocket for invoice notifictions");
+    }
 }
 
 var watcher = setInterval(function () {

@@ -36,7 +36,7 @@ namespace BTCPayServer.Services
         {
             StringBuilder txt = new StringBuilder();
             txt.Append($"@Copyright BTCPayServer v{Version}");
-            if (!Environment.IsProduction() || Build.Equals("Release", StringComparison.OrdinalIgnoreCase))
+            if (!Environment.IsProduction() || !Build.Equals("Release", StringComparison.OrdinalIgnoreCase))
             {
                 txt.Append($" Environment: {Environment.EnvironmentName} Build: {Build}");
             }

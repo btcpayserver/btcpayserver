@@ -263,7 +263,7 @@ namespace BTCPayServer.Controllers
                 //var p2wsh = 0x2aa7ed3U;
                 Dictionary<uint, string[]> electrumMapping = new Dictionary<uint, string[]>();
                 //Source https://github.com/spesmilo/electrum/blob/9edffd17542de5773e7284a8c8a2673c766bb3c3/lib/bitcoin.py
-                var standard = _Network == Network.Main ? 0x0488b21eU : 0x043587cf;
+                var standard = 0x0488b21eU;
                 electrumMapping.Add(standard, new[] { "legacy" });
                 var p2wpkh_p2sh = 0x049d7cb2U;
                 electrumMapping.Add(p2wpkh_p2sh, new string[] { "p2sh" });
@@ -276,7 +276,7 @@ namespace BTCPayServer.Controllers
                 var prefix = Utils.ToUInt32(data, false);
                 if (!electrumMapping.TryGetValue(prefix, out string[] labels))
                     throw new FormatException("!electrumMapping.TryGetValue(prefix, out string[] labels)");
-                var standardPrefix = Utils.ToBytes(standard, false);
+                var standardPrefix = Utils.ToBytes(_Network == Network.Main ? 0x0488b21eU : 0x043587cf, false);
 
                 for (int i = 0; i < 4; i++)
                     data[i] = standardPrefix[i];

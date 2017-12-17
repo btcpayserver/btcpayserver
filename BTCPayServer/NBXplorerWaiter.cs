@@ -119,12 +119,30 @@ namespace BTCPayServer
                     }
                     break;
             }
+
             LastStatus = status;
             if (oldState != State)
             {
                 Logs.PayServer.LogInformation($"NBXplorerWaiter status changed: {oldState} => {State}");
+                if (State == NBXplorerState.Synching)
+                {
+                    SetInterval(TimeSpan.FromSeconds(10));
+                }
+                else
+                {
+                    SetInterval(TimeSpan.FromMinutes(1));
+                }
             }
             return oldState != State;
+        }
+
+        private void SetInterval(TimeSpan interval)
+        {
+            try
+            {
+                _Timer.Change(0, (int)interval.TotalMilliseconds);
+            }
+            catch { }
         }
 
         public Task<T> WhenReady<T>(Func<ExplorerClient, Task<T>> act)
@@ -162,7 +180,7 @@ namespace BTCPayServer
                         var status = await _Client.GetStatusAsync(cancellation).ConfigureAwait(false);
                         return status;
                     }
-                    catch (OperationCanceledException) { throw; }
+                    catch (OperationCanceledException) { }
                     catch { }
                 }
             }

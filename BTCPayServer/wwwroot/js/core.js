@@ -191,7 +191,7 @@ function onDataCallback(jsonData) {
     checkoutCtrl.srvModel = jsonData;
 }
 
-var watcher = setInterval(function () {
+function fetchStatus() {
     var path = srvModel.serverUrl + "/i/" + srvModel.invoiceId + "/status";
     $.ajax({
         url: path,
@@ -201,6 +201,21 @@ var watcher = setInterval(function () {
     }).fail(function (jqXHR, textStatus, errorThrown) {
 
     });
+}
+
+var supportsWebSockets = 'WebSocket' in window && window.WebSocket.CLOSING === 2;
+if (supportsWebSockets) {
+    var path = srvModel.serverUrl + "/i/" + srvModel.invoiceId + "/status/ws";
+    path = path.replace("https://", "wss://");
+    path = path.replace("http://", "ws://");
+    var socket = new WebSocket(path);
+    socket.onmessage = function (e) {
+        fetchStatus();
+    };
+}
+
+var watcher = setInterval(function () {
+    fetchStatus();
 }, 2000);
 
 $(".menu__item").click(function () {

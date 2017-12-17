@@ -53,7 +53,7 @@ namespace BTCPayServer.Controllers
         IFeeProvider _FeeProvider;
         private CurrencyNameTable _CurrencyNameTable;
         ExplorerClient _Explorer;
-
+        EventAggregator _EventAggregator;
         public InvoiceController(
             Network network,
             InvoiceRepository invoiceRepository,
@@ -62,6 +62,7 @@ namespace BTCPayServer.Controllers
             BTCPayWallet wallet,
             IRateProvider rateProvider,
             StoreRepository storeRepository,
+            EventAggregator eventAggregator,
             InvoiceWatcherAccessor watcher,
             ExplorerClient explorerClient,
             IFeeProvider feeProvider)
@@ -76,6 +77,7 @@ namespace BTCPayServer.Controllers
             _Watcher = (watcher ?? throw new ArgumentNullException(nameof(watcher))).Instance;
             _UserManager = userManager;
             _FeeProvider = feeProvider ?? throw new ArgumentNullException(nameof(feeProvider));
+            _EventAggregator = eventAggregator;
         }
 
         internal async Task<DataWrapper<InvoiceResponse>> CreateInvoiceCore(Invoice invoice, StoreData store, string serverUrl, double expiryMinutes = 15)

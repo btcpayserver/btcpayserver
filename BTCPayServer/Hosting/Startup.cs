@@ -144,6 +144,7 @@ namespace BTCPayServer.Hosting
             app.UseAuthentication();
             app.UseHangfireServer();
             app.UseHangfireDashboard("/hangfire", new DashboardOptions() { Authorization = new[] { new NeedRole(Roles.ServerAdmin) } });
+            app.UseWebSockets();
             app.UseMvc(routes =>
             {
                 routes.MapRoute(

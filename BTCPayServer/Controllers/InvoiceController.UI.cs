@@ -16,12 +16,14 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Services.Rates;
+using System.Net.WebSockets;
+using System.Threading;
+using BTCPayServer.Events;
 
 namespace BTCPayServer.Controllers
 {
     public partial class InvoiceController
     {
-
         [HttpPost]
         [Route("invoices/{invoiceId}")]
         public IActionResult Invoice(string invoiceId, string command)
@@ -167,6 +169,73 @@ namespace BTCPayServer.Controllers
             if (model == null)
                 return NotFound();
             return Json(model);
+        }
+
+        [HttpGet]
+        [Route("i/{invoiceId}/status/ws")]
+        public async Task<IActionResult> GetStatusWebSocket(string invoiceId)
+        {
+            if (!HttpContext.WebSockets.IsWebSocketRequest)
+                return NotFound();
+            var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
+            if (invoice == null || invoice.Status == "complete" || invoice.Status == "invalid" || invoice.Status == "expired")
+                return NotFound();
+            var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+            CompositeDisposable leases = new CompositeDisposable();
+            try
+            {
+                _EventAggregator.Subscribe<Events.InvoiceDataChangedEvent>(async o => await NotifySocket(webSocket, o.InvoiceId, invoiceId));
+                _EventAggregator.Subscribe<Events.InvoicePaymentEvent>(async o => await NotifySocket(webSocket, o.InvoiceId, invoiceId));
+                _EventAggregator.Subscribe<Events.InvoiceStatusChangedEvent>(async o => await NotifySocket(webSocket, o.InvoiceId, invoiceId));
+                while (true)
+                {
+                    var message = await webSocket.ReceiveAsync(DummyBuffer, default(CancellationToken));
+                    if (message.MessageType == WebSocketMessageType.Close)
+                        break;
+                }
+            }
+            finally
+            {
+                leases.Dispose();
+                await CloseSocket(webSocket);
+            }
+            return new NoResponse();
+        }
+
+        class NoResponse : IActionResult
+        {
+            public Task ExecuteResultAsync(ActionContext context)
+            {
+                return Task.CompletedTask;
+            }
+        }
+
+        ArraySegment<Byte> DummyBuffer = new ArraySegment<Byte>(new Byte[1]);
+        private async Task NotifySocket(WebSocket webSocket, string invoiceId, string expectedId)
+        {
+            if (invoiceId != expectedId || webSocket.State != WebSocketState.Open)
+                return;
+            CancellationTokenSource cts = new CancellationTokenSource();
+            cts.CancelAfter(5000);
+            try
+            {
+                await webSocket.SendAsync(DummyBuffer, WebSocketMessageType.Binary, true, cts.Token);
+            }
+            catch { await CloseSocket(webSocket); }
+        }
+
+        private static async Task CloseSocket(WebSocket webSocket)
+        {
+            try
+            {
+                if (webSocket.State == WebSocketState.Open)
+                {
+                    CancellationTokenSource cts = new CancellationTokenSource();
+                    cts.CancelAfter(5000);
+                    await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", cts.Token);
+                }
+            }
+            finally { webSocket.Dispose(); }
         }
 
         [HttpPost]

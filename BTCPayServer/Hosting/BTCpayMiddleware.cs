@@ -29,13 +29,11 @@ namespace BTCPayServer.Hosting
     {
         TokenRepository _TokenRepository;
         RequestDelegate _Next;
-        CallbackController _CallbackController;
         BTCPayServerOptions _Options;
 
         public BTCPayMiddleware(RequestDelegate next,
             TokenRepository tokenRepo,
-            BTCPayServerOptions options,
-            CallbackController callbackController)
+            BTCPayServerOptions options)
         {
             _TokenRepository = tokenRepo ?? throw new ArgumentNullException(nameof(tokenRepo));
             _Next = next ?? throw new ArgumentNullException(nameof(next));
@@ -43,12 +41,9 @@ namespace BTCPayServer.Hosting
         }
 
 
-
-        bool _Registered;
         public async Task Invoke(HttpContext httpContext)
         {
             RewriteHostIfNeeded(httpContext);
-
             httpContext.Request.Headers.TryGetValue("x-signature", out StringValues values);
             var sig = values.FirstOrDefault();
             httpContext.Request.Headers.TryGetValue("x-identity", out values);

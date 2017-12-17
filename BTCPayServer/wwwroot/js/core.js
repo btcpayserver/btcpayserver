@@ -214,8 +214,7 @@ if (supportsWebSockets) {
             fetchStatus();
         };
     }
-    catch
-    {
+    catch (e) {
         console.error("Error while connecting to websocket for invoice notifictions");
     }
 }

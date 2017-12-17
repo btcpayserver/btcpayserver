@@ -79,8 +79,8 @@ namespace BTCPayServer.Services.Invoices
                     if (invoice == null)
                         break;
                     var stateBefore = invoice.Status;
-                    var stateChanges = new List<string>();
-                    var result = await UpdateInvoice(changes, invoice, stateChanges).ConfigureAwait(false);
+                    var postSaveActions = new List<Action>();
+                    var result = await UpdateInvoice(changes, invoice, postSaveActions).ConfigureAwait(false);
                     changes = result.Changes;
                     if (result.NeedSave)
                     { 
@@ -90,12 +90,10 @@ namespace BTCPayServer.Services.Invoices
 
                     var changed = stateBefore != invoice.Status;
 
-                    foreach(var stateChange in stateChanges)
+                    foreach(var saveAction in postSaveActions)
                     {
-                        _EventAggregator.Publish(new InvoiceStatusChangedEvent() { InvoiceId = invoice.Id, NewState = stateChange, OldState = stateBefore });
-                        stateBefore = stateChange;
+                        saveAction();
                     }
-
                     
                     if (invoice.Status == "complete" ||
                        ((invoice.Status == "invalid" || invoice.Status == "expired") && invoice.MonitoringExpiration < DateTimeOffset.UtcNow))
@@ -121,7 +119,7 @@ namespace BTCPayServer.Services.Invoices
         }
 
 
-        private async Task<(bool NeedSave, UTXOChanges Changes)> UpdateInvoice(UTXOChanges changes, InvoiceEntity invoice, List<string> stateChanges)
+        private async Task<(bool NeedSave, UTXOChanges Changes)> UpdateInvoice(UTXOChanges changes, InvoiceEntity invoice, List<Action> postSaveActions)
         {
             bool needSave = false;
             //Fetch unknown payments
@@ -140,6 +138,7 @@ namespace BTCPayServer.Services.Invoices
             {
                 var payment = await _InvoiceRepository.AddPayment(invoice.Id, coin).ConfigureAwait(false);
                 invoice.Payments.Add(payment);
+                postSaveActions.Add(() => _EventAggregator.Publish(new InvoicePaymentEvent(invoice.Id)));
                 dirtyAddress = true;
             }
             //////
@@ -148,8 +147,9 @@ namespace BTCPayServer.Services.Invoices
             {
                 needSave = true;
                 await _InvoiceRepository.UnaffectAddress(invoice.Id);
+
+                postSaveActions.Add(() => _EventAggregator.Publish(new InvoiceStatusChangedEvent(invoice, "expired")));
                 invoice.Status = "expired";
-                stateChanges.Add(invoice.Status);
             }
 
             if (invoice.Status == "new" || invoice.Status == "expired")
@@ -159,8 +159,8 @@ namespace BTCPayServer.Services.Invoices
                 {
                     if (invoice.Status == "new")
                     {
+                        postSaveActions.Add(() => _EventAggregator.Publish(new InvoiceStatusChangedEvent(invoice, "paid")));
                         invoice.Status = "paid";
-                        stateChanges.Add(invoice.Status);
                         invoice.ExceptionStatus = null;
                         await _InvoiceRepository.UnaffectAddress(invoice.Id);
                         needSave = true;
@@ -219,8 +219,8 @@ namespace BTCPayServer.Services.Invoices
                    (chainTotalConfirmed < invoice.GetTotalCryptoDue()))
                 {
                     await _InvoiceRepository.UnaffectAddress(invoice.Id);
+                    postSaveActions.Add(() => _EventAggregator.Publish(new InvoiceStatusChangedEvent(invoice, "invalid")));
                     invoice.Status = "invalid";
-                    stateChanges.Add(invoice.Status);
                     needSave = true;
                 }
                 else
@@ -229,8 +229,8 @@ namespace BTCPayServer.Services.Invoices
                     if (totalConfirmed >= invoice.GetTotalCryptoDue())
                     {
                         await _InvoiceRepository.UnaffectAddress(invoice.Id);
+                        postSaveActions.Add(() => _EventAggregator.Publish(new InvoiceStatusChangedEvent(invoice, "confirmed")));
                         invoice.Status = "confirmed";
-                        stateChanges.Add(invoice.Status);
                         needSave = true;
                     }
                 }
@@ -243,8 +243,8 @@ namespace BTCPayServer.Services.Invoices
                 var totalConfirmed = transactions.Select(t => t.Payment.Output.Value).Sum();
                 if (totalConfirmed >= invoice.GetTotalCryptoDue())
                 {
+                    postSaveActions.Add(() => _EventAggregator.Publish(new InvoiceStatusChangedEvent(invoice, "complete")));
                     invoice.Status = "complete";
-                    stateChanges.Add(invoice.Status);
                     needSave = true;
                 }
             }

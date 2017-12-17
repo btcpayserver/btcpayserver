@@ -286,7 +286,7 @@ namespace BTCPayServer.Services.Invoices
                 CurrentTime = DateTimeOffset.UtcNow,
                 InvoiceTime = InvoiceTime,
                 ExpirationTime = ExpirationTime,
-                BTCPrice = Money.Coins((decimal)(1.0 / Rate)).ToString(),
+                BTCPrice = Money.Coins((decimal)(ProductInformation.Price / Rate)).ToString(),
                 Status = Status,
                 Url = ServerUrl.WithTrailingSlash() + "invoice?id=" + Id,
                 Currency = ProductInformation.Currency,

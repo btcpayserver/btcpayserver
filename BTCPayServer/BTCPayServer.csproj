@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.0</TargetFramework>
-		<Version>1.0.0.48</Version>
+		<Version>1.0.0.49</Version>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Build\dockerfiles\**" />

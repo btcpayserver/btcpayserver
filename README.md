@@ -19,10 +19,6 @@ This solution is for you if:
 * You want to become a payment processor yourself and offer BTCPay hosted solution to merchants
 * You want to a way support other currency than those offered by Bitpay
 
-## Where to start?
+## Documentation
 
-First we advise you to look our [youtube videos](https://www.youtube.com/channel/UCpG9WL6TJuoNfFVkaDMp9ug) to better understand if BTCPay fit your business.
-
-You can then head out to the [documentation](https://github.com/btcpayserver/btcpayserver-doc).
-
-You want to contribute? head out to [Local Development instructions](https://github.com/btcpayserver/btcpayserver-doc/blob/master/Local-Development.md).
+Please check out our [complete documentation](https://github.com/btcpayserver/btcpayserver-doc) for more details.

@@ -4,19 +4,22 @@
 
 ## Introduction 
 
-If you:
+BTCPay Server is an Open Source payment processor conforms to the invoice API of Bitpay.
+This allows easy migration of your code base to your own, self-hosted payment processor.
 
-* Currently depend on BitPay and want to keep using Bitcoin for your payments after November
-* Do not want to give custody or control of your funds to a third party
-* Have been rejected by BitPay for KYC/AML reasons after developing your solution
-* Are a service provider who wants to offer Bitcoin payments to your customer with a different pricing model than BitPay
-* Want to propose services similar to BitPay for an alt-currency.
-* Want features BitPay is not willing to consider (Multi-sig + SegWit support soon)
+This solution is for you if:
 
-Then head out to the [documentation](https://github.com/btcpayserver/btcpayserver-doc), this project is for you.
+* You currently use Bitpay as a payment processor but are worry about their commitment to Bitcoin in the future
+* You want to be in control of your own funds
+* Bitpay compliance team decided to reject your application
+* You want lower fee (we support Segwit)
+* You want to become a payment processor yourself and offer BTCPay hosted solution to merchants
+* You want to a way support other currency than those offered by Bitpay
 
-If you want to help development, go to [Local Development](https://github.com/btcpayserver/btcpayserver-doc/blob/master/Local-Development.md).
+## Where to start?
 
-## Additional resources
+First we advise you to look our [youtube videos](https://www.youtube.com/channel/UCpG9WL6TJuoNfFVkaDMp9ug) to better understand if BTCPay fit your business.
 
-[Introduction of BTCPay on youtube](https://www.youtube.com/watch?v=npFMOu6tTpA)
+You can then head out to the [documentation](https://github.com/btcpayserver/btcpayserver-doc).
+
+To setup your development environment so you can contribute to this project, go to [Local Development](https://github.com/btcpayserver/btcpayserver-doc/blob/master/Local-Development.md).

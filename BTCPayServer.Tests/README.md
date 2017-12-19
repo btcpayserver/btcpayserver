@@ -6,7 +6,7 @@ You can however use the `docker-compose.yml` of this folder to get it running.
 This is running a bitcoind instance on regtest, a private bitcoin blockchain for testing on which you can generate blocks yourself.
 
 ```
-docker-compose up nbxplorer
+docker-compose up dev
 ```
 
 You can run the tests while it is running through your favorite IDE, or with

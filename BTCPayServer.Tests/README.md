@@ -1,7 +1,9 @@
-# How to run the tests
+# How to be started for development
 
-The tests depends on having a proper environment running with Postgres, Bitcoind, NBxplorer configured.
+BTCPay Server tests depend on having a proper environment running with Postgres, Bitcoind, NBxplorer configured.
 You can however use the `docker-compose.yml` of this folder to get it running.
+
+In addition, when you run a debug session of BTCPay (Hitting F5 on Visual Studio Code or Visual Studio 2017), it will run the launch profile called `Docker-Regtest`. This launch profile depends on this `docker-compose` running.
 
 This is running a bitcoind instance on regtest, a private bitcoin blockchain for testing on which you can generate blocks yourself.
 

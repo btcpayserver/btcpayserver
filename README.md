@@ -25,4 +25,4 @@ First we advise you to look our [youtube videos](https://www.youtube.com/channel
 
 You can then head out to the [documentation](https://github.com/btcpayserver/btcpayserver-doc).
 
-To setup your development environment so you can contribute to this project, go to [Local Development](https://github.com/btcpayserver/btcpayserver-doc/blob/master/Local-Development.md).
+You want to contribute? head out to [Local Development instructions](https://github.com/btcpayserver/btcpayserver-doc/blob/master/Local-Development.md).

@@ -255,13 +255,19 @@ namespace BTCPayServer.Services.Invoices
             dto.CryptoInfo = new List<InvoiceCryptoInfo>();
             foreach (var info in this.GetCryptoData().Values)
             {
+                var accounting = info.Calculate();
                 var cryptoInfo = new InvoiceCryptoInfo();
                 cryptoInfo.CryptoCode = info.CryptoCode;
                 cryptoInfo.Rate = info.Rate;
                 cryptoInfo.Price = Money.Coins(ProductInformation.Price / cryptoInfo.Rate).ToString();
-                cryptoInfo.Due = info.GetCryptoDue().ToString();
-                var paid = Payments.Where(p => p.Accounted && p.GetCryptoCode() == info.CryptoCode).Select(p => p.GetValue()).Sum();
-                cryptoInfo.Paid = paid.ToString();
+
+                cryptoInfo.Due = accounting.Due.ToString();
+                cryptoInfo.Paid = accounting.Paid.ToString();
+                cryptoInfo.TotalDue = accounting.TotalDue.ToString();
+                cryptoInfo.NetworkFee = accounting.NetworkFee.ToString();
+                cryptoInfo.TxCount = accounting.TxCount;
+                cryptoInfo.CryptoPaid = accounting.CryptoPaid;
+
                 cryptoInfo.Address = info.DepositAddress;
                 cryptoInfo.ExRates = new Dictionary<string, double>
                 {
@@ -372,6 +378,38 @@ namespace BTCPayServer.Services.Invoices
         }
     }
 
+    public class CryptoDataAccounting
+    {
+        /// <summary>
+        /// Total amount of this invoice
+        /// </summary>
+        public Money TotalDue { get; set; }
+
+        /// <summary>
+        /// Amount of crypto remaining to pay this invoice
+        /// </summary>
+        public Money Due { get; set; }
+
+        /// <summary>
+        /// Total amount of the invoice paid after conversion to this crypto currency
+        /// </summary>
+        public Money Paid { get; set; }
+
+        /// <summary>
+        /// Total amount of the invoice paid in this currency
+        /// </summary>
+        public Money CryptoPaid { get; set; }
+
+        /// <summary>
+        /// Number of transactions required to pay
+        /// </summary>
+        public int TxCount { get; set; }
+        /// <summary>
+        /// Total amount of network fee to pay to the invoice
+        /// </summary>
+        public Money NetworkFee { get; set; }
+    }
+
     public class CryptoData
     {
         [JsonIgnore]
@@ -386,28 +424,13 @@ namespace BTCPayServer.Services.Invoices
         public Money TxFee { get; set; }
         [JsonProperty(PropertyName = "depositAddress")]
         public string DepositAddress { get; set; }
-
-        public Money GetNetworkFee()
-        {
-            var item = Calculate();
-            return TxFee * item.TxCount;
-        }
-
-        public int GetTxCount()
-        {
-            return Calculate().TxCount;
-        }
-
-        public Money GetTotalCryptoDue()
-        {
-            return Calculate().TotalDue;
-        }
-
-        private (Money TotalDue, Money Paid, int TxCount) Calculate()
+        
+        public CryptoDataAccounting Calculate()
         {
             var cryptoData = ParentEntity.GetCryptoData();
             var totalDue = Money.Coins(ParentEntity.ProductInformation.Price / Rate) + TxFee;
             var paid = Money.Zero;
+            var cryptoPaid = Money.Zero;
             int txCount = 1;
             var payments =
                 ParentEntity.Payments
@@ -416,6 +439,8 @@ namespace BTCPayServer.Services.Invoices
                 .Select(_ =>
                 {
                     paid += _.GetValue(cryptoData, CryptoCode);
+                    if (CryptoCode == _.GetCryptoCode())
+                        cryptoPaid += _.GetValue();
                     return _;
                 })
                 .TakeWhile(_ =>
@@ -429,19 +454,17 @@ namespace BTCPayServer.Services.Invoices
                     return !paidEnough;
                 })
                 .ToArray();
-            return (totalDue, paid, txCount);
-        }
 
-        public Money GetTotalPaid()
-        {
-            return Calculate().Paid;
+            var accounting = new CryptoDataAccounting();
+            accounting.TotalDue = totalDue;
+            accounting.Paid = paid;
+            accounting.TxCount = txCount;
+            accounting.CryptoPaid = cryptoPaid;
+            accounting.Due = Money.Max(accounting.TotalDue - accounting.Paid, Money.Zero);
+            accounting.NetworkFee = TxFee * txCount;
+            return accounting;
         }
-        public Money GetCryptoDue()
-        {
-            var o = Calculate();
-            var v = o.TotalDue - o.Paid;
-            return v < Money.Zero ? Money.Zero : v;
-        }
+        
     }
 
     public class AccountedPaymentEntity

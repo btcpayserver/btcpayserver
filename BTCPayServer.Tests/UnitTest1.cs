@@ -47,28 +47,34 @@ namespace BTCPayServer.Tests
             entity.Payments = new System.Collections.Generic.List<PaymentEntity>();
             entity.ProductInformation = new ProductInformation() { Price = 5000 };
 
-            Assert.Equal(Money.Coins(1.1m), cryptoData.GetCryptoDue());
-            Assert.Equal(Money.Coins(1.1m), cryptoData.GetTotalCryptoDue());
+            var accounting = cryptoData.Calculate();
+            Assert.Equal(Money.Coins(1.1m), accounting.Due);
+            Assert.Equal(Money.Coins(1.1m), accounting.TotalDue);
 
             entity.Payments.Add(new PaymentEntity() { Output = new TxOut(Money.Coins(0.5m), new Key()), Accounted = true });
 
+            accounting = cryptoData.Calculate();
             //Since we need to spend one more txout, it should be 1.1 - 0,5 + 0.1
-            Assert.Equal(Money.Coins(0.7m), cryptoData.GetCryptoDue());
-            Assert.Equal(Money.Coins(1.2m), cryptoData.GetTotalCryptoDue());
+            Assert.Equal(Money.Coins(0.7m), accounting.Due);
+            Assert.Equal(Money.Coins(1.2m), accounting.TotalDue);
 
             entity.Payments.Add(new PaymentEntity() { Output = new TxOut(Money.Coins(0.2m), new Key()), Accounted = true });
-            Assert.Equal(Money.Coins(0.6m), cryptoData.GetCryptoDue());
-            Assert.Equal(Money.Coins(1.3m), cryptoData.GetTotalCryptoDue());
+
+            accounting = cryptoData.Calculate();
+            Assert.Equal(Money.Coins(0.6m), accounting.Due);
+            Assert.Equal(Money.Coins(1.3m), accounting.TotalDue);
 
             entity.Payments.Add(new PaymentEntity() { Output = new TxOut(Money.Coins(0.6m), new Key()), Accounted = true });
 
-            Assert.Equal(Money.Zero, cryptoData.GetCryptoDue());
-            Assert.Equal(Money.Coins(1.3m), cryptoData.GetTotalCryptoDue());
+            accounting = cryptoData.Calculate();
+            Assert.Equal(Money.Zero, accounting.Due);
+            Assert.Equal(Money.Coins(1.3m), accounting.TotalDue);
 
             entity.Payments.Add(new PaymentEntity() { Output = new TxOut(Money.Coins(0.2m), new Key()), Accounted = true });
 
-            Assert.Equal(Money.Zero, cryptoData.GetCryptoDue());
-            Assert.Equal(Money.Coins(1.3m), cryptoData.GetTotalCryptoDue());
+            accounting = cryptoData.Calculate();
+            Assert.Equal(Money.Zero, accounting.Due);
+            Assert.Equal(Money.Coins(1.3m), accounting.TotalDue);
 #pragma warning restore CS0618
         }
 

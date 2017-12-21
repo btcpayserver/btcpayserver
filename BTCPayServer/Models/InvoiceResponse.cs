@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using NBitcoin;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -66,18 +67,49 @@ namespace BTCPayServer.Models
         }
 
         //"btcDue":"0.001160"
+        /// <summary>
+        /// Amount of crypto remaining to pay this invoice
+        /// </summary>
         [JsonProperty("due")]
         public string Due
         {
             get; set;
         }
 
+        [JsonProperty("paymentUrls")]
         public NBitpayClient.InvoicePaymentUrls PaymentUrls
         {
             get; set;
         }
+
+        [JsonProperty("address")]
         public string Address { get; set; }
+        [JsonProperty("url")]
         public string Url { get; set; }
+
+        /// <summary>
+        /// Total amount of this invoice
+        /// </summary>
+        [JsonProperty("totalDue")]
+        public string TotalDue { get; set; }
+
+        /// <summary>
+        /// Total amount of network fee to pay to the invoice
+        /// </summary>
+        [JsonProperty("networkFee")]
+        public string NetworkFee { get; set; }
+
+        /// <summary>
+        /// Number of transactions required to pay
+        /// </summary>
+        [JsonProperty("txCount")]
+        public int TxCount { get; set; }
+
+        /// <summary>
+        /// Total amount of the invoice paid in this crypto
+        /// </summary>
+        [JsonProperty("cryptoPaid")]
+        public Money CryptoPaid { get; set; }
     }
 
     //{"facade":"pos/invoice","data":{,}}

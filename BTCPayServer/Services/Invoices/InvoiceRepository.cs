@@ -144,7 +144,7 @@ namespace BTCPayServer.Services.Invoices
                         Assigned = DateTimeOffset.UtcNow
                     });
                     textSearch.Add(cryptoData.DepositAddress);
-                    textSearch.Add(cryptoData.GetTotalCryptoDue().ToString());
+                    textSearch.Add(cryptoData.Calculate().TotalDue.ToString());
                 }
                 context.PendingInvoices.Add(new PendingInvoiceData() { Id = invoice.Id });
                 await context.SaveChangesAsync().ConfigureAwait(false);

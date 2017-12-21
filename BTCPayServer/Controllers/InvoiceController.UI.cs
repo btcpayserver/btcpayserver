@@ -62,6 +62,8 @@ namespace BTCPayServer.Controllers
             var dto = invoice.EntityToDTO(_NetworkProvider);
             var cryptoInfo = dto.CryptoInfo.First(o => o.CryptoCode.Equals(cryptoCode, StringComparison.OrdinalIgnoreCase));
             var store = await _StoreRepository.FindStore(invoice.StoreId);
+
+            var accounting = cryptoData.Calculate();
             InvoiceDetailsModel model = new InvoiceDetailsModel()
             {
                 StoreName = store.StoreName,
@@ -75,10 +77,10 @@ namespace BTCPayServer.Controllers
                 BuyerInformation = invoice.BuyerInformation,
                 Rate = cryptoData.Rate,
                 Fiat = dto.Price + " " + dto.Currency,
-                BTC = cryptoData.GetTotalCryptoDue().ToString() + $" {network.CryptoCode}",
-                BTCDue = cryptoData.GetCryptoDue().ToString() + $" {network.CryptoCode}",
-                BTCPaid = cryptoData.GetTotalPaid().ToString() + $" {network.CryptoCode}",
-                NetworkFee = cryptoData.GetNetworkFee().ToString() + $" {network.CryptoCode}",
+                BTC = accounting.TotalDue.ToString() + $" {network.CryptoCode}",
+                BTCDue = accounting.Due.ToString() + $" {network.CryptoCode}",
+                BTCPaid = accounting.Paid.ToString() + $" {network.CryptoCode}",
+                NetworkFee = accounting.NetworkFee.ToString() + $" {network.CryptoCode}",
                 NotificationUrl = invoice.NotificationURL,
                 ProductInformation = invoice.ProductInformation,
                 BitcoinAddress = BitcoinAddress.Create(cryptoInfo.Address, network.NBitcoinNetwork),
@@ -137,15 +139,16 @@ namespace BTCPayServer.Controllers
             var dto = invoice.EntityToDTO(_NetworkProvider);
             var cryptoInfo = dto.CryptoInfo.First(o => o.CryptoCode == network.CryptoCode);
             var currency = invoice.ProductInformation.Currency;
+            var accounting = cryptoData.Calculate();
             var model = new PaymentModel()
             {
                 ServerUrl = HttpContext.Request.GetAbsoluteRoot(),
                 OrderId = invoice.OrderId,
                 InvoiceId = invoice.Id,
                 BtcAddress = cryptoData.DepositAddress,
-                BtcAmount = (cryptoData.GetTotalCryptoDue() - cryptoData.TxFee).ToString(),
-                BtcTotalDue = cryptoData.GetTotalCryptoDue().ToString(),
-                BtcDue = cryptoData.GetCryptoDue().ToString(),
+                BtcAmount = (accounting.TotalDue - cryptoData.TxFee).ToString(),
+                BtcTotalDue = accounting.TotalDue.ToString(),
+                BtcDue = accounting.Due.ToString(),
                 CustomerEmail = invoice.RefundMail,
                 ExpirationSeconds = Math.Max(0, (int)(invoice.ExpirationTime - DateTimeOffset.UtcNow).TotalSeconds),
                 MaxTimeSeconds = (int)(invoice.ExpirationTime - invoice.InvoiceTime).TotalSeconds,
@@ -155,8 +158,8 @@ namespace BTCPayServer.Controllers
                 StoreName = store.StoreName,
                 TxFees = cryptoData.TxFee.ToString(),
                 InvoiceBitcoinUrl = cryptoInfo.PaymentUrls.BIP72,
-                TxCount = cryptoData.GetTxCount(),
-                BtcPaid = cryptoData.GetTotalPaid().ToString(),
+                TxCount = accounting.TxCount,
+                BtcPaid = accounting.Paid.ToString(),
                 Status = invoice.Status
             };
 

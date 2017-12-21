@@ -134,16 +134,16 @@ namespace BTCPayServer.Tests
             Assert.Equal("0.00000000001", light.ToString());
         }
 
-        [Fact]
-        public void CanSendLightningPayment()
-        {
+        //[Fact]
+        //public void CanSendLightningPayment()
+        //{
 
-            using (var tester = ServerTester.Create())
-            {
-                tester.Start();
-                tester.PrepareLightning();
-            }
-        }
+        //    using (var tester = ServerTester.Create())
+        //    {
+        //        tester.Start();
+        //        tester.PrepareLightning();
+        //    }
+        //}
 
         [Fact]
         public void CanUseServerInitiatedPairingCode()

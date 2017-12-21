@@ -16,15 +16,15 @@ services:
       TESTS_FAKECALLBACK: 'false'
       TESTS_PORT: 80
       TESTS_HOSTNAME: tests
-      TEST_ECLAIR1: http://eclair1:8080/
-      TEST_ECLAIR2: http://eclair2:8080/
+      # TEST_ECLAIR1: http://eclair1:8080/
+      # TEST_ECLAIR2: http://eclair2:8080/
     expose:
       - "80"
     links:
       - bitcoind
       - nbxplorer
-      - eclair1
-      - eclair2
+      # - eclair1
+      # - eclair2
     extra_hosts: 
       - "tests:127.0.0.1"
 
@@ -38,8 +38,8 @@ services:
     links:
       - bitcoind
       - nbxplorer
-      - eclair1
-      - eclair2
+      # - eclair1
+      # - eclair2
 
   nbxplorer:
     image: nicolasdorier/nbxplorer:1.0.0.32

@@ -38,33 +38,38 @@ namespace BTCPayServer.Tests
         public void CanCalculateCryptoDue()
         {
             var entity = new InvoiceEntity();
+#pragma warning disable CS0618
             entity.TxFee = Money.Coins(0.1m);
             entity.Rate = 5000;
+
+            var cryptoData = entity.GetCryptoData("BTC");
+            Assert.NotNull(cryptoData); // Should use legacy data to build itself
             entity.Payments = new System.Collections.Generic.List<PaymentEntity>();
             entity.ProductInformation = new ProductInformation() { Price = 5000 };
 
-            Assert.Equal(Money.Coins(1.1m), entity.GetCryptoDue());
-            Assert.Equal(Money.Coins(1.1m), entity.GetTotalCryptoDue());
+            Assert.Equal(Money.Coins(1.1m), cryptoData.GetCryptoDue());
+            Assert.Equal(Money.Coins(1.1m), cryptoData.GetTotalCryptoDue());
 
             entity.Payments.Add(new PaymentEntity() { Output = new TxOut(Money.Coins(0.5m), new Key()), Accounted = true });
 
             //Since we need to spend one more txout, it should be 1.1 - 0,5 + 0.1
-            Assert.Equal(Money.Coins(0.7m), entity.GetCryptoDue());
-            Assert.Equal(Money.Coins(1.2m), entity.GetTotalCryptoDue());
+            Assert.Equal(Money.Coins(0.7m), cryptoData.GetCryptoDue());
+            Assert.Equal(Money.Coins(1.2m), cryptoData.GetTotalCryptoDue());
 
             entity.Payments.Add(new PaymentEntity() { Output = new TxOut(Money.Coins(0.2m), new Key()), Accounted = true });
-            Assert.Equal(Money.Coins(0.6m), entity.GetCryptoDue());
-            Assert.Equal(Money.Coins(1.3m), entity.GetTotalCryptoDue());
+            Assert.Equal(Money.Coins(0.6m), cryptoData.GetCryptoDue());
+            Assert.Equal(Money.Coins(1.3m), cryptoData.GetTotalCryptoDue());
 
             entity.Payments.Add(new PaymentEntity() { Output = new TxOut(Money.Coins(0.6m), new Key()), Accounted = true });
 
-            Assert.Equal(Money.Zero, entity.GetCryptoDue());
-            Assert.Equal(Money.Coins(1.3m), entity.GetTotalCryptoDue());
+            Assert.Equal(Money.Zero, cryptoData.GetCryptoDue());
+            Assert.Equal(Money.Coins(1.3m), cryptoData.GetTotalCryptoDue());
 
             entity.Payments.Add(new PaymentEntity() { Output = new TxOut(Money.Coins(0.2m), new Key()), Accounted = true });
 
-            Assert.Equal(Money.Zero, entity.GetCryptoDue());
-            Assert.Equal(Money.Coins(1.3m), entity.GetTotalCryptoDue());
+            Assert.Equal(Money.Zero, cryptoData.GetCryptoDue());
+            Assert.Equal(Money.Coins(1.3m), cryptoData.GetTotalCryptoDue());
+#pragma warning restore CS0618
         }
 
         [Fact]
@@ -312,26 +317,26 @@ namespace BTCPayServer.Tests
                         StoreId = user.StoreId,
                         TextSearch = invoice.OrderId
                     }).GetAwaiter().GetResult();
-                    Assert.Equal(1, textSearchResult.Length);
+                    Assert.Single(textSearchResult);
                     textSearchResult = tester.PayTester.InvoiceRepository.GetInvoices(new InvoiceQuery()
                     {
                         StoreId = user.StoreId,
                         TextSearch = invoice.Id
                     }).GetAwaiter().GetResult();
 
-                    Assert.Equal(1, textSearchResult.Length);
+                    Assert.Single(textSearchResult);
                 });
 
                 invoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
                 Assert.Equal(Money.Coins(0), invoice.BtcPaid);
                 Assert.Equal("new", invoice.Status);
-                Assert.Equal(false, (bool)((JValue)invoice.ExceptionStatus).Value);
+                Assert.False((bool)((JValue)invoice.ExceptionStatus).Value);
 
-                Assert.Equal(1, user.BitPay.GetInvoices(invoice.InvoiceTime.DateTime).Length);
-                Assert.Equal(0, user.BitPay.GetInvoices(invoice.InvoiceTime.DateTime + TimeSpan.FromDays(1)).Length);
-                Assert.Equal(1, user.BitPay.GetInvoices(invoice.InvoiceTime.DateTime - TimeSpan.FromDays(5)).Length);
-                Assert.Equal(1, user.BitPay.GetInvoices(invoice.InvoiceTime.DateTime - TimeSpan.FromDays(5), invoice.InvoiceTime.DateTime).Length);
-                Assert.Equal(0, user.BitPay.GetInvoices(invoice.InvoiceTime.DateTime - TimeSpan.FromDays(5), invoice.InvoiceTime.DateTime - TimeSpan.FromDays(1)).Length);
+                Assert.Single(user.BitPay.GetInvoices(invoice.InvoiceTime.DateTime));
+                Assert.Empty(user.BitPay.GetInvoices(invoice.InvoiceTime.DateTime + TimeSpan.FromDays(1)));
+                Assert.Single(user.BitPay.GetInvoices(invoice.InvoiceTime.DateTime - TimeSpan.FromDays(5)));
+                Assert.Single(user.BitPay.GetInvoices(invoice.InvoiceTime.DateTime - TimeSpan.FromDays(5), invoice.InvoiceTime.DateTime));
+                Assert.Empty(user.BitPay.GetInvoices(invoice.InvoiceTime.DateTime - TimeSpan.FromDays(5), invoice.InvoiceTime.DateTime - TimeSpan.FromDays(1)));
 
 
                 var firstPayment = Money.Coins(0.04m);
@@ -348,7 +353,7 @@ namespace BTCPayServer.Tests
                 cashCow.SendToAddress(invoiceAddress, firstPayment);
 
                 var invoiceEntity = repo.GetInvoice(null, invoice.Id, true).GetAwaiter().GetResult();
-                Assert.Equal(1, invoiceEntity.HistoricalAddresses.Length);
+                Assert.Single(invoiceEntity.HistoricalAddresses);
                 Assert.Null(invoiceEntity.HistoricalAddresses[0].UnAssigned);
 
                 Money secondPayment = Money.Zero;
@@ -360,7 +365,7 @@ namespace BTCPayServer.Tests
                     Assert.Equal("new", localInvoice.Status);
                     Assert.Equal(firstPayment, localInvoice.BtcPaid);
                     txFee = localInvoice.BtcDue - invoice.BtcDue;
-                    Assert.Equal("paidPartial", localInvoice.ExceptionStatus);
+                    Assert.Equal("paidPartial", localInvoice.ExceptionStatus.ToString());
                     Assert.NotEqual(localInvoice.BitcoinAddress, invoice.BitcoinAddress); //New address
                     Assert.True(IsMapped(invoice, ctx));
                     Assert.True(IsMapped(localInvoice, ctx));

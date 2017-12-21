@@ -107,7 +107,6 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<BTCPayServerEnvironment>();
             services.TryAddSingleton<TokenRepository>();
             services.TryAddSingleton<EventAggregator>();
-            services.TryAddSingleton<Network>(o => o.GetRequiredService<BTCPayServerOptions>().Network);
             services.TryAddSingleton<ApplicationDbContextFactory>(o => 
             {
                 var opts = o.GetRequiredService<BTCPayServerOptions>();
@@ -125,14 +124,20 @@ namespace BTCPayServer.Hosting
                 }
                 return dbContext;
             });
+
+            services.TryAddSingleton<BTCPayNetworkProvider>(o => 
+            {
+                var opts = o.GetRequiredService<BTCPayServerOptions>();
+                return new BTCPayNetworkProvider(opts.Network);
+            });
+
             services.TryAddSingleton<StoreRepository>();
             services.TryAddSingleton<BTCPayWallet>();
             services.TryAddSingleton<CurrencyNameTable>();
-            services.TryAddSingleton<IFeeProvider>(o => new NBXplorerFeeProvider()
+            services.TryAddSingleton<IFeeProviderFactory>(o => new NBXplorerFeeProviderFactory(o.GetRequiredService<ExplorerClient>())
             {
                 Fallback = new FeeRate(100, 1),
-                BlockTarget = 20,
-                ExplorerClient = o.GetRequiredService<ExplorerClient>()
+                BlockTarget = 20
             });
 
             services.TryAddSingleton<NBXplorerWaiterAccessor>();

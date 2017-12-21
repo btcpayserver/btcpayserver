@@ -17,21 +17,25 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         [Route("i/{invoiceId}")]
         [AcceptMediaTypeConstraint("application/bitcoin-paymentrequest")]
-        public async Task<IActionResult> GetInvoiceRequest(string invoiceId)
+        public async Task<IActionResult> GetInvoiceRequest(string invoiceId, string cryptoCode = null)
         {
+            if (cryptoCode == null)
+                cryptoCode = "BTC";
             var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
-            if (invoice == null || invoice.IsExpired())
+            var network = _NetworkProvider.GetNetwork(cryptoCode);
+            if (invoice == null || invoice.IsExpired() || network == null || !invoice.Support(network))
                 return NotFound();
 
-            var dto = invoice.EntityToDTO();
+            var dto = invoice.EntityToDTO(_NetworkProvider);
+            var cryptoData = dto.CryptoInfo.First(c => c.CryptoCode.Equals(cryptoCode, StringComparison.OrdinalIgnoreCase));
             PaymentRequest request = new PaymentRequest
             {
                 DetailsVersion = 1
             };
             request.Details.Expires = invoice.ExpirationTime;
             request.Details.Memo = invoice.ProductInformation.ItemDesc;
-            request.Details.Network = _Network;
-            request.Details.Outputs.Add(new PaymentOutput() { Amount = dto.BTCDue, Script = BitcoinAddress.Create(dto.BitcoinAddress, _Network).ScriptPubKey });
+            request.Details.Network = network.NBitcoinNetwork;
+            request.Details.Outputs.Add(new PaymentOutput() { Amount = cryptoData.Due, Script = BitcoinAddress.Create(cryptoData.Address, network.NBitcoinNetwork).ScriptPubKey });
             request.Details.MerchantData = Encoding.UTF8.GetBytes(invoice.Id);
             request.Details.Time = DateTimeOffset.UtcNow;
             request.Details.PaymentUrl = new Uri(invoice.ServerUrl.WithTrailingSlash() + ($"i/{invoice.Id}"), UriKind.Absolute);

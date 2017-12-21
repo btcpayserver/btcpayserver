@@ -45,17 +45,20 @@ namespace BTCPayServer.Services.Invoices
         IBackgroundJobClient _JobClient;
         EventAggregator _EventAggregator;
         InvoiceRepository _InvoiceRepository;
+        BTCPayNetworkProvider _NetworkProvider;
 
         public InvoiceNotificationManager(
             IBackgroundJobClient jobClient,
             EventAggregator eventAggregator,
             InvoiceRepository invoiceRepository,
+            BTCPayNetworkProvider networkProvider,
             ILogger<InvoiceNotificationManager> logger)
         {
             Logger = logger as ILogger ?? NullLogger.Instance;
             _JobClient = jobClient;
             _EventAggregator = eventAggregator;
             _InvoiceRepository = invoiceRepository;
+            _NetworkProvider = networkProvider;
         }
 
         async Task Notify(InvoiceEntity invoice)
@@ -110,19 +113,15 @@ namespace BTCPayServer.Services.Invoices
             }
         }
 
-        private static async Task<HttpResponseMessage> SendNotification(InvoiceEntity invoice, CancellationToken cancellation)
+        private async Task<HttpResponseMessage> SendNotification(InvoiceEntity invoice, CancellationToken cancellation)
         {
             var request = new HttpRequestMessage();
             request.Method = HttpMethod.Post;
 
-            var dto = invoice.EntityToDTO();
+            var dto = invoice.EntityToDTO(_NetworkProvider);
             InvoicePaymentNotification notification = new InvoicePaymentNotification()
             {
                 Id = dto.Id,
-                Url = dto.Url,
-                BTCDue = dto.BTCDue,
-                BTCPaid = dto.BTCPaid,
-                BTCPrice = dto.BTCPrice,
                 Currency = dto.Currency,
                 CurrentTime = dto.CurrentTime,
                 ExceptionStatus = dto.ExceptionStatus,
@@ -130,10 +129,23 @@ namespace BTCPayServer.Services.Invoices
                 InvoiceTime = dto.InvoiceTime,
                 PosData = dto.PosData,
                 Price = dto.Price,
-                Rate = dto.Rate,
                 Status = dto.Status,
                 BuyerFields = invoice.RefundMail == null ? null : new Newtonsoft.Json.Linq.JObject() { new JProperty("buyerEmail", invoice.RefundMail) }
             };
+
+            // We keep backward compatibility with bitpay by passing BTC info to the notification
+            // we don't pass other info, as it is a bad idea to use IPN data for logic processing (can be faked)
+            var btcCryptoInfo = dto.CryptoInfo.FirstOrDefault(c => c.CryptoCode == "BTC");
+            if(btcCryptoInfo != null)
+            {
+#pragma warning disable CS0618
+                notification.Rate = (double)dto.Rate;
+                notification.Url = dto.Url;
+                notification.BTCDue = dto.BTCDue;
+                notification.BTCPaid = dto.BTCPaid;
+                notification.BTCPrice = dto.BTCPrice;
+#pragma warning restore CS0618
+            }
             request.RequestUri = new Uri(invoice.NotificationURL, UriKind.Absolute);
             request.Content = new StringContent(JsonConvert.SerializeObject(notification), Encoding.UTF8, "application/json");
             var response = await _Client.SendAsync(request, cancellation);

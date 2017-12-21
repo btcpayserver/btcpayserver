@@ -24,16 +24,19 @@ namespace BTCPayServer.Controllers
         private InvoiceRepository _InvoiceRepository;
         private TokenRepository _TokenRepository;
         private StoreRepository _StoreRepository;
+        private BTCPayNetworkProvider _NetworkProvider;
 
         public InvoiceControllerAPI(InvoiceController invoiceController,
                                     InvoiceRepository invoceRepository,
                                     TokenRepository tokenRepository,
-                                    StoreRepository storeRepository)
+                                    StoreRepository storeRepository,
+                                    BTCPayNetworkProvider networkProvider)
         {
             this._InvoiceController = invoiceController;
             this._InvoiceRepository = invoceRepository;
             this._TokenRepository = tokenRepository;
             this._StoreRepository = storeRepository;
+            this._NetworkProvider = networkProvider;
         }
 
         [HttpPost]
@@ -56,7 +59,7 @@ namespace BTCPayServer.Controllers
             if (invoice == null)
                 throw new BitpayHttpException(404, "Object not found");
 
-            var resp = invoice.EntityToDTO();
+            var resp = invoice.EntityToDTO(_NetworkProvider);
             return new DataWrapper<InvoiceResponse>(resp);
         }
 
@@ -90,7 +93,7 @@ namespace BTCPayServer.Controllers
 
 
             var entities = (await _InvoiceRepository.GetInvoices(query))
-                            .Select((o) => o.EntityToDTO()).ToArray();
+                            .Select((o) => o.EntityToDTO(_NetworkProvider)).ToArray();
 
             return DataWrapper.Create(entities);
         }

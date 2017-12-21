@@ -48,15 +48,13 @@ namespace BTCPayServer.Controllers
         IRateProvider _RateProvider;
         private InvoiceWatcher _Watcher;
         StoreRepository _StoreRepository;
-        Network _Network;
         UserManager<ApplicationUser> _UserManager;
-        IFeeProvider _FeeProvider;
+        IFeeProviderFactory _FeeProviderFactory;
         private CurrencyNameTable _CurrencyNameTable;
         ExplorerClient _Explorer;
         EventAggregator _EventAggregator;
-        public InvoiceController(
-            Network network,
-            InvoiceRepository invoiceRepository,
+        BTCPayNetworkProvider _NetworkProvider;
+        public InvoiceController(InvoiceRepository invoiceRepository,
             CurrencyNameTable currencyNameTable,
             UserManager<ApplicationUser> userManager,
             BTCPayWallet wallet,
@@ -65,31 +63,32 @@ namespace BTCPayServer.Controllers
             EventAggregator eventAggregator,
             InvoiceWatcherAccessor watcher,
             ExplorerClient explorerClient,
-            IFeeProvider feeProvider)
+            BTCPayNetworkProvider networkProvider,
+            IFeeProviderFactory feeProviderFactory)
         {
             _CurrencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
             _Explorer = explorerClient ?? throw new ArgumentNullException(nameof(explorerClient));
             _StoreRepository = storeRepository ?? throw new ArgumentNullException(nameof(storeRepository));
-            _Network = network ?? throw new ArgumentNullException(nameof(network));
             _InvoiceRepository = invoiceRepository ?? throw new ArgumentNullException(nameof(invoiceRepository));
             _Wallet = wallet ?? throw new ArgumentNullException(nameof(wallet));
             _RateProvider = rateProvider ?? throw new ArgumentNullException(nameof(rateProvider));
             _Watcher = (watcher ?? throw new ArgumentNullException(nameof(watcher))).Instance;
             _UserManager = userManager;
-            _FeeProvider = feeProvider ?? throw new ArgumentNullException(nameof(feeProvider));
+            _FeeProviderFactory = feeProviderFactory ?? throw new ArgumentNullException(nameof(feeProviderFactory));
             _EventAggregator = eventAggregator;
+            _NetworkProvider = networkProvider;
         }
+
 
         internal async Task<DataWrapper<InvoiceResponse>> CreateInvoiceCore(Invoice invoice, StoreData store, string serverUrl, double expiryMinutes = 15)
         {
-            //TODO: expiryMinutes (time before a new invoice can become paid) and monitoringMinutes (time before a paid invoice becomes invalid)  should be configurable at store level
             var derivationStrategy = store.DerivationStrategy;
             var entity = new InvoiceEntity
             {
                 InvoiceTime = DateTimeOffset.UtcNow,
                 DerivationStrategy = derivationStrategy ?? throw new BitpayHttpException(400, "This store has not configured the derivation strategy")
             };
-            var storeBlob = store.GetStoreBlob(_Network);
+            var storeBlob = store.GetStoreBlob();
             Uri notificationUri = Uri.IsWellFormedUriString(invoice.NotificationURL, UriKind.Absolute) ? new Uri(invoice.NotificationURL, UriKind.Absolute) : null;
             if (notificationUri == null || (notificationUri.Scheme != "http" && notificationUri.Scheme != "https")) //TODO: Filer non routable addresses ?
                 notificationUri = null;
@@ -114,16 +113,45 @@ namespace BTCPayServer.Controllers
             entity.Status = "new";
             entity.SpeedPolicy = ParseSpeedPolicy(invoice.TransactionSpeed, store.SpeedPolicy);
 
-            var getFeeRate = _FeeProvider.GetFeeRateAsync();
-            var getRate = _RateProvider.GetRateAsync(invoice.Currency);
-            var getAddress = _Wallet.ReserveAddressAsync(ParseDerivationStrategy(derivationStrategy));
-            entity.TxFee = storeBlob.NetworkFeeDisabled ? Money.Zero : (await getFeeRate).GetFee(100); // assume price for 100 bytes
-            entity.Rate = (double)await getRate;
+            var queries = storeBlob.GetSupportedCryptoCurrencies()
+                    .Select(n => _NetworkProvider.GetNetwork(n))
+                    .Where(n => n != null)
+                    .Select(network =>
+                    {
+                        return new
+                        {
+                            network = network,
+                            getFeeRate = _FeeProviderFactory.CreateFeeProvider(network).GetFeeRateAsync(),
+                            getRate = _RateProvider.GetRateAsync(invoice.Currency),
+                            getAddress = _Wallet.ReserveAddressAsync(ParseDerivationStrategy(derivationStrategy, network))
+                        };
+                    });
+
+            var cryptoDatas = new Dictionary<string, CryptoData>();
+            foreach (var q in queries)
+            {
+                CryptoData cryptoData = new CryptoData();
+                cryptoData.CryptoCode = q.network.CryptoCode;
+                cryptoData.FeeRate = (await q.getFeeRate);
+                cryptoData.TxFee = storeBlob.NetworkFeeDisabled ? Money.Zero : cryptoData.FeeRate.GetFee(100); // assume price for 100 bytes
+                cryptoData.Rate = await q.getRate;
+                cryptoData.DepositAddress = (await q.getAddress).ToString();
+
+#pragma warning disable CS0618
+                if (q.network.CryptoCode == "BTC")
+                {
+                    entity.TxFee = cryptoData.TxFee;
+                    entity.Rate = cryptoData.Rate;
+                    entity.DepositAddress = cryptoData.DepositAddress;
+                }
+#pragma warning restore CS0618
+                cryptoDatas.Add(cryptoData.CryptoCode, cryptoData);
+            }
+            entity.SetCryptoData(cryptoDatas);
             entity.PosData = invoice.PosData;
-            entity.DepositAddress = await getAddress;
-            entity = await _InvoiceRepository.CreateInvoiceAsync(store.Id, entity);
+            entity = await _InvoiceRepository.CreateInvoiceAsync(store.Id, entity, _NetworkProvider);
             _Watcher.Watch(entity.Id);
-            var resp = entity.EntityToDTO();
+            var resp = entity.EntityToDTO(_NetworkProvider);
             return new DataWrapper<InvoiceResponse>(resp) { Facade = "pos/invoice" };
         }
 
@@ -155,9 +183,9 @@ namespace BTCPayServer.Controllers
             buyerInformation.BuyerZip = buyerInformation.BuyerZip ?? buyer.zip;
         }
 
-        private DerivationStrategyBase ParseDerivationStrategy(string derivationStrategy)
+        private DerivationStrategyBase ParseDerivationStrategy(string derivationStrategy, BTCPayNetwork network)
         {
-            return new DerivationStrategyFactory(_Network).Parse(derivationStrategy);
+            return new DerivationStrategyFactory(network.NBitcoinNetwork).Parse(derivationStrategy);
         }
 
         private TDest Map<TFrom, TDest>(TFrom data)

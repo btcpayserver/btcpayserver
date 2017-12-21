@@ -43,10 +43,10 @@ namespace BTCPayServer.Controllers
                                   EventAggregator eventAggregator,
                                   BTCPayServerOptions options,
                                   IServer server,
-                                  Network network)
+                                  BTCPayNetworkProvider networkProvider)
         {
             _Settings = repo;
-            _Network = network;
+            _Network = networkProvider.GetNetwork("BTC").NBitcoinNetwork;
             _Explorer = explorer;
             _Options = options;
             _EventAggregator = eventAggregator;

@@ -10,6 +10,7 @@ using Newtonsoft.Json.Linq;
 using NBitcoin.DataEncoders;
 using BTCPayServer.Data;
 using NBXplorer.Models;
+using NBXplorer;
 
 namespace BTCPayServer.Services.Invoices
 {
@@ -82,7 +83,7 @@ namespace BTCPayServer.Services.Invoices
         }
 
         [JsonProperty(PropertyName = "price")]
-        public double Price
+        public decimal Price
         {
             get; set;
         }
@@ -111,65 +112,17 @@ namespace BTCPayServer.Services.Invoices
             get; set;
         }
 
-        public int GetTxCount()
-        {
-            return Calculate().TxCount;
-        }
-
         public string OrderId
         {
             get; set;
-        }
-
-        public Money GetTotalCryptoDue()
-        {
-            return Calculate().TotalDue;
-        }
-
-        private (Money TotalDue, Money Paid, int TxCount) Calculate()
-        {
-            var totalDue = Money.Coins((decimal)(ProductInformation.Price / Rate)) + TxFee;
-            var paid = Money.Zero;
-            int txCount = 1;
-            var payments =
-                Payments
-                .Where(p => p.Accounted)
-                .OrderByDescending(p => p.ReceivedTime)
-                .Select(_ =>
-                {
-                    paid += _.Output.Value;
-                    return _;
-                })
-                .TakeWhile(_ =>
-                {
-                    var paidEnough = totalDue <= paid;
-                    if (!paidEnough)
-                    {
-                        txCount++;
-                        totalDue += TxFee;
-                    }
-                    return !paidEnough;
-                })
-                .ToArray();
-            return (totalDue, paid, txCount);
-        }
-
-        public Money GetTotalPaid()
-        {
-            return Calculate().Paid;
-        }
-        public Money GetCryptoDue()
-        {
-            var o = Calculate();
-            var v = o.TotalDue - o.Paid;
-            return v < Money.Zero ? Money.Zero : v;
         }
 
         public SpeedPolicy SpeedPolicy
         {
             get; set;
         }
-        public double Rate
+        [Obsolete("Use GetCryptoData(network).Rate instead")]
+        public decimal Rate
         {
             get; set;
         }
@@ -181,7 +134,9 @@ namespace BTCPayServer.Services.Invoices
         {
             get; set;
         }
-        public BitcoinAddress DepositAddress
+
+        [Obsolete("Use GetCryptoData(network).DepositAddress instead")]
+        public string DepositAddress
         {
             get; set;
         }
@@ -231,6 +186,8 @@ namespace BTCPayServer.Services.Invoices
             get;
             set;
         }
+
+        [Obsolete("Use GetCryptoData(network).TxFee instead")]
         public Money TxFee
         {
             get;
@@ -251,6 +208,10 @@ namespace BTCPayServer.Services.Invoices
             get;
             set;
         }
+
+        [Obsolete("Use Set/GetCryptoData() instead")]
+        public JObject CryptoData { get; set; }
+
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public DateTimeOffset MonitoringExpiration
         {
@@ -275,7 +236,7 @@ namespace BTCPayServer.Services.Invoices
         }
 
 
-        public InvoiceResponse EntityToDTO()
+        public InvoiceResponse EntityToDTO(BTCPayNetworkProvider networkProvider)
         {
             ServerUrl = ServerUrl ?? "";
             InvoiceResponse dto = new InvoiceResponse
@@ -286,33 +247,61 @@ namespace BTCPayServer.Services.Invoices
                 CurrentTime = DateTimeOffset.UtcNow,
                 InvoiceTime = InvoiceTime,
                 ExpirationTime = ExpirationTime,
-                BTCPrice = Money.Coins((decimal)(ProductInformation.Price / Rate)).ToString(),
                 Status = Status,
-                Url = ServerUrl.WithTrailingSlash() + "invoice?id=" + Id,
                 Currency = ProductInformation.Currency,
-                Flags = new Flags() { Refundable = Refundable },
-                Rate = Rate
+                Flags = new Flags() { Refundable = Refundable }
             };
+
+            dto.CryptoInfo = new List<InvoiceCryptoInfo>();
+            foreach (var info in this.GetCryptoData().Values)
+            {
+                var cryptoInfo = new InvoiceCryptoInfo();
+                cryptoInfo.CryptoCode = info.CryptoCode;
+                cryptoInfo.Rate = info.Rate;
+                cryptoInfo.Price = Money.Coins(ProductInformation.Price / cryptoInfo.Rate).ToString();
+                cryptoInfo.Due = info.GetCryptoDue().ToString();
+                var paid = Payments.Where(p => p.Accounted && p.GetCryptoCode() == info.CryptoCode).Select(p => p.GetValue()).Sum();
+                cryptoInfo.Paid = paid.ToString();
+                cryptoInfo.Address = info.DepositAddress;
+                cryptoInfo.ExRates = new Dictionary<string, double>
+                {
+                    { ProductInformation.Currency, (double)cryptoInfo.Rate }
+                };
+
+                var scheme = networkProvider.GetNetwork(info.CryptoCode)?.UriScheme ?? "BTC";
+                var cryptoSuffix = cryptoInfo.CryptoCode == "BTC" ? "" : "/" + cryptoInfo.CryptoCode;
+                cryptoInfo.Url = ServerUrl.WithTrailingSlash() + $"invoice{cryptoSuffix}?id=" + Id;
+
+
+                cryptoInfo.PaymentUrls = new InvoicePaymentUrls()
+                {
+                    BIP72 = $"{scheme}:{cryptoInfo.Address}?amount={cryptoInfo.Due}&r={ServerUrl.WithTrailingSlash() + ($"i/{Id}{cryptoSuffix}")}",
+                    BIP72b = $"{scheme}:?r={ServerUrl.WithTrailingSlash() + ($"i/{Id}{cryptoSuffix}")}",
+                    BIP73 = ServerUrl.WithTrailingSlash() + ($"i/{Id}{cryptoSuffix}"),
+                    BIP21 = $"{scheme}:{cryptoInfo.Address}?amount={cryptoInfo.Due}",
+                };
+#pragma warning disable CS0618
+                if (info.CryptoCode == "BTC")
+                {
+                    dto.Url = cryptoInfo.Url;
+                    dto.BTCPrice = cryptoInfo.Price;
+                    dto.Rate = cryptoInfo.Rate;
+                    dto.ExRates = cryptoInfo.ExRates;
+                    dto.BitcoinAddress = cryptoInfo.Address;
+                    dto.BTCPaid = cryptoInfo.Paid;
+                    dto.BTCDue = cryptoInfo.Due;
+                    dto.PaymentUrls = cryptoInfo.PaymentUrls;
+                }
+#pragma warning restore CS0618
+
+                dto.CryptoInfo.Add(cryptoInfo);
+            }
+
             Populate(ProductInformation, dto);
             Populate(BuyerInformation, dto);
-            dto.ExRates = new Dictionary<string, double>
-            {
-                { ProductInformation.Currency, Rate }
-            };
-            dto.PaymentUrls = new InvoicePaymentUrls()
-            {
-                BIP72 = $"bitcoin:{DepositAddress}?amount={GetCryptoDue()}&r={ServerUrl.WithTrailingSlash() + ($"i/{Id}")}",
-                BIP72b = $"bitcoin:?r={ServerUrl.WithTrailingSlash() + ($"i/{Id}")}",
-                BIP73 = ServerUrl.WithTrailingSlash() + ($"i/{Id}"),
-                BIP21 = $"bitcoin:{DepositAddress}?amount={GetCryptoDue()}",
-            };
-            dto.BitcoinAddress = DepositAddress.ToString();
+
             dto.Token = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16)); //No idea what it is useful for
             dto.Guid = Guid.NewGuid().ToString();
-
-            var paid = Payments.Where(p => p.Accounted).Select(p => p.Output.Value).Sum();
-            dto.BTCPaid = paid.ToString();
-            dto.BTCDue = GetCryptoDue().ToString();
 
             dto.ExceptionStatus = ExceptionStatus == null ? new JValue(false) : new JValue(ExceptionStatus);
             return dto;
@@ -324,10 +313,134 @@ namespace BTCPayServer.Services.Invoices
             JsonConvert.PopulateObject(str, dest);
         }
 
+        internal bool Support(BTCPayNetwork network)
+        {
+            var rates = GetCryptoData();
+            return rates.TryGetValue(network.CryptoCode, out var data);
+        }
+
+        public CryptoData GetCryptoData(string cryptoCode)
+        {
+            GetCryptoData().TryGetValue(cryptoCode, out var data);
+            return data;
+        }
+
+        public CryptoData GetCryptoData(BTCPayNetwork network)
+        {
+            GetCryptoData().TryGetValue(network.CryptoCode, out var data);
+            return data;
+        }
+
+        public Dictionary<string, CryptoData> GetCryptoData()
+        {
+            Dictionary<string, CryptoData> rates = new Dictionary<string, CryptoData>();
+            var serializer = new Serializer(Dummy);
+#pragma warning disable CS0618
+            // Legacy
+            if (Rate != 0.0m)
+            {
+                rates.TryAdd("BTC", new CryptoData() { ParentEntity = this, Rate = Rate, CryptoCode = "BTC", TxFee = TxFee, FeeRate = new FeeRate(TxFee, 100), DepositAddress = DepositAddress });
+            }
+            if (CryptoData != null)
+            {
+                foreach (var prop in CryptoData.Properties())
+                {
+                    var r = serializer.ToObject<CryptoData>(prop.Value.ToString());
+                    r.CryptoCode = prop.Name;
+                    r.ParentEntity = this;
+                    rates.TryAdd(r.CryptoCode, r);
+                }
+            }
+#pragma warning restore CS0618
+            return rates;
+        }
+
+        Network Dummy = Network.Main;
+        public void SetCryptoData(Dictionary<string, CryptoData> cryptoData)
+        {
+            var obj = new JObject();
+            var serializer = new Serializer(Dummy);
+            foreach (var kv in cryptoData)
+            {
+                var clone = serializer.ToObject<CryptoData>(serializer.ToString(kv.Value));
+                clone.CryptoCode = null;
+                obj.Add(new JProperty(kv.Key, JObject.Parse(serializer.ToString(clone))));
+            }
+#pragma warning disable CS0618
+            CryptoData = obj;
+#pragma warning restore CS0618
+        }
+    }
+
+    public class CryptoData
+    {
+        [JsonIgnore]
+        public InvoiceEntity ParentEntity { get; set; }
+        [JsonProperty(PropertyName = "cryptoCode", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string CryptoCode { get; set; }
+        [JsonProperty(PropertyName = "rate")]
+        public decimal Rate { get; set; }
+        [JsonProperty(PropertyName = "feeRate")]
+        public FeeRate FeeRate { get; set; }
+        [JsonProperty(PropertyName = "txFee")]
+        public Money TxFee { get; set; }
+        [JsonProperty(PropertyName = "depositAddress")]
+        public string DepositAddress { get; set; }
+
         public Money GetNetworkFee()
         {
             var item = Calculate();
             return TxFee * item.TxCount;
+        }
+
+        public int GetTxCount()
+        {
+            return Calculate().TxCount;
+        }
+
+        public Money GetTotalCryptoDue()
+        {
+            return Calculate().TotalDue;
+        }
+
+        private (Money TotalDue, Money Paid, int TxCount) Calculate()
+        {
+            var cryptoData = ParentEntity.GetCryptoData();
+            var totalDue = Money.Coins(ParentEntity.ProductInformation.Price / Rate) + TxFee;
+            var paid = Money.Zero;
+            int txCount = 1;
+            var payments =
+                ParentEntity.Payments
+                .Where(p => p.Accounted)
+                .OrderByDescending(p => p.ReceivedTime)
+                .Select(_ =>
+                {
+                    paid += _.GetValue(cryptoData, CryptoCode);
+                    return _;
+                })
+                .TakeWhile(_ =>
+                {
+                    var paidEnough = totalDue <= paid;
+                    if (!paidEnough && _.GetCryptoCode() == CryptoCode)
+                    {
+                        txCount++;
+                        totalDue += TxFee;
+                    }
+                    return !paidEnough;
+                })
+                .ToArray();
+            return (totalDue, paid, txCount);
+        }
+
+        public Money GetTotalPaid()
+        {
+            return Calculate().Paid;
+        }
+        public Money GetCryptoDue()
+        {
+            var o = Calculate();
+            var v = o.TotalDue - o.Paid;
+            return v < Money.Zero ? Money.Zero : v;
         }
     }
 
@@ -352,13 +465,59 @@ namespace BTCPayServer.Services.Invoices
         {
             get; set;
         }
+
+        [Obsolete("Use GetValue() or GetScriptPubKey() instead")]
         public TxOut Output
         {
             get; set;
         }
+
+        public Script GetScriptPubKey()
+        {
+#pragma warning disable CS0618
+            return Output.ScriptPubKey;
+#pragma warning restore CS0618
+        }
+
         public bool Accounted
         {
             get; set;
         }
+
+        [Obsolete("Use GetCryptoCode() instead")]
+        public string CryptoCode
+        {
+            get;
+            set;
+        }
+        public Money GetValue()
+        {
+#pragma warning disable CS0618
+            return Output.Value;
+#pragma warning restore CS0618
+        }
+        public Money GetValue(Dictionary<string, CryptoData> cryptoData, string cryptoCode)
+        {
+#pragma warning disable CS0618
+            var to = cryptoCode;
+            var from = GetCryptoCode();
+            if (to == from)
+                return Output.Value;
+            var fromRate = cryptoData[from].Rate;
+            var toRate = cryptoData[to].Rate;
+
+            var fiatValue = fromRate * Output.Value.ToDecimal(MoneyUnit.BTC);
+            var otherCurrencyValue = toRate == 0 ? 0.0m : fiatValue / toRate;
+            return Money.Coins(otherCurrencyValue);
+#pragma warning restore CS0618
+        }
+
+        public string GetCryptoCode()
+        {
+#pragma warning disable CS0618
+            return CryptoCode ?? "BTC";
+#pragma warning restore CS0618
+        }
+
     }
 }

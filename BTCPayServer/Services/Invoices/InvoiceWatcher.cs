@@ -29,9 +29,10 @@ namespace BTCPayServer.Services.Invoices
         DerivationStrategyFactory _DerivationFactory;
         EventAggregator _EventAggregator;
         BTCPayWallet _Wallet;
-        
+        BTCPayNetworkProvider _NetworkProvider;
 
         public InvoiceWatcher(ExplorerClient explorerClient,
+            BTCPayNetworkProvider networkProvider,
             InvoiceRepository invoiceRepository,
             EventAggregator eventAggregator,
             BTCPayWallet wallet,
@@ -44,6 +45,7 @@ namespace BTCPayServer.Services.Invoices
             _DerivationFactory = new DerivationStrategyFactory(_ExplorerClient.Network);
             _InvoiceRepository = invoiceRepository ?? throw new ArgumentNullException(nameof(invoiceRepository));
             _EventAggregator = eventAggregator ?? throw new ArgumentNullException(nameof(eventAggregator));
+            _NetworkProvider = networkProvider;
             accessor.Instance = this;
         }
         CompositeDisposable leases = new CompositeDisposable();
@@ -126,6 +128,7 @@ namespace BTCPayServer.Services.Invoices
             var strategy = _DerivationFactory.Parse(invoice.DerivationStrategy);
             changes = await _ExplorerClient.SyncAsync(strategy, changes, !LongPollingMode, _Cts.Token).ConfigureAwait(false);
 
+
             var utxos = changes.Confirmed.UTXOs.Concat(changes.Unconfirmed.UTXOs).ToArray();
             List<Coin> receivedCoins = new List<Coin>();
             foreach (var received in utxos)
@@ -142,7 +145,9 @@ namespace BTCPayServer.Services.Invoices
                 dirtyAddress = true;
             }
             //////
-
+            var network = _NetworkProvider.GetNetwork("BTC");
+            var cryptoData = invoice.GetCryptoData(network);
+            var cryptoDataAll = invoice.GetCryptoData();
             if (invoice.Status == "new" && invoice.ExpirationTime < DateTimeOffset.UtcNow)
             {
                 needSave = true;
@@ -154,8 +159,8 @@ namespace BTCPayServer.Services.Invoices
 
             if (invoice.Status == "new" || invoice.Status == "expired")
             {
-                var totalPaid = (await GetPaymentsWithTransaction(invoice)).Select(p => p.Payment.Output.Value).Sum();
-                if (totalPaid >= invoice.GetTotalCryptoDue())
+                var totalPaid = (await GetPaymentsWithTransaction(invoice)).Select(p => p.Payment.GetValue(cryptoDataAll, cryptoData.CryptoCode)).Sum();
+                if (totalPaid >= cryptoData.GetTotalCryptoDue())
                 {
                     if (invoice.Status == "new")
                     {
@@ -172,23 +177,23 @@ namespace BTCPayServer.Services.Invoices
                     }
                 }
 
-                if (totalPaid > invoice.GetTotalCryptoDue() && invoice.ExceptionStatus != "paidOver")
+                if (totalPaid > cryptoData.GetTotalCryptoDue() && invoice.ExceptionStatus != "paidOver")
                 {
                     invoice.ExceptionStatus = "paidOver";
                     await _InvoiceRepository.UnaffectAddress(invoice.Id);
                     needSave = true;
                 }
 
-                if (totalPaid < invoice.GetTotalCryptoDue() && invoice.Payments.Count != 0 && invoice.ExceptionStatus != "paidPartial")
+                if (totalPaid < cryptoData.GetTotalCryptoDue() && invoice.Payments.Count != 0 && invoice.ExceptionStatus != "paidPartial")
                 {
-                    Logs.PayServer.LogInformation("Paid to " + invoice.DepositAddress);
+                    Logs.PayServer.LogInformation("Paid to " + cryptoData.DepositAddress);
                     invoice.ExceptionStatus = "paidPartial";
                     needSave = true;
                     if (dirtyAddress)
                     {
                         var address = await _Wallet.ReserveAddressAsync(_DerivationFactory.Parse(invoice.DerivationStrategy));
                         Logs.PayServer.LogInformation("Generate new " + address);
-                        await _InvoiceRepository.NewAddress(invoice.Id, address);
+                        await _InvoiceRepository.NewAddress(invoice.Id, address, network);
                     }
                 }
             }
@@ -210,13 +215,13 @@ namespace BTCPayServer.Services.Invoices
                     transactions = transactions.Where(t => t.Confirmations >= 6);
                 }
 
-                var chainTotalConfirmed = chainConfirmedTransactions.Select(t => t.Payment.Output.Value).Sum();
+                var chainTotalConfirmed = chainConfirmedTransactions.Select(t => t.Payment.GetValue(cryptoDataAll, cryptoData.CryptoCode)).Sum();
 
                 if (// Is after the monitoring deadline
                    (invoice.MonitoringExpiration < DateTimeOffset.UtcNow)
                    &&
                    // And not enough amount confirmed
-                   (chainTotalConfirmed < invoice.GetTotalCryptoDue()))
+                   (chainTotalConfirmed < cryptoData.GetTotalCryptoDue()))
                 {
                     await _InvoiceRepository.UnaffectAddress(invoice.Id);
                     postSaveActions.Add(() => _EventAggregator.Publish(new InvoiceStatusChangedEvent(invoice, "invalid")));
@@ -225,8 +230,8 @@ namespace BTCPayServer.Services.Invoices
                 }
                 else
                 {
-                    var totalConfirmed = transactions.Select(t => t.Payment.Output.Value).Sum();
-                    if (totalConfirmed >= invoice.GetTotalCryptoDue())
+                    var totalConfirmed = transactions.Select(t => t.Payment.GetValue(cryptoDataAll, cryptoData.CryptoCode)).Sum();
+                    if (totalConfirmed >= cryptoData.GetTotalCryptoDue())
                     {
                         await _InvoiceRepository.UnaffectAddress(invoice.Id);
                         postSaveActions.Add(() => _EventAggregator.Publish(new InvoiceStatusChangedEvent(invoice, "confirmed")));
@@ -240,8 +245,8 @@ namespace BTCPayServer.Services.Invoices
             {
                 var transactions = await GetPaymentsWithTransaction(invoice);
                 transactions = transactions.Where(t => t.Confirmations >= 6);
-                var totalConfirmed = transactions.Select(t => t.Payment.Output.Value).Sum();
-                if (totalConfirmed >= invoice.GetTotalCryptoDue())
+                var totalConfirmed = transactions.Select(t => t.Payment.GetValue(cryptoDataAll, cryptoData.CryptoCode)).Sum();
+                if (totalConfirmed >= cryptoData.GetTotalCryptoDue())
                 {
                     postSaveActions.Add(() => _EventAggregator.Publish(new InvoiceStatusChangedEvent(invoice, "complete")));
                     invoice.Status = "complete";

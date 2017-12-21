@@ -62,15 +62,17 @@ namespace BTCPayServer.Data
             set;
         }
 
-        public StoreBlob GetStoreBlob(Network network)
+        static Network Dummy = Network.Main;
+
+        public StoreBlob GetStoreBlob()
         {
-            return StoreBlob == null ? new StoreBlob() : new Serializer(network).ToObject<StoreBlob>(Encoding.UTF8.GetString(StoreBlob));
+            return StoreBlob == null ? new StoreBlob() : new Serializer(Dummy).ToObject<StoreBlob>(Encoding.UTF8.GetString(StoreBlob));
         }
 
-        public bool SetStoreBlob(StoreBlob storeBlob, Network network)
+        public bool SetStoreBlob(StoreBlob storeBlob)
         {
-            var original = new Serializer(network).ToString(GetStoreBlob(network));
-            var newBlob = new Serializer(network).ToString(storeBlob);
+            var original = new Serializer(Dummy).ToString(GetStoreBlob());
+            var newBlob = new Serializer(Dummy).ToString(storeBlob);
             if (original == newBlob)
                 return false;
             StoreBlob = Encoding.UTF8.GetBytes(newBlob);
@@ -94,6 +96,20 @@ namespace BTCPayServer.Data
         {
             get;
             set;
+        }
+
+        [Obsolete("Use GetSupportedCryptoCurrencies() instead")]
+        public string[] SupportedCryptoCurrencies { get; set; }
+
+        public string[] GetSupportedCryptoCurrencies()
+        {
+#pragma warning disable CS0618
+            if(SupportedCryptoCurrencies == null)
+            {
+                return new string[] { "BTC" };
+            }
+            return SupportedCryptoCurrencies;
+#pragma warning restore CS0618
         }
     }
 }

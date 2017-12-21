@@ -34,7 +34,7 @@ namespace BTCPayServer.Controllers
             UserManager<ApplicationUser> userManager,
             AccessTokenController tokenController,
             BTCPayWallet wallet,
-            Network network,
+            BTCPayNetworkProvider networkProvider,
             IHostingEnvironment env)
         {
             _Repo = repo;
@@ -43,7 +43,7 @@ namespace BTCPayServer.Controllers
             _TokenController = tokenController;
             _Wallet = wallet;
             _Env = env;
-            _Network = network;
+            _Network = networkProvider.GetNetwork("BTC").NBitcoinNetwork;
             _CallbackController = callbackController;
         }
         Network _Network;
@@ -145,7 +145,7 @@ namespace BTCPayServer.Controllers
             if (store == null)
                 return NotFound();
 
-            var storeBlob = store.GetStoreBlob(_Network);
+            var storeBlob = store.GetStoreBlob();
             var vm = new StoreViewModel();
             vm.Id = store.Id;
             vm.StoreName = store.StoreName;
@@ -210,11 +210,11 @@ namespace BTCPayServer.Controllers
                     }
                 }
 
-                var blob = store.GetStoreBlob(_Network);
+                var blob = store.GetStoreBlob();
                 blob.NetworkFeeDisabled = !model.NetworkFee;
                 blob.MonitoringExpiration = model.MonitoringExpiration;
 
-                if (store.SetStoreBlob(blob, _Network))
+                if (store.SetStoreBlob(blob))
                 {
                     needUpdate = true;
                 }

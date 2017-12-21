@@ -92,7 +92,7 @@ namespace BTCPayServer.Models.InvoicingModels
             get;
             set;
         }
-        public double Rate
+        public decimal Rate
         {
             get;
             internal set;

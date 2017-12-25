@@ -217,17 +217,9 @@ namespace BTCPayServer.Controllers
                 leases.Dispose();
                 await CloseSocket(webSocket);
             }
-            return new NoResponse();
+            return new EmptyResult();
         }
-
-        class NoResponse : IActionResult
-        {
-            public Task ExecuteResultAsync(ActionContext context)
-            {
-                return Task.CompletedTask;
-            }
-        }
-
+        
         ArraySegment<Byte> DummyBuffer = new ArraySegment<Byte>(new Byte[1]);
         private async Task NotifySocket(WebSocket webSocket, string invoiceId, string expectedId)
         {

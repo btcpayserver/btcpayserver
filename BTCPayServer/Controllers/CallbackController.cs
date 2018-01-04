@@ -77,7 +77,7 @@ namespace BTCPayServer.Controllers
         public async Task NewBlock(string token)
         {
             await AssertToken(token);
-            _EventAggregator.Publish(new NewBlockEvent());
+            _EventAggregator.Publish(new Events.NewBlockEvent());
         }
 
         private async Task AssertToken(string token)

@@ -81,7 +81,7 @@ namespace BTCPayServer
                     status = await GetStatusWithTimeout();
                     if (status != null)
                     {
-                        if (status.IsFullySynched())
+                        if (status.IsFullySynched)
                         {
                             State = NBXplorerState.Ready;
                         }
@@ -97,7 +97,7 @@ namespace BTCPayServer
                     {
                         State = NBXplorerState.NotConnected;
                     }
-                    else if (status.IsFullySynched())
+                    else if (status.IsFullySynched)
                     {
                         State = NBXplorerState.Ready;
                     }
@@ -108,7 +108,7 @@ namespace BTCPayServer
                     {
                         State = NBXplorerState.NotConnected;
                     }
-                    else if (!status.IsFullySynched())
+                    else if (!status.IsFullySynched)
                     {
                         State = NBXplorerState.Synching;
                     }

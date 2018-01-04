@@ -132,8 +132,8 @@ namespace BTCPayServer.Services.Invoices
             var utxos = changes.Confirmed.UTXOs.Concat(changes.Unconfirmed.UTXOs).ToArray();
             List<Coin> receivedCoins = new List<Coin>();
             foreach (var received in utxos)
-                if (invoice.AvailableAddressHashes.Contains(received.Output.ScriptPubKey.Hash.ToString()))
-                    receivedCoins.Add(new Coin(received.Outpoint, received.Output));
+                if (invoice.AvailableAddressHashes.Contains(received.ScriptPubKey.Hash.ToString()))
+                    receivedCoins.Add(received.AsCoin());
 
             var alreadyAccounted = new HashSet<OutPoint>(invoice.Payments.Select(p => p.Outpoint));
             bool dirtyAddress = false;
@@ -363,7 +363,7 @@ namespace BTCPayServer.Services.Invoices
                 }
             }, null, 0, (int)PollInterval.TotalMilliseconds);
 
-            leases.Add(_EventAggregator.Subscribe<NewBlockEvent>(async b => { await NotifyBlock(); }));
+            leases.Add(_EventAggregator.Subscribe<Events.NewBlockEvent>(async b => { await NotifyBlock(); }));
             leases.Add(_EventAggregator.Subscribe<TxOutReceivedEvent>(async b => { await NotifyReceived(b.ScriptPubKey); }));
 
             return Task.CompletedTask;

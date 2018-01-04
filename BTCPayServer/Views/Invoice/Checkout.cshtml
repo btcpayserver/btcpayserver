@@ -12,15 +12,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <title>BTCPay Invoice</title>
 
-    <environment include="Development">
-        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
-    </environment>
-    <environment exclude="Development">
-        <link rel="stylesheet" href="https://ajax.aspnetcdn.com/ajax/bootstrap/3.3.7/css/bootstrap.min.css"
-              asp-fallback-href="~/lib/bootstrap/dist/css/bootstrap.min.css"
-              asp-fallback-test-class="sr-only" asp-fallback-test-property="position" asp-fallback-test-value="absolute" />
-    </environment>
-
+    <link href="~/vendor/font-awesome/css/font-awesome.css" rel="stylesheet" />
     <link href="~/css/css.css" rel="stylesheet" type="text/css">
     <link href="~/css/normalizer.css" rel="stylesheet" type="text/css">
     <script src="https://code.jquery.com/jquery-3.2.1.min.js"
@@ -102,7 +94,7 @@
                                 </div>
                                 <div class="order-details">
                                     <!---->
-                                    <div class="single-item-order">
+                                    <div class="single-item-order buyerTotalLine">
                                         <div class="single-item-order__left">
                                             <div class="single-item-order__left__name">
                                                 {{ srvModel.storeName }}
@@ -113,7 +105,7 @@
                                         </div>
                                         <!---->
                                         <div class="single-item-order__right">
-                                            <div class="single-item-order__right__btc-price clickable" id="buyerTotalBtcAmount">
+                                            <div class="single-item-order__right__btc-price" id="buyerTotalBtcAmount">
                                                 <span>{{ srvModel.btcDue }} BTC</span>
                                             </div>
                                             <!---->
@@ -122,6 +114,9 @@
                                             </div>
                                             <!---->
                                         </div>
+
+                                        <span class="fa fa-angle-double-down"></span>
+                                        <span class="fa fa-angle-double-up"></span>
                                     </div>
                                     <!---->
                                     <line-items>

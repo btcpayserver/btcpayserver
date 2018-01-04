@@ -238,8 +238,9 @@ function validateEmail(email) {
 }
 
 // Expand Line-Items
-$("#buyerTotalBtcAmount").click(function () {
+$(".buyerTotalLine").click(function () {
     $("line-items").toggleClass("expanded");
+    $(".buyerTotalLine").toggleClass("expanded");
     $(".single-item-order__right__btc-price__chevron").toggleClass("expanded");
 });
 

@@ -256,7 +256,7 @@ namespace BTCPayServer.Services.Invoices
             {
                 using (var tx = _Engine.GetTransaction())
                 {
-                    tx.TextInsert("InvoiceSearch", Encoders.Base58.DecodeData(invoiceId), string.Join(" ", terms.Where(t => !String.IsNullOrWhiteSpace(t))));
+                    tx.TextAppend("InvoiceSearch", Encoders.Base58.DecodeData(invoiceId), string.Join(" ", terms.Where(t => !String.IsNullOrWhiteSpace(t))));
                     tx.Commit();
                 }
             });

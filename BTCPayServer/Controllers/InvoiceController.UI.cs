@@ -129,6 +129,8 @@ namespace BTCPayServer.Controllers
 
         private async Task<PaymentModel> GetInvoiceModel(string invoiceId, string cryptoCode)
         {
+            if (cryptoCode == null)
+                throw new ArgumentNullException(nameof(cryptoCode));
             var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
             var network = _NetworkProvider.GetNetwork(cryptoCode);
             if (invoice == null || network == null || !invoice.Support(network))
@@ -183,6 +185,8 @@ namespace BTCPayServer.Controllers
         [Route("i/{invoiceId}/status")]
         public async Task<IActionResult> GetStatus(string invoiceId, string cryptoCode)
         {
+            if (cryptoCode == null)
+                cryptoCode = "BTC";
             var model = await GetInvoiceModel(invoiceId, cryptoCode);
             if (model == null)
                 return NotFound();

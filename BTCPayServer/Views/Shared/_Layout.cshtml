@@ -7,13 +7,6 @@
 @{
     var waiterState = waiter.Instance.State;
     var lastStatus = waiter.Instance.LastStatus;
-
-    var synching = waiterState == NBXplorerState.Synching &&
-        lastStatus != null &&
-        lastStatus.NodeBlocks.HasValue &&
-        lastStatus.NodeHeaders.HasValue &&
-        lastStatus.VerificationProgress.HasValue;
-    var verificationProgress = lastStatus != null && lastStatus.VerificationProgress.HasValue ? lastStatus.VerificationProgress.Value * 100 : 0.0;
 }
 
 <!DOCTYPE html>
@@ -117,7 +110,7 @@
         </div>
     }
 
-    @if(synching)
+    @if(waiterState == NBXplorerState.Synching && lastStatus.BitcoinStatus != null)
     {
         <!-- Modal -->
         <div id="synching-modal" class="modal fade" role="dialog">
@@ -130,12 +123,12 @@
                         <button type="button" class="close" data-dismiss="modal">&times;</button>
                     </div>
                     <div class="modal-body">
-                        <p>Bitcoin Core is synching (Chain height: @lastStatus.NodeHeaders, Block height: @lastStatus.NodeBlocks)</p>
+                        <p>Bitcoin Core is synching (Chain height: @lastStatus.BitcoinStatus.Headers, Block height: @lastStatus.BitcoinStatus.Blocks)</p>
                         <p>BTCPay Server will not work correctly until it is over.</p>
                         <div class="progress">
-                            <div class="progress-bar" role="progressbar" aria-valuenow="@((int)verificationProgress)"
-                                 aria-valuemin="0" aria-valuemax="100" style="width:@((int)verificationProgress)%">
-                                @((int)verificationProgress)%
+                            <div class="progress-bar" role="progressbar" aria-valuenow="@((int)lastStatus.BitcoinStatus.VerificationProgress)"
+                                 aria-valuemin="0" aria-valuemax="100" style="width:@((int)lastStatus.BitcoinStatus.VerificationProgress)%">
+                                @((int)lastStatus.BitcoinStatus.VerificationProgress)%
                             </div>
                         </div>
                     </div>
@@ -147,7 +140,7 @@
             </div>
         </div>
     }
-    else if(waiterState == NBXplorerState.Synching)
+    else if(waiterState == NBXplorerState.Synching && lastStatus.BitcoinStatus == null)
     {
         <!-- Modal -->
         <div id="synching-modal" class="modal fade" role="dialog">
@@ -196,7 +189,7 @@
             });
         </script>
     }
-    @if(synching)
+    @if(waiterState == NBXplorerState.Synching)
     {
         <script type="text/javascript">
             $(function () {

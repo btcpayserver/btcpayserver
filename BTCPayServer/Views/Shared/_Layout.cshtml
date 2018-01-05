@@ -7,6 +7,7 @@
 @{
     var waiterState = waiter.Instance.State;
     var lastStatus = waiter.Instance.LastStatus;
+    var verificationProgress = waiter.Instance.LastStatus?.BitcoinStatus != null ? waiter.Instance.LastStatus.BitcoinStatus.VerificationProgress * 100 : 0.0;
 }
 
 <!DOCTYPE html>
@@ -126,9 +127,9 @@
                         <p>Bitcoin Core is synching (Chain height: @lastStatus.BitcoinStatus.Headers, Block height: @lastStatus.BitcoinStatus.Blocks)</p>
                         <p>BTCPay Server will not work correctly until it is over.</p>
                         <div class="progress">
-                            <div class="progress-bar" role="progressbar" aria-valuenow="@((int)lastStatus.BitcoinStatus.VerificationProgress)"
-                                 aria-valuemin="0" aria-valuemax="100" style="width:@((int)lastStatus.BitcoinStatus.VerificationProgress)%">
-                                @((int)lastStatus.BitcoinStatus.VerificationProgress)%
+                            <div class="progress-bar" role="progressbar" aria-valuenow="@((int)verificationProgress)"
+                                 aria-valuemin="0" aria-valuemax="100" style="width:@((int)verificationProgress)%">
+                                @((int)verificationProgress)%
                             </div>
                         </div>
                     </div>

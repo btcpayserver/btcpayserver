@@ -22,6 +22,11 @@ namespace BTCPayServer
 {
     public static class Extensions
     {
+        public static bool SupportDropColumn(this Microsoft.EntityFrameworkCore.Migrations.Migration migration, string activeProvider)
+        {
+            return activeProvider != "Microsoft.EntityFrameworkCore.Sqlite";
+        }
+
         public static async Task<Dictionary<uint256, TransactionResult>> GetTransactions(this ExplorerClient client, uint256[] hashes, CancellationToken cts = default(CancellationToken))
         {
             hashes = hashes.Distinct().ToArray();

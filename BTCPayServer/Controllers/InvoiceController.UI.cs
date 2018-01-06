@@ -325,7 +325,7 @@ namespace BTCPayServer.Controllers
                 return View(model);
             }
             var store = await _StoreRepository.FindStore(model.StoreId, GetUserId());
-            if (string.IsNullOrEmpty(store.DerivationStrategy))
+            if (store.GetDerivationStrategies(_NetworkProvider).Count() == 0)
             {
                 StatusMessage = "Error: You need to configure the derivation scheme in order to create an invoice";
                 return RedirectToAction(nameof(StoresController.UpdateStore), "Stores", new

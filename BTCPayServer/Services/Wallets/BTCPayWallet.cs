@@ -28,15 +28,15 @@ namespace BTCPayServer.Services.Wallets
         }
 
 
-        public async Task<BitcoinAddress> ReserveAddressAsync(DerivationStrategyBase derivationStrategy)
+        public async Task<BitcoinAddress> ReserveAddressAsync(DerivationStrategy derivationStrategy)
         {
-            var pathInfo = await _Client.GetUnusedAsync(derivationStrategy, DerivationFeature.Deposit, 0, true).ConfigureAwait(false);
+            var pathInfo = await _Client.GetUnusedAsync(derivationStrategy.DerivationStrategyBase, DerivationFeature.Deposit, 0, true).ConfigureAwait(false);
             return pathInfo.ScriptPubKey.GetDestinationAddress(_Client.Network);
         }
 
-        public async Task TrackAsync(DerivationStrategyBase derivationStrategy)
+        public async Task TrackAsync(DerivationStrategy derivationStrategy)
         {
-            await _Client.TrackAsync(derivationStrategy);
+            await _Client.TrackAsync(derivationStrategy.DerivationStrategyBase);
         }
 
         private byte[] ToBytes<T>(T obj)
@@ -50,9 +50,9 @@ namespace BTCPayServer.Services.Wallets
             return Task.WhenAll(tasks);
         }
 
-        public async Task<Money> GetBalance(DerivationStrategyBase derivationStrategy)
+        public async Task<Money> GetBalance(DerivationStrategy derivationStrategy)
         {
-            var result = await _Client.SyncAsync(derivationStrategy, null, true);
+            var result = await _Client.SyncAsync(derivationStrategy.DerivationStrategyBase, null, true);
             return result.Confirmed.UTXOs.Select(u => u.Value)
                          .Concat(result.Unconfirmed.UTXOs.Select(u => u.Value))
                          .Sum();

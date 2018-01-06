@@ -82,12 +82,15 @@ namespace BTCPayServer.Controllers
 
         internal async Task<DataWrapper<InvoiceResponse>> CreateInvoiceCore(Invoice invoice, StoreData store, string serverUrl, double expiryMinutes = 15)
         {
-            var derivationStrategy = store.DerivationStrategy;
+            var derivationStrategies = store.GetDerivationStrategies(_NetworkProvider).ToList();
+            if (derivationStrategies.Count == 0)
+                throw new BitpayHttpException(400, "This store has not configured the derivation strategy");
             var entity = new InvoiceEntity
             {
-                InvoiceTime = DateTimeOffset.UtcNow,
-                DerivationStrategy = derivationStrategy ?? throw new BitpayHttpException(400, "This store has not configured the derivation strategy")
+                InvoiceTime = DateTimeOffset.UtcNow
             };
+            entity.SetDerivationStrategies(derivationStrategies);
+
             var storeBlob = store.GetStoreBlob();
             Uri notificationUri = Uri.IsWellFormedUriString(invoice.NotificationURL, UriKind.Absolute) ? new Uri(invoice.NotificationURL, UriKind.Absolute) : null;
             if (notificationUri == null || (notificationUri.Scheme != "http" && notificationUri.Scheme != "https")) //TODO: Filer non routable addresses ?
@@ -113,17 +116,15 @@ namespace BTCPayServer.Controllers
             entity.Status = "new";
             entity.SpeedPolicy = ParseSpeedPolicy(invoice.TransactionSpeed, store.SpeedPolicy);
 
-            var queries = storeBlob.GetSupportedCryptoCurrencies()
-                    .Select(n => _NetworkProvider.GetNetwork(n))
-                    .Where(n => n != null)
-                    .Select(network =>
+            var queries = derivationStrategies
+                    .Select(derivationStrategy =>
                     {
                         return new
                         {
-                            network = network,
-                            getFeeRate = _FeeProviderFactory.CreateFeeProvider(network).GetFeeRateAsync(),
+                            network = derivationStrategy.Network,
+                            getFeeRate = _FeeProviderFactory.CreateFeeProvider(derivationStrategy.Network).GetFeeRateAsync(),
                             getRate = _RateProvider.GetRateAsync(invoice.Currency),
-                            getAddress = _Wallet.ReserveAddressAsync(ParseDerivationStrategy(derivationStrategy, network))
+                            getAddress = _Wallet.ReserveAddressAsync(derivationStrategy)
                         };
                     });
 
@@ -138,7 +139,7 @@ namespace BTCPayServer.Controllers
                 cryptoData.DepositAddress = (await q.getAddress).ToString();
 
 #pragma warning disable CS0618
-                if (q.network.CryptoCode == "BTC")
+                if (q.network.IsBTC)
                 {
                     entity.TxFee = cryptoData.TxFee;
                     entity.Rate = cryptoData.Rate;

@@ -26,7 +26,6 @@ namespace BTCPayServer.Services.Invoices
     {
         InvoiceRepository _InvoiceRepository;
         ExplorerClient _ExplorerClient;
-        DerivationStrategyFactory _DerivationFactory;
         EventAggregator _EventAggregator;
         BTCPayWallet _Wallet;
         BTCPayNetworkProvider _NetworkProvider;
@@ -42,7 +41,6 @@ namespace BTCPayServer.Services.Invoices
             PollInterval = explorerClient.Network == Network.RegTest ? TimeSpan.FromSeconds(10.0) : TimeSpan.FromMinutes(1.0);
             _Wallet = wallet ?? throw new ArgumentNullException(nameof(wallet));
             _ExplorerClient = explorerClient ?? throw new ArgumentNullException(nameof(explorerClient));
-            _DerivationFactory = new DerivationStrategyFactory(_ExplorerClient.Network);
             _InvoiceRepository = invoiceRepository ?? throw new ArgumentNullException(nameof(invoiceRepository));
             _EventAggregator = eventAggregator ?? throw new ArgumentNullException(nameof(eventAggregator));
             _NetworkProvider = networkProvider;
@@ -125,8 +123,8 @@ namespace BTCPayServer.Services.Invoices
         {
             bool needSave = false;
             //Fetch unknown payments
-            var strategy = _DerivationFactory.Parse(invoice.DerivationStrategy);
-            changes = await _ExplorerClient.SyncAsync(strategy, changes, !LongPollingMode, _Cts.Token).ConfigureAwait(false);
+            var strategy = invoice.GetDerivationStrategies(_NetworkProvider).First(s => s.Network.IsBTC);
+            changes = await _ExplorerClient.SyncAsync(strategy.DerivationStrategyBase, changes, !LongPollingMode, _Cts.Token).ConfigureAwait(false);
 
 
             var utxos = changes.Confirmed.UTXOs.Concat(changes.Unconfirmed.UTXOs).ToArray();
@@ -192,7 +190,7 @@ namespace BTCPayServer.Services.Invoices
                     needSave = true;
                     if (dirtyAddress)
                     {
-                        var address = await _Wallet.ReserveAddressAsync(_DerivationFactory.Parse(invoice.DerivationStrategy));
+                        var address = await _Wallet.ReserveAddressAsync(strategy);
                         Logs.PayServer.LogInformation("Generate new " + address);
                         await _InvoiceRepository.NewAddress(invoice.Id, address, network);
                     }

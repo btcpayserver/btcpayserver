@@ -11,7 +11,7 @@ namespace BTCPayServer
         Dictionary<string, BTCPayNetwork> _Networks = new Dictionary<string, BTCPayNetwork>();
         public BTCPayNetworkProvider(Network network)
         {
-            if(network == Network.Main)
+            if (network == Network.Main)
             {
                 Add(new BTCPayNetwork()
                 {
@@ -42,6 +42,15 @@ namespace BTCPayServer
                     NBitcoinNetwork = Network.RegTest,
                     UriScheme = "bitcoin"
                 });
+            }
+        }
+
+        [Obsolete("Should not be needed")]
+        public BTCPayNetwork BTC
+        {
+            get
+            {
+                return GetNetwork("BTC");
             }
         }
 

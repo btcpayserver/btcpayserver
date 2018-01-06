@@ -153,11 +153,64 @@ namespace BTCPayServer.Services.Invoices
             get;
             set;
         }
+
+        [Obsolete("Use GetDerivationStrategies instead")]
         public string DerivationStrategy
         {
             get;
             set;
         }
+
+        [Obsolete("Use GetDerivationStrategies instead")]
+        public string DerivationStrategies
+        {
+            get;
+            set;
+        }
+
+        public IEnumerable<DerivationStrategy> GetDerivationStrategies(BTCPayNetworkProvider networks)
+        {
+#pragma warning disable CS0618
+            bool btcReturned = false;
+            if (!string.IsNullOrEmpty(DerivationStrategies))
+            {
+                JObject strategies = JObject.Parse(DerivationStrategies);
+                foreach (var strat in strategies.Properties())
+                {
+                    var network = networks.GetNetwork(strat.Name);
+                    if (network != null)
+                    {
+                        if (network == networks.BTC && btcReturned)
+                            btcReturned = true;
+                        yield return BTCPayServer.DerivationStrategy.Parse(strat.Value.Value<string>(), network);
+                    }
+                }
+            }
+
+            if (!btcReturned && !string.IsNullOrEmpty(DerivationStrategy))
+            {
+                if (networks.BTC != null)
+                {
+                    yield return BTCPayServer.DerivationStrategy.Parse(DerivationStrategy, networks.BTC);
+                }
+            }
+#pragma warning restore CS0618
+        }
+
+        internal void SetDerivationStrategies(IEnumerable<DerivationStrategy> derivationStrategies)
+        {
+            JObject obj = new JObject();
+            foreach(var strat in derivationStrategies)
+            {
+                obj.Add(strat.Network.CryptoCode, new JValue(strat.DerivationStrategyBase.ToString()));
+#pragma warning disable CS0618
+                if (strat.Network.IsBTC)
+                    DerivationStrategy = strat.DerivationStrategyBase.ToString();
+            }
+            DerivationStrategies = JsonConvert.SerializeObject(obj);
+#pragma warning restore CS0618
+        }
+
         public string Status
         {
             get;
@@ -424,7 +477,7 @@ namespace BTCPayServer.Services.Invoices
         public Money TxFee { get; set; }
         [JsonProperty(PropertyName = "depositAddress")]
         public string DepositAddress { get; set; }
-        
+
         public CryptoDataAccounting Calculate()
         {
             var cryptoData = ParentEntity.GetCryptoData();
@@ -464,7 +517,7 @@ namespace BTCPayServer.Services.Invoices
             accounting.NetworkFee = TxFee * txCount;
             return accounting;
         }
-        
+
     }
 
     public class AccountedPaymentEntity

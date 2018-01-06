@@ -27,7 +27,7 @@
                     <tr>
                         <th>Name</th>
                         <th>Website</th>
-                        <th>Balance</th>
+                        <th>Balances</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -42,7 +42,16 @@
                                     <a href="@store.WebSite">@store.WebSite</a>
                                 }
                             </td>
-                            <td>@store.Balance</td>
+                            <td>
+                                @for(int i = 0; i < store.Balances.Length; i++)
+                                {
+                                    <span>@store.Balances[i]</span>
+                                    if(i != store.Balances.Length - 1)
+                                    {
+                                        <br />
+                                    }
+                                }
+                            </td>
                             <td><a asp-action="UpdateStore" asp-route-storeId="@store.Id">Settings</a> - <a asp-action="DeleteStore" asp-route-storeId="@store.Id">Remove</a></td>
                         </tr>
                     }

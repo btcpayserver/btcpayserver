@@ -185,7 +185,7 @@ namespace BTCPayServer.Services.Invoices
                 currencyData.DepositAddress = bitcoinAddress.ToString();
 
 #pragma warning disable CS0618
-                if (network.CryptoCode == "BTC")
+                if (network.IsBTC)
                 {
                     invoiceEntity.DepositAddress = currencyData.DepositAddress;
                 }

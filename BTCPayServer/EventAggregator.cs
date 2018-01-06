@@ -72,12 +72,17 @@ namespace BTCPayServer
 
         public void Publish<T>(T evt) where T : class
         {
+            Publish(evt, typeof(T));
+        }
+
+        public void Publish(object evt, Type evtType)
+        {
             if (evt == null)
                 throw new ArgumentNullException(nameof(evt));
             List<Action<object>> actionList = new List<Action<object>>();
             lock (_Subscriptions)
             {
-                if (_Subscriptions.TryGetValue(typeof(T), out Dictionary<Subscription, Action<object>> actions))
+                if (_Subscriptions.TryGetValue(evtType, out Dictionary<Subscription, Action<object>> actions))
                 {
                     actionList = actions.Values.ToList();
                 }

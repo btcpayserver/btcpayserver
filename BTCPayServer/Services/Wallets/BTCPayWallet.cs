@@ -7,9 +7,22 @@ using System.Text;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
+using System.Threading;
+using NBXplorer.Models;
 
 namespace BTCPayServer.Services.Wallets
 {
+    public class KnownState
+    {
+        public uint256 UnconfirmedHash { get; set; }
+        public uint256 ConfirmedHash { get; set; }
+    }
+    public class GetCoinsResult
+    {
+        public Coin[] Coins { get; set; }
+        public KnownState State { get; set; }
+        public DerivationStrategy Strategy { get; set; }
+    }
     public class BTCPayWallet
     {
         private ExplorerClient _Client;
@@ -25,6 +38,7 @@ namespace BTCPayServer.Services.Wallets
             _Client = client;
             _DBFactory = factory;
             _Serializer = new NBXplorer.Serializer(_Client.Network);
+            LongPollingMode = client.Network == Network.RegTest;
         }
 
 
@@ -37,6 +51,24 @@ namespace BTCPayServer.Services.Wallets
         public async Task TrackAsync(DerivationStrategy derivationStrategy)
         {
             await _Client.TrackAsync(derivationStrategy.DerivationStrategyBase);
+        }
+
+        public Task<TransactionResult> GetTransactionAsync(uint256 txId, CancellationToken cancellation = default(CancellationToken))
+        {
+            return _Client.GetTransactionAsync(txId, cancellation);
+        }
+
+        public bool LongPollingMode { get; set; }
+        public async Task<GetCoinsResult> GetCoins(DerivationStrategy strategy, KnownState state, CancellationToken cancellation = default(CancellationToken))
+        {
+            var changes = await _Client.SyncAsync(strategy.DerivationStrategyBase, state?.ConfirmedHash, state?.UnconfirmedHash, !LongPollingMode, cancellation).ConfigureAwait(false);
+            var utxos = changes.Confirmed.UTXOs.Concat(changes.Unconfirmed.UTXOs).Select(c => c.AsCoin()).ToArray();
+            return new GetCoinsResult()
+            {
+                Coins = utxos,
+                State = new KnownState() { ConfirmedHash = changes.Confirmed.Hash, UnconfirmedHash = changes.Unconfirmed.Hash },
+                Strategy = strategy,
+            };
         }
 
         private byte[] ToBytes<T>(T obj)

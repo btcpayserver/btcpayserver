@@ -17,6 +17,7 @@ using NBXplorer;
 using NBXplorer.Models;
 using System.Linq;
 using System.Threading;
+using BTCPayServer.Services.Wallets;
 
 namespace BTCPayServer
 {
@@ -27,7 +28,7 @@ namespace BTCPayServer
             return activeProvider != "Microsoft.EntityFrameworkCore.Sqlite";
         }
 
-        public static async Task<Dictionary<uint256, TransactionResult>> GetTransactions(this ExplorerClient client, uint256[] hashes, CancellationToken cts = default(CancellationToken))
+        public static async Task<Dictionary<uint256, TransactionResult>> GetTransactions(this BTCPayWallet client, uint256[] hashes, CancellationToken cts = default(CancellationToken))
         {
             hashes = hashes.Distinct().ToArray();
             var transactions = hashes

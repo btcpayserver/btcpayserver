@@ -159,7 +159,7 @@ namespace BTCPayServer.Controllers
                 MerchantRefLink = invoice.RedirectURL ?? "/",
                 StoreName = store.StoreName,
                 TxFees = cryptoData.TxFee.ToString(),
-                InvoiceBitcoinUrl = cryptoInfo.PaymentUrls.BIP72,
+                InvoiceBitcoinUrl = cryptoInfo.PaymentUrls.BIP21,
                 TxCount = accounting.TxCount,
                 BtcPaid = accounting.Paid.ToString(),
                 Status = invoice.Status

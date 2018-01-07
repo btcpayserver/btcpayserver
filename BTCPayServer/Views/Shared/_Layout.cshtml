@@ -2,13 +2,7 @@
 @inject UserManager<ApplicationUser> UserManager
 @inject RoleManager<IdentityRole> RoleManager
 @inject BTCPayServer.Services.BTCPayServerEnvironment env
-@inject BTCPayServer.NBXplorerWaiterAccessor waiter
-
-@{
-    var waiterState = waiter.Instance.State;
-    var lastStatus = waiter.Instance.LastStatus;
-    var verificationProgress = waiter.Instance.LastStatus?.BitcoinStatus != null ? waiter.Instance.LastStatus.BitcoinStatus.VerificationProgress * 100 : 0.0;
-}
+@inject BTCPayServer.HostedServices.NBXplorerDashboard dashboard
 
 <!DOCTYPE html>
 <html lang="en">
@@ -87,31 +81,7 @@
     @RenderBody()
 
 
-    @if(waiterState == NBXplorerState.NotConnected)
-    {
-        <!-- Modal -->
-        <div id="no-nbxplorer" class="modal fade" role="dialog">
-            <div class="modal-dialog">
-
-                <!-- Modal content-->
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h4 class="modal-title">NBXplorer is not running</h4>
-                        <button type="button" class="close" data-dismiss="modal">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <p>NBXplorer is not running, BTCPay Server will not be functional.</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    }
-
-    @if(waiterState == NBXplorerState.Synching && lastStatus.BitcoinStatus != null)
+    @if(!dashboard.IsFullySynched())
     {
         <!-- Modal -->
         <div id="synching-modal" class="modal fade" role="dialog">
@@ -120,41 +90,57 @@
                 <!-- Modal content-->
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h4 class="modal-title">Bitcoin Core node is synching...</h4>
+                        <h4 class="modal-title">Your nodes are synching...</h4>
                         <button type="button" class="close" data-dismiss="modal">&times;</button>
                     </div>
                     <div class="modal-body">
-                        <p>Bitcoin Core is synching (Chain height: @lastStatus.BitcoinStatus.Headers, Block height: @lastStatus.BitcoinStatus.Blocks)</p>
-                        <p>BTCPay Server will not work correctly until it is over.</p>
-                        <div class="progress">
-                            <div class="progress-bar" role="progressbar" aria-valuenow="@((int)verificationProgress)"
-                                 aria-valuemin="0" aria-valuemax="100" style="width:@((int)verificationProgress)%">
-                                @((int)verificationProgress)%
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    }
-    else if(waiterState == NBXplorerState.Synching && lastStatus.BitcoinStatus == null)
-    {
-        <!-- Modal -->
-        <div id="synching-modal" class="modal fade" role="dialog">
-            <div class="modal-dialog">
-
-                <!-- Modal content-->
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h4 class="modal-title">Bitcoin Core node is starting...</h4>
-                        <button type="button" class="close" data-dismiss="modal">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <p>Satoshi is rolling the blocks forward... Time to drink a cup of tea?</p>
+                        <p>
+                            Some of your nodes are still synching...<br />
+                            BTCPay Server will not work correctly until it is over.
+                        </p>
+                        @foreach(var line in dashboard.GetAll())
+                        {
+                            <h4>@line.Network.CryptoCode</h4>
+                            @if(line.Status == null)
+                            {
+                                <p>NBXplorer is offline</p>
+                            }
+                            else
+                            {
+                                <ul>
+                                    <li>NBXplorer headers height: @line.Status.ChainHeight</li>
+                                    @if(line.Status.BitcoinStatus == null)
+                                    {
+                                        if(line.State == BTCPayServer.HostedServices.NBXplorerState.Synching)
+                                        {
+                                            <li>The node is starting...</li>
+                                        }
+                                        else
+                                        {
+                                            <li>The node is offline</li>
+                                        }
+                                    }
+                                    else if(line.Status.BitcoinStatus.IsSynched)
+                                    {
+                                        <li>The node is synched</li>
+                                    }
+                                    else
+                                    {
+                                        <li>Node headers height: @line.Status.BitcoinStatus.Headers</li>
+                                        <li>Validated blocks: @line.Status.BitcoinStatus.Blocks</li>
+                                    }
+                                </ul>
+                                @if(!line.Status.IsFullySynched && line.Status.BitcoinStatus != null)
+                                {
+                                    <div class="progress">
+                                        <div class="progress-bar" role="progressbar" aria-valuenow="@((int)line.Status.BitcoinStatus.VerificationProgress * 100)"
+                                             aria-valuemin="0" aria-valuemax="100" style="width:@((int)line.Status.BitcoinStatus.VerificationProgress * 100)%">
+                                            @((int)line.Status.BitcoinStatus.VerificationProgress * 100)%
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        }
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -182,15 +168,7 @@
     <!-- Custom scripts for this template -->
     <script src="~/js/creative.js"></script>
 
-    @if(waiterState == NBXplorerState.NotConnected)
-    {
-        <script type="text/javascript">
-            $(function () {
-                $("#no-nbxplorer").modal();
-            });
-        </script>
-    }
-    @if(waiterState == NBXplorerState.Synching)
+    @if(!dashboard.IsFullySynched())
     {
         <script type="text/javascript">
             $(function () {

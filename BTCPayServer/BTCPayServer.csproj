@@ -22,7 +22,7 @@
     <PackageReference Include="Hangfire.PostgreSql" Version="1.4.8.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.2" />
     <PackageReference Include="NBitcoin" Version="4.0.0.51" />
-    <PackageReference Include="NBitpayClient" Version="1.0.0.13" />	  
+    <PackageReference Include="NBitpayClient" Version="1.0.0.14" />	  
     <PackageReference Include="DBreeze" Version="1.87.0" />
     <PackageReference Include="NBXplorer.Client" Version="1.0.0.24" />
     <PackageReference Include="NicolasDorier.CommandLine" Version="1.0.0.1" />

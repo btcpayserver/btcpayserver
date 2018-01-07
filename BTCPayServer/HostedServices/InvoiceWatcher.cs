@@ -108,7 +108,7 @@ namespace BTCPayServer.HostedServices
                         _EventAggregator.Publish(evt, evt.GetType());
                     }
 
-                    foreach(var modifiedKnownState in updateContext.ModifiedKnownStates)
+                    foreach (var modifiedKnownState in updateContext.ModifiedKnownStates)
                     {
                         changes.AddOrReplace(modifiedKnownState.Key, modifiedKnownState.Value);
                     }
@@ -223,10 +223,9 @@ namespace BTCPayServer.HostedServices
             if (invoice.Status == "paid")
             {
                 var transactions = await GetPaymentsWithTransaction(network, invoice);
-                var chainConfirmedTransactions = transactions.Where(t => t.Confirmations >= 1);
                 if (invoice.SpeedPolicy == SpeedPolicy.HighSpeed)
                 {
-                    transactions = transactions.Where(t => !t.Transaction.RBF);
+                    transactions = transactions.Where(t => t.Confirmations >= 1 || !t.Transaction.RBF);
                 }
                 else if (invoice.SpeedPolicy == SpeedPolicy.MediumSpeed)
                 {
@@ -237,29 +236,25 @@ namespace BTCPayServer.HostedServices
                     transactions = transactions.Where(t => t.Confirmations >= 6);
                 }
 
-                var chainTotalConfirmed = chainConfirmedTransactions.Select(t => t.Payment.GetValue(cryptoDataAll, cryptoData.CryptoCode)).Sum();
+                var totalConfirmed = transactions.Select(t => t.Payment.GetValue(cryptoDataAll, cryptoData.CryptoCode)).Sum();
 
                 if (// Is after the monitoring deadline
                    (invoice.MonitoringExpiration < DateTimeOffset.UtcNow)
                    &&
                    // And not enough amount confirmed
-                   (chainTotalConfirmed < accounting.TotalDue))
+                   (totalConfirmed < accounting.TotalDue))
                 {
                     await _InvoiceRepository.UnaffectAddress(invoice.Id);
                     context.Events.Add(new InvoiceStatusChangedEvent(invoice, "invalid"));
                     invoice.Status = "invalid";
                     context.MarkDirty();
                 }
-                else
+                else if (totalConfirmed >= accounting.TotalDue)
                 {
-                    var totalConfirmed = transactions.Select(t => t.Payment.GetValue(cryptoDataAll, cryptoData.CryptoCode)).Sum();
-                    if (totalConfirmed >= accounting.TotalDue)
-                    {
-                        await _InvoiceRepository.UnaffectAddress(invoice.Id);
-                        context.Events.Add(new InvoiceStatusChangedEvent(invoice, "confirmed"));
-                        invoice.Status = "confirmed";
-                        context.MarkDirty();
-                    }
+                    await _InvoiceRepository.UnaffectAddress(invoice.Id);
+                    context.Events.Add(new InvoiceStatusChangedEvent(invoice, "confirmed"));
+                    invoice.Status = "confirmed";
+                    context.MarkDirty();
                 }
             }
 

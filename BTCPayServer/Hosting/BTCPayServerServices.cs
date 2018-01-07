@@ -132,6 +132,7 @@ namespace BTCPayServer.Hosting
                 return new BTCPayNetworkProvider(opts.Network);
             });
 
+            services.TryAddSingleton<NBXplorerDashboard>();
             services.TryAddSingleton<StoreRepository>();
             services.TryAddSingleton<BTCPayWallet>();
             services.TryAddSingleton<CurrencyNameTable>();

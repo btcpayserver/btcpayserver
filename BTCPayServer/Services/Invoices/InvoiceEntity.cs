@@ -282,6 +282,7 @@ namespace BTCPayServer.Services.Invoices
             get;
             set;
         }
+        public bool ExtendedNotifications { get; set; }
 
         public bool IsExpired()
         {

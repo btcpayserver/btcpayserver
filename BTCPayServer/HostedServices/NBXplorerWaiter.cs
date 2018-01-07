@@ -20,14 +20,40 @@ namespace BTCPayServer.HostedServices
         Ready
     }
 
+    public class NBXplorerDashboard
+    {
+        public class NBXplorerSummary
+        {
+            public BTCPayNetwork Network { get; set; }
+            public NBXplorerState State { get; set; }
+            public StatusResult Status { get; set; }
+        }
+        ConcurrentDictionary<string, NBXplorerSummary> _Summaries = new ConcurrentDictionary<string, NBXplorerSummary>();
+        public void Publish(BTCPayNetwork network, NBXplorerState state, StatusResult status)
+        {
+            var summary = new NBXplorerSummary() { Network = network, State = state, Status = status };
+            _Summaries.AddOrUpdate(network.CryptoCode, summary, (k, v) => summary);
+        }
+
+        public bool IsFullySynched()
+        {
+            return _Summaries.All(s => s.Value.Status != null && s.Value.Status.IsFullySynched);
+        }
+
+        public IEnumerable<NBXplorerSummary> GetAll()
+        {
+            return _Summaries.Values;
+        }
+    }
+
     public class NBXplorerWaiters : IHostedService
     {
         List<NBXplorerWaiter> _Waiters = new List<NBXplorerWaiter>();
-        public NBXplorerWaiters(ExplorerClientProvider explorerClientProvider, EventAggregator eventAggregator)
+        public NBXplorerWaiters(NBXplorerDashboard dashboard, ExplorerClientProvider explorerClientProvider, EventAggregator eventAggregator)
         {
-            foreach(var explorer in explorerClientProvider.GetAll())
+            foreach (var explorer in explorerClientProvider.GetAll())
             {
-                _Waiters.Add(new NBXplorerWaiter(explorer.Item1, explorer.Item2, eventAggregator));
+                _Waiters.Add(new NBXplorerWaiter(dashboard, explorer.Item1, explorer.Item2, eventAggregator));
             }
         }
         public Task StartAsync(CancellationToken cancellationToken)
@@ -44,13 +70,15 @@ namespace BTCPayServer.HostedServices
     public class NBXplorerWaiter : IHostedService
     {
 
-        public NBXplorerWaiter(BTCPayNetwork network, ExplorerClient client, EventAggregator aggregator)
+        public NBXplorerWaiter(NBXplorerDashboard dashboard, BTCPayNetwork network, ExplorerClient client, EventAggregator aggregator)
         {
             _Network = network;
             _Client = client;
             _Aggregator = aggregator;
+            _Dashboard = dashboard;
         }
 
+        NBXplorerDashboard _Dashboard;
         BTCPayNetwork _Network;
         EventAggregator _Aggregator;
         ExplorerClient _Client;
@@ -134,7 +162,6 @@ namespace BTCPayServer.HostedServices
                     break;
             }
 
-            LastStatus = status;
             if (oldState != State)
             {
                 if (State == NBXplorerState.Synching)
@@ -147,6 +174,7 @@ namespace BTCPayServer.HostedServices
                 }
                 _Aggregator.Publish(new NBXplorerStateChangedEvent(_Network, oldState, State));
             }
+            _Dashboard.Publish(_Network, State, status);
             return oldState != State;
         }
 
@@ -180,8 +208,6 @@ namespace BTCPayServer.HostedServices
         }
 
         public NBXplorerState State { get; private set; }
-
-        public StatusResult LastStatus { get; private set; }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {

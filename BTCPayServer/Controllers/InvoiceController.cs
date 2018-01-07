@@ -98,7 +98,8 @@ namespace BTCPayServer.Controllers
             entity.MonitoringExpiration = entity.ExpirationTime + TimeSpan.FromMinutes(storeBlob.MonitoringExpiration);
             entity.OrderId = invoice.OrderId;
             entity.ServerUrl = serverUrl;
-            entity.FullNotifications = invoice.FullNotifications;
+            entity.FullNotifications = invoice.FullNotifications || invoice.ExtendedNotifications;
+            entity.ExtendedNotifications = invoice.ExtendedNotifications;
             entity.NotificationURL = notificationUri?.AbsoluteUri;
             entity.BuyerInformation = Map<Invoice, BuyerInformation>(invoice);
             //Another way of passing buyer info to support

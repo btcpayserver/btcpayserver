@@ -19,6 +19,7 @@ using BTCPayServer.Services.Rates;
 using System.Net.WebSockets;
 using System.Threading;
 using BTCPayServer.Events;
+using NBXplorer;
 
 namespace BTCPayServer.Controllers
 {

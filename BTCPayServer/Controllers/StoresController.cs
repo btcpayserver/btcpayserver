@@ -30,7 +30,6 @@ namespace BTCPayServer.Controllers
         public StoresController(
             StoreRepository repo,
             TokenRepository tokenRepo,
-            CallbackController callbackController,
             UserManager<ApplicationUser> userManager,
             AccessTokenController tokenController,
             BTCPayWallet wallet,
@@ -44,11 +43,9 @@ namespace BTCPayServer.Controllers
             _Wallet = wallet;
             _Env = env;
             _NetworkProvider = networkProvider;
-            _CallbackController = callbackController;
         }
         BTCPayNetworkProvider _NetworkProvider;
 
-        CallbackController _CallbackController;
         BTCPayWallet _Wallet;
         AccessTokenController _TokenController;
         StoreRepository _Repo;
@@ -203,7 +200,6 @@ namespace BTCPayServer.Controllers
                         {
                             var strategy = ParseDerivationStrategy(model.DerivationScheme, model.DerivationSchemeFormat, _NetworkProvider.BTC);
                             await _Wallet.TrackAsync(strategy);
-                            await _CallbackController.RegisterCallbackUriAsync(strategy.DerivationStrategyBase);
                             model.DerivationScheme = strategy.ToString();
                         }
                         store.DerivationStrategy = model.DerivationScheme;

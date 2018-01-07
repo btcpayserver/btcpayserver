@@ -168,11 +168,9 @@ namespace BTCPayServer.Hosting
 
             services.TryAddSingleton<InvoiceWatcherAccessor>();
             services.AddSingleton<IHostedService, InvoiceWatcher>();
-            services.TryAddSingleton<Initializer>();
             services.TryAddScoped<IHttpContextAccessor, HttpContextAccessor>();
             services.TryAddSingleton<IAuthorizationHandler, OwnStoreHandler>();
             services.AddTransient<AccessTokenController>();
-            services.AddTransient<CallbackController>();
             services.AddTransient<InvoiceController>();
             // Add application services.
             services.AddTransient<IEmailSender, EmailSender>();
@@ -204,10 +202,6 @@ namespace BTCPayServer.Hosting
                 });
             }
 
-
-
-            var initialize = app.ApplicationServices.GetService<Initializer>();
-            initialize.Init();
             app.UseMiddleware<BTCPayMiddleware>();
             return app;
         }

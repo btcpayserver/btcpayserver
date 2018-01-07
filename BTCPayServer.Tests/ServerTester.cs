@@ -213,43 +213,6 @@ namespace BTCPayServer.Tests
             }
         }
 
-        /// <summary>
-        /// Simulating callback from NBXplorer. NBXplorer can't reach the host during tests as it is not running on localhost.
-        /// </summary>
-        /// <param name="address"></param>
-        public void SimulateCallback(BitcoinAddress address = null)
-        {
-            if (!FakeCallback) //The callback of NBXplorer should work
-                return;
-
-            var req = new MockHttpRequest(PayTester.ServerUri);
-            var controller = PayTester.GetController<CallbackController>();
-            if (address != null)
-            {
-
-                var match = new TransactionMatch();
-                match.Outputs.Add(new KeyPathInformation() { ScriptPubKey = address.ScriptPubKey });
-                var content = new StringContent(new NBXplorer.Serializer(Network).ToString(match), new UTF8Encoding(false), "application/json");
-                var uri = controller.GetCallbackUriAsync().GetAwaiter().GetResult();
-
-                HttpRequestMessage message = new HttpRequestMessage();
-                message.Method = HttpMethod.Post;
-                message.RequestUri = uri;
-                message.Content = content;
-
-                _Http.SendAsync(message).GetAwaiter().GetResult();
-            }
-            else
-            {
-
-                var uri = controller.GetCallbackBlockUriAsync().GetAwaiter().GetResult();
-                HttpRequestMessage message = new HttpRequestMessage();
-                message.Method = HttpMethod.Post;
-                message.RequestUri = uri;
-                _Http.SendAsync(message).GetAwaiter().GetResult();
-            }
-        }
-
 
         public BTCPayServerTester PayTester
         {

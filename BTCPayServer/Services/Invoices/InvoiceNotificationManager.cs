@@ -17,6 +17,7 @@ using Newtonsoft.Json;
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Hosting;
 using BTCPayServer.Events;
+using NBXplorer;
 
 namespace BTCPayServer.Services.Invoices
 {

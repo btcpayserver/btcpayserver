@@ -206,9 +206,9 @@ namespace BTCPayServer.Controllers
             CompositeDisposable leases = new CompositeDisposable();
             try
             {
-                _EventAggregator.Subscribe<Events.InvoiceDataChangedEvent>(async o => await NotifySocket(webSocket, o.InvoiceId, invoiceId));
-                _EventAggregator.Subscribe<Events.InvoicePaymentEvent>(async o => await NotifySocket(webSocket, o.InvoiceId, invoiceId));
-                _EventAggregator.Subscribe<Events.InvoiceStatusChangedEvent>(async o => await NotifySocket(webSocket, o.InvoiceId, invoiceId));
+                leases.Add(_EventAggregator.Subscribe<Events.InvoiceDataChangedEvent>(async o => await NotifySocket(webSocket, o.InvoiceId, invoiceId)));
+                leases.Add(_EventAggregator.Subscribe<Events.InvoicePaymentEvent>(async o => await NotifySocket(webSocket, o.InvoiceId, invoiceId)));
+                leases.Add(_EventAggregator.Subscribe<Events.InvoiceStatusChangedEvent>(async o => await NotifySocket(webSocket, o.InvoiceId, invoiceId)));
                 while (true)
                 {
                     var message = await webSocket.ReceiveAsync(DummyBuffer, default(CancellationToken));

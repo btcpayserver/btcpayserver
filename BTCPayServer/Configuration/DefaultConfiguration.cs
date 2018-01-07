@@ -27,8 +27,11 @@ namespace BTCPayServer.Configuration
             app.Option("--testnet | -testnet", $"Use testnet", CommandOptionType.BoolValue);
             app.Option("--regtest | -regtest", $"Use regtest", CommandOptionType.BoolValue);
             app.Option("--postgres", $"Connection string to postgres database (default: sqlite is used)", CommandOptionType.SingleValue);
-            app.Option("--explorerurl", $"Url of the NBxplorer (default: : Default setting of NBXplorer for the network)", CommandOptionType.SingleValue);
-            app.Option("--explorercookiefile", $"Path to the cookie file (default: Default setting of NBXplorer for the network)", CommandOptionType.SingleValue);
+            foreach (var network in new BTCPayNetworkProvider(Network.Main).GetAll())
+            {
+                app.Option($"--{network.CryptoCode}explorerurl", $"Url of the NBxplorer for {network.CryptoCode} (default: If no explorer is specified, the default for Bitcoin will be selected)", CommandOptionType.SingleValue);
+                app.Option($"--{network.CryptoCode}explorercookiefile", $"Path to the cookie file (default: Default setting of NBXplorer for the network)", CommandOptionType.SingleValue);
+            }
             app.Option("--externalurl", $"The expected external url of this service, to use if BTCPay is behind a reverse proxy (default: empty, use the incoming HTTP request to figure out)", CommandOptionType.SingleValue);
             return app;
         }
@@ -83,8 +86,12 @@ namespace BTCPayServer.Configuration
             builder.AppendLine("#postgres=User ID=root;Password=myPassword;Host=localhost;Port=5432;Database=myDataBase;");
             builder.AppendLine();
             builder.AppendLine("### NBXplorer settings ###");
-            builder.AppendLine("#explorer.url=" + network.DefaultExplorerUrl.AbsoluteUri);
-            builder.AppendLine("#explorer.cookiefile=" + network.DefaultExplorerCookieFile);
+            foreach (var n in new BTCPayNetworkProvider(network.Network).GetAll())
+            {
+                var nbxplorer = NBXplorer.Configuration.NetworkInformation.GetNetworkByName(n.NBitcoinNetwork.ToString());
+                builder.AppendLine($"#{n.CryptoCode}.explorer.url={nbxplorer.GetDefaultExplorerUrl()}");
+                builder.AppendLine($"#{n.CryptoCode}.explorer.cookiefile={ nbxplorer.GetDefaultCookieFile()}");
+            }
             return builder.ToString();
         }
 

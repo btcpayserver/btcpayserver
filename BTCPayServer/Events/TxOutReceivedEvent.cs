@@ -8,12 +8,12 @@ namespace BTCPayServer.Events
 {
     public class TxOutReceivedEvent
     {
+        public BTCPayNetwork Network { get; set; }
         public Script ScriptPubKey { get; set; }
-        public BitcoinAddress Address { get; set; }
 
         public override string ToString()
         {
-            String address = Address?.ToString() ?? ScriptPubKey.ToHex();
+            String address = ScriptPubKey.GetDestinationAddress(Network.NBitcoinNetwork)?.ToString() ?? ScriptPubKey.ToString();
             return $"{address} received a transaction";
         }
     }

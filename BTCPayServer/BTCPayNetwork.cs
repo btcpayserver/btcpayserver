@@ -22,6 +22,5 @@ namespace BTCPayServer
                 return CryptoCode == "BTC";
             }
         }
-
     }
 }

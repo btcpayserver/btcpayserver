@@ -289,7 +289,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
-        public void InvoiceFlowThroughDifferentStatesCorrectly()
+        public void TestAccessBitpayAPI()
         {
             using (var tester = ServerTester.Create())
             {
@@ -298,6 +298,17 @@ namespace BTCPayServer.Tests
                 Assert.False(user.BitPay.TestAccess(Facade.Merchant));
                 user.GrantAccess();
                 Assert.True(user.BitPay.TestAccess(Facade.Merchant));
+            }
+        }
+
+        [Fact]
+        public void InvoiceFlowThroughDifferentStatesCorrectly()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.Start();
+                var user = tester.NewAccount();
+                user.GrantAccess();
                 var invoice = user.BitPay.CreateInvoice(new Invoice()
                 {
                     Price = 5000.0,

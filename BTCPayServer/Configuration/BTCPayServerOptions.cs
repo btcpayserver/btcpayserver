@@ -9,21 +9,13 @@ using System.Net;
 using System.Text;
 using StandardConfiguration;
 using Microsoft.Extensions.Configuration;
+using NBXplorer;
 
 namespace BTCPayServer.Configuration
 {
     public class BTCPayServerOptions
     {
         public Network Network
-        {
-            get; set;
-        }
-        public Uri Explorer
-        {
-            get; set;
-        }
-
-        public string CookieFile
         {
             get; set;
         }
@@ -53,11 +45,39 @@ namespace BTCPayServer.Configuration
             DataDir = conf.GetOrDefault<string>("datadir", networkInfo.DefaultDataDirectory);
             Logs.Configuration.LogInformation("Network: " + Network);
 
-            Explorer = conf.GetOrDefault<Uri>("explorer.url", networkInfo.DefaultExplorerUrl);
-            CookieFile = conf.GetOrDefault<string>("explorer.cookiefile", networkInfo.DefaultExplorerCookieFile);
+            foreach (var net in new BTCPayNetworkProvider(Network).GetAll())
+            {
+                var explorer = conf.GetOrDefault<Uri>($"{net.CryptoCode}.explorer.url", null);
+                var cookieFile = conf.GetOrDefault<string>($"{net.CryptoCode}.explorer.cookiefile", null);
+                if (explorer != null && cookieFile != null)
+                {
+                    ExplorerFactories.Add(net.CryptoCode, (n) => CreateExplorerClient(n, explorer, cookieFile));
+                }
+            }
+
+            // Handle legacy explorer.url and explorer.cookiefile
+            if (ExplorerFactories.Count == 0)
+            {
+                var nbxplorer = NBXplorer.Configuration.NetworkInformation.GetNetworkByName(Network.Name);
+                var explorer = conf.GetOrDefault<Uri>($"explorer.url", new Uri(nbxplorer.GetDefaultExplorerUrl(), UriKind.Absolute));
+                var cookieFile = conf.GetOrDefault<string>($"explorer.cookiefile", nbxplorer.GetDefaultCookieFile());
+                ExplorerFactories.Add("BTC", (n) => CreateExplorerClient(n, explorer, cookieFile));
+            }
+            //////
+
             PostgresConnectionString = conf.GetOrDefault<string>("postgres", null);
             ExternalUrl = conf.GetOrDefault<Uri>("externalurl", null);
         }
+
+        private static ExplorerClient CreateExplorerClient(BTCPayNetwork n, Uri uri, string cookieFile)
+        {
+            var explorer = new ExplorerClient(n.NBitcoinNetwork, uri);
+            if (!explorer.SetCookieAuth(cookieFile))
+                explorer.SetNoAuth();
+            return explorer;
+        }
+
+        public Dictionary<string, Func<BTCPayNetwork, ExplorerClient>> ExplorerFactories = new Dictionary<string, Func<BTCPayNetwork, ExplorerClient>>();
         public string PostgresConnectionString
         {
             get;

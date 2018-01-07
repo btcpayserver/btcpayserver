@@ -16,13 +16,10 @@ using BTCPayServer.Services.Wallets;
 using BTCPayServer.Controllers;
 using BTCPayServer.Events;
 using Microsoft.AspNetCore.Hosting;
+using BTCPayServer.Services.Invoices;
 
-namespace BTCPayServer.Services.Invoices
+namespace BTCPayServer.HostedServices
 {
-    public class InvoiceWatcherAccessor
-    {
-        public InvoiceWatcher Instance { get; set; }
-    }
     public class InvoiceWatcher : IHostedService
     {
         class UpdateInvoiceContext
@@ -56,15 +53,13 @@ namespace BTCPayServer.Services.Invoices
             BTCPayNetworkProvider networkProvider,
             InvoiceRepository invoiceRepository,
             EventAggregator eventAggregator,
-            BTCPayWallet wallet,
-            InvoiceWatcherAccessor accessor)
+            BTCPayWallet wallet)
         {
             PollInterval = TimeSpan.FromMinutes(1.0);
             _Wallet = wallet ?? throw new ArgumentNullException(nameof(wallet));
             _InvoiceRepository = invoiceRepository ?? throw new ArgumentNullException(nameof(invoiceRepository));
             _EventAggregator = eventAggregator ?? throw new ArgumentNullException(nameof(eventAggregator));
             _NetworkProvider = networkProvider;
-            accessor.Instance = this;
         }
         CompositeDisposable leases = new CompositeDisposable();
 
@@ -157,7 +152,6 @@ namespace BTCPayServer.Services.Invoices
                 response.Coins = response.Coins.Where(c => invoice.AvailableAddressHashes.Contains(c.ScriptPubKey.Hash.ToString())).ToArray();
             }
             var coins = getCoinsResponses.Where(s => s.Coins.Length != 0).FirstOrDefault();
-
             bool dirtyAddress = false;
             if (coins != null)
             {
@@ -172,7 +166,7 @@ namespace BTCPayServer.Services.Invoices
                 }
             }
             //////
-            var network = _NetworkProvider.GetNetwork("BTC");
+            var network = coins?.Strategy?.Network ?? _NetworkProvider.GetNetwork(invoice.GetCryptoData().First().Key);
             var cryptoData = invoice.GetCryptoData(network);
             var cryptoDataAll = invoice.GetCryptoData();
             var accounting = cryptoData.Calculate();
@@ -187,7 +181,7 @@ namespace BTCPayServer.Services.Invoices
 
             if (invoice.Status == "new" || invoice.Status == "expired")
             {
-                var totalPaid = (await GetPaymentsWithTransaction(invoice)).Select(p => p.Payment.GetValue(cryptoDataAll, cryptoData.CryptoCode)).Sum();
+                var totalPaid = (await GetPaymentsWithTransaction(network, invoice)).Select(p => p.Payment.GetValue(cryptoDataAll, cryptoData.CryptoCode)).Sum();
                 if (totalPaid >= accounting.TotalDue)
                 {
                     if (invoice.Status == "new")
@@ -228,7 +222,7 @@ namespace BTCPayServer.Services.Invoices
 
             if (invoice.Status == "paid")
             {
-                var transactions = await GetPaymentsWithTransaction(invoice);
+                var transactions = await GetPaymentsWithTransaction(network, invoice);
                 var chainConfirmedTransactions = transactions.Where(t => t.Confirmations >= 1);
                 if (invoice.SpeedPolicy == SpeedPolicy.HighSpeed)
                 {
@@ -271,7 +265,7 @@ namespace BTCPayServer.Services.Invoices
 
             if (invoice.Status == "confirmed")
             {
-                var transactions = await GetPaymentsWithTransaction(invoice);
+                var transactions = await GetPaymentsWithTransaction(network, invoice);
                 transactions = transactions.Where(t => t.Confirmations >= 6);
                 var totalConfirmed = transactions.Select(t => t.Payment.GetValue(cryptoDataAll, cryptoData.CryptoCode)).Sum();
                 if (totalConfirmed >= accounting.TotalDue)
@@ -283,9 +277,9 @@ namespace BTCPayServer.Services.Invoices
             }
         }
 
-        private async Task<IEnumerable<AccountedPaymentEntity>> GetPaymentsWithTransaction(InvoiceEntity invoice)
+        private async Task<IEnumerable<AccountedPaymentEntity>> GetPaymentsWithTransaction(BTCPayNetwork network, InvoiceEntity invoice)
         {
-            var transactions = await _Wallet.GetTransactions(invoice.Payments.Select(t => t.Outpoint.Hash).ToArray());
+            var transactions = await _Wallet.GetTransactions(network, invoice.Payments.Select(t => t.Outpoint.Hash).ToArray());
 
             var spentTxIn = new Dictionary<OutPoint, AccountedPaymentEntity>();
             var result = invoice.Payments.Select(p => p.Outpoint).ToHashSet();
@@ -355,7 +349,7 @@ namespace BTCPayServer.Services.Invoices
             }
         }
 
-        public void Watch(string invoiceId)
+        private void Watch(string invoiceId)
         {
             if (invoiceId == null)
                 throw new ArgumentNullException(nameof(invoiceId));
@@ -390,7 +384,8 @@ namespace BTCPayServer.Services.Invoices
             }, null, 0, (int)PollInterval.TotalMilliseconds);
 
             leases.Add(_EventAggregator.Subscribe<Events.NewBlockEvent>(async b => { await NotifyBlock(); }));
-            leases.Add(_EventAggregator.Subscribe<TxOutReceivedEvent>(async b => { await NotifyReceived(b.ScriptPubKey); }));
+            leases.Add(_EventAggregator.Subscribe<Events.TxOutReceivedEvent>(async b => { await NotifyReceived(b.ScriptPubKey); }));
+            leases.Add(_EventAggregator.Subscribe<Events.InvoiceCreatedEvent>(b => { Watch(b.InvoiceId); }));
 
             return Task.CompletedTask;
         }

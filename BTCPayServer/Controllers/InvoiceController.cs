@@ -38,6 +38,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.Routing;
 using NBXplorer.DerivationStrategy;
 using NBXplorer;
+using BTCPayServer.HostedServices;
 
 namespace BTCPayServer.Controllers
 {
@@ -46,14 +47,13 @@ namespace BTCPayServer.Controllers
         InvoiceRepository _InvoiceRepository;
         BTCPayWallet _Wallet;
         IRateProvider _RateProvider;
-        private InvoiceWatcher _Watcher;
         StoreRepository _StoreRepository;
         UserManager<ApplicationUser> _UserManager;
         IFeeProviderFactory _FeeProviderFactory;
         private CurrencyNameTable _CurrencyNameTable;
-        ExplorerClient _Explorer;
         EventAggregator _EventAggregator;
         BTCPayNetworkProvider _NetworkProvider;
+        ExplorerClientProvider _ExplorerClients;
         public InvoiceController(InvoiceRepository invoiceRepository,
             CurrencyNameTable currencyNameTable,
             UserManager<ApplicationUser> userManager,
@@ -61,18 +61,16 @@ namespace BTCPayServer.Controllers
             IRateProvider rateProvider,
             StoreRepository storeRepository,
             EventAggregator eventAggregator,
-            InvoiceWatcherAccessor watcher,
-            ExplorerClient explorerClient,
             BTCPayNetworkProvider networkProvider,
+            ExplorerClientProvider explorerClientProviders,
             IFeeProviderFactory feeProviderFactory)
         {
+            _ExplorerClients = explorerClientProviders;
             _CurrencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
-            _Explorer = explorerClient ?? throw new ArgumentNullException(nameof(explorerClient));
             _StoreRepository = storeRepository ?? throw new ArgumentNullException(nameof(storeRepository));
             _InvoiceRepository = invoiceRepository ?? throw new ArgumentNullException(nameof(invoiceRepository));
             _Wallet = wallet ?? throw new ArgumentNullException(nameof(wallet));
             _RateProvider = rateProvider ?? throw new ArgumentNullException(nameof(rateProvider));
-            _Watcher = (watcher ?? throw new ArgumentNullException(nameof(watcher))).Instance;
             _UserManager = userManager;
             _FeeProviderFactory = feeProviderFactory ?? throw new ArgumentNullException(nameof(feeProviderFactory));
             _EventAggregator = eventAggregator;
@@ -151,7 +149,7 @@ namespace BTCPayServer.Controllers
             entity.SetCryptoData(cryptoDatas);
             entity.PosData = invoice.PosData;
             entity = await _InvoiceRepository.CreateInvoiceAsync(store.Id, entity, _NetworkProvider);
-            _Watcher.Watch(entity.Id);
+            _EventAggregator.Publish(new Events.InvoiceCreatedEvent(entity.Id));
             var resp = entity.EntityToDTO(_NetworkProvider);
             return new DataWrapper<InvoiceResponse>(resp) { Facade = "pos/invoice" };
         }

@@ -31,7 +31,7 @@ namespace BTCPayServer.Controllers
         {
             if (command == "refresh")
             {
-                _Watcher.Watch(invoiceId);
+                _EventAggregator.Publish(new Events.InvoiceCreatedEvent(invoiceId));
             }
             StatusMessage = "Invoice is state is being refreshed, please refresh the page soon...";
             return RedirectToAction(nameof(Invoice), new
@@ -94,7 +94,7 @@ namespace BTCPayServer.Controllers
                 {
                     var m = new InvoiceDetailsModel.Payment();
                     m.DepositAddress = payment.GetScriptPubKey().GetDestinationAddress(network.NBitcoinNetwork);
-                    m.Confirmations = (await _Explorer.GetTransactionAsync(payment.Outpoint.Hash))?.Confirmations ?? 0;
+                    m.Confirmations = (await _ExplorerClients.GetExplorerClient(payment.GetCryptoCode())?.GetTransactionAsync(payment.Outpoint.Hash))?.Confirmations ?? 0;
                     m.TransactionId = payment.Outpoint.Hash.ToString();
                     m.ReceivedTime = payment.ReceivedTime;
                     m.TransactionLink = string.Format(network.BlockExplorerLink, m.TransactionId);

@@ -41,7 +41,7 @@ services:
       # - eclair2
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:1.0.0.35
+    image: nicolasdorier/nbxplorer:1.0.0.36
     ports:
       - "32838:32838"
     expose: 

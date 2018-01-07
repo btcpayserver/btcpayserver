@@ -36,6 +36,7 @@ using BTCPayServer.Services.Wallets;
 using BTCPayServer.Authentication;
 using Microsoft.Extensions.Caching.Memory;
 using BTCPayServer.Logging;
+using BTCPayServer.HostedServices;
 
 namespace BTCPayServer.Hosting
 {
@@ -134,22 +135,18 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<StoreRepository>();
             services.TryAddSingleton<BTCPayWallet>();
             services.TryAddSingleton<CurrencyNameTable>();
-            services.TryAddSingleton<IFeeProviderFactory>(o => new NBXplorerFeeProviderFactory(o.GetRequiredService<ExplorerClient>())
+            services.TryAddSingleton<IFeeProviderFactory>(o => new NBXplorerFeeProviderFactory(o.GetRequiredService<ExplorerClientProvider>())
             {
                 Fallback = new FeeRate(100, 1),
                 BlockTarget = 20
             });
 
-            services.TryAddSingleton<NBXplorerWaiterAccessor>();
-            services.AddSingleton<IHostedService, NBXplorerWaiter>();
-            services.TryAddSingleton<ExplorerClient>(o =>
-            {
-                var opts = o.GetRequiredService<BTCPayServerOptions>();
-                var explorer = new ExplorerClient(opts.Network, opts.Explorer);
-                if (!explorer.SetCookieAuth(opts.CookieFile))
-                    explorer.SetNoAuth();
-                return explorer;
-            });
+            services.AddSingleton<IHostedService, NBXplorerWaiters>();
+            services.AddSingleton<IHostedService, NBXplorerListener>();
+            services.AddSingleton<IHostedService, InvoiceNotificationManager>();
+            services.AddSingleton<IHostedService, InvoiceWatcher>();
+
+            services.TryAddSingleton<ExplorerClientProvider>();
             services.TryAddSingleton<Bitpay>(o =>
             {
                 if (o.GetRequiredService<BTCPayServerOptions>().Network == Network.Main)
@@ -163,11 +160,7 @@ namespace BTCPayServer.Hosting
                 var bitpay = new BitpayRateProvider(new Bitpay(new Key(), new Uri("https://bitpay.com/")));
                 return new CachedRateProvider(new FallbackRateProvider(new IRateProvider[] { coinaverage, bitpay }), o.GetRequiredService<IMemoryCache>()) { CacheSpan = TimeSpan.FromMinutes(1.0) };
             });
-            
-            services.AddSingleton<IHostedService, InvoiceNotificationManager>();
 
-            services.TryAddSingleton<InvoiceWatcherAccessor>();
-            services.AddSingleton<IHostedService, InvoiceWatcher>();
             services.TryAddScoped<IHttpContextAccessor, HttpContextAccessor>();
             services.TryAddSingleton<IAuthorizationHandler, OwnStoreHandler>();
             services.AddTransient<AccessTokenController>();

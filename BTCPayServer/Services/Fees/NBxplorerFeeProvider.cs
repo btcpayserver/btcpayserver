@@ -10,43 +10,38 @@ namespace BTCPayServer.Services.Fees
 {
     public class NBXplorerFeeProviderFactory : IFeeProviderFactory
     {
-        public NBXplorerFeeProviderFactory(ExplorerClient explorerClient)
+        public NBXplorerFeeProviderFactory(ExplorerClientProvider explorerClients)
         {
-            if (explorerClient == null)
-                throw new ArgumentNullException(nameof(explorerClient));
-            _ExplorerClient = explorerClient;
+            if (explorerClients == null)
+                throw new ArgumentNullException(nameof(explorerClients));
+            _ExplorerClients = explorerClients;
         }
 
-        private readonly ExplorerClient _ExplorerClient;
-        public ExplorerClient ExplorerClient
-        {
-            get
-            {
-                return _ExplorerClient;
-            }
-        }
+        private readonly ExplorerClientProvider _ExplorerClients;
 
         public FeeRate Fallback { get; set; }
         public int BlockTarget { get; set; }
         public IFeeProvider CreateFeeProvider(BTCPayNetwork network)
         {
-            return new NBXplorerFeeProvider(this);
+            return new NBXplorerFeeProvider(this, _ExplorerClients.GetExplorerClient(network));
         }
     }
     public class NBXplorerFeeProvider : IFeeProvider
     {
-        public NBXplorerFeeProvider(NBXplorerFeeProviderFactory factory)
+        public NBXplorerFeeProvider(NBXplorerFeeProviderFactory parent, ExplorerClient explorerClient)
         {
-            if (factory == null)
-                throw new ArgumentNullException(nameof(factory));
-            _Factory = factory;
+            if (explorerClient == null)
+                throw new ArgumentNullException(nameof(explorerClient));
+            _Factory = parent;
+            _ExplorerClient = explorerClient;
         }
-        private readonly NBXplorerFeeProviderFactory _Factory;
+        NBXplorerFeeProviderFactory _Factory;
+        ExplorerClient _ExplorerClient;
         public async Task<FeeRate> GetFeeRateAsync()
         {
             try
             {
-                return (await _Factory.ExplorerClient.GetFeeRateAsync(_Factory.BlockTarget).ConfigureAwait(false)).FeeRate;
+                return (await _ExplorerClient.GetFeeRateAsync(_Factory.BlockTarget).ConfigureAwait(false)).FeeRate;
             }
             catch (NBXplorerException ex) when (ex.Error.HttpCode == 400 && ex.Error.Code == "fee-estimation-unavailable")
             {

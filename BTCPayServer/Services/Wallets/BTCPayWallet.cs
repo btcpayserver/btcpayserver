@@ -25,11 +25,10 @@ namespace BTCPayServer.Services.Wallets
     }
     public class BTCPayWallet
     {
-        private ExplorerClient _Client;
-        private Serializer _Serializer;
+        private ExplorerClientProvider _Client;
         ApplicationDbContextFactory _DBFactory;
 
-        public BTCPayWallet(ExplorerClient client, ApplicationDbContextFactory factory)
+        public BTCPayWallet(ExplorerClientProvider client, ApplicationDbContextFactory factory)
         {
             if (client == null)
                 throw new ArgumentNullException(nameof(client));
@@ -37,31 +36,32 @@ namespace BTCPayServer.Services.Wallets
                 throw new ArgumentNullException(nameof(factory));
             _Client = client;
             _DBFactory = factory;
-            _Serializer = new NBXplorer.Serializer(_Client.Network);
-            LongPollingMode = client.Network == Network.RegTest;
         }
 
 
         public async Task<BitcoinAddress> ReserveAddressAsync(DerivationStrategy derivationStrategy)
         {
-            var pathInfo = await _Client.GetUnusedAsync(derivationStrategy.DerivationStrategyBase, DerivationFeature.Deposit, 0, true).ConfigureAwait(false);
-            return pathInfo.ScriptPubKey.GetDestinationAddress(_Client.Network);
+            var client = _Client.GetExplorerClient(derivationStrategy.Network);
+            var pathInfo = await client.GetUnusedAsync(derivationStrategy.DerivationStrategyBase, DerivationFeature.Deposit, 0, true).ConfigureAwait(false);
+            return pathInfo.ScriptPubKey.GetDestinationAddress(client.Network);
         }
 
         public async Task TrackAsync(DerivationStrategy derivationStrategy)
         {
-            await _Client.TrackAsync(derivationStrategy.DerivationStrategyBase);
+            var client = _Client.GetExplorerClient(derivationStrategy.Network);
+            await client.TrackAsync(derivationStrategy.DerivationStrategyBase);
         }
 
-        public Task<TransactionResult> GetTransactionAsync(uint256 txId, CancellationToken cancellation = default(CancellationToken))
+        public Task<TransactionResult> GetTransactionAsync(BTCPayNetwork network, uint256 txId, CancellationToken cancellation = default(CancellationToken))
         {
-            return _Client.GetTransactionAsync(txId, cancellation);
+            var client = _Client.GetExplorerClient(network);
+            return client.GetTransactionAsync(txId, cancellation);
         }
 
-        public bool LongPollingMode { get; set; }
         public async Task<GetCoinsResult> GetCoins(DerivationStrategy strategy, KnownState state, CancellationToken cancellation = default(CancellationToken))
         {
-            var changes = await _Client.SyncAsync(strategy.DerivationStrategyBase, state?.ConfirmedHash, state?.UnconfirmedHash, !LongPollingMode, cancellation).ConfigureAwait(false);
+            var client = _Client.GetExplorerClient(strategy.Network);
+            var changes = await client.SyncAsync(strategy.DerivationStrategyBase, state?.ConfirmedHash, state?.UnconfirmedHash, true, cancellation).ConfigureAwait(false);
             var utxos = changes.Confirmed.UTXOs.Concat(changes.Unconfirmed.UTXOs).Select(c => c.AsCoin()).ToArray();
             return new GetCoinsResult()
             {
@@ -71,20 +71,17 @@ namespace BTCPayServer.Services.Wallets
             };
         }
 
-        private byte[] ToBytes<T>(T obj)
+        public Task BroadcastTransactionsAsync(BTCPayNetwork network, List<Transaction> transactions)
         {
-            return ZipUtils.Zip(_Serializer.ToString(obj));
-        }
-
-        public Task BroadcastTransactionsAsync(List<Transaction> transactions)
-        {
-            var tasks = transactions.Select(t => _Client.BroadcastAsync(t)).ToArray();
+            var client = _Client.GetExplorerClient(network);
+            var tasks = transactions.Select(t => client.BroadcastAsync(t)).ToArray();
             return Task.WhenAll(tasks);
         }
 
         public async Task<Money> GetBalance(DerivationStrategy derivationStrategy)
         {
-            var result = await _Client.SyncAsync(derivationStrategy.DerivationStrategyBase, null, true);
+            var client = _Client.GetExplorerClient(derivationStrategy.Network);
+            var result = await client.SyncAsync(derivationStrategy.DerivationStrategyBase, null, true);
             return result.Confirmed.UTXOs.Select(u => u.Value)
                          .Concat(result.Unconfirmed.UTXOs.Select(u => u.Value))
                          .Sum();

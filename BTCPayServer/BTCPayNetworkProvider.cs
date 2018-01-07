@@ -18,7 +18,7 @@ namespace BTCPayServer
                     CryptoCode = "BTC",
                     BlockExplorerLink = "https://www.smartbit.com.au/tx/{0}",
                     NBitcoinNetwork = Network.Main,
-                    UriScheme = "bitcoin"
+                    UriScheme = "bitcoin",
                 });
             }
 
@@ -29,7 +29,7 @@ namespace BTCPayServer
                     CryptoCode = "BTC",
                     BlockExplorerLink = "https://testnet.smartbit.com.au/tx/{0}",
                     NBitcoinNetwork = Network.TestNet,
-                    UriScheme = "bitcoin"
+                    UriScheme = "bitcoin",
                 });
             }
 
@@ -57,6 +57,11 @@ namespace BTCPayServer
         public void Add(BTCPayNetwork network)
         {
             _Networks.Add(network.CryptoCode, network);
+        }
+
+        public IEnumerable<BTCPayNetwork> GetAll()
+        {
+            return _Networks.Values.ToArray();
         }
 
         public BTCPayNetwork GetNetwork(string cryptoCode)

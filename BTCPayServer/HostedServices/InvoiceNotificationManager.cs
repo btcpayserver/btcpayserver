@@ -18,8 +18,9 @@ using System.Collections.Concurrent;
 using Microsoft.Extensions.Hosting;
 using BTCPayServer.Events;
 using NBXplorer;
+using BTCPayServer.Services.Invoices;
 
-namespace BTCPayServer.Services.Invoices
+namespace BTCPayServer.HostedServices
 {
     public class InvoiceNotificationManager : IHostedService
     {

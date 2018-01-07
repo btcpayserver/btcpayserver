@@ -11,12 +11,8 @@ using NBXplorer.Models;
 using System.Collections.Concurrent;
 using BTCPayServer.Events;
 
-namespace BTCPayServer
+namespace BTCPayServer.HostedServices
 {
-    public class NBXplorerWaiterAccessor
-    {
-        public NBXplorerWaiter Instance { get; set; }
-    }
     public enum NBXplorerState
     {
         NotConnected,
@@ -24,15 +20,38 @@ namespace BTCPayServer
         Ready
     }
 
-    public class NBXplorerWaiter : IHostedService
+    public class NBXplorerWaiters : IHostedService
     {
-        public NBXplorerWaiter(ExplorerClient client, EventAggregator aggregator, NBXplorerWaiterAccessor accessor)
+        List<NBXplorerWaiter> _Waiters = new List<NBXplorerWaiter>();
+        public NBXplorerWaiters(ExplorerClientProvider explorerClientProvider, EventAggregator eventAggregator)
         {
-            _Client = client;
-            _Aggregator = aggregator;
-            accessor.Instance = this;
+            foreach(var explorer in explorerClientProvider.GetAll())
+            {
+                _Waiters.Add(new NBXplorerWaiter(explorer.Item1, explorer.Item2, eventAggregator));
+            }
+        }
+        public Task StartAsync(CancellationToken cancellationToken)
+        {
+            return Task.WhenAll(_Waiters.Select(w => w.StartAsync(cancellationToken)).ToArray());
         }
 
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            return Task.WhenAll(_Waiters.Select(w => w.StopAsync(cancellationToken)).ToArray());
+        }
+    }
+
+    public class NBXplorerWaiter : IHostedService
+    {
+
+        public NBXplorerWaiter(BTCPayNetwork network, ExplorerClient client, EventAggregator aggregator)
+        {
+            _Network = network;
+            _Client = client;
+            _Aggregator = aggregator;
+        }
+
+        BTCPayNetwork _Network;
         EventAggregator _Aggregator;
         ExplorerClient _Client;
         Timer _Timer;
@@ -126,7 +145,7 @@ namespace BTCPayServer
                 {
                     SetInterval(TimeSpan.FromMinutes(1));
                 }
-                _Aggregator.Publish(new NBXplorerStateChangedEvent(oldState, State));
+                _Aggregator.Publish(new NBXplorerStateChangedEvent(_Network, oldState, State));
             }
             return oldState != State;
         }

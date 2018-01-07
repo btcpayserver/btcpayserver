@@ -18,21 +18,30 @@ using NBXplorer.Models;
 using System.Linq;
 using System.Threading;
 using BTCPayServer.Services.Wallets;
+using System.IO;
 
 namespace BTCPayServer
 {
     public static class Extensions
     {
+        public static string GetDefaultExplorerUrl(this NBXplorer.Configuration.NetworkInformation networkInfo)
+        {
+            return $"http://127.0.0.1:{networkInfo.DefaultExplorerPort}/";
+        }
+        public static string GetDefaultCookieFile(this NBXplorer.Configuration.NetworkInformation networkInfo)
+        {
+            return Path.Combine(networkInfo.DefaultDataDirectory, ".cookie");
+        }
         public static bool SupportDropColumn(this Microsoft.EntityFrameworkCore.Migrations.Migration migration, string activeProvider)
         {
             return activeProvider != "Microsoft.EntityFrameworkCore.Sqlite";
         }
 
-        public static async Task<Dictionary<uint256, TransactionResult>> GetTransactions(this BTCPayWallet client, uint256[] hashes, CancellationToken cts = default(CancellationToken))
+        public static async Task<Dictionary<uint256, TransactionResult>> GetTransactions(this BTCPayWallet client, BTCPayNetwork network, uint256[] hashes, CancellationToken cts = default(CancellationToken))
         {
             hashes = hashes.Distinct().ToArray();
             var transactions = hashes
-                                        .Select(async o => await client.GetTransactionAsync(o, cts))
+                                        .Select(async o => await client.GetTransactionAsync(network, o, cts))
                                         .ToArray();
             await Task.WhenAll(transactions).ConfigureAwait(false);
             return transactions.Select(t => t.Result).Where(t => t != null).ToDictionary(o => o.Transaction.GetHash());

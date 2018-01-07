@@ -273,7 +273,6 @@ namespace BTCPayServer.Controllers
                     var callbackUrl = Url.EmailConfirmationLink(user.Id, code, Request.Scheme);
                     RegisteredUserId = user.Id;
                     await _emailSender.SendEmailConfirmationAsync(model.Email, callbackUrl);
-                    _logger.LogInformation("User created a new account with password.");
                     if (!policies.RequiresConfirmedEmail)
                     {
                         await _signInManager.SignInAsync(user, isPersistent: false);

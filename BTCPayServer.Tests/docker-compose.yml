@@ -13,7 +13,6 @@ services:
       TESTS_RPCCONNECTION: server=http://bitcoind:43782;ceiwHEbqWI83:DwubwWsoo3
       TESTS_NBXPLORERURL: http://nbxplorer:32838/
       TESTS_POSTGRES: User ID=postgres;Host=postgres;Port=5432;Database=btcpayserver
-      TESTS_FAKECALLBACK: 'false'
       TESTS_PORT: 80
       TESTS_HOSTNAME: tests
       # TEST_ECLAIR1: http://eclair1:8080/

@@ -30,7 +30,6 @@ namespace BTCPayServer.Configuration
             app.Option("--explorerurl", $"Url of the NBxplorer (default: : Default setting of NBXplorer for the network)", CommandOptionType.SingleValue);
             app.Option("--explorercookiefile", $"Path to the cookie file (default: Default setting of NBXplorer for the network)", CommandOptionType.SingleValue);
             app.Option("--externalurl", $"The expected external url of this service, to use if BTCPay is behind a reverse proxy (default: empty, use the incoming HTTP request to figure out)", CommandOptionType.SingleValue);
-            app.Option("--internalurl", $"The expected internal url of this service, this set NBXplorer callback addresses (default: empty, use the incoming HTTP request to figure out)", CommandOptionType.SingleValue);
             return app;
         }
 

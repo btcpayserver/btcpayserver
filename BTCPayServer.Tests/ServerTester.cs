@@ -47,7 +47,6 @@ namespace BTCPayServer.Tests
                 Directory.CreateDirectory(_Directory);
 
 
-            FakeCallback = bool.Parse(GetEnvironment("TESTS_FAKECALLBACK", "true"));
             ExplorerNode = new RPCClient(RPCCredentialString.Parse(GetEnvironment("TESTS_RPCCONNECTION", "server=http://127.0.0.1:43782;ceiwHEbqWI83:DwubwWsoo3")), Network);
             ExplorerClient = new ExplorerClient(Network, new Uri(GetEnvironment("TESTS_NBXPLORERURL", "http://127.0.0.1:32838/")));
             PayTester = new BTCPayServerTester(Path.Combine(_Directory, "pay"))
@@ -102,12 +101,6 @@ namespace BTCPayServer.Tests
         public TestAccount NewAccount()
         {
             return new TestAccount(this);
-        }
-
-        public bool FakeCallback
-        {
-            get;
-            set;
         }
         public RPCClient ExplorerNode
         {

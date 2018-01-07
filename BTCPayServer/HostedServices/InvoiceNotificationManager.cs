@@ -115,6 +115,7 @@ namespace BTCPayServer.HostedServices
             }
         }
 
+        Encoding UTF8 = new UTF8Encoding(false);
         private async Task<HttpResponseMessage> SendNotification(InvoiceEntity invoice, CancellationToken cancellation)
         {
             var request = new HttpRequestMessage();
@@ -149,7 +150,7 @@ namespace BTCPayServer.HostedServices
 #pragma warning restore CS0618
             }
             request.RequestUri = new Uri(invoice.NotificationURL, UriKind.Absolute);
-            request.Content = new StringContent(JsonConvert.SerializeObject(notification), Encoding.UTF8, "application/json");
+            request.Content = new StringContent(JsonConvert.SerializeObject(notification), UTF8, "application/json");
             var response = await _Client.SendAsync(request, cancellation);
             return response;
         }

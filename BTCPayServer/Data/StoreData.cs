@@ -64,10 +64,50 @@ namespace BTCPayServer.Data
                     {
                         if (network == networks.BTC && btcReturned)
                             continue;
-                        yield return BTCPayServer.DerivationStrategy.Parse(strat.Value<string>(), network);
+                        if (strat.Value.Type == JTokenType.Null)
+                            continue;
+                        yield return BTCPayServer.DerivationStrategy.Parse(strat.Value.Value<string>(), network);
                     }
                 }
             }
+#pragma warning restore CS0618
+        }
+
+        public void SetDerivationStrategy(BTCPayNetwork network, string derivationScheme)
+        {
+#pragma warning disable CS0618
+            JObject strategies = string.IsNullOrEmpty(DerivationStrategies) ? new JObject() : JObject.Parse(DerivationStrategies);
+            bool existing = false;
+            foreach (var strat in strategies.Properties().ToList())
+            {
+                if (strat.Name == network.CryptoCode)
+                {
+                    if (network.IsBTC)
+                        DerivationStrategy = null;
+                    if (string.IsNullOrEmpty(derivationScheme))
+                    {
+                        strat.Remove();
+                    }
+                    else
+                    {
+                        strat.Value = new JValue(derivationScheme);
+                    }
+                    existing = true;
+                    break;
+                }
+            }
+
+            if (!existing && string.IsNullOrEmpty(derivationScheme))
+            {
+                if(network.IsBTC)
+                    DerivationStrategy = null;
+            }
+            else if(!existing)
+                strategies.Add(new JProperty(network.CryptoCode, new JValue(derivationScheme)));
+            // This is deprecated so we don't have to set anymore
+            //if (network.IsBTC)
+            //    DerivationStrategy = derivationScheme;
+            DerivationStrategies = strategies.ToString();
 #pragma warning restore CS0618
         }
 

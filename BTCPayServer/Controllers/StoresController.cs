@@ -34,6 +34,7 @@ namespace BTCPayServer.Controllers
             AccessTokenController tokenController,
             BTCPayWallet wallet,
             BTCPayNetworkProvider networkProvider,
+            ExplorerClientProvider explorerProvider,
             IHostingEnvironment env)
         {
             _Repo = repo;
@@ -43,9 +44,10 @@ namespace BTCPayServer.Controllers
             _Wallet = wallet;
             _Env = env;
             _NetworkProvider = networkProvider;
+            _ExplorerProvider = explorerProvider;
         }
         BTCPayNetworkProvider _NetworkProvider;
-
+        private ExplorerClientProvider _ExplorerProvider;
         BTCPayWallet _Wallet;
         AccessTokenController _TokenController;
         StoreRepository _Repo;
@@ -154,15 +156,109 @@ namespace BTCPayServer.Controllers
             vm.StoreWebsite = store.StoreWebsite;
             vm.NetworkFee = !storeBlob.NetworkFeeDisabled;
             vm.SpeedPolicy = store.SpeedPolicy;
-            vm.DerivationScheme = store.DerivationStrategy;
+            AddDerivationSchemes(store, vm);
             vm.StatusMessage = StatusMessage;
             vm.MonitoringExpiration = storeBlob.MonitoringExpiration;
             return View(vm);
         }
 
+        private void AddDerivationSchemes(StoreData store, StoreViewModel vm)
+        {
+            var strategies = store
+                            .GetDerivationStrategies(_NetworkProvider)
+                            .ToDictionary(s => s.Network.CryptoCode);
+            foreach (var explorerProvider in _ExplorerProvider.GetAll())
+            {
+                if (strategies.TryGetValue(explorerProvider.Item1.CryptoCode, out DerivationStrategy strat))
+                {
+                    vm.DerivationSchemes.Add(new StoreViewModel.DerivationScheme()
+                    {
+                        Crypto = explorerProvider.Item1.CryptoCode,
+                        Value = strat.DerivationStrategyBase.ToString()
+                    });
+                }
+            }
+        }
+
+        [HttpGet]
+        [Route("{storeId}/derivations")]
+        public async Task<IActionResult> AddDerivationScheme(string storeId, string selectedScheme = null)
+        {
+            selectedScheme = selectedScheme ?? "BTC";
+            var store = await _Repo.FindStore(storeId, GetUserId());
+            if (store == null)
+                return NotFound();
+            DerivationSchemeViewModel vm = new DerivationSchemeViewModel();
+            vm.SetCryptoCurrencies(_ExplorerProvider, selectedScheme);
+            return View(vm);
+        }
+
+        [HttpPost]
+        [Route("{storeId}/derivations")]
+        public async Task<IActionResult> AddDerivationScheme(string storeId, DerivationSchemeViewModel vm, string command, string selectedScheme = null)
+        {
+            selectedScheme = selectedScheme ?? "BTC";
+            var store = await _Repo.FindStore(storeId, GetUserId());
+            if (store == null)
+                return NotFound();
+
+            var network = vm.CryptoCurrency == null ? null : _ExplorerProvider.GetNetwork(vm.CryptoCurrency);
+            vm.SetCryptoCurrencies(_ExplorerProvider, selectedScheme);
+            if (network == null)
+            {
+                ModelState.AddModelError(nameof(vm.CryptoCurrency), "Invalid network");
+                return View(vm);
+            }
+
+            if (command == "Save")
+            {
+                try
+                {
+                    if (!string.IsNullOrEmpty(vm.DerivationScheme))
+                    {
+                        var strategy = ParseDerivationStrategy(vm.DerivationScheme, vm.DerivationSchemeFormat, network);
+                        await _Wallet.TrackAsync(strategy);
+                        vm.DerivationScheme = strategy.ToString();
+                    }
+                    store.SetDerivationStrategy(network, vm.DerivationScheme);
+                }
+                catch
+                {
+                    ModelState.AddModelError(nameof(vm.DerivationScheme), "Invalid Derivation Scheme");
+                    return View(vm);
+                }
+
+                await _Repo.UpdateStore(store);
+                StatusMessage = $"Derivation scheme for {vm.CryptoCurrency} has been modified.";
+                return RedirectToAction(nameof(UpdateStore), new { storeId = storeId });
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(vm.DerivationScheme))
+                {
+                    try
+                    {
+                        var scheme = ParseDerivationStrategy(vm.DerivationScheme, vm.DerivationSchemeFormat, network);
+                        var line = scheme.DerivationStrategyBase.GetLineFor(DerivationFeature.Deposit);
+
+                        for (int i = 0; i < 10; i++)
+                        {
+                            var address = line.Derive((uint)i);
+                            vm.AddressSamples.Add((line.Path.Derive((uint)i).ToString(), address.ScriptPubKey.GetDestinationAddress(scheme.Network.NBitcoinNetwork).ToString()));
+                        }
+                    }
+                    catch
+                    {
+                        ModelState.AddModelError(nameof(vm.DerivationScheme), "Invalid Derivation Scheme");
+                    }
+                }
+                return View(vm);
+            }
+        }
+
         [HttpPost]
         [Route("{storeId}")]
-        public async Task<IActionResult> UpdateStore(string storeId, StoreViewModel model, string command)
+        public async Task<IActionResult> UpdateStore(string storeId, StoreViewModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -171,88 +267,44 @@ namespace BTCPayServer.Controllers
             var store = await _Repo.FindStore(storeId, GetUserId());
             if (store == null)
                 return NotFound();
+            AddDerivationSchemes(store, model);
 
-            if (command == "Save")
+            bool needUpdate = false;
+            if (store.SpeedPolicy != model.SpeedPolicy)
             {
-                bool needUpdate = false;
-                if (store.SpeedPolicy != model.SpeedPolicy)
-                {
-                    needUpdate = true;
-                    store.SpeedPolicy = model.SpeedPolicy;
-                }
-                if (store.StoreName != model.StoreName)
-                {
-                    needUpdate = true;
-                    store.StoreName = model.StoreName;
-                }
-                if (store.StoreWebsite != model.StoreWebsite)
-                {
-                    needUpdate = true;
-                    store.StoreWebsite = model.StoreWebsite;
-                }
-
-                if (store.DerivationStrategy != model.DerivationScheme)
-                {
-                    needUpdate = true;
-                    try
-                    {
-                        if (!string.IsNullOrEmpty(model.DerivationScheme))
-                        {
-                            var strategy = ParseDerivationStrategy(model.DerivationScheme, model.DerivationSchemeFormat, _NetworkProvider.BTC);
-                            await _Wallet.TrackAsync(strategy);
-                            model.DerivationScheme = strategy.ToString();
-                        }
-                        store.DerivationStrategy = model.DerivationScheme;
-                    }
-                    catch
-                    {
-                        ModelState.AddModelError(nameof(model.DerivationScheme), "Invalid Derivation Scheme");
-                        return View(model);
-                    }
-                }
-
-                var blob = store.GetStoreBlob();
-                blob.NetworkFeeDisabled = !model.NetworkFee;
-                blob.MonitoringExpiration = model.MonitoringExpiration;
-
-                if (store.SetStoreBlob(blob))
-                {
-                    needUpdate = true;
-                }
-
-                if (needUpdate)
-                {
-                    await _Repo.UpdateStore(store);
-                    StatusMessage = "Store successfully updated";
-                }
-
-                return RedirectToAction(nameof(UpdateStore), new
-                {
-                    storeId = storeId
-                });
+                needUpdate = true;
+                store.SpeedPolicy = model.SpeedPolicy;
             }
-            else
+            if (store.StoreName != model.StoreName)
             {
-                if (!string.IsNullOrEmpty(model.DerivationScheme))
-                {
-                    try
-                    {
-                        var scheme = ParseDerivationStrategy(model.DerivationScheme, model.DerivationSchemeFormat, _NetworkProvider.BTC);
-                        var line = scheme.DerivationStrategyBase.GetLineFor(DerivationFeature.Deposit);
-
-                        for (int i = 0; i < 10; i++)
-                        {
-                            var address = line.Derive((uint)i);
-                            model.AddressSamples.Add((line.Path.Derive((uint)i).ToString(), address.ScriptPubKey.GetDestinationAddress(scheme.Network.NBitcoinNetwork).ToString()));
-                        }
-                    }
-                    catch
-                    {
-                        ModelState.AddModelError(nameof(model.DerivationScheme), "Invalid Derivation Scheme");
-                    }
-                }
-                return View(model);
+                needUpdate = true;
+                store.StoreName = model.StoreName;
             }
+            if (store.StoreWebsite != model.StoreWebsite)
+            {
+                needUpdate = true;
+                store.StoreWebsite = model.StoreWebsite;
+            }
+
+            var blob = store.GetStoreBlob();
+            blob.NetworkFeeDisabled = !model.NetworkFee;
+            blob.MonitoringExpiration = model.MonitoringExpiration;
+
+            if (store.SetStoreBlob(blob))
+            {
+                needUpdate = true;
+            }
+
+            if (needUpdate)
+            {
+                await _Repo.UpdateStore(store);
+                StatusMessage = "Store successfully updated";
+            }
+
+            return RedirectToAction(nameof(UpdateStore), new
+            {
+                storeId = storeId
+            });
         }
 
         private DerivationStrategy ParseDerivationStrategy(string derivationScheme, string format, BTCPayNetwork network)

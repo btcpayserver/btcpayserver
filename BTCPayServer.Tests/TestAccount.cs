@@ -59,8 +59,14 @@ namespace BTCPayServer.Tests
             DerivationScheme = new DerivationStrategyFactory(parent.Network).Parse(ExtKey.Neuter().ToString() + "-[legacy]");
             await store.UpdateStore(StoreId, new StoreViewModel()
             {
-                DerivationScheme = DerivationScheme.ToString(),
                 SpeedPolicy = SpeedPolicy.MediumSpeed
+            });
+
+            await store.AddDerivationScheme(StoreId, new DerivationSchemeViewModel()
+            {
+                CryptoCurrency = "BTC",
+                DerivationSchemeFormat = "BTCPay",
+                DerivationScheme = DerivationScheme.ToString(),
             }, "Save");
             return store;
         }

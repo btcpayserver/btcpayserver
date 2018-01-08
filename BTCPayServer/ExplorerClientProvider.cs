@@ -37,6 +37,16 @@ namespace BTCPayServer
             return GetExplorerClient(network.CryptoCode);
         }
 
+        public BTCPayNetwork GetNetwork(string cryptoCode)
+        {
+            var network = _NetworkProviders.GetNetwork(cryptoCode);
+            if (network == null)
+                return null;
+            if (_Options.ExplorerFactories.ContainsKey(network.CryptoCode))
+                return network;
+            return null;
+        }
+
         public IEnumerable<(BTCPayNetwork, ExplorerClient)> GetAll()
         {
             foreach(var net in _NetworkProviders.GetAll())

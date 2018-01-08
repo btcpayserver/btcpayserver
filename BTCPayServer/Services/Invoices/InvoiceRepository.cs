@@ -344,7 +344,8 @@ namespace BTCPayServer.Services.Invoices
                     .Invoices
                     .Include(o => o.Payments)
                     .Include(o => o.RefundAddresses);
-
+                if(queryObject.IncludeAddresses)
+                    query = query.Include(o => o.HistoricalAddressInvoices).Include(o => o.AddressInvoices);
                 if (!string.IsNullOrEmpty(queryObject.InvoiceId))
                 {
                     query = query.Where(i => i.Id == queryObject.InvoiceId);
@@ -549,5 +550,6 @@ namespace BTCPayServer.Services.Invoices
             get;
             set;
         }
+        public bool IncludeAddresses { get; set; }
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Data;
 using BTCPayServer.Services.Invoices;
 using NBitcoin;
 
@@ -9,8 +10,18 @@ namespace BTCPayServer.Models.InvoicingModels
 {
     public class InvoiceDetailsModel
     {
+        public class CryptoPayment
+        {
+            public string CryptoCode { get; set; }
+            public string Due { get; set; }
+            public string Paid { get; set; }
+            public string Address { get; internal set; }
+            public string Rate { get; internal set; }
+            public string PaymentUrl { get; internal set; }
+        }
         public class Payment
         {
+            public string CryptoCode { get; set; }
             public int Confirmations
             {
                 get; set;
@@ -48,10 +59,12 @@ namespace BTCPayServer.Models.InvoicingModels
             get; set;
         }
 
-        public List<Payment> Payments
+        public List<CryptoPayment> CryptoPayments
         {
             get; set;
-        } = new List<Payment>();
+        } = new List<CryptoPayment>();
+
+        public List<Payment> Payments { get; set; } = new List<Payment>();
 
         public string Status
         {
@@ -107,40 +120,12 @@ namespace BTCPayServer.Models.InvoicingModels
             get;
             set;
         }
-        public string BTC
-        {
-            get;
-            set;
-        }
-        public string BTCDue
-        {
-            get;
-            set;
-        }
-        public string BTCPaid
-        {
-            get;
-            internal set;
-        }
-        public String NetworkFee
-        {
-            get;
-            internal set;
-        }
         public ProductInformation ProductInformation
         {
             get;
             internal set;
         }
-        public BitcoinAddress BitcoinAddress
-        {
-            get;
-            internal set;
-        }
-        public string PaymentUrl
-        {
-            get;
-            set;
-        }
+        public HistoricalAddressInvoiceData[] Addresses { get; set; }
+        public DateTimeOffset MonitoringDate { get; internal set; }
     }
 }

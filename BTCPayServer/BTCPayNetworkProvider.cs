@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Services.Rates;
+using Microsoft.Extensions.Caching.Memory;
 using NBitcoin;
+using NBitpayClient;
 
 namespace BTCPayServer
 {
@@ -15,6 +18,11 @@ namespace BTCPayServer
         Dictionary<string, BTCPayNetwork> _Networks = new Dictionary<string, BTCPayNetwork>();
         public BTCPayNetworkProvider(Network network)
         {
+            var coinaverage = new CoinAverageRateProvider("BTC");
+            var bitpay = new BitpayRateProvider(new Bitpay(new Key(), new Uri("https://bitpay.com/")));
+            var btcRate = new FallbackRateProvider(new IRateProvider[] { coinaverage, bitpay });
+
+            var ltcRate = new CoinAverageRateProvider("LTC");
             if (network == Network.Main)
             {
                 Add(new BTCPayNetwork()
@@ -23,6 +31,7 @@ namespace BTCPayServer
                     BlockExplorerLink = "https://www.smartbit.com.au/tx/{0}",
                     NBitcoinNetwork = Network.Main,
                     UriScheme = "bitcoin",
+                    DefaultRateProvider = btcRate
                 });
                 Add(new BTCPayNetwork()
                 {
@@ -30,6 +39,7 @@ namespace BTCPayServer
                     BlockExplorerLink = "https://live.blockcypher.com/ltc/tx/{0}/",
                     NBitcoinNetwork = NBXplorer.Altcoins.Litecoin.Networks.Mainnet,
                     UriScheme = "litecoin",
+                    DefaultRateProvider = ltcRate
                 });
             }
 
@@ -41,6 +51,7 @@ namespace BTCPayServer
                     BlockExplorerLink = "https://testnet.smartbit.com.au/tx/{0}",
                     NBitcoinNetwork = Network.TestNet,
                     UriScheme = "bitcoin",
+                    DefaultRateProvider = btcRate
                 });
                 Add(new BTCPayNetwork()
                 {
@@ -48,6 +59,7 @@ namespace BTCPayServer
                     BlockExplorerLink = "http://explorer.litecointools.com/tx/{0}",
                     NBitcoinNetwork = NBXplorer.Altcoins.Litecoin.Networks.Testnet,
                     UriScheme = "litecoin",
+                    DefaultRateProvider = ltcRate
                 });
             }
 
@@ -58,7 +70,8 @@ namespace BTCPayServer
                     CryptoCode = "BTC",
                     BlockExplorerLink = "https://testnet.smartbit.com.au/tx/{0}",
                     NBitcoinNetwork = Network.RegTest,
-                    UriScheme = "bitcoin"
+                    UriScheme = "bitcoin",
+                    DefaultRateProvider = btcRate
                 });
                 Add(new BTCPayNetwork()
                 {
@@ -66,6 +79,7 @@ namespace BTCPayServer
                     BlockExplorerLink = "http://explorer.litecointools.com/tx/{0}",
                     NBitcoinNetwork = NBXplorer.Altcoins.Litecoin.Networks.Regtest,
                     UriScheme = "litecoin",
+                    DefaultRateProvider = ltcRate
                 });
             }
         }

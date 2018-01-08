@@ -159,7 +159,7 @@ namespace BTCPayServer.HostedServices
                 var alreadyAccounted = new HashSet<OutPoint>(invoice.Payments.Select(p => p.Outpoint));
                 foreach (var coin in coins.Coins.Where(c => !alreadyAccounted.Contains(c.Outpoint)))
                 {
-                    var payment = await _InvoiceRepository.AddPayment(invoice.Id, coin).ConfigureAwait(false);
+                    var payment = await _InvoiceRepository.AddPayment(invoice.Id, coin, coins.Strategy.Network.CryptoCode).ConfigureAwait(false);
                     invoice.Payments.Add(payment);
                     context.Events.Add(new InvoicePaymentEvent(invoice.Id));
                     dirtyAddress = true;

@@ -419,7 +419,7 @@ namespace BTCPayServer.Services.Invoices
             AddToTextSearch(invoiceId, addresses.Select(a => a.ToString()).ToArray());
         }
 
-        public async Task<PaymentEntity> AddPayment(string invoiceId, Coin receivedCoin)
+        public async Task<PaymentEntity> AddPayment(string invoiceId, Coin receivedCoin, string cryptoCode)
         {
             using (var context = _ContextFactory.CreateContext())
             {
@@ -428,6 +428,7 @@ namespace BTCPayServer.Services.Invoices
                     Outpoint = receivedCoin.Outpoint,
 #pragma warning disable CS0618
                     Output = receivedCoin.TxOut,
+                    CryptoCode = cryptoCode,
 #pragma warning restore CS0618
                     ReceivedTime = DateTime.UtcNow
                 };

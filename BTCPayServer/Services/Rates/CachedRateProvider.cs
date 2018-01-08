@@ -10,8 +10,9 @@ namespace BTCPayServer.Services.Rates
     {
         private IRateProvider _Inner;
         private IMemoryCache _MemoryCache;
+        private string _CryptoCode;
 
-        public CachedRateProvider(IRateProvider inner, IMemoryCache memoryCache)
+        public CachedRateProvider(string cryptoCode, IRateProvider inner, IMemoryCache memoryCache)
         {
             if (inner == null)
                 throw new ArgumentNullException(nameof(inner));
@@ -19,6 +20,7 @@ namespace BTCPayServer.Services.Rates
                 throw new ArgumentNullException(nameof(memoryCache));
             this._Inner = inner;
             this._MemoryCache = memoryCache;
+            this._CryptoCode = cryptoCode;
         }
 
         public TimeSpan CacheSpan
@@ -29,7 +31,7 @@ namespace BTCPayServer.Services.Rates
 
         public Task<decimal> GetRateAsync(string currency)
         {
-            return _MemoryCache.GetOrCreateAsync("CURR_" + currency, (ICacheEntry entry) =>
+            return _MemoryCache.GetOrCreateAsync("CURR_" + currency + "_" + _CryptoCode, (ICacheEntry entry) =>
             {
                 entry.AbsoluteExpiration = DateTimeOffset.UtcNow + CacheSpan;
                 return _Inner.GetRateAsync(currency);

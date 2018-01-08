@@ -459,11 +459,11 @@ namespace BTCPayServer.Tests
         [Fact]
         public void CheckRatesProvider()
         {
-            var coinAverage = new CoinAverageRateProvider();
+            var coinAverage = new CoinAverageRateProvider("BTC");
             var jpy = coinAverage.GetRateAsync("JPY").GetAwaiter().GetResult();
             var jpy2 = new BitpayRateProvider(new Bitpay(new Key(), new Uri("https://bitpay.com/"))).GetRateAsync("JPY").GetAwaiter().GetResult();
 
-            var cached = new CachedRateProvider(coinAverage, new MemoryCache(new MemoryCacheOptions() { ExpirationScanFrequency = TimeSpan.FromSeconds(1.0) }));
+            var cached = new CachedRateProvider("BTC", coinAverage, new MemoryCache(new MemoryCacheOptions() { ExpirationScanFrequency = TimeSpan.FromSeconds(1.0) }));
             cached.CacheSpan = TimeSpan.FromSeconds(10);
             var a = cached.GetRateAsync("JPY").GetAwaiter().GetResult();
             var b = cached.GetRateAsync("JPY").GetAwaiter().GetResult();

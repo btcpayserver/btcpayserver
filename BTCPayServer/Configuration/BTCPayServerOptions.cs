@@ -45,11 +45,14 @@ namespace BTCPayServer.Configuration
             DataDir = conf.GetOrDefault<string>("datadir", networkInfo.DefaultDataDirectory);
             Logs.Configuration.LogInformation("Network: " + Network);
 
+
+            
             foreach (var net in new BTCPayNetworkProvider(Network).GetAll())
             {
+                var nbxplorer = NBXplorer.Configuration.NetworkInformation.GetNetworkByName(net.NBitcoinNetwork.Name);
                 var explorer = conf.GetOrDefault<Uri>($"{net.CryptoCode}.explorer.url", null);
-                var cookieFile = conf.GetOrDefault<string>($"{net.CryptoCode}.explorer.cookiefile", null);
-                if (explorer != null && cookieFile != null)
+                var cookieFile = conf.GetOrDefault<string>($"{net.CryptoCode}.explorer.cookiefile", nbxplorer.GetDefaultCookieFile());
+                if (explorer != null)
                 {
                     ExplorerFactories.Add(net.CryptoCode, (n) => CreateExplorerClient(n, explorer, cookieFile));
                 }
@@ -58,7 +61,7 @@ namespace BTCPayServer.Configuration
             // Handle legacy explorer.url and explorer.cookiefile
             if (ExplorerFactories.Count == 0)
             {
-                var nbxplorer = NBXplorer.Configuration.NetworkInformation.GetNetworkByName(Network.Name);
+                var nbxplorer = NBXplorer.Configuration.NetworkInformation.GetNetworkByName(Network.Name); // Will get BTC info
                 var explorer = conf.GetOrDefault<Uri>($"explorer.url", new Uri(nbxplorer.GetDefaultExplorerUrl(), UriKind.Absolute));
                 var cookieFile = conf.GetOrDefault<string>($"explorer.cookiefile", nbxplorer.GetDefaultCookieFile());
                 ExplorerFactories.Add("BTC", (n) => CreateExplorerClient(n, explorer, cookieFile));

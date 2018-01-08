@@ -383,9 +383,9 @@ namespace BTCPayServer.Tests
                     Assert.True(IsMapped(localInvoice, ctx));
 
                     invoiceEntity = repo.GetInvoice(null, invoice.Id, true).GetAwaiter().GetResult();
-                    var historical1 = invoiceEntity.HistoricalAddresses.FirstOrDefault(h => h.Address == invoice.BitcoinAddress.ToString());
+                    var historical1 = invoiceEntity.HistoricalAddresses.FirstOrDefault(h => h.GetAddress() == invoice.BitcoinAddress.ToString());
                     Assert.NotNull(historical1.UnAssigned);
-                    var historical2 = invoiceEntity.HistoricalAddresses.FirstOrDefault(h => h.Address == localInvoice.BitcoinAddress.ToString());
+                    var historical2 = invoiceEntity.HistoricalAddresses.FirstOrDefault(h => h.GetAddress() == localInvoice.BitcoinAddress.ToString());
                     Assert.Null(historical2.UnAssigned);
                     invoiceAddress = BitcoinAddress.Create(localInvoice.BitcoinAddress, cashCow.Network);
                     secondPayment = localInvoice.BtcDue;
@@ -473,8 +473,8 @@ namespace BTCPayServer.Tests
 
         private static bool IsMapped(Invoice invoice, ApplicationDbContext ctx)
         {
-            var h = BitcoinAddress.Create(invoice.BitcoinAddress).ScriptPubKey.Hash.ToString();
-            return ctx.AddressInvoices.FirstOrDefault(i => i.InvoiceDataId == invoice.Id && i.Address == h) != null;
+            var h = BitcoinAddress.Create(invoice.BitcoinAddress).ScriptPubKey.Hash;
+            return ctx.AddressInvoices.FirstOrDefault(i => i.InvoiceDataId == invoice.Id && i.GetHash() == h) != null;
         }
 
         private void Eventually(Action act)

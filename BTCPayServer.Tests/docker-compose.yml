@@ -11,19 +11,17 @@ services:
       dockerfile: BTCPayServer.Tests/Dockerfile
     environment:
       TESTS_RPCCONNECTION: server=http://bitcoind:43782;ceiwHEbqWI83:DwubwWsoo3
-      TESTS_NBXPLORERURL: http://nbxplorer:32838/
+      TESTS_BTCNBXPLORERURL: http://bitcoin-nbxplorer:32838/
+      TESTS_LTCNBXPLORERURL: http://litecoin-nbxplorer:32839/
       TESTS_POSTGRES: User ID=postgres;Host=postgres;Port=5432;Database=btcpayserver
       TESTS_PORT: 80
       TESTS_HOSTNAME: tests
-      # TEST_ECLAIR1: http://eclair1:8080/
-      # TEST_ECLAIR2: http://eclair2:8080/
     expose:
       - "80"
     links:
-      - bitcoind
-      - nbxplorer
-      # - eclair1
-      # - eclair2
+      - bitcoin-nbxplorer
+      - litecoin-nbxplorer
+      - postgres
     extra_hosts: 
       - "tests:127.0.0.1"
 
@@ -35,12 +33,11 @@ services:
         regtest=1
         connect=bitcoind:39388
     links:
-      - bitcoind
-      - nbxplorer
-      # - eclair1
-      # - eclair2
+      - bitcoin-nbxplorer
+      - litecoin-nbxplorer
+      - postgres
 
-  nbxplorer:
+  bitcoin-nbxplorer:
     image: nicolasdorier/nbxplorer:1.0.0.39
     ports:
       - "32838:32838"
@@ -57,49 +54,24 @@ services:
       NBXPLORER_NOAUTH: 1
     links:
       - bitcoind
-      - postgres
 
-  eclair1:
-    image: acinq/eclair:latest
-    environment:
-      JAVA_OPTS: >
-        -Xmx512m 
-        -Declair.printToConsole 
-        -Declair.bitcoind.host=bitcoind 
-        -Declair.bitcoind.rpcport=43782 
-        -Declair.bitcoind.rpcuser=ceiwHEbqWI83 
-        -Declair.bitcoind.rpcpassword=DwubwWsoo3 
-        -Declair.bitcoind.zmq=tcp://bitcoind:29000
-        -Declair.chain=regtest
-        -Declair.api.binding-ip=0.0.0.0
-    links:
-      - bitcoind
+  litecoin-nbxplorer:
+    image: nicolasdorier/nbxplorer:1.0.0.39
     ports:
-      - "30992:8080" # api port
-    expose:
-      - "9735" # server port
-      - "8080" # api port
-
-  eclair2:
-    image: acinq/eclair:latest
+      - "32839:32839"
+    expose: 
+      - "32839"
     environment:
-      JAVA_OPTS: >
-        -Xmx512m 
-        -Declair.printToConsole 
-        -Declair.bitcoind.host=bitcoind 
-        -Declair.bitcoind.rpcport=43782 
-        -Declair.bitcoind.rpcuser=ceiwHEbqWI83 
-        -Declair.bitcoind.rpcpassword=DwubwWsoo3 
-        -Declair.bitcoind.zmq=tcp://bitcoind:29000
-        -Declair.chain=regtest
-        -Declair.api.binding-ip=0.0.0.0
+      NBXPLORER_NETWORK: ltc-regtest
+      NBXPLORER_RPCURL: http://litecoind:43782/
+      NBXPLORER_RPCUSER: ceiwHEbqWI83
+      NBXPLORER_RPCPASSWORD: DwubwWsoo3
+      NBXPLORER_NODEENDPOINT: litecoind:39388
+      NBXPLORER_BIND: 0.0.0.0:32839
+      NBXPLORER_VERBOSE: 1
+      NBXPLORER_NOAUTH: 1
     links:
-      - bitcoind
-    ports:
-      - "30993:8080" # api port
-    expose:
-      - "9735" # server port
-      - "8080" # api port
+        - litecoind
 
   bitcoind:
     container_name: btcpayserver_dev_bitcoind
@@ -116,8 +88,30 @@ services:
         zmqpubrawblock=tcp://0.0.0.0:29000
         zmqpubrawtx=tcp://0.0.0.0:29000
         txindex=1
-    ports:
-      - "43782:43782" # RPC
+    ports: 
+      - "43782:43782"
+    expose:
+      - "43782" # RPC
+      - "39388" # P2P
+      - "29000" # zmq
+
+  litecoind:
+    container_name: btcpayserver_dev_litecoind
+    image: nicolasdorier/docker-litecoin:0.14.2
+    environment:
+      BITCOIN_EXTRA_ARGS: |
+        rpcuser=ceiwHEbqWI83
+        rpcpassword=DwubwWsoo3
+        regtest=1
+        server=1
+        rpcport=43782
+        port=39388
+        whitelist=0.0.0.0/0
+        zmqpubrawblock=tcp://0.0.0.0:29000
+        zmqpubrawtx=tcp://0.0.0.0:29000
+        txindex=1
+    ports: 
+      - "43783:43782"
     expose:
       - "43782" # RPC
       - "39388" # P2P

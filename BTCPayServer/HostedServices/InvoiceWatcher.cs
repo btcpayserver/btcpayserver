@@ -63,9 +63,9 @@ namespace BTCPayServer.HostedServices
         }
         CompositeDisposable leases = new CompositeDisposable();
 
-        async Task NotifyReceived(Script scriptPubKey)
+        async Task NotifyReceived(Script scriptPubKey, BTCPayNetwork network)
         {
-            var invoice = await _InvoiceRepository.GetInvoiceIdFromScriptPubKey(scriptPubKey);
+            var invoice = await _InvoiceRepository.GetInvoiceIdFromScriptPubKey(scriptPubKey, network.CryptoCode);
             if (invoice != null)
                 _WatchRequests.Add(invoice);
         }
@@ -149,7 +149,7 @@ namespace BTCPayServer.HostedServices
             var getCoinsResponses = getCoinsResponsesAsync.Select(g => g.Result).ToArray();
             foreach (var response in getCoinsResponses)
             {
-                response.Coins = response.Coins.Where(c => invoice.AvailableAddressHashes.Contains(c.ScriptPubKey.Hash.ToString())).ToArray();
+                response.Coins = response.Coins.Where(c => invoice.AvailableAddressHashes.Contains(c.ScriptPubKey.Hash.ToString() + response.Strategy.Network.CryptoCode)).ToArray();
             }
             var coins = getCoinsResponses.Where(s => s.Coins.Length != 0).FirstOrDefault();
             bool dirtyAddress = false;
@@ -208,7 +208,6 @@ namespace BTCPayServer.HostedServices
 
                 if (totalPaid < accounting.TotalDue && invoice.Payments.Count != 0 && invoice.ExceptionStatus != "paidPartial")
                 {
-                    Logs.PayServer.LogInformation("Paid to " + cryptoData.DepositAddress);
                     invoice.ExceptionStatus = "paidPartial";
                     context.MarkDirty();
                     if (dirtyAddress)
@@ -379,7 +378,7 @@ namespace BTCPayServer.HostedServices
             }, null, 0, (int)PollInterval.TotalMilliseconds);
 
             leases.Add(_EventAggregator.Subscribe<Events.NewBlockEvent>(async b => { await NotifyBlock(); }));
-            leases.Add(_EventAggregator.Subscribe<Events.TxOutReceivedEvent>(async b => { await NotifyReceived(b.ScriptPubKey); }));
+            leases.Add(_EventAggregator.Subscribe<Events.TxOutReceivedEvent>(async b => { await NotifyReceived(b.ScriptPubKey, b.Network); }));
             leases.Add(_EventAggregator.Subscribe<Events.InvoiceCreatedEvent>(b => { Watch(b.InvoiceId); }));
 
             return Task.CompletedTask;

@@ -107,12 +107,6 @@ namespace BTCPayServer.Tests
                     .Build();
             _Host.Start();
             InvoiceRepository = (InvoiceRepository)_Host.Services.GetService(typeof(InvoiceRepository));
-
-            var waiter = ((NBXplorerWaiterAccessor)_Host.Services.GetService(typeof(NBXplorerWaiterAccessor))).Instance;
-            while(waiter.State != NBXplorerState.Ready)
-            {
-                Thread.Sleep(10);
-            }
         }
         
         public string HostName

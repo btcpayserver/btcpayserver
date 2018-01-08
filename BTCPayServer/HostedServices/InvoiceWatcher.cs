@@ -15,45 +15,53 @@ using Hangfire;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Controllers;
 using BTCPayServer.Events;
+using Microsoft.AspNetCore.Hosting;
+using BTCPayServer.Services.Invoices;
 
-namespace BTCPayServer.Services.Invoices
+namespace BTCPayServer.HostedServices
 {
-    public class InvoiceWatcherAccessor
-    {
-        public InvoiceWatcher Instance { get; set; }
-    }
     public class InvoiceWatcher : IHostedService
     {
+        class UpdateInvoiceContext
+        {
+            public UpdateInvoiceContext()
+            {
+
+            }
+
+            public Dictionary<BTCPayNetwork, KnownState> KnownStates { get; set; }
+            public Dictionary<BTCPayNetwork, KnownState> ModifiedKnownStates { get; set; } = new Dictionary<BTCPayNetwork, KnownState>();
+            public InvoiceEntity Invoice { get; set; }
+            public List<object> Events { get; set; } = new List<object>();
+
+            bool _Dirty = false;
+            public void MarkDirty()
+            {
+                _Dirty = true;
+            }
+
+            public bool Dirty => _Dirty;
+        }
+
         InvoiceRepository _InvoiceRepository;
-        ExplorerClient _ExplorerClient;
-        DerivationStrategyFactory _DerivationFactory;
         EventAggregator _EventAggregator;
         BTCPayWallet _Wallet;
         BTCPayNetworkProvider _NetworkProvider;
 
-        public InvoiceWatcher(ExplorerClient explorerClient,
+        public InvoiceWatcher(
+            IHostingEnvironment env,
             BTCPayNetworkProvider networkProvider,
             InvoiceRepository invoiceRepository,
             EventAggregator eventAggregator,
-            BTCPayWallet wallet,
-            InvoiceWatcherAccessor accessor)
+            BTCPayWallet wallet)
         {
-            LongPollingMode = explorerClient.Network == Network.RegTest;
-            PollInterval = explorerClient.Network == Network.RegTest ? TimeSpan.FromSeconds(10.0) : TimeSpan.FromMinutes(1.0);
+            PollInterval = TimeSpan.FromMinutes(1.0);
             _Wallet = wallet ?? throw new ArgumentNullException(nameof(wallet));
-            _ExplorerClient = explorerClient ?? throw new ArgumentNullException(nameof(explorerClient));
-            _DerivationFactory = new DerivationStrategyFactory(_ExplorerClient.Network);
             _InvoiceRepository = invoiceRepository ?? throw new ArgumentNullException(nameof(invoiceRepository));
             _EventAggregator = eventAggregator ?? throw new ArgumentNullException(nameof(eventAggregator));
             _NetworkProvider = networkProvider;
-            accessor.Instance = this;
         }
         CompositeDisposable leases = new CompositeDisposable();
-
-        public bool LongPollingMode
-        {
-            get; set;
-        }
 
         async Task NotifyReceived(Script scriptPubKey)
         {
@@ -72,7 +80,7 @@ namespace BTCPayServer.Services.Invoices
 
         private async Task UpdateInvoice(string invoiceId)
         {
-            UTXOChanges changes = null;
+            Dictionary<BTCPayNetwork, KnownState> changes = new Dictionary<BTCPayNetwork, KnownState>();
             while (true)
             {
                 try
@@ -81,22 +89,30 @@ namespace BTCPayServer.Services.Invoices
                     if (invoice == null)
                         break;
                     var stateBefore = invoice.Status;
-                    var postSaveActions = new List<Action>();
-                    var result = await UpdateInvoice(changes, invoice, postSaveActions).ConfigureAwait(false);
-                    changes = result.Changes;
-                    if (result.NeedSave)
-                    { 
+                    var updateContext = new UpdateInvoiceContext()
+                    {
+                        Invoice = invoice,
+                        KnownStates = changes
+                    };
+                    await UpdateInvoice(updateContext).ConfigureAwait(false);
+                    if (updateContext.Dirty)
+                    {
                         await _InvoiceRepository.UpdateInvoiceStatus(invoice.Id, invoice.Status, invoice.ExceptionStatus).ConfigureAwait(false);
                         _EventAggregator.Publish(new InvoiceDataChangedEvent() { InvoiceId = invoice.Id });
                     }
 
                     var changed = stateBefore != invoice.Status;
 
-                    foreach(var saveAction in postSaveActions)
+                    foreach (var evt in updateContext.Events)
                     {
-                        saveAction();
+                        _EventAggregator.Publish(evt, evt.GetType());
                     }
-                    
+
+                    foreach (var modifiedKnownState in updateContext.ModifiedKnownStates)
+                    {
+                        changes.AddOrReplace(modifiedKnownState.Key, modifiedKnownState.Value);
+                    }
+
                     if (invoice.Status == "complete" ||
                        ((invoice.Status == "invalid" || invoice.Status == "expired") && invoice.MonitoringExpiration < DateTimeOffset.UtcNow))
                     {
@@ -121,60 +137,65 @@ namespace BTCPayServer.Services.Invoices
         }
 
 
-        private async Task<(bool NeedSave, UTXOChanges Changes)> UpdateInvoice(UTXOChanges changes, InvoiceEntity invoice, List<Action> postSaveActions)
+        private async Task UpdateInvoice(UpdateInvoiceContext context)
         {
-            bool needSave = false;
+            var invoice = context.Invoice;
             //Fetch unknown payments
-            var strategy = _DerivationFactory.Parse(invoice.DerivationStrategy);
-            changes = await _ExplorerClient.SyncAsync(strategy, changes, !LongPollingMode, _Cts.Token).ConfigureAwait(false);
-
-
-            var utxos = changes.Confirmed.UTXOs.Concat(changes.Unconfirmed.UTXOs).ToArray();
-            List<Coin> receivedCoins = new List<Coin>();
-            foreach (var received in utxos)
-                if (invoice.AvailableAddressHashes.Contains(received.Output.ScriptPubKey.Hash.ToString()))
-                    receivedCoins.Add(new Coin(received.Outpoint, received.Output));
-
-            var alreadyAccounted = new HashSet<OutPoint>(invoice.Payments.Select(p => p.Outpoint));
-            bool dirtyAddress = false;
-            foreach (var coin in receivedCoins.Where(c => !alreadyAccounted.Contains(c.Outpoint)))
+            var strategies = invoice.GetDerivationStrategies(_NetworkProvider).ToArray();
+            var getCoinsResponsesAsync = strategies
+                                .Select(d => _Wallet.GetCoins(d, context.KnownStates.TryGet(d.Network), _Cts.Token))
+                                .ToArray();
+            await Task.WhenAll(getCoinsResponsesAsync);
+            var getCoinsResponses = getCoinsResponsesAsync.Select(g => g.Result).ToArray();
+            foreach (var response in getCoinsResponses)
             {
-                var payment = await _InvoiceRepository.AddPayment(invoice.Id, coin).ConfigureAwait(false);
-                invoice.Payments.Add(payment);
-                postSaveActions.Add(() => _EventAggregator.Publish(new InvoicePaymentEvent(invoice.Id)));
-                dirtyAddress = true;
+                response.Coins = response.Coins.Where(c => invoice.AvailableAddressHashes.Contains(c.ScriptPubKey.Hash.ToString())).ToArray();
+            }
+            var coins = getCoinsResponses.Where(s => s.Coins.Length != 0).FirstOrDefault();
+            bool dirtyAddress = false;
+            if (coins != null)
+            {
+                context.ModifiedKnownStates.Add(coins.Strategy.Network, coins.State);
+                var alreadyAccounted = new HashSet<OutPoint>(invoice.Payments.Select(p => p.Outpoint));
+                foreach (var coin in coins.Coins.Where(c => !alreadyAccounted.Contains(c.Outpoint)))
+                {
+                    var payment = await _InvoiceRepository.AddPayment(invoice.Id, coin).ConfigureAwait(false);
+                    invoice.Payments.Add(payment);
+                    context.Events.Add(new InvoicePaymentEvent(invoice.Id));
+                    dirtyAddress = true;
+                }
             }
             //////
-            var network = _NetworkProvider.GetNetwork("BTC");
+            var network = coins?.Strategy?.Network ?? _NetworkProvider.GetNetwork(invoice.GetCryptoData().First().Key);
             var cryptoData = invoice.GetCryptoData(network);
             var cryptoDataAll = invoice.GetCryptoData();
             var accounting = cryptoData.Calculate();
             if (invoice.Status == "new" && invoice.ExpirationTime < DateTimeOffset.UtcNow)
             {
-                needSave = true;
+                context.MarkDirty();
                 await _InvoiceRepository.UnaffectAddress(invoice.Id);
 
-                postSaveActions.Add(() => _EventAggregator.Publish(new InvoiceStatusChangedEvent(invoice, "expired")));
+                context.Events.Add(new InvoiceStatusChangedEvent(invoice, "expired"));
                 invoice.Status = "expired";
             }
 
             if (invoice.Status == "new" || invoice.Status == "expired")
             {
-                var totalPaid = (await GetPaymentsWithTransaction(invoice)).Select(p => p.Payment.GetValue(cryptoDataAll, cryptoData.CryptoCode)).Sum();
+                var totalPaid = (await GetPaymentsWithTransaction(network, invoice)).Select(p => p.Payment.GetValue(cryptoDataAll, cryptoData.CryptoCode)).Sum();
                 if (totalPaid >= accounting.TotalDue)
                 {
                     if (invoice.Status == "new")
                     {
-                        postSaveActions.Add(() => _EventAggregator.Publish(new InvoiceStatusChangedEvent(invoice, "paid")));
+                        context.Events.Add(new InvoiceStatusChangedEvent(invoice, "paid"));
                         invoice.Status = "paid";
                         invoice.ExceptionStatus = null;
                         await _InvoiceRepository.UnaffectAddress(invoice.Id);
-                        needSave = true;
+                        context.MarkDirty();
                     }
                     else if (invoice.Status == "expired")
                     {
                         invoice.ExceptionStatus = "paidLate";
-                        needSave = true;
+                        context.MarkDirty();
                     }
                 }
 
@@ -182,17 +203,17 @@ namespace BTCPayServer.Services.Invoices
                 {
                     invoice.ExceptionStatus = "paidOver";
                     await _InvoiceRepository.UnaffectAddress(invoice.Id);
-                    needSave = true;
+                    context.MarkDirty();
                 }
 
                 if (totalPaid < accounting.TotalDue && invoice.Payments.Count != 0 && invoice.ExceptionStatus != "paidPartial")
                 {
                     Logs.PayServer.LogInformation("Paid to " + cryptoData.DepositAddress);
                     invoice.ExceptionStatus = "paidPartial";
-                    needSave = true;
+                    context.MarkDirty();
                     if (dirtyAddress)
                     {
-                        var address = await _Wallet.ReserveAddressAsync(_DerivationFactory.Parse(invoice.DerivationStrategy));
+                        var address = await _Wallet.ReserveAddressAsync(coins.Strategy);
                         Logs.PayServer.LogInformation("Generate new " + address);
                         await _InvoiceRepository.NewAddress(invoice.Id, address, network);
                     }
@@ -201,11 +222,10 @@ namespace BTCPayServer.Services.Invoices
 
             if (invoice.Status == "paid")
             {
-                var transactions = await GetPaymentsWithTransaction(invoice);
-                var chainConfirmedTransactions = transactions.Where(t => t.Confirmations >= 1);
+                var transactions = await GetPaymentsWithTransaction(network, invoice);
                 if (invoice.SpeedPolicy == SpeedPolicy.HighSpeed)
                 {
-                    transactions = transactions.Where(t => !t.Transaction.RBF);
+                    transactions = transactions.Where(t => t.Confirmations >= 1 || !t.Transaction.RBF);
                 }
                 else if (invoice.SpeedPolicy == SpeedPolicy.MediumSpeed)
                 {
@@ -216,50 +236,45 @@ namespace BTCPayServer.Services.Invoices
                     transactions = transactions.Where(t => t.Confirmations >= 6);
                 }
 
-                var chainTotalConfirmed = chainConfirmedTransactions.Select(t => t.Payment.GetValue(cryptoDataAll, cryptoData.CryptoCode)).Sum();
+                var totalConfirmed = transactions.Select(t => t.Payment.GetValue(cryptoDataAll, cryptoData.CryptoCode)).Sum();
 
                 if (// Is after the monitoring deadline
                    (invoice.MonitoringExpiration < DateTimeOffset.UtcNow)
                    &&
                    // And not enough amount confirmed
-                   (chainTotalConfirmed < accounting.TotalDue))
+                   (totalConfirmed < accounting.TotalDue))
                 {
                     await _InvoiceRepository.UnaffectAddress(invoice.Id);
-                    postSaveActions.Add(() => _EventAggregator.Publish(new InvoiceStatusChangedEvent(invoice, "invalid")));
+                    context.Events.Add(new InvoiceStatusChangedEvent(invoice, "invalid"));
                     invoice.Status = "invalid";
-                    needSave = true;
+                    context.MarkDirty();
                 }
-                else
+                else if (totalConfirmed >= accounting.TotalDue)
                 {
-                    var totalConfirmed = transactions.Select(t => t.Payment.GetValue(cryptoDataAll, cryptoData.CryptoCode)).Sum();
-                    if (totalConfirmed >= accounting.TotalDue)
-                    {
-                        await _InvoiceRepository.UnaffectAddress(invoice.Id);
-                        postSaveActions.Add(() => _EventAggregator.Publish(new InvoiceStatusChangedEvent(invoice, "confirmed")));
-                        invoice.Status = "confirmed";
-                        needSave = true;
-                    }
+                    await _InvoiceRepository.UnaffectAddress(invoice.Id);
+                    context.Events.Add(new InvoiceStatusChangedEvent(invoice, "confirmed"));
+                    invoice.Status = "confirmed";
+                    context.MarkDirty();
                 }
             }
 
             if (invoice.Status == "confirmed")
             {
-                var transactions = await GetPaymentsWithTransaction(invoice);
+                var transactions = await GetPaymentsWithTransaction(network, invoice);
                 transactions = transactions.Where(t => t.Confirmations >= 6);
                 var totalConfirmed = transactions.Select(t => t.Payment.GetValue(cryptoDataAll, cryptoData.CryptoCode)).Sum();
                 if (totalConfirmed >= accounting.TotalDue)
                 {
-                    postSaveActions.Add(() => _EventAggregator.Publish(new InvoiceStatusChangedEvent(invoice, "complete")));
+                    context.Events.Add(new InvoiceStatusChangedEvent(invoice, "complete"));
                     invoice.Status = "complete";
-                    needSave = true;
+                    context.MarkDirty();
                 }
             }
-            return (needSave, changes);
         }
 
-        private async Task<IEnumerable<AccountedPaymentEntity>> GetPaymentsWithTransaction(InvoiceEntity invoice)
+        private async Task<IEnumerable<AccountedPaymentEntity>> GetPaymentsWithTransaction(BTCPayNetwork network, InvoiceEntity invoice)
         {
-            var transactions = await _ExplorerClient.GetTransactions(invoice.Payments.Select(t => t.Outpoint.Hash).ToArray());
+            var transactions = await _Wallet.GetTransactions(network, invoice.Payments.Select(t => t.Outpoint.Hash).ToArray());
 
             var spentTxIn = new Dictionary<OutPoint, AccountedPaymentEntity>();
             var result = invoice.Payments.Select(p => p.Outpoint).ToHashSet();
@@ -329,7 +344,7 @@ namespace BTCPayServer.Services.Invoices
             }
         }
 
-        public void Watch(string invoiceId)
+        private void Watch(string invoiceId)
         {
             if (invoiceId == null)
                 throw new ArgumentNullException(nameof(invoiceId));
@@ -363,8 +378,9 @@ namespace BTCPayServer.Services.Invoices
                 }
             }, null, 0, (int)PollInterval.TotalMilliseconds);
 
-            leases.Add(_EventAggregator.Subscribe<NewBlockEvent>(async b => { await NotifyBlock(); }));
-            leases.Add(_EventAggregator.Subscribe<TxOutReceivedEvent>(async b => { await NotifyReceived(b.ScriptPubKey); }));
+            leases.Add(_EventAggregator.Subscribe<Events.NewBlockEvent>(async b => { await NotifyBlock(); }));
+            leases.Add(_EventAggregator.Subscribe<Events.TxOutReceivedEvent>(async b => { await NotifyReceived(b.ScriptPubKey); }));
+            leases.Add(_EventAggregator.Subscribe<Events.InvoiceCreatedEvent>(b => { Watch(b.InvoiceId); }));
 
             return Task.CompletedTask;
         }

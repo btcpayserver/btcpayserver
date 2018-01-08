@@ -19,6 +19,7 @@ using BTCPayServer.Services.Rates;
 using System.Net.WebSockets;
 using System.Threading;
 using BTCPayServer.Events;
+using NBXplorer;
 
 namespace BTCPayServer.Controllers
 {
@@ -30,7 +31,7 @@ namespace BTCPayServer.Controllers
         {
             if (command == "refresh")
             {
-                _Watcher.Watch(invoiceId);
+                _EventAggregator.Publish(new Events.InvoiceCreatedEvent(invoiceId));
             }
             StatusMessage = "Invoice is state is being refreshed, please refresh the page soon...";
             return RedirectToAction(nameof(Invoice), new
@@ -93,7 +94,7 @@ namespace BTCPayServer.Controllers
                 {
                     var m = new InvoiceDetailsModel.Payment();
                     m.DepositAddress = payment.GetScriptPubKey().GetDestinationAddress(network.NBitcoinNetwork);
-                    m.Confirmations = (await _Explorer.GetTransactionAsync(payment.Outpoint.Hash))?.Confirmations ?? 0;
+                    m.Confirmations = (await _ExplorerClients.GetExplorerClient(payment.GetCryptoCode())?.GetTransactionAsync(payment.Outpoint.Hash))?.Confirmations ?? 0;
                     m.TransactionId = payment.Outpoint.Hash.ToString();
                     m.ReceivedTime = payment.ReceivedTime;
                     m.TransactionLink = string.Format(network.BlockExplorerLink, m.TransactionId);
@@ -129,6 +130,8 @@ namespace BTCPayServer.Controllers
 
         private async Task<PaymentModel> GetInvoiceModel(string invoiceId, string cryptoCode)
         {
+            if (cryptoCode == null)
+                throw new ArgumentNullException(nameof(cryptoCode));
             var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
             var network = _NetworkProvider.GetNetwork(cryptoCode);
             if (invoice == null || network == null || !invoice.Support(network))
@@ -157,7 +160,7 @@ namespace BTCPayServer.Controllers
                 MerchantRefLink = invoice.RedirectURL ?? "/",
                 StoreName = store.StoreName,
                 TxFees = cryptoData.TxFee.ToString(),
-                InvoiceBitcoinUrl = cryptoInfo.PaymentUrls.BIP72,
+                InvoiceBitcoinUrl = cryptoInfo.PaymentUrls.BIP21,
                 TxCount = accounting.TxCount,
                 BtcPaid = accounting.Paid.ToString(),
                 Status = invoice.Status
@@ -183,6 +186,8 @@ namespace BTCPayServer.Controllers
         [Route("i/{invoiceId}/status")]
         public async Task<IActionResult> GetStatus(string invoiceId, string cryptoCode)
         {
+            if (cryptoCode == null)
+                cryptoCode = "BTC";
             var model = await GetInvoiceModel(invoiceId, cryptoCode);
             if (model == null)
                 return NotFound();
@@ -202,9 +207,9 @@ namespace BTCPayServer.Controllers
             CompositeDisposable leases = new CompositeDisposable();
             try
             {
-                _EventAggregator.Subscribe<Events.InvoiceDataChangedEvent>(async o => await NotifySocket(webSocket, o.InvoiceId, invoiceId));
-                _EventAggregator.Subscribe<Events.InvoicePaymentEvent>(async o => await NotifySocket(webSocket, o.InvoiceId, invoiceId));
-                _EventAggregator.Subscribe<Events.InvoiceStatusChangedEvent>(async o => await NotifySocket(webSocket, o.InvoiceId, invoiceId));
+                leases.Add(_EventAggregator.Subscribe<Events.InvoiceDataChangedEvent>(async o => await NotifySocket(webSocket, o.InvoiceId, invoiceId)));
+                leases.Add(_EventAggregator.Subscribe<Events.InvoicePaymentEvent>(async o => await NotifySocket(webSocket, o.InvoiceId, invoiceId)));
+                leases.Add(_EventAggregator.Subscribe<Events.InvoiceStatusChangedEvent>(async o => await NotifySocket(webSocket, o.InvoiceId, invoiceId)));
                 while (true)
                 {
                     var message = await webSocket.ReceiveAsync(DummyBuffer, default(CancellationToken));
@@ -217,17 +222,9 @@ namespace BTCPayServer.Controllers
                 leases.Dispose();
                 await CloseSocket(webSocket);
             }
-            return new NoResponse();
+            return new EmptyResult();
         }
-
-        class NoResponse : IActionResult
-        {
-            public Task ExecuteResultAsync(ActionContext context)
-            {
-                return Task.CompletedTask;
-            }
-        }
-
+        
         ArraySegment<Byte> DummyBuffer = new ArraySegment<Byte>(new Byte[1]);
         private async Task NotifySocket(WebSocket webSocket, string invoiceId, string expectedId)
         {
@@ -329,7 +326,7 @@ namespace BTCPayServer.Controllers
                 return View(model);
             }
             var store = await _StoreRepository.FindStore(model.StoreId, GetUserId());
-            if (string.IsNullOrEmpty(store.DerivationStrategy))
+            if (store.GetDerivationStrategies(_NetworkProvider).Count() == 0)
             {
                 StatusMessage = "Error: You need to configure the derivation scheme in order to create an invoice";
                 return RedirectToAction(nameof(StoresController.UpdateStore), "Stores", new

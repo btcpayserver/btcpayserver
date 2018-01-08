@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Logging;
+using System.Threading;
 
 namespace BTCPayServer
 {
@@ -26,8 +27,12 @@ namespace BTCPayServer
 
             public Action<Object> Act { get; set; }
 
+            bool _Disposed;
             public void Dispose()
             {
+                if (_Disposed)
+                    return;
+                _Disposed = true;
                 lock (this.aggregator._Subscriptions)
                 {
                     if (this.aggregator._Subscriptions.TryGetValue(t, out Dictionary<Subscription, Action<object>> actions))
@@ -51,15 +56,33 @@ namespace BTCPayServer
                 Dispose();
             }
         }
+        public Task<T> WaitNext<T>(CancellationToken cancellation = default(CancellationToken))
+        {
+            return WaitNext<T>(o => true, cancellation);
+        }
+        public async Task<T> WaitNext<T>(Func<T, bool> predicate, CancellationToken cancellation = default(CancellationToken))
+        {
+            TaskCompletionSource<T> tcs = new TaskCompletionSource<T>();
+            var subscription = Subscribe<T>((a, b) => { if (predicate(b)) { tcs.TrySetResult(b); a.Unsubscribe(); } });
+            using (cancellation.Register(() => { tcs.TrySetCanceled(); subscription.Unsubscribe(); }))
+            {
+                return await tcs.Task.ConfigureAwait(false);
+            }
+        }
 
         public void Publish<T>(T evt) where T : class
+        {
+            Publish(evt, typeof(T));
+        }
+
+        public void Publish(object evt, Type evtType)
         {
             if (evt == null)
                 throw new ArgumentNullException(nameof(evt));
             List<Action<object>> actionList = new List<Action<object>>();
             lock (_Subscriptions)
             {
-                if (_Subscriptions.TryGetValue(typeof(T), out Dictionary<Subscription, Action<object>> actions))
+                if (_Subscriptions.TryGetValue(evtType, out Dictionary<Subscription, Action<object>> actions))
                 {
                     actionList = actions.Values.ToList();
                 }

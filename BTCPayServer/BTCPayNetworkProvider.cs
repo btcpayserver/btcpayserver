@@ -11,14 +11,14 @@ namespace BTCPayServer
         Dictionary<string, BTCPayNetwork> _Networks = new Dictionary<string, BTCPayNetwork>();
         public BTCPayNetworkProvider(Network network)
         {
-            if(network == Network.Main)
+            if (network == Network.Main)
             {
                 Add(new BTCPayNetwork()
                 {
                     CryptoCode = "BTC",
                     BlockExplorerLink = "https://www.smartbit.com.au/tx/{0}",
                     NBitcoinNetwork = Network.Main,
-                    UriScheme = "bitcoin"
+                    UriScheme = "bitcoin",
                 });
             }
 
@@ -29,7 +29,7 @@ namespace BTCPayServer
                     CryptoCode = "BTC",
                     BlockExplorerLink = "https://testnet.smartbit.com.au/tx/{0}",
                     NBitcoinNetwork = Network.TestNet,
-                    UriScheme = "bitcoin"
+                    UriScheme = "bitcoin",
                 });
             }
 
@@ -45,9 +45,23 @@ namespace BTCPayServer
             }
         }
 
+        [Obsolete("Should not be needed")]
+        public BTCPayNetwork BTC
+        {
+            get
+            {
+                return GetNetwork("BTC");
+            }
+        }
+
         public void Add(BTCPayNetwork network)
         {
             _Networks.Add(network.CryptoCode, network);
+        }
+
+        public IEnumerable<BTCPayNetwork> GetAll()
+        {
+            return _Networks.Values.ToArray();
         }
 
         public BTCPayNetwork GetNetwork(string cryptoCode)

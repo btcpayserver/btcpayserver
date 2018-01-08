@@ -17,8 +17,10 @@ using Newtonsoft.Json;
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Hosting;
 using BTCPayServer.Events;
+using NBXplorer;
+using BTCPayServer.Services.Invoices;
 
-namespace BTCPayServer.Services.Invoices
+namespace BTCPayServer.HostedServices
 {
     public class InvoiceNotificationManager : IHostedService
     {
@@ -113,6 +115,7 @@ namespace BTCPayServer.Services.Invoices
             }
         }
 
+        Encoding UTF8 = new UTF8Encoding(false);
         private async Task<HttpResponseMessage> SendNotification(InvoiceEntity invoice, CancellationToken cancellation)
         {
             var request = new HttpRequestMessage();
@@ -147,7 +150,7 @@ namespace BTCPayServer.Services.Invoices
 #pragma warning restore CS0618
             }
             request.RequestUri = new Uri(invoice.NotificationURL, UriKind.Absolute);
-            request.Content = new StringContent(JsonConvert.SerializeObject(notification), Encoding.UTF8, "application/json");
+            request.Content = new StringContent(JsonConvert.SerializeObject(notification), UTF8, "application/json");
             var response = await _Client.SendAsync(request, cancellation);
             return response;
         }

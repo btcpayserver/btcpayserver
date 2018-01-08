@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Data
 {
@@ -26,9 +27,48 @@ namespace BTCPayServer.Data
             get; set;
         }
 
+        [Obsolete("Use GetDerivationStrategies instead")]
         public string DerivationStrategy
         {
             get; set;
+        }
+
+        [Obsolete("Use GetDerivationStrategies instead")]
+        public string DerivationStrategies
+        {
+            get;
+            set;
+        }
+
+        public IEnumerable<DerivationStrategy> GetDerivationStrategies(BTCPayNetworkProvider networks)
+        {
+#pragma warning disable CS0618
+            bool btcReturned = false;
+            if (!string.IsNullOrEmpty(DerivationStrategy))
+            {
+                if (networks.BTC != null)
+                {
+                    btcReturned = true;
+                    yield return BTCPayServer.DerivationStrategy.Parse(DerivationStrategy, networks.BTC);
+                }
+            }
+
+
+            if (!string.IsNullOrEmpty(DerivationStrategies))
+            {
+                JObject strategies = JObject.Parse(DerivationStrategies);
+                foreach (var strat in strategies.Properties())
+                {
+                    var network = networks.GetNetwork(strat.Name);
+                    if (network != null)
+                    {
+                        if (network == networks.BTC && btcReturned)
+                            continue;
+                        yield return BTCPayServer.DerivationStrategy.Parse(strat.Value<string>(), network);
+                    }
+                }
+            }
+#pragma warning restore CS0618
         }
 
         public string StoreName
@@ -96,20 +136,6 @@ namespace BTCPayServer.Data
         {
             get;
             set;
-        }
-
-        [Obsolete("Use GetSupportedCryptoCurrencies() instead")]
-        public string[] SupportedCryptoCurrencies { get; set; }
-
-        public string[] GetSupportedCryptoCurrencies()
-        {
-#pragma warning disable CS0618
-            if(SupportedCryptoCurrencies == null)
-            {
-                return new string[] { "BTC" };
-            }
-            return SupportedCryptoCurrencies;
-#pragma warning restore CS0618
         }
     }
 }

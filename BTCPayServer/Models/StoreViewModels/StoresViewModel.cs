@@ -32,7 +32,7 @@ namespace BTCPayServer.Models.StoreViewModels
             {
                 get; set;
             }
-            public Money Balance
+            public string[] Balances
             {
                 get; set;
             }

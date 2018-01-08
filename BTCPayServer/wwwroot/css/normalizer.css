@@ -8467,8 +8467,40 @@ strong {
     font-size: 14px;
 }
 
-    .single-item-order__right__btc-price.clickable {
-        cursor: pointer;
+.buyerTotalLine {
+    cursor: pointer;
+}
+
+    .buyerTotalLine .fa-angle-double-down {
+        opacity: 0.2;
+        position: absolute;
+        bottom: 0px;
+        left: 49%;
+    }
+
+    .buyerTotalLine.expanded .fa-angle-double-down {
+        display: none !important;
+    }
+
+    .buyerTotalLine:hover .fa-angle-double-down {
+        opacity: 1;
+    }
+
+    .buyerTotalLine .fa-angle-double-up {
+        display: none;
+        position: absolute;
+        bottom: 0px;
+        left: 49%;
+    }
+
+    .buyerTotalLine.expanded .fa-angle-double-up {
+        display: block;
+        opacity: 0.2;
+    }
+
+    .buyerTotalLine.expanded:hover .fa-angle-double-up {
+        display: block;
+        opacity: 1;
     }
 
 .single-item-order__right__btc-price__chevron {

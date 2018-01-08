@@ -79,6 +79,15 @@ namespace BTCPayServer.Hosting
             {
                 o.Filters.Add(new XFrameOptionsAttribute("DENY"));
             });
+
+            services.Configure<IdentityOptions>(options =>
+            {
+                options.Password.RequireDigit = false;
+                options.Password.RequiredLength = 7;
+                options.Password.RequireLowercase = false;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequireUppercase = false;
+            });
         }
 
         // Big hack, tests fails if only call AddHangfire because Hangfire fail at initializing at the second test run

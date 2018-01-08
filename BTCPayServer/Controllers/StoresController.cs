@@ -30,7 +30,6 @@ namespace BTCPayServer.Controllers
         public StoresController(
             StoreRepository repo,
             TokenRepository tokenRepo,
-            CallbackController callbackController,
             UserManager<ApplicationUser> userManager,
             AccessTokenController tokenController,
             BTCPayWallet wallet,
@@ -43,11 +42,10 @@ namespace BTCPayServer.Controllers
             _TokenController = tokenController;
             _Wallet = wallet;
             _Env = env;
-            _Network = networkProvider.GetNetwork("BTC").NBitcoinNetwork;
-            _CallbackController = callbackController;
+            _NetworkProvider = networkProvider;
         }
-        Network _Network;
-        CallbackController _CallbackController;
+        BTCPayNetworkProvider _NetworkProvider;
+
         BTCPayWallet _Wallet;
         AccessTokenController _TokenController;
         StoreRepository _Repo;
@@ -93,8 +91,12 @@ namespace BTCPayServer.Controllers
             StoresViewModel result = new StoresViewModel();
             result.StatusMessage = StatusMessage;
             var stores = await _Repo.GetStoresByUserId(GetUserId());
-            var balances = stores.Select(async s => string.IsNullOrEmpty(s.DerivationStrategy) ? Money.Zero : await _Wallet.GetBalance(ParseDerivationStrategy(s.DerivationStrategy, null))).ToArray();
+            var balances = stores
+                                .Select(s => s.GetDerivationStrategies(_NetworkProvider)
+                                              .Select(async ss => (await _Wallet.GetBalance(ss)).ToString() + " " + ss.Network.CryptoCode))
+                                .ToArray();
 
+            await Task.WhenAll(balances.SelectMany(_ => _));
             for (int i = 0; i < stores.Length; i++)
             {
                 var store = stores[i];
@@ -103,7 +105,7 @@ namespace BTCPayServer.Controllers
                     Id = store.Id,
                     Name = store.StoreName,
                     WebSite = store.StoreWebsite,
-                    Balance = await balances[i]
+                    Balances = balances[i].Select(t => t.Result).ToArray()
                 });
             }
             return View(result);
@@ -196,9 +198,8 @@ namespace BTCPayServer.Controllers
                     {
                         if (!string.IsNullOrEmpty(model.DerivationScheme))
                         {
-                            var strategy = ParseDerivationStrategy(model.DerivationScheme, model.DerivationSchemeFormat);
+                            var strategy = ParseDerivationStrategy(model.DerivationScheme, model.DerivationSchemeFormat, _NetworkProvider.BTC);
                             await _Wallet.TrackAsync(strategy);
-                            await _CallbackController.RegisterCallbackUriAsync(strategy);
                             model.DerivationScheme = strategy.ToString();
                         }
                         store.DerivationStrategy = model.DerivationScheme;
@@ -236,13 +237,13 @@ namespace BTCPayServer.Controllers
                 {
                     try
                     {
-                        var scheme = ParseDerivationStrategy(model.DerivationScheme, model.DerivationSchemeFormat);
-                        var line = scheme.GetLineFor(DerivationFeature.Deposit);
+                        var scheme = ParseDerivationStrategy(model.DerivationScheme, model.DerivationSchemeFormat, _NetworkProvider.BTC);
+                        var line = scheme.DerivationStrategyBase.GetLineFor(DerivationFeature.Deposit);
 
                         for (int i = 0; i < 10; i++)
                         {
                             var address = line.Derive((uint)i);
-                            model.AddressSamples.Add((line.Path.Derive((uint)i).ToString(), address.ScriptPubKey.GetDestinationAddress(_Network).ToString()));
+                            model.AddressSamples.Add((line.Path.Derive((uint)i).ToString(), address.ScriptPubKey.GetDestinationAddress(scheme.Network.NBitcoinNetwork).ToString()));
                         }
                     }
                     catch
@@ -254,7 +255,7 @@ namespace BTCPayServer.Controllers
             }
         }
 
-        private DerivationStrategyBase ParseDerivationStrategy(string derivationScheme, string format)
+        private DerivationStrategy ParseDerivationStrategy(string derivationScheme, string format, BTCPayNetwork network)
         {
             if (format == "Electrum")
             {
@@ -276,19 +277,19 @@ namespace BTCPayServer.Controllers
                 var prefix = Utils.ToUInt32(data, false);
                 if (!electrumMapping.TryGetValue(prefix, out string[] labels))
                     throw new FormatException("!electrumMapping.TryGetValue(prefix, out string[] labels)");
-                var standardPrefix = Utils.ToBytes(_Network == Network.Main ? 0x0488b21eU : 0x043587cf, false);
+                var standardPrefix = Utils.ToBytes(network.NBitcoinNetwork == Network.Main ? 0x0488b21eU : 0x043587cf, false);
 
                 for (int i = 0; i < 4; i++)
                     data[i] = standardPrefix[i];
 
-                derivationScheme = new BitcoinExtPubKey(Encoders.Base58Check.EncodeData(data), _Network).ToString();
+                derivationScheme = new BitcoinExtPubKey(Encoders.Base58Check.EncodeData(data), network.NBitcoinNetwork).ToString();
                 foreach (var label in labels)
                 {
                     derivationScheme = derivationScheme + $"-[{label}]";
                 }
             }
 
-            return new DerivationStrategyFactory(_Network).Parse(derivationScheme);
+            return DerivationStrategy.Parse(new DerivationStrategyFactory(network.NBitcoinNetwork).Parse(derivationScheme).ToString(), network);
         }
 
         [HttpGet]

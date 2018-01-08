@@ -105,11 +105,6 @@ namespace BTCPayServer.Models.InvoicingModels
             get;
             set;
         }
-        public decimal Rate
-        {
-            get;
-            internal set;
-        }
         public string NotificationUrl
         {
             get;

@@ -75,7 +75,7 @@ namespace BTCPayServer.HostedServices
             {
                 foreach (var nbxplorerState in _Dashboards.GetAll())
                 {
-                    if(nbxplorerState.Status != null && nbxplorerState.Status.IsFullySynched)
+                    if (nbxplorerState.Status != null && nbxplorerState.Status.IsFullySynched)
                     {
                         await Listen(nbxplorerState.Network);
                     }
@@ -102,22 +102,22 @@ namespace BTCPayServer.HostedServices
 
         private async Task Listen(BTCPayNetwork network)
         {
-            if (_Sessions.ContainsKey(network.CryptoCode))
-                return;
-            var client = _ExplorerClients.GetExplorerClient(network);
-            if (client == null)
-                return;
-            if (_Cts.IsCancellationRequested)
-                return;
-            var session = await client.CreateNotificationSessionAsync(_Cts.Token).ConfigureAwait(false);
-            if (!_Sessions.TryAdd(network.CryptoCode, session))
-            {
-                await session.DisposeAsync();
-                return;
-            }
-
             try
             {
+                if (_Sessions.ContainsKey(network.CryptoCode))
+                    return;
+                var client = _ExplorerClients.GetExplorerClient(network);
+                if (client == null)
+                    return;
+                if (_Cts.IsCancellationRequested)
+                    return;
+                var session = await client.CreateNotificationSessionAsync(_Cts.Token).ConfigureAwait(false);
+                if (!_Sessions.TryAdd(network.CryptoCode, session))
+                {
+                    await session.DisposeAsync();
+                    return;
+                }
+
                 using (session)
                 {
                     await session.ListenNewBlockAsync(_Cts.Token).ConfigureAwait(false);
@@ -149,6 +149,10 @@ namespace BTCPayServer.HostedServices
                 }
             }
             catch when (_Cts.IsCancellationRequested) { }
+            catch(Exception ex)
+            {
+                Logs.PayServer.LogError(ex, $"Error while connecting to WebSocket of NBXplorer ({network.CryptoCode})");
+            }
             finally
             {
                 Logs.PayServer.LogInformation($"Disconnected from WebSocket of NBXplorer ({network.CryptoCode})");

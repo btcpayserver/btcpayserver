@@ -102,6 +102,7 @@ namespace BTCPayServer.HostedServices
 
         private async Task Listen(BTCPayNetwork network)
         {
+            bool cleanup = false;
             try
             {
                 if (_Sessions.ContainsKey(network.CryptoCode))
@@ -117,7 +118,7 @@ namespace BTCPayServer.HostedServices
                     await session.DisposeAsync();
                     return;
                 }
-
+                cleanup = true;
                 using (session)
                 {
                     await session.ListenNewBlockAsync(_Cts.Token).ConfigureAwait(false);
@@ -149,17 +150,20 @@ namespace BTCPayServer.HostedServices
                 }
             }
             catch when (_Cts.IsCancellationRequested) { }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Logs.PayServer.LogError(ex, $"Error while connecting to WebSocket of NBXplorer ({network.CryptoCode})");
             }
             finally
             {
-                Logs.PayServer.LogInformation($"Disconnected from WebSocket of NBXplorer ({network.CryptoCode})");
-                _Sessions.TryRemove(network.CryptoCode, out NotificationSession unused);
-                if (_Sessions.Count == 0 && _Cts.IsCancellationRequested)
+                if (cleanup)
                 {
-                    _RunningTask.TrySetResult(true);
+                    Logs.PayServer.LogInformation($"Disconnected from WebSocket of NBXplorer ({network.CryptoCode})");
+                    _Sessions.TryRemove(network.CryptoCode, out NotificationSession unused);
+                    if (_Sessions.Count == 0 && _Cts.IsCancellationRequested)
+                    {
+                        _RunningTask.TrySetResult(true);
+                    }
                 }
             }
         }

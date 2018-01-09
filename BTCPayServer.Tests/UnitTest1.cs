@@ -23,6 +23,7 @@ using Microsoft.EntityFrameworkCore;
 using BTCPayServer.Services.Rates;
 using Microsoft.Extensions.Caching.Memory;
 using BTCPayServer.Eclair;
+using System.Collections.Generic;
 
 namespace BTCPayServer.Tests
 {
@@ -75,6 +76,88 @@ namespace BTCPayServer.Tests
             accounting = cryptoData.Calculate();
             Assert.Equal(Money.Zero, accounting.Due);
             Assert.Equal(Money.Coins(1.3m), accounting.TotalDue);
+
+            entity = new InvoiceEntity();
+            entity.ProductInformation = new ProductInformation() { Price = 5000 };
+            entity.SetCryptoData(new System.Collections.Generic.Dictionary<string, CryptoData>(new KeyValuePair<string, CryptoData>[] {
+                new KeyValuePair<string,CryptoData>("BTC", new CryptoData()
+                                                           {
+                                                                Rate = 1000,
+                                                                TxFee = Money.Coins(0.1m)
+                                                           }),
+                new KeyValuePair<string,CryptoData>("LTC", new CryptoData()
+                                                           {
+                                                                Rate = 500,
+                                                                TxFee = Money.Coins(0.01m)
+                                                           })
+            }));
+            entity.Payments = new List<PaymentEntity>();
+            cryptoData = entity.GetCryptoData("BTC");
+            accounting = cryptoData.Calculate();
+            Assert.Equal(Money.Coins(5.1m), accounting.Due);
+
+            cryptoData = entity.GetCryptoData("LTC");
+            accounting = cryptoData.Calculate();
+            Assert.Equal(Money.Coins(10.01m), accounting.TotalDue);
+
+            entity.Payments.Add(new PaymentEntity() { CryptoCode = "BTC", Output = new TxOut(Money.Coins(1.0m), new Key()), Accounted = true });
+
+            cryptoData = entity.GetCryptoData("BTC");
+            accounting = cryptoData.Calculate();
+            Assert.Equal(Money.Coins(4.2m), accounting.Due);
+            Assert.Equal(Money.Coins(1.0m), accounting.CryptoPaid);
+            Assert.Equal(Money.Coins(1.0m), accounting.Paid);
+            Assert.Equal(Money.Coins(5.2m), accounting.TotalDue);
+            Assert.Equal(2, accounting.TxCount);
+
+            cryptoData = entity.GetCryptoData("LTC");
+            accounting = cryptoData.Calculate();
+            Assert.Equal(Money.Coins(10.01m + 0.1m * 2 - 2.0m /* 8.21m */), accounting.Due);
+            Assert.Equal(Money.Coins(0.0m), accounting.CryptoPaid);
+            Assert.Equal(Money.Coins(2.0m), accounting.Paid);
+            Assert.Equal(Money.Coins(10.01m + 0.1m * 2), accounting.TotalDue);
+
+            entity.Payments.Add(new PaymentEntity() { CryptoCode = "LTC", Output = new TxOut(Money.Coins(1.0m), new Key()), Accounted = true });
+
+
+            cryptoData = entity.GetCryptoData("BTC");
+            accounting = cryptoData.Calculate();
+            Assert.Equal(Money.Coins(4.2m - 0.5m + 0.01m / 2), accounting.Due);
+            Assert.Equal(Money.Coins(1.0m), accounting.CryptoPaid);
+            Assert.Equal(Money.Coins(1.5m), accounting.Paid);
+            Assert.Equal(Money.Coins(5.2m + 0.01m / 2), accounting.TotalDue); // The fee for LTC added
+            Assert.Equal(2, accounting.TxCount);
+
+            cryptoData = entity.GetCryptoData("LTC");
+            accounting = cryptoData.Calculate();
+            Assert.Equal(Money.Coins(8.21m - 1.0m + 0.01m), accounting.Due);
+            Assert.Equal(Money.Coins(1.0m), accounting.CryptoPaid);
+            Assert.Equal(Money.Coins(3.0m), accounting.Paid);
+            Assert.Equal(Money.Coins(10.01m + 0.1m * 2 + 0.01m), accounting.TotalDue);
+            Assert.Equal(2, accounting.TxCount);
+
+            var remaining = Money.Coins(4.2m - 0.5m + 0.01m / 2);
+            entity.Payments.Add(new PaymentEntity() { CryptoCode = "BTC", Output = new TxOut(remaining, new Key()), Accounted = true });
+
+            cryptoData = entity.GetCryptoData("BTC");
+            accounting = cryptoData.Calculate();
+            Assert.Equal(Money.Zero, accounting.Due);
+            Assert.Equal(Money.Coins(1.0m) + remaining, accounting.CryptoPaid);
+            Assert.Equal(Money.Coins(1.5m) + remaining, accounting.Paid);
+            Assert.Equal(Money.Coins(5.2m + 0.01m / 2), accounting.TotalDue);
+            Assert.Equal(accounting.Paid, accounting.TotalDue);
+            Assert.Equal(2, accounting.TxCount);
+
+            cryptoData = entity.GetCryptoData("LTC");
+            accounting = cryptoData.Calculate();
+            Assert.Equal(Money.Zero, accounting.Due);
+            Assert.Equal(Money.Coins(1.0m), accounting.CryptoPaid);
+            Assert.Equal(Money.Coins(3.0m) + remaining * 2, accounting.Paid);
+            // Paying 2 BTC fee, LTC fee removed because fully paid
+            Assert.Equal(Money.Coins(10.01m + 0.1m * 2 + 0.1m * 2 /* + 0.01m no need to pay this fee anymore */), accounting.TotalDue);
+            Assert.Equal(1, accounting.TxCount);
+            Assert.Equal(accounting.Paid, accounting.TotalDue);
+
 #pragma warning restore CS0618
         }
 

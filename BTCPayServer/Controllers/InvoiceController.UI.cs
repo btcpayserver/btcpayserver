@@ -153,7 +153,13 @@ namespace BTCPayServer.Controllers
                 BtcPaid = accounting.Paid.ToString(),
                 Status = invoice.Status,
                 CryptoImage = "/" + Url.Content(network.CryptoImagePath),
-                NetworkFeeDescription = $"{accounting.TxCount} transaction{(accounting.TxCount > 1 ? "s" : "")} x {cryptoData.TxFee} {network.CryptoCode}"
+                NetworkFeeDescription = $"{accounting.TxCount} transaction{(accounting.TxCount > 1 ? "s" : "")} x {cryptoData.TxFee} {network.CryptoCode}",
+                AvailableCryptos = invoice.GetCryptoData().Select(kv=> new PaymentModel.AvailableCrypto()
+                {
+                    CryptoCode = kv.Key,
+                    CryptoImage = "/" + _NetworkProvider.GetNetwork(kv.Key).CryptoImagePath,
+                    Link = Url.Action(nameof(Checkout), new { invoiceId = invoiceId, cryptoCode = kv.Key })
+                }).ToList()
             };
 
             var isMultiCurrency = invoice.Payments.Select(p=>p.GetCryptoCode()).Concat(new[] { network.CryptoCode }).Distinct().Count() > 1;

@@ -7,6 +7,13 @@ namespace BTCPayServer.Models.InvoicingModels
 {
     public class PaymentModel
     {
+        public class AvailableCrypto
+        {
+            public string CryptoCode { get; set; }
+            public string CryptoImage { get; set; }
+            public string Link { get; set; }
+        }
+        public List<AvailableCrypto> AvailableCryptos { get; set; } = new List<AvailableCrypto>();
         public string CryptoCode { get; set; }
         public string ServerUrl { get; set; }
         public string InvoiceId { get; set; }

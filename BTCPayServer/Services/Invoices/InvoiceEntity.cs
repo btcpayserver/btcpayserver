@@ -495,10 +495,13 @@ namespace BTCPayServer.Services.Invoices
                 .OrderByDescending(p => p.ReceivedTime)
                 .Select(_ =>
                 {
-                    paidTxFee = _.GetValue(cryptoData, CryptoCode, cryptoData[_.GetCryptoCode()].TxFee);
+                    var txFee = _.GetValue(cryptoData, CryptoCode, cryptoData[_.GetCryptoCode()].TxFee);
                     paid += _.GetValue(cryptoData, CryptoCode);
-                    if(!paidEnough)
-                        totalDue += paidTxFee;
+                    if (!paidEnough)
+                    {
+                        totalDue += txFee;
+                        paidTxFee += txFee;
+                    }
                     paidEnough |= totalDue <= paid;
                     if (CryptoCode == _.GetCryptoCode())
                     {
@@ -513,6 +516,7 @@ namespace BTCPayServer.Services.Invoices
             {
                 txCount++;
                 totalDue += TxFee;
+                paidTxFee += TxFee;
             }
             var accounting = new CryptoDataAccounting();
             accounting.TotalDue = totalDue;
@@ -520,7 +524,7 @@ namespace BTCPayServer.Services.Invoices
             accounting.TxCount = txCount;
             accounting.CryptoPaid = cryptoPaid;
             accounting.Due = Money.Max(accounting.TotalDue - accounting.Paid, Money.Zero);
-            accounting.NetworkFee = TxFee * txCount;
+            accounting.NetworkFee = paidTxFee;
             return accounting;
         }
 

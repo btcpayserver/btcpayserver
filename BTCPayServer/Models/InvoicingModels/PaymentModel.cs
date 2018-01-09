@@ -23,15 +23,14 @@ namespace BTCPayServer.Models.InvoicingModels
         public string ItemDesc { get; set; }
         public string TimeLeft { get; set; }
         public string Rate { get; set; }
-        public string BtcAmount { get; set; }
-        public string TxFees { get; set; }
+        public string OrderAmount { get; set; }
         public string InvoiceBitcoinUrl { get; set; }
-        public string BtcTotalDue { get; set; }
         public int TxCount { get; set; }
         public string BtcPaid { get; set; }
         public string StoreEmail { get; set; }
 
         public string OrderId { get; set; }
         public string CryptoImage { get; set; }
+        public string NetworkFeeDescription { get; internal set; }
     }
 }

@@ -139,8 +139,7 @@ namespace BTCPayServer.Controllers
                 OrderId = invoice.OrderId,
                 InvoiceId = invoice.Id,
                 BtcAddress = cryptoData.DepositAddress,
-                BtcAmount = (accounting.TotalDue - cryptoData.TxFee).ToString(),
-                BtcTotalDue = accounting.TotalDue.ToString(),
+                OrderAmount = (accounting.TotalDue - accounting.NetworkFee).ToString(),
                 BtcDue = accounting.Due.ToString(),
                 CustomerEmail = invoice.RefundMail,
                 ExpirationSeconds = Math.Max(0, (int)(invoice.ExpirationTime - DateTimeOffset.UtcNow).TotalSeconds),
@@ -149,13 +148,17 @@ namespace BTCPayServer.Controllers
                 Rate = FormatCurrency(cryptoData),
                 MerchantRefLink = invoice.RedirectURL ?? "/",
                 StoreName = store.StoreName,
-                TxFees = cryptoData.TxFee.ToString(),
                 InvoiceBitcoinUrl = cryptoInfo.PaymentUrls.BIP21,
                 TxCount = accounting.TxCount,
                 BtcPaid = accounting.Paid.ToString(),
                 Status = invoice.Status,
-                CryptoImage = "/" + Url.Content(network.CryptoImagePath)
+                CryptoImage = "/" + Url.Content(network.CryptoImagePath),
+                NetworkFeeDescription = $"{accounting.TxCount} transaction{(accounting.TxCount > 1 ? "s" : "")} x {cryptoData.TxFee} {network.CryptoCode}"
             };
+
+            var isMultiCurrency = invoice.Payments.Select(p=>p.GetCryptoCode()).Concat(new[] { network.CryptoCode }).Distinct().Count() > 1;
+            if (isMultiCurrency)
+                model.NetworkFeeDescription = $"{accounting.NetworkFee} {network.CryptoCode}";
 
             var expiration = TimeSpan.FromSeconds(model.ExpirationSeconds);
             model.TimeLeft = PrettyPrint(expiration);

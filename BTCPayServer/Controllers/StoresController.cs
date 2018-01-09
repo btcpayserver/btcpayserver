@@ -415,12 +415,15 @@ namespace BTCPayServer.Controllers
                 pairingCode = ((DataWrapper<List<PairingCodeResponse>>)await _TokenController.Tokens(tokenRequest)).Data[0].PairingCode;
             }
 
+            GeneratedPairingCode = pairingCode;
             return RedirectToAction(nameof(RequestPairing), new
             {
                 pairingCode = pairingCode,
                 selectedStore = storeId
             });
         }
+
+        public string GeneratedPairingCode { get; set; }
 
         [HttpGet]
         [Route("/api-tokens")]

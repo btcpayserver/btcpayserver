@@ -205,11 +205,9 @@ namespace BTCPayServer.Hosting
                     act();
                     return;
                 }
-                catch
+                catch when(!cts.IsCancellationRequested)
                 {
-                    if (cts.IsCancellationRequested)
-                        throw;
-                    Thread.Sleep(1000);
+                    Thread.Sleep(100);
                 }
             }
         }

@@ -61,6 +61,8 @@ namespace BTCPayServer.Services.Wallets
         public async Task<GetCoinsResult> GetCoins(DerivationStrategy strategy, KnownState state, CancellationToken cancellation = default(CancellationToken))
         {
             var client = _Client.GetExplorerClient(strategy.Network);
+            if (client == null)
+                return new GetCoinsResult() { Coins = new Coin[0], State = null, Strategy = strategy };
             var changes = await client.SyncAsync(strategy.DerivationStrategyBase, state?.ConfirmedHash, state?.UnconfirmedHash, true, cancellation).ConfigureAwait(false);
             var utxos = changes.Confirmed.UTXOs.Concat(changes.Unconfirmed.UTXOs).Select(c => c.AsCoin()).ToArray();
             return new GetCoinsResult()

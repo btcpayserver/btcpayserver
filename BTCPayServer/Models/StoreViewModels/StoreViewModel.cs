@@ -16,9 +16,14 @@ namespace BTCPayServer.Models.StoreViewModels
             public string Crypto { get; set; }
             public string Value { get; set; }
         }
+        class Format
+        {
+            public string Name { get; set; }
+            public string Value { get; set; }
+        }
         public StoreViewModel()
         {
-            
+
         }
 
         public string Id { get; set; }
@@ -65,6 +70,18 @@ namespace BTCPayServer.Models.StoreViewModels
         public string StatusMessage
         {
             get; set;
+        }
+        public SelectList CryptoCurrencies { get; set; }
+
+        [Display(Name = "Default crypto currency on checkout")]
+        public string DefaultCryptoCurrency { get; set; }
+
+        public void SetCryptoCurrencies(ExplorerClientProvider explorerProvider, string defaultCrypto)
+        {
+            var choices = explorerProvider.GetAll().Select(o => new Format() { Name = o.Item1.CryptoCode, Value = o.Item1.CryptoCode }).ToArray();
+            var chosen = choices.FirstOrDefault(f => f.Name == defaultCrypto) ?? choices.FirstOrDefault();
+            CryptoCurrencies = new SelectList(choices, nameof(chosen.Value), nameof(chosen.Name), chosen);
+            DefaultCryptoCurrency = chosen.Name;
         }
     }
 }

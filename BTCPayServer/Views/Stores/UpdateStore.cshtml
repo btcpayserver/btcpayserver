@@ -36,6 +36,10 @@
                 <span asp-validation-for="StoreWebsite" class="text-danger"></span>
             </div>
             <div class="form-group">
+                <label asp-for="DefaultCryptoCurrency"></label>
+                <select asp-for="DefaultCryptoCurrency" asp-items="Model.CryptoCurrencies" class="form-control"></select>
+            </div>
+            <div class="form-group">
                 <label asp-for="NetworkFee"></label>
                 <input asp-for="NetworkFee" type="checkbox" class="form-check" />
             </div>
@@ -69,12 +73,12 @@
                     </thead>
                     <tbody>
                         @foreach(var scheme in Model.DerivationSchemes)
-                        {
-                            <tr>
-                                <td>@scheme.Crypto</td>
-                                <td>@scheme.Value</td>
-                            </tr>
-                        }
+                {
+                    <tr>
+                        <td>@scheme.Crypto</td>
+                        <td>@scheme.Value</td>
+                    </tr>
+        }
                     </tbody>
                 </table>
             </div>

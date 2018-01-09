@@ -192,7 +192,7 @@ function onDataCallback(jsonData) {
 }
 
 function fetchStatus() {
-    var path = srvModel.serverUrl + "/i/" + srvModel.invoiceId + "/status";
+    var path = srvModel.serverUrl + "/i/" + srvModel.invoiceId + "/" + srvModel.cryptoCode + "/status";
     $.ajax({
         url: path,
         type: "GET"
@@ -215,7 +215,7 @@ if (supportsWebSockets) {
         };
     }
     catch (e) {
-        console.error("Error while connecting to websocket for invoice notifictions");
+        console.error("Error while connecting to websocket for invoice notifications");
     }
 }
 

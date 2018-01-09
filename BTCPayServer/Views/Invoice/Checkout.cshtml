@@ -106,11 +106,11 @@
                                         <!---->
                                         <div class="single-item-order__right">
                                             <div class="single-item-order__right__btc-price" id="buyerTotalBtcAmount">
-                                                <span>{{ srvModel.btcDue }} BTC</span>
+                                                <span>{{ srvModel.btcDue }} {{ srvModel.cryptoCode }}</span>
                                             </div>
                                             <!---->
                                             <div class="single-item-order__right__ex-rate">
-                                                1 BTC = {{ srvModel.rate }}
+                                                1 {{ srvModel.cryptoCode }} = {{ srvModel.rate }}
                                             </div>
                                             <!---->
                                         </div>
@@ -124,23 +124,23 @@
                                             <!---->
                                             <div class="line-items__item">
                                                 <div class="line-items__item__label" i18n="">Payment Amount</div>
-                                                <div class="line-items__item__value">{{srvModel.btcAmount}} BTC</div>
+                                                <div class="line-items__item__value">{{srvModel.btcAmount}} {{ srvModel.cryptoCode }}</div>
                                             </div>
                                             <div class="line-items__item">
                                                 <div class="line-items__item__label">
                                                     <span i18n="">Network Cost</span>
                                                 </div>
-                                                <div class="line-items__item__value" i18n="">{{srvModel.txCount }} transaction x {{ srvModel.txFees}} BTC</div>
+                                                <div class="line-items__item__value" i18n="">{{srvModel.txCount }} transaction x {{ srvModel.txFees}} {{ srvModel.cryptoCode }}</div>
                                             </div>
                                             <div class="line-items__item">
                                                 <div class="line-items__item__label">
                                                     <span i18n="">Already Paid</span>
                                                 </div>
-                                                <div class="line-items__item__value" i18n="">-{{srvModel.btcPaid }} BTC</div>
+                                                <div class="line-items__item__value" i18n="">-{{srvModel.btcPaid }} {{ srvModel.cryptoCode }}</div>
                                             </div>
                                             <div class="line-items__item line-items__item--total">
                                                 <div class="line-items__item__label" i18n="">Due	</div>
-                                                <div class="line-items__item__value">{{srvModel.btcDue}} BTC</div>
+                                                <div class="line-items__item__value">{{srvModel.btcDue}} {{ srvModel.cryptoCode }}</div>
                                             </div>
                                             <!---->
                                         </div>
@@ -311,7 +311,7 @@
                                                 <bp-refund-address name="refundAddress" ngmodel="" class="ng-untouched ng-pristine ng-invalid">
                                                     <div class="bp-refund-address">
                                                         <div class="bitcoin-logo">
-                                                            <div><img src="~/imlegacy/bitcoin-symbol.svg"></div>
+                                                            <div><img src="@Model.CryptoImage"></div>
                                                         </div>
                                                         <input class="bp-input {'not-empty': addressValue.length &gt; 0} ng-untouched ng-pristine ng-valid" id="refund-address-input" name="refundAddress" ngclass="{'not-empty': addressValue.length &gt; 0}">
                                                     </div>
@@ -336,14 +336,14 @@
                                     </div>
                                     <div class="bp-view payment manual-flow" id="copy">
                                         <div class="manual__step-two__instructions">
-                                            <span i18n="">To complete your payment, please send {{ srvModel.btcDue }} BTC to the address below.</span>
+                                            <span i18n="">To complete your payment, please send {{ srvModel.btcDue }} {{ srvModel.cryptoCode }} to the address below.</span>
                                         </div>
                                         <div class="manual-box flipped" style="margin-bottom: 30px;">
                                             <div class="manual-box__amount">
                                                 <div class="manual-box__amount__label label" i18n="">Amount</div>
                                                 <!---->
                                                 <div class="manual-box__amount__value copy-cursor" ngxclipboard="">
-                                                    <span>{{srvModel.btcDue}}</span> BTC
+                                                    <span>{{srvModel.btcDue}}</span> {{ srvModel.cryptoCode }}
                                                     <div class="copied-label">
                                                         <span i18n="">Copied</span>
                                                     </div>
@@ -360,7 +360,7 @@
                                                         <div class="manual-box__address__value copy-cursor" ngxclipboard="">
                                                             <div class="manual-box__address__wrapper">
                                                                 <div class="manual-box__address__wrapper__logo">
-                                                                    <img src="~/imlegacy/bitcoin-symbol.svg">
+                                                                    <img src="@Model.CryptoImage">
                                                                 </div>
                                                                 <div class="manual-box__address__wrapper__value">{{srvModel.btcAddress}}</div>
                                                             </div>

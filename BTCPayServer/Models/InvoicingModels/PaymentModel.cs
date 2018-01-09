@@ -7,6 +7,7 @@ namespace BTCPayServer.Models.InvoicingModels
 {
     public class PaymentModel
     {
+        public string CryptoCode { get; set; }
         public string ServerUrl { get; set; }
         public string InvoiceId { get; set; }
         public string BtcAddress { get; set; }
@@ -31,5 +32,6 @@ namespace BTCPayServer.Models.InvoicingModels
         public string StoreEmail { get; set; }
 
         public string OrderId { get; set; }
+        public string CryptoImage { get; set; }
     }
 }

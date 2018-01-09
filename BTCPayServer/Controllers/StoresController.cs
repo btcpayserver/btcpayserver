@@ -153,6 +153,7 @@ namespace BTCPayServer.Controllers
             var vm = new StoreViewModel();
             vm.Id = store.Id;
             vm.StoreName = store.StoreName;
+            vm.SetCryptoCurrencies(_ExplorerProvider, store.GetDefaultCrypto());
             vm.StoreWebsite = store.StoreWebsite;
             vm.NetworkFee = !storeBlob.NetworkFeeDisabled;
             vm.SpeedPolicy = store.SpeedPolicy;
@@ -285,6 +286,13 @@ namespace BTCPayServer.Controllers
                 needUpdate = true;
                 store.StoreWebsite = model.StoreWebsite;
             }
+
+            if (store.GetDefaultCrypto() != model.DefaultCryptoCurrency)
+            {
+                needUpdate = true;
+                store.SetDefaultCrypto(model.DefaultCryptoCurrency);
+            }
+            model.SetCryptoCurrencies(_ExplorerProvider, model.DefaultCryptoCurrency);
 
             var blob = store.GetStoreBlob();
             blob.NetworkFeeDisabled = !model.NetworkFee;

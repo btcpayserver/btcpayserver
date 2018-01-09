@@ -23,5 +23,7 @@ namespace BTCPayServer
                 return CryptoCode == "BTC";
             }
         }
+
+        public string CryptoImagePath { get; set; }
     }
 }

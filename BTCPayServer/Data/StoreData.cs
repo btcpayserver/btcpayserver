@@ -141,6 +141,19 @@ namespace BTCPayServer.Data
             get;
             set;
         }
+        [Obsolete("Use GetDefaultCrypto instead")]
+        public string DefaultCrypto { get; set; }
+
+#pragma warning disable CS0618
+        public string GetDefaultCrypto()
+        {
+            return DefaultCrypto ?? "BTC";
+        }
+        public void SetDefaultCrypto(string defaultCryptoCurrency)
+        {
+            DefaultCrypto = defaultCryptoCurrency;
+        }
+#pragma warning restore CS0618
 
         static Network Dummy = Network.Main;
 

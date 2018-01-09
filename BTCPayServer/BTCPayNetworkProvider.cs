@@ -31,7 +31,8 @@ namespace BTCPayServer
                     BlockExplorerLink = "https://www.smartbit.com.au/tx/{0}",
                     NBitcoinNetwork = Network.Main,
                     UriScheme = "bitcoin",
-                    DefaultRateProvider = btcRate
+                    DefaultRateProvider = btcRate,
+                    CryptoImagePath = "imlegacy/bitcoin-symbol.svg"
                 });
                 Add(new BTCPayNetwork()
                 {
@@ -39,7 +40,8 @@ namespace BTCPayServer
                     BlockExplorerLink = "https://live.blockcypher.com/ltc/tx/{0}/",
                     NBitcoinNetwork = NBXplorer.Altcoins.Litecoin.Networks.Mainnet,
                     UriScheme = "litecoin",
-                    DefaultRateProvider = ltcRate
+                    DefaultRateProvider = ltcRate,
+                    CryptoImagePath = "imlegacy/litecoin-symbol.svg"
                 });
             }
 
@@ -51,7 +53,8 @@ namespace BTCPayServer
                     BlockExplorerLink = "https://testnet.smartbit.com.au/tx/{0}",
                     NBitcoinNetwork = Network.TestNet,
                     UriScheme = "bitcoin",
-                    DefaultRateProvider = btcRate
+                    DefaultRateProvider = btcRate,
+                    CryptoImagePath = "imlegacy/bitcoin-symbol.svg"
                 });
                 Add(new BTCPayNetwork()
                 {
@@ -59,7 +62,8 @@ namespace BTCPayServer
                     BlockExplorerLink = "http://explorer.litecointools.com/tx/{0}",
                     NBitcoinNetwork = NBXplorer.Altcoins.Litecoin.Networks.Testnet,
                     UriScheme = "litecoin",
-                    DefaultRateProvider = ltcRate
+                    DefaultRateProvider = ltcRate,
+                    CryptoImagePath = "imlegacy/litecoin-symbol.svg"
                 });
             }
 
@@ -71,7 +75,8 @@ namespace BTCPayServer
                     BlockExplorerLink = "https://testnet.smartbit.com.au/tx/{0}",
                     NBitcoinNetwork = Network.RegTest,
                     UriScheme = "bitcoin",
-                    DefaultRateProvider = btcRate
+                    DefaultRateProvider = btcRate,
+                    CryptoImagePath = "imlegacy/bitcoin-symbol.svg"
                 });
                 Add(new BTCPayNetwork()
                 {
@@ -79,7 +84,8 @@ namespace BTCPayServer
                     BlockExplorerLink = "http://explorer.litecointools.com/tx/{0}",
                     NBitcoinNetwork = NBXplorer.Altcoins.Litecoin.Networks.Regtest,
                     UriScheme = "litecoin",
-                    DefaultRateProvider = ltcRate
+                    DefaultRateProvider = ltcRate,
+                    CryptoImagePath = "imlegacy/litecoin-symbol.svg"
                 });
             }
         }

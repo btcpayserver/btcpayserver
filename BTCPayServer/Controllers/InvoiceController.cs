@@ -46,7 +46,7 @@ namespace BTCPayServer.Controllers
     {
         InvoiceRepository _InvoiceRepository;
         BTCPayWallet _Wallet;
-        IRateProvider _RateProvider;
+        IRateProviderFactory _RateProviders;
         StoreRepository _StoreRepository;
         UserManager<ApplicationUser> _UserManager;
         IFeeProviderFactory _FeeProviderFactory;
@@ -58,7 +58,7 @@ namespace BTCPayServer.Controllers
             CurrencyNameTable currencyNameTable,
             UserManager<ApplicationUser> userManager,
             BTCPayWallet wallet,
-            IRateProvider rateProvider,
+            IRateProviderFactory rateProviders,
             StoreRepository storeRepository,
             EventAggregator eventAggregator,
             BTCPayNetworkProvider networkProvider,
@@ -70,7 +70,7 @@ namespace BTCPayServer.Controllers
             _StoreRepository = storeRepository ?? throw new ArgumentNullException(nameof(storeRepository));
             _InvoiceRepository = invoiceRepository ?? throw new ArgumentNullException(nameof(invoiceRepository));
             _Wallet = wallet ?? throw new ArgumentNullException(nameof(wallet));
-            _RateProvider = rateProvider ?? throw new ArgumentNullException(nameof(rateProvider));
+            _RateProviders = rateProviders ?? throw new ArgumentNullException(nameof(rateProviders));
             _UserManager = userManager;
             _FeeProviderFactory = feeProviderFactory ?? throw new ArgumentNullException(nameof(feeProviderFactory));
             _EventAggregator = eventAggregator;
@@ -122,7 +122,7 @@ namespace BTCPayServer.Controllers
                         {
                             network = derivationStrategy.Network,
                             getFeeRate = _FeeProviderFactory.CreateFeeProvider(derivationStrategy.Network).GetFeeRateAsync(),
-                            getRate = _RateProvider.GetRateAsync(invoice.Currency),
+                            getRate = _RateProviders.GetRateProvider(derivationStrategy.Network).GetRateAsync(invoice.Currency),
                             getAddress = _Wallet.ReserveAddressAsync(derivationStrategy)
                         };
                     });

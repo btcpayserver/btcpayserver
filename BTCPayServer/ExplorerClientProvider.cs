@@ -32,14 +32,21 @@ namespace BTCPayServer
             return null;
         }
 
-        internal object GetExplorerClient(object network)
-        {
-            throw new NotImplementedException();
-        }
-
         public ExplorerClient GetExplorerClient(BTCPayNetwork network)
         {
+            if (network == null)
+                throw new ArgumentNullException(nameof(network));
             return GetExplorerClient(network.CryptoCode);
+        }
+
+        public BTCPayNetwork GetNetwork(string cryptoCode)
+        {
+            var network = _NetworkProviders.GetNetwork(cryptoCode);
+            if (network == null)
+                return null;
+            if (_Options.ExplorerFactories.ContainsKey(network.CryptoCode))
+                return network;
+            return null;
         }
 
         public IEnumerable<(BTCPayNetwork, ExplorerClient)> GetAll()

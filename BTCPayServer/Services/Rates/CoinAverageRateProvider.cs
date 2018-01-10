@@ -19,6 +19,13 @@ namespace BTCPayServer.Services.Rates
     {
         static HttpClient _Client = new HttpClient();
 
+        public CoinAverageRateProvider(string cryptoCode)
+        {
+            CryptoCode = cryptoCode ?? "BTC";
+        }
+
+        public string CryptoCode { get; set; }
+
         public string Market
         {
             get; set;
@@ -51,8 +58,8 @@ namespace BTCPayServer.Services.Rates
                 resp.EnsureSuccessStatusCode();
                 var rates = JObject.Parse(await resp.Content.ReadAsStringAsync());
                 return rates.Properties()
-                              .Where(p => p.Name.StartsWith("BTC", StringComparison.OrdinalIgnoreCase))
-                              .ToDictionary(p => p.Name.Substring(3, 3), p => ToDecimal(p.Value["last"]));
+                              .Where(p => p.Name.StartsWith(CryptoCode, StringComparison.OrdinalIgnoreCase))
+                              .ToDictionary(p => p.Name.Substring(CryptoCode.Length, p.Name.Length - CryptoCode.Length), p => ToDecimal(p.Value["last"]));
             }
         }
 

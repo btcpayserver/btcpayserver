@@ -113,7 +113,9 @@ namespace BTCPayServer.Data
                 .HasForeignKey(pt => pt.StoreDataId);
 
             builder.Entity<AddressInvoiceData>()
+#pragma warning disable CS0618
                 .HasKey(o => o.Address);
+#pragma warning restore CS0618
 
             builder.Entity<PairingCodeData>()
                 .HasKey(o => o.Id);
@@ -128,7 +130,9 @@ namespace BTCPayServer.Data
                 .HasKey(o => new
                 {
                     o.InvoiceDataId,
+#pragma warning disable CS0618
                     o.Address
+#pragma warning restore CS0618
                 });
         }
     }

@@ -15,7 +15,8 @@
             "commandName": "Project",
             "launchBrowser": true,
             "environmentVariables": {
-                "BTCPAY_EXPLORERURL": "http://127.0.0.1:32838/",
+                "BTCPAY_BTCEXPLORERURL": "http://127.0.0.1:32838/",
+                "BTCPAY_LTCEXPLORERURL": "http://127.0.0.1:32839/",
                 "BTCPAY_NETWORK": "regtest",
                 "ASPNETCORE_ENVIRONMENT": "Development",
                 "BTCPAY_POSTGRES": "User ID=postgres;Host=127.0.0.1;Port=39372;Database=btcpayserver"

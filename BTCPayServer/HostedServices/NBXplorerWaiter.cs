@@ -82,95 +82,106 @@ namespace BTCPayServer.HostedServices
         BTCPayNetwork _Network;
         EventAggregator _Aggregator;
         ExplorerClient _Client;
-        Timer _Timer;
-        ManualResetEventSlim _Idle = new ManualResetEventSlim(true);
+
+        CancellationTokenSource _Cts;
+        Task _Loop;
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            _Timer = new Timer(Callback, null, 0, (int)TimeSpan.FromMinutes(1.0).TotalMilliseconds);
+            _Cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            _Loop = StartLoop(_Cts.Token);
             return Task.CompletedTask;
         }
 
-        void Callback(object state)
+        private async Task StartLoop(CancellationToken cancellation)
         {
-            if (!_Idle.IsSet)
-                return;
+            Logs.PayServer.LogInformation($"Starting listening NBXplorer ({_Network.CryptoCode})");
             try
             {
-                _Idle.Reset();
-                CheckStatus().GetAwaiter().GetResult();
+                while (!cancellation.IsCancellationRequested)
+                {
+                    try
+                    {
+                        while (await StepAsync(cancellation))
+                        {
+
+                        }
+                        await Task.Delay(PollInterval, cancellation);
+                    }
+                    catch (Exception ex) when (!cancellation.IsCancellationRequested)
+                    {
+                        Logs.PayServer.LogError(ex, $"Unhandled exception in NBXplorerWaiter ({_Network.CryptoCode})");
+                        await Task.Delay(TimeSpan.FromSeconds(10), cancellation);
+                    }
+                }
             }
-            catch (Exception ex)
-            {
-                Logs.PayServer.LogError(ex, "Error while checking NBXplorer state");
-            }
-            finally
-            {
-                _Idle.Set();
-            }
+            catch when (cancellation.IsCancellationRequested) { }
         }
 
-        async Task CheckStatus()
-        {
-            while (await StepAsync())
-            {
-
-            }
-        }
-
-        private async Task<bool> StepAsync()
+        private async Task<bool> StepAsync(CancellationToken cancellation)
         {
             var oldState = State;
-
             StatusResult status = null;
-            switch (State)
+            try
             {
-                case NBXplorerState.NotConnected:
-                    status = await GetStatusWithTimeout();
-                    if (status != null)
-                    {
-                        if (status.IsFullySynched)
+                switch (State)
+                {
+                    case NBXplorerState.NotConnected:
+                        status = await _Client.GetStatusAsync(cancellation);
+                        if (status != null)
+                        {
+                            if (status.IsFullySynched)
+                            {
+                                State = NBXplorerState.Ready;
+                            }
+                            else
+                            {
+                                State = NBXplorerState.Synching;
+                            }
+                        }
+                        break;
+                    case NBXplorerState.Synching:
+                        status = await _Client.GetStatusAsync(cancellation);
+                        if (status == null)
+                        {
+                            State = NBXplorerState.NotConnected;
+                        }
+                        else if (status.IsFullySynched)
                         {
                             State = NBXplorerState.Ready;
                         }
-                        else
+                        break;
+                    case NBXplorerState.Ready:
+                        status = await _Client.GetStatusAsync(cancellation);
+                        if (status == null)
+                        {
+                            State = NBXplorerState.NotConnected;
+                        }
+                        else if (!status.IsFullySynched)
                         {
                             State = NBXplorerState.Synching;
                         }
-                    }
-                    break;
-                case NBXplorerState.Synching:
-                    status = await GetStatusWithTimeout();
-                    if (status == null)
-                    {
-                        State = NBXplorerState.NotConnected;
-                    }
-                    else if (status.IsFullySynched)
-                    {
-                        State = NBXplorerState.Ready;
-                    }
-                    break;
-                case NBXplorerState.Ready:
-                    status = await GetStatusWithTimeout();
-                    if (status == null)
-                    {
-                        State = NBXplorerState.NotConnected;
-                    }
-                    else if (!status.IsFullySynched)
-                    {
-                        State = NBXplorerState.Synching;
-                    }
-                    break;
-            }
+                        break;
+                }
 
+            }
+            catch when (cancellation.IsCancellationRequested)
+            {
+
+            }
+            catch (Exception ex)
+            {
+                State = NBXplorerState.NotConnected;
+                Logs.PayServer.LogError(ex, $"Error while trying to connect to NBXplorer ({_Network.CryptoCode})");
+            }
             if (oldState != State)
             {
                 if (State == NBXplorerState.Synching)
                 {
-                    SetInterval(TimeSpan.FromSeconds(10));
+                    PollInterval = TimeSpan.FromSeconds(10);
                 }
                 else
                 {
-                    SetInterval(TimeSpan.FromMinutes(1));
+                    PollInterval = TimeSpan.FromMinutes(1);
                 }
                 _Aggregator.Publish(new NBXplorerStateChangedEvent(_Network, oldState, State));
             }
@@ -178,43 +189,14 @@ namespace BTCPayServer.HostedServices
             return oldState != State;
         }
 
-        private void SetInterval(TimeSpan interval)
-        {
-            try
-            {
-                _Timer.Change(0, (int)interval.TotalMilliseconds);
-            }
-            catch { }
-        }
-
-        private async Task<StatusResult> GetStatusWithTimeout()
-        {
-            CancellationTokenSource cts = new CancellationTokenSource();
-            using (cts)
-            {
-                var cancellation = cts.Token;
-                while (!cancellation.IsCancellationRequested)
-                {
-                    try
-                    {
-                        var status = await _Client.GetStatusAsync(cancellation).ConfigureAwait(false);
-                        return status;
-                    }
-                    catch (OperationCanceledException) { }
-                    catch { }
-                }
-            }
-            return null;
-        }
+        public TimeSpan PollInterval { get; set; } = TimeSpan.FromMinutes(1.0);
 
         public NBXplorerState State { get; private set; }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            _Timer.Dispose();
-            _Timer = null;
-            _Idle.Wait();
-            return Task.CompletedTask;
+            _Cts.Cancel();
+            return _Loop;
         }
     }
 }

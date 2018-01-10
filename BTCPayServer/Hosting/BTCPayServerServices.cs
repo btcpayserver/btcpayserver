@@ -155,12 +155,7 @@ namespace BTCPayServer.Hosting
                 else
                     return new Bitpay(new Key(), new Uri("https://test.bitpay.com/"));
             });
-            services.TryAddSingleton<IRateProvider>(o =>
-            {
-                var coinaverage = new CoinAverageRateProvider();
-                var bitpay = new BitpayRateProvider(new Bitpay(new Key(), new Uri("https://bitpay.com/")));
-                return new CachedRateProvider(new FallbackRateProvider(new IRateProvider[] { coinaverage, bitpay }), o.GetRequiredService<IMemoryCache>()) { CacheSpan = TimeSpan.FromMinutes(1.0) };
-            });
+            services.TryAddSingleton<IRateProviderFactory, CachedDefaultRateProviderFactory>();
 
             services.TryAddScoped<IHttpContextAccessor, HttpContextAccessor>();
             services.TryAddSingleton<IAuthorizationHandler, OwnStoreHandler>();
@@ -210,11 +205,9 @@ namespace BTCPayServer.Hosting
                     act();
                     return;
                 }
-                catch
+                catch when(!cts.IsCancellationRequested)
                 {
-                    if (cts.IsCancellationRequested)
-                        throw;
-                    Thread.Sleep(1000);
+                    Thread.Sleep(100);
                 }
             }
         }

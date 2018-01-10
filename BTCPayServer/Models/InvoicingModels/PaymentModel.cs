@@ -7,6 +7,14 @@ namespace BTCPayServer.Models.InvoicingModels
 {
     public class PaymentModel
     {
+        public class AvailableCrypto
+        {
+            public string CryptoCode { get; set; }
+            public string CryptoImage { get; set; }
+            public string Link { get; set; }
+        }
+        public List<AvailableCrypto> AvailableCryptos { get; set; } = new List<AvailableCrypto>();
+        public string CryptoCode { get; set; }
         public string ServerUrl { get; set; }
         public string InvoiceId { get; set; }
         public string BtcAddress { get; set; }
@@ -22,14 +30,14 @@ namespace BTCPayServer.Models.InvoicingModels
         public string ItemDesc { get; set; }
         public string TimeLeft { get; set; }
         public string Rate { get; set; }
-        public string BtcAmount { get; set; }
-        public string TxFees { get; set; }
+        public string OrderAmount { get; set; }
         public string InvoiceBitcoinUrl { get; set; }
-        public string BtcTotalDue { get; set; }
         public int TxCount { get; set; }
         public string BtcPaid { get; set; }
         public string StoreEmail { get; set; }
 
         public string OrderId { get; set; }
+        public string CryptoImage { get; set; }
+        public string NetworkFeeDescription { get; internal set; }
     }
 }

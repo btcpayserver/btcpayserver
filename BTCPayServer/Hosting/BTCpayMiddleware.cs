@@ -99,39 +99,73 @@ namespace BTCPayServer.Hosting
 
         private void RewriteHostIfNeeded(HttpContext httpContext)
         {
+            string reverseProxyScheme = null;
+            if (httpContext.Request.Headers.TryGetValue("X-Forwarded-Proto", out StringValues proto))
+            {
+                var scheme = proto.SingleOrDefault();
+                if (scheme != null)
+                {
+                    reverseProxyScheme = scheme;
+                }
+            }
+
+            ushort? reverseProxyPort = null;
+            if (httpContext.Request.Headers.TryGetValue("X-Forwarded-Port", out StringValues port))
+            {
+                var portString = port.SingleOrDefault();
+                if (portString != null && ushort.TryParse(portString, out ushort pp))
+                {
+                    reverseProxyPort = pp;
+                }
+            }
+
             // Make sure that code executing after this point think that the external url has been hit.
             if (_Options.ExternalUrl != null)
             {
-                httpContext.Request.Scheme = _Options.ExternalUrl.Scheme;
+                if (reverseProxyScheme != null && _Options.ExternalUrl.Scheme != reverseProxyScheme)
+                {
+                    if (reverseProxyScheme == "http" && _Options.ExternalUrl.Scheme == "https")
+                        Logs.PayServer.LogWarning($"BTCPay ExternalUrl setting expected to use scheme '{_Options.ExternalUrl.Scheme}' externally, but the reverse proxy uses scheme '{reverseProxyScheme}'");
+                    httpContext.Request.Scheme = reverseProxyScheme;
+                }
+                else
+                { 
+                    httpContext.Request.Scheme = _Options.ExternalUrl.Scheme;
+                }
                 if (_Options.ExternalUrl.IsDefaultPort)
                     httpContext.Request.Host = new HostString(_Options.ExternalUrl.Host);
                 else
-                    httpContext.Request.Host = new HostString(_Options.ExternalUrl.Host, _Options.ExternalUrl.Port);
+                {
+                    if (reverseProxyPort != null && _Options.ExternalUrl.Port != reverseProxyPort.Value)
+                    {
+                        Logs.PayServer.LogWarning($"BTCPay ExternalUrl setting expected to use port '{_Options.ExternalUrl.Port}' externally, but the reverse proxy uses port '{reverseProxyPort.Value}'");
+                        httpContext.Request.Host = new HostString(_Options.ExternalUrl.Host, reverseProxyPort.Value);
+                    }
+                    else
+                    {
+                        httpContext.Request.Host = new HostString(_Options.ExternalUrl.Host, _Options.ExternalUrl.Port);
+                    }
+                }
             }
             // NGINX pass X-Forwarded-Proto and X-Forwarded-Port, so let's use that to have better guess of the real domain
             else
             {
                 ushort? p = null;
-                if (httpContext.Request.Headers.TryGetValue("X-Forwarded-Proto", out StringValues proto))
+                if (reverseProxyScheme != null)
                 {
-                    var scheme = proto.SingleOrDefault();
-                    if (scheme != null)
-                    {
-                        httpContext.Request.Scheme = scheme;
-                        if (scheme == "http")
-                            p = 80;
-                        if (scheme == "https")
-                            p = 443;
-                    }
+                    httpContext.Request.Scheme = reverseProxyScheme;
+                    if (reverseProxyScheme == "http")
+                        p = 80;
+                    if (reverseProxyScheme == "https")
+                        p = 443;
                 }
-                if (httpContext.Request.Headers.TryGetValue("X-Forwarded-Port", out StringValues port))
+
+
+                if (reverseProxyPort != null)
                 {
-                    var portString = port.SingleOrDefault();
-                    if (portString != null && ushort.TryParse(portString, out ushort pp))
-                    {
-                        p = pp;
-                    }
+                    p = reverseProxyPort.Value;
                 }
+
                 if (p.HasValue)
                 {
                     bool isDefault = httpContext.Request.Scheme == "http" && p.Value == 80;

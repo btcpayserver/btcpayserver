@@ -180,7 +180,7 @@ namespace BTCPayServer.Services.Invoices
                     var network = networks.GetNetwork(strat.Name);
                     if (network != null)
                     {
-                        if (network == networks.BTC && btcReturned)
+                        if (network == networks.BTC)
                             btcReturned = true;
                         yield return BTCPayServer.DerivationStrategy.Parse(strat.Value.Value<string>(), network);
                     }
@@ -200,7 +200,7 @@ namespace BTCPayServer.Services.Invoices
         internal void SetDerivationStrategies(IEnumerable<DerivationStrategy> derivationStrategies)
         {
             JObject obj = new JObject();
-            foreach(var strat in derivationStrategies)
+            foreach (var strat in derivationStrategies)
             {
                 obj.Add(strat.Network.CryptoCode, new JValue(strat.DerivationStrategyBase.ToString()));
 #pragma warning disable CS0618
@@ -220,10 +220,27 @@ namespace BTCPayServer.Services.Invoices
         {
             get; set;
         }
+
+        [Obsolete("Use GetPayments instead")]
         public List<PaymentEntity> Payments
         {
             get; set;
         }
+
+#pragma warning disable CS0618
+        public List<PaymentEntity> GetPayments()
+        {
+            return Payments.ToList();
+        }
+        public List<PaymentEntity> GetPayments(string cryptoCode)
+        {
+            return Payments.Where(p=>p.CryptoCode == cryptoCode).ToList();
+        }
+        public List<PaymentEntity> GetPayments(BTCPayNetwork network)
+        {
+            return GetPayments(network.CryptoCode);
+        }
+#pragma warning restore CS0618
         public bool Refundable
         {
             get;
@@ -482,40 +499,49 @@ namespace BTCPayServer.Services.Invoices
         public CryptoDataAccounting Calculate()
         {
             var cryptoData = ParentEntity.GetCryptoData();
-            var totalDue = Money.Coins(ParentEntity.ProductInformation.Price / Rate) + TxFee;
+            var totalDue = Money.Coins(ParentEntity.ProductInformation.Price / Rate);
             var paid = Money.Zero;
             var cryptoPaid = Money.Zero;
-            int txCount = 1;
+
+            var paidTxFee = Money.Zero;
+            bool paidEnough = totalDue <= paid;
+            int txCount = 0;
             var payments =
-                ParentEntity.Payments
+                ParentEntity.GetPayments()
                 .Where(p => p.Accounted)
-                .OrderByDescending(p => p.ReceivedTime)
+                .OrderBy(p => p.ReceivedTime)
                 .Select(_ =>
                 {
+                    var txFee = _.GetValue(cryptoData, CryptoCode, cryptoData[_.GetCryptoCode()].TxFee);
                     paid += _.GetValue(cryptoData, CryptoCode);
-                    if (CryptoCode == _.GetCryptoCode())
-                        cryptoPaid += _.GetValue();
-                    return _;
-                })
-                .TakeWhile(_ =>
-                {
-                    var paidEnough = totalDue <= paid;
-                    if (!paidEnough && _.GetCryptoCode() == CryptoCode)
+                    if (!paidEnough)
                     {
-                        txCount++;
-                        totalDue += TxFee;
+                        totalDue += txFee;
+                        paidTxFee += txFee;
                     }
-                    return !paidEnough;
+                    paidEnough |= totalDue <= paid;
+                    if (CryptoCode == _.GetCryptoCode())
+                    {
+                        cryptoPaid += _.GetValue();
+                        txCount++;
+                    }
+                    return _;
                 })
                 .ToArray();
 
+            if (!paidEnough)
+            {
+                txCount++;
+                totalDue += TxFee;
+                paidTxFee += TxFee;
+            }
             var accounting = new CryptoDataAccounting();
             accounting.TotalDue = totalDue;
             accounting.Paid = paid;
             accounting.TxCount = txCount;
             accounting.CryptoPaid = cryptoPaid;
             accounting.Due = Money.Max(accounting.TotalDue - accounting.Paid, Money.Zero);
-            accounting.NetworkFee = TxFee * txCount;
+            accounting.NetworkFee = paidTxFee;
             return accounting;
         }
 
@@ -573,20 +599,21 @@ namespace BTCPayServer.Services.Invoices
             return Output.Value;
 #pragma warning restore CS0618
         }
-        public Money GetValue(Dictionary<string, CryptoData> cryptoData, string cryptoCode)
+        public Money GetValue(Dictionary<string, CryptoData> cryptoData, string cryptoCode, Money value = null)
         {
 #pragma warning disable CS0618
+            value = value ?? Output.Value;
+#pragma warning restore CS0618
             var to = cryptoCode;
             var from = GetCryptoCode();
             if (to == from)
-                return Output.Value;
+                return value;
             var fromRate = cryptoData[from].Rate;
             var toRate = cryptoData[to].Rate;
 
-            var fiatValue = fromRate * Output.Value.ToDecimal(MoneyUnit.BTC);
+            var fiatValue = fromRate * value.ToDecimal(MoneyUnit.BTC);
             var otherCurrencyValue = toRate == 0 ? 0.0m : fiatValue / toRate;
             return Money.Coins(otherCurrencyValue);
-#pragma warning restore CS0618
         }
 
         public string GetCryptoCode()

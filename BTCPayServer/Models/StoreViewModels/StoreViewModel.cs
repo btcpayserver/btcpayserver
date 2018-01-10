@@ -11,6 +11,11 @@ namespace BTCPayServer.Models.StoreViewModels
 {
     public class StoreViewModel
     {
+        public class DerivationScheme
+        {
+            public string Crypto { get; set; }
+            public string Value { get; set; }
+        }
         class Format
         {
             public string Name { get; set; }
@@ -18,14 +23,9 @@ namespace BTCPayServer.Models.StoreViewModels
         }
         public StoreViewModel()
         {
-            var btcPay = new Format { Name = "BTCPay", Value = "BTCPay" };
-            DerivationSchemeFormat = btcPay.Value;
-            DerivationSchemeFormats = new SelectList(new Format[]
-            {
-                btcPay,
-                new Format { Name = "Electrum", Value = "Electrum" },
-            }, nameof(btcPay.Value), nameof(btcPay.Name), btcPay);
+
         }
+
         public string Id { get; set; }
         [Display(Name = "Store Name")]
         [Required]
@@ -45,19 +45,7 @@ namespace BTCPayServer.Models.StoreViewModels
             set;
         }
 
-        public string DerivationScheme
-        {
-            get; set;
-        }
-
-        [Display(Name = "Derivation Scheme format")]
-        public string DerivationSchemeFormat
-        {
-            get;
-            set;
-        }
-
-        public SelectList DerivationSchemeFormats { get; set; }
+        public List<StoreViewModel.DerivationScheme> DerivationSchemes { get; set; } = new List<StoreViewModel.DerivationScheme>();
 
         [Display(Name = "Payment invalid if transactions fails to confirm after ... minutes")]
         [Range(10, 60 * 24 * 31)]
@@ -79,14 +67,21 @@ namespace BTCPayServer.Models.StoreViewModels
             get; set;
         }
 
-        public List<(string KeyPath, string Address)> AddressSamples
-        {
-            get; set;
-        } = new List<(string KeyPath, string Address)>();
-
         public string StatusMessage
         {
             get; set;
+        }
+        public SelectList CryptoCurrencies { get; set; }
+
+        [Display(Name = "Default crypto currency on checkout")]
+        public string DefaultCryptoCurrency { get; set; }
+
+        public void SetCryptoCurrencies(ExplorerClientProvider explorerProvider, string defaultCrypto)
+        {
+            var choices = explorerProvider.GetAll().Select(o => new Format() { Name = o.Item1.CryptoCode, Value = o.Item1.CryptoCode }).ToArray();
+            var chosen = choices.FirstOrDefault(f => f.Name == defaultCrypto) ?? choices.FirstOrDefault();
+            CryptoCurrencies = new SelectList(choices, nameof(chosen.Value), nameof(chosen.Name), chosen);
+            DefaultCryptoCurrency = chosen.Name;
         }
     }
 }

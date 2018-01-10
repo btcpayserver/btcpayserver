@@ -56,7 +56,7 @@ services:
       - bitcoind
 
   litecoin-nbxplorer:
-    image: nicolasdorier/nbxplorer:1.0.0.42
+    image: nicolasdorier/nbxplorer:1.0.0.43
     ports:
       - "32839:32839"
     expose: 

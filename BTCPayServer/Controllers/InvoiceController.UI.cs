@@ -119,7 +119,8 @@ namespace BTCPayServer.Controllers
         private async Task<PaymentModel> GetInvoiceModel(string invoiceId, string cryptoCode)
         {
             var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
-
+            if (invoice == null)
+                return null;
             var store = await _StoreRepository.FindStore(invoice.StoreId);
             if (cryptoCode == null)
                 cryptoCode = store.GetDefaultCrypto();

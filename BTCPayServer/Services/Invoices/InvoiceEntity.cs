@@ -180,7 +180,7 @@ namespace BTCPayServer.Services.Invoices
                     var network = networks.GetNetwork(strat.Name);
                     if (network != null)
                     {
-                        if (network == networks.BTC && btcReturned)
+                        if (network == networks.BTC)
                             btcReturned = true;
                         yield return BTCPayServer.DerivationStrategy.Parse(strat.Value.Value<string>(), network);
                     }
@@ -220,10 +220,27 @@ namespace BTCPayServer.Services.Invoices
         {
             get; set;
         }
+
+        [Obsolete("Use GetPayments instead")]
         public List<PaymentEntity> Payments
         {
             get; set;
         }
+
+#pragma warning disable CS0618
+        public List<PaymentEntity> GetPayments()
+        {
+            return Payments.ToList();
+        }
+        public List<PaymentEntity> GetPayments(string cryptoCode)
+        {
+            return Payments.Where(p=>p.CryptoCode == cryptoCode).ToList();
+        }
+        public List<PaymentEntity> GetPayments(BTCPayNetwork network)
+        {
+            return GetPayments(network.CryptoCode);
+        }
+#pragma warning restore CS0618
         public bool Refundable
         {
             get;
@@ -490,9 +507,9 @@ namespace BTCPayServer.Services.Invoices
             bool paidEnough = totalDue <= paid;
             int txCount = 0;
             var payments =
-                ParentEntity.Payments
+                ParentEntity.GetPayments()
                 .Where(p => p.Accounted)
-                .OrderByDescending(p => p.ReceivedTime)
+                .OrderBy(p => p.ReceivedTime)
                 .Select(_ =>
                 {
                     var txFee = _.GetValue(cryptoData, CryptoCode, cryptoData[_.GetCryptoCode()].TxFee);

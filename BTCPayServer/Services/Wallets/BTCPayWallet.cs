@@ -19,7 +19,12 @@ namespace BTCPayServer.Services.Wallets
     }
     public class NetworkCoins
     {
-        public Coin[] Coins { get; set; }
+        public class TimestampedCoin
+        {
+            public DateTimeOffset DateTime { get; set; }
+            public Coin Coin { get; set; }
+        }
+        public TimestampedCoin[] TimestampedCoins { get; set; }
         public KnownState State { get; set; }
         public DerivationStrategy Strategy { get; set; }
     }
@@ -50,6 +55,10 @@ namespace BTCPayServer.Services.Wallets
 
         public Task<TransactionResult> GetTransactionAsync(BTCPayNetwork network, uint256 txId, CancellationToken cancellation = default(CancellationToken))
         {
+            if (network == null)
+                throw new ArgumentNullException(nameof(network));
+            if (txId == null)
+                throw new ArgumentNullException(nameof(txId));
             var client = _Client.GetExplorerClient(network);
             return client.GetTransactionAsync(txId, cancellation);
         }
@@ -58,12 +67,11 @@ namespace BTCPayServer.Services.Wallets
         {
             var client = _Client.GetExplorerClient(strategy.Network);
             if (client == null)
-                return new NetworkCoins() { Coins = new Coin[0], State = null, Strategy = strategy };
+                return new NetworkCoins() { TimestampedCoins = new NetworkCoins.TimestampedCoin[0], State = null, Strategy = strategy };
             var changes = await client.SyncAsync(strategy.DerivationStrategyBase, state?.ConfirmedHash, state?.UnconfirmedHash, true, cancellation).ConfigureAwait(false);
-            var utxos = changes.Confirmed.UTXOs.Concat(changes.Unconfirmed.UTXOs).Select(c => c.AsCoin()).ToArray();
             return new NetworkCoins()
             {
-                Coins = utxos,
+                TimestampedCoins = changes.Confirmed.UTXOs.Concat(changes.Unconfirmed.UTXOs).Select(c => new NetworkCoins.TimestampedCoin() { Coin = c.AsCoin(), DateTime = c.Timestamp }).ToArray(),
                 State = new KnownState() { ConfirmedHash = changes.Confirmed.Hash, UnconfirmedHash = changes.Unconfirmed.Hash },
                 Strategy = strategy,
             };

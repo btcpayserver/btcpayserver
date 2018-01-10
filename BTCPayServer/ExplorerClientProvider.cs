@@ -34,6 +34,8 @@ namespace BTCPayServer
 
         public ExplorerClient GetExplorerClient(BTCPayNetwork network)
         {
+            if (network == null)
+                throw new ArgumentNullException(nameof(network));
             return GetExplorerClient(network.CryptoCode);
         }
 

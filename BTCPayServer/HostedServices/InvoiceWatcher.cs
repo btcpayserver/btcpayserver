@@ -149,16 +149,19 @@ namespace BTCPayServer.HostedServices
                 invoice.Status = "expired";
             }
 
-            foreach (NetworkCoins coins in await GetCoinsPerNetwork(context, invoice))
+            var derivationStrategies = invoice.GetDerivationStrategies(_NetworkProvider).ToArray();
+            foreach (NetworkCoins coins in await GetCoinsPerNetwork(context, invoice, derivationStrategies))
             {
                 bool dirtyAddress = false;
                 if (coins.State != null)
                     context.ModifiedKnownStates.AddOrReplace(coins.Strategy.Network, coins.State);
-                var alreadyAccounted = new HashSet<OutPoint>(invoice.Payments.Select(p => p.Outpoint));
-                foreach (var coin in coins.Coins.Where(c => !alreadyAccounted.Contains(c.Outpoint)))
+                var alreadyAccounted = new HashSet<OutPoint>(invoice.GetPayments(coins.Strategy.Network).Select(p => p.Outpoint));
+                foreach (var coin in coins.TimestampedCoins.Where(c => !alreadyAccounted.Contains(c.Coin.Outpoint)))
                 {
-                    var payment = await _InvoiceRepository.AddPayment(invoice.Id, coin, coins.Strategy.Network.CryptoCode).ConfigureAwait(false);
+                    var payment = await _InvoiceRepository.AddPayment(invoice.Id, coin.DateTime, coin.Coin, coins.Strategy.Network.CryptoCode).ConfigureAwait(false);
+#pragma warning disable CS0618
                     invoice.Payments.Add(payment);
+#pragma warning restore CS0618
                     context.Events.Add(new InvoicePaymentEvent(invoice.Id));
                     dirtyAddress = true;
                 }
@@ -169,7 +172,7 @@ namespace BTCPayServer.HostedServices
 
                 if (invoice.Status == "new" || invoice.Status == "expired")
                 {
-                    var totalPaid = (await GetPaymentsWithTransaction(network, invoice)).Select(p => p.Payment.GetValue(cryptoDataAll, cryptoData.CryptoCode)).Sum();
+                    var totalPaid = (await GetPaymentsWithTransaction(derivationStrategies, invoice)).Select(p => p.Payment.GetValue(cryptoDataAll, cryptoData.CryptoCode)).Sum();
                     if (totalPaid >= accounting.TotalDue)
                     {
                         if (invoice.Status == "new")
@@ -194,7 +197,7 @@ namespace BTCPayServer.HostedServices
                         context.MarkDirty();
                     }
 
-                    if (totalPaid < accounting.TotalDue && invoice.Payments.Count != 0 && invoice.ExceptionStatus != "paidPartial")
+                    if (totalPaid < accounting.TotalDue && invoice.GetPayments().Count != 0 && invoice.ExceptionStatus != "paidPartial")
                     {
                         invoice.ExceptionStatus = "paidPartial";
                         context.MarkDirty();
@@ -209,7 +212,7 @@ namespace BTCPayServer.HostedServices
 
                 if (invoice.Status == "paid")
                 {
-                    var transactions = await GetPaymentsWithTransaction(network, invoice);
+                    var transactions = await GetPaymentsWithTransaction(derivationStrategies, invoice);
                     if (invoice.SpeedPolicy == SpeedPolicy.HighSpeed)
                     {
                         transactions = transactions.Where(t => t.Confirmations >= 1 || !t.Transaction.RBF);
@@ -247,7 +250,7 @@ namespace BTCPayServer.HostedServices
 
                 if (invoice.Status == "confirmed")
                 {
-                    var transactions = await GetPaymentsWithTransaction(network, invoice);
+                    var transactions = await GetPaymentsWithTransaction(derivationStrategies, invoice);
                     transactions = transactions.Where(t => t.Confirmations >= 6);
                     var totalConfirmed = transactions.Select(t => t.Payment.GetValue(cryptoDataAll, cryptoData.CryptoCode)).Sum();
                     if (totalConfirmed >= accounting.TotalDue)
@@ -260,9 +263,8 @@ namespace BTCPayServer.HostedServices
             }
         }
 
-        private async Task<IEnumerable<NetworkCoins>> GetCoinsPerNetwork(UpdateInvoiceContext context, InvoiceEntity invoice)
+        private async Task<IEnumerable<NetworkCoins>> GetCoinsPerNetwork(UpdateInvoiceContext context, InvoiceEntity invoice, DerivationStrategy[] strategies)
         {
-            var strategies = invoice.GetDerivationStrategies(_NetworkProvider).ToArray();
             var getCoinsResponsesAsync = strategies
                                 .Select(d => _Wallet.GetCoins(d, context.KnownStates.TryGet(d.Network)))
                                 .ToArray();
@@ -270,64 +272,106 @@ namespace BTCPayServer.HostedServices
             var getCoinsResponses = getCoinsResponsesAsync.Select(g => g.Result).ToArray();
             foreach (var response in getCoinsResponses)
             {
-                response.Coins = response.Coins.Where(c => invoice.AvailableAddressHashes.Contains(c.ScriptPubKey.Hash.ToString() + response.Strategy.Network.CryptoCode)).ToArray();
+                response.TimestampedCoins = response.TimestampedCoins.Where(c => invoice.AvailableAddressHashes.Contains(c.Coin.ScriptPubKey.Hash.ToString() + response.Strategy.Network.CryptoCode)).ToArray();
             }
-            return getCoinsResponses.Where(s => s.Coins.Length != 0).ToArray();
+            return getCoinsResponses.Where(s => s.TimestampedCoins.Length != 0).ToArray();
         }
 
-        private async Task<IEnumerable<AccountedPaymentEntity>> GetPaymentsWithTransaction(BTCPayNetwork network, InvoiceEntity invoice)
+        private async Task<IEnumerable<AccountedPaymentEntity>> GetPaymentsWithTransaction(DerivationStrategy[] derivations, InvoiceEntity invoice)
         {
-            var transactions = await _Wallet.GetTransactions(network, invoice.Payments.Select(t => t.Outpoint.Hash).ToArray());
-
-            var spentTxIn = new Dictionary<OutPoint, AccountedPaymentEntity>();
-            var result = invoice.Payments.Select(p => p.Outpoint).ToHashSet();
-            List<AccountedPaymentEntity> payments = new List<AccountedPaymentEntity>();
-            foreach (var payment in invoice.Payments)
+            List<PaymentEntity> updatedPaymentEntities = new List<PaymentEntity>();
+            List<AccountedPaymentEntity> accountedPayments = new List<AccountedPaymentEntity>();
+            foreach (var network in derivations.Select(d => d.Network))
             {
-                TransactionResult tx;
-                if (!transactions.TryGetValue(payment.Outpoint.Hash, out tx))
+                var transactions = await _Wallet.GetTransactions(network, invoice.GetPayments(network).Select(t => t.Outpoint.Hash).ToArray());
+                var conflicts = GetConflicts(transactions.Select(t => t.Value));
+                foreach (var payment in invoice.GetPayments(network))
                 {
-                    result.Remove(payment.Outpoint);
-                    continue;
-                }
-                AccountedPaymentEntity accountedPayment = new AccountedPaymentEntity()
-                {
-                    Confirmations = tx.Confirmations,
-                    Transaction = tx.Transaction,
-                    Payment = payment
-                };
-                payments.Add(accountedPayment);
-                foreach (var txin in tx.Transaction.Inputs)
-                {
-                    if (!spentTxIn.TryAdd(txin.PrevOut, accountedPayment))
-                    {
-                        //We get a double spend
-                        var existing = spentTxIn[txin.PrevOut];
+                    TransactionResult tx;
+                    if (!transactions.TryGetValue(payment.Outpoint.Hash, out tx))
+                        continue;
 
-                        //Take the most recent, the full node is already comparing fees correctly so we have the most likely to be confirmed
-                        if (accountedPayment.Confirmations > 1 || existing.Payment.ReceivedTime < accountedPayment.Payment.ReceivedTime)
-                        {
-                            spentTxIn[txin.PrevOut] = accountedPayment;
-                            result.Remove(existing.Payment.Outpoint);
-                        }
+                    AccountedPaymentEntity accountedPayment = new AccountedPaymentEntity()
+                    {
+                        Confirmations = tx.Confirmations,
+                        Transaction = tx.Transaction,
+                        Payment = payment
+                    };
+                    var txId = accountedPayment.Transaction.GetHash();
+                    var txConflict = conflicts.GetConflict(txId);
+                    var accounted = txConflict == null || txConflict.IsWinner(txId);
+                    if (accounted != payment.Accounted)
+                    {
+                        updatedPaymentEntities.Add(payment);
+                        payment.Accounted = accounted;
                     }
+
+                    if (accounted)
+                        accountedPayments.Add(accountedPayment);
                 }
             }
-
-            List<PaymentEntity> updated = new List<PaymentEntity>();
-            var accountedPayments = payments.Where(p =>
-            {
-                var accounted = result.Contains(p.Payment.Outpoint);
-                if (p.Payment.Accounted != accounted)
-                {
-                    p.Payment.Accounted = accounted;
-                    updated.Add(p.Payment);
-                }
-                return accounted;
-            }).ToArray();
-
-            await _InvoiceRepository.UpdatePayments(payments);
+            await _InvoiceRepository.UpdatePayments(updatedPaymentEntities);
             return accountedPayments;
+        }
+
+
+        class TransactionConflict
+        {
+            public Dictionary<uint256, TransactionResult> Transactions { get; set; } = new Dictionary<uint256, TransactionResult>();
+
+
+            uint256 _Winner;
+            public bool IsWinner(uint256 txId)
+            {
+                if (_Winner == null)
+                {
+                    var confirmed = Transactions.FirstOrDefault(t => t.Value.Confirmations >= 1);
+                    if (!confirmed.Equals(default(KeyValuePair<uint256, TransactionResult>)))
+                    {
+                        _Winner = confirmed.Key;
+                    }
+                    else
+                    {
+                        // Take the most recent (bitcoin node would not forward a conflict without a successfull RBF)
+                        _Winner = Transactions
+                                .OrderByDescending(t => t.Value.Timestamp)
+                                .First()
+                                .Key;
+                    }
+                }
+                return _Winner == txId;
+            }
+        }
+        class TransactionConflicts : List<TransactionConflict>
+        {
+            public TransactionConflicts(IEnumerable<TransactionConflict> collection) : base(collection)
+            {
+
+            }
+
+            public TransactionConflict GetConflict(uint256 txId)
+            {
+                return this.FirstOrDefault(c => c.Transactions.ContainsKey(txId));
+            }
+        }
+        private TransactionConflicts GetConflicts(IEnumerable<TransactionResult> transactions)
+        {
+            Dictionary<OutPoint, TransactionConflict> conflictsByOutpoint = new Dictionary<OutPoint, TransactionConflict>();
+            foreach (var tx in transactions)
+            {
+                var hash = tx.Transaction.GetHash();
+                foreach (var input in tx.Transaction.Inputs)
+                {
+                    TransactionConflict conflict = new TransactionConflict();
+                    if (!conflictsByOutpoint.TryAdd(input.PrevOut, conflict))
+                    {
+                        conflict = conflictsByOutpoint[input.PrevOut];
+                    }
+                    if (!conflict.Transactions.ContainsKey(hash))
+                        conflict.Transactions.Add(hash, tx);
+                }
+            }
+            return new TransactionConflicts(conflictsByOutpoint.Where(c => c.Value.Transactions.Count > 1).Select(c => c.Value));
         }
 
         TimeSpan _PollInterval;

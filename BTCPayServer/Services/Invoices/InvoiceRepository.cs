@@ -107,7 +107,9 @@ namespace BTCPayServer.Services.Invoices
             List<string> textSearch = new List<string>();
             invoice = Clone(invoice);
             invoice.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16));
+#pragma warning disable CS0618
             invoice.Payments = new List<PaymentEntity>();
+#pragma warning restore CS0618
             invoice.StoreId = storeId;
             using (var context = _ContextFactory.CreateContext())
             {
@@ -309,12 +311,14 @@ namespace BTCPayServer.Services.Invoices
         private InvoiceEntity ToEntity(InvoiceData invoice)
         {
             var entity = ToObject<InvoiceEntity>(invoice.Blob);
+#pragma warning disable CS0618
             entity.Payments = invoice.Payments.Select(p =>
             {
                 var paymentEntity = ToObject<PaymentEntity>(p.Blob);
                 paymentEntity.Accounted = p.Accounted;
                 return paymentEntity;
             }).ToList();
+#pragma warning restore CS0618
             entity.ExceptionStatus = invoice.ExceptionStatus;
             entity.Status = invoice.Status;
             entity.RefundMail = invoice.CustomerEmail;
@@ -419,7 +423,7 @@ namespace BTCPayServer.Services.Invoices
             AddToTextSearch(invoiceId, addresses.Select(a => a.ToString()).ToArray());
         }
 
-        public async Task<PaymentEntity> AddPayment(string invoiceId, Coin receivedCoin, string cryptoCode)
+        public async Task<PaymentEntity> AddPayment(string invoiceId, DateTimeOffset date, Coin receivedCoin, string cryptoCode)
         {
             using (var context = _ContextFactory.CreateContext())
             {
@@ -430,7 +434,7 @@ namespace BTCPayServer.Services.Invoices
                     Output = receivedCoin.TxOut,
                     CryptoCode = cryptoCode,
 #pragma warning restore CS0618
-                    ReceivedTime = DateTime.UtcNow
+                    ReceivedTime = date.UtcDateTime
                 };
 
                 PaymentData data = new PaymentData
@@ -448,7 +452,7 @@ namespace BTCPayServer.Services.Invoices
             }
         }
 
-        public async Task UpdatePayments(List<AccountedPaymentEntity> payments)
+        public async Task UpdatePayments(List<PaymentEntity> payments)
         {
             if (payments.Count == 0)
                 return;
@@ -457,8 +461,8 @@ namespace BTCPayServer.Services.Invoices
                 foreach (var payment in payments)
                 {
                     var data = new PaymentData();
-                    data.Id = payment.Payment.Outpoint.ToString();
-                    data.Accounted = payment.Payment.Accounted;
+                    data.Id = payment.Outpoint.ToString();
+                    data.Accounted = payment.Accounted;
                     context.Attach(data);
                     context.Entry(data).Property(o => o.Accounted).IsModified = true;
                 }

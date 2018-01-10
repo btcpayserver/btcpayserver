@@ -70,7 +70,7 @@ namespace BTCPayServer.Models.InvoicingModels
         {
             get; set;
         }
-
+        public string StatusException { get; set; }
         public DateTimeOffset CreatedDate
         {
             get; set;

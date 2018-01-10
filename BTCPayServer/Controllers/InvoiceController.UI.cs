@@ -56,6 +56,7 @@ namespace BTCPayServer.Controllers
                 Fiat = FormatCurrency((decimal)dto.Price, dto.Currency),
                 NotificationUrl = invoice.NotificationURL,
                 ProductInformation = invoice.ProductInformation,
+                StatusException = invoice.ExceptionStatus
             };
 
             foreach (var data in invoice.GetCryptoData())
@@ -74,7 +75,7 @@ namespace BTCPayServer.Controllers
             }
 
             var payments = invoice
-                .Payments
+                .GetPayments()
                 .Select(async payment =>
                 {
                     var m = new InvoiceDetailsModel.Payment();

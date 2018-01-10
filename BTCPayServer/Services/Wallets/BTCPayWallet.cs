@@ -17,7 +17,7 @@ namespace BTCPayServer.Services.Wallets
         public uint256 UnconfirmedHash { get; set; }
         public uint256 ConfirmedHash { get; set; }
     }
-    public class GetCoinsResult
+    public class NetworkCoins
     {
         public Coin[] Coins { get; set; }
         public KnownState State { get; set; }
@@ -26,16 +26,12 @@ namespace BTCPayServer.Services.Wallets
     public class BTCPayWallet
     {
         private ExplorerClientProvider _Client;
-        ApplicationDbContextFactory _DBFactory;
 
-        public BTCPayWallet(ExplorerClientProvider client, ApplicationDbContextFactory factory)
+        public BTCPayWallet(ExplorerClientProvider client)
         {
             if (client == null)
                 throw new ArgumentNullException(nameof(client));
-            if (factory == null)
-                throw new ArgumentNullException(nameof(factory));
             _Client = client;
-            _DBFactory = factory;
         }
 
 
@@ -58,14 +54,14 @@ namespace BTCPayServer.Services.Wallets
             return client.GetTransactionAsync(txId, cancellation);
         }
 
-        public async Task<GetCoinsResult> GetCoins(DerivationStrategy strategy, KnownState state, CancellationToken cancellation = default(CancellationToken))
+        public async Task<NetworkCoins> GetCoins(DerivationStrategy strategy, KnownState state, CancellationToken cancellation = default(CancellationToken))
         {
             var client = _Client.GetExplorerClient(strategy.Network);
             if (client == null)
-                return new GetCoinsResult() { Coins = new Coin[0], State = null, Strategy = strategy };
+                return new NetworkCoins() { Coins = new Coin[0], State = null, Strategy = strategy };
             var changes = await client.SyncAsync(strategy.DerivationStrategyBase, state?.ConfirmedHash, state?.UnconfirmedHash, true, cancellation).ConfigureAwait(false);
             var utxos = changes.Confirmed.UTXOs.Concat(changes.Unconfirmed.UTXOs).Select(c => c.AsCoin()).ToArray();
-            return new GetCoinsResult()
+            return new NetworkCoins()
             {
                 Coins = utxos,
                 State = new KnownState() { ConfirmedHash = changes.Confirmed.Hash, UnconfirmedHash = changes.Unconfirmed.Hash },
@@ -79,6 +75,7 @@ namespace BTCPayServer.Services.Wallets
             var tasks = transactions.Select(t => client.BroadcastAsync(t)).ToArray();
             return Task.WhenAll(tasks);
         }
+
 
         public async Task<Money> GetBalance(DerivationStrategy derivationStrategy)
         {

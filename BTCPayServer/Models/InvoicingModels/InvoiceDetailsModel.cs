@@ -48,6 +48,8 @@ namespace BTCPayServer.Models.InvoicingModels
                 get;
                 set;
             }
+
+            public bool Replaced { get; set; }
         }
 
         public string StatusMessage

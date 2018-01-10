@@ -86,6 +86,7 @@ namespace BTCPayServer.Controllers
                     m.TransactionId = payment.Outpoint.Hash.ToString();
                     m.ReceivedTime = payment.ReceivedTime;
                     m.TransactionLink = string.Format(paymentNetwork.BlockExplorerLink, m.TransactionId);
+                    m.Replaced = !payment.Accounted;
                     return m;
                 })
                 .ToArray();

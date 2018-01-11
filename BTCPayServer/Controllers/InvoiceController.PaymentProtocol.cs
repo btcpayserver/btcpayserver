@@ -66,13 +66,17 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> PostPayment(string invoiceId, string cryptoCode = null)
         {
             var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
-            if (invoice == null || invoice.IsExpired())
-                return NotFound();
             if (cryptoCode == null)
                 cryptoCode = "BTC";
             var network = _NetworkProvider.GetNetwork(cryptoCode);
+            if (network == null || invoice == null || invoice.IsExpired() || !invoice.Support(network))
+                return NotFound();
+
+            var wallet = _WalletProvider.GetWallet(network);
+            if (wallet == null)
+                return NotFound();
             var payment = PaymentMessage.Load(Request.Body);
-            var unused = _Wallet.BroadcastTransactionsAsync(network, payment.Transactions);
+            var unused = wallet.BroadcastTransactionsAsync(payment.Transactions);
             await _InvoiceRepository.AddRefundsAsync(invoiceId, payment.RefundTo.Select(p => new TxOut(p.Amount, p.Script)).ToArray());
             return new PaymentAckActionResult(payment.CreateACK(invoiceId + " is currently processing, thanks for your purchase..."));
         }

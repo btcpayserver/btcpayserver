@@ -45,7 +45,7 @@ namespace BTCPayServer.HostedServices
 
         InvoiceRepository _InvoiceRepository;
         EventAggregator _EventAggregator;
-        BTCPayWallet _Wallet;
+        BTCPayWalletProvider _WalletProvider;
         BTCPayNetworkProvider _NetworkProvider;
 
         public InvoiceWatcher(
@@ -53,10 +53,10 @@ namespace BTCPayServer.HostedServices
             BTCPayNetworkProvider networkProvider,
             InvoiceRepository invoiceRepository,
             EventAggregator eventAggregator,
-            BTCPayWallet wallet)
+            BTCPayWalletProvider walletProvider)
         {
             PollInterval = TimeSpan.FromMinutes(1.0);
-            _Wallet = wallet ?? throw new ArgumentNullException(nameof(wallet));
+            _WalletProvider = walletProvider ?? throw new ArgumentNullException(nameof(walletProvider));
             _InvoiceRepository = invoiceRepository ?? throw new ArgumentNullException(nameof(invoiceRepository));
             _EventAggregator = eventAggregator ?? throw new ArgumentNullException(nameof(eventAggregator));
             _NetworkProvider = networkProvider;
@@ -150,29 +150,39 @@ namespace BTCPayServer.HostedServices
             }
 
             var derivationStrategies = invoice.GetDerivationStrategies(_NetworkProvider).ToArray();
-            foreach (NetworkCoins coins in await GetCoinsPerNetwork(context, invoice, derivationStrategies))
+            var payments = await GetPaymentsWithTransaction(derivationStrategies, invoice);
+            foreach (Task<NetworkCoins> coinsAsync in GetCoinsPerNetwork(context, invoice, derivationStrategies))
             {
+                var coins = await coinsAsync;
+                if (coins.TimestampedCoins.Length == 0)
+                    continue;
                 bool dirtyAddress = false;
                 if (coins.State != null)
-                    context.ModifiedKnownStates.AddOrReplace(coins.Strategy.Network, coins.State);
-                var alreadyAccounted = new HashSet<OutPoint>(invoice.GetPayments(coins.Strategy.Network).Select(p => p.Outpoint));
+                    context.ModifiedKnownStates.AddOrReplace(coins.Wallet.Network, coins.State);
+                var alreadyAccounted = new HashSet<OutPoint>(invoice.GetPayments(coins.Wallet.Network).Select(p => p.Outpoint));
+
                 foreach (var coin in coins.TimestampedCoins.Where(c => !alreadyAccounted.Contains(c.Coin.Outpoint)))
                 {
-                    var payment = await _InvoiceRepository.AddPayment(invoice.Id, coin.DateTime, coin.Coin, coins.Strategy.Network.CryptoCode).ConfigureAwait(false);
+                    var payment = await _InvoiceRepository.AddPayment(invoice.Id, coin.DateTime, coin.Coin, coins.Wallet.Network.CryptoCode).ConfigureAwait(false);
 #pragma warning disable CS0618
                     invoice.Payments.Add(payment);
 #pragma warning restore CS0618
+                    alreadyAccounted.Add(coin.Coin.Outpoint);
                     context.Events.Add(new InvoicePaymentEvent(invoice.Id));
                     dirtyAddress = true;
                 }
-                var network = coins.Strategy.Network;
+                if (dirtyAddress)
+                {
+                    payments = await GetPaymentsWithTransaction(derivationStrategies, invoice);
+                }
+                var network = coins.Wallet.Network;
                 var cryptoData = invoice.GetCryptoData(network);
                 var cryptoDataAll = invoice.GetCryptoData();
                 var accounting = cryptoData.Calculate();
 
                 if (invoice.Status == "new" || invoice.Status == "expired")
                 {
-                    var totalPaid = (await GetPaymentsWithTransaction(derivationStrategies, invoice)).Select(p => p.Payment.GetValue(cryptoDataAll, cryptoData.CryptoCode)).Sum();
+                    var totalPaid = payments.Select(p => p.Payment.GetValue(cryptoDataAll, cryptoData.CryptoCode)).Sum();
                     if (totalPaid >= accounting.TotalDue)
                     {
                         if (invoice.Status == "new")
@@ -203,7 +213,7 @@ namespace BTCPayServer.HostedServices
                         context.MarkDirty();
                         if (dirtyAddress)
                         {
-                            var address = await _Wallet.ReserveAddressAsync(coins.Strategy);
+                            var address = await coins.Wallet.ReserveAddressAsync(coins.Strategy);
                             Logs.PayServer.LogInformation("Generate new " + address);
                             await _InvoiceRepository.NewAddress(invoice.Id, address, network);
                         }
@@ -212,7 +222,7 @@ namespace BTCPayServer.HostedServices
 
                 if (invoice.Status == "paid")
                 {
-                    var transactions = await GetPaymentsWithTransaction(derivationStrategies, invoice);
+                    var transactions = payments;
                     if (invoice.SpeedPolicy == SpeedPolicy.HighSpeed)
                     {
                         transactions = transactions.Where(t => t.Confirmations >= 1 || !t.Transaction.RBF);
@@ -250,7 +260,7 @@ namespace BTCPayServer.HostedServices
 
                 if (invoice.Status == "confirmed")
                 {
-                    var transactions = await GetPaymentsWithTransaction(derivationStrategies, invoice);
+                    var transactions = payments;
                     transactions = transactions.Where(t => t.Confirmations >= 6);
                     var totalConfirmed = transactions.Select(t => t.Payment.GetValue(cryptoDataAll, cryptoData.CryptoCode)).Sum();
                     if (totalConfirmed >= accounting.TotalDue)
@@ -263,18 +273,23 @@ namespace BTCPayServer.HostedServices
             }
         }
 
-        private async Task<IEnumerable<NetworkCoins>> GetCoinsPerNetwork(UpdateInvoiceContext context, InvoiceEntity invoice, DerivationStrategy[] strategies)
+        private IEnumerable<Task<NetworkCoins>> GetCoinsPerNetwork(UpdateInvoiceContext context, InvoiceEntity invoice, DerivationStrategy[] strategies)
         {
-            var getCoinsResponsesAsync = strategies
-                                .Select(d => _Wallet.GetCoins(d, context.KnownStates.TryGet(d.Network)))
+            return strategies
+                                .Select(d => (Wallet: _WalletProvider.GetWallet(d.Network),
+                                              Network: d.Network,
+                                              Strategy: d.DerivationStrategyBase))
+                                .Where(d => d.Wallet != null)
+                                .Select(d => (Network: d.Network,
+                                              Coins: d.Wallet.GetCoins(d.Strategy, context.KnownStates.TryGet(d.Network))))
+                                .Select(async d =>
+                                {
+                                    var coins = await d.Coins;
+                                    // Keep only coins from the invoice
+                                    coins.TimestampedCoins = coins.TimestampedCoins.Where(c => invoice.AvailableAddressHashes.Contains(c.Coin.ScriptPubKey.Hash.ToString() + d.Network.CryptoCode)).ToArray();
+                                    return coins;
+                                })
                                 .ToArray();
-            await Task.WhenAll(getCoinsResponsesAsync);
-            var getCoinsResponses = getCoinsResponsesAsync.Select(g => g.Result).ToArray();
-            foreach (var response in getCoinsResponses)
-            {
-                response.TimestampedCoins = response.TimestampedCoins.Where(c => invoice.AvailableAddressHashes.Contains(c.Coin.ScriptPubKey.Hash.ToString() + response.Strategy.Network.CryptoCode)).ToArray();
-            }
-            return getCoinsResponses.Where(s => s.TimestampedCoins.Length != 0).ToArray();
         }
 
         private async Task<IEnumerable<AccountedPaymentEntity>> GetPaymentsWithTransaction(DerivationStrategy[] derivations, InvoiceEntity invoice)
@@ -283,7 +298,10 @@ namespace BTCPayServer.HostedServices
             List<AccountedPaymentEntity> accountedPayments = new List<AccountedPaymentEntity>();
             foreach (var network in derivations.Select(d => d.Network))
             {
-                var transactions = await _Wallet.GetTransactions(network, invoice.GetPayments(network).Select(t => t.Outpoint.Hash).ToArray());
+                var wallet = _WalletProvider.GetWallet(network);
+                if (wallet == null)
+                    continue;
+                var transactions = await wallet.GetTransactions(network, invoice.GetPayments(network).Select(t => t.Outpoint.Hash).ToArray());
                 var conflicts = GetConflicts(transactions.Select(t => t.Value));
                 foreach (var payment in invoice.GetPayments(network))
                 {

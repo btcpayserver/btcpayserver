@@ -26,31 +26,40 @@ namespace BTCPayServer.Services.Wallets
         }
         public TimestampedCoin[] TimestampedCoins { get; set; }
         public KnownState State { get; set; }
-        public DerivationStrategy Strategy { get; set; }
+        public DerivationStrategyBase Strategy { get; set; }
+        public BTCPayWallet Wallet { get; set; }
     }
     public class BTCPayWallet
     {
-        private ExplorerClientProvider _Client;
+        private ExplorerClient _Client;
 
-        public BTCPayWallet(ExplorerClientProvider client)
+        public BTCPayWallet(ExplorerClient client, BTCPayNetwork network)
         {
             if (client == null)
                 throw new ArgumentNullException(nameof(client));
             _Client = client;
+            _Network = network;
         }
 
 
-        public async Task<BitcoinAddress> ReserveAddressAsync(DerivationStrategy derivationStrategy)
+        private readonly BTCPayNetwork _Network;
+        public BTCPayNetwork Network
         {
-            var client = _Client.GetExplorerClient(derivationStrategy.Network);
-            var pathInfo = await client.GetUnusedAsync(derivationStrategy.DerivationStrategyBase, DerivationFeature.Deposit, 0, true).ConfigureAwait(false);
-            return pathInfo.ScriptPubKey.GetDestinationAddress(client.Network);
+            get
+            {
+                return _Network;
+            }
         }
 
-        public async Task TrackAsync(DerivationStrategy derivationStrategy)
+        public async Task<BitcoinAddress> ReserveAddressAsync(DerivationStrategyBase derivationStrategy)
         {
-            var client = _Client.GetExplorerClient(derivationStrategy.Network);
-            await client.TrackAsync(derivationStrategy.DerivationStrategyBase);
+            var pathInfo = await _Client.GetUnusedAsync(derivationStrategy, DerivationFeature.Deposit, 0, true).ConfigureAwait(false);
+            return pathInfo.ScriptPubKey.GetDestinationAddress(_Client.Network);
+        }
+
+        public async Task TrackAsync(DerivationStrategyBase derivationStrategy)
+        {
+            await _Client.TrackAsync(derivationStrategy);
         }
 
         public Task<TransactionResult> GetTransactionAsync(BTCPayNetwork network, uint256 txId, CancellationToken cancellation = default(CancellationToken))
@@ -59,36 +68,31 @@ namespace BTCPayServer.Services.Wallets
                 throw new ArgumentNullException(nameof(network));
             if (txId == null)
                 throw new ArgumentNullException(nameof(txId));
-            var client = _Client.GetExplorerClient(network);
-            return client.GetTransactionAsync(txId, cancellation);
+            return _Client.GetTransactionAsync(txId, cancellation);
         }
 
-        public async Task<NetworkCoins> GetCoins(DerivationStrategy strategy, KnownState state, CancellationToken cancellation = default(CancellationToken))
+        public async Task<NetworkCoins> GetCoins(DerivationStrategyBase strategy, KnownState state, CancellationToken cancellation = default(CancellationToken))
         {
-            var client = _Client.GetExplorerClient(strategy.Network);
-            if (client == null)
-                return new NetworkCoins() { TimestampedCoins = new NetworkCoins.TimestampedCoin[0], State = null, Strategy = strategy };
-            var changes = await client.SyncAsync(strategy.DerivationStrategyBase, state?.ConfirmedHash, state?.UnconfirmedHash, true, cancellation).ConfigureAwait(false);
+            var changes = await _Client.SyncAsync(strategy, state?.ConfirmedHash, state?.UnconfirmedHash, true, cancellation).ConfigureAwait(false);
             return new NetworkCoins()
             {
                 TimestampedCoins = changes.Confirmed.UTXOs.Concat(changes.Unconfirmed.UTXOs).Select(c => new NetworkCoins.TimestampedCoin() { Coin = c.AsCoin(), DateTime = c.Timestamp }).ToArray(),
                 State = new KnownState() { ConfirmedHash = changes.Confirmed.Hash, UnconfirmedHash = changes.Unconfirmed.Hash },
                 Strategy = strategy,
+                Wallet = this
             };
         }
 
-        public Task BroadcastTransactionsAsync(BTCPayNetwork network, List<Transaction> transactions)
+        public Task BroadcastTransactionsAsync(List<Transaction> transactions)
         {
-            var client = _Client.GetExplorerClient(network);
-            var tasks = transactions.Select(t => client.BroadcastAsync(t)).ToArray();
+            var tasks = transactions.Select(t => _Client.BroadcastAsync(t)).ToArray();
             return Task.WhenAll(tasks);
         }
 
 
-        public async Task<Money> GetBalance(DerivationStrategy derivationStrategy)
+        public async Task<Money> GetBalance(DerivationStrategyBase derivationStrategy)
         {
-            var client = _Client.GetExplorerClient(derivationStrategy.Network);
-            var result = await client.SyncAsync(derivationStrategy.DerivationStrategyBase, null, true);
+            var result = await _Client.SyncAsync(derivationStrategy, null, true);
             return result.Confirmed.UTXOs.Select(u => u.Value)
                          .Concat(result.Unconfirmed.UTXOs.Select(u => u.Value))
                          .Sum();

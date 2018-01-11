@@ -165,7 +165,7 @@ namespace BTCPayServer.Controllers
                 }).ToList()
             };
 
-            var isMultiCurrency = invoice.Payments.Select(p=>p.GetCryptoCode()).Concat(new[] { network.CryptoCode }).Distinct().Count() > 1;
+            var isMultiCurrency = invoice.GetPayments().Select(p=>p.GetCryptoCode()).Concat(new[] { network.CryptoCode }).Distinct().Count() > 1;
             if (isMultiCurrency)
                 model.NetworkFeeDescription = $"{accounting.NetworkFee} {network.CryptoCode}";
 

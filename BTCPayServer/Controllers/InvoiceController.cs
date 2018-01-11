@@ -45,7 +45,7 @@ namespace BTCPayServer.Controllers
     public partial class InvoiceController : Controller
     {
         InvoiceRepository _InvoiceRepository;
-        BTCPayWallet _Wallet;
+        BTCPayWalletProvider _WalletProvider;
         IRateProviderFactory _RateProviders;
         StoreRepository _StoreRepository;
         UserManager<ApplicationUser> _UserManager;
@@ -57,7 +57,7 @@ namespace BTCPayServer.Controllers
         public InvoiceController(InvoiceRepository invoiceRepository,
             CurrencyNameTable currencyNameTable,
             UserManager<ApplicationUser> userManager,
-            BTCPayWallet wallet,
+            BTCPayWalletProvider walletProvider,
             IRateProviderFactory rateProviders,
             StoreRepository storeRepository,
             EventAggregator eventAggregator,
@@ -69,7 +69,7 @@ namespace BTCPayServer.Controllers
             _CurrencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
             _StoreRepository = storeRepository ?? throw new ArgumentNullException(nameof(storeRepository));
             _InvoiceRepository = invoiceRepository ?? throw new ArgumentNullException(nameof(invoiceRepository));
-            _Wallet = wallet ?? throw new ArgumentNullException(nameof(wallet));
+            _WalletProvider = walletProvider ?? throw new ArgumentNullException(nameof(walletProvider));
             _RateProviders = rateProviders ?? throw new ArgumentNullException(nameof(rateProviders));
             _UserManager = userManager;
             _FeeProviderFactory = feeProviderFactory ?? throw new ArgumentNullException(nameof(feeProviderFactory));
@@ -116,14 +116,20 @@ namespace BTCPayServer.Controllers
             entity.SpeedPolicy = ParseSpeedPolicy(invoice.TransactionSpeed, store.SpeedPolicy);
 
             var queries = derivationStrategies
-                    .Select(derivationStrategy =>
+                    .Select(derivationStrategy => ( Wallet: _WalletProvider.GetWallet(derivationStrategy.Network),  
+                                                    DerivationStrategy: derivationStrategy.DerivationStrategyBase,
+                                                    Network: derivationStrategy.Network,
+                                                    RateProvider: _RateProviders.GetRateProvider(derivationStrategy.Network),
+                                                    FeeRateProvider: _FeeProviderFactory.CreateFeeProvider(derivationStrategy.Network)))
+                    .Where(_ => _.Wallet != null && _.FeeRateProvider != null && _.RateProvider != null)
+                    .Select(_ =>
                     {
                         return new
                         {
-                            network = derivationStrategy.Network,
-                            getFeeRate = _FeeProviderFactory.CreateFeeProvider(derivationStrategy.Network).GetFeeRateAsync(),
-                            getRate = _RateProviders.GetRateProvider(derivationStrategy.Network).GetRateAsync(invoice.Currency),
-                            getAddress = _Wallet.ReserveAddressAsync(derivationStrategy)
+                            network = _.Network,
+                            getFeeRate = _.FeeRateProvider.GetFeeRateAsync(),
+                            getRate = _.RateProvider.GetRateAsync(invoice.Currency),
+                            getAddress = _.Wallet.ReserveAddressAsync(_.DerivationStrategy)
                         };
                     });
 

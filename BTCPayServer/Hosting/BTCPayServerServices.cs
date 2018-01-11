@@ -103,7 +103,7 @@ namespace BTCPayServer.Hosting
                 var dbpath = Path.Combine(opts.DataDir, "InvoiceDB");
                 if (!Directory.Exists(dbpath))
                     Directory.CreateDirectory(dbpath);
-                return new InvoiceRepository(dbContext, dbpath, opts.Network);
+                return new InvoiceRepository(dbContext, dbpath);
             });
             services.AddSingleton<BTCPayServerEnvironment>();
             services.TryAddSingleton<TokenRepository>();
@@ -129,7 +129,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<BTCPayNetworkProvider>(o => 
             {
                 var opts = o.GetRequiredService<BTCPayServerOptions>();
-                return new BTCPayNetworkProvider(opts.Network);
+                return new BTCPayNetworkProvider(opts.ChainType);
             });
 
             services.TryAddSingleton<NBXplorerDashboard>();
@@ -152,7 +152,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<ExplorerClientProvider>();
             services.TryAddSingleton<Bitpay>(o =>
             {
-                if (o.GetRequiredService<BTCPayServerOptions>().Network == Network.Main)
+                if (o.GetRequiredService<BTCPayServerOptions>().ChainType == ChainType.Main)
                     return new Bitpay(new Key(), new Uri("https://bitpay.com/"));
                 else
                     return new Bitpay(new Key(), new Uri("https://test.bitpay.com/"));

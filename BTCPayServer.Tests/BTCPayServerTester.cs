@@ -45,19 +45,11 @@ namespace BTCPayServer.Tests
         }
 
         public Uri LTCNBXplorerUri { get; set; }
-        public string CookieFile
-        {
-            get; set;
-        }
+        
         public Uri ServerUri
         {
             get;
             set;
-        }
-
-        public ExtKey HDPrivateKey
-        {
-            get; set;
         }
 
         public string Postgres
@@ -76,15 +68,17 @@ namespace BTCPayServer.Tests
             if (!Directory.Exists(_Directory))
                 Directory.CreateDirectory(_Directory);
 
-            HDPrivateKey = new ExtKey();
             StringBuilder config = new StringBuilder();
             config.AppendLine($"regtest=1");
             config.AppendLine($"port={Port}");
-            config.AppendLine($"explorer.url={NBXplorerUri.AbsoluteUri}");
+            config.AppendLine($"chains=btc,ltc");
+
+            config.AppendLine($"btc.explorer.url={NBXplorerUri.AbsoluteUri}");
+            config.AppendLine($"btc.explorer.cookiefile=0");
+
             config.AppendLine($"ltc.explorer.url={LTCNBXplorerUri.AbsoluteUri}");
-            config.AppendLine($"explorer.cookiefile={CookieFile}");
-            config.AppendLine($"ltc.explorer.cookiefile={CookieFile}");
-            config.AppendLine($"hdpubkey={HDPrivateKey.Neuter().ToString(Network.RegTest)}");
+            config.AppendLine($"ltc.explorer.cookiefile=0");
+
             if (Postgres != null)
                 config.AppendLine($"postgres=" + Postgres);
             File.WriteAllText(Path.Combine(_Directory, "settings.config"), config.ToString());

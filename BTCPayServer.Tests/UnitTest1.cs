@@ -330,13 +330,13 @@ namespace BTCPayServer.Tests
                     false, //subtractfeefromamount
                     true, //replaceable
                 }).ResultString);
-                var invoiceAddress = BitcoinAddress.Create(invoice.BitcoinAddress, tester.Network);
+                var invoiceAddress = BitcoinAddress.Create(invoice.BitcoinAddress, user.SupportedNetwork.NBitcoinNetwork);
 
                 Eventually(() =>
                 {
                     invoice = user.BitPay.GetInvoice(invoice.Id);
                     Assert.Equal(payment1, invoice.BtcPaid);
-                    invoiceAddress = BitcoinAddress.Create(invoice.BitcoinAddress, tester.Network);
+                    invoiceAddress = BitcoinAddress.Create(invoice.BitcoinAddress, user.SupportedNetwork.NBitcoinNetwork);
                 });
 
                 var tx = tester.ExplorerNode.GetRawTransaction(new uint256(tx1));

@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Services.Rates;
 using Microsoft.Extensions.Caching.Memory;
 using NBitcoin;
 using NBitpayClient;
+using NBXplorer.Configuration;
 
 namespace BTCPayServer
 {
@@ -16,14 +18,14 @@ namespace BTCPayServer
             NBXplorer.Altcoins.Litecoin.Networks.EnsureRegistered();
         }
         Dictionary<string, BTCPayNetwork> _Networks = new Dictionary<string, BTCPayNetwork>();
-        public BTCPayNetworkProvider(Network network)
+        public BTCPayNetworkProvider(ChainType chainType)
         {
             var coinaverage = new CoinAverageRateProvider("BTC");
             var bitpay = new BitpayRateProvider(new Bitpay(new Key(), new Uri("https://bitpay.com/")));
             var btcRate = new FallbackRateProvider(new IRateProvider[] { coinaverage, bitpay });
 
             var ltcRate = new CoinAverageRateProvider("LTC");
-            if (network == Network.Main)
+            if (chainType == ChainType.Main)
             {
                 Add(new BTCPayNetwork()
                 {
@@ -45,7 +47,7 @@ namespace BTCPayServer
                 });
             }
 
-            if (network == Network.TestNet)
+            if (chainType == ChainType.Test)
             {
                 Add(new BTCPayNetwork()
                 {
@@ -67,7 +69,7 @@ namespace BTCPayServer
                 });
             }
 
-            if (network == Network.RegTest)
+            if (chainType == ChainType.Regtest)
             {
                 Add(new BTCPayNetwork()
                 {
@@ -85,8 +87,14 @@ namespace BTCPayServer
                     NBitcoinNetwork = NBXplorer.Altcoins.Litecoin.Networks.Regtest,
                     UriScheme = "litecoin",
                     DefaultRateProvider = ltcRate,
-                    CryptoImagePath = "imlegacy/litecoin-symbol.svg"
+                    CryptoImagePath = "imlegacy/litecoin-symbol.svg",
                 });
+            }
+
+            foreach(var n in _Networks)
+            {
+                n.Value.NBXplorerNetwork = NetworkInformation.GetNetworkByName(n.Value.NBitcoinNetwork.Name);
+                n.Value.DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(chainType);
             }
         }
 

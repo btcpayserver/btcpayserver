@@ -12,7 +12,7 @@ namespace BTCPayServer.Tests
         public EclairTester(ServerTester parent, string environmentName, string defaultRPC, string defaultHost)
         {
             this.parent = parent;
-            RPC = new EclairRPCClient(new Uri(parent.GetEnvironment(environmentName, defaultRPC)), parent.Network);
+            //RPC = new EclairRPCClient(new Uri(parent.GetEnvironment(environmentName, defaultRPC)), parent.Network);
             P2PHost = parent.GetEnvironment(environmentName + "_HOST", defaultHost);
         }
 

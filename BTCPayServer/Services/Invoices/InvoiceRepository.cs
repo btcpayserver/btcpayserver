@@ -32,27 +32,12 @@ namespace BTCPayServer.Services.Invoices
             }
         }
 
-
-        Network _Network;
-        public Network Network
-        {
-            get
-            {
-                return _Network;
-            }
-            set
-            {
-                _Network = value;
-            }
-        }
-
         private ApplicationDbContextFactory _ContextFactory;
         private CustomThreadPool _IndexerThread;
-        public InvoiceRepository(ApplicationDbContextFactory contextFactory, string dbreezePath, Network network)
+        public InvoiceRepository(ApplicationDbContextFactory contextFactory, string dbreezePath)
         {
             _Engine = new DBreezeEngine(dbreezePath);
             _IndexerThread = new CustomThreadPool(1, "Invoice Indexer");
-            _Network = network;
             _ContextFactory = contextFactory;
         }
 
@@ -105,7 +90,7 @@ namespace BTCPayServer.Services.Invoices
         public async Task<InvoiceEntity> CreateInvoiceAsync(string storeId, InvoiceEntity invoice, BTCPayNetworkProvider networkProvider)
         {
             List<string> textSearch = new List<string>();
-            invoice = Clone(invoice);
+            invoice = Clone(invoice, null);
             invoice.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16));
 #pragma warning disable CS0618
             invoice.Payments = new List<PaymentEntity>();
@@ -118,7 +103,7 @@ namespace BTCPayServer.Services.Invoices
                     StoreDataId = storeId,
                     Id = invoice.Id,
                     Created = invoice.InvoiceTime,
-                    Blob = ToBytes(invoice),
+                    Blob = ToBytes(invoice, null),
                     OrderId = invoice.OrderId,
                     Status = invoice.Status,
                     ItemCode = invoice.ProductInformation.ItemCode,
@@ -150,8 +135,8 @@ namespace BTCPayServer.Services.Invoices
             textSearch.Add(invoice.InvoiceTime.ToString(CultureInfo.InvariantCulture));
             textSearch.Add(invoice.ProductInformation.Price.ToString(CultureInfo.InvariantCulture));
             textSearch.Add(invoice.OrderId);
-            textSearch.Add(ToString(invoice.BuyerInformation));
-            textSearch.Add(ToString(invoice.ProductInformation));
+            textSearch.Add(ToString(invoice.BuyerInformation, null));
+            textSearch.Add(ToString(invoice.ProductInformation, null));
             textSearch.Add(invoice.StoreId);
 
             AddToTextSearch(invoice.Id, textSearch.ToArray());
@@ -167,7 +152,7 @@ namespace BTCPayServer.Services.Invoices
                 if (invoice == null)
                     return false;
 
-                var invoiceEntity = ToObject<InvoiceEntity>(invoice.Blob);
+                var invoiceEntity = ToObject<InvoiceEntity>(invoice.Blob, network.NBitcoinNetwork);
                 var currencyData = invoiceEntity.GetCryptoData(network, null);
                 if (currencyData == null)
                     return false;
@@ -186,7 +171,7 @@ namespace BTCPayServer.Services.Invoices
                 }
 #pragma warning restore CS0618
                 invoiceEntity.SetCryptoData(currencyData);
-                invoice.Blob = ToBytes(invoiceEntity);
+                invoice.Blob = ToBytes(invoiceEntity, network.NBitcoinNetwork);
 
                 context.AddressInvoices.Add(new AddressInvoiceData() {
                     InvoiceDataId = invoiceId, CreatedTime = DateTimeOffset.UtcNow }
@@ -225,7 +210,7 @@ namespace BTCPayServer.Services.Invoices
                 var invoiceData = await context.FindAsync<InvoiceData>(invoiceId).ConfigureAwait(false);
                 if (invoiceData == null)
                     return;
-                var invoiceEntity = ToObject<InvoiceEntity>(invoiceData.Blob);
+                var invoiceEntity = ToObject<InvoiceEntity>(invoiceData.Blob, null);
                 MarkUnassigned(invoiceId, invoiceEntity, context, null);
                 try
                 {
@@ -308,11 +293,11 @@ namespace BTCPayServer.Services.Invoices
 
         private InvoiceEntity ToEntity(InvoiceData invoice)
         {
-            var entity = ToObject<InvoiceEntity>(invoice.Blob);
+            var entity = ToObject<InvoiceEntity>(invoice.Blob, null);
 #pragma warning disable CS0618
             entity.Payments = invoice.Payments.Select(p =>
             {
-                var paymentEntity = ToObject<PaymentEntity>(p.Blob);
+                var paymentEntity = ToObject<PaymentEntity>(p.Blob, null);
                 paymentEntity.Accounted = p.Accounted;
                 return paymentEntity;
             }).ToList();
@@ -396,7 +381,7 @@ namespace BTCPayServer.Services.Invoices
 
         }
 
-        public async Task AddRefundsAsync(string invoiceId, TxOut[] outputs)
+        public async Task AddRefundsAsync(string invoiceId, TxOut[] outputs, Network network)
         {
             if (outputs.Length == 0)
                 return;
@@ -410,14 +395,14 @@ namespace BTCPayServer.Services.Invoices
                     {
                         Id = invoiceId + "-" + i,
                         InvoiceDataId = invoiceId,
-                        Blob = ToBytes(output)
+                        Blob = ToBytes(output, network)
                     });
                     i++;
                 }
                 await context.SaveChangesAsync().ConfigureAwait(false);
             }
 
-            var addresses = outputs.Select(o => o.ScriptPubKey.GetDestinationAddress(_Network)).Where(a => a != null).ToArray();
+            var addresses = outputs.Select(o => o.ScriptPubKey.GetDestinationAddress(network)).Where(a => a != null).ToArray();
             AddToTextSearch(invoiceId, addresses.Select(a => a.ToString()).ToArray());
         }
 
@@ -438,7 +423,7 @@ namespace BTCPayServer.Services.Invoices
                 PaymentData data = new PaymentData
                 {
                     Id = receivedCoin.Outpoint.ToString(),
-                    Blob = ToBytes(entity),
+                    Blob = ToBytes(entity, null),
                     InvoiceDataId = invoiceId
                 };
 
@@ -468,24 +453,24 @@ namespace BTCPayServer.Services.Invoices
             }
         }
 
-        private T ToObject<T>(byte[] value)
+        private T ToObject<T>(byte[] value, Network network)
         {
-            return NBitcoin.JsonConverters.Serializer.ToObject<T>(ZipUtils.Unzip(value), Network);
+            return NBitcoin.JsonConverters.Serializer.ToObject<T>(ZipUtils.Unzip(value), network);
         }
 
-        private byte[] ToBytes<T>(T obj)
+        private byte[] ToBytes<T>(T obj, Network network)
         {
-            return ZipUtils.Zip(NBitcoin.JsonConverters.Serializer.ToString(obj));
+            return ZipUtils.Zip(NBitcoin.JsonConverters.Serializer.ToString(obj, network));
         }
 
-        private T Clone<T>(T invoice)
+        private T Clone<T>(T invoice, Network network)
         {
-            return NBitcoin.JsonConverters.Serializer.ToObject<T>(ToString(invoice), Network);
+            return NBitcoin.JsonConverters.Serializer.ToObject<T>(ToString(invoice, network), network);
         }
 
-        private string ToString<T>(T data)
+        private string ToString<T>(T data, Network network)
         {
-            return NBitcoin.JsonConverters.Serializer.ToString(data, Network);
+            return NBitcoin.JsonConverters.Serializer.ToString(data, network);
         }
 
         public void Dispose()

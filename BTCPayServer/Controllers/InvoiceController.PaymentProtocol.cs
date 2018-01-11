@@ -77,7 +77,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             var payment = PaymentMessage.Load(Request.Body);
             var unused = wallet.BroadcastTransactionsAsync(payment.Transactions);
-            await _InvoiceRepository.AddRefundsAsync(invoiceId, payment.RefundTo.Select(p => new TxOut(p.Amount, p.Script)).ToArray());
+            await _InvoiceRepository.AddRefundsAsync(invoiceId, payment.RefundTo.Select(p => new TxOut(p.Amount, p.Script)).ToArray(), network.NBitcoinNetwork);
             return new PaymentAckActionResult(payment.CreateACK(invoiceId + " is currently processing, thanks for your purchase..."));
         }
     }

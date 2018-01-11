@@ -39,7 +39,7 @@ services:
       - postgres
 
   bitcoin-nbxplorer:
-    image: nicolasdorier/nbxplorer:1.0.0.45
+    image: nicolasdorier/nbxplorer:1.0.0.47
     ports:
       - "32838:32838"
     expose: 
@@ -57,7 +57,7 @@ services:
       - bitcoind
 
   litecoin-nbxplorer:
-    image: nicolasdorier/nbxplorer:1.0.0.45
+    image: nicolasdorier/nbxplorer:1.0.0.47
     ports:
       - "32839:32839"
     expose: 

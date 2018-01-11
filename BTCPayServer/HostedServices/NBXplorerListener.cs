@@ -12,6 +12,7 @@ using NBXplorer;
 using System.Collections.Concurrent;
 using NBXplorer.DerivationStrategy;
 using BTCPayServer.Events;
+using BTCPayServer.Services;
 
 namespace BTCPayServer.HostedServices
 {
@@ -24,9 +25,11 @@ namespace BTCPayServer.HostedServices
         private TaskCompletionSource<bool> _RunningTask;
         private CancellationTokenSource _Cts;
         NBXplorerDashboard _Dashboards;
+        TransactionCacheProvider _TxCache;
 
         public NBXplorerListener(ExplorerClientProvider explorerClients,
                                 NBXplorerDashboard dashboard,
+                                TransactionCacheProvider cacheProvider,
                                 InvoiceRepository invoiceRepository,
                                 EventAggregator aggregator, IApplicationLifetime lifetime)
         {
@@ -36,6 +39,7 @@ namespace BTCPayServer.HostedServices
             _ExplorerClients = explorerClients;
             _Aggregator = aggregator;
             _Lifetime = lifetime;
+            _TxCache = cacheProvider;
         }
 
         CompositeDisposable leases = new CompositeDisposable();
@@ -130,11 +134,13 @@ namespace BTCPayServer.HostedServices
                         switch (newEvent)
                         {
                             case NBXplorer.Models.NewBlockEvent evt:
+                                _TxCache.GetTransactionCache(network).NewBlock(evt.Hash, evt.PreviousBlockHash);
                                 _Aggregator.Publish(new Events.NewBlockEvent());
                                 break;
                             case NBXplorer.Models.NewTransactionEvent evt:
-                                foreach (var txout in evt.Match.Outputs)
+                                foreach (var txout in evt.Outputs)
                                 {
+                                    _TxCache.GetTransactionCache(network).AddToCache(evt.TransactionData);
                                     _Aggregator.Publish(new Events.TxOutReceivedEvent()
                                     {
                                         Network = network,

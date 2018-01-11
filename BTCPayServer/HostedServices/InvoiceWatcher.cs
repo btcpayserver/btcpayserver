@@ -17,6 +17,7 @@ using BTCPayServer.Controllers;
 using BTCPayServer.Events;
 using Microsoft.AspNetCore.Hosting;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services;
 
 namespace BTCPayServer.HostedServices
 {
@@ -150,7 +151,7 @@ namespace BTCPayServer.HostedServices
             }
 
             var derivationStrategies = invoice.GetDerivationStrategies(_NetworkProvider).ToArray();
-            var payments = await GetPaymentsWithTransaction(null, derivationStrategies, invoice);
+            var payments = await GetPaymentsWithTransaction(derivationStrategies, invoice);
             foreach (Task<NetworkCoins> coinsAsync in GetCoinsPerNetwork(context, invoice, derivationStrategies))
             {
                 var coins = await coinsAsync;
@@ -173,7 +174,7 @@ namespace BTCPayServer.HostedServices
                 }
                 if (dirtyAddress)
                 {
-                    payments = await GetPaymentsWithTransaction(payments, derivationStrategies, invoice);
+                    payments = await GetPaymentsWithTransaction(derivationStrategies, invoice);
                 }
                 var network = coins.Wallet.Network;
                 var cryptoData = invoice.GetCryptoData(network, _NetworkProvider);
@@ -293,58 +294,23 @@ namespace BTCPayServer.HostedServices
         }
 
 
-        class AccountedPaymentEntities : List<AccountedPaymentEntity>
-        {
-            public AccountedPaymentEntities(AccountedPaymentEntities existing)
-            {
-                if (existing != null)
-                    _Transactions = existing._Transactions;
-            }
-
-            Dictionary<uint256, TransactionResult> _Transactions = new Dictionary<uint256, TransactionResult>();
-
-            public void AddToCache(IEnumerable<TransactionResult> transactions)
-            {
-                foreach (var tx in transactions)
-                    _Transactions.TryAdd(tx.Transaction.GetHash(), tx);
-            }
-            public TransactionResult GetTransaction(uint256 txId)
-            {
-                _Transactions.TryGetValue(txId, out TransactionResult result);
-                return result;
-            }
-
-            internal IEnumerable<TransactionResult> GetTransactions()
-            {
-                return _Transactions.Values;
-            }
-        }
-        private async Task<AccountedPaymentEntities> GetPaymentsWithTransaction(AccountedPaymentEntities previous, DerivationStrategy[] derivations, InvoiceEntity invoice)
+        private async Task<IEnumerable<AccountedPaymentEntity>> GetPaymentsWithTransaction(DerivationStrategy[] derivations, InvoiceEntity invoice)
         {
             List<PaymentEntity> updatedPaymentEntities = new List<PaymentEntity>();
-            AccountedPaymentEntities accountedPayments = new AccountedPaymentEntities(previous);
+            List<AccountedPaymentEntity> accountedPayments = new List<AccountedPaymentEntity>();
             foreach (var network in derivations.Select(d => d.Network))
             {
                 var wallet = _WalletProvider.GetWallet(network);
                 if (wallet == null)
                     continue;
 
-                var hashesToFetch = new HashSet<uint256>(invoice
-                    .GetPayments(network)
+                var transactions = await wallet.GetTransactions(invoice.GetPayments(wallet.Network)
                     .Select(t => t.Outpoint.Hash)
-                    .Where(h => accountedPayments?.GetTransaction(h) == null)
-                    .ToList());
-
-
-                if (hashesToFetch.Count > 0)
-                {
-                    accountedPayments.AddToCache((await wallet.GetTransactions(hashesToFetch.ToArray())).Select(t => t.Value));
-                }
-                var conflicts = GetConflicts(accountedPayments.GetTransactions());
+                    .ToArray());
+                var conflicts = GetConflicts(transactions.Select(t => t.Value));
                 foreach (var payment in invoice.GetPayments(network))
                 {
-                    TransactionResult tx = accountedPayments.GetTransaction(payment.Outpoint.Hash);
-                    if (tx == null)
+                    if (!transactions.TryGetValue(payment.Outpoint.Hash, out TransactionResult tx))
                         continue;
 
                     AccountedPaymentEntity accountedPayment = new AccountedPaymentEntity()
@@ -369,7 +335,6 @@ namespace BTCPayServer.HostedServices
             await _InvoiceRepository.UpdatePayments(updatedPaymentEntities);
             return accountedPayments;
         }
-
 
         class TransactionConflict
         {

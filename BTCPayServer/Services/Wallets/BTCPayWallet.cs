@@ -33,13 +33,14 @@ namespace BTCPayServer.Services.Wallets
     public class BTCPayWallet
     {
         private ExplorerClient _Client;
-
-        public BTCPayWallet(ExplorerClient client, BTCPayNetwork network)
+        private TransactionCache _Cache;
+        public BTCPayWallet(ExplorerClient client, TransactionCache cache, BTCPayNetwork network)
         {
             if (client == null)
                 throw new ArgumentNullException(nameof(client));
             _Client = client;
             _Network = network;
+            _Cache = cache;
         }
 
 
@@ -65,11 +66,16 @@ namespace BTCPayServer.Services.Wallets
             await _Client.TrackAsync(derivationStrategy);
         }
 
-        public Task<TransactionResult> GetTransactionAsync(uint256 txId, CancellationToken cancellation = default(CancellationToken))
+        public async Task<TransactionResult> GetTransactionAsync(uint256 txId, CancellationToken cancellation = default(CancellationToken))
         {
             if (txId == null)
                 throw new ArgumentNullException(nameof(txId));
-            return _Client.GetTransactionAsync(txId, cancellation);
+            var tx = _Cache.GetTransaction(txId);
+            if (tx != null)
+                return tx;
+            tx = await _Client.GetTransactionAsync(txId, cancellation);
+            _Cache.AddToCache(tx);
+            return tx;
         }
 
         public async Task<NetworkCoins> GetCoins(DerivationStrategyBase strategy, KnownState state, CancellationToken cancellation = default(CancellationToken))

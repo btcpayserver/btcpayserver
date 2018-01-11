@@ -59,7 +59,7 @@ namespace BTCPayServer.Controllers
                 StatusException = invoice.ExceptionStatus
             };
 
-            foreach (var data in invoice.GetCryptoData())
+            foreach (var data in invoice.GetCryptoData(null))
             {
                 var cryptoInfo = dto.CryptoInfo.First(o => o.CryptoCode.Equals(data.Key, StringComparison.OrdinalIgnoreCase));
                 var accounting = data.Value.Calculate();
@@ -128,7 +128,7 @@ namespace BTCPayServer.Controllers
             var network = _NetworkProvider.GetNetwork(cryptoCode);
             if (invoice == null || network == null || !invoice.Support(network))
                 return null;
-            var cryptoData = invoice.GetCryptoData(network);
+            var cryptoData = invoice.GetCryptoData(network, _NetworkProvider);
 
             var dto = invoice.EntityToDTO(_NetworkProvider);
             var cryptoInfo = dto.CryptoInfo.First(o => o.CryptoCode == network.CryptoCode);
@@ -157,12 +157,15 @@ namespace BTCPayServer.Controllers
                 Status = invoice.Status,
                 CryptoImage = "/" + Url.Content(network.CryptoImagePath),
                 NetworkFeeDescription = $"{accounting.TxCount} transaction{(accounting.TxCount > 1 ? "s" : "")} x {cryptoData.TxFee} {network.CryptoCode}",
-                AvailableCryptos = invoice.GetCryptoData().Select(kv=> new PaymentModel.AvailableCrypto()
-                {
-                    CryptoCode = kv.Key,
-                    CryptoImage = "/" + _NetworkProvider.GetNetwork(kv.Key).CryptoImagePath,
-                    Link = Url.Action(nameof(Checkout), new { invoiceId = invoiceId, cryptoCode = kv.Key })
-                }).ToList()
+                AvailableCryptos = invoice.GetCryptoData(_NetworkProvider)
+                                          .Where(i => i.Value.Network != null)
+                                          .Select(kv=> new PaymentModel.AvailableCrypto()
+                                            {
+                                                CryptoCode = kv.Key,
+                                                CryptoImage = "/" + kv.Value.Network.CryptoImagePath,
+                                                Link = Url.Action(nameof(Checkout), new { invoiceId = invoiceId, cryptoCode = kv.Key })
+                                            }).Where(c => c.CryptoImage != "/")
+                .ToList()
             };
 
             var isMultiCurrency = invoice.GetPayments().Select(p=>p.GetCryptoCode()).Concat(new[] { network.CryptoCode }).Distinct().Count() > 1;

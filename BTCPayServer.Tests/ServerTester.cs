@@ -47,11 +47,17 @@ namespace BTCPayServer.Tests
                 Directory.CreateDirectory(_Directory);
 
 
-            ExplorerNode = new RPCClient(RPCCredentialString.Parse(GetEnvironment("TESTS_RPCCONNECTION", "server=http://127.0.0.1:43782;ceiwHEbqWI83:DwubwWsoo3")), Network);
+            var network = new BTCPayNetworkProvider(Network);
+            ExplorerNode = new RPCClient(RPCCredentialString.Parse(GetEnvironment("TESTS_RPCCONNECTION", "server=http://127.0.0.1:43782;ceiwHEbqWI83:DwubwWsoo3")), network.GetNetwork("BTC").NBitcoinNetwork);
+            LTCExplorerNode = new RPCClient(RPCCredentialString.Parse(GetEnvironment("TESTS_LTCRPCCONNECTION", "server=http://127.0.0.1:43783;ceiwHEbqWI83:DwubwWsoo3")), network.GetNetwork("LTC").NBitcoinNetwork);
+
             ExplorerClient = new ExplorerClient(Network, new Uri(GetEnvironment("TESTS_NBXPLORERURL", "http://127.0.0.1:32838/")));
+            LTCExplorerClient = new ExplorerClient(Network, new Uri(GetEnvironment("TESTS_LTCNBXPLORERURL", "http://127.0.0.1:32839/")));
+
             PayTester = new BTCPayServerTester(Path.Combine(_Directory, "pay"))
             {
                 NBXplorerUri = ExplorerClient.Address,
+                LTCNBXplorerUri = LTCExplorerClient.Address,
                 Postgres = GetEnvironment("TESTS_POSTGRES", "User ID=postgres;Host=127.0.0.1;Port=39372;Database=btcpayserver")
             };
             PayTester.Port = int.Parse(GetEnvironment("TESTS_PORT", Utils.FreeTcpPort().ToString()));
@@ -107,10 +113,16 @@ namespace BTCPayServer.Tests
             get; set;
         }
 
+        public RPCClient LTCExplorerNode
+        {
+            get; set;
+        }
+
         public ExplorerClient ExplorerClient
         {
             get; set;
         }
+        public ExplorerClient LTCExplorerClient { get; set; }
 
         HttpClient _Http = new HttpClient();
 

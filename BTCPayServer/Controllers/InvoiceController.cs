@@ -121,7 +121,9 @@ namespace BTCPayServer.Controllers
                                                     Network: derivationStrategy.Network,
                                                     RateProvider: _RateProviders.GetRateProvider(derivationStrategy.Network),
                                                     FeeRateProvider: _FeeProviderFactory.CreateFeeProvider(derivationStrategy.Network)))
-                    .Where(_ => _.Wallet != null && _.FeeRateProvider != null && _.RateProvider != null)
+                    .Where(_ => _.Wallet != null && 
+                                _.FeeRateProvider != null && 
+                                _.RateProvider != null)
                     .Select(_ =>
                     {
                         return new

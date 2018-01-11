@@ -125,16 +125,15 @@ namespace BTCPayServer.Services.Invoices
                     CustomerEmail = invoice.RefundMail
                 });
 
-                foreach (var cryptoData in invoice.GetCryptoData().Values)
+                foreach (var cryptoData in invoice.GetCryptoData(networkProvider).Values)
                 {
-                    var network = networkProvider.GetNetwork(cryptoData.CryptoCode);
-                    if (network == null)
+                    if (cryptoData.Network == null)
                         throw new InvalidOperationException("CryptoCode unsupported");
                     context.AddressInvoices.Add(new AddressInvoiceData()
                     {
                         InvoiceDataId = invoice.Id,
                         CreatedTime = DateTimeOffset.UtcNow,
-                    }.SetHash(BitcoinAddress.Create(cryptoData.DepositAddress, network.NBitcoinNetwork).ScriptPubKey.Hash, network.CryptoCode));
+                    }.SetHash(BitcoinAddress.Create(cryptoData.DepositAddress, cryptoData.Network.NBitcoinNetwork).ScriptPubKey.Hash, cryptoData.CryptoCode));
                     context.HistoricalAddressInvoices.Add(new HistoricalAddressInvoiceData()
                     {
                         InvoiceDataId = invoice.Id,
@@ -169,8 +168,7 @@ namespace BTCPayServer.Services.Invoices
                     return false;
 
                 var invoiceEntity = ToObject<InvoiceEntity>(invoice.Blob);
-                var cryptoData = invoiceEntity.GetCryptoData();
-                var currencyData = cryptoData.Where(c => c.Value.CryptoCode == network.CryptoCode).Select(f => f.Value).FirstOrDefault();
+                var currencyData = invoiceEntity.GetCryptoData(network, null);
                 if (currencyData == null)
                     return false;
 
@@ -187,7 +185,7 @@ namespace BTCPayServer.Services.Invoices
                     invoiceEntity.DepositAddress = currencyData.DepositAddress;
                 }
 #pragma warning restore CS0618
-                invoiceEntity.SetCryptoData(cryptoData);
+                invoiceEntity.SetCryptoData(currencyData);
                 invoice.Blob = ToBytes(invoiceEntity);
 
                 context.AddressInvoices.Add(new AddressInvoiceData() {
@@ -207,7 +205,7 @@ namespace BTCPayServer.Services.Invoices
 
         private static void MarkUnassigned(string invoiceId, InvoiceEntity entity, ApplicationDbContext context, string cryptoCode)
         {
-            foreach (var address in entity.GetCryptoData())
+            foreach (var address in entity.GetCryptoData(null))
             {
                 if (cryptoCode != null && cryptoCode != address.Value.CryptoCode)
                     continue;

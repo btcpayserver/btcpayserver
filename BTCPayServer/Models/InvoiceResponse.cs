@@ -37,81 +37,6 @@ namespace BTCPayServer.Models
         }
     }
 
-    public class InvoiceCryptoInfo
-    {
-        [JsonProperty("cryptoCode")]
-        public string CryptoCode { get; set; }
-
-        [JsonProperty("rate")]
-        public decimal Rate { get; set; }
-
-        //"exRates":{"USD":4320.02}
-        [JsonProperty("exRates")]
-        public Dictionary<string, double> ExRates
-        {
-            get; set;
-        }
-
-        //"btcPaid":"0.000000"
-        [JsonProperty("paid")]
-        public string Paid
-        {
-            get; set;
-        }
-
-        //"btcPrice":"0.001157"
-        [JsonProperty("price")]
-        public string Price
-        {
-            get; set;
-        }
-
-        //"btcDue":"0.001160"
-        /// <summary>
-        /// Amount of crypto remaining to pay this invoice
-        /// </summary>
-        [JsonProperty("due")]
-        public string Due
-        {
-            get; set;
-        }
-
-        [JsonProperty("paymentUrls")]
-        public NBitpayClient.InvoicePaymentUrls PaymentUrls
-        {
-            get; set;
-        }
-
-        [JsonProperty("address")]
-        public string Address { get; set; }
-        [JsonProperty("url")]
-        public string Url { get; set; }
-
-        /// <summary>
-        /// Total amount of this invoice
-        /// </summary>
-        [JsonProperty("totalDue")]
-        public string TotalDue { get; set; }
-
-        /// <summary>
-        /// Total amount of network fee to pay to the invoice
-        /// </summary>
-        [JsonProperty("networkFee")]
-        public string NetworkFee { get; set; }
-
-        /// <summary>
-        /// Number of transactions required to pay
-        /// </summary>
-        [JsonProperty("txCount")]
-        public int TxCount { get; set; }
-
-        /// <summary>
-        /// Total amount of the invoice paid in this crypto
-        /// </summary>
-        [JsonProperty("cryptoPaid")]
-        public Money CryptoPaid { get; set; }
-    }
-
     //{"facade":"pos/invoice","data":{,}}
     public class InvoiceResponse
     {
@@ -151,7 +76,7 @@ namespace BTCPayServer.Models
         }
 
         [JsonProperty("cryptoInfo")]
-        public List<InvoiceCryptoInfo> CryptoInfo { get; set; }
+        public List<NBitpayClient.InvoiceCryptoInfo> CryptoInfo { get; set; }
 
         //"price":5
         [JsonProperty("price")]

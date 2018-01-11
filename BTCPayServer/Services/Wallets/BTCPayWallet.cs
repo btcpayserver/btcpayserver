@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Data;
 using System.Threading;
 using NBXplorer.Models;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace BTCPayServer.Services.Wallets
 {
@@ -51,6 +52,8 @@ namespace BTCPayServer.Services.Wallets
             }
         }
 
+        public TimeSpan CacheSpan { get; private set; } = TimeSpan.FromMinutes(60);
+
         public async Task<BitcoinAddress> ReserveAddressAsync(DerivationStrategyBase derivationStrategy)
         {
             var pathInfo = await _Client.GetUnusedAsync(derivationStrategy, DerivationFeature.Deposit, 0, true).ConfigureAwait(false);
@@ -62,10 +65,8 @@ namespace BTCPayServer.Services.Wallets
             await _Client.TrackAsync(derivationStrategy);
         }
 
-        public Task<TransactionResult> GetTransactionAsync(BTCPayNetwork network, uint256 txId, CancellationToken cancellation = default(CancellationToken))
+        public Task<TransactionResult> GetTransactionAsync(uint256 txId, CancellationToken cancellation = default(CancellationToken))
         {
-            if (network == null)
-                throw new ArgumentNullException(nameof(network));
             if (txId == null)
                 throw new ArgumentNullException(nameof(txId));
             return _Client.GetTransactionAsync(txId, cancellation);

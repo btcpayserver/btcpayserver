@@ -43,6 +43,8 @@ namespace BTCPayServer.Tests
         {
             get; set;
         }
+
+        public Uri LTCNBXplorerUri { get; set; }
         public string CookieFile
         {
             get; set;
@@ -79,7 +81,9 @@ namespace BTCPayServer.Tests
             config.AppendLine($"regtest=1");
             config.AppendLine($"port={Port}");
             config.AppendLine($"explorer.url={NBXplorerUri.AbsoluteUri}");
+            config.AppendLine($"ltc.explorer.url={LTCNBXplorerUri.AbsoluteUri}");
             config.AppendLine($"explorer.cookiefile={CookieFile}");
+            config.AppendLine($"ltc.explorer.cookiefile={CookieFile}");
             config.AppendLine($"hdpubkey={HDPrivateKey.Neuter().ToString(Network.RegTest)}");
             if (Postgres != null)
                 config.AppendLine($"postgres=" + Postgres);

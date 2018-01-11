@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace BTCPayServer.Services.Wallets
 {
@@ -29,7 +30,7 @@ namespace BTCPayServer.Services.Wallets
                 throw new ArgumentNullException(nameof(cryptoCode));
             var network = _NetworkProvider.GetNetwork(cryptoCode);
             var client = _Client.GetExplorerClient(cryptoCode);
-            if (network == null && client == null)
+            if (network == null || client == null)
                 return null;
             return new BTCPayWallet(client, network);
         }

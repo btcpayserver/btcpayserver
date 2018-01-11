@@ -14,7 +14,7 @@ namespace BTCPayServer.Events
         public override string ToString()
         {
             String address = ScriptPubKey.GetDestinationAddress(Network.NBitcoinNetwork)?.ToString() ?? ScriptPubKey.ToString();
-            return $"{address} received a transaction";
+            return $"{address} received a transaction ({Network.CryptoCode})";
         }
     }
 }

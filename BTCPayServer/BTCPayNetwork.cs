@@ -25,5 +25,9 @@ namespace BTCPayServer
         }
 
         public string CryptoImagePath { get; set; }
+        public override string ToString()
+        {
+            return CryptoCode;
+        }
     }
 }

@@ -71,6 +71,23 @@ namespace BTCPayServer.Tests
             return store;
         }
 
+        public void RegisterDerivationScheme(string crytoCode)
+        {
+            RegisterDerivationSchemeAsync(crytoCode).GetAwaiter().GetResult();
+        }
+        public async Task RegisterDerivationSchemeAsync(string crytoCode)
+        {
+            var store = parent.PayTester.GetController<StoresController>(UserId);
+            var networkProvider = parent.PayTester.GetService<BTCPayNetworkProvider>();
+            var derivation = new DerivationStrategyFactory(networkProvider.GetNetwork(crytoCode).NBitcoinNetwork).Parse(ExtKey.Neuter().ToString() + "-[legacy]");
+            await store.AddDerivationScheme(StoreId, new DerivationSchemeViewModel()
+            {
+                CryptoCurrency = crytoCode,
+                DerivationSchemeFormat = crytoCode,
+                DerivationScheme = derivation.ToString(),
+            }, "Save");
+        }
+
         public DerivationStrategyBase DerivationScheme { get; set; }
 
         private async Task RegisterAsync()

@@ -19,7 +19,7 @@ namespace BTCPayServer.Configuration
         protected override CommandLineApplication CreateCommandLineApplicationCore()
         {
             var provider = new BTCPayNetworkProvider(ChainType.Main);
-            var chains = string.Join(",", provider.GetAll().Select(n=>n.CryptoCode.ToLowerInvariant()).ToArray());
+            var chains = string.Join(",", provider.GetAll().Select(n => n.CryptoCode.ToLowerInvariant()).ToArray());
             CommandLineApplication app = new CommandLineApplication(true)
             {
                 FullName = "BTCPay\r\nOpen source, self-hosted payment processor.",
@@ -72,9 +72,13 @@ namespace BTCPayServer.Configuration
             if (network != null)
             {
                 var n = Network.GetNetwork(network);
+                if (n == null)
+                {
+                    throw new ConfigException($"Invalid network parameter '{network}'");
+                }
                 return n.ToChainType();
             }
-            var net = conf.GetOrDefault<bool>("regtest", false) ? ChainType.Regtest:
+            var net = conf.GetOrDefault<bool>("regtest", false) ? ChainType.Regtest :
                         conf.GetOrDefault<bool>("testnet", false) ? ChainType.Test : ChainType.Main;
 
             return net;

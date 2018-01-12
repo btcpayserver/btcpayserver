@@ -395,9 +395,9 @@ namespace BTCPayServer.Services.Invoices
             return rates.TryGetValue(network.CryptoCode, out var data);
         }
 
-        public CryptoData GetCryptoData(string cryptoCode, BTCPayNetworkProvider networkProvider)
+        public CryptoData GetCryptoData(string cryptoCode, BTCPayNetworkProvider networkProvider, bool alwaysIncludeBTC = false)
         {
-            GetCryptoData(networkProvider).TryGetValue(cryptoCode, out var data);
+            GetCryptoData(networkProvider, alwaysIncludeBTC).TryGetValue(cryptoCode, out var data);
             return data;
         }
 

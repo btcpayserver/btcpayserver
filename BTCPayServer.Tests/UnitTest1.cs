@@ -43,8 +43,14 @@ namespace BTCPayServer.Tests
             entity.TxFee = Money.Coins(0.1m);
             entity.Rate = 5000;
 
-            var cryptoData = entity.GetCryptoData("BTC", null);
+            var cryptoData = entity.GetCryptoData("BTC", null, true);
             Assert.NotNull(cryptoData); // Should use legacy data to build itself
+            Assert.Null(entity.GetCryptoData("BTC", null, false));
+            entity.SetCryptoData(new CryptoData() { ParentEntity = entity, Rate = entity.Rate, CryptoCode = "BTC", TxFee = entity.TxFee, FeeRate = new FeeRate(entity.TxFee, 100), DepositAddress = entity.DepositAddress, Network = null });
+            Assert.NotNull(entity.GetCryptoData("BTC", null, false));
+            Assert.NotNull(entity.GetCryptoData("BTC", null, true));
+
+
             entity.Payments = new System.Collections.Generic.List<PaymentEntity>();
             entity.ProductInformation = new ProductInformation() { Price = 5000 };
 

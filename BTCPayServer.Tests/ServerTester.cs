@@ -47,11 +47,17 @@ namespace BTCPayServer.Tests
                 Directory.CreateDirectory(_Directory);
 
 
-            ExplorerNode = new RPCClient(RPCCredentialString.Parse(GetEnvironment("TESTS_RPCCONNECTION", "server=http://127.0.0.1:43782;ceiwHEbqWI83:DwubwWsoo3")), Network);
-            ExplorerClient = new ExplorerClient(Network, new Uri(GetEnvironment("TESTS_NBXPLORERURL", "http://127.0.0.1:32838/")));
+            NetworkProvider = new BTCPayNetworkProvider(ChainType.Regtest);
+            ExplorerNode = new RPCClient(RPCCredentialString.Parse(GetEnvironment("TESTS_BTCRPCCONNECTION", "server=http://127.0.0.1:43782;ceiwHEbqWI83:DwubwWsoo3")), NetworkProvider.GetNetwork("BTC").NBitcoinNetwork);
+            LTCExplorerNode = new RPCClient(RPCCredentialString.Parse(GetEnvironment("TESTS_LTCRPCCONNECTION", "server=http://127.0.0.1:43783;ceiwHEbqWI83:DwubwWsoo3")), NetworkProvider.GetNetwork("LTC").NBitcoinNetwork);
+
+            ExplorerClient = new ExplorerClient(NetworkProvider.GetNetwork("BTC").NBXplorerNetwork, new Uri(GetEnvironment("TESTS_BTCNBXPLORERURL", "http://127.0.0.1:32838/")));
+            LTCExplorerClient = new ExplorerClient(NetworkProvider.GetNetwork("LTC").NBXplorerNetwork, new Uri(GetEnvironment("TESTS_LTCNBXPLORERURL", "http://127.0.0.1:32838/")));
+
             PayTester = new BTCPayServerTester(Path.Combine(_Directory, "pay"))
             {
                 NBXplorerUri = ExplorerClient.Address,
+                LTCNBXplorerUri = LTCExplorerClient.Address,
                 Postgres = GetEnvironment("TESTS_POSTGRES", "User ID=postgres;Host=127.0.0.1;Port=39372;Database=btcpayserver")
             };
             PayTester.Port = int.Parse(GetEnvironment("TESTS_PORT", Utils.FreeTcpPort().ToString()));
@@ -102,7 +108,14 @@ namespace BTCPayServer.Tests
         {
             return new TestAccount(this);
         }
+
+        public BTCPayNetworkProvider NetworkProvider { get; private set; }
         public RPCClient ExplorerNode
+        {
+            get; set;
+        }
+
+        public RPCClient LTCExplorerNode
         {
             get; set;
         }
@@ -111,6 +124,7 @@ namespace BTCPayServer.Tests
         {
             get; set;
         }
+        public ExplorerClient LTCExplorerClient { get; set; }
 
         HttpClient _Http = new HttpClient();
 
@@ -211,12 +225,6 @@ namespace BTCPayServer.Tests
         {
             get; set;
         }
-
-        public Network Network
-        {
-            get;
-            set;
-        } = Network.RegTest;
 
         public void Dispose()
         {

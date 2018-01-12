@@ -13,9 +13,16 @@ using NBXplorer;
 
 namespace BTCPayServer.Configuration
 {
+    public class NBXplorerConnectionSetting
+    {
+        public string CryptoCode { get; internal set; }
+        public Uri ExplorerUri { get; internal set; }
+        public string CookieFile { get; internal set; }
+    }
+
     public class BTCPayServerOptions
     {
-        public Network Network
+        public ChainType ChainType
         {
             get; set;
         }
@@ -35,52 +42,44 @@ namespace BTCPayServer.Configuration
             set;
         }
 
+        public List<NBXplorerConnectionSetting> NBXplorerConnectionSettings
+        {
+            get;
+            set;
+        } = new List<NBXplorerConnectionSetting>();
+
         public void LoadArgs(IConfiguration conf)
         {
-            var networkInfo = DefaultConfiguration.GetNetwork(conf);
-            Network = networkInfo?.Network;
-            if (Network == null)
-                throw new ConfigException("Invalid network");
+            ChainType = DefaultConfiguration.GetChainType(conf);
+            var defaultSettings = BTCPayDefaultSettings.GetDefaultSettings(ChainType);
+            DataDir = conf.GetOrDefault<string>("datadir", defaultSettings.DefaultDataDirectory);
+            Logs.Configuration.LogInformation("Network: " + ChainType.ToString());
 
-            DataDir = conf.GetOrDefault<string>("datadir", networkInfo.DefaultDataDirectory);
-            Logs.Configuration.LogInformation("Network: " + Network);
-
-
-            
-            foreach (var net in new BTCPayNetworkProvider(Network).GetAll())
+            var supportedChains = conf.GetOrDefault<string>("chains", "btc")
+                                      .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                                      .Select(t => t.ToUpperInvariant());
+            var validChains = new List<string>();
+            foreach (var net in new BTCPayNetworkProvider(ChainType).GetAll())
             {
-                var nbxplorer = NBXplorer.Configuration.NetworkInformation.GetNetworkByName(net.NBitcoinNetwork.Name);
-                var explorer = conf.GetOrDefault<Uri>($"{net.CryptoCode}.explorer.url", null);
-                var cookieFile = conf.GetOrDefault<string>($"{net.CryptoCode}.explorer.cookiefile", nbxplorer.GetDefaultCookieFile());
-                if (explorer != null)
+                if (supportedChains.Contains(net.CryptoCode))
                 {
-                    ExplorerFactories.Add(net.CryptoCode, (n) => CreateExplorerClient(n, explorer, cookieFile));
+                    validChains.Add(net.CryptoCode);
+                    NBXplorerConnectionSetting setting = new NBXplorerConnectionSetting();
+                    setting.CryptoCode = net.CryptoCode;
+                    setting.ExplorerUri = conf.GetOrDefault<Uri>($"{net.CryptoCode}.explorer.url", net.NBXplorerNetwork.DefaultSettings.DefaultUrl);
+                    setting.CookieFile = conf.GetOrDefault<string>($"{net.CryptoCode}.explorer.cookiefile", net.NBXplorerNetwork.DefaultSettings.DefaultCookieFile);
+                    NBXplorerConnectionSettings.Add(setting);
                 }
             }
+            var invalidChains = String.Join(',', supportedChains.Where(s => !validChains.Contains(s)).ToArray());
+            if(!string.IsNullOrEmpty(invalidChains))
+                throw new ConfigException($"Invalid chains {invalidChains}");
 
-            // Handle legacy explorer.url and explorer.cookiefile
-            if (ExplorerFactories.Count == 0)
-            {
-                var nbxplorer = NBXplorer.Configuration.NetworkInformation.GetNetworkByName(Network.Name); // Will get BTC info
-                var explorer = conf.GetOrDefault<Uri>($"explorer.url", new Uri(nbxplorer.GetDefaultExplorerUrl(), UriKind.Absolute));
-                var cookieFile = conf.GetOrDefault<string>($"explorer.cookiefile", nbxplorer.GetDefaultCookieFile());
-                ExplorerFactories.Add("BTC", (n) => CreateExplorerClient(n, explorer, cookieFile));
-            }
-            //////
-
+            Logs.Configuration.LogInformation("Supported chains: " + String.Join(',', supportedChains.ToArray()));
             PostgresConnectionString = conf.GetOrDefault<string>("postgres", null);
             ExternalUrl = conf.GetOrDefault<Uri>("externalurl", null);
         }
 
-        private static ExplorerClient CreateExplorerClient(BTCPayNetwork n, Uri uri, string cookieFile)
-        {
-            var explorer = new ExplorerClient(n.NBitcoinNetwork, uri);
-            if (!explorer.SetCookieAuth(cookieFile))
-                explorer.SetNoAuth();
-            return explorer;
-        }
-
-        public Dictionary<string, Func<BTCPayNetwork, ExplorerClient>> ExplorerFactories = new Dictionary<string, Func<BTCPayNetwork, ExplorerClient>>();
         public string PostgresConnectionString
         {
             get;

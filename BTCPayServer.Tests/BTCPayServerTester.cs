@@ -43,19 +43,13 @@ namespace BTCPayServer.Tests
         {
             get; set;
         }
-        public string CookieFile
-        {
-            get; set;
-        }
+
+        public Uri LTCNBXplorerUri { get; set; }
+        
         public Uri ServerUri
         {
             get;
             set;
-        }
-
-        public ExtKey HDPrivateKey
-        {
-            get; set;
         }
 
         public string Postgres
@@ -73,21 +67,31 @@ namespace BTCPayServer.Tests
         {
             if (!Directory.Exists(_Directory))
                 Directory.CreateDirectory(_Directory);
+            string chain = ChainType.Regtest.ToNetwork().Name;
+            string chainDirectory = Path.Combine(_Directory, chain);
+            if (!Directory.Exists(chainDirectory))
+                Directory.CreateDirectory(chainDirectory);
 
-            HDPrivateKey = new ExtKey();
+
             StringBuilder config = new StringBuilder();
-            config.AppendLine($"regtest=1");
+            config.AppendLine($"{chain.ToLowerInvariant()}=1");
             config.AppendLine($"port={Port}");
-            config.AppendLine($"explorer.url={NBXplorerUri.AbsoluteUri}");
-            config.AppendLine($"explorer.cookiefile={CookieFile}");
-            config.AppendLine($"hdpubkey={HDPrivateKey.Neuter().ToString(Network.RegTest)}");
+            config.AppendLine($"chains=btc,ltc");
+
+            config.AppendLine($"btc.explorer.url={NBXplorerUri.AbsoluteUri}");
+            config.AppendLine($"btc.explorer.cookiefile=0");
+
+            config.AppendLine($"ltc.explorer.url={LTCNBXplorerUri.AbsoluteUri}");
+            config.AppendLine($"ltc.explorer.cookiefile=0");
+
             if (Postgres != null)
                 config.AppendLine($"postgres=" + Postgres);
-            File.WriteAllText(Path.Combine(_Directory, "settings.config"), config.ToString());
+            var confPath = Path.Combine(chainDirectory, "settings.config");
+            File.WriteAllText(confPath, config.ToString());
 
             ServerUri = new Uri("http://" + HostName + ":" + Port + "/");
 
-            var conf = new DefaultConfiguration() { Logger = Logs.LogProvider.CreateLogger("Console") }.CreateConfiguration(new[] { "--datadir", _Directory });
+            var conf = new DefaultConfiguration() { Logger = Logs.LogProvider.CreateLogger("Console") }.CreateConfiguration(new[] { "--datadir", _Directory, "--conf", confPath });
 
             _Host = new WebHostBuilder()
                     .UseConfiguration(conf)

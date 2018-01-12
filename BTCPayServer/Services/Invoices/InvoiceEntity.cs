@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using BTCPayServer.Models;
-using NBitpayClient;
 using Newtonsoft.Json.Linq;
 using NBitcoin.DataEncoders;
 using BTCPayServer.Data;
@@ -234,7 +233,7 @@ namespace BTCPayServer.Services.Invoices
         }
         public List<PaymentEntity> GetPayments(string cryptoCode)
         {
-            return Payments.Where(p=>p.CryptoCode == cryptoCode).ToList();
+            return Payments.Where(p => p.CryptoCode == cryptoCode).ToList();
         }
         public List<PaymentEntity> GetPayments(BTCPayNetwork network)
         {
@@ -323,11 +322,11 @@ namespace BTCPayServer.Services.Invoices
                 Flags = new Flags() { Refundable = Refundable }
             };
 
-            dto.CryptoInfo = new List<InvoiceCryptoInfo>();
-            foreach (var info in this.GetCryptoData().Values)
+            dto.CryptoInfo = new List<NBitpayClient.InvoiceCryptoInfo>();
+            foreach (var info in this.GetCryptoData(networkProvider, true).Values)
             {
                 var accounting = info.Calculate();
-                var cryptoInfo = new InvoiceCryptoInfo();
+                var cryptoInfo = new NBitpayClient.InvoiceCryptoInfo();
                 cryptoInfo.CryptoCode = info.CryptoCode;
                 cryptoInfo.Rate = info.Rate;
                 cryptoInfo.Price = Money.Coins(ProductInformation.Price / cryptoInfo.Rate).ToString();
@@ -337,7 +336,7 @@ namespace BTCPayServer.Services.Invoices
                 cryptoInfo.TotalDue = accounting.TotalDue.ToString();
                 cryptoInfo.NetworkFee = accounting.NetworkFee.ToString();
                 cryptoInfo.TxCount = accounting.TxCount;
-                cryptoInfo.CryptoPaid = accounting.CryptoPaid;
+                cryptoInfo.CryptoPaid = accounting.CryptoPaid.ToString();
 
                 cryptoInfo.Address = info.DepositAddress;
                 cryptoInfo.ExRates = new Dictionary<string, double>
@@ -345,12 +344,12 @@ namespace BTCPayServer.Services.Invoices
                     { ProductInformation.Currency, (double)cryptoInfo.Rate }
                 };
 
-                var scheme = networkProvider.GetNetwork(info.CryptoCode)?.UriScheme ?? "BTC";
+                var scheme = info.Network.UriScheme;
                 var cryptoSuffix = cryptoInfo.CryptoCode == "BTC" ? "" : "/" + cryptoInfo.CryptoCode;
                 cryptoInfo.Url = ServerUrl.WithTrailingSlash() + $"invoice{cryptoSuffix}?id=" + Id;
 
 
-                cryptoInfo.PaymentUrls = new InvoicePaymentUrls()
+                cryptoInfo.PaymentUrls = new NBitpayClient.InvoicePaymentUrls()
                 {
                     BIP72 = $"{scheme}:{cryptoInfo.Address}?amount={cryptoInfo.Due}&r={ServerUrl.WithTrailingSlash() + ($"i/{Id}{cryptoSuffix}")}",
                     BIP72b = $"{scheme}:?r={ServerUrl.WithTrailingSlash() + ($"i/{Id}{cryptoSuffix}")}",
@@ -392,40 +391,46 @@ namespace BTCPayServer.Services.Invoices
 
         internal bool Support(BTCPayNetwork network)
         {
-            var rates = GetCryptoData();
+            var rates = GetCryptoData(null);
             return rates.TryGetValue(network.CryptoCode, out var data);
         }
 
-        public CryptoData GetCryptoData(string cryptoCode)
+        public CryptoData GetCryptoData(string cryptoCode, BTCPayNetworkProvider networkProvider, bool alwaysIncludeBTC = false)
         {
-            GetCryptoData().TryGetValue(cryptoCode, out var data);
+            GetCryptoData(networkProvider, alwaysIncludeBTC).TryGetValue(cryptoCode, out var data);
             return data;
         }
 
-        public CryptoData GetCryptoData(BTCPayNetwork network)
+        public CryptoData GetCryptoData(BTCPayNetwork network, BTCPayNetworkProvider networkProvider)
         {
-            GetCryptoData().TryGetValue(network.CryptoCode, out var data);
+            GetCryptoData(networkProvider).TryGetValue(network.CryptoCode, out var data);
             return data;
         }
 
-        public Dictionary<string, CryptoData> GetCryptoData()
+        public Dictionary<string, CryptoData> GetCryptoData(BTCPayNetworkProvider networkProvider, bool alwaysIncludeBTC = false)
         {
             Dictionary<string, CryptoData> rates = new Dictionary<string, CryptoData>();
+            bool btcAdded = false;
             var serializer = new Serializer(Dummy);
 #pragma warning disable CS0618
             // Legacy
-            if (Rate != 0.0m)
+            if (alwaysIncludeBTC)
             {
-                rates.TryAdd("BTC", new CryptoData() { ParentEntity = this, Rate = Rate, CryptoCode = "BTC", TxFee = TxFee, FeeRate = new FeeRate(TxFee, 100), DepositAddress = DepositAddress });
+                var btcNetwork = networkProvider?.GetNetwork("BTC");
+                rates.Add("BTC", new CryptoData() { ParentEntity = this, Rate = Rate, CryptoCode = "BTC", TxFee = TxFee, FeeRate = new FeeRate(TxFee, 100), DepositAddress = DepositAddress, Network = btcNetwork });
+                btcAdded = true;
             }
             if (CryptoData != null)
             {
                 foreach (var prop in CryptoData.Properties())
                 {
+                    if (prop.Name == "BTC" && btcAdded)
+                        continue;
                     var r = serializer.ToObject<CryptoData>(prop.Value.ToString());
                     r.CryptoCode = prop.Name;
                     r.ParentEntity = this;
-                    rates.TryAdd(r.CryptoCode, r);
+                    r.Network = networkProvider?.GetNetwork(r.CryptoCode);
+                    rates.Add(r.CryptoCode, r);
                 }
             }
 #pragma warning restore CS0618
@@ -433,6 +438,14 @@ namespace BTCPayServer.Services.Invoices
         }
 
         Network Dummy = Network.Main;
+
+        public void SetCryptoData(CryptoData cryptoData)
+        {
+            var dict = GetCryptoData(null);
+            dict.AddOrReplace(cryptoData.CryptoCode, cryptoData);
+            SetCryptoData(dict);
+        }
+
         public void SetCryptoData(Dictionary<string, CryptoData> cryptoData)
         {
             var obj = new JObject();
@@ -485,6 +498,8 @@ namespace BTCPayServer.Services.Invoices
     {
         [JsonIgnore]
         public InvoiceEntity ParentEntity { get; set; }
+        [JsonIgnore]
+        public BTCPayNetwork Network { get; set; }
         [JsonProperty(PropertyName = "cryptoCode", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string CryptoCode { get; set; }
         [JsonProperty(PropertyName = "rate")]
@@ -498,7 +513,7 @@ namespace BTCPayServer.Services.Invoices
 
         public CryptoDataAccounting Calculate()
         {
-            var cryptoData = ParentEntity.GetCryptoData();
+            var cryptoData = ParentEntity.GetCryptoData(null);
             var totalDue = Money.Coins(ParentEntity.ProductInformation.Price / Rate);
             var paid = Money.Zero;
             var cryptoPaid = Money.Zero;

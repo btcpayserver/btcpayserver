@@ -103,7 +103,13 @@
                             <h4>@line.Network.CryptoCode</h4>
                             @if(line.Status == null)
                             {
-                                <p>NBXplorer is offline</p>
+                                <ul>
+                                <li>The node is offline</li>
+                                @if(line.Error != null)
+                                {
+                                    <li>Last error: @line.Error</li>
+                                }
+                                </ul>
                             }
                             else
                             {
@@ -118,11 +124,21 @@
                                         else
                                         {
                                             <li>The node is offline</li>
+                                            @if(line.Error != null)
+                                            {
+                                                <li>Last error: @line.Error</li>
+                                            }
                                         }
                                     }
                                     else if(line.Status.BitcoinStatus.IsSynched)
                                     {
-                                        <li>The node is synched</li>
+                                        <li>The node is synched (Height: @line.Status.BitcoinStatus.Headers)</li>
+                                        @if(line.Status.BitcoinStatus.IsSynched &&
+                                            line.Status.SyncHeight.HasValue &&
+                                            line.Status.SyncHeight.Value < line.Status.BitcoinStatus.Headers)
+                                        {
+                                            <li>NBXplorer is synching... (Height: @line.Status.SyncHeight.Value)</li>
+                                        }
                                     }
                                     else
                                     {

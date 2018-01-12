@@ -59,7 +59,7 @@ namespace BTCPayServer.Controllers
                 StatusException = invoice.ExceptionStatus
             };
 
-            foreach (var data in invoice.GetCryptoData())
+            foreach (var data in invoice.GetCryptoData(null))
             {
                 var cryptoInfo = dto.CryptoInfo.First(o => o.CryptoCode.Equals(data.Key, StringComparison.OrdinalIgnoreCase));
                 var accounting = data.Value.Calculate();
@@ -123,12 +123,23 @@ namespace BTCPayServer.Controllers
             if (invoice == null)
                 return null;
             var store = await _StoreRepository.FindStore(invoice.StoreId);
+            bool isDefaultCrypto = false;
             if (cryptoCode == null)
+            { 
                 cryptoCode = store.GetDefaultCrypto();
+                isDefaultCrypto = true;
+            }
             var network = _NetworkProvider.GetNetwork(cryptoCode);
-            if (invoice == null || network == null || !invoice.Support(network))
+            if (invoice == null || network == null)
                 return null;
-            var cryptoData = invoice.GetCryptoData(network);
+
+            if(!invoice.Support(network))
+            {
+                if(!isDefaultCrypto)
+                    return null;
+                network = invoice.GetCryptoData(_NetworkProvider).First().Value.Network;
+            }
+            var cryptoData = invoice.GetCryptoData(network, _NetworkProvider);
 
             var dto = invoice.EntityToDTO(_NetworkProvider);
             var cryptoInfo = dto.CryptoInfo.First(o => o.CryptoCode == network.CryptoCode);
@@ -157,15 +168,18 @@ namespace BTCPayServer.Controllers
                 Status = invoice.Status,
                 CryptoImage = "/" + Url.Content(network.CryptoImagePath),
                 NetworkFeeDescription = $"{accounting.TxCount} transaction{(accounting.TxCount > 1 ? "s" : "")} x {cryptoData.TxFee} {network.CryptoCode}",
-                AvailableCryptos = invoice.GetCryptoData().Select(kv=> new PaymentModel.AvailableCrypto()
-                {
-                    CryptoCode = kv.Key,
-                    CryptoImage = "/" + _NetworkProvider.GetNetwork(kv.Key).CryptoImagePath,
-                    Link = Url.Action(nameof(Checkout), new { invoiceId = invoiceId, cryptoCode = kv.Key })
-                }).ToList()
+                AvailableCryptos = invoice.GetCryptoData(_NetworkProvider)
+                                          .Where(i => i.Value.Network != null)
+                                          .Select(kv=> new PaymentModel.AvailableCrypto()
+                                            {
+                                                CryptoCode = kv.Key,
+                                                CryptoImage = "/" + kv.Value.Network.CryptoImagePath,
+                                                Link = Url.Action(nameof(Checkout), new { invoiceId = invoiceId, cryptoCode = kv.Key })
+                                            }).Where(c => c.CryptoImage != "/")
+                .ToList()
             };
 
-            var isMultiCurrency = invoice.Payments.Select(p=>p.GetCryptoCode()).Concat(new[] { network.CryptoCode }).Distinct().Count() > 1;
+            var isMultiCurrency = invoice.GetPayments().Select(p=>p.GetCryptoCode()).Concat(new[] { network.CryptoCode }).Distinct().Count() > 1;
             if (isMultiCurrency)
                 model.NetworkFeeDescription = $"{accounting.NetworkFee} {network.CryptoCode}";
 
@@ -248,7 +262,7 @@ namespace BTCPayServer.Controllers
             {
                 await webSocket.SendAsync(DummyBuffer, WebSocketMessageType.Binary, true, cts.Token);
             }
-            catch { await CloseSocket(webSocket); }
+            catch { try { webSocket.Dispose(); } catch { } }
         }
 
         private static async Task CloseSocket(WebSocket webSocket)
@@ -263,7 +277,7 @@ namespace BTCPayServer.Controllers
                 }
             }
             catch { }
-            finally { webSocket.Dispose(); }
+            finally { try { webSocket.Dispose(); } catch { } }
         }
 
         [HttpPost]

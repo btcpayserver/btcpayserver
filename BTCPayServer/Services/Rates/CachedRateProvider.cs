@@ -37,13 +37,7 @@ namespace BTCPayServer.Services.Rates
                 return _Inner.GetRateAsync(currency);
             });
         }
-
-        private bool TryGetFromCache(string key, out object obj)
-        {
-            obj = _MemoryCache.Get(key);
-            return obj != null;
-        }
-
+        
         public Task<ICollection<Rate>> GetRatesAsync()
         {
             return _MemoryCache.GetOrCreateAsync("GLOBAL_RATES", (ICacheEntry entry) =>

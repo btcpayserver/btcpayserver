@@ -323,7 +323,7 @@ namespace BTCPayServer.Services.Invoices
             };
 
             dto.CryptoInfo = new List<NBitpayClient.InvoiceCryptoInfo>();
-            foreach (var info in this.GetCryptoData(networkProvider).Values)
+            foreach (var info in this.GetCryptoData(networkProvider, true).Values)
             {
                 var accounting = info.Calculate();
                 var cryptoInfo = new NBitpayClient.InvoiceCryptoInfo();
@@ -407,13 +407,13 @@ namespace BTCPayServer.Services.Invoices
             return data;
         }
 
-        public Dictionary<string, CryptoData> GetCryptoData(BTCPayNetworkProvider networkProvider)
+        public Dictionary<string, CryptoData> GetCryptoData(BTCPayNetworkProvider networkProvider, bool alwaysIncludeBTC = false)
         {
             Dictionary<string, CryptoData> rates = new Dictionary<string, CryptoData>();
             var serializer = new Serializer(Dummy);
 #pragma warning disable CS0618
             // Legacy
-            if (Rate != 0.0m)
+            if (alwaysIncludeBTC)
             {
                 var btcNetwork = networkProvider?.GetNetwork("BTC");
                 rates.TryAdd("BTC", new CryptoData() { ParentEntity = this, Rate = Rate, CryptoCode = "BTC", TxFee = TxFee, FeeRate = new FeeRate(TxFee, 100), DepositAddress = DepositAddress, Network = btcNetwork });

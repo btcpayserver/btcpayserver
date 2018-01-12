@@ -116,13 +116,13 @@ namespace BTCPayServer.Controllers
             entity.SpeedPolicy = ParseSpeedPolicy(invoice.TransactionSpeed, store.SpeedPolicy);
 
             var queries = derivationStrategies
-                    .Select(derivationStrategy => ( Wallet: _WalletProvider.GetWallet(derivationStrategy.Network),  
+                    .Select(derivationStrategy => (Wallet: _WalletProvider.GetWallet(derivationStrategy.Network),
                                                     DerivationStrategy: derivationStrategy.DerivationStrategyBase,
                                                     Network: derivationStrategy.Network,
                                                     RateProvider: _RateProviders.GetRateProvider(derivationStrategy.Network),
                                                     FeeRateProvider: _FeeProviderFactory.CreateFeeProvider(derivationStrategy.Network)))
-                    .Where(_ => _.Wallet != null && 
-                                _.FeeRateProvider != null && 
+                    .Where(_ => _.Wallet != null &&
+                                _.FeeRateProvider != null &&
                                 _.RateProvider != null)
                     .Select(_ =>
                     {
@@ -135,19 +135,21 @@ namespace BTCPayServer.Controllers
                         };
                     });
 
+            bool legacyBTCisSet = false;
             var cryptoDatas = new Dictionary<string, CryptoData>();
             foreach (var q in queries)
             {
                 CryptoData cryptoData = new CryptoData();
                 cryptoData.CryptoCode = q.network.CryptoCode;
                 cryptoData.FeeRate = (await q.getFeeRate);
-                cryptoData.TxFee = storeBlob.NetworkFeeDisabled ? Money.Zero : cryptoData.FeeRate.GetFee(100); // assume price for 100 bytes
+                cryptoData.TxFee = GetTxFee(storeBlob, cryptoData.FeeRate); // assume price for 100 bytes
                 cryptoData.Rate = await q.getRate;
                 cryptoData.DepositAddress = (await q.getAddress).ToString();
 
 #pragma warning disable CS0618
                 if (q.network.IsBTC)
                 {
+                    legacyBTCisSet = true;
                     entity.TxFee = cryptoData.TxFee;
                     entity.Rate = cryptoData.Rate;
                     entity.DepositAddress = cryptoData.DepositAddress;
@@ -155,12 +157,37 @@ namespace BTCPayServer.Controllers
 #pragma warning restore CS0618
                 cryptoDatas.Add(cryptoData.CryptoCode, cryptoData);
             }
+
+            if (!legacyBTCisSet)
+            {
+                // Legacy Bitpay clients expect information for BTC information, even if the store do not support it
+#pragma warning disable CS0618
+                var btc = _NetworkProvider.BTC;
+                var feeProvider = _FeeProviderFactory.CreateFeeProvider(btc);
+                var rateProvider = _RateProviders.GetRateProvider(btc);
+                if (feeProvider != null && rateProvider != null)
+                {
+                    var gettingFee = feeProvider.GetFeeRateAsync();
+                    var gettingRate = rateProvider.GetRateAsync("BTC");
+                    entity.TxFee = GetTxFee(storeBlob, await gettingFee);
+                    entity.Rate = await gettingRate;
+                }
+                // So users does not crash if they check depositAddress is not set
+                entity.DepositAddress = cryptoDatas.First().Value.DepositAddress;
+#pragma warning restore CS0618
+            }
+
             entity.SetCryptoData(cryptoDatas);
             entity.PosData = invoice.PosData;
             entity = await _InvoiceRepository.CreateInvoiceAsync(store.Id, entity, _NetworkProvider);
             _EventAggregator.Publish(new Events.InvoiceCreatedEvent(entity.Id));
             var resp = entity.EntityToDTO(_NetworkProvider);
             return new DataWrapper<InvoiceResponse>(resp) { Facade = "pos/invoice" };
+        }
+
+        private static Money GetTxFee(StoreBlob storeBlob, FeeRate feeRate)
+        {
+            return storeBlob.NetworkFeeDisabled ? Money.Zero : feeRate.GetFee(100);
         }
 
         private SpeedPolicy ParseSpeedPolicy(string transactionSpeed, SpeedPolicy defaultPolicy)

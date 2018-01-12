@@ -123,11 +123,22 @@ namespace BTCPayServer.Controllers
             if (invoice == null)
                 return null;
             var store = await _StoreRepository.FindStore(invoice.StoreId);
+            bool isDefaultCrypto = false;
             if (cryptoCode == null)
+            { 
                 cryptoCode = store.GetDefaultCrypto();
+                isDefaultCrypto = true;
+            }
             var network = _NetworkProvider.GetNetwork(cryptoCode);
-            if (invoice == null || network == null || !invoice.Support(network))
+            if (invoice == null || network == null)
                 return null;
+
+            if(!invoice.Support(network))
+            {
+                if(!isDefaultCrypto)
+                    return null;
+                network = invoice.GetCryptoData(_NetworkProvider).First().Value.Network;
+            }
             var cryptoData = invoice.GetCryptoData(network, _NetworkProvider);
 
             var dto = invoice.EntityToDTO(_NetworkProvider);

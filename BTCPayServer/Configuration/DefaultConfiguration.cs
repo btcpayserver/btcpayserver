@@ -55,7 +55,15 @@ namespace BTCPayServer.Configuration
             if (dataDir == null)
                 return network.DefaultConfigurationFile;
             var fileName = Path.GetFileName(network.DefaultConfigurationFile);
-            return Path.Combine(dataDir, fileName);
+            var chainDir = Path.GetFileName(Path.GetDirectoryName(network.DefaultConfigurationFile));
+            chainDir = Path.Combine(dataDir, chainDir);
+            try
+            {
+                if (!Directory.Exists(chainDir))
+                    Directory.CreateDirectory(chainDir);
+            }
+            catch { }
+            return Path.Combine(chainDir, fileName);
         }
 
         public static ChainType GetChainType(IConfiguration conf)

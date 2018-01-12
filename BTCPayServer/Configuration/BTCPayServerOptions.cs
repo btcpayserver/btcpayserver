@@ -44,16 +44,16 @@ namespace BTCPayServer.Configuration
 
             var supportedChains = conf.GetOrDefault<string>("chains", "btc")
                                       .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                                      .Select(t => t.ToLowerInvariant());
+                                      .Select(t => t.ToUpperInvariant());
             var validChains = new List<string>();
             foreach (var net in new BTCPayNetworkProvider(ChainType).GetAll())
             {
-                if (supportedChains.Contains(net.CryptoCode.ToLowerInvariant()))
+                if (supportedChains.Contains(net.CryptoCode))
                 {
-                    validChains.Add(net.CryptoCode.ToLowerInvariant());
-                    var explorer = conf.GetOrDefault<Uri>($"{net.CryptoCode}.explorer.url", new Uri(net.NBXplorerNetwork.GetDefaultExplorerUrl()));
-                    var cookieFile = conf.GetOrDefault<string>($"{net.CryptoCode}.explorer.cookiefile", net.NBXplorerNetwork.GetDefaultCookieFile());
-                    if (cookieFile.Trim() == "0")
+                    validChains.Add(net.CryptoCode);
+                    var explorer = conf.GetOrDefault<Uri>($"{net.CryptoCode}.explorer.url", net.NBXplorerNetwork.DefaultSettings.DefaultUrl);
+                    var cookieFile = conf.GetOrDefault<string>($"{net.CryptoCode}.explorer.cookiefile", net.NBXplorerNetwork.DefaultSettings.DefaultCookieFile);
+                    if (cookieFile.Trim() == "0" || string.IsNullOrEmpty(cookieFile.Trim()))
                         cookieFile = null;
                     if (explorer != null)
                     {
@@ -65,14 +65,14 @@ namespace BTCPayServer.Configuration
             if(!string.IsNullOrEmpty(invalidChains))
                 throw new ConfigException($"Invalid chains {invalidChains}");
 
-            Logs.Configuration.LogInformation("Supported chains: " + String.Join(';', supportedChains.ToArray()));
+            Logs.Configuration.LogInformation("Supported chains: " + String.Join(',', supportedChains.ToArray()));
             PostgresConnectionString = conf.GetOrDefault<string>("postgres", null);
             ExternalUrl = conf.GetOrDefault<Uri>("externalurl", null);
         }
 
         private static ExplorerClient CreateExplorerClient(BTCPayNetwork n, Uri uri, string cookieFile)
         {
-            var explorer = new ExplorerClient(n.NBitcoinNetwork, uri);
+            var explorer = new ExplorerClient(n.NBXplorerNetwork, uri);
             if (cookieFile == null || !explorer.SetCookieAuth(cookieFile))
                 explorer.SetNoAuth();
             return explorer;

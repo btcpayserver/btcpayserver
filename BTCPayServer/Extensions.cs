@@ -24,14 +24,6 @@ namespace BTCPayServer
 {
     public static class Extensions
     {
-        public static string GetDefaultExplorerUrl(this NBXplorer.Configuration.NetworkInformation networkInfo)
-        {
-            return $"http://127.0.0.1:{networkInfo.DefaultExplorerPort}/";
-        }
-        public static string GetDefaultCookieFile(this NBXplorer.Configuration.NetworkInformation networkInfo)
-        {
-            return Path.Combine(networkInfo.DefaultDataDirectory, ".cookie");
-        }
         public static bool SupportDropColumn(this Microsoft.EntityFrameworkCore.Migrations.Migration migration, string activeProvider)
         {
             return activeProvider != "Microsoft.EntityFrameworkCore.Sqlite";

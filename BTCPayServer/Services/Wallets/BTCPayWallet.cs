@@ -58,7 +58,7 @@ namespace BTCPayServer.Services.Wallets
         public async Task<BitcoinAddress> ReserveAddressAsync(DerivationStrategyBase derivationStrategy)
         {
             var pathInfo = await _Client.GetUnusedAsync(derivationStrategy, DerivationFeature.Deposit, 0, true).ConfigureAwait(false);
-            return pathInfo.ScriptPubKey.GetDestinationAddress(_Client.Network);
+            return pathInfo.ScriptPubKey.GetDestinationAddress(Network.NBitcoinNetwork);
         }
 
         public async Task TrackAsync(DerivationStrategyBase derivationStrategy)

@@ -5,16 +5,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Services.Rates;
 using NBitcoin;
-using NBXplorer.Configuration;
+using NBXplorer;
 
 namespace BTCPayServer
 {
-    public enum ChainType
-    {
-        Regtest,
-        Main,
-        Test
-    }
     public class BTCPayDefaultSettings
     {
         static BTCPayDefaultSettings()
@@ -67,7 +61,7 @@ namespace BTCPayServer
         }
 
         public string CryptoImagePath { get; set; }
-        public NetworkInformation NBXplorerNetwork { get; set; }
+        public NBXplorer.NBXplorerNetwork NBXplorerNetwork { get; set; }
 
 
         public BTCPayDefaultSettings DefaultSettings { get; set; }

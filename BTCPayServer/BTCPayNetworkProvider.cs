@@ -7,95 +7,29 @@ using BTCPayServer.Services.Rates;
 using Microsoft.Extensions.Caching.Memory;
 using NBitcoin;
 using NBitpayClient;
-using NBXplorer.Configuration;
+using NBXplorer;
 
 namespace BTCPayServer
 {
-    public class BTCPayNetworkProvider
+    public partial class BTCPayNetworkProvider
     {
-        static BTCPayNetworkProvider()
-        {
-            NBXplorer.Altcoins.Litecoin.Networks.EnsureRegistered();
-        }
         Dictionary<string, BTCPayNetwork> _Networks = new Dictionary<string, BTCPayNetwork>();
+
+
+        private readonly NBXplorerNetworkProvider _NBXplorerNetworkProvider;
+        public NBXplorerNetworkProvider NBXplorerNetworkProvider
+        {
+            get
+            {
+                return _NBXplorerNetworkProvider;
+            }
+        }
+
         public BTCPayNetworkProvider(ChainType chainType)
         {
-            var coinaverage = new CoinAverageRateProvider("BTC");
-            var bitpay = new BitpayRateProvider(new Bitpay(new Key(), new Uri("https://bitpay.com/")));
-            var btcRate = new FallbackRateProvider(new IRateProvider[] { coinaverage, bitpay });
-
-            var ltcRate = new CoinAverageRateProvider("LTC");
-            if (chainType == ChainType.Main)
-            {
-                Add(new BTCPayNetwork()
-                {
-                    CryptoCode = "BTC",
-                    BlockExplorerLink = "https://www.smartbit.com.au/tx/{0}",
-                    NBitcoinNetwork = Network.Main,
-                    UriScheme = "bitcoin",
-                    DefaultRateProvider = btcRate,
-                    CryptoImagePath = "imlegacy/bitcoin-symbol.svg"
-                });
-                Add(new BTCPayNetwork()
-                {
-                    CryptoCode = "LTC",
-                    BlockExplorerLink = "https://live.blockcypher.com/ltc/tx/{0}/",
-                    NBitcoinNetwork = NBXplorer.Altcoins.Litecoin.Networks.Mainnet,
-                    UriScheme = "litecoin",
-                    DefaultRateProvider = ltcRate,
-                    CryptoImagePath = "imlegacy/litecoin-symbol.svg"
-                });
-            }
-
-            if (chainType == ChainType.Test)
-            {
-                Add(new BTCPayNetwork()
-                {
-                    CryptoCode = "BTC",
-                    BlockExplorerLink = "https://testnet.smartbit.com.au/tx/{0}",
-                    NBitcoinNetwork = Network.TestNet,
-                    UriScheme = "bitcoin",
-                    DefaultRateProvider = btcRate,
-                    CryptoImagePath = "imlegacy/bitcoin-symbol.svg"
-                });
-                Add(new BTCPayNetwork()
-                {
-                    CryptoCode = "LTC",
-                    BlockExplorerLink = "http://explorer.litecointools.com/tx/{0}",
-                    NBitcoinNetwork = NBXplorer.Altcoins.Litecoin.Networks.Testnet,
-                    UriScheme = "litecoin",
-                    DefaultRateProvider = ltcRate,
-                    CryptoImagePath = "imlegacy/litecoin-symbol.svg"
-                });
-            }
-
-            if (chainType == ChainType.Regtest)
-            {
-                Add(new BTCPayNetwork()
-                {
-                    CryptoCode = "BTC",
-                    BlockExplorerLink = "https://testnet.smartbit.com.au/tx/{0}",
-                    NBitcoinNetwork = Network.RegTest,
-                    UriScheme = "bitcoin",
-                    DefaultRateProvider = btcRate,
-                    CryptoImagePath = "imlegacy/bitcoin-symbol.svg"
-                });
-                Add(new BTCPayNetwork()
-                {
-                    CryptoCode = "LTC",
-                    BlockExplorerLink = "http://explorer.litecointools.com/tx/{0}",
-                    NBitcoinNetwork = NBXplorer.Altcoins.Litecoin.Networks.Regtest,
-                    UriScheme = "litecoin",
-                    DefaultRateProvider = ltcRate,
-                    CryptoImagePath = "imlegacy/litecoin-symbol.svg",
-                });
-            }
-
-            foreach(var n in _Networks)
-            {
-                n.Value.NBXplorerNetwork = NetworkInformation.GetNetworkByName(n.Value.NBitcoinNetwork.Name);
-                n.Value.DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(chainType);
-            }
+            _NBXplorerNetworkProvider = new NBXplorerNetworkProvider(chainType);
+            InitBitcoin();
+            InitLitecoin();
         }
 
         [Obsolete("To use only for legacy stuff")]

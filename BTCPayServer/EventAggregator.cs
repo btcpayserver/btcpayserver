@@ -88,7 +88,7 @@ namespace BTCPayServer
                 }
             }
 
-            Logs.Events.LogInformation($"New event: {evt.ToString()}");
+            Logs.Events.LogInformation(evt.ToString());
             foreach (var sub in actionList)
             {
                 try

@@ -48,11 +48,11 @@ namespace BTCPayServer.Tests
 
 
             NetworkProvider = new BTCPayNetworkProvider(ChainType.Regtest);
-            ExplorerNode = new RPCClient(RPCCredentialString.Parse(GetEnvironment("TESTS_RPCCONNECTION", "server=http://127.0.0.1:43782;ceiwHEbqWI83:DwubwWsoo3")), NetworkProvider.GetNetwork("BTC").NBitcoinNetwork);
+            ExplorerNode = new RPCClient(RPCCredentialString.Parse(GetEnvironment("TESTS_BTCRPCCONNECTION", "server=http://127.0.0.1:43782;ceiwHEbqWI83:DwubwWsoo3")), NetworkProvider.GetNetwork("BTC").NBitcoinNetwork);
             LTCExplorerNode = new RPCClient(RPCCredentialString.Parse(GetEnvironment("TESTS_LTCRPCCONNECTION", "server=http://127.0.0.1:43783;ceiwHEbqWI83:DwubwWsoo3")), NetworkProvider.GetNetwork("LTC").NBitcoinNetwork);
 
-            ExplorerClient = new ExplorerClient(NetworkProvider.GetNetwork("BTC").NBitcoinNetwork, new Uri(GetEnvironment("TESTS_NBXPLORERURL", "http://127.0.0.1:32838/")));
-            LTCExplorerClient = new ExplorerClient(NetworkProvider.GetNetwork("LTC").NBitcoinNetwork, new Uri(GetEnvironment("TESTS_LTCNBXPLORERURL", "http://127.0.0.1:32839/")));
+            ExplorerClient = new ExplorerClient(NetworkProvider.GetNetwork("BTC").NBXplorerNetwork, new Uri(GetEnvironment("TESTS_BTCNBXPLORERURL", "http://127.0.0.1:32838/")));
+            LTCExplorerClient = new ExplorerClient(NetworkProvider.GetNetwork("LTC").NBXplorerNetwork, new Uri(GetEnvironment("TESTS_LTCNBXPLORERURL", "http://127.0.0.1:32838/")));
 
             PayTester = new BTCPayServerTester(Path.Combine(_Directory, "pay"))
             {

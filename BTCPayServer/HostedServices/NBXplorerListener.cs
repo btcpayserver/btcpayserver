@@ -135,7 +135,7 @@ namespace BTCPayServer.HostedServices
                         {
                             case NBXplorer.Models.NewBlockEvent evt:
                                 _TxCache.GetTransactionCache(network).NewBlock(evt.Hash, evt.PreviousBlockHash);
-                                _Aggregator.Publish(new Events.NewBlockEvent());
+                                _Aggregator.Publish(new Events.NewBlockEvent() { CryptoCode = evt.CryptoCode });
                                 break;
                             case NBXplorer.Models.NewTransactionEvent evt:
                                 foreach (var txout in evt.Outputs)

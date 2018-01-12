@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using NBitcoin;
 using System.Text;
 using CommandLine;
+using NBXplorer;
 
 namespace BTCPayServer.Configuration
 {
@@ -32,8 +33,9 @@ namespace BTCPayServer.Configuration
             app.Option("--postgres", $"Connection string to postgres database (default: sqlite is used)", CommandOptionType.SingleValue);
             foreach (var network in provider.GetAll())
             {
-                app.Option($"--{network.CryptoCode}explorerurl", $"Url of the NBxplorer for {network.CryptoCode} (default: {network.NBXplorerNetwork.GetDefaultExplorerUrl()})", CommandOptionType.SingleValue);
-                app.Option($"--{network.CryptoCode}explorercookiefile", $"Path to the cookie file (default: {network.NBXplorerNetwork.GetDefaultCookieFile()})", CommandOptionType.SingleValue);
+                var crypto = network.CryptoCode.ToLowerInvariant();
+                app.Option($"--{crypto}explorerurl", $"Url of the NBxplorer for {network.CryptoCode} (default: {network.NBXplorerNetwork.DefaultSettings.DefaultUrl})", CommandOptionType.SingleValue);
+                app.Option($"--{crypto}explorercookiefile", $"Path to the cookie file (default: {network.NBXplorerNetwork.DefaultSettings.DefaultCookieFile})", CommandOptionType.SingleValue);
             }
             app.Option("--externalurl", $"The expected external url of this service, to use if BTCPay is behind a reverse proxy (default: empty, use the incoming HTTP request to figure out)", CommandOptionType.SingleValue);
             return app;
@@ -62,12 +64,7 @@ namespace BTCPayServer.Configuration
             if (network != null)
             {
                 var n = Network.GetNetwork(network);
-                if (n == Network.Main)
-                    return ChainType.Main;
-                if (n == Network.TestNet)
-                    return ChainType.Test;
-                if (n == Network.RegTest)
-                    return ChainType.Regtest;
+                return n.ToChainType();
             }
             var net = conf.GetOrDefault<bool>("regtest", false) ? ChainType.Regtest:
                         conf.GetOrDefault<bool>("testnet", false) ? ChainType.Test : ChainType.Main;
@@ -92,8 +89,8 @@ namespace BTCPayServer.Configuration
             builder.AppendLine("### NBXplorer settings ###");
             foreach (var n in new BTCPayNetworkProvider(defaultSettings.ChainType).GetAll())
             {
-                builder.AppendLine($"#{n.CryptoCode}.explorer.url={n.NBXplorerNetwork.GetDefaultExplorerUrl()}");
-                builder.AppendLine($"#{n.CryptoCode}.explorer.cookiefile={ n.NBXplorerNetwork.GetDefaultCookieFile()}");
+                builder.AppendLine($"#{n.CryptoCode}.explorer.url={n.NBXplorerNetwork.DefaultSettings.DefaultUrl}");
+                builder.AppendLine($"#{n.CryptoCode}.explorer.cookiefile={ n.NBXplorerNetwork.DefaultSettings.DefaultCookieFile}");
             }
             return builder.ToString();
         }

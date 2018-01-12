@@ -7,9 +7,10 @@ namespace BTCPayServer.Events
 {
     public class NewBlockEvent
     {
+        public string CryptoCode { get; set; }
         public override string ToString()
         {
-            return "New block";
+            return $"{CryptoCode}: New block";
         }
     }
 }

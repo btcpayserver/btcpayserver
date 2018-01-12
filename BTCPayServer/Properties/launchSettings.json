@@ -9,19 +9,20 @@
   },
   "profiles": {
     "Default": {
-      "commandName": "Project"
+      "commandName": "Project",
+      "commandLineArgs": "--network testnet --chains ltc --ltcexplorerurl http://127.0.0.1:2727/"
     },
     "Docker-Regtest": {
       "commandName": "Project",
       "launchBrowser": true,
-        "environmentVariables": {
-            "BTCPAY_NETWORK": "regtest",
-            "BTCPAY_CHAINS": "btc,ltc",
-            "BTCPAY_LTCEXPLORERURL": "http://127.0.0.1:32838/",
-            "BTCPAY_BTCEXPLORERURL": "http://127.0.0.1:32838/",
-            "ASPNETCORE_ENVIRONMENT": "Development",
-            "BTCPAY_POSTGRES": "User ID=postgres;Host=127.0.0.1;Port=39372;Database=btcpayserver"
-        },
+      "environmentVariables": {
+        "BTCPAY_NETWORK": "regtest",
+        "BTCPAY_LTCEXPLORERURL": "http://127.0.0.1:32838/",
+        "BTCPAY_BTCEXPLORERURL": "http://127.0.0.1:32838/",
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "BTCPAY_CHAINS": "btc,ltc",
+        "BTCPAY_POSTGRES": "User ID=postgres;Host=127.0.0.1;Port=39372;Database=btcpayserver"
+      },
       "applicationUrl": "http://localhost:14142/"
     }
   }

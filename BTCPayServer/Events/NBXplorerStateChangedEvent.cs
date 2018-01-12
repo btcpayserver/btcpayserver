@@ -6,6 +6,21 @@ using BTCPayServer.HostedServices;
 
 namespace BTCPayServer.Events
 {
+    public class NBXplorerErrorEvent
+    {
+        public NBXplorerErrorEvent(BTCPayNetwork network, string errorMessage)
+        {
+            Message = errorMessage;
+            Network = network;
+        }
+        public string Message { get; set; }
+        public BTCPayNetwork Network { get; set; }
+
+        public override string ToString()
+        {
+            return $"{Network.CryptoCode}: NBXplorer error `{Message}`";
+        }
+    }
     public class NBXplorerStateChangedEvent
     {
         public NBXplorerStateChangedEvent(BTCPayNetwork network, NBXplorerState old, NBXplorerState newState)

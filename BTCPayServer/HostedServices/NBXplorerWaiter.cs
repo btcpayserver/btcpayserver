@@ -27,11 +27,12 @@ namespace BTCPayServer.HostedServices
             public BTCPayNetwork Network { get; set; }
             public NBXplorerState State { get; set; }
             public StatusResult Status { get; set; }
+            public string Error { get; set; }
         }
         ConcurrentDictionary<string, NBXplorerSummary> _Summaries = new ConcurrentDictionary<string, NBXplorerSummary>();
-        public void Publish(BTCPayNetwork network, NBXplorerState state, StatusResult status)
+        public void Publish(BTCPayNetwork network, NBXplorerState state, StatusResult status, string error)
         {
-            var summary = new NBXplorerSummary() { Network = network, State = state, Status = status };
+            var summary = new NBXplorerSummary() { Network = network, State = state, Status = status, Error = error };
             _Summaries.AddOrUpdate(network.CryptoCode, summary, (k, v) => summary);
         }
 
@@ -120,6 +121,7 @@ namespace BTCPayServer.HostedServices
         private async Task<bool> StepAsync(CancellationToken cancellation)
         {
             var oldState = State;
+            string error = null;
             StatusResult status = null;
             try
             {
@@ -164,15 +166,28 @@ namespace BTCPayServer.HostedServices
                 }
 
             }
-            catch when (cancellation.IsCancellationRequested)
+            catch (Exception ex) when (!cancellation.IsCancellationRequested)
             {
-
+                error = ex.Message;
             }
-            catch (Exception ex)
+
+
+            if(status == null && error == null)
+                error = $"{_Network.CryptoCode}: NBXplorer does not support this cryptocurrency";
+
+            if(status != null && error == null)
+            {
+                if(status.ChainType != _Network.NBXplorerNetwork.DefaultSettings.ChainType)
+                    error = $"{_Network.CryptoCode}: NBXplorer is on a different ChainType (actual: {status.ChainType}, expected: {_Network.NBXplorerNetwork.DefaultSettings.ChainType})";
+            }
+
+            if (error != null)
             {
                 State = NBXplorerState.NotConnected;
-                Logs.PayServer.LogError(ex, $"Error while trying to connect to NBXplorer ({_Network.CryptoCode})");
+                status = null;
+                _Aggregator.Publish(new NBXplorerErrorEvent(_Network, error));
             }
+
             if (oldState != State)
             {
                 if (State == NBXplorerState.Synching)
@@ -185,7 +200,7 @@ namespace BTCPayServer.HostedServices
                 }
                 _Aggregator.Publish(new NBXplorerStateChangedEvent(_Network, oldState, State));
             }
-            _Dashboard.Publish(_Network, State, status);
+            _Dashboard.Publish(_Network, State, status, error);
             return oldState != State;
         }
 

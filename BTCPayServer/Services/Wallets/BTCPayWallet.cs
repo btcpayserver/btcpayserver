@@ -57,7 +57,15 @@ namespace BTCPayServer.Services.Wallets
 
         public async Task<BitcoinAddress> ReserveAddressAsync(DerivationStrategyBase derivationStrategy)
         {
+            if (derivationStrategy == null)
+                throw new ArgumentNullException(nameof(derivationStrategy));
             var pathInfo = await _Client.GetUnusedAsync(derivationStrategy, DerivationFeature.Deposit, 0, true).ConfigureAwait(false);
+            // Might happen on some broken install
+            if (pathInfo == null)
+            {
+                await _Client.TrackAsync(derivationStrategy).ConfigureAwait(false);
+                pathInfo = await _Client.GetUnusedAsync(derivationStrategy, DerivationFeature.Deposit, 0, true).ConfigureAwait(false);
+            }
             return pathInfo.ScriptPubKey.GetDestinationAddress(Network.NBitcoinNetwork);
         }
 

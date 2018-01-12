@@ -1,4 +1,6 @@
-﻿using Hangfire;
+﻿using BTCPayServer.Logging;
+using Microsoft.Extensions.Logging;
+using Hangfire;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,10 +22,16 @@ namespace BTCPayServer.Services.Mails
             _JobClient = jobClient;
             _Repository = repository;
         }
-        public Task SendEmailAsync(string email, string subject, string message)
+        public async Task SendEmailAsync(string email, string subject, string message)
         {
+            var settings = await _Repository.GetSettingAsync<EmailSettings>();
+            if (settings == null)
+            {
+                Logs.Configuration.LogWarning("Should have sent email, but email settings are not configured");
+                return;
+            }
             _JobClient.Schedule(() => SendMailCore(email, subject, message), TimeSpan.Zero);
-            return Task.CompletedTask;
+            return;
         }
 
         public async Task SendMailCore(string email, string subject, string message)

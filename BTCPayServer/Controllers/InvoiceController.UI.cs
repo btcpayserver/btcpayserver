@@ -262,7 +262,7 @@ namespace BTCPayServer.Controllers
             {
                 await webSocket.SendAsync(DummyBuffer, WebSocketMessageType.Binary, true, cts.Token);
             }
-            catch { await CloseSocket(webSocket); }
+            catch { try { webSocket.Dispose(); } catch { } }
         }
 
         private static async Task CloseSocket(WebSocket webSocket)
@@ -277,7 +277,7 @@ namespace BTCPayServer.Controllers
                 }
             }
             catch { }
-            finally { webSocket.Dispose(); }
+            finally { try { webSocket.Dispose(); } catch { } }
         }
 
         [HttpPost]

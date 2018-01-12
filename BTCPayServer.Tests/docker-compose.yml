@@ -37,7 +37,7 @@ services:
       - postgres
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:1.0.0.50
+    image: nicolasdorier/nbxplorer:1.0.0.51
     ports:
       - "32838:32838"
     expose: 

@@ -67,9 +67,14 @@ namespace BTCPayServer.Tests
         {
             if (!Directory.Exists(_Directory))
                 Directory.CreateDirectory(_Directory);
+            string chain = ChainType.Regtest.ToNetwork().Name;
+            string chainDirectory = Path.Combine(_Directory, chain);
+            if (!Directory.Exists(chainDirectory))
+                Directory.CreateDirectory(chainDirectory);
+
 
             StringBuilder config = new StringBuilder();
-            config.AppendLine($"regtest=1");
+            config.AppendLine($"{chain.ToLowerInvariant()}=1");
             config.AppendLine($"port={Port}");
             config.AppendLine($"chains=btc,ltc");
 
@@ -81,11 +86,12 @@ namespace BTCPayServer.Tests
 
             if (Postgres != null)
                 config.AppendLine($"postgres=" + Postgres);
-            File.WriteAllText(Path.Combine(_Directory, "settings.config"), config.ToString());
+            var confPath = Path.Combine(chainDirectory, "settings.config");
+            File.WriteAllText(confPath, config.ToString());
 
             ServerUri = new Uri("http://" + HostName + ":" + Port + "/");
 
-            var conf = new DefaultConfiguration() { Logger = Logs.LogProvider.CreateLogger("Console") }.CreateConfiguration(new[] { "--datadir", _Directory });
+            var conf = new DefaultConfiguration() { Logger = Logs.LogProvider.CreateLogger("Console") }.CreateConfiguration(new[] { "--datadir", _Directory, "--conf", confPath });
 
             _Host = new WebHostBuilder()
                     .UseConfiguration(conf)

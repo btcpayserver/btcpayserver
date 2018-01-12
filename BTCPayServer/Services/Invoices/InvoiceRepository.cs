@@ -196,7 +196,7 @@ namespace BTCPayServer.Services.Invoices
                     continue;
                 var historical = new HistoricalAddressInvoiceData();
                 historical.InvoiceDataId = invoiceId;
-                historical.SetAddress(address.Value.DepositAddress, cryptoCode);
+                historical.SetAddress(address.Value.DepositAddress, address.Value.CryptoCode);
                 historical.UnAssigned = DateTimeOffset.UtcNow;
                 context.Attach(historical);
                 context.Entry(historical).Property(o => o.UnAssigned).IsModified = true;

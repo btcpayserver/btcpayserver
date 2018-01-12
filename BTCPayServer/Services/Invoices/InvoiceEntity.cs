@@ -410,23 +410,27 @@ namespace BTCPayServer.Services.Invoices
         public Dictionary<string, CryptoData> GetCryptoData(BTCPayNetworkProvider networkProvider, bool alwaysIncludeBTC = false)
         {
             Dictionary<string, CryptoData> rates = new Dictionary<string, CryptoData>();
+            bool btcAdded = false;
             var serializer = new Serializer(Dummy);
 #pragma warning disable CS0618
             // Legacy
             if (alwaysIncludeBTC)
             {
                 var btcNetwork = networkProvider?.GetNetwork("BTC");
-                rates.TryAdd("BTC", new CryptoData() { ParentEntity = this, Rate = Rate, CryptoCode = "BTC", TxFee = TxFee, FeeRate = new FeeRate(TxFee, 100), DepositAddress = DepositAddress, Network = btcNetwork });
+                rates.Add("BTC", new CryptoData() { ParentEntity = this, Rate = Rate, CryptoCode = "BTC", TxFee = TxFee, FeeRate = new FeeRate(TxFee, 100), DepositAddress = DepositAddress, Network = btcNetwork });
+                btcAdded = true;
             }
             if (CryptoData != null)
             {
                 foreach (var prop in CryptoData.Properties())
                 {
+                    if (prop.Name == "BTC" && btcAdded)
+                        continue;
                     var r = serializer.ToObject<CryptoData>(prop.Value.ToString());
                     r.CryptoCode = prop.Name;
                     r.ParentEntity = this;
                     r.Network = networkProvider?.GetNetwork(r.CryptoCode);
-                    rates.TryAdd(r.CryptoCode, r);
+                    rates.Add(r.CryptoCode, r);
                 }
             }
 #pragma warning restore CS0618

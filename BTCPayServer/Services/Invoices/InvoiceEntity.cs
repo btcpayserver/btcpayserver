@@ -417,7 +417,7 @@ namespace BTCPayServer.Services.Invoices
             if (alwaysIncludeBTC)
             {
                 var btcNetwork = networkProvider?.GetNetwork("BTC");
-                phantom = new CryptoData() { ParentEntity = this, IsPhantomBTC = true, Rate = Rate, CryptoCode = "BTC", TxFee = TxFee, FeeRate = new FeeRate(TxFee, 100), DepositAddress = DepositAddress, Network = btcNetwork }
+                phantom = new CryptoData() { ParentEntity = this, IsPhantomBTC = true, Rate = Rate, CryptoCode = "BTC", TxFee = TxFee, FeeRate = new FeeRate(TxFee, 100), DepositAddress = DepositAddress, Network = btcNetwork };
                 rates.Add("BTC", phantom);
             }
             if (CryptoData != null)

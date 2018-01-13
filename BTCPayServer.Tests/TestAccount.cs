@@ -46,12 +46,15 @@ namespace BTCPayServer.Tests
             Assert.IsType<ViewResult>(await store.RequestPairing(pairingCode.ToString()));
             await store.Pair(pairingCode.ToString(), StoreId);
         }
-        public StoresController CreateStore(string cryptoCode = "BTC")
+        public StoresController CreateStore(string cryptoCode = null)
         {
             return CreateStoreAsync(cryptoCode).GetAwaiter().GetResult();
         }
-        public async Task<StoresController> CreateStoreAsync(string cryptoCode = "BTC")
+
+        public string CryptoCode { get; set; } = "BTC";
+        public async Task<StoresController> CreateStoreAsync(string cryptoCode = null)
         {
+            cryptoCode = cryptoCode ?? CryptoCode;
             SupportedNetwork = parent.NetworkProvider.GetNetwork(cryptoCode);
             ExtKey = new ExtKey().GetWif(SupportedNetwork.NBitcoinNetwork);
             var store = parent.PayTester.GetController<StoresController>(UserId);
@@ -65,7 +68,7 @@ namespace BTCPayServer.Tests
 
             await store.AddDerivationScheme(StoreId, new DerivationSchemeViewModel()
             {
-                CryptoCurrency = "BTC",
+                CryptoCurrency = cryptoCode,
                 DerivationSchemeFormat = "BTCPay",
                 DerivationScheme = DerivationScheme.ToString(),
             }, "Save");

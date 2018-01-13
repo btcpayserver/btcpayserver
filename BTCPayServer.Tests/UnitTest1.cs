@@ -393,6 +393,64 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        public void CanHaveLTCOnlyStore()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.Start();
+                var user = tester.NewAccount();
+                user.CryptoCode = "LTC";
+                user.GrantAccess();
+
+                // First we try payment with a merchant having only BTC
+                var invoice = user.BitPay.CreateInvoice(new Invoice()
+                {
+                    Price = 500,
+                    Currency = "USD",
+                    PosData = "posData",
+                    OrderId = "orderId",
+                    ItemDesc = "Some description",
+                    FullNotifications = true
+                }, Facade.Merchant);
+
+                Assert.Single(invoice.CryptoInfo);
+                Assert.Equal("LTC", invoice.CryptoInfo[0].CryptoCode);
+                var cashCow = tester.LTCExplorerNode;
+                var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, cashCow.Network);
+                var firstPayment = Money.Coins(0.1m);
+                cashCow.SendToAddress(invoiceAddress, firstPayment);
+                Eventually(() =>
+                {
+                    invoice = user.BitPay.GetInvoice(invoice.Id);
+                    Assert.Equal(firstPayment, invoice.CryptoInfo[0].Paid);
+                });
+
+                Assert.Single(invoice.CryptoInfo); // Only BTC should be presented
+
+                var controller = tester.PayTester.GetController<InvoiceController>(null);
+                var checkout = (Models.InvoicingModels.PaymentModel)((JsonResult)controller.GetStatus(invoice.Id, null).GetAwaiter().GetResult()).Value;
+                Assert.Single(checkout.AvailableCryptos);
+                Assert.Equal("LTC", checkout.CryptoCode);
+
+                //////////////////////
+
+                // Despite it is called BitcoinAddress it should be LTC because BTC is not available
+                Assert.Null(invoice.BitcoinAddress);
+                Assert.NotEqual(invoice.BtcDue, invoice.CryptoInfo[0].Due); // Should be BTC rate
+                cashCow.SendToAddress(invoiceAddress, invoice.CryptoInfo[0].Due);
+
+                Eventually(() =>
+                {
+                    invoice = user.BitPay.GetInvoice(invoice.Id);
+                    Assert.Equal("paid", invoice.Status);
+                    checkout = (Models.InvoicingModels.PaymentModel)((JsonResult)controller.GetStatus(invoice.Id, null).GetAwaiter().GetResult()).Value;
+                    Assert.Equal("paid", checkout.Status);
+                });
+
+            }
+        }
+
+        [Fact]
         public void CanPayWithTwoCurrencies()
         {
             using (var tester = ServerTester.Create())

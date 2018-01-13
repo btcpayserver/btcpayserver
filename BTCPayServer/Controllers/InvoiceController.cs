@@ -172,8 +172,6 @@ namespace BTCPayServer.Controllers
                     entity.TxFee = GetTxFee(storeBlob, await gettingFee);
                     entity.Rate = await gettingRate;
                 }
-                // So users does not crash if they check depositAddress is not set
-                entity.DepositAddress = cryptoDatas.First().Value.DepositAddress;
 #pragma warning restore CS0618
             }
 

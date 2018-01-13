@@ -369,8 +369,8 @@ namespace BTCPayServer.Services.Invoices
                     dto.PaymentUrls = cryptoInfo.PaymentUrls;
                 }
 #pragma warning restore CS0618
-
-                dto.CryptoInfo.Add(cryptoInfo);
+                if(!info.IsPhantomBTC)
+                    dto.CryptoInfo.Add(cryptoInfo);
             }
 
             Populate(ProductInformation, dto);
@@ -410,22 +410,22 @@ namespace BTCPayServer.Services.Invoices
         public Dictionary<string, CryptoData> GetCryptoData(BTCPayNetworkProvider networkProvider, bool alwaysIncludeBTC = false)
         {
             Dictionary<string, CryptoData> rates = new Dictionary<string, CryptoData>();
-            bool btcAdded = false;
             var serializer = new Serializer(Dummy);
+            CryptoData phantom = null;
 #pragma warning disable CS0618
             // Legacy
             if (alwaysIncludeBTC)
             {
                 var btcNetwork = networkProvider?.GetNetwork("BTC");
-                rates.Add("BTC", new CryptoData() { ParentEntity = this, Rate = Rate, CryptoCode = "BTC", TxFee = TxFee, FeeRate = new FeeRate(TxFee, 100), DepositAddress = DepositAddress, Network = btcNetwork });
-                btcAdded = true;
+                phantom = new CryptoData() { ParentEntity = this, IsPhantomBTC = true, Rate = Rate, CryptoCode = "BTC", TxFee = TxFee, FeeRate = new FeeRate(TxFee, 100), DepositAddress = DepositAddress, Network = btcNetwork }
+                rates.Add("BTC", phantom);
             }
             if (CryptoData != null)
             {
                 foreach (var prop in CryptoData.Properties())
                 {
-                    if (prop.Name == "BTC" && btcAdded)
-                        continue;
+                    if (prop.Name == "BTC" && phantom != null)
+                        rates.Remove("BTC");
                     var r = serializer.ToObject<CryptoData>(prop.Value.ToString());
                     r.CryptoCode = prop.Name;
                     r.ParentEntity = this;
@@ -511,9 +511,12 @@ namespace BTCPayServer.Services.Invoices
         [JsonProperty(PropertyName = "depositAddress")]
         public string DepositAddress { get; set; }
 
+        [JsonIgnore]
+        public bool IsPhantomBTC { get; set; }
+
         public CryptoDataAccounting Calculate()
         {
-            var cryptoData = ParentEntity.GetCryptoData(null);
+            var cryptoData = ParentEntity.GetCryptoData(null, IsPhantomBTC);
             var totalDue = Money.Coins(ParentEntity.ProductInformation.Price / Rate);
             var paid = Money.Zero;
             var cryptoPaid = Money.Zero;

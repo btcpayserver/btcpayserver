@@ -68,11 +68,23 @@ namespace BTCPayServer.HostedServices
             CancellationTokenSource cts = new CancellationTokenSource(10000);
             try
             {
+                _EventAggregator.Publish<InvoiceIPNEvent>(new InvoiceIPNEvent(invoice.Id));
                 await SendNotification(invoice, cts.Token);
                 return;
             }
-            catch // It fails, it is OK because we try with hangfire after
+            catch(OperationCanceledException) when(cts.IsCancellationRequested)
             {
+                _EventAggregator.Publish<InvoiceIPNEvent>(new InvoiceIPNEvent(invoice.Id)
+                {
+                    Error = "Timeout"
+                });
+            }
+            catch(Exception ex) // It fails, it is OK because we try with hangfire after
+            {
+                _EventAggregator.Publish<InvoiceIPNEvent>(new InvoiceIPNEvent(invoice.Id)
+                {
+                    Error = ex.Message
+                });
             }
             var invoiceStr = NBitcoin.JsonConverters.Serializer.ToString(new ScheduledJob() { TryCount = 0, Invoice = invoice });
             if (!string.IsNullOrEmpty(invoice.NotificationURL))
@@ -93,12 +105,26 @@ namespace BTCPayServer.HostedServices
             CancellationTokenSource cts = new CancellationTokenSource(10000);
             try
             {
+                _EventAggregator.Publish<InvoiceIPNEvent>(new InvoiceIPNEvent(job.Invoice.Id));
                 HttpResponseMessage response = await SendNotification(job.Invoice, cts.Token);
                 reschedule = response.StatusCode != System.Net.HttpStatusCode.OK;
                 Logger.LogInformation("Job " + jobId + " returned " + response.StatusCode);
             }
-            catch (Exception ex)
+            catch (OperationCanceledException) when (cts.IsCancellationRequested)
             {
+                _EventAggregator.Publish<InvoiceIPNEvent>(new InvoiceIPNEvent(job.Invoice.Id)
+                {
+                    Error = "Timeout"
+                });
+                reschedule = true;
+                Logger.LogInformation("Job " + jobId + " timed out");
+            }
+            catch (Exception ex) // It fails, it is OK because we try with hangfire after
+            {
+                _EventAggregator.Publish<InvoiceIPNEvent>(new InvoiceIPNEvent(job.Invoice.Id)
+                {
+                    Error = ex.Message
+                });
                 reschedule = true;
                 Logger.LogInformation("Job " + jobId + " threw exception " + ex.Message);
             }
@@ -187,12 +213,27 @@ namespace BTCPayServer.HostedServices
                 await SaveEvent(invoice.Id, e);
             }));
 
+            leases.Add(_EventAggregator.Subscribe<InvoiceCreatedEvent>(async e =>
+            {
+                await SaveEvent(e.InvoiceId, e);
+            }));
+
             leases.Add(_EventAggregator.Subscribe<InvoiceDataChangedEvent>(async e => 
             {
                 await SaveEvent(e.InvoiceId, e);
             }));
 
             leases.Add(_EventAggregator.Subscribe<InvoicePaymentEvent>(async e =>
+            {
+                await SaveEvent(e.InvoiceId, e);
+            }));
+
+            leases.Add(_EventAggregator.Subscribe<InvoiceStopWatchedEvent>(async e =>
+            {
+                await SaveEvent(e.InvoiceId, e);
+            }));
+
+            leases.Add(_EventAggregator.Subscribe<InvoiceIPNEvent>(async e =>
             {
                 await SaveEvent(e.InvoiceId, e);
             }));

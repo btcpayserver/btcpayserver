@@ -118,7 +118,7 @@ namespace BTCPayServer.HostedServices
                        ((invoice.Status == "invalid" || invoice.Status == "expired") && invoice.MonitoringExpiration < DateTimeOffset.UtcNow))
                     {
                         if (await _InvoiceRepository.RemovePendingInvoice(invoice.Id).ConfigureAwait(false))
-                            Logs.PayServer.LogInformation("Stopped watching invoice " + invoiceId);
+                            _EventAggregator.Publish<InvoiceStopWatchedEvent>(new InvoiceStopWatchedEvent() { InvoiceId = invoice.Id });
                         break;
                     }
 

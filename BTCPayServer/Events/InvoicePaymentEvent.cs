@@ -13,7 +13,7 @@ namespace BTCPayServer.Events
         {
             InvoiceId = invoiceId;
             Address = address;
-            CryptoCode = cryptoCode
+            CryptoCode = cryptoCode;
         }
 
         public string Address { get; set; }

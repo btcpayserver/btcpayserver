@@ -33,7 +33,6 @@ namespace BTCPayServer.Controllers
         private readonly ILogger _logger;
         private readonly UrlEncoder _urlEncoder;
         TokenRepository _TokenRepository;
-        private readonly BTCPayWallet _Wallet;
         IHostingEnvironment _Env;
         StoreRepository _StoreRepository;
 
@@ -47,7 +46,7 @@ namespace BTCPayServer.Controllers
           ILogger<ManageController> logger,
           UrlEncoder urlEncoder,
           TokenRepository tokenRepository,
-          BTCPayWallet wallet,
+          BTCPayWalletProvider walletProvider,
           StoreRepository storeRepository,
           IHostingEnvironment env)
         {
@@ -57,7 +56,6 @@ namespace BTCPayServer.Controllers
             _logger = logger;
             _urlEncoder = urlEncoder;
             _TokenRepository = tokenRepository;
-            _Wallet = wallet;
             _Env = env;
             _StoreRepository = storeRepository;
         }

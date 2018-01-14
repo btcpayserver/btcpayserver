@@ -33,7 +33,8 @@ namespace BTCPayServer.Controllers
             {
                 UserId = GetUserId(),
                 InvoiceId = invoiceId,
-                IncludeAddresses = true
+                IncludeAddresses = true,
+                IncludeEvents = true
             })).FirstOrDefault();
             if (invoice == null)
                 return NotFound();
@@ -57,7 +58,8 @@ namespace BTCPayServer.Controllers
                 NotificationUrl = invoice.NotificationURL,
                 RedirectUrl = invoice.RedirectURL,
                 ProductInformation = invoice.ProductInformation,
-                StatusException = invoice.ExceptionStatus
+                StatusException = invoice.ExceptionStatus,
+                Events = invoice.Events
             };
 
             foreach (var data in invoice.GetCryptoData(null))

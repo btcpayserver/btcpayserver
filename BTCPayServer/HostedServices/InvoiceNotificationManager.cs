@@ -184,8 +184,25 @@ namespace BTCPayServer.HostedServices
                 {
                     await Notify(invoice);
                 }
+                await SaveEvent(invoice.Id, e);
             }));
+
+            leases.Add(_EventAggregator.Subscribe<InvoiceDataChangedEvent>(async e => 
+            {
+                await SaveEvent(e.InvoiceId, e);
+            }));
+
+            leases.Add(_EventAggregator.Subscribe<InvoicePaymentEvent>(async e =>
+            {
+                await SaveEvent(e.InvoiceId, e);
+            }));
+
             return Task.CompletedTask;
+        }
+
+        private Task SaveEvent(string invoiceId, object evt)
+        {
+            return _InvoiceRepository.AddInvoiceEvent(invoiceId, evt);
         }
 
         public Task StopAsync(CancellationToken cancellationToken)

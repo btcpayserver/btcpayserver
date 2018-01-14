@@ -99,7 +99,7 @@ namespace BTCPayServer.HostedServices
                     if (updateContext.Dirty)
                     {
                         await _InvoiceRepository.UpdateInvoiceStatus(invoice.Id, invoice.Status, invoice.ExceptionStatus).ConfigureAwait(false);
-                        _EventAggregator.Publish(new InvoiceDataChangedEvent() { InvoiceId = invoice.Id });
+                        updateContext.Events.Add(new InvoiceDataChangedEvent() { Status = invoice.Status, ExceptionStatus = invoice.ExceptionStatus, InvoiceId = invoice.Id });
                     }
 
                     var changed = stateBefore != invoice.Status;
@@ -169,7 +169,7 @@ namespace BTCPayServer.HostedServices
                     invoice.Payments.Add(payment);
 #pragma warning restore CS0618
                     alreadyAccounted.Add(coin.Coin.Outpoint);
-                    context.Events.Add(new InvoicePaymentEvent(invoice.Id));
+                    context.Events.Add(new InvoicePaymentEvent(invoice.Id, coins.Wallet.Network.CryptoCode, coin.Coin.ScriptPubKey.GetDestinationAddress(coins.Wallet.Network.NBitcoinNetwork).ToString()));
                     dirtyAddress = true;
                 }
                 if (dirtyAddress)

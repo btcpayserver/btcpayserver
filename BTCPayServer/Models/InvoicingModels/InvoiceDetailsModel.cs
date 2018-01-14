@@ -126,5 +126,6 @@ namespace BTCPayServer.Models.InvoicingModels
         }
         public HistoricalAddressInvoiceData[] Addresses { get; set; }
         public DateTimeOffset MonitoringDate { get; internal set; }
+        public List<Data.InvoiceEventData> Events { get; internal set; }
     }
 }

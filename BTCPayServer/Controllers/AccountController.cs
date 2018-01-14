@@ -15,6 +15,7 @@ using BTCPayServer.Models.AccountViewModels;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Stores;
+using BTCPayServer.Logging;
 
 namespace BTCPayServer.Controllers
 {
@@ -25,10 +26,10 @@ namespace BTCPayServer.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IEmailSender _emailSender;
-        private readonly ILogger _logger;
         StoreRepository storeRepository;
         RoleManager<IdentityRole> _RoleManager;
         SettingsRepository _SettingsRepository;
+        ILogger _logger;
 
         public AccountController(
             UserManager<ApplicationUser> userManager,
@@ -36,16 +37,15 @@ namespace BTCPayServer.Controllers
             StoreRepository storeRepository,
             SignInManager<ApplicationUser> signInManager,
             IEmailSender emailSender,
-            SettingsRepository settingsRepository,
-            ILogger<AccountController> logger)
+            SettingsRepository settingsRepository)
         {
             this.storeRepository = storeRepository;
             _userManager = userManager;
             _signInManager = signInManager;
             _emailSender = emailSender;
-            _logger = logger;
             _RoleManager = roleManager;
             _SettingsRepository = settingsRepository;
+            _logger = Logs.PayServer;
         }
 
         [TempData]
@@ -259,12 +259,10 @@ namespace BTCPayServer.Controllers
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
-                    _logger.LogInformation("User created a new account with password.");
-
                     var admin = await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin);
+                    Logs.PayServer.LogInformation($"A new user just registered {user.Email} {(admin.Count == 0 ? "(admin)" : "")}");
                     if (admin.Count == 0)
                     {
-                        _logger.LogInformation("Admin created.");
                         await _RoleManager.CreateAsync(new IdentityRole(Roles.ServerAdmin));
                         await _userManager.AddToRoleAsync(user, Roles.ServerAdmin);
                     }
@@ -291,7 +289,7 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
-        /// <summary>
+        /// <summary> 
         /// Test property
         /// </summary>
         public string RegisteredUserId

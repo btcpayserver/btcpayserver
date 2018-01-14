@@ -225,5 +225,28 @@
                 </table>
             </div>
         </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <h3>Events</h3>
+                <table class="table">
+                    <thead class="thead-inverse">
+                        <tr>
+                            <th>Date</th>
+                            <th>Message</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach(var evt in Model.Events)
+                        {
+                            <tr>
+                                <td>@evt.Timestamp</td>
+                                <td>@evt.Message</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </section>

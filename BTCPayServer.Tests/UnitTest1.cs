@@ -436,6 +436,7 @@ namespace BTCPayServer.Tests
 
                 // Despite it is called BitcoinAddress it should be LTC because BTC is not available
                 Assert.Null(invoice.BitcoinAddress);
+                Assert.NotEqual(1.0, invoice.Rate);
                 Assert.NotEqual(invoice.BtcDue, invoice.CryptoInfo[0].Due); // Should be BTC rate
                 cashCow.SendToAddress(invoiceAddress, invoice.CryptoInfo[0].Due);
 

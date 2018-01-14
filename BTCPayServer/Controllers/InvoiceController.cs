@@ -168,7 +168,7 @@ namespace BTCPayServer.Controllers
                 if (feeProvider != null && rateProvider != null)
                 {
                     var gettingFee = feeProvider.GetFeeRateAsync();
-                    var gettingRate = rateProvider.GetRateAsync("BTC");
+                    var gettingRate = rateProvider.GetRateAsync(invoice.Currency);
                     entity.TxFee = GetTxFee(storeBlob, await gettingFee);
                     entity.Rate = await gettingRate;
                 }

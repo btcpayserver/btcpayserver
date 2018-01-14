@@ -55,6 +55,7 @@ namespace BTCPayServer.Controllers
                 BuyerInformation = invoice.BuyerInformation,
                 Fiat = FormatCurrency((decimal)dto.Price, dto.Currency),
                 NotificationUrl = invoice.NotificationURL,
+                RedirectUrl = invoice.RedirectURL,
                 ProductInformation = invoice.ProductInformation,
                 StatusException = invoice.ExceptionStatus
             };

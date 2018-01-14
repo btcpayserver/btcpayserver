@@ -112,6 +112,8 @@ namespace BTCPayServer.Models.InvoicingModels
             get;
             internal set;
         }
+
+        public string RedirectUrl { get; set; }
         public string Fiat
         {
             get;

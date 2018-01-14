@@ -26,6 +26,11 @@ namespace BTCPayServer.Data
             get; set;
         }
 
+        public DbSet<InvoiceEventData> InvoiceEvents
+        {
+            get; set;
+        }
+
         public DbSet<HistoricalAddressInvoiceData> HistoricalAddressInvoices
         {
             get; set;
@@ -132,6 +137,15 @@ namespace BTCPayServer.Data
                     o.InvoiceDataId,
 #pragma warning disable CS0618
                     o.Address
+#pragma warning restore CS0618
+                });
+
+            builder.Entity<InvoiceEventData>()
+                .HasKey(o => new
+                {
+                    o.InvoiceDataId,
+#pragma warning disable CS0618
+                    o.UniqueId
 #pragma warning restore CS0618
                 });
         }

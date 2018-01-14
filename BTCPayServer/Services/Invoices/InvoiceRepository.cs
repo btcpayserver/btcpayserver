@@ -173,8 +173,11 @@ namespace BTCPayServer.Services.Invoices
                 invoiceEntity.SetCryptoData(currencyData);
                 invoice.Blob = ToBytes(invoiceEntity, network.NBitcoinNetwork);
 
-                context.AddressInvoices.Add(new AddressInvoiceData() {
-                    InvoiceDataId = invoiceId, CreatedTime = DateTimeOffset.UtcNow }
+                context.AddressInvoices.Add(new AddressInvoiceData()
+                {
+                    InvoiceDataId = invoiceId,
+                    CreatedTime = DateTimeOffset.UtcNow
+                }
                 .SetHash(bitcoinAddress.ScriptPubKey.Hash, network.CryptoCode));
                 context.HistoricalAddressInvoices.Add(new HistoricalAddressInvoiceData()
                 {
@@ -185,6 +188,21 @@ namespace BTCPayServer.Services.Invoices
                 await context.SaveChangesAsync();
                 AddToTextSearch(invoice.Id, bitcoinAddress.ToString());
                 return true;
+            }
+        }
+
+        public async Task AddInvoiceEvent(string invoiceId, object evt)
+        {
+            using (var context = _ContextFactory.CreateContext())
+            {
+                context.InvoiceEvents.Add(new InvoiceEventData()
+                {
+                    InvoiceDataId = invoiceId,
+                    Message = evt.ToString(),
+                    Timestamp = DateTimeOffset.UtcNow,
+                    UniqueId = Encoders.Hex.EncodeData(RandomUtils.GetBytes(10))
+                });
+                await context.SaveChangesAsync();
             }
         }
 
@@ -314,6 +332,10 @@ namespace BTCPayServer.Services.Invoices
             {
                 entity.AvailableAddressHashes = invoice.AddressInvoices.Select(a => a.GetHash() + a.GetCryptoCode()).ToHashSet();
             }
+            if(invoice.Events != null)
+            {
+                entity.Events = invoice.Events.OrderBy(c => c.Timestamp).ToList();
+            }
             return entity;
         }
 
@@ -326,8 +348,10 @@ namespace BTCPayServer.Services.Invoices
                     .Invoices
                     .Include(o => o.Payments)
                     .Include(o => o.RefundAddresses);
-                if(queryObject.IncludeAddresses)
+                if (queryObject.IncludeAddresses)
                     query = query.Include(o => o.HistoricalAddressInvoices).Include(o => o.AddressInvoices);
+                if (queryObject.IncludeEvents)
+                    query = query.Include(o => o.Events);
                 if (!string.IsNullOrEmpty(queryObject.InvoiceId))
                 {
                     query = query.Where(i => i.Id == queryObject.InvoiceId);
@@ -536,5 +560,7 @@ namespace BTCPayServer.Services.Invoices
             set;
         }
         public bool IncludeAddresses { get; set; }
+
+        public bool IncludeEvents { get; set; }
     }
 }

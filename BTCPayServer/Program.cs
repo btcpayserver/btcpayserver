@@ -24,7 +24,8 @@ namespace BTCPayServer
         {
             ServicePointManager.DefaultConnectionLimit = 100;
             IWebHost host = null;
-            CustomConsoleLogProvider loggerProvider = new CustomConsoleLogProvider();
+            var processor = new ConsoleLoggerProcessor();
+            CustomConsoleLogProvider loggerProvider = new CustomConsoleLogProvider(processor);
 
             var loggerFactory = new LoggerFactory();
             loggerFactory.AddProvider(loggerProvider);
@@ -44,7 +45,7 @@ namespace BTCPayServer
                     .ConfigureLogging(l =>
                     {
                         l.AddFilter("Microsoft", LogLevel.Error);
-                        l.AddProvider(new CustomConsoleLogProvider());
+                        l.AddProvider(new CustomConsoleLogProvider(processor));
                     })
                     .UseStartup<Startup>()
                     .Build();
@@ -61,13 +62,9 @@ namespace BTCPayServer
                 if (!string.IsNullOrEmpty(ex.Message))
                     Logs.Configuration.LogError(ex.Message);
             }
-            catch (Exception exception)
-            {
-                logger.LogError("Exception thrown while running the server");
-                logger.LogError(exception.ToString());
-            }
             finally
             {
+                processor.Dispose();
                 if (host != null)
                     host.Dispose();
                 loggerProvider.Dispose();

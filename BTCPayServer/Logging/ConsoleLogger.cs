@@ -12,7 +12,11 @@ namespace BTCPayServer.Logging
 {
     public class CustomConsoleLogProvider : ILoggerProvider
     {
-        ConsoleLoggerProcessor _Processor = new ConsoleLoggerProcessor();
+        ConsoleLoggerProcessor _Processor;
+        public CustomConsoleLogProvider(ConsoleLoggerProcessor processor)
+        {
+            _Processor = processor;
+        }
         public ILogger CreateLogger(string categoryName)
         {
             return new CustomConsoleLogger(categoryName, (a, b) => true, false, _Processor);

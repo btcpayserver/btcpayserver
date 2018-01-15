@@ -68,6 +68,8 @@ namespace BTCPayServer.HostedServices
             CancellationTokenSource cts = new CancellationTokenSource(10000);
             try
             {
+                if (string.IsNullOrEmpty(invoice.NotificationURL))
+                    return;
                 _EventAggregator.Publish<InvoiceIPNEvent>(new InvoiceIPNEvent(invoice.Id));
                 await SendNotification(invoice, cts.Token);
                 return;

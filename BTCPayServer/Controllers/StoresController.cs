@@ -350,7 +350,7 @@ namespace BTCPayServer.Controllers
                 var prefix = Utils.ToUInt32(data, false);
                 if (!electrumMapping.TryGetValue(prefix, out string[] labels))
                     throw new FormatException("!electrumMapping.TryGetValue(prefix, out string[] labels)");
-                var standardPrefix = Utils.ToBytes(network.NBitcoinNetwork == Network.Main ? 0x0488b21eU : 0x043587cf, false);
+                var standardPrefix = Utils.ToBytes(network.NBXplorerNetwork.DefaultSettings.ChainType == NBXplorer.ChainType.Main ? 0x0488b21eU : 0x043587cf, false);
 
                 for (int i = 0; i < 4; i++)
                     data[i] = standardPrefix[i];

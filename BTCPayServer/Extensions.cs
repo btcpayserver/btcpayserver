@@ -19,6 +19,8 @@ using System.Linq;
 using System.Threading;
 using BTCPayServer.Services.Wallets;
 using System.IO;
+using BTCPayServer.Logging;
+using Microsoft.Extensions.Logging;
 
 namespace BTCPayServer
 {

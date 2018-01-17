@@ -359,7 +359,7 @@ namespace BTCPayServer.Tests
                 change.Value -= (payment2 - payment1) * 2; //Add more fees
                 var replaced = tester.ExplorerNode.SignRawTransaction(tx);
                 tester.ExplorerNode.SendRawTransaction(replaced);
-                var test = tester.ExplorerClient.Sync(user.DerivationScheme, null);
+                var test = tester.ExplorerClient.GetUTXOs(user.DerivationScheme, null);
                 Eventually(() =>
                 {
                     invoice = user.BitPay.GetInvoice(invoice.Id);

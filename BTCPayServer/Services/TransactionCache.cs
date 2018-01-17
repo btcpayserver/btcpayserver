@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,33 +30,33 @@ namespace BTCPayServer.Services
     }
     public class TransactionCache : IDisposable
     {
-        IOptions<MemoryCacheOptions> _Options;
+        //IOptions<MemoryCacheOptions> _Options;
         public TransactionCache(IOptions<MemoryCacheOptions> options, BTCPayNetwork network)
         {
-            if (network == null)
-                throw new ArgumentNullException(nameof(network));
-            _Options = options;
-            _MemoryCache = new MemoryCache(_Options);
-            Network = network;
+            //if (network == null)
+            //    throw new ArgumentNullException(nameof(network));
+            //_Options = options;
+            //_MemoryCache = new MemoryCache(_Options);
+            //Network = network;
         }
 
-        uint256 _LastHash;
-        int _ConfOffset;
-        IMemoryCache _MemoryCache;
+        //uint256 _LastHash;
+        //int _ConfOffset;
+        //IMemoryCache _MemoryCache;
         
         public void NewBlock(uint256 newHash, uint256 previousHash)
         {
-            if (_LastHash != previousHash)
-            {
-                var old = _MemoryCache;
-                _ConfOffset = 0;
-                _MemoryCache = new MemoryCache(_Options);
-                Thread.MemoryBarrier();
-                old.Dispose();
-            }
-            else
-                _ConfOffset++;
-            _LastHash = newHash;
+            //if (_LastHash != previousHash)
+            //{
+            //    var old = _MemoryCache;
+            //    _ConfOffset = 0;
+            //    _MemoryCache = new MemoryCache(_Options);
+            //    Thread.MemoryBarrier();
+            //    old.Dispose();
+            //}
+            //else
+            //    _ConfOffset++;
+            //_LastHash = newHash;
         }
 
         public TimeSpan CacheSpan { get; private set; } = TimeSpan.FromMinutes(60);
@@ -64,29 +65,32 @@ namespace BTCPayServer.Services
 
         public void AddToCache(TransactionResult tx)
         {
-            _MemoryCache.Set(tx.Transaction.GetHash(), tx, DateTimeOffset.UtcNow + CacheSpan);
+            //Logging.Logs.PayServer.LogInformation($"ADD CACHE: {tx.Transaction.GetHash()} ({tx.Confirmations} conf)");
+            //_MemoryCache.Set(tx.Transaction.GetHash(), tx, DateTimeOffset.UtcNow + CacheSpan);
         }
 
 
         public TransactionResult GetTransaction(uint256 txId)
         {
-            _MemoryCache.TryGetValue(txId.ToString(), out object tx);
+            //var ok = _MemoryCache.TryGetValue(txId.ToString(), out object tx);
+            //Logging.Logs.PayServer.LogInformation($"GET CACHE: {txId} ({ok} plus {_ConfOffset})");
 
-            var result = tx as TransactionResult;
-            var confOffset = _ConfOffset;
-            if (result != null && result.Confirmations > 0 && confOffset > 0)
-            {
-                var serializer = new NBXplorer.Serializer(Network.NBitcoinNetwork);
-                result = serializer.ToObject<TransactionResult>(serializer.ToString(result));
-                result.Confirmations += confOffset;
-                result.Height += confOffset;
-            }
-            return result;
+            //var result = tx as TransactionResult;
+            //var confOffset = _ConfOffset;
+            //if (result != null && result.Confirmations > 0 && confOffset > 0)
+            //{
+            //    var serializer = new NBXplorer.Serializer(Network.NBitcoinNetwork);
+            //    result = serializer.ToObject<TransactionResult>(serializer.ToString(result));
+            //    result.Confirmations += confOffset;
+            //    result.Height += confOffset;
+            //}
+            //return result;
+            return null; // Does not work correctly yet
         }
 
         public void Dispose()
         {
-            _MemoryCache.Dispose();
+            //_MemoryCache.Dispose();
         }
     }
 }

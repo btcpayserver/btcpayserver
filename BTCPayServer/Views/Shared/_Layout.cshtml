@@ -48,30 +48,36 @@
     <!-- Navigation -->
     <nav class='navbar navbar-expand-lg navbar-light fixed-top @additionalStyle' id="mainNav">
         <div class="container">
-            <a class="navbar-brand js-scroll-trigger" href="~/"><img src="~/img/logo.png" height="45"></a>
+            <a class="navbar-brand js-scroll-trigger" href="~/">
+                <img src="~/img/logo.png" height="45">
+                @if(env.ChainType != NBXplorer.ChainType.Main)
+                {
+                <span class="badge badge-warning" style="font-size:10px;">@env.ChainType.ToString()</span>
+                }
+            </a>
             <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarResponsive">
                 <ul class="navbar-nav ml-auto">
-                    @if (SignInManager.IsSignedIn(User))
-                    {
-                        @if (User.IsInRole(Roles.ServerAdmin))
-                        {
-                            <li class="nav-item"><a asp-area="" asp-controller="Server" asp-action="ListUsers" class="nav-link js-scroll-trigger">Server settings</a></li>
-                        }
-                        <li class="nav-item"><a asp-area="" asp-controller="Stores" asp-action="ListStores" class="nav-link js-scroll-trigger">Stores</a></li>
-                        <li class="nav-item"><a asp-area="" asp-controller="Invoice" asp-action="ListInvoices" class="nav-link js-scroll-trigger">Invoices</a></li>
-                        <li class="nav-item">
-                            <a asp-area="" asp-controller="Manage" asp-action="Index" title="Manage" class="nav-link js-scroll-trigger">My settings</a>
-                        </li>
-                        <li class="nav-item">
-                            <a asp-area="" asp-controller="Account" asp- asp-action="Logout" title="Manage" class="nav-link js-scroll-trigger">Log out</a>
-                        </li>}
-                    else
-                    {
-                        <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Register" class="nav-link js-scroll-trigger">Register</a></li>
-                        <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Login" class="nav-link js-scroll-trigger">Log in</a></li>}
+                    @if(SignInManager.IsSignedIn(User))
+            {
+                @if(User.IsInRole(Roles.ServerAdmin))
+        {
+            <li class="nav-item"><a asp-area="" asp-controller="Server" asp-action="ListUsers" class="nav-link js-scroll-trigger">Server settings</a></li>
+}
+                <li class="nav-item"><a asp-area="" asp-controller="Stores" asp-action="ListStores" class="nav-link js-scroll-trigger">Stores</a></li>
+                <li class="nav-item"><a asp-area="" asp-controller="Invoice" asp-action="ListInvoices" class="nav-link js-scroll-trigger">Invoices</a></li>
+                <li class="nav-item">
+                    <a asp-area="" asp-controller="Manage" asp-action="Index" title="Manage" class="nav-link js-scroll-trigger">My settings</a>
+                </li>
+                <li class="nav-item">
+                    <a asp-area="" asp-controller="Account" asp- asp-action="Logout" title="Manage" class="nav-link js-scroll-trigger">Log out</a>
+                </li>}
+    else
+    {
+        <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Register" class="nav-link js-scroll-trigger">Register</a></li>
+        <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Login" class="nav-link js-scroll-trigger">Log in</a></li>}
 
                 </ul>
             </div>

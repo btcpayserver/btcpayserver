@@ -163,8 +163,6 @@ namespace BTCPayServer.Controllers
             AddDerivationSchemes(store, vm);
             vm.StatusMessage = StatusMessage;
             vm.MonitoringExpiration = storeBlob.MonitoringExpiration;
-            vm.InvoiceExpiration = storeBlob.InvoiceExpiration;
-            vm.RateMultiplier = (double)storeBlob.GetRateMultiplier();
             return View(vm);
         }
 
@@ -308,8 +306,6 @@ namespace BTCPayServer.Controllers
             var blob = store.GetStoreBlob();
             blob.NetworkFeeDisabled = !model.NetworkFee;
             blob.MonitoringExpiration = model.MonitoringExpiration;
-            blob.InvoiceExpiration = model.InvoiceExpiration;
-            blob.SetRateMultiplier(model.RateMultiplier);
 
             if (store.SetStoreBlob(blob))
             {
@@ -350,7 +346,7 @@ namespace BTCPayServer.Controllers
                 var prefix = Utils.ToUInt32(data, false);
                 if (!electrumMapping.TryGetValue(prefix, out string[] labels))
                     throw new FormatException("!electrumMapping.TryGetValue(prefix, out string[] labels)");
-                var standardPrefix = Utils.ToBytes(network.NBXplorerNetwork.DefaultSettings.ChainType == NBXplorer.ChainType.Main ? 0x0488b21eU : 0x043587cf, false);
+                var standardPrefix = Utils.ToBytes(network.NBitcoinNetwork == Network.Main ? 0x0488b21eU : 0x043587cf, false);
 
                 for (int i = 0; i < 4; i++)
                     data[i] = standardPrefix[i];

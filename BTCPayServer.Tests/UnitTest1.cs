@@ -24,6 +24,7 @@ using BTCPayServer.Services.Rates;
 using Microsoft.Extensions.Caching.Memory;
 using BTCPayServer.Eclair;
 using System.Collections.Generic;
+using BTCPayServer.Models.StoreViewModels;
 
 namespace BTCPayServer.Tests
 {
@@ -389,6 +390,50 @@ namespace BTCPayServer.Tests
                 Assert.False(user.BitPay.TestAccess(Facade.Merchant));
                 user.GrantAccess();
                 Assert.True(user.BitPay.TestAccess(Facade.Merchant));
+            }
+        }
+
+
+        [Fact]
+        public void CanTweakRate()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.Start();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+
+
+                // First we try payment with a merchant having only BTC
+                var invoice1 = user.BitPay.CreateInvoice(new Invoice()
+                {
+                    Price = 5000.0,
+                    Currency = "USD",
+                    PosData = "posData",
+                    OrderId = "orderId",
+                    ItemDesc = "Some description",
+                    FullNotifications = true
+                }, Facade.Merchant);
+
+
+                var storeController = tester.PayTester.GetController<StoresController>(user.UserId);
+                var vm = (StoreViewModel)((ViewResult)storeController.UpdateStore(user.StoreId).Result).Model;
+                Assert.Equal(1.0, vm.RateMultiplier);
+                vm.RateMultiplier = 0.5;
+                storeController.UpdateStore(user.StoreId, vm).Wait();
+
+
+                var invoice2 = user.BitPay.CreateInvoice(new Invoice()
+                {
+                    Price = 5000.0,
+                    Currency = "USD",
+                    PosData = "posData",
+                    OrderId = "orderId",
+                    ItemDesc = "Some description",
+                    FullNotifications = true
+                }, Facade.Merchant);
+
+                Assert.True(invoice2.BtcPrice.Almost(invoice1.BtcPrice * 2, 0.00001m));
             }
         }
 

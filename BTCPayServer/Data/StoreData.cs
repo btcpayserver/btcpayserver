@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using BTCPayServer.Services.Rates;
 
 namespace BTCPayServer.Data
 {
@@ -99,10 +100,10 @@ namespace BTCPayServer.Data
 
             if (!existing && string.IsNullOrEmpty(derivationScheme))
             {
-                if(network.IsBTC)
+                if (network.IsBTC)
                     DerivationStrategy = null;
             }
-            else if(!existing)
+            else if (!existing)
                 strategies.Add(new JProperty(network.CryptoCode, new JValue(derivationScheme)));
             // This is deprecated so we don't have to set anymore
             //if (network.IsBTC)
@@ -173,6 +174,22 @@ namespace BTCPayServer.Data
         }
     }
 
+    public class RateRule
+    {
+        public RateRule()
+        {
+            RuleName = "Multiplier";
+        }
+        public string RuleName { get; set; }
+
+        public double Multiplier { get; set; }
+
+        public decimal Apply(BTCPayNetwork network, decimal rate)
+        {
+            return rate * (decimal)Multiplier;
+        }
+    }
+
     public class StoreBlob
     {
         public StoreBlob()
@@ -200,5 +217,30 @@ namespace BTCPayServer.Data
             set;
         }
 
+        public void SetRateMultiplier(double rate)
+        {
+            RateRules = new List<RateRule>();
+            RateRules.Add(new RateRule() { Multiplier = rate });
+        }
+        public decimal GetRateMultiplier()
+        {
+            decimal rate = 1.0m;
+            if (RateRules == null || RateRules.Count == 0)
+                return rate;
+            foreach (var rule in RateRules)
+            {
+                rate = rule.Apply(null, rate);
+            }
+            return rate;
+        }
+
+        public List<RateRule> RateRules { get; set; } = new List<RateRule>();
+
+        public IRateProvider ApplyRateRules(BTCPayNetwork network, IRateProvider rateProvider)
+        {
+            if (RateRules == null || RateRules.Count == 0)
+                return rateProvider;
+            return new TweakRateProvider(network, rateProvider, RateRules.ToList());
+        }
     }
 }

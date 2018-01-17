@@ -164,6 +164,7 @@ namespace BTCPayServer.Controllers
             vm.StatusMessage = StatusMessage;
             vm.MonitoringExpiration = storeBlob.MonitoringExpiration;
             vm.InvoiceExpiration = storeBlob.InvoiceExpiration;
+            vm.RateMultiplier = (double)storeBlob.GetRateMultiplier();
             return View(vm);
         }
 
@@ -307,6 +308,8 @@ namespace BTCPayServer.Controllers
             var blob = store.GetStoreBlob();
             blob.NetworkFeeDisabled = !model.NetworkFee;
             blob.MonitoringExpiration = model.MonitoringExpiration;
+            blob.InvoiceExpiration = model.InvoiceExpiration;
+            blob.SetRateMultiplier(model.RateMultiplier);
 
             if (store.SetStoreBlob(blob))
             {

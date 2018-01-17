@@ -47,6 +47,14 @@ namespace BTCPayServer.Models.StoreViewModels
 
         public List<StoreViewModel.DerivationScheme> DerivationSchemes { get; set; } = new List<StoreViewModel.DerivationScheme>();
 
+        [Display(Name = "Multiply the original rate by ...")]
+        [Range(0.01, 10.0)]
+        public double RateMultiplier
+        {
+            get;
+            set;
+        }
+
         [Display(Name = "Invoice expires if the full amount has not been paid after ... minutes")]
         [Range(1, 60 * 24 * 31)]
         public int InvoiceExpiration

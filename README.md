@@ -8,7 +8,7 @@
 
 ## Introduction 
 
-BTCPay Server is an Open Source payment processor that conforms to the invoice API of [Bitpay](https://bitpay.com/).
+BTCPay Server is an Open Source payment processor, written in C#, that conforms to the invoice API of [Bitpay](https://bitpay.com/).
 This allows easy migration of your code base to your own, self-hosted payment processor.
 
 This solution is for you if:

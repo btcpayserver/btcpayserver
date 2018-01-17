@@ -38,7 +38,7 @@
 <body id="page-top">
 
     @{
-        if(ViewBag.AlwaysShrinkNavBar == null)
+        if (ViewBag.AlwaysShrinkNavBar == null)
         {
             ViewBag.AlwaysShrinkNavBar = true;
         }
@@ -48,30 +48,36 @@
     <!-- Navigation -->
     <nav class='navbar navbar-expand-lg navbar-light fixed-top @additionalStyle' id="mainNav">
         <div class="container">
-            <a class="navbar-brand js-scroll-trigger" href="~/"><img src="~/img/logo.png" height="45"></a>
+            <a class="navbar-brand js-scroll-trigger" href="~/">
+                <img src="~/img/logo.png" height="45">
+                @if(env.ChainType != NBXplorer.ChainType.Main)
+                {
+                <span class="badge badge-warning" style="font-size:10px;">@env.ChainType.ToString()</span>
+                }
+            </a>
             <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarResponsive">
                 <ul class="navbar-nav ml-auto">
                     @if(SignInManager.IsSignedIn(User))
-                    {
-                        @if(User.IsInRole(Roles.ServerAdmin))
-                        {
-                            <li class="nav-item"><a asp-area="" asp-controller="Server" asp-action="ListUsers" class="nav-link js-scroll-trigger">Server settings</a></li>
-                        }
-                        <li class="nav-item"><a asp-area="" asp-controller="Stores" asp-action="ListStores" class="nav-link js-scroll-trigger">Stores</a></li>
-                        <li class="nav-item"><a asp-area="" asp-controller="Invoice" asp-action="ListInvoices" class="nav-link js-scroll-trigger">Invoices</a></li>
-                        <li class="nav-item">
-                            <a asp-area="" asp-controller="Manage" asp-action="Index" title="Manage" class="nav-link js-scroll-trigger">My settings</a>
-                        </li>
-                        <li class="nav-item">
-                            <a asp-area="" asp-controller="Account" asp- asp-action="Logout" title="Manage" class="nav-link js-scroll-trigger">Log out</a>
-                        </li>}
-                    else
-                    {
-                        <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Register" class="nav-link js-scroll-trigger">Register</a></li>
-                        <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Login" class="nav-link js-scroll-trigger">Log in</a></li>}
+            {
+                @if(User.IsInRole(Roles.ServerAdmin))
+        {
+            <li class="nav-item"><a asp-area="" asp-controller="Server" asp-action="ListUsers" class="nav-link js-scroll-trigger">Server settings</a></li>
+}
+                <li class="nav-item"><a asp-area="" asp-controller="Stores" asp-action="ListStores" class="nav-link js-scroll-trigger">Stores</a></li>
+                <li class="nav-item"><a asp-area="" asp-controller="Invoice" asp-action="ListInvoices" class="nav-link js-scroll-trigger">Invoices</a></li>
+                <li class="nav-item">
+                    <a asp-area="" asp-controller="Manage" asp-action="Index" title="Manage" class="nav-link js-scroll-trigger">My settings</a>
+                </li>
+                <li class="nav-item">
+                    <a asp-area="" asp-controller="Account" asp- asp-action="Logout" title="Manage" class="nav-link js-scroll-trigger">Log out</a>
+                </li>}
+    else
+    {
+        <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Register" class="nav-link js-scroll-trigger">Register</a></li>
+        <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Login" class="nav-link js-scroll-trigger">Log in</a></li>}
 
                 </ul>
             </div>
@@ -79,93 +85,6 @@
     </nav>
 
     @RenderBody()
-
-
-    @if(!dashboard.IsFullySynched())
-    {
-        <!-- Modal -->
-        <div id="synching-modal" class="modal fade" role="dialog">
-            <div class="modal-dialog">
-
-                <!-- Modal content-->
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h4 class="modal-title">Your nodes are synching...</h4>
-                        <button type="button" class="close" data-dismiss="modal">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <p>
-                            Some of your nodes are still synching...<br />
-                            BTCPay Server will not work correctly until it is over.
-                        </p>
-                        @foreach(var line in dashboard.GetAll())
-                        {
-                            <h4>@line.Network.CryptoCode</h4>
-                            @if(line.Status == null)
-                            {
-                                <ul>
-                                <li>The node is offline</li>
-                                @if(line.Error != null)
-                                {
-                                    <li>Last error: @line.Error</li>
-                                }
-                                </ul>
-                            }
-                            else
-                            {
-                                <ul>
-                                    <li>NBXplorer headers height: @line.Status.ChainHeight</li>
-                                    @if(line.Status.BitcoinStatus == null)
-                                    {
-                                        if(line.State == BTCPayServer.HostedServices.NBXplorerState.Synching)
-                                        {
-                                            <li>The node is starting...</li>
-                                        }
-                                        else
-                                        {
-                                            <li>The node is offline</li>
-                                            @if(line.Error != null)
-                                            {
-                                                <li>Last error: @line.Error</li>
-                                            }
-                                        }
-                                    }
-                                    else if(line.Status.BitcoinStatus.IsSynched)
-                                    {
-                                        <li>The node is synched (Height: @line.Status.BitcoinStatus.Headers)</li>
-                                        @if(line.Status.BitcoinStatus.IsSynched &&
-                                            line.Status.SyncHeight.HasValue &&
-                                            line.Status.SyncHeight.Value < line.Status.BitcoinStatus.Headers)
-                                        {
-                                            <li>NBXplorer is synching... (Height: @line.Status.SyncHeight.Value)</li>
-                                        }
-                                    }
-                                    else
-                                    {
-                                        <li>Node headers height: @line.Status.BitcoinStatus.Headers</li>
-                                        <li>Validated blocks: @line.Status.BitcoinStatus.Blocks</li>
-                                    }
-                                </ul>
-                                @if(!line.Status.IsFullySynched && line.Status.BitcoinStatus != null)
-                                {
-                                    <div class="progress">
-                                        <div class="progress-bar" role="progressbar" aria-valuenow="@((int)(line.Status.BitcoinStatus.VerificationProgress * 100))"
-                                             aria-valuemin="0" aria-valuemax="100" style="width:@((int)(line.Status.BitcoinStatus.VerificationProgress * 100))%">
-                                            @((int)(line.Status.BitcoinStatus.VerificationProgress * 100))%
-                                        </div>
-                                    </div>
-                                }
-                            }
-                        }
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    }
 
     <footer class="bg-dark">
         <div class="container text-right"><span style="font-size:8px;">@env.ToString()</span></div>
@@ -184,13 +103,10 @@
     <!-- Custom scripts for this template -->
     <script src="~/js/creative.js"></script>
 
-    @if(!dashboard.IsFullySynched())
+
+    @if (!dashboard.IsFullySynched())
     {
-        <script type="text/javascript">
-            $(function () {
-                $("#synching-modal").modal();
-            });
-        </script>
+        @Html.Partial("SyncModal")
     }
 
     @RenderSection("Scripts", required: false)

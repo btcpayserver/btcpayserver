@@ -78,7 +78,7 @@ namespace BTCPayServer.Controllers
         }
 
 
-        internal async Task<DataWrapper<InvoiceResponse>> CreateInvoiceCore(Invoice invoice, StoreData store, string serverUrl, double expiryMinutes = 15)
+        internal async Task<DataWrapper<InvoiceResponse>> CreateInvoiceCore(Invoice invoice, StoreData store, string serverUrl)
         {
             var derivationStrategies = store.GetDerivationStrategies(_NetworkProvider).ToList();
             if (derivationStrategies.Count == 0)
@@ -94,7 +94,7 @@ namespace BTCPayServer.Controllers
             if (notificationUri == null || (notificationUri.Scheme != "http" && notificationUri.Scheme != "https")) //TODO: Filer non routable addresses ?
                 notificationUri = null;
             EmailAddressAttribute emailValidator = new EmailAddressAttribute();
-            entity.ExpirationTime = entity.InvoiceTime.AddMinutes(expiryMinutes);
+            entity.ExpirationTime = entity.InvoiceTime.AddMinutes(storeBlob.InvoiceExpiration);
             entity.MonitoringExpiration = entity.ExpirationTime + TimeSpan.FromMinutes(storeBlob.MonitoringExpiration);
             entity.OrderId = invoice.OrderId;
             entity.ServerUrl = serverUrl;
@@ -130,7 +130,7 @@ namespace BTCPayServer.Controllers
                         {
                             network = _.Network,
                             getFeeRate = _.FeeRateProvider.GetFeeRateAsync(),
-                            getRate = _.RateProvider.GetRateAsync(invoice.Currency),
+                            getRate = storeBlob.ApplyRateRules(_.Network, _.RateProvider).GetRateAsync(invoice.Currency),
                             getAddress = _.Wallet.ReserveAddressAsync(_.DerivationStrategy)
                         };
                     });
@@ -164,7 +164,7 @@ namespace BTCPayServer.Controllers
 #pragma warning disable CS0618
                 var btc = _NetworkProvider.BTC;
                 var feeProvider = _FeeProviderFactory.CreateFeeProvider(btc);
-                var rateProvider = _RateProviders.GetRateProvider(btc);
+                var rateProvider = storeBlob.ApplyRateRules(btc, _RateProviders.GetRateProvider(btc));
                 if (feeProvider != null && rateProvider != null)
                 {
                     var gettingFee = feeProvider.GetFeeRateAsync();

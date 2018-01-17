@@ -61,10 +61,9 @@ namespace BTCPayServer.Tests
             await store.CreateStore(new CreateStoreViewModel() { Name = "Test Store" });
             StoreId = store.CreatedStoreId;
             DerivationScheme = new DerivationStrategyFactory(SupportedNetwork.NBitcoinNetwork).Parse(ExtKey.Neuter().ToString() + "-[legacy]");
-            await store.UpdateStore(StoreId, new StoreViewModel()
-            {
-                SpeedPolicy = SpeedPolicy.MediumSpeed
-            });
+            var vm = (StoreViewModel)((ViewResult)await store.UpdateStore(StoreId)).Model;
+            vm.SpeedPolicy = SpeedPolicy.MediumSpeed;
+            await store.UpdateStore(StoreId, vm);
 
             await store.AddDerivationScheme(StoreId, new DerivationSchemeViewModel()
             {

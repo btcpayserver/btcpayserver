@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27004.2005
 MinimumVisualStudioVersion = 15.0.26124.0
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BTCPayServer", "BTCPayServer\BTCPayServer.csproj", "{949A0870-8D8C-4DE5-8845-DDD560489177}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTCPayServer", "BTCPayServer\BTCPayServer.csproj", "{949A0870-8D8C-4DE5-8845-DDD560489177}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BTCPayServer.Tests", "BTCPayServer.Tests\BTCPayServer.Tests.csproj", "{B373F439-6E75-4A94-985D-10A0C7C500D0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTCPayServer.Tests", "BTCPayServer.Tests\BTCPayServer.Tests.csproj", "{B373F439-6E75-4A94-985D-10A0C7C500D0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -47,10 +47,5 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {203A3162-BE45-4721-937D-6804E0E1AFF8}
-	EndGlobalSection
-	GlobalSection(MonoDevelopProperties) = preSolution
-		Policies = $0
-		$0.DotNetNamingPolicy = $1
-		$1.DirectoryNamespaceAssociation = PrefixedHierarchical
 	EndGlobalSection
 EndGlobal

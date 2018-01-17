@@ -47,7 +47,15 @@ namespace BTCPayServer.Models.StoreViewModels
 
         public List<StoreViewModel.DerivationScheme> DerivationSchemes { get; set; } = new List<StoreViewModel.DerivationScheme>();
 
-        [Display(Name = "Payment invalid if transactions fails to confirm after ... minutes")]
+        [Display(Name = "Invoice expires if the full amount has not been paid after ... minutes")]
+        [Range(1, 60 * 24 * 31)]
+        public int InvoiceExpiration
+        {
+            get;
+            set;
+        }
+
+        [Display(Name = "Payment invalid if transactions fails to confirm ... minutes after invoice expiration")]
         [Range(10, 60 * 24 * 31)]
         public int MonitoringExpiration
         {

@@ -39,6 +39,11 @@
                 <input asp-for="NetworkFee" type="checkbox" class="form-check" />
             </div>
             <div class="form-group">
+                <label asp-for="InvoiceExpiration"></label>
+                <input asp-for="InvoiceExpiration" class="form-control" />
+                <span asp-validation-for="InvoiceExpiration" class="text-danger"></span>
+            </div>
+            <div class="form-group">
                 <label asp-for="MonitoringExpiration"></label>
                 <input asp-for="MonitoringExpiration" class="form-control" />
                 <span asp-validation-for="MonitoringExpiration" class="text-danger"></span>

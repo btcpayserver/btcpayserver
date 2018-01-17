@@ -177,6 +177,7 @@ namespace BTCPayServer.Data
     {
         public StoreBlob()
         {
+            InvoiceExpiration = 15;
             MonitoringExpiration = 60;
         }
         public bool NetworkFeeDisabled
@@ -190,5 +191,14 @@ namespace BTCPayServer.Data
             get;
             set;
         }
+
+        [DefaultValue(15)]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+        public int InvoiceExpiration
+        {
+            get;
+            set;
+        }
+
     }
 }

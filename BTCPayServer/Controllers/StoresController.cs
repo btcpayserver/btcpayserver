@@ -163,6 +163,7 @@ namespace BTCPayServer.Controllers
             AddDerivationSchemes(store, vm);
             vm.StatusMessage = StatusMessage;
             vm.MonitoringExpiration = storeBlob.MonitoringExpiration;
+            vm.InvoiceExpiration = storeBlob.InvoiceExpiration;
             return View(vm);
         }
 

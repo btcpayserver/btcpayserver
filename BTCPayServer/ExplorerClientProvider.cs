@@ -38,10 +38,14 @@ namespace BTCPayServer
         private static ExplorerClient CreateExplorerClient(BTCPayNetwork n, Uri uri, string cookieFile)
         {
             var explorer = new ExplorerClient(n.NBXplorerNetwork, uri);
-            if (cookieFile == null || !explorer.SetCookieAuth(cookieFile))
+            if (cookieFile == null)
             {
                 Logs.Configuration.LogWarning($"{n.CryptoCode}: Not using cookie authentication");
                 explorer.SetNoAuth();
+            }
+            if(!explorer.SetCookieAuth(cookieFile))
+            {
+                Logs.Configuration.LogWarning($"{n.CryptoCode}: Using cookie auth against NBXplorer, but {cookieFile} is not found");
             }
             return explorer;
         }

@@ -15,8 +15,7 @@ namespace BTCPayServer.Services.Wallets
 {
     public class KnownState
     {
-        public uint256 UnconfirmedHash { get; set; }
-        public uint256 ConfirmedHash { get; set; }
+        public UTXOChanges PreviousCall { get; set; }
     }
     public class NetworkCoins
     {
@@ -88,11 +87,11 @@ namespace BTCPayServer.Services.Wallets
 
         public async Task<NetworkCoins> GetCoins(DerivationStrategyBase strategy, KnownState state, CancellationToken cancellation = default(CancellationToken))
         {
-            var changes = await _Client.SyncAsync(strategy, state?.ConfirmedHash, state?.UnconfirmedHash, true, cancellation).ConfigureAwait(false);
+            var changes = await _Client.GetUTXOsAsync(strategy, state?.PreviousCall, false, cancellation).ConfigureAwait(false);
             return new NetworkCoins()
             {
                 TimestampedCoins = changes.Confirmed.UTXOs.Concat(changes.Unconfirmed.UTXOs).Select(c => new NetworkCoins.TimestampedCoin() { Coin = c.AsCoin(), DateTime = c.Timestamp }).ToArray(),
-                State = new KnownState() { ConfirmedHash = changes.Confirmed.Hash, UnconfirmedHash = changes.Unconfirmed.Hash },
+                State = new KnownState() { PreviousCall = changes },
                 Strategy = strategy,
                 Wallet = this
             };
@@ -107,7 +106,7 @@ namespace BTCPayServer.Services.Wallets
 
         public async Task<Money> GetBalance(DerivationStrategyBase derivationStrategy)
         {
-            var result = await _Client.SyncAsync(derivationStrategy, null, true);
+            var result = await _Client.GetUTXOsAsync(derivationStrategy, null, true);
 
             Dictionary<OutPoint, UTXO> received = new Dictionary<OutPoint, UTXO>();
             foreach(var utxo in result.Confirmed.UTXOs.Concat(result.Unconfirmed.UTXOs))

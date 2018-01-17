@@ -5,12 +5,13 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Text;
+using NBXplorer;
 
 namespace BTCPayServer.Services
 {
     public class BTCPayServerEnvironment
     {
-        public BTCPayServerEnvironment(IHostingEnvironment env)
+        public BTCPayServerEnvironment(IHostingEnvironment env, BTCPayNetworkProvider provider)
         {
             Version = typeof(BTCPayServerEnvironment).GetTypeInfo().Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>().Version;
 #if DEBUG
@@ -19,11 +20,13 @@ namespace BTCPayServer.Services
 			Build = "Release";
 #endif
             Environment = env;
+            ChainType = provider.NBXplorerNetworkProvider.ChainType;
         }
         public IHostingEnvironment Environment
         {
             get; set;
         }
+        public ChainType ChainType { get; set; }
         public string Version
         {
             get; set;

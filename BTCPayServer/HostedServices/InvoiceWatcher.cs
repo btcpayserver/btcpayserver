@@ -456,10 +456,8 @@ namespace BTCPayServer.HostedServices
                 {
                     try
                     {
-                        Logs.PayServer.LogInformation($"POLL");
                         foreach (var pending in await _InvoiceRepository.GetPendingInvoices())
                         {
-                            Logs.PayServer.LogInformation($"POLL: {pending}");
                             _WatchRequests.Add(pending);
                         }
                         await Task.Delay(PollInterval, cancellation);
@@ -483,24 +481,25 @@ namespace BTCPayServer.HostedServices
             {
                 foreach (var item in _WatchRequests.GetConsumingEnumerable(cancellation))
                 {
+                    bool added = false;
                     var task = executing.GetOrAdd(item, async i =>
                     {
                         try
                         {
-                            Logs.PayServer.LogInformation($"Updating {i}");
+                            added = true;
                             await UpdateInvoice(i, cancellation);
                         }
                         catch (Exception ex) when (!cancellation.IsCancellationRequested)
                         {
                             Logs.PayServer.LogCritical(ex, $"Error in the InvoiceWatcher loop (Invoice {i})");
-                            await Task.Delay(2000, cancellation);
-                        }
-                        finally {
-                            Logs.PayServer.LogInformation($"Updated {i}");
-                            if(!executing.TryRemove(i, out Task useless))
-                                Logs.PayServer.LogInformation($"NOT REMOVED");
                         }
                     });
+
+                    if (!added && task.Status == TaskStatus.RanToCompletion)
+                    {
+                        executing.TryRemove(item, out Task t);
+                        _WatchRequests.Add(item);
+                    }
                 }
             }
             catch when (cancellation.IsCancellationRequested)

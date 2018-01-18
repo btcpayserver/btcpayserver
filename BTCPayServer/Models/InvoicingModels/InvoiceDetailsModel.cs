@@ -97,6 +97,8 @@ namespace BTCPayServer.Models.InvoicingModels
             get;
             set;
         }
+
+        public string TransactionSpeed { get; set; }
         public object StoreName
         {
             get;

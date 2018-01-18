@@ -408,11 +408,23 @@ namespace BTCPayServer.HostedServices
             }
         }
 
-        private void Watch(string invoiceId)
+        private async Task Watch(string invoiceId)
         {
             if (invoiceId == null)
                 throw new ArgumentNullException(nameof(invoiceId));
             _WatchRequests.Add(invoiceId);
+            var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
+            try
+            {
+                var now = DateTimeOffset.UtcNow;
+                if (invoice.ExpirationTime > now)
+                {
+                    await Task.Delay(invoice.ExpirationTime - now, _Cts.Token);
+                    _WatchRequests.Add(invoiceId);
+                }
+            }
+            catch when (_Cts.IsCancellationRequested)
+            { }
         }
 
         BlockingCollection<string> _WatchRequests = new BlockingCollection<string>(new ConcurrentQueue<string>());
@@ -430,7 +442,7 @@ namespace BTCPayServer.HostedServices
 
             leases.Add(_EventAggregator.Subscribe<Events.NewBlockEvent>(async b => { await NotifyBlock(); }));
             leases.Add(_EventAggregator.Subscribe<Events.TxOutReceivedEvent>(async b => { await NotifyReceived(b.ScriptPubKey, b.Network); }));
-            leases.Add(_EventAggregator.Subscribe<Events.InvoiceCreatedEvent>(b => { Watch(b.InvoiceId); }));
+            leases.Add(_EventAggregator.Subscribe<Events.InvoiceCreatedEvent>(async b => { await Watch(b.InvoiceId); }));
 
             return Task.CompletedTask;
         }

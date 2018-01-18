@@ -14,6 +14,12 @@
 */
 
 // TODO: Vue controller... complete migrate to it for binding, animations can stay in jQuery
+Vue.config.ignoredElements = [
+    'line-items',
+    'low-fee-timeline',
+    // Ignoring custom HTML5 elements, eg: bp-spinner
+    /^bp-/
+]
 var checkoutCtrl = new Vue({
     el: '#checkoutCtrl',
     components: {

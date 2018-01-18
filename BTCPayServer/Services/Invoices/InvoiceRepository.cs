@@ -1,4 +1,5 @@
 ﻿using DBreeze;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -16,6 +17,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Data;
 using System.Globalization;
 using BTCPayServer.Models.InvoicingModels;
+using BTCPayServer.Logging;
 
 namespace BTCPayServer.Services.Invoices
 {
@@ -43,6 +45,7 @@ namespace BTCPayServer.Services.Invoices
 
         public async Task<bool> RemovePendingInvoice(string invoiceId)
         {
+            Logs.PayServer.LogInformation($"Remove pending invoice {invoiceId}");
             using (var ctx = _ContextFactory.CreateContext())
             {
                 ctx.PendingInvoices.Remove(new PendingInvoiceData() { Id = invoiceId });

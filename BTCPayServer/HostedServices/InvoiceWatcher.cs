@@ -412,7 +412,6 @@ namespace BTCPayServer.HostedServices
         {
             if (invoiceId == null)
                 throw new ArgumentNullException(nameof(invoiceId));
-            Logs.PayServer.LogInformation($"Watching {invoiceId}");
             _WatchRequests.Add(invoiceId);
             var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
             try
@@ -457,8 +456,10 @@ namespace BTCPayServer.HostedServices
                 {
                     try
                     {
+                        Logs.PayServer.LogInformation($"POLL");
                         foreach (var pending in await _InvoiceRepository.GetPendingInvoices())
                         {
+                            Logs.PayServer.LogInformation($"POLL: {pending}");
                             _WatchRequests.Add(pending);
                         }
                         await Task.Delay(PollInterval, cancellation);
@@ -496,7 +497,9 @@ namespace BTCPayServer.HostedServices
                         }
                         finally {
                             Logs.PayServer.LogInformation($"Updated {i}");
-                            executing.TryRemove(i, out Task useless); }
+                            if(!executing.TryRemove(i, out Task useless))
+                                Logs.PayServer.LogInformation($"NOT REMOVED");
+                        }
                     });
                 }
             }

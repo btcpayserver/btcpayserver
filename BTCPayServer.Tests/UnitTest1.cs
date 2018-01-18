@@ -51,7 +51,7 @@ namespace BTCPayServer.Tests
             // Some check that handling legacy stuff does not break things
             var cryptoData = entity.GetCryptoData("BTC", null, true);
             cryptoData.Calculate();
-            Assert.NotNull(cryptoData); 
+            Assert.NotNull(cryptoData);
             Assert.Null(entity.GetCryptoData("BTC", null, false));
             entity.SetCryptoData(new CryptoData() { ParentEntity = entity, Rate = entity.Rate, CryptoCode = "BTC", TxFee = entity.TxFee });
             Assert.NotNull(entity.GetCryptoData("BTC", null, false));

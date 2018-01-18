@@ -489,10 +489,10 @@ namespace BTCPayServer.HostedServices
                         }
                         catch (Exception ex) when (!cancellation.IsCancellationRequested)
                         {
-                            Logs.PayServer.LogCritical(ex, $"Error in the InvoiceWatcher loop (Invoice {item})");
+                            Logs.PayServer.LogCritical(ex, $"Error in the InvoiceWatcher loop (Invoice {i})");
                             await Task.Delay(2000, cancellation);
                         }
-                        finally { executing.TryRemove(item, out Task useless); }
+                        finally { executing.TryRemove(i, out Task useless); }
                     });
                 }
             }

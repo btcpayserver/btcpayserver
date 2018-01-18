@@ -237,8 +237,7 @@ namespace BTCPayServer.Controllers
             try
             {
                 leases.Add(_EventAggregator.Subscribe<Events.InvoiceDataChangedEvent>(async o => await NotifySocket(webSocket, o.InvoiceId, invoiceId)));
-                leases.Add(_EventAggregator.Subscribe<Events.InvoicePaymentEvent>(async o => await NotifySocket(webSocket, o.InvoiceId, invoiceId)));
-                leases.Add(_EventAggregator.Subscribe<Events.InvoiceStatusChangedEvent>(async o => await NotifySocket(webSocket, o.InvoiceId, invoiceId)));
+                leases.Add(_EventAggregator.Subscribe<Events.InvoiceEvent>(async o => await NotifySocket(webSocket, o.InvoiceId, invoiceId)));
                 while (true)
                 {
                     var message = await webSocket.ReceiveAsync(DummyBuffer, default(CancellationToken));
@@ -414,6 +413,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> InvalidatePaidInvoice(string invoiceId)
         {
             await _InvoiceRepository.UpdatePaidInvoiceToInvalid(invoiceId);
+            _EventAggregator.Publish(new InvoiceEvent(invoiceId, 1008, "invoice_markedInvalid"));
             return RedirectToAction(nameof(ListInvoices));
         }
 

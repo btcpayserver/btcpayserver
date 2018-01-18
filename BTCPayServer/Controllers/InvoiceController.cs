@@ -178,7 +178,7 @@ namespace BTCPayServer.Controllers
             entity.SetCryptoData(cryptoDatas);
             entity.PosData = invoice.PosData;
             entity = await _InvoiceRepository.CreateInvoiceAsync(store.Id, entity, _NetworkProvider);
-            _EventAggregator.Publish(new Events.InvoiceCreatedEvent(entity.Id));
+            _EventAggregator.Publish(new Events.InvoiceEvent(entity, 1001, "invoice_created"));
             var resp = entity.EntityToDTO(_NetworkProvider);
             return new DataWrapper<InvoiceResponse>(resp) { Facade = "pos/invoice" };
         }

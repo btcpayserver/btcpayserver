@@ -87,19 +87,22 @@ namespace BTCPayServer.HostedServices
             }, null, 0, (int)PollInterval.TotalMilliseconds);
             leases.Add(_ListenPoller);
 
-            leases.Add(_Aggregator.Subscribe<Events.InvoiceCreatedEvent>(async inv =>
+            leases.Add(_Aggregator.Subscribe<Events.InvoiceEvent>(async inv =>
             {
-                var invoice = await _InvoiceRepository.GetInvoice(null, inv.InvoiceId);
-                List<Task> listeningDerivations = new List<Task>();
-                foreach (var notificationSessions in _Sessions)
+                if (inv.Name == "invoice_created")
                 {
-                    var derivationStrategy = GetStrategy(notificationSessions.Key, invoice);
-                    if (derivationStrategy != null)
+                    var invoice = await _InvoiceRepository.GetInvoice(null, inv.InvoiceId);
+                    List<Task> listeningDerivations = new List<Task>();
+                    foreach (var notificationSessions in _Sessions)
                     {
-                        listeningDerivations.Add(notificationSessions.Value.ListenDerivationSchemesAsync(new[] { derivationStrategy }, _Cts.Token));
+                        var derivationStrategy = GetStrategy(notificationSessions.Key, invoice);
+                        if (derivationStrategy != null)
+                        {
+                            listeningDerivations.Add(notificationSessions.Value.ListenDerivationSchemesAsync(new[] { derivationStrategy }, _Cts.Token));
+                        }
                     }
+                    await Task.WhenAll(listeningDerivations.ToArray()).ConfigureAwait(false);
                 }
-                await Task.WhenAll(listeningDerivations.ToArray()).ConfigureAwait(false);
             }));
             return Task.CompletedTask;
         }

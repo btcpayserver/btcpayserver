@@ -37,6 +37,9 @@ namespace BTCPayServer.HostedServices
             {
                 get; set;
             }
+
+            public int? EventCode { get; set; }
+            public string Message { get; set; }
         }
 
         public ILogger Logger
@@ -63,32 +66,32 @@ namespace BTCPayServer.HostedServices
             _NetworkProvider = networkProvider;
         }
 
-        async Task Notify(InvoiceEntity invoice)
+        async Task Notify(InvoiceEntity invoice, int? eventCode = null, string name = null)
         {
             CancellationTokenSource cts = new CancellationTokenSource(10000);
             try
             {
                 if (string.IsNullOrEmpty(invoice.NotificationURL))
                     return;
-                _EventAggregator.Publish<InvoiceIPNEvent>(new InvoiceIPNEvent(invoice.Id));
-                await SendNotification(invoice, cts.Token);
+                _EventAggregator.Publish<InvoiceIPNEvent>(new InvoiceIPNEvent(invoice.Id, eventCode, name));
+                await SendNotification(invoice, eventCode, name, cts.Token);
                 return;
             }
-            catch(OperationCanceledException) when(cts.IsCancellationRequested)
+            catch (OperationCanceledException) when (cts.IsCancellationRequested)
             {
-                _EventAggregator.Publish<InvoiceIPNEvent>(new InvoiceIPNEvent(invoice.Id)
+                _EventAggregator.Publish<InvoiceIPNEvent>(new InvoiceIPNEvent(invoice.Id, eventCode, name)
                 {
                     Error = "Timeout"
                 });
             }
-            catch(Exception ex) // It fails, it is OK because we try with hangfire after
+            catch (Exception ex) // It fails, it is OK because we try with hangfire after
             {
-                _EventAggregator.Publish<InvoiceIPNEvent>(new InvoiceIPNEvent(invoice.Id)
+                _EventAggregator.Publish<InvoiceIPNEvent>(new InvoiceIPNEvent(invoice.Id, eventCode, name)
                 {
                     Error = ex.Message
                 });
             }
-            var invoiceStr = NBitcoin.JsonConverters.Serializer.ToString(new ScheduledJob() { TryCount = 0, Invoice = invoice });
+            var invoiceStr = NBitcoin.JsonConverters.Serializer.ToString(new ScheduledJob() { TryCount = 0, Invoice = invoice, EventCode = eventCode, Message = name });
             if (!string.IsNullOrEmpty(invoice.NotificationURL))
                 _JobClient.Schedule(() => NotifyHttp(invoiceStr), TimeSpan.Zero);
         }
@@ -107,14 +110,18 @@ namespace BTCPayServer.HostedServices
             CancellationTokenSource cts = new CancellationTokenSource(10000);
             try
             {
-                _EventAggregator.Publish<InvoiceIPNEvent>(new InvoiceIPNEvent(job.Invoice.Id));
-                HttpResponseMessage response = await SendNotification(job.Invoice, cts.Token);
+                HttpResponseMessage response = await SendNotification(job.Invoice, job.EventCode, job.Message, cts.Token);
                 reschedule = response.StatusCode != System.Net.HttpStatusCode.OK;
                 Logger.LogInformation("Job " + jobId + " returned " + response.StatusCode);
+
+                _EventAggregator.Publish<InvoiceIPNEvent>(new InvoiceIPNEvent(job.Invoice.Id, job.EventCode, job.Message)
+                {
+                    Error = reschedule ? $"Unexpected return code: {(int)response.StatusCode}" : null
+                });
             }
             catch (OperationCanceledException) when (cts.IsCancellationRequested)
             {
-                _EventAggregator.Publish<InvoiceIPNEvent>(new InvoiceIPNEvent(job.Invoice.Id)
+                _EventAggregator.Publish<InvoiceIPNEvent>(new InvoiceIPNEvent(job.Invoice.Id, job.EventCode, job.Message)
                 {
                     Error = "Timeout"
                 });
@@ -123,12 +130,25 @@ namespace BTCPayServer.HostedServices
             }
             catch (Exception ex) // It fails, it is OK because we try with hangfire after
             {
-                _EventAggregator.Publish<InvoiceIPNEvent>(new InvoiceIPNEvent(job.Invoice.Id)
+                _EventAggregator.Publish<InvoiceIPNEvent>(new InvoiceIPNEvent(job.Invoice.Id, job.EventCode, job.Message)
                 {
                     Error = ex.Message
                 });
                 reschedule = true;
-                Logger.LogInformation("Job " + jobId + " threw exception " + ex.Message);
+
+                List<string> messages = new List<string>();
+                while(ex != null)
+                {
+                    messages.Add(ex.Message);
+                    ex = ex.InnerException;
+                }
+                string message = String.Join(',', messages.ToArray());
+                Logger.LogInformation("Job " + jobId + " threw exception " + message);
+
+                _EventAggregator.Publish<InvoiceIPNEvent>(new InvoiceIPNEvent(job.Invoice.Id, job.EventCode, job.Message)
+                {
+                    Error = $"Unexpected error: {message}"
+                });
             }
             finally { cts.Dispose(); _Executing.TryRemove(jobId, out jobId); }
 
@@ -143,8 +163,23 @@ namespace BTCPayServer.HostedServices
             }
         }
 
+        public class InvoicePaymentNotificationEvent
+        {
+            [JsonProperty("code")]
+            public int Code { get; set; }
+            [JsonProperty("name")]
+            public string Name { get; set; }
+        }
+        public class InvoicePaymentNotificationEventWrapper
+        {
+            [JsonProperty("event")]
+            public InvoicePaymentNotificationEvent Event { get; set; }
+            [JsonProperty("data")]
+            public InvoicePaymentNotification Data { get; set; }
+        }
+
         Encoding UTF8 = new UTF8Encoding(false);
-        private async Task<HttpResponseMessage> SendNotification(InvoiceEntity invoice, CancellationToken cancellation)
+        private async Task<HttpResponseMessage> SendNotification(InvoiceEntity invoice, int? eventCode, string name, CancellationToken cancellation)
         {
             var request = new HttpRequestMessage();
             request.Method = HttpMethod.Post;
@@ -167,7 +202,7 @@ namespace BTCPayServer.HostedServices
             // We keep backward compatibility with bitpay by passing BTC info to the notification
             // we don't pass other info, as it is a bad idea to use IPN data for logic processing (can be faked)
             var btcCryptoInfo = dto.CryptoInfo.FirstOrDefault(c => c.CryptoCode == "BTC");
-            if(btcCryptoInfo != null)
+            if (btcCryptoInfo != null)
             {
 #pragma warning disable CS0618
                 notification.Rate = (double)dto.Rate;
@@ -177,8 +212,22 @@ namespace BTCPayServer.HostedServices
                 notification.BTCPrice = dto.BTCPrice;
 #pragma warning restore CS0618
             }
+
+            string notificationString = null;
+            if (eventCode.HasValue)
+            {
+                var wrapper = new InvoicePaymentNotificationEventWrapper();
+                wrapper.Data = notification;
+                wrapper.Event = new InvoicePaymentNotificationEvent() { Code = eventCode.Value, Name = name };
+                notificationString = JsonConvert.SerializeObject(wrapper);
+            }
+            else
+            {
+                notificationString = JsonConvert.SerializeObject(notification);
+            }
+
             request.RequestUri = new Uri(invoice.NotificationURL, UriKind.Absolute);
-            request.Content = new StringContent(JsonConvert.SerializeObject(notification), UTF8, "application/json");
+            request.Content = new StringContent(notificationString, UTF8, "application/json");
             var response = await _Client.SendAsync(request, cancellation);
             return response;
         }
@@ -193,42 +242,41 @@ namespace BTCPayServer.HostedServices
         CompositeDisposable leases = new CompositeDisposable();
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            leases.Add(_EventAggregator.Subscribe<InvoiceStatusChangedEvent>(async e => 
+            leases.Add(_EventAggregator.Subscribe<InvoiceEvent>(async e =>
             {
                 var invoice = await _InvoiceRepository.GetInvoice(null, e.InvoiceId);
+                await SaveEvent(invoice.Id, e);
 
                 // we need to use the status in the event and not in the invoice. The invoice might now be in another status.
                 if (invoice.FullNotifications)
                 {
-                    if (e.NewState == "expired" ||
-                       e.NewState == "paid" ||
-                       e.NewState == "invalid" ||
-                       e.NewState == "complete"
+                    if (e.Name == "invoice_expired" ||
+                       e.Name == "invoice_paidInFull" ||
+                       e.Name == "invoice_failedToConfirm" ||
+                       e.Name == "invoice_markedInvalid" ||
+                       e.Name == "invoice_failedToConfirm" ||
+                       e.Name == "invoice_completed"
                      )
                         await Notify(invoice);
                 }
-                
-                if(e.NewState == "confirmed")
+
+                if (e.Name == "invoice_confirmed")
                 {
                     await Notify(invoice);
                 }
-                await SaveEvent(invoice.Id, e);
+
+                if (invoice.ExtendedNotifications)
+                {
+                    await Notify(invoice, e.EventCode, e.Name);
+                }
             }));
 
-            leases.Add(_EventAggregator.Subscribe<InvoiceCreatedEvent>(async e =>
+
+            leases.Add(_EventAggregator.Subscribe<InvoiceDataChangedEvent>(async e =>
             {
                 await SaveEvent(e.InvoiceId, e);
             }));
 
-            leases.Add(_EventAggregator.Subscribe<InvoiceDataChangedEvent>(async e => 
-            {
-                await SaveEvent(e.InvoiceId, e);
-            }));
-
-            leases.Add(_EventAggregator.Subscribe<InvoicePaymentEvent>(async e =>
-            {
-                await SaveEvent(e.InvoiceId, e);
-            }));
 
             leases.Add(_EventAggregator.Subscribe<InvoiceStopWatchedEvent>(async e =>
             {

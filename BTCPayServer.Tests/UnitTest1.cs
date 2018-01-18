@@ -280,7 +280,8 @@ namespace BTCPayServer.Tests
                         OrderId = "orderId",
                         NotificationURL = callbackServer.GetUri().AbsoluteUri,
                         ItemDesc = "Some description",
-                        FullNotifications = true
+                        FullNotifications = true,
+                        ExtendedNotifications = true
                     });
                     BitcoinUrlBuilder url = new BitcoinUrlBuilder(invoice.PaymentUrls.BIP21);
                     tester.ExplorerNode.SendToAddress(url.Address, url.Amount);

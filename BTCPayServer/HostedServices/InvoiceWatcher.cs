@@ -146,7 +146,7 @@ namespace BTCPayServer.HostedServices
                 context.MarkDirty();
                 await _InvoiceRepository.UnaffectAddress(invoice.Id);
 
-                context.Events.Add(new InvoiceStatusChangedEvent(invoice, "expired"));
+                context.Events.Add(new InvoiceEvent(invoice, 1004, "invoice_expired"));
                 invoice.Status = "expired";
             }
 
@@ -169,7 +169,7 @@ namespace BTCPayServer.HostedServices
                     invoice.Payments.Add(payment);
 #pragma warning restore CS0618
                     alreadyAccounted.Add(coin.Coin.Outpoint);
-                    context.Events.Add(new InvoicePaymentEvent(invoice.Id, coins.Wallet.Network.CryptoCode, coin.Coin.ScriptPubKey.GetDestinationAddress(coins.Wallet.Network.NBitcoinNetwork).ToString()));
+                    context.Events.Add(new InvoiceEvent(invoice, 1002, "invoice_receivedPayment"));
                     dirtyAddress = true;
                 }
                 if (dirtyAddress)
@@ -188,7 +188,7 @@ namespace BTCPayServer.HostedServices
                     {
                         if (invoice.Status == "new")
                         {
-                            context.Events.Add(new InvoiceStatusChangedEvent(invoice, "paid"));
+                            context.Events.Add(new InvoiceEvent(invoice, 1003, "invoice_paidInFull"));
                             invoice.Status = "paid";
                             invoice.ExceptionStatus = null;
                             await _InvoiceRepository.UnaffectAddress(invoice.Id);
@@ -197,6 +197,7 @@ namespace BTCPayServer.HostedServices
                         else if (invoice.Status == "expired")
                         {
                             invoice.ExceptionStatus = "paidLate";
+                            context.Events.Add(new InvoiceEvent(invoice, 1009, "invoice_paidAfterExpiration"));
                             context.MarkDirty();
                         }
                     }
@@ -246,14 +247,14 @@ namespace BTCPayServer.HostedServices
                        (totalConfirmed < accounting.TotalDue))
                     {
                         await _InvoiceRepository.UnaffectAddress(invoice.Id);
-                        context.Events.Add(new InvoiceStatusChangedEvent(invoice, "invalid"));
+                        context.Events.Add(new InvoiceEvent(invoice, 1013, "invoice_failedToConfirm"));
                         invoice.Status = "invalid";
                         context.MarkDirty();
                     }
                     else if (totalConfirmed >= accounting.TotalDue)
                     {
                         await _InvoiceRepository.UnaffectAddress(invoice.Id);
-                        context.Events.Add(new InvoiceStatusChangedEvent(invoice, "confirmed"));
+                        context.Events.Add(new InvoiceEvent(invoice, 1005, "invoice_confirmed"));
                         invoice.Status = "confirmed";
                         context.MarkDirty();
                     }
@@ -266,7 +267,7 @@ namespace BTCPayServer.HostedServices
                     var totalConfirmed = transactions.Select(t => t.Payment.GetValue(cryptoDataAll, cryptoData.CryptoCode)).Sum();
                     if (totalConfirmed >= accounting.TotalDue)
                     {
-                        context.Events.Add(new InvoiceStatusChangedEvent(invoice, "complete"));
+                        context.Events.Add(new InvoiceEvent(invoice, 1006, "invoice_completed"));
                         invoice.Status = "complete";
                         context.MarkDirty();
                     }
@@ -442,7 +443,13 @@ namespace BTCPayServer.HostedServices
 
             leases.Add(_EventAggregator.Subscribe<Events.NewBlockEvent>(async b => { await NotifyBlock(); }));
             leases.Add(_EventAggregator.Subscribe<Events.TxOutReceivedEvent>(async b => { await NotifyReceived(b.ScriptPubKey, b.Network); }));
-            leases.Add(_EventAggregator.Subscribe<Events.InvoiceCreatedEvent>(async b => { await Watch(b.InvoiceId); }));
+            leases.Add(_EventAggregator.Subscribe<Events.InvoiceEvent>(async b =>
+            {
+                if(b.Name == "invoice_created")
+                { 
+                    await Watch(b.InvoiceId);
+                }
+            }));
 
             return Task.CompletedTask;
         }

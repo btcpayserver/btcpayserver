@@ -68,7 +68,8 @@ namespace BTCPayServer.Services.Stores
                 StoreData store = new StoreData
                 {
                     Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(32)),
-                    StoreName = name
+                    StoreName = name,
+                    SpeedPolicy = Invoices.SpeedPolicy.MediumSpeed
                 };
                 var userStore = new UserStore
                 {

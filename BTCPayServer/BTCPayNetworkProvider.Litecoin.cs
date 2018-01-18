@@ -18,7 +18,7 @@ namespace BTCPayServer
             Add(new BTCPayNetwork()
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
-                BlockExplorerLink = "https://live.blockcypher.com/ltc/tx/{0}/",
+                BlockExplorerLink = NBXplorerNetworkProvider.ChainType == ChainType.Main ? "https://live.blockcypher.com/ltc/tx/{0}/" : "http://explorer.litecointools.com/tx/{0}",
                 NBitcoinNetwork = nbxplorerNetwork.NBitcoinNetwork,
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "litecoin",

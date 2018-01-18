@@ -25,6 +25,7 @@ using Microsoft.Extensions.Caching.Memory;
 using BTCPayServer.Eclair;
 using System.Collections.Generic;
 using BTCPayServer.Models.StoreViewModels;
+using System.Threading.Tasks;
 
 namespace BTCPayServer.Tests
 {

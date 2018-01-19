@@ -162,6 +162,7 @@ namespace BTCPayServer.Controllers
                 CustomerEmail = invoice.RefundMail,
                 ExpirationSeconds = Math.Max(0, (int)(invoice.ExpirationTime - DateTimeOffset.UtcNow).TotalSeconds),
                 MaxTimeSeconds = (int)(invoice.ExpirationTime - invoice.InvoiceTime).TotalSeconds,
+                MaxTimeMinutes = (int)(invoice.ExpirationTime - invoice.InvoiceTime).TotalMinutes,
                 ItemDesc = invoice.ProductInformation.ItemDesc,
                 Rate = FormatCurrency(cryptoData),
                 MerchantRefLink = invoice.RedirectURL ?? "/",

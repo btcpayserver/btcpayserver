@@ -47,14 +47,14 @@ namespace BTCPayServer.Models.StoreViewModels
 
         public List<StoreViewModel.DerivationScheme> DerivationSchemes { get; set; } = new List<StoreViewModel.DerivationScheme>();
 
-        [Display(Name = "Preferred exchange rate...")]
+        [Display(Name = "Preferred price source (eg. bitfinex, bitstamp...)")]
         public string PreferredExchange { get; set; }
 
         public string RateSource
         {
             get
             {
-                return string.IsNullOrEmpty(PreferredExchange) ? "https://apiv2.bitcoinaverage.com/indices/global/ticker/short" : $"https://apiv2.bitcoinaverage.com/exchanges/{PreferredExchange}";
+                return PreferredExchange.IsCoinAverage() ? "https://apiv2.bitcoinaverage.com/indices/global/ticker/short" : $"https://apiv2.bitcoinaverage.com/exchanges/{PreferredExchange}";
             }
         }
 

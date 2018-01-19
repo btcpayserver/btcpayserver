@@ -166,7 +166,7 @@ namespace BTCPayServer.Controllers
             vm.MonitoringExpiration = storeBlob.MonitoringExpiration;
             vm.InvoiceExpiration = storeBlob.InvoiceExpiration;
             vm.RateMultiplier = (double)storeBlob.GetRateMultiplier();
-            vm.PreferredExchange = storeBlob.PreferredExchange;
+            vm.PreferredExchange = storeBlob.PreferredExchange.IsCoinAverage() ? "coinaverage" : storeBlob.PreferredExchange;
             return View(vm);
         }
 
@@ -322,14 +322,14 @@ namespace BTCPayServer.Controllers
                 needUpdate = true;
             }
 
-            if (!string.IsNullOrEmpty(blob.PreferredExchange) && newExchange)
+            if (!blob.PreferredExchange.IsCoinAverage() && newExchange)
             {
                 using (HttpClient client = new HttpClient())
                 {
                     var rate = await client.GetAsync(model.RateSource);
                     if (rate.StatusCode == System.Net.HttpStatusCode.NotFound)
                     {
-                        ModelState.AddModelError(nameof(model.PreferredExchange), $"Invalid exchange ({model.RateSource})");
+                        ModelState.AddModelError(nameof(model.PreferredExchange), $"Unsupported exchange ({model.RateSource})");
                         return View(model);
                     }
                 }

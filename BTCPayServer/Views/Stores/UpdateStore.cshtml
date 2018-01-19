@@ -43,7 +43,7 @@
                 <input asp-for="PreferredExchange" class="form-control" />
                 <span asp-validation-for="PreferredExchange" class="text-danger"></span>
                 <p id="PreferredExchangeHelpBlock" class="form-text text-muted">
-                    Current rate source is <a href="@Model.RateSource" target="_blank">@Model.RateSource</a>.<small> (using 1 minute cache)</small>
+                    Current rate source is <a href="@Model.RateSource" target="_blank">@Model.PreferredExchange</a>.<small> (using 1 minute cache)</small>
                 </p>
             </div>
             <div class="form-group">

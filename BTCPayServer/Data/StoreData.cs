@@ -239,7 +239,7 @@ namespace BTCPayServer.Data
 
         public IRateProvider ApplyRateRules(BTCPayNetwork network, IRateProvider rateProvider)
         {
-            if (!string.IsNullOrEmpty(PreferredExchange))
+            if (!PreferredExchange.IsCoinAverage())
             {
                 // If the original rateProvider is a cache, use the same inner provider as fallback, and same memory cache to wrap it all
                 if (rateProvider is CachedRateProvider cachedRateProvider)

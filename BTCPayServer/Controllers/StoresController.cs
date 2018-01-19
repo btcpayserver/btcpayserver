@@ -243,7 +243,7 @@ namespace BTCPayServer.Controllers
                 }
 
                 await _Repo.UpdateStore(store);
-                StatusMessage = $"Derivation scheme for {vm.CryptoCurrency} has been modified.";
+                StatusMessage = $"Derivation scheme for {network.CryptoCode} has been modified.";
                 return RedirectToAction(nameof(UpdateStore), new { storeId = storeId });
             }
             else

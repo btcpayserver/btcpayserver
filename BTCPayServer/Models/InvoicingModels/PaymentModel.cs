@@ -39,5 +39,6 @@ namespace BTCPayServer.Models.InvoicingModels
         public string OrderId { get; set; }
         public string CryptoImage { get; set; }
         public string NetworkFeeDescription { get; internal set; }
+        public int MaxTimeMinutes { get; internal set; }
     }
 }

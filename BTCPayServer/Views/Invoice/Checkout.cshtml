@@ -492,7 +492,7 @@
                                         <div>
                                             <div class="expired__body">
                                                 <div class="expired__header" i18n="">What happened?</div>
-                                                <div class="expired__text" i18n="">This invoice has expired. An invoice is only valid for 15 minutes. You can <div class="expired__text__link i18n-return-to-merchant">return to {{srvModel.storeName}}</div> if you would like to submit your payment again.</div>
+                                                <div class="expired__text" i18n="">This invoice has expired. An invoice is only valid for @Model.MaxTimeMinutes minutes. You can <div class="expired__text__link i18n-return-to-merchant">return to {{srvModel.storeName}}</div> if you would like to submit your payment again.</div>
                                                 <div class="expired__text" i18n="">If you tried to send a payment, it has not yet been accepted by the Bitcoin network. We have not yet received your funds.</div>
                                                 <div class="expired__text" i18n="">
                                                     If the transaction
@@ -504,7 +504,7 @@
                                                     <span class="expired__text__bullet" i18n="">Invoice ID:</span> {{srvModel.invoiceId}}<br>
                                                     <!---->
                                                     <span>
-                                                        <span class="expired__text__bullet" i18n="">Order ID:</span> {{srvModel.OrderId}}
+                                                        <span class="expired__text__bullet" i18n="">Order ID:</span> {{srvModel.orderId}}
                                                     </span>
                                                 </div>
                                             </div>

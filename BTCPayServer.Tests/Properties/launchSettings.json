@@ -1,0 +1,7 @@
+{
+    "profiles": {
+        "BTCPayServer.Tests": {
+            "commandName": "Project"
+        }
+    }
+}

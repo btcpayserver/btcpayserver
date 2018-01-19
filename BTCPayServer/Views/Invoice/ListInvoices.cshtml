@@ -1,0 +1,127 @@
+﻿@model InvoicesModel
+@{
+    ViewData["Title"] = "Invoices";
+}
+
+<section>
+    <div class="container">
+
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                @Html.Partial("_StatusMessage", Model.StatusMessage)
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                <h2 class="section-heading">@ViewData["Title"]</h2>
+                <hr class="primary">
+                <p>Create, search or pay an invoice. (<a href="#help" data-toggle="collapse">Help</a>)</p>
+                <div id="help" class="collapse text-left">
+                    <p>You can search for invoice Id, deposit address, price, order id, store id, any buyer information and any product information.</br>
+                    You can also apply filters to your search by searching for `filtername:value`, here is a list of supported filters</p>
+                    <ul>
+                        <li><b>storeid:id</b> for filtering a specific store</li>
+                        <li><b>status:(expired|invalid|complete|confirmed|paid|new)</b> for filtering a specific status</li>
+                    </ul>
+                </div>
+                <div class="form-group">
+                    <form asp-action="SearchInvoice" method="post">
+                        <input asp-for="SearchTerm" class="form-control" />
+                        <input type="hidden" asp-for="Count" />
+                        <span asp-validation-for="SearchTerm" class="text-danger"></span>
+                        <button type="submit" class="btn btn-default" title="Search invoice">
+                            <span class="glyphicon glyphicon-search"></span> Search
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <a asp-action="CreateInvoice" class="btn btn-success" role="button"><span class="glyphicon glyphicon-plus"></span> Create a new invoice</a>
+            <table class="table">
+                <thead class="thead-inverse">
+                    <tr>
+                        <th>Date</th>
+                        <th>InvoiceId</th>
+                        <th>Status</th>
+                        <th>Amount</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach(var invoice in Model.Invoices)
+                    {
+                        <tr>
+                            <td>@invoice.Date</td>
+                            <td>@invoice.InvoiceId</td>
+                            @if(invoice.Status == "paid")
+                            {
+                                <td>
+                                    <div class="btn-group">
+                                        <a class="dropdown-toggle dropdown-toggle-split" style="cursor: pointer;" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            @invoice.Status <span class="sr-only">Toggle Dropdown</span>
+                                        </a>
+                                        <div class="dropdown-menu pull-right">
+                                            <button class="dropdown-item small" data-toggle="modal" data-target="#myModal" onclick="$('#invoiceId').val('@invoice.InvoiceId')">Make Invalid</button>
+                                        </div>
+                                    </div>
+                                </td>
+                            }
+                            else
+                            {
+                                <td>@invoice.Status</td>
+                            }
+                            <td>@invoice.AmountCurrency</td>
+                            <td><a asp-action="Checkout" asp-route-invoiceId="@invoice.InvoiceId">Checkout</a> - <a asp-action="Invoice" asp-route-invoiceId="@invoice.InvoiceId">Details</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <span>
+                @if(Model.Skip != 0)
+                {
+                    <a href="@Url.Action("ListInvoices", new
+                        {
+                            searchTerm = Model.SearchTerm,
+                            skip = Math.Max(0, Model.Skip - Model.Count),
+                            count = Model.Count,
+                        })"><<</a><span> - </span>
+                }
+                <a href="@Url.Action("ListInvoices", new
+                    {
+                        searchTerm = Model.SearchTerm,
+                        skip = Model.Skip + Model.Count,
+                        count = Model.Count,
+                    })">>></a>
+            </span>
+        </div>
+
+    </div>
+</section>
+
+<!-- Modal -->
+<div id="myModal" class="modal fade" role="dialog">
+    <form method="post" action="/invoices/invalidatepaid">
+        <input id="invoiceId" name="invoiceId" type="hidden" />
+        <div class="modal-dialog">
+
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Set Invoice status to Invalid</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to invalidate this transaction? This action is NOT undoable!</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-danger">Yes, make invoice Invalid</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+
+        </div>
+    </form>
+</div>

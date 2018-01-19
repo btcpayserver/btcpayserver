@@ -751,6 +751,10 @@ namespace BTCPayServer.Tests
             var b = cached.GetRateAsync("JPY").GetAwaiter().GetResult();
             //Manually check that cache get hit after 10 sec
             var c = cached.GetRateAsync("JPY").GetAwaiter().GetResult();
+
+            var bitstamp = new CoinAverageRateProvider("BTC") { Exchange = "bitstamp" };
+            var bitstampRate = bitstamp.GetRateAsync("USD").GetAwaiter().GetResult();
+            Assert.Throws<RateUnavailableException>(() => bitstamp.GetRateAsync("XXXXX").GetAwaiter().GetResult());
         }
 
         private static bool IsMapped(Invoice invoice, ApplicationDbContext ctx)

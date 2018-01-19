@@ -24,6 +24,8 @@ namespace BTCPayServer.Services.Rates
             CryptoCode = cryptoCode ?? "BTC";
         }
 
+        public string Exchange { get; set; }
+
         public string CryptoCode { get; set; }
 
         public string Market
@@ -45,7 +47,15 @@ namespace BTCPayServer.Services.Rates
 
         private async Task<Dictionary<string, decimal>> GetRatesCore()
         {
-            var resp = await _Client.GetAsync($"https://apiv2.bitcoinaverage.com/indices/{Market}/ticker/short");
+            HttpResponseMessage resp = null;
+            if (Exchange == null)
+            {
+                resp = await _Client.GetAsync($"https://apiv2.bitcoinaverage.com/indices/{Market}/ticker/short");
+            }
+            else
+            {
+                resp = await _Client.GetAsync($"https://apiv2.bitcoinaverage.com/exchanges/{Exchange}");
+            }
             using (resp)
             {
 
@@ -57,9 +67,23 @@ namespace BTCPayServer.Services.Rates
                     throw new CoinAverageException("Unauthorized access to the API, premium plan needed");
                 resp.EnsureSuccessStatusCode();
                 var rates = JObject.Parse(await resp.Content.ReadAsStringAsync());
+                if(Exchange != null)
+                {
+                    rates = (JObject)rates["symbols"];
+                }
                 return rates.Properties()
                               .Where(p => p.Name.StartsWith(CryptoCode, StringComparison.OrdinalIgnoreCase))
-                              .ToDictionary(p => p.Name.Substring(CryptoCode.Length, p.Name.Length - CryptoCode.Length), p => ToDecimal(p.Value["last"]));
+                              .ToDictionary(p => p.Name.Substring(CryptoCode.Length, p.Name.Length - CryptoCode.Length), p =>
+                              {
+                                  if (Exchange == null)
+                                  {
+                                      return ToDecimal(p.Value["last"]);
+                                  }
+                                  else
+                                  {
+                                      return ToDecimal(p.Value["bid"]);
+                                  }
+                              });
             }
         }
 

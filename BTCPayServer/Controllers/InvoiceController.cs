@@ -80,9 +80,9 @@ namespace BTCPayServer.Controllers
 
         internal async Task<DataWrapper<InvoiceResponse>> CreateInvoiceCore(Invoice invoice, StoreData store, string serverUrl)
         {
-            var derivationStrategies = store.GetDerivationStrategies(_NetworkProvider).ToList();
+            var derivationStrategies = store.GetDerivationStrategies(_NetworkProvider).Where(c => _ExplorerClients.IsAvailable(c.Network.CryptoCode)).ToList();
             if (derivationStrategies.Count == 0)
-                throw new BitpayHttpException(400, "This store has not configured the derivation strategy");
+                throw new BitpayHttpException(400, "No derivation strategy are available now for this store");
             var entity = new InvoiceEntity
             {
                 InvoiceTime = DateTimeOffset.UtcNow

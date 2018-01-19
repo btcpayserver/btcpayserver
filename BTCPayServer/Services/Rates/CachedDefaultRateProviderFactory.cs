@@ -11,6 +11,15 @@ namespace BTCPayServer.Services.Rates
     {
         IMemoryCache _Cache;
         ConcurrentDictionary<string, IRateProvider> _Providers = new ConcurrentDictionary<string, IRateProvider>();
+
+        public IMemoryCache Cache
+        {
+            get
+            {
+                return _Cache;
+            }
+        }
+
         public CachedDefaultRateProviderFactory(IMemoryCache cache)
         {
             if (cache == null)
@@ -18,10 +27,12 @@ namespace BTCPayServer.Services.Rates
             _Cache = cache;
         }
 
+        public IRateProvider RateProvider { get; set; }
+
         public TimeSpan CacheSpan { get; set; } = TimeSpan.FromMinutes(1.0);
         public IRateProvider GetRateProvider(BTCPayNetwork network)
         {
-            return _Providers.GetOrAdd(network.CryptoCode, new CachedRateProvider(network.CryptoCode, network.DefaultRateProvider, _Cache) { CacheSpan = CacheSpan });
+            return _Providers.GetOrAdd(network.CryptoCode, new CachedRateProvider(network.CryptoCode, RateProvider ?? network.DefaultRateProvider, _Cache) { CacheSpan = CacheSpan });
         }
     }
 }

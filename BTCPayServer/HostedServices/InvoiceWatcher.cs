@@ -278,7 +278,7 @@ namespace BTCPayServer.HostedServices
         private IEnumerable<Task<NetworkCoins>> GetCoinsPerNetwork(UpdateInvoiceContext context, InvoiceEntity invoice, DerivationStrategy[] strategies)
         {
             return strategies
-                                .Select(d => (Wallet: _WalletProvider.GetWallet(d.Network),
+                                .Select(d => (Wallet: _WalletProvider.IsAvailable(d.Network) ? _WalletProvider.GetWallet(d.Network) : null,
                                               Network: d.Network,
                                               Strategy: d.DerivationStrategyBase))
                                 .Where(d => d.Wallet != null)
@@ -445,8 +445,8 @@ namespace BTCPayServer.HostedServices
             leases.Add(_EventAggregator.Subscribe<Events.TxOutReceivedEvent>(async b => { await NotifyReceived(b.ScriptPubKey, b.Network); }));
             leases.Add(_EventAggregator.Subscribe<Events.InvoiceEvent>(async b =>
             {
-                if(b.Name == "invoice_created")
-                { 
+                if (b.Name == "invoice_created")
+                {
                     await Watch(b.InvoiceId);
                 }
             }));

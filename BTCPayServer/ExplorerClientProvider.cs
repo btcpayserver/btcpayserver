@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Configuration;
 using BTCPayServer.Logging;
 using NBXplorer;
+using BTCPayServer.HostedServices;
 
 namespace BTCPayServer
 {
@@ -15,9 +16,10 @@ namespace BTCPayServer
         BTCPayServerOptions _Options;
 
         public BTCPayNetworkProvider NetworkProviders => _NetworkProviders;
-
-        public ExplorerClientProvider(BTCPayNetworkProvider networkProviders, BTCPayServerOptions options)
+        NBXplorerDashboard _Dashboard;
+        public ExplorerClientProvider(BTCPayNetworkProvider networkProviders, BTCPayServerOptions options, NBXplorerDashboard dashboard)
         {
+            _Dashboard = dashboard;
             _NetworkProviders = networkProviders;
             _Options = options;
 
@@ -66,6 +68,16 @@ namespace BTCPayServer
             if (network == null)
                 throw new ArgumentNullException(nameof(network));
             return GetExplorerClient(network.CryptoCode);
+        }
+
+        public bool IsAvailable(BTCPayNetwork network)
+        {
+            return IsAvailable(network.CryptoCode);
+        }
+
+        public bool IsAvailable(string cryptoCode)
+        {
+            return _Clients.ContainsKey(cryptoCode) && _Dashboard.IsFullySynched(cryptoCode);
         }
 
         public BTCPayNetwork GetNetwork(string cryptoCode)

@@ -38,5 +38,10 @@ namespace BTCPayServer.Services.Wallets
                 return null;
             return new BTCPayWallet(client, _TransactionCacheProvider.GetTransactionCache(network), network);
         }
+
+        public bool IsAvailable(BTCPayNetwork network)
+        {
+            return _Client.IsAvailable(network);
+        }
     }
 }

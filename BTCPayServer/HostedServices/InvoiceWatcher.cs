@@ -194,7 +194,7 @@ namespace BTCPayServer.HostedServices
                             await _InvoiceRepository.UnaffectAddress(invoice.Id);
                             context.MarkDirty();
                         }
-                        else if (invoice.Status == "expired")
+                        else if (invoice.Status == "expired" && invoice.ExceptionStatus != "paidLate")
                         {
                             invoice.ExceptionStatus = "paidLate";
                             context.Events.Add(new InvoiceEvent(invoice, 1009, "invoice_paidAfterExpiration"));

@@ -248,7 +248,7 @@ namespace BTCPayServer.Data
                         new CoinAverageRateProvider(network.CryptoCode) { Exchange = PreferredExchange },
                         cachedRateProvider.Inner
                     });
-                    rateProvider = new CachedRateProvider(network.CryptoCode, rateProvider, cachedRateProvider.MemoryCache);
+                    rateProvider = new CachedRateProvider(network.CryptoCode, rateProvider, cachedRateProvider.MemoryCache) { AdditionalScope = PreferredExchange };
                 }
                 else
                 {

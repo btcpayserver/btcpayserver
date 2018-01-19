@@ -278,6 +278,8 @@ namespace BTCPayServer.Controllers
             {
                 return View(model);
             }
+            if (model.PreferredExchange != null)
+                model.PreferredExchange = model.PreferredExchange.Trim().ToLowerInvariant();
             var store = await _Repo.FindStore(storeId, GetUserId());
             if (store == null)
                 return NotFound();

@@ -7,34 +7,66 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Filters;
 using BTCPayServer.Services.Rates;
+using BTCPayServer.Services.Stores;
 
 namespace BTCPayServer.Controllers
 {
     public class RateController : Controller
     {
-        IRateProvider _RateProvider;
+        IRateProviderFactory _RateProviderFactory;
+        BTCPayNetworkProvider _NetworkProvider;
         CurrencyNameTable _CurrencyNameTable;
-        public RateController(IRateProvider rateProvider, CurrencyNameTable currencyNameTable)
+        StoreRepository _StoreRepo;
+        public RateController(
+            IRateProviderFactory rateProviderFactory, 
+            BTCPayNetworkProvider networkProvider,
+            StoreRepository storeRepo,
+            CurrencyNameTable currencyNameTable)
         {
-            _RateProvider = rateProvider ?? throw new ArgumentNullException(nameof(rateProvider));
+            _RateProviderFactory = rateProviderFactory ?? throw new ArgumentNullException(nameof(rateProviderFactory));
+            _NetworkProvider = networkProvider;
+            _StoreRepo = storeRepo;
             _CurrencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
         }
 
         [Route("rates")]
         [HttpGet]
         [BitpayAPIConstraint]
-        public async Task<DataWrapper<NBitpayClient.Rate[]>> GetRates()
+        public async Task<IActionResult> GetRates(string cryptoCode = null, string storeId = null)
         {
-            var allRates = (await _RateProvider.GetRatesAsync());
-            return new DataWrapper<NBitpayClient.Rate[]>
+            cryptoCode = cryptoCode ?? "BTC";
+            var network= _NetworkProvider.GetNetwork(cryptoCode);
+            if (network == null)
+                return NotFound();
+            var rateProvider = _RateProviderFactory.GetRateProvider(network);
+            if (rateProvider == null)
+                return NotFound();
+
+            if(storeId != null)
+            {
+                var store = await _StoreRepo.FindStore(storeId);
+                if (store == null)
+                    return NotFound();
+                rateProvider = store.GetStoreBlob().ApplyRateRules(network, rateProvider);
+            }
+
+            var allRates = (await rateProvider.GetRatesAsync());
+            return Json(new DataWrapper<NBitpayClient.Rate[]>
                     (allRates.Select(r =>
                             new NBitpayClient.Rate()
                             {
                                 Code = r.Currency,
                                 Name = _CurrencyNameTable.GetCurrencyData(r.Currency)?.Name,
                                 Value = r.Value
-                            }).Where(n => n.Name != null).ToArray());
+                            }).Where(n => n.Name != null).ToArray()));
 
+        }
+
+        [Route("api/rates")]
+        [HttpGet]
+        public Task<IActionResult> GetRates2(string cryptoCode = null, string storeId = null)
+        {
+            return GetRates(cryptoCode, storeId);
         }
     }
 }

@@ -40,7 +40,7 @@ namespace BTCPayServer.Services.Rates
 
         public Task<decimal> GetRateAsync(string currency)
         {
-            return MemoryCache.GetOrCreateAsync("CURR_" + currency + "_" + _CryptoCode, (ICacheEntry entry) =>
+            return MemoryCache.GetOrCreateAsync("CURR_" + currency + "_" + _CryptoCode + "_" + AdditionalScope, (ICacheEntry entry) =>
             {
                 entry.AbsoluteExpiration = DateTimeOffset.UtcNow + CacheSpan;
                 return _Inner.GetRateAsync(currency);
@@ -49,11 +49,13 @@ namespace BTCPayServer.Services.Rates
         
         public Task<ICollection<Rate>> GetRatesAsync()
         {
-            return MemoryCache.GetOrCreateAsync("GLOBAL_RATES", (ICacheEntry entry) =>
+            return MemoryCache.GetOrCreateAsync("GLOBAL_RATES_" + _CryptoCode + "_" + AdditionalScope, (ICacheEntry entry) =>
             {
                 entry.AbsoluteExpiration = DateTimeOffset.UtcNow + CacheSpan;
                 return _Inner.GetRatesAsync();
             });
         }
+
+        public string AdditionalScope { get; set; }
     }
 }

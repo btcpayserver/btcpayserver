@@ -235,9 +235,29 @@ namespace BTCPayServer.Data
         }
 
         public List<RateRule> RateRules { get; set; } = new List<RateRule>();
+        public string PreferredExchange { get; set; }
 
         public IRateProvider ApplyRateRules(BTCPayNetwork network, IRateProvider rateProvider)
         {
+            if (!string.IsNullOrEmpty(PreferredExchange))
+            {
+                // If the original rateProvider is a cache, use the same inner provider as fallback, and same memory cache to wrap it all
+                if (rateProvider is CachedRateProvider cachedRateProvider)
+                {
+                    rateProvider = new FallbackRateProvider(new IRateProvider[] {
+                        new CoinAverageRateProvider(network.CryptoCode) { Exchange = PreferredExchange },
+                        cachedRateProvider.Inner
+                    });
+                    rateProvider = new CachedRateProvider(network.CryptoCode, rateProvider, cachedRateProvider.MemoryCache);
+                }
+                else
+                {
+                    rateProvider = new FallbackRateProvider(new IRateProvider[] {
+                        new CoinAverageRateProvider(network.CryptoCode) { Exchange = PreferredExchange },
+                        rateProvider
+                    });
+                }
+            }
             if (RateRules == null || RateRules.Count == 0)
                 return rateProvider;
             return new TweakRateProvider(network, rateProvider, RateRules.ToList());

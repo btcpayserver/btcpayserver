@@ -17,6 +17,7 @@ using NBXplorer.DerivationStrategy;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace BTCPayServer.Controllers
@@ -95,7 +96,7 @@ namespace BTCPayServer.Controllers
             var stores = await _Repo.GetStoresByUserId(GetUserId());
             var balances = stores
                                 .Select(s => s.GetDerivationStrategies(_NetworkProvider)
-                                              .Select(d => (Wallet: _WalletProvider.GetWallet(d.Network), 
+                                              .Select(d => (Wallet: _WalletProvider.GetWallet(d.Network),
                                                             DerivationStrategy: d.DerivationStrategyBase))
                                               .Where(_ => _.Wallet != null)
                                               .Select(async _ => (await _.Wallet.GetBalance(_.DerivationStrategy)).ToString() + " " + _.Wallet.Network.CryptoCode))
@@ -165,6 +166,7 @@ namespace BTCPayServer.Controllers
             vm.MonitoringExpiration = storeBlob.MonitoringExpiration;
             vm.InvoiceExpiration = storeBlob.InvoiceExpiration;
             vm.RateMultiplier = (double)storeBlob.GetRateMultiplier();
+            vm.PreferredExchange = storeBlob.PreferredExchange;
             return View(vm);
         }
 
@@ -309,11 +311,26 @@ namespace BTCPayServer.Controllers
             blob.NetworkFeeDisabled = !model.NetworkFee;
             blob.MonitoringExpiration = model.MonitoringExpiration;
             blob.InvoiceExpiration = model.InvoiceExpiration;
+            blob.PreferredExchange = model.PreferredExchange;
+
             blob.SetRateMultiplier(model.RateMultiplier);
 
             if (store.SetStoreBlob(blob))
             {
                 needUpdate = true;
+            }
+
+            if (!string.IsNullOrEmpty(blob.PreferredExchange))
+            {
+                using (HttpClient client = new HttpClient())
+                {
+                    var rate = await client.GetAsync(model.RateSource);
+                    if (rate.StatusCode == System.Net.HttpStatusCode.NotFound)
+                    {
+                        ModelState.AddModelError(nameof(model.PreferredExchange), $"Invalid exchange ({model.RateSource})");
+                        return View(model);
+                    }
+                }
             }
 
             if (needUpdate)

@@ -311,6 +311,8 @@ namespace BTCPayServer.Controllers
             blob.NetworkFeeDisabled = !model.NetworkFee;
             blob.MonitoringExpiration = model.MonitoringExpiration;
             blob.InvoiceExpiration = model.InvoiceExpiration;
+
+            bool newExchange = blob.PreferredExchange != model.PreferredExchange;
             blob.PreferredExchange = model.PreferredExchange;
 
             blob.SetRateMultiplier(model.RateMultiplier);
@@ -320,7 +322,7 @@ namespace BTCPayServer.Controllers
                 needUpdate = true;
             }
 
-            if (!string.IsNullOrEmpty(blob.PreferredExchange))
+            if (!string.IsNullOrEmpty(blob.PreferredExchange) && newExchange)
             {
                 using (HttpClient client = new HttpClient())
                 {

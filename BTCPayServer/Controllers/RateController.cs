@@ -34,15 +34,26 @@ namespace BTCPayServer.Controllers
         [BitpayAPIConstraint]
         public async Task<IActionResult> GetRates(string cryptoCode = null, string storeId = null)
         {
+            var result = await GetRates2(cryptoCode, storeId);
+            var rates = (result as JsonResult)?.Value as NBitpayClient.Rate[];
+            if(rates == null)
+                return result;
+            return Json(new DataWrapper<NBitpayClient.Rate[]>(rates)); 
+        }
+
+        [Route("api/rates")]
+        [HttpGet]
+        public async Task<IActionResult> GetRates2(string cryptoCode = null, string storeId = null)
+        {
             cryptoCode = cryptoCode ?? "BTC";
-            var network= _NetworkProvider.GetNetwork(cryptoCode);
+            var network = _NetworkProvider.GetNetwork(cryptoCode);
             if (network == null)
                 return NotFound();
             var rateProvider = _RateProviderFactory.GetRateProvider(network);
             if (rateProvider == null)
                 return NotFound();
 
-            if(storeId != null)
+            if (storeId != null)
             {
                 var store = await _StoreRepo.FindStore(storeId);
                 if (store == null)
@@ -51,22 +62,13 @@ namespace BTCPayServer.Controllers
             }
 
             var allRates = (await rateProvider.GetRatesAsync());
-            return Json(new DataWrapper<NBitpayClient.Rate[]>
-                    (allRates.Select(r =>
+            return Json(allRates.Select(r =>
                             new NBitpayClient.Rate()
                             {
                                 Code = r.Currency,
                                 Name = _CurrencyNameTable.GetCurrencyData(r.Currency)?.Name,
                                 Value = r.Value
-                            }).Where(n => n.Name != null).ToArray()));
-
-        }
-
-        [Route("api/rates")]
-        [HttpGet]
-        public Task<IActionResult> GetRates2(string cryptoCode = null, string storeId = null)
-        {
-            return GetRates(cryptoCode, storeId);
+                            }).Where(n => n.Name != null).ToArray());
         }
     }
 }

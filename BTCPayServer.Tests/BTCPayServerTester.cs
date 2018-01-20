@@ -97,7 +97,12 @@ namespace BTCPayServer.Tests
                     .UseConfiguration(conf)
                     .ConfigureServices(s =>
                     {
-                        s.AddSingleton<IRateProvider>(new MockRateProvider(new Rate("USD", 5000m)));
+                        var mockRates = new MockRateProviderFactory();
+                        var btc = new MockRateProvider("BTC", new Rate("USD", 5000m));
+                        var ltc = new MockRateProvider("LTC", new Rate("USD", 500m));
+                        mockRates.AddMock(btc);
+                        mockRates.AddMock(ltc);
+                        s.AddSingleton<IRateProviderFactory>(mockRates);
                         s.AddLogging(l =>
                         {
                             l.SetMinimumLevel(LogLevel.Information)

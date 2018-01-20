@@ -6,17 +6,38 @@ using System.Threading.Tasks;
 
 namespace BTCPayServer.Services.Rates
 {
+    public class MockRateProviderFactory : IRateProviderFactory
+    {
+        List<MockRateProvider> _Mocks = new List<MockRateProvider>();
+        public MockRateProviderFactory()
+        {
+
+        }
+
+        public void AddMock(MockRateProvider mock)
+        {
+            _Mocks.Add(mock);
+        }
+        public IRateProvider GetRateProvider(BTCPayNetwork network)
+        {
+            return _Mocks.FirstOrDefault(m => m.CryptoCode == network.CryptoCode);
+        }
+    }
     public class MockRateProvider : IRateProvider
     {
         List<Rate> _Rates;
 
-        public MockRateProvider(params Rate[] rates)
+        public string CryptoCode { get; }
+
+        public MockRateProvider(string cryptoCode, params Rate[] rates)
         {
             _Rates = new List<Rate>(rates);
+            CryptoCode = cryptoCode;
         }
-        public MockRateProvider(List<Rate> rates)
+        public MockRateProvider(string cryptoCode, List<Rate> rates)
         {
             _Rates = rates;
+            CryptoCode = cryptoCode;
         }
         public Task<decimal> GetRateAsync(string currency)
         {

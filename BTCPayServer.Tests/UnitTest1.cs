@@ -519,7 +519,6 @@ namespace BTCPayServer.Tests
                 }, Facade.Merchant);
 
                 var cashCow = tester.ExplorerNode;
-                cashCow.Generate(2); // get some money in case
                 var invoiceAddress = BitcoinAddress.Create(invoice.BitcoinAddress, cashCow.Network);
                 var firstPayment = Money.Coins(0.04m);
                 cashCow.SendToAddress(invoiceAddress, firstPayment);
@@ -554,7 +553,6 @@ namespace BTCPayServer.Tests
                 invoiceAddress = BitcoinAddress.Create(invoice.BitcoinAddress, cashCow.Network);
                 firstPayment = Money.Coins(0.04m);
                 cashCow.SendToAddress(invoiceAddress, firstPayment);
-                Logs.Tester.LogInformation("First payment sent to " + invoiceAddress);
                 Eventually(() =>
                 {
                     invoice = user.BitPay.GetInvoice(invoice.Id);
@@ -568,7 +566,7 @@ namespace BTCPayServer.Tests
                 var secondPayment = Money.Coins(decimal.Parse(ltcCryptoInfo.Due));
                 cashCow.Generate(2); // LTC is not worth a lot, so just to make sure we have money...
                 cashCow.SendToAddress(invoiceAddress, secondPayment);
-                Logs.Tester.LogInformation("Second payment sent to " + invoiceAddress);
+
                 Eventually(() =>
                 {
                     invoice = user.BitPay.GetInvoice(invoice.Id);
@@ -767,7 +765,7 @@ namespace BTCPayServer.Tests
 
         private void Eventually(Action act)
         {
-            CancellationTokenSource cts = new CancellationTokenSource(20000);
+            CancellationTokenSource cts = new CancellationTokenSource(10000);
             while (true)
             {
                 try

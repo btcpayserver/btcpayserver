@@ -68,11 +68,7 @@ namespace BTCPayServer.HostedServices
         {
             var invoice = await _InvoiceRepository.GetInvoiceIdFromScriptPubKey(scriptPubKey, network.CryptoCode);
             if (invoice != null)
-            {
-                String address = scriptPubKey.GetDestinationAddress(network.NBitcoinNetwork)?.ToString() ?? scriptPubKey.ToString();
-                Logs.PayServer.LogInformation($"{address} is mapping to invoice {invoice}");
                 _WatchRequests.Add(invoice);
-            }
         }
 
         async Task NotifyBlock()
@@ -86,11 +82,8 @@ namespace BTCPayServer.HostedServices
         private async Task UpdateInvoice(string invoiceId, CancellationToken cancellation)
         {
             Dictionary<BTCPayNetwork, KnownState> changes = new Dictionary<BTCPayNetwork, KnownState>();
-            int maxLoop = 5;
-            int loopCount = -1;
-            while (!cancellation.IsCancellationRequested && loopCount < maxLoop)
+            while (!cancellation.IsCancellationRequested)
             {
-                loopCount++;
                 try
                 {
                     var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId, true).ConfigureAwait(false);
@@ -129,7 +122,7 @@ namespace BTCPayServer.HostedServices
                         break;
                     }
 
-                    if (updateContext.Events.Count == 0 || cancellation.IsCancellationRequested)
+                    if (!changed || cancellation.IsCancellationRequested)
                         break;
                 }
                 catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
@@ -490,31 +483,29 @@ namespace BTCPayServer.HostedServices
         {
             Logs.PayServer.LogInformation("Start watching invoices");
             await Task.Delay(1).ConfigureAwait(false); // Small hack so that the caller does not block on GetConsumingEnumerable
-            ConcurrentDictionary<string, Lazy<Task>> executing = new ConcurrentDictionary<string, Lazy<Task>>();
+            ConcurrentDictionary<string, Task> executing = new ConcurrentDictionary<string, Task>();
             try
             {
-                // This loop just make sure an invoice will not be updated at the same time by two tasks.
-                // If an update is happening while a request come, then the update is deferred when the executing task is over
                 foreach (var item in _WatchRequests.GetConsumingEnumerable(cancellation))
                 {
-                    var localItem = item;
-                    var toExecute = new Lazy<Task>(async () =>
+                    bool added = false;
+                    var task = executing.GetOrAdd(item, async i =>
                     {
                         try
                         {
-                            await UpdateInvoice(localItem, cancellation);
+                            added = true;
+                            await UpdateInvoice(i, cancellation);
                         }
-                        finally
+                        catch (Exception ex) when (!cancellation.IsCancellationRequested)
                         {
-                            executing.TryRemove(localItem, out Lazy<Task> unused);
+                            Logs.PayServer.LogCritical(ex, $"Error in the InvoiceWatcher loop (Invoice {i})");
                         }
-                    }, false);
-                    var executingTask = executing.GetOrAdd(item, toExecute);
-                    executingTask.Value.GetAwaiter(); // Make sure it run
-                    if (executingTask != toExecute)
+                    });
+
+                    if (!added && task.Status == TaskStatus.RanToCompletion)
                     {
-                        // What was planned can't run for now, rebook it when the executingTask finish
-                        var unused = executingTask.Value.ContinueWith(t => _WatchRequests.Add(localItem));
+                        executing.TryRemove(item, out Task t);
+                        _WatchRequests.Add(item);
                     }
                 }
             }
@@ -523,7 +514,7 @@ namespace BTCPayServer.HostedServices
             }
             finally
             {
-                await Task.WhenAll(executing.Values.Select(v => v.Value).ToArray());
+                await Task.WhenAll(executing.Values);
             }
             Logs.PayServer.LogInformation("Stop watching invoices");
         }

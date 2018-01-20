@@ -2,12 +2,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.0</TargetFramework>
-<<<<<<< HEAD
-		<Version>1.0.1.12</Version>
-		<RootNamespace>BTCPayJungle</RootNamespace>
-=======
-		<Version>1.0.1.15</Version>
->>>>>>> upstream/master
+		<Version>1.0.1.16</Version>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Build\dockerfiles\**" />

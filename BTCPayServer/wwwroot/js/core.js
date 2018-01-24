@@ -19,7 +19,7 @@ Vue.config.ignoredElements = [
     'low-fee-timeline',
     // Ignoring custom HTML5 elements, eg: bp-spinner
     /^bp-/
-]
+];
 var checkoutCtrl = new Vue({
     el: '#checkoutCtrl',
     components: {
@@ -28,7 +28,7 @@ var checkoutCtrl = new Vue({
     data: {
         srvModel: srvModel
     }
-})
+});
 
 var display = $(".timer-row__time-left"); // Timer container
 
@@ -88,7 +88,7 @@ function emailForm() {
             $("#emailAddressForm").addClass("ng-touched ng-dirty ng-submitted ng-invalid");
 
         }
-    })
+    });
 }
 
 /* =============== Even listeners =============== */
@@ -136,7 +136,7 @@ $("#copy-tab").click(function () {
         $(".payment-tabs__slider").addClass("slide-right");
     }
 
-    if (!($("#copy").is(".active"))) {
+    if (!$("#copy").is(".active")) {
         $("#copy").show();
         $("#copy").addClass("active");
 
@@ -284,7 +284,7 @@ function progressStart(timerMax) {
 
         var now = new Date();
         var timeDiff = end.getTime() - now.getTime();
-        var perc = 100 - Math.round((timeDiff / timerMax) * 100);
+        var perc = 100 - Math.round(timeDiff / timerMax * 100);
 
         if (perc === 75 && (status === "paidPartial" || status === "new")) {
             $(".timer-row").addClass("expiring-soon");

@@ -197,7 +197,7 @@ namespace BTCPayServer.HostedServices
                         {
                             context.Events.Add(new InvoiceEvent(invoice, 1003, "invoice_paidInFull"));
                             invoice.Status = "paid";
-                            invoice.ExceptionStatus = null;
+                            invoice.ExceptionStatus = totalPaid > accounting.TotalDue ? "paidOver" : null;
                             await _InvoiceRepository.UnaffectAddress(invoice.Id);
                             context.MarkDirty();
                         }
@@ -207,13 +207,6 @@ namespace BTCPayServer.HostedServices
                             context.Events.Add(new InvoiceEvent(invoice, 1009, "invoice_paidAfterExpiration"));
                             context.MarkDirty();
                         }
-                    }
-
-                    if (totalPaid > accounting.TotalDue && invoice.ExceptionStatus != "paidOver")
-                    {
-                        invoice.ExceptionStatus = "paidOver";
-                        await _InvoiceRepository.UnaffectAddress(invoice.Id);
-                        context.MarkDirty();
                     }
 
                     if (totalPaid < accounting.TotalDue && invoice.GetPayments().Count != 0 && invoice.ExceptionStatus != "paidPartial")

@@ -287,3 +287,4 @@ __pycache__/
 *.odx.cs
 *.xsd.cs
 /BTCPayServer/Build/dockerfiles
+.DS_Store

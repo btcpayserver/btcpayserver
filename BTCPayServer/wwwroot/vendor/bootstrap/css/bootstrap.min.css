@@ -2985,7 +2985,6 @@ tbody.collapse.show {
     border-radius: .25rem;
     -webkit-appearance: none;
     -moz-appearance: none;
-    appearance: none
 }
 
     .custom-select:focus {
@@ -8593,4 +8592,3 @@ a.text-dark:focus, a.text-dark:hover {
 .invisible {
     visibility: hidden !important
 }
-/*# sourceMappingURL=bootstrap.min.css.map */

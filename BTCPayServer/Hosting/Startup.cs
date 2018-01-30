@@ -36,6 +36,7 @@ using System.Threading;
 using Microsoft.Extensions.Options;
 using Microsoft.ApplicationInsights.AspNetCore.Extensions;
 using Microsoft.AspNetCore.Mvc.Cors.Internal;
+using Meziantou.AspNetCore.BundleTagHelpers;
 
 namespace BTCPayServer.Hosting
 {
@@ -87,6 +88,13 @@ namespace BTCPayServer.Hosting
                 options.Password.RequireLowercase = false;
                 options.Password.RequireNonAlphanumeric = false;
                 options.Password.RequireUppercase = false;
+            });
+
+            // bundling
+            services.AddBundles(options =>
+            {
+                options.UseMinifiedFiles = Environment.GetEnvironmentVariable("BTCPAY_BUNDLEJSCSS") == "true";
+                options.AppendVersion = true;
             });
         }
 

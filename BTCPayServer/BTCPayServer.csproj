@@ -104,6 +104,8 @@
 
 	<ItemGroup>
 	  <Folder Include="Build\" />
+	  <Folder Include="wwwroot\bundles\main\" />
+	  <Folder Include="wwwroot\bundles\jqueryvalidate\" />
 	  <Folder Include="wwwroot\vendor\clipboard.js\" />
 	</ItemGroup>
 

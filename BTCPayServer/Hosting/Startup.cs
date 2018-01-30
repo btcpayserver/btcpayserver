@@ -39,6 +39,7 @@ using Microsoft.ApplicationInsights.AspNetCore.Extensions;
 using Microsoft.AspNetCore.Mvc.Cors.Internal;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using System.Net;
+using Meziantou.AspNetCore.BundleTagHelpers;
 
 namespace BTCPayServer.Hosting
 {
@@ -100,6 +101,13 @@ namespace BTCPayServer.Hosting
             //        l.UseHttps("devtest.pfx", "toto");
             //    });
             //});
+
+            // bundling
+            services.AddBundles(options =>
+            {
+                options.UseMinifiedFiles = Environment.GetEnvironmentVariable("BTCPAY_BUNDLEJSCSS") == "true";
+                options.AppendVersion = true;
+            });
         }
 
         // Big hack, tests fails if only call AddHangfire because Hangfire fail at initializing at the second test run

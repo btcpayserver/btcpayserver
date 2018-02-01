@@ -34,7 +34,7 @@ namespace BTCPayServer.Services.Rates
         public TimeSpan LongCacheSpan { get; set; } = TimeSpan.FromMinutes(15.0);
         public IRateProvider GetRateProvider(BTCPayNetwork network, bool longCache)
         {
-            return (longCache ? _LongCacheProviders : _Providers).GetOrAdd(network.CryptoCode, new CachedRateProvider(network.CryptoCode, RateProvider ?? network.DefaultRateProvider, _Cache) { CacheSpan = longCache ? LongCacheSpan : CacheSpan });
+            return (longCache ? _LongCacheProviders : _Providers).GetOrAdd(network.CryptoCode, new CachedRateProvider(network.CryptoCode, RateProvider ?? network.DefaultRateProvider, _Cache) { CacheSpan = longCache ? LongCacheSpan : CacheSpan, AdditionalScope = longCache ? "LONG" : "SHORT" });
         }
     }
 }

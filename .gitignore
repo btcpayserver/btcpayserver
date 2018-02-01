@@ -288,3 +288,4 @@ __pycache__/
 *.xsd.cs
 /BTCPayServer/Build/dockerfiles
 .DS_Store
+BTCPayServer/wwwroot/vendor/bootstrap/css/bootstrap.css

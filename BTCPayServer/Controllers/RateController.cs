@@ -49,7 +49,7 @@ namespace BTCPayServer.Controllers
             var network = _NetworkProvider.GetNetwork(cryptoCode);
             if (network == null)
                 return NotFound();
-            var rateProvider = _RateProviderFactory.GetRateProvider(network);
+            var rateProvider = _RateProviderFactory.GetRateProvider(network, true);
             if (rateProvider == null)
                 return NotFound();
 

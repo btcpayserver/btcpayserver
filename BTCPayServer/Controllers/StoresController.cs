@@ -258,7 +258,7 @@ namespace BTCPayServer.Controllers
                         for (int i = 0; i < 10; i++)
                         {
                             var address = line.Derive((uint)i);
-                            vm.AddressSamples.Add((line.Path.Derive((uint)i).ToString(), address.ScriptPubKey.GetDestinationAddress(network.NBitcoinNetwork).ToString()));
+                            vm.AddressSamples.Add((DerivationStrategyBase.GetKeyPath(DerivationFeature.Deposit).Derive((uint)i).ToString(), address.ScriptPubKey.GetDestinationAddress(network.NBitcoinNetwork).ToString()));
                         }
                     }
                     catch

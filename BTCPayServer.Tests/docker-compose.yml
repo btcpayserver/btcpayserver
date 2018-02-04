@@ -27,7 +27,7 @@ services:
 
   # The dev container is not actually used, it is just handy to run `docker-compose up dev` to start all services
   dev: 
-    image: junglelabs/btcpayjungle:latest
+    image: junglelab/btcpayjungle:latest
     environment:
       BITCOIN_EXTRA_ARGS: |
         regtest=1

@@ -7,6 +7,6 @@ namespace BTCPayServer.Services.Rates
 {
     public interface IRateProviderFactory
     {
-        IRateProvider GetRateProvider(BTCPayNetwork network);
+        IRateProvider GetRateProvider(BTCPayNetwork network, bool longCache);
     }
 }

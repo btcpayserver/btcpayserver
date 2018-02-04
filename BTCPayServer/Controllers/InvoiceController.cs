@@ -119,7 +119,7 @@ namespace BTCPayServer.Controllers
                     .Select(derivationStrategy => (Wallet: _WalletProvider.GetWallet(derivationStrategy.Network),
                                                     DerivationStrategy: derivationStrategy.DerivationStrategyBase,
                                                     Network: derivationStrategy.Network,
-                                                    RateProvider: _RateProviders.GetRateProvider(derivationStrategy.Network),
+                                                    RateProvider: _RateProviders.GetRateProvider(derivationStrategy.Network, false),
                                                     FeeRateProvider: _FeeProviderFactory.CreateFeeProvider(derivationStrategy.Network)))
                     .Where(_ => _.Wallet != null &&
                                 _.FeeRateProvider != null &&
@@ -164,7 +164,7 @@ namespace BTCPayServer.Controllers
 #pragma warning disable CS0618
                 var btc = _NetworkProvider.BTC;
                 var feeProvider = _FeeProviderFactory.CreateFeeProvider(btc);
-                var rateProvider = storeBlob.ApplyRateRules(btc, _RateProviders.GetRateProvider(btc));
+                var rateProvider = storeBlob.ApplyRateRules(btc, _RateProviders.GetRateProvider(btc, false));
                 if (feeProvider != null && rateProvider != null)
                 {
                     var gettingFee = feeProvider.GetFeeRateAsync();

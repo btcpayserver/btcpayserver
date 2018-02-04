@@ -27,7 +27,7 @@ services:
 
   # The dev container is not actually used, it is just handy to run `docker-compose up dev` to start all services
   dev: 
-    image: nicolasdorier/docker-bitcoin:0.15.0.1
+    image: junglelab/btcpayjungle:latest
     environment:
       BITCOIN_EXTRA_ARGS: |
         regtest=1
@@ -37,7 +37,7 @@ services:
       - postgres
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:1.0.1.3
+    image: nicolasdorier/nbxplorer:1.0.1.10
     ports:
       - "32838:32838"
     expose: 

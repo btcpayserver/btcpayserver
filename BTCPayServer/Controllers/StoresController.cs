@@ -203,7 +203,7 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("{storeId}/derivations")]
-        public async Task<IActionResult> AddDerivationScheme(string storeId, DerivationSchemeViewModel vm, string command, string selectedScheme = null)
+        public async Task<IActionResult> AddDerivationScheme(string storeId, DerivationSchemeViewModel vm, string selectedScheme = null)
         {
             selectedScheme = selectedScheme ?? "BTC";
             var store = await _Repo.FindStore(storeId, GetUserId());
@@ -224,16 +224,31 @@ namespace BTCPayServer.Controllers
                 return View(vm);
             }
 
-            if (command == "Save")
+
+            DerivationStrategyBase strategy = null;
+            try
+            {
+                if (!string.IsNullOrEmpty(vm.DerivationScheme))
+                {
+                    strategy = ParseDerivationStrategy(vm.DerivationScheme, vm.DerivationSchemeFormat, network);
+                    vm.DerivationScheme = strategy.ToString();
+                }
+                store.SetDerivationStrategy(network, vm.DerivationScheme);
+            }
+            catch
+            {
+                ModelState.AddModelError(nameof(vm.DerivationScheme), "Invalid Derivation Scheme");
+                vm.Confirmation = false;
+                return View(vm);
+            }
+
+
+            if (strategy == null || vm.Confirmation)
             {
                 try
                 {
-                    if (!string.IsNullOrEmpty(vm.DerivationScheme))
-                    {
-                        var strategy = ParseDerivationStrategy(vm.DerivationScheme, vm.DerivationSchemeFormat, network);
+                    if (strategy != null)
                         await wallet.TrackAsync(strategy);
-                        vm.DerivationScheme = strategy.ToString();
-                    }
                     store.SetDerivationStrategy(network, vm.DerivationScheme);
                 }
                 catch
@@ -250,22 +265,15 @@ namespace BTCPayServer.Controllers
             {
                 if (!string.IsNullOrEmpty(vm.DerivationScheme))
                 {
-                    try
-                    {
-                        var scheme = ParseDerivationStrategy(vm.DerivationScheme, vm.DerivationSchemeFormat, network);
-                        var line = scheme.GetLineFor(DerivationFeature.Deposit);
+                    var line = strategy.GetLineFor(DerivationFeature.Deposit);
 
-                        for (int i = 0; i < 10; i++)
-                        {
-                            var address = line.Derive((uint)i);
-                            vm.AddressSamples.Add((DerivationStrategyBase.GetKeyPath(DerivationFeature.Deposit).Derive((uint)i).ToString(), address.ScriptPubKey.GetDestinationAddress(network.NBitcoinNetwork).ToString()));
-                        }
-                    }
-                    catch
+                    for (int i = 0; i < 10; i++)
                     {
-                        ModelState.AddModelError(nameof(vm.DerivationScheme), "Invalid Derivation Scheme");
+                        var address = line.Derive((uint)i);
+                        vm.AddressSamples.Add((DerivationStrategyBase.GetKeyPath(DerivationFeature.Deposit).Derive((uint)i).ToString(), address.ScriptPubKey.GetDestinationAddress(network.NBitcoinNetwork).ToString()));
                     }
                 }
+                vm.Confirmation = true;
                 return View(vm);
             }
         }

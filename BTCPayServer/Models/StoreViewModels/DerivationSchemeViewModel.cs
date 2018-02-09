@@ -48,6 +48,8 @@ namespace BTCPayServer.Models.StoreViewModels
             set;
         }
 
+        public bool Confirmation { get; set; }
+
         public SelectList CryptoCurrencies { get; set; }
         public SelectList DerivationSchemeFormats { get; set; }
 

@@ -2,6 +2,7 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -72,24 +73,19 @@ namespace BTCPayServer.Services.Rates
                     rates = (JObject)rates["symbols"];
                 }
                 return rates.Properties()
-                              .Where(p => p.Name.StartsWith(CryptoCode, StringComparison.OrdinalIgnoreCase))
+                              .Where(p => p.Name.StartsWith(CryptoCode, StringComparison.OrdinalIgnoreCase) && TryToDecimal(p, out decimal unused))
                               .ToDictionary(p => p.Name.Substring(CryptoCode.Length, p.Name.Length - CryptoCode.Length), p =>
                               {
-                                  if (Exchange == null)
-                                  {
-                                      return ToDecimal(p.Value["last"]);
-                                  }
-                                  else
-                                  {
-                                      return ToDecimal(p.Value["bid"]);
-                                  }
+                                  TryToDecimal(p, out decimal v);
+                                  return v;
                               });
             }
         }
 
-        private decimal ToDecimal(JToken token)
+        private bool TryToDecimal(JProperty p, out decimal v)
         {
-            return decimal.Parse(token.Value<string>(), System.Globalization.NumberStyles.AllowExponent | System.Globalization.NumberStyles.AllowDecimalPoint);
+            JToken token = p.Value[Exchange == null ? "last" : "bid"];
+            return decimal.TryParse(token.Value<string>(), System.Globalization.NumberStyles.AllowExponent | System.Globalization.NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out v);
         }
 
         public async Task<ICollection<Rate>> GetRatesAsync()

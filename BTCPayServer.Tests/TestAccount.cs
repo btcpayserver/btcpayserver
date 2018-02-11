@@ -70,6 +70,7 @@ namespace BTCPayServer.Tests
                 CryptoCurrency = cryptoCode,
                 DerivationSchemeFormat = "BTCPay",
                 DerivationScheme = DerivationScheme.ToString(),
+                Confirmation = true
             }, "Save");
             return store;
         }
@@ -90,6 +91,7 @@ namespace BTCPayServer.Tests
                 CryptoCurrency = crytoCode,
                 DerivationSchemeFormat = crytoCode,
                 DerivationScheme = derivation.ToString(),
+                Confirmation = true
             }, "Save");
         }
 

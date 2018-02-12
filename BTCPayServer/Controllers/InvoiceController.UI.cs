@@ -250,7 +250,7 @@ namespace BTCPayServer.Controllers
             finally
             {
                 leases.Dispose();
-                await CloseSocket(webSocket);
+                await webSocket.CloseSocket();
             }
             return new EmptyResult();
         }
@@ -267,21 +267,6 @@ namespace BTCPayServer.Controllers
                 await webSocket.SendAsync(DummyBuffer, WebSocketMessageType.Binary, true, cts.Token);
             }
             catch { try { webSocket.Dispose(); } catch { } }
-        }
-
-        private static async Task CloseSocket(WebSocket webSocket)
-        {
-            try
-            {
-                if (webSocket.State == WebSocketState.Open)
-                {
-                    CancellationTokenSource cts = new CancellationTokenSource();
-                    cts.CancelAfter(5000);
-                    await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", cts.Token);
-                }
-            }
-            catch { }
-            finally { try { webSocket.Dispose(); } catch { } }
         }
 
         [HttpPost]

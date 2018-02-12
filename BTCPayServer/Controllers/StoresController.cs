@@ -2,22 +2,30 @@
 using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
+using BTCPayServer.Services;
+using BTCPayServer.Services.Fees;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
+using LedgerWallet;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitpayClient;
 using NBXplorer.DerivationStrategy;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Net.WebSockets;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace BTCPayServer.Controllers
@@ -29,6 +37,7 @@ namespace BTCPayServer.Controllers
     public class StoresController : Controller
     {
         public StoresController(
+            IOptions<MvcJsonOptions> mvcJsonOptions,
             StoreRepository repo,
             TokenRepository tokenRepo,
             UserManager<ApplicationUser> userManager,
@@ -36,6 +45,7 @@ namespace BTCPayServer.Controllers
             BTCPayWalletProvider walletProvider,
             BTCPayNetworkProvider networkProvider,
             ExplorerClientProvider explorerProvider,
+            IFeeProviderFactory feeRateProvider,
             IHostingEnvironment env)
         {
             _Repo = repo;
@@ -46,9 +56,13 @@ namespace BTCPayServer.Controllers
             _Env = env;
             _NetworkProvider = networkProvider;
             _ExplorerProvider = explorerProvider;
+            _MvcJsonOptions = mvcJsonOptions.Value;
+            _FeeRateProvider = feeRateProvider;
         }
         BTCPayNetworkProvider _NetworkProvider;
         private ExplorerClientProvider _ExplorerProvider;
+        private MvcJsonOptions _MvcJsonOptions;
+        private IFeeProviderFactory _FeeRateProvider;
         BTCPayWalletProvider _WalletProvider;
         AccessTokenController _TokenController;
         StoreRepository _Repo;
@@ -86,6 +100,338 @@ namespace BTCPayServer.Controllers
         public string CreatedStoreId
         {
             get; set;
+        }
+
+        [HttpGet]
+        [Route("{storeId}/wallet")]
+        public async Task<IActionResult> Wallet(string storeId)
+        {
+            var store = await _Repo.FindStore(storeId, GetUserId());
+            if (store == null)
+                return NotFound();
+            WalletModel model = new WalletModel();
+            model.ServerUrl = GetStoreUrl(storeId);
+            model.SetCryptoCurrencies(_ExplorerProvider, store.GetDefaultCrypto());
+            return View(model);
+        }
+
+        private string GetStoreUrl(string storeId)
+        {
+            return HttpContext.Request.GetAbsoluteRoot() + "/stores/" + storeId + "/";
+        }
+
+        class WebSocketTransport : LedgerWallet.Transports.ILedgerTransport
+        {
+            private readonly WebSocket webSocket;
+
+            public WebSocketTransport(System.Net.WebSockets.WebSocket webSocket)
+            {
+                if (webSocket == null)
+                    throw new ArgumentNullException(nameof(webSocket));
+                this.webSocket = webSocket;
+            }
+
+            public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(10);
+            public async Task<byte[][]> Exchange(byte[][] apdus)
+            {
+                List<byte[]> responses = new List<byte[]>();
+                using (CancellationTokenSource cts = new CancellationTokenSource(Timeout))
+                {
+                    foreach (var apdu in apdus)
+                    {
+                        await this.webSocket.SendAsync(new ArraySegment<byte>(apdu), WebSocketMessageType.Binary, true, cts.Token);
+                    }
+                    foreach (var apdu in apdus)
+                    {
+                        byte[] response = new byte[300];
+                        var result = await this.webSocket.ReceiveAsync(new ArraySegment<byte>(response), cts.Token);
+                        Array.Resize(ref response, result.Count);
+                        responses.Add(response);
+                    }
+                }
+                return responses.ToArray();
+            }
+        }
+
+        class LedgerTestResult
+        {
+            public bool Success { get; set; }
+            public string Error { get; set; }
+        }
+
+        class GetInfoResult
+        {
+            public int RecommendedSatoshiPerByte { get; set; }
+            public double Balance { get; set; }
+        }
+
+        class SendToAddressResult
+        {
+            public string TransactionId { get; set; }
+        }
+
+        class GetXPubResult
+        {
+            public string ExtPubKey { get; set; }
+        }
+
+        [HttpGet]
+        [Route("{storeId}/ws/ledger")]
+        public async Task<IActionResult> LedgerConnection(
+            string storeId,
+            string command,
+            // getinfo
+            string cryptoCode = null,
+            // sendtoaddress
+            string destination = null, string amount = null, string feeRate = null, string substractFees = null
+            )
+        {
+            if (!HttpContext.WebSockets.IsWebSocketRequest)
+                return NotFound();
+            var store = await _Repo.FindStore(storeId, GetUserId());
+            if (store == null)
+                return NotFound();
+
+            var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+            var ledgerTransport = new WebSocketTransport(webSocket);
+            var ledger = new LedgerWallet.LedgerClient(ledgerTransport);
+            try
+            {
+                if (command == "test")
+                {
+                    var version = await ledger.GetFirmwareVersionAsync();
+                    await Send(webSocket, new LedgerTestResult() { Success = true });
+                }
+                if (command == "getxpub")
+                {
+                    var network = _NetworkProvider.GetNetwork(cryptoCode);
+                    try
+                    {
+                        var pubkey = await GetExtPubKey(ledger, network, new KeyPath("49'").Derive(network.CoinType).Derive(0, true));
+                        var derivation = new DerivationStrategyFactory(network.NBitcoinNetwork).CreateDirectDerivationStrategy(pubkey, new DerivationStrategyOptions()
+                        {
+                            P2SH = true,
+                            Legacy = false
+                        });
+                        await Send(webSocket, new GetXPubResult() { ExtPubKey = derivation.ToString() });
+                    }
+                    catch(FormatException)
+                    {
+                        await Send(webSocket, new LedgerTestResult() { Success = false, Error = "Unsupported ledger app" });
+                    }
+                }
+                if (command == "getinfo")
+                {
+                    var network = _NetworkProvider.GetNetwork(cryptoCode);
+                    var strategy = store.GetDerivationStrategies(_NetworkProvider).FirstOrDefault(s => s.Network.NBitcoinNetwork == network.NBitcoinNetwork);
+                    if (strategy == null)
+                    {
+                        await Send(webSocket, new LedgerTestResult() { Success = false, Error = $"Derivation strategy for {cryptoCode} is not set" });
+                        return new EmptyResult();
+                    }
+                    DirectDerivationStrategy directStrategy = GetDirectStrategy(strategy);
+                    if (directStrategy == null)
+                    {
+                        await Send(webSocket, new LedgerTestResult() { Success = false, Error = $"The feature does not work for multi-sig wallets" });
+                        return new EmptyResult();
+                    }
+
+                    var foundKeyPath = await GetKeyPath(ledger, network, directStrategy);
+
+                    if (foundKeyPath == null)
+                    {
+                        await Send(webSocket, new LedgerTestResult() { Success = false, Error = $"This store is not configured to use this ledger" });
+                        return new EmptyResult();
+                    }
+
+                    var feeProvider = _FeeRateProvider.CreateFeeProvider(network);
+                    var recommendedFees = feeProvider.GetFeeRateAsync();
+                    var balance = _WalletProvider.GetWallet(network).GetBalance(strategy.DerivationStrategyBase);
+
+                    await Send(webSocket, new GetInfoResult() { Balance = (double)(await balance).ToDecimal(MoneyUnit.BTC), RecommendedSatoshiPerByte = (int)(await recommendedFees).GetFee(1).Satoshi });
+                }
+
+                if (command == "sendtoaddress")
+                {
+                    var network = _NetworkProvider.GetNetwork(cryptoCode);
+                    var strategy = store.GetDerivationStrategies(_NetworkProvider).FirstOrDefault(s => s.Network.NBitcoinNetwork == network.NBitcoinNetwork);
+                    if (strategy == null)
+                    {
+                        await Send(webSocket, new LedgerTestResult() { Success = false, Error = $"Derivation strategy for {cryptoCode} is not set" });
+                        return new EmptyResult();
+                    }
+
+                    DirectDerivationStrategy directStrategy = GetDirectStrategy(strategy);
+                    if (directStrategy == null)
+                    {
+                        await Send(webSocket, new LedgerTestResult() { Success = false, Error = $"The feature does not work for multi-sig wallets" });
+                        return new EmptyResult();
+                    }
+
+                    var foundKeyPath = await GetKeyPath(ledger, network, directStrategy);
+
+                    if (foundKeyPath == null)
+                    {
+                        await Send(webSocket, new LedgerTestResult() { Success = false, Error = $"This store is not configured to use this ledger" });
+                        return new EmptyResult();
+                    }
+
+                    BitcoinAddress destinationAddress = null;
+                    try
+                    {
+                        destinationAddress = BitcoinAddress.Create(destination.Trim());
+                    }
+                    catch
+                    {
+                        await Send(webSocket, new LedgerTestResult() { Success = false, Error = $"Invalid destination address" });
+                        return new EmptyResult();
+                    }
+
+                    Money amountBTC = null;
+                    try
+                    {
+                        amountBTC = Money.Parse(amount);
+                    }
+                    catch
+                    {
+                        await Send(webSocket, new LedgerTestResult() { Success = false, Error = $"Invalid amount" });
+                        return new EmptyResult();
+                    }
+                    if (amount <= Money.Zero)
+                    {
+                        await Send(webSocket, new LedgerTestResult() { Success = false, Error = "The amount should be above zero" });
+                        return new EmptyResult();
+                    }
+
+                    FeeRate feeRateValue = null;
+                    try
+                    {
+                        feeRateValue = new FeeRate(Money.Satoshis(int.Parse(feeRate)), 1);
+                    }
+                    catch
+                    {
+                        await Send(webSocket, new LedgerTestResult() { Success = false, Error = "Invalid fee rate" });
+                        return new EmptyResult();
+                    }
+
+                    if (feeRateValue.FeePerK <= Money.Zero)
+                    {
+                        await Send(webSocket, new LedgerTestResult() { Success = false, Error = "The fee rate should be above zero" });
+                        return new EmptyResult();
+                    }
+
+                    bool substractFeeBool = bool.Parse(substractFees);
+
+                    var wallet = _WalletProvider.GetWallet(network);
+                    var unspentCoins = await wallet.GetUnspentCoins(strategy.DerivationStrategyBase);
+
+                    TransactionBuilder builder = new TransactionBuilder();
+                    builder.AddCoins(unspentCoins.Item1);
+                    builder.Send(destinationAddress, amountBTC);
+                    if (substractFeeBool)
+                        builder.SubtractFees();
+                    var change = await wallet.GetChangeAddressAsync(strategy.DerivationStrategyBase);
+                    builder.SetChange(change.Item1);
+                    builder.SendEstimatedFees(feeRateValue);
+                    builder.Shuffle();
+                    var unsigned = builder.BuildTransaction(false);
+
+                    Dictionary<OutPoint, KeyPath> keyPaths = unspentCoins.Item2;
+                    var hasChange = unsigned.Outputs.Count == 2;
+                    var usedCoins = builder.FindSpentCoins(unsigned);
+                    ledgerTransport.Timeout = TimeSpan.FromMinutes(5);
+                    var fullySigned = await ledger.SignTransactionAsync(
+                        usedCoins.Select(c => new SignatureRequest
+                        {
+                            InputCoin = c,
+                            KeyPath = foundKeyPath.Derive(keyPaths[c.Outpoint]),
+                            PubKey = directStrategy.Root.Derive(keyPaths[c.Outpoint]).PubKey
+                        }).ToArray(),
+                        unsigned,
+                        hasChange ? foundKeyPath.Derive(change.Item2) : null);
+                    try
+                    {
+                        var result = await wallet.BroadcastTransactionsAsync(new List<Transaction>() { fullySigned });
+                        if (!result[0].Success)
+                        {
+                            await Send(webSocket, new LedgerTestResult() { Success = false, Error = $"RPC Error while broadcasting: {result[0].RPCCode} {result[0].RPCCodeMessage} {result[0].RPCMessage}" });
+                            return new EmptyResult();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        await Send(webSocket, new LedgerTestResult() { Success = false, Error = "Error while broadcasting: " + ex.Message });
+                        return new EmptyResult();
+                    }
+                    await Send(webSocket, new SendToAddressResult() { TransactionId = fullySigned.GetHash().ToString() });
+                }
+            }
+            catch (LedgerWallet.LedgerWalletException ex)
+            { try { await Send(webSocket, new LedgerTestResult() { Success = false, Error = ex.Message }); } catch { } }
+            catch (OperationCanceledException)
+            { try { await Send(webSocket, new LedgerTestResult() { Success = false, Error = "timeout" }); } catch { } }
+            catch (Exception ex)
+            { try { await Send(webSocket, new LedgerTestResult() { Success = false, Error = ex.Message }); } catch { } }
+            finally
+            {
+                await webSocket.CloseSocket();
+            }
+
+            return new EmptyResult();
+        }
+
+        private static async Task<KeyPath> GetKeyPath(LedgerClient ledger, BTCPayNetwork network, DirectDerivationStrategy directStrategy)
+        {
+            KeyPath foundKeyPath = null;
+            foreach (var account in
+                                  new[] { new KeyPath("49'"), new KeyPath("44'") }
+                                  .Select(purpose => purpose.Derive(network.CoinType))
+                                  .SelectMany(coinType => Enumerable.Range(0, 5).Select(i => coinType.Derive(i, true))))
+            {
+                try
+                {
+                    var extpubkey = await GetExtPubKey(ledger, network, account);
+                    if (directStrategy.ToString().Contains(extpubkey.ToString()))
+                    {
+                        foundKeyPath = account;
+                        break;
+                    }
+                }
+                catch (FormatException)
+                {
+                    throw new Exception($"The opened ledger app does not support {network.NBitcoinNetwork.Name}");
+                }
+            }
+
+            return foundKeyPath;
+        }
+
+        private static async Task<BitcoinExtPubKey> GetExtPubKey(LedgerClient ledger, BTCPayNetwork network, KeyPath account)
+        {
+            var pubKey = await ledger.GetWalletPubKeyAsync(account);
+            if (pubKey.Address.Network != network.NBitcoinNetwork)
+            {
+                if (network.DefaultSettings.ChainType == NBXplorer.ChainType.Main)
+                    throw new Exception($"The opened ledger app should be for {network.NBitcoinNetwork.Name}, not for {pubKey.Address.Network}");
+            }
+            var parent = (await ledger.GetWalletPubKeyAsync(account.Parent)).UncompressedPublicKey.Compress();
+            var extpubkey = new ExtPubKey(pubKey.UncompressedPublicKey.Compress(), pubKey.ChainCode, (byte)account.Indexes.Length, parent.Hash.ToBytes().Take(4).ToArray(), account.Indexes.Last()).GetWif(network.NBitcoinNetwork);
+            return extpubkey;
+        }
+
+        private static DirectDerivationStrategy GetDirectStrategy(DerivationStrategy strategy)
+        {
+            var directStrategy = strategy.DerivationStrategyBase as DirectDerivationStrategy;
+            if (directStrategy == null)
+                directStrategy = (strategy.DerivationStrategyBase as P2SHDerivationStrategy).Inner as DirectDerivationStrategy;
+            return directStrategy;
+        }
+
+        UTF8Encoding UTF8NOBOM = new UTF8Encoding(false);
+        private async Task Send(WebSocket webSocket, object result)
+        {
+            var bytes = UTF8NOBOM.GetBytes(JsonConvert.SerializeObject(result, _MvcJsonOptions.SerializerSettings));
+            await webSocket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, new CancellationTokenSource(2000).Token);
         }
 
         [HttpGet]
@@ -197,6 +543,7 @@ namespace BTCPayServer.Controllers
             if (store == null)
                 return NotFound();
             DerivationSchemeViewModel vm = new DerivationSchemeViewModel();
+            vm.ServerUrl = GetStoreUrl(storeId);
             vm.SetCryptoCurrencies(_ExplorerProvider, selectedScheme);
             return View(vm);
         }
@@ -206,6 +553,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> AddDerivationScheme(string storeId, DerivationSchemeViewModel vm, string selectedScheme = null)
         {
             selectedScheme = selectedScheme ?? "BTC";
+            vm.ServerUrl = GetStoreUrl(storeId);
             var store = await _Repo.FindStore(storeId, GetUserId());
             if (store == null)
                 return NotFound();

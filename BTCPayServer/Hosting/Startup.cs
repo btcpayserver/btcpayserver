@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
+
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.AspNetCore.Mvc;
 using NBitpayClient;
@@ -36,6 +37,8 @@ using System.Threading;
 using Microsoft.Extensions.Options;
 using Microsoft.ApplicationInsights.AspNetCore.Extensions;
 using Microsoft.AspNetCore.Mvc.Cors.Internal;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+using System.Net;
 
 namespace BTCPayServer.Hosting
 {
@@ -88,6 +91,15 @@ namespace BTCPayServer.Hosting
                 options.Password.RequireNonAlphanumeric = false;
                 options.Password.RequireUppercase = false;
             });
+
+            // Needed to debug U2F for ledger support
+            //services.Configure<KestrelServerOptions>(kestrel =>
+            //{
+            //    kestrel.Listen(IPAddress.Loopback, 5012, l => 
+            //    {
+            //        l.UseHttps("devtest.pfx", "toto");
+            //    });
+            //});
         }
 
         // Big hack, tests fails if only call AddHangfire because Hangfire fail at initializing at the second test run

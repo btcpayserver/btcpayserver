@@ -68,6 +68,20 @@ namespace BTCPayServer.Services.Wallets
             return pathInfo.ScriptPubKey.GetDestinationAddress(Network.NBitcoinNetwork);
         }
 
+        public async Task<(BitcoinAddress, KeyPath)> GetChangeAddressAsync(DerivationStrategyBase derivationStrategy)
+        {
+            if (derivationStrategy == null)
+                throw new ArgumentNullException(nameof(derivationStrategy));
+            var pathInfo = await _Client.GetUnusedAsync(derivationStrategy, DerivationFeature.Change, 0, false).ConfigureAwait(false);
+            // Might happen on some broken install
+            if (pathInfo == null)
+            {
+                await _Client.TrackAsync(derivationStrategy).ConfigureAwait(false);
+                pathInfo = await _Client.GetUnusedAsync(derivationStrategy, DerivationFeature.Change, 0, false).ConfigureAwait(false);
+            }
+            return (pathInfo.ScriptPubKey.GetDestinationAddress(Network.NBitcoinNetwork), pathInfo.KeyPath);
+        }
+
         public async Task TrackAsync(DerivationStrategyBase derivationStrategy)
         {
             await _Client.TrackAsync(derivationStrategy);
@@ -97,27 +111,27 @@ namespace BTCPayServer.Services.Wallets
             };
         }
 
-        public Task BroadcastTransactionsAsync(List<Transaction> transactions)
+        public Task<BroadcastResult[]> BroadcastTransactionsAsync(List<Transaction> transactions)
         {
             var tasks = transactions.Select(t => _Client.BroadcastAsync(t)).ToArray();
             return Task.WhenAll(tasks);
         }
 
+        public async Task<(Coin[], Dictionary<OutPoint, KeyPath>)> GetUnspentCoins(DerivationStrategyBase derivationStrategy, CancellationToken cancellation = default(CancellationToken))
+        {
+            var changes = await _Client.GetUTXOsAsync(derivationStrategy, null, false, cancellation).ConfigureAwait(false);
+            var keyPaths = new Dictionary<OutPoint, KeyPath>();
+            foreach (var coin in changes.GetUnspentUTXOs())
+            {
+                keyPaths.TryAdd(coin.Outpoint, coin.KeyPath);
+            }
+            return (changes.GetUnspentCoins(), keyPaths);
+        }
 
         public async Task<Money> GetBalance(DerivationStrategyBase derivationStrategy)
         {
             var result = await _Client.GetUTXOsAsync(derivationStrategy, null, true);
-
-            Dictionary<OutPoint, UTXO> received = new Dictionary<OutPoint, UTXO>();
-            foreach(var utxo in result.Confirmed.UTXOs.Concat(result.Unconfirmed.UTXOs))
-            {
-                received.TryAdd(utxo.Outpoint, utxo);
-            }
-            foreach (var utxo in result.Confirmed.SpentOutpoints.Concat(result.Unconfirmed.SpentOutpoints))
-            {
-                received.Remove(utxo);
-            }
-            return received.Values.Select(c => c.Value).Sum();
+            return result.GetUnspentUTXOs().Select(c => c.Value).Sum();
         }
     }
 }

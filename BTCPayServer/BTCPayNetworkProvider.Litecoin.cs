@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Services.Rates;
+using NBitcoin;
 using NBXplorer;
 
 namespace BTCPayServer
@@ -24,7 +25,8 @@ namespace BTCPayServer
                 UriScheme = "litecoin",
                 DefaultRateProvider = ltcRate,
                 CryptoImagePath = "imlegacy/litecoin-symbol.svg",
-                DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NBXplorerNetworkProvider.ChainType)
+                DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NBXplorerNetworkProvider.ChainType),
+                CoinType = NBXplorerNetworkProvider.ChainType == ChainType.Main ? new KeyPath("2'") : new KeyPath("3'")
             });
         }
     }

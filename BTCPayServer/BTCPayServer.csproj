@@ -2,7 +2,8 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.0</TargetFramework>
-		<Version>1.0.1.21</Version>
+		<Version>1.0.1.22</Version>
+    <NoWarn>NU1701</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Build\dockerfiles\**" />
@@ -20,11 +21,12 @@
     <PackageReference Include="Hangfire" Version="1.6.17" />
     <PackageReference Include="Hangfire.MemoryStorage" Version="1.5.2" />
     <PackageReference Include="Hangfire.PostgreSql" Version="1.4.8.1" />
+    <PackageReference Include="LedgerWallet" Version="1.0.1.32" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.2" />
     <PackageReference Include="NBitcoin" Version="4.0.0.54" />
     <PackageReference Include="NBitpayClient" Version="1.0.0.16" />	  
     <PackageReference Include="DBreeze" Version="1.87.0" />
-    <PackageReference Include="NBXplorer.Client" Version="1.0.1.8" />
+    <PackageReference Include="NBXplorer.Client" Version="1.0.1.9" />
     <PackageReference Include="NicolasDorier.CommandLine" Version="1.0.0.1" />
     <PackageReference Include="NicolasDorier.CommandLine.Configuration" Version="1.0.0.2" />
     <PackageReference Include="NicolasDorier.StandardConfiguration" Version="1.0.0.13" />
@@ -98,5 +100,11 @@
 
 	<ItemGroup>
 	  <Folder Include="Build\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="devtest.pfx">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
 	</ItemGroup>
 </Project>

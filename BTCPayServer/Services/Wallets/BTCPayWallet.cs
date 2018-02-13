@@ -117,13 +117,13 @@ namespace BTCPayServer.Services.Wallets
             return Task.WhenAll(tasks);
         }
 
-        public async Task<(Coin[], Dictionary<OutPoint, KeyPath>)> GetUnspentCoins(DerivationStrategyBase derivationStrategy, CancellationToken cancellation = default(CancellationToken))
+        public async Task<(Coin[], Dictionary<Script, KeyPath>)> GetUnspentCoins(DerivationStrategyBase derivationStrategy, CancellationToken cancellation = default(CancellationToken))
         {
             var changes = await _Client.GetUTXOsAsync(derivationStrategy, null, false, cancellation).ConfigureAwait(false);
-            var keyPaths = new Dictionary<OutPoint, KeyPath>();
+            var keyPaths = new Dictionary<Script, KeyPath>();
             foreach (var coin in changes.GetUnspentUTXOs())
             {
-                keyPaths.TryAdd(coin.Outpoint, coin.KeyPath);
+                keyPaths.TryAdd(coin.ScriptPubKey, coin.KeyPath);
             }
             return (changes.GetUnspentCoins(), keyPaths);
         }

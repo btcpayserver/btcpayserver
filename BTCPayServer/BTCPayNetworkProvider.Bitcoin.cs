@@ -26,7 +26,8 @@ namespace BTCPayServer
                 UriScheme = "bitcoin",
                 DefaultRateProvider = btcRate,
                 CryptoImagePath = "imlegacy/bitcoin-symbol.svg",
-                DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NBXplorerNetworkProvider.ChainType)
+                DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NBXplorerNetworkProvider.ChainType),
+                CoinType = NBXplorerNetworkProvider.ChainType == ChainType.Main ? new KeyPath("0'") : new KeyPath("1'")
             });
         }
     }

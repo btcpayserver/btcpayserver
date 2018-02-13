@@ -65,6 +65,8 @@ namespace BTCPayServer
 
 
         public BTCPayDefaultSettings DefaultSettings { get; set; }
+        public KeyPath CoinType { get; internal set; }
+
         public override string ToString()
         {
             return CryptoCode;

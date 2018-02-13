@@ -45,6 +45,8 @@
                 confirmButton.removeClass("disabled");
             })
             .then(function (result) {
+                if (!result)
+                    return;
                 confirmButton.prop("disabled", false);
                 confirmButton.removeClass("disabled");
                 if (result.error) {
@@ -84,6 +86,8 @@
         bridge.sendCommand("getinfo", "cryptoCode=" + cryptoCode)
             .catch(function (reason) { Write('check', 'error', reason); })
             .then(function (result) {
+                if (!result)
+                    return;
                 if (result.error) {
                     Write('check', 'error', result.error);
                     return;
@@ -104,9 +108,16 @@
                 Write('hw', 'error', 'U2F or Websocket are not supported by this browser');
             }
             else {
-                bridge.sendCommand('test')
-                    .catch(function (reason) { Write('hw', 'error', reason); })
+                bridge.sendCommand('test', null, 5)
+                    .catch(function (reason)
+                    {
+                        if (reason.message === "Sign failed")
+                            reason = "Have you forgot to activate browser support in your ledger app?";
+                        Write('hw', 'error', reason);
+                    })
                     .then(function (result) {
+                        if (!result)
+                            return;
                         if (result.error) {
                             Write('hw', 'error', result.error);
                         } else {

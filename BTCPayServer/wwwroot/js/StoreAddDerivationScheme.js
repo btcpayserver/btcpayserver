@@ -8,8 +8,10 @@
     }
 
     function Write(prefix, type, message) {
-
-        
+        if (type === "error") {
+            $("#no-ledger-info").css("display", "block");
+            $("#ledger-info").css("display", "none");
+        }
     }
 
     $("#ledger-info-recommended").on("click", function (elem) {
@@ -20,7 +22,7 @@
     });
 
     $("#CryptoCurrency").on("change", function (elem) {
-        $("#no-ledger-info").css("display", "block");
+        $("#no-ledger-info").css("display", "none");
         $("#ledger-info").css("display", "none");
         updateInfo();
     });

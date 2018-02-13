@@ -207,7 +207,7 @@ namespace BTCPayServer.Controllers
                     var network = _NetworkProvider.GetNetwork(cryptoCode);
                     try
                     {
-                        var pubkey = await GetExtPubKey(ledger, network, new KeyPath("49'").Derive(network.CoinType).Derive(0, true));
+                        var pubkey = await GetExtPubKey(ledger, network, new KeyPath("49'").Derive(network.CoinType).Derive(0, true), false);
                         var derivation = new DerivationStrategyFactory(network.NBitcoinNetwork).CreateDirectDerivationStrategy(pubkey, new DerivationStrategyOptions()
                         {
                             P2SH = true,
@@ -390,8 +390,8 @@ namespace BTCPayServer.Controllers
             {
                 try
                 {
-                    var extpubkey = await GetExtPubKey(ledger, network, account);
-                    if (directStrategy.ToString().Contains(extpubkey.ToString()))
+                    var extpubkey = await GetExtPubKey(ledger, network, account, true);
+                    if (directStrategy.Root.PubKey == extpubkey.ExtPubKey.PubKey)
                     {
                         foundKeyPath = account;
                         break;
@@ -406,7 +406,7 @@ namespace BTCPayServer.Controllers
             return foundKeyPath;
         }
 
-        private static async Task<BitcoinExtPubKey> GetExtPubKey(LedgerClient ledger, BTCPayNetwork network, KeyPath account)
+        private static async Task<BitcoinExtPubKey> GetExtPubKey(LedgerClient ledger, BTCPayNetwork network, KeyPath account, bool onlyChaincode)
         {
             var pubKey = await ledger.GetWalletPubKeyAsync(account);
             if (pubKey.Address.Network != network.NBitcoinNetwork)
@@ -414,8 +414,8 @@ namespace BTCPayServer.Controllers
                 if (network.DefaultSettings.ChainType == NBXplorer.ChainType.Main)
                     throw new Exception($"The opened ledger app should be for {network.NBitcoinNetwork.Name}, not for {pubKey.Address.Network}");
             }
-            var parent = (await ledger.GetWalletPubKeyAsync(account.Parent)).UncompressedPublicKey.Compress();
-            var extpubkey = new ExtPubKey(pubKey.UncompressedPublicKey.Compress(), pubKey.ChainCode, (byte)account.Indexes.Length, parent.Hash.ToBytes().Take(4).ToArray(), account.Indexes.Last()).GetWif(network.NBitcoinNetwork);
+            var fingerprint = onlyChaincode ? new byte[4] : (await ledger.GetWalletPubKeyAsync(account.Parent)).UncompressedPublicKey.Compress().Hash.ToBytes().Take(4).ToArray();
+            var extpubkey = new ExtPubKey(pubKey.UncompressedPublicKey.Compress(), pubKey.ChainCode, (byte)account.Indexes.Length, fingerprint, account.Indexes.Last()).GetWif(network.NBitcoinNetwork);
             return extpubkey;
         }
 

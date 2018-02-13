@@ -1,6 +1,8 @@
 ﻿$(function () {
     var ledgerDetected = false;
     var bridge = new ledgerwebsocket.LedgerWebSocketBridge(srvModel.serverUrl + "ws/ledger");
+    var recommendedFees = "";
+    var recommendedBalance = "";
 
     function WriteAlert(type, message) {
         $(".alert").removeClass("alert-danger");
@@ -24,6 +26,15 @@
 
     $("#sendform").on("submit", function (elem) {
         elem.preventDefault();
+
+        if ($("#amount-textbox").val() === "") {
+            $("#amount-textbox").val(recommendedBalance);
+            $("#substract-checkbox").prop("checked", true);
+        }
+
+        if ($("#fee-textbox").val() === "") {
+            $("#fee-textbox").val(recommendedFees);
+        }
 
         var args = "";
         args += "cryptoCode=" + $("#cryptoCurrencies").val();
@@ -95,6 +106,8 @@
                 else {
                     Write('check', 'success', 'This store is configured to use your ledger');
                     $(".crypto-info").css("display", "block");
+                    recommendedFees = result.recommendedSatoshiPerByte;
+                    recommendedBalance = result.balance;
                     $("#crypto-fee").text(result.recommendedSatoshiPerByte);
                     $("#crypto-balance").text(result.balance);
                     $("#crypto-code").text(cryptoCode);

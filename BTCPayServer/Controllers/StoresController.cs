@@ -232,7 +232,7 @@ namespace BTCPayServer.Controllers
                     DirectDerivationStrategy directStrategy = GetDirectStrategy(strategy);
                     if (directStrategy == null)
                     {
-                        await Send(webSocket, new LedgerTestResult() { Success = false, Error = $"The feature does not work for multi-sig wallets" });
+                        await Send(webSocket, new LedgerTestResult() { Success = false, Error = $"The feature does not work for multi-sig or non-segwit wallets" });
                         return new EmptyResult();
                     }
 
@@ -264,7 +264,7 @@ namespace BTCPayServer.Controllers
                     DirectDerivationStrategy directStrategy = GetDirectStrategy(strategy);
                     if (directStrategy == null)
                     {
-                        await Send(webSocket, new LedgerTestResult() { Success = false, Error = $"The feature does not work for multi-sig wallets" });
+                        await Send(webSocket, new LedgerTestResult() { Success = false, Error = $"The feature does not work for multi-sig or non-segwit wallets" });
                         return new EmptyResult();
                     }
 
@@ -424,6 +424,8 @@ namespace BTCPayServer.Controllers
             var directStrategy = strategy.DerivationStrategyBase as DirectDerivationStrategy;
             if (directStrategy == null)
                 directStrategy = (strategy.DerivationStrategyBase as P2SHDerivationStrategy).Inner as DirectDerivationStrategy;
+            if (!directStrategy.Segwit)
+                return null;
             return directStrategy;
         }
 

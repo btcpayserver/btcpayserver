@@ -312,10 +312,10 @@ namespace BTCPayServer.Controllers
             var stores = await _Repo.GetStoresByUserId(GetUserId());
             var balances = stores
                                 .Select(s => s.GetDerivationStrategies(_NetworkProvider)
-                                              .Select(d => (Wallet: _WalletProvider.GetWallet(d.Network),
-                                                            DerivationStrategy: d.DerivationStrategyBase))
+                                              .Select(d => ((Wallet: _WalletProvider.GetWallet(d.Network),
+                                                            DerivationStrategy: d.DerivationStrategyBase)))
                                               .Where(_ => _.Wallet != null)
-                                              .Select(async _ => (await _.Wallet.GetBalance(_.DerivationStrategy)).ToString() + " " + _.Wallet.Network.CryptoCode))
+                                              .Select(async _ => (await GetBalanceString(_)).ToString() + " " + _.Wallet.Network.CryptoCode))
                                 .ToArray();
 
             await Task.WhenAll(balances.SelectMany(_ => _));
@@ -331,6 +331,21 @@ namespace BTCPayServer.Controllers
                 });
             }
             return View(result);
+        }
+
+        private static async Task<string> GetBalanceString((BTCPayWallet Wallet, DerivationStrategyBase DerivationStrategy) _)
+        {
+            using (CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
+            {
+                try
+                {
+                    return (await _.Wallet.GetBalance(_.DerivationStrategy, cts.Token)).ToString();
+                }
+                catch
+                {
+                    return "--";
+                }
+            }
         }
 
         [HttpGet]

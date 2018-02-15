@@ -1,4 +1,5 @@
 ﻿using NBitcoin;
+using Microsoft.Extensions.Logging;
 using NBXplorer;
 using NBXplorer.DerivationStrategy;
 using System;
@@ -10,6 +11,7 @@ using BTCPayServer.Data;
 using System.Threading;
 using NBXplorer.Models;
 using Microsoft.Extensions.Caching.Memory;
+using BTCPayServer.Logging;
 
 namespace BTCPayServer.Services.Wallets
 {
@@ -25,7 +27,6 @@ namespace BTCPayServer.Services.Wallets
             public Coin Coin { get; set; }
         }
         public TimestampedCoin[] TimestampedCoins { get; set; }
-        public KnownState State { get; set; }
         public DerivationStrategyBase Strategy { get; set; }
         public BTCPayWallet Wallet { get; set; }
     }
@@ -102,19 +103,40 @@ namespace BTCPayServer.Services.Wallets
             _MemoryCache.Remove("CACHEDCOINS_" + strategy.ToString());
         }
 
-        public Task<NetworkCoins> GetCoins(DerivationStrategyBase strategy, CancellationToken cancellation = default(CancellationToken))
+        public async Task<NetworkCoins> GetCoins(DerivationStrategyBase strategy, CancellationToken cancellation = default(CancellationToken))
         {
-            return _MemoryCache.GetOrCreateAsync("CACHEDCOINS_" + strategy.ToString(), async entry =>
+            UTXOChanges changes = await GetUTXOChanges(strategy, cancellation);
+
+            return new NetworkCoins()
             {
-                entry.AbsoluteExpiration = DateTimeOffset.UtcNow + CacheSpan;
-                var changes = await _Client.GetUTXOsAsync(strategy, null, false, cancellation).ConfigureAwait(false);
-                return new NetworkCoins()
+                TimestampedCoins = changes.Confirmed.UTXOs.Concat(changes.Unconfirmed.UTXOs).Select(c => new NetworkCoins.TimestampedCoin() { Coin = c.AsCoin(), DateTime = c.Timestamp }).ToArray(),
+                Strategy = strategy,
+                Wallet = this
+            };
+        }
+
+        private async Task<UTXOChanges> GetUTXOChanges(DerivationStrategyBase strategy, CancellationToken cancellation)
+        {
+            return await _MemoryCache.GetOrCreateAsync("CACHEDCOINS_" + strategy.ToString(), async entry =>
+            {
+                var now = DateTimeOffset.UtcNow;
+                UTXOChanges result = null;
+                try
                 {
-                    TimestampedCoins = changes.Confirmed.UTXOs.Concat(changes.Unconfirmed.UTXOs).Select(c => new NetworkCoins.TimestampedCoin() { Coin = c.AsCoin(), DateTime = c.Timestamp }).ToArray(),
-                    State = new KnownState() { PreviousCall = changes },
-                    Strategy = strategy,
-                    Wallet = this
-                };
+                    result = await _Client.GetUTXOsAsync(strategy, null, false, cancellation).ConfigureAwait(false);
+                }
+                catch
+                {
+                    Logs.PayServer.LogError("Call to NBXplorer GetUTXOsAsync timed out, this should never happen, please report this issue to NBXplorer developers");
+                    throw;
+                }
+                var spentTime = DateTimeOffset.UtcNow - now;
+                if (spentTime.TotalSeconds > 30)
+                {
+                    Logs.PayServer.LogWarning($"NBXplorer took {(int)spentTime.TotalSeconds} seconds to reply, there is something wrong, please report this issue to NBXplorer developers");
+                }
+                entry.AbsoluteExpiration = DateTimeOffset.UtcNow + CacheSpan;
+                return result;
             });
         }
 
@@ -128,7 +150,7 @@ namespace BTCPayServer.Services.Wallets
 
         public async Task<(Coin[], Dictionary<Script, KeyPath>)> GetUnspentCoins(DerivationStrategyBase derivationStrategy, CancellationToken cancellation = default(CancellationToken))
         {
-            var changes = await _Client.GetUTXOsAsync(derivationStrategy, null, false, cancellation).ConfigureAwait(false);
+            var changes = await GetUTXOChanges(derivationStrategy, cancellation);
             var keyPaths = new Dictionary<Script, KeyPath>();
             foreach (var coin in changes.GetUnspentUTXOs())
             {
@@ -137,10 +159,10 @@ namespace BTCPayServer.Services.Wallets
             return (changes.GetUnspentCoins(), keyPaths);
         }
 
-        public async Task<Money> GetBalance(DerivationStrategyBase derivationStrategy)
+        public async Task<Money> GetBalance(DerivationStrategyBase derivationStrategy, CancellationToken cancellation = default(CancellationToken))
         {
-            var result = await _Client.GetUTXOsAsync(derivationStrategy, null, true);
-            return result.GetUnspentUTXOs().Select(c => c.Value).Sum();
+            UTXOChanges changes = await GetUTXOChanges(derivationStrategy, cancellation);
+            return changes.GetUnspentUTXOs().Select(c => c.Value).Sum();
         }
     }
 }

@@ -22,6 +22,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Http.Extensions;
 using BTCPayServer.Controllers;
+using System.Net.WebSockets;
 
 namespace BTCPayServer.Hosting
 {
@@ -82,6 +83,8 @@ namespace BTCPayServer.Hosting
             {
                 await _Next(httpContext);
             }
+            catch (WebSocketException)
+            { }
             catch (UnauthorizedAccessException ex)
             {
                 await HandleBitpayHttpException(httpContext, new BitpayHttpException(401, ex.Message));

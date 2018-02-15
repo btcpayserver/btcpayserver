@@ -102,6 +102,7 @@ namespace BTCPayServer.Services.Wallets
         public void InvalidateCache(DerivationStrategyBase strategy)
         {
             _MemoryCache.Remove("CACHEDCOINS_" + strategy.ToString());
+            _FetchingUTXOs.TryRemove(strategy.ToString(), out var unused);
         }
         ConcurrentDictionary<string, TaskCompletionSource<UTXOChanges>> _FetchingUTXOs = new ConcurrentDictionary<string, TaskCompletionSource<UTXOChanges>>();
 

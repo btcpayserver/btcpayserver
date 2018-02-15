@@ -10,15 +10,12 @@ namespace BTCPayServer.Services.Wallets
     {
         private ExplorerClientProvider _Client;
         BTCPayNetworkProvider _NetworkProvider;
-        TransactionCacheProvider _TransactionCacheProvider;
         public BTCPayWalletProvider(ExplorerClientProvider client,
-                                    TransactionCacheProvider transactionCacheProvider,
                                     BTCPayNetworkProvider networkProvider)
         {
             if (client == null)
                 throw new ArgumentNullException(nameof(client));
             _Client = client;
-            _TransactionCacheProvider = transactionCacheProvider;
             _NetworkProvider = networkProvider;
         }
 
@@ -36,7 +33,7 @@ namespace BTCPayServer.Services.Wallets
             var client = _Client.GetExplorerClient(cryptoCode);
             if (network == null || client == null)
                 return null;
-            return new BTCPayWallet(client, _TransactionCacheProvider.GetTransactionCache(network), network);
+            return new BTCPayWallet(client, network);
         }
 
         public bool IsAvailable(BTCPayNetwork network)

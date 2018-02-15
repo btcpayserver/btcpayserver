@@ -142,8 +142,6 @@ namespace BTCPayServer.Hosting
                 BlockTarget = 20
             });
 
-            services.AddSingleton<TransactionCacheProvider>();
-
             services.AddSingleton<IHostedService, NBXplorerWaiters>();
             services.AddSingleton<IHostedService, NBXplorerListener>();
             services.AddSingleton<IHostedService, InvoiceNotificationManager>();

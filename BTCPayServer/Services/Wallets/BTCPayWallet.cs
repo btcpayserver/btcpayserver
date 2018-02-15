@@ -32,14 +32,12 @@ namespace BTCPayServer.Services.Wallets
     public class BTCPayWallet
     {
         private ExplorerClient _Client;
-        private TransactionCache _Cache;
-        public BTCPayWallet(ExplorerClient client, TransactionCache cache, BTCPayNetwork network)
+        public BTCPayWallet(ExplorerClient client, BTCPayNetwork network)
         {
             if (client == null)
                 throw new ArgumentNullException(nameof(client));
             _Client = client;
             _Network = network;
-            _Cache = cache;
         }
 
 
@@ -91,11 +89,7 @@ namespace BTCPayServer.Services.Wallets
         {
             if (txId == null)
                 throw new ArgumentNullException(nameof(txId));
-            var tx = _Cache.GetTransaction(txId);
-            if (tx != null)
-                return tx;
-            tx = await _Client.GetTransactionAsync(txId, cancellation);
-            _Cache.AddToCache(tx);
+            var tx = await _Client.GetTransactionAsync(txId, cancellation);
             return tx;
         }
 

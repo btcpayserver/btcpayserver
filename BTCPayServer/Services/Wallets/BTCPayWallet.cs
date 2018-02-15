@@ -32,12 +32,16 @@ namespace BTCPayServer.Services.Wallets
     public class BTCPayWallet
     {
         private ExplorerClient _Client;
-        public BTCPayWallet(ExplorerClient client, BTCPayNetwork network)
+        private IMemoryCache _MemoryCache;
+        public BTCPayWallet(ExplorerClient client, IMemoryCache memoryCache, BTCPayNetwork network)
         {
             if (client == null)
                 throw new ArgumentNullException(nameof(client));
+            if (memoryCache == null)
+                throw new ArgumentNullException(nameof(memoryCache));
             _Client = client;
             _Network = network;
+            _MemoryCache = memoryCache;
         }
 
 
@@ -50,7 +54,7 @@ namespace BTCPayServer.Services.Wallets
             }
         }
 
-        public TimeSpan CacheSpan { get; private set; } = TimeSpan.FromMinutes(60);
+        public TimeSpan CacheSpan { get; private set; } = TimeSpan.FromMinutes(30);
 
         public async Task<BitcoinAddress> ReserveAddressAsync(DerivationStrategyBase derivationStrategy)
         {
@@ -93,16 +97,25 @@ namespace BTCPayServer.Services.Wallets
             return tx;
         }
 
-        public async Task<NetworkCoins> GetCoins(DerivationStrategyBase strategy, KnownState state, CancellationToken cancellation = default(CancellationToken))
+        public void InvalidateCache(DerivationStrategyBase strategy)
         {
-            var changes = await _Client.GetUTXOsAsync(strategy, state?.PreviousCall, false, cancellation).ConfigureAwait(false);
-            return new NetworkCoins()
+            _MemoryCache.Remove("CACHEDCOINS_" + strategy.ToString());
+        }
+
+        public Task<NetworkCoins> GetCoins(DerivationStrategyBase strategy, CancellationToken cancellation = default(CancellationToken))
+        {
+            return _MemoryCache.GetOrCreateAsync("CACHEDCOINS_" + strategy.ToString(), async entry =>
             {
-                TimestampedCoins = changes.Confirmed.UTXOs.Concat(changes.Unconfirmed.UTXOs).Select(c => new NetworkCoins.TimestampedCoin() { Coin = c.AsCoin(), DateTime = c.Timestamp }).ToArray(),
-                State = new KnownState() { PreviousCall = changes },
-                Strategy = strategy,
-                Wallet = this
-            };
+                entry.AbsoluteExpiration = DateTimeOffset.UtcNow + CacheSpan;
+                var changes = await _Client.GetUTXOsAsync(strategy, null, false, cancellation).ConfigureAwait(false);
+                return new NetworkCoins()
+                {
+                    TimestampedCoins = changes.Confirmed.UTXOs.Concat(changes.Unconfirmed.UTXOs).Select(c => new NetworkCoins.TimestampedCoin() { Coin = c.AsCoin(), DateTime = c.Timestamp }).ToArray(),
+                    State = new KnownState() { PreviousCall = changes },
+                    Strategy = strategy,
+                    Wallet = this
+                };
+            });
         }
 
         public Task<BroadcastResult[]> BroadcastTransactionsAsync(List<Transaction> transactions)
@@ -110,6 +123,8 @@ namespace BTCPayServer.Services.Wallets
             var tasks = transactions.Select(t => _Client.BroadcastAsync(t)).ToArray();
             return Task.WhenAll(tasks);
         }
+
+
 
         public async Task<(Coin[], Dictionary<Script, KeyPath>)> GetUnspentCoins(DerivationStrategyBase derivationStrategy, CancellationToken cancellation = default(CancellationToken))
         {

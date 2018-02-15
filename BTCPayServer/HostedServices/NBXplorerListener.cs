@@ -142,7 +142,8 @@ namespace BTCPayServer.HostedServices
                                     _Aggregator.Publish(new Events.TxOutReceivedEvent()
                                     {
                                         Network = network,
-                                        ScriptPubKey = txout.ScriptPubKey
+                                        ScriptPubKey = txout.ScriptPubKey,
+                                        DerivationStrategy = txout.DerivationStrategy
                                     });
                                 }
                                 break;

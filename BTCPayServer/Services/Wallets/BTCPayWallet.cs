@@ -12,6 +12,7 @@ using System.Threading;
 using NBXplorer.Models;
 using Microsoft.Extensions.Caching.Memory;
 using BTCPayServer.Logging;
+using System.Collections.Concurrent;
 
 namespace BTCPayServer.Services.Wallets
 {
@@ -102,6 +103,8 @@ namespace BTCPayServer.Services.Wallets
         {
             _MemoryCache.Remove("CACHEDCOINS_" + strategy.ToString());
         }
+        ConcurrentDictionary<string, TaskCompletionSource<UTXOChanges>> _FetchingUTXOs = new ConcurrentDictionary<string, TaskCompletionSource<UTXOChanges>>();
+
 
         public async Task<NetworkCoins> GetCoins(DerivationStrategyBase strategy, CancellationToken cancellation = default(CancellationToken))
         {
@@ -114,30 +117,46 @@ namespace BTCPayServer.Services.Wallets
                 Wallet = this
             };
         }
-
         private async Task<UTXOChanges> GetUTXOChanges(DerivationStrategyBase strategy, CancellationToken cancellation)
         {
-            return await _MemoryCache.GetOrCreateAsync("CACHEDCOINS_" + strategy.ToString(), async entry =>
+            var thisCompletionSource = new TaskCompletionSource<UTXOChanges>();
+            var completionSource = _FetchingUTXOs.GetOrAdd(strategy.ToString(), (s) => thisCompletionSource);
+            if (thisCompletionSource != completionSource)
+                return await completionSource.Task;
+            try
             {
-                var now = DateTimeOffset.UtcNow;
-                UTXOChanges result = null;
-                try
+                var utxos = await _MemoryCache.GetOrCreateAsync("CACHEDCOINS_" + strategy.ToString(), async entry =>
                 {
-                    result = await _Client.GetUTXOsAsync(strategy, null, false, cancellation).ConfigureAwait(false);
-                }
-                catch
-                {
-                    Logs.PayServer.LogError("Call to NBXplorer GetUTXOsAsync timed out, this should never happen, please report this issue to NBXplorer developers");
-                    throw;
-                }
-                var spentTime = DateTimeOffset.UtcNow - now;
-                if (spentTime.TotalSeconds > 30)
-                {
-                    Logs.PayServer.LogWarning($"NBXplorer took {(int)spentTime.TotalSeconds} seconds to reply, there is something wrong, please report this issue to NBXplorer developers");
-                }
-                entry.AbsoluteExpiration = DateTimeOffset.UtcNow + CacheSpan;
-                return result;
-            });
+                    var now = DateTimeOffset.UtcNow;
+                    UTXOChanges result = null;
+                    try
+                    {
+                        result = await _Client.GetUTXOsAsync(strategy, null, false, cancellation).ConfigureAwait(false);
+                    }
+                    catch
+                    {
+                        Logs.PayServer.LogError("Call to NBXplorer GetUTXOsAsync timed out, this should never happen, please report this issue to NBXplorer developers");
+                        throw;
+                    }
+                    var spentTime = DateTimeOffset.UtcNow - now;
+                    if (spentTime.TotalSeconds > 30)
+                    {
+                        Logs.PayServer.LogWarning($"NBXplorer took {(int)spentTime.TotalSeconds} seconds to reply, there is something wrong, please report this issue to NBXplorer developers");
+                    }
+                    entry.AbsoluteExpiration = DateTimeOffset.UtcNow + CacheSpan;
+                    return result;
+                });
+                completionSource.TrySetResult(utxos);
+            }
+            catch(Exception ex)
+            {
+                completionSource.TrySetException(ex);
+            }
+            finally
+            {
+                _FetchingUTXOs.TryRemove(strategy.ToString(), out var unused);
+            }
+            return await completionSource.Task;
         }
 
         public Task<BroadcastResult[]> BroadcastTransactionsAsync(List<Transaction> transactions)

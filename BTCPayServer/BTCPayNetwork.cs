@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using NBitcoin;
 using NBXplorer;
@@ -63,13 +64,13 @@ namespace BTCPayServer
         public string CryptoImagePath { get; set; }
         public NBXplorer.NBXplorerNetwork NBXplorerNetwork { get; set; }
 
-
         public BTCPayDefaultSettings DefaultSettings { get; set; }
         public KeyPath CoinType { get; internal set; }
+        public int MaxTrackedConfirmation { get; internal set; } = 7;
 
         public override string ToString()
         {
             return CryptoCode;
-        }
+        }        
     }
 }

@@ -20,6 +20,13 @@ namespace BTCPayServer.Services.Wallets
     {
         public UTXOChanges PreviousCall { get; set; }
     }
+
+    public class ReceivedCoin
+    {
+        public Coin Coin { get; set; }
+        public DateTimeOffset Timestamp { get; set; }
+        public KeyPath KeyPath { get; set; }
+    }
     public class NetworkCoins
     {
         public class TimestampedCoin
@@ -56,7 +63,7 @@ namespace BTCPayServer.Services.Wallets
             }
         }
 
-        public TimeSpan CacheSpan { get; private set; } = TimeSpan.FromMinutes(30);
+        public TimeSpan CacheSpan { get; private set; } = TimeSpan.FromMinutes(5);
 
         public async Task<BitcoinAddress> ReserveAddressAsync(DerivationStrategyBase derivationStrategy)
         {
@@ -106,18 +113,6 @@ namespace BTCPayServer.Services.Wallets
         }
         ConcurrentDictionary<string, TaskCompletionSource<UTXOChanges>> _FetchingUTXOs = new ConcurrentDictionary<string, TaskCompletionSource<UTXOChanges>>();
 
-
-        public async Task<NetworkCoins> GetCoins(DerivationStrategyBase strategy, CancellationToken cancellation = default(CancellationToken))
-        {
-            UTXOChanges changes = await GetUTXOChanges(strategy, cancellation);
-
-            return new NetworkCoins()
-            {
-                TimestampedCoins = changes.Confirmed.UTXOs.Concat(changes.Unconfirmed.UTXOs).Select(c => new NetworkCoins.TimestampedCoin() { Coin = c.AsCoin(), DateTime = c.Timestamp }).ToArray(),
-                Strategy = strategy,
-                Wallet = this
-            };
-        }
         private async Task<UTXOChanges> GetUTXOChanges(DerivationStrategyBase strategy, CancellationToken cancellation)
         {
             var thisCompletionSource = new TaskCompletionSource<UTXOChanges>();
@@ -149,7 +144,7 @@ namespace BTCPayServer.Services.Wallets
                 });
                 completionSource.TrySetResult(utxos);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 completionSource.TrySetException(ex);
             }
@@ -168,15 +163,18 @@ namespace BTCPayServer.Services.Wallets
 
 
 
-        public async Task<(Coin[], Dictionary<Script, KeyPath>)> GetUnspentCoins(DerivationStrategyBase derivationStrategy, CancellationToken cancellation = default(CancellationToken))
+        public async Task<ReceivedCoin[]> GetUnspentCoins(DerivationStrategyBase derivationStrategy, CancellationToken cancellation = default(CancellationToken))
         {
-            var changes = await GetUTXOChanges(derivationStrategy, cancellation);
-            var keyPaths = new Dictionary<Script, KeyPath>();
-            foreach (var coin in changes.GetUnspentUTXOs())
-            {
-                keyPaths.TryAdd(coin.ScriptPubKey, coin.KeyPath);
-            }
-            return (changes.GetUnspentCoins(), keyPaths);
+            if (derivationStrategy == null)
+                throw new ArgumentNullException(nameof(derivationStrategy));
+            return (await GetUTXOChanges(derivationStrategy, cancellation))
+                          .GetUnspentUTXOs()
+                          .Select(c => new ReceivedCoin()
+                          {
+                              Coin = c.AsCoin(derivationStrategy),
+                              KeyPath = c.KeyPath,
+                              Timestamp = c.Timestamp
+                          }).ToArray();
         }
 
         public async Task<Money> GetBalance(DerivationStrategyBase derivationStrategy, CancellationToken cancellation = default(CancellationToken))

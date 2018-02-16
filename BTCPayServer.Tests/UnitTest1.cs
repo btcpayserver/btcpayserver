@@ -629,11 +629,11 @@ namespace BTCPayServer.Tests
                 Assert.Equal("new", invoice.Status);
                 Assert.False((bool)((JValue)invoice.ExceptionStatus).Value);
 
-                Assert.Single(user.BitPay.GetInvoices(invoice.InvoiceTime.DateTime));
-                Assert.Empty(user.BitPay.GetInvoices(invoice.InvoiceTime.DateTime + TimeSpan.FromDays(1)));
-                Assert.Single(user.BitPay.GetInvoices(invoice.InvoiceTime.DateTime - TimeSpan.FromDays(5)));
-                Assert.Single(user.BitPay.GetInvoices(invoice.InvoiceTime.DateTime - TimeSpan.FromDays(5), invoice.InvoiceTime.DateTime));
-                Assert.Empty(user.BitPay.GetInvoices(invoice.InvoiceTime.DateTime - TimeSpan.FromDays(5), invoice.InvoiceTime.DateTime - TimeSpan.FromDays(1)));
+                Assert.Single(user.BitPay.GetInvoices(invoice.InvoiceTime.UtcDateTime));
+                Assert.Empty(user.BitPay.GetInvoices(invoice.InvoiceTime.UtcDateTime + TimeSpan.FromDays(2)));
+                Assert.Single(user.BitPay.GetInvoices(invoice.InvoiceTime.UtcDateTime - TimeSpan.FromDays(5)));
+                Assert.Single(user.BitPay.GetInvoices(invoice.InvoiceTime.UtcDateTime - TimeSpan.FromDays(5), invoice.InvoiceTime.DateTime + TimeSpan.FromDays(1.0)));
+                Assert.Empty(user.BitPay.GetInvoices(invoice.InvoiceTime.UtcDateTime - TimeSpan.FromDays(5), invoice.InvoiceTime.DateTime - TimeSpan.FromDays(1)));
 
 
                 var firstPayment = Money.Coins(0.04m);

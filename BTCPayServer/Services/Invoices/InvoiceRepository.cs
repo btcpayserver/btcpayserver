@@ -58,12 +58,22 @@ namespace BTCPayServer.Services.Invoices
             }
         }
 
-        public async Task<string> GetInvoiceIdFromScriptPubKey(Script scriptPubKey, string cryptoCode)
+        public async Task<InvoiceEntity> GetInvoiceFromScriptPubKey(Script scriptPubKey, string cryptoCode)
         {
             using (var db = _ContextFactory.CreateContext())
             {
-                var result = await db.AddressInvoices.FindAsync(scriptPubKey.Hash.ToString() + "#" + cryptoCode);
-                return result?.InvoiceDataId;
+                var key = scriptPubKey.Hash.ToString() + "#" + cryptoCode;
+                var result = await db.AddressInvoices
+#pragma warning disable CS0618
+                                    .Where(a => a.Address == key)
+#pragma warning restore CS0618
+                                    .Select(a => a.InvoiceData)
+                                    .Include(a => a.Payments)
+                                    .Include(a => a.RefundAddresses)
+                                    .FirstOrDefaultAsync();
+                if (result == null)
+                    return null;
+                return ToEntity(result);
             }
         }
 
@@ -121,7 +131,7 @@ namespace BTCPayServer.Services.Invoices
                     {
                         InvoiceDataId = invoice.Id,
                         CreatedTime = DateTimeOffset.UtcNow,
-                    }.SetHash(BitcoinAddress.Create(cryptoData.DepositAddress, cryptoData.Network.NBitcoinNetwork).ScriptPubKey.Hash, cryptoData.CryptoCode));
+                    }.SetHash(cryptoData.GetDepositAddress().ScriptPubKey.Hash, cryptoData.CryptoCode));
                     context.HistoricalAddressInvoices.Add(new HistoricalAddressInvoiceData()
                     {
                         InvoiceDataId = invoice.Id,
@@ -444,14 +454,16 @@ namespace BTCPayServer.Services.Invoices
                     Output = receivedCoin.TxOut,
                     CryptoCode = cryptoCode,
 #pragma warning restore CS0618
-                    ReceivedTime = date.UtcDateTime
+                    ReceivedTime = date.UtcDateTime,
+                    Accounted = false
                 };
-
+                entity.SetCryptoPaymentData(new BitcoinLikePaymentData());
                 PaymentData data = new PaymentData
                 {
                     Id = receivedCoin.Outpoint.ToString(),
                     Blob = ToBytes(entity, null),
-                    InvoiceDataId = invoiceId
+                    InvoiceDataId = invoiceId,
+                    Accounted = false
                 };
 
                 context.Payments.Add(data);
@@ -473,8 +485,10 @@ namespace BTCPayServer.Services.Invoices
                     var data = new PaymentData();
                     data.Id = payment.Outpoint.ToString();
                     data.Accounted = payment.Accounted;
+                    data.Blob = ToBytes(payment, null);
                     context.Attach(data);
                     context.Entry(data).Property(o => o.Accounted).IsModified = true;
+                    context.Entry(data).Property(o => o.Blob).IsModified = true;
                 }
                 await context.SaveChangesAsync().ConfigureAwait(false);
             }

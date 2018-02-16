@@ -219,7 +219,7 @@ namespace BTCPayServer.Controllers
                 {
                     var strategy = GetDirectDerivationStrategy(store, network);
                     var strategyBase = GetDerivationStrategy(store, network);
-                    if (!await hw.SupportDerivation(network, strategy))
+                    if (strategy == null || !await hw.SupportDerivation(network, strategy))
                     {
                         throw new Exception($"This store is not configured to use this ledger");
                     }
@@ -238,12 +238,11 @@ namespace BTCPayServer.Controllers
                     var change = wallet.GetChangeAddressAsync(strategyBase);
                     var unspentCoins = await wallet.GetUnspentCoins(strategyBase);
                     var changeAddress = await change;
-                    unspentCoins.Item2.TryAdd(changeAddress.Item1.ScriptPubKey, changeAddress.Item2);
-                    var transaction = await hw.SendToAddress(strategy, unspentCoins.Item1, network,
+                    var transaction = await hw.SendToAddress(strategy, unspentCoins, network,
                                             new[] { (destinationAddress as IDestination, amountBTC, subsctractFeesValue) },
                                             feeRateValue,
                                             changeAddress.Item1,
-                                            unspentCoins.Item2);
+                                            changeAddress.Item2);
                     try
                     {
                         var broadcastResult = await wallet.BroadcastTransactionsAsync(new List<Transaction>() { transaction });
@@ -256,6 +255,7 @@ namespace BTCPayServer.Controllers
                     {
                         throw new Exception("Error while broadcasting: " + ex.Message);
                     }
+                    wallet.InvalidateCache(strategyBase);
                     result = new SendToAddressResult() { TransactionId = transaction.GetHash().ToString() };
                 }
             }

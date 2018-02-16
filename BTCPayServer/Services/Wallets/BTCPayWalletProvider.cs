@@ -24,7 +24,10 @@ namespace BTCPayServer.Services.Wallets
 
             foreach(var network in networkProvider.GetAll())
             {
-                _Wallets.Add(network.CryptoCode, new BTCPayWallet(_Client.GetExplorerClient(network.CryptoCode), new MemoryCache(_Options), network));
+                var explorerClient = _Client.GetExplorerClient(network.CryptoCode);
+                if (explorerClient == null)
+                    continue;
+                _Wallets.Add(network.CryptoCode, new BTCPayWallet(explorerClient, new MemoryCache(_Options), network));
             }
         }
 
@@ -47,6 +50,12 @@ namespace BTCPayServer.Services.Wallets
         public bool IsAvailable(BTCPayNetwork network)
         {
             return _Client.IsAvailable(network);
+        }
+
+        public IEnumerable<BTCPayWallet> GetWallets()
+        {
+            foreach (var w in _Wallets)
+                yield return w.Value;
         }
     }
 }

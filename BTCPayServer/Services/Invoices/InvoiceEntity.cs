@@ -10,6 +10,7 @@ using NBitcoin.DataEncoders;
 using BTCPayServer.Data;
 using NBXplorer.Models;
 using NBXplorer;
+using NBXplorer.DerivationStrategy;
 
 namespace BTCPayServer.Services.Invoices
 {
@@ -165,6 +166,28 @@ namespace BTCPayServer.Services.Invoices
         {
             get;
             set;
+        }
+
+        public DerivationStrategyBase GetDerivationStrategy(BTCPayNetwork network)
+        {
+#pragma warning disable CS0618
+            JObject strategies = JObject.Parse(DerivationStrategies);
+#pragma warning restore CS0618
+            foreach (var strat in strategies.Properties())
+            {
+                if (strat.Name == network.CryptoCode)
+                {
+                    return BTCPayServer.DerivationStrategy.Parse(strat.Value.Value<string>(), network).DerivationStrategyBase;
+                }
+            }
+
+#pragma warning disable CS0618
+            if (network.IsBTC && !string.IsNullOrEmpty(DerivationStrategy))
+            {
+                return BTCPayServer.DerivationStrategy.Parse(DerivationStrategy, network).DerivationStrategyBase;
+            }
+            return null;
+#pragma warning restore CS0618
         }
 
         public IEnumerable<DerivationStrategy> GetDerivationStrategies(BTCPayNetworkProvider networks)
@@ -370,7 +393,7 @@ namespace BTCPayServer.Services.Invoices
                     dto.PaymentUrls = cryptoInfo.PaymentUrls;
                 }
 #pragma warning restore CS0618
-                if(!info.IsPhantomBTC)
+                if (!info.IsPhantomBTC)
                     dto.CryptoInfo.Add(cryptoInfo);
             }
 
@@ -512,6 +535,15 @@ namespace BTCPayServer.Services.Invoices
         [JsonProperty(PropertyName = "depositAddress")]
         public string DepositAddress { get; set; }
 
+        public BitcoinAddress GetDepositAddress()
+        {
+            if(string.IsNullOrEmpty(DepositAddress))
+            {
+                return null;
+            }
+            return BitcoinAddress.Create(DepositAddress, Network.NBitcoinNetwork);
+        }
+
         [JsonIgnore]
         public bool IsPhantomBTC { get; set; }
 
@@ -566,17 +598,6 @@ namespace BTCPayServer.Services.Invoices
 
     }
 
-    public class AccountedPaymentEntity
-    {
-        public int Confirmations
-        {
-            get;
-            set;
-        }
-        public PaymentEntity Payment { get; set; }
-        public Transaction Transaction { get; set; }
-    }
-
     public class PaymentEntity
     {
         public DateTimeOffset ReceivedTime
@@ -612,6 +633,41 @@ namespace BTCPayServer.Services.Invoices
             get;
             set;
         }
+
+        [Obsolete("Use GetCryptoPaymentData() instead")]
+        public string CryptoPaymentData { get; set; }
+        [Obsolete("Use GetCryptoPaymentData() instead")]
+        public string CryptoPaymentDataType { get; set; }
+
+        public CryptoPaymentData GetCryptoPaymentData()
+        {
+#pragma warning disable CS0618
+            if (string.IsNullOrEmpty(CryptoPaymentDataType))
+            {
+                return NullPaymentData.Instance;
+            }
+            if (CryptoPaymentDataType == "BTCLike")
+            {
+                return JsonConvert.DeserializeObject<BitcoinLikePaymentData>(CryptoPaymentData);
+            }
+            else
+                return NullPaymentData.Instance;
+#pragma warning restore CS0618
+        }
+
+        public void SetCryptoPaymentData(CryptoPaymentData cryptoPaymentData)
+        {
+#pragma warning disable CS0618
+            if (cryptoPaymentData is BitcoinLikePaymentData)
+            {
+                CryptoPaymentDataType = "BTCLike";
+            }
+            else
+                throw new NotSupportedException(cryptoPaymentData.ToString());
+            CryptoPaymentData = JsonConvert.SerializeObject(cryptoPaymentData);
+#pragma warning restore CS0618
+        }
+
         public Money GetValue()
         {
 #pragma warning disable CS0618
@@ -641,6 +697,62 @@ namespace BTCPayServer.Services.Invoices
             return CryptoCode ?? "BTC";
 #pragma warning restore CS0618
         }
+    }
 
+    public interface CryptoPaymentData
+    {
+        bool PaymentCompleted(PaymentEntity entity, BTCPayNetwork network);
+        bool PaymentConfirmed(PaymentEntity entity, SpeedPolicy speedPolicy, BTCPayNetwork network);
+
+    }
+
+    public class NullPaymentData : CryptoPaymentData
+    {
+
+        private static readonly NullPaymentData _Instance = new NullPaymentData();
+        public static NullPaymentData Instance
+        {
+            get
+            {
+                return _Instance;
+            }
+        }
+        public bool PaymentCompleted(PaymentEntity entity, BTCPayNetwork network)
+        {
+            return false;
+        }
+
+        public bool PaymentConfirmed(PaymentEntity entity, SpeedPolicy speedPolicy, BTCPayNetwork network)
+        {
+            return false;
+        }
+    }
+
+    public class BitcoinLikePaymentData : CryptoPaymentData
+    {
+        public int ConfirmationCount { get; set; }
+        public bool RBF { get; set; }
+
+        public bool PaymentCompleted(PaymentEntity entity, BTCPayNetwork network)
+        {
+            return ConfirmationCount >= 6;
+        }
+
+        public bool PaymentConfirmed(PaymentEntity entity, SpeedPolicy speedPolicy, BTCPayNetwork network)
+        {
+            if (speedPolicy == SpeedPolicy.HighSpeed)
+            {
+                return ConfirmationCount >= 1 || !RBF;
+            }
+            else if (speedPolicy == SpeedPolicy.MediumSpeed)
+            {
+                return ConfirmationCount >= 1;
+            }
+            else if (speedPolicy == SpeedPolicy.LowSpeed)
+            {
+                return ConfirmationCount >= 6;
+            }
+            return false;
+        }
     }
 }

@@ -193,6 +193,7 @@ namespace BTCPayServer.HostedServices
                 _Aggregator.Publish(new NBXplorerErrorEvent(_Network, error));
             }
 
+            _Dashboard.Publish(_Network, State, status, error);
             if (oldState != State)
             {
                 if (State == NBXplorerState.Synching)
@@ -205,7 +206,6 @@ namespace BTCPayServer.HostedServices
                 }
                 _Aggregator.Publish(new NBXplorerStateChangedEvent(_Network, oldState, State));
             }
-            _Dashboard.Publish(_Network, State, status, error);
             return oldState != State;
         }
 

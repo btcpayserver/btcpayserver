@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Services.Wallets;
 using LedgerWallet;
 using NBitcoin;
 using NBXplorer.DerivationStrategy;
@@ -115,6 +116,8 @@ namespace BTCPayServer.Services
                 throw new ArgumentNullException(nameof(Network));
             if (strategy == null)
                 throw new ArgumentNullException(nameof(strategy));
+            if (!strategy.Segwit)
+                return false;
             return await GetKeyPath(_Ledger, network, strategy) != null;
         }
 
@@ -145,11 +148,11 @@ namespace BTCPayServer.Services
         }
 
         public async Task<Transaction> SendToAddress(DirectDerivationStrategy strategy, 
-                                                             Coin[] coins, BTCPayNetwork network, 
+                                                             ReceivedCoin[] coins, BTCPayNetwork network, 
                                                              (IDestination destination, Money amount, bool substractFees)[] send, 
                                                              FeeRate feeRate, 
                                                              IDestination changeAddress,
-                                                             Dictionary<Script, KeyPath> keypaths = null)
+                                                             KeyPath changeKeyPath)
         {
             if (strategy == null)
                 throw new ArgumentNullException(nameof(strategy));
@@ -159,8 +162,6 @@ namespace BTCPayServer.Services
                 throw new ArgumentNullException(nameof(feeRate));
             if (changeAddress == null)
                 throw new ArgumentNullException(nameof(changeAddress));
-            if (keypaths == null)
-                throw new ArgumentNullException(nameof(keypaths));
             if (feeRate.FeePerK <= Money.Zero)
             {
                 throw new ArgumentOutOfRangeException(nameof(feeRate), "The fee rate should be above zero");
@@ -184,7 +185,7 @@ namespace BTCPayServer.Services
             }
 
             TransactionBuilder builder = new TransactionBuilder();
-            builder.AddCoins(coins);
+            builder.AddCoins(coins.Select(c=>c.Coin).ToArray());
 
             foreach (var element in send)
             {
@@ -197,6 +198,12 @@ namespace BTCPayServer.Services
             builder.Shuffle();
             var unsigned = builder.BuildTransaction(false);
 
+            var keypaths = new Dictionary<Script, KeyPath>();
+            foreach(var c in coins)
+            {
+                keypaths.TryAdd(c.Coin.ScriptPubKey, c.KeyPath);
+            }
+
             var hasChange = unsigned.Outputs.Count == 2;
             var usedCoins = builder.FindSpentCoins(unsigned);
             _Transport.Timeout = TimeSpan.FromMinutes(5);
@@ -208,7 +215,7 @@ namespace BTCPayServer.Services
                     PubKey = strategy.Root.Derive(keypaths[c.TxOut.ScriptPubKey]).PubKey
                 }).ToArray(),
                 unsigned,
-                hasChange ? foundKeyPath.Derive(keypaths[changeAddress.ScriptPubKey]) : null);
+                hasChange ? foundKeyPath.Derive(changeKeyPath) : null);
             return fullySigned;
         }
     }

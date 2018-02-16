@@ -48,5 +48,11 @@ namespace BTCPayServer.Services.Wallets
         {
             return _Client.IsAvailable(network);
         }
+
+        public IEnumerable<BTCPayWallet> GetWallets()
+        {
+            foreach (var w in _Wallets)
+                yield return w.Value;
+        }
     }
 }

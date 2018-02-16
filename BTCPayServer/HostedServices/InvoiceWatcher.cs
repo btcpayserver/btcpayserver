@@ -331,7 +331,8 @@ namespace BTCPayServer.HostedServices
         {
             leases.Dispose();
             _Cts.Cancel();
-            return _Loop;
+            var waitingPendingInvoices = _WaitingInvoices ?? Task.CompletedTask;
+            return Task.WhenAll(waitingPendingInvoices, _Loop);
         }
     }
 }

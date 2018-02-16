@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
 
 namespace BTCPayServer.Services.Wallets
 {
@@ -10,17 +11,24 @@ namespace BTCPayServer.Services.Wallets
     {
         private ExplorerClientProvider _Client;
         BTCPayNetworkProvider _NetworkProvider;
-        TransactionCacheProvider _TransactionCacheProvider;
+        IOptions<MemoryCacheOptions> _Options;
         public BTCPayWalletProvider(ExplorerClientProvider client,
-                                    TransactionCacheProvider transactionCacheProvider,
+                                    IOptions<MemoryCacheOptions> memoryCacheOption,
                                     BTCPayNetworkProvider networkProvider)
         {
             if (client == null)
                 throw new ArgumentNullException(nameof(client));
             _Client = client;
-            _TransactionCacheProvider = transactionCacheProvider;
             _NetworkProvider = networkProvider;
+            _Options = memoryCacheOption;
+
+            foreach(var network in networkProvider.GetAll())
+            {
+                _Wallets.Add(network.CryptoCode, new BTCPayWallet(_Client.GetExplorerClient(network.CryptoCode), new MemoryCache(_Options), network));
+            }
         }
+
+        Dictionary<string, BTCPayWallet> _Wallets = new Dictionary<string, BTCPayWallet>();
 
         public BTCPayWallet GetWallet(BTCPayNetwork network)
         {
@@ -32,11 +40,8 @@ namespace BTCPayServer.Services.Wallets
         {
             if (cryptoCode == null)
                 throw new ArgumentNullException(nameof(cryptoCode));
-            var network = _NetworkProvider.GetNetwork(cryptoCode);
-            var client = _Client.GetExplorerClient(cryptoCode);
-            if (network == null || client == null)
-                return null;
-            return new BTCPayWallet(client, _TransactionCacheProvider.GetTransactionCache(network), network);
+            _Wallets.TryGetValue(cryptoCode, out var result);
+            return result;
         }
 
         public bool IsAvailable(BTCPayNetwork network)

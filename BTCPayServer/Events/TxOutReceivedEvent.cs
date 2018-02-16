@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using NBitcoin;
+using NBXplorer.DerivationStrategy;
 
 namespace BTCPayServer.Events
 {
@@ -10,6 +11,7 @@ namespace BTCPayServer.Events
     {
         public BTCPayNetwork Network { get; set; }
         public Script ScriptPubKey { get; set; }
+        public DerivationStrategyBase DerivationStrategy { get; set; }
 
         public override string ToString()
         {

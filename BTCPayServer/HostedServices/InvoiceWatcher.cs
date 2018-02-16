@@ -29,9 +29,6 @@ namespace BTCPayServer.HostedServices
             {
 
             }
-
-            public Dictionary<BTCPayNetwork, KnownState> KnownStates { get; set; }
-            public Dictionary<BTCPayNetwork, KnownState> ModifiedKnownStates { get; set; } = new Dictionary<BTCPayNetwork, KnownState>();
             public InvoiceEntity Invoice { get; set; }
             public List<object> Events { get; set; } = new List<object>();
 
@@ -64,14 +61,15 @@ namespace BTCPayServer.HostedServices
         }
         CompositeDisposable leases = new CompositeDisposable();
 
-        async Task NotifyReceived(Script scriptPubKey, BTCPayNetwork network)
+        async Task NotifyReceived(Events.TxOutReceivedEvent evt)
         {
-            var invoice = await _InvoiceRepository.GetInvoiceIdFromScriptPubKey(scriptPubKey, network.CryptoCode);
-            if (invoice != null)
+            var invoiceId = await _InvoiceRepository.GetInvoiceIdFromScriptPubKey(evt.ScriptPubKey, evt.Network.CryptoCode);
+            if (invoiceId != null)
             {
-                String address = scriptPubKey.GetDestinationAddress(network.NBitcoinNetwork)?.ToString() ?? scriptPubKey.ToString();
-                Logs.PayServer.LogInformation($"{address} is mapping to invoice {invoice}");
-                _WatchRequests.Add(invoice);
+                String address = evt.ScriptPubKey.GetDestinationAddress(evt.Network.NBitcoinNetwork)?.ToString() ?? evt.ScriptPubKey.ToString();
+                _WalletProvider.GetWallet(evt.Network).InvalidateCache(evt.DerivationStrategy);
+                Logs.PayServer.LogInformation($"{address} is mapping to invoice {invoiceId}");
+                _WatchRequests.Add(invoiceId);
             }
         }
 
@@ -99,8 +97,7 @@ namespace BTCPayServer.HostedServices
                     var stateBefore = invoice.Status;
                     var updateContext = new UpdateInvoiceContext()
                     {
-                        Invoice = invoice,
-                        KnownStates = changes
+                        Invoice = invoice
                     };
                     await UpdateInvoice(updateContext).ConfigureAwait(false);
                     if (updateContext.Dirty)
@@ -114,11 +111,6 @@ namespace BTCPayServer.HostedServices
                     foreach (var evt in updateContext.Events)
                     {
                         _EventAggregator.Publish(evt, evt.GetType());
-                    }
-
-                    foreach (var modifiedKnownState in updateContext.ModifiedKnownStates)
-                    {
-                        changes.AddOrReplace(modifiedKnownState.Key, modifiedKnownState.Value);
                     }
 
                     if (invoice.Status == "complete" ||
@@ -165,8 +157,6 @@ namespace BTCPayServer.HostedServices
                 if (coins.TimestampedCoins.Length == 0)
                     continue;
                 bool dirtyAddress = false;
-                if (coins.State != null)
-                    context.ModifiedKnownStates.AddOrReplace(coins.Wallet.Network, coins.State);
                 var alreadyAccounted = new HashSet<OutPoint>(invoice.GetPayments(coins.Wallet.Network).Select(p => p.Outpoint));
 
                 foreach (var coin in coins.TimestampedCoins.Where(c => !alreadyAccounted.Contains(c.Coin.Outpoint)))
@@ -283,7 +273,7 @@ namespace BTCPayServer.HostedServices
                                               Strategy: d.DerivationStrategyBase))
                                 .Where(d => d.Wallet != null)
                                 .Select(d => (Network: d.Network,
-                                              Coins: d.Wallet.GetCoins(d.Strategy, context.KnownStates.TryGet(d.Network))))
+                                              Coins: d.Wallet.GetCoins(d.Strategy)))
                                 .Select(async d =>
                                 {
                                     var coins = await d.Coins;
@@ -442,7 +432,7 @@ namespace BTCPayServer.HostedServices
             _Loop = StartLoop(_Cts.Token);
 
             leases.Add(_EventAggregator.Subscribe<Events.NewBlockEvent>(async b => { await NotifyBlock(); }));
-            leases.Add(_EventAggregator.Subscribe<Events.TxOutReceivedEvent>(async b => { await NotifyReceived(b.ScriptPubKey, b.Network); }));
+            leases.Add(_EventAggregator.Subscribe<Events.TxOutReceivedEvent>(async b => { await NotifyReceived(b); }));
             leases.Add(_EventAggregator.Subscribe<Events.InvoiceEvent>(async b =>
             {
                 if (b.Name == "invoice_created")

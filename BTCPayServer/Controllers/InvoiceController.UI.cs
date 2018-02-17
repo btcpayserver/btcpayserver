@@ -72,7 +72,7 @@ namespace BTCPayServer.Controllers
                 cryptoPayment.CryptoCode = paymentNetwork.CryptoCode;
                 cryptoPayment.Due = accounting.Due.ToString() + $" {paymentNetwork.CryptoCode}";
                 cryptoPayment.Paid = accounting.CryptoPaid.ToString() + $" {paymentNetwork.CryptoCode}";
-                cryptoPayment.Address = data.Value.DepositAddress.ToString();
+                cryptoPayment.Address = data.Value.DepositAddress;
                 cryptoPayment.Rate = FormatCurrency(data.Value);
                 cryptoPayment.PaymentUrl = cryptoInfo.PaymentUrls.BIP21;
                 model.CryptoPayments.Add(cryptoPayment);
@@ -89,7 +89,7 @@ namespace BTCPayServer.Controllers
                     m.Confirmations = (await _ExplorerClients.GetExplorerClient(payment.GetCryptoCode())?.GetTransactionAsync(payment.Outpoint.Hash))?.Confirmations ?? 0;
                     m.TransactionId = payment.Outpoint.Hash.ToString();
                     m.ReceivedTime = payment.ReceivedTime;
-                    m.TransactionLink = string.Format(paymentNetwork.BlockExplorerLink, m.TransactionId);
+                    m.TransactionLink = string.Format(CultureInfo.InvariantCulture, paymentNetwork.BlockExplorerLink, m.TransactionId);
                     m.Replaced = !payment.Accounted;
                     return m;
                 })
@@ -207,10 +207,10 @@ namespace BTCPayServer.Controllers
         {
             StringBuilder builder = new StringBuilder();
             if (expiration.Days >= 1)
-                builder.Append(expiration.Days.ToString());
+                builder.Append(expiration.Days.ToString(CultureInfo.InvariantCulture));
             if (expiration.Hours >= 1)
-                builder.Append(expiration.Hours.ToString("00"));
-            builder.Append($"{expiration.Minutes.ToString("00")}:{expiration.Seconds.ToString("00")}");
+                builder.Append(expiration.Hours.ToString("00", CultureInfo.InvariantCulture));
+            builder.Append($"{expiration.Minutes.ToString("00", CultureInfo.InvariantCulture)}:{expiration.Seconds.ToString("00", CultureInfo.InvariantCulture)}");
             return builder.ToString();
         }
 

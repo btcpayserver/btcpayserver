@@ -139,7 +139,7 @@ namespace BTCPayServer.Eclair
         public IEnumerable<LightMoney> Split(int parts)
         {
             if (parts <= 0)
-                throw new ArgumentOutOfRangeException("Parts should be more than 0", "parts");
+                throw new ArgumentOutOfRangeException(nameof(parts), "Parts should be more than 0");
             long remain;
             long result = DivRem(_MilliSatoshis, parts, out remain);
 
@@ -431,7 +431,7 @@ namespace BTCPayServer.Eclair
         /// <returns></returns>
         public string ToString(bool fplus, bool trimExcessZero = true)
         {
-            var fmt = string.Format("{{0:{0}{1}B}}",
+            var fmt = string.Format(CultureInfo.InvariantCulture, "{{0:{0}{1}B}}",
                                     (fplus ? "+" : null),
                                     (trimExcessZero ? "2" : "11"));
             return string.Format(BitcoinFormatter.Formatter, fmt, _MilliSatoshis);
@@ -479,7 +479,7 @@ namespace BTCPayServer.Eclair
                         unitToUseInCalc = LightMoneyUnit.BTC;
                         break;
                 }
-                var val = Convert.ToDecimal(arg) / (long)unitToUseInCalc;
+                var val = Convert.ToDecimal(arg, CultureInfo.InvariantCulture) / (long)unitToUseInCalc;
                 var zeros = new string('0', decPos);
                 var rest = new string('#', 11 - decPos);
                 var fmt = plus && val > 0 ? "+" : string.Empty;

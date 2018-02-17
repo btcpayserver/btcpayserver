@@ -70,7 +70,7 @@ namespace BTCPayServer.Hosting
                     if (BitIdExtensions.CheckBitIDSignature(key, sig, url, body))
                     {
                         var bitid = new BitIdentity(key);
-                        httpContext.User = new GenericPrincipal(bitid, new string[0]);
+                        httpContext.User = new GenericPrincipal(bitid, Array.Empty<string>());
                         Logs.PayServer.LogDebug($"BitId signature check success for SIN {bitid.SIN}");
                     }
                 }

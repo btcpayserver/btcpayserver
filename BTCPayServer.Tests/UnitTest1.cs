@@ -26,6 +26,7 @@ using BTCPayServer.Eclair;
 using System.Collections.Generic;
 using BTCPayServer.Models.StoreViewModels;
 using System.Threading.Tasks;
+using System.Globalization;
 
 namespace BTCPayServer.Tests
 {
@@ -312,7 +313,7 @@ namespace BTCPayServer.Tests
                 pairingCode = acc.BitPay.RequestClientAuthorization("test1", Facade.Merchant);
                 var store2 = acc.CreateStore();
                 store2.Pair(pairingCode.ToString(), store2.CreatedStoreId).GetAwaiter().GetResult();
-                Assert.Contains(nameof(PairingResult.ReusedKey), store2.StatusMessage);
+                Assert.Contains(nameof(PairingResult.ReusedKey), store2.StatusMessage, StringComparison.CurrentCultureIgnoreCase);
             }
         }
 
@@ -334,7 +335,7 @@ namespace BTCPayServer.Tests
                 var payment2 = Money.Coins(0.08m);
                 var tx1 = new uint256(tester.ExplorerNode.SendCommand("sendtoaddress", new object[]
                 {
-                    invoice.BitcoinAddress.ToString(),
+                    invoice.BitcoinAddress,
                     payment1.ToString(),
                     null, //comment
                     null, //comment_to
@@ -565,7 +566,7 @@ namespace BTCPayServer.Tests
                 var ltcCryptoInfo = invoice.CryptoInfo.FirstOrDefault(c => c.CryptoCode == "LTC");
                 Assert.NotNull(ltcCryptoInfo);
                 invoiceAddress = BitcoinAddress.Create(ltcCryptoInfo.Address, cashCow.Network);
-                var secondPayment = Money.Coins(decimal.Parse(ltcCryptoInfo.Due));
+                var secondPayment = Money.Coins(decimal.Parse(ltcCryptoInfo.Due, CultureInfo.InvariantCulture));
                 cashCow.Generate(2); // LTC is not worth a lot, so just to make sure we have money...
                 cashCow.SendToAddress(invoiceAddress, secondPayment);
                 Logs.Tester.LogInformation("Second payment sent to " + invoiceAddress);
@@ -667,9 +668,9 @@ namespace BTCPayServer.Tests
                     Assert.True(IsMapped(localInvoice, ctx));
 
                     invoiceEntity = repo.GetInvoice(null, invoice.Id, true).GetAwaiter().GetResult();
-                    var historical1 = invoiceEntity.HistoricalAddresses.FirstOrDefault(h => h.GetAddress() == invoice.BitcoinAddress.ToString());
+                    var historical1 = invoiceEntity.HistoricalAddresses.FirstOrDefault(h => h.GetAddress() == invoice.BitcoinAddress);
                     Assert.NotNull(historical1.UnAssigned);
-                    var historical2 = invoiceEntity.HistoricalAddresses.FirstOrDefault(h => h.GetAddress() == localInvoice.BitcoinAddress.ToString());
+                    var historical2 = invoiceEntity.HistoricalAddresses.FirstOrDefault(h => h.GetAddress() == localInvoice.BitcoinAddress);
                     Assert.Null(historical2.UnAssigned);
                     invoiceAddress = BitcoinAddress.Create(localInvoice.BitcoinAddress, cashCow.Network);
                     secondPayment = localInvoice.BtcDue;

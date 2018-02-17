@@ -25,9 +25,9 @@ namespace BTCPayServer.HostedServices
     {
         class UpdateInvoiceContext
         {
-            public UpdateInvoiceContext()
+            public UpdateInvoiceContext(InvoiceEntity invoice)
             {
-
+                Invoice = invoice;
             }
             public InvoiceEntity Invoice { get; set; }
             public List<object> Events { get; set; } = new List<object>();
@@ -56,61 +56,6 @@ namespace BTCPayServer.HostedServices
             _NetworkProvider = networkProvider;
         }
         CompositeDisposable leases = new CompositeDisposable();        
-
-        private async Task UpdateInvoice(string invoiceId, CancellationToken cancellation)
-        {
-            Dictionary<BTCPayNetwork, KnownState> changes = new Dictionary<BTCPayNetwork, KnownState>();
-            int maxLoop = 5;
-            int loopCount = -1;
-            while (!cancellation.IsCancellationRequested && loopCount < maxLoop)
-            {
-                loopCount++;
-                try
-                {
-                    var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId, true).ConfigureAwait(false);
-                    if (invoice == null)
-                        break;
-                    var stateBefore = invoice.Status;
-                    var updateContext = new UpdateInvoiceContext()
-                    {
-                        Invoice = invoice
-                    };
-                    await UpdateInvoice(updateContext).ConfigureAwait(false);
-                    if (updateContext.Dirty)
-                    {
-                        await _InvoiceRepository.UpdateInvoiceStatus(invoice.Id, invoice.Status, invoice.ExceptionStatus).ConfigureAwait(false);
-                        updateContext.Events.Add(new InvoiceDataChangedEvent() { Status = invoice.Status, ExceptionStatus = invoice.ExceptionStatus, InvoiceId = invoice.Id });
-                    }
-
-                    var changed = stateBefore != invoice.Status;
-
-                    foreach (var evt in updateContext.Events)
-                    {
-                        _EventAggregator.Publish(evt, evt.GetType());
-                    }
-
-                    if (invoice.Status == "complete" ||
-                       ((invoice.Status == "invalid" || invoice.Status == "expired") && invoice.MonitoringExpiration < DateTimeOffset.UtcNow))
-                    {
-                        if (await _InvoiceRepository.RemovePendingInvoice(invoice.Id).ConfigureAwait(false))
-                            _EventAggregator.Publish<InvoiceStopWatchedEvent>(new InvoiceStopWatchedEvent() { InvoiceId = invoice.Id });
-                        break;
-                    }
-
-                    if (updateContext.Events.Count == 0 || cancellation.IsCancellationRequested)
-                        break;
-                }
-                catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
-                {
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    Logs.PayServer.LogError(ex, "Unhandled error on watching invoice " + invoiceId);
-                    await Task.Delay(10000, cancellation).ConfigureAwait(false);
-                }
-            }
-        }
 
 
         private async Task UpdateInvoice(UpdateInvoiceContext context)
@@ -233,13 +178,13 @@ namespace BTCPayServer.HostedServices
                 {
                     await Task.Delay(invoice.ExpirationTime - now, _Cts.Token);
                 }
-                _WatchRequests.Add(invoiceId);
+                Watch(invoiceId);
                 now = DateTimeOffset.UtcNow;
                 if (invoice.MonitoringExpiration > now)
                 {
                     await Task.Delay(invoice.MonitoringExpiration - now, _Cts.Token);
                 }
-                _WatchRequests.Add(invoiceId);
+                Watch(invoiceId);
             }
             catch when (_Cts.IsCancellationRequested)
             { }
@@ -258,7 +203,7 @@ namespace BTCPayServer.HostedServices
             _Loop = StartLoop(_Cts.Token);
             _WaitingInvoices = WaitPendingInvoices();
 
-            leases.Add(_EventAggregator.Subscribe<Events.InvoiceNeedUpdateEvent>(async b =>
+            leases.Add(_EventAggregator.Subscribe<Events.InvoiceNeedUpdateEvent>(b =>
             {
                     Watch(b.InvoiceId);
             }));
@@ -289,40 +234,58 @@ namespace BTCPayServer.HostedServices
         {
             Logs.PayServer.LogInformation("Start watching invoices");
             await Task.Delay(1).ConfigureAwait(false); // Small hack so that the caller does not block on GetConsumingEnumerable
-            ConcurrentDictionary<string, Lazy<Task>> executing = new ConcurrentDictionary<string, Lazy<Task>>();
             try
             {
-                // This loop just make sure an invoice will not be updated at the same time by two tasks.
-                // If an update is happening while a request come, then the update is deferred when the executing task is over
-                foreach (var item in _WatchRequests.GetConsumingEnumerable(cancellation))
+                foreach (var invoiceId in _WatchRequests.GetConsumingEnumerable(cancellation))
                 {
-                    var localItem = item;
-                    var toExecute = new Lazy<Task>(async () =>
+                    int maxLoop = 5;
+                    int loopCount = -1;
+                    while (!cancellation.IsCancellationRequested && loopCount < maxLoop)
                     {
+                        loopCount++;
                         try
                         {
-                            await UpdateInvoice(localItem, cancellation);
+                            var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId, true);
+                            if (invoice == null)
+                                break;
+                            var updateContext = new UpdateInvoiceContext(invoice);
+                            await UpdateInvoice(updateContext);
+                            if (updateContext.Dirty)
+                            {
+                                await _InvoiceRepository.UpdateInvoiceStatus(invoice.Id, invoice.Status, invoice.ExceptionStatus);
+                                updateContext.Events.Add(new InvoiceDataChangedEvent(invoice));
+                            }
+
+                            foreach (var evt in updateContext.Events)
+                            {
+                                _EventAggregator.Publish(evt, evt.GetType());
+                            }
+
+                            if (invoice.Status == "complete" ||
+                               ((invoice.Status == "invalid" || invoice.Status == "expired") && invoice.MonitoringExpiration < DateTimeOffset.UtcNow))
+                            {
+                                if (await _InvoiceRepository.RemovePendingInvoice(invoice.Id))
+                                    _EventAggregator.Publish(new InvoiceStopWatchedEvent(invoice.Id));
+                                break;
+                            }
+
+                            if (updateContext.Events.Count == 0 || cancellation.IsCancellationRequested)
+                                break;
                         }
-                        finally
+                        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
                         {
-                            executing.TryRemove(localItem, out Lazy<Task> unused);
+                            break;
                         }
-                    }, false);
-                    var executingTask = executing.GetOrAdd(item, toExecute);
-                    executingTask.Value.GetAwaiter(); // Make sure it run
-                    if (executingTask != toExecute)
-                    {
-                        // What was planned can't run for now, rebook it when the executingTask finish
-                        var unused = executingTask.Value.ContinueWith(t => _WatchRequests.Add(localItem));
+                        catch (Exception ex)
+                        {
+                            Logs.PayServer.LogError(ex, "Unhandled error on watching invoice " + invoiceId);
+                            await Task.Delay(10000, cancellation);
+                        }
                     }
                 }
             }
             catch when (cancellation.IsCancellationRequested)
             {
-            }
-            finally
-            {
-                await Task.WhenAll(executing.Values.Select(v => v.Value).ToArray());
             }
             Logs.PayServer.LogInformation("Stop watching invoices");
         }

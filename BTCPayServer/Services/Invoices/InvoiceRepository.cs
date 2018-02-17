@@ -384,7 +384,7 @@ namespace BTCPayServer.Services.Invoices
                 {
                     var ids = new HashSet<string>(SearchInvoice(queryObject.TextSearch));
                     if (ids.Count == 0)
-                        return new InvoiceEntity[0];
+                        return Array.Empty<InvoiceEntity>();
                     query = query.Where(i => ids.Contains(i.Id));
                 }
 

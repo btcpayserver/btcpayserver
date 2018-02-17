@@ -21,6 +21,7 @@ using NBXplorer.DerivationStrategy;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Net.WebSockets;
@@ -179,7 +180,7 @@ namespace BTCPayServer.Controllers
                 {
                     try
                     {
-                        feeRateValue = new FeeRate(Money.Satoshis(int.Parse(feeRate)), 1);
+                        feeRateValue = new FeeRate(Money.Satoshis(int.Parse(feeRate, CultureInfo.InvariantCulture)), 1);
                     }
                     catch { }
                     if (feeRateValue == null || feeRateValue.FeePerK <= Money.Zero)
@@ -315,7 +316,7 @@ namespace BTCPayServer.Controllers
                                               .Select(d => ((Wallet: _WalletProvider.GetWallet(d.Network),
                                                             DerivationStrategy: d.DerivationStrategyBase)))
                                               .Where(_ => _.Wallet != null)
-                                              .Select(async _ => (await GetBalanceString(_)).ToString() + " " + _.Wallet.Network.CryptoCode))
+                                              .Select(async _ => (await GetBalanceString(_)) + " " + _.Wallet.Network.CryptoCode))
                                 .ToArray();
 
             await Task.WhenAll(balances.SelectMany(_ => _));
@@ -604,7 +605,7 @@ namespace BTCPayServer.Controllers
                 var p2wpkh_p2sh = 0x049d7cb2U;
                 electrumMapping.Add(p2wpkh_p2sh, new string[] { "p2sh" });
                 var p2wpkh = 0x4b24746U;
-                electrumMapping.Add(p2wpkh, new string[] { });
+                electrumMapping.Add(p2wpkh, Array.Empty<string>());
 
                 var data = Encoders.Base58Check.DecodeData(derivationScheme);
                 if (data.Length < 4)

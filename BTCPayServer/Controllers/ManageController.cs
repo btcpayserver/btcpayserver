@@ -20,6 +20,7 @@ using NBitcoin;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Services.Mails;
+using System.Globalization;
 
 namespace BTCPayServer.Controllers
 {
@@ -434,7 +435,7 @@ namespace BTCPayServer.Controllers
             }
 
             // Strip spaces and hypens
-            var verificationCode = model.Code.Replace(" ", string.Empty).Replace("-", string.Empty);
+            var verificationCode = model.Code.Replace(" ", string.Empty, StringComparison.InvariantCulture).Replace("-", string.Empty, StringComparison.InvariantCulture);
 
             var is2faTokenValid = await _userManager.VerifyTwoFactorTokenAsync(
                 user, _userManager.Options.Tokens.AuthenticatorTokenProvider, verificationCode);
@@ -524,7 +525,7 @@ namespace BTCPayServer.Controllers
 
         private string GenerateQrCodeUri(string email, string unformattedKey)
         {
-            return string.Format(
+            return string.Format(CultureInfo.InvariantCulture,
                 AuthenicatorUriFormat,
                 _urlEncoder.Encode("BTCPayServer"),
                 _urlEncoder.Encode(email),

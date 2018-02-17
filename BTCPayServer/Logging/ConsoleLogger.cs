@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace BTCPayServer.Logging
@@ -333,7 +334,8 @@ namespace BTCPayServer.Logging
             _outputTask = Task.Factory.StartNew(
                 ProcessLogQueue,
                 this,
-                TaskCreationOptions.LongRunning);
+                default(CancellationToken),
+                TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
 
         public virtual void EnqueueMessage(LogMessageEntry message)

@@ -137,7 +137,7 @@ namespace BTCPayServer.HostedServices
                     await session.ListenNewBlockAsync(_Cts.Token).ConfigureAwait(false);
                     await session.ListenDerivationSchemesAsync((await GetStrategies(network)).ToArray(), _Cts.Token).ConfigureAwait(false);
 
-                    Logs.PayServer.LogInformation($"{network.CryptoCode}: checking if any pending invoice got paid while offline...");
+                    Logs.PayServer.LogInformation($"{network.CryptoCode}: Checking if any pending invoice got paid while offline...");
                     int paymentCount = await FindPaymentViaPolling(wallet, network);
                     Logs.PayServer.LogInformation($"{network.CryptoCode}: {paymentCount} payments happened while offline");
 

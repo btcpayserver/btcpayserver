@@ -80,14 +80,34 @@ namespace BTCPayServer.Controllers
 
             var payments = invoice
                 .GetPayments()
+                .Where(p => p.GetCryptoPaymentData() is BitcoinLikePaymentData)
                 .Select(async payment =>
                 {
+                    var paymentData = (BitcoinLikePaymentData)payment.GetCryptoPaymentData();
                     var m = new InvoiceDetailsModel.Payment();
                     var paymentNetwork = _NetworkProvider.GetNetwork(payment.GetCryptoCode());
                     m.CryptoCode = payment.GetCryptoCode();
                     m.DepositAddress = payment.GetScriptPubKey().GetDestinationAddress(paymentNetwork.NBitcoinNetwork);
-                    m.Confirmations = (await _ExplorerClients.GetExplorerClient(payment.GetCryptoCode())?.GetTransactionAsync(payment.Outpoint.Hash))?.Confirmations ?? 0;
-                    m.TransactionId = payment.Outpoint.Hash.ToString();
+
+                    int confirmationCount = 0;
+                    if(paymentData.Legacy) // The confirmation count in the paymentData is not up to date
+                    {
+                        confirmationCount = (await _ExplorerClients.GetExplorerClient(payment.GetCryptoCode())?.GetTransactionAsync(paymentData.Outpoint.Hash))?.Confirmations ?? 0;
+                    }
+                    else
+                    {
+                        confirmationCount = paymentData.ConfirmationCount;
+                    }
+                    if(confirmationCount >= paymentNetwork.MaxTrackedConfirmation)
+                    {
+                        m.Confirmations = "At least " + (paymentNetwork.MaxTrackedConfirmation);
+                    }
+                    else
+                    {
+                        m.Confirmations = confirmationCount.ToString(CultureInfo.InvariantCulture);
+                    }
+                    
+                    m.TransactionId = paymentData.Outpoint.Hash.ToString();
                     m.ReceivedTime = payment.ReceivedTime;
                     m.TransactionLink = string.Format(CultureInfo.InvariantCulture, paymentNetwork.BlockExplorerLink, m.TransactionId);
                     m.Replaced = !payment.Accounted;

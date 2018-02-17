@@ -66,7 +66,7 @@ namespace BTCPayServer
 
         public BTCPayDefaultSettings DefaultSettings { get; set; }
         public KeyPath CoinType { get; internal set; }
-        public int MaxTrackedConfirmation { get; internal set; } = 7;
+        public int MaxTrackedConfirmation { get; internal set; } = 6;
 
         public override string ToString()
         {

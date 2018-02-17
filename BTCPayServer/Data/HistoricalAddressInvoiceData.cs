@@ -35,7 +35,7 @@ namespace BTCPayServer.Data
         {
             if (Address == null)
                 return null;
-            var index = Address.IndexOf("#");
+            var index = Address.IndexOf("#", StringComparison.InvariantCulture);
             if (index == -1)
                 return Address;
             return Address.Substring(0, index);

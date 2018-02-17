@@ -24,7 +24,7 @@ namespace BTCPayServer.Data
         {
             if (Address == null)
                 return null;
-            var index = Address.IndexOf("#");
+            var index = Address.IndexOf("#", StringComparison.InvariantCulture);
             if (index == -1)
                 return new ScriptId(Address);
             return new ScriptId(Address.Substring(0, index));
@@ -38,7 +38,7 @@ namespace BTCPayServer.Data
         {
             if (Address == null)
                 return null;
-            var index = Address.IndexOf("#");
+            var index = Address.IndexOf("#", StringComparison.InvariantCulture);
             if (index == -1)
                 return "BTC";
             return Address.Substring(index + 1);

@@ -113,7 +113,7 @@ namespace BTCPayServer.Services
         public async Task<bool> SupportDerivation(BTCPayNetwork network, DirectDerivationStrategy strategy)
         {
             if (network == null)
-                throw new ArgumentNullException(nameof(Network));
+                throw new ArgumentNullException(nameof(network));
             if (strategy == null)
                 throw new ArgumentNullException(nameof(strategy));
             if (!strategy.Segwit)

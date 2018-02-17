@@ -18,6 +18,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 using BTCPayServer.Eclair;
+using System.Globalization;
 
 namespace BTCPayServer.Tests
 {
@@ -60,7 +61,7 @@ namespace BTCPayServer.Tests
                 LTCNBXplorerUri = LTCExplorerClient.Address,
                 Postgres = GetEnvironment("TESTS_POSTGRES", "User ID=postgres;Host=127.0.0.1;Port=39372;Database=btcpayserver")
             };
-            PayTester.Port = int.Parse(GetEnvironment("TESTS_PORT", Utils.FreeTcpPort().ToString()));
+            PayTester.Port = int.Parse(GetEnvironment("TESTS_PORT", Utils.FreeTcpPort().ToString(CultureInfo.InvariantCulture)), CultureInfo.InvariantCulture);
             PayTester.HostName = GetEnvironment("TESTS_HOSTNAME", "127.0.0.1");
             PayTester.Start();
 

@@ -27,7 +27,7 @@ namespace BTCPayServer
             {
                 if(filter.Split(new char[] { ':' }, StringSplitOptions.RemoveEmptyEntries).Length == 2)
                 { 
-                    TextSearch = TextSearch.Replace(filter, string.Empty);
+                    TextSearch = TextSearch.Replace(filter, string.Empty, StringComparison.InvariantCulture);
                 }
             }
             TextSearch = TextSearch.Trim();

@@ -63,7 +63,7 @@ namespace BTCPayServer
         }
         public static string WithTrailingSlash(this string str)
         {
-            if (str.EndsWith("/"))
+            if (str.EndsWith("/", StringComparison.InvariantCulture))
                 return str;
             return str + "/";
         }

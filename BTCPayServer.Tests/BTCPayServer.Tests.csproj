@@ -4,7 +4,7 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
 
     <IsPackable>false</IsPackable>
-    <NoWarn>NU1701</NoWarn>
+    <NoWarn>NU1701,CA1816,CA1308,CA1810,CA2208</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

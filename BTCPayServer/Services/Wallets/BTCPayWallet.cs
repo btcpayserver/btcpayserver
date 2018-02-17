@@ -16,11 +16,6 @@ using System.Collections.Concurrent;
 
 namespace BTCPayServer.Services.Wallets
 {
-    public class KnownState
-    {
-        public UTXOChanges PreviousCall { get; set; }
-    }
-
     public class ReceivedCoin
     {
         public Coin Coin { get; set; }

@@ -537,7 +537,7 @@ namespace BTCPayServer.Services.Invoices
 
         public BitcoinAddress GetDepositAddress()
         {
-            if(string.IsNullOrEmpty(DepositAddress))
+            if (string.IsNullOrEmpty(DepositAddress))
             {
                 return null;
             }
@@ -573,7 +573,7 @@ namespace BTCPayServer.Services.Invoices
                     paidEnough |= totalDue <= paid;
                     if (CryptoCode == _.GetCryptoCode())
                     {
-                        cryptoPaid += _.GetValue();
+                        cryptoPaid += _.GetCryptoPaymentData().GetValue();
                         txCount++;
                     }
                     return _;
@@ -604,28 +604,24 @@ namespace BTCPayServer.Services.Invoices
         {
             get; set;
         }
+
+        [Obsolete("Use ((BitcoinLikePaymentData)GetCryptoPaymentData()).Outpoint")]
         public OutPoint Outpoint
         {
             get; set;
         }
 
-        [Obsolete("Use GetValue() or GetScriptPubKey() instead")]
+        [Obsolete("Use ((BitcoinLikePaymentData)GetCryptoPaymentData()).Output")]
         public TxOut Output
         {
             get; set;
-        }
-
-        public Script GetScriptPubKey()
-        {
-#pragma warning disable CS0618
-            return Output.ScriptPubKey;
-#pragma warning restore CS0618
         }
 
         public bool Accounted
         {
             get; set;
         }
+
 
         [Obsolete("Use GetCryptoCode() instead")]
         public string CryptoCode
@@ -636,42 +632,57 @@ namespace BTCPayServer.Services.Invoices
 
         [Obsolete("Use GetCryptoPaymentData() instead")]
         public string CryptoPaymentData { get; set; }
-        [Obsolete("Use GetCryptoPaymentData() instead")]
+        [Obsolete("Use GetCryptoPaymentDataType() instead")]
         public string CryptoPaymentDataType { get; set; }
+
+        public string GetCryptoPaymentDataType()
+        {
+#pragma warning disable CS0618 // Type or member is obsolete
+            return String.IsNullOrEmpty(CryptoPaymentDataType) ? BitcoinLikePaymentData.OnchainBitcoinType : CryptoPaymentDataType;
+#pragma warning restore CS0618 // Type or member is obsolete
+        }
 
         public CryptoPaymentData GetCryptoPaymentData()
         {
 #pragma warning disable CS0618
             if (string.IsNullOrEmpty(CryptoPaymentDataType))
             {
-                return NullPaymentData.Instance;
+                // In case this is a payment done before this update, consider it unconfirmed with RBF for safety
+                var paymentData = new BitcoinLikePaymentData();
+                paymentData.Outpoint = Outpoint;
+                paymentData.Output = Output;
+                paymentData.RBF = true;
+                paymentData.ConfirmationCount = 0;
+                paymentData.Legacy = true;
+                return paymentData;
             }
-            if (CryptoPaymentDataType == "BTCLike")
+            if (CryptoPaymentDataType == BitcoinLikePaymentData.OnchainBitcoinType)
             {
-                return JsonConvert.DeserializeObject<BitcoinLikePaymentData>(CryptoPaymentData);
+                var paymentData = JsonConvert.DeserializeObject<BitcoinLikePaymentData>(CryptoPaymentData);
+                // legacy
+                paymentData.Output = Output;
+                paymentData.Outpoint = Outpoint;
+                return paymentData;
             }
-            else
-                return NullPaymentData.Instance;
+
+            throw new NotSupportedException(nameof(CryptoPaymentDataType) + " does not support " + CryptoPaymentDataType);
 #pragma warning restore CS0618
         }
 
         public void SetCryptoPaymentData(CryptoPaymentData cryptoPaymentData)
         {
 #pragma warning disable CS0618
-            if (cryptoPaymentData is BitcoinLikePaymentData)
+            if (cryptoPaymentData is BitcoinLikePaymentData paymentData)
             {
-                CryptoPaymentDataType = "BTCLike";
+                CryptoPaymentDataType = BitcoinLikePaymentData.OnchainBitcoinType;
+                // Legacy
+                Outpoint = paymentData.Outpoint;
+                Output = paymentData.Output;
+                ///
             }
             else
                 throw new NotSupportedException(cryptoPaymentData.ToString());
             CryptoPaymentData = JsonConvert.SerializeObject(cryptoPaymentData);
-#pragma warning restore CS0618
-        }
-
-        public Money GetValue()
-        {
-#pragma warning disable CS0618
-            return Output.Value;
 #pragma warning restore CS0618
         }
         public Money GetValue(Dictionary<string, CryptoData> cryptoData, string cryptoCode, Money value = null)
@@ -701,41 +712,71 @@ namespace BTCPayServer.Services.Invoices
 
     public interface CryptoPaymentData
     {
+        /// <summary>
+        /// Returns an identifier which uniquely identify the payment
+        /// </summary>
+        /// <returns>The payment id</returns>
+        string GetPaymentId();
+
+        /// <summary>
+        /// Returns terms which will be indexed and searchable in the search bar of invoice
+        /// </summary>
+        /// <returns>The search terms</returns>
+        string[] GetSearchTerms();
+        /// <summary>
+        /// Get value of what as been paid
+        /// </summary>
+        /// <returns>The amount paid</returns>
+        Money GetValue();
         bool PaymentCompleted(PaymentEntity entity, BTCPayNetwork network);
         bool PaymentConfirmed(PaymentEntity entity, SpeedPolicy speedPolicy, BTCPayNetwork network);
 
     }
 
-    public class NullPaymentData : CryptoPaymentData
-    {
-
-        private static readonly NullPaymentData _Instance = new NullPaymentData();
-        public static NullPaymentData Instance
-        {
-            get
-            {
-                return _Instance;
-            }
-        }
-        public bool PaymentCompleted(PaymentEntity entity, BTCPayNetwork network)
-        {
-            return false;
-        }
-
-        public bool PaymentConfirmed(PaymentEntity entity, SpeedPolicy speedPolicy, BTCPayNetwork network)
-        {
-            return false;
-        }
-    }
-
     public class BitcoinLikePaymentData : CryptoPaymentData
     {
+        public readonly static string OnchainBitcoinType = "BTCLike";
+        public BitcoinLikePaymentData()
+        {
+
+        }
+        public BitcoinLikePaymentData(Coin coin, bool rbf)
+        {
+            Outpoint = coin.Outpoint;
+            Output = coin.TxOut;
+            ConfirmationCount = 0;
+            RBF = rbf;
+        }
+        [JsonIgnore]
+        public OutPoint Outpoint { get; set; }
+        [JsonIgnore]
+        public TxOut Output { get; set; }
         public int ConfirmationCount { get; set; }
         public bool RBF { get; set; }
 
+        /// <summary>
+        /// This is set to true if the payment was created before CryptoPaymentData existed in BTCPayServer
+        /// </summary>
+        public bool Legacy { get; set; }
+
+        public string GetPaymentId()
+        {
+            return Outpoint.ToString();
+        }
+
+        public string[] GetSearchTerms()
+        {
+            return new[] { Outpoint.Hash.ToString() };
+        }
+
+        public Money GetValue()
+        {
+            return Output.Value;
+        }
+
         public bool PaymentCompleted(PaymentEntity entity, BTCPayNetwork network)
         {
-            return ConfirmationCount >= 6;
+            return ConfirmationCount >= network.MaxTrackedConfirmation;
         }
 
         public bool PaymentConfirmed(PaymentEntity entity, SpeedPolicy speedPolicy, BTCPayNetwork network)

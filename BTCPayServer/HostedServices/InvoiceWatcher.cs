@@ -55,7 +55,7 @@ namespace BTCPayServer.HostedServices
             _EventAggregator = eventAggregator ?? throw new ArgumentNullException(nameof(eventAggregator));
             _NetworkProvider = networkProvider;
         }
-        CompositeDisposable leases = new CompositeDisposable();        
+        CompositeDisposable leases = new CompositeDisposable();
 
 
         private async Task UpdateInvoice(UpdateInvoiceContext context)
@@ -110,7 +110,7 @@ namespace BTCPayServer.HostedServices
 
                 if (invoice.Status == "paid")
                 {
-                    var transactions = payments.Where(p => p.GetCryptoPaymentData().PaymentConfirmed(p, invoice.SpeedPolicy, network));           
+                    var transactions = payments.Where(p => p.GetCryptoPaymentData().PaymentConfirmed(p, invoice.SpeedPolicy, network));
 
                     var totalConfirmed = transactions.Select(t => t.GetValue(cryptoDataAll, cryptoData.CryptoCode)).Sum();
 
@@ -205,7 +205,7 @@ namespace BTCPayServer.HostedServices
 
             leases.Add(_EventAggregator.Subscribe<Events.InvoiceNeedUpdateEvent>(b =>
             {
-                    Watch(b.InvoiceId);
+                Watch(b.InvoiceId);
             }));
             leases.Add(_EventAggregator.Subscribe<Events.InvoiceEvent>(async b =>
             {
@@ -279,7 +279,11 @@ namespace BTCPayServer.HostedServices
                         catch (Exception ex)
                         {
                             Logs.PayServer.LogError(ex, "Unhandled error on watching invoice " + invoiceId);
-                            await Task.Delay(10000, cancellation);
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                            Task.Delay(10000, cancellation)
+                                .ContinueWith(t => _WatchRequests.Add(invoiceId), TaskScheduler.Default);
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                            break;
                         }
                     }
                 }

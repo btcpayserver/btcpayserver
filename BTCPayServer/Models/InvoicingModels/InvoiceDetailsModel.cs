@@ -22,7 +22,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public class Payment
         {
             public string CryptoCode { get; set; }
-            public int Confirmations
+            public string Confirmations
             {
                 get; set;
             }

@@ -443,24 +443,24 @@ namespace BTCPayServer.Services.Invoices
             AddToTextSearch(invoiceId, addresses.Select(a => a.ToString()).ToArray());
         }
 
-        public async Task<PaymentEntity> AddPayment(string invoiceId, DateTimeOffset date, Coin receivedCoin, string cryptoCode)
+        public async Task<PaymentEntity> AddPayment(string invoiceId, DateTimeOffset date, CryptoPaymentData paymentData, string cryptoCode)
         {
             using (var context = _ContextFactory.CreateContext())
             {
                 PaymentEntity entity = new PaymentEntity
                 {
-                    Outpoint = receivedCoin.Outpoint,
 #pragma warning disable CS0618
-                    Output = receivedCoin.TxOut,
                     CryptoCode = cryptoCode,
 #pragma warning restore CS0618
                     ReceivedTime = date.UtcDateTime,
                     Accounted = false
                 };
-                entity.SetCryptoPaymentData(new BitcoinLikePaymentData());
+                entity.SetCryptoPaymentData(paymentData);
+                
+
                 PaymentData data = new PaymentData
                 {
-                    Id = receivedCoin.Outpoint.ToString(),
+                    Id = paymentData.GetPaymentId(),
                     Blob = ToBytes(entity, null),
                     InvoiceDataId = invoiceId,
                     Accounted = false
@@ -469,7 +469,7 @@ namespace BTCPayServer.Services.Invoices
                 context.Payments.Add(data);
 
                 await context.SaveChangesAsync().ConfigureAwait(false);
-                AddToTextSearch(invoiceId, receivedCoin.Outpoint.Hash.ToString());
+                AddToTextSearch(invoiceId, paymentData.GetSearchTerms());
                 return entity;
             }
         }
@@ -482,8 +482,9 @@ namespace BTCPayServer.Services.Invoices
             {
                 foreach (var payment in payments)
                 {
+                    var paymentData = payment.GetCryptoPaymentData();
                     var data = new PaymentData();
-                    data.Id = payment.Outpoint.ToString();
+                    data.Id = paymentData.GetPaymentId();
                     data.Accounted = payment.Accounted;
                     data.Blob = ToBytes(payment, null);
                     context.Attach(data);

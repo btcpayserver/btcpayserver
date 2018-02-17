@@ -80,14 +80,14 @@ namespace BTCPayServer.Controllers
 
             var payments = invoice
                 .GetPayments()
-                .Where(p => p.GetCryptoPaymentData() is BitcoinLikePaymentData)
+                .Where(p => p.GetCryptoPaymentDataType() == BitcoinLikePaymentData.OnchainBitcoinType)
                 .Select(async payment =>
                 {
                     var paymentData = (BitcoinLikePaymentData)payment.GetCryptoPaymentData();
                     var m = new InvoiceDetailsModel.Payment();
                     var paymentNetwork = _NetworkProvider.GetNetwork(payment.GetCryptoCode());
                     m.CryptoCode = payment.GetCryptoCode();
-                    m.DepositAddress = payment.GetScriptPubKey().GetDestinationAddress(paymentNetwork.NBitcoinNetwork);
+                    m.DepositAddress = paymentData.Output.ScriptPubKey.GetDestinationAddress(paymentNetwork.NBitcoinNetwork);
 
                     int confirmationCount = 0;
                     if(paymentData.Legacy) // The confirmation count in the paymentData is not up to date

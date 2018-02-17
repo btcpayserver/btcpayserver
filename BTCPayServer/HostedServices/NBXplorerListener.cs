@@ -137,7 +137,7 @@ namespace BTCPayServer.HostedServices
                     await session.ListenNewBlockAsync(_Cts.Token).ConfigureAwait(false);
                     await session.ListenDerivationSchemesAsync((await GetStrategies(network)).ToArray(), _Cts.Token).ConfigureAwait(false);
 
-                    Logs.PayServer.LogInformation($"{network.CryptoCode}: if any pending invoice got paid while offline...");
+                    Logs.PayServer.LogInformation($"{network.CryptoCode}: checking if any pending invoice got paid while offline...");
                     int paymentCount = await FindPaymentViaPolling(wallet, network);
                     Logs.PayServer.LogInformation($"{network.CryptoCode}: {paymentCount} payments happened while offline");
 
@@ -209,8 +209,8 @@ namespace BTCPayServer.HostedServices
         IEnumerable<BitcoinLikePaymentData> GetAllBitcoinPaymentData(InvoiceEntity invoice)
         {
             return invoice.GetPayments()
-                    .Select(p => p.GetCryptoPaymentData() as BitcoinLikePaymentData)
-                    .Where(p => p != null);
+                    .Where(p => p.GetCryptoPaymentDataType() == BitcoinLikePaymentData.OnchainBitcoinType)
+                    .Select(p => (BitcoinLikePaymentData)p.GetCryptoPaymentData());
         }
 
         async Task<InvoiceEntity> UpdatePaymentStates(BTCPayWallet wallet, string invoiceId)
@@ -223,9 +223,9 @@ namespace BTCPayServer.HostedServices
             var conflicts = GetConflicts(transactions.Select(t => t.Value));
             foreach (var payment in invoice.GetPayments(wallet.Network))
             {
-                var paymentData = payment.GetCryptoPaymentData() as BitcoinLikePaymentData;
-                if (paymentData == null)
+                if (payment.GetCryptoPaymentDataType() != BitcoinLikePaymentData.OnchainBitcoinType)
                     continue;
+                var paymentData = (BitcoinLikePaymentData)payment.GetCryptoPaymentData();
                 if (!transactions.TryGetValue(paymentData.Outpoint.Hash, out TransactionResult tx))
                     continue;
                 var txId = tx.Transaction.GetHash();
@@ -346,9 +346,10 @@ namespace BTCPayServer.HostedServices
 
         private async Task<InvoiceEntity> ReceivedPayment(BTCPayWallet wallet, string invoiceId, PaymentEntity payment, DerivationStrategyBase strategy)
         {
+            var paymentData = (BitcoinLikePaymentData)payment.GetCryptoPaymentData();
             var invoice = (await UpdatePaymentStates(wallet, invoiceId));
             var cryptoData = invoice.GetCryptoData(wallet.Network, _ExplorerClients.NetworkProviders);
-            if (cryptoData.GetDepositAddress().ScriptPubKey == payment.GetScriptPubKey() && cryptoData.Calculate().Due > Money.Zero)
+            if (cryptoData.GetDepositAddress().ScriptPubKey == paymentData.Output.ScriptPubKey && cryptoData.Calculate().Due > Money.Zero)
             {
                 var address = await wallet.ReserveAddressAsync(strategy);
                 await _InvoiceRepository.NewAddress(invoiceId, address, wallet.Network);

@@ -329,8 +329,11 @@ namespace BTCPayServer.HostedServices
                 var strategy = invoice.GetDerivationStrategy(network);
                 if (strategy == null)
                     continue;
+                var cryptoId = new CryptoDataId(network.CryptoCode, PaymentTypes.BTCLike);
+                if (!invoice.Support(cryptoId))
+                    continue;
                 var coins = (await wallet.GetUnspentCoins(strategy))
-                             .Where(c => invoice.AvailableAddressHashes.Contains(c.Coin.ScriptPubKey.Hash.ToString() + network.CryptoCode))
+                             .Where(c => invoice.AvailableAddressHashes.Contains(c.Coin.ScriptPubKey.Hash.ToString() + cryptoId))
                              .ToArray();
                 foreach (var coin in coins.Where(c => !alreadyAccounted.Contains(c.Coin.Outpoint)))
                 {

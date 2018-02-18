@@ -134,7 +134,7 @@ namespace BTCPayServer.Services.Invoices
                     {
                         InvoiceDataId = invoice.Id,
                         CreatedTime = DateTimeOffset.UtcNow,
-                    }.SetHash(hash, cryptoData.GetId().ToString()));
+                    }.SetHash(hash, cryptoData.GetId()));
 
                     context.HistoricalAddressInvoices.Add(new HistoricalAddressInvoiceData()
                     {
@@ -207,7 +207,7 @@ namespace BTCPayServer.Services.Invoices
                     InvoiceDataId = invoiceId,
                     CreatedTime = DateTimeOffset.UtcNow
                 }
-                .SetHash(GetAddressInvoiceHash(currencyData), network.CryptoCode));
+                .SetHash(GetAddressInvoiceHash(currencyData), currencyData.GetId()));
                 context.HistoricalAddressInvoices.Add(new HistoricalAddressInvoiceData()
                 {
                     InvoiceDataId = invoiceId,
@@ -359,7 +359,7 @@ namespace BTCPayServer.Services.Invoices
             }
             if (invoice.AddressInvoices != null)
             {
-                entity.AvailableAddressHashes = invoice.AddressInvoices.Select(a => a.GetHash() + a.GetCryptoCode()).ToHashSet();
+                entity.AvailableAddressHashes = invoice.AddressInvoices.Select(a => a.GetHash() + a.GetCryptoDataId().ToString()).ToHashSet();
             }
             if(invoice.Events != null)
             {

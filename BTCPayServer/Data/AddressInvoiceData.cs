@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Services.Invoices;
 using NBitcoin;
 
 namespace BTCPayServer.Data
@@ -29,19 +30,19 @@ namespace BTCPayServer.Data
                 return new ScriptId(Address);
             return new ScriptId(Address.Substring(0, index));
         }
-        public AddressInvoiceData SetHash(ScriptId scriptId, string cryptoCode)
+        public AddressInvoiceData SetHash(ScriptId scriptId, CryptoDataId cryptoDataId)
         {
-            Address = scriptId + "#" + cryptoCode;
+            Address = scriptId + "#" + cryptoDataId?.ToString();
             return this;
         }
-        public string GetCryptoCode()
+        public CryptoDataId GetCryptoDataId()
         {
             if (Address == null)
                 return null;
             var index = Address.IndexOf("#", StringComparison.InvariantCulture);
             if (index == -1)
-                return "BTC";
-            return Address.Substring(index + 1);
+                return CryptoDataId.Parse("BTC");
+            return CryptoDataId.Parse(Address.Substring(index + 1));
         }
 #pragma warning restore CS0618
 

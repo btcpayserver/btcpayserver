@@ -198,7 +198,7 @@ function onDataCallback(jsonData) {
 }
 
 function fetchStatus() {
-    var path = srvModel.serverUrl + "/i/" + srvModel.invoiceId + "/" + srvModel.cryptoCode + "/status";
+    var path = srvModel.serverUrl + "/i/" + srvModel.invoiceId + "/" + srvModel.cryptoDataId + "/status";
     $.ajax({
         url: path,
         type: "GET"

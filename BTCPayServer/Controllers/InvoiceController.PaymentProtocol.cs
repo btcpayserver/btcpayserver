@@ -9,13 +9,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BTCPayServer.Services.Invoices;
 
 namespace BTCPayServer.Controllers
 {
     public partial class InvoiceController
     {
         [HttpGet]
-        [Route("i/{invoiceId}")]
+        [Route("i/{invoiceId}/{cryptoCode?}")]
         [AcceptMediaTypeConstraint("application/bitcoin-paymentrequest")]
         public async Task<IActionResult> GetInvoiceRequest(string invoiceId, string cryptoCode = null)
         {
@@ -23,11 +24,12 @@ namespace BTCPayServer.Controllers
                 cryptoCode = "BTC";
             var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
             var network = _NetworkProvider.GetNetwork(cryptoCode);
-            if (invoice == null || invoice.IsExpired() || network == null || !invoice.Support(network))
+            var cryptoId = new CryptoDataId(cryptoCode, Payments.PaymentTypes.BTCLike);
+            if (invoice == null || invoice.IsExpired() || network == null || !invoice.Support(cryptoId))
                 return NotFound();
 
             var dto = invoice.EntityToDTO(_NetworkProvider);
-            var cryptoData = dto.CryptoInfo.First(c => c.CryptoCode.Equals(cryptoCode, StringComparison.OrdinalIgnoreCase));
+            var cryptoData = dto.CryptoInfo.First(c => c.GetCryptoDataId() == cryptoId);
             PaymentRequest request = new PaymentRequest
             {
                 DetailsVersion = 1
@@ -69,7 +71,7 @@ namespace BTCPayServer.Controllers
             if (cryptoCode == null)
                 cryptoCode = "BTC";
             var network = _NetworkProvider.GetNetwork(cryptoCode);
-            if (network == null || invoice == null || invoice.IsExpired() || !invoice.Support(network))
+            if (network == null || invoice == null || invoice.IsExpired() || !invoice.Support(new Services.Invoices.CryptoDataId(cryptoCode, Payments.PaymentTypes.BTCLike)))
                 return NotFound();
 
             var wallet = _WalletProvider.GetWallet(network);

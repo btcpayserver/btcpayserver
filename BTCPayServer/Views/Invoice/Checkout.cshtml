@@ -613,7 +613,7 @@
                                 <div style="text-align:center">
                                     @foreach(var crypto in Model.AvailableCryptos)
                                     {
-                                        <a style="text-decoration:none;" href="@crypto.Link" onclick="srvModel.cryptoCode='@crypto.CryptoCode'; fetchStatus(); return false;"><img style="height:32px; margin-right:5px; margin-left:5px;" alt="@crypto.CryptoCode" src="@crypto.CryptoImage" /></a>
+                                        <a style="text-decoration:none;" href="@crypto.Link" onclick="srvModel.cryptoDataId='@crypto.CryptoDataId'; fetchStatus(); return false;"><img style="height:32px; margin-right:5px; margin-left:5px;" alt="@crypto.CryptoDataId" src="@crypto.CryptoImage" /></a>
                                     }
                                 </div>
                             }

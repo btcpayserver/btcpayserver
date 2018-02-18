@@ -27,6 +27,7 @@ using System.Collections.Generic;
 using BTCPayServer.Models.StoreViewModels;
 using System.Threading.Tasks;
 using System.Globalization;
+using BTCPayServer.Payments;
 
 namespace BTCPayServer.Tests
 {
@@ -50,13 +51,13 @@ namespace BTCPayServer.Tests
             entity.ProductInformation = new ProductInformation() { Price = 5000 };
 
             // Some check that handling legacy stuff does not break things
-            var cryptoData = entity.GetCryptoData("BTC", null, true);
+            var cryptoData = entity.GetCryptoData(null, true).TryGet("BTC", PaymentTypes.BTCLike);
             cryptoData.Calculate();
             Assert.NotNull(cryptoData);
-            Assert.Null(entity.GetCryptoData("BTC", null, false));
+            Assert.Null(entity.GetCryptoData(null, false).TryGet("BTC", PaymentTypes.BTCLike));
             entity.SetCryptoData(new CryptoData() { ParentEntity = entity, Rate = entity.Rate, CryptoCode = "BTC", TxFee = entity.TxFee });
-            Assert.NotNull(entity.GetCryptoData("BTC", null, false));
-            Assert.NotNull(entity.GetCryptoData("BTC", null, true));
+            Assert.NotNull(entity.GetCryptoData(null, false).TryGet("BTC", PaymentTypes.BTCLike));
+            Assert.NotNull(entity.GetCryptoData(null, true).TryGet("BTC", PaymentTypes.BTCLike));
             ////////////////////
 
             var accounting = cryptoData.Calculate();
@@ -90,30 +91,32 @@ namespace BTCPayServer.Tests
 
             entity = new InvoiceEntity();
             entity.ProductInformation = new ProductInformation() { Price = 5000 };
-            entity.SetCryptoData(new System.Collections.Generic.Dictionary<string, CryptoData>(new KeyValuePair<string, CryptoData>[] {
-                new KeyValuePair<string,CryptoData>("BTC", new CryptoData()
-                                                           {
-                                                                Rate = 1000,
-                                                                TxFee = Money.Coins(0.1m)
-                                                           }),
-                new KeyValuePair<string,CryptoData>("LTC", new CryptoData()
-                                                           {
-                                                                Rate = 500,
-                                                                TxFee = Money.Coins(0.01m)
-                                                           })
-            }));
+            CryptoDataDictionary cryptoDatas = new CryptoDataDictionary();
+            cryptoDatas.Add(new CryptoData()
+            {
+                CryptoCode = "BTC",
+                Rate = 1000,
+                TxFee = Money.Coins(0.1m)
+            });
+            cryptoDatas.Add(new CryptoData()
+            {
+                CryptoCode = "LTC",
+                Rate = 500,
+                TxFee = Money.Coins(0.01m)
+            });
+            entity.SetCryptoData(cryptoDatas);
             entity.Payments = new List<PaymentEntity>();
-            cryptoData = entity.GetCryptoData("BTC", null);
+            cryptoData = entity.GetCryptoData(new CryptoDataId("BTC", PaymentTypes.BTCLike), null);
             accounting = cryptoData.Calculate();
             Assert.Equal(Money.Coins(5.1m), accounting.Due);
 
-            cryptoData = entity.GetCryptoData("LTC", null);
+            cryptoData = entity.GetCryptoData(new CryptoDataId("LTC", PaymentTypes.BTCLike), null);
             accounting = cryptoData.Calculate();
             Assert.Equal(Money.Coins(10.01m), accounting.TotalDue);
 
             entity.Payments.Add(new PaymentEntity() { CryptoCode = "BTC", Output = new TxOut(Money.Coins(1.0m), new Key()), Accounted = true });
 
-            cryptoData = entity.GetCryptoData("BTC", null);
+            cryptoData = entity.GetCryptoData(new CryptoDataId("BTC", PaymentTypes.BTCLike), null);
             accounting = cryptoData.Calculate();
             Assert.Equal(Money.Coins(4.2m), accounting.Due);
             Assert.Equal(Money.Coins(1.0m), accounting.CryptoPaid);
@@ -121,7 +124,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(Money.Coins(5.2m), accounting.TotalDue);
             Assert.Equal(2, accounting.TxCount);
 
-            cryptoData = entity.GetCryptoData("LTC", null);
+            cryptoData = entity.GetCryptoData(new CryptoDataId("LTC", PaymentTypes.BTCLike), null);
             accounting = cryptoData.Calculate();
             Assert.Equal(Money.Coins(10.01m + 0.1m * 2 - 2.0m /* 8.21m */), accounting.Due);
             Assert.Equal(Money.Coins(0.0m), accounting.CryptoPaid);
@@ -131,7 +134,7 @@ namespace BTCPayServer.Tests
             entity.Payments.Add(new PaymentEntity() { CryptoCode = "LTC", Output = new TxOut(Money.Coins(1.0m), new Key()), Accounted = true });
 
 
-            cryptoData = entity.GetCryptoData("BTC", null);
+            cryptoData = entity.GetCryptoData(new CryptoDataId("BTC", PaymentTypes.BTCLike), null);
             accounting = cryptoData.Calculate();
             Assert.Equal(Money.Coins(4.2m - 0.5m + 0.01m / 2), accounting.Due);
             Assert.Equal(Money.Coins(1.0m), accounting.CryptoPaid);
@@ -139,7 +142,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(Money.Coins(5.2m + 0.01m / 2), accounting.TotalDue); // The fee for LTC added
             Assert.Equal(2, accounting.TxCount);
 
-            cryptoData = entity.GetCryptoData("LTC", null);
+            cryptoData = entity.GetCryptoData(new CryptoDataId("LTC", PaymentTypes.BTCLike), null);
             accounting = cryptoData.Calculate();
             Assert.Equal(Money.Coins(8.21m - 1.0m + 0.01m), accounting.Due);
             Assert.Equal(Money.Coins(1.0m), accounting.CryptoPaid);
@@ -150,7 +153,7 @@ namespace BTCPayServer.Tests
             var remaining = Money.Coins(4.2m - 0.5m + 0.01m / 2);
             entity.Payments.Add(new PaymentEntity() { CryptoCode = "BTC", Output = new TxOut(remaining, new Key()), Accounted = true });
 
-            cryptoData = entity.GetCryptoData("BTC", null);
+            cryptoData = entity.GetCryptoData(new CryptoDataId("BTC", PaymentTypes.BTCLike), null);
             accounting = cryptoData.Calculate();
             Assert.Equal(Money.Zero, accounting.Due);
             Assert.Equal(Money.Coins(1.0m) + remaining, accounting.CryptoPaid);
@@ -159,7 +162,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(accounting.Paid, accounting.TotalDue);
             Assert.Equal(2, accounting.TxCount);
 
-            cryptoData = entity.GetCryptoData("LTC", null);
+            cryptoData = entity.GetCryptoData(new CryptoDataId("LTC", PaymentTypes.BTCLike), null);
             accounting = cryptoData.Calculate();
             Assert.Equal(Money.Zero, accounting.Due);
             Assert.Equal(Money.Coins(1.0m), accounting.CryptoPaid);

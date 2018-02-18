@@ -39,6 +39,7 @@ using Microsoft.AspNetCore.Mvc.Routing;
 using NBXplorer.DerivationStrategy;
 using NBXplorer;
 using BTCPayServer.HostedServices;
+using BTCPayServer.Payments;
 
 namespace BTCPayServer.Controllers
 {
@@ -136,16 +137,17 @@ namespace BTCPayServer.Controllers
                     });
 
             bool legacyBTCisSet = false;
-            var cryptoDatas = new Dictionary<string, CryptoData>();
+            var cryptoDatas = new CryptoDataDictionary();
             foreach (var q in queries)
             {
                 CryptoData cryptoData = new CryptoData();
-                cryptoData.CryptoCode = q.network.CryptoCode;
-                cryptoData.FeeRate = (await q.getFeeRate);
-                cryptoData.TxFee = GetTxFee(storeBlob, cryptoData.FeeRate); // assume price for 100 bytes
+                cryptoData.SetId(new CryptoDataId(q.network.CryptoCode, PaymentTypes.BTCLike));
+                BitcoinLikeOnChainPaymentMethod onchainMethod = new BitcoinLikeOnChainPaymentMethod();
+                onchainMethod.FeeRate = (await q.getFeeRate);
+                onchainMethod.TxFee = GetTxFee(storeBlob, onchainMethod.FeeRate); // assume price for 100 bytes
                 cryptoData.Rate = await q.getRate;
-                cryptoData.DepositAddress = (await q.getAddress).ToString();
-
+                onchainMethod.DepositAddress = (await q.getAddress);
+                cryptoData.SetPaymentMethod(onchainMethod);
 #pragma warning disable CS0618
                 if (q.network.IsBTC)
                 {
@@ -155,7 +157,7 @@ namespace BTCPayServer.Controllers
                     entity.DepositAddress = cryptoData.DepositAddress;
                 }
 #pragma warning restore CS0618
-                cryptoDatas.Add(cryptoData.CryptoCode, cryptoData);
+                cryptoDatas.Add(cryptoData);
             }
 
             if (!legacyBTCisSet)

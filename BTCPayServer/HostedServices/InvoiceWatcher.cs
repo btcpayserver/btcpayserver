@@ -72,17 +72,16 @@ namespace BTCPayServer.HostedServices
 
             var derivationStrategies = invoice.GetDerivationStrategies(_NetworkProvider).ToArray();
             var payments = invoice.GetPayments().Where(p => p.Accounted).ToArray();
-            foreach (BTCPayNetwork network in _NetworkProvider.GetAll())
+            var cryptoDataAll = invoice.GetCryptoData(_NetworkProvider);
+            foreach (var cryptoData in cryptoDataAll.Select(c => c))
             {
-                var cryptoData = invoice.GetCryptoData(network, _NetworkProvider);
-                if (cryptoData == null) // Altcoin not supported
-                    continue;
-                var cryptoDataAll = invoice.GetCryptoData(_NetworkProvider);
                 var accounting = cryptoData.Calculate();
-
+                var network = _NetworkProvider.GetNetwork(cryptoData.GetId().CryptoCode);
+                if (network == null)
+                    continue;
                 if (invoice.Status == "new" || invoice.Status == "expired")
                 {
-                    var totalPaid = payments.Select(p => p.GetValue(cryptoDataAll, cryptoData.CryptoCode)).Sum();
+                    var totalPaid = payments.Select(p => p.GetValue(cryptoDataAll, cryptoData.GetId())).Sum();
                     if (totalPaid >= accounting.TotalDue)
                     {
                         if (invoice.Status == "new")
@@ -112,7 +111,7 @@ namespace BTCPayServer.HostedServices
                 {
                     var transactions = payments.Where(p => p.GetCryptoPaymentData().PaymentConfirmed(p, invoice.SpeedPolicy, network));
 
-                    var totalConfirmed = transactions.Select(t => t.GetValue(cryptoDataAll, cryptoData.CryptoCode)).Sum();
+                    var totalConfirmed = transactions.Select(t => t.GetValue(cryptoDataAll, cryptoData.GetId())).Sum();
 
                     if (// Is after the monitoring deadline
                        (invoice.MonitoringExpiration < DateTimeOffset.UtcNow)
@@ -137,7 +136,7 @@ namespace BTCPayServer.HostedServices
                 if (invoice.Status == "confirmed")
                 {
                     var transactions = payments.Where(p => p.GetCryptoPaymentData().PaymentCompleted(p, network));
-                    var totalConfirmed = transactions.Select(t => t.GetValue(cryptoDataAll, cryptoData.CryptoCode)).Sum();
+                    var totalConfirmed = transactions.Select(t => t.GetValue(cryptoDataAll, cryptoData.GetId())).Sum();
                     if (totalConfirmed >= accounting.TotalDue)
                     {
                         context.Events.Add(new InvoiceEvent(invoice, 1006, "invoice_completed"));

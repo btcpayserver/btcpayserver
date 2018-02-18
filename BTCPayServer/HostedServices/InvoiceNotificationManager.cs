@@ -201,7 +201,7 @@ namespace BTCPayServer.HostedServices
 
             // We keep backward compatibility with bitpay by passing BTC info to the notification
             // we don't pass other info, as it is a bad idea to use IPN data for logic processing (can be faked)
-            var btcCryptoInfo = dto.CryptoInfo.FirstOrDefault(c => c.CryptoCode == "BTC");
+            var btcCryptoInfo = dto.CryptoInfo.FirstOrDefault(c => c.GetCryptoDataId() == new CryptoDataId("BTC", Payments.PaymentTypes.BTCLike));
             if (btcCryptoInfo != null)
             {
 #pragma warning disable CS0618

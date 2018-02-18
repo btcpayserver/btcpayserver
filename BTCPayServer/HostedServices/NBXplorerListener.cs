@@ -16,6 +16,7 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Wallets;
 using NBitcoin;
 using NBXplorer.Models;
+using BTCPayServer.Payments;
 
 namespace BTCPayServer.HostedServices
 {
@@ -209,7 +210,7 @@ namespace BTCPayServer.HostedServices
         IEnumerable<BitcoinLikePaymentData> GetAllBitcoinPaymentData(InvoiceEntity invoice)
         {
             return invoice.GetPayments()
-                    .Where(p => p.GetCryptoPaymentDataType() == BitcoinLikePaymentData.OnchainBitcoinType)
+                    .Where(p => p.GetCryptoDataId().PaymentType == PaymentTypes.BTCLike)
                     .Select(p => (BitcoinLikePaymentData)p.GetCryptoPaymentData());
         }
 
@@ -223,7 +224,7 @@ namespace BTCPayServer.HostedServices
             var conflicts = GetConflicts(transactions.Select(t => t.Value));
             foreach (var payment in invoice.GetPayments(wallet.Network))
             {
-                if (payment.GetCryptoPaymentDataType() != BitcoinLikePaymentData.OnchainBitcoinType)
+                if (payment.GetCryptoDataId().PaymentType !=  PaymentTypes.BTCLike)
                     continue;
                 var paymentData = (BitcoinLikePaymentData)payment.GetCryptoPaymentData();
                 if (!transactions.TryGetValue(paymentData.Outpoint.Hash, out TransactionResult tx))
@@ -348,13 +349,15 @@ namespace BTCPayServer.HostedServices
         {
             var paymentData = (BitcoinLikePaymentData)payment.GetCryptoPaymentData();
             var invoice = (await UpdatePaymentStates(wallet, invoiceId));
-            var cryptoData = invoice.GetCryptoData(wallet.Network, _ExplorerClients.NetworkProviders);
-            if (cryptoData.GetDepositAddress().ScriptPubKey == paymentData.Output.ScriptPubKey && cryptoData.Calculate().Due > Money.Zero)
+            var cryptoData = invoice.GetCryptoData(wallet.Network, PaymentTypes.BTCLike, _ExplorerClients.NetworkProviders);
+            var method = cryptoData.GetPaymentMethod() as Payments.BitcoinLikeOnChainPaymentMethod;
+            if (method.DepositAddress.ScriptPubKey == paymentData.Output.ScriptPubKey && cryptoData.Calculate().Due > Money.Zero)
             {
                 var address = await wallet.ReserveAddressAsync(strategy);
-                await _InvoiceRepository.NewAddress(invoiceId, address, wallet.Network);
+                method.DepositAddress = address;
+                await _InvoiceRepository.NewAddress(invoiceId, method, wallet.Network);
                 _Aggregator.Publish(new InvoiceNewAddressEvent(invoiceId, address.ToString(), wallet.Network));
-                cryptoData.DepositAddress = address.ToString();
+                cryptoData.SetPaymentMethod(method);
                 invoice.SetCryptoData(cryptoData);
             }
             wallet.InvalidateCache(strategy);

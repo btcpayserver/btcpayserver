@@ -172,16 +172,18 @@ namespace BTCPayServer.Services.Invoices
         public DerivationStrategyBase GetDerivationStrategy(BTCPayNetwork network)
         {
 #pragma warning disable CS0618
-            JObject strategies = JObject.Parse(DerivationStrategies);
-#pragma warning restore CS0618
-            foreach (var strat in strategies.Properties())
+            if (!string.IsNullOrEmpty(DerivationStrategies))
             {
-                if (strat.Name == network.CryptoCode)
+                JObject strategies = JObject.Parse(DerivationStrategies);
+#pragma warning restore CS0618
+                foreach (var strat in strategies.Properties())
                 {
-                    return BTCPayServer.DerivationStrategy.Parse(strat.Value.Value<string>(), network).DerivationStrategyBase;
+                    if (strat.Name == network.CryptoCode)
+                    {
+                        return BTCPayServer.DerivationStrategy.Parse(strat.Value.Value<string>(), network).DerivationStrategyBase;
+                    }
                 }
             }
-
 #pragma warning disable CS0618
             if (network.IsBTC && !string.IsNullOrEmpty(DerivationStrategy))
             {

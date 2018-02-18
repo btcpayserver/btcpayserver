@@ -281,7 +281,9 @@ namespace BTCPayServer.HostedServices
                 {
                     lock (_SendingRequestsByInvoiceId)
                     {
-                        _SendingRequestsByInvoiceId.Remove(id);
+                        _SendingRequestsByInvoiceId.TryGetValue(id, out var executing2);
+                        if(executing2 == sending)
+                            _SendingRequestsByInvoiceId.Remove(id);
                     }
                 }, TaskScheduler.Default);
             }

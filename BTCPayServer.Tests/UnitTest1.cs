@@ -28,6 +28,8 @@ using BTCPayServer.Models.StoreViewModels;
 using System.Threading.Tasks;
 using System.Globalization;
 using BTCPayServer.Payments;
+using BTCPayServer.Payments.Bitcoin;
+using BTCPayServer.HostedServices;
 
 namespace BTCPayServer.Tests
 {
@@ -37,6 +39,63 @@ namespace BTCPayServer.Tests
         {
             Logs.Tester = new XUnitLog(helper) { Name = "Tests" };
             Logs.LogProvider = new XUnitLogProvider(helper);
+        }
+
+        [Fact]
+        public void CanCalculateCryptoDue2()
+        {
+            var dummy = new Key().PubKey.GetAddress(Network.RegTest);
+#pragma warning disable CS0618
+            InvoiceEntity invoiceEntity = new InvoiceEntity();
+            invoiceEntity.Payments = new System.Collections.Generic.List<PaymentEntity>();
+            invoiceEntity.ProductInformation = new ProductInformation() { Price = 100 };
+            PaymentMethodDictionary paymentMethods = new PaymentMethodDictionary();
+            paymentMethods.Add(new PaymentMethod()
+            {
+                CryptoCode = "BTC",
+                Rate = 10513.44m,
+            }.SetPaymentMethodDetails(new BTCPayServer.Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod()
+            {
+                TxFee = Money.Coins(0.00000100m),
+                DepositAddress = dummy
+            }));
+            paymentMethods.Add(new PaymentMethod()
+            {
+                CryptoCode = "LTC",
+                Rate = 216.79m
+            }.SetPaymentMethodDetails(new BTCPayServer.Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod()
+            {
+                TxFee = Money.Coins(0.00010000m),
+                DepositAddress = dummy
+            }));
+            invoiceEntity.SetPaymentMethods(paymentMethods);
+
+            var btc = invoiceEntity.GetPaymentMethod(new PaymentMethodId("BTC", PaymentTypes.BTCLike), null);
+            var accounting = btc.Calculate();
+
+            invoiceEntity.Payments.Add(new PaymentEntity() { Accounted = true, CryptoCode = "BTC" }.SetCryptoPaymentData(new BitcoinLikePaymentData()
+            {
+                Output = new TxOut() { Value = Money.Coins(0.00151263m) }
+            }));
+            accounting = btc.Calculate();
+            invoiceEntity.Payments.Add(new PaymentEntity() { Accounted = true, CryptoCode = "BTC" }.SetCryptoPaymentData(new BitcoinLikePaymentData()
+            {
+                Output = new TxOut() { Value = accounting.Due }
+            }));
+            accounting = btc.Calculate();
+            Assert.Equal(Money.Zero, accounting.Due);
+            Assert.Equal(Money.Zero, accounting.DueUncapped);
+
+            var ltc = invoiceEntity.GetPaymentMethod(new PaymentMethodId("LTC", PaymentTypes.BTCLike), null);
+            accounting = ltc.Calculate();
+
+            Assert.Equal(Money.Zero, accounting.Due);
+            // LTC might have over paid due to BTC paying above what it should (round 1 satoshi up)
+            Assert.True(accounting.DueUncapped < Money.Zero);
+
+            var paymentMethod = InvoiceWatcher.GetNearestClearedPayment(paymentMethods, out var accounting2, null);
+            Assert.Equal(btc.CryptoCode, paymentMethod.CryptoCode);
+#pragma warning restore CS0618
         }
 
         [Fact]
@@ -171,7 +230,6 @@ namespace BTCPayServer.Tests
             Assert.Equal(Money.Coins(10.01m + 0.1m * 2 + 0.1m * 2 /* + 0.01m no need to pay this fee anymore */), accounting.TotalDue);
             Assert.Equal(1, accounting.TxCount);
             Assert.Equal(accounting.Paid, accounting.TotalDue);
-
 #pragma warning restore CS0618
         }
 

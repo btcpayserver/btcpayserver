@@ -20,9 +20,9 @@ namespace BTCPayServer.Payments.Bitcoin
             return DepositAddress?.ToString();
         }
 
-        public Money GetTxFee()
+        public decimal GetTxFee()
         {
-            return TxFee;
+            return TxFee.ToDecimal(MoneyUnit.BTC);
         }
 
         public void SetPaymentDestination(string newPaymentDestination)

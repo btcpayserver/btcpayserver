@@ -48,9 +48,9 @@ namespace BTCPayServer.Payments.Bitcoin
             return new[] { Outpoint.Hash.ToString() };
         }
 
-        public Money GetValue()
+        public decimal GetValue()
         {
-            return Output.Value;
+            return Output.Value.ToDecimal(MoneyUnit.BTC);
         }
 
         public bool PaymentCompleted(PaymentEntity entity, BTCPayNetwork network)

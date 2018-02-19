@@ -10,7 +10,7 @@ namespace BTCPayServer.Payments
     {
         string GetPaymentDestination();
         PaymentTypes GetPaymentType();
-        Money GetTxFee();
+        decimal GetTxFee();
         void SetPaymentDestination(string newPaymentDestination);
     }
 }

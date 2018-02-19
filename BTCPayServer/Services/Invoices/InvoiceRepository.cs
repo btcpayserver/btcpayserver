@@ -124,26 +124,26 @@ namespace BTCPayServer.Services.Invoices
                     CustomerEmail = invoice.RefundMail
                 });
 
-                foreach (var cryptoData in invoice.GetCryptoData(networkProvider))
+                foreach (var paymentMethod in invoice.GetPaymentMethods(networkProvider))
                 {
-                    if (cryptoData.Network == null)
+                    if (paymentMethod.Network == null)
                         throw new InvalidOperationException("CryptoCode unsupported");
-                    var paymentDestination = cryptoData.GetPaymentMethod().GetPaymentDestination();
+                    var paymentDestination = paymentMethod.GetPaymentMethodDetails().GetPaymentDestination();
 
-                    string address = GetDestination(cryptoData);
+                    string address = GetDestination(paymentMethod);
                     context.AddressInvoices.Add(new AddressInvoiceData()
                     {
                         InvoiceDataId = invoice.Id,
                         CreatedTime = DateTimeOffset.UtcNow,
-                    }.Set(address, cryptoData.GetId()));
+                    }.Set(address, paymentMethod.GetId()));
 
                     context.HistoricalAddressInvoices.Add(new HistoricalAddressInvoiceData()
                     {
                         InvoiceDataId = invoice.Id,
                         Assigned = DateTimeOffset.UtcNow
-                    }.SetAddress(paymentDestination, cryptoData.GetId().ToString()));
+                    }.SetAddress(paymentDestination, paymentMethod.GetId().ToString()));
                     textSearch.Add(paymentDestination);
-                    textSearch.Add(cryptoData.Calculate().TotalDue.ToString());
+                    textSearch.Add(paymentMethod.Calculate().TotalDue.ToString());
                 }
                 context.PendingInvoices.Add(new PendingInvoiceData() { Id = invoice.Id });
                 await context.SaveChangesAsync().ConfigureAwait(false);
@@ -162,18 +162,18 @@ namespace BTCPayServer.Services.Invoices
             return invoice;
         }
 
-        private static string GetDestination(CryptoData cryptoData)
+        private static string GetDestination(PaymentMethod paymentMethod)
         {
             // For legacy reason, BitcoinLikeOnChain is putting the hashes of addresses in database
-            if (cryptoData.GetId().PaymentType == Payments.PaymentTypes.BTCLike)
+            if (paymentMethod.GetId().PaymentType == Payments.PaymentTypes.BTCLike)
             {
-                return ((Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod)cryptoData.GetPaymentMethod()).DepositAddress.ScriptPubKey.Hash.ToString();
+                return ((Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod)paymentMethod.GetPaymentMethodDetails()).DepositAddress.ScriptPubKey.Hash.ToString();
             }
             ///////////////
-            return cryptoData.GetPaymentMethod().GetPaymentDestination();
+            return paymentMethod.GetPaymentMethodDetails().GetPaymentDestination();
         }
 
-        public async Task<bool> NewAddress(string invoiceId, IPaymentMethod paymentMethod, BTCPayNetwork network)
+        public async Task<bool> NewAddress(string invoiceId, IPaymentMethodDetails paymentMethod, BTCPayNetwork network)
         {
             using (var context = _ContextFactory.CreateContext())
             {
@@ -182,11 +182,11 @@ namespace BTCPayServer.Services.Invoices
                     return false;
 
                 var invoiceEntity = ToObject<InvoiceEntity>(invoice.Blob, network.NBitcoinNetwork);
-                var currencyData = invoiceEntity.GetCryptoData(network, paymentMethod.GetPaymentType(), null);
+                var currencyData = invoiceEntity.GetPaymentMethod(network, paymentMethod.GetPaymentType(), null);
                 if (currencyData == null)
                     return false;
 
-                var existingPaymentMethod = currencyData.GetPaymentMethod();
+                var existingPaymentMethod = currencyData.GetPaymentMethodDetails();
                 if (existingPaymentMethod.GetPaymentDestination() != null)
                 {
                     MarkUnassigned(invoiceId, invoiceEntity, context, currencyData.GetId());
@@ -194,14 +194,14 @@ namespace BTCPayServer.Services.Invoices
 
                 existingPaymentMethod.SetPaymentDestination(paymentMethod.GetPaymentDestination());
 
-                currencyData.SetPaymentMethod(existingPaymentMethod);
+                currencyData.SetPaymentMethodDetails(existingPaymentMethod);
 #pragma warning disable CS0618
                 if (network.IsBTC)
                 {
                     invoiceEntity.DepositAddress = currencyData.DepositAddress;
                 }
 #pragma warning restore CS0618
-                invoiceEntity.SetCryptoData(currencyData);
+                invoiceEntity.SetPaymentMethod(currencyData);
                 invoice.Blob = ToBytes(invoiceEntity, network.NBitcoinNetwork);
 
                 context.AddressInvoices.Add(new AddressInvoiceData()
@@ -237,15 +237,15 @@ namespace BTCPayServer.Services.Invoices
             }
         }
 
-        private static void MarkUnassigned(string invoiceId, InvoiceEntity entity, ApplicationDbContext context, CryptoDataId cryptoDataId)
+        private static void MarkUnassigned(string invoiceId, InvoiceEntity entity, ApplicationDbContext context, PaymentMethodId paymentMethodId)
         {
-            foreach (var address in entity.GetCryptoData(null))
+            foreach (var address in entity.GetPaymentMethods(null))
             {
-                if (cryptoDataId != null && cryptoDataId != address.GetId())
+                if (paymentMethodId != null && paymentMethodId != address.GetId())
                     continue;
                 var historical = new HistoricalAddressInvoiceData();
                 historical.InvoiceDataId = invoiceId;
-                historical.SetAddress(address.GetPaymentMethod().GetPaymentDestination(), address.GetId().ToString());
+                historical.SetAddress(address.GetPaymentMethodDetails().GetPaymentDestination(), address.GetId().ToString());
                 historical.UnAssigned = DateTimeOffset.UtcNow;
                 context.Attach(historical);
                 context.Entry(historical).Property(o => o.UnAssigned).IsModified = true;
@@ -361,7 +361,7 @@ namespace BTCPayServer.Services.Invoices
             }
             if (invoice.AddressInvoices != null)
             {
-                entity.AvailableAddressHashes = invoice.AddressInvoices.Select(a => a.GetAddress() + a.GetCryptoDataId().ToString()).ToHashSet();
+                entity.AvailableAddressHashes = invoice.AddressInvoices.Select(a => a.GetAddress() + a.GetpaymentMethodId().ToString()).ToHashSet();
             }
             if(invoice.Events != null)
             {

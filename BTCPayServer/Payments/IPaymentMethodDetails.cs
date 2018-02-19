@@ -6,7 +6,7 @@ using NBitcoin;
 
 namespace BTCPayServer.Payments
 {
-    public interface IPaymentMethod
+    public interface IPaymentMethodDetails
     {
         string GetPaymentDestination();
         PaymentTypes GetPaymentType();

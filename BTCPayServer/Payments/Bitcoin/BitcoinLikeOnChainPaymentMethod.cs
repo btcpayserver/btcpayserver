@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 
 namespace BTCPayServer.Payments.Bitcoin
 {
-    public class BitcoinLikeOnChainPaymentMethod : IPaymentMethod
+    public class BitcoinLikeOnChainPaymentMethod : IPaymentMethodDetails
     {
         public PaymentTypes GetPaymentType()
         {

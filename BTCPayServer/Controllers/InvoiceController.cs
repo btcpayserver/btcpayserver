@@ -137,27 +137,27 @@ namespace BTCPayServer.Controllers
                     });
 
             bool legacyBTCisSet = false;
-            var cryptoDatas = new CryptoDataDictionary();
+            var paymentMethods = new PaymentMethodDictionary();
             foreach (var q in queries)
             {
-                CryptoData cryptoData = new CryptoData();
-                cryptoData.SetId(new CryptoDataId(q.network.CryptoCode, PaymentTypes.BTCLike));
+                PaymentMethod paymentMethod = new PaymentMethod();
+                paymentMethod.SetId(new PaymentMethodId(q.network.CryptoCode, PaymentTypes.BTCLike));
                 Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod onchainMethod = new Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod();
                 onchainMethod.FeeRate = (await q.getFeeRate);
                 onchainMethod.TxFee = GetTxFee(storeBlob, onchainMethod.FeeRate); // assume price for 100 bytes
-                cryptoData.Rate = await q.getRate;
+                paymentMethod.Rate = await q.getRate;
                 onchainMethod.DepositAddress = (await q.getAddress);
-                cryptoData.SetPaymentMethod(onchainMethod);
+                paymentMethod.SetPaymentMethodDetails(onchainMethod);
 #pragma warning disable CS0618
                 if (q.network.IsBTC)
                 {
                     legacyBTCisSet = true;
-                    entity.TxFee = cryptoData.TxFee;
-                    entity.Rate = cryptoData.Rate;
-                    entity.DepositAddress = cryptoData.DepositAddress;
+                    entity.TxFee = paymentMethod.TxFee;
+                    entity.Rate = paymentMethod.Rate;
+                    entity.DepositAddress = paymentMethod.DepositAddress;
                 }
 #pragma warning restore CS0618
-                cryptoDatas.Add(cryptoData);
+                paymentMethods.Add(paymentMethod);
             }
 
             if (!legacyBTCisSet)
@@ -177,7 +177,7 @@ namespace BTCPayServer.Controllers
 #pragma warning restore CS0618
             }
 
-            entity.SetCryptoData(cryptoDatas);
+            entity.SetPaymentMethods(paymentMethods);
             entity.PosData = invoice.PosData;
             entity = await _InvoiceRepository.CreateInvoiceAsync(store.Id, entity, _NetworkProvider);
             _EventAggregator.Publish(new Events.InvoiceEvent(entity, 1001, "invoice_created"));

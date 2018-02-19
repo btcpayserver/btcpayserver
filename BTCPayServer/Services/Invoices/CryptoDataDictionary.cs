@@ -7,15 +7,22 @@ using BTCPayServer.Payments;
 
 namespace BTCPayServer.Services.Invoices
 {
-    public class CryptoDataDictionary : IEnumerable<CryptoData>
+    public class PaymentMethodDictionary : IEnumerable<PaymentMethod>
     {
-        Dictionary<CryptoDataId, CryptoData> _Inner = new Dictionary<CryptoDataId, CryptoData>();
-        public CryptoDataDictionary()
+        Dictionary<PaymentMethodId, PaymentMethod> _Inner = new Dictionary<PaymentMethodId, PaymentMethod>();
+        public PaymentMethodDictionary()
         {
 
         }
 
-        public CryptoData this[CryptoDataId index]
+        public PaymentMethodDictionary(BTCPayNetworkProvider networkProvider)
+        {
+            NetworkProvider = networkProvider;
+        }
+
+
+        public BTCPayNetworkProvider NetworkProvider { get; set; }
+        public PaymentMethod this[PaymentMethodId index]
         {
             get
             {
@@ -23,30 +30,30 @@ namespace BTCPayServer.Services.Invoices
             }
         }
 
-        public void Add(CryptoData cryptoData)
+        public void Add(PaymentMethod paymentMethod)
         {
-            _Inner.Add(cryptoData.GetId(), cryptoData);
+            _Inner.Add(paymentMethod.GetId(), paymentMethod);
         }
 
-        public void Remove(CryptoData cryptoData)
+        public void Remove(PaymentMethod paymentMethod)
         {
-            _Inner.Remove(cryptoData.GetId());
+            _Inner.Remove(paymentMethod.GetId());
         }
-        public bool TryGetValue(CryptoDataId cryptoDataId, out CryptoData data)
+        public bool TryGetValue(PaymentMethodId paymentMethodId, out PaymentMethod data)
         {
-            if (cryptoDataId == null)
-                throw new ArgumentNullException(nameof(cryptoDataId));
-            return _Inner.TryGetValue(cryptoDataId, out data);
+            if (paymentMethodId == null)
+                throw new ArgumentNullException(nameof(paymentMethodId));
+            return _Inner.TryGetValue(paymentMethodId, out data);
         }
 
-        public void AddOrReplace(CryptoData cryptoData)
+        public void AddOrReplace(PaymentMethod paymentMethod)
         {
-            var key = cryptoData.GetId();
+            var key = paymentMethod.GetId();
             _Inner.Remove(key);
-            _Inner.Add(key, cryptoData);
+            _Inner.Add(key, paymentMethod);
         }
 
-        public IEnumerator<CryptoData> GetEnumerator()
+        public IEnumerator<PaymentMethod> GetEnumerator()
         {
             return _Inner.Values.GetEnumerator();
         }
@@ -56,18 +63,18 @@ namespace BTCPayServer.Services.Invoices
             return GetEnumerator();
         }
 
-        public CryptoData TryGet(CryptoDataId cryptoDataId)
+        public PaymentMethod TryGet(PaymentMethodId paymentMethodId)
         {
-            if (cryptoDataId == null)
-                throw new ArgumentNullException(nameof(cryptoDataId));
-            _Inner.TryGetValue(cryptoDataId, out var value);
+            if (paymentMethodId == null)
+                throw new ArgumentNullException(nameof(paymentMethodId));
+            _Inner.TryGetValue(paymentMethodId, out var value);
             return value;
         }
-        public CryptoData TryGet(string network, PaymentTypes paymentType)
+        public PaymentMethod TryGet(string network, PaymentTypes paymentType)
         {
             if (network == null)
                 throw new ArgumentNullException(nameof(network));
-            var id = new CryptoDataId(network, paymentType);
+            var id = new PaymentMethodId(network, paymentType);
             return TryGet(id);
         }
     }

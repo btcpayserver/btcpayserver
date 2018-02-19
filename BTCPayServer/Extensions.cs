@@ -30,9 +30,9 @@ namespace BTCPayServer
 {
     public static class Extensions
     {
-        public static CryptoDataId GetCryptoDataId(this InvoiceCryptoInfo info)
+        public static PaymentMethodId GetpaymentMethodId(this InvoiceCryptoInfo info)
         {
-            return new CryptoDataId(info.CryptoCode, Enum.Parse<PaymentTypes>(info.PaymentType));
+            return new PaymentMethodId(info.CryptoCode, Enum.Parse<PaymentTypes>(info.PaymentType));
         }
         public static async Task CloseSocket(this WebSocket webSocket)
         {

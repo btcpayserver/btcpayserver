@@ -30,21 +30,21 @@ namespace BTCPayServer.Data
                 return Address;
             return Address.Substring(0, index);
         }
-        public AddressInvoiceData Set(string address, CryptoDataId cryptoDataId)
+        public AddressInvoiceData Set(string address, PaymentMethodId paymentMethodId)
         {
-            Address = address + "#" + cryptoDataId?.ToString();
+            Address = address + "#" + paymentMethodId?.ToString();
             return this;
         }
-        public CryptoDataId GetCryptoDataId()
+        public PaymentMethodId GetpaymentMethodId()
         {
             if (Address == null)
                 return null;
             var index = Address.LastIndexOf("#", StringComparison.InvariantCulture);
-            // Legacy AddressInvoiceData does not have the CryptoDataId attached to the Address
+            // Legacy AddressInvoiceData does not have the paymentMethodId attached to the Address
             if (index == -1)
-                return CryptoDataId.Parse("BTC");
+                return PaymentMethodId.Parse("BTC");
             /////////////////////////
-            return CryptoDataId.Parse(Address.Substring(index + 1));
+            return PaymentMethodId.Parse(Address.Substring(index + 1));
         }
 #pragma warning restore CS0618
 

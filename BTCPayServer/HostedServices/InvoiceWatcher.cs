@@ -72,16 +72,16 @@ namespace BTCPayServer.HostedServices
 
             var derivationStrategies = invoice.GetDerivationStrategies(_NetworkProvider).ToArray();
             var payments = invoice.GetPayments().Where(p => p.Accounted).ToArray();
-            var cryptoDataAll = invoice.GetCryptoData(_NetworkProvider);
-            foreach (var cryptoData in cryptoDataAll.Select(c => c))
+            var allPaymentMethods = invoice.GetPaymentMethods(_NetworkProvider);
+            foreach (var paymentMethod in allPaymentMethods.Select(c => c))
             {
-                var accounting = cryptoData.Calculate();
-                var network = _NetworkProvider.GetNetwork(cryptoData.GetId().CryptoCode);
+                var accounting = paymentMethod.Calculate();
+                var network = _NetworkProvider.GetNetwork(paymentMethod.GetId().CryptoCode);
                 if (network == null)
                     continue;
+                var totalPaid = payments.Select(p => p.GetValue(allPaymentMethods, paymentMethod.GetId())).Sum();
                 if (invoice.Status == "new" || invoice.Status == "expired")
                 {
-                    var totalPaid = payments.Select(p => p.GetValue(cryptoDataAll, cryptoData.GetId())).Sum();
                     if (totalPaid >= accounting.TotalDue)
                     {
                         if (invoice.Status == "new")
@@ -107,11 +107,34 @@ namespace BTCPayServer.HostedServices
                     }
                 }
 
+                // Just make sure RBF did not cancelled a payment
+                if (invoice.Status == "paid")
+                {
+                    if (totalPaid == accounting.TotalDue && invoice.ExceptionStatus == "paidOver")
+                    {
+                        invoice.ExceptionStatus = null;
+                        context.MarkDirty();
+                    }
+
+                    if (totalPaid > accounting.TotalDue && invoice.ExceptionStatus != "paidOver")
+                    {
+                        invoice.ExceptionStatus = "paidOver";
+                        context.MarkDirty();
+                    }
+
+                    if (totalPaid < accounting.TotalDue)
+                    {
+                        invoice.Status = "new";
+                        invoice.ExceptionStatus = totalPaid == Money.Zero ? null : "paidPartial";
+                        context.MarkDirty();
+                    }
+                }
+
                 if (invoice.Status == "paid")
                 {
                     var transactions = payments.Where(p => p.GetCryptoPaymentData().PaymentConfirmed(p, invoice.SpeedPolicy, network));
 
-                    var totalConfirmed = transactions.Select(t => t.GetValue(cryptoDataAll, cryptoData.GetId())).Sum();
+                    var totalConfirmed = transactions.Select(t => t.GetValue(allPaymentMethods, paymentMethod.GetId())).Sum();
 
                     if (// Is after the monitoring deadline
                        (invoice.MonitoringExpiration < DateTimeOffset.UtcNow)
@@ -136,7 +159,7 @@ namespace BTCPayServer.HostedServices
                 if (invoice.Status == "confirmed")
                 {
                     var transactions = payments.Where(p => p.GetCryptoPaymentData().PaymentCompleted(p, network));
-                    var totalConfirmed = transactions.Select(t => t.GetValue(cryptoDataAll, cryptoData.GetId())).Sum();
+                    var totalConfirmed = transactions.Select(t => t.GetValue(allPaymentMethods, paymentMethod.GetId())).Sum();
                     if (totalConfirmed >= accounting.TotalDue)
                     {
                         context.Events.Add(new InvoiceEvent(invoice, 1006, "invoice_completed"));

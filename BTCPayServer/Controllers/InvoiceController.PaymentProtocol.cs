@@ -24,12 +24,12 @@ namespace BTCPayServer.Controllers
                 cryptoCode = "BTC";
             var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
             var network = _NetworkProvider.GetNetwork(cryptoCode);
-            var cryptoId = new CryptoDataId(cryptoCode, Payments.PaymentTypes.BTCLike);
-            if (invoice == null || invoice.IsExpired() || network == null || !invoice.Support(cryptoId))
+            var paymentMethodId = new PaymentMethodId(cryptoCode, Payments.PaymentTypes.BTCLike);
+            if (invoice == null || invoice.IsExpired() || network == null || !invoice.Support(paymentMethodId))
                 return NotFound();
 
             var dto = invoice.EntityToDTO(_NetworkProvider);
-            var cryptoData = dto.CryptoInfo.First(c => c.GetCryptoDataId() == cryptoId);
+            var paymentMethod = dto.CryptoInfo.First(c => c.GetpaymentMethodId() == paymentMethodId);
             PaymentRequest request = new PaymentRequest
             {
                 DetailsVersion = 1
@@ -37,7 +37,7 @@ namespace BTCPayServer.Controllers
             request.Details.Expires = invoice.ExpirationTime;
             request.Details.Memo = invoice.ProductInformation.ItemDesc;
             request.Details.Network = network.NBitcoinNetwork;
-            request.Details.Outputs.Add(new PaymentOutput() { Amount = cryptoData.Due, Script = BitcoinAddress.Create(cryptoData.Address, network.NBitcoinNetwork).ScriptPubKey });
+            request.Details.Outputs.Add(new PaymentOutput() { Amount = paymentMethod.Due, Script = BitcoinAddress.Create(paymentMethod.Address, network.NBitcoinNetwork).ScriptPubKey });
             request.Details.MerchantData = Encoding.UTF8.GetBytes(invoice.Id);
             request.Details.Time = DateTimeOffset.UtcNow;
             request.Details.PaymentUrl = new Uri(invoice.ServerUrl.WithTrailingSlash() + ($"i/{invoice.Id}"), UriKind.Absolute);
@@ -71,7 +71,7 @@ namespace BTCPayServer.Controllers
             if (cryptoCode == null)
                 cryptoCode = "BTC";
             var network = _NetworkProvider.GetNetwork(cryptoCode);
-            if (network == null || invoice == null || invoice.IsExpired() || !invoice.Support(new Services.Invoices.CryptoDataId(cryptoCode, Payments.PaymentTypes.BTCLike)))
+            if (network == null || invoice == null || invoice.IsExpired() || !invoice.Support(new Services.Invoices.PaymentMethodId(cryptoCode, Payments.PaymentTypes.BTCLike)))
                 return NotFound();
 
             var wallet = _WalletProvider.GetWallet(network);

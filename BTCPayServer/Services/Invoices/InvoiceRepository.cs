@@ -18,6 +18,7 @@ using BTCPayServer.Data;
 using System.Globalization;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Logging;
+using BTCPayServer.Payments;
 
 namespace BTCPayServer.Services.Invoices
 {
@@ -166,7 +167,7 @@ namespace BTCPayServer.Services.Invoices
             ScriptId hash = null;
             if (cryptoData.GetId().PaymentType == Payments.PaymentTypes.BTCLike)
             {
-                hash = ((Payments.BitcoinLikeOnChainPaymentMethod)cryptoData.GetPaymentMethod()).DepositAddress.ScriptPubKey.Hash;
+                hash = ((Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod)cryptoData.GetPaymentMethod()).DepositAddress.ScriptPubKey.Hash;
             }
             return hash;
         }

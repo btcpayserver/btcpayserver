@@ -74,7 +74,7 @@ namespace BTCPayServer.Controllers
                 cryptoPayment.Due = accounting.Due.ToString() + $" {paymentNetwork.CryptoCode}";
                 cryptoPayment.Paid = accounting.CryptoPaid.ToString() + $" {paymentNetwork.CryptoCode}";
 
-                var onchainMethod = data.GetPaymentMethod() as BitcoinLikeOnChainPaymentMethod;
+                var onchainMethod = data.GetPaymentMethod() as Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod;
                 if(onchainMethod != null)
                 { 
                     cryptoPayment.Address = onchainMethod.DepositAddress.ToString();
@@ -89,7 +89,7 @@ namespace BTCPayServer.Controllers
                 .Where(p => p.GetCryptoDataId().PaymentType == PaymentTypes.BTCLike)
                 .Select(async payment =>
                 {
-                    var paymentData = (BitcoinLikePaymentData)payment.GetCryptoPaymentData();
+                    var paymentData = (Payments.Bitcoin.BitcoinLikePaymentData)payment.GetCryptoPaymentData();
                     var m = new InvoiceDetailsModel.Payment();
                     var paymentNetwork = _NetworkProvider.GetNetwork(payment.GetCryptoCode());
                     m.CryptoCode = payment.GetCryptoCode();

@@ -17,8 +17,9 @@ using BTCPayServer.Services.Wallets;
 using NBitcoin;
 using NBXplorer.Models;
 using BTCPayServer.Payments;
+using BTCPayServer.HostedServices;
 
-namespace BTCPayServer.HostedServices
+namespace BTCPayServer.Payments.Bitcoin
 {
     public class NBXplorerListener : IHostedService
     {
@@ -353,7 +354,7 @@ namespace BTCPayServer.HostedServices
             var paymentData = (BitcoinLikePaymentData)payment.GetCryptoPaymentData();
             var invoice = (await UpdatePaymentStates(wallet, invoiceId));
             var cryptoData = invoice.GetCryptoData(wallet.Network, PaymentTypes.BTCLike, _ExplorerClients.NetworkProviders);
-            var method = cryptoData.GetPaymentMethod() as Payments.BitcoinLikeOnChainPaymentMethod;
+            var method = cryptoData.GetPaymentMethod() as BitcoinLikeOnChainPaymentMethod;
             if (method.DepositAddress.ScriptPubKey == paymentData.Output.ScriptPubKey && cryptoData.Calculate().Due > Money.Zero)
             {
                 var address = await wallet.ReserveAddressAsync(strategy);

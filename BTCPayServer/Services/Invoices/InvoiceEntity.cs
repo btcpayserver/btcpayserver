@@ -366,8 +366,7 @@ namespace BTCPayServer.Services.Invoices
                 cryptoInfo.TxCount = accounting.TxCount;
                 cryptoInfo.CryptoPaid = accounting.CryptoPaid.ToString();
 
-                if (info.GetPaymentMethod() is BitcoinLikeOnChainPaymentMethod onchainMethod)
-                    cryptoInfo.Address = onchainMethod.DepositAddress?.ToString();
+                cryptoInfo.Address = info.GetPaymentMethod()?.GetPaymentDestination();
                 cryptoInfo.ExRates = new Dictionary<string, double>
                 {
                     { ProductInformation.Currency, (double)cryptoInfo.Rate }
@@ -524,14 +523,6 @@ namespace BTCPayServer.Services.Invoices
         public Money NetworkFee { get; set; }
     }
 
-    public interface IPaymentMethod
-    {
-        string GetPaymentDestination();
-        PaymentTypes GetPaymentType();
-        Money GetTxFee();
-        void SetPaymentDestination(string newPaymentDestination);
-    }
-
     public class CryptoDataId
     {
         public CryptoDataId(string cryptoCode, PaymentTypes paymentType)
@@ -627,7 +618,7 @@ namespace BTCPayServer.Services.Invoices
             // Legacy, old code does not have PaymentMethods
             if (string.IsNullOrEmpty(PaymentType) || PaymentMethod == null)
             {
-                return new BitcoinLikeOnChainPaymentMethod()
+                return new Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod()
                 {
                     FeeRate = FeeRate,
                     DepositAddress = string.IsNullOrEmpty(DepositAddress) ? null : BitcoinAddress.Create(DepositAddress, Network?.NBitcoinNetwork),
@@ -639,7 +630,7 @@ namespace BTCPayServer.Services.Invoices
 
                 if (GetId().PaymentType == PaymentTypes.BTCLike)
                 {
-                    var method = DeserializePaymentMethod<BitcoinLikeOnChainPaymentMethod>(PaymentMethod);
+                    var method = DeserializePaymentMethod<Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod>(PaymentMethod);
                     method.TxFee = TxFee;
                     method.DepositAddress = BitcoinAddress.Create(DepositAddress, Network?.NBitcoinNetwork);
                     method.FeeRate = FeeRate;
@@ -665,7 +656,7 @@ namespace BTCPayServer.Services.Invoices
             else if (PaymentType != paymentMethod.GetPaymentType().ToString())
                 throw new InvalidOperationException("Invalid payment method affected");
 
-            if (paymentMethod is BitcoinLikeOnChainPaymentMethod bitcoinPaymentMethod)
+            if (paymentMethod is Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod bitcoinPaymentMethod)
             {
                 TxFee = bitcoinPaymentMethod.TxFee;
                 FeeRate = bitcoinPaymentMethod.FeeRate;
@@ -673,7 +664,7 @@ namespace BTCPayServer.Services.Invoices
             }
             var jobj = JObject.Parse(JsonConvert.SerializeObject(paymentMethod));
             PaymentMethod = jobj;
-           
+
 #pragma warning restore CS0618 // Type or member is obsolete
         }
 
@@ -792,7 +783,7 @@ namespace BTCPayServer.Services.Invoices
             if (string.IsNullOrEmpty(CryptoPaymentDataType))
             {
                 // In case this is a payment done before this update, consider it unconfirmed with RBF for safety
-                var paymentData = new BitcoinLikePaymentData();
+                var paymentData = new Payments.Bitcoin.BitcoinLikePaymentData();
                 paymentData.Outpoint = Outpoint;
                 paymentData.Output = Output;
                 paymentData.RBF = true;
@@ -802,7 +793,7 @@ namespace BTCPayServer.Services.Invoices
             }
             if (GetCryptoDataId().PaymentType == PaymentTypes.BTCLike)
             {
-                var paymentData = JsonConvert.DeserializeObject<BitcoinLikePaymentData>(CryptoPaymentData);
+                var paymentData = JsonConvert.DeserializeObject<Payments.Bitcoin.BitcoinLikePaymentData>(CryptoPaymentData);
                 // legacy
                 paymentData.Output = Output;
                 paymentData.Outpoint = Outpoint;
@@ -816,7 +807,7 @@ namespace BTCPayServer.Services.Invoices
         public void SetCryptoPaymentData(CryptoPaymentData cryptoPaymentData)
         {
 #pragma warning disable CS0618
-            if (cryptoPaymentData is BitcoinLikePaymentData paymentData)
+            if (cryptoPaymentData is Payments.Bitcoin.BitcoinLikePaymentData paymentData)
             {
                 // Legacy
                 Outpoint = paymentData.Outpoint;

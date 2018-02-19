@@ -142,7 +142,7 @@ namespace BTCPayServer.Controllers
             {
                 CryptoData cryptoData = new CryptoData();
                 cryptoData.SetId(new CryptoDataId(q.network.CryptoCode, PaymentTypes.BTCLike));
-                BitcoinLikeOnChainPaymentMethod onchainMethod = new BitcoinLikeOnChainPaymentMethod();
+                Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod onchainMethod = new Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod();
                 onchainMethod.FeeRate = (await q.getFeeRate);
                 onchainMethod.TxFee = GetTxFee(storeBlob, onchainMethod.FeeRate); // assume price for 100 bytes
                 cryptoData.Rate = await q.getRate;

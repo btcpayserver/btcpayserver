@@ -327,7 +327,7 @@ namespace BTCPayServer.Payments.Bitcoin
             {
                 var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId, true);
                 var alreadyAccounted = GetAllBitcoinPaymentData(invoice).Select(p => p.Outpoint).ToHashSet();
-                var strategy = invoice.GetDerivationStrategy(network);
+                var strategy = GetDerivationStrategy(invoice, network);
                 if (strategy == null)
                     continue;
                 var cryptoId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
@@ -347,6 +347,14 @@ namespace BTCPayServer.Payments.Bitcoin
                 }
             }
             return totalPayment;
+        }
+
+        private DerivationStrategyBase GetDerivationStrategy(InvoiceEntity invoice, BTCPayNetwork network)
+        {
+            return invoice.GetDerivationStrategies(_ExplorerClients.NetworkProviders)
+                          .Where(d => d.Network.CryptoCode == network.CryptoCode)
+                          .Select(d => d.DerivationStrategyBase)
+                          .FirstOrDefault();
         }
 
         private async Task<InvoiceEntity> ReceivedPayment(BTCPayWallet wallet, string invoiceId, PaymentEntity payment, DerivationStrategyBase strategy)

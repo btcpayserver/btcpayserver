@@ -21,27 +21,29 @@ namespace BTCPayServer.Data
 
 
 #pragma warning disable CS0618
-        public ScriptId GetHash()
+        public string GetAddress()
         {
             if (Address == null)
                 return null;
-            var index = Address.IndexOf("#", StringComparison.InvariantCulture);
+            var index = Address.LastIndexOf("#", StringComparison.InvariantCulture);
             if (index == -1)
-                return new ScriptId(Address);
-            return new ScriptId(Address.Substring(0, index));
+                return Address;
+            return Address.Substring(0, index);
         }
-        public AddressInvoiceData SetHash(ScriptId scriptId, CryptoDataId cryptoDataId)
+        public AddressInvoiceData Set(string address, CryptoDataId cryptoDataId)
         {
-            Address = scriptId + "#" + cryptoDataId?.ToString();
+            Address = address + "#" + cryptoDataId?.ToString();
             return this;
         }
         public CryptoDataId GetCryptoDataId()
         {
             if (Address == null)
                 return null;
-            var index = Address.IndexOf("#", StringComparison.InvariantCulture);
+            var index = Address.LastIndexOf("#", StringComparison.InvariantCulture);
+            // Legacy AddressInvoiceData does not have the CryptoDataId attached to the Address
             if (index == -1)
                 return CryptoDataId.Parse("BTC");
+            /////////////////////////
             return CryptoDataId.Parse(Address.Substring(index + 1));
         }
 #pragma warning restore CS0618

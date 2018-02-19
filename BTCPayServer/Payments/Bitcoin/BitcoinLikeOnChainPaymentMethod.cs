@@ -33,11 +33,13 @@ namespace BTCPayServer.Payments.Bitcoin
                 DepositAddress = BitcoinAddress.Create(newPaymentDestination, DepositAddress.Network);
         }
 
+        // Those properties are JsonIgnore because their data is inside CryptoData class for legacy reason
         [JsonIgnore]
         public FeeRate FeeRate { get; set; }
         [JsonIgnore]
         public Money TxFee { get; set; }
         [JsonIgnore]
         public BitcoinAddress DepositAddress { get; set; }
+        ///////////////////////////////////////////////////////////////////////////////////////
     }
 }

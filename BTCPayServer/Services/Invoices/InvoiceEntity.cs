@@ -169,30 +169,6 @@ namespace BTCPayServer.Services.Invoices
             set;
         }
 
-        public DerivationStrategyBase GetDerivationStrategy(BTCPayNetwork network)
-        {
-#pragma warning disable CS0618
-            if (!string.IsNullOrEmpty(DerivationStrategies))
-            {
-                JObject strategies = JObject.Parse(DerivationStrategies);
-#pragma warning restore CS0618
-                foreach (var strat in strategies.Properties())
-                {
-                    if (strat.Name == network.CryptoCode)
-                    {
-                        return BTCPayServer.DerivationStrategy.Parse(strat.Value.Value<string>(), network).DerivationStrategyBase;
-                    }
-                }
-            }
-#pragma warning disable CS0618
-            if (network.IsBTC && !string.IsNullOrEmpty(DerivationStrategy))
-            {
-                return BTCPayServer.DerivationStrategy.Parse(DerivationStrategy, network).DerivationStrategyBase;
-            }
-            return null;
-#pragma warning restore CS0618
-        }
-
         public IEnumerable<DerivationStrategy> GetDerivationStrategies(BTCPayNetworkProvider networks)
         {
 #pragma warning disable CS0618

@@ -70,7 +70,6 @@ namespace BTCPayServer.HostedServices
                 invoice.Status = "expired";
             }
 
-            var derivationStrategies = invoice.GetDerivationStrategies(_NetworkProvider).ToArray();
             var payments = invoice.GetPayments().Where(p => p.Accounted).ToArray();
             var allPaymentMethods = invoice.GetPaymentMethods(_NetworkProvider);
             var paymentMethod = GetNearestClearedPayment(allPaymentMethods, out var accounting, _NetworkProvider);

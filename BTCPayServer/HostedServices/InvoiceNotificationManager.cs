@@ -19,6 +19,7 @@ using Microsoft.Extensions.Hosting;
 using BTCPayServer.Events;
 using NBXplorer;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Payments;
 
 namespace BTCPayServer.HostedServices
 {

@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Payments;
+using BTCPayServer.Services.Invoices;
 using NBitcoin;
 using NBXplorer.DerivationStrategy;
 
 namespace BTCPayServer
 {
-    public class DerivationStrategy
+    public class DerivationStrategy : IPaymentMethodFactory
     {
         private DerivationStrategyBase _DerivationStrategy;
         private BTCPayNetwork _Network;
@@ -31,6 +33,8 @@ namespace BTCPayServer
         public BTCPayNetwork Network { get { return this._Network; } }
 
         public DerivationStrategyBase DerivationStrategyBase { get { return this._DerivationStrategy; } }
+
+        public PaymentMethodId PaymentId => new PaymentMethodId(Network.CryptoCode, PaymentTypes.BTCLike);
 
         public override string ToString()
         {

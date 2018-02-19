@@ -88,7 +88,7 @@ namespace BTCPayServer.Controllers
             {
                 InvoiceTime = DateTimeOffset.UtcNow
             };
-            entity.SetDerivationStrategies(derivationStrategies);
+            entity.SetPaymentMethodFactories(derivationStrategies);
 
             var storeBlob = store.GetStoreBlob();
             Uri notificationUri = Uri.IsWellFormedUriString(invoice.NotificationURL, UriKind.Absolute) ? new Uri(invoice.NotificationURL, UriKind.Absolute) : null;

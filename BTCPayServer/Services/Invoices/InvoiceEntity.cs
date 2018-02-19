@@ -162,14 +162,14 @@ namespace BTCPayServer.Services.Invoices
             set;
         }
 
-        [Obsolete("Use GetDerivationStrategies instead")]
+        [Obsolete("Use GetPaymentMethodFactories() instead")]
         public string DerivationStrategies
         {
             get;
             set;
         }
 
-        public IEnumerable<DerivationStrategy> GetDerivationStrategies(BTCPayNetworkProvider networks)
+        public IEnumerable<IPaymentMethodFactory> GetPaymentMethodFactories(BTCPayNetworkProvider networks)
         {
 #pragma warning disable CS0618
             bool btcReturned = false;
@@ -178,12 +178,13 @@ namespace BTCPayServer.Services.Invoices
                 JObject strategies = JObject.Parse(DerivationStrategies);
                 foreach (var strat in strategies.Properties())
                 {
-                    var network = networks.GetNetwork(strat.Name);
+                    var paymentMethodId = PaymentMethodId.Parse(strat.Name);
+                    var network = networks.GetNetwork(paymentMethodId.CryptoCode);
                     if (network != null)
                     {
-                        if (network == networks.BTC)
+                        if (network == networks.BTC && paymentMethodId.PaymentType == PaymentTypes.BTCLike)
                             btcReturned = true;
-                        yield return BTCPayServer.DerivationStrategy.Parse(strat.Value.Value<string>(), network);
+                        yield return Deserialize(paymentMethodId, strat.Value, network);
                     }
                 }
             }
@@ -198,18 +199,50 @@ namespace BTCPayServer.Services.Invoices
 #pragma warning restore CS0618
         }
 
-        internal void SetDerivationStrategies(IEnumerable<DerivationStrategy> derivationStrategies)
+        internal void SetPaymentMethodFactories(IEnumerable<IPaymentMethodFactory> derivationStrategies)
         {
             JObject obj = new JObject();
             foreach (var strat in derivationStrategies)
             {
-                obj.Add(strat.Network.CryptoCode, new JValue(strat.DerivationStrategyBase.ToString()));
+                obj.Add(strat.PaymentId.ToString(), Serialize(strat));
 #pragma warning disable CS0618
-                if (strat.Network.IsBTC)
-                    DerivationStrategy = strat.DerivationStrategyBase.ToString();
+                if (strat.PaymentId.PaymentType == PaymentTypes.BTCLike && strat.PaymentId.CryptoCode == "BTC")
+                    DerivationStrategy = ((JValue)Serialize(strat)).Value<string>();
             }
             DerivationStrategies = JsonConvert.SerializeObject(obj);
 #pragma warning restore CS0618
+        }
+
+
+        private IPaymentMethodFactory Deserialize(PaymentMethodId paymentMethodId, JToken value, BTCPayNetwork network)
+        {
+            // Legacy
+            if (paymentMethodId.PaymentType == PaymentTypes.BTCLike)
+            {
+                return BTCPayServer.DerivationStrategy.Parse(((JValue)value).Value<string>(), network);
+            }
+            //////////
+            else // if(paymentMethodId.PaymentType == PaymentTypes.Lightning)
+            {
+                // return JsonConvert.Deserialize<T>();
+            }
+            throw new NotSupportedException();
+        }
+
+        JToken Serialize(IPaymentMethodFactory factory)
+        {
+            // Legacy
+            if(factory.PaymentId.PaymentType == PaymentTypes.BTCLike)
+            {
+                return new JValue(((DerivationStrategy)factory).DerivationStrategyBase.ToString());
+            }
+            //////////////
+            else
+            {
+                var str = JsonConvert.SerializeObject(factory);
+                return JObject.Parse(str);
+            }
+            throw new NotSupportedException();
         }
 
         public string Status
@@ -510,61 +543,6 @@ namespace BTCPayServer.Services.Invoices
         /// Total amount of network fee to pay to the invoice
         /// </summary>
         public Money NetworkFee { get; set; }
-    }
-
-    public class PaymentMethodId
-    {
-        public PaymentMethodId(string cryptoCode, PaymentTypes paymentType)
-        {
-            if (cryptoCode == null)
-                throw new ArgumentNullException(nameof(cryptoCode));
-            PaymentType = paymentType;
-            CryptoCode = cryptoCode;
-        }
-        public string CryptoCode { get; private set; }
-        public PaymentTypes PaymentType { get; private set; }
-
-
-        public override bool Equals(object obj)
-        {
-            PaymentMethodId item = obj as PaymentMethodId;
-            if (item == null)
-                return false;
-            return ToString().Equals(item.ToString(), StringComparison.InvariantCulture);
-        }
-        public static bool operator ==(PaymentMethodId a, PaymentMethodId b)
-        {
-            if (System.Object.ReferenceEquals(a, b))
-                return true;
-            if (((object)a == null) || ((object)b == null))
-                return false;
-            return a.ToString() == b.ToString();
-        }
-
-        public static bool operator !=(PaymentMethodId a, PaymentMethodId b)
-        {
-            return !(a == b);
-        }
-
-        public override int GetHashCode()
-        {
-#pragma warning disable CA1307 // Specify StringComparison
-            return ToString().GetHashCode();
-#pragma warning restore CA1307 // Specify StringComparison
-        }
-
-        public override string ToString()
-        {
-            if (PaymentType == PaymentTypes.BTCLike)
-                return CryptoCode;
-            return CryptoCode + "_" + PaymentType.ToString();
-        }
-
-        public static PaymentMethodId Parse(string str)
-        {
-            var parts = str.Split('_');
-            return new PaymentMethodId(parts[0], parts.Length == 1 ? PaymentTypes.BTCLike : Enum.Parse<PaymentTypes>(parts[1]));
-        }
     }
 
     public class PaymentMethod

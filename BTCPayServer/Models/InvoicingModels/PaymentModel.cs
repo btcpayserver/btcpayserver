@@ -9,7 +9,7 @@ namespace BTCPayServer.Models.InvoicingModels
     {
         public class AvailableCrypto
         {
-            public string paymentMethodId { get; set; }
+            public string PaymentMethodId { get; set; }
             public string CryptoImage { get; set; }
             public string Link { get; set; }
         }
@@ -41,6 +41,6 @@ namespace BTCPayServer.Models.InvoicingModels
         public string NetworkFeeDescription { get; internal set; }
         public int MaxTimeMinutes { get; internal set; }
         public string PaymentType { get; internal set; }
-        public string paymentMethodId { get; internal set; }
+        public string PaymentMethodId { get; internal set; }
     }
 }

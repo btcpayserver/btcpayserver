@@ -183,7 +183,7 @@ namespace BTCPayServer.Controllers
             var model = new PaymentModel()
             {
                 CryptoCode = network.CryptoCode,
-                paymentMethodId = paymentMethodId.ToString(),
+                PaymentMethodId = paymentMethodId.ToString(),
                 ServerUrl = HttpContext.Request.GetAbsoluteRoot(),
                 OrderId = invoice.OrderId,
                 InvoiceId = invoice.Id,
@@ -208,7 +208,7 @@ namespace BTCPayServer.Controllers
                                           .Where(i => i.Network != null)
                                           .Select(kv=> new PaymentModel.AvailableCrypto()
                                             {
-                                                paymentMethodId = kv.GetId().ToString(),
+                                                PaymentMethodId = kv.GetId().ToString(),
                                                 CryptoImage = "/" + kv.Network.CryptoImagePath,
                                                 Link = Url.Action(nameof(Checkout), new { invoiceId = invoiceId, paymentMethodId = kv.GetId().ToString() })
                                             }).Where(c => c.CryptoImage != "/")

@@ -22,11 +22,18 @@ using System.IO;
 using BTCPayServer.Logging;
 using Microsoft.Extensions.Logging;
 using System.Net.WebSockets;
+using BTCPayServer.Services.Invoices;
+using NBitpayClient;
+using BTCPayServer.Payments;
 
 namespace BTCPayServer
 {
     public static class Extensions
     {
+        public static PaymentMethodId GetpaymentMethodId(this InvoiceCryptoInfo info)
+        {
+            return new PaymentMethodId(info.CryptoCode, Enum.Parse<PaymentTypes>(info.PaymentType));
+        }
         public static async Task CloseSocket(this WebSocket webSocket)
         {
             try

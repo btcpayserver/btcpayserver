@@ -143,7 +143,7 @@ namespace BTCPayServer.Hosting
             });
 
             services.AddSingleton<IHostedService, NBXplorerWaiters>();
-            services.AddSingleton<IHostedService, NBXplorerListener>();
+            services.AddSingleton<IHostedService, Payments.Bitcoin.NBXplorerListener>();
             services.AddSingleton<IHostedService, InvoiceNotificationManager>();
             services.AddSingleton<IHostedService, InvoiceWatcher>();
 

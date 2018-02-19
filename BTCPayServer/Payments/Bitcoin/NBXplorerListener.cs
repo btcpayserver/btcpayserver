@@ -16,8 +16,10 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Wallets;
 using NBitcoin;
 using NBXplorer.Models;
+using BTCPayServer.Payments;
+using BTCPayServer.HostedServices;
 
-namespace BTCPayServer.HostedServices
+namespace BTCPayServer.Payments.Bitcoin
 {
     public class NBXplorerListener : IHostedService
     {
@@ -209,7 +211,7 @@ namespace BTCPayServer.HostedServices
         IEnumerable<BitcoinLikePaymentData> GetAllBitcoinPaymentData(InvoiceEntity invoice)
         {
             return invoice.GetPayments()
-                    .Where(p => p.GetCryptoPaymentDataType() == BitcoinLikePaymentData.OnchainBitcoinType)
+                    .Where(p => p.GetpaymentMethodId().PaymentType == PaymentTypes.BTCLike)
                     .Select(p => (BitcoinLikePaymentData)p.GetCryptoPaymentData());
         }
 
@@ -223,7 +225,7 @@ namespace BTCPayServer.HostedServices
             var conflicts = GetConflicts(transactions.Select(t => t.Value));
             foreach (var payment in invoice.GetPayments(wallet.Network))
             {
-                if (payment.GetCryptoPaymentDataType() != BitcoinLikePaymentData.OnchainBitcoinType)
+                if (payment.GetpaymentMethodId().PaymentType !=  PaymentTypes.BTCLike)
                     continue;
                 var paymentData = (BitcoinLikePaymentData)payment.GetCryptoPaymentData();
                 if (!transactions.TryGetValue(paymentData.Outpoint.Hash, out TransactionResult tx))
@@ -328,8 +330,11 @@ namespace BTCPayServer.HostedServices
                 var strategy = invoice.GetDerivationStrategy(network);
                 if (strategy == null)
                     continue;
+                var cryptoId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
+                if (!invoice.Support(cryptoId))
+                    continue;
                 var coins = (await wallet.GetUnspentCoins(strategy))
-                             .Where(c => invoice.AvailableAddressHashes.Contains(c.Coin.ScriptPubKey.Hash.ToString() + network.CryptoCode))
+                             .Where(c => invoice.AvailableAddressHashes.Contains(c.Coin.ScriptPubKey.Hash.ToString() + cryptoId))
                              .ToArray();
                 foreach (var coin in coins.Where(c => !alreadyAccounted.Contains(c.Coin.Outpoint)))
                 {
@@ -348,14 +353,18 @@ namespace BTCPayServer.HostedServices
         {
             var paymentData = (BitcoinLikePaymentData)payment.GetCryptoPaymentData();
             var invoice = (await UpdatePaymentStates(wallet, invoiceId));
-            var cryptoData = invoice.GetCryptoData(wallet.Network, _ExplorerClients.NetworkProviders);
-            if (cryptoData.GetDepositAddress().ScriptPubKey == paymentData.Output.ScriptPubKey && cryptoData.Calculate().Due > Money.Zero)
+            var paymentMethod = invoice.GetPaymentMethod(wallet.Network, PaymentTypes.BTCLike, _ExplorerClients.NetworkProviders);
+            if (paymentMethod != null &&
+                paymentMethod.GetPaymentMethodDetails() is BitcoinLikeOnChainPaymentMethod btc && 
+                btc.DepositAddress.ScriptPubKey == paymentData.Output.ScriptPubKey && 
+                paymentMethod.Calculate().Due > Money.Zero)
             {
                 var address = await wallet.ReserveAddressAsync(strategy);
-                await _InvoiceRepository.NewAddress(invoiceId, address, wallet.Network);
+                btc.DepositAddress = address;
+                await _InvoiceRepository.NewAddress(invoiceId, btc, wallet.Network);
                 _Aggregator.Publish(new InvoiceNewAddressEvent(invoiceId, address.ToString(), wallet.Network));
-                cryptoData.DepositAddress = address.ToString();
-                invoice.SetCryptoData(cryptoData);
+                paymentMethod.SetPaymentMethodDetails(btc);
+                invoice.SetPaymentMethod(paymentMethod);
             }
             wallet.InvalidateCache(strategy);
             _Aggregator.Publish(new InvoiceEvent(invoiceId, 1002, "invoice_receivedPayment"));

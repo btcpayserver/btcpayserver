@@ -137,7 +137,7 @@ namespace BTCPayServer.HostedServices
                 reschedule = true;
 
                 List<string> messages = new List<string>();
-                while(ex != null)
+                while (ex != null)
                 {
                     messages.Add(ex.Message);
                     ex = ex.InnerException;
@@ -201,7 +201,7 @@ namespace BTCPayServer.HostedServices
 
             // We keep backward compatibility with bitpay by passing BTC info to the notification
             // we don't pass other info, as it is a bad idea to use IPN data for logic processing (can be faked)
-            var btcCryptoInfo = dto.CryptoInfo.FirstOrDefault(c => c.CryptoCode == "BTC");
+            var btcCryptoInfo = dto.CryptoInfo.FirstOrDefault(c => c.GetpaymentMethodId() == new PaymentMethodId("BTC", Payments.PaymentTypes.BTCLike));
             if (btcCryptoInfo != null)
             {
 #pragma warning disable CS0618
@@ -228,8 +228,66 @@ namespace BTCPayServer.HostedServices
 
             request.RequestUri = new Uri(invoice.NotificationURL, UriKind.Absolute);
             request.Content = new StringContent(notificationString, UTF8, "application/json");
-            var response = await _Client.SendAsync(request, cancellation);
+            var response = await Enqueue(invoice.Id, async () => await _Client.SendAsync(request, cancellation));
             return response;
+        }
+
+        Dictionary<string, Task> _SendingRequestsByInvoiceId = new Dictionary<string, Task>();
+
+
+        /// <summary>
+        /// Will make sure only one callback is called at once on the same invoiceId
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="sendRequest"></param>
+        /// <returns></returns>
+        private async Task<T> Enqueue<T>(string id, Func<Task<T>> sendRequest)
+        {
+            Task<T> sending = null;
+            lock (_SendingRequestsByInvoiceId)
+            {
+                if (_SendingRequestsByInvoiceId.TryGetValue(id, out var executing))
+                {
+                    var completion = new TaskCompletionSource<T>();
+                    sending = completion.Task;
+                    _SendingRequestsByInvoiceId.Remove(id);
+                    _SendingRequestsByInvoiceId.Add(id, sending);
+                    executing.ContinueWith(_ =>
+                    {
+                        sendRequest()
+                            .ContinueWith(t =>
+                            {
+                                if(t.Status == TaskStatus.RanToCompletion)
+                                { 
+                                    completion.TrySetResult(t.Result);
+                                }
+                                if(t.Status == TaskStatus.Faulted)
+                                {
+                                    completion.TrySetException(t.Exception);
+                                }
+                                if(t.Status == TaskStatus.Canceled)
+                                {
+                                    completion.TrySetCanceled();
+                                }
+                            }, TaskScheduler.Default);
+                    }, TaskScheduler.Default);
+                }
+                else
+                {
+                    sending = sendRequest();
+                    _SendingRequestsByInvoiceId.Add(id, sending);
+                }
+                sending.ContinueWith(o =>
+                {
+                    lock (_SendingRequestsByInvoiceId)
+                    {
+                        _SendingRequestsByInvoiceId.TryGetValue(id, out var executing2);
+                        if(executing2 == sending)
+                            _SendingRequestsByInvoiceId.Remove(id);
+                    }
+                }, TaskScheduler.Default);
+            }
+            return await sending;
         }
 
         int MaxTry = 6;

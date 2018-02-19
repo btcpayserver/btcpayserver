@@ -72,80 +72,117 @@ namespace BTCPayServer.HostedServices
 
             var derivationStrategies = invoice.GetDerivationStrategies(_NetworkProvider).ToArray();
             var payments = invoice.GetPayments().Where(p => p.Accounted).ToArray();
-            foreach (BTCPayNetwork network in _NetworkProvider.GetAll())
+            var allPaymentMethods = invoice.GetPaymentMethods(_NetworkProvider);
+            var paymentMethod = GetNearestClearedPayment(allPaymentMethods, out var accounting, _NetworkProvider);
+            if (paymentMethod == null)
+                return;
+            var network = _NetworkProvider.GetNetwork(paymentMethod.GetId().CryptoCode);
+            if (invoice.Status == "new" || invoice.Status == "expired")
             {
-                var cryptoData = invoice.GetCryptoData(network, _NetworkProvider);
-                if (cryptoData == null) // Altcoin not supported
-                    continue;
-                var cryptoDataAll = invoice.GetCryptoData(_NetworkProvider);
-                var accounting = cryptoData.Calculate();
-
-                if (invoice.Status == "new" || invoice.Status == "expired")
+                if (accounting.Paid >= accounting.TotalDue)
                 {
-                    var totalPaid = payments.Select(p => p.GetValue(cryptoDataAll, cryptoData.CryptoCode)).Sum();
-                    if (totalPaid >= accounting.TotalDue)
+                    if (invoice.Status == "new")
                     {
-                        if (invoice.Status == "new")
-                        {
-                            context.Events.Add(new InvoiceEvent(invoice, 1003, "invoice_paidInFull"));
-                            invoice.Status = "paid";
-                            invoice.ExceptionStatus = totalPaid > accounting.TotalDue ? "paidOver" : null;
-                            await _InvoiceRepository.UnaffectAddress(invoice.Id);
-                            context.MarkDirty();
-                        }
-                        else if (invoice.Status == "expired" && invoice.ExceptionStatus != "paidLate")
-                        {
-                            invoice.ExceptionStatus = "paidLate";
-                            context.Events.Add(new InvoiceEvent(invoice, 1009, "invoice_paidAfterExpiration"));
-                            context.MarkDirty();
-                        }
+                        context.Events.Add(new InvoiceEvent(invoice, 1003, "invoice_paidInFull"));
+                        invoice.Status = "paid";
+                        invoice.ExceptionStatus = accounting.Paid > accounting.TotalDue ? "paidOver" : null;
+                        await _InvoiceRepository.UnaffectAddress(invoice.Id);
+                        context.MarkDirty();
                     }
-
-                    if (totalPaid < accounting.TotalDue && invoice.GetPayments().Count != 0 && invoice.ExceptionStatus != "paidPartial")
+                    else if (invoice.Status == "expired" && invoice.ExceptionStatus != "paidLate")
                     {
-                        invoice.ExceptionStatus = "paidPartial";
+                        invoice.ExceptionStatus = "paidLate";
+                        context.Events.Add(new InvoiceEvent(invoice, 1009, "invoice_paidAfterExpiration"));
                         context.MarkDirty();
                     }
                 }
 
-                if (invoice.Status == "paid")
+                if (accounting.Paid < accounting.TotalDue && invoice.GetPayments().Count != 0 && invoice.ExceptionStatus != "paidPartial")
                 {
-                    var transactions = payments.Where(p => p.GetCryptoPaymentData().PaymentConfirmed(p, invoice.SpeedPolicy, network));
-
-                    var totalConfirmed = transactions.Select(t => t.GetValue(cryptoDataAll, cryptoData.CryptoCode)).Sum();
-
-                    if (// Is after the monitoring deadline
-                       (invoice.MonitoringExpiration < DateTimeOffset.UtcNow)
-                       &&
-                       // And not enough amount confirmed
-                       (totalConfirmed < accounting.TotalDue))
-                    {
-                        await _InvoiceRepository.UnaffectAddress(invoice.Id);
-                        context.Events.Add(new InvoiceEvent(invoice, 1013, "invoice_failedToConfirm"));
-                        invoice.Status = "invalid";
-                        context.MarkDirty();
-                    }
-                    else if (totalConfirmed >= accounting.TotalDue)
-                    {
-                        await _InvoiceRepository.UnaffectAddress(invoice.Id);
-                        context.Events.Add(new InvoiceEvent(invoice, 1005, "invoice_confirmed"));
-                        invoice.Status = "confirmed";
-                        context.MarkDirty();
-                    }
-                }
-
-                if (invoice.Status == "confirmed")
-                {
-                    var transactions = payments.Where(p => p.GetCryptoPaymentData().PaymentCompleted(p, network));
-                    var totalConfirmed = transactions.Select(t => t.GetValue(cryptoDataAll, cryptoData.CryptoCode)).Sum();
-                    if (totalConfirmed >= accounting.TotalDue)
-                    {
-                        context.Events.Add(new InvoiceEvent(invoice, 1006, "invoice_completed"));
-                        invoice.Status = "complete";
-                        context.MarkDirty();
-                    }
+                    invoice.ExceptionStatus = "paidPartial";
+                    context.MarkDirty();
                 }
             }
+
+            // Just make sure RBF did not cancelled a payment
+            if (invoice.Status == "paid")
+            {
+                if (accounting.Paid == accounting.TotalDue && invoice.ExceptionStatus == "paidOver")
+                {
+                    invoice.ExceptionStatus = null;
+                    context.MarkDirty();
+                }
+
+                if (accounting.Paid > accounting.TotalDue && invoice.ExceptionStatus != "paidOver")
+                {
+                    invoice.ExceptionStatus = "paidOver";
+                    context.MarkDirty();
+                }
+
+                if (accounting.Paid < accounting.TotalDue)
+                {
+                    invoice.Status = "new";
+                    invoice.ExceptionStatus = accounting.Paid == Money.Zero ? null : "paidPartial";
+                    context.MarkDirty();
+                }
+            }
+
+            if (invoice.Status == "paid")
+            {
+                var confirmedAccounting = paymentMethod.Calculate(p => p.GetCryptoPaymentData().PaymentConfirmed(p, invoice.SpeedPolicy, network));
+
+                if (// Is after the monitoring deadline
+                   (invoice.MonitoringExpiration < DateTimeOffset.UtcNow)
+                   &&
+                   // And not enough amount confirmed
+                   (confirmedAccounting.Paid < accounting.TotalDue))
+                {
+                    await _InvoiceRepository.UnaffectAddress(invoice.Id);
+                    context.Events.Add(new InvoiceEvent(invoice, 1013, "invoice_failedToConfirm"));
+                    invoice.Status = "invalid";
+                    context.MarkDirty();
+                }
+                else if (confirmedAccounting.Paid >= accounting.TotalDue)
+                {
+                    await _InvoiceRepository.UnaffectAddress(invoice.Id);
+                    context.Events.Add(new InvoiceEvent(invoice, 1005, "invoice_confirmed"));
+                    invoice.Status = "confirmed";
+                    context.MarkDirty();
+                }
+            }
+
+            if (invoice.Status == "confirmed")
+            {
+                var completedAccounting = paymentMethod.Calculate(p => p.GetCryptoPaymentData().PaymentCompleted(p, network));
+                if (completedAccounting.Paid >= accounting.TotalDue)
+                {
+                    context.Events.Add(new InvoiceEvent(invoice, 1006, "invoice_completed"));
+                    invoice.Status = "complete";
+                    context.MarkDirty();
+                }
+            }
+
+        }
+
+        public static PaymentMethod GetNearestClearedPayment(PaymentMethodDictionary allPaymentMethods, out PaymentMethodAccounting accounting, BTCPayNetworkProvider networkProvider)
+        {
+            PaymentMethod result = null;
+            accounting = null;
+            decimal nearestToZero = 0.0m;
+            foreach (var paymentMethod in allPaymentMethods)
+            {
+                if (networkProvider != null && networkProvider.GetNetwork(paymentMethod.GetId().CryptoCode) == null)
+                    continue;
+                var currentAccounting = paymentMethod.Calculate();
+                var distanceFromZero = Math.Abs(currentAccounting.DueUncapped.ToDecimal(MoneyUnit.BTC));
+                if (result == null || distanceFromZero < nearestToZero)
+                {
+                    result = paymentMethod;
+                    nearestToZero = distanceFromZero;
+                    accounting = currentAccounting;
+                }
+            }
+            return result;
         }
 
         TimeSpan _PollInterval;

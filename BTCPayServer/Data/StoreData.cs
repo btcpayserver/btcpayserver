@@ -12,6 +12,7 @@ using System.ComponentModel;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using BTCPayServer.Services.Rates;
+using BTCPayServer.Payments;
 
 namespace BTCPayServer.Data
 {
@@ -41,10 +42,12 @@ namespace BTCPayServer.Data
             set;
         }
 
-        public IEnumerable<DerivationStrategy> GetDerivationStrategies(BTCPayNetworkProvider networks)
+        public IEnumerable<ISupportedPaymentMethod> GetSupportedPaymentMethods(BTCPayNetworkProvider networks)
         {
 #pragma warning disable CS0618
             bool btcReturned = false;
+
+            // Legacy stuff which should go away
             if (!string.IsNullOrEmpty(DerivationStrategy))
             {
                 if (networks.BTC != null)
@@ -60,54 +63,63 @@ namespace BTCPayServer.Data
                 JObject strategies = JObject.Parse(DerivationStrategies);
                 foreach (var strat in strategies.Properties())
                 {
-                    var network = networks.GetNetwork(strat.Name);
+                    var paymentMethodId = PaymentMethodId.Parse(strat.Name);
+                    var network = networks.GetNetwork(paymentMethodId.CryptoCode);
                     if (network != null)
                     {
-                        if (network == networks.BTC && btcReturned)
+                        if (network == networks.BTC && paymentMethodId.PaymentType == PaymentTypes.BTCLike && btcReturned)
                             continue;
                         if (strat.Value.Type == JTokenType.Null)
                             continue;
-                        yield return BTCPayServer.DerivationStrategy.Parse(strat.Value.Value<string>(), network);
+                        yield return PaymentMethodExtensions.Deserialize(paymentMethodId, strat.Value, network);
                     }
                 }
             }
 #pragma warning restore CS0618
         }
 
-        public void SetDerivationStrategy(BTCPayNetwork network, string derivationScheme)
+        /// <summary>
+        /// Set or remove a new supported payment method for the store
+        /// </summary>
+        /// <param name="paymentMethodId">The paymentMethodId</param>
+        /// <param name="supportedPaymentMethod">The payment method, or null to remove</param>
+        public void SetSupportedPaymentMethod(PaymentMethodId paymentMethodId, ISupportedPaymentMethod supportedPaymentMethod)
         {
+            if (supportedPaymentMethod != null && paymentMethodId != supportedPaymentMethod.PaymentId)
+                throw new InvalidOperationException("Argument mismatch");
+
 #pragma warning disable CS0618
             JObject strategies = string.IsNullOrEmpty(DerivationStrategies) ? new JObject() : JObject.Parse(DerivationStrategies);
             bool existing = false;
             foreach (var strat in strategies.Properties().ToList())
             {
-                if (strat.Name == network.CryptoCode)
+                var stratId = PaymentMethodId.Parse(strat.Name);
+                if (stratId.IsBTCOnChain)
                 {
-                    if (network.IsBTC)
-                        DerivationStrategy = null;
-                    if (string.IsNullOrEmpty(derivationScheme))
+                    // Legacy stuff which should go away
+                    DerivationStrategy = null;
+                }
+                if (stratId == paymentMethodId)
+                {
+                    if (supportedPaymentMethod == null)
                     {
                         strat.Remove();
                     }
                     else
                     {
-                        strat.Value = new JValue(derivationScheme);
+                        strat.Value = PaymentMethodExtensions.Serialize(supportedPaymentMethod);
                     }
                     existing = true;
                     break;
                 }
             }
 
-            if (!existing && string.IsNullOrEmpty(derivationScheme))
+            if(!existing && supportedPaymentMethod == null && paymentMethodId.IsBTCOnChain)
             {
-                if (network.IsBTC)
-                    DerivationStrategy = null;
+                DerivationStrategy = null;
             }
             else if (!existing)
-                strategies.Add(new JProperty(network.CryptoCode, new JValue(derivationScheme)));
-            // This is deprecated so we don't have to set anymore
-            //if (network.IsBTC)
-            //    DerivationStrategy = derivationScheme;
+                strategies.Add(new JProperty(supportedPaymentMethod.PaymentId.ToString(), PaymentMethodExtensions.Serialize(supportedPaymentMethod)));
             DerivationStrategies = strategies.ToString();
 #pragma warning restore CS0618
         }

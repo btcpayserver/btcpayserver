@@ -184,7 +184,7 @@ namespace BTCPayServer.Services.Invoices
                     {
                         if (network == networks.BTC && paymentMethodId.PaymentType == PaymentTypes.BTCLike)
                             btcReturned = true;
-                        yield return Deserialize(paymentMethodId, strat.Value, network);
+                        yield return PaymentMethodExtensions.Deserialize(paymentMethodId, strat.Value, network);
                     }
                 }
             }
@@ -204,45 +204,13 @@ namespace BTCPayServer.Services.Invoices
             JObject obj = new JObject();
             foreach (var strat in derivationStrategies)
             {
-                obj.Add(strat.PaymentId.ToString(), Serialize(strat));
+                obj.Add(strat.PaymentId.ToString(), PaymentMethodExtensions.Serialize(strat));
 #pragma warning disable CS0618
-                if (strat.PaymentId.PaymentType == PaymentTypes.BTCLike && strat.PaymentId.CryptoCode == "BTC")
-                    DerivationStrategy = ((JValue)Serialize(strat)).Value<string>();
+                if (strat.PaymentId.IsBTCOnChain)
+                    DerivationStrategy = ((JValue)PaymentMethodExtensions.Serialize(strat)).Value<string>();
             }
             DerivationStrategies = JsonConvert.SerializeObject(obj);
 #pragma warning restore CS0618
-        }
-
-
-        private ISupportedPaymentMethod Deserialize(PaymentMethodId paymentMethodId, JToken value, BTCPayNetwork network)
-        {
-            // Legacy
-            if (paymentMethodId.PaymentType == PaymentTypes.BTCLike)
-            {
-                return BTCPayServer.DerivationStrategy.Parse(((JValue)value).Value<string>(), network);
-            }
-            //////////
-            else // if(paymentMethodId.PaymentType == PaymentTypes.Lightning)
-            {
-                // return JsonConvert.Deserialize<T>();
-            }
-            throw new NotSupportedException();
-        }
-
-        JToken Serialize(ISupportedPaymentMethod factory)
-        {
-            // Legacy
-            if(factory.PaymentId.PaymentType == PaymentTypes.BTCLike)
-            {
-                return new JValue(((DerivationStrategy)factory).DerivationStrategyBase.ToString());
-            }
-            //////////////
-            else
-            {
-                var str = JsonConvert.SerializeObject(factory);
-                return JObject.Parse(str);
-            }
-            throw new NotSupportedException();
         }
 
         public string Status

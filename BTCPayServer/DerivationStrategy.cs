@@ -14,7 +14,7 @@ namespace BTCPayServer
         private DerivationStrategyBase _DerivationStrategy;
         private BTCPayNetwork _Network;
 
-        DerivationStrategy(DerivationStrategyBase result, BTCPayNetwork network)
+        public DerivationStrategy(DerivationStrategyBase result, BTCPayNetwork network)
         {
             this._DerivationStrategy = result;
             this._Network = network;

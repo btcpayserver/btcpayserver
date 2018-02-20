@@ -2,6 +2,7 @@
 using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
+using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Fees;
 using BTCPayServer.Services.Stores;
@@ -296,7 +297,10 @@ namespace BTCPayServer.Controllers
 
         private DerivationStrategyBase GetDerivationStrategy(StoreData store, BTCPayNetwork network)
         {
-            var strategy = store.GetDerivationStrategies(_NetworkProvider).FirstOrDefault(s => s.Network.NBitcoinNetwork == network.NBitcoinNetwork);
+            var strategy = store
+                            .GetSupportedPaymentMethods(_NetworkProvider)
+                            .OfType<DerivationStrategy>()
+                            .FirstOrDefault(s => s.Network.NBitcoinNetwork == network.NBitcoinNetwork);
             if (strategy == null)
             {
                 throw new Exception($"Derivation strategy for {network.CryptoCode} is not set");
@@ -312,7 +316,8 @@ namespace BTCPayServer.Controllers
             result.StatusMessage = StatusMessage;
             var stores = await _Repo.GetStoresByUserId(GetUserId());
             var balances = stores
-                                .Select(s => s.GetDerivationStrategies(_NetworkProvider)
+                                .Select(s => s.GetSupportedPaymentMethods(_NetworkProvider)
+                                              .OfType<DerivationStrategy>()
                                               .Select(d => ((Wallet: _WalletProvider.GetWallet(d.Network),
                                                             DerivationStrategy: d.DerivationStrategyBase)))
                                               .Where(_ => _.Wallet != null)
@@ -405,7 +410,8 @@ namespace BTCPayServer.Controllers
         private void AddDerivationSchemes(StoreData store, StoreViewModel vm)
         {
             var strategies = store
-                            .GetDerivationStrategies(_NetworkProvider)
+                            .GetSupportedPaymentMethods(_NetworkProvider)
+                            .OfType<DerivationStrategy>()
                             .ToDictionary(s => s.Network.CryptoCode);
             foreach (var explorerProvider in _ExplorerProvider.GetAll())
             {
@@ -458,8 +464,8 @@ namespace BTCPayServer.Controllers
                 return View(vm);
             }
 
-
-            DerivationStrategyBase strategy = null;
+            PaymentMethodId paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
+            DerivationStrategy strategy = null;
             try
             {
                 if (!string.IsNullOrEmpty(vm.DerivationScheme))
@@ -467,7 +473,7 @@ namespace BTCPayServer.Controllers
                     strategy = ParseDerivationStrategy(vm.DerivationScheme, vm.DerivationSchemeFormat, network);
                     vm.DerivationScheme = strategy.ToString();
                 }
-                store.SetDerivationStrategy(network, vm.DerivationScheme);
+                store.SetSupportedPaymentMethod(paymentMethodId, strategy);
             }
             catch
             {
@@ -477,13 +483,13 @@ namespace BTCPayServer.Controllers
             }
 
 
-            if (strategy == null || vm.Confirmation)
+            if (vm.Confirmation)
             {
                 try
                 {
                     if (strategy != null)
-                        await wallet.TrackAsync(strategy);
-                    store.SetDerivationStrategy(network, vm.DerivationScheme);
+                        await wallet.TrackAsync(strategy.DerivationStrategyBase);
+                    store.SetSupportedPaymentMethod(paymentMethodId, strategy);
                 }
                 catch
                 {
@@ -499,7 +505,7 @@ namespace BTCPayServer.Controllers
             {
                 if (!string.IsNullOrEmpty(vm.DerivationScheme))
                 {
-                    var line = strategy.GetLineFor(DerivationFeature.Deposit);
+                    var line = strategy.DerivationStrategyBase.GetLineFor(DerivationFeature.Deposit);
 
                     for (int i = 0; i < 10; i++)
                     {
@@ -591,7 +597,7 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        private DerivationStrategyBase ParseDerivationStrategy(string derivationScheme, string format, BTCPayNetwork network)
+        private DerivationStrategy ParseDerivationStrategy(string derivationScheme, string format, BTCPayNetwork network)
         {
             if (format == "Electrum")
             {
@@ -625,7 +631,7 @@ namespace BTCPayServer.Controllers
                 }
             }
 
-            return new DerivationStrategyFactory(network.NBitcoinNetwork).Parse(derivationScheme);
+            return new DerivationStrategy(new DerivationStrategyFactory(network.NBitcoinNetwork).Parse(derivationScheme), network);
         }
 
         [HttpGet]

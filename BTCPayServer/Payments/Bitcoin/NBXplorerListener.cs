@@ -21,6 +21,9 @@ using BTCPayServer.HostedServices;
 
 namespace BTCPayServer.Payments.Bitcoin
 {
+    /// <summary>
+    /// This class listener NBXplorer instances to detect incoming on-chain, bitcoin like payment
+    /// </summary>
     public class NBXplorerListener : IHostedService
     {
         EventAggregator _Aggregator;

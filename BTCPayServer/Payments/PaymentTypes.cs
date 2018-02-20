@@ -5,8 +5,14 @@ using System.Threading.Tasks;
 
 namespace BTCPayServer.Payments
 {
+    /// <summary>
+    /// The different ways to pay an invoice
+    /// </summary>
     public enum PaymentTypes
     {
+        /// <summary>
+        /// On-Chain UTXO based, bitcoin compatible
+        /// </summary>
         BTCLike
     }
 }

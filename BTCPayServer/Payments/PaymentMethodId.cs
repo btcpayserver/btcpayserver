@@ -5,6 +5,10 @@ using System.Threading.Tasks;
 
 namespace BTCPayServer.Payments
 {
+
+    /// <summary>
+    /// A value object which represent a crypto currency with his payment type (ie, onchain or offchain)
+    /// </summary>
     public class PaymentMethodId
     {
         public PaymentMethodId(string cryptoCode, PaymentTypes paymentType)
@@ -14,6 +18,16 @@ namespace BTCPayServer.Payments
             PaymentType = paymentType;
             CryptoCode = cryptoCode;
         }
+
+        [Obsolete("Should only be used for legacy stuff")]
+        public bool IsBTCOnChain
+        {
+            get
+            {
+                return CryptoCode == "BTC" && PaymentType == PaymentTypes.BTCLike;
+            }
+        }
+
         public string CryptoCode { get; private set; }
         public PaymentTypes PaymentType { get; private set; }
 

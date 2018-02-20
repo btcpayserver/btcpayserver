@@ -98,7 +98,7 @@ namespace BTCPayServer.Controllers
                     int confirmationCount = 0;
                     if(paymentData.Legacy) // The confirmation count in the paymentData is not up to date
                     {
-                        confirmationCount = (await _ExplorerClients.GetExplorerClient(payment.GetCryptoCode())?.GetTransactionAsync(paymentData.Outpoint.Hash))?.Confirmations ?? 0;
+                        confirmationCount = (await ((ExplorerClientProvider)_ServiceProvider.GetService(typeof(ExplorerClientProvider))).GetExplorerClient(payment.GetCryptoCode())?.GetTransactionAsync(paymentData.Outpoint.Hash))?.Confirmations ?? 0;
                     }
                     else
                     {
@@ -373,7 +373,7 @@ namespace BTCPayServer.Controllers
                 return View(model);
             }
             var store = await _StoreRepository.FindStore(model.StoreId, GetUserId());
-            if (store.GetDerivationStrategies(_NetworkProvider).Count() == 0)
+            if (store.GetSupportedPaymentMethods(_NetworkProvider).Count() == 0)
             {
                 StatusMessage = "Error: You need to configure the derivation scheme in order to create an invoice";
                 return RedirectToAction(nameof(StoresController.UpdateStore), "Stores", new

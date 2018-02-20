@@ -33,10 +33,12 @@ namespace BTCPayServer.Payments.Bitcoin
         private TaskCompletionSource<bool> _RunningTask;
         private CancellationTokenSource _Cts;
         BTCPayWalletProvider _Wallets;
+        BTCPayNetworkProvider _NetworkProvider;
 
         public NBXplorerListener(ExplorerClientProvider explorerClients,
                                 BTCPayWalletProvider wallets,
                                 InvoiceRepository invoiceRepository,
+                                BTCPayNetworkProvider networkProvider,
                                 EventAggregator aggregator, IApplicationLifetime lifetime)
         {
             PollInterval = TimeSpan.FromMinutes(1.0);
@@ -45,10 +47,11 @@ namespace BTCPayServer.Payments.Bitcoin
             _ExplorerClients = explorerClients;
             _Aggregator = aggregator;
             _Lifetime = lifetime;
+            _NetworkProvider = networkProvider;
         }
 
         CompositeDisposable leases = new CompositeDisposable();
-        ConcurrentDictionary<string, NotificationSession> _Sessions = new ConcurrentDictionary<string, NotificationSession>();
+        ConcurrentDictionary<string, NotificationSession> _SessionsByCryptoCode = new ConcurrentDictionary<string, NotificationSession>();
         private Timer _ListenPoller;
 
         TimeSpan _PollInterval;
@@ -101,16 +104,12 @@ namespace BTCPayServer.Payments.Bitcoin
                 if (inv.Name == "invoice_created")
                 {
                     var invoice = await _InvoiceRepository.GetInvoice(null, inv.InvoiceId);
-                    List<Task> listeningDerivations = new List<Task>();
-                    foreach (var notificationSessions in _Sessions)
-                    {
-                        var derivationStrategy = GetStrategy(notificationSessions.Key, invoice);
-                        if (derivationStrategy != null)
-                        {
-                            listeningDerivations.Add(notificationSessions.Value.ListenDerivationSchemesAsync(new[] { derivationStrategy }, _Cts.Token));
-                        }
-                    }
-                    await Task.WhenAll(listeningDerivations.ToArray()).ConfigureAwait(false);
+                    await Task.WhenAll(invoice.GetSupportedPaymentMethod<DerivationStrategy>(_NetworkProvider)
+                           .Select(s => (Session: _SessionsByCryptoCode.TryGet(s.PaymentId.CryptoCode), 
+                                         DerivationStrategy: s.DerivationStrategyBase))
+                           .Where(s => s.Session != null)
+                           .Select(s => s.Session.ListenDerivationSchemesAsync(new[] { s.DerivationStrategy }))
+                           .ToArray()).ConfigureAwait(false);
                 }
             }));
             return Task.CompletedTask;
@@ -122,7 +121,7 @@ namespace BTCPayServer.Payments.Bitcoin
             bool cleanup = false;
             try
             {
-                if (_Sessions.ContainsKey(network.CryptoCode))
+                if (_SessionsByCryptoCode.ContainsKey(network.CryptoCode))
                     return;
                 var client = _ExplorerClients.GetExplorerClient(network);
                 if (client == null)
@@ -130,7 +129,7 @@ namespace BTCPayServer.Payments.Bitcoin
                 if (_Cts.IsCancellationRequested)
                     return;
                 var session = await client.CreateNotificationSessionAsync(_Cts.Token).ConfigureAwait(false);
-                if (!_Sessions.TryAdd(network.CryptoCode, session))
+                if (!_SessionsByCryptoCode.TryAdd(network.CryptoCode, session))
                 {
                     await session.DisposeAsync();
                     return;
@@ -202,8 +201,8 @@ namespace BTCPayServer.Payments.Bitcoin
                 if (cleanup)
                 {
                     Logs.PayServer.LogInformation($"Disconnected from WebSocket of NBXplorer ({network.CryptoCode})");
-                    _Sessions.TryRemove(network.CryptoCode, out NotificationSession unused);
-                    if (_Sessions.Count == 0 && _Cts.IsCancellationRequested)
+                    _SessionsByCryptoCode.TryRemove(network.CryptoCode, out NotificationSession unused);
+                    if (_SessionsByCryptoCode.Count == 0 && _Cts.IsCancellationRequested)
                     {
                         _RunningTask.TrySetResult(true);
                     }
@@ -228,7 +227,7 @@ namespace BTCPayServer.Payments.Bitcoin
             var conflicts = GetConflicts(transactions.Select(t => t.Value));
             foreach (var payment in invoice.GetPayments(wallet.Network))
             {
-                if (payment.GetpaymentMethodId().PaymentType !=  PaymentTypes.BTCLike)
+                if (payment.GetpaymentMethodId().PaymentType != PaymentTypes.BTCLike)
                     continue;
                 var paymentData = (BitcoinLikePaymentData)payment.GetCryptoPaymentData();
                 if (!transactions.TryGetValue(paymentData.Outpoint.Hash, out TransactionResult tx))
@@ -246,7 +245,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
                 if (paymentData.ConfirmationCount != tx.Confirmations)
                 {
-                    if(wallet.Network.MaxTrackedConfirmation >= paymentData.ConfirmationCount)
+                    if (wallet.Network.MaxTrackedConfirmation >= paymentData.ConfirmationCount)
                     {
                         paymentData.ConfirmationCount = tx.Confirmations;
                         payment.SetCryptoPaymentData(paymentData);
@@ -354,9 +353,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
         private DerivationStrategyBase GetDerivationStrategy(InvoiceEntity invoice, BTCPayNetwork network)
         {
-            return invoice.GetSupportedPaymentMethod(_ExplorerClients.NetworkProviders)
-                          .OfType<DerivationStrategy>()
-                          .Where(d => d.Network.CryptoCode == network.CryptoCode)
+            return invoice.GetSupportedPaymentMethod<DerivationStrategy>(new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike), _ExplorerClients.NetworkProviders)
                           .Select(d => d.DerivationStrategyBase)
                           .FirstOrDefault();
         }
@@ -367,8 +364,8 @@ namespace BTCPayServer.Payments.Bitcoin
             var invoice = (await UpdatePaymentStates(wallet, invoiceId));
             var paymentMethod = invoice.GetPaymentMethod(wallet.Network, PaymentTypes.BTCLike, _ExplorerClients.NetworkProviders);
             if (paymentMethod != null &&
-                paymentMethod.GetPaymentMethodDetails() is BitcoinLikeOnChainPaymentMethod btc && 
-                btc.DepositAddress.ScriptPubKey == paymentData.Output.ScriptPubKey && 
+                paymentMethod.GetPaymentMethodDetails() is BitcoinLikeOnChainPaymentMethod btc &&
+                btc.DepositAddress.ScriptPubKey == paymentData.Output.ScriptPubKey &&
                 paymentMethod.Calculate().Due > Money.Zero)
             {
                 var address = await wallet.ReserveAddressAsync(strategy);
@@ -389,25 +386,12 @@ namespace BTCPayServer.Payments.Bitcoin
             foreach (var invoiceId in await _InvoiceRepository.GetPendingInvoices())
             {
                 var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
-                var strategy = GetStrategy(network.CryptoCode, invoice);
+                var strategy = GetDerivationStrategy(invoice, network);
                 if (strategy != null)
                     strategies.Add(strategy);
             }
 
             return strategies;
-        }
-
-        private DerivationStrategyBase GetStrategy(string cryptoCode, InvoiceEntity invoice)
-        {
-            foreach (var derivationStrategy in invoice.GetSupportedPaymentMethod(_ExplorerClients.NetworkProviders)
-                                                      .OfType<DerivationStrategy>())
-            {
-                if (derivationStrategy.Network.CryptoCode == cryptoCode)
-                {
-                    return derivationStrategy.DerivationStrategyBase;
-                }
-            }
-            return null;
         }
 
         public Task StopAsync(CancellationToken cancellationToken)

@@ -168,7 +168,17 @@ namespace BTCPayServer.Services.Invoices
             get;
             set;
         }
-
+        public IEnumerable<T> GetSupportedPaymentMethod<T>(PaymentMethodId paymentMethodId, BTCPayNetworkProvider networks) where T : ISupportedPaymentMethod
+        {
+            return
+                GetSupportedPaymentMethod(networks)
+                .Where(p => paymentMethodId == null || p.PaymentId == paymentMethodId)
+                .OfType<T>();
+        }
+        public IEnumerable<T> GetSupportedPaymentMethod<T>(BTCPayNetworkProvider networks) where T : ISupportedPaymentMethod
+        {
+            return GetSupportedPaymentMethod<T>(null, networks);
+    }
         public IEnumerable<ISupportedPaymentMethod> GetSupportedPaymentMethod(BTCPayNetworkProvider networks)
         {
 #pragma warning disable CS0618

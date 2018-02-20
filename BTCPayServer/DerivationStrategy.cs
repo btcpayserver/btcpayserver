@@ -9,7 +9,7 @@ using NBXplorer.DerivationStrategy;
 
 namespace BTCPayServer
 {
-    public class DerivationStrategy : IPaymentMethodFactory
+    public class DerivationStrategy : ISupportedPaymentMethod
     {
         private DerivationStrategyBase _DerivationStrategy;
         private BTCPayNetwork _Network;

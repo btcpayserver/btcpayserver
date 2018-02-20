@@ -169,7 +169,7 @@ namespace BTCPayServer.Services.Invoices
             set;
         }
 
-        public IEnumerable<IPaymentMethodFactory> GetPaymentMethodFactories(BTCPayNetworkProvider networks)
+        public IEnumerable<ISupportedPaymentMethod> GetSupportedPaymentMethod(BTCPayNetworkProvider networks)
         {
 #pragma warning disable CS0618
             bool btcReturned = false;
@@ -199,7 +199,7 @@ namespace BTCPayServer.Services.Invoices
 #pragma warning restore CS0618
         }
 
-        internal void SetPaymentMethodFactories(IEnumerable<IPaymentMethodFactory> derivationStrategies)
+        internal void SetSupportedPaymentMethods(IEnumerable<ISupportedPaymentMethod> derivationStrategies)
         {
             JObject obj = new JObject();
             foreach (var strat in derivationStrategies)
@@ -214,7 +214,7 @@ namespace BTCPayServer.Services.Invoices
         }
 
 
-        private IPaymentMethodFactory Deserialize(PaymentMethodId paymentMethodId, JToken value, BTCPayNetwork network)
+        private ISupportedPaymentMethod Deserialize(PaymentMethodId paymentMethodId, JToken value, BTCPayNetwork network)
         {
             // Legacy
             if (paymentMethodId.PaymentType == PaymentTypes.BTCLike)
@@ -229,7 +229,7 @@ namespace BTCPayServer.Services.Invoices
             throw new NotSupportedException();
         }
 
-        JToken Serialize(IPaymentMethodFactory factory)
+        JToken Serialize(ISupportedPaymentMethod factory)
         {
             // Legacy
             if(factory.PaymentId.PaymentType == PaymentTypes.BTCLike)

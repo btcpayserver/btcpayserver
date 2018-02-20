@@ -351,7 +351,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
         private DerivationStrategyBase GetDerivationStrategy(InvoiceEntity invoice, BTCPayNetwork network)
         {
-            return invoice.GetPaymentMethodFactories(_ExplorerClients.NetworkProviders)
+            return invoice.GetSupportedPaymentMethod(_ExplorerClients.NetworkProviders)
                           .OfType<DerivationStrategy>()
                           .Where(d => d.Network.CryptoCode == network.CryptoCode)
                           .Select(d => d.DerivationStrategyBase)
@@ -396,7 +396,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
         private DerivationStrategyBase GetStrategy(string cryptoCode, InvoiceEntity invoice)
         {
-            foreach (var derivationStrategy in invoice.GetPaymentMethodFactories(_ExplorerClients.NetworkProviders)
+            foreach (var derivationStrategy in invoice.GetSupportedPaymentMethod(_ExplorerClients.NetworkProviders)
                                                       .OfType<DerivationStrategy>())
             {
                 if (derivationStrategy.Network.CryptoCode == cryptoCode)

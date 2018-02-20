@@ -6,7 +6,7 @@ using BTCPayServer.Services.Invoices;
 
 namespace BTCPayServer.Payments
 {
-    public interface IPaymentMethodFactory
+    public interface ISupportedPaymentMethod
     {
         PaymentMethodId PaymentId { get; }
     }

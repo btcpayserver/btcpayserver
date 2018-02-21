@@ -142,10 +142,10 @@ namespace BTCPayServer.Hosting
                 BlockTarget = 20
             });
 
-            services.AddSingleton<TransactionCacheProvider>();
+            services.AddSingleton<Payments.IPaymentMethodHandler<DerivationStrategy>, Payments.Bitcoin.BitcoinLikePaymentHandler>();
 
             services.AddSingleton<IHostedService, NBXplorerWaiters>();
-            services.AddSingleton<IHostedService, NBXplorerListener>();
+            services.AddSingleton<IHostedService, Payments.Bitcoin.NBXplorerListener>();
             services.AddSingleton<IHostedService, InvoiceNotificationManager>();
             services.AddSingleton<IHostedService, InvoiceWatcher>();
 

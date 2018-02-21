@@ -25,13 +25,10 @@ namespace BTCPayServer.HostedServices
     {
         class UpdateInvoiceContext
         {
-            public UpdateInvoiceContext()
+            public UpdateInvoiceContext(InvoiceEntity invoice)
             {
-
+                Invoice = invoice;
             }
-
-            public Dictionary<BTCPayNetwork, KnownState> KnownStates { get; set; }
-            public Dictionary<BTCPayNetwork, KnownState> ModifiedKnownStates { get; set; } = new Dictionary<BTCPayNetwork, KnownState>();
             public InvoiceEntity Invoice { get; set; }
             public List<object> Events { get; set; } = new List<object>();
 
@@ -46,103 +43,19 @@ namespace BTCPayServer.HostedServices
 
         InvoiceRepository _InvoiceRepository;
         EventAggregator _EventAggregator;
-        BTCPayWalletProvider _WalletProvider;
         BTCPayNetworkProvider _NetworkProvider;
 
         public InvoiceWatcher(
-            IHostingEnvironment env,
             BTCPayNetworkProvider networkProvider,
             InvoiceRepository invoiceRepository,
-            EventAggregator eventAggregator,
-            BTCPayWalletProvider walletProvider)
+            EventAggregator eventAggregator)
         {
             PollInterval = TimeSpan.FromMinutes(1.0);
-            _WalletProvider = walletProvider ?? throw new ArgumentNullException(nameof(walletProvider));
             _InvoiceRepository = invoiceRepository ?? throw new ArgumentNullException(nameof(invoiceRepository));
             _EventAggregator = eventAggregator ?? throw new ArgumentNullException(nameof(eventAggregator));
             _NetworkProvider = networkProvider;
         }
         CompositeDisposable leases = new CompositeDisposable();
-
-        async Task NotifyReceived(Script scriptPubKey, BTCPayNetwork network)
-        {
-            var invoice = await _InvoiceRepository.GetInvoiceIdFromScriptPubKey(scriptPubKey, network.CryptoCode);
-            if (invoice != null)
-            {
-                String address = scriptPubKey.GetDestinationAddress(network.NBitcoinNetwork)?.ToString() ?? scriptPubKey.ToString();
-                Logs.PayServer.LogInformation($"{address} is mapping to invoice {invoice}");
-                _WatchRequests.Add(invoice);
-            }
-        }
-
-        async Task NotifyBlock()
-        {
-            foreach (var invoice in await _InvoiceRepository.GetPendingInvoices())
-            {
-                _WatchRequests.Add(invoice);
-            }
-        }
-
-        private async Task UpdateInvoice(string invoiceId, CancellationToken cancellation)
-        {
-            Dictionary<BTCPayNetwork, KnownState> changes = new Dictionary<BTCPayNetwork, KnownState>();
-            int maxLoop = 5;
-            int loopCount = -1;
-            while (!cancellation.IsCancellationRequested && loopCount < maxLoop)
-            {
-                loopCount++;
-                try
-                {
-                    var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId, true).ConfigureAwait(false);
-                    if (invoice == null)
-                        break;
-                    var stateBefore = invoice.Status;
-                    var updateContext = new UpdateInvoiceContext()
-                    {
-                        Invoice = invoice,
-                        KnownStates = changes
-                    };
-                    await UpdateInvoice(updateContext).ConfigureAwait(false);
-                    if (updateContext.Dirty)
-                    {
-                        await _InvoiceRepository.UpdateInvoiceStatus(invoice.Id, invoice.Status, invoice.ExceptionStatus).ConfigureAwait(false);
-                        updateContext.Events.Add(new InvoiceDataChangedEvent() { Status = invoice.Status, ExceptionStatus = invoice.ExceptionStatus, InvoiceId = invoice.Id });
-                    }
-
-                    var changed = stateBefore != invoice.Status;
-
-                    foreach (var evt in updateContext.Events)
-                    {
-                        _EventAggregator.Publish(evt, evt.GetType());
-                    }
-
-                    foreach (var modifiedKnownState in updateContext.ModifiedKnownStates)
-                    {
-                        changes.AddOrReplace(modifiedKnownState.Key, modifiedKnownState.Value);
-                    }
-
-                    if (invoice.Status == "complete" ||
-                       ((invoice.Status == "invalid" || invoice.Status == "expired") && invoice.MonitoringExpiration < DateTimeOffset.UtcNow))
-                    {
-                        if (await _InvoiceRepository.RemovePendingInvoice(invoice.Id).ConfigureAwait(false))
-                            _EventAggregator.Publish<InvoiceStopWatchedEvent>(new InvoiceStopWatchedEvent() { InvoiceId = invoice.Id });
-                        break;
-                    }
-
-                    if (updateContext.Events.Count == 0 || cancellation.IsCancellationRequested)
-                        break;
-                }
-                catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
-                {
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    Logs.PayServer.LogError(ex, "Unhandled error on watching invoice " + invoiceId);
-                    await Task.Delay(10000, cancellation).ConfigureAwait(false);
-                }
-            }
-        }
 
 
         private async Task UpdateInvoice(UpdateInvoiceContext context)
@@ -157,243 +70,118 @@ namespace BTCPayServer.HostedServices
                 invoice.Status = "expired";
             }
 
-            var derivationStrategies = invoice.GetDerivationStrategies(_NetworkProvider).ToArray();
-            var payments = await GetPaymentsWithTransaction(derivationStrategies, invoice);
-            foreach (Task<NetworkCoins> coinsAsync in GetCoinsPerNetwork(context, invoice, derivationStrategies))
+            var payments = invoice.GetPayments().Where(p => p.Accounted).ToArray();
+            var allPaymentMethods = invoice.GetPaymentMethods(_NetworkProvider);
+            var paymentMethod = GetNearestClearedPayment(allPaymentMethods, out var accounting, _NetworkProvider);
+            if (paymentMethod == null)
+                return;
+            var network = _NetworkProvider.GetNetwork(paymentMethod.GetId().CryptoCode);
+            if (invoice.Status == "new" || invoice.Status == "expired")
             {
-                var coins = await coinsAsync;
-                if (coins.TimestampedCoins.Length == 0)
-                    continue;
-                bool dirtyAddress = false;
-                if (coins.State != null)
-                    context.ModifiedKnownStates.AddOrReplace(coins.Wallet.Network, coins.State);
-                var alreadyAccounted = new HashSet<OutPoint>(invoice.GetPayments(coins.Wallet.Network).Select(p => p.Outpoint));
-
-                foreach (var coin in coins.TimestampedCoins.Where(c => !alreadyAccounted.Contains(c.Coin.Outpoint)))
+                if (accounting.Paid >= accounting.TotalDue)
                 {
-                    var payment = await _InvoiceRepository.AddPayment(invoice.Id, coin.DateTime, coin.Coin, coins.Wallet.Network.CryptoCode).ConfigureAwait(false);
-#pragma warning disable CS0618
-                    invoice.Payments.Add(payment);
-#pragma warning restore CS0618
-                    alreadyAccounted.Add(coin.Coin.Outpoint);
-                    context.Events.Add(new InvoiceEvent(invoice, 1002, "invoice_receivedPayment"));
-                    dirtyAddress = true;
-                }
-                if (dirtyAddress)
-                {
-                    payments = await GetPaymentsWithTransaction(derivationStrategies, invoice);
-                }
-                var network = coins.Wallet.Network;
-                var cryptoData = invoice.GetCryptoData(network, _NetworkProvider);
-                var cryptoDataAll = invoice.GetCryptoData(_NetworkProvider);
-                var accounting = cryptoData.Calculate();
-
-                if (invoice.Status == "new" || invoice.Status == "expired")
-                {
-                    var totalPaid = payments.Select(p => p.Payment.GetValue(cryptoDataAll, cryptoData.CryptoCode)).Sum();
-                    if (totalPaid >= accounting.TotalDue)
+                    if (invoice.Status == "new")
                     {
-                        if (invoice.Status == "new")
-                        {
-                            context.Events.Add(new InvoiceEvent(invoice, 1003, "invoice_paidInFull"));
-                            invoice.Status = "paid";
-                            invoice.ExceptionStatus = totalPaid > accounting.TotalDue ? "paidOver" : null;
-                            await _InvoiceRepository.UnaffectAddress(invoice.Id);
-                            context.MarkDirty();
-                        }
-                        else if (invoice.Status == "expired" && invoice.ExceptionStatus != "paidLate")
-                        {
-                            invoice.ExceptionStatus = "paidLate";
-                            context.Events.Add(new InvoiceEvent(invoice, 1009, "invoice_paidAfterExpiration"));
-                            context.MarkDirty();
-                        }
-                    }
-
-                    if (totalPaid < accounting.TotalDue && invoice.GetPayments().Count != 0 && invoice.ExceptionStatus != "paidPartial")
-                    {
-                        invoice.ExceptionStatus = "paidPartial";
-                        context.MarkDirty();
-                        if (dirtyAddress)
-                        {
-                            var address = await coins.Wallet.ReserveAddressAsync(coins.Strategy);
-                            Logs.PayServer.LogInformation("Generate new " + address);
-                            await _InvoiceRepository.NewAddress(invoice.Id, address, network);
-                        }
-                    }
-                }
-
-                if (invoice.Status == "paid")
-                {
-                    IEnumerable<AccountedPaymentEntity> transactions = payments;
-                    if (invoice.SpeedPolicy == SpeedPolicy.HighSpeed)
-                    {
-                        transactions = transactions.Where(t => t.Confirmations >= 1 || !t.Transaction.RBF);
-                    }
-                    else if (invoice.SpeedPolicy == SpeedPolicy.MediumSpeed)
-                    {
-                        transactions = transactions.Where(t => t.Confirmations >= 1);
-                    }
-                    else if (invoice.SpeedPolicy == SpeedPolicy.LowSpeed)
-                    {
-                        transactions = transactions.Where(t => t.Confirmations >= 6);
-                    }
-
-                    var totalConfirmed = transactions.Select(t => t.Payment.GetValue(cryptoDataAll, cryptoData.CryptoCode)).Sum();
-
-                    if (// Is after the monitoring deadline
-                       (invoice.MonitoringExpiration < DateTimeOffset.UtcNow)
-                       &&
-                       // And not enough amount confirmed
-                       (totalConfirmed < accounting.TotalDue))
-                    {
+                        context.Events.Add(new InvoiceEvent(invoice, 1003, "invoice_paidInFull"));
+                        invoice.Status = "paid";
+                        invoice.ExceptionStatus = accounting.Paid > accounting.TotalDue ? "paidOver" : null;
                         await _InvoiceRepository.UnaffectAddress(invoice.Id);
-                        context.Events.Add(new InvoiceEvent(invoice, 1013, "invoice_failedToConfirm"));
-                        invoice.Status = "invalid";
                         context.MarkDirty();
                     }
-                    else if (totalConfirmed >= accounting.TotalDue)
+                    else if (invoice.Status == "expired" && invoice.ExceptionStatus != "paidLate")
                     {
-                        await _InvoiceRepository.UnaffectAddress(invoice.Id);
-                        context.Events.Add(new InvoiceEvent(invoice, 1005, "invoice_confirmed"));
-                        invoice.Status = "confirmed";
+                        invoice.ExceptionStatus = "paidLate";
+                        context.Events.Add(new InvoiceEvent(invoice, 1009, "invoice_paidAfterExpiration"));
                         context.MarkDirty();
                     }
                 }
 
-                if (invoice.Status == "confirmed")
+                if (accounting.Paid < accounting.TotalDue && invoice.GetPayments().Count != 0 && invoice.ExceptionStatus != "paidPartial")
                 {
-                    IEnumerable<AccountedPaymentEntity> transactions = payments;
-                    transactions = transactions.Where(t => t.Confirmations >= 6);
-                    var totalConfirmed = transactions.Select(t => t.Payment.GetValue(cryptoDataAll, cryptoData.CryptoCode)).Sum();
-                    if (totalConfirmed >= accounting.TotalDue)
-                    {
-                        context.Events.Add(new InvoiceEvent(invoice, 1006, "invoice_completed"));
-                        invoice.Status = "complete";
-                        context.MarkDirty();
-                    }
+                    invoice.ExceptionStatus = "paidPartial";
+                    context.MarkDirty();
                 }
             }
-        }
 
-        private IEnumerable<Task<NetworkCoins>> GetCoinsPerNetwork(UpdateInvoiceContext context, InvoiceEntity invoice, DerivationStrategy[] strategies)
-        {
-            return strategies
-                                .Select(d => (Wallet: _WalletProvider.IsAvailable(d.Network) ? _WalletProvider.GetWallet(d.Network) : null,
-                                              Network: d.Network,
-                                              Strategy: d.DerivationStrategyBase))
-                                .Where(d => d.Wallet != null)
-                                .Select(d => (Network: d.Network,
-                                              Coins: d.Wallet.GetCoins(d.Strategy, context.KnownStates.TryGet(d.Network))))
-                                .Select(async d =>
-                                {
-                                    var coins = await d.Coins;
-                                    // Keep only coins from the invoice
-                                    coins.TimestampedCoins = coins.TimestampedCoins.Where(c => invoice.AvailableAddressHashes.Contains(c.Coin.ScriptPubKey.Hash.ToString() + d.Network.CryptoCode)).ToArray();
-                                    return coins;
-                                })
-                                .ToArray();
-        }
-
-
-        private async Task<IEnumerable<AccountedPaymentEntity>> GetPaymentsWithTransaction(DerivationStrategy[] derivations, InvoiceEntity invoice)
-        {
-            List<PaymentEntity> updatedPaymentEntities = new List<PaymentEntity>();
-            List<AccountedPaymentEntity> accountedPayments = new List<AccountedPaymentEntity>();
-            foreach (var network in derivations.Select(d => d.Network))
+            // Just make sure RBF did not cancelled a payment
+            if (invoice.Status == "paid")
             {
-                var wallet = _WalletProvider.GetWallet(network);
-                if (wallet == null)
+                if (accounting.Paid == accounting.TotalDue && invoice.ExceptionStatus == "paidOver")
+                {
+                    invoice.ExceptionStatus = null;
+                    context.MarkDirty();
+                }
+
+                if (accounting.Paid > accounting.TotalDue && invoice.ExceptionStatus != "paidOver")
+                {
+                    invoice.ExceptionStatus = "paidOver";
+                    context.MarkDirty();
+                }
+
+                if (accounting.Paid < accounting.TotalDue)
+                {
+                    invoice.Status = "new";
+                    invoice.ExceptionStatus = accounting.Paid == Money.Zero ? null : "paidPartial";
+                    context.MarkDirty();
+                }
+            }
+
+            if (invoice.Status == "paid")
+            {
+                var confirmedAccounting = paymentMethod.Calculate(p => p.GetCryptoPaymentData().PaymentConfirmed(p, invoice.SpeedPolicy, network));
+
+                if (// Is after the monitoring deadline
+                   (invoice.MonitoringExpiration < DateTimeOffset.UtcNow)
+                   &&
+                   // And not enough amount confirmed
+                   (confirmedAccounting.Paid < accounting.TotalDue))
+                {
+                    await _InvoiceRepository.UnaffectAddress(invoice.Id);
+                    context.Events.Add(new InvoiceEvent(invoice, 1013, "invoice_failedToConfirm"));
+                    invoice.Status = "invalid";
+                    context.MarkDirty();
+                }
+                else if (confirmedAccounting.Paid >= accounting.TotalDue)
+                {
+                    await _InvoiceRepository.UnaffectAddress(invoice.Id);
+                    context.Events.Add(new InvoiceEvent(invoice, 1005, "invoice_confirmed"));
+                    invoice.Status = "confirmed";
+                    context.MarkDirty();
+                }
+            }
+
+            if (invoice.Status == "confirmed")
+            {
+                var completedAccounting = paymentMethod.Calculate(p => p.GetCryptoPaymentData().PaymentCompleted(p, network));
+                if (completedAccounting.Paid >= accounting.TotalDue)
+                {
+                    context.Events.Add(new InvoiceEvent(invoice, 1006, "invoice_completed"));
+                    invoice.Status = "complete";
+                    context.MarkDirty();
+                }
+            }
+
+        }
+
+        public static PaymentMethod GetNearestClearedPayment(PaymentMethodDictionary allPaymentMethods, out PaymentMethodAccounting accounting, BTCPayNetworkProvider networkProvider)
+        {
+            PaymentMethod result = null;
+            accounting = null;
+            decimal nearestToZero = 0.0m;
+            foreach (var paymentMethod in allPaymentMethods)
+            {
+                if (networkProvider != null && networkProvider.GetNetwork(paymentMethod.GetId().CryptoCode) == null)
                     continue;
-
-                var transactions = await wallet.GetTransactions(invoice.GetPayments(wallet.Network)
-                    .Select(t => t.Outpoint.Hash)
-                    .ToArray());
-                var conflicts = GetConflicts(transactions.Select(t => t.Value));
-                foreach (var payment in invoice.GetPayments(network))
+                var currentAccounting = paymentMethod.Calculate();
+                var distanceFromZero = Math.Abs(currentAccounting.DueUncapped.ToDecimal(MoneyUnit.BTC));
+                if (result == null || distanceFromZero < nearestToZero)
                 {
-                    if (!transactions.TryGetValue(payment.Outpoint.Hash, out TransactionResult tx))
-                        continue;
-
-                    AccountedPaymentEntity accountedPayment = new AccountedPaymentEntity()
-                    {
-                        Confirmations = tx.Confirmations,
-                        Transaction = tx.Transaction,
-                        Payment = payment
-                    };
-                    var txId = accountedPayment.Transaction.GetHash();
-                    var txConflict = conflicts.GetConflict(txId);
-                    var accounted = txConflict == null || txConflict.IsWinner(txId);
-                    if (accounted != payment.Accounted)
-                    {
-                        updatedPaymentEntities.Add(payment);
-                        payment.Accounted = accounted;
-                    }
-
-                    if (accounted)
-                        accountedPayments.Add(accountedPayment);
+                    result = paymentMethod;
+                    nearestToZero = distanceFromZero;
+                    accounting = currentAccounting;
                 }
             }
-            await _InvoiceRepository.UpdatePayments(updatedPaymentEntities);
-            return accountedPayments;
-        }
-
-        class TransactionConflict
-        {
-            public Dictionary<uint256, TransactionResult> Transactions { get; set; } = new Dictionary<uint256, TransactionResult>();
-
-
-            uint256 _Winner;
-            public bool IsWinner(uint256 txId)
-            {
-                if (_Winner == null)
-                {
-                    var confirmed = Transactions.FirstOrDefault(t => t.Value.Confirmations >= 1);
-                    if (!confirmed.Equals(default(KeyValuePair<uint256, TransactionResult>)))
-                    {
-                        _Winner = confirmed.Key;
-                    }
-                    else
-                    {
-                        // Take the most recent (bitcoin node would not forward a conflict without a successfull RBF)
-                        _Winner = Transactions
-                                .OrderByDescending(t => t.Value.Timestamp)
-                                .First()
-                                .Key;
-                    }
-                }
-                return _Winner == txId;
-            }
-        }
-        class TransactionConflicts : List<TransactionConflict>
-        {
-            public TransactionConflicts(IEnumerable<TransactionConflict> collection) : base(collection)
-            {
-
-            }
-
-            public TransactionConflict GetConflict(uint256 txId)
-            {
-                return this.FirstOrDefault(c => c.Transactions.ContainsKey(txId));
-            }
-        }
-        private TransactionConflicts GetConflicts(IEnumerable<TransactionResult> transactions)
-        {
-            Dictionary<OutPoint, TransactionConflict> conflictsByOutpoint = new Dictionary<OutPoint, TransactionConflict>();
-            foreach (var tx in transactions)
-            {
-                var hash = tx.Transaction.GetHash();
-                foreach (var input in tx.Transaction.Inputs)
-                {
-                    TransactionConflict conflict = new TransactionConflict();
-                    if (!conflictsByOutpoint.TryAdd(input.PrevOut, conflict))
-                    {
-                        conflict = conflictsByOutpoint[input.PrevOut];
-                    }
-                    if (!conflict.Transactions.ContainsKey(hash))
-                        conflict.Transactions.Add(hash, tx);
-                }
-            }
-            return new TransactionConflicts(conflictsByOutpoint.Where(c => c.Value.Transactions.Count > 1).Select(c => c.Value));
+            return result;
         }
 
         TimeSpan _PollInterval;
@@ -409,11 +197,15 @@ namespace BTCPayServer.HostedServices
             }
         }
 
-        private async Task Watch(string invoiceId)
+        private void Watch(string invoiceId)
         {
             if (invoiceId == null)
                 throw new ArgumentNullException(nameof(invoiceId));
             _WatchRequests.Add(invoiceId);
+        }
+
+        private async Task Wait(string invoiceId)
+        {
             var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
             try
             {
@@ -421,102 +213,119 @@ namespace BTCPayServer.HostedServices
                 if (invoice.ExpirationTime > now)
                 {
                     await Task.Delay(invoice.ExpirationTime - now, _Cts.Token);
-                    _WatchRequests.Add(invoiceId);
                 }
+                Watch(invoiceId);
+                now = DateTimeOffset.UtcNow;
+                if (invoice.MonitoringExpiration > now)
+                {
+                    await Task.Delay(invoice.MonitoringExpiration - now, _Cts.Token);
+                }
+                Watch(invoiceId);
             }
             catch when (_Cts.IsCancellationRequested)
             { }
+
         }
 
         BlockingCollection<string> _WatchRequests = new BlockingCollection<string>(new ConcurrentQueue<string>());
 
-        Task _Poller;
         Task _Loop;
+        Task _WaitingInvoices;
         CancellationTokenSource _Cts;
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
             _Cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-
-            _Poller = StartPoller(_Cts.Token);
             _Loop = StartLoop(_Cts.Token);
+            _WaitingInvoices = WaitPendingInvoices();
 
-            leases.Add(_EventAggregator.Subscribe<Events.NewBlockEvent>(async b => { await NotifyBlock(); }));
-            leases.Add(_EventAggregator.Subscribe<Events.TxOutReceivedEvent>(async b => { await NotifyReceived(b.ScriptPubKey, b.Network); }));
+            leases.Add(_EventAggregator.Subscribe<Events.InvoiceNeedUpdateEvent>(b =>
+            {
+                Watch(b.InvoiceId);
+            }));
             leases.Add(_EventAggregator.Subscribe<Events.InvoiceEvent>(async b =>
             {
                 if (b.Name == "invoice_created")
                 {
-                    await Watch(b.InvoiceId);
+                    Watch(b.InvoiceId);
+                    await Wait(b.InvoiceId);
+                }
+
+                if (b.Name == "invoice_receivedPayment")
+                {
+                    Watch(b.InvoiceId);
                 }
             }));
-
             return Task.CompletedTask;
         }
 
-
-        private async Task StartPoller(CancellationToken cancellation)
+        private async Task WaitPendingInvoices()
         {
-            try
-            {
-                while (!cancellation.IsCancellationRequested)
-                {
-                    try
-                    {
-                        foreach (var pending in await _InvoiceRepository.GetPendingInvoices())
-                        {
-                            _WatchRequests.Add(pending);
-                        }
-                        await Task.Delay(PollInterval, cancellation);
-                    }
-                    catch (Exception ex) when (!cancellation.IsCancellationRequested)
-                    {
-                        Logs.PayServer.LogError(ex, $"Unhandled exception in InvoiceWatcher poller");
-                        await Task.Delay(PollInterval, cancellation);
-                    }
-                }
-            }
-            catch when (cancellation.IsCancellationRequested) { }
+            await Task.WhenAll((await _InvoiceRepository.GetPendingInvoices())
+                .Select(id => Wait(id)).ToArray());
+            _WaitingInvoices = null;
         }
 
         async Task StartLoop(CancellationToken cancellation)
         {
             Logs.PayServer.LogInformation("Start watching invoices");
             await Task.Delay(1).ConfigureAwait(false); // Small hack so that the caller does not block on GetConsumingEnumerable
-            ConcurrentDictionary<string, Lazy<Task>> executing = new ConcurrentDictionary<string, Lazy<Task>>();
             try
             {
-                // This loop just make sure an invoice will not be updated at the same time by two tasks.
-                // If an update is happening while a request come, then the update is deferred when the executing task is over
-                foreach (var item in _WatchRequests.GetConsumingEnumerable(cancellation))
+                foreach (var invoiceId in _WatchRequests.GetConsumingEnumerable(cancellation))
                 {
-                    var localItem = item;
-                    var toExecute = new Lazy<Task>(async () =>
+                    int maxLoop = 5;
+                    int loopCount = -1;
+                    while (!cancellation.IsCancellationRequested && loopCount < maxLoop)
                     {
+                        loopCount++;
                         try
                         {
-                            await UpdateInvoice(localItem, cancellation);
+                            var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId, true);
+                            if (invoice == null)
+                                break;
+                            var updateContext = new UpdateInvoiceContext(invoice);
+                            await UpdateInvoice(updateContext);
+                            if (updateContext.Dirty)
+                            {
+                                await _InvoiceRepository.UpdateInvoiceStatus(invoice.Id, invoice.Status, invoice.ExceptionStatus);
+                                updateContext.Events.Add(new InvoiceDataChangedEvent(invoice));
+                            }
+
+                            foreach (var evt in updateContext.Events)
+                            {
+                                _EventAggregator.Publish(evt, evt.GetType());
+                            }
+
+                            if (invoice.Status == "complete" ||
+                               ((invoice.Status == "invalid" || invoice.Status == "expired") && invoice.MonitoringExpiration < DateTimeOffset.UtcNow))
+                            {
+                                if (await _InvoiceRepository.RemovePendingInvoice(invoice.Id))
+                                    _EventAggregator.Publish(new InvoiceStopWatchedEvent(invoice.Id));
+                                break;
+                            }
+
+                            if (updateContext.Events.Count == 0 || cancellation.IsCancellationRequested)
+                                break;
                         }
-                        finally
+                        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
                         {
-                            executing.TryRemove(localItem, out Lazy<Task> unused);
+                            break;
                         }
-                    }, false);
-                    var executingTask = executing.GetOrAdd(item, toExecute);
-                    executingTask.Value.GetAwaiter(); // Make sure it run
-                    if (executingTask != toExecute)
-                    {
-                        // What was planned can't run for now, rebook it when the executingTask finish
-                        var unused = executingTask.Value.ContinueWith(t => _WatchRequests.Add(localItem));
+                        catch (Exception ex)
+                        {
+                            Logs.PayServer.LogError(ex, "Unhandled error on watching invoice " + invoiceId);
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                            Task.Delay(10000, cancellation)
+                                .ContinueWith(t => _WatchRequests.Add(invoiceId), TaskScheduler.Default);
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                            break;
+                        }
                     }
                 }
             }
             catch when (cancellation.IsCancellationRequested)
             {
-            }
-            finally
-            {
-                await Task.WhenAll(executing.Values.Select(v => v.Value).ToArray());
             }
             Logs.PayServer.LogInformation("Stop watching invoices");
         }
@@ -525,7 +334,8 @@ namespace BTCPayServer.HostedServices
         {
             leases.Dispose();
             _Cts.Cancel();
-            return Task.WhenAll(_Poller, _Loop);
+            var waitingPendingInvoices = _WaitingInvoices ?? Task.CompletedTask;
+            return Task.WhenAll(waitingPendingInvoices, _Loop);
         }
     }
 }

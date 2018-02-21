@@ -13,7 +13,7 @@ namespace BTCPayServer.Configuration
     {
         public static T GetOrDefault<T>(this IConfiguration configuration, string key, T defaultValue)
         {
-            var str = configuration[key] ?? configuration[key.Replace(".", string.Empty)];
+            var str = configuration[key] ?? configuration[key.Replace(".", string.Empty, StringComparison.InvariantCulture)];
             if (str == null)
                 return defaultValue;
             if (typeof(T) == typeof(bool))
@@ -32,12 +32,12 @@ namespace BTCPayServer.Configuration
                 return (T)(object)str;
             else if (typeof(T) == typeof(IPEndPoint))
             {
-                var separator = str.LastIndexOf(":");
+                var separator = str.LastIndexOf(":", StringComparison.InvariantCulture);
                 if (separator == -1)
                     throw new FormatException();
                 var ip = str.Substring(0, separator);
                 var port = str.Substring(separator + 1);
-                return (T)(object)new IPEndPoint(IPAddress.Parse(ip), int.Parse(port));
+                return (T)(object)new IPEndPoint(IPAddress.Parse(ip), int.Parse(port, CultureInfo.InvariantCulture));
             }
             else if (typeof(T) == typeof(int))
             {

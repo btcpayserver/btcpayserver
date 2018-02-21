@@ -33,7 +33,7 @@ namespace BTCPayServer.Eclair
 
         public Task<GetInfoResponse> GetInfoAsync()
         {
-            return SendCommandAsync<GetInfoResponse>(new RPCRequest("getinfo", new object[] { }));
+            return SendCommandAsync<GetInfoResponse>(new RPCRequest("getinfo", Array.Empty<object>()));
         }
 
         public async Task<T> SendCommandAsync<T>(RPCRequest request, bool throwIfRPCError = true)
@@ -104,7 +104,7 @@ namespace BTCPayServer.Eclair
 
         public async Task<AllChannelResponse[]> AllChannelsAsync()
         {
-            return await SendCommandAsync<AllChannelResponse[]>(new RPCRequest("allchannels", new object[] { })).ConfigureAwait(false);
+            return await SendCommandAsync<AllChannelResponse[]>(new RPCRequest("allchannels", Array.Empty<object>())).ConfigureAwait(false);
         }
 
         public string[] Channels()
@@ -114,7 +114,7 @@ namespace BTCPayServer.Eclair
 
         public async Task<string[]> ChannelsAsync()
         {
-            return await SendCommandAsync<string[]>(new RPCRequest("channels", new object[] { })).ConfigureAwait(false);
+            return await SendCommandAsync<string[]>(new RPCRequest("channels", Array.Empty<object>())).ConfigureAwait(false);
         }
 
         public void Close(string channelId)
@@ -155,7 +155,7 @@ namespace BTCPayServer.Eclair
 
         public async Task<string[]> AllNodesAsync()
         {
-            return await SendCommandAsync<string[]>(new RPCRequest("allnodes", new object[] { })).ConfigureAwait(false);
+            return await SendCommandAsync<string[]>(new RPCRequest("allnodes", Array.Empty<object>())).ConfigureAwait(false);
         }
 
         public Uri Address { get; private set; }

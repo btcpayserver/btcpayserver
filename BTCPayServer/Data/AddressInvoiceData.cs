@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Payments;
+using BTCPayServer.Services.Invoices;
 using NBitcoin;
 
 namespace BTCPayServer.Data
@@ -20,28 +22,30 @@ namespace BTCPayServer.Data
 
 
 #pragma warning disable CS0618
-        public ScriptId GetHash()
+        public string GetAddress()
         {
             if (Address == null)
                 return null;
-            var index = Address.IndexOf("#");
+            var index = Address.LastIndexOf("#", StringComparison.InvariantCulture);
             if (index == -1)
-                return new ScriptId(Address);
-            return new ScriptId(Address.Substring(0, index));
+                return Address;
+            return Address.Substring(0, index);
         }
-        public AddressInvoiceData SetHash(ScriptId scriptId, string cryptoCode)
+        public AddressInvoiceData Set(string address, PaymentMethodId paymentMethodId)
         {
-            Address = scriptId + "#" + cryptoCode;
+            Address = address + "#" + paymentMethodId?.ToString();
             return this;
         }
-        public string GetCryptoCode()
+        public PaymentMethodId GetpaymentMethodId()
         {
             if (Address == null)
                 return null;
-            var index = Address.IndexOf("#");
+            var index = Address.LastIndexOf("#", StringComparison.InvariantCulture);
+            // Legacy AddressInvoiceData does not have the paymentMethodId attached to the Address
             if (index == -1)
-                return "BTC";
-            return Address.Substring(index + 1);
+                return PaymentMethodId.Parse("BTC");
+            /////////////////////////
+            return PaymentMethodId.Parse(Address.Substring(index + 1));
         }
 #pragma warning restore CS0618
 

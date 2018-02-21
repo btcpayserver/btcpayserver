@@ -21,11 +21,33 @@ using BTCPayServer.Services.Wallets;
 using System.IO;
 using BTCPayServer.Logging;
 using Microsoft.Extensions.Logging;
+using System.Net.WebSockets;
+using BTCPayServer.Services.Invoices;
+using NBitpayClient;
+using BTCPayServer.Payments;
 
 namespace BTCPayServer
 {
     public static class Extensions
     {
+        public static PaymentMethodId GetpaymentMethodId(this InvoiceCryptoInfo info)
+        {
+            return new PaymentMethodId(info.CryptoCode, Enum.Parse<PaymentTypes>(info.PaymentType));
+        }
+        public static async Task CloseSocket(this WebSocket webSocket)
+        {
+            try
+            {
+                if (webSocket.State == WebSocketState.Open)
+                {
+                    CancellationTokenSource cts = new CancellationTokenSource();
+                    cts.CancelAfter(5000);
+                    await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", cts.Token);
+                }
+            }
+            catch { }
+            finally { try { webSocket.Dispose(); } catch { } }
+        }
         public static bool SupportDropColumn(this Microsoft.EntityFrameworkCore.Migrations.Migration migration, string activeProvider)
         {
             return activeProvider != "Microsoft.EntityFrameworkCore.Sqlite";
@@ -48,7 +70,7 @@ namespace BTCPayServer
         }
         public static string WithTrailingSlash(this string str)
         {
-            if (str.EndsWith("/"))
+            if (str.EndsWith("/", StringComparison.InvariantCulture))
                 return str;
             return str + "/";
         }

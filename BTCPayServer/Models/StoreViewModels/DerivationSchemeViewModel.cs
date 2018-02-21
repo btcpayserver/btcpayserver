@@ -48,10 +48,13 @@ namespace BTCPayServer.Models.StoreViewModels
             set;
         }
 
+        public bool Confirmation { get; set; }
+
         public SelectList CryptoCurrencies { get; set; }
         public SelectList DerivationSchemeFormats { get; set; }
 
-        
+        public string ServerUrl { get; set; }
+
         public void SetCryptoCurrencies(ExplorerClientProvider explorerProvider, string selectedScheme)
         {
             var choices = explorerProvider.GetAll().Select(o => new Format() { Name = o.Item1.CryptoCode, Value = o.Item1.CryptoCode }).ToArray();

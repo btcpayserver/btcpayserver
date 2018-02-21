@@ -22,6 +22,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Http.Extensions;
 using BTCPayServer.Controllers;
+using System.Net.WebSockets;
 
 namespace BTCPayServer.Hosting
 {
@@ -69,7 +70,7 @@ namespace BTCPayServer.Hosting
                     if (BitIdExtensions.CheckBitIDSignature(key, sig, url, body))
                     {
                         var bitid = new BitIdentity(key);
-                        httpContext.User = new GenericPrincipal(bitid, new string[0]);
+                        httpContext.User = new GenericPrincipal(bitid, Array.Empty<string>());
                         Logs.PayServer.LogDebug($"BitId signature check success for SIN {bitid.SIN}");
                     }
                 }
@@ -82,6 +83,8 @@ namespace BTCPayServer.Hosting
             {
                 await _Next(httpContext);
             }
+            catch (WebSocketException)
+            { }
             catch (UnauthorizedAccessException ex)
             {
                 await HandleBitpayHttpException(httpContext, new BitpayHttpException(401, ex.Message));

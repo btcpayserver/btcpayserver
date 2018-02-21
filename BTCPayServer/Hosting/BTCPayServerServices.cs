@@ -37,6 +37,7 @@ using BTCPayServer.Authentication;
 using Microsoft.Extensions.Caching.Memory;
 using BTCPayServer.Logging;
 using BTCPayServer.HostedServices;
+using Meziantou.AspNetCore.BundleTagHelpers;
 
 namespace BTCPayServer.Hosting
 {
@@ -177,6 +178,13 @@ namespace BTCPayServer.Hosting
                 {
                     builder.AddRequirements(new OwnStoreAuthorizationRequirement("Owner"));
                 });
+            });
+
+            // bundling
+            services.AddBundles(options =>
+            {
+                options.UseMinifiedFiles = Environment.GetEnvironmentVariable("BTCPAY_BUNDLEJSCSS") == "true";
+                options.AppendVersion = true;
             });
 
             return services;

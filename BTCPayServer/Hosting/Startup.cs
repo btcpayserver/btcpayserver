@@ -37,7 +37,6 @@ using System.Threading;
 using Microsoft.Extensions.Options;
 using Microsoft.ApplicationInsights.AspNetCore.Extensions;
 using Microsoft.AspNetCore.Mvc.Cors.Internal;
-using Meziantou.AspNetCore.BundleTagHelpers;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using System.Net;
 
@@ -91,13 +90,6 @@ namespace BTCPayServer.Hosting
                 options.Password.RequireLowercase = false;
                 options.Password.RequireNonAlphanumeric = false;
                 options.Password.RequireUppercase = false;
-            });
-
-            // bundling
-            services.AddBundles(options =>
-            {
-                options.UseMinifiedFiles = Environment.GetEnvironmentVariable("BTCPAY_BUNDLEJSCSS") == "true";
-                options.AppendVersion = true;
             });
 
             // Needed to debug U2F for ledger support

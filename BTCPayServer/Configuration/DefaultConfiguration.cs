@@ -39,6 +39,7 @@ namespace BTCPayServer.Configuration
             }
             app.Option("--externalurl", $"The expected external url of this service, to use if BTCPay is behind a reverse proxy (default: empty, use the incoming HTTP request to figure out)", CommandOptionType.SingleValue);
             app.Option("--internallightningnode", $"An internal lightning node which can be used without https requirement and easily configured by the admin (default: empty)", CommandOptionType.SingleValue);
+            app.Option("--bundlejscss", $"Bundle javascript and css files for better performance (default: true)", CommandOptionType.SingleValue);
             return app;
         }
 

@@ -184,10 +184,15 @@ namespace BTCPayServer.Hosting
             });
 
             // bundling
-            services.AddBundles(options =>
+
+            services.AddBundles();
+            services.AddTransient<BundleOptions>(provider =>
             {
-                options.UseMinifiedFiles = Environment.GetEnvironmentVariable("BTCPAY_BUNDLEJSCSS") == "true";
-                options.AppendVersion = true;
+                var opts = provider.GetRequiredService<BTCPayServerOptions>();
+                var bundle = new BundleOptions();
+                bundle.UseMinifiedFiles = opts.BundleJsCss;
+                bundle.AppendVersion = true;
+                return bundle;
             });
 
             return services;

@@ -78,6 +78,7 @@ namespace BTCPayServer.Configuration
             Logs.Configuration.LogInformation("Supported chains: " + String.Join(',', supportedChains.ToArray()));
 
             PostgresConnectionString = conf.GetOrDefault<string>("postgres", null);
+            BundleJsCss = conf.GetOrDefault<bool>("bundlejscss", true);
             ExternalUrl = conf.GetOrDefault<Uri>("externalurl", null);
             InternalLightningNode = conf.GetOrDefault<Uri>("internallightningnode", null);
         }
@@ -91,6 +92,11 @@ namespace BTCPayServer.Configuration
             set;
         }
         public Uri ExternalUrl
+        {
+            get;
+            set;
+        }
+        public bool BundleJsCss
         {
             get;
             set;

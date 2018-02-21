@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Payments;
 
 namespace BTCPayServer.Controllers
 {
@@ -71,7 +72,7 @@ namespace BTCPayServer.Controllers
             if (cryptoCode == null)
                 cryptoCode = "BTC";
             var network = _NetworkProvider.GetNetwork(cryptoCode);
-            if (network == null || invoice == null || invoice.IsExpired() || !invoice.Support(new Services.Invoices.PaymentMethodId(cryptoCode, Payments.PaymentTypes.BTCLike)))
+            if (network == null || invoice == null || invoice.IsExpired() || !invoice.Support(new PaymentMethodId(cryptoCode, Payments.PaymentTypes.BTCLike)))
                 return NotFound();
 
             var wallet = _WalletProvider.GetWallet(network);

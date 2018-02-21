@@ -25,6 +25,12 @@ namespace BTCPayServer.Payments.Bitcoin
             return TxFee.ToDecimal(MoneyUnit.BTC);
         }
 
+        public void SetNoTxFee()
+        {
+            TxFee = Money.Zero;
+        }
+
+
         public void SetPaymentDestination(string newPaymentDestination)
         {
             if (newPaymentDestination == null)

@@ -22,7 +22,7 @@ using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore;
 using BTCPayServer.Services.Rates;
 using Microsoft.Extensions.Caching.Memory;
-using BTCPayServer.Eclair;
+using BTCPayServer.Payments.Lightning.Eclair;
 using System.Collections.Generic;
 using BTCPayServer.Models.StoreViewModels;
 using System.Threading.Tasks;
@@ -241,6 +241,7 @@ namespace BTCPayServer.Tests
                 tester.Start();
                 var user = tester.NewAccount();
                 user.GrantAccess();
+                user.RegisterDerivationScheme("BTC");
                 var invoice = user.BitPay.CreateInvoice(new Invoice()
                 {
                     Buyer = new Buyer() { email = "test@fwf.com" },
@@ -288,16 +289,17 @@ namespace BTCPayServer.Tests
             Assert.Equal("0.00000000001", light.ToString());
         }
 
-        //[Fact]
-        //public void CanSendLightningPayment()
-        //{
+        [Fact]
+        public void CanSendLightningPayment()
+        {
 
-        //    using (var tester = ServerTester.Create())
-        //    {
-        //        tester.Start();
-        //        tester.PrepareLightning();
-        //    }
-        //}
+            using (var tester = ServerTester.Create())
+            {
+                tester.Start();
+                tester.PrepareLightning();
+
+            }
+        }
 
         [Fact]
         public void CanUseServerInitiatedPairingCode()
@@ -334,6 +336,7 @@ namespace BTCPayServer.Tests
                     tester.Start();
                     var acc = tester.NewAccount();
                     acc.GrantAccess();
+                    acc.RegisterDerivationScheme("BTC");
                     var invoice = acc.BitPay.CreateInvoice(new Invoice()
                     {
                         Price = 5.0,
@@ -386,12 +389,12 @@ namespace BTCPayServer.Tests
                 tester.Start();
                 var user = tester.NewAccount();
                 user.GrantAccess();
+                user.RegisterDerivationScheme("BTC");
                 var invoice = user.BitPay.CreateInvoice(new Invoice()
                 {
                     Price = 5000.0,
                     Currency = "USD"
                 }, Facade.Merchant);
-
                 var payment1 = invoice.BtcDue + Money.Coins(0.0001m);
                 var payment2 = invoice.BtcDue;
                 var tx1 = new uint256(tester.ExplorerNode.SendCommand("sendtoaddress", new object[]
@@ -454,6 +457,7 @@ namespace BTCPayServer.Tests
                 var user = tester.NewAccount();
                 Assert.False(user.BitPay.TestAccess(Facade.Merchant));
                 user.GrantAccess();
+                user.RegisterDerivationScheme("BTC");
                 Assert.True(user.BitPay.TestAccess(Facade.Merchant));
             }
         }
@@ -467,7 +471,7 @@ namespace BTCPayServer.Tests
                 tester.Start();
                 var user = tester.NewAccount();
                 user.GrantAccess();
-
+                user.RegisterDerivationScheme("BTC");
 
                 // First we try payment with a merchant having only BTC
                 var invoice1 = user.BitPay.CreateInvoice(new Invoice()
@@ -509,8 +513,8 @@ namespace BTCPayServer.Tests
             {
                 tester.Start();
                 var user = tester.NewAccount();
-                user.CryptoCode = "LTC";
                 user.GrantAccess();
+                user.RegisterDerivationScheme("LTC");
 
                 // First we try payment with a merchant having only BTC
                 var invoice = user.BitPay.CreateInvoice(new Invoice()
@@ -569,7 +573,7 @@ namespace BTCPayServer.Tests
                 tester.Start();
                 var user = tester.NewAccount();
                 user.GrantAccess();
-
+                user.RegisterDerivationScheme("BTC");
                 // First we try payment with a merchant having only BTC
                 var invoice = user.BitPay.CreateInvoice(new Invoice()
                 {
@@ -658,6 +662,7 @@ namespace BTCPayServer.Tests
                 tester.Start();
                 var user = tester.NewAccount();
                 user.GrantAccess();
+                user.RegisterDerivationScheme("BTC");
                 var invoice = user.BitPay.CreateInvoice(new Invoice()
                 {
                     Price = 5000.0,

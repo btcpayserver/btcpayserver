@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace BTCPayServer.Eclair
+namespace BTCPayServer.Payments.Lightning.Eclair
 {
     public class AllChannelResponse
     {

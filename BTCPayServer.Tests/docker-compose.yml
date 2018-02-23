@@ -17,11 +17,12 @@ services:
       TESTS_POSTGRES: User ID=postgres;Host=postgres;Port=5432;Database=btcpayserver
       TESTS_PORT: 80
       TESTS_HOSTNAME: tests
+      TEST_ECLAIR: http://eclair-cli:gpwefwmmewci@eclair:8080/
+      TEST_CHARGE: http://api-token:foiewnccewuify@lightning-charged:9112/
     expose:
       - "80"
     links:
-      - nbxplorer
-      - postgres
+      - dev
     extra_hosts: 
       - "tests:127.0.0.1"
 
@@ -35,6 +36,8 @@ services:
     links:
       - nbxplorer
       - postgres
+      - eclair
+      - lightning-charged
 
   nbxplorer:
     image: nicolasdorier/nbxplorer:1.0.1.14
@@ -72,11 +75,56 @@ services:
         rpcport=43782
         port=39388
         whitelist=0.0.0.0/0
+        zmqpubrawblock=tcp://0.0.0.0:29000
+        zmqpubrawtx=tcp://0.0.0.0:29000
+        txindex=1
     ports: 
       - "43782:43782"
     expose:
       - "43782" # RPC
       - "39388" # P2P
+    volumes:
+      - "bitcoin_datadir:/data"
+
+  lightning-charged:
+    image: shesek/lightning-charge:0.3.1
+    environment:
+      NETWORK: regtest
+      API_TOKEN: foiewnccewuify
+      SKIP_BITCOIND: 1
+      BITCOIND_RPCCONNECT: bitcoind
+    volumes:
+      - "bitcoin_datadir:/etc/bitcoin"
+    expose:
+      - "9112" # Charge
+      - "9735" # Lightning
+    ports:
+      - "54938:9112" # Charge
+    links:
+      - bitcoind
+
+  eclair:
+    image: acinq/eclair@sha256:758eaf02683046a096ee03390d3a54df8fcfca50883f7560ab946a36ee4e81d8
+    environment:
+      JAVA_OPTS: >
+        -Xmx512m 
+        -Declair.printToConsole 
+        -Declair.bitcoind.host=bitcoind 
+        -Declair.bitcoind.rpcport=43782 
+        -Declair.bitcoind.rpcuser=ceiwHEbqWI83 
+        -Declair.bitcoind.rpcpassword=DwubwWsoo3 
+        -Declair.bitcoind.zmq=tcp://bitcoind:29000
+        -Declair.api.enabled=true
+        -Declair.api.password=gpwefwmmewci
+        -Declair.chain=regtest
+        -Declair.api.binding-ip=0.0.0.0
+    links:
+      - bitcoind
+    ports:
+      - "30992:8080" # api port
+    expose:
+      - "9735" # server port
+      - "8080" # api port
 
   litecoind:
     container_name: btcpayserver_dev_litecoind
@@ -102,3 +150,6 @@ services:
       - "39372:5432"
     expose:
       - "5432"
+
+volumes:
+    bitcoin_datadir:

@@ -46,20 +46,30 @@ namespace BTCPayServer.Tests
             Assert.IsType<ViewResult>(await store.RequestPairing(pairingCode.ToString()));
             await store.Pair(pairingCode.ToString(), StoreId);
         }
-        public StoresController CreateStore(string cryptoCode = null)
+        public StoresController CreateStore()
         {
-            return CreateStoreAsync(cryptoCode).GetAwaiter().GetResult();
+            return CreateStoreAsync().GetAwaiter().GetResult();
         }
 
-        public string CryptoCode { get; set; } = "BTC";
-        public async Task<StoresController> CreateStoreAsync(string cryptoCode = null)
+        public async Task<StoresController> CreateStoreAsync()
         {
-            cryptoCode = cryptoCode ?? CryptoCode;
-            SupportedNetwork = parent.NetworkProvider.GetNetwork(cryptoCode);
-            ExtKey = new ExtKey().GetWif(SupportedNetwork.NBitcoinNetwork);
             var store = parent.PayTester.GetController<StoresController>(UserId);
             await store.CreateStore(new CreateStoreViewModel() { Name = "Test Store" });
             StoreId = store.CreatedStoreId;
+            return store;
+        }
+
+        public BTCPayNetwork SupportedNetwork { get; set; }
+
+        public void RegisterDerivationScheme(string crytoCode)
+        {
+            RegisterDerivationSchemeAsync(crytoCode).GetAwaiter().GetResult();
+        }
+        public async Task RegisterDerivationSchemeAsync(string cryptoCode)
+        {
+            SupportedNetwork = parent.NetworkProvider.GetNetwork(cryptoCode);
+            var store = parent.PayTester.GetController<StoresController>(UserId);
+            ExtKey = new ExtKey().GetWif(SupportedNetwork.NBitcoinNetwork);
             DerivationScheme = new DerivationStrategyFactory(SupportedNetwork.NBitcoinNetwork).Parse(ExtKey.Neuter().ToString() + "-[legacy]");
             var vm = (StoreViewModel)((ViewResult)await store.UpdateStore(StoreId)).Model;
             vm.SpeedPolicy = SpeedPolicy.MediumSpeed;
@@ -70,27 +80,6 @@ namespace BTCPayServer.Tests
                 CryptoCurrency = cryptoCode,
                 DerivationSchemeFormat = "BTCPay",
                 DerivationScheme = DerivationScheme.ToString(),
-                Confirmation = true
-            }, "Save");
-            return store;
-        }
-
-        public BTCPayNetwork SupportedNetwork { get; set; }
-
-        public void RegisterDerivationScheme(string crytoCode)
-        {
-            RegisterDerivationSchemeAsync(crytoCode).GetAwaiter().GetResult();
-        }
-        public async Task RegisterDerivationSchemeAsync(string crytoCode)
-        {
-            var store = parent.PayTester.GetController<StoresController>(UserId);
-            var networkProvider = parent.PayTester.GetService<BTCPayNetworkProvider>();
-            var derivation = new DerivationStrategyFactory(networkProvider.GetNetwork(crytoCode).NBitcoinNetwork).Parse(ExtKey.Neuter().ToString() + "-[legacy]");
-            await store.AddDerivationScheme(StoreId, new DerivationSchemeViewModel()
-            {
-                CryptoCurrency = crytoCode,
-                DerivationSchemeFormat = crytoCode,
-                DerivationScheme = derivation.ToString(),
                 Confirmation = true
             }, "Save");
         }

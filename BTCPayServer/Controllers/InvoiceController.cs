@@ -83,12 +83,23 @@ namespace BTCPayServer.Controllers
                                                .Select(c =>
                                                 (Handler: (IPaymentMethodHandler)_ServiceProvider.GetService(typeof(IPaymentMethodHandler<>).MakeGenericType(c.GetType())),
                                                 SupportedPaymentMethod: c,
-                                                Network: _NetworkProvider.GetNetwork(c.PaymentId.CryptoCode)))
-                                                .Where(c =>
-                                                        c.Network != null &&
-                                                        c.Handler.IsAvailable(c.SupportedPaymentMethod, c.Network))
-                                                .ToArray();
-            if (supportedPaymentMethods.Length == 0)
+                                                Network: _NetworkProvider.GetNetwork(c.PaymentId.CryptoCode),
+                                                IsAvailable: Task.FromResult(false)))
+                                                .Where(c => c.Network != null)
+                                                .Select(c => 
+                                                {
+                                                    c.IsAvailable = c.Handler.IsAvailable(c.SupportedPaymentMethod, c.Network);
+                                                    return c;
+                                                })
+                                                .ToList();
+            foreach(var supportedPaymentMethod in supportedPaymentMethods.ToList())
+            {
+                if(!await supportedPaymentMethod.IsAvailable)
+                {
+                    supportedPaymentMethods.Remove(supportedPaymentMethod);
+                }
+            }
+            if (supportedPaymentMethods.Count == 0)
                 throw new BitpayHttpException(400, "No derivation strategy are available now for this store");
             var entity = new InvoiceEntity
             {

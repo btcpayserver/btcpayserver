@@ -38,9 +38,9 @@ namespace BTCPayServer.Payments.Bitcoin
             return onchainMethod;
         }
 
-        public override bool IsAvailable(DerivationStrategy supportedPaymentMethod, BTCPayNetwork network)
+        public override Task<bool> IsAvailable(DerivationStrategy supportedPaymentMethod, BTCPayNetwork network)
         {
-            return _ExplorerProvider.IsAvailable(network);
+            return Task.FromResult(_ExplorerProvider.IsAvailable(network));
         }
     }
 }

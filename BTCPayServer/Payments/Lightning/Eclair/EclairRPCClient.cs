@@ -9,7 +9,7 @@ using NBitcoin;
 using NBitcoin.JsonConverters;
 using NBitcoin.RPC;
 
-namespace BTCPayServer.Eclair
+namespace BTCPayServer.Payments.Lightning.Eclair
 {
     public class EclairRPCClient
     {
@@ -21,7 +21,12 @@ namespace BTCPayServer.Eclair
                 throw new ArgumentNullException(nameof(network));
             Address = address;
             Network = network;
+            if (string.IsNullOrEmpty(address.UserInfo))
+                throw new ArgumentException(paramName: nameof(address), message: "User info in the url should be provided");
+            Password = address.UserInfo;
         }
+
+        public string Password { get; set; }
 
         public Network Network { get; private set; }
 
@@ -165,6 +170,8 @@ namespace BTCPayServer.Eclair
             var webRequest = (HttpWebRequest)WebRequest.Create(Address.AbsoluteUri);
             webRequest.ContentType = "application/json";
             webRequest.Method = "POST";
+            var auth = Convert.ToBase64String(Encoding.ASCII.GetBytes(Password));
+            webRequest.Headers[HttpRequestHeader.Authorization] = $"Basic {auth}";
             return webRequest;
         }
 

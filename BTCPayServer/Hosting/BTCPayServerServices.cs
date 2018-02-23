@@ -194,7 +194,7 @@ namespace BTCPayServer.Hosting
             }
 
             app.UseMiddleware<BTCPayMiddleware>();
-            return app;
+            return app; 
         }
 
         static void Retry(Action act)

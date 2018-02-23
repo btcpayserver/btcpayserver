@@ -17,7 +17,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
-using BTCPayServer.Eclair;
+using BTCPayServer.Payments.Lightning.Eclair;
 using System.Globalization;
 
 namespace BTCPayServer.Tests
@@ -65,8 +65,9 @@ namespace BTCPayServer.Tests
             PayTester.HostName = GetEnvironment("TESTS_HOSTNAME", "127.0.0.1");
             PayTester.Start();
 
-            MerchantEclair = new EclairTester(this, "TEST_ECLAIR1", "http://127.0.0.1:30992/", "eclair1");
-            CustomerEclair = new EclairTester(this, "TEST_ECLAIR2", "http://127.0.0.1:30993/", "eclair2");
+            var btc  = NetworkProvider.GetNetwork("BTC").NBitcoinNetwork;
+            CustomerEclair = new EclairTester(this, "TEST_ECLAIR", "http://eclair-cli:gpwefwmmewci@127.0.0.1:30992/", "eclair", btc);
+            MerchantCharge = new ChargeTester(this, "TEST_CHARGE", "http://api-token:foiewnccewuify@127.0.0.1:54938/", "lightning-charged", btc);
         }
 
 
@@ -83,12 +84,13 @@ namespace BTCPayServer.Tests
             // Activate segwit
             var blockCount = ExplorerNode.GetBlockCountAsync();
             // Fetch node info, but that in cache
-            var merchant = MerchantEclair.GetNodeInfoAsync();
+            var merchantInfo = MerchantCharge.Client.GetInfoAsync();
             var customer = CustomerEclair.GetNodeInfoAsync();
             var channels = CustomerEclair.RPC.ChannelsAsync();
-            var connect = CustomerEclair.RPC.ConnectAsync(merchant.Result);
-            await Task.WhenAll(blockCount, merchant, customer, channels, connect);
 
+            var info = await merchantInfo;
+            var connect = CustomerEclair.RPC.ConnectAsync(new NodeInfo(info.Id, MerchantCharge.P2PHost, info.Port));
+            await Task.WhenAll(blockCount, customer, channels, connect);
             // Mine until segwit is activated
             if (blockCount.Result <= 432)
             {
@@ -98,6 +100,7 @@ namespace BTCPayServer.Tests
 
         public EclairTester MerchantEclair { get; set; }
         public EclairTester CustomerEclair { get; set; }
+        public ChargeTester MerchantCharge { get; private set; }
 
         internal string GetEnvironment(string variable, string defaultValue)
         {

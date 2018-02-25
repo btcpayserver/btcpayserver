@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.WebSockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using NBitcoin;
+using NBXplorer;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Payments.Lightning.CLightning
@@ -40,27 +44,67 @@ namespace BTCPayServer.Payments.Lightning.CLightning
             Credentials = new NetworkCredential(userInfo[0], userInfo[1]);
         }
 
+        public async Task<CreateInvoiceResponse> CreateInvoiceAsync(CreateInvoiceRequest request, CancellationToken cancellation = default(CancellationToken))
+        {
+            var message = CreateMessage(HttpMethod.Post, "invoice");
+            Dictionary<string, string> parameters = new Dictionary<string, string>();
+            parameters.Add("msatoshi", request.Amont.MilliSatoshi.ToString(CultureInfo.InvariantCulture));
+            parameters.Add("expiry", ((int)request.Expiry.TotalSeconds).ToString(CultureInfo.InvariantCulture));
+            message.Content = new FormUrlEncodedContent(parameters);
+            var result = await _Client.SendAsync(message, cancellation);
+            result.EnsureSuccessStatusCode();
+            var content = await result.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<CreateInvoiceResponse>(content);
+        }
+
+        public async Task<ChargeSession> Listen(CancellationToken cancellation = default(CancellationToken))
+        {
+            var socket = new ClientWebSocket();
+            socket.Options.SetRequestHeader("Authorization", $"Basic {GetBase64Creds()}");
+            var uri = new UriBuilder(Uri) { UserName = null, Password = null }.Uri.AbsoluteUri;
+            if (!uri.EndsWith('/'))
+                uri += "/";
+            uri += "ws";
+            uri = ToWebsocketUri(uri);
+            await socket.ConnectAsync(new Uri(uri), cancellation);
+            return new ChargeSession(socket);
+        }
+
+        private static string ToWebsocketUri(string uri)
+        {
+            if (uri.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                uri = uri.Replace("https://", "wss://", StringComparison.OrdinalIgnoreCase);
+            if (uri.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
+                uri = uri.Replace("http://", "ws://", StringComparison.OrdinalIgnoreCase);
+            return uri;
+        }
+
         public NetworkCredential Credentials { get; set; }
 
         public GetInfoResponse GetInfo()
         {
             return GetInfoAsync().GetAwaiter().GetResult();
         }
-        public async Task<GetInfoResponse> GetInfoAsync()
+        public async Task<GetInfoResponse> GetInfoAsync(CancellationToken cancellation = default(CancellationToken))
         {
-            var request = Get("info");
-            var message = await _Client.SendAsync(request);
+            var request = CreateMessage(HttpMethod.Get, "info");
+            var message = await _Client.SendAsync(request, cancellation);
             message.EnsureSuccessStatusCode();
             var content = await message.Content.ReadAsStringAsync();
             return JsonConvert.DeserializeObject<GetInfoResponse>(content);
         }
 
-        private HttpRequestMessage Get(string path)
+        private HttpRequestMessage CreateMessage(HttpMethod method, string path)
         {
             var uri = GetFullUri(path);
-            var request = new HttpRequestMessage(HttpMethod.Get, uri);
-            request.Headers.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($"{Credentials.UserName}:{Credentials.Password}")));
+            var request = new HttpRequestMessage(method, uri);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Basic", GetBase64Creds());
             return request;
+        }
+
+        private string GetBase64Creds()
+        {
+            return Convert.ToBase64String(Encoding.ASCII.GetBytes($"{Credentials.UserName}:{Credentials.Password}"));
         }
 
         private Uri GetFullUri(string partialUrl)

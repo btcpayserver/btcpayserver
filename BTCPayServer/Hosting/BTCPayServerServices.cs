@@ -129,7 +129,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<BTCPayNetworkProvider>(o => 
             {
                 var opts = o.GetRequiredService<BTCPayServerOptions>();
-                return new BTCPayNetworkProvider(opts.ChainType);
+                return opts.NetworkProvider;
             });
 
             services.TryAddSingleton<NBXplorerDashboard>();
@@ -143,9 +143,12 @@ namespace BTCPayServer.Hosting
             });
 
             services.AddSingleton<Payments.IPaymentMethodHandler<DerivationStrategy>, Payments.Bitcoin.BitcoinLikePaymentHandler>();
+            services.AddSingleton<IHostedService, Payments.Bitcoin.NBXplorerListener>();
+
+            services.AddSingleton<Payments.IPaymentMethodHandler<Payments.Lightning.LightningSupportedPaymentMethod>, Payments.Lightning.LightningLikePaymentHandler>();
+            services.AddSingleton<IHostedService, Payments.Lightning.ChargeListener>();
 
             services.AddSingleton<IHostedService, NBXplorerWaiters>();
-            services.AddSingleton<IHostedService, Payments.Bitcoin.NBXplorerListener>();
             services.AddSingleton<IHostedService, InvoiceNotificationManager>();
             services.AddSingleton<IHostedService, InvoiceWatcher>();
 

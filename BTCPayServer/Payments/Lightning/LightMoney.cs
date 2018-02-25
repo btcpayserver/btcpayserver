@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using NBitcoin;
 
-namespace BTCPayServer.Payments.Lightning.Eclair
+namespace BTCPayServer.Payments.Lightning
 {
     public enum LightMoneyUnit : ulong
     {
@@ -94,28 +95,31 @@ namespace BTCPayServer.Payments.Lightning.Eclair
             return a;
         }
 
-        public LightMoney(int satoshis)
+        public LightMoney(int msatoshis)
         {
-            MilliSatoshi = satoshis;
+            MilliSatoshi = msatoshis;
         }
 
-        public LightMoney(uint satoshis)
+        public LightMoney(uint msatoshis)
         {
-            MilliSatoshi = satoshis;
+            MilliSatoshi = msatoshis;
+        }
+        public LightMoney(Money money)
+        {
+            MilliSatoshi = checked(money.Satoshi * 1000);
+        }
+        public LightMoney(long msatoshis)
+        {
+            MilliSatoshi = msatoshis;
         }
 
-        public LightMoney(long satoshis)
-        {
-            MilliSatoshi = satoshis;
-        }
-
-        public LightMoney(ulong satoshis)
+        public LightMoney(ulong msatoshis)
         {
             // overflow check. 
             // ulong.MaxValue is greater than long.MaxValue
             checked
             {
-                MilliSatoshi = (long)satoshis;
+                MilliSatoshi = (long)msatoshis;
             }
         }
 
@@ -171,7 +175,7 @@ namespace BTCPayServer.Payments.Lightning.Eclair
             CheckMoneyUnit(unit, "unit");
             // overflow safe because (long / int) always fit in decimal 
             // decimal operations are checked by default
-            return (decimal)MilliSatoshi / (int)unit;
+            return (decimal)MilliSatoshi / (ulong)unit;
         }
         /// <summary>
         /// Convert Money to decimal (same as ToUnit)

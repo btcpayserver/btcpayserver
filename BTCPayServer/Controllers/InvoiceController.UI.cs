@@ -198,30 +198,40 @@ namespace BTCPayServer.Controllers
                 Rate = FormatCurrency(paymentMethod),
                 MerchantRefLink = invoice.RedirectURL ?? "/",
                 StoreName = store.StoreName,
-                InvoiceBitcoinUrl = cryptoInfo.PaymentUrls.BIP21,
-                TxCount = accounting.TxCount,
+                InvoiceBitcoinUrl = paymentMethodId.PaymentType == PaymentTypes.BTCLike ? cryptoInfo.PaymentUrls.BIP21 :
+                                    paymentMethodId.PaymentType == PaymentTypes.LightningLike ? cryptoInfo.PaymentUrls.BOLT11 :
+                                    throw new NotSupportedException(),
+                InvoiceBitcoinUrlQR = paymentMethodId.PaymentType == PaymentTypes.BTCLike ? cryptoInfo.PaymentUrls.BIP21 :
+                                    paymentMethodId.PaymentType == PaymentTypes.LightningLike ? cryptoInfo.PaymentUrls.BOLT11.ToUpperInvariant() :
+                                    throw new NotSupportedException(),
+                TxCount = accounting.TxRequired,
                 BtcPaid = accounting.Paid.ToString(),
                 Status = invoice.Status,
-                CryptoImage = "/" + Url.Content(network.CryptoImagePath),
-                NetworkFeeDescription = $"{accounting.TxCount} transaction{(accounting.TxCount > 1 ? "s" : "")} x {paymentMethodDetails.GetTxFee()} {network.CryptoCode}",
+                CryptoImage = "/" + GetImage(paymentMethodId,  network),
+                NetworkFeeDescription = $"{accounting.TxRequired} transaction{(accounting.TxRequired > 1 ? "s" : "")} x {paymentMethodDetails.GetTxFee()} {network.CryptoCode}",
                 AvailableCryptos = invoice.GetPaymentMethods(_NetworkProvider)
                                           .Where(i => i.Network != null)
                                           .Select(kv=> new PaymentModel.AvailableCrypto()
                                             {
                                                 PaymentMethodId = kv.GetId().ToString(),
-                                                CryptoImage = "/" + kv.Network.CryptoImagePath,
+                                                CryptoImage = "/" + GetImage(kv.GetId(), kv.Network),
                                                 Link = Url.Action(nameof(Checkout), new { invoiceId = invoiceId, paymentMethodId = kv.GetId().ToString() })
                                             }).Where(c => c.CryptoImage != "/")
                 .ToList()
             };
 
-            var isMultiCurrency = invoice.GetPayments().Select(p=>p.GetCryptoCode()).Concat(new[] { network.CryptoCode }).Distinct().Count() > 1;
+            var isMultiCurrency = invoice.GetPayments().Select(p=>p.GetpaymentMethodId()).Concat(new[] { paymentMethod.GetId() }).Distinct().Count() > 1;
             if (isMultiCurrency)
                 model.NetworkFeeDescription = $"{accounting.NetworkFee} {network.CryptoCode}";
 
             var expiration = TimeSpan.FromSeconds(model.ExpirationSeconds);
             model.TimeLeft = PrettyPrint(expiration);
             return model;
+        }
+
+        private string GetImage(PaymentMethodId paymentMethodId, BTCPayNetwork network)
+        {
+            return (paymentMethodId.PaymentType == PaymentTypes.BTCLike ? Url.Content(network.CryptoImagePath) : Url.Content(network.LightningImagePath));
         }
 
         private string FormatCurrency(PaymentMethod paymentMethod)

@@ -65,7 +65,7 @@ namespace BTCPayServer.Tests
             PayTester.HostName = GetEnvironment("TESTS_HOSTNAME", "127.0.0.1");
             PayTester.Start();
 
-            var btc  = NetworkProvider.GetNetwork("BTC").NBitcoinNetwork;
+            var btc = NetworkProvider.GetNetwork("BTC").NBitcoinNetwork;
             CustomerEclair = new EclairTester(this, "TEST_ECLAIR", "http://eclair-cli:gpwefwmmewci@127.0.0.1:30992/", "eclair", btc);
             MerchantCharge = new ChargeTester(this, "TEST_CHARGE", "http://api-token:foiewnccewuify@127.0.0.1:54938/", "lightning-charged", btc);
         }
@@ -89,13 +89,35 @@ namespace BTCPayServer.Tests
             var channels = CustomerEclair.RPC.ChannelsAsync();
 
             var info = await merchantInfo;
-            var connect = CustomerEclair.RPC.ConnectAsync(new NodeInfo(info.Id, MerchantCharge.P2PHost, info.Port));
+            var clightning = new NodeInfo(info.Id, MerchantCharge.P2PHost, info.Port);
+            var connect = CustomerEclair.RPC.ConnectAsync(clightning);
             await Task.WhenAll(blockCount, customer, channels, connect);
             // Mine until segwit is activated
             if (blockCount.Result <= 432)
             {
                 ExplorerNode.Generate(433 - blockCount.Result);
             }
+
+            if (channels.Result.Length == 0)
+            {
+                await CustomerEclair.RPC.OpenAsync(clightning, Money.Satoshis(16777215));
+                while ((await CustomerEclair.RPC.ChannelsAsync())[0].State != "NORMAL")
+                {
+                    ExplorerNode.Generate(1);
+                }
+            }
+        }
+
+        public void SendLightningPayment(Invoice invoice)
+        {
+            SendLightningPaymentAsync(invoice).GetAwaiter().GetResult();
+        }
+
+        public async Task SendLightningPaymentAsync(Invoice invoice)
+        {
+            var bolt11 = invoice.CryptoInfo.Where(o => o.PaymentUrls.BOLT11 != null).First().PaymentUrls.BOLT11;
+            bolt11 = bolt11.Replace("lightning:", "", StringComparison.OrdinalIgnoreCase);
+            await CustomerEclair.RPC.SendAsync(bolt11);
         }
 
         public EclairTester MerchantEclair { get; set; }

@@ -34,5 +34,6 @@ namespace BTCPayServer.Tests
         {
             return GetNodeInfoAsync().GetAwaiter().GetResult();
         }
+
     }
 }

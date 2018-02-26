@@ -98,12 +98,34 @@ namespace BTCPayServer.Tests
                 ExplorerNode.Generate(433 - blockCount.Result);
             }
 
+            // If the channel is not created, let's do it
             if (channels.Result.Length == 0)
             {
-                await CustomerEclair.RPC.OpenAsync(clightning, Money.Satoshis(16777215));
-                while ((await CustomerEclair.RPC.ChannelsAsync())[0].State != "NORMAL")
+                var c = (await CustomerEclair.RPC.ChannelsAsync());
+                bool generated = false;
+                bool createdChannel = false;
+                CancellationTokenSource timeout = new CancellationTokenSource();
+                timeout.CancelAfter(10000);
+                while (c.Length == 0 || c[0].State != "NORMAL")
                 {
-                    ExplorerNode.Generate(1);
+                    if(timeout.IsCancellationRequested)
+                    {
+                        timeout = new CancellationTokenSource();
+                        timeout.CancelAfter(10000);
+                        createdChannel = false;
+                        generated = false;
+                    }
+                    if(!createdChannel)
+                    {
+                        await CustomerEclair.RPC.OpenAsync(clightning, Money.Satoshis(16777215));
+                        createdChannel = true;
+                    }
+                    if (!generated && c.Length != 0 && c[0].State == "WAIT_FOR_FUNDING_CONFIRMED")
+                    {
+                        ExplorerNode.Generate(6);
+                        generated = true;
+                    }
+                    c = (await CustomerEclair.RPC.ChannelsAsync());
                 }
             }
         }

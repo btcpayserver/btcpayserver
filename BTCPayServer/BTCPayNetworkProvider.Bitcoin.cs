@@ -26,7 +26,7 @@ namespace BTCPayServer
                 UriScheme = "bitcoin",
                 DefaultRateProvider = btcRate,
                 CryptoImagePath = "imlegacy/bitcoin-symbol.svg",
-                LightningImagePath = "imlegacy/bitcoin-symbol.svg",
+                LightningImagePath = "imlegacy/btc-lightning.svg",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NBXplorerNetworkProvider.ChainType),
                 CoinType = NBXplorerNetworkProvider.ChainType == ChainType.Main ? new KeyPath("0'") : new KeyPath("1'"),
                 CLightningNetworkName = ChainType == ChainType.Main ? "bitcoin" :

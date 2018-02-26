@@ -79,7 +79,10 @@ namespace BTCPayServer.Configuration
 
             PostgresConnectionString = conf.GetOrDefault<string>("postgres", null);
             ExternalUrl = conf.GetOrDefault<Uri>("externalurl", null);
+            InternalLightningNode = conf.GetOrDefault<Uri>("internallightningnode", null);
         }
+
+        public Uri InternalLightningNode { get; set; }
 
         public BTCPayNetworkProvider NetworkProvider { get; set; }
         public string PostgresConnectionString

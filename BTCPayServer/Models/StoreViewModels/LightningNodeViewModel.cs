@@ -29,6 +29,7 @@ namespace BTCPayServer.Models.StoreViewModels
         }
         public SelectList CryptoCurrencies { get; set; }
         public string StatusMessage { get; set; }
+        public string InternalLightningNode { get; internal set; }
 
         public void SetCryptoCurrencies(BTCPayNetworkProvider networkProvider, string selectedScheme)
         {

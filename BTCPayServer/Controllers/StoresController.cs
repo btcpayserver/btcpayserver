@@ -1,4 +1,5 @@
 ﻿using BTCPayServer.Authentication;
+using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
@@ -31,6 +32,8 @@ namespace BTCPayServer.Controllers
     {
         public StoresController(
             IServiceProvider serviceProvider,
+            BTCPayServerOptions btcpayServerOptions,
+            BTCPayServerEnvironment btcpayEnv,
             IOptions<MvcJsonOptions> mvcJsonOptions,
             StoreRepository repo,
             TokenRepository tokenRepo,
@@ -53,7 +56,11 @@ namespace BTCPayServer.Controllers
             _MvcJsonOptions = mvcJsonOptions.Value;
             _FeeRateProvider = feeRateProvider;
             _ServiceProvider = serviceProvider;
+            _BtcpayServerOptions = btcpayServerOptions;
+            _BTCPayEnv = btcpayEnv;
         }
+        BTCPayServerOptions _BtcpayServerOptions;
+        BTCPayServerEnvironment _BTCPayEnv;
         IServiceProvider _ServiceProvider;
         BTCPayNetworkProvider _NetworkProvider;
         private ExplorerClientProvider _ExplorerProvider;

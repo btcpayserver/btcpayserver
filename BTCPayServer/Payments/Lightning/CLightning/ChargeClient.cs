@@ -37,9 +37,9 @@ namespace BTCPayServer.Payments.Lightning.CLightning
             this._Uri = uri;
             this._Network = network;
             if (uri.UserInfo == null)
-                throw new ArgumentException(paramName:nameof(uri), message:"User information not present in uri");
+                throw new ArgumentException(paramName: nameof(uri), message: "User information not present in uri");
             var userInfo = uri.UserInfo.Split(':');
-            if(userInfo.Length != 2)
+            if (userInfo.Length != 2)
                 throw new ArgumentException(paramName: nameof(uri), message: "User information not present in uri");
             Credentials = new NetworkCredential(userInfo[0], userInfo[1]);
         }
@@ -85,6 +85,18 @@ namespace BTCPayServer.Payments.Lightning.CLightning
         {
             return GetInfoAsync().GetAwaiter().GetResult();
         }
+
+        public async Task<ChargeInvoice> GetInvoice(string invoiceId, CancellationToken cancellation = default(CancellationToken))
+        {
+            var request = CreateMessage(HttpMethod.Get, $"invoice/{invoiceId}");
+            var message = await _Client.SendAsync(request, cancellation);
+            if (message.StatusCode == HttpStatusCode.NotFound)
+                return null;
+            message.EnsureSuccessStatusCode();
+            var content = await message.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<ChargeInvoice>(content);
+        }
+
         public async Task<GetInfoResponse> GetInfoAsync(CancellationToken cancellation = default(CancellationToken))
         {
             var request = CreateMessage(HttpMethod.Get, "info");

@@ -363,7 +363,7 @@ namespace BTCPayServer.Services.Invoices
             {
                 entity.AvailableAddressHashes = invoice.AddressInvoices.Select(a => a.GetAddress() + a.GetpaymentMethodId().ToString()).ToHashSet();
             }
-            if(invoice.Events != null)
+            if (invoice.Events != null)
             {
                 entity.Events = invoice.Events.OrderBy(c => c.Timestamp).ToList();
             }
@@ -461,7 +461,7 @@ namespace BTCPayServer.Services.Invoices
             AddToTextSearch(invoiceId, addresses.Select(a => a.ToString()).ToArray());
         }
 
-        public async Task<PaymentEntity> AddPayment(string invoiceId, DateTimeOffset date, CryptoPaymentData paymentData, string cryptoCode)
+        public async Task<PaymentEntity> AddPayment(string invoiceId, DateTimeOffset date, CryptoPaymentData paymentData, string cryptoCode, bool accounted = false)
         {
             using (var context = _ContextFactory.CreateContext())
             {
@@ -471,17 +471,17 @@ namespace BTCPayServer.Services.Invoices
                     CryptoCode = cryptoCode,
 #pragma warning restore CS0618
                     ReceivedTime = date.UtcDateTime,
-                    Accounted = false
+                    Accounted = accounted
                 };
                 entity.SetCryptoPaymentData(paymentData);
-                
+
 
                 PaymentData data = new PaymentData
                 {
                     Id = paymentData.GetPaymentId(),
                     Blob = ToBytes(entity, null),
                     InvoiceDataId = invoiceId,
-                    Accounted = false
+                    Accounted = accounted
                 };
 
                 context.Payments.Add(data);

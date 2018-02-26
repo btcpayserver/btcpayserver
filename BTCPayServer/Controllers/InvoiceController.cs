@@ -138,6 +138,7 @@ namespace BTCPayServer.Controllers
                         {
                             var rate = await storeBlob.ApplyRateRules(o.Network, _RateProviders.GetRateProvider(o.Network, false)).GetRateAsync(invoice.Currency);
                             PaymentMethod paymentMethod = new PaymentMethod();
+                            paymentMethod.ParentEntity = entity;
                             paymentMethod.SetId(o.SupportedPaymentMethod.PaymentId);
                             paymentMethod.Rate = rate;
                             var paymentDetails = await o.Handler.CreatePaymentMethodDetails(o.SupportedPaymentMethod, paymentMethod, o.Network);
@@ -162,7 +163,7 @@ namespace BTCPayServer.Controllers
 #pragma warning disable CS0618
             // Legacy Bitpay clients expect information for BTC information, even if the store do not support it
             var legacyBTCisSet = paymentMethods.Any(p => p.GetId().IsBTCOnChain);
-            if (!legacyBTCisSet)
+            if (!legacyBTCisSet && _NetworkProvider.BTC != null)
             {
                 var btc = _NetworkProvider.BTC;
                 var feeProvider = ((IFeeProviderFactory)_ServiceProvider.GetService(typeof(IFeeProviderFactory))).CreateFeeProvider(btc);

@@ -35,6 +35,14 @@ namespace BTCPayServer.Services
         {
             get; set;
         }
+
+        public bool IsDevelopping
+        {
+            get
+            {
+                return ChainType == ChainType.Regtest && Environment.IsDevelopment();
+            }
+        }
         public override string ToString()
         {
             StringBuilder txt = new StringBuilder();

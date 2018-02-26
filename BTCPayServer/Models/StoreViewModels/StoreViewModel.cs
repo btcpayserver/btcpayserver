@@ -103,6 +103,16 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Default crypto currency on checkout")]
         public string DefaultCryptoCurrency { get; set; }
 
+        public class LightningNode
+        {
+            public string CryptoCode { get; set; }
+            public string Address { get; set; }
+        }
+        public List<LightningNode> LightningNodes
+        {
+            get; set;
+        } = new List<LightningNode>();
+
         public void SetCryptoCurrencies(ExplorerClientProvider explorerProvider, string defaultCrypto)
         {
             var choices = explorerProvider.GetAll().Select(o => new Format() { Name = o.Item1.CryptoCode, Value = o.Item1.CryptoCode }).ToArray();

@@ -81,7 +81,7 @@ namespace BTCPayServer.Tests
                 DerivationSchemeFormat = "BTCPay",
                 DerivationScheme = DerivationScheme.ToString(),
                 Confirmation = true
-            }, "Save");
+            });
         }
 
         public DerivationStrategyBase DerivationScheme { get; set; }
@@ -110,6 +110,21 @@ namespace BTCPayServer.Tests
         public string StoreId
         {
             get; set;
+        }
+
+        public void RegisterLightningNode(string cryptoCode)
+        {
+            RegisterLightningNodeAsync(cryptoCode).GetAwaiter().GetResult();
+        }
+
+        public async Task RegisterLightningNodeAsync(string cryptoCode)
+        {
+            var storeController = parent.PayTester.GetController<StoresController>(UserId);
+            await storeController.AddLightningNode(StoreId, new LightningNodeViewModel()
+            {
+                CryptoCurrency = "BTC",
+                Url = parent.MerchantCharge.Client.Uri.AbsoluteUri
+            }, "save");
         }
     }
 }

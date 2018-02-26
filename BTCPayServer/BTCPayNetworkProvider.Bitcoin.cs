@@ -20,14 +20,18 @@ namespace BTCPayServer
             Add(new BTCPayNetwork()
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
-                BlockExplorerLink = NBXplorerNetworkProvider.ChainType == ChainType.Main? "https://www.smartbit.com.au/tx/{0}" : "https://testnet.smartbit.com.au/tx/{0}",
+                BlockExplorerLink = NBXplorerNetworkProvider.ChainType == ChainType.Main ? "https://www.smartbit.com.au/tx/{0}" : "https://testnet.smartbit.com.au/tx/{0}",
                 NBitcoinNetwork = nbxplorerNetwork.NBitcoinNetwork,
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "bitcoin",
                 DefaultRateProvider = btcRate,
                 CryptoImagePath = "imlegacy/bitcoin-symbol.svg",
+                LightningImagePath = "imlegacy/bitcoin-symbol.svg",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NBXplorerNetworkProvider.ChainType),
-                CoinType = NBXplorerNetworkProvider.ChainType == ChainType.Main ? new KeyPath("0'") : new KeyPath("1'")
+                CoinType = NBXplorerNetworkProvider.ChainType == ChainType.Main ? new KeyPath("0'") : new KeyPath("1'"),
+                CLightningNetworkName = ChainType == ChainType.Main ? "bitcoin" :
+                                        ChainType == ChainType.Test ? "testnet" :
+                                        ChainType == ChainType.Regtest ? "regtest" : null
             });
         }
     }

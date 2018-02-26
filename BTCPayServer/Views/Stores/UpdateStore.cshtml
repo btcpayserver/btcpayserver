@@ -14,7 +14,7 @@
     </div>
 </div>
 <div class="row">
-    <div class="col-md-6">
+    <div class="col-md-8">
         <form method="post">
             <div class="form-group">
                 <label asp-for="Id"></label>
@@ -89,7 +89,7 @@
                         {
                             <tr>
                                 <td>@scheme.Crypto</td>
-                                <td>@scheme.Value</td>
+                                <td style="max-width:400px;overflow:hidden;">@scheme.Value</td>
                             </tr>
                         }
                     </tbody>

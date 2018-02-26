@@ -108,14 +108,14 @@ namespace BTCPayServer.Tests
                 timeout.CancelAfter(10000);
                 while (c.Length == 0 || c[0].State != "NORMAL")
                 {
-                    if(timeout.IsCancellationRequested)
+                    if (timeout.IsCancellationRequested)
                     {
                         timeout = new CancellationTokenSource();
                         timeout.CancelAfter(10000);
-                        createdChannel = false;
+                        createdChannel = c.Length == 0;
                         generated = false;
                     }
-                    if(!createdChannel)
+                    if (!createdChannel)
                     {
                         await CustomerEclair.RPC.OpenAsync(clightning, Money.Satoshis(16777215));
                         createdChannel = true;

@@ -27,7 +27,14 @@ namespace BTCPayServer.Configuration
                 throw new FormatException();
             }
             else if (typeof(T) == typeof(Uri))
-                return (T)(object)new Uri(str, UriKind.Absolute);
+                if (string.IsNullOrEmpty(str))
+                {
+                    return defaultValue;
+                }
+                else
+                {
+                    return (T)(object)new Uri(str, UriKind.Absolute);
+                }
             else if (typeof(T) == typeof(string))
                 return (T)(object)str;
             else if (typeof(T) == typeof(IPEndPoint))

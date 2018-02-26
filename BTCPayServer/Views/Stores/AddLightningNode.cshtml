@@ -1,5 +1,4 @@
-﻿@inject BTCPayServer.Services.BTCPayServerEnvironment env
-@model LightningNodeViewModel
+﻿@model LightningNodeViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData["Title"] = "Add lightning node (Experimental)";
@@ -13,12 +12,6 @@
         <div asp-validation-summary="All" class="text-danger"></div>
     </div>
 </div>
-@if(env.IsDevelopping) {
-<div class="alert alert-info alert-dismissible" role="alert">
-    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-    <span>To test during development, please use http://api-token:foiewnccewuify@127.0.0.1:54938/ </span>
-</div>
-}
 
 <div class="alert alert-warning alert-dismissible" role="alert">
     <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -49,8 +42,14 @@
 
             <div class="form-group">
                 <label asp-for="Url"></label>
-                <input asp-for="Url" class="form-control" />
+                <input id="lightningurl" asp-for="Url" class="form-control" />
                 <span asp-validation-for="Url" class="text-danger"></span>
+                @if(Model.InternalLightningNode != null)
+                {
+                    <p class="form-text text-muted">
+                        You can use the internal lightning node by <a href="#" onclick="$('#lightningurl').val('@Model.InternalLightningNode'); return false;">clicking here</a>
+                    </p>
+                }
             </div>
             <button name="command" type="submit" value="save" class="btn btn-success">Submit</button>
             <button name="command" type="submit" value="test" class="btn btn-info">Test connection</button>

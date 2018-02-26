@@ -84,6 +84,8 @@ namespace BTCPayServer.Tests
             config.AppendLine($"ltc.explorer.url={LTCNBXplorerUri.AbsoluteUri}");
             config.AppendLine($"ltc.explorer.cookiefile=0");
 
+            config.AppendLine($"internallightningnode={IntegratedLightning.AbsoluteUri}");
+
             if (Postgres != null)
                 config.AppendLine($"postgres=" + Postgres);
             var confPath = Path.Combine(chainDirectory, "settings.config");
@@ -91,8 +93,8 @@ namespace BTCPayServer.Tests
 
             ServerUri = new Uri("http://" + HostName + ":" + Port + "/");
 
+            Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
             var conf = new DefaultConfiguration() { Logger = Logs.LogProvider.CreateLogger("Console") }.CreateConfiguration(new[] { "--datadir", _Directory, "--conf", confPath });
-
             _Host = new WebHostBuilder()
                     .UseConfiguration(conf)
                     .ConfigureServices(s =>
@@ -124,6 +126,7 @@ namespace BTCPayServer.Tests
             internal set;
         }
         public InvoiceRepository InvoiceRepository { get; private set; }
+        public Uri IntegratedLightning { get; internal set; }
 
         public T GetService<T>()
         {

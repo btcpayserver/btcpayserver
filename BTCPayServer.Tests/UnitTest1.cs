@@ -356,7 +356,32 @@ namespace BTCPayServer.Tests
                     Assert.Equal("complete", localInvoice.Status);
                     Assert.Equal("False", localInvoice.ExceptionStatus.ToString());
                 });
+
+
+                Task.WaitAll(Enumerable.Range(0, 5)
+                    .Select(_ => CanSendLightningPaymentCore(tester, user))
+                    .ToArray());
             }
+        }
+
+        async Task CanSendLightningPaymentCore(ServerTester tester, TestAccount user)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(RandomUtils.GetUInt32() % 5));
+            var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice()
+            {
+                Price = 0.01,
+                Currency = "USD",
+                PosData = "posData",
+                OrderId = "orderId",
+                ItemDesc = "Some description"
+            });
+            await tester.SendLightningPaymentAsync(invoice);
+            await EventuallyAsync(async () =>
+            {
+                var localInvoice = await user.BitPay.GetInvoiceAsync(invoice.Id);
+                Assert.Equal("complete", localInvoice.Status);
+                Assert.Equal("False", localInvoice.ExceptionStatus.ToString());
+            });
         }
 
         [Fact]
@@ -895,7 +920,7 @@ namespace BTCPayServer.Tests
 
         private void Eventually(Action act)
         {
-            CancellationTokenSource cts = new CancellationTokenSource(200000);
+            CancellationTokenSource cts = new CancellationTokenSource(20000);
             while (true)
             {
                 try
@@ -906,6 +931,23 @@ namespace BTCPayServer.Tests
                 catch (XunitException) when (!cts.Token.IsCancellationRequested)
                 {
                     cts.Token.WaitHandle.WaitOne(500);
+                }
+            }
+        }
+
+        private async Task EventuallyAsync(Func<Task> act)
+        {
+            CancellationTokenSource cts = new CancellationTokenSource(20000);
+            while (true)
+            {
+                try
+                {
+                    await act();
+                    break;
+                }
+                catch (XunitException) when (!cts.Token.IsCancellationRequested)
+                {
+                    await Task.Delay(500);
                 }
             }
         }

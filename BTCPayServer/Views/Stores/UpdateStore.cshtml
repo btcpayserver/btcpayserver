@@ -14,7 +14,7 @@
     </div>
 </div>
 <div class="row">
-    <div class="col-md-6">
+    <div class="col-md-8">
         <form method="post">
             <div class="form-group">
                 <label asp-for="Id"></label>
@@ -89,7 +89,7 @@
                         {
                             <tr>
                                 <td>@scheme.Crypto</td>
-                                <td>@scheme.Value</td>
+                                <td style="max-width:400px;overflow:hidden;">@scheme.Value</td>
                             </tr>
                         }
                     </tbody>
@@ -99,7 +99,10 @@
             <div class="form-group">
                 <div class="form-group">
                     <h5>Lightning nodes (Experimental)</h5>
-                    <span>Connection to lightning charge node used to generate lignting network payment</span>
+                    <p>
+                        <span>A connection to a lightning charge node is required to generate lignting network enabled invoices.<br /></span>
+                        <span>This is experimental and not advised for production so keep in mind:</span>
+                    </p>
                 </div>
                 <div class="form-group">
                     <a asp-action="AddLightningNode" class="btn btn-success" role="button"><span class="glyphicon glyphicon-plus"></span>Add or modify a lightning node</a>

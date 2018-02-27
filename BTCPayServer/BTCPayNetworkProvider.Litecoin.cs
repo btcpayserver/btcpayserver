@@ -25,7 +25,7 @@ namespace BTCPayServer
                 UriScheme = "litecoin",
                 DefaultRateProvider = ltcRate,
                 CryptoImagePath = "imlegacy/litecoin-symbol.svg",
-                LightningImagePath = "imlegacy/litecoin-symbol.svg",
+                LightningImagePath = "imlegacy/ltc-lightning.svg",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NBXplorerNetworkProvider.ChainType),
                 CoinType = NBXplorerNetworkProvider.ChainType == ChainType.Main ? new KeyPath("2'") : new KeyPath("3'"),
                 CLightningNetworkName = ChainType == ChainType.Main ? "litecoin" :

@@ -10,7 +10,7 @@ using Newtonsoft.Json;
 
 namespace BTCPayServer.Payments.Lightning.CLightning
 {
-    public class ChargeInvoiceNotification
+    public class ChargeInvoice
     {
         public string Id { get; set; }
 
@@ -42,7 +42,7 @@ namespace BTCPayServer.Payments.Lightning.CLightning
         }
 
         ArraySegment<byte> _Buffer;
-        public async Task<ChargeInvoiceNotification> NextEvent(CancellationToken cancellation = default(CancellationToken))
+        public async Task<ChargeInvoice> NextEvent(CancellationToken cancellation = default(CancellationToken))
         {
             var buffer = _Buffer;
             var array = _Buffer.Array;
@@ -96,10 +96,10 @@ namespace BTCPayServer.Payments.Lightning.CLightning
         }
 
         UTF8Encoding UTF8 = new UTF8Encoding(false, true);
-        private ChargeInvoiceNotification ParseMessage(ArraySegment<byte> buffer)
+        private ChargeInvoice ParseMessage(ArraySegment<byte> buffer)
         {
             var str = UTF8.GetString(buffer.Array, 0, buffer.Count);
-            return JsonConvert.DeserializeObject<ChargeInvoiceNotification>(str, new JsonSerializerSettings());
+            return JsonConvert.DeserializeObject<ChargeInvoice>(str, new JsonSerializerSettings());
         }
 
         private async Task CloseSocketAndThrow(WebSocketCloseStatus status, string description, CancellationToken cancellation)

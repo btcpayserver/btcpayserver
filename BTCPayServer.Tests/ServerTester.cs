@@ -55,19 +55,20 @@ namespace BTCPayServer.Tests
             ExplorerClient = new ExplorerClient(NetworkProvider.GetNetwork("BTC").NBXplorerNetwork, new Uri(GetEnvironment("TESTS_BTCNBXPLORERURL", "http://127.0.0.1:32838/")));
             LTCExplorerClient = new ExplorerClient(NetworkProvider.GetNetwork("LTC").NBXplorerNetwork, new Uri(GetEnvironment("TESTS_LTCNBXPLORERURL", "http://127.0.0.1:32838/")));
 
+            var btc = NetworkProvider.GetNetwork("BTC").NBitcoinNetwork;
+            CustomerEclair = new EclairTester(this, "TEST_ECLAIR", "http://eclair-cli:gpwefwmmewci@127.0.0.1:30992/", "eclair", btc);
+            MerchantCharge = new ChargeTester(this, "TEST_CHARGE", "http://api-token:foiewnccewuify@127.0.0.1:54938/", "lightning-charged", btc);
+
             PayTester = new BTCPayServerTester(Path.Combine(_Directory, "pay"))
             {
                 NBXplorerUri = ExplorerClient.Address,
                 LTCNBXplorerUri = LTCExplorerClient.Address,
-                Postgres = GetEnvironment("TESTS_POSTGRES", "User ID=postgres;Host=127.0.0.1;Port=39372;Database=btcpayserver")
+                Postgres = GetEnvironment("TESTS_POSTGRES", "User ID=postgres;Host=127.0.0.1;Port=39372;Database=btcpayserver"),
+                IntegratedLightning = MerchantCharge.Client.Uri
             };
             PayTester.Port = int.Parse(GetEnvironment("TESTS_PORT", Utils.FreeTcpPort().ToString(CultureInfo.InvariantCulture)), CultureInfo.InvariantCulture);
             PayTester.HostName = GetEnvironment("TESTS_HOSTNAME", "127.0.0.1");
             PayTester.Start();
-
-            var btc = NetworkProvider.GetNetwork("BTC").NBitcoinNetwork;
-            CustomerEclair = new EclairTester(this, "TEST_ECLAIR", "http://eclair-cli:gpwefwmmewci@127.0.0.1:30992/", "eclair", btc);
-            MerchantCharge = new ChargeTester(this, "TEST_CHARGE", "http://api-token:foiewnccewuify@127.0.0.1:54938/", "lightning-charged", btc);
         }
 
 
@@ -98,12 +99,34 @@ namespace BTCPayServer.Tests
                 ExplorerNode.Generate(433 - blockCount.Result);
             }
 
+            // If the channel is not created, let's do it
             if (channels.Result.Length == 0)
             {
-                await CustomerEclair.RPC.OpenAsync(clightning, Money.Satoshis(16777215));
-                while ((await CustomerEclair.RPC.ChannelsAsync())[0].State != "NORMAL")
+                var c = (await CustomerEclair.RPC.ChannelsAsync());
+                bool generated = false;
+                bool createdChannel = false;
+                CancellationTokenSource timeout = new CancellationTokenSource();
+                timeout.CancelAfter(10000);
+                while (c.Length == 0 || c[0].State != "NORMAL")
                 {
-                    ExplorerNode.Generate(1);
+                    if (timeout.IsCancellationRequested)
+                    {
+                        timeout = new CancellationTokenSource();
+                        timeout.CancelAfter(10000);
+                        createdChannel = c.Length == 0;
+                        generated = false;
+                    }
+                    if (!createdChannel)
+                    {
+                        await CustomerEclair.RPC.OpenAsync(clightning, Money.Satoshis(16777215));
+                        createdChannel = true;
+                    }
+                    if (!generated && c.Length != 0 && c[0].State == "WAIT_FOR_FUNDING_CONFIRMED")
+                    {
+                        ExplorerNode.Generate(6);
+                        generated = true;
+                    }
+                    c = (await CustomerEclair.RPC.ChannelsAsync());
                 }
             }
         }

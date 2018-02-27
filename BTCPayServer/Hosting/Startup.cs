@@ -39,6 +39,7 @@ using Microsoft.ApplicationInsights.AspNetCore.Extensions;
 using Microsoft.AspNetCore.Mvc.Cors.Internal;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using System.Net;
+using Meziantou.AspNetCore.BundleTagHelpers;
 
 namespace BTCPayServer.Hosting
 {

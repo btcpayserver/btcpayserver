@@ -287,3 +287,6 @@ __pycache__/
 *.odx.cs
 *.xsd.cs
 /BTCPayServer/Build/dockerfiles
+
+# Bundling JS/CSS
+BTCPayServer/wwwroot/bundles/

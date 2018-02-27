@@ -46,3 +46,15 @@ If you are using Powershell:
 ```
 .\docker-bitcoin-cli.ps1 sendtoaddress "mohu16LH66ptoWGEL1GtP6KHTBJYXMWhEf" 0.23111090
 ```
+
+For sending to litecoin, use .\docker-litecoin-cli.ps1 instead.
+
+## FAQ
+
+`docker-compose up dev` failed or tests are not passing, what should I do?
+
+1. Run `docker-compose down --v` (this will reset your test environment)
+2. Run `docker-compose pull` (this will ensure you have the lastest images)
+3. Run again with `docker-compose up dev`
+
+If you still have issues, try to restart docker.

@@ -9,8 +9,18 @@ using NBitcoin;
 using NBitcoin.JsonConverters;
 using NBitcoin.RPC;
 
-namespace BTCPayServer.Eclair
+namespace BTCPayServer.Payments.Lightning.Eclair
 {
+    public class SendResponse
+    {
+        public string PaymentHash { get; set; }
+    }
+    public class ChannelInfo
+    {
+        public string NodeId { get; set; }
+        public string ChannelId { get; set; }
+        public string State { get; set; }
+    }
     public class EclairRPCClient
     {
         public EclairRPCClient(Uri address, Network network)
@@ -21,7 +31,12 @@ namespace BTCPayServer.Eclair
                 throw new ArgumentNullException(nameof(network));
             Address = address;
             Network = network;
+            if (string.IsNullOrEmpty(address.UserInfo))
+                throw new ArgumentException(paramName: nameof(address), message: "User info in the url should be provided");
+            Password = address.UserInfo;
         }
+
+        public string Password { get; set; }
 
         public Network Network { get; private set; }
 
@@ -107,19 +122,24 @@ namespace BTCPayServer.Eclair
             return await SendCommandAsync<AllChannelResponse[]>(new RPCRequest("allchannels", Array.Empty<object>())).ConfigureAwait(false);
         }
 
-        public string[] Channels()
+        public ChannelInfo[] Channels()
         {
             return ChannelsAsync().GetAwaiter().GetResult();
         }
 
-        public async Task<string[]> ChannelsAsync()
+        public async Task<ChannelInfo[]> ChannelsAsync()
         {
-            return await SendCommandAsync<string[]>(new RPCRequest("channels", Array.Empty<object>())).ConfigureAwait(false);
+            return await SendCommandAsync<ChannelInfo[]>(new RPCRequest("channels", Array.Empty<object>())).ConfigureAwait(false);
         }
 
         public void Close(string channelId)
         {
             CloseAsync(channelId).GetAwaiter().GetResult();
+        }
+
+        public async Task SendAsync(string paymentRequest)
+        {
+            await SendCommandAsync<SendResponse>(new RPCRequest("send", new[] { paymentRequest })).ConfigureAwait(false);
         }
 
         public async Task CloseAsync(string channelId)
@@ -165,6 +185,8 @@ namespace BTCPayServer.Eclair
             var webRequest = (HttpWebRequest)WebRequest.Create(Address.AbsoluteUri);
             webRequest.ContentType = "application/json";
             webRequest.Method = "POST";
+            var auth = Convert.ToBase64String(Encoding.ASCII.GetBytes(Password));
+            webRequest.Headers[HttpRequestHeader.Authorization] = $"Basic {auth}";
             return webRequest;
         }
 
@@ -220,7 +242,7 @@ namespace BTCPayServer.Eclair
                 throw new ArgumentNullException(nameof(node));
             pushAmount = pushAmount ?? LightMoney.Zero;
 
-            var result = await SendCommandAsync(new RPCRequest("open", new object[] { node.NodeId, node.Host, node.Port, fundingSatoshi.Satoshi, pushAmount.MilliSatoshi }));
+            var result = await SendCommandAsync(new RPCRequest("open", new object[] { node.NodeId, fundingSatoshi.Satoshi, pushAmount.MilliSatoshi }));
 
             return result.ResultString;
         }

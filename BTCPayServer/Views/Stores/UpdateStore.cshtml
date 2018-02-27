@@ -14,7 +14,7 @@
     </div>
 </div>
 <div class="row">
-    <div class="col-md-6">
+    <div class="col-md-8">
         <form method="post">
             <div class="form-group">
                 <label asp-for="Id"></label>
@@ -72,7 +72,7 @@
             </div>
             <div class="form-group">
                 <h5>Derivation Scheme</h5>
-                <span>The DerivationScheme represents the destination of the funds received by your invoice.</span>
+                <span>The DerivationScheme represents the destination of the funds received by your invoice on chain.</span>
             </div>
 
             <div class="form-group">
@@ -86,14 +86,44 @@
                     </thead>
                     <tbody>
                         @foreach(var scheme in Model.DerivationSchemes)
-                {
-                    <tr>
-                        <td>@scheme.Crypto</td>
-                        <td>@scheme.Value</td>
-                    </tr>
-        }
+                        {
+                            <tr>
+                                <td>@scheme.Crypto</td>
+                                <td style="max-width:400px;overflow:hidden;">@scheme.Value</td>
+                            </tr>
+                        }
                     </tbody>
                 </table>
+            </div>
+
+            <div class="form-group">
+                <div class="form-group">
+                    <h5>Lightning nodes (Experimental)</h5>
+                    <p>
+                        <span>A connection to a lightning charge node is required to generate lignting network enabled invoices.<br /></span>
+                        <span>This is experimental and not advised for production so keep in mind:</span>
+                    </p>
+                </div>
+                <div class="form-group">
+                    <a asp-action="AddLightningNode" class="btn btn-success" role="button"><span class="glyphicon glyphicon-plus"></span>Add or modify a lightning node</a>
+                    <table class="table">
+                        <thead class="thead-inverse">
+                            <tr>
+                                <th>Crypto</th>
+                                <th>Address</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach(var scheme in Model.LightningNodes)
+                            {
+                                <tr>
+                                    <td>@scheme.CryptoCode</td>
+                                    <td>@scheme.Address</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </div>
             <button name="command" type="submit" class="btn btn-success" value="Save">Save</button>
         </form>

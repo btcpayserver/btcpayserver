@@ -17,12 +17,26 @@ namespace BTCPayServer.Payments
                 return BTCPayServer.DerivationStrategy.Parse(((JValue)value).Value<string>(), network);
             }
             //////////
-            else // if(paymentMethodId.PaymentType == PaymentTypes.Lightning)
+            else if (paymentMethodId.PaymentType == PaymentTypes.LightningLike)
             {
-                // return JsonConvert.Deserialize<T>();
+                return JsonConvert.DeserializeObject<Payments.Lightning.LightningSupportedPaymentMethod>(value.ToString());
             }
             throw new NotSupportedException();
         }
+
+        public static IPaymentMethodDetails DeserializePaymentMethodDetails(PaymentMethodId paymentMethodId, JObject jobj)
+        {
+            if(paymentMethodId.PaymentType == PaymentTypes.BTCLike)
+            {
+                return JsonConvert.DeserializeObject<Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod>(jobj.ToString());
+            }
+            if (paymentMethodId.PaymentType == PaymentTypes.LightningLike)
+            {
+                return JsonConvert.DeserializeObject<Payments.Lightning.LightningLikePaymentMethodDetails>(jobj.ToString());
+            }
+            throw new NotSupportedException(paymentMethodId.PaymentType.ToString());
+        }
+
 
         public static JToken Serialize(ISupportedPaymentMethod factory)
         {
@@ -39,5 +53,6 @@ namespace BTCPayServer.Payments
             }
             throw new NotSupportedException();
         }
+
     }
 }

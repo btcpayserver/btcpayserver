@@ -83,12 +83,23 @@ namespace BTCPayServer.Controllers
                                                .Select(c =>
                                                 (Handler: (IPaymentMethodHandler)_ServiceProvider.GetService(typeof(IPaymentMethodHandler<>).MakeGenericType(c.GetType())),
                                                 SupportedPaymentMethod: c,
-                                                Network: _NetworkProvider.GetNetwork(c.PaymentId.CryptoCode)))
-                                                .Where(c =>
-                                                        c.Network != null &&
-                                                        c.Handler.IsAvailable(c.SupportedPaymentMethod, c.Network))
-                                                .ToArray();
-            if (supportedPaymentMethods.Length == 0)
+                                                Network: _NetworkProvider.GetNetwork(c.PaymentId.CryptoCode),
+                                                IsAvailable: Task.FromResult(false)))
+                                                .Where(c => c.Network != null)
+                                                .Select(c => 
+                                                {
+                                                    c.IsAvailable = c.Handler.IsAvailable(c.SupportedPaymentMethod, c.Network);
+                                                    return c;
+                                                })
+                                                .ToList();
+            foreach(var supportedPaymentMethod in supportedPaymentMethods.ToList())
+            {
+                if(!await supportedPaymentMethod.IsAvailable)
+                {
+                    supportedPaymentMethods.Remove(supportedPaymentMethod);
+                }
+            }
+            if (supportedPaymentMethods.Count == 0)
                 throw new BitpayHttpException(400, "No derivation strategy are available now for this store");
             var entity = new InvoiceEntity
             {
@@ -127,6 +138,7 @@ namespace BTCPayServer.Controllers
                         {
                             var rate = await storeBlob.ApplyRateRules(o.Network, _RateProviders.GetRateProvider(o.Network, false)).GetRateAsync(invoice.Currency);
                             PaymentMethod paymentMethod = new PaymentMethod();
+                            paymentMethod.ParentEntity = entity;
                             paymentMethod.SetId(o.SupportedPaymentMethod.PaymentId);
                             paymentMethod.Rate = rate;
                             var paymentDetails = await o.Handler.CreatePaymentMethodDetails(o.SupportedPaymentMethod, paymentMethod, o.Network);
@@ -151,7 +163,7 @@ namespace BTCPayServer.Controllers
 #pragma warning disable CS0618
             // Legacy Bitpay clients expect information for BTC information, even if the store do not support it
             var legacyBTCisSet = paymentMethods.Any(p => p.GetId().IsBTCOnChain);
-            if (!legacyBTCisSet)
+            if (!legacyBTCisSet && _NetworkProvider.BTC != null)
             {
                 var btc = _NetworkProvider.BTC;
                 var feeProvider = ((IFeeProviderFactory)_ServiceProvider.GetService(typeof(IFeeProviderFactory))).CreateFeeProvider(btc);

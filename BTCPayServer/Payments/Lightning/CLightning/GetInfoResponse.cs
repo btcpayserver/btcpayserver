@@ -2,17 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using NBitcoin;
-using Newtonsoft.Json;
 
-namespace BTCPayServer.Eclair
+namespace BTCPayServer.Payments.Lightning.CLightning
 {
     public class GetInfoResponse
     {
-        public string NodeId { get; set; }
-        public string Alias { get; set; }
+        public string Id { get; set; }
         public int Port { get; set; }
-        public uint256 ChainHash { get; set; }
+        public string[] Address { get; set; }
+        public string Version { get; set; }
         public int BlockHeight { get; set; }
+        public string Network { get; set; }
     }
 }

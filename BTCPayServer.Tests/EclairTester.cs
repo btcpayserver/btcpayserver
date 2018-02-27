@@ -2,17 +2,18 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-using BTCPayServer.Eclair;
+using BTCPayServer.Payments.Lightning.Eclair;
+using NBitcoin;
 
 namespace BTCPayServer.Tests
 {
     public class EclairTester
     {
         ServerTester parent;
-        public EclairTester(ServerTester parent, string environmentName, string defaultRPC, string defaultHost)
+        public EclairTester(ServerTester parent, string environmentName, string defaultRPC, string defaultHost, Network network)
         {
             this.parent = parent;
-            //RPC = new EclairRPCClient(new Uri(parent.GetEnvironment(environmentName, defaultRPC)), parent.Network);
+            RPC = new EclairRPCClient(new Uri(parent.GetEnvironment(environmentName, defaultRPC)), network);
             P2PHost = parent.GetEnvironment(environmentName + "_HOST", defaultHost);
         }
 
@@ -33,5 +34,6 @@ namespace BTCPayServer.Tests
         {
             return GetNodeInfoAsync().GetAwaiter().GetResult();
         }
+
     }
 }

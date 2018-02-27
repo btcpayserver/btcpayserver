@@ -7,9 +7,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Build\dockerfiles\**" />
+    <Compile Remove="wwwroot\bundles\jqueryvalidate\**" />
     <Content Remove="Build\dockerfiles\**" />
+    <Content Remove="wwwroot\bundles\jqueryvalidate\**" />
     <EmbeddedResource Remove="Build\dockerfiles\**" />
+    <EmbeddedResource Remove="wwwroot\bundles\jqueryvalidate\**" />
     <None Remove="Build\dockerfiles\**" />
+    <None Remove="wwwroot\bundles\jqueryvalidate\**" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Currencies.txt" />
@@ -104,8 +108,6 @@
 
 	<ItemGroup>
 	  <Folder Include="Build\" />
-	  <Folder Include="wwwroot\bundles\main\" />
-	  <Folder Include="wwwroot\bundles\jqueryvalidate\" />
 	  <Folder Include="wwwroot\vendor\clipboard.js\" />
 	</ItemGroup>
 

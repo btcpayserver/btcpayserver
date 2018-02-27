@@ -289,4 +289,5 @@ __pycache__/
 /BTCPayServer/Build/dockerfiles
 
 # Bundling JS/CSS
-BTCPayServer/wwwroot/bundles/
+BTCPayServer/wwwroot/bundles/*
+!BTCPayServer/wwwroot/bundles/.gitignore

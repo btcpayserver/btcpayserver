@@ -101,13 +101,6 @@ namespace BTCPayServer.Hosting
             //        l.UseHttps("devtest.pfx", "toto");
             //    });
             //});
-
-            // bundling
-            services.AddBundles(options =>
-            {
-                options.UseMinifiedFiles = Environment.GetEnvironmentVariable("BTCPAY_BUNDLEJSCSS") == "true";
-                options.AppendVersion = true;
-            });
         }
 
         // Big hack, tests fails if only call AddHangfire because Hangfire fail at initializing at the second test run

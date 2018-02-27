@@ -287,5 +287,7 @@ __pycache__/
 *.odx.cs
 *.xsd.cs
 /BTCPayServer/Build/dockerfiles
-.DS_Store
-BTCPayServer/wwwroot/vendor/bootstrap/css/bootstrap.css
+
+# Bundling JS/CSS
+BTCPayServer/wwwroot/bundles/*
+!BTCPayServer/wwwroot/bundles/.gitignore

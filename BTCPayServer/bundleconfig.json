@@ -1,0 +1,31 @@
+[
+    {
+        "outputFileName": "wwwroot/bundles/main-bundle.min.css",
+        "inputFiles": [
+            "wwwroot/vendor/bootstrap/css/bootstrap.css",
+            "wwwroot/vendor/magnific-popup/magnific-popup.css",
+            "wwwroot/css/creative.css",
+            "wwwroot/css/site.css",
+            "wwwroot/vendor/animatecss/animate.css"
+        ]
+    },
+    {
+        "outputFileName": "wwwroot/bundles/main-bundle.min.js",
+        "inputFiles": [
+            "wwwroot/vendor/jquery/jquery.js",
+            "wwwroot/vendor/popper/popper.js",
+            "wwwroot/vendor/bootstrap/js/bootstrap.js",
+            "wwwroot/vendor/jquery-easing/jquery.easing.js",
+            "wwwroot/vendor/scrollreveal/scrollreveal.min.js",
+            "wwwroot/vendor/magnific-popup/jquery.magnific-popup.js",
+            "wwwroot/js/creative.js"
+        ]
+    },
+    {
+        "outputFileName": "wwwroot/bundles/jqueryvalidate-bundle.min.js",
+        "inputFiles": [
+            "wwwroot/vendor/jquery-validate/jquery.validate.js",
+            "wwwroot/vendor/jquery-validate-unobtrusive/jquery.validate.unobtrusive.js"
+        ]
+    }
+]

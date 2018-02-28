@@ -44,6 +44,7 @@
                 <thead class="thead-inverse">
                     <tr>
                         <th>Date</th>
+                        <th>OrderId</th>
                         <th>InvoiceId</th>
                         <th>Status</th>
                         <th>Amount</th>
@@ -55,6 +56,7 @@
                     {
                         <tr>
                             <td>@invoice.Date</td>
+                            <td>@invoice.OrderId</td>
                             <td>@invoice.InvoiceId</td>
                             @if(invoice.Status == "paid")
                             {

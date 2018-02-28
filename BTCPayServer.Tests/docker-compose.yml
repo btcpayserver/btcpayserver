@@ -28,7 +28,7 @@ services:
 
   # The dev container is not actually used, it is just handy to run `docker-compose up dev` to start all services
   dev: 
-    image: nicolasdorier/docker-bitcoin:0.15.0.1
+    image: nicolasdorier/docker-bitcoin:0.16.0
     environment:
       BITCOIN_EXTRA_ARGS: |
         regtest=1
@@ -40,7 +40,7 @@ services:
       - lightning-charged
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:1.0.1.14
+    image: nicolasdorier/nbxplorer:1.0.1.16
     ports:
       - "32838:32838"
     expose: 
@@ -65,7 +65,7 @@ services:
 
   bitcoind:
     container_name: btcpayserver_dev_bitcoind
-    image: nicolasdorier/docker-bitcoin:0.15.0.1
+    image: nicolasdorier/docker-bitcoin:0.16.0
     environment:
       BITCOIN_EXTRA_ARGS: |
         rpcuser=ceiwHEbqWI83
@@ -78,6 +78,8 @@ services:
         zmqpubrawblock=tcp://0.0.0.0:29000
         zmqpubrawtx=tcp://0.0.0.0:29000
         txindex=1
+        # Eclair is still using addwitnessaddress
+        deprecatedrpc=addwitnessaddress 
     ports: 
       - "43782:43782"
     expose:

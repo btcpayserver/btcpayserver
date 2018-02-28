@@ -64,7 +64,7 @@ namespace BTCPayServer.Payments.Lightning
             {
                 throw new Exception($"Error while connecting to the lightning charge {client.Uri} ({ex.Message})");
             }
-            var address = info.Address?.FirstOrDefault();
+            var address = info.Address.Select(a=>a.Address).FirstOrDefault();
             var port = info.Port;
             address = address ?? client.Uri.DnsSafeHost;
 

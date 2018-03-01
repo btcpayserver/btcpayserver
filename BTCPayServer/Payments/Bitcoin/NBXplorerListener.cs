@@ -279,7 +279,7 @@ namespace BTCPayServer.Payments.Bitcoin
                     }
                     else
                     {
-                        // Take the most recent (bitcoin node would not forward a conflict without a successfull RBF)
+                        // Take the most recent (bitcoin node would not forward a conflict without a successful RBF)
                         _Winner = Transactions
                                 .OrderByDescending(t => t.Value.Timestamp)
                                 .First()

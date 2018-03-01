@@ -93,11 +93,6 @@ namespace BTCPayServer.Tests
             var clightning = new NodeInfo(info.Id, MerchantCharge.P2PHost, info.Port);
             var connect = CustomerEclair.RPC.ConnectAsync(clightning);
             await Task.WhenAll(blockCount, customer, channels, connect);
-            // Mine until segwit is activated
-            if (blockCount.Result <= 432)
-            {
-                ExplorerNode.Generate(433 - blockCount.Result);
-            }
 
             // If the channel is not created, let's do it
             if (channels.Result.Length == 0)

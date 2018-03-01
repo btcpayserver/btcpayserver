@@ -64,7 +64,7 @@ namespace BTCPayServer.Payments.Lightning
             {
                 throw new Exception($"Error while connecting to the lightning charge {client.Uri} ({ex.Message})");
             }
-            var address = info.Address?.FirstOrDefault();
+            var address = info.Address.Select(a=>a.Address).FirstOrDefault();
             var port = info.Port;
             address = address ?? client.Uri.DnsSafeHost;
 
@@ -73,9 +73,10 @@ namespace BTCPayServer.Payments.Lightning
                 throw new Exception($"Lightning node network {info.Network}, but expected is {network.CLightningNetworkName}");
             }
 
-            if (Math.Abs(info.BlockHeight - (await status).ChainHeight) > 10)
+            var blocksGap = Math.Abs(info.BlockHeight - (await status).ChainHeight);
+            if (blocksGap > 10)
             {
-                throw new Exception($"The lightning node is not synched");
+                throw new Exception($"The lightning is not synched ({blocksGap} blocks)");
             }
 
             try
@@ -84,7 +85,7 @@ namespace BTCPayServer.Payments.Lightning
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error while connecting to the lightning node via {address} ({ex.Message})");
+                throw new Exception($"Error while connecting to the lightning node via {address}:{port} ({ex.Message})");
             }
         }
 

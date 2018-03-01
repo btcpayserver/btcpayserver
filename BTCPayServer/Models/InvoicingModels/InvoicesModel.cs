@@ -33,11 +33,12 @@ namespace BTCPayServer.Models.InvoicingModels
 
     public class InvoiceModel
     {
-        public DateTimeOffset Date
+        public string Date
         {
             get; set;
         }
 
+        public string OrderId { get; set; }
         public string InvoiceId
         {
             get; set;

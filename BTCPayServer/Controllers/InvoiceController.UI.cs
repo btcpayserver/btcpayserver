@@ -345,8 +345,9 @@ namespace BTCPayServer.Controllers
                 model.Invoices.Add(new InvoiceModel()
                 {
                     Status = invoice.Status,
-                    Date = invoice.InvoiceTime,
+                    Date = Prettify(invoice.InvoiceTime),
                     InvoiceId = invoice.Id,
+                    OrderId = invoice.OrderId ?? string.Empty,
                     AmountCurrency = $"{invoice.ProductInformation.Price.ToString(CultureInfo.InvariantCulture)} {invoice.ProductInformation.Currency}"
                 });
             }
@@ -354,6 +355,30 @@ namespace BTCPayServer.Controllers
             model.Count = count;
             model.StatusMessage = StatusMessage;
             return View(model);
+        }
+
+        private string Prettify(DateTimeOffset invoiceTime)
+        {
+            var ago = DateTime.UtcNow - invoiceTime;
+
+            if(ago.TotalMinutes < 1)
+            {
+                return $"{(int)ago.TotalSeconds} second{Plural((int)ago.TotalSeconds)} ago";
+            }
+            if (ago.TotalHours < 1)
+            {
+                return $"{(int)ago.TotalMinutes} minute{Plural((int)ago.TotalMinutes)} ago";
+            }
+            if (ago.Days < 1)
+            {
+                return $"{(int)ago.TotalHours} hour{Plural((int)ago.TotalHours)} ago";
+            }
+            return $"{(int)ago.TotalDays} day{Plural((int)ago.TotalDays)} ago";
+        }
+
+        private string Plural(int totalDays)
+        {
+            return totalDays > 1 ? "s" : string.Empty;
         }
 
         [HttpGet]

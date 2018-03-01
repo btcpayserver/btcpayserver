@@ -85,7 +85,7 @@ namespace BTCPayServer.Payments.Lightning
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error while connecting to the lightning node via {address} ({ex.Message})");
+                throw new Exception($"Error while connecting to the lightning node via {address}:{port} ({ex.Message})");
             }
         }
 

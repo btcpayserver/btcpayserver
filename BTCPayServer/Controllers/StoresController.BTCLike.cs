@@ -224,17 +224,20 @@ namespace BTCPayServer.Controllers
 
                 if (command == "sendtoaddress")
                 {
+                    if(!_Dashboard.IsFullySynched(network.CryptoCode, out var summary))
+                        throw new Exception($"{network.CryptoCode}: not started or fully synched");
                     var strategy = GetDirectDerivationStrategy(store, network);
                     var strategyBase = GetDerivationStrategy(store, network);
                     var wallet = _WalletProvider.GetWallet(network);
                     var change = wallet.GetChangeAddressAsync(strategyBase);
+                    
                     var unspentCoins = await wallet.GetUnspentCoins(strategyBase);
                     var changeAddress = await change;
                     var transaction = await hw.SendToAddress(strategy, unspentCoins, network,
                                             new[] { (destinationAddress as IDestination, amountBTC, subsctractFeesValue) },
                                             feeRateValue,
                                             changeAddress.Item1,
-                                            changeAddress.Item2);
+                                            changeAddress.Item2, summary.Status.BitcoinStatus.MinRelayTxFee);
                     try
                     {
                         var broadcastResult = await wallet.BroadcastTransactionsAsync(new List<Transaction>() { transaction });

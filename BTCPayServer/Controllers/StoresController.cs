@@ -1,6 +1,7 @@
 ﻿using BTCPayServer.Authentication;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Services;
@@ -31,6 +32,7 @@ namespace BTCPayServer.Controllers
     public partial class StoresController : Controller
     {
         public StoresController(
+            NBXplorerDashboard dashboard,
             IServiceProvider serviceProvider,
             BTCPayServerOptions btcpayServerOptions,
             BTCPayServerEnvironment btcpayEnv,
@@ -45,6 +47,7 @@ namespace BTCPayServer.Controllers
             IFeeProviderFactory feeRateProvider,
             IHostingEnvironment env)
         {
+            _Dashboard = dashboard;
             _Repo = repo;
             _TokenRepository = tokenRepo;
             _UserManager = userManager;
@@ -59,6 +62,7 @@ namespace BTCPayServer.Controllers
             _BtcpayServerOptions = btcpayServerOptions;
             _BTCPayEnv = btcpayEnv;
         }
+        NBXplorerDashboard _Dashboard;
         BTCPayServerOptions _BtcpayServerOptions;
         BTCPayServerEnvironment _BTCPayEnv;
         IServiceProvider _ServiceProvider;

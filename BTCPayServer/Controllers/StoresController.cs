@@ -516,7 +516,7 @@ namespace BTCPayServer.Controllers
             var pairingResult = await _TokenRepository.PairWithStoreAsync(pairingCode, store.Id);
             if (pairingResult == PairingResult.Complete || pairingResult == PairingResult.Partial)
             {
-                StatusMessage = "Pairing is successfull";
+                StatusMessage = "Pairing is successful";
                 if (pairingResult == PairingResult.Partial)
                     StatusMessage = "Server initiated pairing code: " + pairingCode;
                 return RedirectToAction(nameof(ListTokens), new

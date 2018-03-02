@@ -197,7 +197,7 @@ namespace BTCPayServer.Controllers
                     {
                         subsctractFeesValue = bool.Parse(substractFees);
                     }
-                    catch { throw new FormatException("Invalid value for substract fees"); }
+                    catch { throw new FormatException("Invalid value for subtract fees"); }
                 }
                 if (command == "test")
                 {

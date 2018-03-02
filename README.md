@@ -23,3 +23,5 @@ This solution is for you if:
 ## Documentation
 
 Please check out our [complete documentation](https://github.com/btcpayserver/btcpayserver-doc) for more details.
+
+You can also checkout [The Merchants Guide to accepting Bitcoin directly with no intermediates through BTCPay](https://www.reddit.com/r/Bitcoin/comments/81h1oy/the_merchants_guide_to_accepting_bitcoin_directly/).

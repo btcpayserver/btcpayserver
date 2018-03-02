@@ -41,9 +41,11 @@ namespace BTCPayServer.HostedServices
             return _Summaries.All(s => s.Value.Status != null && s.Value.Status.IsFullySynched);
         }
 
-        public bool IsFullySynched(string cryptoCode)
+        public bool IsFullySynched(string cryptoCode, out NBXplorerSummary summary)
         {
-            return _Summaries.Any(s => s.Key.Equals(cryptoCode, StringComparison.OrdinalIgnoreCase) && s.Value.Status != null && s.Value.Status.IsFullySynched);
+            return _Summaries.TryGetValue(cryptoCode, out summary) && 
+                   summary.Status != null && 
+                   summary.Status.IsFullySynched;
         }
 
         public IEnumerable<NBXplorerSummary> GetAll()

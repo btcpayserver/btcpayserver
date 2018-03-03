@@ -27,5 +27,23 @@
             "wwwroot/vendor/jquery-validate/jquery.validate.js",
             "wwwroot/vendor/jquery-validate-unobtrusive/jquery.validate.unobtrusive.js"
         ]
+    },
+    {
+        "outputFileName": "wwwroot/bundles/checkout-bundle.min.css",
+        "inputFiles": [
+            "wwwroot/vendor/font-awesome/css/font-awesome.css",
+            "wwwroot/css/css.css",
+            "wwwroot/css/normalizer.css"
+        ]
+    },
+    {
+        "outputFileName": "wwwroot/bundles/checkout-bundle.min.js",
+        "inputFiles": [
+            "wwwroot/vendor/clipboard.js/clipboard.js",
+            "wwwroot/vendor/jquery/jquery.js",
+            "wwwroot/js/vue.min.js",
+            "wwwroot/js/vue-qrcode.js",
+            "wwwroot/js/core.js"
+        ]
     }
 ]

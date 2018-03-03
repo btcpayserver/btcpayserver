@@ -1,4 +1,5 @@
-﻿@model PaymentModel
+﻿@addTagHelper *, Meziantou.AspNetCore.BundleTagHelpers
+@model PaymentModel
 @{
     Layout = null;
     ViewData["Title"] = "Payment";
@@ -12,18 +13,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <title>BTCPay Invoice</title>
 
-    <link href="~/vendor/font-awesome/css/font-awesome.css" rel="stylesheet" />
-    <link href="~/css/css.css" rel="stylesheet" type="text/css">
-    <link href="~/css/normalizer.css" rel="stylesheet" type="text/css">
+    <bundle name="wwwroot/bundles/checkout-bundle.min.css" />
 
     <script type="text/javascript">
 		@Model.ToJSVariableModel("srvModel")
     </script>
-    <script src="~/vendor/clipboard.js/clipboard.js"></script>
-    <script src="~/vendor/jquery/jquery.js"></script>
-    <script src="~/js/vue.min.js" type="text/javascript"></script>
-    <script src="~/js/vue-qrcode.js" type="text/javascript"></script>
-    <script src="~/js/core.js" type="text/javascript" defer="defer"></script>
+
+    <bundle name="wwwroot/bundles/checkout-bundle.min.js" />
 </head>
 <body style="background: #E4E4E4">
     <noscript>
@@ -72,7 +68,7 @@
                                             <bp-spinner>
                                                 <svg xml:space="preserve" style="enable-background:new 0 0 50 50;" version="1.1" viewBox="0 0 50 50" x="0px" xmlns="http://www.w3.org/2000/svg" y="0px">
                                                 <path d="M11.1,29.6c-0.5-1.5-0.8-3-0.8-4.6c0-8.1,6.6-14.7,14.7-14.7S39.7,16.9,39.7,25c0,1.6-0.3,3.2-0.8,4.6l6.1,2c0.7-2.1,1.1-4.3,1.1-6.6c0-11.7-9.5-21.2-21.2-21.2S3.8,13.3,3.8,25c0,2.3,0.4,4.5,1.1,6.6L11.1,29.6z"></path>
-                        </svg>
+                                                </svg>
                                             </bp-spinner>
                                         </div>
                                         <div class="timer-row__message">
@@ -88,6 +84,26 @@
                                     </div>
                                 </div>
                                 <div class="order-details">
+                                    @if (Model.AvailableCryptos.Count > 1)
+                                    {
+                                        <div class="currency-selection">
+                                            <div class="single-item-order__left">
+                                                <div style="font-weight: 600;">
+                                                    Currency Selection
+                                                </div>
+                                            </div>
+                                            <div class="single-item-order__right">
+                                                <div>
+                                                    @foreach (var crypto in Model.AvailableCryptos)
+                                                    {
+                                                        <a href="@crypto.Link" onclick="return changeCurrency('@crypto.PaymentMethodId');">
+                                                            <img style="height:32px; margin-left:5px;" alt="@crypto.PaymentMethodId" src="@crypto.CryptoImage" />
+                                                        </a>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
                                     <!---->
                                     <div class="single-item-order buyerTotalLine">
                                         <div class="single-item-order__left">
@@ -162,6 +178,13 @@
                                                 <span class="glyphicon glyphicon-new-window"></span>
                                             </a>
                                         </div>
+                                    </div>
+                                    <div class="payment__spinner">
+                                        <bp-spinner>
+                                            <svg xml:space="preserve" style="enable-background:new 0 0 50 50;" version="1.1" viewBox="0 0 50 50" x="0px" xmlns="http://www.w3.org/2000/svg" y="0px">
+                                            <path d="M11.1,29.6c-0.5-1.5-0.8-3-0.8-4.6c0-8.1,6.6-14.7,14.7-14.7S39.7,16.9,39.7,25c0,1.6-0.3,3.2-0.8,4.6l6.1,2c0.7-2.1,1.1-4.3,1.1-6.6c0-11.7-9.5-21.2-21.2-21.2S3.8,13.3,3.8,25c0,2.3,0.4,4.5,1.1,6.6L11.1,29.6z"></path>
+                                                </svg>
+                                        </bp-spinner>
                                     </div>
                                     <div class="bp-view payment manual-flow enter-contact-email active" id="emailAddressView">
                                         <form class="manual__step-one refund-address-form contact-email-form" id="emailAddressForm" name="emailAddressForm" novalidate="">
@@ -600,23 +623,27 @@
                             </div>
                         </div>
                     </div>
-                    <div class="footer">
-                        <div class="footer__item no-hover" style="opacity: 1; padding-left: 0; max-height: 21px;">
-                            @if(Model.AvailableCryptos.Count > 1)
-                            {
-                                <div style="text-align:center">Accepted here</div>
-                                <div style="text-align:center">
-                                    @foreach(var crypto in Model.AvailableCryptos)
-                                    {
-                                        <a style="text-decoration:none;" href="@crypto.Link" onclick="srvModel.paymentMethodId='@crypto.PaymentMethodId'; fetchStatus(); return false;"><img style="height:32px; margin-right:5px; margin-left:5px;" alt="@crypto.PaymentMethodId" src="@crypto.CryptoImage" /></a>
-                                    }
-                                </div>
-                            }
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
     </invoice>
+    <script type="text/javascript">
+        // TODO: Move all logic from core.js to Vue controller
+        Vue.config.ignoredElements = [
+            'line-items',
+            'low-fee-timeline',
+            // Ignoring custom HTML5 elements, eg: bp-spinner
+            /^bp-/
+        ];
+        var checkoutCtrl = new Vue({
+            el: '#checkoutCtrl',
+            components: {
+                qrcode: VueQr
+            },
+            data: {
+                srvModel: srvModel
+            }
+        });
+    </script>
 </body>
 </html>

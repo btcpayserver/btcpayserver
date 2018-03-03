@@ -10498,6 +10498,7 @@ All mobile class names should be prefixed by m- */
     min-height: 575px;
 }
 
+.paid .currency-selection,
 .expired .order-details,
 .archived .order-details {
     display: none;

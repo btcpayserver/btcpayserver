@@ -23,7 +23,7 @@
     <script src="~/vendor/jquery/jquery.js"></script>
     <script src="~/js/vue.min.js" type="text/javascript"></script>
     <script src="~/js/vue-qrcode.js" type="text/javascript"></script>
-    <script src="~/js/core.js" type="text/javascript" defer="defer"></script>
+    <script src="~/js/core.js" type="text/javascript"></script>
 </head>
 <body style="background: #E4E4E4">
     <noscript>
@@ -631,5 +631,23 @@
             </div>
         </div>
     </invoice>
+    <script type="text/javascript">
+        // TODO: Move all logic from core.js to Vue controller
+        Vue.config.ignoredElements = [
+            'line-items',
+            'low-fee-timeline',
+            // Ignoring custom HTML5 elements, eg: bp-spinner
+            /^bp-/
+        ];
+        var checkoutCtrl = new Vue({
+            el: '#checkoutCtrl',
+            components: {
+                qrcode: VueQr
+            },
+            data: {
+                srvModel: srvModel
+            }
+        });
+    </script>
 </body>
 </html>

@@ -72,7 +72,7 @@
                                             <bp-spinner>
                                                 <svg xml:space="preserve" style="enable-background:new 0 0 50 50;" version="1.1" viewBox="0 0 50 50" x="0px" xmlns="http://www.w3.org/2000/svg" y="0px">
                                                 <path d="M11.1,29.6c-0.5-1.5-0.8-3-0.8-4.6c0-8.1,6.6-14.7,14.7-14.7S39.7,16.9,39.7,25c0,1.6-0.3,3.2-0.8,4.6l6.1,2c0.7-2.1,1.1-4.3,1.1-6.6c0-11.7-9.5-21.2-21.2-21.2S3.8,13.3,3.8,25c0,2.3,0.4,4.5,1.1,6.6L11.1,29.6z"></path>
-                        </svg>
+                                                </svg>
                                             </bp-spinner>
                                         </div>
                                         <div class="timer-row__message">
@@ -87,6 +87,26 @@
                                         <div class="timer-row__time-left">@Model.TimeLeft</div>
                                     </div>
                                 </div>
+                                @if (Model.AvailableCryptos.Count > 1)
+                                {
+                                    <div class="currency-selection">
+                                        <div class="single-item-order__left">
+                                            <div style="font-weight: 600;">
+                                                Currency Selection
+                                            </div>
+                                        </div>
+                                        <div class="single-item-order__right">
+                                            <div>
+                                                @foreach (var crypto in Model.AvailableCryptos)
+                                                {
+                                                    <a href="@crypto.Link" onclick="return changeCurrency('@crypto.PaymentMethodId');">
+                                                        <img style="height:32px; margin-left:5px;" alt="@crypto.PaymentMethodId" src="@crypto.CryptoImage" />
+                                                    </a>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
                                 <div class="order-details">
                                     <!---->
                                     <div class="single-item-order buyerTotalLine">
@@ -598,20 +618,6 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                    <div class="footer">
-                        <div class="footer__item no-hover" style="opacity: 1; padding-left: 0; max-height: 21px;">
-                            @if(Model.AvailableCryptos.Count > 1)
-                            {
-                                <div style="text-align:center">Accepted here</div>
-                                <div style="text-align:center">
-                                    @foreach(var crypto in Model.AvailableCryptos)
-                                    {
-                                        <a style="text-decoration:none;" href="@crypto.Link" onclick="srvModel.paymentMethodId='@crypto.PaymentMethodId'; fetchStatus(); return false;"><img style="height:32px; margin-right:5px; margin-left:5px;" alt="@crypto.PaymentMethodId" src="@crypto.CryptoImage" /></a>
-                                    }
-                                </div>
-                            }
                         </div>
                     </div>
                 </div>

@@ -197,6 +197,12 @@ function onDataCallback(jsonData) {
     checkoutCtrl.srvModel = jsonData;
 }
 
+function changeCurrency(currency) {
+    srvModel.paymentMethodId = currency;
+    fetchStatus();
+    return false;
+}
+
 function fetchStatus() {
     var path = srvModel.serverUrl + "/i/" + srvModel.invoiceId + "/" + srvModel.paymentMethodId + "/status";
     $.ajax({

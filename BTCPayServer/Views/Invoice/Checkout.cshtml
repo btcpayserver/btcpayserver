@@ -87,27 +87,27 @@
                                         <div class="timer-row__time-left">@Model.TimeLeft</div>
                                     </div>
                                 </div>
-                                @if (Model.AvailableCryptos.Count > 1)
-                                {
-                                    <div class="currency-selection">
-                                        <div class="single-item-order__left">
-                                            <div style="font-weight: 600;">
-                                                Currency Selection
-                                            </div>
-                                        </div>
-                                        <div class="single-item-order__right">
-                                            <div>
-                                                @foreach (var crypto in Model.AvailableCryptos)
-                                                {
-                                                    <a href="@crypto.Link" onclick="return changeCurrency('@crypto.PaymentMethodId');">
-                                                        <img style="height:32px; margin-left:5px;" alt="@crypto.PaymentMethodId" src="@crypto.CryptoImage" />
-                                                    </a>
-                                                }
-                                            </div>
-                                        </div>
-                                    </div>
-                                }
                                 <div class="order-details">
+                                    @if (Model.AvailableCryptos.Count > 1)
+                                    {
+                                        <div class="currency-selection">
+                                            <div class="single-item-order__left">
+                                                <div style="font-weight: 600;">
+                                                    Currency Selection
+                                                </div>
+                                            </div>
+                                            <div class="single-item-order__right">
+                                                <div>
+                                                    @foreach (var crypto in Model.AvailableCryptos)
+                                                    {
+                                                        <a href="@crypto.Link" onclick="return changeCurrency('@crypto.PaymentMethodId');">
+                                                            <img style="height:32px; margin-left:5px;" alt="@crypto.PaymentMethodId" src="@crypto.CryptoImage" />
+                                                        </a>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
                                     <!---->
                                     <div class="single-item-order buyerTotalLine">
                                         <div class="single-item-order__left">

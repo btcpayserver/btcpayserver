@@ -193,13 +193,23 @@ function onDataCallback(jsonData) {
         window.parent.postMessage({ "invoiceId": srvModel.invoiceId, "status": newStatus }, "*");
     }
 
+    // restoring qr code view only when currency is switched
+    if (jsonData.paymentMethodId == srvModel.paymentMethodId) {
+        $("#scan").show();
+        $(".payment__spinner").hide();
+    }
+
     // updating ui
     checkoutCtrl.srvModel = jsonData;
 }
 
 function changeCurrency(currency) {
-    srvModel.paymentMethodId = currency;
-    fetchStatus();
+    if (srvModel.paymentMethodId != currency) {
+        $("#scan").hide();
+        $(".payment__spinner").show();
+        srvModel.paymentMethodId = currency;
+        fetchStatus();
+    }
     return false;
 }
 

@@ -10892,6 +10892,20 @@ bp-spinner {
     display: flex;
 }
 
+.payment__spinner {
+    margin-top: 140px;
+    display: none;
+}
+
+    .payment__spinner > bp-spinner > svg {
+        margin: auto auto;
+        height: 60px;
+        width: 60px;
+        fill: gray;
+        animation: spin 0.55s linear infinite;
+        opacity: .85;
+    }
+
 bp-refund-address.ng-valid .bitcoin-logo {
     opacity: 1;
     margin-left: 0;

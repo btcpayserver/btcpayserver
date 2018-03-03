@@ -1,4 +1,83 @@
+// public methods
+function onDataCallback(jsonData) {
+    var newStatus = jsonData.status;
+
+    if (newStatus === "complete" ||
+        newStatus === "confirmed" ||
+        newStatus === "paid") {
+        if ($(".modal-dialog").hasClass("expired")) {
+            $(".modal-dialog").removeClass("expired");
+        }
+
+        if (srvModel.merchantRefLink !== "") {
+            $(".action-button").click(function () {
+                window.location.href = srvModel.merchantRefLink;
+            });
+        }
+        else {
+            $(".action-button").hide();
+        }
+
+        $(".modal-dialog").addClass("paid");
+
+        if ($("#scan").hasClass("active")) {
+            $("#scan").removeClass("active");
+        } else if ($("#copy").hasClass("active")) {
+            $("#copy").removeClass("active");
+        }
+        $("#paid").addClass("active");
+    }
+
+    if (newStatus === "expired" || newStatus === "invalid") { //TODO: different state if the invoice is invalid (failed to confirm after timeout)
+        $(".timer-row").removeClass("expiring-soon");
+        $(".timer-row__message span").html("Invoice expired.");
+        $(".timer-row__spinner").html("");
+        $("#emailAddressView").removeClass("active");
+        $(".modal-dialog").addClass("expired");
+        $("#expired").addClass("active");
+    }
+
+    if (checkoutCtrl.srvModel.status !== newStatus) {
+        window.parent.postMessage({ "invoiceId": srvModel.invoiceId, "status": newStatus }, "*");
+    }
+
+    // restoring qr code view only when currency is switched
+    if (jsonData.paymentMethodId == srvModel.paymentMethodId) {
+        $("#scan").show();
+        $(".payment__spinner").hide();
+    }
+
+    // updating ui
+    checkoutCtrl.srvModel = jsonData;
+}
+
+function changeCurrency(currency) {
+    if (srvModel.paymentMethodId != currency) {
+        $("#scan").hide();
+        $(".payment__spinner").show();
+        srvModel.paymentMethodId = currency;
+        fetchStatus();
+    }
+    return false;
+}
+
+function fetchStatus() {
+    var path = srvModel.serverUrl + "/i/" + srvModel.invoiceId + "/" + srvModel.paymentMethodId + "/status";
+    $.ajax({
+        url: path,
+        type: "GET"
+    }).done(function (data) {
+        onDataCallback(data);
+    }).fail(function (jqXHR, textStatus, errorThrown) {
+
+    });
+}
+
+// private methods
 $(document).ready(function () {
+    // initialize
+    onDataCallback(srvModel);
+
     /* TAF
     
     - Version mobile
@@ -129,82 +208,6 @@ $(document).ready(function () {
     // Payment received
     // Should connect using webhook ?
     // If notification received
-
-    onDataCallback(srvModel);
-
-    function onDataCallback(jsonData) {
-        var newStatus = jsonData.status;
-
-        if (newStatus === "complete" ||
-            newStatus === "confirmed" ||
-            newStatus === "paid") {
-            if ($(".modal-dialog").hasClass("expired")) {
-                $(".modal-dialog").removeClass("expired");
-            }
-
-            if (srvModel.merchantRefLink !== "") {
-                $(".action-button").click(function () {
-                    window.location.href = srvModel.merchantRefLink;
-                });
-            }
-            else {
-                $(".action-button").hide();
-            }
-
-            $(".modal-dialog").addClass("paid");
-
-            if ($("#scan").hasClass("active")) {
-                $("#scan").removeClass("active");
-            } else if ($("#copy").hasClass("active")) {
-                $("#copy").removeClass("active");
-            }
-            $("#paid").addClass("active");
-        }
-
-        if (newStatus === "expired" || newStatus === "invalid") { //TODO: different state if the invoice is invalid (failed to confirm after timeout)
-            $(".timer-row").removeClass("expiring-soon");
-            $(".timer-row__message span").html("Invoice expired.");
-            $(".timer-row__spinner").html("");
-            $("#emailAddressView").removeClass("active");
-            $(".modal-dialog").addClass("expired");
-            $("#expired").addClass("active");
-        }
-
-        if (checkoutCtrl.srvModel.status !== newStatus) {
-            window.parent.postMessage({ "invoiceId": srvModel.invoiceId, "status": newStatus }, "*");
-        }
-
-        // restoring qr code view only when currency is switched
-        if (jsonData.paymentMethodId == srvModel.paymentMethodId) {
-            $("#scan").show();
-            $(".payment__spinner").hide();
-        }
-
-        // updating ui
-        checkoutCtrl.srvModel = jsonData;
-    }
-
-    function changeCurrency(currency) {
-        if (srvModel.paymentMethodId != currency) {
-            $("#scan").hide();
-            $(".payment__spinner").show();
-            srvModel.paymentMethodId = currency;
-            fetchStatus();
-        }
-        return false;
-    }
-
-    function fetchStatus() {
-        var path = srvModel.serverUrl + "/i/" + srvModel.invoiceId + "/" + srvModel.paymentMethodId + "/status";
-        $.ajax({
-            url: path,
-            type: "GET"
-        }).done(function (data) {
-            onDataCallback(data);
-        }).fail(function (jqXHR, textStatus, errorThrown) {
-
-        });
-    }
 
     var supportsWebSockets = 'WebSocket' in window && window.WebSocket.CLOSING === 2;
     if (supportsWebSockets) {

@@ -35,6 +35,12 @@ function onDataCallback(jsonData) {
         $("#emailAddressView").removeClass("active");
         $(".modal-dialog").addClass("expired");
         $("#expired").addClass("active");
+
+        if ($("#scan").hasClass("active")) {
+            $("#scan").removeClass("active");
+        } else if ($("#copy").hasClass("active")) {
+            $("#copy").removeClass("active");
+        }
     }
 
     if (checkoutCtrl.srvModel.status !== newStatus) {

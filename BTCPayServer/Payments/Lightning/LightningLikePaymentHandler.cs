@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Payments.Lightning.CLightning;
 using BTCPayServer.Services.Invoices;
 
@@ -12,10 +13,10 @@ namespace BTCPayServer.Payments.Lightning
 {
     public class LightningLikePaymentHandler : PaymentMethodHandlerBase<LightningSupportedPaymentMethod>
     {
-        ExplorerClientProvider _ExplorerClientProvider;
-        public LightningLikePaymentHandler(ExplorerClientProvider explorerClientProvider)
+        NBXplorerDashboard _Dashboard;
+        public LightningLikePaymentHandler(NBXplorerDashboard dashboard)
         {
-            _ExplorerClientProvider = explorerClientProvider;
+            _Dashboard = dashboard;
         }
         public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(LightningSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, BTCPayNetwork network)
         {
@@ -47,13 +48,12 @@ namespace BTCPayServer.Payments.Lightning
 
         public async Task Test(LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network)
         {
-            if (!_ExplorerClientProvider.IsAvailable(network))
+            if (!_Dashboard.IsFullySynched(network.CryptoCode, out var summary))
                 throw new Exception($"Full node not available");
 
-            var explorerClient = _ExplorerClientProvider.GetExplorerClient(network);
+            
             var cts = new CancellationTokenSource(5000);
             var client = GetClient(supportedPaymentMethod, network);
-            var status = explorerClient.GetStatusAsync();
             GetInfoResponse info = null;
             try
             {
@@ -73,7 +73,7 @@ namespace BTCPayServer.Payments.Lightning
                 throw new Exception($"Lightning node network {info.Network}, but expected is {network.CLightningNetworkName}");
             }
 
-            var blocksGap = Math.Abs(info.BlockHeight - (await status).ChainHeight);
+            var blocksGap = Math.Abs(info.BlockHeight - summary.Status.ChainHeight);
             if (blocksGap > 10)
             {
                 throw new Exception($"The lightning is not synched ({blocksGap} blocks)");

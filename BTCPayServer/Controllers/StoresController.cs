@@ -1,6 +1,7 @@
 ﻿using BTCPayServer.Authentication;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Services;
@@ -31,6 +32,7 @@ namespace BTCPayServer.Controllers
     public partial class StoresController : Controller
     {
         public StoresController(
+            NBXplorerDashboard dashboard,
             IServiceProvider serviceProvider,
             BTCPayServerOptions btcpayServerOptions,
             BTCPayServerEnvironment btcpayEnv,
@@ -45,6 +47,7 @@ namespace BTCPayServer.Controllers
             IFeeProviderFactory feeRateProvider,
             IHostingEnvironment env)
         {
+            _Dashboard = dashboard;
             _Repo = repo;
             _TokenRepository = tokenRepo;
             _UserManager = userManager;
@@ -59,6 +62,7 @@ namespace BTCPayServer.Controllers
             _BtcpayServerOptions = btcpayServerOptions;
             _BTCPayEnv = btcpayEnv;
         }
+        NBXplorerDashboard _Dashboard;
         BTCPayServerOptions _BtcpayServerOptions;
         BTCPayServerEnvironment _BTCPayEnv;
         IServiceProvider _ServiceProvider;
@@ -516,7 +520,7 @@ namespace BTCPayServer.Controllers
             var pairingResult = await _TokenRepository.PairWithStoreAsync(pairingCode, store.Id);
             if (pairingResult == PairingResult.Complete || pairingResult == PairingResult.Partial)
             {
-                StatusMessage = "Pairing is successfull";
+                StatusMessage = "Pairing is successful";
                 if (pairingResult == PairingResult.Partial)
                     StatusMessage = "Server initiated pairing code: " + pairingCode;
                 return RedirectToAction(nameof(ListTokens), new

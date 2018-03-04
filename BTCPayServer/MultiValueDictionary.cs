@@ -16,7 +16,7 @@ namespace BTCPayServer
     /// there is functionality to allow adding or removing more than a single
     /// value at once. 
     /// 
-    /// The MultiValueDictionary can also be viewed as a IReadOnlyDictionary&lt;TKey,IReadOnlyCollection&lt;TValue&gt;t&gt;
+    /// The MultiValueDictionary can also be viewed as an IReadOnlyDictionary&lt;TKey,IReadOnlyCollection&lt;TValue&gt;t&gt;
     /// where the <see cref="IReadOnlyCollection{TValue}" /> is abstracted from the view of the programmer.
     /// 
     /// For a read-only MultiValueDictionary.

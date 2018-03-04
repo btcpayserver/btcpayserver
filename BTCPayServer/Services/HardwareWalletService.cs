@@ -152,7 +152,8 @@ namespace BTCPayServer.Services
                                                              (IDestination destination, Money amount, bool substractFees)[] send, 
                                                              FeeRate feeRate, 
                                                              IDestination changeAddress,
-                                                             KeyPath changeKeyPath)
+                                                             KeyPath changeKeyPath,
+                                                             FeeRate minTxRelayFee)
         {
             if (strategy == null)
                 throw new ArgumentNullException(nameof(strategy));
@@ -185,6 +186,7 @@ namespace BTCPayServer.Services
             }
 
             TransactionBuilder builder = new TransactionBuilder();
+            builder.StandardTransactionPolicy.MinRelayTxFee = minTxRelayFee;
             builder.AddCoins(coins.Select(c=>c.Coin).ToArray());
 
             foreach (var element in send)

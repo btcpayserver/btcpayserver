@@ -8411,6 +8411,17 @@ strong {
     float: right;
 }
 
+.currency-selection {
+    border-bottom: 1px solid #E9E9E9;
+    position: relative;
+    padding: 4px 15px;
+    display: flex;
+    font-weight: 300;
+    color: #565D6E;
+    letter-spacing: .45px;
+    background: #fff;
+}
+
 .single-item-order {
     position: relative;
     padding: 15px;
@@ -10487,6 +10498,7 @@ All mobile class names should be prefixed by m- */
     min-height: 575px;
 }
 
+.paid .currency-selection,
 .expired .order-details,
 .archived .order-details {
     display: none;
@@ -10880,6 +10892,20 @@ bp-loading-button button {
 bp-spinner {
     display: flex;
 }
+
+.payment__spinner {
+    margin-top: 140px;
+    display: none;
+}
+
+    .payment__spinner > bp-spinner > svg {
+        margin: auto auto;
+        height: 60px;
+        width: 60px;
+        fill: gray;
+        animation: spin 0.55s linear infinite;
+        opacity: .85;
+    }
 
 bp-refund-address.ng-valid .bitcoin-logo {
     opacity: 1;

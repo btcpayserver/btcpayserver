@@ -77,7 +77,7 @@ namespace BTCPayServer
 
         public bool IsAvailable(string cryptoCode)
         {
-            return _Clients.ContainsKey(cryptoCode) && _Dashboard.IsFullySynched(cryptoCode);
+            return _Clients.ContainsKey(cryptoCode) && _Dashboard.IsFullySynched(cryptoCode, out var unused);
         }
 
         public BTCPayNetwork GetNetwork(string cryptoCode)

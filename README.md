@@ -25,3 +25,18 @@ This solution is for you if:
 Please check out our [complete documentation](https://github.com/btcpayserver/btcpayserver-doc) for more details.
 
 You can also checkout [The Merchants Guide to accepting Bitcoin directly with no intermediates through BTCPay](https://www.reddit.com/r/Bitcoin/comments/81h1oy/the_merchants_guide_to_accepting_bitcoin_directly/).
+
+## How to build
+
+While the documentation advise using docker-compose, you may want to build yourself outside of development purpose.
+
+```
+cd BTCPayServer
+dotnet build -c Release
+```
+
+## How to run
+
+```
+dotnet run --no-launch-profile --no-build -c Release -- [btcpay's args]
+```

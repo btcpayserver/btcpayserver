@@ -30,13 +30,26 @@ You can also checkout [The Merchants Guide to accepting Bitcoin directly with no
 
 While the documentation advise using docker-compose, you may want to build yourself outside of development purpose.
 
+On Powershell:
 ```
-cd BTCPayServer
-dotnet build -c Release
+.\build.ps1
+```
+
+On linux:
+```
+.\build.sh
 ```
 
 ## How to run
 
+Use the `run` scripts to run BTCPayServer, this example show how to print the available command line arguments of BTCPayServer.
+
+On Powershell:
 ```
-dotnet run --no-launch-profile --no-build -c Release -- [btcpay's args]
+.\run.ps1 --help
+```
+
+On linux:
+```
+.\run.sh --help
 ```

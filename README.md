@@ -39,7 +39,7 @@ On Powershell:
 
 On linux:
 ```
-.\build.sh
+./build.sh
 ```
 
 ## How to run
@@ -53,5 +53,9 @@ On Powershell:
 
 On linux:
 ```
-.\run.sh --help
+./run.sh --help
 ```
+
+## Other dependencies
+
+For more information see the documentation [How to deploy a BTCPay server instance](https://github.com/btcpayserver/btcpayserver-doc/blob/master/Deployment.md).

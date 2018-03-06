@@ -27,9 +27,10 @@ namespace BTCPayServer.Data
         public string CryptoCode { get; set; }
 
 #pragma warning disable CS0618
-        public string GetCryptoCode()
+        public Payments.PaymentMethodId GetPaymentMethodId()
         {
-            return string.IsNullOrEmpty(CryptoCode) ? "BTC" : CryptoCode;
+            return string.IsNullOrEmpty(CryptoCode) ? new Payments.PaymentMethodId("BTC", Payments.PaymentTypes.BTCLike)
+                                                    : Payments.PaymentMethodId.Parse(CryptoCode);
         }
         public string GetAddress()
         {

@@ -31,7 +31,7 @@
     <PackageReference Include="Meziantou.AspNetCore.BundleTagHelpers" Version="1.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.2" />
     <PackageReference Include="Microsoft.NetCore.Analyzers" Version="2.6.0" />
-    <PackageReference Include="NBitcoin" Version="4.0.0.59" />
+    <PackageReference Include="NBitcoin" Version="4.0.0.60" />
     <PackageReference Include="NBitpayClient" Version="1.0.0.18" />	  
     <PackageReference Include="DBreeze" Version="1.87.0" />
     <PackageReference Include="NBXplorer.Client" Version="1.0.1.14" />

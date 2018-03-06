@@ -12,16 +12,22 @@ namespace BTCPayServer.Models.InvoicingModels
     {
         public class CryptoPayment
         {
-            public string CryptoCode { get; set; }
+            public string PaymentMethod { get; set; }
             public string Due { get; set; }
             public string Paid { get; set; }
             public string Address { get; internal set; }
             public string Rate { get; internal set; }
             public string PaymentUrl { get; internal set; }
         }
+        public class AddressModel
+        {
+            public string PaymentMethod { get; set; }
+            public string Destination { get; set; }
+            public bool Current { get; set; }
+        }
         public class Payment
         {
-            public string CryptoCode { get; set; }
+            public string PaymentMethod { get; set; }
             public string Confirmations
             {
                 get; set;
@@ -126,7 +132,7 @@ namespace BTCPayServer.Models.InvoicingModels
             get;
             internal set;
         }
-        public HistoricalAddressInvoiceData[] Addresses { get; set; }
+        public AddressModel[] Addresses { get; set; }
         public DateTimeOffset MonitoringDate { get; internal set; }
         public List<Data.InvoiceEventData> Events { get; internal set; }
     }

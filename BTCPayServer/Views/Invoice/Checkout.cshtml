@@ -169,8 +169,9 @@
                                 <div adjust-height="" class="payment-box">
                                     <div class="bp-view payment scan" id="scan">
                                         <div class="payment__scan">
-                                            <img :src="srvModel.cryptoImage" style="position: absolute; height:64px; width:64px; left:118px; top:96px;" />
-                                            <qrcode :val="srvModel.invoiceBitcoinUrlQR" :size="256" bg-color="#f5f5f7" fg-color="#000" />
+                                            <img v-bind:src="srvModel.cryptoImage" style="position: absolute; height:64px; width:64px; left:118px; top:96px;" />
+                                            <qrcode v-bind:val="srvModel.invoiceBitcoinUrlQR" v-bind:size="256" bg-color="#f5f5f7" fg-color="#000">
+                                            </qrcode>
                                         </div>
                                         <div class="payment__details__instruction__open-wallet">
                                             <a class="payment__details__instruction__open-wallet__btn action-button" v-bind:href="srvModel.invoiceBitcoinUrl">

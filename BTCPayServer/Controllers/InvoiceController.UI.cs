@@ -68,11 +68,11 @@ namespace BTCPayServer.Controllers
             {
                 var cryptoInfo = dto.CryptoInfo.First(o => o.GetpaymentMethodId() == data.GetId());
                 var accounting = data.Calculate();
-                var paymentNetwork = _NetworkProvider.GetNetwork(data.GetId().CryptoCode);
+                var paymentMethodId = data.GetId();
                 var cryptoPayment = new InvoiceDetailsModel.CryptoPayment();
-                cryptoPayment.CryptoCode = paymentNetwork.CryptoCode;
-                cryptoPayment.Due = accounting.Due.ToString() + $" {paymentNetwork.CryptoCode}";
-                cryptoPayment.Paid = accounting.CryptoPaid.ToString() + $" {paymentNetwork.CryptoCode}";
+                cryptoPayment.PaymentMethod = ToString(paymentMethodId);
+                cryptoPayment.Due = accounting.Due.ToString() + $" {paymentMethodId.CryptoCode}";
+                cryptoPayment.Paid = accounting.CryptoPaid.ToString() + $" {paymentMethodId.CryptoCode}";
 
                 var onchainMethod = data.GetPaymentMethodDetails() as Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod;
                 if(onchainMethod != null)
@@ -86,13 +86,13 @@ namespace BTCPayServer.Controllers
 
             var payments = invoice
                 .GetPayments()
-                .Where(p => p.GetpaymentMethodId().PaymentType == PaymentTypes.BTCLike)
+                .Where(p => p.GetPaymentMethodId().PaymentType == PaymentTypes.BTCLike)
                 .Select(async payment =>
                 {
                     var paymentData = (Payments.Bitcoin.BitcoinLikePaymentData)payment.GetCryptoPaymentData();
                     var m = new InvoiceDetailsModel.Payment();
                     var paymentNetwork = _NetworkProvider.GetNetwork(payment.GetCryptoCode());
-                    m.CryptoCode = payment.GetCryptoCode();
+                    m.PaymentMethod = ToString(payment.GetPaymentMethodId());
                     m.DepositAddress = paymentData.Output.ScriptPubKey.GetDestinationAddress(paymentNetwork.NBitcoinNetwork);
 
                     int confirmationCount = 0;
@@ -121,10 +121,30 @@ namespace BTCPayServer.Controllers
                 })
                 .ToArray();
             await Task.WhenAll(payments);
-            model.Addresses = invoice.HistoricalAddresses;
+            model.Addresses = invoice.HistoricalAddresses.Select(h=> new InvoiceDetailsModel.AddressModel
+            {
+                Destination = h.GetAddress(),
+                PaymentMethod = ToString(h.GetPaymentMethodId()),
+                Current = !h.UnAssigned.HasValue
+            }).ToArray();
             model.Payments = payments.Select(p => p.GetAwaiter().GetResult()).ToList();
             model.StatusMessage = StatusMessage;
             return View(model);
+        }
+
+        private string ToString(PaymentMethodId paymentMethodId)
+        {
+            var type = paymentMethodId.PaymentType.ToString();
+            switch (paymentMethodId.PaymentType)
+            {
+                case PaymentTypes.BTCLike:
+                    type = "On-Chain";
+                    break;
+                case PaymentTypes.LightningLike:
+                    type = "Off-Chain";
+                    break;
+            }
+            return $"{paymentMethodId.CryptoCode} ({type})";
         }
 
         [HttpGet]
@@ -220,7 +240,7 @@ namespace BTCPayServer.Controllers
                 .ToList()
             };
 
-            var isMultiCurrency = invoice.GetPayments().Select(p=>p.GetpaymentMethodId()).Concat(new[] { paymentMethod.GetId() }).Distinct().Count() > 1;
+            var isMultiCurrency = invoice.GetPayments().Select(p=>p.GetPaymentMethodId()).Concat(new[] { paymentMethod.GetId() }).Distinct().Count() > 1;
             if (isMultiCurrency)
                 model.NetworkFeeDescription = $"{accounting.NetworkFee} {network.CryptoCode}";
 

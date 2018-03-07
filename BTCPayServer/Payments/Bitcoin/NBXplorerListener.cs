@@ -213,7 +213,7 @@ namespace BTCPayServer.Payments.Bitcoin
         IEnumerable<BitcoinLikePaymentData> GetAllBitcoinPaymentData(InvoiceEntity invoice)
         {
             return invoice.GetPayments()
-                    .Where(p => p.GetpaymentMethodId().PaymentType == PaymentTypes.BTCLike)
+                    .Where(p => p.GetPaymentMethodId().PaymentType == PaymentTypes.BTCLike)
                     .Select(p => (BitcoinLikePaymentData)p.GetCryptoPaymentData());
         }
 
@@ -227,7 +227,7 @@ namespace BTCPayServer.Payments.Bitcoin
             var conflicts = GetConflicts(transactions.Select(t => t.Value));
             foreach (var payment in invoice.GetPayments(wallet.Network))
             {
-                if (payment.GetpaymentMethodId().PaymentType != PaymentTypes.BTCLike)
+                if (payment.GetPaymentMethodId().PaymentType != PaymentTypes.BTCLike)
                     continue;
                 var paymentData = (BitcoinLikePaymentData)payment.GetCryptoPaymentData();
                 if (!transactions.TryGetValue(paymentData.Outpoint.Hash, out TransactionResult tx))

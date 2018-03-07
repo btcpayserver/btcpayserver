@@ -655,7 +655,7 @@ namespace BTCPayServer.Services.Invoices
                 .OrderBy(p => p.ReceivedTime)
                 .Select(_ =>
                 {
-                    var txFee = _.GetValue(paymentMethods, GetId(), paymentMethods[_.GetpaymentMethodId()].GetTxFee());
+                    var txFee = _.GetValue(paymentMethods, GetId(), paymentMethods[_.GetPaymentMethodId()].GetTxFee());
                     paid += _.GetValue(paymentMethods, GetId());
                     if (!paidEnough)
                     {
@@ -663,7 +663,7 @@ namespace BTCPayServer.Services.Invoices
                         paidTxFee += txFee;
                     }
                     paidEnough |= paid >= RoundUp(totalDue, 8);
-                    if (GetId() == _.GetpaymentMethodId())
+                    if (GetId() == _.GetPaymentMethodId())
                     {
                         cryptoPaid += _.GetCryptoPaymentData().GetValue();
                         txRequired++;
@@ -766,7 +766,7 @@ namespace BTCPayServer.Services.Invoices
                 paymentData.Legacy = true;
                 return paymentData;
             }
-            if (GetpaymentMethodId().PaymentType == PaymentTypes.BTCLike)
+            if (GetPaymentMethodId().PaymentType == PaymentTypes.BTCLike)
             {
                 var paymentData = JsonConvert.DeserializeObject<Payments.Bitcoin.BitcoinLikePaymentData>(CryptoPaymentData);
                 // legacy
@@ -774,7 +774,7 @@ namespace BTCPayServer.Services.Invoices
                 paymentData.Outpoint = Outpoint;
                 return paymentData;
             }
-            if(GetpaymentMethodId().PaymentType== PaymentTypes.LightningLike)
+            if(GetPaymentMethodId().PaymentType== PaymentTypes.LightningLike)
             {
                 return JsonConvert.DeserializeObject<Payments.Lightning.LightningLikePaymentData>(CryptoPaymentData);
             }
@@ -802,7 +802,7 @@ namespace BTCPayServer.Services.Invoices
         {
             value = value ?? this.GetCryptoPaymentData().GetValue();
             var to = paymentMethodId;
-            var from = this.GetpaymentMethodId();
+            var from = this.GetPaymentMethodId();
             if (to == from)
                 return decimal.Round(value.Value, 8);
             var fromRate = paymentMethods[from].Rate;
@@ -813,7 +813,7 @@ namespace BTCPayServer.Services.Invoices
             return otherCurrencyValue;
         }
 
-        public PaymentMethodId GetpaymentMethodId()
+        public PaymentMethodId GetPaymentMethodId()
         {
 #pragma warning disable CS0618 // Type or member is obsolete
             return new PaymentMethodId(CryptoCode ?? "BTC", string.IsNullOrEmpty(CryptoPaymentDataType) ? PaymentTypes.BTCLike : Enum.Parse<PaymentTypes>(CryptoPaymentDataType));

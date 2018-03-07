@@ -153,7 +153,7 @@
                 <table class="table">
                     <thead class="thead-inverse">
                         <tr>
-                            <th>Crypto</th>
+                            <th style="white-space:nowrap;">Payment method</th>
                             <th>Rate</th>
                             <th>Paid</th>
                             <th>Due</th>
@@ -164,7 +164,7 @@
                         @foreach(var payment in Model.CryptoPayments)
                     {
                         <tr>
-                            <td>@payment.CryptoCode</td>
+                            <td>@payment.PaymentMethod</td>
                             <td>@payment.Rate</td>
                             <td>@payment.Paid</td>
                             <td>@payment.Due</td>
@@ -181,8 +181,7 @@
                 <table class="table">
                     <thead class="thead-inverse">
                         <tr>
-                            <th>Crypto</th>
-                            <th>Date</th>
+                            <th style="white-space:nowrap;">Payment method</th>
                             <th>Deposit address</th>
                             <th>Transaction Id</th>
                             <th>Confirmations</th>
@@ -193,8 +192,7 @@
                         @foreach(var payment in Model.Payments)
                     {
                         <tr>
-                            <td>@payment.CryptoCode</td>
-                            <td>@payment.ReceivedTime</td>
+                            <td>@payment.PaymentMethod</td>
                             <td>@payment.DepositAddress</td>
                             <td><a href="@payment.TransactionLink" target="_blank">@payment.TransactionId</a></td>
                             <td>@payment.Confirmations</td>
@@ -211,7 +209,7 @@
                 <table class="table">
                     <thead class="thead-inverse">
                         <tr>
-                            <th>Crypto</th>
+                            <th style="white-space:nowrap;">Payment method</th>
                             <th>Address</th>
                             <th>Current</th>
                         </tr>
@@ -220,11 +218,11 @@
                         @foreach(var address in Model.Addresses)
                     {
                         <tr>
-                            <td>@address.GetCryptoCode()</td>
-                            <td>@address.GetAddress()</td>
-                            <td>@(!address.UnAssigned.HasValue)</td>
+                            <td style="width:100px;">@address.PaymentMethod</td>
+                            <td style="max-width:100px;overflow:hidden;">@address.Destination</td>
+                            <td>@address.Current.ToString()</td>
                         </tr>
-                }
+                    }
                     </tbody>
                 </table>
             </div>

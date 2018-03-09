@@ -75,7 +75,8 @@ namespace BTCPayServer.HostedServices
                 if (string.IsNullOrEmpty(invoice.NotificationURL))
                     return;
                 _EventAggregator.Publish<InvoiceIPNEvent>(new InvoiceIPNEvent(invoice.Id, eventCode, name));
-                await SendNotification(invoice, eventCode, name, cts.Token);
+                var response = await SendNotification(invoice, eventCode, name, cts.Token);
+                response.EnsureSuccessStatusCode();
                 return;
             }
             catch (OperationCanceledException) when (cts.IsCancellationRequested)
@@ -112,7 +113,7 @@ namespace BTCPayServer.HostedServices
             try
             {
                 HttpResponseMessage response = await SendNotification(job.Invoice, job.EventCode, job.Message, cts.Token);
-                reschedule = response.StatusCode != System.Net.HttpStatusCode.OK;
+                reschedule = !response.IsSuccessStatusCode;
                 Logger.LogInformation("Job " + jobId + " returned " + response.StatusCode);
 
                 _EventAggregator.Publish<InvoiceIPNEvent>(new InvoiceIPNEvent(job.Invoice.Id, job.EventCode, job.Message)

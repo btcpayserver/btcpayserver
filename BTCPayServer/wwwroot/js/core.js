@@ -71,7 +71,8 @@ function fetchStatus() {
     var path = srvModel.serverUrl + "/i/" + srvModel.invoiceId + "/" + srvModel.paymentMethodId + "/status";
     $.ajax({
         url: path,
-        type: "GET"
+        type: "GET",
+        cache: false
     }).done(function (data) {
         onDataCallback(data);
     }).fail(function (jqXHR, textStatus, errorThrown) {

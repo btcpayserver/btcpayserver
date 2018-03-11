@@ -54,10 +54,11 @@ namespace BTCPayServer.Controllers
                     return View(vm);
                 }
 
-                if (uri.Scheme != "https")
+                var domain = GetDomain(uri.AbsoluteUri);
+                if (uri.Scheme != "https" && domain != "127.0.0.1" && domain != "localhost")
                 {
                     var internalNode = GetInternalLightningNodeIfAuthorized();
-                    if (internalNode == null || GetDomain(internalNode) != GetDomain(uri.AbsoluteUri))
+                    if (internalNode == null || GetDomain(internalNode) != domain)
                     {
                         ModelState.AddModelError(nameof(vm.Url), "The url must be HTTPS");
                         return View(vm);

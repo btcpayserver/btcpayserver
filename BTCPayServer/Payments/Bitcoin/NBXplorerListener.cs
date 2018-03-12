@@ -98,20 +98,6 @@ namespace BTCPayServer.Payments.Bitcoin
                 }
             }, null, 0, (int)PollInterval.TotalMilliseconds);
             leases.Add(_ListenPoller);
-
-            leases.Add(_Aggregator.Subscribe<Events.InvoiceEvent>(async inv =>
-            {
-                if (inv.Name == "invoice_created")
-                {
-                    var invoice = await _InvoiceRepository.GetInvoice(null, inv.InvoiceId);
-                    await Task.WhenAll(invoice.GetSupportedPaymentMethod<DerivationStrategy>(_NetworkProvider)
-                           .Select(s => (Session: _SessionsByCryptoCode.TryGet(s.PaymentId.CryptoCode), 
-                                         DerivationStrategy: s.DerivationStrategyBase))
-                           .Where(s => s.Session != null)
-                           .Select(s => s.Session.ListenDerivationSchemesAsync(new[] { s.DerivationStrategy }))
-                           .ToArray()).ConfigureAwait(false);
-                }
-            }));
             return Task.CompletedTask;
         }
 
@@ -139,7 +125,7 @@ namespace BTCPayServer.Payments.Bitcoin
                 using (session)
                 {
                     await session.ListenNewBlockAsync(_Cts.Token).ConfigureAwait(false);
-                    await session.ListenDerivationSchemesAsync((await GetStrategies(network)).ToArray(), _Cts.Token).ConfigureAwait(false);
+                    await session.ListenAllDerivationSchemesAsync(cancellation: _Cts.Token).ConfigureAwait(false);
 
                     Logs.PayServer.LogInformation($"{network.CryptoCode}: Checking if any pending invoice got paid while offline...");
                     int paymentCount = await FindPaymentViaPolling(wallet, network);
@@ -379,21 +365,6 @@ namespace BTCPayServer.Payments.Bitcoin
             _Aggregator.Publish(new InvoiceEvent(invoiceId, 1002, "invoice_receivedPayment"));
             return invoice;
         }
-
-        private async Task<List<DerivationStrategyBase>> GetStrategies(BTCPayNetwork network)
-        {
-            List<DerivationStrategyBase> strategies = new List<DerivationStrategyBase>();
-            foreach (var invoiceId in await _InvoiceRepository.GetPendingInvoices())
-            {
-                var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
-                var strategy = GetDerivationStrategy(invoice, network);
-                if (strategy != null)
-                    strategies.Add(strategy);
-            }
-
-            return strategies;
-        }
-
         public Task StopAsync(CancellationToken cancellationToken)
         {
             leases.Dispose();

@@ -347,7 +347,6 @@ namespace BTCPayServer.Tests
                     ItemDesc = "Some description"
                 });
 
-
                 tester.SendLightningPayment(invoice);
 
                 Eventually(() =>

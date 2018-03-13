@@ -10,6 +10,9 @@
         text-overflow: ellipsis;
         white-space: nowrap;
     }
+    .money {
+        text-align: right;
+    }
 </style>
 
 <section>
@@ -67,7 +70,7 @@
                     </tr>
                     <tr>
                         <th>Refund email</th>
-                        <td>@Model.RefundEmail</td>
+                        <td><a href="mailto:@Model.RefundEmail">@Model.RefundEmail</a></td>
                     </tr>
                     <tr>
                         <th>Order Id</th>
@@ -83,7 +86,7 @@
                     </tr>
                     <tr>
                         <th>Redirect Url</th>
-                        <td>@Model.RedirectUrl</td>
+                        <td><a href="@Model.RedirectUrl">@Model.RedirectUrl</a></td>
                     </tr>
                 </table>
             </div>
@@ -98,7 +101,7 @@
                     </tr>
                     <tr>
                         <th>Email</th>
-                        <td>@Model.BuyerInformation.BuyerEmail</td>
+                        <td><a href="mailto:@Model.BuyerInformation.BuyerEmail">@Model.BuyerInformation.BuyerEmail</a></td>
                     </tr>
                     <tr>
                         <th>Phone</th>
@@ -154,10 +157,10 @@
                     <thead class="thead-inverse">
                         <tr>
                             <th style="white-space:nowrap;">Payment method</th>
-                            <th>Rate</th>
-                            <th>Paid</th>
-                            <th>Due</th>
                             <th>Address</th>
+                            <th class="money">Rate</th>
+                            <th class="money">Paid</th>
+                            <th class="money">Due</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -165,10 +168,10 @@
                     {
                         <tr>
                             <td>@payment.PaymentMethod</td>
-                            <td style="text-align:right;">@payment.Rate</td>
-                            <td>@payment.Paid</td>
-                            <td>@payment.Due</td>
                             <td>@payment.Address</td>
+                            <td class="money">@payment.Rate</td>
+                            <td class="money">@payment.Paid</td>
+                            <td class="money">@payment.Due</td>
                         </tr>
                 }
                     </tbody>
@@ -184,19 +187,18 @@
                             <th style="white-space:nowrap;">Payment method</th>
                             <th>Deposit address</th>
                             <th>Transaction Id</th>
-                            <th>Confirmations</th>
-                            <th>Replaced</th>
+                            <th style="text-align:right;">Confirmations</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach(var payment in Model.Payments)
                     {
+                            var replaced = payment.Replaced ? "text-decoration: line-through;" : "";
                         <tr>
-                            <td>@payment.PaymentMethod</td>
-                            <td>@payment.DepositAddress</td>
-                            <td><a href="@payment.TransactionLink" target="_blank">@payment.TransactionId</a></td>
-                            <td>@payment.Confirmations</td>
-                            <td>@payment.Replaced</td>
+                            <td style="@replaced">@payment.PaymentMethod</td>
+                            <td style="@replaced">@payment.DepositAddress</td>
+                            <td style="@replaced"><a href="@payment.TransactionLink" target="_blank">@payment.TransactionId</a></td>
+                            <td style="text-align:right;">@payment.Confirmations</td>
                         </tr>
                 }
                     </tbody>
@@ -211,16 +213,15 @@
                         <tr>
                             <th style="white-space:nowrap;">Payment method</th>
                             <th>Address</th>
-                            <th>Current</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach(var address in Model.Addresses)
-                    {
+                        {
+                            var current = address.Current ? "font-weight: bold;" : "";
                         <tr>
-                            <td style="width:100px;">@address.PaymentMethod</td>
-                            <td style="max-width:100px;overflow:hidden;">@address.Destination</td>
-                            <td>@address.Current.ToString()</td>
+                            <td style="width:100px;@current">@address.PaymentMethod</td>
+                            <td style="max-width:100px;overflow:hidden;@current">@address.Destination</td>
                         </tr>
                     }
                     </tbody>

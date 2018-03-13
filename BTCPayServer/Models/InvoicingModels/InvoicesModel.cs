@@ -39,6 +39,7 @@ namespace BTCPayServer.Models.InvoicingModels
         }
 
         public string OrderId { get; set; }
+        public string RedirectUrl { get; set; }
         public string InvoiceId
         {
             get; set;

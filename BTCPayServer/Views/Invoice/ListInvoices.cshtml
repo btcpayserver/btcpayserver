@@ -47,8 +47,8 @@
                         <th>OrderId</th>
                         <th>InvoiceId</th>
                         <th>Status</th>
-                        <th>Amount</th>
-                        <th>Actions</th>
+                        <th style="text-align:right">Amount</th>
+                        <th  style="text-align:right">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -56,7 +56,16 @@
                     {
                         <tr>
                             <td>@invoice.Date</td>
-                            <td>@invoice.OrderId</td>
+                            <td>
+                                @if(invoice.RedirectUrl != string.Empty)
+                                {
+                                    <a href="@invoice.RedirectUrl">@invoice.OrderId</a>
+                                }
+                                else
+                                {
+                                    <span>@invoice.OrderId</span>
+                                }
+                            </td>
                             <td>@invoice.InvoiceId</td>
                             @if(invoice.Status == "paid")
                             {
@@ -73,10 +82,15 @@
                             }
                             else
                             {
-                                <td>@invoice.Status</td>
+                                <td >@invoice.Status</td>
                             }
-                            <td>@invoice.AmountCurrency</td>
-                            <td><a asp-action="Checkout" asp-route-invoiceId="@invoice.InvoiceId">Checkout</a> - <a asp-action="Invoice" asp-route-invoiceId="@invoice.InvoiceId">Details</a></td>
+                            <td style="text-align:right">@invoice.AmountCurrency</td>
+                            <td style="text-align:right">
+                                @if(invoice.Status == "new")
+                                {
+                                    <a asp-action="Checkout" asp-route-invoiceId="@invoice.InvoiceId">Checkout</a> <span>-</span> 
+                                }<a asp-action="Invoice" asp-route-invoiceId="@invoice.InvoiceId">Details</a>
+                            </td>
                         </tr>
                     }
                 </tbody>

@@ -368,6 +368,7 @@ namespace BTCPayServer.Controllers
                     Date = Prettify(invoice.InvoiceTime),
                     InvoiceId = invoice.Id,
                     OrderId = invoice.OrderId ?? string.Empty,
+                    RedirectUrl = invoice.RedirectURL ?? string.Empty,
                     AmountCurrency = $"{invoice.ProductInformation.Price.ToString(CultureInfo.InvariantCulture)} {invoice.ProductInformation.Currency}"
                 });
             }

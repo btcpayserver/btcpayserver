@@ -17,7 +17,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
         public string GetPaymentDestination()
         {
-            return DepositAddress?.ToString();
+            return DepositAddress;
         }
 
         public decimal GetTxFee()
@@ -33,10 +33,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
         public void SetPaymentDestination(string newPaymentDestination)
         {
-            if (newPaymentDestination == null)
-                DepositAddress = null;
-            else
-                DepositAddress = BitcoinAddress.Create(newPaymentDestination, DepositAddress.Network);
+            DepositAddress = newPaymentDestination;
         }
 
         // Those properties are JsonIgnore because their data is inside CryptoData class for legacy reason
@@ -45,7 +42,11 @@ namespace BTCPayServer.Payments.Bitcoin
         [JsonIgnore]
         public Money TxFee { get; set; }
         [JsonIgnore]
-        public BitcoinAddress DepositAddress { get; set; }
+        public String DepositAddress { get; set; }
+        public BitcoinAddress GetDepositAddress(Network network)
+        {
+            return string.IsNullOrEmpty(DepositAddress) ? null : BitcoinAddress.Create(DepositAddress, network);
+        }
         ///////////////////////////////////////////////////////////////////////////////////////
     }
 }

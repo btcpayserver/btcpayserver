@@ -45,7 +45,7 @@ namespace BTCPayServer.Tests
         [Fact]
         public void CanCalculateCryptoDue2()
         {
-            var dummy = new Key().PubKey.GetAddress(Network.RegTest);
+            var dummy = new Key().PubKey.GetAddress(Network.RegTest).ToString();
 #pragma warning disable CS0618
             InvoiceEntity invoiceEntity = new InvoiceEntity();
             invoiceEntity.Payments = new System.Collections.Generic.List<PaymentEntity>();

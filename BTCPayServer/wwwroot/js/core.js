@@ -53,6 +53,7 @@ function onDataCallback(jsonData) {
         $(".payment__spinner").hide();
     }
 
+    jsonData.shapeshiftUrl = "https://shapeshift.io/shifty.html?destination=" + jsonData.btcAddress + "&output=" + jsonData.paymentMethodId + "&amount=" + jsonData.btcDue;
     // updating ui
     checkoutCtrl.srvModel = jsonData;
 }

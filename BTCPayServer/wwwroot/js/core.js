@@ -49,7 +49,7 @@ function onDataCallback(jsonData) {
 
     // restoring qr code view only when currency is switched
     if (jsonData.paymentMethodId == srvModel.paymentMethodId) {
-        $("#scan").show();
+        $(".payment__currencies").show();
         $(".payment__spinner").hide();
     }
 
@@ -59,7 +59,7 @@ function onDataCallback(jsonData) {
 
 function changeCurrency(currency) {
     if (srvModel.paymentMethodId != currency) {
-        $("#scan").hide();
+        $(".payment__currencies").hide();
         $(".payment__spinner").show();
         srvModel.paymentMethodId = currency;
         fetchStatus();

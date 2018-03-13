@@ -10894,14 +10894,13 @@ bp-spinner {
 }
 
 .payment__spinner {
-    margin-top: 140px;
     display: none;
 }
 
     .payment__spinner > bp-spinner > svg {
-        margin: auto auto;
-        height: 60px;
-        width: 60px;
+        margin: auto 0px 0px auto;
+        height: 32px;
+        width: 32px;
         fill: gray;
         animation: spin 0.55s linear infinite;
         opacity: .85;

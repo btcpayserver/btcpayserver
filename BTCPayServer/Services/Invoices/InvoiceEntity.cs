@@ -582,7 +582,7 @@ namespace BTCPayServer.Services.Invoices
                 return new Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod()
                 {
                     FeeRate = FeeRate,
-                    DepositAddress = string.IsNullOrEmpty(DepositAddress) ? null : BitcoinAddress.Create(DepositAddress, Network?.NBitcoinNetwork),
+                    DepositAddress = string.IsNullOrEmpty(DepositAddress) ? null : DepositAddress,
                     TxFee = TxFee
                 };
             }
@@ -592,7 +592,7 @@ namespace BTCPayServer.Services.Invoices
                 if (details is Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod btcLike)
                 {
                     btcLike.TxFee = TxFee;
-                    btcLike.DepositAddress = BitcoinAddress.Create(DepositAddress, Network?.NBitcoinNetwork);
+                    btcLike.DepositAddress = string.IsNullOrEmpty(DepositAddress) ? null : DepositAddress;
                     btcLike.FeeRate = FeeRate;
                 }
                 return details;

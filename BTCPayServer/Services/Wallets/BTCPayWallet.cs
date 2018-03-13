@@ -137,6 +137,7 @@ namespace BTCPayServer.Services.Wallets
                     entry.AbsoluteExpiration = DateTimeOffset.UtcNow + CacheSpan;
                     return result;
                 });
+                _FetchingUTXOs.TryRemove(strategy.ToString(), out var unused);
                 completionSource.TrySetResult(utxos);
             }
             catch (Exception ex)

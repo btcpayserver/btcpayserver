@@ -60,9 +60,6 @@ namespace BTCPayServer.Payments.Lightning
 
         private async Task EnsureListening(string invoiceId, bool poll)
         {
-            if (Listening(invoiceId))
-                return;
-
             var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
             foreach (var paymentMethod in invoice.GetPaymentMethods(_NetworkProvider)
                                                           .Where(c => c.GetId().PaymentType == PaymentTypes.LightningLike))
@@ -98,7 +95,10 @@ namespace BTCPayServer.Payments.Lightning
                         continue;
                 }
 
-                StartListening(listenedInvoice);
+                if (!Listening(invoiceId))
+                {
+                    StartListening(listenedInvoice);
+                }
             }
         }
 
@@ -232,10 +232,7 @@ namespace BTCPayServer.Payments.Lightning
                     _ListeningLightning.Add(listen);
                     listen.ContinueWith(_ =>
                     {
-                        lock (_ListenedInvoiceByLightningUrl)
-                        {
-                            _ListeningLightning.Remove(listen);
-                        }
+                        DoneListening(listenedInvoice);
                     }, TaskScheduler.Default);
                 }
                 _ListenedInvoiceByLightningUrl.Add(listenedInvoice.Uri, listenedInvoice);

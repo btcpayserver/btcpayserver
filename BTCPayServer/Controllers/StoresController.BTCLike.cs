@@ -65,7 +65,6 @@ namespace BTCPayServer.Controllers
                     strategy = ParseDerivationStrategy(vm.DerivationScheme, vm.DerivationSchemeFormat, network);
                     vm.DerivationScheme = strategy.ToString();
                 }
-                store.SetSupportedPaymentMethod(paymentMethodId, strategy);
             }
             catch
             {
@@ -75,7 +74,7 @@ namespace BTCPayServer.Controllers
             }
 
 
-            if (vm.Confirmation)
+            if (vm.Confirmation || strategy == null)
             {
                 try
                 {

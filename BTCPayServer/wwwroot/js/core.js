@@ -144,19 +144,22 @@ $(document).ready(function () {
                     contentType: "application/json; charset=utf-8"
                 }).done(function () {
                     hideEmailForm();
+                }).fail(function (jqXHR, textStatus, errorThrown) {
+
                 })
-                    .fail(function (jqXHR, textStatus, errorThrown) {
-
-                    })
-                    .always(function () {
-                        $("#emailAddressForm .input-wrapper bp-loading-button .action-button").removeClass("loading");
-                    });
+                .always(function () {
+                    $("#emailAddressForm .input-wrapper bp-loading-button .action-button").removeClass("loading");
+                });
             } else {
-
                 $("#emailAddressForm").addClass("ng-touched ng-dirty ng-submitted ng-invalid");
-
             }
         });
+    }
+
+    // Validate Email address
+    function validateEmail(email) {
+        var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+        return re.test(email);
     }
 
     /* =============== Even listeners =============== */
@@ -244,12 +247,6 @@ $(document).ready(function () {
         $(".selector span").text($(".selected").text());
         // function to load contents in different language should go there
     });
-
-    // Validate Email address
-    function validateEmail(email) {
-        var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-        return re.test(email);
-    }
 
     // Expand Line-Items
     $(".buyerTotalLine").click(function () {

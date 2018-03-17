@@ -84,7 +84,7 @@ services:
       - "bitcoin_datadir:/data"
 
   lightning-charged:
-    image: shesek/lightning-charge:0.3.4
+    image: shesek/lightning-charge:0.3.5
     environment:
       NETWORK: regtest
       API_TOKEN: foiewnccewuify

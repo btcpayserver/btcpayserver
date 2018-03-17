@@ -615,7 +615,7 @@ namespace BTCPayServer.Services.Invoices
             {
                 TxFee = bitcoinPaymentMethod.TxFee;
                 FeeRate = bitcoinPaymentMethod.FeeRate;
-                DepositAddress = bitcoinPaymentMethod.DepositAddress.ToString();
+                DepositAddress = bitcoinPaymentMethod.DepositAddress;
             }
             var jobj = JObject.Parse(JsonConvert.SerializeObject(paymentMethod));
             PaymentMethodDetails = jobj;

@@ -102,6 +102,7 @@ namespace BTCPayServer.Tests
                         await ExplorerNode.SendToAddressAsync(address, Money.Coins(0.2m));
                         ExplorerNode.Generate(1);
                         await WaitLNSynched();
+                        await Task.Delay(1000);
                         await CustomerLightningD.FundChannelAsync(clightning, Money.Satoshis(16777215));
                         break;
                     case "CHANNELD_AWAITING_LOCKIN":

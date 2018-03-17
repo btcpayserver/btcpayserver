@@ -17,7 +17,7 @@ services:
       TESTS_POSTGRES: User ID=postgres;Host=postgres;Port=5432;Database=btcpayserver
       TESTS_PORT: 80
       TESTS_HOSTNAME: tests
-      TEST_CUSTOMERLIGHTNINGD: http://lightningd:9835/
+      TEST_CUSTOMERLIGHTNINGD: http://customer_lightningd:9835/
       TEST_MERCHANTCHARGE: http://api-token:foiewnccewuify@lightning-charged:9112/
     expose:
       - "80"
@@ -36,7 +36,8 @@ services:
     links:
       - nbxplorer
       - postgres
-      - lightningd
+      - customer_lightningd
+      - merchant_lightningd
       - lightning-charged
 
   nbxplorer:
@@ -83,24 +84,7 @@ services:
     volumes:
       - "bitcoin_datadir:/data"
 
-  lightning-charged:
-    image: shesek/lightning-charge:0.3.5
-    environment:
-      NETWORK: regtest
-      API_TOKEN: foiewnccewuify
-      SKIP_BITCOIND: 1
-      BITCOIND_RPCCONNECT: bitcoind
-    volumes:
-      - "bitcoin_datadir:/etc/bitcoin"
-    expose:
-      - "9112" # Charge
-      - "9735" # Lightning
-    ports:
-      - "54938:9112" # Charge
-    links:
-      - bitcoind
-
-  lightningd:
+  customer_lightningd:
     image: nicolasdorier/clightning
     environment: 
       LIGHTNINGD_OPT: |
@@ -115,6 +99,46 @@ services:
       - "9835" # api port
     volumes:
       - "bitcoin_datadir:/etc/bitcoin"
+      - "customer_lightningd_datadir:/root/.lightning"
+    links:
+      - bitcoind
+
+  lightning-charged:
+    image: shesek/lightning-charge:0.3.5
+    environment:
+      NETWORK: regtest
+      API_TOKEN: foiewnccewuify
+      SKIP_BITCOIND: 1
+      BITCOIND_RPCCONNECT: bitcoind
+    volumes:
+      - "bitcoin_datadir:/etc/bitcoin"
+      - "lightning_charge_datadir:/data"
+      - "merchant_lightningd_datadir:/etc/lightning"
+    expose:
+      - "9112" # Charge
+      - "9735" # Lightning
+    ports:
+      - "54938:9112" # Charge
+    links:
+      - bitcoind
+      - merchant_lightningd
+
+  merchant_lightningd:
+    image: nicolasdorier/clightning
+    environment: 
+      LIGHTNINGD_OPT: |
+        bitcoin-datadir=/etc/bitcoin
+        bitcoin-rpcconnect=bitcoind
+        network=regtest
+        log-level=debug
+    ports:
+      - "30993:9835" # api port
+    expose:
+      - "9735" # server port
+      - "9835" # api port
+    volumes:
+      - "bitcoin_datadir:/etc/bitcoin"
+      - "merchant_lightningd_datadir:/root/.lightning"
     links:
       - bitcoind
 
@@ -145,3 +169,6 @@ services:
 
 volumes:
     bitcoin_datadir:
+    customer_lightningd_datadir:
+    merchant_lightningd_datadir:
+    lightning_charge_datadir:

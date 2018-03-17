@@ -1,1 +1,1 @@
-docker exec -ti btcpayservertests_bitcoind_1 bitcoin-cli -regtest -conf="/data/bitcoin.conf" -datadir="/data" $args
+docker exec -ti btcpayservertests_bitcoind_1 bitcoin-cli -datadir="/data" $args

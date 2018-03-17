@@ -41,7 +41,7 @@ docker-compose run --rm tests
 
 You can call bitcoin-cli inside the container with `docker exec`, for example, if you want to send `0.23111090` to `mohu16LH66ptoWGEL1GtP6KHTBJYXMWhEf`:
 ```
-docker exec -ti btcpayserver_dev_bitcoind bitcoin-cli -regtest -conf="/data/bitcoin.conf" -datadir="/data" sendtoaddress "mohu16LH66ptoWGEL1GtP6KHTBJYXMWhEf" 0.23111090
+docker exec -ti btcpayservertests_bitcoind_1 bitcoin-cli -regtest -conf="/data/bitcoin.conf" -datadir="/data" sendtoaddress "mohu16LH66ptoWGEL1GtP6KHTBJYXMWhEf" 0.23111090
 ```
 
 If you are using Powershell:

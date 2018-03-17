@@ -65,7 +65,6 @@ services:
       - litecoind
 
   bitcoind:
-    container_name: btcpayserver_dev_bitcoind
     image: nicolasdorier/docker-bitcoin:0.16.0
     environment:
       BITCOIN_EXTRA_ARGS: |
@@ -143,7 +142,6 @@ services:
       - bitcoind
 
   litecoind:
-    container_name: btcpayserver_dev_litecoind
     image: nicolasdorier/docker-litecoin:0.14.2
     environment:
       BITCOIN_EXTRA_ARGS: |

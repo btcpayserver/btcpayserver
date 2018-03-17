@@ -163,12 +163,13 @@ namespace BTCPayServer.Payments.Lightning
 
         private async Task AddPayment(BTCPayNetwork network, ChargeInvoice notification, ListenedInvoice listenedInvoice)
         {
-            await _InvoiceRepository.AddPayment(listenedInvoice.InvoiceId, notification.PaidAt.Value, new LightningLikePaymentData()
+            var payment = await _InvoiceRepository.AddPayment(listenedInvoice.InvoiceId, notification.PaidAt.Value, new LightningLikePaymentData()
             {
                 BOLT11 = notification.PaymentRequest,
                 Amount = notification.MilliSatoshi
             }, network.CryptoCode, accounted: true);
-            _Aggregator.Publish(new InvoiceEvent(listenedInvoice.InvoiceId, 1002, "invoice_receivedPayment"));
+            if(payment != null)
+                _Aggregator.Publish(new InvoiceEvent(listenedInvoice.InvoiceId, 1002, "invoice_receivedPayment"));
         }
 
         private static ChargeClient GetChargeClient(LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network)

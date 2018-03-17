@@ -461,6 +461,15 @@ namespace BTCPayServer.Services.Invoices
             AddToTextSearch(invoiceId, addresses.Select(a => a.ToString()).ToArray());
         }
 
+        /// <summary>
+        /// Add a payment to an invoice
+        /// </summary>
+        /// <param name="invoiceId"></param>
+        /// <param name="date"></param>
+        /// <param name="paymentData"></param>
+        /// <param name="cryptoCode"></param>
+        /// <param name="accounted"></param>
+        /// <returns>The PaymentEntity or null if already added</returns>
         public async Task<PaymentEntity> AddPayment(string invoiceId, DateTimeOffset date, CryptoPaymentData paymentData, string cryptoCode, bool accounted = false)
         {
             using (var context = _ContextFactory.CreateContext())
@@ -486,7 +495,11 @@ namespace BTCPayServer.Services.Invoices
 
                 context.Payments.Add(data);
 
-                await context.SaveChangesAsync().ConfigureAwait(false);
+                try
+                {
+                    await context.SaveChangesAsync().ConfigureAwait(false);
+                }
+                catch(DbUpdateException) { return null; } // Already exists
                 AddToTextSearch(invoiceId, paymentData.GetSearchTerms());
                 return entity;
             }

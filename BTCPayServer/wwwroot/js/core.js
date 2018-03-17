@@ -20,11 +20,7 @@ function onDataCallback(jsonData) {
 
         $(".modal-dialog").addClass("paid");
 
-        if ($("#scan").hasClass("active")) {
-            $("#scan").removeClass("active");
-        } else if ($("#copy").hasClass("active")) {
-            $("#copy").removeClass("active");
-        }
+        resetTabsSlider();
         $("#paid").addClass("active");
     }
 
@@ -36,11 +32,7 @@ function onDataCallback(jsonData) {
         $(".modal-dialog").addClass("expired");
         $("#expired").addClass("active");
 
-        if ($("#scan").hasClass("active")) {
-            $("#scan").removeClass("active");
-        } else if ($("#copy").hasClass("active")) {
-            $("#copy").removeClass("active");
-        }
+        resetTabsSlider();
     }
 
     if (checkoutCtrl.srvModel.status !== newStatus) {
@@ -147,9 +139,9 @@ $(document).ready(function () {
                 }).fail(function (jqXHR, textStatus, errorThrown) {
 
                 })
-                .always(function () {
-                    $("#emailAddressForm .input-wrapper bp-loading-button .action-button").removeClass("loading");
-                });
+                    .always(function () {
+                        $("#emailAddressForm .input-wrapper bp-loading-button .action-button").removeClass("loading");
+                    });
             } else {
                 $("#emailAddressForm").addClass("ng-touched ng-dirty ng-submitted ng-invalid");
             }
@@ -175,46 +167,50 @@ $(document).ready(function () {
     // Scan/Copy Transitions
     // Scan Tab
     $("#scan-tab").click(function () {
-        if (!$(this).is(".active")) {
-            $(this).addClass("active");
-        }
-
-        if ($("#copy-tab").is(".active")) {
-            $("#copy-tab").removeClass("active");
-        }
-
-        $(".payment-tabs__slider").removeClass("slide-right");
-
-        if (!$("#scan").is(".active")) {
-            $("#copy").hide();
-            $("#copy").removeClass("active");
-
-            $("#scan").show();
-            $("#scan").addClass("active");
-        }
+        resetTabsSlider();
+        activateTab("#scan");
     });
 
-    // Main Copy tab
+    // Copy tab
     $("#copy-tab").click(function () {
-        if (!$(this).is(".active")) {
-            $(this).addClass("active");
-        }
+        resetTabsSlider();
+        activateTab("#copy");
 
-        if ($("#scan-tab").is(".active")) {
-            $("#scan-tab").removeClass("active");
-        }
-        if (!$(".payment-tabs__slider").is("slide-right")) {
-            $(".payment-tabs__slider").addClass("slide-right");
-        }
-
-        if (!$("#copy").is(".active")) {
-            $("#copy").show();
-            $("#copy").addClass("active");
-
-            $("#scan").hide();
-            $("#scan").removeClass("active");
-        }
+        $("#tabsSlider").addClass("slide-copy");
     });
+
+    // Altcoins tab
+    $("#altcoins-tab").click(function () {
+        resetTabsSlider();
+        activateTab("#altcoins");
+
+        $("#tabsSlider").addClass("slide-altcoins");
+    });
+
+    function resetTabsSlider() {
+        $("#tabsSlider").removeClass("slide-copy");
+        $("#tabsSlider").removeClass("slide-altcoins");
+
+        $("#scan-tab").removeClass("active");
+        $("#copy-tab").removeClass("active");
+        $("#altcoins-tab").removeClass("active");
+
+        $("#copy").hide();
+        $("#copy").removeClass("active");
+
+        $("#scan").hide();
+        $("#scan").removeClass("active");
+
+        $("#altcoins").hide();
+        $("#altcoins").removeClass("active");
+    }
+
+    function activateTab(senderName) {
+        $(senderName + "-tab").addClass("active");
+
+        $(senderName).show();
+        $(senderName).addClass("active");
+    }
 
     // Payment received
     // Should connect using webhook ?

@@ -57,7 +57,7 @@ namespace BTCPayServer.Tests
 
             var btc = NetworkProvider.GetNetwork("BTC").NBitcoinNetwork;
             CustomerLightningD = new CLightningRPCClient(new Uri(GetEnvironment("TEST_CUSTOMERLIGHTNINGD", "http://127.0.0.1:30992/")), btc);
-            MerchantCharge = new ChargeTester(this, "TEST_MERCHANTCHARGE", "http://api-token:foiewnccewuify@127.0.0.1:54938/", "lightning-charged", btc);
+            MerchantCharge = new ChargeTester(this, "TEST_MERCHANTCHARGE", "http://api-token:foiewnccewuify@127.0.0.1:54938/", "merchant_lightningd", btc);
 
             PayTester = new BTCPayServerTester(Path.Combine(_Directory, "pay"))
             {

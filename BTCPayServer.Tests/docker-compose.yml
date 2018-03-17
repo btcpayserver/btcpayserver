@@ -1,7 +1,7 @@
 version: "3"    
 
 # Run `docker-compose up dev` for bootstrapping your development environment
-# Doing so will expose eclair API, NBXplorer, Bitcoind RPC and postgres port to the host so that tests can Run,
+# Doing so will expose NBXplorer, Bitcoind RPC and postgres port to the host so that tests can Run,
 # The Visual Studio launch setting `Docker-Regtest` is configured to use this environment.
 services:
 
@@ -17,8 +17,8 @@ services:
       TESTS_POSTGRES: User ID=postgres;Host=postgres;Port=5432;Database=btcpayserver
       TESTS_PORT: 80
       TESTS_HOSTNAME: tests
-      TEST_ECLAIR: http://eclair-cli:gpwefwmmewci@eclair:8080/
-      TEST_CHARGE: http://api-token:foiewnccewuify@lightning-charged:9112/
+      TEST_CUSTOMERLIGHTNINGD: http://lightningd:9835/
+      TEST_MERCHANTCHARGE: http://api-token:foiewnccewuify@lightning-charged:9112/
     expose:
       - "80"
     links:
@@ -36,7 +36,7 @@ services:
     links:
       - nbxplorer
       - postgres
-      - eclair
+      - lightningd
       - lightning-charged
 
   nbxplorer:
@@ -75,11 +75,6 @@ services:
         rpcport=43782
         port=39388
         whitelist=0.0.0.0/0
-        zmqpubrawblock=tcp://0.0.0.0:29000
-        zmqpubrawtx=tcp://0.0.0.0:29000
-        txindex=1
-        # Eclair is still using addwitnessaddress
-        deprecatedrpc=addwitnessaddress 
     ports: 
       - "43782:43782"
     expose:
@@ -89,7 +84,7 @@ services:
       - "bitcoin_datadir:/data"
 
   lightning-charged:
-    image: shesek/lightning-charge:0.3.1
+    image: shesek/lightning-charge:0.3.4
     environment:
       NETWORK: regtest
       API_TOKEN: foiewnccewuify
@@ -105,28 +100,23 @@ services:
     links:
       - bitcoind
 
-  eclair:
-    image: acinq/eclair@sha256:758eaf02683046a096ee03390d3a54df8fcfca50883f7560ab946a36ee4e81d8
-    environment:
-      JAVA_OPTS: >
-        -Xmx512m 
-        -Declair.printToConsole 
-        -Declair.bitcoind.host=bitcoind 
-        -Declair.bitcoind.rpcport=43782 
-        -Declair.bitcoind.rpcuser=ceiwHEbqWI83 
-        -Declair.bitcoind.rpcpassword=DwubwWsoo3 
-        -Declair.bitcoind.zmq=tcp://bitcoind:29000
-        -Declair.api.enabled=true
-        -Declair.api.password=gpwefwmmewci
-        -Declair.chain=regtest
-        -Declair.api.binding-ip=0.0.0.0
-    links:
-      - bitcoind
+  lightningd:
+    image: nicolasdorier/clightning
+    environment: 
+      LIGHTNINGD_OPT: |
+        bitcoin-datadir=/etc/bitcoin
+        bitcoin-rpcconnect=bitcoind
+        network=regtest
+        log-level=debug
     ports:
-      - "30992:8080" # api port
+      - "30992:9835" # api port
     expose:
       - "9735" # server port
-      - "8080" # api port
+      - "9835" # api port
+    volumes:
+      - "bitcoin_datadir:/etc/bitcoin"
+    links:
+      - bitcoind
 
   litecoind:
     container_name: btcpayserver_dev_litecoind

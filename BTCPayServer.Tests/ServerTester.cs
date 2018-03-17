@@ -17,8 +17,8 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
-using BTCPayServer.Payments.Lightning.Eclair;
 using System.Globalization;
+using BTCPayServer.Payments.Lightning.CLightning.RPC;
 
 namespace BTCPayServer.Tests
 {
@@ -56,8 +56,8 @@ namespace BTCPayServer.Tests
             LTCExplorerClient = new ExplorerClient(NetworkProvider.GetNetwork("LTC").NBXplorerNetwork, new Uri(GetEnvironment("TESTS_LTCNBXPLORERURL", "http://127.0.0.1:32838/")));
 
             var btc = NetworkProvider.GetNetwork("BTC").NBitcoinNetwork;
-            CustomerEclair = new EclairTester(this, "TEST_ECLAIR", "http://eclair-cli:gpwefwmmewci@127.0.0.1:30992/", "eclair", btc);
-            MerchantCharge = new ChargeTester(this, "TEST_CHARGE", "http://api-token:foiewnccewuify@127.0.0.1:54938/", "lightning-charged", btc);
+            CustomerLightningD = new CLightningRPCClient(new Uri(GetEnvironment("TEST_CUSTOMERLIGHTNINGD", "http://127.0.0.1:30992/")), btc);
+            MerchantCharge = new ChargeTester(this, "TEST_MERCHANTCHARGE", "http://api-token:foiewnccewuify@127.0.0.1:54938/", "lightning-charged", btc);
 
             PayTester = new BTCPayServerTester(Path.Combine(_Directory, "pay"))
             {
@@ -73,55 +73,62 @@ namespace BTCPayServer.Tests
 
 
         /// <summary>
-        /// This will setup a channel going from customer to merchant
+        /// Connect a customer LN node to the merchant LN node
         /// </summary>
         public void PrepareLightning()
         {
             PrepareLightningAsync().GetAwaiter().GetResult();
         }
 
+
+        /// <summary>
+        /// Connect a customer LN node to the merchant LN node
+        /// </summary>
+        /// <returns></returns>
         public async Task PrepareLightningAsync()
         {
-            // Activate segwit
-            var blockCount = ExplorerNode.GetBlockCountAsync();
-            // Fetch node info, but that in cache
-            var merchantInfo = MerchantCharge.Client.GetInfoAsync();
-            var customer = CustomerEclair.GetNodeInfoAsync();
-            var channels = CustomerEclair.RPC.ChannelsAsync();
-
-            var info = await merchantInfo;
-            var clightning = new NodeInfo(info.Id, MerchantCharge.P2PHost, info.Port);
-            var connect = CustomerEclair.RPC.ConnectAsync(clightning);
-            await Task.WhenAll(blockCount, customer, channels, connect);
-
-            // If the channel is not created, let's do it
-            if (channels.Result.Length == 0)
+            while (true)
             {
-                var c = (await CustomerEclair.RPC.ChannelsAsync());
-                bool generated = false;
-                bool createdChannel = false;
-                CancellationTokenSource timeout = new CancellationTokenSource();
-                timeout.CancelAfter(10000);
-                while (c.Length == 0 || c[0].State != "NORMAL")
+                var channel = (await CustomerLightningD.ListPeersAsync())
+                            .SelectMany(p => p.Channels)
+                            .FirstOrDefault();
+                switch (channel?.State)
                 {
-                    if (timeout.IsCancellationRequested)
-                    {
-                        timeout = new CancellationTokenSource();
-                        timeout.CancelAfter(10000);
-                        createdChannel = c.Length == 0;
-                        generated = false;
-                    }
-                    if (!createdChannel)
-                    {
-                        await CustomerEclair.RPC.OpenAsync(clightning, Money.Satoshis(16777215));
-                        createdChannel = true;
-                    }
-                    if (!generated && c.Length != 0 && c[0].State == "WAIT_FOR_FUNDING_CONFIRMED")
-                    {
-                        ExplorerNode.Generate(6);
-                        generated = true;
-                    }
-                    c = (await CustomerEclair.RPC.ChannelsAsync());
+                    case null:
+                        var merchantInfo = await WaitLNSynched();
+                        var clightning = new NodeInfo(merchantInfo.Id, MerchantCharge.P2PHost, merchantInfo.Port);
+                        await CustomerLightningD.ConnectAsync(clightning);
+                        var address = await CustomerLightningD.NewAddressAsync();
+                        await ExplorerNode.SendToAddressAsync(address, Money.Coins(0.2m));
+                        ExplorerNode.Generate(1);
+                        await WaitLNSynched();
+                        await CustomerLightningD.FundChannelAsync(clightning, Money.Satoshis(16777215));
+                        break;
+                    case "CHANNELD_AWAITING_LOCKIN":
+                        ExplorerNode.Generate(1);
+                        await WaitLNSynched();
+                        break;
+                    case "CHANNELD_NORMAL":
+                        return;
+                    default:
+                        throw new NotSupportedException(channel?.State ?? "");
+                }
+            }
+        }
+
+        private async Task<Payments.Lightning.CLightning.GetInfoResponse> WaitLNSynched()
+        {
+            while (true)
+            {
+                var merchantInfo = await MerchantCharge.Client.GetInfoAsync();
+                var blockCount = await ExplorerNode.GetBlockCountAsync();
+                if (merchantInfo.BlockHeight != blockCount)
+                {
+                    await Task.Delay(1000);
+                }
+                else
+                {
+                    return merchantInfo;
                 }
             }
         }
@@ -135,11 +142,10 @@ namespace BTCPayServer.Tests
         {
             var bolt11 = invoice.CryptoInfo.Where(o => o.PaymentUrls.BOLT11 != null).First().PaymentUrls.BOLT11;
             bolt11 = bolt11.Replace("lightning:", "", StringComparison.OrdinalIgnoreCase);
-            await CustomerEclair.RPC.SendAsync(bolt11);
+            await CustomerLightningD.SendAsync(bolt11);
         }
 
-        public EclairTester MerchantEclair { get; set; }
-        public EclairTester CustomerEclair { get; set; }
+        public CLightningRPCClient CustomerLightningD { get; set; }
         public ChargeTester MerchantCharge { get; private set; }
 
         internal string GetEnvironment(string variable, string defaultValue)

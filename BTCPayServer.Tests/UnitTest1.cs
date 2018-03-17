@@ -22,7 +22,6 @@ using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore;
 using BTCPayServer.Services.Rates;
 using Microsoft.Extensions.Caching.Memory;
-using BTCPayServer.Payments.Lightning.Eclair;
 using System.Collections.Generic;
 using BTCPayServer.Models.StoreViewModels;
 using System.Threading.Tasks;

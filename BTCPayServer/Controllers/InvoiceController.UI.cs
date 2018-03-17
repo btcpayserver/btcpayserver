@@ -77,7 +77,7 @@ namespace BTCPayServer.Controllers
                 var onchainMethod = data.GetPaymentMethodDetails() as Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod;
                 if(onchainMethod != null)
                 { 
-                    cryptoPayment.Address = onchainMethod.DepositAddress.ToString();
+                    cryptoPayment.Address = onchainMethod.DepositAddress;
                 }
                 cryptoPayment.Rate = FormatCurrency(data);
                 cryptoPayment.PaymentUrl = cryptoInfo.PaymentUrls.BIP21;

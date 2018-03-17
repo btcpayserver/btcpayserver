@@ -30,6 +30,19 @@ namespace BTCPayServer
 {
     public static class Extensions
     {
+        public static decimal RoundUp(decimal value, int precision)
+        {
+            for (int i = 0; i < precision; i++)
+            {
+                value = value * 10m;
+            }
+            value = Math.Ceiling(value);
+            for (int i = 0; i < precision; i++)
+            {
+                value = value / 10m;
+            }
+            return value;
+        }
         public static PaymentMethodId GetpaymentMethodId(this InvoiceCryptoInfo info)
         {
             return new PaymentMethodId(info.CryptoCode, Enum.Parse<PaymentTypes>(info.PaymentType));

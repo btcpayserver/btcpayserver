@@ -21,7 +21,7 @@ namespace BTCPayServer.Payments.Lightning
         public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(LightningSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, BTCPayNetwork network)
         {
             var invoice = paymentMethod.ParentEntity;
-            var due = invoice.ProductInformation.Price / paymentMethod.Rate;
+            var due = Extensions.RoundUp(invoice.ProductInformation.Price / paymentMethod.Rate, 8);
             var client = GetClient(supportedPaymentMethod, network);
             var expiry = invoice.ExpirationTime - DateTimeOffset.UtcNow;
             var lightningInvoice = await client.CreateInvoiceAsync(new CreateInvoiceRequest()

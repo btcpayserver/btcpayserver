@@ -17,12 +17,15 @@ namespace BTCPayServer.JsonConverters
             return typeof(LightMoneyJsonConverter).GetTypeInfo().IsAssignableFrom(objectType.GetTypeInfo());
         }
 
+        Type longType = typeof(long).GetTypeInfo();
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             try
             {
                 return reader.TokenType == JsonToken.Null ? null :
-                    reader.TokenType == JsonToken.Integer ? new LightMoney((long)reader.Value) :
+                    reader.TokenType == JsonToken.Integer ?
+                                                longType.IsAssignableFrom(reader.ValueType) ? new LightMoney((long)reader.Value)
+                                                                                            : new LightMoney(long.MaxValue) :
                     reader.TokenType == JsonToken.String ? new LightMoney(long.Parse((string)reader.Value, CultureInfo.InvariantCulture)) 
                     : null;
             }

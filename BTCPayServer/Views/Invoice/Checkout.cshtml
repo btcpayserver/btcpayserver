@@ -100,10 +100,6 @@
                                                             <img style="height:32px; margin-left:5px;" alt="@crypto.PaymentMethodId" src="@crypto.CryptoImage" />
                                                         </a>
                                                     }
-                                                    <script>function shapeshift_click(a, e) { e.preventDefault(); var link = a.href; var shapeshiftWindow = window.open(link, '1418115287605', 'width=700,height=500,toolbar=0,menubar=0,location=0,status=1,scrollbars=1,resizable=0,left=0,top=0'); shapeshiftWindow.focus(); return false; }</script>
-                                                    <a onclick="shapeshift_click(this, event);" v-bind:href="srvModel.shapeshiftUrl">
-                                                        <img src="https://shapeshift.io/legacy/images/lens_icon.png" class="ss-button" style="height:32px; margin-left: 5px;">
-                                                    </a>
                                                 </div>
                                                 <div class="payment__spinner">
                                                     <bp-spinner>
@@ -174,7 +170,10 @@
                                         <div class="payment-tabs__tab" id="copy-tab">
                                             <span i18n="">Copy</span>
                                         </div>
-                                        <div class="payment-tabs__slider"></div>
+                                        <div class="payment-tabs__tab" id="altcoins-tab">
+                                            <span i18n="">Altcoins</span>
+                                        </div>
+                                        <div id="tabsSlider" class="payment-tabs__slider three-tabs"></div>
                                     </div>
                                 </div>
                                 <div adjust-height="" class="payment-box">
@@ -262,6 +261,13 @@
                                                 </div>
                                             </div>
                                         </div>
+                                    </div>
+                                    <div id="altcoins" class="bp-view payment manual-flow">
+                                        <p>Instructions... understand there is forwarding time...</p>
+                                        <script>function shapeshift_click(a, e) { e.preventDefault(); var link = a.href; var shapeshiftWindow = window.open(link, '1418115287605', 'width=700,height=500,toolbar=0,menubar=0,location=0,status=1,scrollbars=1,resizable=0,left=0,top=0'); shapeshiftWindow.focus(); return false; }</script>
+                                        <a onclick="shapeshift_click(this, event);" v-bind:href="srvModel.shapeshiftUrl">
+                                            <img src="https://shapeshift.io/legacy/images/lens_icon.png" class="ss-button" style="height:32px; margin-left: 5px;">
+                                        </a>
                                     </div>
                                     <div class="bp-view" id="link-expired" style="padding-top: 3.6rem;">
                                         <div class="manual__step-one refund-address-form" novalidate="">

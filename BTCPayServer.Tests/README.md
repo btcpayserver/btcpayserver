@@ -41,7 +41,7 @@ docker-compose run --rm tests
 
 You can call bitcoin-cli inside the container with `docker exec`, for example, if you want to send `0.23111090` to `mohu16LH66ptoWGEL1GtP6KHTBJYXMWhEf`:
 ```
-docker exec -ti btcpayservertests_bitcoind_1 bitcoin-cli -datadir="/data" sendtoaddress "mohu16LH66ptoWGEL1GtP6KHTBJYXMWhEf" 0.23111090
+./docker-bitcoin-cli.sh sendtoaddress "mohu16LH66ptoWGEL1GtP6KHTBJYXMWhEf" 0.23111090
 ```
 
 If you are using Powershell:
@@ -51,12 +51,13 @@ If you are using Powershell:
 
 ### Using the test litecoin-cli
 
-Same as bitcoin-cli, but with `.\docker-litecoin-cli.ps1` instead. 
+Same as bitcoin-cli, but with `.\docker-litecoin-cli.ps1` and `.\docker-litecoin-cli.sh` instead. 
 
 ### Using the test lightning-cli
 
+If you are using Linux:
 ```
-docker exec -ti btcpayservertests_customer_lightningd_1 lightning-cli pay lnbcrt100u1pd2e6uspp5ajnadvhazjrz55twd5k6yeg9u87wpw0q2fdr7g960yl5asv5fmnqdq9d3hkccqpxmedyrk0ehw5ueqx5e0r4qrrv74cewddfcvsxaawqz7634cmjj39sqwy5tvhz0hasktkk6t9pqfdh3edmf3z09zst5y7khv3rvxh8ctqqw6mwhh
+./docker-customer-lightning-cli.sh pay lnbcrt100u1pd2e6uspp5ajnadvhazjrz55twd5k6yeg9u87wpw0q2fdr7g960yl5asv5fmnqdq9d3hkccqpxmedyrk0ehw5ueqx5e0r4qrrv74cewddfcvsxaawqz7634cmjj39sqwy5tvhz0hasktkk6t9pqfdh3edmf3z09zst5y7khv3rvxh8ctqqw6mwhh
 ```
 
 If you are using Powershell:

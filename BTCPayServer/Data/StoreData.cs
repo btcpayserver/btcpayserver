@@ -213,6 +213,10 @@ namespace BTCPayServer.Data
         {
             get; set;
         }
+        public bool AllowCoinConversion
+        {
+            get; set;
+        }
         [DefaultValue(60)]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public int MonitoringExpiration

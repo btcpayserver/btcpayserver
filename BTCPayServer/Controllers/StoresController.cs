@@ -222,6 +222,7 @@ namespace BTCPayServer.Controllers
             vm.InvoiceExpiration = storeBlob.InvoiceExpiration;
             vm.RateMultiplier = (double)storeBlob.GetRateMultiplier();
             vm.PreferredExchange = storeBlob.PreferredExchange.IsCoinAverage() ? "coinaverage" : storeBlob.PreferredExchange;
+            vm.AllowCoinConversion = storeBlob.AllowCoinConversion;
             return View(vm);
         }
 
@@ -298,6 +299,7 @@ namespace BTCPayServer.Controllers
             blob.PreferredExchange = model.PreferredExchange;
 
             blob.SetRateMultiplier(model.RateMultiplier);
+            blob.AllowCoinConversion = model.AllowCoinConversion;
 
             if (store.SetStoreBlob(blob))
             {

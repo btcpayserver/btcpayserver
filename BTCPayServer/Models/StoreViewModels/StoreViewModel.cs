@@ -94,6 +94,12 @@ namespace BTCPayServer.Models.StoreViewModels
             get; set;
         }
 
+        [Display(Name = "Allow conversion through third party (Shapeshift, Changelly...)")]
+        public bool AllowCoinConversion
+        {
+            get; set;
+        }
+
         public string StatusMessage
         {
             get; set;

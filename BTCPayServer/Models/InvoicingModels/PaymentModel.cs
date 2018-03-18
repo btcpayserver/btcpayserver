@@ -43,5 +43,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public int MaxTimeMinutes { get; internal set; }
         public string PaymentType { get; internal set; }
         public string PaymentMethodId { get; internal set; }
+
+        public bool AllowCoinConversion { get; set; }
     }
 }

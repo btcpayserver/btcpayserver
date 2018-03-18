@@ -62,7 +62,6 @@ namespace BTCPayServer.Payments.Lightning
         {
             if (Listening(invoiceId))
                 return;
-
             var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
             foreach (var paymentMethod in invoice.GetPaymentMethods(_NetworkProvider)
                                                           .Where(c => c.GetId().PaymentType == PaymentTypes.LightningLike))
@@ -92,7 +91,7 @@ namespace BTCPayServer.Payments.Lightning
                     var chargeInvoice = await charge.GetInvoice(lightningMethod.InvoiceId);
                     if (chargeInvoice == null)
                         continue;
-                    if(chargeInvoice.Status == "paid")
+                    if (chargeInvoice.Status == "paid")
                         await AddPayment(network, chargeInvoice, listenedInvoice);
                     if (chargeInvoice.Status == "paid" || chargeInvoice.Status == "expired")
                         continue;
@@ -157,18 +156,20 @@ namespace BTCPayServer.Payments.Lightning
             catch (Exception ex)
             {
                 Logs.PayServer.LogError(ex, $"{supportedPaymentMethod.CryptoCode} (Lightning): Error while contacting {supportedPaymentMethod.GetLightningChargeUrl(false)}");
+                DoneListening(supportedPaymentMethod.GetLightningChargeUrl(false));
             }
             Logs.PayServer.LogInformation($"{supportedPaymentMethod.CryptoCode} (Lightning): Stop listening {supportedPaymentMethod.GetLightningChargeUrl(false)}");
         }
 
         private async Task AddPayment(BTCPayNetwork network, ChargeInvoice notification, ListenedInvoice listenedInvoice)
         {
-            await _InvoiceRepository.AddPayment(listenedInvoice.InvoiceId, notification.PaidAt.Value, new LightningLikePaymentData()
+            var payment = await _InvoiceRepository.AddPayment(listenedInvoice.InvoiceId, notification.PaidAt.Value, new LightningLikePaymentData()
             {
                 BOLT11 = notification.PaymentRequest,
                 Amount = notification.MilliSatoshi
             }, network.CryptoCode, accounted: true);
-            _Aggregator.Publish(new InvoiceEvent(listenedInvoice.InvoiceId, 1002, "invoice_receivedPayment"));
+            if(payment != null)
+                _Aggregator.Publish(new InvoiceEvent(listenedInvoice.InvoiceId, 1002, "invoice_receivedPayment"));
         }
 
         private static ChargeClient GetChargeClient(LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network)
@@ -202,9 +203,26 @@ namespace BTCPayServer.Payments.Lightning
             return false;
         }
 
+        /// <summary>
+        /// Stop listening all invoices on this server
+        /// </summary>
+        /// <param name="uri"></param>
+        private void DoneListening(Uri uri)
+        {
+            lock (_ListenedInvoiceByChargeInvoiceId)
+            {
+                foreach (var listenedInvoice in _ListenedInvoiceByLightningUrl[uri.AbsoluteUri])
+                {
+                    _ListenedInvoiceByChargeInvoiceId.Remove(listenedInvoice.PaymentMethodDetails.InvoiceId);
+                    _InvoiceIds.Remove(listenedInvoice.InvoiceId);
+                }
+                _ListenedInvoiceByLightningUrl.Remove(uri.AbsoluteUri);
+            }
+        }
+
         bool Listening(string invoiceId)
         {
-            lock(_ListenedInvoiceByLightningUrl)
+            lock (_ListenedInvoiceByLightningUrl)
             {
                 return _InvoiceIds.Contains(invoiceId);
             }
@@ -230,13 +248,6 @@ namespace BTCPayServer.Payments.Lightning
                 {
                     var listen = Listen(listenedInvoice.SupportedPaymentMethod, listenedInvoice.Network);
                     _ListeningLightning.Add(listen);
-                    listen.ContinueWith(_ =>
-                    {
-                        lock (_ListenedInvoiceByLightningUrl)
-                        {
-                            _ListeningLightning.Remove(listen);
-                        }
-                    }, TaskScheduler.Default);
                 }
                 _ListenedInvoiceByLightningUrl.Add(listenedInvoice.Uri, listenedInvoice);
                 _ListenedInvoiceByChargeInvoiceId.Add(listenedInvoice.PaymentMethodDetails.InvoiceId, listenedInvoice);

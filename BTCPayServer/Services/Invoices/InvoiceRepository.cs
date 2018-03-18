@@ -130,7 +130,7 @@ namespace BTCPayServer.Services.Invoices
                         throw new InvalidOperationException("CryptoCode unsupported");
                     var paymentDestination = paymentMethod.GetPaymentMethodDetails().GetPaymentDestination();
 
-                    string address = GetDestination(paymentMethod);
+                    string address = GetDestination(paymentMethod, paymentMethod.Network.NBitcoinNetwork);
                     context.AddressInvoices.Add(new AddressInvoiceData()
                     {
                         InvoiceDataId = invoice.Id,
@@ -162,12 +162,12 @@ namespace BTCPayServer.Services.Invoices
             return invoice;
         }
 
-        private static string GetDestination(PaymentMethod paymentMethod)
+        private static string GetDestination(PaymentMethod paymentMethod, Network network)
         {
             // For legacy reason, BitcoinLikeOnChain is putting the hashes of addresses in database
             if (paymentMethod.GetId().PaymentType == Payments.PaymentTypes.BTCLike)
             {
-                return ((Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod)paymentMethod.GetPaymentMethodDetails()).DepositAddress.ScriptPubKey.Hash.ToString();
+                return ((Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod)paymentMethod.GetPaymentMethodDetails()).GetDepositAddress(network).ScriptPubKey.Hash.ToString();
             }
             ///////////////
             return paymentMethod.GetPaymentMethodDetails().GetPaymentDestination();
@@ -209,7 +209,7 @@ namespace BTCPayServer.Services.Invoices
                     InvoiceDataId = invoiceId,
                     CreatedTime = DateTimeOffset.UtcNow
                 }
-                .Set(GetDestination(currencyData), currencyData.GetId()));
+                .Set(GetDestination(currencyData, network.NBitcoinNetwork), currencyData.GetId()));
                 context.HistoricalAddressInvoices.Add(new HistoricalAddressInvoiceData()
                 {
                     InvoiceDataId = invoiceId,
@@ -461,6 +461,15 @@ namespace BTCPayServer.Services.Invoices
             AddToTextSearch(invoiceId, addresses.Select(a => a.ToString()).ToArray());
         }
 
+        /// <summary>
+        /// Add a payment to an invoice
+        /// </summary>
+        /// <param name="invoiceId"></param>
+        /// <param name="date"></param>
+        /// <param name="paymentData"></param>
+        /// <param name="cryptoCode"></param>
+        /// <param name="accounted"></param>
+        /// <returns>The PaymentEntity or null if already added</returns>
         public async Task<PaymentEntity> AddPayment(string invoiceId, DateTimeOffset date, CryptoPaymentData paymentData, string cryptoCode, bool accounted = false)
         {
             using (var context = _ContextFactory.CreateContext())
@@ -486,7 +495,11 @@ namespace BTCPayServer.Services.Invoices
 
                 context.Payments.Add(data);
 
-                await context.SaveChangesAsync().ConfigureAwait(false);
+                try
+                {
+                    await context.SaveChangesAsync().ConfigureAwait(false);
+                }
+                catch(DbUpdateException) { return null; } // Already exists
                 AddToTextSearch(invoiceId, paymentData.GetSearchTerms());
                 return entity;
             }

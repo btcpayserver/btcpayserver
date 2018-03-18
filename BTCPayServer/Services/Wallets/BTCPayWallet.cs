@@ -126,17 +126,18 @@ namespace BTCPayServer.Services.Wallets
                     }
                     catch
                     {
-                        Logs.PayServer.LogError("Call to NBXplorer GetUTXOsAsync timed out, this should never happen, please report this issue to NBXplorer developers");
+                        Logs.PayServer.LogError($"{Network.CryptoCode}: Call to NBXplorer GetUTXOsAsync timed out, this should never happen, please report this issue to NBXplorer developers");
                         throw;
                     }
                     var spentTime = DateTimeOffset.UtcNow - now;
                     if (spentTime.TotalSeconds > 30)
                     {
-                        Logs.PayServer.LogWarning($"NBXplorer took {(int)spentTime.TotalSeconds} seconds to reply, there is something wrong, please report this issue to NBXplorer developers");
+                        Logs.PayServer.LogWarning($"{Network.CryptoCode}: NBXplorer took {(int)spentTime.TotalSeconds} seconds to reply, there is something wrong, please report this issue to NBXplorer developers");
                     }
                     entry.AbsoluteExpiration = DateTimeOffset.UtcNow + CacheSpan;
                     return result;
                 });
+                _FetchingUTXOs.TryRemove(strategy.ToString(), out var unused);
                 completionSource.TrySetResult(utxos);
             }
             catch (Exception ex)

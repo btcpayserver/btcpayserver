@@ -34,7 +34,7 @@ namespace BTCPayServer.Payments.Bitcoin
             Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod onchainMethod = new Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod();
             onchainMethod.FeeRate = await getFeeRate;
             onchainMethod.TxFee = onchainMethod.FeeRate.GetFee(100); // assume price for 100 bytes
-            onchainMethod.DepositAddress = await getAddress;
+            onchainMethod.DepositAddress = (await getAddress).ToString();
             return onchainMethod;
         }
 

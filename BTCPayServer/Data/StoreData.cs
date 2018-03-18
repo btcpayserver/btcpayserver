@@ -118,7 +118,7 @@ namespace BTCPayServer.Data
             {
                 DerivationStrategy = null;
             }
-            else if (!existing)
+            else if (!existing && supportedPaymentMethod != null)
                 strategies.Add(new JProperty(supportedPaymentMethod.PaymentId.ToString(), PaymentMethodExtensions.Serialize(supportedPaymentMethod)));
             DerivationStrategies = strategies.ToString();
 #pragma warning restore CS0618

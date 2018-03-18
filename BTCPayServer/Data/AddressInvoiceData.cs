@@ -33,7 +33,7 @@ namespace BTCPayServer.Data
         }
         public AddressInvoiceData Set(string address, PaymentMethodId paymentMethodId)
         {
-            Address = address + "#" + paymentMethodId?.ToString();
+            Address = address + "#" + paymentMethodId.ToString();
             return this;
         }
         public PaymentMethodId GetpaymentMethodId()

@@ -160,7 +160,8 @@ namespace BTCPayServer.Payments.Bitcoin
                                             if (!alreadyExist)
                                             {
                                                 var payment = await _InvoiceRepository.AddPayment(invoice.Id, DateTimeOffset.UtcNow, paymentData, network.CryptoCode);
-                                                await ReceivedPayment(wallet, invoice.Id, payment, evt.DerivationStrategy);
+                                                if(payment != null)
+                                                    await ReceivedPayment(wallet, invoice.Id, payment, evt.DerivationStrategy);
                                             }
                                             else
                                             {
@@ -330,7 +331,8 @@ namespace BTCPayServer.Payments.Bitcoin
                     var paymentData = new BitcoinLikePaymentData(coin.Coin, transaction.Transaction.RBF);
                     var payment = await _InvoiceRepository.AddPayment(invoice.Id, coin.Timestamp, paymentData, network.CryptoCode).ConfigureAwait(false);
                     alreadyAccounted.Add(coin.Coin.Outpoint);
-                    invoice = await ReceivedPayment(wallet, invoice.Id, payment, strategy);
+                    if (payment != null)
+                        invoice = await ReceivedPayment(wallet, invoice.Id, payment, strategy);
                     totalPayment++;
                 }
             }
@@ -351,11 +353,11 @@ namespace BTCPayServer.Payments.Bitcoin
             var paymentMethod = invoice.GetPaymentMethod(wallet.Network, PaymentTypes.BTCLike, _ExplorerClients.NetworkProviders);
             if (paymentMethod != null &&
                 paymentMethod.GetPaymentMethodDetails() is BitcoinLikeOnChainPaymentMethod btc &&
-                btc.DepositAddress.ScriptPubKey == paymentData.Output.ScriptPubKey &&
+                btc.GetDepositAddress(wallet.Network.NBitcoinNetwork).ScriptPubKey == paymentData.Output.ScriptPubKey &&
                 paymentMethod.Calculate().Due > Money.Zero)
             {
                 var address = await wallet.ReserveAddressAsync(strategy);
-                btc.DepositAddress = address;
+                btc.DepositAddress = address.ToString();
                 await _InvoiceRepository.NewAddress(invoiceId, btc, wallet.Network);
                 _Aggregator.Publish(new InvoiceNewAddressEvent(invoiceId, address.ToString(), wallet.Network));
                 paymentMethod.SetPaymentMethodDetails(btc);

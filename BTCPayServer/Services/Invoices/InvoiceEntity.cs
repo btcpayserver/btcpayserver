@@ -582,7 +582,7 @@ namespace BTCPayServer.Services.Invoices
                 return new Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod()
                 {
                     FeeRate = FeeRate,
-                    DepositAddress = string.IsNullOrEmpty(DepositAddress) ? null : BitcoinAddress.Create(DepositAddress, Network?.NBitcoinNetwork),
+                    DepositAddress = string.IsNullOrEmpty(DepositAddress) ? null : DepositAddress,
                     TxFee = TxFee
                 };
             }
@@ -592,7 +592,7 @@ namespace BTCPayServer.Services.Invoices
                 if (details is Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod btcLike)
                 {
                     btcLike.TxFee = TxFee;
-                    btcLike.DepositAddress = BitcoinAddress.Create(DepositAddress, Network?.NBitcoinNetwork);
+                    btcLike.DepositAddress = string.IsNullOrEmpty(DepositAddress) ? null : DepositAddress;
                     btcLike.FeeRate = FeeRate;
                 }
                 return details;
@@ -615,7 +615,7 @@ namespace BTCPayServer.Services.Invoices
             {
                 TxFee = bitcoinPaymentMethod.TxFee;
                 FeeRate = bitcoinPaymentMethod.FeeRate;
-                DepositAddress = bitcoinPaymentMethod.DepositAddress.ToString();
+                DepositAddress = bitcoinPaymentMethod.DepositAddress;
             }
             var jobj = JObject.Parse(JsonConvert.SerializeObject(paymentMethod));
             PaymentMethodDetails = jobj;
@@ -646,8 +646,9 @@ namespace BTCPayServer.Services.Invoices
             var paid = 0m;
             var cryptoPaid = 0.0m;
 
+            int precision = 8;
             var paidTxFee = 0m;
-            bool paidEnough = paid >= RoundUp(totalDue, 8);
+            bool paidEnough = paid >= Extensions.RoundUp(totalDue, precision);
             int txRequired = 0;
             var payments =
                 ParentEntity.GetPayments()
@@ -662,7 +663,7 @@ namespace BTCPayServer.Services.Invoices
                         totalDue += txFee;
                         paidTxFee += txFee;
                     }
-                    paidEnough |= paid >= RoundUp(totalDue, 8);
+                    paidEnough |= paid >= Extensions.RoundUp(totalDue, precision);
                     if (GetId() == _.GetPaymentMethodId())
                     {
                         cryptoPaid += _.GetCryptoPaymentData().GetValue();
@@ -681,7 +682,7 @@ namespace BTCPayServer.Services.Invoices
                 paidTxFee += GetTxFee();
             }
 
-            accounting.TotalDue = Money.Coins(RoundUp(totalDue, 8));
+            accounting.TotalDue = Money.Coins(Extensions.RoundUp(totalDue, precision));
             accounting.Paid = Money.Coins(paid);
             accounting.TxRequired = txRequired;
             accounting.CryptoPaid = Money.Coins(cryptoPaid);
@@ -689,20 +690,6 @@ namespace BTCPayServer.Services.Invoices
             accounting.DueUncapped = accounting.TotalDue - accounting.Paid;
             accounting.NetworkFee = Money.Coins(paidTxFee);
             return accounting;
-        }
-
-        private static decimal RoundUp(decimal value, int precision)
-        {
-            for (int i = 0; i < precision; i++)
-            {
-                value = value * 10m;
-            }
-            value = Math.Ceiling(value);
-            for (int i = 0; i < precision; i++)
-            {
-                value = value / 10m;
-            }
-            return value;
         }
 
         private decimal GetTxFee()

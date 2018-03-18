@@ -272,27 +272,36 @@
                                     @if (Model.AllowCoinConversion)
                                     {
                                         <div id="altcoins" class="bp-view payment manual-flow">
-                                            <div class="manual__step-two__instructions">
-                                                <span>
-                                                    You can pay {{ srvModel.btcDue }} {{ srvModel.cryptoCode }} using altcoins other than the ones merchant directly supports.
-                                                    <br /><br />
-                                                    This service is provided by 3rd party. Please keep in mind that
-                                                    <span style="font-weight: 900;">we have no control</span> over how providers will forward your funds.
-                                                    Invoice will only be marked paid once funds are received on {{srvModel.cryptoCode}} Blockchain.
-                                                </span>
-                                            </div>
-                                            <center>
-                                                <script>function shapeshift_click(a, e) { e.preventDefault(); var link = a.href; var shapeshiftWindow = window.open(link, '1418115287605', 'width=700,height=500,toolbar=0,menubar=0,location=0,status=1,scrollbars=1,resizable=0,left=0,top=0'); shapeshiftWindow.focus(); return false; }</script>
-                                                <a onclick="shapeshift_click(this, event);" v-bind:href="srvModel.shapeshiftUrl">
-                                                    <img src="https://shapeshift.io/images/shifty/xs_light_altcoins.png" class="ss-button">
-                                                </a>
+                                            <div v-if="srvModel.paymentMethodId != 'BTC_LightningLike'">
+                                                <div class="manual__step-two__instructions">
+                                                    <span>
+                                                        You can pay {{ srvModel.btcDue }} {{ srvModel.cryptoCode }} using altcoins other than the ones merchant directly supports.
+                                                        <br /><br />
+                                                        This service is provided by 3rd party. Please keep in mind that
+                                                        <span style="font-weight: 900;">we have no control</span> over how providers will forward your funds.
+                                                        Invoice will only be marked paid once funds are received on {{srvModel.cryptoCode}} Blockchain.
+                                                    </span>
+                                                </div>
+                                                <center>
+                                                    <script>function shapeshift_click(a, e) { e.preventDefault(); var link = a.href; var shapeshiftWindow = window.open(link, '1418115287605', 'width=700,height=500,toolbar=0,menubar=0,location=0,status=1,scrollbars=1,resizable=0,left=0,top=0'); shapeshiftWindow.focus(); return false; }</script>
+                                                    <a onclick="shapeshift_click(this, event);" v-bind:href="srvModel.shapeshiftUrl">
+                                                        <img src="https://shapeshift.io/images/shifty/xs_light_altcoins.png" class="ss-button">
+                                                    </a>
 
-                                                @*Changelly doesn't have TO_AMOUNT support so we can't include it
-                                                        <script type="text/javascript">function open_widget(a, e) { e.preventDefault(); var link = a.href; var changellyWindow = window.open(link, 'Changelly', 'width=600,height=470,toolbar=0,menubar=0,location=0,status=1,scrollbars=1,resizable=0,left=0,top=0'); changellyWindow.focus(); return false; }</script>
-                                                    <a onclick="open_widget(this, event);" href="https://changelly.com/widget/v1?auth=email&from=DASH&to=BTC&address=&amount=1&merchant_id=&ref_id=">
-                                                        <img src="https://changelly.com/pay_button_pay_with.png" alt="Changelly" />
-                                                    </a>*@
-                                            </center>
+                                                    @*Changelly doesn't have TO_AMOUNT support so we can't include it
+                                                            <script type="text/javascript">function open_widget(a, e) { e.preventDefault(); var link = a.href; var changellyWindow = window.open(link, 'Changelly', 'width=600,height=470,toolbar=0,menubar=0,location=0,status=1,scrollbars=1,resizable=0,left=0,top=0'); changellyWindow.focus(); return false; }</script>
+                                                        <a onclick="open_widget(this, event);" href="https://changelly.com/widget/v1?auth=email&from=DASH&to=BTC&address=&amount=1&merchant_id=&ref_id=">
+                                                            <img src="https://changelly.com/pay_button_pay_with.png" alt="Changelly" />
+                                                        </a>*@
+                                                </center>
+                                            </div>
+                                            <div v-else>
+                                                <div class="manual__step-two__instructions">
+                                                    <span>
+                                                        No conversion providers available for BTC Lightning Network payments.
+                                                    </span>
+                                                </div>
+                                            </div>
                                         </div>
                                     }
                                     <div class="bp-view" id="link-expired" style="padding-top: 3.6rem;">

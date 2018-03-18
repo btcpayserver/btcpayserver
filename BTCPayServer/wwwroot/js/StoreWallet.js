@@ -125,7 +125,7 @@
                     .catch(function (reason)
                     {
                         if (reason.message === "Sign failed")
-                            reason = "Have you forgot to activate browser support in your ledger app?";
+                            reason = "Are you running the ledger app with version equals or above 1.2.4?";
                         Write('hw', 'error', reason);
                     })
                     .then(function (result) {

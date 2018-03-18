@@ -8,6 +8,7 @@ using BTCPayServer.Services.Wallets;
 using LedgerWallet;
 using NBitcoin;
 using NBXplorer.DerivationStrategy;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Services
 {
@@ -76,18 +77,19 @@ namespace BTCPayServer.Services
             return new LedgerTestResult() { Success = true };
         }
 
-        public async Task<GetXPubResult> GetExtPubKey(BTCPayNetwork network)
+        public async Task<GetXPubResult> GetExtPubKey(BTCPayNetwork network, int account)
         {
             if (network == null)
                 throw new ArgumentNullException(nameof(network));
 
-            var pubkey = await GetExtPubKey(_Ledger, network, new KeyPath("49'").Derive(network.CoinType).Derive(0, true), false);
+            var path = new KeyPath("49'").Derive(network.CoinType).Derive(account, true);
+            var pubkey = await GetExtPubKey(_Ledger, network, path, false);
             var derivation = new DerivationStrategyFactory(network.NBitcoinNetwork).CreateDirectDerivationStrategy(pubkey, new DerivationStrategyOptions()
             {
                 P2SH = true,
                 Legacy = false
             });
-            return new GetXPubResult() { ExtPubKey = derivation.ToString() };
+            return new GetXPubResult() { ExtPubKey = derivation.ToString(), KeyPath = path };
         }
 
         private static async Task<BitcoinExtPubKey> GetExtPubKey(LedgerClient ledger, BTCPayNetwork network, KeyPath account, bool onlyChaincode)
@@ -231,5 +233,8 @@ namespace BTCPayServer.Services
     public class GetXPubResult
     {
         public string ExtPubKey { get; set; }
+        [JsonConverter(typeof(NBitcoin.JsonConverters.KeyPathJsonConverter))]
+        public KeyPath KeyPath { get; set; }
+        public int CoinType { get; internal set; }
     }
 }

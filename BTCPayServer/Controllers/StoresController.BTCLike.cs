@@ -129,6 +129,8 @@ namespace BTCPayServer.Controllers
             string command,
             // getinfo
             string cryptoCode = null,
+            // getxpub
+            int account = 0,
             // sendtoaddress
             string destination = null, string amount = null, string feeRate = null, string substractFees = null
             )
@@ -204,7 +206,9 @@ namespace BTCPayServer.Controllers
                 }
                 if (command == "getxpub")
                 {
-                    result = await hw.GetExtPubKey(network);
+                    var getxpubResult = await hw.GetExtPubKey(network, account); ;
+                    getxpubResult.CoinType = (int)(getxpubResult.KeyPath.Indexes[1] - 0x80000000);
+                    result = getxpubResult;
                 }
                 if (command == "getinfo")
                 {

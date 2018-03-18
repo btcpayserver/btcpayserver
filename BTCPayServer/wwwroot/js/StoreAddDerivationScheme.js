@@ -1,7 +1,11 @@
 ﻿$(function () {
     var ledgerDetected = false;
-    var recommendedPubKey = "";
     var bridge = new ledgerwebsocket.LedgerWebSocketBridge(srvModel + "ws/ledger");
+
+    var cryptoSelector = $("#CryptoCurrency");
+    function GetSelectedCryptoCode() {
+        return cryptoSelector.val();
+    }
 
     function WriteAlert(type, message) {
         
@@ -14,10 +18,18 @@
         }
     }
 
-    $("#ledger-info-recommended").on("click", function (elem) {
+    $(".ledger-info-recommended").on("click", function (elem) {
         elem.preventDefault();
-        $("#DerivationScheme").val(recommendedPubKey);
-        $("#DerivationSchemeFormat").val("BTCPay");
+        var account = elem.currentTarget.getAttribute("data-ledgeraccount");
+        var cryptoCode = GetSelectedCryptoCode();
+        bridge.sendCommand("getxpub", "cryptoCode=" + cryptoCode + "&account=" + account)
+            .then(function (result) {
+                if (cryptoCode !== GetSelectedCryptoCode())
+                    return;
+                $("#DerivationScheme").val(result.extPubKey);
+                $("#DerivationSchemeFormat").val("BTCPay");
+            })
+            .catch(function (reason) { Write('check', 'error', reason); });
         return false;
     });
 
@@ -30,11 +42,13 @@
     var updateInfo = function () {
         if (!ledgerDetected)
             return false;
-        var cryptoCode = $("#CryptoCurrency").val();
+        var cryptoCode = GetSelectedCryptoCode();
         bridge.sendCommand("getxpub", "cryptoCode=" + cryptoCode)
             .catch(function (reason) { Write('check', 'error', reason); })
             .then(function (result) {
                 if (!result)
+                    return;
+                if (cryptoCode !== GetSelectedCryptoCode())
                     return;
                 if (result.error) {
                     Write('check', 'error', result.error);
@@ -42,9 +56,9 @@
                 }
                 else {
                     Write('check', 'success', 'This store is configured to use your ledger');
-                    recommendedPubKey = result.extPubKey;
                     $("#no-ledger-info").css("display", "none");
                     $("#ledger-info").css("display", "block");
+                    $(".ledger-info-cointype").text(result.coinType);
                 }
             });
     };

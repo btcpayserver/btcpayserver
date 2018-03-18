@@ -170,23 +170,20 @@
                                         <div class="payment-tabs__tab" id="copy-tab">
                                             <span i18n="">Copy</span>
                                         </div>
-                                        <div class="payment-tabs__slider"></div>
+                                        @if (Model.AllowCoinConversion)
+                                        {
+                                            <div class="payment-tabs__tab" id="altcoins-tab">
+                                                <span i18n="">Conversion</span>
+                                            </div>
+                                            <div id="tabsSlider" class="payment-tabs__slider three-tabs"></div>
+                                        }
+                                        else
+                                        {
+                                            <div id="tabsSlider" class="payment-tabs__slider"></div>
+                                        }
                                     </div>
                                 </div>
                                 <div adjust-height="" class="payment-box">
-                                    <div class="bp-view payment scan" id="scan">
-                                        <div class="payment__scan">
-                                            <img v-bind:src="srvModel.cryptoImage" style="position: absolute; height:64px; width:64px; left:118px; top:96px;" />
-                                            <qrcode v-bind:val="srvModel.invoiceBitcoinUrlQR" v-bind:size="256" bg-color="#f5f5f7" fg-color="#000">
-                                            </qrcode>
-                                        </div>
-                                        <div class="payment__details__instruction__open-wallet">
-                                            <a class="payment__details__instruction__open-wallet__btn action-button" v-bind:href="srvModel.invoiceBitcoinUrl">
-                                                <span i18n="">Open in wallet</span>
-                                                <span class="glyphicon glyphicon-new-window"></span>
-                                            </a>
-                                        </div>
-                                    </div>
                                     <div class="bp-view payment manual-flow enter-contact-email active" id="emailAddressView">
                                         <form class="manual__step-one refund-address-form contact-email-form" id="emailAddressForm" name="emailAddressForm" novalidate="">
                                             <div class="manual__step-one__header">
@@ -211,7 +208,7 @@
                                                             <bp-spinner>
                                                                 <svg xml:space="preserve" style="enable-background:new 0 0 50 50;" version="1.1" viewBox="0 0 50 50" x="0px" xmlns="http://www.w3.org/2000/svg" y="0px">
                                                                 <path d="M11.1,29.6c-0.5-1.5-0.8-3-0.8-4.6c0-8.1,6.6-14.7,14.7-14.7S39.7,16.9,39.7,25c0,1.6-0.3,3.2-0.8,4.6l6.1,2c0.7-2.1,1.1-4.3,1.1-6.6c0-11.7-9.5-21.2-21.2-21.2S3.8,13.3,3.8,25c0,2.3,0.4,4.5,1.1,6.6L11.1,29.6z"></path>
-                                </svg>
+                                                                </svg>
                                                             </bp-spinner>
                                                         </div>
                                                     </button>
@@ -219,6 +216,94 @@
                                             </div>
                                         </form>
                                     </div>
+                                    <div class="bp-view payment scan" id="scan">
+                                        <div class="payment__scan">
+                                            <img v-bind:src="srvModel.cryptoImage" style="position: absolute; height:64px; width:64px; left:118px; top:96px;" />
+                                            <qrcode v-bind:val="srvModel.invoiceBitcoinUrlQR" v-bind:size="256" bg-color="#f5f5f7" fg-color="#000">
+                                            </qrcode>
+                                        </div>
+                                        <div class="payment__details__instruction__open-wallet">
+                                            <a class="payment__details__instruction__open-wallet__btn action-button" v-bind:href="srvModel.invoiceBitcoinUrl">
+                                                <span i18n="">Open in wallet</span>
+                                                <span class="glyphicon glyphicon-new-window"></span>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="bp-view payment manual-flow" id="copy">
+                                        <div class="manual__step-two__instructions">
+                                            <span i18n="">To complete your payment, please send {{ srvModel.btcDue }} {{ srvModel.cryptoCode }} to the address below.</span>
+                                        </div>
+                                        <div class="manual-box flipped" style="margin-bottom: 30px;">
+                                            <div class="manual-box__amount">
+                                                <div class="manual-box__amount__label label" i18n="">Amount</div>
+                                                <!---->
+                                                <div class="manual-box__amount__value copy-cursor" ngxclipboard="">
+                                                    <span>{{srvModel.btcDue}}</span> {{ srvModel.cryptoCode }}
+                                                    <div class="copied-label">
+                                                        <span i18n="">Copied</span>
+                                                    </div>
+                                                </div>
+                                                <!---->
+                                            </div>
+                                            <div class="manual-box__address">
+                                                <div class="flipper flipped-initially">
+                                                    <div class="back"></div>
+                                                    <div class="front">
+                                                        <div class="manual-box__address__arrow"></div>
+                                                        <div class="manual-box__address__label label" i18n="">Address</div>
+                                                        <!---->
+                                                        <div class="manual-box__address__value copy-cursor" ngxclipboard="">
+                                                            <div class="manual-box__address__wrapper">
+                                                                <div class="manual-box__address__wrapper__logo">
+                                                                    <img :src="srvModel.cryptoImage" height="16" />
+                                                                </div>
+                                                                <div class="manual-box__address__wrapper__value" style="overflow:hidden;max-width:240px;">{{srvModel.btcAddress}}</div>
+                                                            </div>
+                                                            <div class="copied-label" style="top: 5px;">
+                                                                <span i18n="">Copied</span>
+                                                            </div>
+                                                        </div>
+                                                        <!---->
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @if (Model.AllowCoinConversion)
+                                    {
+                                        <div id="altcoins" class="bp-view payment manual-flow">
+                                            <div v-if="srvModel.paymentMethodId != 'BTC_LightningLike'">
+                                                <div class="manual__step-two__instructions">
+                                                    <span>
+                                                        You can pay {{ srvModel.btcDue }} {{ srvModel.cryptoCode }} using altcoins other than the ones merchant directly supports.
+                                                        <br /><br />
+                                                        This service is provided by 3rd party. Please keep in mind that
+                                                        <span style="font-weight: 900;">we have no control</span> over how providers will forward your funds.
+                                                        Invoice will only be marked paid once funds are received on {{srvModel.cryptoCode}} Blockchain.
+                                                    </span>
+                                                </div>
+                                                <center>
+                                                    <script>function shapeshift_click(a, e) { e.preventDefault(); var link = a.href; var shapeshiftWindow = window.open(link, '1418115287605', 'width=700,height=500,toolbar=0,menubar=0,location=0,status=1,scrollbars=1,resizable=0,left=0,top=0'); shapeshiftWindow.focus(); return false; }</script>
+                                                    <a onclick="shapeshift_click(this, event);" v-bind:href="srvModel.shapeshiftUrl">
+                                                        <img src="https://shapeshift.io/images/shifty/xs_light_altcoins.png" class="ss-button">
+                                                    </a>
+
+                                                    @*Changelly doesn't have TO_AMOUNT support so we can't include it
+                                                            <script type="text/javascript">function open_widget(a, e) { e.preventDefault(); var link = a.href; var changellyWindow = window.open(link, 'Changelly', 'width=600,height=470,toolbar=0,menubar=0,location=0,status=1,scrollbars=1,resizable=0,left=0,top=0'); changellyWindow.focus(); return false; }</script>
+                                                        <a onclick="open_widget(this, event);" href="https://changelly.com/widget/v1?auth=email&from=DASH&to=BTC&address=&amount=1&merchant_id=&ref_id=">
+                                                            <img src="https://changelly.com/pay_button_pay_with.png" alt="Changelly" />
+                                                        </a>*@
+                                                </center>
+                                            </div>
+                                            <div v-else>
+                                                <div class="manual__step-two__instructions">
+                                                    <span>
+                                                        No conversion providers available for BTC Lightning Network payments.
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
                                     <div class="bp-view" id="link-expired" style="padding-top: 3.6rem;">
                                         <div class="manual__step-one refund-address-form" novalidate="">
                                             <div class="manual__step-one__header" i18n="">Link Expired</div>
@@ -354,46 +439,7 @@
                                             </div>
                                         </form>
                                     </div>
-                                    <div class="bp-view payment manual-flow" id="copy">
-                                        <div class="manual__step-two__instructions">
-                                            <span i18n="">To complete your payment, please send {{ srvModel.btcDue }} {{ srvModel.cryptoCode }} to the address below.</span>
-                                        </div>
-                                        <div class="manual-box flipped" style="margin-bottom: 30px;">
-                                            <div class="manual-box__amount">
-                                                <div class="manual-box__amount__label label" i18n="">Amount</div>
-                                                <!---->
-                                                <div class="manual-box__amount__value copy-cursor" ngxclipboard="">
-                                                    <span>{{srvModel.btcDue}}</span> {{ srvModel.cryptoCode }}
-                                                    <div class="copied-label">
-                                                        <span i18n="">Copied</span>
-                                                    </div>
-                                                </div>
-                                                <!---->
-                                            </div>
-                                            <div class="manual-box__address">
-                                                <div class="flipper flipped-initially">
-                                                    <div class="back"></div>
-                                                    <div class="front">
-                                                        <div class="manual-box__address__arrow"></div>
-                                                        <div class="manual-box__address__label label" i18n="">Address</div>
-                                                        <!---->
-                                                        <div class="manual-box__address__value copy-cursor" ngxclipboard="">
-                                                            <div class="manual-box__address__wrapper">
-                                                                <div class="manual-box__address__wrapper__logo">
-                                                                    <img :src="srvModel.cryptoImage" height="16" />
-                                                                </div>
-                                                                <div class="manual-box__address__wrapper__value" style="overflow:hidden;max-width:240px;">{{srvModel.btcAddress}}</div>
-                                                            </div>
-                                                            <div class="copied-label" style="top: 5px;">
-                                                                <span i18n="">Copied</span>
-                                                            </div>
-                                                        </div>
-                                                        <!---->
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+
                                     <div class="bp-view pad" id="paid">
                                         <div class="status-block">
                                             <div class="success-block">
@@ -551,7 +597,6 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <!---->
                                     <div class="bp-view" id="refund-complete">
                                         <div class="status-block">
                                             <div class="success-block" style="opacity: 1;">
@@ -611,8 +656,6 @@
                                             </bp-done-text>
                                         </button>
                                     </div>
-                                    <!---->
-                                    <!---->
                                     <div class="footer-button enter-different-address-button">
                                         <bp-done-text>
                                             <!---->

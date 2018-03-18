@@ -8562,9 +8562,22 @@ strong {
     transition: all .2s ease;
 }
 
-    .payment-tabs__slider.slide-right {
+    .payment-tabs__slider.slide-copy {
         right: 0;
     }
+
+    .payment-tabs__slider.three-tabs {
+        width: 33%;
+        right: 67%;
+    }
+
+        .payment-tabs__slider.three-tabs.slide-copy {
+            right: 33%;
+        }
+
+        .payment-tabs__slider.three-tabs.slide-altcoins {
+            right: 0;
+        }
 
 .manual__step-one__header {
     padding-top: 20px;

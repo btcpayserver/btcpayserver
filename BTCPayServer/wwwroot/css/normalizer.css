@@ -8562,7 +8562,7 @@ strong {
     transition: all .2s ease;
 }
 
-    .payment-tabs__slider.two-tabs.slide-copy {
+    .payment-tabs__slider.slide-copy {
         right: 0;
     }
 

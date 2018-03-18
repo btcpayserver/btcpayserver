@@ -229,6 +229,7 @@ namespace BTCPayServer.Controllers
                 Status = invoice.Status,
                 CryptoImage = "/" + GetImage(paymentMethodId,  network),
                 NetworkFeeDescription = $"{accounting.TxRequired} transaction{(accounting.TxRequired > 1 ? "s" : "")} x {paymentMethodDetails.GetTxFee()} {network.CryptoCode}",
+                AllowCoinConversion = store.GetStoreBlob().AllowCoinConversion,
                 AvailableCryptos = invoice.GetPaymentMethods(_NetworkProvider)
                                           .Where(i => i.Network != null)
                                           .Select(kv=> new PaymentModel.AvailableCrypto()

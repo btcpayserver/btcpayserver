@@ -75,8 +75,8 @@ namespace BTCPayServer.Controllers
                 cryptoPayment.Paid = accounting.CryptoPaid.ToString() + $" {paymentMethodId.CryptoCode}";
 
                 var onchainMethod = data.GetPaymentMethodDetails() as Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod;
-                if(onchainMethod != null)
-                { 
+                if (onchainMethod != null)
+                {
                     cryptoPayment.Address = onchainMethod.DepositAddress;
                 }
                 cryptoPayment.Rate = FormatCurrency(data);
@@ -96,15 +96,19 @@ namespace BTCPayServer.Controllers
                     m.DepositAddress = paymentData.Output.ScriptPubKey.GetDestinationAddress(paymentNetwork.NBitcoinNetwork);
 
                     int confirmationCount = 0;
-                    if(paymentData.Legacy) // The confirmation count in the paymentData is not up to date
+                    if (    (paymentData.ConfirmationCount < paymentNetwork.MaxTrackedConfirmation && payment.Accounted)
+                         && (paymentData.Legacy || invoice.MonitoringExpiration < DateTimeOffset.UtcNow)) // The confirmation count in the paymentData is not up to date
                     {
                         confirmationCount = (await ((ExplorerClientProvider)_ServiceProvider.GetService(typeof(ExplorerClientProvider))).GetExplorerClient(payment.GetCryptoCode())?.GetTransactionAsync(paymentData.Outpoint.Hash))?.Confirmations ?? 0;
+                        paymentData.ConfirmationCount = confirmationCount;
+                        payment.SetCryptoPaymentData(paymentData);
+                        await _InvoiceRepository.UpdatePayments(new List<PaymentEntity> { payment });
                     }
                     else
                     {
                         confirmationCount = paymentData.ConfirmationCount;
                     }
-                    if(confirmationCount >= paymentNetwork.MaxTrackedConfirmation)
+                    if (confirmationCount >= paymentNetwork.MaxTrackedConfirmation)
                     {
                         m.Confirmations = "At least " + (paymentNetwork.MaxTrackedConfirmation);
                     }
@@ -112,7 +116,7 @@ namespace BTCPayServer.Controllers
                     {
                         m.Confirmations = confirmationCount.ToString(CultureInfo.InvariantCulture);
                     }
-                    
+
                     m.TransactionId = paymentData.Outpoint.Hash.ToString();
                     m.ReceivedTime = payment.ReceivedTime;
                     m.TransactionLink = string.Format(CultureInfo.InvariantCulture, paymentNetwork.BlockExplorerLink, m.TransactionId);
@@ -121,7 +125,7 @@ namespace BTCPayServer.Controllers
                 })
                 .ToArray();
             await Task.WhenAll(payments);
-            model.Addresses = invoice.HistoricalAddresses.Select(h=> new InvoiceDetailsModel.AddressModel
+            model.Addresses = invoice.HistoricalAddresses.Select(h => new InvoiceDetailsModel.AddressModel
             {
                 Destination = h.GetAddress(),
                 PaymentMethod = ToString(h.GetPaymentMethodId()),
@@ -186,7 +190,7 @@ namespace BTCPayServer.Controllers
                 return null;
             if (!invoice.Support(paymentMethodId))
             {
-                if(!isDefaultCrypto)
+                if (!isDefaultCrypto)
                     return null;
                 var paymentMethodTemp = invoice.GetPaymentMethods(_NetworkProvider).First();
                 network = paymentMethodTemp.Network;
@@ -227,21 +231,21 @@ namespace BTCPayServer.Controllers
                 TxCount = accounting.TxRequired,
                 BtcPaid = accounting.Paid.ToString(),
                 Status = invoice.Status,
-                CryptoImage = "/" + GetImage(paymentMethodId,  network),
+                CryptoImage = "/" + GetImage(paymentMethodId, network),
                 NetworkFeeDescription = $"{accounting.TxRequired} transaction{(accounting.TxRequired > 1 ? "s" : "")} x {paymentMethodDetails.GetTxFee()} {network.CryptoCode}",
                 AllowCoinConversion = store.GetStoreBlob().AllowCoinConversion,
                 AvailableCryptos = invoice.GetPaymentMethods(_NetworkProvider)
                                           .Where(i => i.Network != null)
-                                          .Select(kv=> new PaymentModel.AvailableCrypto()
-                                            {
-                                                PaymentMethodId = kv.GetId().ToString(),
-                                                CryptoImage = "/" + GetImage(kv.GetId(), kv.Network),
-                                                Link = Url.Action(nameof(Checkout), new { invoiceId = invoiceId, paymentMethodId = kv.GetId().ToString() })
-                                            }).Where(c => c.CryptoImage != "/")
+                                          .Select(kv => new PaymentModel.AvailableCrypto()
+                                          {
+                                              PaymentMethodId = kv.GetId().ToString(),
+                                              CryptoImage = "/" + GetImage(kv.GetId(), kv.Network),
+                                              Link = Url.Action(nameof(Checkout), new { invoiceId = invoiceId, paymentMethodId = kv.GetId().ToString() })
+                                          }).Where(c => c.CryptoImage != "/")
                 .ToList()
             };
 
-            var isMultiCurrency = invoice.GetPayments().Select(p=>p.GetPaymentMethodId()).Concat(new[] { paymentMethod.GetId() }).Distinct().Count() > 1;
+            var isMultiCurrency = invoice.GetPayments().Select(p => p.GetPaymentMethodId()).Concat(new[] { paymentMethod.GetId() }).Distinct().Count() > 1;
             if (isMultiCurrency)
                 model.NetworkFeeDescription = $"{accounting.NetworkFee} {network.CryptoCode}";
 
@@ -383,7 +387,7 @@ namespace BTCPayServer.Controllers
         {
             var ago = DateTime.UtcNow - invoiceTime;
 
-            if(ago.TotalMinutes < 1)
+            if (ago.TotalMinutes < 1)
             {
                 return $"{(int)ago.TotalSeconds} second{Plural((int)ago.TotalSeconds)} ago";
             }

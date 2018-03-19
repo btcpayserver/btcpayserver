@@ -1,3 +1,21 @@
+function resetTabsSlider() {
+    $("#tabsSlider").removeClass("slide-copy");
+    $("#tabsSlider").removeClass("slide-altcoins");
+
+    $("#scan-tab").removeClass("active");
+    $("#copy-tab").removeClass("active");
+    $("#altcoins-tab").removeClass("active");
+
+    $("#copy").hide();
+    $("#copy").removeClass("active");
+
+    $("#scan").hide();
+    $("#scan").removeClass("active");
+
+    $("#altcoins").hide();
+    $("#altcoins").removeClass("active");
+}
+
 // public methods
 function onDataCallback(jsonData) {
     var newStatus = jsonData.status;
@@ -186,24 +204,6 @@ $(document).ready(function () {
 
         $("#tabsSlider").addClass("slide-altcoins");
     });
-
-    function resetTabsSlider() {
-        $("#tabsSlider").removeClass("slide-copy");
-        $("#tabsSlider").removeClass("slide-altcoins");
-
-        $("#scan-tab").removeClass("active");
-        $("#copy-tab").removeClass("active");
-        $("#altcoins-tab").removeClass("active");
-
-        $("#copy").hide();
-        $("#copy").removeClass("active");
-
-        $("#scan").hide();
-        $("#scan").removeClass("active");
-
-        $("#altcoins").hide();
-        $("#altcoins").removeClass("active");
-    }
 
     function activateTab(senderName) {
         $(senderName + "-tab").addClass("active");

@@ -15,15 +15,19 @@ namespace BTCPayServer.Payments.Lightning
     public class LightningLikePaymentHandler : PaymentMethodHandlerBase<LightningSupportedPaymentMethod>
     {
         NBXplorerDashboard _Dashboard;
-        public LightningLikePaymentHandler(NBXplorerDashboard dashboard)
+        LightningClientFactory _LightningClientFactory;
+        public LightningLikePaymentHandler(
+            LightningClientFactory lightningClientFactory,
+            NBXplorerDashboard dashboard)
         {
+            _LightningClientFactory = lightningClientFactory;
             _Dashboard = dashboard;
         }
         public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(LightningSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, BTCPayNetwork network)
         {
             var invoice = paymentMethod.ParentEntity;
             var due = Extensions.RoundUp(invoice.ProductInformation.Price / paymentMethod.Rate, 8);
-            var client = GetClient(supportedPaymentMethod, network);
+            var client = _LightningClientFactory.CreateClient(supportedPaymentMethod, network);
             var expiry = invoice.ExpirationTime - DateTimeOffset.UtcNow;
             if (expiry < TimeSpan.Zero)
                 expiry = TimeSpan.FromSeconds(1);
@@ -52,7 +56,7 @@ namespace BTCPayServer.Payments.Lightning
 
             
             var cts = new CancellationTokenSource(5000);
-            var client = GetClient(supportedPaymentMethod, network);
+            var client = _LightningClientFactory.CreateClient(supportedPaymentMethod, network);
             LightningNodeInformation info = null;
             try
             {
@@ -78,11 +82,6 @@ namespace BTCPayServer.Payments.Lightning
             {
                 throw new Exception($"Error while connecting to the lightning node via {info.Address}:{info.P2PPort} ({ex.Message})");
             }
-        }
-
-        private static ILightningInvoiceClient GetClient(LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network)
-        {
-            return new ChargeClient(supportedPaymentMethod.GetLightningChargeUrl(true), network.NBitcoinNetwork);
         }
 
         private async Task<bool> TestConnection(string addressStr, int port, CancellationToken cancellation)

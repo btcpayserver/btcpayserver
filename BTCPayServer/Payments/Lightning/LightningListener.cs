@@ -9,7 +9,6 @@ using BTCPayServer.Logging;
 using BTCPayServer.Services.Invoices;
 using Microsoft.Extensions.Hosting;
 using NBXplorer;
-using BTCPayServer.Payments.Lightning.Charge;
 
 namespace BTCPayServer.Payments.Lightning
 {
@@ -28,13 +27,16 @@ namespace BTCPayServer.Payments.Lightning
         EventAggregator _Aggregator;
         InvoiceRepository _InvoiceRepository;
         BTCPayNetworkProvider _NetworkProvider;
+        LightningClientFactory _LightningClientFactory;
         public LightningListener(EventAggregator aggregator,
                               InvoiceRepository invoiceRepository,
+                              LightningClientFactory lightningClientFactory,
                               BTCPayNetworkProvider networkProvider)
         {
             _Aggregator = aggregator;
             _InvoiceRepository = invoiceRepository;
             _NetworkProvider = networkProvider;
+            _LightningClientFactory = lightningClientFactory;
         }
 
         CompositeDisposable leases = new CompositeDisposable();
@@ -87,7 +89,7 @@ namespace BTCPayServer.Payments.Lightning
 
                 if (poll)
                 {
-                    var charge = GetChargeClient(lightningSupportedMethod, network);
+                    var charge = _LightningClientFactory.CreateClient(lightningSupportedMethod, network);
                     var chargeInvoice = await charge.GetInvoice(lightningMethod.InvoiceId);
                     if (chargeInvoice == null)
                         continue;
@@ -124,7 +126,7 @@ namespace BTCPayServer.Payments.Lightning
             try
             {
                 Logs.PayServer.LogInformation($"{supportedPaymentMethod.CryptoCode} (Lightning): Start listening {supportedPaymentMethod.GetLightningChargeUrl(false)}");
-                var charge = GetChargeClient(supportedPaymentMethod, network);
+                var charge = _LightningClientFactory.CreateClient(supportedPaymentMethod, network);
                 var session = await charge.Listen(_Cts.Token);
                 while (true)
                 {
@@ -170,11 +172,6 @@ namespace BTCPayServer.Payments.Lightning
             }, network.CryptoCode, accounted: true);
             if(payment != null)
                 _Aggregator.Publish(new InvoiceEvent(listenedInvoice.InvoiceId, 1002, "invoice_receivedPayment"));
-        }
-
-        private static ILightningInvoiceClient GetChargeClient(LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network)
-        {
-            return new ChargeClient(supportedPaymentMethod.GetLightningChargeUrl(true), network.NBitcoinNetwork);
         }
 
         List<Task> _ListeningLightning = new List<Task>();

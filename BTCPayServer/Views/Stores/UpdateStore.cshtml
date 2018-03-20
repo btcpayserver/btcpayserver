@@ -80,21 +80,22 @@
             </div>
 
             <div class="form-group">
-                <a asp-action="AddDerivationScheme" class="btn btn-success" role="button"><span class="glyphicon glyphicon-plus"></span>Add or modify a derivation scheme</a>
                 <table class="table">
                     <thead class="thead-inverse">
                         <tr>
                             <th>Crypto</th>
                             <th>Derivation Scheme</th>
+                            <th style="text-align:right">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var scheme in Model.DerivationSchemes)
                         {
-                            <tr>
-                                <td>@scheme.Crypto</td>
-                                <td style="max-width:400px;overflow:hidden;">@scheme.Value</td>
-                            </tr>
+                        <tr>
+                            <td>@scheme.Crypto</td>
+                            <td style="max-width:400px;overflow:hidden;">@scheme.Value</td>
+                            <td style="text-align:right"><a asp-action="AddDerivationScheme" asp-route-cryptoCode="@scheme.Crypto">Modify</a></td>
+                        </tr>
                         }
                     </tbody>
                 </table>
@@ -109,12 +110,12 @@
                     </p>
                 </div>
                 <div class="form-group">
-                    <a asp-action="AddLightningNode" class="btn btn-success" role="button"><span class="glyphicon glyphicon-plus"></span>Add or modify a lightning node</a>
                     <table class="table">
                         <thead class="thead-inverse">
                             <tr>
                                 <th>Crypto</th>
                                 <th>Address</th>
+                                <th style="text-align:right">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -123,6 +124,7 @@
                                 <tr>
                                     <td>@scheme.CryptoCode</td>
                                     <td>@scheme.Address</td>
+                                    <td style="text-align:right"><a asp-action="AddLightningNode" asp-route-cryptoCode="@scheme.CryptoCode">Modify</a></td>
                                 </tr>
                             }
                         </tbody>

@@ -27,6 +27,7 @@ namespace BTCPayServer.Payments.Lightning.Charge
 
         [JsonProperty("payreq")]
         public string PaymentRequest { get; set; }
+        public string Label { get; set; }
     }
     public class ChargeSession : ILightningListenInvoiceSession
     {

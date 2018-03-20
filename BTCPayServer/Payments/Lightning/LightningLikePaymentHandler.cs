@@ -49,23 +49,31 @@ namespace BTCPayServer.Payments.Lightning
             catch { return false; }
         }
 
+        /// <summary>
+        /// Used for testing
+        /// </summary>
+        public bool SkipP2PTest { get; set; }
+
         public async Task Test(LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network)
         {
             if (!_Dashboard.IsFullySynched(network.CryptoCode, out var summary))
                 throw new Exception($"Full node not available");
-
             
             var cts = new CancellationTokenSource(5000);
             var client = _LightningClientFactory.CreateClient(supportedPaymentMethod, network);
             LightningNodeInformation info = null;
             try
             {
-
                 info = await client.GetInfo(cts.Token);
             }
             catch (Exception ex)
             {
                 throw new Exception($"Error while connecting to the API ({ex.Message})");
+            }
+
+            if(info.Address == null)
+            {
+                throw new Exception($"No lightning node public address has been configured");
             }
 
             var blocksGap = Math.Abs(info.BlockHeight - summary.Status.ChainHeight);
@@ -76,7 +84,8 @@ namespace BTCPayServer.Payments.Lightning
 
             try
             {
-                await TestConnection(info.Address, info.P2PPort, cts.Token);
+                if(!SkipP2PTest)
+                    await TestConnection(info.Address, info.P2PPort, cts.Token);
             }
             catch (Exception ex)
             {

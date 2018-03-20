@@ -142,7 +142,7 @@ namespace BTCPayServer.Payments.Lightning.Charge
         {
             return new LightningInvoice()
             {
-                Id = invoice.Id,
+                Id = invoice.Id ?? invoice.Label,
                 Amount = invoice.MilliSatoshi,
                 BOLT11 = invoice.PaymentRequest,
                 PaidAt = invoice.PaidAt,
@@ -161,7 +161,6 @@ namespace BTCPayServer.Payments.Lightning.Charge
             var info = await GetInfoAsync(cancellation);
             var address = info.Address.Select(a => a.Address).FirstOrDefault();
             var port = info.Port;
-            address = address ?? Uri.DnsSafeHost;
             return new LightningNodeInformation()
             {
                 P2PPort = port,

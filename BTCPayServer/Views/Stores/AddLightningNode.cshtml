@@ -33,13 +33,8 @@
         <form method="post">
             <div class="form-group">
                 <h5>Lightning node url</h5>
-                <span>This URL should point to an installed lightning charge server</span>
+                <span>This URL should point to an installed lightning charge server for @Model.CryptoCode</span>
             </div>
-            <div class="form-group">
-                <label asp-for="CryptoCurrency"></label>
-                <select asp-for="CryptoCurrency" asp-items="Model.CryptoCurrencies" class="form-control"></select>
-            </div>
-
             <div class="form-group">
                 <label asp-for="Url"></label>
                 <input id="lightningurl" asp-for="Url" class="form-control" />

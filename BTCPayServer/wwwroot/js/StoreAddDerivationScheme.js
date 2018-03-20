@@ -33,12 +33,6 @@
         return false;
     });
 
-    $("#CryptoCurrency").on("change", function (elem) {
-        $("#no-ledger-info").css("display", "none");
-        $("#ledger-info").css("display", "none");
-        updateInfo();
-    });
-
     var updateInfo = function () {
         if (!ledgerDetected)
             return false;

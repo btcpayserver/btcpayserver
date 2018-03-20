@@ -35,6 +35,6 @@ namespace BTCPayServer.Payments.Lightning
 
     public interface ILightningListenInvoiceSession : IDisposable
     {
-        Task<LightningInvoice> WaitInvoice(CancellationToken token);
+        Task<LightningInvoice> WaitInvoice(CancellationToken cancellation);
     }
 }

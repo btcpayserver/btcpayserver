@@ -8,38 +8,65 @@ using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning.CLightning;
 using Microsoft.AspNetCore.Mvc;
 using BTCPayServer.Payments.Lightning;
+using System.Net;
+using BTCPayServer.Data;
 
 namespace BTCPayServer.Controllers
 {
     public partial class StoresController
     {
         [HttpGet]
-        [Route("{storeId}/lightning")]
-        public async Task<IActionResult> AddLightningNode(string storeId, string selectedCrypto = null)
+        [Route("{storeId}/lightning/{cryptoCode}")]
+        public async Task<IActionResult> AddLightningNode(string storeId, string cryptoCode)
         {
-            selectedCrypto = selectedCrypto ?? "BTC";
             var store = await _Repo.FindStore(storeId, GetUserId());
             if (store == null)
                 return NotFound();
             LightningNodeViewModel vm = new LightningNodeViewModel();
-            vm.SetCryptoCurrencies(_NetworkProvider, selectedCrypto);
-            vm.InternalLightningNode = GetInternalLightningNodeIfAuthorized();
+            vm.CryptoCode = cryptoCode;
+            vm.InternalLightningNode = GetInternalLighningNode(cryptoCode)?.ToUri(true)?.AbsoluteUri;
+            SetExistingValues(store, vm);
             return View(vm);
         }
 
-        [HttpPost]
-        [Route("{storeId}/lightning")]
-        public async Task<IActionResult> AddLightningNode(string storeId, LightningNodeViewModel vm, string command)
+        private void SetExistingValues(StoreData store, LightningNodeViewModel vm)
         {
+            vm.Url = GetExistingLightningSupportedPaymentMethod(vm.CryptoCode, store)?.GetLightningUrl()?.ToString();
+        }
+
+        private LightningSupportedPaymentMethod GetExistingLightningSupportedPaymentMethod(string cryptoCode, StoreData store)
+        {
+            var id = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
+            var existing = store.GetSupportedPaymentMethods(_NetworkProvider)
+                .OfType<LightningSupportedPaymentMethod>()
+                .FirstOrDefault(d => d.PaymentId == id);
+            return existing;
+        }
+
+        private LightningConnectionString GetInternalLighningNode(string cryptoCode)
+        {
+            if (_BtcpayServerOptions.InternalLightningByCryptoCode.TryGetValue(cryptoCode, out var connectionString))
+            {
+                return CanUseInternalLightning() ? connectionString : null;
+            }
+            return null;
+        }
+
+        [HttpPost]
+        [Route("{storeId}/lightning/{cryptoCode}")]
+        public async Task<IActionResult> AddLightningNode(string storeId, LightningNodeViewModel vm, string command, string cryptoCode)
+        {
+            vm.CryptoCode = cryptoCode;
             var store = await _Repo.FindStore(storeId, GetUserId());
             if (store == null)
                 return NotFound();
-            var network = vm.CryptoCurrency == null ? null : _ExplorerProvider.GetNetwork(vm.CryptoCurrency);
-            vm.SetCryptoCurrencies(_NetworkProvider, vm.CryptoCurrency);
-            vm.InternalLightningNode = GetInternalLightningNodeIfAuthorized();
+            var network = vm.CryptoCode == null ? null : _ExplorerProvider.GetNetwork(vm.CryptoCode);
+
+            var internalLightning = GetInternalLighningNode(network.CryptoCode);
+            vm.InternalLightningNode = internalLightning?.ToUri(true)?.AbsoluteUri;
             if (network == null)
             {
-                ModelState.AddModelError(nameof(vm.CryptoCurrency), "Invalid network");
+                ModelState.AddModelError(nameof(vm.CryptoCode), "Invalid network");
                 return View(vm);
             }
 
@@ -47,33 +74,31 @@ namespace BTCPayServer.Controllers
             Payments.Lightning.LightningSupportedPaymentMethod paymentMethod = null;
             if (!string.IsNullOrEmpty(vm.Url))
             {
-                Uri uri;
-                if (!Uri.TryCreate(vm.Url, UriKind.Absolute, out uri))
+                if (!LightningConnectionString.TryParse(vm.Url, out var connectionString, out var error))
                 {
-                    ModelState.AddModelError(nameof(vm.Url), "Invalid URL");
+                    ModelState.AddModelError(nameof(vm.Url), $"Invalid URL ({error})");
                     return View(vm);
                 }
 
-                var domain = GetDomain(uri.AbsoluteUri);
-                if (uri.Scheme != "https" && domain != "127.0.0.1" && domain != "localhost")
+                var internalDomain = internalLightning?.ToUri(false)?.DnsSafeHost;
+                bool isLocal = (internalDomain == "127.0.0.1" || internalDomain == "localhost");
+
+                bool isInternalNode = connectionString.ConnectionType == LightningConnectionType.CLightning ||
+                                      connectionString.BaseUri.DnsSafeHost == internalDomain ||
+                                      isLocal;
+
+                if (connectionString.BaseUri.Scheme == "http" && !isLocal)
                 {
-                    var internalNode = GetInternalLightningNodeIfAuthorized();
-                    if (internalNode == null || GetDomain(internalNode) != domain)
+                    if (!isInternalNode || (isInternalNode && !CanUseInternalLightning()))
                     {
                         ModelState.AddModelError(nameof(vm.Url), "The url must be HTTPS");
                         return View(vm);
                     }
                 }
 
-                if (!CanUseInternalLightning() && GetDomain(_BtcpayServerOptions.InternalLightningNode.AbsoluteUri) == GetDomain(uri.AbsoluteUri))
+                if (isInternalNode && !CanUseInternalLightning())
                 {
                     ModelState.AddModelError(nameof(vm.Url), "Unauthorized url");
-                    return View(vm);
-                }
-
-                if (string.IsNullOrEmpty(uri.UserInfo) || uri.UserInfo.Split(':').Length != 2)
-                {
-                    ModelState.AddModelError(nameof(vm.Url), "The url is missing user and password");
                     return View(vm);
                 }
 
@@ -81,7 +106,7 @@ namespace BTCPayServer.Controllers
                 {
                     CryptoCode = paymentMethodId.CryptoCode
                 };
-                paymentMethod.SetLightningChargeUrl(uri);
+                paymentMethod.SetLightningUrl(connectionString);
             }
             if (command == "save")
             {
@@ -112,24 +137,9 @@ namespace BTCPayServer.Controllers
             }
         }
 
-        private string GetInternalLightningNodeIfAuthorized()
-        {
-            if (_BtcpayServerOptions.InternalLightningNode != null &&
-                        CanUseInternalLightning())
-            {
-                return _BtcpayServerOptions.InternalLightningNode.AbsoluteUri;
-            }
-            return null;
-        }
-
         private bool CanUseInternalLightning()
         {
             return (_BTCPayEnv.IsDevelopping || User.IsInRole(Roles.ServerAdmin));
-        }
-
-        string GetDomain(string uri)
-        {
-            return new UriBuilder(uri).Host;
         }
     }
 }

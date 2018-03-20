@@ -303,24 +303,95 @@ namespace BTCPayServer.Tests
                 user.GrantAccess();
                 var storeController = tester.PayTester.GetController<StoresController>(user.UserId);
                 Assert.IsType<ViewResult>(storeController.UpdateStore(user.StoreId).GetAwaiter().GetResult());
-                Assert.IsType<ViewResult>(storeController.AddLightningNode(user.StoreId).GetAwaiter().GetResult());
+                Assert.IsType<ViewResult>(storeController.AddLightningNode(user.StoreId, "BTC").GetAwaiter().GetResult());
 
                 var testResult = storeController.AddLightningNode(user.StoreId, new LightningNodeViewModel()
                 {
-                    CryptoCurrency = "BTC",
                     Url = tester.MerchantCharge.Client.Uri.AbsoluteUri
-                }, "test").GetAwaiter().GetResult();
+                }, "test", "BTC").GetAwaiter().GetResult();
                 Assert.DoesNotContain("Error", ((LightningNodeViewModel)Assert.IsType<ViewResult>(testResult).Model).StatusMessage, StringComparison.OrdinalIgnoreCase);
                 Assert.True(storeController.ModelState.IsValid);
 
                 Assert.IsType<RedirectToActionResult>(storeController.AddLightningNode(user.StoreId, new LightningNodeViewModel()
                 {
-                    CryptoCurrency = "BTC",
                     Url = tester.MerchantCharge.Client.Uri.AbsoluteUri
-                }, "save").GetAwaiter().GetResult());
+                }, "save", "BTC").GetAwaiter().GetResult());
 
                 var storeVm = Assert.IsType<Models.StoreViewModels.StoreViewModel>(Assert.IsType<ViewResult>(storeController.UpdateStore(user.StoreId).GetAwaiter().GetResult()).Model);
-                Assert.Single(storeVm.LightningNodes);
+                Assert.Single(storeVm.LightningNodes.Where(l => !string.IsNullOrEmpty(l.Address)));
+            }
+        }
+
+        [Fact]
+        public void CanParseLightningURL()
+        {
+            LightningConnectionString conn = null;
+            Assert.True(LightningConnectionString.TryParse("/test/a", out conn));
+            Assert.Equal("unix://test/a", conn.ToString());
+            Assert.Equal("unix://test/a", conn.ToUri(true).AbsoluteUri);
+            Assert.Equal("unix://test/a", conn.ToUri(false).AbsoluteUri);
+            Assert.Equal(LightningConnectionType.CLightning, conn.ConnectionType);
+
+            Assert.True(LightningConnectionString.TryParse("unix://test/a", out conn));
+            Assert.Equal("unix://test/a", conn.ToString());
+            Assert.Equal("unix://test/a", conn.ToUri(true).AbsoluteUri);
+            Assert.Equal("unix://test/a", conn.ToUri(false).AbsoluteUri);
+            Assert.Equal(LightningConnectionType.CLightning, conn.ConnectionType);
+
+            Assert.True(LightningConnectionString.TryParse("unix://test/a", out conn));
+            Assert.Equal("unix://test/a", conn.ToString());
+            Assert.Equal("unix://test/a", conn.ToUri(true).AbsoluteUri);
+            Assert.Equal("unix://test/a", conn.ToUri(false).AbsoluteUri);
+            Assert.Equal(LightningConnectionType.CLightning, conn.ConnectionType);
+
+            Assert.True(LightningConnectionString.TryParse("tcp://test/a", out conn));
+            Assert.Equal("tcp://test/a", conn.ToString());
+            Assert.Equal("tcp://test/a", conn.ToUri(true).AbsoluteUri);
+            Assert.Equal("tcp://test/a", conn.ToUri(false).AbsoluteUri);
+            Assert.Equal(LightningConnectionType.CLightning, conn.ConnectionType);
+
+            Assert.True(LightningConnectionString.TryParse("http://aaa:bbb@test/a", out conn));
+            Assert.Equal("http://aaa:bbb@test/a", conn.ToString());
+            Assert.Equal("http://aaa:bbb@test/a", conn.ToUri(true).AbsoluteUri);
+            Assert.Equal("http://test/a", conn.ToUri(false).AbsoluteUri);
+            Assert.Equal(LightningConnectionType.Charge, conn.ConnectionType);
+            Assert.Equal("aaa", conn.Username);
+            Assert.Equal("bbb", conn.Password);
+
+            Assert.False(LightningConnectionString.TryParse("lol://aaa:bbb@test/a", out conn));
+            Assert.False(LightningConnectionString.TryParse("https://test/a", out conn));
+            Assert.False(LightningConnectionString.TryParse("unix://dwewoi:dwdwqd@test/a", out conn));
+        }
+
+        [Fact]
+        public void CanSendLightningPayment2()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.Start();
+                tester.PrepareLightning();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                user.RegisterLightningNode("BTC", LightningConnectionType.CLightning);
+                user.RegisterDerivationScheme("BTC");
+
+                var invoice = user.BitPay.CreateInvoice(new Invoice()
+                {
+                    Price = 0.01,
+                    Currency = "USD",
+                    PosData = "posData",
+                    OrderId = "orderId",
+                    ItemDesc = "Some description"
+                });
+
+                tester.SendLightningPayment(invoice);
+
+                Eventually(() =>
+                {
+                    var localInvoice = user.BitPay.GetInvoice(invoice.Id);
+                    Assert.Equal("complete", localInvoice.Status);
+                    Assert.Equal("False", localInvoice.ExceptionStatus.ToString());
+                });
             }
         }
 
@@ -334,7 +405,7 @@ namespace BTCPayServer.Tests
                 tester.PrepareLightning();
                 var user = tester.NewAccount();
                 user.GrantAccess();
-                user.RegisterLightningNode("BTC");
+                user.RegisterLightningNode("BTC", LightningConnectionType.Charge);
                 user.RegisterDerivationScheme("BTC");
 
                 var invoice = user.BitPay.CreateInvoice(new Invoice()

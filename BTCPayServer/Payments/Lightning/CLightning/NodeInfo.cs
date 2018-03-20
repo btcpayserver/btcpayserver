@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace BTCPayServer.Payments.Lightning.CLightning.RPC
+namespace BTCPayServer.Payments.Lightning.CLightning
 {
     public class NodeInfo
     {

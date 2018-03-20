@@ -13,9 +13,9 @@ using NBitcoin;
 using NBXplorer;
 using Newtonsoft.Json;
 
-namespace BTCPayServer.Payments.Lightning.CLightning
+namespace BTCPayServer.Payments.Lightning.Charge
 {
-    public class ChargeClient
+    public class ChargeClient : ILightningInvoiceClient
     {
         private Uri _Uri;
         public Uri Uri
@@ -125,6 +125,49 @@ namespace BTCPayServer.Payments.Lightning.CLightning
             if (!uri.EndsWith("/", StringComparison.InvariantCultureIgnoreCase))
                 uri += "/";
             return new Uri(uri + partialUrl);
+        }
+
+        async Task<LightningInvoice> ILightningInvoiceClient.GetInvoice(string invoiceId, CancellationToken cancellation)
+        {
+            var invoice = await GetInvoice(invoiceId, cancellation);
+            return ChargeClient.ToLightningInvoice(invoice);
+        }
+
+        async Task<ILightningListenInvoiceSession> ILightningInvoiceClient.Listen(CancellationToken cancellation)
+        {
+            return await Listen(cancellation);
+        }
+
+        internal static LightningInvoice ToLightningInvoice(ChargeInvoice invoice)
+        {
+            return new LightningInvoice()
+            {
+                Id = invoice.Id,
+                Amount = invoice.MilliSatoshi,
+                BOLT11 = invoice.PaymentRequest,
+                PaidAt = invoice.PaidAt,
+                Status = invoice.Status
+            };
+        }
+
+        async Task<LightningInvoice> ILightningInvoiceClient.CreateInvoice(LightMoney amount, TimeSpan expiry, CancellationToken cancellation)
+        {
+            var invoice = await CreateInvoiceAsync(new CreateInvoiceRequest() { Amont = amount, Expiry = expiry });
+            return new LightningInvoice() { Id = invoice.Id, Amount = amount, BOLT11 = invoice.PayReq, Status = "unpaid" };
+        }
+
+        async Task<LightningNodeInformation> ILightningInvoiceClient.GetInfo(CancellationToken cancellation)
+        {
+            var info = await GetInfoAsync(cancellation);
+            var address = info.Address.Select(a => a.Address).FirstOrDefault();
+            var port = info.Port;
+            address = address ?? Uri.DnsSafeHost;
+            return new LightningNodeInformation()
+            {
+                P2PPort = port,
+                Address = address,
+                BlockHeight = info.BlockHeight
+            };
         }
     }
 }

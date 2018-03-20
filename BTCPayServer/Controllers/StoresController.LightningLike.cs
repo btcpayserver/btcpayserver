@@ -37,7 +37,7 @@ namespace BTCPayServer.Controllers
             var network = vm.CryptoCurrency == null ? null : _ExplorerProvider.GetNetwork(vm.CryptoCurrency);
             vm.SetCryptoCurrencies(_NetworkProvider, vm.CryptoCurrency);
             vm.InternalLightningNode = GetInternalLightningNodeIfAuthorized();
-            if (network == null || network.CLightningNetworkName == null)
+            if (network == null)
             {
                 ModelState.AddModelError(nameof(vm.CryptoCurrency), "Invalid network");
                 return View(vm);

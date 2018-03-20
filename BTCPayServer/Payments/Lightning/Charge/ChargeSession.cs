@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using NBXplorer;
 using Newtonsoft.Json;
 
-namespace BTCPayServer.Payments.Lightning.CLightning
+namespace BTCPayServer.Payments.Lightning.Charge
 {
     public class ChargeInvoice
     {
@@ -28,7 +28,7 @@ namespace BTCPayServer.Payments.Lightning.CLightning
         [JsonProperty("payreq")]
         public string PaymentRequest { get; set; }
     }
-    public class ChargeSession : IDisposable
+    public class ChargeSession : ILightningListenInvoiceSession
     {
         private ClientWebSocket socket;
 
@@ -42,7 +42,7 @@ namespace BTCPayServer.Payments.Lightning.CLightning
         }
 
         ArraySegment<byte> _Buffer;
-        public async Task<ChargeInvoice> NextEvent(CancellationToken cancellation = default(CancellationToken))
+        public async Task<ChargeInvoice> WaitInvoice(CancellationToken cancellation = default(CancellationToken))
         {
             var buffer = _Buffer;
             var array = _Buffer.Array;
@@ -119,6 +119,16 @@ namespace BTCPayServer.Payments.Lightning.CLightning
         public async Task DisposeAsync()
         {
             await this.socket.CloseSocket();
+        }
+
+        async Task<LightningInvoice> ILightningListenInvoiceSession.WaitInvoice(CancellationToken token)
+        {
+            return ChargeClient.ToLightningInvoice(await WaitInvoice(token));
+        }
+
+        void IDisposable.Dispose()
+        {
+            Dispose();
         }
     }
 }

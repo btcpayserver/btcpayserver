@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using BTCPayServer.Payments.Lightning.Charge;
 using BTCPayServer.Payments.Lightning.CLightning;
 using NBitcoin;
 

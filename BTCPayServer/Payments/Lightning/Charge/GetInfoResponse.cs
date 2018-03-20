@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace BTCPayServer.Payments.Lightning.CLightning
+namespace BTCPayServer.Payments.Lightning.Charge
 {
     //[{"type":"ipv4","address":"52.166.90.122","port":9735}]
     public class GetInfoResponse

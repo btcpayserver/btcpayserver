@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using NBitcoin;
 using Newtonsoft.Json;
 
-namespace BTCPayServer.Payments.Lightning.CLightning.RPC
+namespace BTCPayServer.Payments.Lightning.CLightning
 {
     public class ChannelInfo
     {

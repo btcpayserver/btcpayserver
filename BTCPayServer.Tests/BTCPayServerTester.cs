@@ -86,7 +86,7 @@ namespace BTCPayServer.Tests
             config.AppendLine($"ltc.explorer.url={LTCNBXplorerUri.AbsoluteUri}");
             config.AppendLine($"ltc.explorer.cookiefile=0");
 
-            config.AppendLine($"internallightningnode={IntegratedLightning.AbsoluteUri}");
+            config.AppendLine($"btc.lightning={IntegratedLightning.AbsoluteUri}");
 
             if (Postgres != null)
                 config.AppendLine($"postgres=" + Postgres);

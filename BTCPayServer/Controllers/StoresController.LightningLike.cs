@@ -24,8 +24,18 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             LightningNodeViewModel vm = new LightningNodeViewModel();
             vm.SetCryptoCurrencies(_NetworkProvider, selectedCrypto);
-            vm.InternalLightningNode = CanUseInternalLightning() ? _BtcpayServerOptions.InternalLightningNode.AbsoluteUri : null;
+            vm.InternalLightningNode = GetInternalLighningNode(selectedCrypto)?.ToUri(true)?.AbsoluteUri;
             return View(vm);
+        }
+
+        private LightningConnectionString GetInternalLighningNode(string selectedCrypto)
+        {
+            selectedCrypto = "BTC";
+            if (_BtcpayServerOptions.InternalLightningByCryptoCode.TryGetValue(selectedCrypto, out var connectionString))
+            {
+                return CanUseInternalLightning() ? connectionString : null;
+            }
+            return null;
         }
 
         [HttpPost]
@@ -37,7 +47,9 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             var network = vm.CryptoCurrency == null ? null : _ExplorerProvider.GetNetwork(vm.CryptoCurrency);
             vm.SetCryptoCurrencies(_NetworkProvider, vm.CryptoCurrency);
-            vm.InternalLightningNode = CanUseInternalLightning() ? _BtcpayServerOptions.InternalLightningNode.AbsoluteUri : null;
+
+            var internalLightning = GetInternalLighningNode(network.CryptoCode);
+            vm.InternalLightningNode = internalLightning?.ToUri(true)?.AbsoluteUri;
             if (network == null)
             {
                 ModelState.AddModelError(nameof(vm.CryptoCurrency), "Invalid network");
@@ -48,15 +60,15 @@ namespace BTCPayServer.Controllers
             Payments.Lightning.LightningSupportedPaymentMethod paymentMethod = null;
             if (!string.IsNullOrEmpty(vm.Url))
             {
-                if(!LightningConnectionString.TryParse(vm.Url, out var connectionString, out var error))
+                if (!LightningConnectionString.TryParse(vm.Url, out var connectionString, out var error))
                 {
                     ModelState.AddModelError(nameof(vm.Url), $"Invalid URL ({error})");
                     return View(vm);
                 }
 
-                var internalDomain = _BtcpayServerOptions.InternalLightningNode.DnsSafeHost;
+                var internalDomain = internalLightning?.ToUri(false)?.DnsSafeHost;
                 bool isLocal = (internalDomain == "127.0.0.1" || internalDomain == "localhost");
-                
+
                 bool isInternalNode = connectionString.ConnectionType == LightningConnectionType.CLightning ||
                                       connectionString.BaseUri.DnsSafeHost == internalDomain ||
                                       isLocal;

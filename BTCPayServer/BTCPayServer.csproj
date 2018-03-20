@@ -56,7 +56,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Include="wwwroot\js\core.js" />
+	  <None Include="wwwroot\js\checkout\core.js" />
 	  <None Include="wwwroot\js\creative.js" />
 	  <None Include="wwwroot\js\creative.min.js" />
 	  <None Include="wwwroot\js\site.js" />

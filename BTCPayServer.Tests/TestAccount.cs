@@ -80,11 +80,10 @@ namespace BTCPayServer.Tests
 
             await store.AddDerivationScheme(StoreId, new DerivationSchemeViewModel()
             {
-                CryptoCurrency = cryptoCode,
                 DerivationSchemeFormat = "BTCPay",
                 DerivationScheme = DerivationScheme.ToString(),
                 Confirmation = true
-            });
+            }, cryptoCode);
         }
 
         public DerivationStrategyBase DerivationScheme { get; set; }
@@ -125,11 +124,10 @@ namespace BTCPayServer.Tests
             var storeController = parent.PayTester.GetController<StoresController>(UserId);
             await storeController.AddLightningNode(StoreId, new LightningNodeViewModel()
             {
-                CryptoCurrency = "BTC",
                 Url = connectionType == LightningConnectionType.Charge ? parent.MerchantCharge.Client.Uri.AbsoluteUri :
                       connectionType == LightningConnectionType.CLightning ? parent.MerchantLightningD.Address.AbsoluteUri
                       : throw new NotSupportedException(connectionType.ToString())
-            }, "save");
+            }, "save", "BTC");
             if (storeController.ModelState.ErrorCount != 0)
                 Assert.False(true, storeController.ModelState.FirstOrDefault().Value.Errors[0].ErrorMessage);
         }

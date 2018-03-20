@@ -28,7 +28,7 @@
                         <th>Name</th>
                         <th>Website</th>
                         <th>Balances</th>
-                        <th>Actions</th>
+                        <th style="text-align:right">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -52,7 +52,7 @@
                                     }
                                 }
                             </td>
-                            <td><a asp-action="UpdateStore" asp-route-storeId="@store.Id">Settings</a> - <a asp-action="DeleteStore" asp-route-storeId="@store.Id">Remove</a></td>
+                            <td style="text-align:right"><a asp-action="UpdateStore" asp-route-storeId="@store.Id">Settings</a> - <a asp-action="DeleteStore" asp-route-storeId="@store.Id">Remove</a></td>
                         </tr>
                     }
                 </tbody>

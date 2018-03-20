@@ -228,25 +228,33 @@ namespace BTCPayServer.Controllers
 
         private void AddPaymentMethods(StoreData store, StoreViewModel vm)
         {
-            foreach(var strategy in  store
-                            .GetSupportedPaymentMethods(_NetworkProvider)
-                            .OfType<DerivationStrategy>())
+            var derivationByCryptoCode = 
+                store
+                .GetSupportedPaymentMethods(_NetworkProvider)
+                .OfType<DerivationStrategy>()
+                .ToDictionary(c => c.Network.CryptoCode);
+            foreach (var network in _NetworkProvider.GetAll())
             {
+                var strategy = derivationByCryptoCode.TryGet(network.CryptoCode);
                 vm.DerivationSchemes.Add(new StoreViewModel.DerivationScheme()
                 {
-                    Crypto = strategy.PaymentId.CryptoCode,
-                    Value = strategy.DerivationStrategyBase.ToString()
+                    Crypto = network.CryptoCode,
+                    Value = strategy?.DerivationStrategyBase?.ToString() ?? string.Empty
                 });
             }
 
-            foreach(var lightning in store
+            var lightningByCryptoCode = store
                                         .GetSupportedPaymentMethods(_NetworkProvider)
-                                        .OfType<Payments.Lightning.LightningSupportedPaymentMethod>())
+                                        .OfType<Payments.Lightning.LightningSupportedPaymentMethod>()
+                                        .ToDictionary(c => c.CryptoCode);
+
+            foreach (var network in _NetworkProvider.GetAll())
             {
+                var lightning = lightningByCryptoCode.TryGet(network.CryptoCode);
                 vm.LightningNodes.Add(new StoreViewModel.LightningNode()
                 {
-                    CryptoCode = lightning.CryptoCode,
-                    Address = lightning.GetLightningUrl().BaseUri.AbsoluteUri
+                    CryptoCode = network.CryptoCode,
+                    Address = lightning?.GetLightningUrl()?.BaseUri.AbsoluteUri ?? string.Empty
                 });
             }
         }

@@ -15,23 +15,21 @@ namespace BTCPayServer.Controllers
     public partial class StoresController
     {
         [HttpGet]
-        [Route("{storeId}/lightning")]
-        public async Task<IActionResult> AddLightningNode(string storeId, string selectedCrypto = null)
+        [Route("{storeId}/lightning/{cryptoCode}")]
+        public async Task<IActionResult> AddLightningNode(string storeId, string cryptoCode)
         {
-            selectedCrypto = selectedCrypto ?? "BTC";
             var store = await _Repo.FindStore(storeId, GetUserId());
             if (store == null)
                 return NotFound();
             LightningNodeViewModel vm = new LightningNodeViewModel();
-            vm.SetCryptoCurrencies(_NetworkProvider, selectedCrypto);
-            vm.InternalLightningNode = GetInternalLighningNode(selectedCrypto)?.ToUri(true)?.AbsoluteUri;
+            vm.CryptoCode = cryptoCode;
+            vm.InternalLightningNode = GetInternalLighningNode(cryptoCode)?.ToUri(true)?.AbsoluteUri;
             return View(vm);
         }
 
-        private LightningConnectionString GetInternalLighningNode(string selectedCrypto)
+        private LightningConnectionString GetInternalLighningNode(string cryptoCode)
         {
-            selectedCrypto = "BTC";
-            if (_BtcpayServerOptions.InternalLightningByCryptoCode.TryGetValue(selectedCrypto, out var connectionString))
+            if (_BtcpayServerOptions.InternalLightningByCryptoCode.TryGetValue(cryptoCode, out var connectionString))
             {
                 return CanUseInternalLightning() ? connectionString : null;
             }
@@ -39,20 +37,20 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost]
-        [Route("{storeId}/lightning")]
-        public async Task<IActionResult> AddLightningNode(string storeId, LightningNodeViewModel vm, string command)
+        [Route("{storeId}/lightning/{cryptoCode}")]
+        public async Task<IActionResult> AddLightningNode(string storeId, LightningNodeViewModel vm, string command, string cryptoCode)
         {
+            vm.CryptoCode = cryptoCode;
             var store = await _Repo.FindStore(storeId, GetUserId());
             if (store == null)
                 return NotFound();
-            var network = vm.CryptoCurrency == null ? null : _ExplorerProvider.GetNetwork(vm.CryptoCurrency);
-            vm.SetCryptoCurrencies(_NetworkProvider, vm.CryptoCurrency);
+            var network = vm.CryptoCode == null ? null : _ExplorerProvider.GetNetwork(vm.CryptoCode);
 
             var internalLightning = GetInternalLighningNode(network.CryptoCode);
             vm.InternalLightningNode = internalLightning?.ToUri(true)?.AbsoluteUri;
             if (network == null)
             {
-                ModelState.AddModelError(nameof(vm.CryptoCurrency), "Invalid network");
+                ModelState.AddModelError(nameof(vm.CryptoCode), "Invalid network");
                 return View(vm);
             }
 

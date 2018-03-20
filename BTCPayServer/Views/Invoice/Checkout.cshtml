@@ -46,9 +46,6 @@
 
     <invoice>
         <div class="no-bounce" id="checkoutCtrl">
-            @*<div class="modal-backdrop fade-in"></div>*@
-
-            <!---->
             <div class="modal page">
                 <div class="modal-dialog open opened" role="document">
                     <div class="modal-content long">
@@ -59,26 +56,16 @@
                                         <div class="header__icon">
                                             <img class="header__icon__img" src="~/img/logo-white.png" height="40">
                                         </div>
-                                        <!---->
                                     </div>
                                     <div class="timer-row">
                                         <div class="timer-row__progress-bar" style="width: 0%;"></div>
-                                        <!---->
                                         <div class="timer-row__spinner">
-                                            <bp-spinner>
-                                                <svg xml:space="preserve" style="enable-background:new 0 0 50 50;" version="1.1" viewBox="0 0 50 50" x="0px" xmlns="http://www.w3.org/2000/svg" y="0px">
-                                                <path d="M11.1,29.6c-0.5-1.5-0.8-3-0.8-4.6c0-8.1,6.6-14.7,14.7-14.7S39.7,16.9,39.7,25c0,1.6-0.3,3.2-0.8,4.6l6.1,2c0.7-2.1,1.1-4.3,1.1-6.6c0-11.7-9.5-21.2-21.2-21.2S3.8,13.3,3.8,25c0,2.3,0.4,4.5,1.1,6.6L11.1,29.6z"></path>
-                                                </svg>
-                                            </bp-spinner>
+                                            @Html.Partial("Checkout-Spinner")
                                         </div>
                                         <div class="timer-row__message">
-                                            <!---->
                                             <span>
-                                                <!---->
                                                 <span i18n="">Awaiting Payment...</span>
-                                                <!---->
                                             </span>
-                                            <!---->
                                         </div>
                                         <div class="timer-row__time-left">@Model.TimeLeft</div>
                                     </div>
@@ -102,16 +89,11 @@
                                                     }
                                                 </div>
                                                 <div class="payment__spinner">
-                                                    <bp-spinner>
-                                                        <svg xml:space="preserve" style="enable-background:new 0 0 50 50;" version="1.1" viewBox="0 0 50 50" x="0px" xmlns="http://www.w3.org/2000/svg" y="0px">
-                                                        <path d="M11.1,29.6c-0.5-1.5-0.8-3-0.8-4.6c0-8.1,6.6-14.7,14.7-14.7S39.7,16.9,39.7,25c0,1.6-0.3,3.2-0.8,4.6l6.1,2c0.7-2.1,1.1-4.3,1.1-6.6c0-11.7-9.5-21.2-21.2-21.2S3.8,13.3,3.8,25c0,2.3,0.4,4.5,1.1,6.6L11.1,29.6z"></path>
-                                                </svg>
-                                                    </bp-spinner>
+                                                    @Html.Partial("Checkout-Spinner")
                                                 </div>
                                             </div>
                                         </div>
                                     }
-                                    <!---->
                                     <div class="single-item-order buyerTotalLine">
                                         <div class="single-item-order__left">
                                             <div class="single-item-order__left__name">
@@ -121,25 +103,20 @@
                                                 {{ srvModel.itemDesc }}
                                             </div>
                                         </div>
-                                        <!---->
                                         <div class="single-item-order__right">
                                             <div class="single-item-order__right__btc-price" id="buyerTotalBtcAmount">
                                                 <span>{{ srvModel.btcDue }} {{ srvModel.cryptoCode }}</span>
                                             </div>
-                                            <!---->
                                             <div class="single-item-order__right__ex-rate">
                                                 1 {{ srvModel.cryptoCode }} = {{ srvModel.rate }}
                                             </div>
-                                            <!---->
                                         </div>
 
                                         <span class="fa fa-angle-double-down"></span>
                                         <span class="fa fa-angle-double-up"></span>
                                     </div>
-                                    <!---->
                                     <line-items>
                                         <div class="line-items">
-                                            <!---->
                                             <div class="line-items__item">
                                                 <div class="line-items__item__label" i18n="">Order Amount</div>
                                                 <div class="line-items__item__value">{{srvModel.orderAmount}} {{ srvModel.cryptoCode }}</div>
@@ -160,7 +137,6 @@
                                                 <div class="line-items__item__label" i18n="">Due	</div>
                                                 <div class="line-items__item__value">{{srvModel.btcDue}} {{ srvModel.cryptoCode }}</div>
                                             </div>
-                                            <!---->
                                         </div>
                                     </line-items>
                                     <div class="payment-tabs">
@@ -187,15 +163,15 @@
                                     <div class="bp-view payment manual-flow enter-contact-email active" id="emailAddressView">
                                         <form class="manual__step-one refund-address-form contact-email-form" id="emailAddressForm" name="emailAddressForm" novalidate="">
                                             <div class="manual__step-one__header">
-                                                <!---->
+
                                                 <span i18n="">Contact &amp; Refund Email</span>
-                                                <!---->
+
                                             </div>
                                             <div class="manual__step-one__instructions">
                                                 <span class="initial-label">
-                                                    <!---->
+
                                                     <span i18n="">Please provide an email address below. We’ll contact you at this address if there is an issue with your payment. </span>
-                                                    <!---->
+
                                                 </span>
                                                 <span class="submission-error-label" i18n="">Please enter a valid email address.</span>
                                             </div>
@@ -236,14 +212,14 @@
                                         <div class="manual-box flipped" style="margin-bottom: 30px;">
                                             <div class="manual-box__amount">
                                                 <div class="manual-box__amount__label label" i18n="">Amount</div>
-                                                <!---->
+
                                                 <div class="manual-box__amount__value copy-cursor" ngxclipboard="">
                                                     <span>{{srvModel.btcDue}}</span> {{ srvModel.cryptoCode }}
                                                     <div class="copied-label">
                                                         <span i18n="">Copied</span>
                                                     </div>
                                                 </div>
-                                                <!---->
+
                                             </div>
                                             <div class="manual-box__address">
                                                 <div class="flipper flipped-initially">
@@ -251,7 +227,7 @@
                                                     <div class="front">
                                                         <div class="manual-box__address__arrow"></div>
                                                         <div class="manual-box__address__label label" i18n="">Address</div>
-                                                        <!---->
+
                                                         <div class="manual-box__address__value copy-cursor" ngxclipboard="">
                                                             <div class="manual-box__address__wrapper">
                                                                 <div class="manual-box__address__wrapper__logo">
@@ -263,7 +239,7 @@
                                                                 <span i18n="">Copied</span>
                                                             </div>
                                                         </div>
-                                                        <!---->
+
                                                     </div>
                                                 </div>
                                             </div>
@@ -378,16 +354,16 @@
                                             <bp-resend-link id="resend-link">
                                                 <div class="bp-resend__link">
                                                     <span class="link-text">
-                                                        <!---->
+
                                                         <span i18n="">Resend email</span>
-                                                        <!---->
+
                                                     </span>
                                                     <div class="success-text">
-                                                        <!---->
+
                                                         <img src="~/imlegacy/circle-check.svg">
-                                                        <!---->
+
                                                         <div i18n="">Email resent</div>
-                                                        <!---->
+
                                                     </div>
                                                 </div>
                                             </bp-resend-link>
@@ -396,19 +372,19 @@
                                     <div class="bp-view refund-address-view" id="enter-refund-address">
                                         <form class="manual__step-one refund-address-form ng-untouched ng-pristine ng-invalid" name="refundAddressForm" novalidate="" style="margin-top: 28px; margin-bottom: 4rem;">
                                             <div class="manual__step-one__header">
-                                                <!---->
+
                                                 <span i18n="">Please provide a refund address.</span>
-                                                <!---->
+
                                             </div>
                                             <div class="manual__step-one__instructions">
                                                 <span class="initial-label">
-                                                    <!---->
+
                                                     <span i18n="">
                                                         To send your refund of {BTC to refund} BTC,
                                                         we’ll need a bitcoin address from your wallet. Please open your bitcoin
                                                         wallet, copy a receiving address, and paste it below.
                                                     </span>
-                                                    <!---->
+
                                                 </span>
                                                 <span class="submission-error-label" i18n="" id="invalid-bitcoin-address">Please enter a valid bitcoin address.</span>
                                             </div>
@@ -425,11 +401,7 @@
                                                     <button class="action-button" style="margin-top: 15px;" type="submit">
                                                         <span class="button-text" lcl="">Request Refund</span>
                                                         <div class="loader-wrapper">
-                                                            <bp-spinner>
-                                                                <svg xml:space="preserve" style="enable-background:new 0 0 50 50;" version="1.1" viewBox="0 0 50 50" x="0px" xmlns="http://www.w3.org/2000/svg" y="0px">
-                                                                <path d="M11.1,29.6c-0.5-1.5-0.8-3-0.8-4.6c0-8.1,6.6-14.7,14.7-14.7S39.7,16.9,39.7,25c0,1.6-0.3,3.2-0.8,4.6l6.1,2c0.7-2.1,1.1-4.3,1.1-6.6c0-11.7-9.5-21.2-21.2-21.2S3.8,13.3,3.8,25c0,2.3,0.4,4.5,1.1,6.6L11.1,29.6z"></path>
-                                </svg>
-                                                            </bp-spinner>
+                                                            @Html.Partial("Checkout-Spinner")
                                                         </div>
                                                     </button>
                                                 </bp-loading-button>
@@ -453,9 +425,7 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <!---->
                                                 <div class="success-message" i18n="">This invoice has been paid.</div>
-                                                <!---->
                                                 <button class="action-button" style="margin-top: 0px;">
                                                     <bp-done-text>
                                                         <span i18n="" class="i18n-return-to-merchant">Return to {{srvModel.storeName}}</span>
@@ -463,11 +433,8 @@
                                                 </button>
                                             </div>
                                         </div>
-                                        <!---->
                                         <div class="button-wrapper refund-address-form-container" id="refund-overpayment-button">
-                                            <!---->
                                         </div>
-                                        <!---->
                                     </div>
                                     <div class="bp-view" id="refund-pending">
                                         <div class="status-block">
@@ -475,9 +442,6 @@
                                                 <img src="~/imlegacy/refund-pending.svg">
                                                 <div class="pending-block__header" i18n="">Processing Refund</div>
                                                 <span>
-                                                    <!---->
-                                                    <!---->
-                                                    <!---->
                                                     <span class="pending-block__message" i18n="">The amount below will be refunded to you within 1-2 business days. </span>
                                                 </span>
                                             </div>
@@ -507,7 +471,6 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <!---->
                                     </div>
                                     <div class="bp-view expired" id="low-fee">
                                         <div class="expired__body">
@@ -542,18 +505,14 @@
                                                 </div>
                                             </low-fee-timeline>
                                         </div>
-                                        <!---->
-                                        <!---->
                                         <button class="action-button" style="margin-top: .75rem;">
                                             <bp-done-text>
-                                                <!---->
-                                                <!---->
                                                 <span i18n="" class="i18n-return-to-merchant">Return to {{srvModel.storeName}}</span>
                                             </bp-done-text>
                                         </button>
                                     </div>
                                     <div class="bp-view expired" id="expired">
-                                        <!---->
+
                                         <div>
                                             <div class="expired__body">
                                                 <div class="expired__header" i18n="">What happened?</div>
@@ -567,7 +526,7 @@
                                                 </div>
                                                 <div class="expired__text">
                                                     <span class="expired__text__bullet" i18n="">Invoice ID:</span> {{srvModel.invoiceId}}<br>
-                                                    <!---->
+
                                                     <span>
                                                         <span class="expired__text__bullet" i18n="">Order ID:</span> {{srvModel.orderId}}
                                                     </span>
@@ -575,14 +534,10 @@
                                             </div>
                                             <a href="/invoices" class="action-button" style="margin-top: 20px;">
                                                 <bp-done-text>
-                                                    <!---->
-                                                    <!---->
                                                     <span i18n="" class="i18n-return-to-merchant">Return to {{srvModel.storeName}}</span>
                                                 </bp-done-text>
                                             </a>
                                         </div>
-                                        <!---->
-                                        <!---->
                                     </div>
                                     <div class="bp-view expired" id="archived">
                                         <div class="expired-icon">
@@ -611,11 +566,9 @@
                                                     </div>
                                                 </div>
                                                 <div class="success-message">
-                                                    <!---->
                                                     <span>
                                                         <span i18n="">Refund Complete</span>
                                                     </span>
-                                                    <!---->
                                                 </div>
                                             </div>
                                         </div>
@@ -623,11 +576,9 @@
                                             <div class="manual-box__amount amount-only">
                                                 <div class="manual-box__amount__label label">
                                                     <span class="initial-label" i18n="">Overpaid By</span>
-                                                    <!---->
                                                     <span class="final-label">
                                                         <span i18n="">Amount Refunded</span>
                                                     </span>
-                                                    <!---->
                                                 </div>
                                                 <div class="manual-box__amount__value">{BTC amount} BTC</div>
                                             </div>
@@ -650,16 +601,14 @@
                                         </div>
                                         <button class="action-button finished" style="margin-top: 23px;">
                                             <bp-done-text>
-                                                <!---->
-                                                <!---->
+
+
                                                 <span i18n="" class="i18n-return-to-merchant">Return to {{srvModel.storeName}}</span>
                                             </bp-done-text>
                                         </button>
                                     </div>
                                     <div class="footer-button enter-different-address-button">
                                         <bp-done-text>
-                                            <!---->
-                                            <!---->
                                             <span i18n="" class="i18n-return-to-merchant">Return to {{srvModel.storeName}}</span>
                                         </bp-done-text>
                                     </div>

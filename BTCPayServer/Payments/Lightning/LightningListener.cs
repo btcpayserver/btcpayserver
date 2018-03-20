@@ -79,7 +79,7 @@ namespace BTCPayServer.Payments.Lightning
 
                 var listenedInvoice = new ListenedInvoice()
                 {
-                    Uri = lightningSupportedMethod.GetLightningChargeUrl(false).AbsoluteUri,
+                    Uri = lightningSupportedMethod.GetLightningUrl().BaseUri.AbsoluteUri,
                     PaymentMethodDetails = lightningMethod,
                     SupportedPaymentMethod = lightningSupportedMethod,
                     PaymentMethod = paymentMethod,
@@ -125,7 +125,7 @@ namespace BTCPayServer.Payments.Lightning
         {
             try
             {
-                Logs.PayServer.LogInformation($"{supportedPaymentMethod.CryptoCode} (Lightning): Start listening {supportedPaymentMethod.GetLightningChargeUrl(false)}");
+                Logs.PayServer.LogInformation($"{supportedPaymentMethod.CryptoCode} (Lightning): Start listening {supportedPaymentMethod.GetLightningUrl().BaseUri}");
                 var charge = _LightningClientFactory.CreateClient(supportedPaymentMethod, network);
                 var session = await charge.Listen(_Cts.Token);
                 while (true)
@@ -134,7 +134,6 @@ namespace BTCPayServer.Payments.Lightning
                     ListenedInvoice listenedInvoice = GetListenedInvoice(notification.Id);
                     if (listenedInvoice == null)
                         continue;
-
                     if (notification.Id == listenedInvoice.PaymentMethodDetails.InvoiceId &&
                        notification.BOLT11 == listenedInvoice.PaymentMethodDetails.BOLT11)
                     {
@@ -157,10 +156,10 @@ namespace BTCPayServer.Payments.Lightning
             }
             catch (Exception ex)
             {
-                Logs.PayServer.LogError(ex, $"{supportedPaymentMethod.CryptoCode} (Lightning): Error while contacting {supportedPaymentMethod.GetLightningChargeUrl(false)}");
-                DoneListening(supportedPaymentMethod.GetLightningChargeUrl(false));
+                Logs.PayServer.LogError(ex, $"{supportedPaymentMethod.CryptoCode} (Lightning): Error while contacting {supportedPaymentMethod.GetLightningUrl().BaseUri}");
+                DoneListening(supportedPaymentMethod.GetLightningUrl());
             }
-            Logs.PayServer.LogInformation($"{supportedPaymentMethod.CryptoCode} (Lightning): Stop listening {supportedPaymentMethod.GetLightningChargeUrl(false)}");
+            Logs.PayServer.LogInformation($"{supportedPaymentMethod.CryptoCode} (Lightning): Stop listening {supportedPaymentMethod.GetLightningUrl().BaseUri}");
         }
 
         private async Task AddPayment(BTCPayNetwork network, LightningInvoice notification, ListenedInvoice listenedInvoice)
@@ -204,8 +203,9 @@ namespace BTCPayServer.Payments.Lightning
         /// Stop listening all invoices on this server
         /// </summary>
         /// <param name="uri"></param>
-        private void DoneListening(Uri uri)
+        private void DoneListening(LightningConnectionString connectionString)
         {
+            var uri = connectionString.BaseUri;
             lock (_ListenedInvoiceByChargeInvoiceId)
             {
                 foreach (var listenedInvoice in _ListenedInvoiceByLightningUrl[uri.AbsoluteUri])

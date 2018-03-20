@@ -57,7 +57,9 @@ namespace BTCPayServer.Tests
             LTCExplorerClient = new ExplorerClient(NetworkProvider.GetNetwork("LTC").NBXplorerNetwork, new Uri(GetEnvironment("TESTS_LTCNBXPLORERURL", "http://127.0.0.1:32838/")));
 
             var btc = NetworkProvider.GetNetwork("BTC").NBitcoinNetwork;
-            CustomerLightningD = new CLightningRPCClient(new Uri(GetEnvironment("TEST_CUSTOMERLIGHTNINGD", "http://127.0.0.1:30992/")), btc);
+            CustomerLightningD = new CLightningRPCClient(new Uri(GetEnvironment("TEST_CUSTOMERLIGHTNINGD", "tcp://127.0.0.1:30992/")), btc);
+            MerchantLightningD = new CLightningRPCClient(new Uri(GetEnvironment("TEST_MERCHANTLIGHTNINGD", "tcp://127.0.0.1:30993/")), btc);
+
             MerchantCharge = new ChargeTester(this, "TEST_MERCHANTCHARGE", "http://api-token:foiewnccewuify@127.0.0.1:54938/", "merchant_lightningd", btc);
 
             PayTester = new BTCPayServerTester(Path.Combine(_Directory, "pay"))
@@ -69,6 +71,7 @@ namespace BTCPayServer.Tests
             };
             PayTester.Port = int.Parse(GetEnvironment("TESTS_PORT", Utils.FreeTcpPort().ToString(CultureInfo.InvariantCulture)), CultureInfo.InvariantCulture);
             PayTester.HostName = GetEnvironment("TESTS_HOSTNAME", "127.0.0.1");
+            PayTester.InContainer = bool.Parse(GetEnvironment("TESTS_INCONTAINER", "false"));
             PayTester.Start();
         }
 
@@ -90,8 +93,10 @@ namespace BTCPayServer.Tests
         {
             while (true)
             {
+                var skippedStates = new[] { "ONCHAIN", "CHANNELD_SHUTTING_DOWN", "CLOSINGD_SIGEXCHANGE", "CLOSINGD_COMPLETE", "FUNDING_SPEND_SEEN" };
                 var channel = (await CustomerLightningD.ListPeersAsync())
                             .SelectMany(p => p.Channels)
+                            .Where(c => !skippedStates.Contains(c.State ?? ""))
                             .FirstOrDefault();
                 switch (channel?.State)
                 {
@@ -148,6 +153,7 @@ namespace BTCPayServer.Tests
         }
 
         public CLightningRPCClient CustomerLightningD { get; set; }
+        public CLightningRPCClient MerchantLightningD { get; private set; }
         public ChargeTester MerchantCharge { get; private set; }
 
         internal string GetEnvironment(string variable, string defaultValue)

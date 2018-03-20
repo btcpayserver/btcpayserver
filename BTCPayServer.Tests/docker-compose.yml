@@ -17,14 +17,19 @@ services:
       TESTS_POSTGRES: User ID=postgres;Host=postgres;Port=5432;Database=btcpayserver
       TESTS_PORT: 80
       TESTS_HOSTNAME: tests
-      TEST_CUSTOMERLIGHTNINGD: http://customer_lightningd:9835/
+      TEST_MERCHANTLIGHTNINGD: "/etc/merchant_lightningd_datadir/lightning-rpc"
+      TEST_CUSTOMERLIGHTNINGD: "/etc/customer_lightningd_datadir/lightning-rpc"
       TEST_MERCHANTCHARGE: http://api-token:foiewnccewuify@lightning-charged:9112/
+      TESTS_INCONTAINER: "true"
     expose:
       - "80"
     links:
       - dev
     extra_hosts: 
       - "tests:127.0.0.1"
+    volumes:
+      - "customer_lightningd_datadir:/etc/customer_lightningd_datadir"
+      - "merchant_lightningd_datadir:/etc/merchant_lightningd_datadir"
 
   # The dev container is not actually used, it is just handy to run `docker-compose up dev` to start all services
   dev: 
@@ -90,6 +95,7 @@ services:
         bitcoin-datadir=/etc/bitcoin
         bitcoin-rpcconnect=bitcoind
         network=regtest
+        ipaddr=customer_lightningd
         log-level=debug
     ports:
       - "30992:9835" # api port
@@ -128,6 +134,7 @@ services:
       LIGHTNINGD_OPT: |
         bitcoin-datadir=/etc/bitcoin
         bitcoin-rpcconnect=bitcoind
+        ipaddr=merchant_lightningd
         network=regtest
         log-level=debug
     ports:

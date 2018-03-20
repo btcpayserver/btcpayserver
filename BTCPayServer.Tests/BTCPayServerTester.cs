@@ -1,5 +1,7 @@
 ﻿using BTCPayServer.Configuration;
 using BTCPayServer.Hosting;
+using BTCPayServer.Payments;
+using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Tests.Logging;
@@ -118,6 +120,7 @@ namespace BTCPayServer.Tests
                     .Build();
             _Host.Start();
             InvoiceRepository = (InvoiceRepository)_Host.Services.GetService(typeof(InvoiceRepository));
+            ((LightningLikePaymentHandler)_Host.Services.GetService(typeof(IPaymentMethodHandler<LightningSupportedPaymentMethod>))).SkipP2PTest = !InContainer;
         }
         
         public string HostName
@@ -127,6 +130,7 @@ namespace BTCPayServer.Tests
         }
         public InvoiceRepository InvoiceRepository { get; private set; }
         public Uri IntegratedLightning { get; internal set; }
+        public bool InContainer { get; internal set; }
 
         public T GetService<T>()
         {

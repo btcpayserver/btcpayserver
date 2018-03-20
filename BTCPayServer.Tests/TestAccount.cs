@@ -1,4 +1,5 @@
 ﻿using BTCPayServer.Controllers;
+using System.Linq;
 using BTCPayServer.Models.AccountViewModels;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Services.Invoices;
@@ -11,6 +12,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 using NBXplorer.DerivationStrategy;
+using BTCPayServer.Payments;
+using BTCPayServer.Payments.Lightning;
 
 namespace BTCPayServer.Tests
 {
@@ -111,20 +114,24 @@ namespace BTCPayServer.Tests
         {
             get; set;
         }
-
-        public void RegisterLightningNode(string cryptoCode)
+        
+        public void RegisterLightningNode(string cryptoCode, LightningConnectionType connectionType)
         {
-            RegisterLightningNodeAsync(cryptoCode).GetAwaiter().GetResult();
+            RegisterLightningNodeAsync(cryptoCode, connectionType).GetAwaiter().GetResult();
         }
 
-        public async Task RegisterLightningNodeAsync(string cryptoCode)
+        public async Task RegisterLightningNodeAsync(string cryptoCode, LightningConnectionType connectionType)
         {
             var storeController = parent.PayTester.GetController<StoresController>(UserId);
             await storeController.AddLightningNode(StoreId, new LightningNodeViewModel()
             {
                 CryptoCurrency = "BTC",
-                Url = parent.MerchantCharge.Client.Uri.AbsoluteUri
+                Url = connectionType == LightningConnectionType.Charge ? parent.MerchantCharge.Client.Uri.AbsoluteUri :
+                      connectionType == LightningConnectionType.CLightning ? parent.MerchantLightningD.Address.AbsoluteUri
+                      : throw new NotSupportedException(connectionType.ToString())
             }, "save");
+            if (storeController.ModelState.ErrorCount != 0)
+                Assert.False(true, storeController.ModelState.FirstOrDefault().Value.Errors[0].ErrorMessage);
         }
-    }
+}
 }

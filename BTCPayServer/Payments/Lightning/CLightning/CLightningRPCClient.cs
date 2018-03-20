@@ -5,8 +5,10 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Payments.Lightning.Charge;
+using Mono.Unix;
 using NBitcoin;
 using NBitcoin.RPC;
 using Newtonsoft.Json;
@@ -14,7 +16,14 @@ using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Payments.Lightning.CLightning
 {
-    public class CLightningRPCClient
+    public class LightningRPCException : Exception
+    {
+        public LightningRPCException(string message) : base(message)
+        {
+
+        }
+    }
+    public class CLightningRPCClient : ILightningInvoiceClient, ILightningListenInvoiceSession
     {
         public Network Network { get; private set; }
         public Uri Address { get; private set; }
@@ -25,13 +34,17 @@ namespace BTCPayServer.Payments.Lightning.CLightning
                 throw new ArgumentNullException(nameof(address));
             if (network == null)
                 throw new ArgumentNullException(nameof(network));
+            if(address.Scheme == "file")
+            {
+                address = new UriBuilder(address) { Scheme = "unix" }.Uri;
+            }
             Address = address;
             Network = network;
         }
 
-        public Task<GetInfoResponse> GetInfoAsync()
+        public Task<GetInfoResponse> GetInfoAsync(CancellationToken cancellation = default(CancellationToken))
         {
-            return SendCommandAsync<GetInfoResponse>("getinfo");
+            return SendCommandAsync<GetInfoResponse>("getinfo", cancellation: cancellation);
         }
 
         public Task SendAsync(string bolt11)
@@ -42,7 +55,7 @@ namespace BTCPayServer.Payments.Lightning.CLightning
         public async Task<PeerInfo[]> ListPeersAsync()
         {
             var peers = await SendCommandAsync<PeerInfo[]>("listpeers", isArray: true);
-            foreach(var peer in peers)
+            foreach (var peer in peers)
             {
                 peer.Channels = peer.Channels ?? Array.Empty<ChannelInfo>();
             }
@@ -60,60 +73,158 @@ namespace BTCPayServer.Payments.Lightning.CLightning
         }
 
         static Encoding UTF8 = new UTF8Encoding(false);
-        private async Task<T> SendCommandAsync<T>(string command, object[] parameters = null, bool noReturn = false, bool isArray = false)
+        private async Task<T> SendCommandAsync<T>(string command, object[] parameters = null, bool noReturn = false, bool isArray = false, CancellationToken cancellation = default(CancellationToken))
         {
             parameters = parameters ?? Array.Empty<string>();
-            var domain = Address.DnsSafeHost;
-            if (!IPAddress.TryParse(domain, out IPAddress address))
+            using (Socket socket = await Connect())
             {
-                address = (await Dns.GetHostAddressesAsync(domain)).FirstOrDefault();
-                if (address == null)
-                    throw new Exception("Host not found");
+                using (var networkStream = new NetworkStream(socket))
+                {
+                    using (var textWriter = new StreamWriter(networkStream, UTF8, 1024 * 10, true))
+                    {
+                        using (var jsonWriter = new JsonTextWriter(textWriter))
+                        {
+                            var req = new JObject();
+                            req.Add("id", 0);
+                            req.Add("method", command);
+                            req.Add("params", new JArray(parameters));
+                            await req.WriteToAsync(jsonWriter, cancellation);
+                            await jsonWriter.FlushAsync(cancellation);
+                        }
+                        await textWriter.FlushAsync();
+                    }
+                    await networkStream.FlushAsync(cancellation);
+                    using (var textReader = new StreamReader(networkStream, UTF8, false, 1024 * 10, true))
+                    {
+                        using (var jsonReader = new JsonTextReader(textReader))
+                        {
+                            var resultAsync = JObject.LoadAsync(jsonReader, cancellation);
+
+                            // without this hack resultAsync is blocking even if cancellation happen
+                            using (cancellation.Register(() => { socket.Dispose(); }))
+                            {
+                                var result = await resultAsync;
+                                var error = result.Property("error");
+                                if (error != null)
+                                {
+                                    throw new LightningRPCException(error.Value["message"].Value<string>());
+                                }
+                                if (noReturn)
+                                    return default(T);
+                                if (isArray)
+                                {
+                                    return result["result"].Children().First().Children().First().ToObject<T>();
+                                }
+                                return result["result"].ToObject<T>();
+                            }
+                        }
+                    }
+                }
             }
-            Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            await socket.ConnectAsync(new IPEndPoint(address, Address.Port));
-            using (var networkStream = new NetworkStream(socket))
+        }
+
+        private async Task<Socket> Connect()
+        {
+            Socket socket = null;
+            EndPoint endpoint = null;
+            if (Address.Scheme == "tcp" || Address.Scheme == "tcp")
             {
-                using (var textWriter = new StreamWriter(networkStream, UTF8, 1024 * 10, true))
+                var domain = Address.DnsSafeHost;
+                if (!IPAddress.TryParse(domain, out IPAddress address))
                 {
-                    using (var jsonWriter = new JsonTextWriter(textWriter))
-                    {
-                        var req = new JObject();
-                        req.Add("id", 0);
-                        req.Add("method", command);
-                        req.Add("params", new JArray(parameters));
-                        await req.WriteToAsync(jsonWriter);
-                        await jsonWriter.FlushAsync();
-                    }
-                    await textWriter.FlushAsync();
+                    address = (await Dns.GetHostAddressesAsync(domain)).FirstOrDefault();
+                    if (address == null)
+                        throw new Exception("Host not found");
                 }
-                await networkStream.FlushAsync();
-                using (var textReader = new StreamReader(networkStream, UTF8, false, 1024 * 10, true))
-                {
-                    using (var jsonReader = new JsonTextReader(textReader))
-                    {
-                        var result = await JObject.LoadAsync(jsonReader);
-                        var error = result.Property("error");
-                        if(error != null)
-                        {
-                            throw new Exception(error.Value.ToString());
-                        }
-                        if (noReturn)
-                            return default(T);
-                        if (isArray)
-                        {
-                            return result["result"].Children().First().Children().First().ToObject<T>();
-                        }
-                        return result["result"].ToObject<T>();
-                    }
-                }
+                socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                endpoint = new IPEndPoint(address, Address.Port);
             }
+            else if (Address.Scheme == "unix")
+            {
+                var path = Address.AbsoluteUri.Remove(0, "unix:".Length);
+                if (!path.StartsWith('/'))
+                    path = "/" + path;
+                while (path.Length >= 2 && (path[0] != '/' || path[1] == '/'))
+                {
+                    path = path.Remove(0, 1);
+                }
+                if (path.Length < 2)
+                    throw new FormatException("Invalid unix url");
+                socket = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.IP);
+                endpoint = new UnixEndPoint(path);
+            }
+            else
+                throw new NotSupportedException($"Protocol {Address.Scheme} for clightning not supported");
+
+            await socket.ConnectAsync(endpoint);
+            return socket;
         }
 
         public async Task<BitcoinAddress> NewAddressAsync()
         {
             var obj = await SendCommandAsync<JObject>("newaddr");
             return BitcoinAddress.Create(obj.Property("address").Value.Value<string>(), Network);
+        }
+
+        async Task<LightningInvoice> ILightningInvoiceClient.GetInvoice(string invoiceId, CancellationToken cancellation)
+        {
+            var invoices = await SendCommandAsync<ChargeInvoice[]>("listinvoices", new[] { invoiceId }, false, true, cancellation);
+            if (invoices.Length == 0)
+                return null;
+            return ChargeClient.ToLightningInvoice(invoices[0]);
+        }
+
+        static NBitcoin.DataEncoders.DataEncoder InvoiceIdEncoder = NBitcoin.DataEncoders.Encoders.Base58;
+        async Task<LightningInvoice> ILightningInvoiceClient.CreateInvoice(LightMoney amount, TimeSpan expiry, CancellationToken cancellation)
+        {
+            var id = InvoiceIdEncoder.EncodeData(RandomUtils.GetBytes(20));
+            var invoice = await SendCommandAsync<CreateInvoiceResponse>("invoice", new object[] { amount.MilliSatoshi, id, "" }, cancellation: cancellation);
+            invoice.Label = id;
+            invoice.MilliSatoshi = amount;
+            invoice.Status = "unpaid";
+            return ToLightningInvoice(invoice);
+        }
+
+        private static LightningInvoice ToLightningInvoice(CreateInvoiceResponse invoice)
+        {
+            return new LightningInvoice()
+            {
+                Id = invoice.Label,
+                Amount = invoice.MilliSatoshi,
+                BOLT11 = invoice.BOLT11,
+                Status = invoice.Status,
+                PaidAt = invoice.PaidAt
+            };
+        }
+
+        Task<ILightningListenInvoiceSession> ILightningInvoiceClient.Listen(CancellationToken cancellation)
+        {
+            return Task.FromResult<ILightningListenInvoiceSession>(this);
+        }
+        long lastInvoiceIndex = 99999999999;
+        async Task<LightningInvoice> ILightningListenInvoiceSession.WaitInvoice(CancellationToken cancellation)
+        {
+            var chargeInvoice = await SendCommandAsync<CreateInvoiceResponse>("waitanyinvoice", new object[] { lastInvoiceIndex }, cancellation: cancellation);
+            lastInvoiceIndex = chargeInvoice.PayIndex.Value;
+            return ToLightningInvoice(chargeInvoice);
+        }
+
+        async Task<LightningNodeInformation> ILightningInvoiceClient.GetInfo(CancellationToken cancellation)
+        {
+            var info = await GetInfoAsync(cancellation);
+            var address = info.Address.Select(a => a.Address).FirstOrDefault();
+            var port = info.Port;
+            return new LightningNodeInformation()
+            {
+                P2PPort = port,
+                Address = address,
+                BlockHeight = info.BlockHeight
+            };
+        }
+
+        void IDisposable.Dispose()
+        {
+
         }
     }
 }

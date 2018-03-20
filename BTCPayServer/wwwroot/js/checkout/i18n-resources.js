@@ -1,24 +1,34 @@
 const locales = {
     en: {
-        message: {
-            hello: 'Hello!! - EN',
+        nested: {
+            lang: 'Language',
         },
         "Awaiting Payment...": "Awaiting Payment...",
-        await_pay: "Awaiting Payment..."
+        "Pay with": "Pay with",
+        "Scan": "Scan",
+        "Copy": "Copy",
+        "Conversion": "Conversion",
+        "Open in wallet": "Open in wallet"
     },
 
     de: {
-        message: {
-            hello: 'Hallo!! - DE',
+        nested: {
+            lang: 'Sprache',
         },
         "Awaiting Payment...": "Warten auf Zahlung...",
-        await_pay: "Warten auf Zahlung..."
+        "Pay with": "Bezahlen mit",
+        "Scan": "Scan",
+        "Copy": "Kopieren",
+        "Conversion": "Umwandlung",
+        "Open in wallet": "In der Brieftasche öffnen"
     },
 };
 
 i18next.init({
     lng: 'en',
     fallbackLng: 'en',
+    nsSeparator: false,
+    keySeparator: false,
     resources: {
         en: { translation: locales.en },
         de: { translation: locales.de }

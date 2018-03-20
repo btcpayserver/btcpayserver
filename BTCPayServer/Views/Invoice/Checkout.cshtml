@@ -63,7 +63,7 @@
                                         </div>
                                         <div class="timer-row__message">
                                             <span>
-                                                <span i18n="">Awaiting Payment...</span>
+                                                <span>{{$t("Awaiting Payment...")}}</span>
                                             </span>
                                         </div>
                                         <div class="timer-row__time-left">@Model.TimeLeft</div>
@@ -75,7 +75,7 @@
                                         <div class="currency-selection">
                                             <div class="single-item-order__left">
                                                 <div style="font-weight: 600;">
-                                                    Pay with
+                                                    {{$t("Pay with")}}
                                                 </div>
                                             </div>
                                             <div class="single-item-order__right">
@@ -140,15 +140,15 @@
                                     </line-items>
                                     <div class="payment-tabs">
                                         <div class="payment-tabs__tab active" id="scan-tab">
-                                            <span i18n="">Scan</span>
+                                            <span>{{$t("Scan")}}</span>
                                         </div>
                                         <div class="payment-tabs__tab" id="copy-tab">
-                                            <span i18n="">Copy</span>
+                                            <span>{{$t("Copy")}}</span>
                                         </div>
                                         @if (Model.AllowCoinConversion)
                                         {
                                             <div class="payment-tabs__tab" id="altcoins-tab">
-                                                <span i18n="">Conversion</span>
+                                                <span>{{$t("Conversion")}}</span>
                                             </div>
                                             <div id="tabsSlider" class="payment-tabs__slider three-tabs"></div>
                                         }
@@ -195,7 +195,7 @@
                                         </div>
                                         <div class="payment__details__instruction__open-wallet">
                                             <a class="payment__details__instruction__open-wallet__btn action-button" v-bind:href="srvModel.invoiceBitcoinUrl">
-                                                <span i18n="">Open in wallet</span>
+                                                <span>{{$t("Open in wallet")}}</span>
                                                 <span class="glyphicon glyphicon-new-window"></span>
                                             </a>
                                         </div>
@@ -607,6 +607,13 @@
                             </div>
                         </div>
                     </div>
+                    <div style="margin-top: 20px;">
+                        @* Not working because of nsSeparator: false, keySeparator: false,
+        {{$t("nested.lang")}} >>
+                        *@
+                        <a style="cursor:pointer;" v-on:click="changeLanguage('en')">English</a>
+                        <a style="cursor:pointer;" v-on:click="changeLanguage('de')">Deutsch</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -620,6 +627,7 @@
             /^bp-/
         ];
         var checkoutCtrl = new Vue({
+            i18n,
             el: '#checkoutCtrl',
             components: {
                 qrcode: VueQr

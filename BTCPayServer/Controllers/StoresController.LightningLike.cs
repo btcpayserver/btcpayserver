@@ -9,6 +9,7 @@ using BTCPayServer.Payments.Lightning.CLightning;
 using Microsoft.AspNetCore.Mvc;
 using BTCPayServer.Payments.Lightning;
 using System.Net;
+using BTCPayServer.Data;
 
 namespace BTCPayServer.Controllers
 {
@@ -24,7 +25,22 @@ namespace BTCPayServer.Controllers
             LightningNodeViewModel vm = new LightningNodeViewModel();
             vm.CryptoCode = cryptoCode;
             vm.InternalLightningNode = GetInternalLighningNode(cryptoCode)?.ToUri(true)?.AbsoluteUri;
+            SetExistingValues(store, vm);
             return View(vm);
+        }
+
+        private void SetExistingValues(StoreData store, LightningNodeViewModel vm)
+        {
+            vm.Url = GetExistingLightningSupportedPaymentMethod(vm.CryptoCode, store)?.GetLightningUrl()?.ToString();
+        }
+
+        private LightningSupportedPaymentMethod GetExistingLightningSupportedPaymentMethod(string cryptoCode, StoreData store)
+        {
+            var id = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
+            var existing = store.GetSupportedPaymentMethods(_NetworkProvider)
+                .OfType<LightningSupportedPaymentMethod>()
+                .FirstOrDefault(d => d.PaymentId == id);
+            return existing;
         }
 
         private LightningConnectionString GetInternalLighningNode(string cryptoCode)

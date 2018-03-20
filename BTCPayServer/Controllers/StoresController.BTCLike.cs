@@ -26,10 +26,26 @@ namespace BTCPayServer.Controllers
             var store = await _Repo.FindStore(storeId, GetUserId());
             if (store == null)
                 return NotFound();
+
             DerivationSchemeViewModel vm = new DerivationSchemeViewModel();
             vm.ServerUrl = GetStoreUrl(storeId);
             vm.CryptoCode = cryptoCode;
+            SetExistingValues(store, vm);
             return View(vm);
+        }
+
+        private void SetExistingValues(StoreData store, DerivationSchemeViewModel vm)
+        {
+            vm.DerivationScheme = GetExistingDerivationStrategy(vm.CryptoCode, store)?.DerivationStrategyBase.ToString();
+        }
+
+        private DerivationStrategy GetExistingDerivationStrategy(string cryptoCode, StoreData store)
+        {
+            var id = new PaymentMethodId(cryptoCode, PaymentTypes.BTCLike);
+            var existing = store.GetSupportedPaymentMethods(_NetworkProvider)
+                .OfType<DerivationStrategy>()
+                .FirstOrDefault(d => d.PaymentId == id);
+            return existing;
         }
 
         [HttpPost]

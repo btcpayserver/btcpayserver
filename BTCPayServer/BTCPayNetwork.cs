@@ -68,7 +68,6 @@ namespace BTCPayServer
         public BTCPayDefaultSettings DefaultSettings { get; set; }
         public KeyPath CoinType { get; internal set; }
         public int MaxTrackedConfirmation { get; internal set; } = 6;
-        public string CLightningNetworkName { get; internal set; }
 
         public override string ToString()
         {

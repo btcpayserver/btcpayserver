@@ -6,14 +6,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Events;
 using BTCPayServer.Logging;
-using BTCPayServer.Payments.Lightning.CLightning;
 using BTCPayServer.Services.Invoices;
 using Microsoft.Extensions.Hosting;
 using NBXplorer;
+using BTCPayServer.Payments.Lightning.Charge;
 
 namespace BTCPayServer.Payments.Lightning
 {
-    public class ChargeListener : IHostedService
+    public class LightningListener : IHostedService
     {
         class ListenedInvoice
         {
@@ -28,7 +28,7 @@ namespace BTCPayServer.Payments.Lightning
         EventAggregator _Aggregator;
         InvoiceRepository _InvoiceRepository;
         BTCPayNetworkProvider _NetworkProvider;
-        public ChargeListener(EventAggregator aggregator,
+        public LightningListener(EventAggregator aggregator,
                               InvoiceRepository invoiceRepository,
                               BTCPayNetworkProvider networkProvider)
         {
@@ -128,13 +128,13 @@ namespace BTCPayServer.Payments.Lightning
                 var session = await charge.Listen(_Cts.Token);
                 while (true)
                 {
-                    var notification = await session.NextEvent(_Cts.Token);
+                    var notification = await session.WaitInvoice(_Cts.Token);
                     ListenedInvoice listenedInvoice = GetListenedInvoice(notification.Id);
                     if (listenedInvoice == null)
                         continue;
 
                     if (notification.Id == listenedInvoice.PaymentMethodDetails.InvoiceId &&
-                       notification.PaymentRequest == listenedInvoice.PaymentMethodDetails.BOLT11)
+                       notification.BOLT11 == listenedInvoice.PaymentMethodDetails.BOLT11)
                     {
                         if (notification.Status == "paid" && notification.PaidAt.HasValue)
                         {
@@ -161,18 +161,18 @@ namespace BTCPayServer.Payments.Lightning
             Logs.PayServer.LogInformation($"{supportedPaymentMethod.CryptoCode} (Lightning): Stop listening {supportedPaymentMethod.GetLightningChargeUrl(false)}");
         }
 
-        private async Task AddPayment(BTCPayNetwork network, ChargeInvoice notification, ListenedInvoice listenedInvoice)
+        private async Task AddPayment(BTCPayNetwork network, LightningInvoice notification, ListenedInvoice listenedInvoice)
         {
             var payment = await _InvoiceRepository.AddPayment(listenedInvoice.InvoiceId, notification.PaidAt.Value, new LightningLikePaymentData()
             {
-                BOLT11 = notification.PaymentRequest,
-                Amount = notification.MilliSatoshi
+                BOLT11 = notification.BOLT11,
+                Amount = notification.Amount
             }, network.CryptoCode, accounted: true);
             if(payment != null)
                 _Aggregator.Publish(new InvoiceEvent(listenedInvoice.InvoiceId, 1002, "invoice_receivedPayment"));
         }
 
-        private static ChargeClient GetChargeClient(LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network)
+        private static ILightningInvoiceClient GetChargeClient(LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network)
         {
             return new ChargeClient(supportedPaymentMethod.GetLightningChargeUrl(true), network.NBitcoinNetwork);
         }

@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.HostedServices;
+using BTCPayServer.Payments.Lightning.Charge;
 using BTCPayServer.Payments.Lightning.CLightning;
 using BTCPayServer.Services.Invoices;
 
@@ -24,14 +25,12 @@ namespace BTCPayServer.Payments.Lightning
             var due = Extensions.RoundUp(invoice.ProductInformation.Price / paymentMethod.Rate, 8);
             var client = GetClient(supportedPaymentMethod, network);
             var expiry = invoice.ExpirationTime - DateTimeOffset.UtcNow;
-            var lightningInvoice = await client.CreateInvoiceAsync(new CreateInvoiceRequest()
-            {
-                Amont = new LightMoney(due, LightMoneyUnit.BTC),
-                Expiry = expiry < TimeSpan.Zero ? TimeSpan.FromSeconds(1) : expiry
-            });
+            if (expiry < TimeSpan.Zero)
+                expiry = TimeSpan.FromSeconds(1);
+            var lightningInvoice = await client.CreateInvoice(new LightMoney(due, LightMoneyUnit.BTC), expiry);
             return new LightningLikePaymentMethodDetails()
             {
-                BOLT11 = lightningInvoice.PayReq,
+                BOLT11 = lightningInvoice.BOLT11,
                 InvoiceId = lightningInvoice.Id
             };
         }
@@ -54,23 +53,15 @@ namespace BTCPayServer.Payments.Lightning
             
             var cts = new CancellationTokenSource(5000);
             var client = GetClient(supportedPaymentMethod, network);
-            GetInfoResponse info = null;
+            LightningNodeInformation info = null;
             try
             {
 
-                info = await client.GetInfoAsync(cts.Token);
+                info = await client.GetInfo(cts.Token);
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error while connecting to the lightning charge {client.Uri} ({ex.Message})");
-            }
-            var address = info.Address.Select(a=>a.Address).FirstOrDefault();
-            var port = info.Port;
-            address = address ?? client.Uri.DnsSafeHost;
-
-            if (info.Network != network.CLightningNetworkName)
-            {
-                throw new Exception($"Lightning node network {info.Network}, but expected is {network.CLightningNetworkName}");
+                throw new Exception($"Error while connecting to the API ({ex.Message})");
             }
 
             var blocksGap = Math.Abs(info.BlockHeight - summary.Status.ChainHeight);
@@ -81,15 +72,15 @@ namespace BTCPayServer.Payments.Lightning
 
             try
             {
-                await TestConnection(address, port, cts.Token);
+                await TestConnection(info.Address, info.P2PPort, cts.Token);
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error while connecting to the lightning node via {address}:{port} ({ex.Message})");
+                throw new Exception($"Error while connecting to the lightning node via {info.Address}:{info.P2PPort} ({ex.Message})");
             }
         }
 
-        private static ChargeClient GetClient(LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network)
+        private static ILightningInvoiceClient GetClient(LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network)
         {
             return new ChargeClient(supportedPaymentMethod.GetLightningChargeUrl(true), network.NBitcoinNetwork);
         }

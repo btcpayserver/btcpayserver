@@ -34,7 +34,6 @@ namespace BTCPayServer.Models.StoreViewModels
         public void SetCryptoCurrencies(BTCPayNetworkProvider networkProvider, string selectedScheme)
         {
             var choices = networkProvider.GetAll()
-                            .Where(n => n.CLightningNetworkName != null)
                             .Select(o => new Format() { Name = o.CryptoCode, Value = o.CryptoCode }).ToArray();
             var chosen = choices.FirstOrDefault(f => f.Name == selectedScheme) ?? choices.FirstOrDefault();
             CryptoCurrencies = new SelectList(choices, nameof(chosen.Value), nameof(chosen.Name), chosen);

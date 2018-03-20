@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Payments.Lightning.CLightning;
-using BTCPayServer.Payments.Lightning.CLightning.RPC;
 using NBitcoin;
 
 namespace BTCPayServer.Tests

@@ -18,7 +18,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Globalization;
-using BTCPayServer.Payments.Lightning.CLightning.RPC;
+using BTCPayServer.Payments.Lightning.CLightning;
+using BTCPayServer.Payments.Lightning.Charge;
 
 namespace BTCPayServer.Tests
 {
@@ -117,7 +118,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        private async Task<Payments.Lightning.CLightning.GetInfoResponse> WaitLNSynched()
+        private async Task<GetInfoResponse> WaitLNSynched()
         {
             while (true)
             {

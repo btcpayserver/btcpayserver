@@ -6,12 +6,13 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using BTCPayServer.Payments.Lightning.Charge;
 using NBitcoin;
 using NBitcoin.RPC;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace BTCPayServer.Payments.Lightning.CLightning.RPC
+namespace BTCPayServer.Payments.Lightning.CLightning
 {
     public class CLightningRPCClient
     {

@@ -2,7 +2,6 @@
 @model PaymentModel
 @{
     Layout = null;
-    ViewData["Title"] = "Payment";
 }
 <!DOCTYPE html>
 <html>
@@ -181,11 +180,7 @@
                                                     <button class="action-button" style="margin-top: 15px;" type="button">
                                                         <span class="button-text" lcl="">Continue</span>
                                                         <div class="loader-wrapper">
-                                                            <bp-spinner>
-                                                                <svg xml:space="preserve" style="enable-background:new 0 0 50 50;" version="1.1" viewBox="0 0 50 50" x="0px" xmlns="http://www.w3.org/2000/svg" y="0px">
-                                                                <path d="M11.1,29.6c-0.5-1.5-0.8-3-0.8-4.6c0-8.1,6.6-14.7,14.7-14.7S39.7,16.9,39.7,25c0,1.6-0.3,3.2-0.8,4.6l6.1,2c0.7-2.1,1.1-4.3,1.1-6.6c0-11.7-9.5-21.2-21.2-21.2S3.8,13.3,3.8,25c0,2.3,0.4,4.5,1.1,6.6L11.1,29.6z"></path>
-                                                                </svg>
-                                                            </bp-spinner>
+                                                            @Html.Partial("Checkout-Spinner")
                                                         </div>
                                                     </button>
                                                 </bp-loading-button>
@@ -291,11 +286,7 @@
                                                     <button class="action-button" style="margin-top: 15px;" type="submit">
                                                         <span class="button-text" lcl="">Request Refund</span>
                                                         <div class="loader-wrapper">
-                                                            <bp-spinner>
-                                                                <svg xml:space="preserve" style="enable-background:new 0 0 50 50;" version="1.1" viewBox="0 0 50 50" x="0px" xmlns="http://www.w3.org/2000/svg" y="0px">
-                                                                <path d="M11.1,29.6c-0.5-1.5-0.8-3-0.8-4.6c0-8.1,6.6-14.7,14.7-14.7S39.7,16.9,39.7,25c0,1.6-0.3,3.2-0.8,4.6l6.1,2c0.7-2.1,1.1-4.3,1.1-6.6c0-11.7-9.5-21.2-21.2-21.2S3.8,13.3,3.8,25c0,2.3,0.4,4.5,1.1,6.6L11.1,29.6z"></path>
-                                </svg>
-                                                            </bp-spinner>
+                                                            @Html.Partial("Checkout-Spinner")
                                                         </div>
                                                     </button>
                                                 </bp-loading-button>
@@ -428,7 +419,7 @@
                                                 <div class="success-message" i18n="">This invoice has been paid.</div>
                                                 <button class="action-button" style="margin-top: 0px;">
                                                     <bp-done-text>
-                                                        <span i18n="" class="i18n-return-to-merchant">Return to {{srvModel.storeName}}</span>
+                                                        <span i18n="">Return to {{srvModel.storeName}}</span>
                                                     </bp-done-text>
                                                 </button>
                                             </div>
@@ -507,7 +498,7 @@
                                         </div>
                                         <button class="action-button" style="margin-top: .75rem;">
                                             <bp-done-text>
-                                                <span i18n="" class="i18n-return-to-merchant">Return to {{srvModel.storeName}}</span>
+                                                <span i18n="">Return to {{srvModel.storeName}}</span>
                                             </bp-done-text>
                                         </button>
                                     </div>
@@ -534,7 +525,7 @@
                                             </div>
                                             <a href="/invoices" class="action-button" style="margin-top: 20px;">
                                                 <bp-done-text>
-                                                    <span i18n="" class="i18n-return-to-merchant">Return to {{srvModel.storeName}}</span>
+                                                    <span i18n="">Return to {{srvModel.storeName}}</span>
                                                 </bp-done-text>
                                             </a>
                                         </div>
@@ -603,13 +594,13 @@
                                             <bp-done-text>
 
 
-                                                <span i18n="" class="i18n-return-to-merchant">Return to {{srvModel.storeName}}</span>
+                                                <span i18n="">Return to {{srvModel.storeName}}</span>
                                             </bp-done-text>
                                         </button>
                                     </div>
                                     <div class="footer-button enter-different-address-button">
                                         <bp-done-text>
-                                            <span i18n="" class="i18n-return-to-merchant">Return to {{srvModel.storeName}}</span>
+                                            <span i18n="">Return to {{srvModel.storeName}}</span>
                                         </bp-done-text>
                                     </div>
                                 </div>

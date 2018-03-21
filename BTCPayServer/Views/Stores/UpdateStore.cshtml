@@ -93,8 +93,14 @@
                         {
                         <tr>
                             <td>@scheme.Crypto</td>
-                            <td style="max-width:400px;overflow:hidden;">@scheme.Value</td>
-                            <td style="text-align:right"><a asp-action="AddDerivationScheme" asp-route-cryptoCode="@scheme.Crypto">Modify</a></td>
+                            <td style="max-width:300px;overflow:hidden;">@scheme.Value</td>
+                            <td style="text-align:right">
+                                @if(!string.IsNullOrWhiteSpace(scheme.Value))
+                                {
+                                    <a asp-action="Wallet" asp-route-cryptoCode="@scheme.Crypto">Wallet</a><span> - </span>
+                                }
+                                <a asp-action="AddDerivationScheme" asp-route-cryptoCode="@scheme.Crypto">Modify</a>
+                            </td>
                         </tr>
                         }
                     </tbody>

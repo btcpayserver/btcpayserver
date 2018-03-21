@@ -14,10 +14,8 @@ namespace BTCPayServer.Views.Stores
 
 
         public static string Tokens => "Tokens";
-        public static string Wallet => "Wallet";
 
         public static string TokensNavClass(ViewContext viewContext) => PageNavClass(viewContext, Tokens);
-        public static string WalletNavClass(ViewContext viewContext) => PageNavClass(viewContext, Wallet);
 
         public static string IndexNavClass(ViewContext viewContext) => PageNavClass(viewContext, Index);
 

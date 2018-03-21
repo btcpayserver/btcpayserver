@@ -151,7 +151,7 @@ services:
       - bitcoind
 
   litecoind:
-    image: nicolasdorier/docker-litecoin:0.14.2
+    image: nicolasdorier/docker-litecoin:0.15.1
     environment:
       BITCOIN_EXTRA_ARGS: |
         rpcuser=ceiwHEbqWI83

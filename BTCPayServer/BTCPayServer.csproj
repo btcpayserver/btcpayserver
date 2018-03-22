@@ -8,12 +8,16 @@
   <ItemGroup>
     <Compile Remove="Build\dockerfiles\**" />
     <Compile Remove="wwwroot\bundles\jqueryvalidate\**" />
+    <Compile Remove="wwwroot\vendor\jquery-nice-select\**" />
     <Content Remove="Build\dockerfiles\**" />
     <Content Remove="wwwroot\bundles\jqueryvalidate\**" />
+    <Content Remove="wwwroot\vendor\jquery-nice-select\**" />
     <EmbeddedResource Remove="Build\dockerfiles\**" />
     <EmbeddedResource Remove="wwwroot\bundles\jqueryvalidate\**" />
+    <EmbeddedResource Remove="wwwroot\vendor\jquery-nice-select\**" />
     <None Remove="Build\dockerfiles\**" />
     <None Remove="wwwroot\bundles\jqueryvalidate\**" />
+    <None Remove="wwwroot\vendor\jquery-nice-select\**" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Currencies.txt" />

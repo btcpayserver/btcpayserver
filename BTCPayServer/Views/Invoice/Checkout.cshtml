@@ -607,12 +607,27 @@
                             </div>
                         </div>
                     </div>
-                    <div style="margin-top: 20px;">
+                    <div style="margin-top: 10px; text-align: right;">
                         @* Not working because of nsSeparator: false, keySeparator: false,
         {{$t("nested.lang")}} >>
                         *@
-                        <a style="cursor:pointer;" v-on:click="changeLanguage('en')">English</a>
-                        <a style="cursor:pointer;" v-on:click="changeLanguage('de')">Deutsch</a>
+                        <select class="cmblang reverse" onchange="changeLanguage($(this).val())">
+                            <option value="en-US">English</option>
+                            <option value="de-DE">Deutsch</option>
+                        </select>
+                        <script>
+                            $(function () {
+                                $(".cmblang").val('de-DE');
+                                changeLanguage('de-DE');
+
+                                $('select').prettyDropdown({
+                                    classic: false,
+                                    height: 30,
+                                    reverse: true,
+                                    hoverIntent: 5000
+                                });
+                            });
+                        </script>
                     </div>
                 </div>
             </div>

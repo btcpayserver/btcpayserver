@@ -4,10 +4,6 @@ const locales_en = {
     },
     "Awaiting Payment...": "Awaiting Payment...",
     "Pay with": "Pay with",
-    "Scan": "Scan",
-    "Copy": "Copy",
-    "Conversion": "Conversion",
-    "Open in wallet": "Open in wallet",
     "Contact and Refund Email": "Contact & Refund Email",
     "Contact_Body": "Please provide an email address below. We’ll contact you at this address if there is an issue with your payment.",
     "Your email": "Your email",
@@ -17,6 +13,12 @@ const locales_en = {
     "Network Cost": "Network Cost",
     "Already Paid": "Already Paid",
     "Due": "Due",
+    // Tabs
+    "Scan": "Scan",
+    "Copy": "Copy",
+    "Conversion": "Conversion",
+    // Scan tab
+    "Open in wallet": "Open in wallet",
     // Copy tab
     "CompletePay_Body": "To complete your payment, please send {{btcDue}} {{cryptoCode}} to the address below.",
     "Amount": "Amount",

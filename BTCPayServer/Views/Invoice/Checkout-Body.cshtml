@@ -120,7 +120,7 @@
                 <span class="submission-error-label">{{$t("Please enter a valid email address")}}</span>
             </div>
             <div class="input-wrapper">
-                <input class="bp-input email-input ng-pristine ng-invalid ng-touched" id="emailAddressFormInput" placeholder="Your email" type="email">
+                <input class="bp-input email-input ng-pristine ng-invalid ng-touched" id="emailAddressFormInput" v-bind:placeholder="$t('Your email')" type="email">
                 <bp-loading-button>
                     <button type="submit" class="action-button" style="margin-top: 15px;">
                         <span class="button-text">{{$t("Continue")}}</span>

@@ -23,7 +23,8 @@
             <tr>
                 <td>@user.Name</td>
                 <td>@user.Email</td>
-                <td><a asp-action="DeleteUser" asp-route-userId="@user.Id">Remove</a></td>
-            </tr>}
+                <td><a asp-action="User" asp-route-userId="@user.Id">Modify</a> <span> - </span> <a asp-action="DeleteUser" asp-route-userId="@user.Id">Remove</a></td>
+            </tr>
+        }
     </tbody>
 </table>

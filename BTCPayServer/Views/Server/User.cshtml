@@ -1,0 +1,22 @@
+﻿@model UserViewModel
+@{
+    ViewData["Title"] = Model.Email;
+    ViewData.AddActivePage(ServerNavPages.Users);
+}
+
+
+<h4>@ViewData["Title"]</h4>
+@Html.Partial("_StatusMessage", Model.StatusMessage)
+
+
+<div class="row">
+    <div class="col-md-8">
+        <form method="post">
+            <div class="form-group">
+                <label asp-for="IsAdmin"></label>
+                <input asp-for="IsAdmin" type="checkbox" class="form-check" />
+            </div>
+            <button name="command" type="submit" class="btn btn-success" value="Save">Save</button>
+        </form>
+    </div>
+</div>

@@ -3,6 +3,7 @@
     var bridge = new ledgerwebsocket.LedgerWebSocketBridge(srvModel.serverUrl + "ws/ledger");
     var recommendedFees = "";
     var recommendedBalance = "";
+    var cryptoCode = $("#cryptoCode").val();
 
     function WriteAlert(type, message) {
         $(".alert").removeClass("alert-danger");
@@ -37,7 +38,7 @@
         }
 
         var args = "";
-        args += "cryptoCode=" + $("#cryptoCurrencies").val();
+        args += "cryptoCode=" + cryptoCode;
         args += "&destination=" + $("#destination-textbox").val();
         args += "&amount=" + $("#amount-textbox").val();
         args += "&feeRate=" + $("#fee-textbox").val();
@@ -64,6 +65,10 @@
                     WriteAlert("danger", result.error);
                 } else {
                     WriteAlert("success", 'Transaction broadcasted (' + result.transactionId + ')');
+                    $("#fee-textbox").val("");
+                    $("#amount-textbox").val("");
+                    $("#destination-textbox").val("");
+                    $("#substract-checkbox").prop("checked", false);
                     updateInfo();
                 }
             });
@@ -85,15 +90,10 @@
         return false;
     });
 
-    $("#cryptoCurrencies").on("change", function (elem) {
-        updateInfo();
-    });
-
     var updateInfo = function () {
         if (!ledgerDetected)
             return false;
         $(".crypto-info").css("display", "none");
-        var cryptoCode = $("#cryptoCurrencies").val();
         bridge.sendCommand("getinfo", "cryptoCode=" + cryptoCode)
             .catch(function (reason) { Write('check', 'error', reason); })
             .then(function (result) {

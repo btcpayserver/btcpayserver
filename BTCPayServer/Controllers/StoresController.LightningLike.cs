@@ -125,14 +125,14 @@ namespace BTCPayServer.Controllers
                 var handler = (LightningLikePaymentHandler)_ServiceProvider.GetRequiredService<IPaymentMethodHandler<Payments.Lightning.LightningSupportedPaymentMethod>>();
                 try
                 {
-                    await handler.Test(paymentMethod, network);
+                    var info = await handler.Test(paymentMethod, network);
+                    vm.StatusMessage = $"Connection to the lightning node succeed ({info})";
                 }
                 catch (Exception ex)
                 {
                     vm.StatusMessage = $"Error: {ex.Message}";
                     return View(vm);
-                }
-                vm.StatusMessage = "Connection to the lightning node succeed";
+                }                
                 return View(vm);
             }
         }

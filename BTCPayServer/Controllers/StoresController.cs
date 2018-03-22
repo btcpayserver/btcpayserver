@@ -110,15 +110,15 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
-        [Route("{storeId}/wallet")]
-        public async Task<IActionResult> Wallet(string storeId)
+        [Route("{storeId}/wallet/{cryptoCode}")]
+        public async Task<IActionResult> Wallet(string storeId, string cryptoCode)
         {
             var store = await _Repo.FindStore(storeId, GetUserId());
             if (store == null)
                 return NotFound();
             WalletModel model = new WalletModel();
             model.ServerUrl = GetStoreUrl(storeId);
-            model.SetCryptoCurrencies(_ExplorerProvider, store.GetDefaultCrypto());
+            model.CryptoCurrency = cryptoCode;
             return View(model);
         }
 

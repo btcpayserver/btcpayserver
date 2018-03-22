@@ -30,11 +30,16 @@ const locales_en = {
     // Invoice expired
     "Invoice expired": "Invoice expired",
     "What happened?": "What happened?",
-    "InvoiceExpired_Body": "This invoice has expired. An invoice is only valid for 15 minutes. You can return to TestStore  \
-if you would like to submit your payment again. \
-If you tried to send a payment, it has not yet been accepted by the Bitcoin network. We have not yet received your funds.    \
-If the transaction is not accepted by the Bitcoin network, the funds will be spendable again in your wallet. Depending on your wallet, this may take 48-72 hours.",
+    "InvoiceExpired_Body_1": "This invoice has expired. An invoice is only valid for {{maxTimeMinutes}} minutes.  \
+You can return to {{storeName}} if you would like to submit your payment again.",
+    "InvoiceExpired_Body_2": "If you tried to send a payment, it has not yet been accepted by the Bitcoin network. We have not yet received your funds.",
+    "InvoiceExpired_Body_3": "If the transaction is not accepted by the Bitcoin network, the funds will be spendable again in your wallet. Depending on your wallet, this may take 48-72 hours.",
     "Invoice ID": "Invoice ID",
     "Order ID": "Order ID",
-    "Return to StoreName": "Return to {{storeName}}"
+    "Return to StoreName": "Return to {{storeName}}",
+    // Invoice paid
+    "This invoice has been paid": "This invoice has been paid",
+    // Invoice archived
+    "This invoice has been archived": "This invoice has been archived",
+    "Archived_Body": "Please contact the store for order information or assistance"
 };

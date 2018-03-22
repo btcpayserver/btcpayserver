@@ -45,6 +45,7 @@ function onDataCallback(jsonData) {
 
     if (newStatus === "expired" || newStatus === "invalid") { //TODO: different state if the invoice is invalid (failed to confirm after timeout)
         $(".timer-row").removeClass("expiring-soon");
+        // TODO: Needs translate
         $(".timer-row__message span").html("Invoice expired.");
         $(".timer-row__spinner").html("");
         $("#emailAddressView").removeClass("active");
@@ -292,6 +293,7 @@ $(document).ready(function () {
 
             if (perc === 75 && (status === "paidPartial" || status === "new")) {
                 $(".timer-row").addClass("expiring-soon");
+                // TODO: Needs translate
                 $(".timer-row__message span").html("Invoice expiring soon ...");
                 updateProgress(perc);
             }

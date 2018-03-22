@@ -12,9 +12,7 @@
             @Html.Partial("Checkout-Spinner")
         </div>
         <div class="timer-row__message">
-            <span>
-                <span>{{$t("Awaiting Payment...")}}</span>
-            </span>
+            <span>{{$t("Awaiting Payment...")}}</span>
         </div>
         <div class="timer-row__time-left">@Model.TimeLeft</div>
     </div>
@@ -234,10 +232,10 @@
                         </div>
                     </div>
                 </div>
-                <div class="success-message" i18n="">This invoice has been paid.</div>
-                <button class="action-button" style="margin-top: 0px;">
+                <div class="success-message">{{$t("This invoice has been paid")}}</div>
+                <button class="action-button">
                     <bp-done-text>
-                        <span i18n="">Return to {{srvModel.storeName}}</span>
+                        <span>{{$t("Return to StoreName", srvModel)}}</span>
                     </bp-done-text>
                 </button>
             </div>
@@ -252,10 +250,10 @@
         </div>
         <div class="archived__message">
             <div class="archived__message__header">
-                <span i18n="">This invoice has been archived.</span>
+                <span>{{$t("This invoice has been archived")}}</span>
             </div>
             <div>
-                <span i18n="">Please contact the store for order information or assistance.</span>
+                <span>{{$t("Archived_Body")}}</span>
             </div>
         </div>
     </div>
@@ -263,26 +261,27 @@
     <div class="bp-view expired" id="expired">
         <div>
             <div class="expired__body">
-                <div class="expired__header" i18n="">What happened?</div>
-                <div class="expired__text" i18n="">This invoice has expired. An invoice is only valid for @Model.MaxTimeMinutes minutes. You can <div class="expired__text__link i18n-return-to-merchant">return to {{srvModel.storeName}}</div> if you would like to submit your payment again.</div>
-                <div class="expired__text" i18n="">If you tried to send a payment, it has not yet been accepted by the Bitcoin network. We have not yet received your funds.</div>
+                <div class="expired__header">{{$t("What happened?")}}</div>
                 <div class="expired__text" i18n="">
-                    If the transaction
-                    is not accepted by the Bitcoin network, the funds will be spendable
-                    again in your wallet. Depending on your wallet, this may take 48-72
-                    hours.
+                    {{$t("InvoiceExpired_Body_1", {storeName: srvModel.storeName, maxTimeMinutes: @Model.MaxTimeMinutes})}}
                 </div>
                 <div class="expired__text">
-                    <span class="expired__text__bullet" i18n="">Invoice ID:</span> {{srvModel.invoiceId}}<br>
-
-                    <span>
-                        <span class="expired__text__bullet" i18n="">Order ID:</span> {{srvModel.orderId}}
-                    </span>
+                    {{$t("InvoiceExpired_Body_2")}}
+                </div>
+                <div class="expired__text">
+                    {{$t("InvoiceExpired_Body_3")}}
+                </div>
+                <div class="expired__text">
+                    <span class="expired__text__bullet">{{$t("Invoice ID")}}</span>: 
+                    {{srvModel.invoiceId}}
+                    <br />
+                    <span class="expired__text__bullet">{{$t("Order ID")}}</span>:
+                    {{srvModel.orderId}}
                 </div>
             </div>
             <a href="/invoices" class="action-button" style="margin-top: 20px;">
                 <bp-done-text>
-                    <span i18n="">Return to {{srvModel.storeName}}</span>
+                    <span>{{$t("Return to StoreName", srvModel)}}</span>
                 </bp-done-text>
             </a>
         </div>

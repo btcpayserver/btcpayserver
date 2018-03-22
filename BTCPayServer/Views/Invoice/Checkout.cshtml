@@ -296,7 +296,7 @@
                                                 <span class="initial-label" i18n="">If there is an issue with this payment, or a refund needs to be made, we will contact you at this address.</span>
                                             </div>
                                             <div class="input-wrapper">
-                                                <input bp-focus="focusEmailInput" class="bp-input email-input ng-untouched ng-pristine" disabled="disabled" name="receiptEmail" placeholder="Your email" 
+                                                <input bp-focus="focusEmailInput" class="bp-input email-input ng-untouched ng-pristine" disabled="disabled" name="receiptEmail" placeholder="Your email"
                                                        style="opacity: 1;" type="email">
                                                 <button type="submit" class="action-button" style="margin-top: 15px;">
                                                     <span i18n="">Confirm email address</span>
@@ -624,18 +624,31 @@
                                     hoverIntent: 5000
                                 });
                             });
+
+                            function changeLanguage(lang) {
+                                i18next.changeLanguage(lang);
+                            }
                         </script>
                     </div>
                 </div>
             </div>
         </div>
     </invoice>
-    <style type="text/css">
-        input::-ms-clear {
-            display: none;
-        }
-    </style>
     <script type="text/javascript">
+        // initialization
+        i18next.init({
+            lng: 'en',
+            fallbackLng: 'en',
+            nsSeparator: false,
+            keySeparator: false,
+            resources: {
+                en: { translation: locales_en },
+                de: { translation: locales_de }
+            },
+        });
+
+        const i18n = new VueI18next(i18next);
+
         // TODO: Move all logic from core.js to Vue controller
         Vue.config.ignoredElements = [
             'line-items',

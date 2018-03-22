@@ -1,3 +1,5 @@
+// TODO: Refactor... switch from jQuery to Vue.js
+// public methods
 function resetTabsSlider() {
     $("#tabsSlider").removeClass("slide-copy");
     $("#tabsSlider").removeClass("slide-altcoins");
@@ -16,7 +18,6 @@ function resetTabsSlider() {
     $("#altcoins").removeClass("active");
 }
 
-// public methods
 function onDataCallback(jsonData) {
     var newStatus = jsonData.status;
 

@@ -46,9 +46,8 @@
             "wwwroot/vendor/vuejs/vue-qrcode.js",
             "wwwroot/vendor/i18next/i18next.js",
             "wwwroot/vendor/i18next/vue-i18next.js",
-            "wwwroot/js/checkout/i18n-resources.js",
-            "wwwroot/js/checkout/core.js",
-            "wwwroot/vendor/jquery-prettydropdowns/jquery.prettydropdowns.js"
+            "wwwroot/vendor/jquery-prettydropdowns/jquery.prettydropdowns.js",
+            "wwwroot/js/checkout/**/*.js"
         ]
     }
 ]

@@ -163,6 +163,8 @@ $(document).ready(function () {
             } else {
                 $("#emailAddressForm").addClass("ng-touched ng-dirty ng-submitted ng-invalid");
             }
+
+            return false;
         });
     }
 

@@ -162,22 +162,18 @@
                                     <div class="bp-view payment manual-flow enter-contact-email active" id="emailAddressView">
                                         <form class="manual__step-one refund-address-form contact-email-form" id="emailAddressForm" name="emailAddressForm" novalidate="">
                                             <div class="manual__step-one__header">
-
                                                 <span i18n="">Contact &amp; Refund Email</span>
-
                                             </div>
                                             <div class="manual__step-one__instructions">
                                                 <span class="initial-label">
-
                                                     <span i18n="">Please provide an email address below. We’ll contact you at this address if there is an issue with your payment. </span>
-
                                                 </span>
                                                 <span class="submission-error-label" i18n="">Please enter a valid email address.</span>
                                             </div>
                                             <div class="input-wrapper">
                                                 <input class="bp-input email-input ng-pristine ng-invalid ng-touched" id="emailAddressFormInput" placeholder="Your email" type="email">
                                                 <bp-loading-button i18n="">
-                                                    <button class="action-button" style="margin-top: 15px;" type="button">
+                                                    <button type="submit" class="action-button" style="margin-top: 15px;">
                                                         <span class="button-text" lcl="">Continue</span>
                                                         <div class="loader-wrapper">
                                                             @Html.Partial("Checkout-Spinner")
@@ -300,8 +296,9 @@
                                                 <span class="initial-label" i18n="">If there is an issue with this payment, or a refund needs to be made, we will contact you at this address.</span>
                                             </div>
                                             <div class="input-wrapper">
-                                                <input bp-focus="focusEmailInput" class="bp-input email-input ng-untouched ng-pristine" disabled="disabled" name="receiptEmail" placeholder="Your email" style="opacity: 1;" type="email">
-                                                <button class="action-button" style="margin-top: 15px;">
+                                                <input bp-focus="focusEmailInput" class="bp-input email-input ng-untouched ng-pristine" disabled="disabled" name="receiptEmail" placeholder="Your email" 
+                                                       style="opacity: 1;" type="email">
+                                                <button type="submit" class="action-button" style="margin-top: 15px;">
                                                     <span i18n="">Confirm email address</span>
                                                 </button>
                                             </div>
@@ -609,7 +606,7 @@
                     </div>
                     <div style="margin-top: 10px; text-align: right;">
                         @* Not working because of nsSeparator: false, keySeparator: false,
-        {{$t("nested.lang")}} >>
+                            {{$t("nested.lang")}} >>
                         *@
                         <select class="cmblang reverse" onchange="changeLanguage($(this).val())">
                             <option value="en-US">English</option>
@@ -633,6 +630,11 @@
             </div>
         </div>
     </invoice>
+    <style type="text/css">
+        input::-ms-clear {
+            display: none;
+        }
+    </style>
     <script type="text/javascript">
         // TODO: Move all logic from core.js to Vue controller
         Vue.config.ignoredElements = [

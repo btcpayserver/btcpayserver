@@ -21,6 +21,7 @@ namespace BTCPayServer.Payments.Lightning
 
     public class LightningNodeInformation
     {
+        public string NodeId { get; set; }
         public string Address { get; internal set; }
         public int P2PPort { get; internal set; }
         public int BlockHeight { get; set; }

@@ -216,6 +216,7 @@ namespace BTCPayServer.Payments.Lightning.CLightning
             var port = info.Port;
             return new LightningNodeInformation()
             {
+                NodeId = info.Id,
                 P2PPort = port,
                 Address = address,
                 BlockHeight = info.BlockHeight

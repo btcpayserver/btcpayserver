@@ -117,23 +117,23 @@
                                     <line-items>
                                         <div class="line-items">
                                             <div class="line-items__item">
-                                                <div class="line-items__item__label" i18n="">Order Amount</div>
+                                                <div class="line-items__item__label">{{$t("Order Amount")}}</div>
                                                 <div class="line-items__item__value">{{srvModel.orderAmount}} {{ srvModel.cryptoCode }}</div>
                                             </div>
                                             <div class="line-items__item">
                                                 <div class="line-items__item__label">
-                                                    <span i18n="">Network Cost</span>
+                                                    <span>{{$t("Network Cost")}}</span>
                                                 </div>
                                                 <div class="line-items__item__value" i18n="">{{srvModel.networkFeeDescription }}</div>
                                             </div>
                                             <div class="line-items__item">
                                                 <div class="line-items__item__label">
-                                                    <span i18n="">Already Paid</span>
+                                                    <span>{{$t("Already Paid")}}</span>
                                                 </div>
-                                                <div class="line-items__item__value" i18n="">-{{srvModel.btcPaid }} {{ srvModel.cryptoCode }}</div>
+                                                <div class="line-items__item__value">-{{srvModel.btcPaid }} {{ srvModel.cryptoCode }}</div>
                                             </div>
                                             <div class="line-items__item line-items__item--total">
-                                                <div class="line-items__item__label" i18n="">Due	</div>
+                                                <div class="line-items__item__label">{{$t("Due")}}</div>
                                                 <div class="line-items__item__value">{{srvModel.btcDue}} {{ srvModel.cryptoCode }}</div>
                                             </div>
                                         </div>
@@ -162,19 +162,19 @@
                                     <div class="bp-view payment manual-flow enter-contact-email active" id="emailAddressView">
                                         <form class="manual__step-one refund-address-form contact-email-form" id="emailAddressForm" name="emailAddressForm" novalidate="">
                                             <div class="manual__step-one__header">
-                                                <span i18n="">Contact &amp; Refund Email</span>
+                                                <span>{{$t("Contact and Refund Email")}}</span>
                                             </div>
                                             <div class="manual__step-one__instructions">
                                                 <span class="initial-label">
-                                                    <span i18n="">Please provide an email address below. We’ll contact you at this address if there is an issue with your payment. </span>
+                                                    <span>{{$t("Contact_Body")}}</span>
                                                 </span>
-                                                <span class="submission-error-label" i18n="">Please enter a valid email address.</span>
+                                                <span class="submission-error-label">{{$t("Please enter a valid email address")}}</span>
                                             </div>
                                             <div class="input-wrapper">
                                                 <input class="bp-input email-input ng-pristine ng-invalid ng-touched" id="emailAddressFormInput" placeholder="Your email" type="email">
-                                                <bp-loading-button i18n="">
+                                                <bp-loading-button>
                                                     <button type="submit" class="action-button" style="margin-top: 15px;">
-                                                        <span class="button-text" lcl="">Continue</span>
+                                                        <span class="button-text">{{$t("Continue")}}</span>
                                                         <div class="loader-wrapper">
                                                             @Html.Partial("Checkout-Spinner")
                                                         </div>
@@ -198,16 +198,16 @@
                                     </div>
                                     <div class="bp-view payment manual-flow" id="copy">
                                         <div class="manual__step-two__instructions">
-                                            <span i18n="">To complete your payment, please send {{ srvModel.btcDue }} {{ srvModel.cryptoCode }} to the address below.</span>
+                                            <span i18n="">{{$t("CompletePay_Body", srvModel)}}</span>
                                         </div>
                                         <div class="manual-box flipped" style="margin-bottom: 30px;">
                                             <div class="manual-box__amount">
-                                                <div class="manual-box__amount__label label" i18n="">Amount</div>
+                                                <div class="manual-box__amount__label label">{{$t("Amount")}}</div>
 
                                                 <div class="manual-box__amount__value copy-cursor" ngxclipboard="">
                                                     <span>{{srvModel.btcDue}}</span> {{ srvModel.cryptoCode }}
                                                     <div class="copied-label">
-                                                        <span i18n="">Copied</span>
+                                                        <span>{{$t("Copied")}}</span>
                                                     </div>
                                                 </div>
 
@@ -217,7 +217,7 @@
                                                     <div class="back"></div>
                                                     <div class="front">
                                                         <div class="manual-box__address__arrow"></div>
-                                                        <div class="manual-box__address__label label" i18n="">Address</div>
+                                                        <div class="manual-box__address__label label">{{$t("Address")}}</div>
 
                                                         <div class="manual-box__address__value copy-cursor" ngxclipboard="">
                                                             <div class="manual-box__address__wrapper">
@@ -227,7 +227,7 @@
                                                                 <div class="manual-box__address__wrapper__value" style="overflow:hidden;max-width:240px;">{{srvModel.btcAddress}}</div>
                                                             </div>
                                                             <div class="copied-label" style="top: 5px;">
-                                                                <span i18n="">Copied</span>
+                                                                <span>{{$t("Copied")}}</span>
                                                             </div>
                                                         </div>
 
@@ -242,11 +242,9 @@
                                             <div v-if="srvModel.paymentMethodId != 'BTC_LightningLike'">
                                                 <div class="manual__step-two__instructions">
                                                     <span>
-                                                        You can pay {{ srvModel.btcDue }} {{ srvModel.cryptoCode }} using altcoins other than the ones merchant directly supports.
+                                                        {{$t("ConversionTab_BodyTop", srvModel)}}
                                                         <br /><br />
-                                                        This service is provided by 3rd party. Please keep in mind that
-                                                        <span style="font-weight: 900;">we have no control</span> over how providers will forward your funds.
-                                                        Invoice will only be marked paid once funds are received on {{srvModel.cryptoCode}} Blockchain.
+                                                        {{$t("ConversionTab_BodyDesc", srvModel)}}
                                                     </span>
                                                 </div>
                                                 <center>
@@ -265,7 +263,7 @@
                                             <div v-else>
                                                 <div class="manual__step-two__instructions">
                                                     <span>
-                                                        No conversion providers available for BTC Lightning Network payments.
+                                                        {{$t("ConversionTab_Lightning")}}
                                                     </span>
                                                 </div>
                                             </div>
@@ -589,17 +587,16 @@
                                         </div>
                                         <button class="action-button finished" style="margin-top: 23px;">
                                             <bp-done-text>
-
-
-                                                <span i18n="">Return to {{srvModel.storeName}}</span>
+                                                <span>{{$t("Return to StoreName", srvModel)}}</span>
                                             </bp-done-text>
                                         </button>
                                     </div>
                                     <div class="footer-button enter-different-address-button">
                                         <bp-done-text>
-                                            <span i18n="">Return to {{srvModel.storeName}}</span>
+                                            <span>{{$t("Return to StoreName", srvModel)}}</span>
                                         </bp-done-text>
                                     </div>
+                                    @* Obsolete? End *@
                                 </div>
                             </div>
                         </div>

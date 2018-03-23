@@ -61,6 +61,9 @@
                         <select class="cmblang reverse" onchange="changeLanguage($(this).val())">
                             <option value="en-US">English</option>
                             <option value="de-DE">Deutsch</option>
+                            <option value="ja-JP">日本語</option>
+                            <option value="fr-FR">Français</option>
+                            <option value="es-ES">Spanish</option>
                         </select>
                         <script>
                             $(function () {
@@ -95,7 +98,10 @@
             keySeparator: false,
             resources: {
                 en: { translation: locales_en },
-                de: { translation: locales_de }
+                de: { translation: locales_de },
+                es: { translation: locales_es },
+                ja: { translation: locales_ja },
+                fr: { translation: locales_fr }
             },
         });
 

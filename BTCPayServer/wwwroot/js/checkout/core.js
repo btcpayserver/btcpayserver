@@ -128,7 +128,6 @@ $(document).ready(function () {
 
 
     function hideEmailForm() {
-        $("[role=document]").removeClass("enter-purchaser-email");
         $("#emailAddressView").removeClass("active");
         $("placeholder-refundEmail").html(srvModel.customerEmail);
 

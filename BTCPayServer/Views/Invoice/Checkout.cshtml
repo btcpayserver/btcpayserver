@@ -58,7 +58,7 @@
                         @* Not working because of nsSeparator: false, keySeparator: false,
                             {{$t("nested.lang")}} >>
                         *@
-                        <select class="cmblang reverse" onchange="changeLanguage($(this).val())">
+                        <select class="cmblang reverse invisible" onchange="changeLanguage($(this).val())">
                             <option value="en-US">English</option>
                             <option value="de-DE">Deutsch</option>
                             <option value="ja-JP">日本語</option>
@@ -69,7 +69,6 @@
                             $(function () {
                                 if (urlParams.lang) {
                                     $(".cmblang").val(urlParams.lang);
-                                    changeLanguage(urlParams.lang);
                                 }
 
                                 $('select').prettyDropdown({
@@ -79,10 +78,6 @@
                                     hoverIntent: 5000
                                 });
                             });
-
-                            function changeLanguage(lang) {
-                                i18next.changeLanguage(lang);
-                            }
                         </script>
                     </div>
                 </div>
@@ -104,6 +99,14 @@
                 fr: { translation: locales_fr }
             },
         });
+
+        function changeLanguage(lang) {
+            i18next.changeLanguage(lang);
+        }
+
+        if (urlParams.lang) {
+            changeLanguage(urlParams.lang);
+        }
 
         const i18n = new VueI18next(i18next);
 

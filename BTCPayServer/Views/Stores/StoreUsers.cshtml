@@ -1,0 +1,56 @@
+﻿@model StoreUsersViewModel
+@{
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData["Title"] = "Manage users";
+    ViewData.AddActivePage(StoreNavPages.Users);
+}
+
+<h4>@ViewData["Title"]</h4>
+@Html.Partial("_StatusMessage", TempData["TempDataProperty-StatusMessage"])
+
+<div class="row">
+    <div class="col-md-6">
+        <div asp-validation-summary="All" class="text-danger"></div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-8">
+        <div class="form-group">
+            <h5>Users</h5>
+            <span>Add access to your store to other users (Guest will not be able to see and modify the store settings)</span>
+        </div>
+        <div class="form-inline">
+            <form method="post">
+                <input asp-for="Email" type="text" class="form-control" placeholder="user@example.com">
+                <select asp-for="Role" class="form-control">
+                    <option value="@StoreRoles.Owner">Owner</option>
+                    <option value="@StoreRoles.Guest">Guest</option>
+                </select>
+                <button type="submit" role="button" class="form-control btn btn-success"><span class="glyphicon glyphicon-plus"></span>Add user</button>
+            </form>
+        </div>
+        <div class="form-group">
+            <table class="table">
+                <thead class="thead-inverse">
+                    <tr>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th style="text-align:right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach(var user in Model.Users)
+                    {
+                        <tr>
+                            <td>@user.Email</td>
+                            <td>@user.Role</td>
+                            <td style="text-align:right">
+                                <a asp-action="DeleteStoreUser" asp-route-storeId="@Model.StoreId" asp-route-userId="@user.Id">Remove</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

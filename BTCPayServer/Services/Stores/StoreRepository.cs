@@ -48,14 +48,72 @@ namespace BTCPayServer.Services.Stores
             }
         }
 
+        public class StoreUser
+        {
+            public string Id { get; set; }
+            public string Email { get; set; }
+            public string Role { get; set; }
+        }
+        public async Task<StoreUser[]> GetStoreUsers(string storeId)
+        {
+            if (storeId == null)
+                throw new ArgumentNullException(nameof(storeId));
+            using (var ctx = _ContextFactory.CreateContext())
+            {
+                return await ctx
+                    .UserStore
+                    .Where(u => u.StoreDataId == storeId)
+                    .Select(u => new StoreUser()
+                    {
+                        Id = u.ApplicationUserId,
+                        Email = u.ApplicationUser.Email,
+                        Role = u.Role
+                    }).ToArrayAsync();
+            }
+        }
+
         public async Task<StoreData[]> GetStoresByUserId(string userId)
         {
             using (var ctx = _ContextFactory.CreateContext())
             {
-                return await ctx.UserStore
+                return (await ctx.UserStore
                     .Where(u => u.ApplicationUserId == userId)
-                    .Select(u => u.StoreData)
-                    .ToArrayAsync();
+                    .Select(u => new { u.StoreData, u.Role })
+                    .ToArrayAsync())
+                    .Select(u =>
+                    {
+                        u.StoreData.Role = u.Role;
+                        return u.StoreData;
+                    }).ToArray();
+            }
+        }
+
+        public async Task<bool> AddStoreUser(string storeId, string userId, string role)
+        {
+            using (var ctx = _ContextFactory.CreateContext())
+            {
+                var userStore = new UserStore() { StoreDataId = storeId, ApplicationUserId = userId, Role = role };
+                ctx.UserStore.Add(userStore);
+                try
+                {
+                    await ctx.SaveChangesAsync();
+                    return true;
+                }
+                catch (DbUpdateException)
+                {
+                    return false;
+                }
+            }
+        }
+
+        public async Task RemoveStoreUser(string storeId, string userId)
+        {
+            using (var ctx = _ContextFactory.CreateContext())
+            {
+                var userStore = new UserStore() { StoreDataId = storeId, ApplicationUserId = userId };
+                ctx.UserStore.Add(userStore);
+                ctx.Entry<UserStore>(userStore).State = EntityState.Deleted;
+                await ctx.SaveChangesAsync();
             }
         }
 

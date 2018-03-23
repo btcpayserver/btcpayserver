@@ -66,6 +66,10 @@ namespace BTCPayServer.Payments.Lightning
             {
                 info = await client.GetInfo(cts.Token);
             }
+            catch (OperationCanceledException) when (cts.IsCancellationRequested)
+            {
+                throw new Exception($"The lightning node did not replied in a timely maner");
+            }
             catch (Exception ex)
             {
                 throw new Exception($"Error while connecting to the API ({ex.Message})");

@@ -56,10 +56,12 @@ namespace BTCPayServer.Tests
 
         public async Task<StoresController> CreateStoreAsync()
         {
-            var store = parent.PayTester.GetController<StoresController>(UserId);
+            var store = parent.PayTester.GetController<UserStoresController>(UserId);
             await store.CreateStore(new CreateStoreViewModel() { Name = "Test Store" });
             StoreId = store.CreatedStoreId;
-            return store;
+            var store2 = parent.PayTester.GetController<StoresController>(UserId);
+            store2.CreatedStoreId = store.CreatedStoreId;
+            return store2;
         }
 
         public BTCPayNetwork SupportedNetwork { get; set; }

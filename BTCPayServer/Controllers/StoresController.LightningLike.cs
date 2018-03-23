@@ -15,6 +15,7 @@ namespace BTCPayServer.Controllers
 {
     public partial class StoresController
     {
+
         [HttpGet]
         [Route("{storeId}/lightning/{cryptoCode}")]
         public async Task<IActionResult> AddLightningNode(string storeId, string cryptoCode)

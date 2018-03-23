@@ -1,4 +1,4 @@
-const locales_fr = {
+const locales_nl = {
     nested: {
         lang: 'Taal',
     },

@@ -33,7 +33,8 @@
         "inputFiles": [
             "wwwroot/vendor/font-awesome/css/font-awesome.css",
             "wwwroot/css/css.css",
-            "wwwroot/css/normalizer.css"
+            "wwwroot/css/normalizer.css",
+            "wwwroot/vendor/jquery-prettydropdowns/prettydropdowns.css"
         ]
     },
     {
@@ -41,9 +42,12 @@
         "inputFiles": [
             "wwwroot/vendor/clipboard.js/clipboard.js",
             "wwwroot/vendor/jquery/jquery.js",
-            "wwwroot/js/vue.min.js",
-            "wwwroot/js/vue-qrcode.js",
-            "wwwroot/js/core.js"
+            "wwwroot/vendor/vuejs/vue.min.js",
+            "wwwroot/vendor/vuejs/vue-qrcode.js",
+            "wwwroot/vendor/i18next/i18next.js",
+            "wwwroot/vendor/i18next/vue-i18next.js",
+            "wwwroot/vendor/jquery-prettydropdowns/jquery.prettydropdowns.js",
+            "wwwroot/js/checkout/**/*.js"
         ]
     }
 ]

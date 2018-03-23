@@ -211,7 +211,7 @@ namespace BTCPayServer.Controllers
                 ServerUrl = HttpContext.Request.GetAbsoluteRoot(),
                 OrderId = invoice.OrderId,
                 InvoiceId = invoice.Id,
-                DefaultLang = storeBlob.DefaultLang ?? "en",
+                DefaultLang = storeBlob.DefaultLang ?? "en-US",
                 BtcAddress = paymentMethodDetails.GetPaymentDestination(),
                 OrderAmount = (accounting.TotalDue - accounting.NetworkFee).ToString(),
                 BtcDue = accounting.Due.ToString(),

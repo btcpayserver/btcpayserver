@@ -64,8 +64,10 @@
                         </select>
                         <script>
                             $(function () {
-                                $(".cmblang").val('de-DE');
-                                changeLanguage('de-DE');
+                                if (urlParams.lang) {
+                                    $(".cmblang").val(urlParams.lang);
+                                    changeLanguage(urlParams.lang);
+                                }
 
                                 $('select').prettyDropdown({
                                     classic: false,
@@ -113,7 +115,8 @@
                 qrcode: VueQr
             },
             data: {
-                srvModel: srvModel
+                srvModel: srvModel,
+                expiringSoon: false
             }
         });
     </script>

@@ -46,12 +46,14 @@ namespace BTCPayServer.Controllers
             BTCPayNetworkProvider networkProvider,
             ExplorerClientProvider explorerProvider,
             IFeeProviderFactory feeRateProvider,
+            LanguageService langService,
             IHostingEnvironment env)
         {
             _Dashboard = dashboard;
             _Repo = repo;
             _TokenRepository = tokenRepo;
             _UserManager = userManager;
+            _LangService = langService;
             _TokenController = tokenController;
             _WalletProvider = walletProvider;
             _Env = env;
@@ -76,6 +78,7 @@ namespace BTCPayServer.Controllers
         StoreRepository _Repo;
         TokenRepository _TokenRepository;
         UserManager<ApplicationUser> _UserManager;
+        private LanguageService _LangService;
         IHostingEnvironment _Env;
 
         [TempData]
@@ -193,6 +196,7 @@ namespace BTCPayServer.Controllers
             vm.Id = store.Id;
             vm.StoreName = store.StoreName;
             vm.SetCryptoCurrencies(_ExplorerProvider, store.GetDefaultCrypto());
+            vm.SetLanguages(_LangService, storeBlob.DefaultLang);
             vm.StoreWebsite = store.StoreWebsite;
             vm.NetworkFee = !storeBlob.NetworkFeeDisabled;
             vm.SpeedPolicy = store.SpeedPolicy;
@@ -205,6 +209,7 @@ namespace BTCPayServer.Controllers
             vm.AllowCoinConversion = storeBlob.AllowCoinConversion;
             return View(vm);
         }
+        
 
         private void AddPaymentMethods(StoreData store, StoreViewModel vm)
         {
@@ -243,6 +248,7 @@ namespace BTCPayServer.Controllers
         [Route("{storeId}")]
         public async Task<IActionResult> UpdateStore(string storeId, StoreViewModel model)
         {
+
             if (!ModelState.IsValid)
             {
                 return View(model);
@@ -277,11 +283,13 @@ namespace BTCPayServer.Controllers
                 store.SetDefaultCrypto(model.DefaultCryptoCurrency);
             }
             model.SetCryptoCurrencies(_ExplorerProvider, model.DefaultCryptoCurrency);
+            model.SetLanguages(_LangService, model.DefaultLang);
 
             var blob = store.GetStoreBlob();
             blob.NetworkFeeDisabled = !model.NetworkFee;
             blob.MonitoringExpiration = model.MonitoringExpiration;
             blob.InvoiceExpiration = model.InvoiceExpiration;
+            blob.DefaultLang = model.DefaultLang;
 
             bool newExchange = blob.PreferredExchange != model.PreferredExchange;
             blob.PreferredExchange = model.PreferredExchange;

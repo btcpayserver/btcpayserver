@@ -1,4 +1,5 @@
 ﻿@addTagHelper *, Meziantou.AspNetCore.BundleTagHelpers
+@inject BTCPayServer.Services.LanguageService langService
 @model PaymentModel
 @{
     Layout = null;
@@ -59,16 +60,18 @@
                             {{$t("nested.lang")}} >>
                         *@
                         <select class="cmblang reverse invisible" onchange="changeLanguage($(this).val())">
-                            <option value="en-US">English</option>
-                            <option value="de-DE">Deutsch</option>
-                            <option value="ja-JP">日本語</option>
-                            <option value="fr-FR">Français</option>
-                            <option value="es-ES">Spanish</option>
+                            @foreach(var lang in langService.GetLanguages())
+                            {
+                                <option value="@lang.Code">@lang.DisplayName</option>
+                            }
                         </select>
                         <script>
                             $(function () {
+                                var storeDefaultLang = '@Model.DefaultLang';
                                 if (urlParams.lang) {
                                     $(".cmblang").val(urlParams.lang);
+                                } else if (storeDefaultLang) {
+                                    $(".cmblang").val(storeDefaultLang);
                                 }
 
                                 $('select').prettyDropdown({
@@ -85,9 +88,11 @@
         </div>
     </invoice>
     <script type="text/javascript">
+        var storeDefaultLang = '@Model.DefaultLang';
+        var storeDefaultLangGlobal = storeDefaultLang.split("-")[0];
         // initialization
         i18next.init({
-            lng: 'en',
+            lng: storeDefaultLangGlobal,
             fallbackLng: 'en',
             nsSeparator: false,
             keySeparator: false,
@@ -106,6 +111,9 @@
 
         if (urlParams.lang) {
             changeLanguage(urlParams.lang);
+        }
+        else if (storeDefaultLang) {
+            changeLanguage(storeDefaultLang);
         }
 
         const i18n = new VueI18next(i18next);

@@ -36,7 +36,7 @@ const locales_nl = {
     "InvoiceExpired_Body_1": "De factuur is vervallen. Een factuur is geldig voor {{maxTimeMinutes}} minuten.  \
 Je kan terug komen naar {{storeName}} indien je nog eens je betaling wilt proberen uit te voeren.",
     "InvoiceExpired_Body_2": "Indien je een betaling uitvoerde, werd deze nog niet aanvaard door de blockchain. We hebben je fondsen nog niet ontvangen.",
-    "InvoiceExpired_Body_3": "Si votre transaction n'a pas été accepté par la blockchain, vos fonds reviendront et dans votre portefueille. Selon votre portefueille, cela peut prendre entre 48 et 72 heures.      Indien je transactie niet door de blockchain werd aanvaard, zullen je fondsen terug in wallet verschijnen. Volgens de wallet, kan dit 48 to 72 uren duren.",
+    "InvoiceExpired_Body_3": "Indien je transactie niet door de blockchain werd aanvaard, zullen je fondsen terug in wallet verschijnen. Volgens de wallet, kan dit 48 to 72 uren duren.",
     "Invoice ID": "Factuurnummer",
     "Order ID": "Bestllingsnummer",
     "Return to StoreName": "Terug naar {{storeName}}",

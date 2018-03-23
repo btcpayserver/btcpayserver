@@ -9550,8 +9550,8 @@ strong {
 }
 
 .expired__body {
-    padding: 14px 10px;
-    padding-top: 8px;
+    padding: 0px 8px 0px;
+    margin-top: -10px;
 }
 
 .expired__header {
@@ -9562,9 +9562,13 @@ strong {
 .expired__text {
     margin-top: 20px;
     font-weight: 100;
-    font-size: 14.5px;
+    font-size: 14px;
     opacity: .8;
 }
+
+    .expired__text .expired__text__smaller {
+        font-size: 11px;
+    }
 
 .expired__text__bullet {
     font-weight: 500;

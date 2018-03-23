@@ -1,4 +1,5 @@
-﻿using BTCPayServer.Services.Invoices;
+﻿using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Validations;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
@@ -105,9 +106,12 @@ namespace BTCPayServer.Models.StoreViewModels
             get; set;
         }
         public SelectList CryptoCurrencies { get; set; }
+        public SelectList Languages { get; set; }
 
         [Display(Name = "Default crypto currency on checkout")]
         public string DefaultCryptoCurrency { get; set; }
+        [Display(Name = "Default language on checkout")]
+        public string DefaultLang { get; set; }
 
         public class LightningNode
         {
@@ -122,9 +126,18 @@ namespace BTCPayServer.Models.StoreViewModels
         public void SetCryptoCurrencies(ExplorerClientProvider explorerProvider, string defaultCrypto)
         {
             var choices = explorerProvider.GetAll().Select(o => new Format() { Name = o.Item1.CryptoCode, Value = o.Item1.CryptoCode }).ToArray();
-            var chosen = choices.FirstOrDefault(f => f.Name == defaultCrypto) ?? choices.FirstOrDefault();
+            var chosen = choices.FirstOrDefault(f => f.Value == defaultCrypto) ?? choices.FirstOrDefault();
             CryptoCurrencies = new SelectList(choices, nameof(chosen.Value), nameof(chosen.Name), chosen);
             DefaultCryptoCurrency = chosen.Name;
+        }
+
+        public void SetLanguages(LanguageService langService, string defaultLang)
+        {
+            defaultLang = defaultLang ?? "en-US";
+            var choices = langService.GetLanguages().Select(o => new Format() { Name = o.DisplayName, Value = o.Code }).ToArray();
+            var chosen = choices.FirstOrDefault(f => f.Value == defaultLang) ?? choices.FirstOrDefault();
+            Languages = new SelectList(choices, nameof(chosen.Value), nameof(chosen.Name), chosen);
+            DefaultLang = chosen.Value;
         }
     }
 }

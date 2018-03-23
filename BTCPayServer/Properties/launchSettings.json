@@ -10,7 +10,8 @@
         "ASPNETCORE_ENVIRONMENT": "Development",
         "BTCPAY_CHAINS": "btc,ltc",
         "BTCPAY_BTCLIGHTNING": "http://api-token:foiewnccewuify@127.0.0.1:54938/",
-        "BTCPAY_POSTGRES": "User ID=postgres;Host=127.0.0.1;Port=39372;Database=btcpayserver"
+        "BTCPAY_POSTGRES": "User ID=postgres;Host=127.0.0.1;Port=39372;Database=btcpayserver",
+        "BTCPAY_BUNDLEJSCSS": "false"
       },
       "applicationUrl": "http://127.0.0.1:14142/"
     }

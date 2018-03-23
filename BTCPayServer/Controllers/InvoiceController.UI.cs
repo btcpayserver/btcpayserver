@@ -201,7 +201,7 @@ namespace BTCPayServer.Controllers
             var paymentMethodDetails = paymentMethod.GetPaymentMethodDetails();
             var dto = invoice.EntityToDTO(_NetworkProvider);
             var cryptoInfo = dto.CryptoInfo.First(o => o.GetpaymentMethodId() == paymentMethodId);
-
+            var storeBlob = store.GetStoreBlob();
             var currency = invoice.ProductInformation.Currency;
             var accounting = paymentMethod.Calculate();
             var model = new PaymentModel()
@@ -211,6 +211,7 @@ namespace BTCPayServer.Controllers
                 ServerUrl = HttpContext.Request.GetAbsoluteRoot(),
                 OrderId = invoice.OrderId,
                 InvoiceId = invoice.Id,
+                DefaultLang = storeBlob.DefaultLang ?? "en",
                 BtcAddress = paymentMethodDetails.GetPaymentDestination(),
                 OrderAmount = (accounting.TotalDue - accounting.NetworkFee).ToString(),
                 BtcDue = accounting.Due.ToString(),
@@ -233,7 +234,7 @@ namespace BTCPayServer.Controllers
                 Status = invoice.Status,
                 CryptoImage = "/" + GetImage(paymentMethodId, network),
                 NetworkFeeDescription = $"{accounting.TxRequired} transaction{(accounting.TxRequired > 1 ? "s" : "")} x {paymentMethodDetails.GetTxFee()} {network.CryptoCode}",
-                AllowCoinConversion = store.GetStoreBlob().AllowCoinConversion,
+                AllowCoinConversion = storeBlob.AllowCoinConversion,
                 AvailableCryptos = invoice.GetPaymentMethods(_NetworkProvider)
                                           .Where(i => i.Network != null)
                                           .Select(kv => new PaymentModel.AvailableCrypto()

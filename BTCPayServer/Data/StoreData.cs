@@ -217,6 +217,7 @@ namespace BTCPayServer.Data
         {
             get; set;
         }
+        public string DefaultLang { get; set; }
         [DefaultValue(60)]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public int MonitoringExpiration

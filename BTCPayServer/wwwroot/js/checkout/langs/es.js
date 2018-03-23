@@ -1,0 +1,2 @@
+const locales_es = {
+};

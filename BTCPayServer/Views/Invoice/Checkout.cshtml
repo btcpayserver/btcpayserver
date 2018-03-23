@@ -89,19 +89,18 @@
     </invoice>
     <script type="text/javascript">
         var storeDefaultLang = '@Model.DefaultLang';
-        var storeDefaultLangGlobal = storeDefaultLang.split("-")[0];
         // initialization
         i18next.init({
-            lng: storeDefaultLangGlobal,
-            fallbackLng: 'en',
+            lng: storeDefaultLang,
+            fallbackLng: 'en-US',
             nsSeparator: false,
             keySeparator: false,
             resources: {
-                en: { translation: locales_en },
-                de: { translation: locales_de },
-                es: { translation: locales_es },
-                ja: { translation: locales_ja },
-                fr: { translation: locales_fr }
+                'en-US': { translation: locales_en },
+                'de-DE': { translation: locales_de },
+                'es-ES': { translation: locales_es },
+                'ja-JP': { translation: locales_ja },
+                'fr-FR': { translation: locales_fr }
             },
         });
 

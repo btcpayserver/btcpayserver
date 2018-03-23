@@ -1,4 +1,4 @@
-const locales_pt = {
+const locales_pt_br = {
     nested: {
         lang: 'Idioma',
     },
@@ -46,11 +46,3 @@ Você pode retornar à {{storeName}} se desejar enviar seu pagamento novamente."
     "This invoice has been archived": "Essa fatura foi arquivada",
     "Archived_Body": "Por favor, contate o estabelecimento para informações e suporte"
 };
-
-    © 2018 GitHub, Inc.
-    Terms
-    Privacy
-    Security
-    Status
-    Help
-

@@ -1,6 +1,6 @@
 const locales_pt_br = {
     nested: {
-        lang: 'Idioma',
+        lang: 'Idioma'
     },
     "Awaiting Payment...": "Esperando o pagamento...",
     "Pay with": "Pague com",

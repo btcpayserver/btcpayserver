@@ -1,6 +1,6 @@
 const locales_nl = {
     nested: {
-        lang: 'Taal',
+        lang: 'Taal'
     },
     "Awaiting Payment...": "Wachtende op de betaling...",
     "Pay with": "Betalen met",

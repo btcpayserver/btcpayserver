@@ -19,6 +19,10 @@ function resetTabsSlider() {
 }
 
 function onDataCallback(jsonData) {
+    // extender properties used 
+    jsonData.shapeshiftUrl = "https://shapeshift.io/shifty.html?destination=" + jsonData.btcAddress + "&output=" + jsonData.paymentMethodId + "&amount=" + jsonData.btcDue;
+    //
+
     var newStatus = jsonData.status;
 
     if (newStatus === "complete" ||
@@ -45,8 +49,6 @@ function onDataCallback(jsonData) {
 
     if (newStatus === "expired" || newStatus === "invalid") { //TODO: different state if the invoice is invalid (failed to confirm after timeout)
         $(".timer-row").removeClass("expiring-soon");
-        // TODO: Needs translate
-        $(".timer-row__message span").html("Invoice expired.");
         $(".timer-row__spinner").html("");
         $("#emailAddressView").removeClass("active");
         $(".modal-dialog").addClass("expired");
@@ -65,7 +67,6 @@ function onDataCallback(jsonData) {
         $(".payment__spinner").hide();
     }
 
-    jsonData.shapeshiftUrl = "https://shapeshift.io/shifty.html?destination=" + jsonData.btcAddress + "&output=" + jsonData.paymentMethodId + "&amount=" + jsonData.btcDue;
     // updating ui
     checkoutCtrl.srvModel = jsonData;
 }
@@ -286,24 +287,23 @@ $(document).ready(function () {
         }
 
         function animateUpdate() {
-
             var now = new Date();
             var timeDiff = end.getTime() - now.getTime();
             var perc = 100 - Math.round(timeDiff / timerMax * 100);
+            var status = checkoutCtrl.srvModel.status;
 
             if (perc === 75 && (status === "paidPartial" || status === "new")) {
                 $(".timer-row").addClass("expiring-soon");
-                // TODO: Needs translate
-                $(".timer-row__message span").html("Invoice expiring soon ...");
+                checkoutCtrl.expiringSoon = true;
                 updateProgress(perc);
             }
             if (perc <= 100) {
                 updateProgress(perc);
                 setTimeout(animateUpdate, timeoutVal);
             }
-            if (perc >= 100 && status === "expired") {
-                onDataCallback(status);
-            }
+            //if (perc >= 100 && status === "expired") {
+            //    onDataCallback(status);
+            //}
         }
     }
 

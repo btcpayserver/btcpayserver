@@ -12,7 +12,15 @@
             @Html.Partial("Checkout-Spinner")
         </div>
         <div class="timer-row__message">
-            <span>{{$t("Awaiting Payment...")}}</span>
+            <span v-if="srvModel.status === 'expired' || srvModel.status === 'invalid'">
+                {{$t("Invoice expired")}}
+            </span>
+            <span v-else-if="expiringSoon">
+                {{$t("Invoice expiring soon...")}}
+            </span>
+            <span v-else>
+                {{$t("Awaiting Payment...")}}
+            </span>
         </div>
         <div class="timer-row__time-left">@Model.TimeLeft</div>
     </div>
@@ -272,7 +280,7 @@
                     {{$t("InvoiceExpired_Body_3")}}
                 </div>
                 <div class="expired__text">
-                    <span class="expired__text__bullet">{{$t("Invoice ID")}}</span>: 
+                    <span class="expired__text__bullet">{{$t("Invoice ID")}}</span>:
                     {{srvModel.invoiceId}}
                     <br />
                     <span class="expired__text__bullet">{{$t("Order ID")}}</span>:

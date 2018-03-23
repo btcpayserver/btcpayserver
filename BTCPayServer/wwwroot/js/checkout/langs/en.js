@@ -30,6 +30,7 @@ const locales_en = {
     "Shapeshift_Button_Text": "Pay with Altcoins",
     "ConversionTab_Lightning": "No conversion providers available for BTC Lightning Network payments.",
     // Invoice expired
+    "Invoice expiring soon...": "Invoice expiring soon...",
     "Invoice expired": "Invoice expired",
     "What happened?": "What happened?",
     "InvoiceExpired_Body_1": "This invoice has expired. An invoice is only valid for {{maxTimeMinutes}} minutes.  \

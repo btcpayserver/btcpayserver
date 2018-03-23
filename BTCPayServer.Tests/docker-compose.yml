@@ -46,7 +46,7 @@ services:
       - lightning-charged
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:1.0.1.22
+    image: nicolasdorier/nbxplorer:1.0.1.24
     ports:
       - "32838:32838"
     expose: 
@@ -151,7 +151,7 @@ services:
       - bitcoind
 
   litecoind:
-    image: nicolasdorier/docker-litecoin:0.14.2
+    image: nicolasdorier/docker-litecoin:0.15.1
     environment:
       BITCOIN_EXTRA_ARGS: |
         rpcuser=ceiwHEbqWI83

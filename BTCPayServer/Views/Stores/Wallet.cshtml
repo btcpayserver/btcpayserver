@@ -2,7 +2,6 @@
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData["Title"] = "Manage wallet";
-    ViewData.AddActivePage(StoreNavPages.Wallet);
 }
 
 <h4>@ViewData["Title"]</h4>
@@ -32,10 +31,7 @@
 </div>
 <div class="col-md-6">
     <form id="sendform" style="display:none;">
-        <div class="form-group">
-            <label asp-for="CryptoCurrency"></label>
-            <select id="cryptoCurrencies" asp-for="CryptoCurrency" asp-items="Model.CryptoCurrencies" class="form-control"></select>
-        </div>
+        <input type="hidden" id="cryptoCode" asp-for="CryptoCurrency" />
         <div class="form-group">
             <label>Destination</label>
             <input id="destination-textbox" name="Destination" class="form-control"  type="text" />

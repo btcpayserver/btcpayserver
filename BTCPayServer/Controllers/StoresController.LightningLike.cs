@@ -9,38 +9,64 @@ using BTCPayServer.Payments.Lightning.CLightning;
 using Microsoft.AspNetCore.Mvc;
 using BTCPayServer.Payments.Lightning;
 using System.Net;
+using BTCPayServer.Data;
 
 namespace BTCPayServer.Controllers
 {
     public partial class StoresController
     {
         [HttpGet]
-        [Route("{storeId}/lightning")]
-        public async Task<IActionResult> AddLightningNode(string storeId, string selectedCrypto = null)
+        [Route("{storeId}/lightning/{cryptoCode}")]
+        public async Task<IActionResult> AddLightningNode(string storeId, string cryptoCode)
         {
-            selectedCrypto = selectedCrypto ?? "BTC";
             var store = await _Repo.FindStore(storeId, GetUserId());
             if (store == null)
                 return NotFound();
             LightningNodeViewModel vm = new LightningNodeViewModel();
-            vm.SetCryptoCurrencies(_NetworkProvider, selectedCrypto);
-            vm.InternalLightningNode = CanUseInternalLightning() ? _BtcpayServerOptions.InternalLightningNode.AbsoluteUri : null;
+            vm.CryptoCode = cryptoCode;
+            vm.InternalLightningNode = GetInternalLighningNode(cryptoCode)?.ToUri(true)?.AbsoluteUri;
+            SetExistingValues(store, vm);
             return View(vm);
         }
 
-        [HttpPost]
-        [Route("{storeId}/lightning")]
-        public async Task<IActionResult> AddLightningNode(string storeId, LightningNodeViewModel vm, string command)
+        private void SetExistingValues(StoreData store, LightningNodeViewModel vm)
         {
+            vm.Url = GetExistingLightningSupportedPaymentMethod(vm.CryptoCode, store)?.GetLightningUrl()?.ToString();
+        }
+
+        private LightningSupportedPaymentMethod GetExistingLightningSupportedPaymentMethod(string cryptoCode, StoreData store)
+        {
+            var id = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
+            var existing = store.GetSupportedPaymentMethods(_NetworkProvider)
+                .OfType<LightningSupportedPaymentMethod>()
+                .FirstOrDefault(d => d.PaymentId == id);
+            return existing;
+        }
+
+        private LightningConnectionString GetInternalLighningNode(string cryptoCode)
+        {
+            if (_BtcpayServerOptions.InternalLightningByCryptoCode.TryGetValue(cryptoCode, out var connectionString))
+            {
+                return CanUseInternalLightning() ? connectionString : null;
+            }
+            return null;
+        }
+
+        [HttpPost]
+        [Route("{storeId}/lightning/{cryptoCode}")]
+        public async Task<IActionResult> AddLightningNode(string storeId, LightningNodeViewModel vm, string command, string cryptoCode)
+        {
+            vm.CryptoCode = cryptoCode;
             var store = await _Repo.FindStore(storeId, GetUserId());
             if (store == null)
                 return NotFound();
-            var network = vm.CryptoCurrency == null ? null : _ExplorerProvider.GetNetwork(vm.CryptoCurrency);
-            vm.SetCryptoCurrencies(_NetworkProvider, vm.CryptoCurrency);
-            vm.InternalLightningNode = CanUseInternalLightning() ? _BtcpayServerOptions.InternalLightningNode.AbsoluteUri : null;
+            var network = vm.CryptoCode == null ? null : _ExplorerProvider.GetNetwork(vm.CryptoCode);
+
+            var internalLightning = GetInternalLighningNode(network.CryptoCode);
+            vm.InternalLightningNode = internalLightning?.ToUri(true)?.AbsoluteUri;
             if (network == null)
             {
-                ModelState.AddModelError(nameof(vm.CryptoCurrency), "Invalid network");
+                ModelState.AddModelError(nameof(vm.CryptoCode), "Invalid network");
                 return View(vm);
             }
 
@@ -48,15 +74,15 @@ namespace BTCPayServer.Controllers
             Payments.Lightning.LightningSupportedPaymentMethod paymentMethod = null;
             if (!string.IsNullOrEmpty(vm.Url))
             {
-                if(!LightningConnectionString.TryParse(vm.Url, out var connectionString, out var error))
+                if (!LightningConnectionString.TryParse(vm.Url, out var connectionString, out var error))
                 {
                     ModelState.AddModelError(nameof(vm.Url), $"Invalid URL ({error})");
                     return View(vm);
                 }
 
-                var internalDomain = _BtcpayServerOptions.InternalLightningNode.DnsSafeHost;
+                var internalDomain = internalLightning?.ToUri(false)?.DnsSafeHost;
                 bool isLocal = (internalDomain == "127.0.0.1" || internalDomain == "localhost");
-                
+
                 bool isInternalNode = connectionString.ConnectionType == LightningConnectionType.CLightning ||
                                       connectionString.BaseUri.DnsSafeHost == internalDomain ||
                                       isLocal;
@@ -99,14 +125,14 @@ namespace BTCPayServer.Controllers
                 var handler = (LightningLikePaymentHandler)_ServiceProvider.GetRequiredService<IPaymentMethodHandler<Payments.Lightning.LightningSupportedPaymentMethod>>();
                 try
                 {
-                    await handler.Test(paymentMethod, network);
+                    var info = await handler.Test(paymentMethod, network);
+                    vm.StatusMessage = $"Connection to the lightning node succeed ({info})";
                 }
                 catch (Exception ex)
                 {
                     vm.StatusMessage = $"Error: {ex.Message}";
                     return View(vm);
-                }
-                vm.StatusMessage = "Connection to the lightning node succeed";
+                }                
                 return View(vm);
             }
         }

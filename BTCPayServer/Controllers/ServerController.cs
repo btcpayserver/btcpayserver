@@ -43,6 +43,50 @@ namespace BTCPayServer.Controllers
             return View(users);
         }
 
+        [Route("server/users/{userId}")]
+        public new async Task<IActionResult> User(string userId)
+        {
+            var user = await _UserManager.FindByIdAsync(userId);
+            if (user == null)
+                return NotFound();
+            var roles = await _UserManager.GetRolesAsync(user);
+            var userVM = new UserViewModel();
+            userVM.Id = user.Id;
+            userVM.IsAdmin = IsAdmin(roles);
+            return View(userVM);
+        }
+
+        private static bool IsAdmin(IList<string> roles)
+        {
+            return roles.Contains(Roles.ServerAdmin, StringComparer.Ordinal);
+        }
+
+        [Route("server/users/{userId}")]
+        [HttpPost]
+        public new async Task<IActionResult> User(string userId, UserViewModel viewModel)
+        {
+            var user = await _UserManager.FindByIdAsync(userId);
+            if (user == null)
+                return NotFound();
+            var roles = await _UserManager.GetRolesAsync(user);
+            var isAdmin = IsAdmin(roles);
+            bool updated = false;
+
+            if(isAdmin != viewModel.IsAdmin)
+            {
+                if (viewModel.IsAdmin)
+                    await _UserManager.AddToRoleAsync(user, Roles.ServerAdmin);
+                else
+                    await _UserManager.RemoveFromRoleAsync(user, Roles.ServerAdmin);
+                updated = true;
+            }
+            if(updated)
+            {
+                viewModel.StatusMessage = "User successfully updated";
+            }
+            return View(viewModel);
+        }
+
 
         [Route("server/users/{userId}/delete")]
         public async Task<IActionResult> DeleteUser(string userId)

@@ -36,9 +36,9 @@ namespace BTCPayServer.Configuration
                 var crypto = network.CryptoCode.ToLowerInvariant();
                 app.Option($"--{crypto}explorerurl", $"Url of the NBxplorer for {network.CryptoCode} (default: {network.NBXplorerNetwork.DefaultSettings.DefaultUrl})", CommandOptionType.SingleValue);
                 app.Option($"--{crypto}explorercookiefile", $"Path to the cookie file (default: {network.NBXplorerNetwork.DefaultSettings.DefaultCookieFile})", CommandOptionType.SingleValue);
+                app.Option($"--{crypto}lightning", $"Easy configuration of lightning for the server adnistrator: Must be a unix socket of CLightning (lightning-rpc) or URL to a charge server (default: empty)", CommandOptionType.SingleValue);
             }
             app.Option("--externalurl", $"The expected external url of this service, to use if BTCPay is behind a reverse proxy (default: empty, use the incoming HTTP request to figure out)", CommandOptionType.SingleValue);
-            app.Option("--internallightningnode", $"An internal lightning node which can be used without https requirement and easily configured by the admin (default: empty)", CommandOptionType.SingleValue);
             app.Option("--bundlejscss", $"Bundle javascript and css files for better performance (default: true)", CommandOptionType.SingleValue);
             return app;
         }
@@ -105,6 +105,8 @@ namespace BTCPayServer.Configuration
             {
                 builder.AppendLine($"#{n.CryptoCode}.explorer.url={n.NBXplorerNetwork.DefaultSettings.DefaultUrl}");
                 builder.AppendLine($"#{n.CryptoCode}.explorer.cookiefile={ n.NBXplorerNetwork.DefaultSettings.DefaultCookieFile}");
+                builder.AppendLine($"#{n.CryptoCode}.lightning=/root/.lightning/lightning-rpc");
+                builder.AppendLine($"#{n.CryptoCode}.lightning=https://apitoken:API_TOKEN_SECRET@charge.example.com/");
             }
             return builder.ToString();
         }

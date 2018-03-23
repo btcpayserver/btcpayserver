@@ -20,5 +20,10 @@ namespace BTCPayServer.Payments.Lightning.CLightning
         public string NodeId { get; private set; }
         public string Host { get; private set; }
         public int Port { get; private set; }
+
+        public override string ToString()
+        {
+            return $"{NodeId}@{Host}:{Port}";
+        }
     }
 }

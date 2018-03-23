@@ -303,24 +303,22 @@ namespace BTCPayServer.Tests
                 user.GrantAccess();
                 var storeController = tester.PayTester.GetController<StoresController>(user.UserId);
                 Assert.IsType<ViewResult>(storeController.UpdateStore(user.StoreId).GetAwaiter().GetResult());
-                Assert.IsType<ViewResult>(storeController.AddLightningNode(user.StoreId).GetAwaiter().GetResult());
+                Assert.IsType<ViewResult>(storeController.AddLightningNode(user.StoreId, "BTC").GetAwaiter().GetResult());
 
                 var testResult = storeController.AddLightningNode(user.StoreId, new LightningNodeViewModel()
                 {
-                    CryptoCurrency = "BTC",
                     Url = tester.MerchantCharge.Client.Uri.AbsoluteUri
-                }, "test").GetAwaiter().GetResult();
+                }, "test", "BTC").GetAwaiter().GetResult();
                 Assert.DoesNotContain("Error", ((LightningNodeViewModel)Assert.IsType<ViewResult>(testResult).Model).StatusMessage, StringComparison.OrdinalIgnoreCase);
                 Assert.True(storeController.ModelState.IsValid);
 
                 Assert.IsType<RedirectToActionResult>(storeController.AddLightningNode(user.StoreId, new LightningNodeViewModel()
                 {
-                    CryptoCurrency = "BTC",
                     Url = tester.MerchantCharge.Client.Uri.AbsoluteUri
-                }, "save").GetAwaiter().GetResult());
+                }, "save", "BTC").GetAwaiter().GetResult());
 
                 var storeVm = Assert.IsType<Models.StoreViewModels.StoreViewModel>(Assert.IsType<ViewResult>(storeController.UpdateStore(user.StoreId).GetAwaiter().GetResult()).Model);
-                Assert.Single(storeVm.LightningNodes);
+                Assert.Single(storeVm.LightningNodes.Where(l => !string.IsNullOrEmpty(l.Address)));
             }
         }
 

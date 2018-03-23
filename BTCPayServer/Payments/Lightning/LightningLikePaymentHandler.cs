@@ -54,7 +54,7 @@ namespace BTCPayServer.Payments.Lightning
         /// </summary>
         public bool SkipP2PTest { get; set; }
 
-        public async Task Test(LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network)
+        public async Task<NodeInfo> Test(LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network)
         {
             if (!_Dashboard.IsFullySynched(network.CryptoCode, out var summary))
                 throw new Exception($"Full node not available");
@@ -91,6 +91,7 @@ namespace BTCPayServer.Payments.Lightning
             {
                 throw new Exception($"Error while connecting to the lightning node via {info.Address}:{info.P2PPort} ({ex.Message})");
             }
+            return new NodeInfo(info.NodeId, info.Address, info.P2PPort);
         }
 
         private async Task<bool> TestConnection(string addressStr, int port, CancellationToken cancellation)

@@ -41,26 +41,11 @@ namespace BTCPayServer.Models.StoreViewModels
             set;
         }
 
-        [Display(Name = "Crypto currency")]
-        public string CryptoCurrency
-        {
-            get;
-            set;
-        }
-
+        public string CryptoCode { get; set; }
         public bool Confirmation { get; set; }
 
-        public SelectList CryptoCurrencies { get; set; }
         public SelectList DerivationSchemeFormats { get; set; }
 
         public string ServerUrl { get; set; }
-
-        public void SetCryptoCurrencies(ExplorerClientProvider explorerProvider, string selectedScheme)
-        {
-            var choices = explorerProvider.GetAll().Select(o => new Format() { Name = o.Item1.CryptoCode, Value = o.Item1.CryptoCode }).ToArray();
-            var chosen = choices.FirstOrDefault(f => f.Name == selectedScheme) ?? choices.FirstOrDefault();
-            CryptoCurrencies = new SelectList(choices, nameof(chosen.Value), nameof(chosen.Name), chosen);
-            CryptoCurrency = chosen.Name;
-        }
     }
 }

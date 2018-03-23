@@ -10,6 +10,7 @@ using System.Text;
 using StandardConfiguration;
 using Microsoft.Extensions.Configuration;
 using NBXplorer;
+using BTCPayServer.Payments.Lightning;
 
 namespace BTCPayServer.Configuration
 {
@@ -73,6 +74,17 @@ namespace BTCPayServer.Configuration
                 setting.ExplorerUri = conf.GetOrDefault<Uri>($"{net.CryptoCode}.explorer.url", net.NBXplorerNetwork.DefaultSettings.DefaultUrl);
                 setting.CookieFile = conf.GetOrDefault<string>($"{net.CryptoCode}.explorer.cookiefile", net.NBXplorerNetwork.DefaultSettings.DefaultCookieFile);
                 NBXplorerConnectionSettings.Add(setting);
+                var lightning = conf.GetOrDefault<string>($"{net.CryptoCode}.lightning", string.Empty);
+                if(lightning.Length != 0)
+                {
+                    if(!LightningConnectionString.TryParse(lightning, out var connectionString, out var error))
+                    {
+                        throw new ConfigException($"Invalid setting {net.CryptoCode}.lightning, you need to pass either " +
+                            $"the absolute path to the unix socket of a running CLightning instance (eg. /root/.lightning/lightning-rpc), " +
+                            $"or the url to a charge server with crendetials (eg. https://apitoken@API_TOKEN_SECRET:charge.example.com/)");
+                    }
+                    InternalLightningByCryptoCode.Add(net.CryptoCode, connectionString);
+                }
             }
 
             Logs.Configuration.LogInformation("Supported chains: " + String.Join(',', supportedChains.ToArray()));
@@ -80,10 +92,12 @@ namespace BTCPayServer.Configuration
             PostgresConnectionString = conf.GetOrDefault<string>("postgres", null);
             BundleJsCss = conf.GetOrDefault<bool>("bundlejscss", true);
             ExternalUrl = conf.GetOrDefault<Uri>("externalurl", null);
-            InternalLightningNode = conf.GetOrDefault<Uri>("internallightningnode", null);
+            var old = conf.GetOrDefault<Uri>("internallightningnode", null);
+            if(old != null)
+                throw new ConfigException($"internallightningnode should not be used anymore, use btclightning instead");
         }
 
-        public Uri InternalLightningNode { get; set; }
+        public Dictionary<string, LightningConnectionString> InternalLightningByCryptoCode { get; set; } = new Dictionary<string, LightningConnectionString>();
 
         public BTCPayNetworkProvider NetworkProvider { get; set; }
         public string PostgresConnectionString

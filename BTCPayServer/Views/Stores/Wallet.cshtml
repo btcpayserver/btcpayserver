@@ -29,42 +29,44 @@
         <p id="check-success" style="display:none;"><span class="glyphicon glyphicon-ok-sign" style="color:green;"></span> <span class="check-label">Detecting hardware wallet...</span></p>
     </div>
 </div>
-<div class="col-md-6">
-    <form id="sendform" style="display:none;">
-        <input type="hidden" id="cryptoCode" asp-for="CryptoCurrency" />
-        <div class="form-group">
-            <label>Destination</label>
-            <input id="destination-textbox" name="Destination" class="form-control"  type="text" />
-            <span id="Destination-Error" class="text-danger"></span>
-        </div>
-        <div class="form-group">
-            <label>Amount</label>
-            <input id="amount-textbox" name="Amount" class="form-control" type="text" />
-            <span id="Amount-Error" class="text-danger"></span>
-            <p class="form-text text-muted crypto-info" style="display: none;">
-                Your current balance is <a id="crypto-balance-link" href="#"><span id="crypto-balance"></span></a> <span id="crypto-code"></span>.
-            </p>
-        </div>
-        <div class="form-group">
-            <label>Fee rate (satoshi per byte)</label>
-            <input id="fee-textbox" name="FeeRate" class="form-control" type="text" />
-            <span id="FeeRate-Error" class="text-danger"></span>
-            <p class="form-text text-muted crypto-info" style="display: none;">
-                The recommended value is <a id="crypto-fee-link" href="#"><span id="crypto-fee"></span></a> satoshi per byte.
-            </p>
-        </div>
-        <div class="form-group">
-            <label>Subtract fees from amount</label>
-            <input id="substract-checkbox" name="SubstractFees" class="form-check" type="checkbox" />
-        </div>
-        <button id="confirm-button" name="command" type="submit" class="btn btn-success">Confirm</button>
-    </form>
+<div class="row">
+    <div class="col-md-6">
+        <form id="sendform" style="display:none;">
+            <input type="hidden" id="cryptoCode" asp-for="CryptoCurrency" />
+            <div class="form-group">
+                <label>Destination</label>
+                <input id="destination-textbox" name="Destination" class="form-control" type="text" />
+                <span id="Destination-Error" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label>Amount</label>
+                <input id="amount-textbox" name="Amount" class="form-control" type="text" />
+                <span id="Amount-Error" class="text-danger"></span>
+                <p class="form-text text-muted crypto-info" style="display: none;">
+                    Your current balance is <a id="crypto-balance-link" href="#"><span id="crypto-balance"></span></a> <span id="crypto-code"></span>.
+                </p>
+            </div>
+            <div class="form-group">
+                <label>Fee rate (satoshi per byte)</label>
+                <input id="fee-textbox" name="FeeRate" class="form-control" type="text" />
+                <span id="FeeRate-Error" class="text-danger"></span>
+                <p class="form-text text-muted crypto-info" style="display: none;">
+                    The recommended value is <a id="crypto-fee-link" href="#"><span id="crypto-fee"></span></a> satoshi per byte.
+                </p>
+            </div>
+            <div class="form-group">
+                <label>Subtract fees from amount</label>
+                <input id="substract-checkbox" name="SubstractFees" class="form-check" type="checkbox" />
+            </div>
+            <button id="confirm-button" name="command" type="submit" class="btn btn-success">Confirm</button>
+        </form>
+    </div>
 </div>
-@section Scripts
-    {
-    <script type="text/javascript">
+    @section Scripts
+        {
+        <script type="text/javascript">
 		@Model.ToJSVariableModel("srvModel")
-    </script>
-    <script src="~/js/ledgerwebsocket.js" type="text/javascript" defer="defer"></script>
-    <script src="~/js/StoreWallet.js" type="text/javascript" defer="defer"></script>
-}
+        </script>
+        <script src="~/js/ledgerwebsocket.js" type="text/javascript" defer="defer"></script>
+        <script src="~/js/StoreWallet.js" type="text/javascript" defer="defer"></script>
+    }

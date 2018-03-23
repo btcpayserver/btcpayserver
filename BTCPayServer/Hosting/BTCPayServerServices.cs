@@ -173,14 +173,14 @@ namespace BTCPayServer.Hosting
 
             services.AddAuthorization(o =>
             {
-                o.AddPolicy("CanAccessStore", builder =>
+                o.AddPolicy(StorePolicies.CanAccessStores, builder =>
                 {
                     builder.AddRequirements(new OwnStoreAuthorizationRequirement());
                 });
 
-                o.AddPolicy("OwnStore", builder =>
+                o.AddPolicy(StorePolicies.OwnStore, builder =>
                 {
-                    builder.AddRequirements(new OwnStoreAuthorizationRequirement("Owner"));
+                    builder.AddRequirements(new OwnStoreAuthorizationRequirement(StoreRoles.Owner));
                 });
             });
 

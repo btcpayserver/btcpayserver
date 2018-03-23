@@ -1,0 +1,206 @@
+.prettydropdown {
+    position: relative;
+    min-width: 72px; /* 70px + borders */
+    display: inline-block;
+}
+
+    .prettydropdown.loading {
+        min-width: 0;
+    }
+
+    .prettydropdown > ul {
+        border-radius: 5px;
+        position: absolute;
+        top: 0;
+        left: 0;
+        background: #fff;
+        border: 1px solid #a9a9a9;
+        box-sizing: content-box;
+        color: #000;
+        cursor: pointer;
+        font: normal 18px Calibri, sans-serif;
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+        text-align: left;
+        -webkit-user-select: none; /* Chrome all / Safari all */
+        -moz-user-select: none; /* Firefox all */
+        -ms-user-select: none; /* IE 10+ */
+        user-select: none; /* Likely future */
+        z-index: 1;
+    }
+
+    .prettydropdown.loading > ul {
+        visibility: hidden;
+        white-space: nowrap;
+    }
+
+    .prettydropdown > ul:focus, .prettydropdown:not(.disabled) > ul:hover {
+        border-color: #7f7f7f;
+    }
+
+    .prettydropdown:not(.disabled) > ul.active {
+        width: auto;
+        max-height: 400px !important;
+        border-color: #1e90ff;
+        overflow-x: hidden;
+        overflow-y: auto;
+        z-index: 99;
+    }
+
+    .prettydropdown > ul.active:focus {
+        outline: none;
+    }
+
+    .prettydropdown > ul.active.reverse {
+        top: auto;
+        bottom: 0;
+    }
+
+    .prettydropdown > ul > li {
+        font-size: 14px;
+        position: relative;
+        min-width: 70px;
+        height: 48px; /* 50px - borders */
+        border-top: 1px solid transparent;
+        border-bottom: 1px solid transparent;
+        box-sizing: border-box;
+        display: none;
+        line-height: 46px; /* 48px - borders */
+        margin: 0;
+        padding-left: 0.8rem;
+    }
+
+    .prettydropdown.loading > ul > li {
+        min-width: 0;
+        display: block;
+        padding-right: 0.8rem;
+    }
+
+    .prettydropdown > ul:not(.active) > li:not(.selected):first-child {
+        color: transparent; /* Prevent FOUC */
+    }
+
+    .prettydropdown > ul > li:first-child, .prettydropdown > ul.active > li {
+        display: block;
+    }
+
+        .prettydropdown > ul.active > li:not(.label):hover, .prettydropdown > ul.active > li.hover:not(.label), .prettydropdown > ul.active > li:first-child:hover:after {
+            background: #1e90ff;
+            color: #fff;
+        }
+
+        .prettydropdown > ul.active > li.nohover {
+            background: inherit !important;
+            color: inherit !important;
+        }
+
+            .prettydropdown > ul.active > li.hover:before, .prettydropdown > ul.active > li.nohover:after {
+                border-top-color: #fff !important;
+            }
+
+            .prettydropdown > ul.active > li.hover:after, .prettydropdown > ul.active > li.nohover:before {
+                border-top-color: #1e90ff !important;
+            }
+
+    .prettydropdown.arrow > ul > li.selected:before, .prettydropdown.arrow > ul > li.selected:after {
+        position: absolute;
+        top: 8px;
+        bottom: 0;
+        right: 8px;
+        height: 16px;
+        border: 8px solid transparent; /* Arrow size */
+        box-sizing: border-box;
+        content: '';
+        display: block;
+        margin: auto;
+    }
+
+    .prettydropdown.arrow.small > ul > li.selected:before, .prettydropdown.arrow.small > ul > li.selected:after {
+        top: 4px;
+        height: 8px;
+        border-width: 4px;
+    }
+
+    .prettydropdown.arrow > ul > li.selected:before {
+        border-top-color: #a9a9a9; /* Arrow color */
+    }
+
+    .prettydropdown.arrow > ul > li.selected:after {
+        top: 4px; /* Chevron thickness */
+        border-top-color: #fff; /* Match background colour */
+    }
+
+    .prettydropdown.arrow.small > ul > li.selected:after {
+        top: 2px; /* Chevron thickness */
+    }
+
+    .prettydropdown.arrow.triangle > ul > li.selected:after {
+        content: none;
+    }
+
+    .prettydropdown > ul:hover > li.selected:before {
+        border-top-color: #7f7f7f;
+    }
+
+    .prettydropdown > ul.active > li.selected:before,
+    .prettydropdown > ul.active > li.selected:after {
+        border: none;
+    }
+
+    .prettydropdown > ul:not(.active) > li > span.checked {
+        display: none;
+    }
+
+    /* Multi-Select */
+    .prettydropdown.multiple > ul > li.selected {
+        overflow: hidden;
+        padding-right: 2rem;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .prettydropdown > ul > li > span.checked {
+        clear: both;
+        float: right;
+        font-weight: bold;
+        margin-right: 0.8rem;
+    }
+
+    /* Option Groups */
+    .prettydropdown > ul > li.label {
+        cursor: default;
+        font-weight: bold;
+    }
+
+        .prettydropdown > ul > li.label:first-child,
+        .prettydropdown.classic > ul > li.label ~ li.selected {
+            border-top: none;
+        }
+
+        .prettydropdown > ul > li.label ~ li:not(.label):not(.selected),
+        .prettydropdown.classic > ul.active > li.label ~ li:not(.label) {
+            padding-left: 1.6rem;
+        }
+
+    /* Classic Behavior */
+    .prettydropdown.classic > ul:not(.active) > li.selected:not(:first-child) {
+        position: absolute;
+        top: 0;
+        display: block;
+    }
+
+    /* Disabled */
+    .prettydropdown.disabled, .prettydropdown > ul > li.disabled {
+        opacity: 0.3;
+    }
+
+        .prettydropdown.disabled > ul > li, .prettydropdown > ul > li.disabled {
+            cursor: not-allowed;
+        }
+
+    /* Divider Lines */
+    .prettydropdown.multiple > ul > li.selected + li, .prettydropdown.multiple > ul.reverse > li.selected,
+    .prettydropdown > ul > li.label, .prettydropdown > ul > li.label ~ li.selected {
+        border-top-color: #dedede;
+    }

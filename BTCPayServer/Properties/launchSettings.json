@@ -5,7 +5,6 @@
       "launchBrowser": true,
       "environmentVariables": {
         "BTCPAY_NETWORK": "regtest",
-        "BTCPAY_BUNDLEJSCSS": "false",
         "BTCPAY_LTCEXPLORERURL": "http://127.0.0.1:32838/",
         "BTCPAY_BTCEXPLORERURL": "http://127.0.0.1:32838/",
         "ASPNETCORE_ENVIRONMENT": "Development",

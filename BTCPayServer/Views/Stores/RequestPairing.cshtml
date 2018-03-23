@@ -13,31 +13,39 @@
             </div>
         </div>
         <div class="row">
-            <table class="table">
-                <tr>
-                    <th>Label</th>
-                    <td>@Model.Label</td>
-                </tr>
-                <tr>
-                    <th>Facade</th>
-                    <td>@Model.Facade</td>
-                </tr>
-                <tr>
-                    <th>SIN</th>
-                    <td>@Model.SIN</td>
-                </tr>
-            </table>
+            <div class="col-md-4"></div>
+            <div class="col-md-4">
+                <table class="table">
+                    <tr>
+                        <th>Label</th>
+                        <td style="text-align:right;">@Model.Label</td>
+                    </tr>
+                    <tr>
+                        <th>Facade</th>
+                        <td style="text-align:right;">@Model.Facade</td>
+                    </tr>
+                    <tr>
+                        <th>SIN</th>
+                        <td style="text-align:right;">@Model.SIN</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-4"></div>
         </div>
         <div class="row">
-            <form asp-action="Pair" method="post">
-                <div class="form-group">
-                    <label asp-for="SelectedStore"></label>
-                    <select asp-for="SelectedStore" asp-items="@(new SelectList(Model.Stores,"Id","Name"))" class="form-control"></select>
-                    <span asp-validation-for="SelectedStore" class="text-danger"></span>
-                </div>
-                <input type="hidden" name="pairingCode" value="@Model.Id" />
-                <button type="submit" class="btn btn-info" title="Approve this pairing demand">Approve</button>
-            </form>
+            <div class="col-md-4"></div>
+            <div class="col-md-4">
+                <form asp-action="Pair" method="post">
+                    <div class="form-group">
+                        <label asp-for="SelectedStore"></label>
+                        <select asp-for="SelectedStore" asp-items="@(new SelectList(Model.Stores,"Id","Name"))" class="form-control"></select>
+                        <span asp-validation-for="SelectedStore" class="text-danger"></span>
+                    </div>
+                    <input type="hidden" name="pairingCode" value="@Model.Id" />
+                    <button type="submit" class="btn btn-info" title="Approve this pairing demand">Approve</button>
+                </form>
+            </div>
+            <div class="col-md-4"></div>
         </div>
     </div>
 </section>

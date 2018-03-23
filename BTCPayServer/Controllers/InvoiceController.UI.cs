@@ -417,7 +417,7 @@ namespace BTCPayServer.Controllers
             if (stores.Count() == 0)
             {
                 StatusMessage = "Error: You need to create at least one store before creating a transaction";
-                return RedirectToAction(nameof(StoresController.ListStores), "Stores");
+                return RedirectToAction(nameof(UserStoresController.ListStores), "UserStores");
             }
             return View(new CreateInvoiceModel() { Stores = stores });
         }
@@ -434,9 +434,18 @@ namespace BTCPayServer.Controllers
                 return View(model);
             }
             var store = await _StoreRepository.FindStore(model.StoreId, GetUserId());
+            StatusMessage = null;
+            if (store.Role != StoreRoles.Owner)
+            {
+                StatusMessage = "Error: You need to be owner of this store to create an invoice";
+            }
             if (store.GetSupportedPaymentMethods(_NetworkProvider).Count() == 0)
             {
                 StatusMessage = "Error: You need to configure the derivation scheme in order to create an invoice";
+            }
+
+            if(StatusMessage != null)
+            {
                 return RedirectToAction(nameof(StoresController.UpdateStore), "Stores", new
                 {
                     storeId = store.Id

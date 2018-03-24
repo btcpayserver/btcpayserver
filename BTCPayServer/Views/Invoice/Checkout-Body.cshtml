@@ -196,7 +196,7 @@
     @if (Model.AllowCoinConversion)
     {
         <div id="altcoins" class="bp-view payment manual-flow">
-            <div v-if="srvModel.paymentMethodId != 'BTC_LightningLike'">
+            <div v-if="srvModel.isLightning">
                 <div class="manual__step-two__instructions">
                     <span>
                         {{$t("ConversionTab_BodyTop", srvModel)}}

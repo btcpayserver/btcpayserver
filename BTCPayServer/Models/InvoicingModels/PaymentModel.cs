@@ -16,6 +16,7 @@ namespace BTCPayServer.Models.InvoicingModels
 
         public string DefaultLang { get; set; }
         public List<AvailableCrypto> AvailableCryptos { get; set; } = new List<AvailableCrypto>();
+        public bool IsLightning { get; set; }
         public string CryptoCode { get; set; }
         public string ServerUrl { get; set; }
         public string InvoiceId { get; set; }

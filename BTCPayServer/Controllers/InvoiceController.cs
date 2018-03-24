@@ -105,7 +105,6 @@ namespace BTCPayServer.Controllers
             {
                 InvoiceTime = DateTimeOffset.UtcNow
             };
-            entity.SetSupportedPaymentMethods(supportedPaymentMethods.Select(s => s.SupportedPaymentMethod));
 
             var storeBlob = store.GetStoreBlob();
             Uri notificationUri = Uri.IsWellFormedUriString(invoice.NotificationURL, UriKind.Absolute) ? new Uri(invoice.NotificationURL, UriKind.Absolute) : null;
@@ -155,6 +154,7 @@ namespace BTCPayServer.Controllers
 #pragma warning restore CS0618
                             return paymentMethod;
                         });
+            entity.SetSupportedPaymentMethods(supportedPaymentMethods.Select(s => s.SupportedPaymentMethod));
             var paymentMethods = new PaymentMethodDictionary();
             foreach (var method in methods)
             {

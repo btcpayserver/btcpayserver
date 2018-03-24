@@ -28,7 +28,7 @@ const locales_es = {
     "ConversionTab_BodyTop": "Puede pagar {{btcDue}} {{cryptoCode}} usando altcoins que no sean los que el comerciante soporta directamente.",
     "ConversionTab_BodyDesc": "Este servicio es proveído por terceros. Tenga en cuenta que no tenemos control sobre cómo los proveedores enviarán sus fondos. La factura solo se marcará como abonada una vez que se reciban los fondos en el bloque de cadenas de {{cryptoCode}} .",
     "Shapeshift_Button_Text": "Pagar con Altcoins",
-    "ConversionTab_Lightning": "No hay proveedores de conversión disponibles para los pagos de BTC Lightning Network.",
+    "ConversionTab_Lightning": "No hay proveedores de conversión disponibles para los pagos de Lightning Network.",
     // Invoice expired
     "Invoice expiring soon...": "La factura expira pronto...",
     "Invoice expired": "La factura expiro",

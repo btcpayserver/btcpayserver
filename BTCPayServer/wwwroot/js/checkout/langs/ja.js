@@ -28,7 +28,7 @@
     "ConversionTab_BodyTop": "代わりに、お店が受け付けていなくても {{btcDue}} {{cryptoCode}} での支払いもできます。",
     "ConversionTab_BodyDesc": "ただし、この変換は第三者サービスによるものですので、お店が受け付けている通貨で着金するまでの間の処理に関しては何の保証もいたしません。変換後に受付中の通貨 ({{cryptoCode}}) がお店に着金してから支払い済みとなりますのでご了承ください。",
     "Shapeshift_Button_Text": "他の仮想通貨で支払う",
-    "ConversionTab_Lightning": "BTCライトニングのペイメントでは現在変換サービスが存在しないためご利用いただけません。ご了承ください。",
+    "ConversionTab_Lightning": "ライトニングのペイメントでは現在変換サービスが存在しないためご利用いただけません。ご了承ください。",
     // Invoice expired
     "Invoice expiring soon...": "お支払いの期限が迫っています...",
     "Invoice expired": "お支払いの期限が切れました",

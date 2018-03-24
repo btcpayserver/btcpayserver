@@ -208,6 +208,7 @@ namespace BTCPayServer.Controllers
             {
                 CryptoCode = network.CryptoCode,
                 PaymentMethodId = paymentMethodId.ToString(),
+                IsLightning = paymentMethodId.PaymentType == PaymentTypes.LightningLike,
                 ServerUrl = HttpContext.Request.GetAbsoluteRoot(),
                 OrderId = invoice.OrderId,
                 InvoiceId = invoice.Id,

@@ -82,7 +82,6 @@ namespace BTCPayServer.Tests
 
             await store.AddDerivationScheme(StoreId, new DerivationSchemeViewModel()
             {
-                DerivationSchemeFormat = "BTCPay",
                 DerivationScheme = DerivationScheme.ToString(),
                 Confirmation = true
             }, cryptoCode);

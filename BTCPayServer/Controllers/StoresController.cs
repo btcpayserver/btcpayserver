@@ -103,7 +103,7 @@ namespace BTCPayServer.Controllers
         private string GetStoreUrl(string storeId)
         {
             return HttpContext.Request.GetAbsoluteRoot() + "/stores/" + storeId + "/";
-        }        
+        }
 
         [HttpGet]
         [Route("{storeId}/users")]
@@ -131,22 +131,22 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> StoreUsers(string storeId, StoreUsersViewModel vm)
         {
             await FillUsers(storeId, vm);
-            if(!ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
                 return View(vm);
             }
             var user = await _UserManager.FindByEmailAsync(vm.Email);
-            if(user == null)
+            if (user == null)
             {
                 ModelState.AddModelError(nameof(vm.Email), "User not found");
                 return View(vm);
             }
-            if(!StoreRoles.AllRoles.Contains(vm.Role))
+            if (!StoreRoles.AllRoles.Contains(vm.Role))
             {
                 ModelState.AddModelError(nameof(vm.Role), "Invalid role");
                 return View(vm);
             }
-            if(!await _Repo.AddStoreUser(storeId, user.Id, vm.Role))
+            if (!await _Repo.AddStoreUser(storeId, user.Id, vm.Role))
             {
                 ModelState.AddModelError(nameof(vm.Email), "The user already has access to this store");
                 return View(vm);
@@ -209,11 +209,11 @@ namespace BTCPayServer.Controllers
             vm.AllowCoinConversion = storeBlob.AllowCoinConversion;
             return View(vm);
         }
-        
+
 
         private void AddPaymentMethods(StoreData store, StoreViewModel vm)
         {
-            var derivationByCryptoCode = 
+            var derivationByCryptoCode =
                 store
                 .GetSupportedPaymentMethods(_NetworkProvider)
                 .OfType<DerivationStrategy>()
@@ -327,41 +327,11 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        private DerivationStrategy ParseDerivationStrategy(string derivationScheme, string format, BTCPayNetwork network)
+        private DerivationStrategy ParseDerivationStrategy(string derivationScheme, Script hint, BTCPayNetwork network)
         {
-            if (format == "Electrum")
-            {
-                //Unsupported Electrum
-                //var p2wsh_p2sh = 0x295b43fU;
-                //var p2wsh = 0x2aa7ed3U;
-                Dictionary<uint, string[]> electrumMapping = new Dictionary<uint, string[]>();
-                //Source https://github.com/spesmilo/electrum/blob/9edffd17542de5773e7284a8c8a2673c766bb3c3/lib/bitcoin.py
-                var standard = 0x0488b21eU;
-                electrumMapping.Add(standard, new[] { "legacy" });
-                var p2wpkh_p2sh = 0x049d7cb2U;
-                electrumMapping.Add(p2wpkh_p2sh, new string[] { "p2sh" });
-                var p2wpkh = 0x4b24746U;
-                electrumMapping.Add(p2wpkh, Array.Empty<string>());
-
-                var data = Encoders.Base58Check.DecodeData(derivationScheme);
-                if (data.Length < 4)
-                    throw new FormatException("data.Length < 4");
-                var prefix = Utils.ToUInt32(data, false);
-                if (!electrumMapping.TryGetValue(prefix, out string[] labels))
-                    throw new FormatException("!electrumMapping.TryGetValue(prefix, out string[] labels)");
-                var standardPrefix = Utils.ToBytes(network.NBXplorerNetwork.DefaultSettings.ChainType == NBXplorer.ChainType.Main ? 0x0488b21eU : 0x043587cf, false);
-
-                for (int i = 0; i < 4; i++)
-                    data[i] = standardPrefix[i];
-
-                derivationScheme = new BitcoinExtPubKey(Encoders.Base58Check.EncodeData(data), network.NBitcoinNetwork).ToString();
-                foreach (var label in labels)
-                {
-                    derivationScheme = derivationScheme + $"-[{label}]";
-                }
-            }
-
-            return new DerivationStrategy(new DerivationStrategyFactory(network.NBitcoinNetwork).Parse(derivationScheme), network);
+            var parser = new DerivationSchemeParser(network.NBitcoinNetwork, network.DefaultSettings.ChainType);
+            parser.HintScriptPubKey = hint;
+            return new DerivationStrategy(parser.Parse(derivationScheme), network);
         }
 
         [HttpGet]
@@ -519,7 +489,7 @@ namespace BTCPayServer.Controllers
             if (store == null || pairing == null)
                 return NotFound();
 
-            if(store.Role != StoreRoles.Owner)
+            if (store.Role != StoreRoles.Owner)
             {
                 StatusMessage = "Error: You can't approve a pairing without being owner of the store";
                 return RedirectToAction(nameof(UserStoresController.ListStores), "UserStores");

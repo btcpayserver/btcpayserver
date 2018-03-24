@@ -5,6 +5,7 @@
     ViewData.AddActivePage(BTCPayServer.Views.Stores.StoreNavPages.Index);
 }
 
+@Html.Partial("_StatusMessage", Model.StatusMessage)
 <h4>@ViewData["Title"]</h4>
 
 <div class="row">
@@ -32,16 +33,12 @@
                     <div id="ledger-info" class="form-text text-muted" style="display: none;">
                         <span>A ledger wallet is detected, which account do you want to use?</span>
                         <ul>
-                        @for(int i = 0; i < 4; i++)
-                        {
-                            <li><a class="ledger-info-recommended" data-ledgeraccount="@i" href="#">Account @i (49'/<span class="ledger-info-cointype">0</span>'/@i')</a></li>
-                        }
+                            @for(int i = 0; i < 4; i++)
+                            {
+                                <li><a class="ledger-info-recommended" data-ledgeraccount="@i" href="#">Account @i (49'/<span class="ledger-info-cointype">0</span>'/@i')</a></li>
+                            }
                         </ul>
                     </div>
-                </div>
-                <div class="form-group">
-                    <label asp-for="DerivationSchemeFormat"></label>
-                    <select asp-for="DerivationSchemeFormat" asp-items="Model.DerivationSchemeFormats" class="form-control"></select>
                 </div>
                 <div class="form-group">
                     <span>BTCPay format memo</span>
@@ -90,7 +87,6 @@
                 </div>
                 <input type="hidden" asp-for="Confirmation" />
                 <input type="hidden" asp-for="DerivationScheme" />
-                <input type="hidden" asp-for="DerivationSchemeFormat" />
                 <div class="form-group">
                     <table class="table">
                         <thead class="thead-inverse">
@@ -109,6 +105,16 @@
                             }
                         </tbody>
                     </table>
+                </div>
+
+                <div class="form-group">
+                    <h5>Wrong addresses?</h5>
+                    <span>Help us to find the correct settings by telling us the first address of your wallet</span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="HintAddress"></label>
+                    <input asp-for="HintAddress" class="form-control" />
+                    <span asp-validation-for="HintAddress" class="text-danger"></span>
                 </div>
                 <button name="command" type="submit" class="btn btn-success">Confirm</button>
             }

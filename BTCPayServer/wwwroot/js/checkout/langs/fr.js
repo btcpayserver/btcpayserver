@@ -30,13 +30,13 @@ const locales_fr = {
     "Shapeshift_Button_Text": "Payer avec une crypto-monnaie alternative",
     "ConversionTab_Lightning": "Pas de fournisseur disponible pour les paiements sur le Lightning Network.",
     // Invoice expired
-    "Invoice expiring soon...": "La facture va bientôt expirée...",
+    "Invoice expiring soon...": "La facture va bientôt expirer...",
     "Invoice expired": "Facture expiré",
     "What happened?": "Que s'est t'il passé?",
     "InvoiceExpired_Body_1": "La facture a expirée. Une facture est seulement valide pour {{maxTimeMinutes}} minutes.  \
 Vous pouvez revenir sur {{storeName}} si vous voulez resoumettre votre paiement.",
     "InvoiceExpired_Body_2": "Si vous avez essayé d'envoyer un paiement, il n'a pas encore été accepté par la blockchain. Nous n'avons pas encore reçu vos fonds.",
-    "InvoiceExpired_Body_3": "Si votre transaction n'a pas été accepté par la blockchain, vos fonds reviendront et dans votre portefueille. Selon votre portefueille, cela peut prendre entre 48 et 72 heures.",
+    "InvoiceExpired_Body_3": "Si votre transaction n'a pas été accepté par la blockchain, vos fonds reviendront dans votre portefueille. Selon votre portefueille, cela peut prendre entre 48 et 72 heures.",
     "Invoice ID": "Numéro de facture",
     "Order ID": "Numéro de commande",
     "Return to StoreName": "Retourner sur {{storeName}}",

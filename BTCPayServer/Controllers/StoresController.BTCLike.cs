@@ -75,7 +75,7 @@ namespace BTCPayServer.Controllers
             {
                 if (!string.IsNullOrEmpty(vm.DerivationScheme))
                 {
-                    strategy = ParseDerivationStrategy(vm.DerivationScheme, vm.DerivationSchemeFormat, network);
+                    strategy = ParseDerivationStrategy(vm.DerivationScheme, null, network);
                     vm.DerivationScheme = strategy.ToString();
                 }
             }
@@ -86,8 +86,38 @@ namespace BTCPayServer.Controllers
                 return View(vm);
             }
 
+            if (!vm.Confirmation && strategy != null)
+                return ShowAddresses(vm, strategy);
 
-            if (vm.Confirmation || strategy == null)
+            if (vm.Confirmation && !string.IsNullOrWhiteSpace(vm.HintAddress))
+            {
+                BitcoinAddress address = null;
+                try
+                {
+                    address = BitcoinAddress.Create(vm.HintAddress, network.NBitcoinNetwork);
+                }
+                catch
+                {
+                    ModelState.AddModelError(nameof(vm.HintAddress), "Invalid hint address");
+                    return ShowAddresses(vm, strategy);
+                }
+
+                try
+                {
+                    strategy = ParseDerivationStrategy(vm.DerivationScheme, address.ScriptPubKey, network);
+                }
+                catch
+                {
+                    ModelState.AddModelError(nameof(vm.HintAddress), "Impossible to find a match with this address");
+                    return ShowAddresses(vm, strategy);
+                }
+                vm.HintAddress = "";
+                vm.StatusMessage = "Address successfully found, please verify that the rest is correct and click on \"Confirm\"";
+                ModelState.Remove(nameof(vm.HintAddress));
+                ModelState.Remove(nameof(vm.DerivationScheme));
+                return ShowAddresses(vm, strategy);
+            }
+            else
             {
                 try
                 {
@@ -105,23 +135,24 @@ namespace BTCPayServer.Controllers
                 StatusMessage = $"Derivation scheme for {network.CryptoCode} has been modified.";
                 return RedirectToAction(nameof(UpdateStore), new { storeId = storeId });
             }
-            else
-            {
-                if (!string.IsNullOrEmpty(vm.DerivationScheme))
-                {
-                    var line = strategy.DerivationStrategyBase.GetLineFor(DerivationFeature.Deposit);
-
-                    for (int i = 0; i < 10; i++)
-                    {
-                        var address = line.Derive((uint)i);
-                        vm.AddressSamples.Add((DerivationStrategyBase.GetKeyPath(DerivationFeature.Deposit).Derive((uint)i).ToString(), address.ScriptPubKey.GetDestinationAddress(network.NBitcoinNetwork).ToString()));
-                    }
-                }
-                vm.Confirmation = true;
-                return View(vm);
-            }
         }
 
+        private IActionResult ShowAddresses(DerivationSchemeViewModel vm, DerivationStrategy strategy)
+        {
+            vm.DerivationScheme = strategy.DerivationStrategyBase.ToString();
+            if (!string.IsNullOrEmpty(vm.DerivationScheme))
+            {
+                var line = strategy.DerivationStrategyBase.GetLineFor(DerivationFeature.Deposit);
+
+                for (int i = 0; i < 10; i++)
+                {
+                    var address = line.Derive((uint)i);
+                    vm.AddressSamples.Add((DerivationStrategyBase.GetKeyPath(DerivationFeature.Deposit).Derive((uint)i).ToString(), address.ScriptPubKey.GetDestinationAddress(strategy.Network.NBitcoinNetwork).ToString()));
+                }
+            }
+            vm.Confirmation = true;
+            return View(vm);
+        }
 
 
         public class GetInfoResult
@@ -219,7 +250,8 @@ namespace BTCPayServer.Controllers
                 }
                 if (command == "getxpub")
                 {
-                    var getxpubResult = await hw.GetExtPubKey(network, account); ;
+                    var getxpubResult = await hw.GetExtPubKey(network, account);
+                    ;
                     getxpubResult.CoinType = (int)(getxpubResult.KeyPath.Indexes[1] - 0x80000000);
                     result = getxpubResult;
                 }
@@ -240,13 +272,13 @@ namespace BTCPayServer.Controllers
 
                 if (command == "sendtoaddress")
                 {
-                    if(!_Dashboard.IsFullySynched(network.CryptoCode, out var summary))
+                    if (!_Dashboard.IsFullySynched(network.CryptoCode, out var summary))
                         throw new Exception($"{network.CryptoCode}: not started or fully synched");
                     var strategy = GetDirectDerivationStrategy(store, network);
                     var strategyBase = GetDerivationStrategy(store, network);
                     var wallet = _WalletProvider.GetWallet(network);
                     var change = wallet.GetChangeAddressAsync(strategyBase);
-                    
+
                     var unspentCoins = await wallet.GetUnspentCoins(strategyBase);
                     var changeAddress = await change;
                     var transaction = await hw.SendToAddress(strategy, unspentCoins, network,

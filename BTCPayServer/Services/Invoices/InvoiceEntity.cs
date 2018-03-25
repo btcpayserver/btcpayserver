@@ -242,7 +242,7 @@ namespace BTCPayServer.Services.Invoices
 #pragma warning disable CS0618
         public List<PaymentEntity> GetPayments()
         {
-            return Payments.ToList();
+            return Payments?.ToList() ?? new List<PaymentEntity>();
         }
         public List<PaymentEntity> GetPayments(string cryptoCode)
         {

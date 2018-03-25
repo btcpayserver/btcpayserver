@@ -41,6 +41,8 @@ namespace BTCPayServer.Services.Rates
 
         private decimal GetRate(Dictionary<string, decimal> rates, string currency)
         {
+            if (currency == "BTC")
+                return 1.0m;
             if (rates.TryGetValue(currency, out decimal result))
                 return result;
             throw new RateUnavailableException(currency);

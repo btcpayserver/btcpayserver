@@ -86,15 +86,15 @@ namespace BTCPayServer.Controllers
                                                 Network: _NetworkProvider.GetNetwork(c.PaymentId.CryptoCode),
                                                 IsAvailable: Task.FromResult(false)))
                                                 .Where(c => c.Network != null)
-                                                .Select(c => 
+                                                .Select(c =>
                                                 {
                                                     c.IsAvailable = c.Handler.IsAvailable(c.SupportedPaymentMethod, c.Network);
                                                     return c;
                                                 })
                                                 .ToList();
-            foreach(var supportedPaymentMethod in supportedPaymentMethods.ToList())
+            foreach (var supportedPaymentMethod in supportedPaymentMethods.ToList())
             {
-                if(!await supportedPaymentMethod.IsAvailable)
+                if (!await supportedPaymentMethod.IsAvailable)
                 {
                     supportedPaymentMethods.Remove(supportedPaymentMethod);
                 }
@@ -138,6 +138,7 @@ namespace BTCPayServer.Controllers
                             var rate = await storeBlob.ApplyRateRules(o.Network, _RateProviders.GetRateProvider(o.Network, false)).GetRateAsync(invoice.Currency);
                             PaymentMethod paymentMethod = new PaymentMethod();
                             paymentMethod.ParentEntity = entity;
+                            paymentMethod.Network = o.Network;
                             paymentMethod.SetId(o.SupportedPaymentMethod.PaymentId);
                             paymentMethod.Rate = rate;
                             var paymentDetails = await o.Handler.CreatePaymentMethodDetails(o.SupportedPaymentMethod, paymentMethod, o.Network);
@@ -152,14 +153,44 @@ namespace BTCPayServer.Controllers
                                 entity.DepositAddress = paymentMethod.DepositAddress;
                             }
 #pragma warning restore CS0618
-                            return paymentMethod;
+                            return (SupportedPaymentMethod: o.SupportedPaymentMethod, PaymentMethod: paymentMethod);
                         });
-            entity.SetSupportedPaymentMethods(supportedPaymentMethods.Select(s => s.SupportedPaymentMethod));
+            
             var paymentMethods = new PaymentMethodDictionary();
+            List<ISupportedPaymentMethod> supported = new List<ISupportedPaymentMethod>();
             foreach (var method in methods)
             {
-                paymentMethods.Add(await method);
+                var o = await method;
+
+                // Check if Lightning Max value is exceeded
+                if(o.SupportedPaymentMethod.PaymentId.PaymentType == PaymentTypes.LightningLike &&
+                   storeBlob.LightningMaxValue != null)
+                {
+                    var lightningMaxValue = storeBlob.LightningMaxValue;
+                    decimal rate = 0.0m;
+                    if (lightningMaxValue.Currency == invoice.Currency)
+                        rate = o.PaymentMethod.Rate;
+                    else
+                        rate = await storeBlob.ApplyRateRules(o.PaymentMethod.Network, _RateProviders.GetRateProvider(o.PaymentMethod.Network, false)).GetRateAsync(lightningMaxValue.Currency);
+
+                    var lightningMaxValueCrypto = Money.Coins(lightningMaxValue.Value / rate);
+                    if (o.PaymentMethod.Calculate().Due > lightningMaxValueCrypto)
+                    {
+                        continue;
+                    }
+                }
+                ///////////////
+                supported.Add(o.SupportedPaymentMethod);
+                paymentMethods.Add(o.PaymentMethod);
             }
+
+            if(supported.Count == 0)
+            {
+                throw new BitpayHttpException(400, "No derivation strategy are available now for this store");
+            }
+
+            entity.SetSupportedPaymentMethods(supported);
+            entity.SetPaymentMethods(paymentMethods);
 #pragma warning disable CS0618
             // Legacy Bitpay clients expect information for BTC information, even if the store do not support it
             var legacyBTCisSet = paymentMethods.Any(p => p.GetId().IsBTCOnChain);
@@ -177,8 +208,6 @@ namespace BTCPayServer.Controllers
                 }
 #pragma warning restore CS0618
             }
-
-            entity.SetPaymentMethods(paymentMethods);
             entity.PosData = invoice.PosData;
             entity = await _InvoiceRepository.CreateInvoiceAsync(store.Id, entity, _NetworkProvider);
             _EventAggregator.Publish(new Events.InvoiceEvent(entity, 1001, "invoice_created"));

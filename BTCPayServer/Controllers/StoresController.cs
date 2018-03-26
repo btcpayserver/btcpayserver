@@ -199,6 +199,7 @@ namespace BTCPayServer.Controllers
             vm.SetLanguages(_LangService, storeBlob.DefaultLang);
             vm.StoreWebsite = store.StoreWebsite;
             vm.NetworkFee = !storeBlob.NetworkFeeDisabled;
+            vm.LightningMaxValue = storeBlob.LightningMaxValue?.ToString() ?? "";
             vm.SpeedPolicy = store.SpeedPolicy;
             AddPaymentMethods(store, vm);
             vm.StatusMessage = StatusMessage;
@@ -248,7 +249,14 @@ namespace BTCPayServer.Controllers
         [Route("{storeId}")]
         public async Task<IActionResult> UpdateStore(string storeId, StoreViewModel model)
         {
-
+            CurrencyValue currencyValue = null;
+            if (!string.IsNullOrWhiteSpace(model.LightningMaxValue))
+            {
+                if(!CurrencyValue.TryParse(model.LightningMaxValue, out currencyValue))
+                {
+                    ModelState.AddModelError(nameof(model.LightningMaxValue), "Invalid currency value");
+                }
+            }
             if (!ModelState.IsValid)
             {
                 return View(model);
@@ -290,6 +298,7 @@ namespace BTCPayServer.Controllers
             blob.MonitoringExpiration = model.MonitoringExpiration;
             blob.InvoiceExpiration = model.InvoiceExpiration;
             blob.DefaultLang = model.DefaultLang;
+            blob.LightningMaxValue = currencyValue;
 
             bool newExchange = blob.PreferredExchange != model.PreferredExchange;
             blob.PreferredExchange = model.PreferredExchange;

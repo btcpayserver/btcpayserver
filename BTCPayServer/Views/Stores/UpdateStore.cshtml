@@ -120,6 +120,12 @@
                     </p>
                 </div>
                 <div class="form-group">
+                    <label asp-for="LightningMaxValue"></label>
+                    <input asp-for="LightningMaxValue" class="form-control" />
+                    <span asp-validation-for="LightningMaxValue" class="text-danger"></span>
+                    <p class="form-text text-muted">Example: 5.50 USD</p>
+                </div>
+                <div class="form-group">
                     <table class="table">
                         <thead class="thead-inverse">
                             <tr>
@@ -130,13 +136,13 @@
                         </thead>
                         <tbody>
                             @foreach(var scheme in Model.LightningNodes)
-                    {
-                        <tr>
-                            <td>@scheme.CryptoCode</td>
-                            <td>@scheme.Address</td>
-                            <td style="text-align:right"><a asp-action="AddLightningNode" asp-route-cryptoCode="@scheme.CryptoCode">Modify</a></td>
-                        </tr>
-            }
+                {
+                    <tr>
+                        <td>@scheme.CryptoCode</td>
+                        <td>@scheme.Address</td>
+                        <td style="text-align:right"><a asp-action="AddLightningNode" asp-route-cryptoCode="@scheme.CryptoCode">Modify</a></td>
+                    </tr>
+    }
                         </tbody>
                     </table>
                 </div>

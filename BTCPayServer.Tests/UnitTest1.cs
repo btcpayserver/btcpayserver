@@ -807,6 +807,26 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        public void CanParseCurrencyValue()
+        {
+            Assert.True(CurrencyValue.TryParse("1.50USD", out var result));
+            Assert.Equal("1.50 USD", result.ToString());
+            Assert.True(CurrencyValue.TryParse("1.50 USD", out result));
+            Assert.Equal("1.50 USD", result.ToString());
+            Assert.True(CurrencyValue.TryParse("1.50 usd", out result));
+            Assert.Equal("1.50 USD", result.ToString());
+            Assert.True(CurrencyValue.TryParse("1 usd", out result));
+            Assert.Equal("1 USD", result.ToString());
+            Assert.True(CurrencyValue.TryParse("1usd", out result));
+            Assert.Equal("1 USD", result.ToString());
+            Assert.True(CurrencyValue.TryParse("1.501 usd", out result));
+            Assert.Equal("1.50 USD", result.ToString());
+            Assert.False(CurrencyValue.TryParse("1.501 WTFF", out result));
+            Assert.False(CurrencyValue.TryParse("1,501 usd", out result));
+            Assert.False(CurrencyValue.TryParse("1.501", out result));
+        }
+
+        [Fact]
         public void CanParseDerivationScheme()
         {
             var parser = new DerivationSchemeParser(Network.TestNet, NBXplorer.ChainType.Test);

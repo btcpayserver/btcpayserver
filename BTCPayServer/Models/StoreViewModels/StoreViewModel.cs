@@ -83,6 +83,11 @@ namespace BTCPayServer.Models.StoreViewModels
             set;
         }
 
+
+        [Display(Name = "Do not propose lightning payment if value of the invoice is above...")]
+        [MaxLength(20)]
+        public string LightningMaxValue { get; set; }
+
         [Display(Name = "Consider the invoice confirmed when the payment transaction...")]
         public SpeedPolicy SpeedPolicy
         {

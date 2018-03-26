@@ -13,6 +13,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Payments;
+using BTCPayServer.JsonConverters;
 
 namespace BTCPayServer.Data
 {
@@ -253,6 +254,9 @@ namespace BTCPayServer.Data
 
         public List<RateRule> RateRules { get; set; } = new List<RateRule>();
         public string PreferredExchange { get; set; }
+
+        [JsonConverter(typeof(CurrencyValueJsonConverter))]
+        public CurrencyValue LightningMaxValue { get; set; }
 
         public IRateProvider ApplyRateRules(BTCPayNetwork network, IRateProvider rateProvider)
         {

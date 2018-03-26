@@ -375,7 +375,8 @@ namespace BTCPayServer.Services.Invoices
                         BIP21 = $"{scheme}:{cryptoInfo.Address}?amount={cryptoInfo.Due}",
                     };
                 }
-                if (info.GetId().PaymentType == PaymentTypes.LightningLike)
+                var paymentId = info.GetId();
+                if (paymentId.PaymentType == PaymentTypes.LightningLike)
                 {
                     cryptoInfo.PaymentUrls = new NBitpayClient.InvoicePaymentUrls()
                     {
@@ -383,7 +384,7 @@ namespace BTCPayServer.Services.Invoices
                     };
                 }
 #pragma warning disable CS0618
-                if (info.CryptoCode == "BTC")
+                if (info.CryptoCode == "BTC" && paymentId.PaymentType == PaymentTypes.BTCLike)
                 {
                     dto.Url = cryptoInfo.Url;
                     dto.BTCPrice = cryptoInfo.Price;

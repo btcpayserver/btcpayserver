@@ -28,6 +28,7 @@ namespace BTCPayServer.Services
                 new Language("es-ES", "Spanish"),
                 new Language("pt-BR", "Portuguese (Brazil)"),
                 new Language("nl-NL", "Dutch"),
+                new Language("cs-CZ", "Česky"),
             };
         }
     }

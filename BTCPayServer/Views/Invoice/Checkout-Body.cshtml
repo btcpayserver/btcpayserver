@@ -199,6 +199,13 @@
             <div v-if="srvModel.isLightning">
                 <div class="manual__step-two__instructions">
                     <span>
+                        {{$t("ConversionTab_Lightning")}}
+                    </span>
+                </div>
+            </div>
+            <div v-else>
+                <div class="manual__step-two__instructions">
+                    <span>
                         {{$t("ConversionTab_BodyTop", srvModel)}}
                         <br /><br />
                         {{$t("ConversionTab_BodyDesc", srvModel)}}
@@ -211,18 +218,11 @@
                     </a>
 
                     @*Changelly doesn't have TO_AMOUNT support so we can't include it
-                            <script type="text/javascript">function open_widget(a, e) { e.preventDefault(); var link = a.href; var changellyWindow = window.open(link, 'Changelly', 'width=600,height=470,toolbar=0,menubar=0,location=0,status=1,scrollbars=1,resizable=0,left=0,top=0'); changellyWindow.focus(); return false; }</script>
-                        <a onclick="open_widget(this, event);" href="https://changelly.com/widget/v1?auth=email&from=DASH&to=BTC&address=&amount=1&merchant_id=&ref_id=">
-                            <img src="https://changelly.com/pay_button_pay_with.png" alt="Changelly" />
-                        </a>*@
+                <script type="text/javascript">function open_widget(a, e) { e.preventDefault(); var link = a.href; var changellyWindow = window.open(link, 'Changelly', 'width=600,height=470,toolbar=0,menubar=0,location=0,status=1,scrollbars=1,resizable=0,left=0,top=0'); changellyWindow.focus(); return false; }</script>
+            <a onclick="open_widget(this, event);" href="https://changelly.com/widget/v1?auth=email&from=DASH&to=BTC&address=&amount=1&merchant_id=&ref_id=">
+                <img src="https://changelly.com/pay_button_pay_with.png" alt="Changelly" />
+            </a>*@
                 </center>
-            </div>
-            <div v-else>
-                <div class="manual__step-two__instructions">
-                    <span>
-                        {{$t("ConversionTab_Lightning")}}
-                    </span>
-                </div>
             </div>
         </div>
     }

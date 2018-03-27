@@ -184,6 +184,65 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
+        [Route("{storeId}/checkout")]
+        public async Task<IActionResult> CheckoutExperience(string storeId)
+        {
+            var store = await _Repo.FindStore(storeId, GetUserId());
+            if (store == null)
+                return NotFound();
+            var storeBlob = store.GetStoreBlob();
+            var vm = new CheckoutExperienceViewModel();
+            vm.SetCryptoCurrencies(_ExplorerProvider, store.GetDefaultCrypto());
+            vm.SetLanguages(_LangService, storeBlob.DefaultLang);
+            vm.LightningMaxValue = storeBlob.LightningMaxValue?.ToString() ?? "";
+            vm.AllowCoinConversion = storeBlob.AllowCoinConversion;
+            return View(vm);
+        }
+
+        [HttpPost]
+        [Route("{storeId}/checkout")]
+        public async Task<IActionResult> CheckoutExperience(string storeId, CheckoutExperienceViewModel model)
+        {
+            CurrencyValue currencyValue = null;
+            if (!string.IsNullOrWhiteSpace(model.LightningMaxValue))
+            {
+                if (!CurrencyValue.TryParse(model.LightningMaxValue, out currencyValue))
+                {
+                    ModelState.AddModelError(nameof(model.LightningMaxValue), "Invalid currency value");
+                }
+            }
+            var store = await _Repo.FindStore(storeId, GetUserId());
+            if (store == null)
+                return NotFound();
+            bool needUpdate = false;
+            var blob = store.GetStoreBlob();
+            if (store.GetDefaultCrypto() != model.DefaultCryptoCurrency)
+            {
+                needUpdate = true;
+                store.SetDefaultCrypto(model.DefaultCryptoCurrency);
+            }
+            model.SetCryptoCurrencies(_ExplorerProvider, model.DefaultCryptoCurrency);
+            model.SetLanguages(_LangService, model.DefaultLang);
+            blob.DefaultLang = model.DefaultLang;
+            blob.AllowCoinConversion = model.AllowCoinConversion;
+            blob.LightningMaxValue = currencyValue;
+            if (store.SetStoreBlob(blob))
+            {
+                needUpdate = true;
+            }
+            if (needUpdate)
+            {
+                await _Repo.UpdateStore(store);
+                StatusMessage = "Store successfully updated";
+            }
+
+            return RedirectToAction(nameof(CheckoutExperience), new
+            {
+                storeId = storeId
+            });
+        }
+
+        [HttpGet]
         [Route("{storeId}")]
         public async Task<IActionResult> UpdateStore(string storeId)
         {
@@ -195,19 +254,14 @@ namespace BTCPayServer.Controllers
             var vm = new StoreViewModel();
             vm.Id = store.Id;
             vm.StoreName = store.StoreName;
-            vm.SetCryptoCurrencies(_ExplorerProvider, store.GetDefaultCrypto());
-            vm.SetLanguages(_LangService, storeBlob.DefaultLang);
             vm.StoreWebsite = store.StoreWebsite;
             vm.NetworkFee = !storeBlob.NetworkFeeDisabled;
-            vm.LightningMaxValue = storeBlob.LightningMaxValue?.ToString() ?? "";
             vm.SpeedPolicy = store.SpeedPolicy;
             AddPaymentMethods(store, vm);
-            vm.StatusMessage = StatusMessage;
             vm.MonitoringExpiration = storeBlob.MonitoringExpiration;
             vm.InvoiceExpiration = storeBlob.InvoiceExpiration;
             vm.RateMultiplier = (double)storeBlob.GetRateMultiplier();
             vm.PreferredExchange = storeBlob.PreferredExchange.IsCoinAverage() ? "coinaverage" : storeBlob.PreferredExchange;
-            vm.AllowCoinConversion = storeBlob.AllowCoinConversion;
             return View(vm);
         }
 
@@ -249,14 +303,6 @@ namespace BTCPayServer.Controllers
         [Route("{storeId}")]
         public async Task<IActionResult> UpdateStore(string storeId, StoreViewModel model)
         {
-            CurrencyValue currencyValue = null;
-            if (!string.IsNullOrWhiteSpace(model.LightningMaxValue))
-            {
-                if(!CurrencyValue.TryParse(model.LightningMaxValue, out currencyValue))
-                {
-                    ModelState.AddModelError(nameof(model.LightningMaxValue), "Invalid currency value");
-                }
-            }
             if (!ModelState.IsValid)
             {
                 return View(model);
@@ -285,26 +331,15 @@ namespace BTCPayServer.Controllers
                 store.StoreWebsite = model.StoreWebsite;
             }
 
-            if (store.GetDefaultCrypto() != model.DefaultCryptoCurrency)
-            {
-                needUpdate = true;
-                store.SetDefaultCrypto(model.DefaultCryptoCurrency);
-            }
-            model.SetCryptoCurrencies(_ExplorerProvider, model.DefaultCryptoCurrency);
-            model.SetLanguages(_LangService, model.DefaultLang);
-
             var blob = store.GetStoreBlob();
             blob.NetworkFeeDisabled = !model.NetworkFee;
             blob.MonitoringExpiration = model.MonitoringExpiration;
             blob.InvoiceExpiration = model.InvoiceExpiration;
-            blob.DefaultLang = model.DefaultLang;
-            blob.LightningMaxValue = currencyValue;
 
             bool newExchange = blob.PreferredExchange != model.PreferredExchange;
             blob.PreferredExchange = model.PreferredExchange;
 
             blob.SetRateMultiplier(model.RateMultiplier);
-            blob.AllowCoinConversion = model.AllowCoinConversion;
 
             if (store.SetStoreBlob(blob))
             {

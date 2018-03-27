@@ -17,11 +17,7 @@ namespace BTCPayServer.Models.StoreViewModels
             public string Crypto { get; set; }
             public string Value { get; set; }
         }
-        class Format
-        {
-            public string Name { get; set; }
-            public string Value { get; set; }
-        }
+
         public StoreViewModel()
         {
 
@@ -83,11 +79,6 @@ namespace BTCPayServer.Models.StoreViewModels
             set;
         }
 
-
-        [Display(Name = "Do not propose lightning payment if value of the invoice is above...")]
-        [MaxLength(20)]
-        public string LightningMaxValue { get; set; }
-
         [Display(Name = "Consider the invoice confirmed when the payment transaction...")]
         public SpeedPolicy SpeedPolicy
         {
@@ -100,24 +91,6 @@ namespace BTCPayServer.Models.StoreViewModels
             get; set;
         }
 
-        [Display(Name = "Allow conversion through third party (Shapeshift, Changelly...)")]
-        public bool AllowCoinConversion
-        {
-            get; set;
-        }
-
-        public string StatusMessage
-        {
-            get; set;
-        }
-        public SelectList CryptoCurrencies { get; set; }
-        public SelectList Languages { get; set; }
-
-        [Display(Name = "Default crypto currency on checkout")]
-        public string DefaultCryptoCurrency { get; set; }
-        [Display(Name = "Default language on checkout")]
-        public string DefaultLang { get; set; }
-
         public class LightningNode
         {
             public string CryptoCode { get; set; }
@@ -128,21 +101,5 @@ namespace BTCPayServer.Models.StoreViewModels
             get; set;
         } = new List<LightningNode>();
 
-        public void SetCryptoCurrencies(ExplorerClientProvider explorerProvider, string defaultCrypto)
-        {
-            var choices = explorerProvider.GetAll().Select(o => new Format() { Name = o.Item1.CryptoCode, Value = o.Item1.CryptoCode }).ToArray();
-            var chosen = choices.FirstOrDefault(f => f.Value == defaultCrypto) ?? choices.FirstOrDefault();
-            CryptoCurrencies = new SelectList(choices, nameof(chosen.Value), nameof(chosen.Name), chosen);
-            DefaultCryptoCurrency = chosen.Name;
-        }
-
-        public void SetLanguages(LanguageService langService, string defaultLang)
-        {
-            defaultLang = defaultLang ?? "en-US";
-            var choices = langService.GetLanguages().Select(o => new Format() { Name = o.DisplayName, Value = o.Code }).ToArray();
-            var chosen = choices.FirstOrDefault(f => f.Value == defaultLang) ?? choices.FirstOrDefault();
-            Languages = new SelectList(choices, nameof(chosen.Value), nameof(chosen.Name), chosen);
-            DefaultLang = chosen.Value;
-        }
     }
 }

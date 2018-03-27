@@ -6,7 +6,7 @@
 }
 
 <h4>@ViewData["Title"]</h4>
-@Html.Partial("_StatusMessage", Model.StatusMessage)
+@Html.Partial("_StatusMessage", TempData["TempDataProperty-StatusMessage"])
 
 <div class="row">
     <div class="col-md-6">
@@ -29,14 +29,6 @@
                 <label asp-for="StoreWebsite"></label>
                 <input asp-for="StoreWebsite" class="form-control" />
                 <span asp-validation-for="StoreWebsite" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="DefaultCryptoCurrency"></label>
-                <select asp-for="DefaultCryptoCurrency" asp-items="Model.CryptoCurrencies" class="form-control"></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="DefaultLang"></label>
-                <select asp-for="DefaultLang" asp-items="Model.Languages" class="form-control"></select>
             </div>
             <div class="form-group">
                 <label asp-for="NetworkFee"></label>
@@ -75,10 +67,6 @@
                 <span asp-validation-for="SpeedPolicy" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="AllowCoinConversion"></label>
-                <input asp-for="AllowCoinConversion" type="checkbox" class="form-check" />
-            </div>
-            <div class="form-group">
                 <h5>Derivation Scheme</h5>
                 <span>The DerivationScheme represents the destination of the funds received by your invoice on chain.</span>
             </div>
@@ -94,19 +82,19 @@
                     </thead>
                     <tbody>
                         @foreach(var scheme in Model.DerivationSchemes)
-                {
-                    <tr>
-                        <td>@scheme.Crypto</td>
-                        <td style="max-width:300px;overflow:hidden;">@scheme.Value</td>
-                        <td style="text-align:right">
-                            @if(!string.IsNullOrWhiteSpace(scheme.Value))
-                    {
-                        <a asp-action="Wallet" asp-route-cryptoCode="@scheme.Crypto">Wallet</a><span> - </span>
-            }
-                            <a asp-action="AddDerivationScheme" asp-route-cryptoCode="@scheme.Crypto">Modify</a>
-                        </td>
-                    </tr>
-        }
+                        {
+                            <tr>
+                                <td>@scheme.Crypto</td>
+                                <td style="max-width:300px;overflow:hidden;">@scheme.Value</td>
+                                <td style="text-align:right">
+                                    @if(!string.IsNullOrWhiteSpace(scheme.Value))
+                                    {
+                                        <a asp-action="Wallet" asp-route-cryptoCode="@scheme.Crypto">Wallet</a><span> - </span>
+                                    }
+                                    <a asp-action="AddDerivationScheme" asp-route-cryptoCode="@scheme.Crypto">Modify</a>
+                                </td>
+                            </tr>
+                        }
                     </tbody>
                 </table>
             </div>
@@ -120,12 +108,6 @@
                     </p>
                 </div>
                 <div class="form-group">
-                    <label asp-for="LightningMaxValue"></label>
-                    <input asp-for="LightningMaxValue" class="form-control" />
-                    <span asp-validation-for="LightningMaxValue" class="text-danger"></span>
-                    <p class="form-text text-muted">Example: 5.50 USD</p>
-                </div>
-                <div class="form-group">
                     <table class="table">
                         <thead class="thead-inverse">
                             <tr>
@@ -136,13 +118,13 @@
                         </thead>
                         <tbody>
                             @foreach(var scheme in Model.LightningNodes)
-                {
-                    <tr>
-                        <td>@scheme.CryptoCode</td>
-                        <td>@scheme.Address</td>
-                        <td style="text-align:right"><a asp-action="AddLightningNode" asp-route-cryptoCode="@scheme.CryptoCode">Modify</a></td>
-                    </tr>
-    }
+                            {
+                                <tr>
+                                    <td>@scheme.CryptoCode</td>
+                                    <td>@scheme.Address</td>
+                                    <td style="text-align:right"><a asp-action="AddLightningNode" asp-route-cryptoCode="@scheme.CryptoCode">Modify</a></td>
+                                </tr>
+                            }
                         </tbody>
                     </table>
                 </div>

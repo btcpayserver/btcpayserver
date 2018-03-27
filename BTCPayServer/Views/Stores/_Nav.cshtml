@@ -2,7 +2,8 @@
 @inject SignInManager<ApplicationUser> SignInManager
 
 <ul class="nav nav-pills nav-stacked">
-    <li class="@StoreNavPages.IndexNavClass(ViewContext)"><a asp-action="UpdateStore">Information</a></li>
+    <li class="@StoreNavPages.IndexNavClass(ViewContext)"><a asp-action="UpdateStore">General settings</a></li>
+    <li class="@StoreNavPages.CheckoutNavClass(ViewContext)"><a asp-action="CheckoutExperience">Checkout experience</a></li>
     <li class="@StoreNavPages.TokensNavClass(ViewContext)"><a asp-action="ListTokens">Access Tokens</a></li>
     <li class="@StoreNavPages.UsersNavClass(ViewContext)"><a asp-action="StoreUsers">Users</a></li>
 </ul>

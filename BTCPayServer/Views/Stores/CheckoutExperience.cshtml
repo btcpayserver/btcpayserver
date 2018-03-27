@@ -1,0 +1,44 @@
+﻿@model CheckoutExperienceViewModel
+@{
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData["Title"] = "Checkout experience";
+    ViewData.AddActivePage(BTCPayServer.Views.Stores.StoreNavPages.Checkout);
+}
+
+<h4>@ViewData["Title"]</h4>
+@Html.Partial("_StatusMessage", TempData["TempDataProperty-StatusMessage"])
+
+<div class="row">
+    <div class="col-md-6">
+        <div asp-validation-summary="All" class="text-danger"></div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-8">
+        <form method="post">
+            <div class="form-group">
+                <label asp-for="DefaultCryptoCurrency"></label>
+                <select asp-for="DefaultCryptoCurrency" asp-items="Model.CryptoCurrencies" class="form-control"></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="DefaultLang"></label>
+                <select asp-for="DefaultLang" asp-items="Model.Languages" class="form-control"></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="AllowCoinConversion"></label>
+                <input asp-for="AllowCoinConversion" type="checkbox" class="form-check" />
+            </div>
+            <div class="form-group">
+                <label asp-for="LightningMaxValue"></label>
+                <input asp-for="LightningMaxValue" class="form-control" />
+                <span asp-validation-for="LightningMaxValue" class="text-danger"></span>
+                <p class="form-text text-muted">Example: 5.50 USD</p>
+            </div>
+            <button name="command" type="submit" class="btn btn-success" value="Save">Save</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

@@ -258,6 +258,11 @@ namespace BTCPayServer.Data
         [JsonConverter(typeof(CurrencyValueJsonConverter))]
         public CurrencyValue LightningMaxValue { get; set; }
 
+        [JsonConverter(typeof(UriJsonConverter))]
+        public Uri CustomLogo { get; set; }
+        [JsonConverter(typeof(UriJsonConverter))]
+        public Uri CustomCSS { get; set; }
+
         public IRateProvider ApplyRateRules(BTCPayNetwork network, IRateProvider rateProvider)
         {
             if (!PreferredExchange.IsCoinAverage())

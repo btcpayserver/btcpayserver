@@ -3,7 +3,14 @@
 <div class="top-header">
     <div class="header">
         <div class="header__icon">
-            <img class="header__icon__img" src="~/img/logo-white.png" height="40">
+            @if(Model.CustomLogoLink != null)
+            {
+                <img class="header__icon__img" src="@Model.CustomLogoLink" height="40">
+            }
+            else
+            {
+                <img class="header__icon__img" src="~/img/logo-white.png" height="40">
+            }
         </div>
     </div>
     <div class="timer-row">
@@ -26,7 +33,7 @@
     </div>
 </div>
 <div class="order-details">
-    @if (Model.AvailableCryptos.Count > 1)
+    @if(Model.AvailableCryptos.Count > 1)
     {
         <div class="currency-selection">
             <div class="single-item-order__left">
@@ -36,7 +43,7 @@
             </div>
             <div class="single-item-order__right">
                 <div class="payment__currencies">
-                    @foreach (var crypto in Model.AvailableCryptos)
+                    @foreach(var crypto in Model.AvailableCryptos)
                     {
                         <a href="@crypto.Link" onclick="return changeCurrency('@crypto.PaymentMethodId');">
                             <img style="height:32px; margin-left:5px;" alt="@crypto.PaymentMethodId" src="@crypto.CryptoImage" />
@@ -101,7 +108,7 @@
         <div class="payment-tabs__tab" id="copy-tab">
             <span>{{$t("Copy")}}</span>
         </div>
-        @if (Model.AllowCoinConversion)
+        @if(Model.AllowCoinConversion)
         {
             <div class="payment-tabs__tab" id="altcoins-tab">
                 <span>{{$t("Conversion")}}</span>
@@ -193,10 +200,17 @@
             </div>
         </div>
     </div>
-    @if (Model.AllowCoinConversion)
+    @if(Model.AllowCoinConversion)
     {
         <div id="altcoins" class="bp-view payment manual-flow">
             <div v-if="srvModel.isLightning">
+                <div class="manual__step-two__instructions">
+                    <span>
+                        {{$t("ConversionTab_Lightning")}}
+                    </span>
+                </div>
+            </div>
+            <div v-else>
                 <div class="manual__step-two__instructions">
                     <span>
                         {{$t("ConversionTab_BodyTop", srvModel)}}
@@ -216,13 +230,6 @@
                             <img src="https://changelly.com/pay_button_pay_with.png" alt="Changelly" />
                         </a>*@
                 </center>
-            </div>
-            <div v-else>
-                <div class="manual__step-two__instructions">
-                    <span>
-                        {{$t("ConversionTab_Lightning")}}
-                    </span>
-                </div>
             </div>
         </div>
     }

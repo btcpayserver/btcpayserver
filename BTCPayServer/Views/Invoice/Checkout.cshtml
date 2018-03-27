@@ -20,6 +20,12 @@
     </script>
 
     <bundle name="wwwroot/bundles/checkout-bundle.min.js" />
+
+
+    @if(Model.CustomCSSLink != null)
+    {
+        <link href="@Model.CustomCSSLink" rel="stylesheet" />
+    }
 </head>
 <body style="background: #E4E4E4">
     <noscript>
@@ -82,6 +88,9 @@
                                 });
                             });
                         </script>
+                    </div>
+                    <div style="margin-top: 10px; text-align: right;" class="form-text small text-muted">
+                        <span>Powered by <a target="_blank" href="https://github.com/btcpayserver/btcpayserver">BTCPay Server</a></span>
                     </div>
                 </div>
             </div>

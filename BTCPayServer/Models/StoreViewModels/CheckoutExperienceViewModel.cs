@@ -30,6 +30,13 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Do not propose lightning payment if value of the invoice is above...")]
         [MaxLength(20)]
         public string LightningMaxValue { get; set; }
+
+        [Display(Name = "Link to a custom CSS stylesheet")]
+        [Url]
+        public Uri CustomCSS { get; set; }
+        [Display(Name = "Link to a custom logo")]
+        [Url]
+        public Uri CustomLogo { get; set; }
         public void SetCryptoCurrencies(ExplorerClientProvider explorerProvider, string defaultCrypto)
         {
             var choices = explorerProvider.GetAll().Select(o => new Format() { Name = o.Item1.CryptoCode, Value = o.Item1.CryptoCode }).ToArray();

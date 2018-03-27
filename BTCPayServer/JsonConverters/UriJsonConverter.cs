@@ -8,11 +8,11 @@ using NBitcoin.JsonConverters;
 
 namespace BTCPayServer.JsonConverters
 {
-    public class CurrencyValueJsonConverter : JsonConverter
+    public class UriJsonConverter : JsonConverter
     {
         public override bool CanConvert(Type objectType)
         {
-            return typeof(CurrencyValue).GetTypeInfo().IsAssignableFrom(objectType.GetTypeInfo());
+            return typeof(Uri).GetTypeInfo().IsAssignableFrom(objectType.GetTypeInfo());
         }
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
@@ -20,7 +20,7 @@ namespace BTCPayServer.JsonConverters
             try
             {
                 return reader.TokenType == JsonToken.Null ? null :
-                       CurrencyValue.TryParse((string)reader.Value, out var result) ? result :
+                       Uri.TryCreate((string)reader.Value, UriKind.Absolute, out var result) ? result :
                        throw new JsonObjectException("Invalid Currency value", reader);
             }
             catch (InvalidCastException)
@@ -31,8 +31,8 @@ namespace BTCPayServer.JsonConverters
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            if(value != null)
-                writer.WriteValue(value.ToString());
+            if (value != null)
+                writer.WriteValue(((Uri)value).AbsoluteUri);
         }
     }
 }

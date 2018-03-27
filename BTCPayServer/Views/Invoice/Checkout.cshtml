@@ -20,6 +20,12 @@
     </script>
 
     <bundle name="wwwroot/bundles/checkout-bundle.min.js" />
+
+
+    @if(Model.CustomCSSLink != null)
+    {
+        <link href="@Model.CustomCSSLink" rel="stylesheet" />
+    }
 </head>
 <body style="background: #E4E4E4">
     <noscript>

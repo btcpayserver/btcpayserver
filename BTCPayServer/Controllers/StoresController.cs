@@ -196,6 +196,8 @@ namespace BTCPayServer.Controllers
             vm.SetLanguages(_LangService, storeBlob.DefaultLang);
             vm.LightningMaxValue = storeBlob.LightningMaxValue?.ToString() ?? "";
             vm.AllowCoinConversion = storeBlob.AllowCoinConversion;
+            vm.CustomCSS = storeBlob.CustomCSS;
+            vm.CustomLogo = storeBlob.CustomLogo;
             return View(vm);
         }
 
@@ -226,6 +228,8 @@ namespace BTCPayServer.Controllers
             blob.DefaultLang = model.DefaultLang;
             blob.AllowCoinConversion = model.AllowCoinConversion;
             blob.LightningMaxValue = currencyValue;
+            blob.CustomLogo = model.CustomLogo;
+            blob.CustomCSS = model.CustomCSS;
             if (store.SetStoreBlob(blob))
             {
                 needUpdate = true;

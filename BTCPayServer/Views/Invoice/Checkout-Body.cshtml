@@ -3,7 +3,14 @@
 <div class="top-header">
     <div class="header">
         <div class="header__icon">
-            <img class="header__icon__img" src="~/img/logo-white.png" height="40">
+            @if(Model.CustomLogoLink != null)
+            {
+                <img class="header__icon__img" src="@Model.CustomLogoLink" height="40">
+            }
+            else
+            {
+                <img class="header__icon__img" src="~/img/logo-white.png" height="40">
+            }
         </div>
     </div>
     <div class="timer-row">
@@ -26,7 +33,7 @@
     </div>
 </div>
 <div class="order-details">
-    @if (Model.AvailableCryptos.Count > 1)
+    @if(Model.AvailableCryptos.Count > 1)
     {
         <div class="currency-selection">
             <div class="single-item-order__left">
@@ -36,7 +43,7 @@
             </div>
             <div class="single-item-order__right">
                 <div class="payment__currencies">
-                    @foreach (var crypto in Model.AvailableCryptos)
+                    @foreach(var crypto in Model.AvailableCryptos)
                     {
                         <a href="@crypto.Link" onclick="return changeCurrency('@crypto.PaymentMethodId');">
                             <img style="height:32px; margin-left:5px;" alt="@crypto.PaymentMethodId" src="@crypto.CryptoImage" />
@@ -101,7 +108,7 @@
         <div class="payment-tabs__tab" id="copy-tab">
             <span>{{$t("Copy")}}</span>
         </div>
-        @if (Model.AllowCoinConversion)
+        @if(Model.AllowCoinConversion)
         {
             <div class="payment-tabs__tab" id="altcoins-tab">
                 <span>{{$t("Conversion")}}</span>
@@ -193,7 +200,7 @@
             </div>
         </div>
     </div>
-    @if (Model.AllowCoinConversion)
+    @if(Model.AllowCoinConversion)
     {
         <div id="altcoins" class="bp-view payment manual-flow">
             <div v-if="srvModel.isLightning">
@@ -218,10 +225,10 @@
                     </a>
 
                     @*Changelly doesn't have TO_AMOUNT support so we can't include it
-                <script type="text/javascript">function open_widget(a, e) { e.preventDefault(); var link = a.href; var changellyWindow = window.open(link, 'Changelly', 'width=600,height=470,toolbar=0,menubar=0,location=0,status=1,scrollbars=1,resizable=0,left=0,top=0'); changellyWindow.focus(); return false; }</script>
-            <a onclick="open_widget(this, event);" href="https://changelly.com/widget/v1?auth=email&from=DASH&to=BTC&address=&amount=1&merchant_id=&ref_id=">
-                <img src="https://changelly.com/pay_button_pay_with.png" alt="Changelly" />
-            </a>*@
+                            <script type="text/javascript">function open_widget(a, e) { e.preventDefault(); var link = a.href; var changellyWindow = window.open(link, 'Changelly', 'width=600,height=470,toolbar=0,menubar=0,location=0,status=1,scrollbars=1,resizable=0,left=0,top=0'); changellyWindow.focus(); return false; }</script>
+                        <a onclick="open_widget(this, event);" href="https://changelly.com/widget/v1?auth=email&from=DASH&to=BTC&address=&amount=1&merchant_id=&ref_id=">
+                            <img src="https://changelly.com/pay_button_pay_with.png" alt="Changelly" />
+                        </a>*@
                 </center>
             </div>
         </div>

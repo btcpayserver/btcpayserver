@@ -17,6 +17,16 @@
     <div class="col-md-8">
         <form method="post">
             <div class="form-group">
+                <label asp-for="CustomLogo"></label>
+                <input asp-for="CustomLogo" class="form-control" />
+                <span asp-validation-for="CustomLogo" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CustomCSS"></label>
+                <input asp-for="CustomCSS" class="form-control" />
+                <span asp-validation-for="CustomCSS" class="text-danger"></span>
+            </div>
+            <div class="form-group">
                 <label asp-for="DefaultCryptoCurrency"></label>
                 <select asp-for="DefaultCryptoCurrency" asp-items="Model.CryptoCurrencies" class="form-control"></select>
             </div>

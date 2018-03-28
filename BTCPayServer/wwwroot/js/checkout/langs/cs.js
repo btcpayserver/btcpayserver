@@ -12,7 +12,7 @@ const locales_cs = {
     "Order Amount": "Cena objednávky",
     "Network Cost": "Síťové náklady",
     "Already Paid": "Již zaplaceno",
-    "Due": "Do kdy",
+    "Due": "Zbývá",
     // Tabs
     "Scan": "Skenovat",
     "Copy": "Kopírovat",

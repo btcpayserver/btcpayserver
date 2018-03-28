@@ -8882,6 +8882,10 @@ strong {
         opacity: 1;
     }
 
+    .manual-box__address__value .copied-label {
+        margin-top: 5px;
+    }
+
 .manual-box__address__wrapper {
     background: rgba(182, 182, 182, 0.13);
     border: 1px solid rgba(77, 77, 77, 0.07);

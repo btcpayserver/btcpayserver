@@ -3,7 +3,7 @@
 <div class="top-header">
     <div class="header">
         <div class="header__icon">
-            @if(Model.CustomLogoLink != null)
+            @if (Model.CustomLogoLink != null)
             {
                 <img class="header__icon__img" src="@Model.CustomLogoLink" height="40">
             }
@@ -33,7 +33,7 @@
     </div>
 </div>
 <div class="order-details">
-    @if(Model.AvailableCryptos.Count > 1)
+    @if (Model.AvailableCryptos.Count > 1)
     {
         <div class="currency-selection">
             <div class="single-item-order__left">
@@ -43,7 +43,7 @@
             </div>
             <div class="single-item-order__right">
                 <div class="payment__currencies">
-                    @foreach(var crypto in Model.AvailableCryptos)
+                    @foreach (var crypto in Model.AvailableCryptos)
                     {
                         <a href="@crypto.Link" onclick="return changeCurrency('@crypto.PaymentMethodId');">
                             <img style="height:32px; margin-left:5px;" alt="@crypto.PaymentMethodId" src="@crypto.CryptoImage" />
@@ -108,7 +108,7 @@
         <div class="payment-tabs__tab" id="copy-tab">
             <span>{{$t("Copy")}}</span>
         </div>
-        @if(Model.AllowCoinConversion)
+        @if (Model.AllowCoinConversion)
         {
             <div class="payment-tabs__tab" id="altcoins-tab">
                 <span>{{$t("Conversion")}}</span>
@@ -164,53 +164,91 @@
         <div class="manual__step-two__instructions">
             <span i18n="">{{$t("CompletePay_Body", srvModel)}}</span>
         </div>
-        <div class="manual-box flipped" style="margin-bottom: 30px;">
-            <div class="manual-box__amount">
-                <div class="manual-box__amount__label label">{{$t("Amount")}}</div>
-
-                <div class="manual-box__amount__value copy-cursor" ngxclipboard="">
-                    <span>{{srvModel.btcDue}}</span> {{ srvModel.cryptoCode }}
-                    <div class="copied-label">
-                        <span>{{$t("Copied")}}</span>
-                    </div>
-                </div>
-
-            </div>
-            <div class="manual-box__address">
-                <div class="flipper flipped-initially">
-                    <div class="back"></div>
-                    <div class="front">
-                        <div class="manual-box__address__arrow"></div>
-                        <div class="manual-box__address__label label">{{$t("Address")}}</div>
-
-                        <div class="manual-box__address__value copy-cursor" ngxclipboard="">
+        <nav v-if="srvModel.isLightning">
+            <div class="manual-box flipped" style="margin-bottom: 30px;">
+                <div class="manual-box__amount">
+                    <div class="flipper flipped-initially">
+                        <div class="manual-box__address__label label">{{$t("BOLT 11 Invoice")}}</div>
+                        <div class="manual-box__address__value copy-cursor" ngxclipboard="" id="btcAddress">
                             <div class="manual-box__address__wrapper">
                                 <div class="manual-box__address__wrapper__logo">
-                                    <img :src="srvModel.cryptoImage" height="16" />
+                                    <img v-bind:src="srvModel.cryptoImage" height="16" />
                                 </div>
-                                <div class="manual-box__address__wrapper__value" style="overflow:hidden;max-width:240px;">{{srvModel.btcAddress}}</div>
+                                <div class="manual-box__address__wrapper__value" id="btcAddressValue" style="overflow:hidden;max-width:240px;">{{srvModel.btcAddress}}</div>
                             </div>
                             <div class="copied-label" style="top: 5px;">
                                 <span>{{$t("Copied")}}</span>
                             </div>
                         </div>
-
+                    </div>
+                </div>
+                <div class="manual-box__address">
+                    <div class="flipper flipped-initially">
+                        <div class="back"></div>
+                        <div class="front">
+                            <div class="manual-box__address__arrow"></div>
+                            <div class="manual-box__address__label label">{{$t("Peer Info")}}</div>
+                            <div class="manual-box__address__value copy-cursor" ngxclipboard="" id="peerInfo">
+                                <div class="manual-box__address__wrapper">
+                                    <div class="manual-box__address__wrapper__logo">
+                                        <img v-bind:src="srvModel.cryptoImage" height="16" />
+                                    </div>
+                                    <div class="manual-box__address__wrapper__value" id="peerInfoValue" style="overflow:hidden;max-width:240px;">{{srvModel.peerInfo}}</div>
+                                </div>
+                                <div class="copied-label" style="top: 5px;">
+                                    <span>{{$t("Copied")}}</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </nav>
+        <nav v-else>
+            <div class="manual-box flipped" style="margin-bottom: 30px;">
+                <div class="manual-box__amount">
+                    <div class="manual-box__amount__label label">{{$t("Amount")}}</div>
+                    <div class="manual-box__amount__value copy-cursor" ngxclipboard="">
+                        <span>{{srvModel.btcDue}}</span> {{ srvModel.cryptoCode }}
+                        <div class="copied-label">
+                            <span>{{$t("Copied")}}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="manual-box__address">
+                    <div class="flipper flipped-initially">
+                        <div class="back"></div>
+                        <div class="front">
+                            <div class="manual-box__address__arrow"></div>
+                            <div class="manual-box__address__label label">{{$t("Address")}}</div>
+                            <div class="manual-box__address__value copy-cursor" ngxclipboard="" id="btcAddress">
+                                <div class="manual-box__address__wrapper">
+                                    <div class="manual-box__address__wrapper__logo">
+                                        <img v-bind:src="srvModel.cryptoImage" height="16" />
+                                    </div>
+                                    <div class="manual-box__address__wrapper__value" id="btcAddressValue" style="overflow:hidden;max-width:240px;">{{srvModel.btcAddress}}</div>
+                                </div>
+                                <div class="copied-label" style="top: 5px;">
+                                    <span>{{$t("Copied")}}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
     </div>
-    @if(Model.AllowCoinConversion)
+    @if (Model.AllowCoinConversion)
     {
         <div id="altcoins" class="bp-view payment manual-flow">
-            <div v-if="srvModel.isLightning">
+            <nav v-if="srvModel.isLightning">
                 <div class="manual__step-two__instructions">
                     <span>
                         {{$t("ConversionTab_Lightning")}}
                     </span>
                 </div>
-            </div>
-            <div v-else>
+            </nav>
+            <nav v-else>
                 <div class="manual__step-two__instructions">
                     <span>
                         {{$t("ConversionTab_BodyTop", srvModel)}}
@@ -230,7 +268,7 @@
                             <img src="https://changelly.com/pay_button_pay_with.png" alt="Changelly" />
                         </a>*@
                 </center>
-            </div>
+            </nav>
         </div>
     }
 

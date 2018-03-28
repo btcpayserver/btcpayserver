@@ -12,14 +12,6 @@ namespace BTCPayServer.Payments
     public interface IPaymentMethodHandler
     {
         /// <summary>
-        /// Returns true if the dependencies for a specific payment method are satisfied. 
-        /// </summary>
-        /// <param name="supportedPaymentMethod"></param>
-        /// <param name="network"></param>
-        /// <returns>true if this payment method is available</returns>
-        Task<bool> IsAvailable(ISupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network);
-
-        /// <summary>
         /// Create needed to track payments of this invoice
         /// </summary>
         /// <param name="supportedPaymentMethod"></param>
@@ -31,7 +23,6 @@ namespace BTCPayServer.Payments
 
     public interface IPaymentMethodHandler<T> : IPaymentMethodHandler where T : ISupportedPaymentMethod
     {
-        Task<bool> IsAvailable(T supportedPaymentMethod, BTCPayNetwork network);
         Task<IPaymentMethodDetails> CreatePaymentMethodDetails(T supportedPaymentMethod, PaymentMethod paymentMethod, BTCPayNetwork network);
     }
 
@@ -46,17 +37,6 @@ namespace BTCPayServer.Payments
                 return CreatePaymentMethodDetails(method, paymentMethod, network);
             }
             throw new NotSupportedException("Invalid supportedPaymentMethod");
-        }
-
-        public abstract Task<bool> IsAvailable(T supportedPaymentMethod, BTCPayNetwork network);
-
-        Task<bool> IPaymentMethodHandler.IsAvailable(ISupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network)
-        {
-            if(supportedPaymentMethod is T method)
-            { 
-                return IsAvailable(method, network);
-            }
-            return Task.FromResult(false);
         }
     }
 }

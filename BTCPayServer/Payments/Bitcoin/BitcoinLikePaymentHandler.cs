@@ -29,6 +29,8 @@ namespace BTCPayServer.Payments.Bitcoin
 
         public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(DerivationStrategy supportedPaymentMethod, PaymentMethod paymentMethod, BTCPayNetwork network)
         {
+            if (!_ExplorerProvider.IsAvailable(network))
+                throw new PaymentMethodUnavailableException($"Full node not available");
             var getFeeRate = _FeeRateProviderFactory.CreateFeeProvider(network).GetFeeRateAsync();
             var getAddress = _WalletProvider.GetWallet(network).ReserveAddressAsync(supportedPaymentMethod.DerivationStrategyBase);
             Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod onchainMethod = new Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod();
@@ -36,11 +38,6 @@ namespace BTCPayServer.Payments.Bitcoin
             onchainMethod.TxFee = onchainMethod.FeeRate.GetFee(100); // assume price for 100 bytes
             onchainMethod.DepositAddress = (await getAddress).ToString();
             return onchainMethod;
-        }
-
-        public override Task<bool> IsAvailable(DerivationStrategy supportedPaymentMethod, BTCPayNetwork network)
-        {
-            return Task.FromResult(_ExplorerProvider.IsAvailable(network));
         }
     }
 }

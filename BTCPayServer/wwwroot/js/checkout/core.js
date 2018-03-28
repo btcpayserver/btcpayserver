@@ -317,12 +317,21 @@ $(document).ready(function () {
         }
     });
     // Address
-    var copyAddress = new Clipboard('.manual-box__address__value', {
+    var copyAddress = new Clipboard('#btcAddress', {
         target: function () {
-            var $elm = $(".manual-box__address__value");
+            var $elm = $("#btcAddress");
             $elm.removeClass("copy-cursor").addClass("copied");
             setTimeout(function () { $elm.removeClass("copied").addClass("copy-cursor"); }, 500);
-            return document.querySelector('.manual-box__address__value .manual-box__address__wrapper .manual-box__address__wrapper__value');
+            return document.querySelector('#btcAddressValue');
+        }
+    });
+    // PeerInfo
+    var copyAddress = new Clipboard('#peerInfo', {
+        target: function () {
+            var $elm = $("#peerInfo");
+            $elm.removeClass("copy-cursor").addClass("copied");
+            setTimeout(function () { $elm.removeClass("copied").addClass("copy-cursor"); }, 500);
+            return document.querySelector('#peerInfoValue');
         }
     });
 

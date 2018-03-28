@@ -132,24 +132,6 @@ namespace BTCPayServer.Controllers
                     var paymentMethod = await o.PaymentMethod;
                     if (paymentMethod == null)
                         throw new PaymentMethodUnavailableException("Payment method unavailable (The handler returned null)");
-                    // Check if Lightning Max value is exceeded
-                    if (o.SupportedPaymentMethod.PaymentId.PaymentType == PaymentTypes.LightningLike &&
-                       storeBlob.LightningMaxValue != null)
-                    {
-                        var lightningMaxValue = storeBlob.LightningMaxValue;
-                        decimal rate = 0.0m;
-                        if (lightningMaxValue.Currency == invoice.Currency)
-                            rate = paymentMethod.Rate;
-                        else
-                            rate = await storeBlob.ApplyRateRules(paymentMethod.Network, _RateProviders.GetRateProvider(paymentMethod.Network, false)).GetRateAsync(lightningMaxValue.Currency);
-
-                        var lightningMaxValueCrypto = Money.Coins(lightningMaxValue.Value / rate);
-                        if (paymentMethod.Calculate().Due > lightningMaxValueCrypto)
-                        {
-                            continue;
-                        }
-                    }
-                    ///////////////
                     supported.Add(o.SupportedPaymentMethod);
                     paymentMethods.Add(paymentMethod);
                 }
@@ -213,6 +195,27 @@ namespace BTCPayServer.Controllers
             if (storeBlob.NetworkFeeDisabled)
                 paymentDetails.SetNoTxFee();
             paymentMethod.SetPaymentMethodDetails(paymentDetails);
+
+            // Check if Lightning Max value is exceeded
+            if (supportedPaymentMethod.PaymentId.PaymentType == PaymentTypes.LightningLike &&
+               storeBlob.LightningMaxValue != null)
+            {
+                var lightningMaxValue = storeBlob.LightningMaxValue;
+                var lightningMaxValueRate = 0.0m;
+                if (lightningMaxValue.Currency == entity.ProductInformation.Currency)
+                    lightningMaxValueRate = paymentMethod.Rate;
+                else
+                    lightningMaxValueRate = await storeBlob.ApplyRateRules(network, _RateProviders.GetRateProvider(network, false)).GetRateAsync(lightningMaxValue.Currency);
+
+                var lightningMaxValueCrypto = Money.Coins(lightningMaxValue.Value / lightningMaxValueRate);
+                if (paymentMethod.Calculate().Due > lightningMaxValueCrypto)
+                {
+                    throw new PaymentMethodUnavailableException("Lightning max value exceeded");
+                }
+            }
+            ///////////////
+
+
 #pragma warning disable CS0618
             if (paymentMethod.GetId().IsBTCOnChain)
             {

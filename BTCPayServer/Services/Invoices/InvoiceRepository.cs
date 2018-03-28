@@ -101,7 +101,7 @@ namespace BTCPayServer.Services.Invoices
             }
         }
 
-        public async Task<InvoiceEntity> CreateInvoiceAsync(string storeId, InvoiceEntity invoice, BTCPayNetworkProvider networkProvider)
+        public async Task<InvoiceEntity> CreateInvoiceAsync(string storeId, InvoiceEntity invoice, IEnumerable<string> creationLogs, BTCPayNetworkProvider networkProvider)
         {
             List<string> textSearch = new List<string>();
             invoice = Clone(invoice, null);
@@ -146,6 +146,17 @@ namespace BTCPayServer.Services.Invoices
                     textSearch.Add(paymentMethod.Calculate().TotalDue.ToString());
                 }
                 context.PendingInvoices.Add(new PendingInvoiceData() { Id = invoice.Id });
+
+                foreach(var log in creationLogs)
+                {
+                    context.InvoiceEvents.Add(new InvoiceEventData()
+                    {
+                        InvoiceDataId = invoice.Id,
+                        Message = log,
+                        Timestamp = invoice.InvoiceTime,
+                        UniqueId = Encoders.Hex.EncodeData(RandomUtils.GetBytes(10))
+                    });
+                }
                 await context.SaveChangesAsync().ConfigureAwait(false);
             }
 

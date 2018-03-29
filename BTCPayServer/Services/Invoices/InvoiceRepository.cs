@@ -508,7 +508,14 @@ namespace BTCPayServer.Services.Invoices
 
                 try
                 {
+                    StringBuilder builder = new StringBuilder();
+                    builder.AppendLine(data.Id);
+                    builder.AppendLine(data.InvoiceDataId);
+                    builder.AppendLine(context.Database.ProviderName);
+                    builder.AppendLine(context.Payments.AnyAsync(p => p.Id == data.Id).ToString());
                     await context.SaveChangesAsync().ConfigureAwait(false);
+                    builder.AppendLine(context.Payments.AnyAsync(p => p.Id == data.Id).ToString());
+                    Logs.PayServer.LogInformation(builder.ToString());
                 }
                 catch(DbUpdateException) { return null; } // Already exists
                 AddToTextSearch(invoiceId, paymentData.GetSearchTerms());

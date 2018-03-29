@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 
 namespace BTCPayServer.Payments.Lightning.CLightning
 {
-    public class CreateInvoiceResponse
+    public class CLightningInvoice
     {
         [JsonConverter(typeof(NBitcoin.JsonConverters.UInt256JsonConverter))]
         [JsonProperty("payment_hash")]

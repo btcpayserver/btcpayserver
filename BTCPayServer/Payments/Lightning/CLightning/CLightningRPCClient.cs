@@ -7,7 +7,6 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Payments.Lightning.Charge;
 using Mono.Unix;
 using NBitcoin;
 using NBitcoin.RPC;
@@ -42,9 +41,9 @@ namespace BTCPayServer.Payments.Lightning.CLightning
             Network = network;
         }
 
-        public Task<GetInfoResponse> GetInfoAsync(CancellationToken cancellation = default(CancellationToken))
+        public Task<Charge.GetInfoResponse> GetInfoAsync(CancellationToken cancellation = default(CancellationToken))
         {
-            return SendCommandAsync<GetInfoResponse>("getinfo", cancellation: cancellation);
+            return SendCommandAsync<Charge.GetInfoResponse>("getinfo", cancellation: cancellation);
         }
 
         public Task SendAsync(string bolt11)
@@ -168,7 +167,7 @@ namespace BTCPayServer.Payments.Lightning.CLightning
 
         async Task<LightningInvoice> ILightningInvoiceClient.GetInvoice(string invoiceId, CancellationToken cancellation)
         {
-            var invoices = await SendCommandAsync<CreateInvoiceResponse[]>("listinvoices", new[] { invoiceId }, false, true, cancellation);
+            var invoices = await SendCommandAsync<CLightningInvoice[]>("listinvoices", new[] { invoiceId }, false, true, cancellation);
             if (invoices.Length == 0)
                 return null;
             return ToLightningInvoice(invoices[0]);
@@ -178,14 +177,14 @@ namespace BTCPayServer.Payments.Lightning.CLightning
         async Task<LightningInvoice> ILightningInvoiceClient.CreateInvoice(LightMoney amount, TimeSpan expiry, CancellationToken cancellation)
         {
             var id = InvoiceIdEncoder.EncodeData(RandomUtils.GetBytes(20));
-            var invoice = await SendCommandAsync<CreateInvoiceResponse>("invoice", new object[] { amount.MilliSatoshi, id, "" }, cancellation: cancellation);
+            var invoice = await SendCommandAsync<CLightningInvoice>("invoice", new object[] { amount.MilliSatoshi, id, "" }, cancellation: cancellation);
             invoice.Label = id;
             invoice.MilliSatoshi = amount;
             invoice.Status = "unpaid";
             return ToLightningInvoice(invoice);
         }
 
-        private static LightningInvoice ToLightningInvoice(CreateInvoiceResponse invoice)
+        private static LightningInvoice ToLightningInvoice(CLightningInvoice invoice)
         {
             return new LightningInvoice()
             {
@@ -204,9 +203,9 @@ namespace BTCPayServer.Payments.Lightning.CLightning
         long lastInvoiceIndex = 99999999999;
         async Task<LightningInvoice> ILightningListenInvoiceSession.WaitInvoice(CancellationToken cancellation)
         {
-            var chargeInvoice = await SendCommandAsync<CreateInvoiceResponse>("waitanyinvoice", new object[] { lastInvoiceIndex }, cancellation: cancellation);
-            lastInvoiceIndex = chargeInvoice.PayIndex.Value;
-            return ToLightningInvoice(chargeInvoice);
+            var invoice = await SendCommandAsync<CLightningInvoice>("waitanyinvoice", new object[] { lastInvoiceIndex }, cancellation: cancellation);
+            lastInvoiceIndex = invoice.PayIndex.Value;
+            return ToLightningInvoice(invoice);
         }
 
         async Task<LightningNodeInformation> ILightningInvoiceClient.GetInfo(CancellationToken cancellation)

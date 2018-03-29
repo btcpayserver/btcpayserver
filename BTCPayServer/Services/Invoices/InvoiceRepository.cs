@@ -52,7 +52,8 @@ namespace BTCPayServer.Services.Invoices
                 ctx.PendingInvoices.Remove(new PendingInvoiceData() { Id = invoiceId });
                 try
                 {
-                    await ctx.SaveChangesAsync();
+                    if (await ctx.SaveChangesAsync() == 0)
+                        return false;
                     return true;
                 }
                 catch (DbUpdateException) { return false; }
@@ -508,6 +509,13 @@ namespace BTCPayServer.Services.Invoices
 
                 try
                 {
+                    if (context.Database.ProviderName == "Microsoft.EntityFrameworkCore.Sqlite")
+                    {
+                        if (await context.Payments.AnyAsync(p => p.Id == paymentData.GetPaymentId()))
+                        {
+                            return null;
+                        }
+                    }
                     if (await context.SaveChangesAsync().ConfigureAwait(false) == 0)
                         return null;
                 }

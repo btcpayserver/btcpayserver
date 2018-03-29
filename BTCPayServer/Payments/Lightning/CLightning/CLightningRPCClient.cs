@@ -168,10 +168,10 @@ namespace BTCPayServer.Payments.Lightning.CLightning
 
         async Task<LightningInvoice> ILightningInvoiceClient.GetInvoice(string invoiceId, CancellationToken cancellation)
         {
-            var invoices = await SendCommandAsync<ChargeInvoice[]>("listinvoices", new[] { invoiceId }, false, true, cancellation);
+            var invoices = await SendCommandAsync<CreateInvoiceResponse[]>("listinvoices", new[] { invoiceId }, false, true, cancellation);
             if (invoices.Length == 0)
                 return null;
-            return ChargeClient.ToLightningInvoice(invoices[0]);
+            return ToLightningInvoice(invoices[0]);
         }
 
         static NBitcoin.DataEncoders.DataEncoder InvoiceIdEncoder = NBitcoin.DataEncoders.Encoders.Base58;

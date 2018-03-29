@@ -87,7 +87,10 @@ namespace BTCPayServer
                     actionList = actions.Values.ToList();
                 }
             }
-
+            if(evt is Events.InvoiceEvent inv && inv.EventCode == 1002)
+            {
+                Logs.Events.LogInformation(new System.Diagnostics.StackTrace().ToString());
+            }
             var log = evt.ToString();
             if(!String.IsNullOrEmpty(log))
                 Logs.Events.LogInformation(log);

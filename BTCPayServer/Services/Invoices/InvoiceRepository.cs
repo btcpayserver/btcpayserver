@@ -508,7 +508,8 @@ namespace BTCPayServer.Services.Invoices
 
                 try
                 {
-                    await context.SaveChangesAsync().ConfigureAwait(false);
+                    if (await context.SaveChangesAsync().ConfigureAwait(false) == 0)
+                        return null;
                 }
                 catch(DbUpdateException) { return null; } // Already exists
                 AddToTextSearch(invoiceId, paymentData.GetSearchTerms());

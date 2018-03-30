@@ -195,26 +195,19 @@
             </div>
         </nav>
         <nav v-else>
-            <div class="manual-box flipped" style="margin-bottom: 30px;">
-                <div class="manual-box__amount copySectionBox">
+            <div class="copyBox">
+                <div class="copySectionBox bottomBorder">
                     <label>{{$t("Amount")}}</label>
                     <div class="manual-box__amount__value copy-cursor" ngxclipboard="">
                         <span>{{srvModel.btcDue}}</span> {{ srvModel.cryptoCode }}
                     </div>
                 </div>
-                <div class="manual-box__address">
-                    <div class="flipper flipped-initially">
-                        <div class="back"></div>
-                        <div class="front">
-                            <div class="manual-box__address__arrow"></div>
-                            <div class="copySectionBox">
-                                <label>{{$t("Address")}}</label>
-                                <div class="inputWithIcon">
-                                    <input type="text" class="checkoutTextbox" v-bind:value="srvModel.btcAddress" readonly="readonly" />
-                                    <img v-bind:src="srvModel.cryptoImage" />
-                                </div>
-                            </div>
-                        </div>
+                <div class="separatorGem"></div>
+                <div class="copySectionBox">
+                    <label>{{$t("Address")}}</label>
+                    <div class="inputWithIcon">
+                        <input type="text" class="checkoutTextbox" v-bind:value="srvModel.btcAddress" readonly="readonly" />
+                        <img v-bind:src="srvModel.cryptoImage" />
                     </div>
                 </div>
             </div>

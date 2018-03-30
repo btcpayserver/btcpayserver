@@ -44,4 +44,7 @@ const locales_es = {
     // Invoice archived
     "This invoice has been archived": "Esta factura ha sido archivada",
     "Archived_Body": "Por favor, comuníquese con la tienda para obtener información de su pedido o asistencia"
+     // Lightning
+    "BOLT 11 Invoice": "Factura BOLT 11",
+    "Node Info": "Información del nodo"
     };

@@ -168,47 +168,36 @@
         <div class="copied-label" style="display:none;">
             <span>{{$t("Copied")}}</span>
         </div>
-        <nav v-if="srvModel.isLightning">
-            <div class="manual-box flipped" style="margin-bottom: 30px;">
-                <div class="manual-box__amount copySectionBox">
-                    <label>{{$t("BOLT 11 Invoice")}}</label>
-                    <div class="inputWithIcon">
-                        <input type="text" class="checkoutTextbox" v-bind:value="srvModel.btcAddress" readonly="readonly" />
-                        <img v-bind:src="srvModel.cryptoImage" />
-                    </div>
+        <nav v-if="srvModel.isLightning" class="copyBox">
+            <div class="copySectionBox bottomBorder">
+                <label>{{$t("BOLT 11 Invoice")}}</label>
+                <div class="inputWithIcon">
+                    <input type="text" class="checkoutTextbox" v-bind:value="srvModel.btcAddress" readonly="readonly" />
+                    <img v-bind:src="srvModel.cryptoImage" />
                 </div>
-                <div class="manual-box__address">
-                    <div class="flipper flipped-initially">
-                        <div class="back"></div>
-                        <div class="front">
-                            <div class="manual-box__address__arrow"></div>
-                            <div class="copySectionBox">
-                                <label>{{$t("Peer Info")}}</label>
-                                <div class="inputWithIcon">
-                                    <input type="text" class="checkoutTextbox" v-bind:value="srvModel.peerInfo" readonly="readonly" />
-                                    <img v-bind:src="srvModel.cryptoImage" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            </div>
+            <div class="separatorGem"></div>
+            <div class="copySectionBox">
+                <label>{{$t("Peer Info")}}</label>
+                <div class="inputWithIcon">
+                    <input type="text" class="checkoutTextbox" v-bind:value="srvModel.peerInfo" readonly="readonly" />
+                    <img v-bind:src="srvModel.cryptoImage" />
                 </div>
             </div>
         </nav>
-        <nav v-else>
-            <div class="copyBox">
-                <div class="copySectionBox bottomBorder">
-                    <label>{{$t("Amount")}}</label>
-                    <div class="manual-box__amount__value copy-cursor" ngxclipboard="">
-                        <span>{{srvModel.btcDue}}</span> {{ srvModel.cryptoCode }}
-                    </div>
+        <nav v-else class="copyBox">
+            <div class="copySectionBox bottomBorder">
+                <label>{{$t("Amount")}}</label>
+                <div class="copyAmountText copy-cursor">
+                    <span>{{srvModel.btcDue}}</span> {{ srvModel.cryptoCode }}
                 </div>
-                <div class="separatorGem"></div>
-                <div class="copySectionBox">
-                    <label>{{$t("Address")}}</label>
-                    <div class="inputWithIcon">
-                        <input type="text" class="checkoutTextbox" v-bind:value="srvModel.btcAddress" readonly="readonly" />
-                        <img v-bind:src="srvModel.cryptoImage" />
-                    </div>
+            </div>
+            <div class="separatorGem"></div>
+            <div class="copySectionBox">
+                <label>{{$t("Address")}}</label>
+                <div class="inputWithIcon">
+                    <input type="text" class="checkoutTextbox" v-bind:value="srvModel.btcAddress" readonly="readonly" />
+                    <img v-bind:src="srvModel.cryptoImage" />
                 </div>
             </div>
         </nav>

@@ -8625,10 +8625,10 @@ strong {
         max-height: 300px;
     }
 
-.copy-cursor {
-    cursor: copy;
-}
-
+/* 
+    After refactoring Copy tab, this section until EOF REFACTOR can likely be deleted 
+    Leaving it since there are some references in refund that I need to look into
+*/
 .manual-box {
     border-radius: 5px;
     margin-left: calc(-40px + 10%);
@@ -8907,6 +8907,7 @@ strong {
     font-size: 10.2px;
     color: #4A4A4A;
 }
+/* EOF REFACTOR */
 
 .status-block {
     position: relative;
@@ -11343,7 +11344,7 @@ low-fee-timeline {
     background: #f6f6f6;
     box-sizing: border-box;
     transition: .3s;
-    font-size: 10px;
+    font-size: 11px;
     color: #4a4a4a;
     cursor: copy;
 }
@@ -11372,3 +11373,16 @@ low-fee-timeline {
         padding: 9px 4px;
         border-radius: 4px 0 0 4px;
     }
+
+.copyAmountText {
+    color: #4A4A4A;
+    font-size: 30px;
+    font-weight: 300;
+    letter-spacing: 1px;
+    margin-top: -10px;
+    position: relative;
+}
+
+.copy-cursor {
+    cursor: copy;
+}

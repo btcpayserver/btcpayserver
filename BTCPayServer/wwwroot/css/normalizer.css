@@ -11290,3 +11290,53 @@ low-fee-timeline {
 .no-bounce * .status-icon__wrapper__outline {
     animation: none !important;
 }
+
+
+/* checkout additions */
+.copySectionBox label {
+    text-transform: uppercase;
+    font-size: 10px;
+    color: #515664;
+    opacity: .5;
+    letter-spacing: .6px;
+    margin-bottom: 14px;
+}
+
+.checkoutTextbox {
+    width: 100%;
+    border: 1px solid #e9e9e9;
+    border-radius: 4px;
+    outline: none;
+    padding: 8px 10px;
+    background: #f6f6f6;
+    box-sizing: border-box;
+    transition: .3s;
+    font-size: 10px;
+    color: #4a4a4a;
+    cursor: copy;
+}
+
+.inputWithIcon .checkoutTextbox {
+    padding-left: 40px;
+}
+
+.inputWithIcon {
+    position: relative;
+}
+
+    .inputWithIcon img {
+        position: absolute;
+        left: 2px;
+        top: 8px;
+        color: #aaa;
+        height: 16px;
+        padding: 0px 6px;
+        border-right: 1px solid #e9e9e9;
+    }
+
+    .inputWithIcon.inputIconBg img {
+        background-color: #aaa;
+        color: #fff;
+        padding: 9px 4px;
+        border-radius: 4px 0 0 4px;
+    }

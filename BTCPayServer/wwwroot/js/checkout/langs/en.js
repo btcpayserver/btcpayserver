@@ -44,5 +44,8 @@ You can return to {{storeName}} if you would like to submit your payment again."
     "This invoice has been paid": "This invoice has been paid",
     // Invoice archived
     "This invoice has been archived": "This invoice has been archived",
-    "Archived_Body": "Please contact the store for order information or assistance"
+    "Archived_Body": "Please contact the store for order information or assistance",
+    // Lightning
+    "BOLT 11 Invoice": "BOLT 11 Invoice",
+    "Peer Info": "Peer Info"
 };

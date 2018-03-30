@@ -21,6 +21,7 @@ using System.Threading;
 using BTCPayServer.Events;
 using NBXplorer;
 using BTCPayServer.Payments;
+using BTCPayServer.Payments.Lightning;
 
 namespace BTCPayServer.Controllers
 {
@@ -229,6 +230,7 @@ namespace BTCPayServer.Controllers
                 InvoiceBitcoinUrl = paymentMethodId.PaymentType == PaymentTypes.BTCLike ? cryptoInfo.PaymentUrls.BIP21 :
                                     paymentMethodId.PaymentType == PaymentTypes.LightningLike ? cryptoInfo.PaymentUrls.BOLT11 :
                                     throw new NotSupportedException(),
+                PeerInfo = (paymentMethodDetails as LightningLikePaymentMethodDetails)?.NodeInfo,
                 InvoiceBitcoinUrlQR = paymentMethodId.PaymentType == PaymentTypes.BTCLike ? cryptoInfo.PaymentUrls.BIP21 :
                                     paymentMethodId.PaymentType == PaymentTypes.LightningLike ? cryptoInfo.PaymentUrls.BOLT11.ToUpperInvariant() :
                                     throw new NotSupportedException(),

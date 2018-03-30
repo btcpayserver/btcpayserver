@@ -62,7 +62,7 @@ function onDataCallback(jsonData) {
     }
 
     // restoring qr code view only when currency is switched
-    if (jsonData.paymentMethodId == srvModel.paymentMethodId) {
+    if (jsonData.paymentMethodId === srvModel.paymentMethodId) {
         $(".payment__currencies").show();
         $(".payment__spinner").hide();
     }
@@ -72,7 +72,7 @@ function onDataCallback(jsonData) {
 }
 
 function changeCurrency(currency) {
-    if (srvModel.paymentMethodId != currency) {
+    if (srvModel.paymentMethodId !== currency) {
         $(".payment__currencies").hide();
         $(".payment__spinner").show();
         srvModel.paymentMethodId = currency;
@@ -306,25 +306,38 @@ $(document).ready(function () {
         }
     }
 
-    // Manual Copy
-    // Amount
-    var copyAmount = new Clipboard('.manual-box__amount__value', {
-        target: function () {
-            var $el = $(".manual-box__amount__value");
-            $el.removeClass("copy-cursor").addClass("copied");
-            setTimeout(function () { $el.removeClass("copied").addClass("copy-cursor"); }, 500);
-            return document.querySelector('.manual-box__amount__value span');
+    // Clipboard Copy
+    var copyAmount = new Clipboard('._copySpan', {
+        target: function (trigger) {
+            return copyElement(trigger, 0, 65).firstChild;
         }
     });
-    // Address
-    var copyAddress = new Clipboard('.manual-box__address__value', {
-        target: function () {
-            var $elm = $(".manual-box__address__value");
-            $elm.removeClass("copy-cursor").addClass("copied");
-            setTimeout(function () { $elm.removeClass("copied").addClass("copy-cursor"); }, 500);
-            return document.querySelector('.manual-box__address__value .manual-box__address__wrapper .manual-box__address__wrapper__value');
+    var copyAmount = new Clipboard('._copyInput', {
+        target: function (trigger) {
+            return copyElement(trigger, 4, 65).firstChild;
         }
     });
+
+    function copyElement(trigger, popupLeftModifier, popupTopModifier) {
+        var elm = $(trigger);
+        var position = elm.offset();
+        position.top -= popupLeftModifier;
+        position.left += (elm.width() / 2) - popupTopModifier;
+        $(".copyLabelPopup").css(position).addClass("copied");
+
+        elm.removeClass("copy-cursor").addClass("clipboardCopied");
+        setTimeout(clearSelection, 100);
+        setTimeout(function () {
+            elm.removeClass("clipboardCopied").addClass("copy-cursor");
+            $(".copyLabelPopup").removeClass("copied");
+        }, 1000);
+        return trigger;
+    }
+    function clearSelection() {
+        if (window.getSelection) { window.getSelection().removeAllRanges(); }
+        else if (document.selection) { document.selection.empty(); }
+    }
+    // EOF Copy
 
     // Disable enter key
     $(document).keypress(

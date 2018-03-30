@@ -44,5 +44,8 @@ Vous pouvez revenir sur {{storeName}} si vous voulez resoumettre votre paiement.
     "This invoice has been paid": "Cette facture a été payée",
     // Invoice archived
     "This invoice has been archived": "Cette facture a été archivée",
-    "Archived_Body": "Merci de contacter le marchand pour plus d'assistance ou d'information sur cette commande."
+    "Archived_Body": "Merci de contacter le marchand pour plus d'assistance ou d'information sur cette commande.",
+    // Lightning
+    "BOLT 11 Invoice": "Facture BOLT 11",
+    "Node Info": "Information du noeud"
 };

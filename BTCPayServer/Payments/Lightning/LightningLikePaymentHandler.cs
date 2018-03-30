@@ -25,28 +25,30 @@ namespace BTCPayServer.Payments.Lightning
         }
         public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(LightningSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, BTCPayNetwork network)
         {
+            var test = Test(supportedPaymentMethod, network);
             var invoice = paymentMethod.ParentEntity;
             var due = Extensions.RoundUp(invoice.ProductInformation.Price / paymentMethod.Rate, 8);
             var client = _LightningClientFactory.CreateClient(supportedPaymentMethod, network);
             var expiry = invoice.ExpirationTime - DateTimeOffset.UtcNow;
             if (expiry < TimeSpan.Zero)
                 expiry = TimeSpan.FromSeconds(1);
-            var lightningInvoice = await client.CreateInvoice(new LightMoney(due, LightMoneyUnit.BTC), expiry);
+
+            LightningInvoice lightningInvoice = null;
+            try
+            {
+                lightningInvoice = await client.CreateInvoice(new LightMoney(due, LightMoneyUnit.BTC), expiry);
+            }
+            catch(Exception ex)
+            {
+                throw new PaymentMethodUnavailableException($"Impossible to create lightning invoice ({ex.Message})", ex);
+            }
+            var nodeInfo = await test;
             return new LightningLikePaymentMethodDetails()
             {
                 BOLT11 = lightningInvoice.BOLT11,
-                InvoiceId = lightningInvoice.Id
+                InvoiceId = lightningInvoice.Id,
+                NodeInfo = nodeInfo.ToString()
             };
-        }
-
-        public async override Task<bool> IsAvailable(LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network)
-        {
-            try
-            {
-                await Test(supportedPaymentMethod, network);
-                return true;
-            }
-            catch { return false; }
         }
 
         /// <summary>
@@ -57,8 +59,8 @@ namespace BTCPayServer.Payments.Lightning
         public async Task<NodeInfo> Test(LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network)
         {
             if (!_Dashboard.IsFullySynched(network.CryptoCode, out var summary))
-                throw new Exception($"Full node not available");
-            
+                throw new PaymentMethodUnavailableException($"Full node not available");
+
             var cts = new CancellationTokenSource(5000);
             var client = _LightningClientFactory.CreateClient(supportedPaymentMethod, network);
             LightningNodeInformation info = null;
@@ -68,37 +70,39 @@ namespace BTCPayServer.Payments.Lightning
             }
             catch (OperationCanceledException) when (cts.IsCancellationRequested)
             {
-                throw new Exception($"The lightning node did not replied in a timely maner");
+                throw new PaymentMethodUnavailableException($"The lightning node did not replied in a timely maner");
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error while connecting to the API ({ex.Message})");
+                throw new PaymentMethodUnavailableException($"Error while connecting to the API ({ex.Message})");
             }
 
-            if(info.Address == null)
+            if (info.Address == null)
             {
-                throw new Exception($"No lightning node public address has been configured");
+                throw new PaymentMethodUnavailableException($"No lightning node public address has been configured");
             }
 
             var blocksGap = Math.Abs(info.BlockHeight - summary.Status.ChainHeight);
             if (blocksGap > 10)
             {
-                throw new Exception($"The lightning is not synched ({blocksGap} blocks)");
+                throw new PaymentMethodUnavailableException($"The lightning is not synched ({blocksGap} blocks)");
             }
 
             try
             {
-                if(!SkipP2PTest)
+                if (!SkipP2PTest)
+                {
                     await TestConnection(info.Address, info.P2PPort, cts.Token);
+                }
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error while connecting to the lightning node via {info.Address}:{info.P2PPort} ({ex.Message})");
+                throw new PaymentMethodUnavailableException($"Error while connecting to the lightning node via {info.Address}:{info.P2PPort} ({ex.Message})");
             }
             return new NodeInfo(info.NodeId, info.Address, info.P2PPort);
         }
 
-        private async Task<bool> TestConnection(string addressStr, int port, CancellationToken cancellation)
+        private async Task TestConnection(string addressStr, int port, CancellationToken cancellation)
         {
             IPAddress address = null;
             try
@@ -107,25 +111,16 @@ namespace BTCPayServer.Payments.Lightning
             }
             catch
             {
-                try
-                {
-                    address = (await Dns.GetHostAddressesAsync(addressStr)).FirstOrDefault();
-                }
-                catch { }
+                address = (await Dns.GetHostAddressesAsync(addressStr)).FirstOrDefault();
             }
 
             if (address == null)
-                throw new Exception($"DNS did not resolved {addressStr}");
+                throw new PaymentMethodUnavailableException($"DNS did not resolved {addressStr}");
 
             using (var tcp = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp))
             {
-                try
-                {
-                    await WithTimeout(tcp.ConnectAsync(new IPEndPoint(address, port)), cancellation);
-                }
-                catch { return false; }
+                await WithTimeout(tcp.ConnectAsync(new IPEndPoint(address, port)), cancellation);
             }
-            return true;
         }
 
         static Task WithTimeout(Task task, CancellationToken token)

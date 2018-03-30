@@ -9,6 +9,7 @@ namespace BTCPayServer.Payments.Lightning
     {
         public string BOLT11 { get; set; }
         public string InvoiceId { get; set; }
+        public string NodeInfo { get; set; }
 
         public string GetPaymentDestination()
         {

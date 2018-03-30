@@ -160,26 +160,21 @@
             </a>
         </div>
     </div>
+
     <div class="bp-view payment manual-flow" id="copy">
         <div class="manual__step-two__instructions">
             <span i18n="">{{$t("CompletePay_Body", srvModel)}}</span>
         </div>
         <nav v-if="srvModel.isLightning">
             <div class="manual-box flipped" style="margin-bottom: 30px;">
-                <div class="manual-box__amount">
-                    <div class="flipper flipped-initially">
-                        <div class="manual-box__address__label label">{{$t("BOLT 11 Invoice")}}</div>
-                        <div class="manual-box__address__value copy-cursor" ngxclipboard="" id="btcAddress">
-                            <div class="manual-box__address__wrapper">
-                                <div class="manual-box__address__wrapper__logo">
-                                    <img v-bind:src="srvModel.cryptoImage" height="16" />
-                                </div>
-                                <div class="manual-box__address__wrapper__value" id="btcAddressValue" style="overflow:hidden;max-width:240px;">{{srvModel.btcAddress}}</div>
-                            </div>
-                            <div class="copied-label" style="top: 5px;">
-                                <span>{{$t("Copied")}}</span>
-                            </div>
-                        </div>
+                <div class="manual-box__amount copySectionBox">
+                    <label>{{$t("BOLT 11 Invoice")}}</label>
+                    <div class="inputWithIcon">
+                        <input type="text" class="checkoutTextbox" v-bind:value="srvModel.btcAddress" readonly="readonly" />
+                        <img v-bind:src="srvModel.cryptoImage" />
+                    </div>
+                    <div class="copied-label" style="top: 5px;">
+                        <span>{{$t("Copied")}}</span>
                     </div>
                 </div>
                 <div class="manual-box__address">

@@ -47,5 +47,5 @@ You can return to {{storeName}} if you would like to submit your payment again."
     "Archived_Body": "Please contact the store for order information or assistance",
     // Lightning
     "BOLT 11 Invoice": "BOLT 11 Invoice",
-    "Peer Info": "Peer Info"
+    "Node Info": "Node Info"
 };

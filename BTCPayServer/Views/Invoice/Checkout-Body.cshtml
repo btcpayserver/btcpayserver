@@ -165,6 +165,9 @@
         <div class="manual__step-two__instructions">
             <span i18n="">{{$t("CompletePay_Body", srvModel)}}</span>
         </div>
+        <div class="copied-label" style="display:none;">
+            <span>{{$t("Copied")}}</span>
+        </div>
         <nav v-if="srvModel.isLightning">
             <div class="manual-box flipped" style="margin-bottom: 30px;">
                 <div class="manual-box__amount copySectionBox">
@@ -173,25 +176,17 @@
                         <input type="text" class="checkoutTextbox" v-bind:value="srvModel.btcAddress" readonly="readonly" />
                         <img v-bind:src="srvModel.cryptoImage" />
                     </div>
-                    <div class="copied-label" style="top: 5px;">
-                        <span>{{$t("Copied")}}</span>
-                    </div>
                 </div>
                 <div class="manual-box__address">
                     <div class="flipper flipped-initially">
                         <div class="back"></div>
                         <div class="front">
                             <div class="manual-box__address__arrow"></div>
-                            <div class="manual-box__address__label label">{{$t("Peer Info")}}</div>
-                            <div class="manual-box__address__value copy-cursor" ngxclipboard="" id="peerInfo">
-                                <div class="manual-box__address__wrapper">
-                                    <div class="manual-box__address__wrapper__logo">
-                                        <img v-bind:src="srvModel.cryptoImage" height="16" />
-                                    </div>
-                                    <div class="manual-box__address__wrapper__value" id="peerInfoValue" style="overflow:hidden;max-width:240px;">{{srvModel.peerInfo}}</div>
-                                </div>
-                                <div class="copied-label" style="top: 5px;">
-                                    <span>{{$t("Copied")}}</span>
+                            <div class="copySectionBox">
+                                <label>{{$t("Peer Info")}}</label>
+                                <div class="inputWithIcon">
+                                    <input type="text" class="checkoutTextbox" v-bind:value="srvModel.peerInfo" readonly="readonly" />
+                                    <img v-bind:src="srvModel.cryptoImage" />
                                 </div>
                             </div>
                         </div>
@@ -201,13 +196,10 @@
         </nav>
         <nav v-else>
             <div class="manual-box flipped" style="margin-bottom: 30px;">
-                <div class="manual-box__amount">
-                    <div class="manual-box__amount__label label">{{$t("Amount")}}</div>
+                <div class="manual-box__amount copySectionBox">
+                    <label>{{$t("Amount")}}</label>
                     <div class="manual-box__amount__value copy-cursor" ngxclipboard="">
                         <span>{{srvModel.btcDue}}</span> {{ srvModel.cryptoCode }}
-                        <div class="copied-label">
-                            <span>{{$t("Copied")}}</span>
-                        </div>
                     </div>
                 </div>
                 <div class="manual-box__address">
@@ -215,16 +207,11 @@
                         <div class="back"></div>
                         <div class="front">
                             <div class="manual-box__address__arrow"></div>
-                            <div class="manual-box__address__label label">{{$t("Address")}}</div>
-                            <div class="manual-box__address__value copy-cursor" ngxclipboard="" id="btcAddress">
-                                <div class="manual-box__address__wrapper">
-                                    <div class="manual-box__address__wrapper__logo">
-                                        <img v-bind:src="srvModel.cryptoImage" height="16" />
-                                    </div>
-                                    <div class="manual-box__address__wrapper__value" id="btcAddressValue" style="overflow:hidden;max-width:240px;">{{srvModel.btcAddress}}</div>
-                                </div>
-                                <div class="copied-label" style="top: 5px;">
-                                    <span>{{$t("Copied")}}</span>
+                            <div class="copySectionBox">
+                                <label>{{$t("Address")}}</label>
+                                <div class="inputWithIcon">
+                                    <input type="text" class="checkoutTextbox" v-bind:value="srvModel.btcAddress" readonly="readonly" />
+                                    <img v-bind:src="srvModel.cryptoImage" />
                                 </div>
                             </div>
                         </div>

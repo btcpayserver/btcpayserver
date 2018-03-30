@@ -11386,3 +11386,33 @@ low-fee-timeline {
 .copy-cursor {
     cursor: copy;
 }
+
+.clipboardCopied {
+    transition: opacity 1s ease;
+    opacity: 0;
+}
+
+.copyLabelPopup {
+    pointer-events: none;
+    cursor: default;
+    transition: opacity 1s ease;
+    position: fixed;
+    width: 130px;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    font-weight: 300;
+    font-size: 14px;
+    color: white;
+    background: #4A4A4A;
+    padding: 10px 40px;
+    border-radius: 3px;
+    letter-spacing: .5px;
+    z-index: 999999;
+}
+
+    .copyLabelPopup.copied {
+        pointer-events: auto;
+        opacity: 1;
+        transition: opacity 1s ease;
+    }

@@ -165,13 +165,13 @@
         <div class="manual__step-two__instructions">
             <span i18n="">{{$t("CompletePay_Body", srvModel)}}</span>
         </div>
-        <div class="copied-label" style="display:none;">
+        <div class="copyLabelPopup">
             <span>{{$t("Copied")}}</span>
         </div>
         <nav v-if="srvModel.isLightning" class="copyBox">
             <div class="copySectionBox bottomBorder">
                 <label>{{$t("BOLT 11 Invoice")}}</label>
-                <div class="inputWithIcon">
+                <div class="inputWithIcon _copyInput">
                     <input type="text" class="checkoutTextbox" v-bind:value="srvModel.btcAddress" readonly="readonly" />
                     <img v-bind:src="srvModel.cryptoImage" />
                 </div>
@@ -179,7 +179,7 @@
             <div class="separatorGem"></div>
             <div class="copySectionBox">
                 <label>{{$t("Peer Info")}}</label>
-                <div class="inputWithIcon">
+                <div class="inputWithIcon _copyInput">
                     <input type="text" class="checkoutTextbox" v-bind:value="srvModel.peerInfo" readonly="readonly" />
                     <img v-bind:src="srvModel.cryptoImage" />
                 </div>
@@ -188,14 +188,14 @@
         <nav v-else class="copyBox">
             <div class="copySectionBox bottomBorder">
                 <label>{{$t("Amount")}}</label>
-                <div class="copyAmountText copy-cursor">
+                <div class="copyAmountText copy-cursor _copySpan">
                     <span>{{srvModel.btcDue}}</span> {{ srvModel.cryptoCode }}
                 </div>
             </div>
             <div class="separatorGem"></div>
             <div class="copySectionBox">
                 <label>{{$t("Address")}}</label>
-                <div class="inputWithIcon">
+                <div class="inputWithIcon _copyInput">
                     <input type="text" class="checkoutTextbox" v-bind:value="srvModel.btcAddress" readonly="readonly" />
                     <img v-bind:src="srvModel.cryptoImage" />
                 </div>

@@ -44,5 +44,8 @@ Je kan terug komen naar {{storeName}} indien je nog eens je betaling wilt prober
     "This invoice has been paid": "Deze factuur werd betaald",
     // Invoice archived
     "This invoice has been archived": "Deze factuur werd geactiveerd",
-    "Archived_Body": "Bedankt om de winkel te contacteren voor bijstand met of informatie over deze bestelling."
+    "Archived_Body": "Bedankt om de winkel te contacteren voor bijstand met of informatie over deze bestelling",
++    // Lightning
++    "BOLT 11 Invoice": "BOLT 11 Factuur",
++    "Node Info": "Node Info"
 };

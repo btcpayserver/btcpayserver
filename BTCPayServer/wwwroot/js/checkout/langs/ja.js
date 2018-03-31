@@ -44,5 +44,8 @@
     "This invoice has been paid":　"お支払いが完了しました",
     // Invoice archived
     "This invoice has been archived": "お支払いをアーカイブしました",
-    "Archived_Body": "ご注文に関わる詳細などでお困りの場合はお店の担当窓口へお問い合わせください。"
+    "Archived_Body": "ご注文に関わる詳細などでお困りの場合はお店の担当窓口へお問い合わせください。",
+    // Lightning
+    "BOLT 11 Invoice": "お支払いコード",
+    "Node Info": "接続情報"
 };

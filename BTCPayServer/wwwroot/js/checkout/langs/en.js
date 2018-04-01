@@ -44,8 +44,12 @@ You can return to {{storeName}} if you would like to submit your payment again."
     "This invoice has been paid": "This invoice has been paid",
     // Invoice archived
     "This invoice has been archived": "This invoice has been archived",
+<<<<<<< HEAD
     "Archived_Body": "Please contact the store for order information or assistance",
     // Lightning
     "BOLT 11 Invoice": "BOLT 11 Invoice",
     "Node Info": "Node Info"
+=======
+    "Archived_Body": "Please contact the store for order information or assistance"
+>>>>>>> parent of 07dcb08... Merge remote-tracking branch 'upstream/master' v1.0.1.71
 };

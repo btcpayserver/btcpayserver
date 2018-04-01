@@ -8625,10 +8625,10 @@ strong {
         max-height: 300px;
     }
 
-/* 
-    After refactoring Copy tab, this section until EOF REFACTOR can likely be deleted 
-    Leaving it since there are some references in refund that I need to look into
-*/
+.copy-cursor {
+    cursor: copy;
+}
+
 .manual-box {
     border-radius: 5px;
     margin-left: calc(-40px + 10%);
@@ -8882,10 +8882,6 @@ strong {
         opacity: 1;
     }
 
-    .manual-box__address__value .copied-label {
-        margin-top: 5px;
-    }
-
 .manual-box__address__wrapper {
     background: rgba(182, 182, 182, 0.13);
     border: 1px solid rgba(77, 77, 77, 0.07);
@@ -8907,7 +8903,6 @@ strong {
     font-size: 10.2px;
     color: #4A4A4A;
 }
-/* EOF REFACTOR */
 
 .status-block {
     position: relative;
@@ -11291,128 +11286,3 @@ low-fee-timeline {
 .no-bounce * .status-icon__wrapper__outline {
     animation: none !important;
 }
-
-
-/* checkout additions */
-.copyBox {
-    text-align: center;
-    position: relative;
-    border-radius: 5px;
-    border: 1px solid #E9E9E9;
-    background: #fff;
-}
-
-.copySectionBox {
-    padding: 12px;
-}
-
-    .copySectionBox label {
-        text-transform: uppercase;
-        font-size: 10px;
-        color: #515664;
-        opacity: .5;
-        letter-spacing: .6px;
-        margin-bottom: 10px;
-    }
-
-    .copySectionBox.bottomBorder {
-        border-bottom: 1px solid #e9e9e9;
-    }
-
-.separatorGem {
-    position: relative;
-    height: 10px;
-    width: 10px;
-    left: 50%;
-    border-right: 1px solid #E9E9E9;
-    border-bottom: 1px solid #E9E9E9;
-    transform: rotateZ(45deg);
-    margin-left: -5px;
-    top: -5px;
-    background: #329F80;
-    transform-style: preserve-3d;
-    backface-visibility: hidden;
-    margin-bottom: -10px;
-}
-
-.checkoutTextbox {
-    width: 100%;
-    border: 1px solid #e9e9e9;
-    border-radius: 4px;
-    outline: none;
-    padding: 8px 10px;
-    background: #f6f6f6;
-    box-sizing: border-box;
-    transition: .3s;
-    font-size: 11px;
-    color: #4a4a4a;
-    cursor: copy;
-}
-
-.inputWithIcon .checkoutTextbox {
-    padding-left: 40px;
-}
-
-.inputWithIcon {
-    position: relative;
-}
-
-    .inputWithIcon img {
-        position: absolute;
-        left: 2px;
-        top: 8px;
-        color: #aaa;
-        height: 16px;
-        padding: 0px 6px;
-        border-right: 1px solid #e9e9e9;
-    }
-
-    .inputWithIcon.inputIconBg img {
-        background-color: #aaa;
-        color: #fff;
-        padding: 9px 4px;
-        border-radius: 4px 0 0 4px;
-    }
-
-.copyAmountText {
-    color: #4A4A4A;
-    font-size: 30px;
-    font-weight: 300;
-    letter-spacing: 1px;
-    margin-top: -10px;
-    position: relative;
-}
-
-.copy-cursor {
-    cursor: copy;
-}
-
-.clipboardCopied {
-    transition: opacity 1s ease;
-    opacity: 0;
-}
-
-.copyLabelPopup {
-    pointer-events: none;
-    cursor: default;
-    transition: opacity 1s ease;
-    position: fixed;
-    width: 130px;
-    top: 0;
-    left: 0;
-    opacity: 0;
-    font-weight: 300;
-    font-size: 14px;
-    color: white;
-    background: #4A4A4A;
-    padding: 10px 40px;
-    border-radius: 3px;
-    letter-spacing: .5px;
-    z-index: 999999;
-}
-
-    .copyLabelPopup.copied {
-        pointer-events: auto;
-        opacity: 1;
-        transition: opacity 1s ease;
-    }

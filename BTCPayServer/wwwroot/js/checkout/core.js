@@ -19,7 +19,7 @@ function resetTabsSlider() {
 }
 
 function onDataCallback(jsonData) {
-    // extender properties used
+    // extender properties used 
     jsonData.shapeshiftUrl = "https://shapeshift.io/shifty.html?destination=" + jsonData.btcAddress + "&output=" + jsonData.paymentMethodId + "&amount=" + jsonData.btcDue;
     //
 
@@ -62,7 +62,7 @@ function onDataCallback(jsonData) {
     }
 
     // restoring qr code view only when currency is switched
-    if (jsonData.paymentMethodId == srvModel.paymentMethodId) {
+    if (jsonData.paymentMethodId === srvModel.paymentMethodId) {
         $(".payment__currencies").show();
         $(".payment__spinner").hide();
     }
@@ -72,7 +72,7 @@ function onDataCallback(jsonData) {
 }
 
 function changeCurrency(currency) {
-    if (srvModel.paymentMethodId != currency) {
+    if (srvModel.paymentMethodId !== currency) {
         $(".payment__currencies").hide();
         $(".payment__spinner").show();
         srvModel.paymentMethodId = currency;
@@ -100,17 +100,17 @@ $(document).ready(function () {
     onDataCallback(srvModel);
 
     /* TAF
-
+    
     - Version mobile
-
+    
     - Réparer le décallage par timer
-
+    
     - Preparer les variables de l'API
-
+    
     - Gestion des differents evenements en fonction du status de l'invoice
-
+    
     - sécuriser les CDN
-
+    
     */
 
     var display = $(".timer-row__time-left"); // Timer container
@@ -317,6 +317,27 @@ $(document).ready(function () {
             return copyElement(trigger, 4, 65).firstChild;
         }
     });
+
+    function copyElement(trigger, popupLeftModifier, popupTopModifier) {
+        var elm = $(trigger);
+        var position = elm.offset();
+        position.top -= popupLeftModifier;
+        position.left += (elm.width() / 2) - popupTopModifier;
+        $(".copyLabelPopup").css(position).addClass("copied");
+
+        elm.removeClass("copy-cursor").addClass("clipboardCopied");
+        setTimeout(clearSelection, 100);
+        setTimeout(function () {
+            elm.removeClass("clipboardCopied").addClass("copy-cursor");
+            $(".copyLabelPopup").removeClass("copied");
+        }, 1000);
+        return trigger;
+    }
+    function clearSelection() {
+        if (window.getSelection) { window.getSelection().removeAllRanges(); }
+        else if (document.selection) { document.selection.empty(); }
+    }
+    // EOF Copy
 
     // Disable enter key
     $(document).keypress(

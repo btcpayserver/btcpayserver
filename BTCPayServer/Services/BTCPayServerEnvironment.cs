@@ -46,7 +46,7 @@ namespace BTCPayServer.Services
         public override string ToString()
         {
             StringBuilder txt = new StringBuilder();
-            txt.Append($"@Copyright BTCPayJungle v{Version}");
+            txt.Append($"@Copyright BTCPayServer v{Version}");
             if (!Environment.IsProduction() || !Build.Equals("Release", StringComparison.OrdinalIgnoreCase))
             {
                 txt.Append($" Environment: {Environment.EnvironmentName} Build: {Build}");

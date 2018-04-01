@@ -4,11 +4,11 @@
 [![Docker Automated build](https://img.shields.io/docker/automated/jrottenberg/ffmpeg.svg)](https://hub.docker.com/r/nicolasdorier/btcpayserver/)
 [![Deploy to Azure](https://azuredeploy.net/deploybutton.svg)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fbtcpayserver%2Fbtcpayserver-azure%2Fmaster%2Fazuredeploy.json)
 
-# BTCPay Jungle
+# BTCPay Server
 
 ## Introduction 
 
-BTCPay Jungle is an Open Source payment processor, written in C#, that conforms to the invoice API of [Bitpay](https://bitpay.com/).
+BTCPay Server is an Open Source payment processor, written in C#, that conforms to the invoice API of [Bitpay](https://bitpay.com/).
 This allows easy migration of your code base to your own, self-hosted payment processor.
 
 This solution is for you if:

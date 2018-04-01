@@ -33,7 +33,7 @@ const locales_es = {
     "Invoice expiring soon...": "La factura expira pronto...",
     "Invoice expired": "La factura expiró",
     "What happened?": "¿Qué sucedió?",
-    "InvoiceExpired_Body_1": "Esta factura ha expirado. Una factura solo es válida por {{maxTimeMinutes}} minutos. \ Puede volver a {{storeName}} si desea volver a enviar su pago.",
+    "InvoiceExpired_Body_1": "Esta factura ha expirado. Una factura solo es válida por {{maxTimeMinutes}} minutos. Puede volver a {{storeName}} si desea volver a enviar su pago.",
     "InvoiceExpired_Body_2": "Si intentó enviar un pago, aún no ha sido aceptado por la red de Bitcoin. Todavía no hemos recibido sus fondos.",
     "InvoiceExpired_Body_3": "Si la transacción no es aceptada por la red de Bitcoin, los fondos se podrán gastar nuevamente en su billetera. Dependiendo de su billetera, esto puede tomar 48-72 horas.",
     "Invoice ID": "ID de factura",
@@ -43,7 +43,7 @@ const locales_es = {
     "This invoice has been paid": "Esta factura ha sido pagada",
     // Invoice archived
     "This invoice has been archived": "Esta factura ha sido archivada",
-    "Archived_Body": "Por favor, comuníquese con la tienda para obtener información de su pedido o asistencia"
+    "Archived_Body": "Por favor, comuníquese con la tienda para obtener información de su pedido o asistencia",
      // Lightning
     "BOLT 11 Invoice": "Factura BOLT 11",
     "Node Info": "Información del nodo"

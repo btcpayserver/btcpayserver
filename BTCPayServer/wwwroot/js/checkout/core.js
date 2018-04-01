@@ -19,7 +19,7 @@ function resetTabsSlider() {
 }
 
 function onDataCallback(jsonData) {
-    // extender properties used 
+    // extender properties used
     jsonData.shapeshiftUrl = "https://shapeshift.io/shifty.html?destination=" + jsonData.btcAddress + "&output=" + jsonData.paymentMethodId + "&amount=" + jsonData.btcDue;
     //
 
@@ -100,17 +100,17 @@ $(document).ready(function () {
     onDataCallback(srvModel);
 
     /* TAF
-    
+
     - Version mobile
-    
+
     - Réparer le décallage par timer
-    
+
     - Preparer les variables de l'API
-    
+
     - Gestion des differents evenements en fonction du status de l'invoice
-    
+
     - sécuriser les CDN
-    
+
     */
 
     var display = $(".timer-row__time-left"); // Timer container
@@ -306,23 +306,15 @@ $(document).ready(function () {
         }
     }
 
-    // Manual Copy
-    // Amount
-    var copyAmount = new Clipboard('.manual-box__amount__value', {
-        target: function () {
-            var $el = $(".manual-box__amount__value");
-            $el.removeClass("copy-cursor").addClass("copied");
-            setTimeout(function () { $el.removeClass("copied").addClass("copy-cursor"); }, 500);
-            return document.querySelector('.manual-box__amount__value span');
+    // Clipboard Copy
+    var copySpan = new Clipboard('._copySpan', {
+        target: function (trigger) {
+            return copyElement(trigger, 0, 65).firstChild;
         }
     });
-    // Address
-    var copyAddress = new Clipboard('.manual-box__address__value', {
-        target: function () {
-            var $elm = $(".manual-box__address__value");
-            $elm.removeClass("copy-cursor").addClass("copied");
-            setTimeout(function () { $elm.removeClass("copied").addClass("copy-cursor"); }, 500);
-            return document.querySelector('.manual-box__address__value .manual-box__address__wrapper .manual-box__address__wrapper__value');
+    var copyInput = new Clipboard('._copyInput', {
+        target: function (trigger) {
+            return copyElement(trigger, 4, 65).firstChild;
         }
     });
 

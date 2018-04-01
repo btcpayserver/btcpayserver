@@ -307,12 +307,12 @@ $(document).ready(function () {
     }
 
     // Clipboard Copy
-    var copyAmount = new Clipboard('._copySpan', {
+    var copySpan = new Clipboard('._copySpan', {
         target: function (trigger) {
             return copyElement(trigger, 0, 65).firstChild;
         }
     });
-    var copyAmount = new Clipboard('._copyInput', {
+    var copyInput = new Clipboard('._copyInput', {
         target: function (trigger) {
             return copyElement(trigger, 4, 65).firstChild;
         }

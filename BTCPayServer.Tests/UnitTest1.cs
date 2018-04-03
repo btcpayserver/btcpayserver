@@ -869,6 +869,49 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        public void CanSetPaymentMethodLimits()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.Start();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                user.RegisterDerivationScheme("BTC");
+                user.RegisterLightningNode("BTC", LightningConnectionType.Charge);
+                var vm = Assert.IsType<CheckoutExperienceViewModel>(Assert.IsType<ViewResult>(user.GetController<StoresController>().CheckoutExperience(user.StoreId).Result).Model);
+                vm.LightningMaxValue = "2 USD";
+                vm.OnChainMinValue = "5 USD";
+                Assert.IsType<RedirectToActionResult>(user.GetController<StoresController>().CheckoutExperience(user.StoreId, vm).Result);
+
+                var invoice = user.BitPay.CreateInvoice(new Invoice()
+                {
+                    Price = 1.5,
+                    Currency = "USD",
+                    PosData = "posData",
+                    OrderId = "orderId",
+                    ItemDesc = "Some description",
+                    FullNotifications = true
+                }, Facade.Merchant);
+
+                Assert.Single(invoice.CryptoInfo);
+                Assert.Equal(PaymentTypes.LightningLike.ToString(), invoice.CryptoInfo[0].PaymentType);
+
+                invoice = user.BitPay.CreateInvoice(new Invoice()
+                {
+                    Price = 5.5,
+                    Currency = "USD",
+                    PosData = "posData",
+                    OrderId = "orderId",
+                    ItemDesc = "Some description",
+                    FullNotifications = true
+                }, Facade.Merchant);
+
+                Assert.Single(invoice.CryptoInfo);
+                Assert.Equal(PaymentTypes.BTCLike.ToString(), invoice.CryptoInfo[0].PaymentType);
+            }
+        }
+
+        [Fact]
         public void CanUsePoSApp()
         {
             using (var tester = ServerTester.Create())

@@ -195,6 +195,7 @@ namespace BTCPayServer.Controllers
             vm.SetCryptoCurrencies(_ExplorerProvider, store.GetDefaultCrypto());
             vm.SetLanguages(_LangService, storeBlob.DefaultLang);
             vm.LightningMaxValue = storeBlob.LightningMaxValue?.ToString() ?? "";
+            vm.OnChainMinValue = storeBlob.OnChainMinValue?.ToString() ?? "";
             vm.AllowCoinConversion = storeBlob.AllowCoinConversion;
             vm.CustomCSS = storeBlob.CustomCSS;
             vm.CustomLogo = storeBlob.CustomLogo;
@@ -205,14 +206,24 @@ namespace BTCPayServer.Controllers
         [Route("{storeId}/checkout")]
         public async Task<IActionResult> CheckoutExperience(string storeId, CheckoutExperienceViewModel model)
         {
-            CurrencyValue currencyValue = null;
+            CurrencyValue lightningMaxValue = null;
             if (!string.IsNullOrWhiteSpace(model.LightningMaxValue))
             {
-                if (!CurrencyValue.TryParse(model.LightningMaxValue, out currencyValue))
+                if (!CurrencyValue.TryParse(model.LightningMaxValue, out lightningMaxValue))
                 {
-                    ModelState.AddModelError(nameof(model.LightningMaxValue), "Invalid currency value");
+                    ModelState.AddModelError(nameof(model.LightningMaxValue), "Invalid lightning max value");
                 }
             }
+
+            CurrencyValue onchainMinValue = null;
+            if (!string.IsNullOrWhiteSpace(model.OnChainMinValue))
+            {
+                if (!CurrencyValue.TryParse(model.OnChainMinValue, out onchainMinValue))
+                {
+                    ModelState.AddModelError(nameof(model.OnChainMinValue), "Invalid on chain min value");
+                }
+            }
+
             var store = await _Repo.FindStore(storeId, GetUserId());
             if (store == null)
                 return NotFound();
@@ -227,7 +238,8 @@ namespace BTCPayServer.Controllers
             model.SetLanguages(_LangService, model.DefaultLang);
             blob.DefaultLang = model.DefaultLang;
             blob.AllowCoinConversion = model.AllowCoinConversion;
-            blob.LightningMaxValue = currencyValue;
+            blob.LightningMaxValue = lightningMaxValue;
+            blob.OnChainMinValue = onchainMinValue;
             blob.CustomLogo = model.CustomLogo;
             blob.CustomCSS = model.CustomCSS;
             if (store.SetStoreBlob(blob))

@@ -54,6 +54,11 @@ namespace BTCPayServer.Tests
             return CreateStoreAsync().GetAwaiter().GetResult();
         }
 
+        public T GetController<T>() where T : Controller
+        {
+            return parent.PayTester.GetController<T>(UserId);
+        }
+
         public async Task<StoresController> CreateStoreAsync()
         {
             var store = parent.PayTester.GetController<UserStoresController>(UserId);

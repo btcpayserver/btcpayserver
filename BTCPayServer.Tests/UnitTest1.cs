@@ -30,6 +30,8 @@ using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Models.AppViewModels;
+using BTCPayServer.Services.Apps;
 
 namespace BTCPayServer.Tests
 {
@@ -864,6 +866,82 @@ namespace BTCPayServer.Tests
 
             result = parser.Parse(tpub);
             Assert.Equal($"{tpub}-[p2sh]", result.ToString());
+        }
+
+        [Fact]
+        public void CanUsePoSApp()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.Start();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                user.RegisterDerivationScheme("BTC");
+                var apps = user.GetController<AppsController>();
+                var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp().Result).Model);
+                vm.Name = "test";
+                vm.SelectedAppType = AppType.PointOfSale.ToString();
+                Assert.IsType<RedirectToActionResult>(apps.CreateApp(vm).Result);
+                var appId = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps().Result).Model).Apps[0].Id;
+                var vmpos = Assert.IsType<UpdatePointOfSaleViewModel>(Assert.IsType<ViewResult>(apps.UpdatePointOfSale(appId).Result).Model);
+                vmpos.Title = "hello";
+                vmpos.Currency = "CAD";
+                vmpos.Template =
+                    "apple:\n" +
+                    "  price: 5.0\n" +
+                    "  title: good apple\n" +
+                    "orange:\n" +
+                    "  price: 10.0\n";
+                Assert.IsType<RedirectToActionResult>(apps.UpdatePointOfSale(appId, vmpos).Result);
+                vmpos = Assert.IsType<UpdatePointOfSaleViewModel>(Assert.IsType<ViewResult>(apps.UpdatePointOfSale(appId).Result).Model);
+                Assert.Equal("hello", vmpos.Title);
+                var vmview = Assert.IsType<ViewPointOfSaleViewModel>(Assert.IsType<ViewResult>(apps.ViewPointOfSale(appId).Result).Model);
+                Assert.Equal("hello", vmview.Title);
+                Assert.Equal(2, vmview.Items.Length);
+                Assert.Equal("good apple", vmview.Items[0].Title);
+                Assert.Equal("orange", vmview.Items[1].Title);
+                Assert.Equal(10.0m, vmview.Items[1].Price.Value);
+                Assert.Equal("$5.00", vmview.Items[0].Price.Formatted);
+                Assert.IsType<RedirectResult>(apps.ViewPointOfSale(appId, "orange").Result);
+                var invoice = user.BitPay.GetInvoices().First();
+                Assert.Equal(10.00, invoice.Price);
+                Assert.Equal("CAD", invoice.Currency);
+                Assert.Equal("orange", invoice.ItemDesc);
+            }
+        }
+
+        [Fact]
+        public void CanCreateAndDeleteApps()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.Start();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                var user2 = tester.NewAccount();
+                user2.GrantAccess();
+                var apps = user.GetController<AppsController>();
+                var apps2 = user2.GetController<AppsController>();
+                var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp().Result).Model);
+                Assert.NotNull(vm.SelectedAppType);
+                Assert.Null(vm.Name);
+                vm.Name = "test";
+                var redirectToAction = Assert.IsType<RedirectToActionResult>(apps.CreateApp(vm).Result);
+                Assert.Equal(nameof(apps.ListApps), redirectToAction.ActionName);
+                var appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps().Result).Model);
+                var appList2 = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps2.ListApps().Result).Model);
+                Assert.Single(appList.Apps);
+                Assert.Empty(appList2.Apps);
+                Assert.Equal("test", appList.Apps[0].AppName);
+                Assert.True(appList.Apps[0].IsOwner);
+                Assert.Equal(user.StoreId, appList.Apps[0].StoreId);
+                Assert.IsType<NotFoundResult>(apps2.DeleteApp(appList.Apps[0].Id).Result);
+                Assert.IsType<ViewResult>(apps.DeleteApp(appList.Apps[0].Id).Result);
+                redirectToAction = Assert.IsType<RedirectToActionResult>(apps.DeleteAppPost(appList.Apps[0].Id).Result);
+                Assert.Equal(nameof(apps.ListApps), redirectToAction.ActionName);
+                appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps().Result).Model);
+                Assert.Empty(appList.Apps);
+            }
         }
 
         [Fact]

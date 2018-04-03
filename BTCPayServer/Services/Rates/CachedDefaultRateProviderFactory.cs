@@ -26,6 +26,8 @@ namespace BTCPayServer.Services.Rates
             if (cache == null)
                 throw new ArgumentNullException(nameof(cache));
             _Cache = cache;
+            // Using same providers because they are both at 15 min actually...
+            _Providers = _LongCacheProviders;
         }
 
         public IRateProvider RateProvider { get; set; }

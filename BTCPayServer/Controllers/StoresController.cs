@@ -236,6 +236,11 @@ namespace BTCPayServer.Controllers
             }
             model.SetCryptoCurrencies(_ExplorerProvider, model.DefaultCryptoCurrency);
             model.SetLanguages(_LangService, model.DefaultLang);
+
+            if(!ModelState.IsValid)
+            {
+                return View(model);
+            }
             blob.DefaultLang = model.DefaultLang;
             blob.AllowCoinConversion = model.AllowCoinConversion;
             blob.LightningMaxValue = lightningMaxValue;

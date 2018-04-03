@@ -26,6 +26,11 @@ namespace BTCPayServer.Data
             get; set;
         }
 
+        public DbSet<AppData> Apps
+        {
+            get; set;
+        }
+
         public DbSet<InvoiceEventData> InvoiceEvents
         {
             get; set;
@@ -106,6 +111,10 @@ namespace BTCPayServer.Data
                        t.ApplicationUserId,
                        t.StoreDataId
                    });
+
+
+            builder.Entity<AppData>()
+                    .HasOne(a => a.StoreData);
 
             builder.Entity<UserStore>()
                  .HasOne(pt => pt.ApplicationUser)

@@ -102,7 +102,7 @@ namespace BTCPayServer.Tests
                     .ConfigureServices(s =>
                     {
                         var mockRates = new MockRateProviderFactory();
-                        var btc = new MockRateProvider("BTC", new Rate("USD", 5000m));
+                        var btc = new MockRateProvider("BTC", new Rate("USD", 5000m), new Rate("CAD", 4500m));
                         var ltc = new MockRateProvider("LTC", new Rate("USD", 500m));
                         mockRates.AddMock(btc);
                         mockRates.AddMock(ltc);

@@ -44,6 +44,12 @@
                 <span asp-validation-for="LightningMaxValue" class="text-danger"></span>
                 <p class="form-text text-muted">Example: 5.50 USD</p>
             </div>
+            <div class="form-group">
+                <label asp-for="OnChainMinValue"></label>
+                <input asp-for="OnChainMinValue" class="form-control" />
+                <span asp-validation-for="OnChainMinValue" class="text-danger"></span>
+                <p class="form-text text-muted">Example: 5.50 USD</p>
+            </div>
             <button name="command" type="submit" class="btn btn-success" value="Save">Save</button>
         </form>
     </div>

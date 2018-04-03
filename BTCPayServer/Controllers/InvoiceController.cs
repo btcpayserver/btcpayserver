@@ -149,7 +149,7 @@ namespace BTCPayServer.Controllers
             {
                 StringBuilder errors = new StringBuilder();
                 errors.AppendLine("No payment method available for this store");
-                foreach(var error in paymentMethodErrors)
+                foreach (var error in paymentMethodErrors)
                 {
                     errors.AppendLine(error);
                 }
@@ -196,21 +196,36 @@ namespace BTCPayServer.Controllers
                 paymentDetails.SetNoTxFee();
             paymentMethod.SetPaymentMethodDetails(paymentDetails);
 
-            // Check if Lightning Max value is exceeded
+            Func<Money, Money, bool> compare = null;
+            CurrencyValue limitValue = null;
+            string errorMessage = null;
             if (supportedPaymentMethod.PaymentId.PaymentType == PaymentTypes.LightningLike &&
                storeBlob.LightningMaxValue != null)
             {
-                var lightningMaxValue = storeBlob.LightningMaxValue;
-                var lightningMaxValueRate = 0.0m;
-                if (lightningMaxValue.Currency == entity.ProductInformation.Currency)
-                    lightningMaxValueRate = paymentMethod.Rate;
-                else
-                    lightningMaxValueRate = await storeBlob.ApplyRateRules(network, _RateProviders.GetRateProvider(network, false)).GetRateAsync(lightningMaxValue.Currency);
+                compare = (a, b) => a > b;
+                limitValue = storeBlob.LightningMaxValue;
+                errorMessage = "The amount of the invoice is too high to be paid with lightning";
+            }
+            else if (supportedPaymentMethod.PaymentId.PaymentType == PaymentTypes.BTCLike &&
+               storeBlob.OnChainMinValue != null)
+            {
+                compare = (a, b) => a < b;
+                limitValue = storeBlob.OnChainMinValue;
+                errorMessage = "The amount of the invoice is too low to be paid on chain";
+            }
 
-                var lightningMaxValueCrypto = Money.Coins(lightningMaxValue.Value / lightningMaxValueRate);
-                if (paymentMethod.Calculate().Due > lightningMaxValueCrypto)
+            if (compare != null)
+            {
+                var limitValueRate = 0.0m;
+                if (limitValue.Currency == entity.ProductInformation.Currency)
+                    limitValueRate = paymentMethod.Rate;
+                else
+                    limitValueRate = await storeBlob.ApplyRateRules(network, _RateProviders.GetRateProvider(network, false)).GetRateAsync(limitValue.Currency);
+
+                var limitValueCrypto = Money.Coins(limitValue.Value / limitValueRate);
+                if (compare(paymentMethod.Calculate().Due, limitValueCrypto))
                 {
-                    throw new PaymentMethodUnavailableException("Lightning max value exceeded");
+                    throw new PaymentMethodUnavailableException(errorMessage);
                 }
             }
             ///////////////

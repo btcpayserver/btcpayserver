@@ -26,11 +26,14 @@ namespace BTCPayServer.Services.Rates
             if (cache == null)
                 throw new ArgumentNullException(nameof(cache));
             _Cache = cache;
+            // Using same providers because they are both at 15 min actually...
+            _Providers = _LongCacheProviders;
         }
 
         public IRateProvider RateProvider { get; set; }
 
-        public TimeSpan CacheSpan { get; set; } = TimeSpan.FromMinutes(1.0);
+        // We use 15 min because of limits with free version of bitcoinaverage
+        public TimeSpan CacheSpan { get; set; } = TimeSpan.FromMinutes(15.0);
         public TimeSpan LongCacheSpan { get; set; } = TimeSpan.FromMinutes(15.0);
         public IRateProvider GetRateProvider(BTCPayNetwork network, bool longCache)
         {

@@ -30,6 +30,11 @@ namespace BTCPayServer.Data
             get; set;
         }
 
+        public List<AppData> Apps
+        {
+            get; set;
+        }
+
         [Obsolete("Use GetDerivationStrategies instead")]
         public string DerivationStrategy
         {
@@ -257,6 +262,8 @@ namespace BTCPayServer.Data
 
         [JsonConverter(typeof(CurrencyValueJsonConverter))]
         public CurrencyValue LightningMaxValue { get; set; }
+        [JsonConverter(typeof(CurrencyValueJsonConverter))]
+        public CurrencyValue OnChainMinValue { get; set; }
 
         [JsonConverter(typeof(UriJsonConverter))]
         public Uri CustomLogo { get; set; }

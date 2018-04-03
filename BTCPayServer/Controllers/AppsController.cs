@@ -1,0 +1,203 @@
+﻿using System;
+using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using BTCPayServer.Data;
+using BTCPayServer.Models;
+using BTCPayServer.Models.AppViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using NBitcoin.DataEncoders;
+using NBitcoin;
+using BTCPayServer.Services.Apps;
+using BTCPayServer.Services.Rates;
+
+namespace BTCPayServer.Controllers
+{
+    [AutoValidateAntiforgeryToken]
+    [Route("apps")]
+    public partial class AppsController : Controller
+    {
+        ApplicationDbContextFactory _ContextFactory;
+        UserManager<ApplicationUser> _UserManager;
+        CurrencyNameTable _Currencies;
+        InvoiceController _InvoiceController;
+
+        [TempData]
+        public string StatusMessage { get; set; }
+
+        public AppsController(
+            UserManager<ApplicationUser> userManager,
+            ApplicationDbContextFactory contextFactory,
+            CurrencyNameTable currencies,
+            InvoiceController invoiceController)
+        {
+            _InvoiceController = invoiceController;
+            _UserManager = userManager;
+            _ContextFactory = contextFactory;
+            _Currencies = currencies;
+        }
+        public async Task<IActionResult> ListApps()
+        {
+            var apps = await GetAllApps();
+            return View(new ListAppsViewModel()
+            {
+                Apps = apps
+            });
+        }
+
+        [HttpPost]
+        [Route("{appId}/delete")]
+        public async Task<IActionResult> DeleteAppPost(string appId)
+        {
+            var appData = await GetOwnedApp(appId);
+            if (appData == null)
+                return NotFound();
+            if (await DeleteApp(appData))
+                StatusMessage = "App removed successfully";
+            return RedirectToAction(nameof(ListApps));
+        }
+
+        [HttpGet]
+        [Route("create")]
+        public async Task<IActionResult> CreateApp()
+        {
+            var stores = await GetOwnedStores();
+            if (stores.Length == 0)
+            {
+                StatusMessage = "Error: You must have created at least one store";
+                return RedirectToAction(nameof(ListApps));
+            }
+            var vm = new CreateAppViewModel();
+            vm.SetStores(stores);
+            return View(vm);
+        }
+
+        [HttpPost]
+        [Route("create")]
+        public async Task<IActionResult> CreateApp(CreateAppViewModel vm)
+        {
+            var stores = await GetOwnedStores();
+            if (stores.Length == 0)
+            {
+                StatusMessage = "Error: You must own at least one store";
+                return RedirectToAction(nameof(ListApps));
+            }
+            var selectedStore = vm.SelectedStore;
+            vm.SetStores(stores);
+            vm.SelectedStore = selectedStore;
+
+            if (!Enum.TryParse<AppType>(vm.SelectedAppType, out AppType appType))
+                ModelState.AddModelError(nameof(vm.SelectedAppType), "Invalid App Type");
+
+            if (!ModelState.IsValid)
+            {
+                return View(vm);
+            }
+
+            if (!stores.Any(s => s.Id == selectedStore))
+            {
+                StatusMessage = "Error: You are not owner of this store";
+                return RedirectToAction(nameof(ListApps));
+            }
+            using (var ctx = _ContextFactory.CreateContext())
+            {
+                var id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(32));
+                var appData = new AppData() { Id = id };
+                appData.StoreDataId = selectedStore;
+                appData.Name = vm.Name;
+                appData.AppType = appType.ToString();
+                ctx.Apps.Add(appData);
+                await ctx.SaveChangesAsync();
+            }
+            StatusMessage = "App successfully created";
+            return RedirectToAction(nameof(ListApps));
+        }
+
+        [HttpGet]
+        [Route("{appId}/delete")]
+        public async Task<IActionResult> DeleteApp(string appId)
+        {
+            var appData = await GetOwnedApp(appId);
+            if (appData == null)
+                return NotFound();
+            return View("Confirm", new ConfirmModel()
+            {
+                Title = $"Delete app {appData.Name} ({appData.AppType})",
+                Description = "This app will be removed from this store",
+                Action = "Delete"
+            });
+        }
+
+        private async Task<AppData> GetOwnedApp(string appId, AppType? type = null)
+        {
+            var userId = GetUserId();
+            using (var ctx = _ContextFactory.CreateContext())
+            {
+                var app = await ctx.UserStore
+                                .Where(us => us.ApplicationUserId == userId && us.Role == StoreRoles.Owner)
+                                .SelectMany(us => us.StoreData.Apps.Where(a => a.Id == appId))
+                   .FirstOrDefaultAsync();
+                if (type != null && type.Value.ToString() != app.AppType)
+                    return null;
+                return app;
+            }
+        }
+
+        private async Task<StoreData[]> GetOwnedStores()
+        {
+            var userId = GetUserId();
+            using (var ctx = _ContextFactory.CreateContext())
+            {
+                return await ctx.UserStore
+                    .Where(us => us.ApplicationUserId == userId && us.Role == StoreRoles.Owner)
+                    .Select(u => u.StoreData)
+                    .ToArrayAsync();
+            }
+        }
+
+        private async Task<bool> DeleteApp(AppData appData)
+        {
+            using (var ctx = _ContextFactory.CreateContext())
+            {
+                ctx.Apps.Add(appData);
+                ctx.Entry<AppData>(appData).State = EntityState.Deleted;
+                return await ctx.SaveChangesAsync() == 1;
+            }
+        }
+
+        private async Task<ListAppsViewModel.ListAppViewModel[]> GetAllApps()
+        {
+            var userId = GetUserId();
+            using (var ctx = _ContextFactory.CreateContext())
+            {
+                return await ctx.UserStore
+                   .Where(us => us.ApplicationUserId == userId)
+                   .Select(us => new
+                   {
+                       IsOwner = us.Role == StoreRoles.Owner,
+                       StoreId = us.StoreDataId,
+                       StoreName = us.StoreData.StoreName,
+                       Apps = us.StoreData.Apps
+                   })
+                   .SelectMany(us => us.Apps.Select(app => new ListAppsViewModel.ListAppViewModel()
+                   {
+                       IsOwner = us.IsOwner,
+                       AppName = app.Name,
+                       AppType = app.AppType,
+                       Id = app.Id,
+                       StoreId = us.StoreId,
+                       StoreName = us.StoreName
+                   }))
+                   .ToArrayAsync();
+            }
+        }
+
+        private string GetUserId()
+        {
+            return _UserManager.GetUserId(User);
+        }
+    }
+}

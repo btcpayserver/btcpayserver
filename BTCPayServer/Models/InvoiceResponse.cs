@@ -42,7 +42,6 @@ namespace BTCPayServer.Models
     {
         //"url":"https://test.bitpay.com/invoice?id=9saCHtp1zyPcNoi3rDdBu8"
         [JsonProperty("url")]
-        [Obsolete("Use CryptoInfo.Url instead")]
         public string Url
         {
             get; set;

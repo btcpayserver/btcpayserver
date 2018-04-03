@@ -1,0 +1,48 @@
+﻿@model ViewPointOfSaleViewModel
+@{
+    ViewData["Title"] = Model.Title;
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html class="h-100">
+<head>
+    <title>@Model.Title</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="stylesheet" href="~/vendor/bootstrap/css/bootstrap.css" />
+</head>
+<body class="h-100">
+    <div class="container d-flex h-100">
+        <div class="justify-content-center align-self-center text-center mx-auto">
+            <h1 class="mb-4">@Model.Title</h1>
+            <form method="post">
+                <div class="row">
+                    @foreach(var item in Model.Items)
+                    {
+                        <div class="col-sm-4 mb-3">
+                            <h3>@item.Title</h3>
+                            <button type="submit" name="choiceKey" class="btn btn-secondary" value="@item.Id">Buy for @item.Price.Formatted</button>
+                        </div>
+                    }
+                </div>
+            </form>
+            @*<div class="row mt-4">
+                    <div class="col-md-4 offset-md-4 col-sm-6 offset-sm-3">
+                        <h3>Something else</h3>
+                        <form data-buy>
+                            <div class="input-group">
+                                <input class="form-control" type="number" step="0.00001" name="amount" placeholder="undefined (optional)"><div class="input-group-append">
+                                    <button class="btn btn-primary" type="submit">Pay</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>*@
+        </div>
+    </div>
+    <script src="~/vendor/bootstrap/js/bootstrap.js"></script>
+    <script src="~/vendor/jquery/jquery.js"></script>
+</body>
+</html>

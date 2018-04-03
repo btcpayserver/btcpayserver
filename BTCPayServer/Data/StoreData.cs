@@ -30,6 +30,11 @@ namespace BTCPayServer.Data
             get; set;
         }
 
+        public List<AppData> Apps
+        {
+            get; set;
+        }
+
         [Obsolete("Use GetDerivationStrategies instead")]
         public string DerivationStrategy
         {

@@ -25,6 +25,9 @@ using System.Net.WebSockets;
 using BTCPayServer.Services.Invoices;
 using NBitpayClient;
 using BTCPayServer.Payments;
+using Microsoft.AspNetCore.Identity;
+using BTCPayServer.Models;
+using System.Security.Claims;
 
 namespace BTCPayServer
 {

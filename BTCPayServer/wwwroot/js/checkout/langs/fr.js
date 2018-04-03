@@ -31,7 +31,7 @@ const locales_fr = {
     "ConversionTab_Lightning": "Pas de fournisseur disponible pour les paiements sur le Lightning Network.",
     // Invoice expired
     "Invoice expiring soon...": "La facture va bientôt expirer...",
-    "Invoice expired": "Facture expiré",
+    "Invoice expired": "Facture expirée",
     "What happened?": "Que s'est t'il passé?",
     "InvoiceExpired_Body_1": "La facture a expirée. Une facture est seulement valide pour {{maxTimeMinutes}} minutes.  \
 Vous pouvez revenir sur {{storeName}} si vous voulez resoumettre votre paiement.",

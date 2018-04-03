@@ -12,7 +12,7 @@ const locales_is = {
     "Order Amount": "Upphæð",
     "Network Cost": "Auka gjöld",
     "Already Paid": "Nú þegar greitt",
-    "Due": "Due",
+    "Due": "Gjalddagi",
     // Tabs
     "Scan": "Skanna",
     "Copy": "Afrita",
@@ -26,14 +26,14 @@ const locales_is = {
     "Copied": "Afritað",
     // Conversion tab
     "ConversionTab_BodyTop": "Þú getur borgað {{btcDue}} {{cryptoCode}} með altcoins.",
-    "ConversionTab_BodyDesc": "Þessi þjónusta er veitt af þriðja aðila. Mundu að við höfum ekki stjórn á því hvernig birgja vilja senda peningana þína. Reikningur verður aðeins merktur þegar móttekinir eru á {{cryptoCode}} Blockchain.",
+    "ConversionTab_BodyDesc": "Þessi þjónusta er veitt af þriðja aðila. Mundu að við höfum ekki stjórn á því hvað þeir gera við peningana. Reikningurinn verður aðeins móttekinn þegar {{cryptoCode}} greiðslan hefur verið staðfest á Bitcoin netinu.",
     "Shapeshift_Button_Text": "Borga með Altcoins",
     "ConversionTab_Lightning": "Engir viðskiptaveitendur eru í boði fyrir Lightning Network greiðslur.",
     // Invoice expired
-    "Invoice expiring soon...": "Innheimt rennur út fljótlega...",
-    "Invoice expired": "Innheimt útrunnin",
+    "Invoice expiring soon...": "Reikningurinn rennur út fljótlega...",
+    "Invoice expired": "Reikningurinn er útrunnin",
     "What happened?": "Hvað gerðist?",
-    "InvoiceExpired_Body_1": "Þessi innheimtun er útrunnin. Innheimtun er aðeins gild í {{maxTimeMinutes}} mínútur.  \
+    "InvoiceExpired_Body_1": "Þessi reikningur er útrunnin. Reikningurinn er aðeins gildur í {{maxTimeMinutes}} mínútur.  \
 Þú getur farið aftur á {{storeName}} ef þú vilt reyna aftur.",
     "InvoiceExpired_Body_2": "Ef þú reyndir að senda greiðslu, þá hefur hún ekki verið samþykkt.",
     "InvoiceExpired_Body_3": "Ef viðskiptin eru ekki samþykkt af Bitcoin netinu verða fjármunirnir aðgengilegar aftur í veskinu þínu. Það fer eftir veskinu þínu og getur tekið 48-72 klukkustundir.",
@@ -43,6 +43,9 @@ const locales_is = {
     // Invoice paid
     "This invoice has been paid": "Þetta hefur verið greitt",
     // Invoice archived
-    "This invoice has been archived": "Þessi innheimta hefur verið gerð ógild",
-    "Archived_Body": "Vinsamlega hafðu samband fyrir upplýsingar eða aðstoð."
+    "This invoice has been archived": "Þessi reikningur hefur verið gerður ógildur",
+    "Archived_Body": "Vinsamlegast hafðu samband fyrir upplýsingar eða aðstoð.",
+    // Lightning
+    "BOLT 11 Invoice": "BOLT 11 Reikningur",
+    "Node Info": "Nótu upplýsingar"
 };

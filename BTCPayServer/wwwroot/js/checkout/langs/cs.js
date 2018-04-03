@@ -44,5 +44,8 @@ Můžete se vrátit do {{storeName}}, pokud chcete svojí objednávku založit z
     "This invoice has been paid": "Faktura byla zaplacena",
     // Invoice archived
     "This invoice has been archived": "Tato faktura byla archivována",
-    "Archived_Body": "Prosíme kontaktujte prodejce pro informace o objednávce a případnou pomoc"
+    "Archived_Body": "Prosíme kontaktujte prodejce pro informace o objednávce a případnou pomoc",
+    // Lightning
+    "BOLT 11 Invoice": "BOLT 11 Faktura",
+    "Node Info": "Info o uzlu"
 };

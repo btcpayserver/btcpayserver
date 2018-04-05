@@ -37,10 +37,10 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Link to a custom CSS stylesheet")]
         [Url]
-        public Uri CustomCSS { get; set; }
+        public string CustomCSS { get; set; }
         [Display(Name = "Link to a custom logo")]
         [Url]
-        public Uri CustomLogo { get; set; }
+        public string CustomLogo { get; set; }
 
         public void SetCryptoCurrencies(ExplorerClientProvider explorerProvider, string defaultCrypto)
         {

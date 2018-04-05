@@ -92,11 +92,14 @@ namespace BTCPayServer.Configuration
             PostgresConnectionString = conf.GetOrDefault<string>("postgres", null);
             BundleJsCss = conf.GetOrDefault<bool>("bundlejscss", true);
             ExternalUrl = conf.GetOrDefault<Uri>("externalurl", null);
+
+            RootPath = conf.GetOrDefault<string>("rootpath", "/");
+
             var old = conf.GetOrDefault<Uri>("internallightningnode", null);
             if(old != null)
                 throw new ConfigException($"internallightningnode should not be used anymore, use btclightning instead");
         }
-
+        public string RootPath { get; set; }
         public Dictionary<string, LightningConnectionString> InternalLightningByCryptoCode { get; set; } = new Dictionary<string, LightningConnectionString>();
 
         public BTCPayNetworkProvider NetworkProvider { get; set; }

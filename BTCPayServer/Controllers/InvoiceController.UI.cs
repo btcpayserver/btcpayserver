@@ -443,11 +443,14 @@ namespace BTCPayServer.Controllers
             StatusMessage = null;
             if (store.Role != StoreRoles.Owner)
             {
-                StatusMessage = "Error: You need to be owner of this store to create an invoice";
+                ModelState.AddModelError(nameof(model.StoreId), "You need to be owner of this store to create an invoice");
+                return View(model);
             }
+
             if (store.GetSupportedPaymentMethods(_NetworkProvider).Count() == 0)
             {
-                StatusMessage = "Error: You need to configure the derivation scheme in order to create an invoice";
+                ModelState.AddModelError(nameof(model.StoreId), "You need to configure the derivation scheme in order to create an invoice");
+                return View(model);
             }
 
             if(StatusMessage != null)

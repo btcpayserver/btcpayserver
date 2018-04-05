@@ -31,6 +31,9 @@ namespace BTCPayServer.Configuration
             app.Option("--regtest | -regtest", $"Use regtest (Deprecated, use --network instead)", CommandOptionType.BoolValue);
             app.Option("--chains | -c", $"Chains to support comma separated (default: btc, available: {chains})", CommandOptionType.SingleValue);
             app.Option("--postgres", $"Connection string to postgres database (default: sqlite is used)", CommandOptionType.SingleValue);
+            app.Option("--externalurl", $"The expected external url of this service, to use if BTCPay is behind a reverse proxy (default: empty, use the incoming HTTP request to figure out)", CommandOptionType.SingleValue);
+            app.Option("--bundlejscss", $"Bundle javascript and css files for better performance (default: true)", CommandOptionType.SingleValue);
+            app.Option("--rootpath", "The root path in the URL to access BTCPay (default: /)", CommandOptionType.SingleValue);
             foreach (var network in provider.GetAll())
             {
                 var crypto = network.CryptoCode.ToLowerInvariant();
@@ -38,8 +41,6 @@ namespace BTCPayServer.Configuration
                 app.Option($"--{crypto}explorercookiefile", $"Path to the cookie file (default: {network.NBXplorerNetwork.DefaultSettings.DefaultCookieFile})", CommandOptionType.SingleValue);
                 app.Option($"--{crypto}lightning", $"Easy configuration of lightning for the server adnistrator: Must be a unix socket of CLightning (lightning-rpc) or URL to a charge server (default: empty)", CommandOptionType.SingleValue);
             }
-            app.Option("--externalurl", $"The expected external url of this service, to use if BTCPay is behind a reverse proxy (default: empty, use the incoming HTTP request to figure out)", CommandOptionType.SingleValue);
-            app.Option("--bundlejscss", $"Bundle javascript and css files for better performance (default: true)", CommandOptionType.SingleValue);
             return app;
         }
 

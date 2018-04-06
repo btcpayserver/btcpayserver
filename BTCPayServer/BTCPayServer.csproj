@@ -61,7 +61,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Include="wwwroot\js\checkout\core.js" />
+	  <None Include="wwwroot\checkout\js\core.js" />
 	  <None Include="wwwroot\main\js\creative.js" />
 	  <None Include="wwwroot\vendor\bootstrap\js\bootstrap.js" />
 	  <None Include="wwwroot\vendor\bootstrap\js\bootstrap.min.js" />
@@ -110,7 +110,7 @@
 
 	<ItemGroup>
 	  <Folder Include="Build\" />
-	  <Folder Include="wwwroot\checkout\css\" />
+	  <Folder Include="wwwroot\css\" />
 	  <Folder Include="wwwroot\vendor\clipboard.js\" />
 	</ItemGroup>
 

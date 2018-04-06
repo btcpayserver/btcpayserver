@@ -62,10 +62,7 @@
 
 	<ItemGroup>
 	  <None Include="wwwroot\js\checkout\core.js" />
-	  <None Include="wwwroot\js\creative.js" />
-	  <None Include="wwwroot\js\creative.min.js" />
-	  <None Include="wwwroot\js\site.js" />
-	  <None Include="wwwroot\js\site.min.js" />
+	  <None Include="wwwroot\main\js\creative.js" />
 	  <None Include="wwwroot\vendor\bootstrap\js\bootstrap.js" />
 	  <None Include="wwwroot\vendor\bootstrap\js\bootstrap.min.js" />
 	  <None Include="wwwroot\vendor\font-awesome\fonts\fontawesome-webfont.svg" />
@@ -113,6 +110,7 @@
 
 	<ItemGroup>
 	  <Folder Include="Build\" />
+	  <Folder Include="wwwroot\checkout\css\" />
 	  <Folder Include="wwwroot\vendor\clipboard.js\" />
 	</ItemGroup>
 

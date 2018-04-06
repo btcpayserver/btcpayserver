@@ -4,8 +4,7 @@
         "inputFiles": [
             "wwwroot/vendor/bootstrap4/css/bootstrap.css",
             "wwwroot/vendor/magnific-popup/magnific-popup.css",
-            "wwwroot/css/creative.css",
-            "wwwroot/css/site.css",
+            "wwwroot/main/**/*.css",
             "wwwroot/vendor/animatecss/animate.css"
         ]
     },
@@ -18,7 +17,7 @@
             "wwwroot/vendor/jquery-easing/jquery.easing.js",
             "wwwroot/vendor/scrollreveal/scrollreveal.min.js",
             "wwwroot/vendor/magnific-popup/jquery.magnific-popup.js",
-            "wwwroot/js/creative.js"
+            "wwwroot/main/**/js/*.js"
         ]
     },
     {

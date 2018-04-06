@@ -147,16 +147,31 @@ namespace BTCPayServer.Hosting
             IApplicationBuilder app,
             IHostingEnvironment env,
             IServiceProvider prov,
+            BTCPayServerOptions options,
             ILoggerFactory loggerFactory)
+        {
+            Logs.Configure(loggerFactory);
+            Logs.Configuration.LogInformation($"Root Path: {options.RootPath}");
+            if (options.RootPath.Equals("/", StringComparison.OrdinalIgnoreCase))
+            {
+                ConfigureCore(app, env, prov, loggerFactory);
+            }
+            else
+            {
+                app.Map(options.RootPath, appChild =>
+                {
+                    ConfigureCore(appChild, env, prov, loggerFactory);
+                });
+            }
+        }
+
+        private static void ConfigureCore(IApplicationBuilder app, IHostingEnvironment env, IServiceProvider prov, ILoggerFactory loggerFactory)
         {
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
                 app.UseBrowserLink();
             }
-
-
-            Logs.Configure(loggerFactory);
 
             //App insight do not that by itself...
             loggerFactory.AddApplicationInsights(prov, LogLevel.Information);

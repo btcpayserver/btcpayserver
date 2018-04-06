@@ -22,8 +22,8 @@
 
         <div class="row">
             <a asp-action="CreateStore" class="btn btn-success" role="button"><span class="glyphicon glyphicon-plus"></span> Create a new store</a>
-            <table class="table">
-                <thead class="thead-inverse">
+            <table class="table table-sm table-responsive-md mt-2">
+                <thead>
                     <tr>
                         <th>Name</th>
                         <th>Website</th>
@@ -32,28 +32,28 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach(var store in Model.Stores)
+                    @foreach (var store in Model.Stores)
                     {
                         <tr>
                             <td>@store.Name</td>
                             <td>
-                                @if(!string.IsNullOrEmpty(store.WebSite))
+                                @if (!string.IsNullOrEmpty(store.WebSite))
                                 {
                                     <a href="@store.WebSite">@store.WebSite</a>
                                 }
                             </td>
                             <td>
-                                @for(int i = 0; i < store.Balances.Length; i++)
+                                @for (int i = 0; i < store.Balances.Length; i++)
                                 {
                                     <span>@store.Balances[i]</span>
-                                    if(i != store.Balances.Length - 1)
+                                    if (i != store.Balances.Length - 1)
                                     {
                                         <br />
                                     }
                                 }
                             </td>
                             <td style="text-align:right">
-                                @if(store.IsOwner)
+                                @if (store.IsOwner)
                                 {
                                     <a asp-action="UpdateStore" asp-controller="Stores" asp-route-storeId="@store.Id">Settings</a><span> - </span>
                                 }

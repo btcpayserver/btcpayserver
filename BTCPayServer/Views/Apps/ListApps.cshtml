@@ -22,8 +22,8 @@
 
         <div class="row">
             <a asp-action="CreateApp" class="btn btn-success" role="button"><span class="glyphicon glyphicon-plus"></span> Create a new app</a>
-            <table class="table">
-                <thead class="thead-inverse">
+            <table class="table table-sm table-responsive-md mt-2">
+                <thead>
                     <tr>
                         <th>Store</th>
                         <th>Name</th>
@@ -32,11 +32,11 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach(var app in Model.Apps)
+                    @foreach (var app in Model.Apps)
                     {
                         <tr>
                             <td>
-                                @if(app.IsOwner)
+                                @if (app.IsOwner)
                                 {
                                     <span><a asp-action="UpdateStore" asp-controller="Stores" asp-route-storeId="@app.StoreId">@app.StoreName</a></span>
                                 }
@@ -48,7 +48,7 @@
                             <td>@app.AppName</td>
                             <td>@app.AppType</td>
                             <td style="text-align:right">
-                                @if(app.IsOwner)
+                                @if (app.IsOwner)
                                 {
                                     <a asp-action="@app.UpdateAction" asp-controller="Apps" asp-route-appId="@app.Id">Settings</a><span> - </span>
                                 }

@@ -9,8 +9,8 @@
 <p>You can allow a public key to access the API of this store</p>
 @Html.Partial("_StatusMessage", Model.StatusMessage)
 <a asp-action="CreateToken" class="btn btn-success" role="button"><span class="glyphicon glyphicon-plus"></span>Create a new token</a>
-<table class="table">
-    <thead class="thead-inverse">
+<table class="table table-sm table-responsive-md mt-2">
+    <thead>
         <tr>
             <th>Label</th>
             <th>SIN</th>
@@ -19,7 +19,7 @@
         </tr>
     </thead>
     <tbody>
-        @foreach(var token in Model.Tokens)
+        @foreach (var token in Model.Tokens)
         {
             <tr>
                 <td>@token.Label</td>

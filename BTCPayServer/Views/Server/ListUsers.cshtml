@@ -9,8 +9,8 @@
 @Html.Partial("_StatusMessage", Model.StatusMessage)
 
 
-<table class="table">
-    <thead class="thead-inverse">
+<table class="table table-sm table-responsive-md mt-2">
+    <thead>
         <tr>
             <th>Name</th>
             <th>Email</th>
@@ -18,7 +18,7 @@
         </tr>
     </thead>
     <tbody>
-        @foreach(var user in Model.Users)
+        @foreach (var user in Model.Users)
         {
             <tr>
                 <td>@user.Name</td>

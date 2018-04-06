@@ -9,5 +9,6 @@ namespace BTCPayServer.Payments.Lightning.Charge
     {
         public LightMoney Amont { get; set; }
         public TimeSpan Expiry { get; set; }
+        public string Description { get; set; }
     }
 }

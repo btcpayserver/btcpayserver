@@ -36,7 +36,7 @@ namespace BTCPayServer.Payments.Lightning
             LightningInvoice lightningInvoice = null;
             try
             {
-                lightningInvoice = await client.CreateInvoice(new LightMoney(due, LightMoneyUnit.BTC), expiry);
+                lightningInvoice = await client.CreateInvoice(new LightMoney(due, LightMoneyUnit.BTC), invoice.ProductInformation.ItemDesc, expiry);
             }
             catch(Exception ex)
             {

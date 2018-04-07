@@ -282,6 +282,7 @@ namespace BTCPayServer.Controllers
             vm.MonitoringExpiration = storeBlob.MonitoringExpiration;
             vm.InvoiceExpiration = storeBlob.InvoiceExpiration;
             vm.RateMultiplier = (double)storeBlob.GetRateMultiplier();
+            vm.LightningDescriptionTemplate = storeBlob.LightningDescriptionTemplate;
             vm.PreferredExchange = storeBlob.PreferredExchange.IsCoinAverage() ? "coinaverage" : storeBlob.PreferredExchange;
             return View(vm);
         }
@@ -356,6 +357,7 @@ namespace BTCPayServer.Controllers
             blob.NetworkFeeDisabled = !model.NetworkFee;
             blob.MonitoringExpiration = model.MonitoringExpiration;
             blob.InvoiceExpiration = model.InvoiceExpiration;
+            blob.LightningDescriptionTemplate = model.LightningDescriptionTemplate ?? string.Empty;
 
             bool newExchange = blob.PreferredExchange != model.PreferredExchange;
             blob.PreferredExchange = model.PreferredExchange;

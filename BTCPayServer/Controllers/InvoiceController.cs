@@ -119,7 +119,7 @@ namespace BTCPayServer.Controllers
                                                 .Where(c => c.Network != null)
                                                 .Select(o =>
                                                     (SupportedPaymentMethod: o.SupportedPaymentMethod,
-                                                    PaymentMethod: CreatePaymentMethodAsync(o.Handler, o.SupportedPaymentMethod, o.Network, entity, storeBlob)))
+                                                    PaymentMethod: CreatePaymentMethodAsync(o.Handler, o.SupportedPaymentMethod, o.Network, entity, store)))
                                                 .ToList();
 
             List<string> paymentMethodErrors = new List<string>();
@@ -183,15 +183,16 @@ namespace BTCPayServer.Controllers
             return new DataWrapper<InvoiceResponse>(resp) { Facade = "pos/invoice" };
         }
 
-        private async Task<PaymentMethod> CreatePaymentMethodAsync(IPaymentMethodHandler handler, ISupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network, InvoiceEntity entity, StoreBlob storeBlob)
+        private async Task<PaymentMethod> CreatePaymentMethodAsync(IPaymentMethodHandler handler, ISupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network, InvoiceEntity entity, StoreData store)
         {
+            var storeBlob = store.GetStoreBlob();
             var rate = await storeBlob.ApplyRateRules(network, _RateProviders.GetRateProvider(network, false)).GetRateAsync(entity.ProductInformation.Currency);
             PaymentMethod paymentMethod = new PaymentMethod();
             paymentMethod.ParentEntity = entity;
             paymentMethod.Network = network;
             paymentMethod.SetId(supportedPaymentMethod.PaymentId);
             paymentMethod.Rate = rate;
-            var paymentDetails = await handler.CreatePaymentMethodDetails(supportedPaymentMethod, paymentMethod, network);
+            var paymentDetails = await handler.CreatePaymentMethodDetails(supportedPaymentMethod, paymentMethod, store, network);
             if (storeBlob.NetworkFeeDisabled)
                 paymentDetails.SetNoTxFee();
             paymentMethod.SetPaymentMethodDetails(paymentDetails);

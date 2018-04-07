@@ -91,6 +91,9 @@ namespace BTCPayServer.Models.StoreViewModels
             get; set;
         }
 
+        [Display(Name = "Description template of the lightning invoice")]
+        public string LightningDescriptionTemplate { get; set; }
+
         public class LightningNode
         {
             public string CryptoCode { get; set; }
@@ -100,6 +103,5 @@ namespace BTCPayServer.Models.StoreViewModels
         {
             get; set;
         } = new List<LightningNode>();
-
     }
 }

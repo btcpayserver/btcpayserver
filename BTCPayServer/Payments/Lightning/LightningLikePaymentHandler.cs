@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Payments.Lightning.Charge;
 using BTCPayServer.Payments.Lightning.CLightning;
@@ -23,8 +24,9 @@ namespace BTCPayServer.Payments.Lightning
             _LightningClientFactory = lightningClientFactory;
             _Dashboard = dashboard;
         }
-        public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(LightningSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, BTCPayNetwork network)
+        public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(LightningSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store, BTCPayNetwork network)
         {
+            var storeBlob = store.GetStoreBlob();
             var test = Test(supportedPaymentMethod, network);
             var invoice = paymentMethod.ParentEntity;
             var due = Extensions.RoundUp(invoice.ProductInformation.Price / paymentMethod.Rate, 8);
@@ -36,7 +38,11 @@ namespace BTCPayServer.Payments.Lightning
             LightningInvoice lightningInvoice = null;
             try
             {
-                lightningInvoice = await client.CreateInvoice(new LightMoney(due, LightMoneyUnit.BTC), invoice.ProductInformation.ItemDesc, expiry);
+                string description = storeBlob.LightningDescriptionTemplate;
+                description = description.Replace("{StoreName}", store.StoreName ?? "", StringComparison.OrdinalIgnoreCase)
+                                         .Replace("{ItemDescription}", invoice.ProductInformation.ItemDesc ?? "", StringComparison.OrdinalIgnoreCase)
+                                         .Replace("{OrderId}", invoice.OrderId ?? "", StringComparison.OrdinalIgnoreCase);
+                lightningInvoice = await client.CreateInvoice(new LightMoney(due, LightMoneyUnit.BTC), description, expiry);
             }
             catch(Exception ex)
             {

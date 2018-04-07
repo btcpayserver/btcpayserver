@@ -129,6 +129,14 @@
                     </table>
                 </div>
             </div>
+            <div class="form-group">
+                <label asp-for="LightningDescriptionTemplate"></label>
+                <input asp-for="LightningDescriptionTemplate" class="form-control" />
+                <span asp-validation-for="LightningDescriptionTemplate" class="text-danger"></span>
+                <p class="form-text text-muted">
+                    Placeholder available are: {StoreName}, {ItemDescription} and {OrderId}
+                </p>
+            </div>
             <button name="command" type="submit" class="btn btn-success" value="Save">Save</button>
         </form>
     </div>

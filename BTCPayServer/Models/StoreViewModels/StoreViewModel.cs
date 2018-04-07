@@ -64,7 +64,7 @@ namespace BTCPayServer.Models.StoreViewModels
         }
 
         [Display(Name = "Invoice expires if the full amount has not been paid after ... minutes")]
-        [Range(1, 60 * 24 * 31)]
+        [Range(1, 60 * 24 * 24)]
         public int InvoiceExpiration
         {
             get;
@@ -72,7 +72,7 @@ namespace BTCPayServer.Models.StoreViewModels
         }
 
         [Display(Name = "Payment invalid if transactions fails to confirm ... minutes after invoice expiration")]
-        [Range(10, 60 * 24 * 31)]
+        [Range(10, 60 * 24 * 24)]
         public int MonitoringExpiration
         {
             get;

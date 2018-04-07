@@ -209,16 +209,16 @@ namespace BTCPayServer.HostedServices
             var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
             try
             {
-                var now = DateTimeOffset.UtcNow;
-                if (invoice.ExpirationTime > now)
+                var delay = invoice.ExpirationTime - DateTimeOffset.UtcNow;
+                if (delay > TimeSpan.Zero)
                 {
-                    await Task.Delay(invoice.ExpirationTime - now, _Cts.Token);
+                    await Task.Delay(delay, _Cts.Token);
                 }
                 Watch(invoiceId);
-                now = DateTimeOffset.UtcNow;
-                if (invoice.MonitoringExpiration > now)
+                delay = invoice.MonitoringExpiration - DateTimeOffset.UtcNow;
+                if (delay > TimeSpan.Zero)
                 {
-                    await Task.Delay(invoice.MonitoringExpiration - now, _Cts.Token);
+                    await Task.Delay(delay, _Cts.Token);
                 }
                 Watch(invoiceId);
             }

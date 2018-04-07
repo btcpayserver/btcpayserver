@@ -31,7 +31,7 @@
                         <input type="hidden" asp-for="Count" />
                         <span asp-validation-for="SearchTerm" class="text-danger"></span>
                         <button type="submit" class="btn btn-default" title="Search invoice">
-                            <span class="glyphicon glyphicon-search"></span> Search
+                            <span class="fa fa-search"></span> Search
                         </button>
                     </form>
                 </div>
@@ -39,9 +39,9 @@
         </div>
 
         <div class="row">
-            <a asp-action="CreateInvoice" class="btn btn-success" role="button"><span class="glyphicon glyphicon-plus"></span> Create a new invoice</a>
-            <table class="table">
-                <thead class="thead-inverse">
+            <a asp-action="CreateInvoice" class="btn btn-success" role="button"><span class="fa fa-plus"></span> Create a new invoice</a>
+            <table class="table table-sm table-responsive-md mt-2">
+                <thead>
                     <tr>
                         <th>Date</th>
                         <th>OrderId</th>

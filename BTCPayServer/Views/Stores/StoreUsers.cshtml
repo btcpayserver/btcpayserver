@@ -17,8 +17,10 @@
     <div class="col-md-8">
         <div class="form-group">
             <h5>Users</h5>
-            <span>Add access to your store to other users (Guest will not be able to see and modify the store settings)<br />
-            Note that the user must have a registered account on this BTCPay Server.</span>
+            <span>
+                Add access to your store to other users (Guest will not be able to see and modify the store settings)<br />
+                Note that the user must have a registered account on this BTCPay Server.
+            </span>
         </div>
         <div class="form-inline">
             <form method="post">
@@ -27,12 +29,12 @@
                     <option value="@StoreRoles.Owner">Owner</option>
                     <option value="@StoreRoles.Guest">Guest</option>
                 </select>
-                <button type="submit" role="button" class="form-control btn btn-success"><span class="glyphicon glyphicon-plus"></span>Add user</button>
+                <button type="submit" role="button" class="form-control btn btn-success"><span class="fa fa-plus"></span>Add user</button>
             </form>
         </div>
         <div class="form-group">
-            <table class="table">
-                <thead class="thead-inverse">
+            <table class="table table-sm table-responsive-md mt-2">
+                <thead>
                     <tr>
                         <th>Email</th>
                         <th>Role</th>
@@ -40,7 +42,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach(var user in Model.Users)
+                    @foreach (var user in Model.Users)
                     {
                         <tr>
                             <td>@user.Email</td>

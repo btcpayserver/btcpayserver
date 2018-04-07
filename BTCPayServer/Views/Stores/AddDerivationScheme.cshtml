@@ -16,7 +16,7 @@
 <div class="row">
     <div class="col-md-8">
         <form method="post">
-            @if(!Model.Confirmation)
+            @if (!Model.Confirmation)
             {
                 <div class="form-group">
                     <h5>Derivation Scheme</h5>
@@ -33,7 +33,7 @@
                     <div id="ledger-info" class="form-text text-muted" style="display: none;">
                         <span>A ledger wallet is detected, which account do you want to use?</span>
                         <ul>
-                            @for(int i = 0; i < 4; i++)
+                            @for (int i = 0; i < 4; i++)
                             {
                                 <li><a class="ledger-info-recommended" data-ledgeraccount="@i" href="#">Account @i (49'/<span class="ledger-info-cointype">0</span>'/@i')</a></li>
                             }
@@ -42,8 +42,8 @@
                 </div>
                 <div class="form-group">
                     <span>BTCPay format memo</span>
-                    <table class="table">
-                        <thead class="thead-inverse">
+                    <table class="table table-sm table-responsive-md mt-2">
+                        <thead>
                             <tr>
                                 <th>Address type</th>
                                 <th>Example</th>
@@ -88,15 +88,15 @@
                 <input type="hidden" asp-for="Confirmation" />
                 <input type="hidden" asp-for="DerivationScheme" />
                 <div class="form-group">
-                    <table class="table">
-                        <thead class="thead-inverse">
+                    <table class="table table-sm table-responsive-md mt-2">
+                        <thead>
                             <tr>
                                 <th>Key path</th>
                                 <th>Address</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach(var sample in Model.AddressSamples)
+                            @foreach (var sample in Model.AddressSamples)
                             {
                                 <tr>
                                     <td>@sample.KeyPath</td>

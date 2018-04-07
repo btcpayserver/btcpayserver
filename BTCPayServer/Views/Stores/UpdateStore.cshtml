@@ -72,8 +72,8 @@
             </div>
 
             <div class="form-group">
-                <table class="table">
-                    <thead class="thead-inverse">
+                <table class="table table-sm table-responsive-md mt-2">
+                    <thead>
                         <tr>
                             <th>Crypto</th>
                             <th>Derivation Scheme</th>
@@ -81,13 +81,13 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach(var scheme in Model.DerivationSchemes)
+                        @foreach (var scheme in Model.DerivationSchemes)
                         {
                             <tr>
                                 <td>@scheme.Crypto</td>
                                 <td style="max-width:300px;overflow:hidden;">@scheme.Value</td>
                                 <td style="text-align:right">
-                                    @if(!string.IsNullOrWhiteSpace(scheme.Value))
+                                    @if (!string.IsNullOrWhiteSpace(scheme.Value))
                                     {
                                         <a asp-action="Wallet" asp-route-cryptoCode="@scheme.Crypto">Wallet</a><span> - </span>
                                     }
@@ -108,8 +108,8 @@
                     </p>
                 </div>
                 <div class="form-group">
-                    <table class="table">
-                        <thead class="thead-inverse">
+                    <table class="table table-sm table-responsive-md mt-2">
+                        <thead>
                             <tr>
                                 <th>Crypto</th>
                                 <th>Address</th>
@@ -117,7 +117,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach(var scheme in Model.LightningNodes)
+                            @foreach (var scheme in Model.LightningNodes)
                             {
                                 <tr>
                                     <td>@scheme.CryptoCode</td>

@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <link rel="stylesheet" href="~/vendor/bootstrap/css/bootstrap.css" />
+    <link rel="stylesheet" href="~/vendor/bootstrap4/css/bootstrap.css" />
 </head>
 <body class="h-100">
     <div class="container d-flex h-100">
@@ -19,11 +19,11 @@
             <h1 class="mb-4">@Model.Title</h1>
             <form method="post">
                 <div class="row">
-                    @foreach(var item in Model.Items)
+                    @foreach (var item in Model.Items)
                     {
                         <div class="col-sm-4 mb-3">
                             <h3>@item.Title</h3>
-                            <button type="submit" name="choiceKey" class="btn btn-secondary" value="@item.Id">Buy for @item.Price.Formatted</button>
+                            <button type="submit" name="choiceKey" class="btn btn-primary" value="@item.Id">Buy for @item.Price.Formatted</button>
                         </div>
                     }
                 </div>
@@ -42,7 +42,7 @@
                 </div>*@
         </div>
     </div>
-    <script src="~/vendor/bootstrap/js/bootstrap.js"></script>
     <script src="~/vendor/jquery/jquery.js"></script>
+    <script src="~/vendor/bootstrap4/js/bootstrap.js"></script>
 </body>
 </html>

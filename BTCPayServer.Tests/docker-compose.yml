@@ -110,7 +110,7 @@ services:
       - bitcoind
 
   lightning-charged:
-    image: shesek/lightning-charge:0.3.7
+    image: shesek/lightning-charge:0.3.9
     environment:
       NETWORK: regtest
       API_TOKEN: foiewnccewuify

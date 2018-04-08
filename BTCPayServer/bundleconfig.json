@@ -2,10 +2,10 @@
     {
         "outputFileName": "wwwroot/bundles/main-bundle.min.css",
         "inputFiles": [
-            "wwwroot/vendor/bootstrap/css/bootstrap.css",
+            "wwwroot/vendor/bootstrap4/css/bootstrap.css",
             "wwwroot/vendor/magnific-popup/magnific-popup.css",
-            "wwwroot/css/creative.css",
-            "wwwroot/css/site.css",
+            "wwwroot/vendor/font-awesome/css/font-awesome.css",
+            "wwwroot/main/**/*.css",
             "wwwroot/vendor/animatecss/animate.css"
         ]
     },
@@ -14,11 +14,11 @@
         "inputFiles": [
             "wwwroot/vendor/jquery/jquery.js",
             "wwwroot/vendor/popper/popper.js",
-            "wwwroot/vendor/bootstrap/js/bootstrap.js",
+            "wwwroot/vendor/bootstrap4/js/bootstrap.js",
             "wwwroot/vendor/jquery-easing/jquery.easing.js",
             "wwwroot/vendor/scrollreveal/scrollreveal.min.js",
             "wwwroot/vendor/magnific-popup/jquery.magnific-popup.js",
-            "wwwroot/js/creative.js"
+            "wwwroot/main/**/js/*.js"
         ]
     },
     {
@@ -32,8 +32,7 @@
         "outputFileName": "wwwroot/bundles/checkout-bundle.min.css",
         "inputFiles": [
             "wwwroot/vendor/font-awesome/css/font-awesome.css",
-            "wwwroot/css/css.css",
-            "wwwroot/css/normalizer.css",
+            "wwwroot/checkout/**/*.css",
             "wwwroot/vendor/jquery-prettydropdowns/prettydropdowns.css"
         ]
     },
@@ -47,7 +46,7 @@
             "wwwroot/vendor/i18next/i18next.js",
             "wwwroot/vendor/i18next/vue-i18next.js",
             "wwwroot/vendor/jquery-prettydropdowns/jquery.prettydropdowns.js",
-            "wwwroot/js/checkout/**/*.js"
+            "wwwroot/checkout/**/*.js"
         ]
     }
 ]

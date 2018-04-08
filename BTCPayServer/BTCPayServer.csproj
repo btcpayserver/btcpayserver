@@ -8,15 +8,19 @@
   <ItemGroup>
     <Compile Remove="Build\dockerfiles\**" />
     <Compile Remove="wwwroot\bundles\jqueryvalidate\**" />
+    <Compile Remove="wwwroot\css\**" />
     <Compile Remove="wwwroot\vendor\jquery-nice-select\**" />
     <Content Remove="Build\dockerfiles\**" />
     <Content Remove="wwwroot\bundles\jqueryvalidate\**" />
+    <Content Remove="wwwroot\css\**" />
     <Content Remove="wwwroot\vendor\jquery-nice-select\**" />
     <EmbeddedResource Remove="Build\dockerfiles\**" />
     <EmbeddedResource Remove="wwwroot\bundles\jqueryvalidate\**" />
+    <EmbeddedResource Remove="wwwroot\css\**" />
     <EmbeddedResource Remove="wwwroot\vendor\jquery-nice-select\**" />
     <None Remove="Build\dockerfiles\**" />
     <None Remove="wwwroot\bundles\jqueryvalidate\**" />
+    <None Remove="wwwroot\css\**" />
     <None Remove="wwwroot\vendor\jquery-nice-select\**" />
   </ItemGroup>
   <ItemGroup>
@@ -108,7 +112,6 @@
 
 	<ItemGroup>
 	  <Folder Include="Build\" />
-	  <Folder Include="wwwroot\css\" />
 	  <Folder Include="wwwroot\vendor\clipboard.js\" />
 	</ItemGroup>
 

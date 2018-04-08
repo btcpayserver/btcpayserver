@@ -270,6 +270,20 @@ namespace BTCPayServer.Data
         [JsonConverter(typeof(UriJsonConverter))]
         public Uri CustomCSS { get; set; }
 
+
+        string _LightningDescriptionTemplate;
+        public string LightningDescriptionTemplate
+        {
+            get
+            {
+                return _LightningDescriptionTemplate ?? "Paid to {StoreName} (Order ID: {OrderId})";
+            }
+            set
+            {
+                _LightningDescriptionTemplate = value;
+            }
+        }
+
         public IRateProvider ApplyRateRules(BTCPayNetwork network, IRateProvider rateProvider)
         {
             if (!PreferredExchange.IsCoinAverage())

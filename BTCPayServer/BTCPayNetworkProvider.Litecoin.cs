@@ -12,7 +12,7 @@ namespace BTCPayServer
     {
         public void InitLitecoin()
         {
-            NBXplorer.Altcoins.Litecoin.Networks.EnsureRegistered();
+            NBitcoin.Altcoins.Litecoin.EnsureRegistered();
             var ltcRate = new CoinAverageRateProvider("LTC");
 
             var nbxplorerNetwork = NBXplorerNetworkProvider.GetFromCryptoCode("LTC");

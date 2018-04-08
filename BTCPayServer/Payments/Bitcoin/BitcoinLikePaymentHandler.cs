@@ -27,7 +27,7 @@ namespace BTCPayServer.Payments.Bitcoin
             _WalletProvider = walletProvider;
         }
 
-        public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(DerivationStrategy supportedPaymentMethod, PaymentMethod paymentMethod, BTCPayNetwork network)
+        public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(DerivationStrategy supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store, BTCPayNetwork network)
         {
             if (!_ExplorerProvider.IsAvailable(network))
                 throw new PaymentMethodUnavailableException($"Full node not available");

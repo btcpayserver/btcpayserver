@@ -1,4 +1,4 @@
-FROM microsoft/dotnet:2.0.5-sdk-2.1.4
+FROM microsoft/dotnet:2.0.6-sdk-2.1.101-stretch
 WORKDIR /app
  # caches restore result by copying csproj file separately
 COPY BTCPayServer.Tests/BTCPayServer.Tests.csproj BTCPayServer.Tests/BTCPayServer.Tests.csproj

@@ -46,7 +46,7 @@ services:
       - lightning-charged
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:1.0.1.24
+    image: nicolasdorier/nbxplorer:1.0.1.25
     ports:
       - "32838:32838"
     expose: 
@@ -89,7 +89,7 @@ services:
       - "bitcoin_datadir:/data"
 
   customer_lightningd:
-    image: nicolasdorier/clightning
+    image: nicolasdorier/clightning:0.0.0.2
     environment: 
       EXPOSE_TCP: "true"
       LIGHTNINGD_OPT: |
@@ -110,11 +110,10 @@ services:
       - bitcoind
 
   lightning-charged:
-    image: shesek/lightning-charge:0.3.5
+    image: shesek/lightning-charge:0.3.9
     environment:
       NETWORK: regtest
       API_TOKEN: foiewnccewuify
-      SKIP_BITCOIND: 1
       BITCOIND_RPCCONNECT: bitcoind
     volumes:
       - "bitcoin_datadir:/etc/bitcoin"
@@ -130,7 +129,7 @@ services:
       - merchant_lightningd
 
   merchant_lightningd:
-    image: nicolasdorier/clightning
+    image: nicolasdorier/clightning:0.0.0.2
     environment: 
       EXPOSE_TCP: "true"
       LIGHTNINGD_OPT: |

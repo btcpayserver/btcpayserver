@@ -48,8 +48,10 @@ namespace BTCPayServer.Payments.Lightning.Charge
         {
             var message = CreateMessage(HttpMethod.Post, "invoice");
             Dictionary<string, string> parameters = new Dictionary<string, string>();
-            parameters.Add("msatoshi", request.Amont.MilliSatoshi.ToString(CultureInfo.InvariantCulture));
+            parameters.Add("msatoshi", request.Amount.MilliSatoshi.ToString(CultureInfo.InvariantCulture));
             parameters.Add("expiry", ((int)request.Expiry.TotalSeconds).ToString(CultureInfo.InvariantCulture));
+            if(request.Description != null)
+                parameters.Add("description", request.Description);
             message.Content = new FormUrlEncodedContent(parameters);
             var result = await _Client.SendAsync(message, cancellation);
             result.EnsureSuccessStatusCode();
@@ -152,9 +154,9 @@ namespace BTCPayServer.Payments.Lightning.Charge
             };
         }
 
-        async Task<LightningInvoice> ILightningInvoiceClient.CreateInvoice(LightMoney amount, TimeSpan expiry, CancellationToken cancellation)
+        async Task<LightningInvoice> ILightningInvoiceClient.CreateInvoice(LightMoney amount, string description, TimeSpan expiry, CancellationToken cancellation)
         {
-            var invoice = await CreateInvoiceAsync(new CreateInvoiceRequest() { Amont = amount, Expiry = expiry });
+            var invoice = await CreateInvoiceAsync(new CreateInvoiceRequest() { Amount = amount, Expiry = expiry, Description = description ?? "" });
             return new LightningInvoice() { Id = invoice.Id, Amount = amount, BOLT11 = invoice.PayReq, Status = "unpaid" };
         }
 

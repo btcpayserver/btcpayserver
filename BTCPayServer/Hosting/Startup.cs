@@ -76,8 +76,6 @@ namespace BTCPayServer.Hosting
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
 
-            // Big hack, tests fails because Hangfire fail at initializing at the second test run
-            AddHangfireFix(services);
             services.AddBTCPayServer();
             services.AddMvc(o =>
             {
@@ -93,6 +91,24 @@ namespace BTCPayServer.Hosting
                 options.Password.RequireUppercase = false;
             });
 
+            services.AddHangfire((o) =>
+            {
+                var scope = AspNetCoreJobActivator.Current.BeginScope(null);
+                var options = (ApplicationDbContextFactory)scope.Resolve(typeof(ApplicationDbContextFactory));
+                options.ConfigureHangfireBuilder(o);
+            });
+            services.AddCors(o =>
+            {
+                o.AddPolicy("BitpayAPI", b =>
+                {
+                    b.AllowAnyMethod().AllowAnyHeader().AllowAnyOrigin();
+                });
+            });
+            services.Configure<IOptions<ApplicationInsightsServiceOptions>>(o =>
+            {
+                o.Value.DeveloperMode = _Env.IsDevelopment();
+            });
+
             // Needed to debug U2F for ledger support
             //services.Configure<KestrelServerOptions>(kestrel =>
             //{
@@ -101,46 +117,6 @@ namespace BTCPayServer.Hosting
             //        l.UseHttps("devtest.pfx", "toto");
             //    });
             //});
-        }
-
-        // Big hack, tests fails if only call AddHangfire because Hangfire fail at initializing at the second test run
-        private void AddHangfireFix(IServiceCollection services)
-        {
-            Action<IGlobalConfiguration> configuration = o =>
-            {
-                var scope = AspNetCoreJobActivator.Current.BeginScope(null);
-                var options = (ApplicationDbContextFactory)scope.Resolve(typeof(ApplicationDbContextFactory));
-                options.ConfigureHangfireBuilder(o);
-            };
-
-            ServiceCollectionDescriptorExtensions.TryAddSingleton<Action<IGlobalConfiguration>>(services, (IServiceProvider serviceProvider) => new Action<IGlobalConfiguration>((config) =>
-           {
-               ILoggerFactory service = ServiceProviderServiceExtensions.GetService<ILoggerFactory>(serviceProvider);
-               if (service != null)
-               {
-                   Hangfire.GlobalConfigurationExtensions.UseLogProvider<AspNetCoreLogProvider>(config, new AspNetCoreLogProvider(service));
-               }
-               IServiceScopeFactory service2 = ServiceProviderServiceExtensions.GetService<IServiceScopeFactory>(serviceProvider);
-               if (service2 != null)
-               {
-                   Hangfire.GlobalConfigurationExtensions.UseActivator<AspNetCoreJobActivator>(config, new AspNetCoreJobActivator(service2));
-               }
-               configuration(config);
-           }));
-
-            services.AddHangfire(configuration);
-            services.AddCors(o =>
-            {
-                o.AddPolicy("BitpayAPI", b =>
-                {
-                    b.AllowAnyMethod().AllowAnyHeader().AllowAnyOrigin();
-                });
-            });
-
-            services.Configure<IOptions<ApplicationInsightsServiceOptions>>(o =>
-            {
-                o.Value.DeveloperMode = _Env.IsDevelopment();
-            });
         }
 
         public void Configure(

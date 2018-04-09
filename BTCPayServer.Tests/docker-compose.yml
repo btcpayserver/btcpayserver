@@ -46,7 +46,7 @@ services:
       - lightning-charged
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:1.0.1.25
+    image: nicolasdorier/nbxplorer:1.0.1.26
     ports:
       - "32838:32838"
     expose: 
@@ -89,7 +89,7 @@ services:
       - "bitcoin_datadir:/data"
 
   customer_lightningd:
-    image: nicolasdorier/clightning:0.0.0.2
+    image: nicolasdorier/clightning:0.0.0.3
     environment: 
       EXPOSE_TCP: "true"
       LIGHTNINGD_OPT: |
@@ -129,7 +129,7 @@ services:
       - merchant_lightningd
 
   merchant_lightningd:
-    image: nicolasdorier/clightning:0.0.0.2
+    image: nicolasdorier/clightning:0.0.0.3
     environment: 
       EXPOSE_TCP: "true"
       LIGHTNINGD_OPT: |

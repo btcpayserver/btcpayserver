@@ -94,7 +94,8 @@ namespace BTCPayServer.Configuration
             ExternalUrl = conf.GetOrDefault<Uri>("externalurl", null);
 
             RootPath = conf.GetOrDefault<string>("rootpath", "/");
-
+            if (!RootPath.StartsWith("/", StringComparison.InvariantCultureIgnoreCase))
+                RootPath = "/" + RootPath;
             var old = conf.GetOrDefault<Uri>("internallightningnode", null);
             if(old != null)
                 throw new ConfigException($"internallightningnode should not be used anymore, use btclightning instead");
@@ -117,6 +118,15 @@ namespace BTCPayServer.Configuration
         {
             get;
             set;
+        }
+
+        internal string GetRootUri()
+        {
+            if (ExternalUrl == null)
+                return null;
+            UriBuilder builder = new UriBuilder(ExternalUrl);
+            builder.Path = RootPath;
+            return builder.ToString();
         }
     }
 }

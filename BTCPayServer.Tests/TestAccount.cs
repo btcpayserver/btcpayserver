@@ -132,7 +132,8 @@ namespace BTCPayServer.Tests
             {
                 Url = connectionType == LightningConnectionType.Charge ? parent.MerchantCharge.Client.Uri.AbsoluteUri :
                       connectionType == LightningConnectionType.CLightning ? parent.MerchantLightningD.Address.AbsoluteUri
-                      : throw new NotSupportedException(connectionType.ToString())
+                      : throw new NotSupportedException(connectionType.ToString()),
+                SkipPortTest = true
             }, "save", "BTC");
             if (storeController.ModelState.ErrorCount != 0)
                 Assert.False(true, storeController.ModelState.FirstOrDefault().Value.Errors[0].ErrorMessage);

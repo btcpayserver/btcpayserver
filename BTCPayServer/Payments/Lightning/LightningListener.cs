@@ -52,9 +52,20 @@ namespace BTCPayServer.Payments.Lightning
 
             _ListenPoller = new Timer(async s =>
             {
-                await Task.WhenAll((await _InvoiceRepository.GetPendingInvoices())
-                .Select(async invoiceId => await EnsureListening(invoiceId, true))
-                .ToArray());
+                try
+                {
+                    await Task.WhenAll((await _InvoiceRepository.GetPendingInvoices())
+                    .Select(async invoiceId => await EnsureListening(invoiceId, true))
+                    .ToArray());
+                }
+                catch (AggregateException ex)
+                {
+                    Logs.PayServer.LogError(ex.InnerException ?? ex.InnerExceptions.FirstOrDefault(), $"Lightning: Uncaught error");
+                }
+                catch (Exception ex)
+                {
+                    Logs.PayServer.LogError(ex, $"Lightning: Uncaught error");
+                }
             }, null, 0, (int)PollInterval.TotalMilliseconds);
             leases.Add(_ListenPoller);
             return Task.CompletedTask;
@@ -90,7 +101,16 @@ namespace BTCPayServer.Payments.Lightning
                 if (poll)
                 {
                     var charge = _LightningClientFactory.CreateClient(lightningSupportedMethod, network);
-                    var chargeInvoice = await charge.GetInvoice(lightningMethod.InvoiceId);
+                    LightningInvoice chargeInvoice = null;
+                    try
+                    {
+                        chargeInvoice = await charge.GetInvoice(lightningMethod.InvoiceId);
+                    }
+                    catch(Exception ex)
+                    {
+                        Logs.PayServer.LogError(ex, $"{lightningSupportedMethod.CryptoCode} (Lightning): Can't connect to the lightning server");
+                        continue;
+                    }
                     if (chargeInvoice == null)
                         continue;
                     if (chargeInvoice.Status == "paid")

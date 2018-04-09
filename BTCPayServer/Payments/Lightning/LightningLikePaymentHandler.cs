@@ -44,7 +44,7 @@ namespace BTCPayServer.Payments.Lightning
                                          .Replace("{OrderId}", invoice.OrderId ?? "", StringComparison.OrdinalIgnoreCase);
                 lightningInvoice = await client.CreateInvoice(new LightMoney(due, LightMoneyUnit.BTC), description, expiry);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 throw new PaymentMethodUnavailableException($"Impossible to create lightning invoice ({ex.Message})", ex);
             }
@@ -56,11 +56,6 @@ namespace BTCPayServer.Payments.Lightning
                 NodeInfo = nodeInfo.ToString()
             };
         }
-
-        /// <summary>
-        /// Used for testing
-        /// </summary>
-        public bool SkipP2PTest { get; set; }
 
         public async Task<NodeInfo> Test(LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network)
         {
@@ -94,38 +89,34 @@ namespace BTCPayServer.Payments.Lightning
                 throw new PaymentMethodUnavailableException($"The lightning is not synched ({blocksGap} blocks)");
             }
 
+            return new NodeInfo(info.NodeId, info.Address, info.P2PPort);
+        }
+
+        public async Task TestConnection(NodeInfo nodeInfo, CancellationToken cancellation)
+        {
             try
             {
-                if (!SkipP2PTest)
+                IPAddress address = null;
+                try
                 {
-                    await TestConnection(info.Address, info.P2PPort, cts.Token);
+                    address = IPAddress.Parse(nodeInfo.Host);
+                }
+                catch
+                {
+                    address = (await Dns.GetHostAddressesAsync(nodeInfo.Host)).FirstOrDefault();
+                }
+
+                if (address == null)
+                    throw new PaymentMethodUnavailableException($"DNS did not resolved {nodeInfo.Host}");
+
+                using (var tcp = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp))
+                {
+                    await WithTimeout(tcp.ConnectAsync(new IPEndPoint(address, nodeInfo.Port)), cancellation);
                 }
             }
             catch (Exception ex)
             {
-                throw new PaymentMethodUnavailableException($"Error while connecting to the lightning node via {info.Address}:{info.P2PPort} ({ex.Message})");
-            }
-            return new NodeInfo(info.NodeId, info.Address, info.P2PPort);
-        }
-
-        private async Task TestConnection(string addressStr, int port, CancellationToken cancellation)
-        {
-            IPAddress address = null;
-            try
-            {
-                address = IPAddress.Parse(addressStr);
-            }
-            catch
-            {
-                address = (await Dns.GetHostAddressesAsync(addressStr)).FirstOrDefault();
-            }
-
-            if (address == null)
-                throw new PaymentMethodUnavailableException($"DNS did not resolved {addressStr}");
-
-            using (var tcp = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp))
-            {
-                await WithTimeout(tcp.ConnectAsync(new IPEndPoint(address, port)), cancellation);
+                throw new PaymentMethodUnavailableException($"Error while connecting to the lightning node via {nodeInfo.Host}:{nodeInfo.Port} ({ex.Message})");
             }
         }
 

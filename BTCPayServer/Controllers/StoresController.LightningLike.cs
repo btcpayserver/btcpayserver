@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using BTCPayServer.Payments.Lightning;
 using System.Net;
 using BTCPayServer.Data;
+using System.Threading;
 
 namespace BTCPayServer.Controllers
 {
@@ -127,13 +128,20 @@ namespace BTCPayServer.Controllers
                 try
                 {
                     var info = await handler.Test(paymentMethod, network);
+                    if (!vm.SkipPortTest)
+                    {
+                        using (CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
+                        {
+                            await handler.TestConnection(info, cts.Token);
+                        }
+                    }
                     vm.StatusMessage = $"Connection to the lightning node succeed ({info})";
                 }
                 catch (Exception ex)
                 {
                     vm.StatusMessage = $"Error: {ex.Message}";
                     return View(vm);
-                }                
+                }
                 return View(vm);
             }
         }

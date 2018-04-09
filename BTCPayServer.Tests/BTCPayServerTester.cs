@@ -120,7 +120,6 @@ namespace BTCPayServer.Tests
                     .Build();
             _Host.Start();
             InvoiceRepository = (InvoiceRepository)_Host.Services.GetService(typeof(InvoiceRepository));
-            ((LightningLikePaymentHandler)_Host.Services.GetService(typeof(IPaymentMethodHandler<LightningSupportedPaymentMethod>))).SkipP2PTest = !InContainer;
         }
         
         public string HostName

@@ -358,7 +358,7 @@ namespace BTCPayServer.Controllers
         [Route("invoices")]
         [Authorize(AuthenticationSchemes = "Identity.Application")]
         [BitpayAPIConstraint(false)]
-        public async Task<IActionResult> ListInvoices(string searchTerm = null, int skip = 0, int count = 20)
+        public async Task<IActionResult> ListInvoices(string searchTerm = null, int skip = 0, int count = 50)
         {
             var model = new InvoicesModel();
             var filterString = new SearchString(searchTerm);

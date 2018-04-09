@@ -18,8 +18,10 @@
                 <hr class="primary">
                 <p>Create, search or pay an invoice. (<a href="#help" data-toggle="collapse">Help</a>)</p>
                 <div id="help" class="collapse text-left">
-                    <p>You can search for invoice Id, deposit address, price, order id, store id, any buyer information and any product information.</br>
-                    You can also apply filters to your search by searching for `filtername:value`, here is a list of supported filters</p>
+                    <p>
+                        You can search for invoice Id, deposit address, price, order id, store id, any buyer information and any product information.</br>
+                        You can also apply filters to your search by searching for `filtername:value`, here is a list of supported filters
+                    </p>
                     <ul>
                         <li><b>storeid:id</b> for filtering a specific store</li>
                         <li><b>status:(expired|invalid|complete|confirmed|paid|new)</b> for filtering a specific status</li>
@@ -27,12 +29,16 @@
                 </div>
                 <div class="form-group">
                     <form asp-action="SearchInvoice" method="post">
-                        <input asp-for="SearchTerm" class="form-control" />
+                        <div class="input-group">
+                            <input asp-for="SearchTerm" class="form-control" />
+                            <span class="input-group-btn">
+                                <button type="submit" class="btn btn-primary" title="Search invoice">
+                                    <span class="fa fa-search"></span> Search
+                                </button>
+                            </span>
+                        </div>
                         <input type="hidden" asp-for="Count" />
                         <span asp-validation-for="SearchTerm" class="text-danger"></span>
-                        <button type="submit" class="btn btn-primary" title="Search invoice">
-                            <span class="fa fa-search"></span> Search
-                        </button>
                     </form>
                 </div>
             </div>
@@ -82,13 +88,13 @@
                             }
                             else
                             {
-                                <td >@invoice.Status</td>
+                                <td>@invoice.Status</td>
                             }
                             <td style="text-align:right">@invoice.AmountCurrency</td>
                             <td style="text-align:right">
                                 @if(invoice.Status == "new")
                                 {
-                                    <a asp-action="Checkout" asp-route-invoiceId="@invoice.InvoiceId">Checkout</a> <span>-</span> 
+                                    <a asp-action="Checkout" asp-route-invoiceId="@invoice.InvoiceId">Checkout</a> <span>-</span>
                                 }<a asp-action="Invoice" asp-route-invoiceId="@invoice.InvoiceId">Details</a>
                             </td>
                         </tr>

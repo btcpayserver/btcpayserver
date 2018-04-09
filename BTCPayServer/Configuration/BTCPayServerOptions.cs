@@ -119,5 +119,14 @@ namespace BTCPayServer.Configuration
             get;
             set;
         }
+
+        internal string GetRootUri()
+        {
+            if (ExternalUrl == null)
+                return null;
+            UriBuilder builder = new UriBuilder(ExternalUrl);
+            builder.Path = RootPath;
+            return builder.ToString();
+        }
     }
 }

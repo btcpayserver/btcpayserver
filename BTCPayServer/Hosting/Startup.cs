@@ -130,18 +130,18 @@ namespace BTCPayServer.Hosting
             Logs.Configuration.LogInformation($"Root Path: {options.RootPath}");
             if (options.RootPath.Equals("/", StringComparison.OrdinalIgnoreCase))
             {
-                ConfigureCore(app, env, prov, loggerFactory);
+                ConfigureCore(app, env, prov, loggerFactory, options);
             }
             else
             {
                 app.Map(options.RootPath, appChild =>
                 {
-                    ConfigureCore(appChild, env, prov, loggerFactory);
+                    ConfigureCore(appChild, env, prov, loggerFactory, options);
                 });
             }
         }
 
-        private static void ConfigureCore(IApplicationBuilder app, IHostingEnvironment env, IServiceProvider prov, ILoggerFactory loggerFactory)
+        private static void ConfigureCore(IApplicationBuilder app, IHostingEnvironment env, IServiceProvider prov, ILoggerFactory loggerFactory, BTCPayServerOptions options)
         {
             if (env.IsDevelopment())
             {
@@ -156,7 +156,11 @@ namespace BTCPayServer.Hosting
             app.UseStaticFiles();
             app.UseAuthentication();
             app.UseHangfireServer();
-            app.UseHangfireDashboard("/hangfire", new DashboardOptions() { Authorization = new[] { new NeedRole(Roles.ServerAdmin) } });
+            app.UseHangfireDashboard("/hangfire", new DashboardOptions()
+            {
+                AppPath = options.GetRootUri(),
+                Authorization = new[] { new NeedRole(Roles.ServerAdmin) }
+            });
             app.UseWebSockets();
             app.UseMvc(routes =>
             {

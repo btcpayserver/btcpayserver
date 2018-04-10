@@ -278,11 +278,6 @@ namespace BTCPayServer.Controllers
             buyerInformation.BuyerZip = buyerInformation.BuyerZip ?? buyer.zip;
         }
 
-        private DerivationStrategyBase ParseDerivationStrategy(string derivationStrategy, BTCPayNetwork network)
-        {
-            return new DerivationStrategyFactory(network.NBitcoinNetwork).Parse(derivationStrategy);
-        }
-
         private TDest Map<TFrom, TDest>(TFrom data)
         {
             return JsonConvert.DeserializeObject<TDest>(JsonConvert.SerializeObject(data));

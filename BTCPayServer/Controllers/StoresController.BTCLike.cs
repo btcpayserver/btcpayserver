@@ -26,10 +26,16 @@ namespace BTCPayServer.Controllers
             var store = await _Repo.FindStore(storeId, GetUserId());
             if (store == null)
                 return NotFound();
+            var network = cryptoCode == null ? null : _ExplorerProvider.GetNetwork(cryptoCode);
+            if (network == null)
+            {
+                return NotFound();
+            }
 
             DerivationSchemeViewModel vm = new DerivationSchemeViewModel();
             vm.ServerUrl = GetStoreUrl(storeId);
             vm.CryptoCode = cryptoCode;
+            vm.RootKeyPath = network.NBitcoinNetwork.Consensus.SupportSegwit ? "49'" : "44'";
             SetExistingValues(store, vm);
             return View(vm);
         }
@@ -63,6 +69,7 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
+            vm.RootKeyPath = network.NBitcoinNetwork.Consensus.SupportSegwit ? "49'" : "44'";
             var wallet = _WalletProvider.GetWallet(network);
             if (wallet == null)
             {
@@ -204,7 +211,7 @@ namespace BTCPayServer.Controllers
                 {
                     try
                     {
-                        destinationAddress = BitcoinAddress.Create(destination);
+                        destinationAddress = BitcoinAddress.Create(destination, network.NBitcoinNetwork);
                     }
                     catch { }
                     if (destinationAddress == null)

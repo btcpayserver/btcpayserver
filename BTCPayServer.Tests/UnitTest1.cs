@@ -1164,7 +1164,7 @@ namespace BTCPayServer.Tests
 
         private static bool IsMapped(Invoice invoice, ApplicationDbContext ctx)
         {
-            var h = BitcoinAddress.Create(invoice.BitcoinAddress).ScriptPubKey.Hash.ToString();
+            var h = BitcoinAddress.Create(invoice.BitcoinAddress, Network.RegTest).ScriptPubKey.Hash.ToString();
             return ctx.AddressInvoices.FirstOrDefault(i => i.InvoiceDataId == invoice.Id && i.GetAddress() == h) != null;
         }
 

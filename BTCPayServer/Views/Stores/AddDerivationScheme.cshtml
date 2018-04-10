@@ -35,7 +35,7 @@
                         <ul>
                             @for (int i = 0; i < 4; i++)
                             {
-                                <li><a class="ledger-info-recommended" data-ledgeraccount="@i" href="#">Account @i (49'/<span class="ledger-info-cointype">0</span>'/@i')</a></li>
+                                <li><a class="ledger-info-recommended" data-ledgeraccount="@i" href="#">Account @i (@Model.RootKeyPath/<span class="ledger-info-cointype">0</span>'/@i')</a></li>
                             }
                         </ul>
                     </div>

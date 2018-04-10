@@ -43,6 +43,9 @@ namespace BTCPayServer
                 }
             }
 
+            if(!Network.Consensus.SupportSegwit)
+                hintedLabels.Add("legacy");
+
             try
             {
                 var result = new DerivationStrategyFactory(Network).Parse(str);

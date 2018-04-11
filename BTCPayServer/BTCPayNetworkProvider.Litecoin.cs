@@ -27,7 +27,7 @@ namespace BTCPayServer
                 CryptoImagePath = "imlegacy/litecoin-symbol.svg",
                 LightningImagePath = "imlegacy/ltc-lightning.svg",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NBXplorerNetworkProvider.ChainType),
-                CoinType = NBXplorerNetworkProvider.ChainType == ChainType.Main ? new KeyPath("2'") : new KeyPath("3'")
+                CoinType = NBXplorerNetworkProvider.ChainType == ChainType.Main ? new KeyPath("2'") : new KeyPath("1'")
             });
         }
     }

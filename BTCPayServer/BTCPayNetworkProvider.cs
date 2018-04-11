@@ -47,6 +47,7 @@ namespace BTCPayServer
             ChainType = chainType;
             InitBitcoin();
             InitLitecoin();
+            InitDogecoin();
         }
 
         /// <summary>

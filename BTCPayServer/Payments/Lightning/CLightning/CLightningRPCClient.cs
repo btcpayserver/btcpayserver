@@ -177,7 +177,7 @@ namespace BTCPayServer.Payments.Lightning.CLightning
         async Task<LightningInvoice> ILightningInvoiceClient.CreateInvoice(LightMoney amount, string description, TimeSpan expiry, CancellationToken cancellation)
         {
             var id = InvoiceIdEncoder.EncodeData(RandomUtils.GetBytes(20));
-            var invoice = await SendCommandAsync<CLightningInvoice>("invoice", new object[] { amount.MilliSatoshi, id, description ?? "" }, cancellation: cancellation);
+            var invoice = await SendCommandAsync<CLightningInvoice>("invoice", new object[] { amount.MilliSatoshi, id, description ?? "", Math.Max(0,  (int)expiry.TotalSeconds) }, cancellation: cancellation);
             invoice.Label = id;
             invoice.MilliSatoshi = amount;
             invoice.Status = "unpaid";

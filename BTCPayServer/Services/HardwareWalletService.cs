@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.WebSockets;
@@ -82,12 +83,20 @@ namespace BTCPayServer.Services
             if (network == null)
                 throw new ArgumentNullException(nameof(network));
 
-            var path = new KeyPath("49'").Derive(network.CoinType).Derive(account, true);
+            var segwit = network.NBitcoinNetwork.Consensus.SupportSegwit;
+            var path = new KeyPath(segwit ? "49'" : "44'").Derive(network.CoinType).Derive(account, true);
             var pubkey = await GetExtPubKey(_Ledger, network, path, false);
-            var derivation = new DerivationStrategyFactory(network.NBitcoinNetwork).CreateDirectDerivationStrategy(pubkey, new DerivationStrategyOptions()
+            var derivation = new DerivationStrategyFactory(network.NBitcoinNetwork).CreateDirectDerivationStrategy(pubkey,
+            segwit ? 
+            new DerivationStrategyOptions()
             {
                 P2SH = true,
                 Legacy = false
+            } :
+            new DerivationStrategyOptions()
+            {
+                P2SH = false,
+                Legacy = true
             });
             return new GetXPubResult() { ExtPubKey = derivation.ToString(), KeyPath = path };
         }
@@ -125,9 +134,13 @@ namespace BTCPayServer.Services
 
         private static async Task<KeyPath> GetKeyPath(LedgerClient ledger, BTCPayNetwork network, DirectDerivationStrategy directStrategy)
         {
+            List<KeyPath> derivations = new List<KeyPath>();
+            if(network.NBitcoinNetwork.Consensus.SupportSegwit)
+                derivations.Add(new KeyPath("49'"));
+            derivations.Add(new KeyPath("44'"));
             KeyPath foundKeyPath = null;
             foreach (var account in
-                                  new[] { new KeyPath("49'"), new KeyPath("44'") }
+                                  derivations
                                   .Select(purpose => purpose.Derive(network.CoinType))
                                   .SelectMany(coinType => Enumerable.Range(0, 5).Select(i => coinType.Derive(i, true))))
             {

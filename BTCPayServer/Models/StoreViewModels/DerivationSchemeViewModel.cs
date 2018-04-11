@@ -29,5 +29,6 @@ namespace BTCPayServer.Models.StoreViewModels
 
         public string ServerUrl { get; set; }
         public string StatusMessage { get; internal set; }
+        public string RootKeyPath { get; set; }
     }
 }

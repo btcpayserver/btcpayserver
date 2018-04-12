@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using NBitcoin;
 
 namespace BTCPayServer.Models.StoreViewModels
 {
@@ -29,6 +30,6 @@ namespace BTCPayServer.Models.StoreViewModels
 
         public string ServerUrl { get; set; }
         public string StatusMessage { get; internal set; }
-        public string RootKeyPath { get; set; }
+        public KeyPath RootKeyPath { get; set; }
     }
 }

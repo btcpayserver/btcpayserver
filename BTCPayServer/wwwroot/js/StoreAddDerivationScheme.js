@@ -52,7 +52,6 @@
                     Write('check', 'success', 'This store is configured to use your ledger');
                     $("#no-ledger-info").css("display", "none");
                     $("#ledger-info").css("display", "block");
-                    $(".ledger-info-cointype").text(result.coinType);
                 }
             });
     };

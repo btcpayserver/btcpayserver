@@ -84,19 +84,12 @@ namespace BTCPayServer.Services
                 throw new ArgumentNullException(nameof(network));
 
             var segwit = network.NBitcoinNetwork.Consensus.SupportSegwit;
-            var path = new KeyPath(segwit ? "49'" : "44'").Derive(network.CoinType).Derive(account, true);
+            var path = network.GetRootKeyPath().Derive(account, true);
             var pubkey = await GetExtPubKey(_Ledger, network, path, false);
-            var derivation = new DerivationStrategyFactory(network.NBitcoinNetwork).CreateDirectDerivationStrategy(pubkey,
-            segwit ? 
-            new DerivationStrategyOptions()
+            var derivation = new DerivationStrategyFactory(network.NBitcoinNetwork).CreateDirectDerivationStrategy(pubkey, new DerivationStrategyOptions()
             {
-                P2SH = true,
-                Legacy = false
-            } :
-            new DerivationStrategyOptions()
-            {
-                P2SH = false,
-                Legacy = true
+                P2SH = segwit,
+                Legacy = !segwit
             });
             return new GetXPubResult() { ExtPubKey = derivation.ToString(), KeyPath = path };
         }
@@ -248,6 +241,5 @@ namespace BTCPayServer.Services
         public string ExtPubKey { get; set; }
         [JsonConverter(typeof(NBitcoin.JsonConverters.KeyPathJsonConverter))]
         public KeyPath KeyPath { get; set; }
-        public int CoinType { get; internal set; }
     }
 }

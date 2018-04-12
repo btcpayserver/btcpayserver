@@ -35,7 +35,7 @@ namespace BTCPayServer.Controllers
             DerivationSchemeViewModel vm = new DerivationSchemeViewModel();
             vm.ServerUrl = GetStoreUrl(storeId);
             vm.CryptoCode = cryptoCode;
-            vm.RootKeyPath = network.NBitcoinNetwork.Consensus.SupportSegwit ? "49'" : "44'";
+            vm.RootKeyPath = network.GetRootKeyPath();
             SetExistingValues(store, vm);
             return View(vm);
         }
@@ -69,7 +69,7 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
-            vm.RootKeyPath = network.NBitcoinNetwork.Consensus.SupportSegwit ? "49'" : "44'";
+            vm.RootKeyPath = network.GetRootKeyPath();
             var wallet = _WalletProvider.GetWallet(network);
             if (wallet == null)
             {
@@ -258,8 +258,6 @@ namespace BTCPayServer.Controllers
                 if (command == "getxpub")
                 {
                     var getxpubResult = await hw.GetExtPubKey(network, account);
-                    ;
-                    getxpubResult.CoinType = (int)(getxpubResult.KeyPath.Indexes[1] - 0x80000000);
                     result = getxpubResult;
                 }
                 if (command == "getinfo")

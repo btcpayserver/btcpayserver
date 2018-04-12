@@ -72,6 +72,12 @@ namespace BTCPayServer
         public override string ToString()
         {
             return CryptoCode;
-        }        
+        }
+
+        internal KeyPath GetRootKeyPath()
+        {
+            return new KeyPath(NBitcoinNetwork.Consensus.SupportSegwit ? "49'" : "44'")
+                        .Derive(CoinType); 
+        }
     }
 }

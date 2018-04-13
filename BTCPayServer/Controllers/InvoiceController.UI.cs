@@ -238,7 +238,8 @@ namespace BTCPayServer.Controllers
                 BtcPaid = accounting.Paid.ToString(),
                 Status = invoice.Status,
                 CryptoImage = "/" + GetImage(paymentMethodId, network),
-                NetworkFeeDescription = $"{accounting.TxRequired} transaction{(accounting.TxRequired > 1 ? "s" : "")} x {paymentMethodDetails.GetTxFee()} {network.CryptoCode}",
+                NetworkFee = paymentMethodDetails.GetTxFee(),
+                IsMultiCurrency = invoice.GetPayments().Select(p => p.GetPaymentMethodId()).Concat(new[] { paymentMethod.GetId() }).Distinct().Count() > 1,
                 AllowCoinConversion = storeBlob.AllowCoinConversion,
                 AvailableCryptos = invoice.GetPaymentMethods(_NetworkProvider)
                                           .Where(i => i.Network != null)
@@ -250,10 +251,6 @@ namespace BTCPayServer.Controllers
                                           }).Where(c => c.CryptoImage != "/")
                 .ToList()
             };
-
-            var isMultiCurrency = invoice.GetPayments().Select(p => p.GetPaymentMethodId()).Concat(new[] { paymentMethod.GetId() }).Distinct().Count() > 1;
-            if (isMultiCurrency)
-                model.NetworkFeeDescription = $"{accounting.NetworkFee} {network.CryptoCode}";
 
             var expiration = TimeSpan.FromSeconds(model.ExpirationSeconds);
             model.TimeLeft = PrettyPrint(expiration);

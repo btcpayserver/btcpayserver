@@ -87,7 +87,14 @@
                 <div class="line-items__item__label">
                     <span>{{$t("Network Cost")}}</span>
                 </div>
-                <div class="line-items__item__value" i18n="">{{srvModel.networkFeeDescription }}</div>
+                <div class="line-items__item__value">
+                    <span v-if="srvModel.IsMultiCurrency">
+                        {{ srvModel.networkFee }} {{ srvModel.cryptoCode }}
+                    </span>
+                    <span v-else>
+                        {{$t("txCount", {count: srvModel.txCount})}} x {{ srvModel.networkFee }} {{ srvModel.cryptoCode }}
+                    </span>
+                </div>
             </div>
             <div class="line-items__item">
                 <div class="line-items__item__label">

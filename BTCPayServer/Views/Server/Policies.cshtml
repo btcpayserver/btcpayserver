@@ -16,6 +16,15 @@
     <div class="col-md-6">
         <form method="post">
             <div class="form-group">
+                <label asp-for="CustomBootstrapThemeCssUri"></label>
+                <input asp-for="CustomBootstrapThemeCssUri" class="form-control" />
+                <span asp-validation-for="CustomBootstrapThemeCssUri" class="text-danger"></span>
+                <p class="form-text text-muted">
+                    <a href="https://bootstrap.build/app/v4.0/" target="_blank">Build your own theme</a>
+                    or <a href="https://bootswatch.com/" target="_blank">pick one already made</a>
+                </p>
+            </div>
+            <div class="form-group">
                 <label asp-for="RequiresConfirmedEmail"></label>
                 <input asp-for="RequiresConfirmedEmail" type="checkbox" class="form-check-inline" />
             </div>

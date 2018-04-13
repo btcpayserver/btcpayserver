@@ -136,6 +136,7 @@ namespace BTCPayServer.Hosting
 
             services.TryAddSingleton<LanguageService>();
             services.TryAddSingleton<NBXplorerDashboard>();
+            services.TryAddSingleton<CssThemeManager>();
             services.TryAddSingleton<StoreRepository>();
             services.TryAddSingleton<BTCPayWalletProvider>();
             services.TryAddSingleton<CurrencyNameTable>();

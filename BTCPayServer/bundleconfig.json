@@ -2,7 +2,6 @@
     {
         "outputFileName": "wwwroot/bundles/main-bundle.min.css",
         "inputFiles": [
-            "wwwroot/vendor/bootstrap4/css/bootstrap.css",
             "wwwroot/vendor/magnific-popup/magnific-popup.css",
             "wwwroot/vendor/font-awesome/css/font-awesome.css",
             "wwwroot/main/**/*.css",

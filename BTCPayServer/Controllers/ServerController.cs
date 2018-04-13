@@ -1,4 +1,5 @@
-﻿using BTCPayServer.Models;
+﻿using BTCPayServer.HostedServices;
+using BTCPayServer.Models;
 using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Mails;
@@ -21,11 +22,13 @@ namespace BTCPayServer.Controllers
     {
         private UserManager<ApplicationUser> _UserManager;
         SettingsRepository _SettingsRepository;
+        private CssThemeManager _CssThemeManager;
 
-        public ServerController(UserManager<ApplicationUser> userManager, SettingsRepository settingsRepository)
+        public ServerController(UserManager<ApplicationUser> userManager, SettingsRepository settingsRepository, CssThemeManager cssThemeManager)
         {
             _UserManager = userManager;
             _SettingsRepository = settingsRepository;
+            _CssThemeManager = cssThemeManager;
         }
 
         [Route("server/users")]
@@ -138,6 +141,9 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> Policies(PoliciesSettings settings)
         {
             await _SettingsRepository.UpdateSetting(settings);
+            // TODO: remove controller/class-level property and have only reference to 
+            // CssThemeManager here in this method
+            _CssThemeManager.Update(settings.CustomBootstrapThemeCssUri);
             TempData["StatusMessage"] = "Policies upadated successfully";
             return View(settings);
         }

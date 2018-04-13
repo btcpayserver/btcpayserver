@@ -8,12 +8,12 @@
 <h4>@ViewData["Title"]</h4>
 @Html.Partial("_StatusMessage", TempData["StatusMessage"])
 <div class="row">
-    <div class="col-md-6">
+    <div class="col-lg-6">
         <div asp-validation-summary="All" class="text-danger"></div>
     </div>
 </div>
 <div class="row">
-    <div class="col-md-6">
+    <div class="col-lg-6">
         <form method="post">
             <div class="form-group">
                 <label asp-for="CustomBootstrapThemeCssUri"></label>

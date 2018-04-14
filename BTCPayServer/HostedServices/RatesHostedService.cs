@@ -16,10 +16,12 @@ namespace BTCPayServer.HostedServices
         public RatesHostedService(SettingsRepository repo, IRateProviderFactory rateProviderFactory)
         {
             this._SettingsRepository = repo;
-            _RateProviderFactory = (BTCPayRateProviderFactory)rateProviderFactory;
+            _RateProviderFactory = rateProviderFactory as BTCPayRateProviderFactory;
         }
         public async Task StartAsync(CancellationToken cancellationToken)
         {
+            if (_RateProviderFactory == null)
+                return;
             var rates = (await _SettingsRepository.GetSettingAsync<RatesSetting>()) ?? new RatesSetting();
             _RateProviderFactory.CacheSpan = TimeSpan.FromMinutes(rates.CacheInMinutes);
         }

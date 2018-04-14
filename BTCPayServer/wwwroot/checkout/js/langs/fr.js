@@ -47,5 +47,8 @@ Vous pouvez revenir sur {{storeName}} si vous voulez resoumettre votre paiement.
     "Archived_Body": "Merci de contacter le marchand pour plus d'assistance ou d'information sur cette commande.",
     // Lightning
     "BOLT 11 Invoice": "Facture BOLT 11",
-    "Node Info": "Information du noeud"
+    "Node Info": "Information du noeud",
+    //
+    "txCount": "{{count}} transaction",
+    "txCount_plural": "{{count}} transactions"
 };

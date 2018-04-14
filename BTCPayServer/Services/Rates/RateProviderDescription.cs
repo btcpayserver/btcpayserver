@@ -5,8 +5,8 @@ using System.Threading.Tasks;
 
 namespace BTCPayServer.Services.Rates
 {
-    public interface IRateProviderFactory
+    public interface RateProviderDescription
     {
-        IRateProvider GetRateProvider(BTCPayNetwork network);
+        IRateProvider CreateRateProvider(IServiceProvider serviceProvider);
     }
 }

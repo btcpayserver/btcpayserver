@@ -44,5 +44,11 @@ Sie können zu {{storeName}} zurückkehren, wenn Sie Ihre Zahlung erneut senden 
     "This invoice has been paid": "Diese Rechnung wurde bezahlt",
     // Invoice archived
     "This invoice has been archived": "Diese Rechnung wurde archiviert",
-    "Archived_Body": "Bitte kontaktieren Sie den Shop für Bestellinformationen oder Hilfe"
+    "Archived_Body": "Bitte kontaktieren Sie den Shop für Bestellinformationen oder Hilfe",
+    // Lightning
+    "BOLT 11 Invoice": "BOLT 11 Rechnung",
+    "Node Info": "Knoten Info",
+    //
+    "txCount": "{{count}} transaktion",
+    "txCount_plural": "{{count}} transaktionen"
 };

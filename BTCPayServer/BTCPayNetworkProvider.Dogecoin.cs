@@ -13,7 +13,6 @@ namespace BTCPayServer
         public void InitDogecoin()
         {
             NBitcoin.Altcoins.Dogecoin.EnsureRegistered();
-            var ltcRate = new CoinAverageRateProvider("DOGE");
 
             var nbxplorerNetwork = NBXplorerNetworkProvider.GetFromCryptoCode("DOGE");
             Add(new BTCPayNetwork()
@@ -23,7 +22,7 @@ namespace BTCPayServer
                 NBitcoinNetwork = nbxplorerNetwork.NBitcoinNetwork,
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "dogecoin",
-                DefaultRateProvider = ltcRate,
+                DefaultRateProvider = new CoinAverageRateProviderDescription("DOGE"),
                 CryptoImagePath = "imlegacy/dogecoin.png",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NBXplorerNetworkProvider.ChainType),
                 CoinType = NBXplorerNetworkProvider.ChainType == ChainType.Main ? new KeyPath("3'") : new KeyPath("1'")

@@ -4,9 +4,17 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using NBitcoin;
 
 namespace BTCPayServer.Services.Rates
 {
+    public class BitpayRateProviderDescription : RateProviderDescription
+    {
+        public IRateProvider CreateRateProvider(IServiceProvider serviceProvider)
+        {
+            return new BitpayRateProvider(new Bitpay(new Key(), new Uri("https://bitpay.com/")));
+        }
+    }
     public class BitpayRateProvider : IRateProvider
     {
         Bitpay _Bitpay;

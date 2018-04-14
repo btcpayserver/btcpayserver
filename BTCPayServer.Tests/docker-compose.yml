@@ -46,7 +46,7 @@ services:
       - lightning-charged
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:1.0.1.32
+    image: nicolasdorier/nbxplorer:1.0.1.34
     ports:
       - "32838:32838"
     expose: 

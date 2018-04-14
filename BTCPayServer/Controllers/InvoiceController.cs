@@ -165,7 +165,7 @@ namespace BTCPayServer.Controllers
             {
                 var btc = _NetworkProvider.BTC;
                 var feeProvider = ((IFeeProviderFactory)_ServiceProvider.GetService(typeof(IFeeProviderFactory))).CreateFeeProvider(btc);
-                var rateProvider = storeBlob.ApplyRateRules(btc, _RateProviders.GetRateProvider(btc, false));
+                var rateProvider = storeBlob.ApplyRateRules(btc, _RateProviders.GetRateProvider(btc));
                 if (feeProvider != null && rateProvider != null)
                 {
                     var gettingFee = feeProvider.GetFeeRateAsync();
@@ -186,7 +186,7 @@ namespace BTCPayServer.Controllers
         private async Task<PaymentMethod> CreatePaymentMethodAsync(IPaymentMethodHandler handler, ISupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network, InvoiceEntity entity, StoreData store)
         {
             var storeBlob = store.GetStoreBlob();
-            var rate = await storeBlob.ApplyRateRules(network, _RateProviders.GetRateProvider(network, false)).GetRateAsync(entity.ProductInformation.Currency);
+            var rate = await storeBlob.ApplyRateRules(network, _RateProviders.GetRateProvider(network)).GetRateAsync(entity.ProductInformation.Currency);
             PaymentMethod paymentMethod = new PaymentMethod();
             paymentMethod.ParentEntity = entity;
             paymentMethod.Network = network;
@@ -221,7 +221,7 @@ namespace BTCPayServer.Controllers
                 if (limitValue.Currency == entity.ProductInformation.Currency)
                     limitValueRate = paymentMethod.Rate;
                 else
-                    limitValueRate = await storeBlob.ApplyRateRules(network, _RateProviders.GetRateProvider(network, false)).GetRateAsync(limitValue.Currency);
+                    limitValueRate = await storeBlob.ApplyRateRules(network, _RateProviders.GetRateProvider(network)).GetRateAsync(limitValue.Currency);
 
                 var limitValueCrypto = Money.Coins(limitValue.Value / limitValueRate);
                 if (compare(paymentMethod.Calculate().Due, limitValueCrypto))

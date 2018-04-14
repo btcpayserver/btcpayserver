@@ -18,7 +18,7 @@ namespace BTCPayServer.Services.Rates
         {
             _Mocks.Add(mock);
         }
-        public IRateProvider GetRateProvider(BTCPayNetwork network, bool longCache)
+        public IRateProvider GetRateProvider(BTCPayNetwork network)
         {
             return _Mocks.FirstOrDefault(m => m.CryptoCode == network.CryptoCode);
         }

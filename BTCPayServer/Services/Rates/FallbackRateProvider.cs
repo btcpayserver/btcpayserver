@@ -5,8 +5,24 @@ using System.Threading.Tasks;
 
 namespace BTCPayServer.Services.Rates
 {
+    public class FallbackRateProviderDescription : RateProviderDescription
+    {
+        public FallbackRateProviderDescription(RateProviderDescription[] rateProviders)
+        {
+            RateProviders = rateProviders;
+        }
+
+        public RateProviderDescription[] RateProviders { get; set; }
+
+        public IRateProvider CreateRateProvider(IServiceProvider serviceProvider)
+        {
+            return new FallbackRateProvider(RateProviders.Select(r => r.CreateRateProvider(serviceProvider)).ToArray());
+        }
+    }
+
     public class FallbackRateProvider : IRateProvider
     {
+
         IRateProvider[] _Providers;
         public FallbackRateProvider(IRateProvider[] providers)
         {

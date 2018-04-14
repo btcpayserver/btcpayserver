@@ -109,6 +109,7 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<BTCPayServerEnvironment>();
             services.TryAddSingleton<TokenRepository>();
             services.TryAddSingleton<EventAggregator>();
+            services.TryAddSingleton<ICoinAverageAuthenticator, BTCPayCoinAverageAuthenticator>();
             services.TryAddSingleton<ApplicationDbContextFactory>(o => 
             {
                 var opts = o.GetRequiredService<BTCPayServerOptions>();
@@ -154,6 +155,7 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService, NBXplorerWaiters>();
             services.AddSingleton<IHostedService, InvoiceNotificationManager>();
             services.AddSingleton<IHostedService, InvoiceWatcher>();
+            services.AddSingleton<IHostedService, RatesHostedService>();
 
             services.TryAddSingleton<ExplorerClientProvider>();
             services.TryAddSingleton<Bitpay>(o =>
@@ -163,7 +165,7 @@ namespace BTCPayServer.Hosting
                 else
                     return new Bitpay(new Key(), new Uri("https://test.bitpay.com/"));
             });
-            services.TryAddSingleton<IRateProviderFactory, CachedDefaultRateProviderFactory>();
+            services.TryAddSingleton<IRateProviderFactory, BTCPayRateProviderFactory>();
 
             services.TryAddScoped<IHttpContextAccessor, HttpContextAccessor>();
             services.TryAddSingleton<IAuthorizationHandler, OwnStoreHandler>();

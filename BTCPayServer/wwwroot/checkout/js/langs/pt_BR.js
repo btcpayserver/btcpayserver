@@ -44,7 +44,7 @@ Você pode voltar para {{storeName}} se quiser enviar o seu pagamento novamente.
     "This invoice has been paid": "Essa fatura foi paga",
     // Invoice archived
     "This invoice has been archived": "Essa fatura foi arquivada",
-    "Archived_Body": "Por favor, entre em contato com o estabelecimento para informações e suporte"
+    "Archived_Body": "Por favor, entre em contato com o estabelecimento para informações e suporte",
     // Lightning
     "BOLT 11 Invoice": "Fatura BOLT 11",
     "Node Info": "Informação de nó",

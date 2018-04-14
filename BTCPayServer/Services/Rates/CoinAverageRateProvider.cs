@@ -1,11 +1,15 @@
 ﻿using Newtonsoft.Json;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
+using System.ComponentModel;
 
 namespace BTCPayServer.Services.Rates
 {
@@ -16,6 +20,69 @@ namespace BTCPayServer.Services.Rates
 
         }
     }
+
+    public class CoinAverageRateProviderDescription : RateProviderDescription
+    {
+        public CoinAverageRateProviderDescription(string crypto)
+        {
+            CryptoCode = crypto;
+        }
+
+        public string CryptoCode { get; set; }
+
+        public IRateProvider CreateRateProvider(IServiceProvider serviceProvider)
+        {
+            return new CoinAverageRateProvider(CryptoCode)
+            {
+                Authenticator = serviceProvider.GetService<ICoinAverageAuthenticator>()
+            };
+        }
+    }
+
+    public class RatesSetting
+    {
+        private static readonly DateTime _epochUtc = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        public string PublicKey { get; set; }
+        public string PrivateKey { get; set; }
+        [DefaultValue(15)]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+        public int CacheInMinutes { get; set; } = 15;
+
+        public string GetCoinAverageSignature()
+        {
+            if (string.IsNullOrEmpty(PublicKey) || string.IsNullOrEmpty(PrivateKey))
+                return null;
+            var timestamp = (int)((DateTime.UtcNow - _epochUtc).TotalSeconds);
+            var payload = timestamp + "." + PublicKey;
+            var digestValueBytes = new HMACSHA256(Encoding.ASCII.GetBytes(PrivateKey)).ComputeHash(Encoding.ASCII.GetBytes(payload));
+            var digestValueHex = NBitcoin.DataEncoders.Encoders.Hex.EncodeData(digestValueBytes);
+            return payload + "." + digestValueHex;
+        }
+    }
+    public class BTCPayCoinAverageAuthenticator : ICoinAverageAuthenticator
+    {
+        private SettingsRepository settingsRepo;
+
+        public BTCPayCoinAverageAuthenticator(SettingsRepository settingsRepo)
+        {
+            this.settingsRepo = settingsRepo;
+        }
+        public async Task AddHeader(HttpRequestMessage message)
+        {
+            var settings = (await settingsRepo.GetSettingAsync<RatesSetting>()) ?? new RatesSetting();
+            var signature = settings.GetCoinAverageSignature();
+            if (signature != null)
+            {
+                message.Headers.Add("X-signature", signature);
+            }
+        }
+    }
+
+    public interface ICoinAverageAuthenticator
+    {
+        Task AddHeader(HttpRequestMessage message);
+    }    
+
     public class CoinAverageRateProvider : IRateProvider
     {
         static HttpClient _Client = new HttpClient();
@@ -48,17 +115,20 @@ namespace BTCPayServer.Services.Rates
             throw new RateUnavailableException(currency);
         }
 
+        public ICoinAverageAuthenticator Authenticator { get; set; }
+
         private async Task<Dictionary<string, decimal>> GetRatesCore()
         {
-            HttpResponseMessage resp = null;
-            if (Exchange == null)
+            string url = Exchange == null ? $"https://apiv2.bitcoinaverage.com/indices/{Market}/ticker/short"
+                                          : $"https://apiv2.bitcoinaverage.com/exchanges/{Exchange}";
+
+            var request = new HttpRequestMessage(HttpMethod.Get, url);
+            var auth = Authenticator;
+            if (auth != null)
             {
-                resp = await _Client.GetAsync($"https://apiv2.bitcoinaverage.com/indices/{Market}/ticker/short");
+                await auth.AddHeader(request);
             }
-            else
-            {
-                resp = await _Client.GetAsync($"https://apiv2.bitcoinaverage.com/exchanges/{Exchange}");
-            }
+            var resp = await _Client.SendAsync(request);
             using (resp)
             {
 
@@ -98,6 +168,18 @@ namespace BTCPayServer.Services.Rates
                 Currency = o.Key,
                 Value = o.Value
             }).ToList();
+        }
+
+        public async Task TestAuthAsync()
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, "https://apiv2.bitcoinaverage.com/blockchain/tx_price/BTCUSD/8a3b4394ba811a9e2b0bbf3cc56888d053ea21909299b2703cdc35e156c860ff");
+            var auth = Authenticator;
+            if (auth != null)
+            {
+                await auth.AddHeader(request);
+            }
+            var resp = await _Client.SendAsync(request);
+            resp.EnsureSuccessStatusCode();
         }
     }
 }

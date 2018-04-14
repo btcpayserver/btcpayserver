@@ -2,6 +2,7 @@
 using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Mails;
+using BTCPayServer.Services.Rates;
 using BTCPayServer.Validations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -11,6 +12,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Net.Mail;
 using System.Threading.Tasks;
 
@@ -21,11 +23,72 @@ namespace BTCPayServer.Controllers
     {
         private UserManager<ApplicationUser> _UserManager;
         SettingsRepository _SettingsRepository;
+        private IRateProviderFactory _RateProviderFactory;
 
-        public ServerController(UserManager<ApplicationUser> userManager, SettingsRepository settingsRepository)
+        public ServerController(UserManager<ApplicationUser> userManager,
+            IRateProviderFactory rateProviderFactory,
+            SettingsRepository settingsRepository)
         {
             _UserManager = userManager;
             _SettingsRepository = settingsRepository;
+            _RateProviderFactory = rateProviderFactory;
+        }
+
+        [Route("server/rates")]
+        public async Task<IActionResult> Rates()
+        {
+            var rates = (await _SettingsRepository.GetSettingAsync<RatesSetting>()) ?? new RatesSetting();
+            return View(new RatesViewModel()
+            {
+                CacheMinutes = rates.CacheInMinutes,
+                PrivateKey = rates.PrivateKey,
+                PublicKey = rates.PublicKey
+            });
+
+        }
+
+        class TestCoinAverageAuthenticator : ICoinAverageAuthenticator
+        {
+            private RatesSetting settings;
+
+            public TestCoinAverageAuthenticator(RatesSetting settings)
+            {
+                this.settings = settings;
+            }
+            public Task AddHeader(HttpRequestMessage message)
+            {
+                var sig = settings.GetCoinAverageSignature();
+                if (sig != null)
+                    message.Headers.Add("X-signature", settings.GetCoinAverageSignature());
+                return Task.CompletedTask;
+            }
+        }
+        [Route("server/rates")]
+        [HttpPost]
+        public async Task<IActionResult> Rates(RatesViewModel vm)
+        {
+            var rates = (await _SettingsRepository.GetSettingAsync<RatesSetting>()) ?? new RatesSetting();
+            rates.PrivateKey = vm.PrivateKey;
+            rates.PublicKey = vm.PublicKey;
+            rates.CacheInMinutes = vm.CacheMinutes;
+            try
+            {
+                if (rates.GetCoinAverageSignature() != null)
+                {
+                    await new CoinAverageRateProvider("BTC")
+                    { Authenticator = new TestCoinAverageAuthenticator(rates) }.TestAuthAsync();
+                }
+            }
+            catch
+            {
+                ModelState.AddModelError(nameof(vm.PrivateKey), "Invalid API key pair");
+            }
+            if (!ModelState.IsValid)
+                return View(vm);
+            await _SettingsRepository.UpdateSetting(rates);
+            ((BTCPayRateProviderFactory)_RateProviderFactory).CacheSpan = TimeSpan.FromMinutes(vm.CacheMinutes);
+            StatusMessage = "Rate settings successfully updated";
+            return RedirectToAction(nameof(Rates));
         }
 
         [Route("server/users")]
@@ -72,7 +135,7 @@ namespace BTCPayServer.Controllers
             var isAdmin = IsAdmin(roles);
             bool updated = false;
 
-            if(isAdmin != viewModel.IsAdmin)
+            if (isAdmin != viewModel.IsAdmin)
             {
                 if (viewModel.IsAdmin)
                     await _UserManager.AddToRoleAsync(user, Roles.ServerAdmin);
@@ -80,7 +143,7 @@ namespace BTCPayServer.Controllers
                     await _UserManager.RemoveFromRoleAsync(user, Roles.ServerAdmin);
                 updated = true;
             }
-            if(updated)
+            if (updated)
             {
                 viewModel.StatusMessage = "User successfully updated";
             }

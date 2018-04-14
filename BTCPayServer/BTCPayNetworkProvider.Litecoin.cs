@@ -13,7 +13,6 @@ namespace BTCPayServer
         public void InitLitecoin()
         {
             NBitcoin.Altcoins.Litecoin.EnsureRegistered();
-            var ltcRate = new CoinAverageRateProvider("LTC");
 
             var nbxplorerNetwork = NBXplorerNetworkProvider.GetFromCryptoCode("LTC");
             Add(new BTCPayNetwork()
@@ -23,7 +22,7 @@ namespace BTCPayServer
                 NBitcoinNetwork = nbxplorerNetwork.NBitcoinNetwork,
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "litecoin",
-                DefaultRateProvider = ltcRate,
+                DefaultRateProvider = new CoinAverageRateProviderDescription("LTC"),
                 CryptoImagePath = "imlegacy/litecoin-symbol.svg",
                 LightningImagePath = "imlegacy/ltc-lightning.svg",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NBXplorerNetworkProvider.ChainType),

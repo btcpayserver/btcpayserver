@@ -87,7 +87,14 @@
                 <div class="line-items__item__label">
                     <span>{{$t("Network Cost")}}</span>
                 </div>
-                <div class="line-items__item__value" i18n="">{{srvModel.networkFeeDescription }}</div>
+                <div class="line-items__item__value">
+                    <span v-if="srvModel.IsMultiCurrency">
+                        {{ srvModel.networkFee }} {{ srvModel.cryptoCode }}
+                    </span>
+                    <span v-else>
+                        {{$t("txCount", {count: srvModel.txCount})}} x {{ srvModel.networkFee }} {{ srvModel.cryptoCode }}
+                    </span>
+                </div>
             </div>
             <div class="line-items__item">
                 <div class="line-items__item__label">
@@ -249,11 +256,9 @@
                     </div>
                 </div>
                 <div class="success-message">{{$t("This invoice has been paid")}}</div>
-                <button class="action-button">
-                    <bp-done-text>
-                        <span>{{$t("Return to StoreName", srvModel)}}</span>
-                    </bp-done-text>
-                </button>
+                <a class="action-button" :href="srvModel.merchantRefLink" v-show="srvModel.merchantRefLink">
+                    <span>{{$t("Return to StoreName", srvModel)}}</span>
+                </a>
             </div>
         </div>
         <div class="button-wrapper refund-address-form-container" id="refund-overpayment-button">
@@ -295,10 +300,9 @@
                     {{srvModel.orderId}}
                 </div>
             </div>
-            <a class="action-button" style="margin-top: 20px;">
-                <bp-done-text>
-                    <span>{{$t("Return to StoreName", srvModel)}}</span>
-                </bp-done-text>
+            <a class="action-button" :href="srvModel.merchantRefLink" v-show="srvModel.merchantRefLink"
+               style="margin-top: 20px;">
+                <span>{{$t("Return to StoreName", srvModel)}}</span>
             </a>
         </div>
     </div>

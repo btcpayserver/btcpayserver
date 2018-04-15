@@ -628,7 +628,10 @@ namespace BTCPayServer.Tests
                 user.RegisterDerivationScheme("BTC");
                 List<decimal> rates = new List<decimal>();
                 rates.Add(CreateInvoice(tester, user, "coinaverage"));
-                rates.Add(CreateInvoice(tester, user, "bitflyer"));
+                var bitflyer = CreateInvoice(tester, user, "bitflyer");
+                var bitflyer2 = CreateInvoice(tester, user, "bitflyer");
+                Assert.Equal(bitflyer, bitflyer2); // Should be equal because cache
+                rates.Add(bitflyer);
                 
                 foreach(var rate in rates)
                 {

@@ -49,17 +49,19 @@ namespace BTCPayServer.Controllers
             var network = _NetworkProvider.GetNetwork(cryptoCode);
             if (network == null)
                 return NotFound();
-            var rateProvider = _RateProviderFactory.GetRateProvider(network);
-            if (rateProvider == null)
-                return NotFound();
 
+            RateRules rules = null;
             if (storeId != null)
             {
                 var store = await _StoreRepo.FindStore(storeId);
                 if (store == null)
                     return NotFound();
-                rateProvider = store.GetStoreBlob().ApplyRateRules(network, rateProvider);
+                rules = store.GetStoreBlob().GetRateRules();
             }
+
+            var rateProvider = _RateProviderFactory.GetRateProvider(network, rules);
+            if (rateProvider == null)
+                return NotFound();
 
             var allRates = (await rateProvider.GetRatesAsync());
             return Json(allRates.Select(r =>

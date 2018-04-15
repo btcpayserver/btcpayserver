@@ -47,7 +47,7 @@ namespace BTCPayServer.Tests
         }
 
         public Uri LTCNBXplorerUri { get; set; }
-        
+
         public Uri ServerUri
         {
             get;
@@ -64,6 +64,9 @@ namespace BTCPayServer.Tests
         {
             get; set;
         }
+
+
+        public bool MockRates { get; set; } = true;
 
         public void Start()
         {
@@ -101,12 +104,15 @@ namespace BTCPayServer.Tests
                     .UseConfiguration(conf)
                     .ConfigureServices(s =>
                     {
-                        var mockRates = new MockRateProviderFactory();
-                        var btc = new MockRateProvider("BTC", new Rate("USD", 5000m), new Rate("CAD", 4500m));
-                        var ltc = new MockRateProvider("LTC", new Rate("USD", 500m));
-                        mockRates.AddMock(btc);
-                        mockRates.AddMock(ltc);
-                        s.AddSingleton<IRateProviderFactory>(mockRates);
+                        if (MockRates)
+                        {
+                            var mockRates = new MockRateProviderFactory();
+                            var btc = new MockRateProvider("BTC", new Rate("USD", 5000m), new Rate("CAD", 4500m));
+                            var ltc = new MockRateProvider("LTC", new Rate("USD", 500m));
+                            mockRates.AddMock(btc);
+                            mockRates.AddMock(ltc);
+                            s.AddSingleton<IRateProviderFactory>(mockRates);
+                        }
                         s.AddLogging(l =>
                         {
                             l.SetMinimumLevel(LogLevel.Information)
@@ -121,7 +127,7 @@ namespace BTCPayServer.Tests
             _Host.Start();
             InvoiceRepository = (InvoiceRepository)_Host.Services.GetService(typeof(InvoiceRepository));
         }
-        
+
         public string HostName
         {
             get;

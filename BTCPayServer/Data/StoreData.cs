@@ -284,30 +284,12 @@ namespace BTCPayServer.Data
             }
         }
 
-        public IRateProvider ApplyRateRules(BTCPayNetwork network, IRateProvider rateProvider)
+        public RateRules GetRateRules()
         {
-            if (!PreferredExchange.IsCoinAverage())
+            return new RateRules(RateRules)
             {
-                // If the original rateProvider is a cache, use the same inner provider as fallback, and same memory cache to wrap it all
-                if (rateProvider is CachedRateProvider cachedRateProvider)
-                {
-                    rateProvider = new FallbackRateProvider(new IRateProvider[] {
-                        new CoinAverageRateProvider(network.CryptoCode) { Exchange = PreferredExchange },
-                        cachedRateProvider.Inner
-                    });
-                    rateProvider = new CachedRateProvider(network.CryptoCode, rateProvider, cachedRateProvider.MemoryCache) { AdditionalScope = PreferredExchange };
-                }
-                else
-                {
-                    rateProvider = new FallbackRateProvider(new IRateProvider[] {
-                        new CoinAverageRateProvider(network.CryptoCode) { Exchange = PreferredExchange },
-                        rateProvider
-                    });
-                }
-            }
-            if (RateRules == null || RateRules.Count == 0)
-                return rateProvider;
-            return new TweakRateProvider(network, rateProvider, RateRules.ToList());
+                PreferredExchange = PreferredExchange
+            };
         }
     }
 }

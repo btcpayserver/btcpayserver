@@ -14,13 +14,20 @@ namespace BTCPayServer.Services.Rates
 
         }
 
+        public TimeSpan CacheSpan { get; set; }
+
         public void AddMock(MockRateProvider mock)
         {
             _Mocks.Add(mock);
         }
-        public IRateProvider GetRateProvider(BTCPayNetwork network)
+        public IRateProvider GetRateProvider(BTCPayNetwork network, RateRules rules)
         {
             return _Mocks.FirstOrDefault(m => m.CryptoCode == network.CryptoCode);
+        }
+
+        public void InvalidateCache()
+        {
+            
         }
     }
     public class MockRateProvider : IRateProvider

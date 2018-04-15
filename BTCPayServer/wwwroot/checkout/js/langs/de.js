@@ -6,7 +6,7 @@ const locales_de = {
     "Pay with": "Bezahlen mit",
     "Contact and Refund Email": "Kontakt und Rückerstattungs Email",
     "Contact_Body": "Bitte geben Sie unten eine E-Mail-Adresse an. Wir werden Sie unter dieser Adresse kontaktieren, falls ein Problem mit Ihrer Zahlung vorliegt.",
-    "Your email": "Deine Email-Adresse",
+    "Your email": "Ihre Email-Adresse",
     "Continue": "Fortsetzen",
     "Please enter a valid email address": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
     "Order Amount": "Bestellbetrag",
@@ -25,7 +25,7 @@ const locales_de = {
     "Address": "Adresse",
     "Copied": "Kopiert",
     // Conversion tab
-    "ConversionTab_BodyTop": "Sie können {{btcDue}} {{cryptoCode}} mit altcoins bezahlen, die nicht direkt vom Händler unterstützt werden.",
+    "ConversionTab_BodyTop": "Sie können {{btcDue}} {{cryptoCode}} mit Altcoins bezahlen, die nicht direkt vom Händler unterstützt werden.",
     "ConversionTab_BodyDesc": "Dieser Service wird von Drittanbietern bereitgestellt. Bitte beachten Sie, dass wir keine Kontrolle darüber haben, wie die Anbieter Ihre Gelder weiterleiten. Die Rechnung wird erst als bezahlt markiert, wenn das Geld in {{cryptoCode}} Blockchain eingegangen ist.",
     "Shapeshift_Button_Text": "Bezahlen mit Altcoins",
     "ConversionTab_Lightning": "Für Lightning Network-Zahlungen sind keine Umrechnungsanbieter verfügbar.",

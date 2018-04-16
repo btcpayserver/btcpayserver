@@ -47,5 +47,8 @@
     "Archived_Body": "ご注文に関わる詳細などでお困りの場合はお店の担当窓口へお問い合わせください。",
     // Lightning
     "BOLT 11 Invoice": "お支払いコード",
-    "Node Info": "接続情報"
+    "Node Info": "接続情報",
+    //
+    "txCount": "取引 {{count}} 個",
+    "txCount_plural": "取引 {{count}} 個"
 };

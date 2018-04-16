@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.0</TargetFramework>
-		<Version>1.0.1.84</Version>
+		<Version>1.0.1.85</Version>
     <NoWarn>NU1701,CA1816,CA1308,CA1810,CA2208</NoWarn>
   </PropertyGroup>
   <ItemGroup>
@@ -34,7 +34,7 @@
     <PackageReference Include="Hangfire" Version="1.6.19" />
     <PackageReference Include="Hangfire.MemoryStorage" Version="1.5.2" />
     <PackageReference Include="Hangfire.PostgreSql" Version="1.4.8.1" />
-    <PackageReference Include="LedgerWallet" Version="1.0.1.32" />
+    <PackageReference Include="LedgerWallet" Version="1.0.1.35" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="2.6.1" />
     <PackageReference Include="Meziantou.AspNetCore.BundleTagHelpers" Version="1.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.2" />

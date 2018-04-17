@@ -47,5 +47,8 @@ Můžete se vrátit do {{storeName}}, pokud chcete svojí objednávku založit z
     "Archived_Body": "Prosíme kontaktujte prodejce pro informace o objednávce a případnou pomoc",
     // Lightning
     "BOLT 11 Invoice": "BOLT 11 Faktura",
-    "Node Info": "Info o uzlu"
+    "Node Info": "Info o uzlu",
+    //
+    "txCount": "{{count}} transakce",
+    "txCount_plural": "{{count}} transakcí"
 };

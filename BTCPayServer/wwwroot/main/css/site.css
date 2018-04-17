@@ -3,12 +3,13 @@
     min-height: 100%;
 }
 
-footer {
+.siteFooter {
     position: absolute;
     left: 0;
     bottom: 0;
     height: 18px;
-    font-size: 14px;
+    padding-top: 2px;
+    font-size: 8px;
     width: 100%;
     overflow: hidden;
 }

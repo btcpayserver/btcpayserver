@@ -8,7 +8,8 @@
     left: 0;
     bottom: 0;
     height: 18px;
-    padding-top: 2px;
+    line-height: 18px;
+    vertical-align: middle;
     font-size: 8px;
     width: 100%;
     overflow: hidden;

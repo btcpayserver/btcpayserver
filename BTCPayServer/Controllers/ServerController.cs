@@ -207,7 +207,7 @@ namespace BTCPayServer.Controllers
             await _SettingsRepository.UpdateSetting(settings);
             // TODO: remove controller/class-level property and have only reference to 
             // CssThemeManager here in this method
-            _CssThemeManager.Update(settings.CustomBootstrapThemeCssUri);
+            _CssThemeManager.Update(settings);
             TempData["StatusMessage"] = "Policies upadated successfully";
             return View(settings);
         }

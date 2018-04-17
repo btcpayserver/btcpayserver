@@ -21,24 +21,42 @@ namespace BTCPayServer.HostedServices
             Update(settingsRepository);
         }
 
-        private string _bootstrapThemeUri;
-        public string BootstrapThemeUri
-        {
-            get { return _bootstrapThemeUri; }
-        }
-
         private async void Update(SettingsRepository settingsRepository)
         {
             var data = (await settingsRepository.GetSettingAsync<PoliciesSettings>()) ?? new PoliciesSettings();
-            Update(data.CustomBootstrapThemeCssUri);
+            Update(data);
         }
 
-        public void Update(string newUri)
+        public void Update(PoliciesSettings data)
+        {
+            UpdateBootstrap(data.BootstrapCssUri);
+            UpdateCreativeStart(data.CreativeStartCssUri);
+        } 
+
+        private string _bootstrapUri;
+        public string BootstrapUri
+        {
+            get { return _bootstrapUri; }
+        }
+        public void UpdateBootstrap(string newUri)
         {
             if (String.IsNullOrWhiteSpace(newUri))
-                _bootstrapThemeUri = "/vendor/bootstrap4/css/bootstrap.css";
+                _bootstrapUri = "/vendor/bootstrap4/css/bootstrap.css";
             else
-                _bootstrapThemeUri = newUri;
+                _bootstrapUri = newUri;
+        }
+
+        private string _creativeStartUri;
+        public string CreativeStartUri
+        {
+            get { return _creativeStartUri; }
+        }
+        public void UpdateCreativeStart(string newUri)
+        {
+            if (String.IsNullOrWhiteSpace(newUri))
+                _creativeStartUri = "/vendor/bootstrap4-creativestart/creative.css";
+            else
+                _creativeStartUri = newUri;
         }
     }
 }

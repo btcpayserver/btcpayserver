@@ -5,6 +5,7 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
@@ -47,7 +48,8 @@ namespace BTCPayServer.Controllers
             ExplorerClientProvider explorerProvider,
             IFeeProviderFactory feeRateProvider,
             LanguageService langService,
-            IHostingEnvironment env)
+            IHostingEnvironment env,
+            CoinAverageSettings coinAverage)
         {
             _Dashboard = dashboard;
             _Repo = repo;
@@ -64,7 +66,9 @@ namespace BTCPayServer.Controllers
             _ServiceProvider = serviceProvider;
             _BtcpayServerOptions = btcpayServerOptions;
             _BTCPayEnv = btcpayEnv;
+            _CoinAverage = coinAverage;
         }
+        CoinAverageSettings _CoinAverage;
         NBXplorerDashboard _Dashboard;
         BTCPayServerOptions _BtcpayServerOptions;
         BTCPayServerEnvironment _BTCPayEnv;
@@ -237,7 +241,7 @@ namespace BTCPayServer.Controllers
             model.SetCryptoCurrencies(_ExplorerProvider, model.DefaultCryptoCurrency);
             model.SetLanguages(_LangService, model.DefaultLang);
 
-            if(!ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
                 return View(model);
             }
@@ -273,6 +277,7 @@ namespace BTCPayServer.Controllers
 
             var storeBlob = store.GetStoreBlob();
             var vm = new StoreViewModel();
+            vm.SetExchangeRates(GetSupportedExchanges(), storeBlob.PreferredExchange.IsCoinAverage() ? "coinaverage" : storeBlob.PreferredExchange);
             vm.Id = store.Id;
             vm.StoreName = store.StoreName;
             vm.StoreWebsite = store.StoreWebsite;
@@ -283,7 +288,6 @@ namespace BTCPayServer.Controllers
             vm.InvoiceExpiration = storeBlob.InvoiceExpiration;
             vm.RateMultiplier = (double)storeBlob.GetRateMultiplier();
             vm.LightningDescriptionTemplate = storeBlob.LightningDescriptionTemplate;
-            vm.PreferredExchange = storeBlob.PreferredExchange.IsCoinAverage() ? "coinaverage" : storeBlob.PreferredExchange;
             return View(vm);
         }
 
@@ -325,6 +329,7 @@ namespace BTCPayServer.Controllers
         [Route("{storeId}")]
         public async Task<IActionResult> UpdateStore(string storeId, StoreViewModel model)
         {
+            model.SetExchangeRates(GetSupportedExchanges(), model.PreferredExchange);
             if (!ModelState.IsValid)
             {
                 return View(model);
@@ -371,14 +376,11 @@ namespace BTCPayServer.Controllers
 
             if (!blob.PreferredExchange.IsCoinAverage() && newExchange)
             {
-                using (HttpClient client = new HttpClient())
+
+                if (!GetSupportedExchanges().Select(c => c.Name).Contains(blob.PreferredExchange, StringComparer.OrdinalIgnoreCase))
                 {
-                    var rate = await client.GetAsync(model.RateSource);
-                    if (rate.StatusCode == System.Net.HttpStatusCode.NotFound)
-                    {
-                        ModelState.AddModelError(nameof(model.PreferredExchange), $"Unsupported exchange ({model.RateSource})");
-                        return View(model);
-                    }
+                    ModelState.AddModelError(nameof(model.PreferredExchange), $"Unsupported exchange ({model.RateSource})");
+                    return View(model);
                 }
             }
 
@@ -392,6 +394,11 @@ namespace BTCPayServer.Controllers
             {
                 storeId = storeId
             });
+        }
+
+        private (String DisplayName, String Name)[] GetSupportedExchanges()
+        {
+            return new[] { ("Coin Average", "coinaverage") }.Concat(_CoinAverage.AvailableExchanges).ToArray();
         }
 
         private DerivationStrategy ParseDerivationStrategy(string derivationScheme, Script hint, BTCPayNetwork network)

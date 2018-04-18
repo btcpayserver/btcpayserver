@@ -59,41 +59,11 @@ namespace BTCPayServer.Services.Rates
 
     public class RatesSetting
     {
-        private static readonly DateTime _epochUtc = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         public string PublicKey { get; set; }
         public string PrivateKey { get; set; }
         [DefaultValue(15)]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public int CacheInMinutes { get; set; } = 15;
-
-        public string GetCoinAverageSignature()
-        {
-            if (string.IsNullOrEmpty(PublicKey) || string.IsNullOrEmpty(PrivateKey))
-                return null;
-            var timestamp = (int)((DateTime.UtcNow - _epochUtc).TotalSeconds);
-            var payload = timestamp + "." + PublicKey;
-            var digestValueBytes = new HMACSHA256(Encoding.ASCII.GetBytes(PrivateKey)).ComputeHash(Encoding.ASCII.GetBytes(payload));
-            var digestValueHex = NBitcoin.DataEncoders.Encoders.Hex.EncodeData(digestValueBytes);
-            return payload + "." + digestValueHex;
-        }
-    }
-    public class BTCPayCoinAverageAuthenticator : ICoinAverageAuthenticator
-    {
-        private SettingsRepository settingsRepo;
-
-        public BTCPayCoinAverageAuthenticator(SettingsRepository settingsRepo)
-        {
-            this.settingsRepo = settingsRepo;
-        }
-        public async Task AddHeader(HttpRequestMessage message)
-        {
-            var settings = (await settingsRepo.GetSettingAsync<RatesSetting>()) ?? new RatesSetting();
-            var signature = settings.GetCoinAverageSignature();
-            if (signature != null)
-            {
-                message.Headers.Add("X-signature", signature);
-            }
-        }
     }
 
     public interface ICoinAverageAuthenticator

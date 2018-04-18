@@ -632,7 +632,7 @@ namespace BTCPayServer.Tests
                 var bitflyer2 = CreateInvoice(tester, user, "bitflyer");
                 Assert.Equal(bitflyer, bitflyer2); // Should be equal because cache
                 rates.Add(bitflyer);
-                
+
                 foreach(var rate in rates)
                 {
                     Assert.Single(rates.Where(r => r == rate));

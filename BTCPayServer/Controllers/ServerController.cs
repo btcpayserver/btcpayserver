@@ -23,7 +23,6 @@ namespace BTCPayServer.Controllers
     {
         private UserManager<ApplicationUser> _UserManager;
         SettingsRepository _SettingsRepository;
-        private IRateProviderFactory _RateProviderFactory;
 
         public ServerController(UserManager<ApplicationUser> userManager,
             IRateProviderFactory rateProviderFactory,
@@ -31,7 +30,6 @@ namespace BTCPayServer.Controllers
         {
             _UserManager = userManager;
             _SettingsRepository = settingsRepository;
-            _RateProviderFactory = rateProviderFactory;
         }
 
         [Route("server/rates")]
@@ -47,22 +45,6 @@ namespace BTCPayServer.Controllers
 
         }
 
-        class TestCoinAverageAuthenticator : ICoinAverageAuthenticator
-        {
-            private RatesSetting settings;
-
-            public TestCoinAverageAuthenticator(RatesSetting settings)
-            {
-                this.settings = settings;
-            }
-            public Task AddHeader(HttpRequestMessage message)
-            {
-                var sig = settings.GetCoinAverageSignature();
-                if (sig != null)
-                    message.Headers.Add("X-signature", settings.GetCoinAverageSignature());
-                return Task.CompletedTask;
-            }
-        }
         [Route("server/rates")]
         [HttpPost]
         public async Task<IActionResult> Rates(RatesViewModel vm)
@@ -73,10 +55,14 @@ namespace BTCPayServer.Controllers
             rates.CacheInMinutes = vm.CacheMinutes;
             try
             {
-                if (rates.GetCoinAverageSignature() != null)
+                var settings = new CoinAverageSettings()
+                {
+                    KeyPair = (vm.PublicKey, vm.PrivateKey)
+                };
+                if (settings.GetCoinAverageSignature() != null)
                 {
                     await new CoinAverageRateProvider("BTC")
-                    { Authenticator = new TestCoinAverageAuthenticator(rates) }.TestAuthAsync();
+                    { Authenticator = settings }.TestAuthAsync();
                 }
             }
             catch
@@ -86,7 +72,6 @@ namespace BTCPayServer.Controllers
             if (!ModelState.IsValid)
                 return View(vm);
             await _SettingsRepository.UpdateSetting(rates);
-            ((BTCPayRateProviderFactory)_RateProviderFactory).CacheSpan = TimeSpan.FromMinutes(vm.CacheMinutes);
             StatusMessage = "Rate settings successfully updated";
             return RedirectToAction(nameof(Rates));
         }

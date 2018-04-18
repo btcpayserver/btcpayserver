@@ -63,9 +63,14 @@ namespace BTCPayServer.HostedServices
         }
         Task RefreshCoinAverageSupportedExchanges(CancellationToken cancellation)
         {
-            return Timer(async () => 
+            return Timer(async () =>
             {
                 var tickers = await new CoinAverageRateProvider("BTC").GetExchangeTickersAsync();
+                _coinAverageSettings.AvailableExchanges = tickers
+                    .Exchanges
+                    .Select(c => (c.DisplayName, c.Name))
+                    .ToArray();
+
                 await Task.Delay(TimeSpan.FromHours(5), cancellation);
             }, cancellation);
         }

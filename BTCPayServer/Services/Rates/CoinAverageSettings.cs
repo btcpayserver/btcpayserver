@@ -13,7 +13,7 @@ namespace BTCPayServer.Services.Rates
         private static readonly DateTime _epochUtc = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         public (String PublicKey, String PrivateKey)? KeyPair { get; set; }
-        public string[] AvailableExchanges { get; set; } = Array.Empty<string>();
+        public (String DisplayName, String Name)[] AvailableExchanges { get; set; } = Array.Empty<(String DisplayName, String Name)>();
 
         public Task AddHeader(HttpRequestMessage message)
         {

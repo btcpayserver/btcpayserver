@@ -36,13 +36,28 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> Rates()
         {
             var rates = (await _SettingsRepository.GetSettingAsync<RatesSetting>()) ?? new RatesSetting();
-            return View(new RatesViewModel()
+
+            var vm = new RatesViewModel()
             {
                 CacheMinutes = rates.CacheInMinutes,
                 PrivateKey = rates.PrivateKey,
                 PublicKey = rates.PublicKey
-            });
+            };
+            await FetchRateLimits(vm);
+            return View(vm);
+        }
 
+        private static async Task FetchRateLimits(RatesViewModel vm)
+        {
+            var coinAverage = GetCoinaverageService(vm, false);
+            if (coinAverage != null)
+            {
+                try
+                {
+                    vm.RateLimits = await coinAverage.GetRateLimitsAsync();
+                }
+                catch { }
+            }
         }
 
         [Route("server/rates")]
@@ -55,25 +70,36 @@ namespace BTCPayServer.Controllers
             rates.CacheInMinutes = vm.CacheMinutes;
             try
             {
-                var settings = new CoinAverageSettings()
-                {
-                    KeyPair = (vm.PublicKey, vm.PrivateKey)
-                };
-                if (settings.GetCoinAverageSignature() != null)
-                {
-                    await new CoinAverageRateProvider("BTC")
-                    { Authenticator = settings }.TestAuthAsync();
-                }
+                var service = GetCoinaverageService(vm, true);
+                if(service != null)
+                    await service.TestAuthAsync();
             }
             catch
             {
                 ModelState.AddModelError(nameof(vm.PrivateKey), "Invalid API key pair");
             }
             if (!ModelState.IsValid)
+            {
+                await FetchRateLimits(vm);
                 return View(vm);
+            }
             await _SettingsRepository.UpdateSetting(rates);
             StatusMessage = "Rate settings successfully updated";
             return RedirectToAction(nameof(Rates));
+        }
+
+        private static CoinAverageRateProvider GetCoinaverageService(RatesViewModel vm, bool withAuth)
+        {
+            var settings = new CoinAverageSettings()
+            {
+                KeyPair = (vm.PublicKey, vm.PrivateKey)
+            };
+            if (!withAuth || settings.GetCoinAverageSignature() != null)
+            {
+                return new CoinAverageRateProvider("BTC")
+                { Authenticator = settings };
+            }
+            return null;
         }
 
         [Route("server/users")]

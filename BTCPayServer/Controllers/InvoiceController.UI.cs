@@ -253,7 +253,7 @@ namespace BTCPayServer.Controllers
             };
 
             var expiration = TimeSpan.FromSeconds(model.ExpirationSeconds);
-            model.TimeLeft = PrettyPrint(expiration);
+            model.TimeLeft = expiration.PrettyPrint();
             return model;
         }
 
@@ -270,17 +270,6 @@ namespace BTCPayServer.Controllers
         public string FormatCurrency(decimal price, string currency)
         {
             return price.ToString("C", _CurrencyNameTable.GetCurrencyProvider(currency)) + $" ({currency})";
-        }
-
-        private string PrettyPrint(TimeSpan expiration)
-        {
-            StringBuilder builder = new StringBuilder();
-            if (expiration.Days >= 1)
-                builder.Append(expiration.Days.ToString(CultureInfo.InvariantCulture));
-            if (expiration.Hours >= 1)
-                builder.Append(expiration.Hours.ToString("00", CultureInfo.InvariantCulture));
-            builder.Append($"{expiration.Minutes.ToString("00", CultureInfo.InvariantCulture)}:{expiration.Seconds.ToString("00", CultureInfo.InvariantCulture)}");
-            return builder.ToString();
         }
 
         [HttpGet]

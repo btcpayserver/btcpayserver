@@ -170,6 +170,23 @@ namespace BTCPayServer.Services.Rates
             resp.EnsureSuccessStatusCode();
         }
 
+        public async Task<GetRateLimitsResponse> GetRateLimitsAsync()
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, "https://apiv2.bitcoinaverage.com/info/ratelimits");
+            var auth = Authenticator;
+            if (auth != null)
+            {
+                await auth.AddHeader(request);
+            }
+            var resp = await _Client.SendAsync(request);
+            resp.EnsureSuccessStatusCode();
+            var jobj = JObject.Parse(await resp.Content.ReadAsStringAsync());
+            var response = new GetRateLimitsResponse();
+            response.CounterReset = TimeSpan.FromSeconds(jobj["counter_reset"].Value<int>());
+            response.RequestsLeft = jobj["requests_left"].Value<int>();
+            return response;
+        }
+
         public async Task<GetExchangeTickersResponse> GetExchangeTickersAsync()
         {
             var request = new HttpRequestMessage(HttpMethod.Get, "https://apiv2.bitcoinaverage.com/symbols/exchanges/ticker");
@@ -190,5 +207,11 @@ namespace BTCPayServer.Services.Rates
                 .ToArray();
             return response;
         }
+    }
+
+    public class GetRateLimitsResponse
+    {
+        public TimeSpan CounterReset { get; set; }
+        public int RequestsLeft { get; set; }
     }
 }

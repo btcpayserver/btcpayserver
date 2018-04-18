@@ -28,11 +28,22 @@ using BTCPayServer.Payments;
 using Microsoft.AspNetCore.Identity;
 using BTCPayServer.Models;
 using System.Security.Claims;
+using System.Globalization;
 
 namespace BTCPayServer
 {
     public static class Extensions
     {
+        public static string PrettyPrint(this TimeSpan expiration)
+        {
+            StringBuilder builder = new StringBuilder();
+            if (expiration.Days >= 1)
+                builder.Append(expiration.Days.ToString(CultureInfo.InvariantCulture));
+            if (expiration.Hours >= 1)
+                builder.Append(expiration.Hours.ToString("00", CultureInfo.InvariantCulture));
+            builder.Append($"{expiration.Minutes.ToString("00", CultureInfo.InvariantCulture)}:{expiration.Seconds.ToString("00", CultureInfo.InvariantCulture)}");
+            return builder.ToString();
+        }
         public static decimal RoundUp(decimal value, int precision)
         {
             for (int i = 0; i < precision; i++)

@@ -23,11 +23,11 @@ namespace BTCPayServer.HostedServices
 
         private async void Update(SettingsRepository settingsRepository)
         {
-            var data = (await settingsRepository.GetSettingAsync<PoliciesSettings>()) ?? new PoliciesSettings();
+            var data = (await settingsRepository.GetSettingAsync<ThemeSettings>()) ?? new ThemeSettings();
             Update(data);
         }
 
-        public void Update(PoliciesSettings data)
+        public void Update(ThemeSettings data)
         {
             UpdateBootstrap(data.BootstrapCssUri);
             UpdateCreativeStart(data.CreativeStartCssUri);

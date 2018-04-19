@@ -3,6 +3,7 @@
 @inject RoleManager<IdentityRole> RoleManager
 @inject BTCPayServer.Services.BTCPayServerEnvironment env
 @inject BTCPayServer.HostedServices.NBXplorerDashboard dashboard
+@inject BTCPayServer.HostedServices.CssThemeManager themeManager
 @addTagHelper *, Meziantou.AspNetCore.BundleTagHelpers
 
 <!DOCTYPE html>
@@ -17,6 +18,9 @@
     <title>BTCPay Server</title>
 
     @* CSS *@
+    <link href="@themeManager.BootstrapUri" rel="stylesheet" />
+    <link href="@themeManager.CreativeStartUri" rel="stylesheet" />
+
     <bundle name="wwwroot/bundles/main-bundle.min.css" />
 
     @* JS *@
@@ -48,25 +52,25 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarResponsive">
                 <ul class="navbar-nav ml-auto">
-                    @if(SignInManager.IsSignedIn(User))
-    {
-                @if(User.IsInRole(Roles.ServerAdmin))
-{
-                <li class="nav-item"><a asp-area="" asp-controller="Server" asp-action="ListUsers" class="nav-link js-scroll-trigger">Server settings</a></li>
-}
-                <li class="nav-item"><a asp-area="" asp-controller="UserStores" asp-action="ListStores" class="nav-link js-scroll-trigger">Stores</a></li>
-                <li class="nav-item"><a asp-area="" asp-controller="Apps" asp-action="ListApps" class="nav-link js-scroll-trigger">Apps</a></li>
-                <li class="nav-item"><a asp-area="" asp-controller="Invoice" asp-action="ListInvoices" class="nav-link js-scroll-trigger">Invoices</a></li>
-                <li class="nav-item">
-                    <a asp-area="" asp-controller="Manage" asp-action="Index" title="Manage" class="nav-link js-scroll-trigger">My settings</a>
-                </li>
-                <li class="nav-item">
-                    <a asp-area="" asp-controller="Account" asp- asp-action="Logout" title="Manage" class="nav-link js-scroll-trigger">Log out</a>
-                </li>}
-else
-{
-                <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Register" class="nav-link js-scroll-trigger">Register</a></li>
-                <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Login" class="nav-link js-scroll-trigger">Log in</a></li>}
+                    @if (SignInManager.IsSignedIn(User))
+                    {
+                        @if (User.IsInRole(Roles.ServerAdmin))
+                        {
+                            <li class="nav-item"><a asp-area="" asp-controller="Server" asp-action="ListUsers" class="nav-link js-scroll-trigger">Server settings</a></li>
+                        }
+                        <li class="nav-item"><a asp-area="" asp-controller="UserStores" asp-action="ListStores" class="nav-link js-scroll-trigger">Stores</a></li>
+                        <li class="nav-item"><a asp-area="" asp-controller="Apps" asp-action="ListApps" class="nav-link js-scroll-trigger">Apps</a></li>
+                        <li class="nav-item"><a asp-area="" asp-controller="Invoice" asp-action="ListInvoices" class="nav-link js-scroll-trigger">Invoices</a></li>
+                        <li class="nav-item">
+                            <a asp-area="" asp-controller="Manage" asp-action="Index" title="Manage" class="nav-link js-scroll-trigger">My settings</a>
+                        </li>
+                        <li class="nav-item">
+                            <a asp-area="" asp-controller="Account" asp- asp-action="Logout" title="Manage" class="nav-link js-scroll-trigger">Log out</a>
+                        </li>}
+                    else
+                    {
+                        <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Register" class="nav-link js-scroll-trigger">Register</a></li>
+                        <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Login" class="nav-link js-scroll-trigger">Log in</a></li>}
 
                 </ul>
             </div>
@@ -75,8 +79,8 @@ else
 
     @RenderBody()
 
-    <footer class="bg-dark">
-        <div class="container text-right"><span style="font-size:8px;">@env.ToString()</span></div>
+    <footer class="siteFooter bg-dark text-white">
+        <div class="container text-right">@env.ToString()</div>
     </footer>
 
     @if (!dashboard.IsFullySynched())

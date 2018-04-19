@@ -15,5 +15,11 @@ namespace BTCPayServer.Services
 
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public bool LockSubscription { get; set; }
+
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+        public string BootstrapCssUri { get; set; }
+
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+        public string CreativeStartCssUri { get; set; }
     }
 }

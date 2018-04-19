@@ -33,7 +33,7 @@ namespace BTCPayServer.HostedServices
             UpdateCreativeStart(data.CreativeStartCssUri);
         } 
 
-        private string _bootstrapUri;
+        private string _bootstrapUri = "/vendor/bootstrap4/css/bootstrap.css?v=" + DateTime.Now.Ticks;
         public string BootstrapUri
         {
             get { return _bootstrapUri; }
@@ -41,12 +41,12 @@ namespace BTCPayServer.HostedServices
         public void UpdateBootstrap(string newUri)
         {
             if (String.IsNullOrWhiteSpace(newUri))
-                _bootstrapUri = "/vendor/bootstrap4/css/bootstrap.css";
+                _bootstrapUri = "/vendor/bootstrap4/css/bootstrap.css?v="+ DateTime.Now.Ticks;
             else
                 _bootstrapUri = newUri;
         }
 
-        private string _creativeStartUri;
+        private string _creativeStartUri = "/vendor/bootstrap4-creativestart/creative.css?v=" + DateTime.Now.Ticks;
         public string CreativeStartUri
         {
             get { return _creativeStartUri; }
@@ -54,7 +54,7 @@ namespace BTCPayServer.HostedServices
         public void UpdateCreativeStart(string newUri)
         {
             if (String.IsNullOrWhiteSpace(newUri))
-                _creativeStartUri = "/vendor/bootstrap4-creativestart/creative.css";
+                _creativeStartUri = "/vendor/bootstrap4-creativestart/creative.css?v=" + DateTime.Now.Ticks;
             else
                 _creativeStartUri = newUri;
         }

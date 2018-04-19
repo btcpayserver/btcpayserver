@@ -41,6 +41,7 @@ namespace BTCPayServer.HostedServices
 
         async Task Timer(Func<Task> act, CancellationToken cancellation, [CallerMemberName]string caller = null)
         {
+            await new SynchronizationContextRemover();
             while (!cancellation.IsCancellationRequested)
             {
                 try
@@ -65,6 +66,7 @@ namespace BTCPayServer.HostedServices
         {
             return Timer(async () =>
             {
+                await new SynchronizationContextRemover();
                 var tickers = await new CoinAverageRateProvider("BTC").GetExchangeTickersAsync();
                 _coinAverageSettings.AvailableExchanges = tickers
                     .Exchanges
@@ -79,6 +81,7 @@ namespace BTCPayServer.HostedServices
         {
             return Timer(async () =>
             {
+                await new SynchronizationContextRemover();
                 var rates = (await _SettingsRepository.GetSettingAsync<RatesSetting>()) ?? new RatesSetting();
                 _RateProviderFactory.CacheSpan = TimeSpan.FromMinutes(rates.CacheInMinutes);
                 if (!string.IsNullOrWhiteSpace(rates.PrivateKey) && !string.IsNullOrWhiteSpace(rates.PublicKey))

@@ -9,10 +9,10 @@ namespace BTCPayServer.Views
     public static class ViewsRazor
     {
         public const string ACTIVE_PAGE_KEY = "ActivePage";
-        public static void SetActivePageAndTitle<T>(this ViewDataDictionary viewData, T activePage)
+        public static void SetActivePageAndTitle<T>(this ViewDataDictionary viewData, T activePage, string title = null)
             where T : IConvertible
         {
-            viewData["Title"] = activePage.ToString();
+            viewData["Title"] = title ?? activePage.ToString();
             viewData[ACTIVE_PAGE_KEY] = activePage;
         }
 
@@ -22,10 +22,5 @@ namespace BTCPayServer.Views
             var activePage = (T)viewData[ACTIVE_PAGE_KEY];
             return page.Equals(activePage) ? "active" : null;
         }
-    }
-
-    public enum ServerNavPages
-    {
-        Index, Users, Rates, Emails, Policies, Theme, Hangfire
     }
 }

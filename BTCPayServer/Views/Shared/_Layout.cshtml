@@ -42,9 +42,9 @@
         <div class="container">
             <a class="navbar-brand js-scroll-trigger" href="~/">
                 <img src="~/img/logo.png" height="45">
-                @if (env.ChainType != NBXplorer.ChainType.Main)
+                @if (env.NetworkType != NBitcoin.NetworkType.Mainnet)
                 {
-                    <span class="badge badge-warning" style="font-size:10px;">@env.ChainType.ToString()</span>
+                    <span class="badge badge-warning" style="font-size:10px;">@env.NetworkType.ToString()</span>
                 }
             </a>
             <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">

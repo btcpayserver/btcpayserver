@@ -18,7 +18,7 @@ namespace BTCPayServer.Configuration
     {
         protected override CommandLineApplication CreateCommandLineApplicationCore()
         {
-            var provider = new BTCPayNetworkProvider(ChainType.Main);
+            var provider = new BTCPayNetworkProvider(NetworkType.Mainnet);
             var chains = string.Join(",", provider.GetAll().Select(n => n.CryptoCode.ToLowerInvariant()).ToArray());
             CommandLineApplication app = new CommandLineApplication(true)
             {
@@ -48,12 +48,12 @@ namespace BTCPayServer.Configuration
 
         protected override string GetDefaultDataDir(IConfiguration conf)
         {
-            return BTCPayDefaultSettings.GetDefaultSettings(GetChainType(conf)).DefaultDataDirectory;
+            return BTCPayDefaultSettings.GetDefaultSettings(GetNetworkType(conf)).DefaultDataDirectory;
         }
 
         protected override string GetDefaultConfigurationFile(IConfiguration conf)
         {
-            var network = BTCPayDefaultSettings.GetDefaultSettings(GetChainType(conf));
+            var network = BTCPayDefaultSettings.GetDefaultSettings(GetNetworkType(conf));
             var dataDir = conf["datadir"];
             if (dataDir == null)
                 return network.DefaultConfigurationFile;
@@ -69,7 +69,7 @@ namespace BTCPayServer.Configuration
             return Path.Combine(chainDir, fileName);
         }
 
-        public static ChainType GetChainType(IConfiguration conf)
+        public static NetworkType GetNetworkType(IConfiguration conf)
         {
             var network = conf.GetOrDefault<string>("network", null);
             if (network != null)
@@ -79,17 +79,18 @@ namespace BTCPayServer.Configuration
                 {
                     throw new ConfigException($"Invalid network parameter '{network}'");
                 }
-                return n.ToChainType();
+                return n.NetworkType;
             }
-            var net = conf.GetOrDefault<bool>("regtest", false) ? ChainType.Regtest :
-                        conf.GetOrDefault<bool>("testnet", false) ? ChainType.Test : ChainType.Main;
+            var net = conf.GetOrDefault<bool>("regtest", false) ? NetworkType.Regtest :
+                        conf.GetOrDefault<bool>("testnet", false) ? NetworkType.Testnet : NetworkType.Mainnet;
 
             return net;
         }
 
         protected override string GetDefaultConfigurationFileTemplate(IConfiguration conf)
         {
-            var defaultSettings = BTCPayDefaultSettings.GetDefaultSettings(GetChainType(conf));
+            var networkType = GetNetworkType(conf);
+            var defaultSettings = BTCPayDefaultSettings.GetDefaultSettings(networkType);
             StringBuilder builder = new StringBuilder();
             builder.AppendLine("### Global settings ###");
             builder.AppendLine("#network=mainnet");
@@ -102,7 +103,7 @@ namespace BTCPayServer.Configuration
             builder.AppendLine("#postgres=User ID=root;Password=myPassword;Host=localhost;Port=5432;Database=myDataBase;");
             builder.AppendLine();
             builder.AppendLine("### NBXplorer settings ###");
-            foreach (var n in new BTCPayNetworkProvider(defaultSettings.ChainType).GetAll())
+            foreach (var n in new BTCPayNetworkProvider(networkType).GetAll())
             {
                 builder.AppendLine($"#{n.CryptoCode}.explorer.url={n.NBXplorerNetwork.DefaultSettings.DefaultUrl}");
                 builder.AppendLine($"#{n.CryptoCode}.explorer.cookiefile={ n.NBXplorerNetwork.DefaultSettings.DefaultCookieFile}");
@@ -116,7 +117,7 @@ namespace BTCPayServer.Configuration
 
         protected override IPEndPoint GetDefaultEndpoint(IConfiguration conf)
         {
-            return new IPEndPoint(IPAddress.Parse("127.0.0.1"), BTCPayDefaultSettings.GetDefaultSettings(GetChainType(conf)).DefaultPort);
+            return new IPEndPoint(IPAddress.Parse("127.0.0.1"), BTCPayDefaultSettings.GetDefaultSettings(GetNetworkType(conf)).DefaultPort);
         }
     }
 }

@@ -873,7 +873,7 @@ namespace BTCPayServer.Tests
         [Fact]
         public void CanParseDerivationScheme()
         {
-            var parser = new DerivationSchemeParser(Network.TestNet, NBXplorer.ChainType.Test);
+            var parser = new DerivationSchemeParser(Network.TestNet);
             NBXplorer.DerivationStrategy.DerivationStrategyBase result;
             //  Passing electrum stuff
             // Native

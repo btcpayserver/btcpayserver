@@ -176,24 +176,24 @@
             <div class="row">
                 <div class="col-md-12">
                     <h3>On-Chain payments</h3>
-                    <table class="table table-sm">
+                    <table class="table table-sm table-responsive-md">
                         <thead class="thead-inverse">
                             <tr>
-                                <th style="white-space:nowrap;">Crypto</th>
+                                <th>Crypto</th>
                                 <th>Deposit address</th>
                                 <th>Transaction Id</th>
-                                <th style="text-align:right;">Confirmations</th>
+                                <th class="text-right">Confirmations</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach(var payment in Model.OnChainPayments)
                             {
-                                var replaced = payment.Replaced ? "text-decoration: line-through;" : "";
+                                var replaced = payment.Replaced ? "class='linethrough'" : "";
                                 <tr>
-                                    <td style="@replaced">@payment.Crypto</td>
-                                    <td style="@replaced">@payment.DepositAddress</td>
-                                    <td style="@replaced"><a href="@payment.TransactionLink" target="_blank">@payment.TransactionId</a></td>
-                                    <td style="text-align:right;">@payment.Confirmations</td>
+                                    <td @replaced>@payment.Crypto</td>
+                                    <td @replaced>@payment.DepositAddress</td>
+                                    <td @replaced><a href="@payment.TransactionLink" target="_blank">@payment.TransactionId</a></td>
+                                    <td class="text-right">@payment.Confirmations</td>
                                 </tr>
                             }
                         </tbody>
@@ -206,10 +206,10 @@
             <div class="row">
                 <div class="col-md-12">
                     <h3>Off-Chain payments</h3>
-                    <table class="table table-sm">
+                    <table class="table table-sm table-responsive-md">
                         <thead class="thead-inverse">
                             <tr>
-                                <th style="white-space:nowrap;">Crypto</th>
+                                <th>Crypto</th>
                                 <th>BOLT11</th>
                             </tr>
                         </thead>
@@ -217,8 +217,8 @@
                             @foreach(var payment in Model.OffChainPayments)
                             {
                                 <tr>
-                                    <td style="width:50px;">@payment.Crypto</td>
-                                    <td style="max-width:100px;overflow:hidden;">@payment.BOLT11</td>
+                                    <td>@payment.Crypto</td>
+                                    <td>@payment.BOLT11</td>
                                 </tr>
                             }
                         </tbody>

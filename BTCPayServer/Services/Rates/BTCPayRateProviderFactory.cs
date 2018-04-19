@@ -51,9 +51,28 @@ namespace BTCPayServer.Services.Rates
             _Cache = new MemoryCache(_CacheOptions);
         }
 
-        public IRateProvider GetRateProvider(BTCPayNetwork network)
+        public IRateProvider GetRateProvider(BTCPayNetwork network, RateRules rules)
         {
-            return new CachedRateProvider(network.CryptoCode, GetDefaultRateProvider(network), _Cache) { CacheSpan = CacheSpan };
+            rules = rules ?? new RateRules();
+            var rateProvider = GetDefaultRateProvider(network);
+            if (!rules.PreferredExchange.IsCoinAverage())
+            {
+                rateProvider = CreateExchangeRateProvider(network, rules.PreferredExchange);
+            }
+            rateProvider = CreateCachedRateProvider(network, rateProvider, rules.PreferredExchange);
+            return new TweakRateProvider(network, rateProvider, rules);
+        }
+
+        private IRateProvider CreateExchangeRateProvider(BTCPayNetwork network, string exchange)
+        {
+            var coinAverage = new CoinAverageRateProviderDescription(network.CryptoCode).CreateRateProvider(serviceProvider);
+            coinAverage.Exchange = exchange;
+            return coinAverage;
+        }
+
+        private CachedRateProvider CreateCachedRateProvider(BTCPayNetwork network, IRateProvider rateProvider, string additionalScope)
+        {
+            return new CachedRateProvider(network.CryptoCode, rateProvider, _Cache) { CacheSpan = CacheSpan, AdditionalScope = additionalScope };
         }
 
         private IRateProvider GetDefaultRateProvider(BTCPayNetwork network)

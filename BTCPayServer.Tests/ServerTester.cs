@@ -34,20 +34,10 @@ namespace BTCPayServer.Tests
         public ServerTester(string scope)
         {
             _Directory = scope;
-        }
-
-        public bool Dockerized
-        {
-            get; set;
-        }
-
-        public void Start()
-        {
             if (Directory.Exists(_Directory))
                 Utils.DeleteDirectory(_Directory);
             if (!Directory.Exists(_Directory))
                 Directory.CreateDirectory(_Directory);
-
 
             NetworkProvider = new BTCPayNetworkProvider(ChainType.Regtest);
             ExplorerNode = new RPCClient(RPCCredentialString.Parse(GetEnvironment("TESTS_BTCRPCCONNECTION", "server=http://127.0.0.1:43782;ceiwHEbqWI83:DwubwWsoo3")), NetworkProvider.GetNetwork("BTC").NBitcoinNetwork);
@@ -72,6 +62,15 @@ namespace BTCPayServer.Tests
             PayTester.Port = int.Parse(GetEnvironment("TESTS_PORT", Utils.FreeTcpPort().ToString(CultureInfo.InvariantCulture)), CultureInfo.InvariantCulture);
             PayTester.HostName = GetEnvironment("TESTS_HOSTNAME", "127.0.0.1");
             PayTester.InContainer = bool.Parse(GetEnvironment("TESTS_INCONTAINER", "false"));
+        }
+
+        public bool Dockerized
+        {
+            get; set;
+        }
+
+        public void Start()
+        {
             PayTester.Start();
         }
 

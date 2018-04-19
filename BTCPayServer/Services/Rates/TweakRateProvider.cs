@@ -10,9 +10,9 @@ namespace BTCPayServer.Services.Rates
     {
         private BTCPayNetwork network;
         private IRateProvider rateProvider;
-        private List<RateRule> rateRules;
+        private RateRules rateRules;
 
-        public TweakRateProvider(BTCPayNetwork network, IRateProvider rateProvider, List<RateRule> rateRules)
+        public TweakRateProvider(BTCPayNetwork network, IRateProvider rateProvider, RateRules rateRules)
         {
             if (network == null)
                 throw new ArgumentNullException(nameof(network));

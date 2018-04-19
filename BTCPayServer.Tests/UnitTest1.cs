@@ -616,12 +616,54 @@ namespace BTCPayServer.Tests
             }
         }
 
+        [Fact]
+        public void CanUseExchangeSpecificRate()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.PayTester.MockRates = false;
+                tester.Start();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                user.RegisterDerivationScheme("BTC");
+                List<decimal> rates = new List<decimal>();
+                rates.Add(CreateInvoice(tester, user, "coinaverage"));
+                var bitflyer = CreateInvoice(tester, user, "bitflyer");
+                var bitflyer2 = CreateInvoice(tester, user, "bitflyer");
+                Assert.Equal(bitflyer, bitflyer2); // Should be equal because cache
+                rates.Add(bitflyer);
+
+                foreach(var rate in rates)
+                {
+                    Assert.Single(rates.Where(r => r == rate));
+                }
+            }
+        }
+
+        private static decimal CreateInvoice(ServerTester tester, TestAccount user, string exchange)
+        {
+            var storeController = tester.PayTester.GetController<StoresController>(user.UserId);
+            var vm = (StoreViewModel)((ViewResult)storeController.UpdateStore(user.StoreId).Result).Model;
+            vm.PreferredExchange = exchange;
+            storeController.UpdateStore(user.StoreId, vm).Wait();
+            var invoice2 = user.BitPay.CreateInvoice(new Invoice()
+            {
+                Price = 5000.0,
+                Currency = "USD",
+                PosData = "posData",
+                OrderId = "orderId",
+                ItemDesc = "Some description",
+                FullNotifications = true
+            }, Facade.Merchant);
+            return invoice2.CryptoInfo[0].Rate;
+        }
 
         [Fact]
         public void CanTweakRate()
         {
             using (var tester = ServerTester.Create())
             {
+                tester.PayTester.MockRates = false;
                 tester.Start();
                 var user = tester.NewAccount();
                 user.GrantAccess();

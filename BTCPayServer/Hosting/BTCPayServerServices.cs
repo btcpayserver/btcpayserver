@@ -109,7 +109,8 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<BTCPayServerEnvironment>();
             services.TryAddSingleton<TokenRepository>();
             services.TryAddSingleton<EventAggregator>();
-            services.TryAddSingleton<ICoinAverageAuthenticator, BTCPayCoinAverageAuthenticator>();
+            services.TryAddSingleton<CoinAverageSettings>();
+            services.TryAddSingleton<ICoinAverageAuthenticator, CoinAverageSettings>();
             services.TryAddSingleton<ApplicationDbContextFactory>(o => 
             {
                 var opts = o.GetRequiredService<BTCPayServerOptions>();

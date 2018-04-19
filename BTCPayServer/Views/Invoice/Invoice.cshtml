@@ -171,33 +171,61 @@
                 </table>
             </div>
         </div>
-        <div class="row">
-            <div class="col-md-12">
-                <h3>Payments</h3>
-                <table class="table table-sm table-responsive-md">
-                    <thead class="thead-inverse">
-                        <tr>
-                            <th>Payment method</th>
-                            <th>Deposit address</th>
-                            <th>Transaction Id</th>
-                            <th class="text-right">Confirmations</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var payment in Model.Payments)
-                        {
-                            var linethrough = payment.Replaced ? "class='linethrough'" : "";
+        @if(Model.OnChainPayments.Count > 0)
+        {
+            <div class="row">
+                <div class="col-md-12">
+                    <h3>On-Chain payments</h3>
+                    <table class="table table-sm">
+                        <thead class="thead-inverse">
                             <tr>
-                                <td @linethrough>@payment.PaymentMethod</td>
-                                <td @linethrough>@payment.DepositAddress</td>
-                                <td @linethrough><a href="@payment.TransactionLink" target="_blank">@payment.TransactionId</a></td>
-                                <td class="text-right">@payment.Confirmations</td>
+                                <th style="white-space:nowrap;">Crypto</th>
+                                <th>Deposit address</th>
+                                <th>Transaction Id</th>
+                                <th style="text-align:right;">Confirmations</th>
                             </tr>
-                        }
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @foreach(var payment in Model.OnChainPayments)
+                            {
+                                var replaced = payment.Replaced ? "text-decoration: line-through;" : "";
+                                <tr>
+                                    <td style="@replaced">@payment.Crypto</td>
+                                    <td style="@replaced">@payment.DepositAddress</td>
+                                    <td style="@replaced"><a href="@payment.TransactionLink" target="_blank">@payment.TransactionId</a></td>
+                                    <td style="text-align:right;">@payment.Confirmations</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
+        }
+        @if(Model.OffChainPayments.Count > 0)
+        {
+            <div class="row">
+                <div class="col-md-12">
+                    <h3>Off-Chain payments</h3>
+                    <table class="table table-sm">
+                        <thead class="thead-inverse">
+                            <tr>
+                                <th style="white-space:nowrap;">Crypto</th>
+                                <th>BOLT11</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach(var payment in Model.OffChainPayments)
+                            {
+                                <tr>
+                                    <td style="width:50px;">@payment.Crypto</td>
+                                    <td style="max-width:100px;overflow:hidden;">@payment.BOLT11</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
         <div class="row">
             <div class="col-md-12">
                 <h3>Addresses</h3>

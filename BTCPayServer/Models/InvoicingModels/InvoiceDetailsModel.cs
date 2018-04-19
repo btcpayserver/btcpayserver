@@ -27,7 +27,7 @@ namespace BTCPayServer.Models.InvoicingModels
         }
         public class Payment
         {
-            public string PaymentMethod { get; set; }
+            public string Crypto { get; set; }
             public string Confirmations
             {
                 get; set;
@@ -72,7 +72,13 @@ namespace BTCPayServer.Models.InvoicingModels
             get; set;
         } = new List<CryptoPayment>();
 
-        public List<Payment> Payments { get; set; } = new List<Payment>();
+        public List<Payment> OnChainPayments { get; set; } = new List<Payment>();
+        public List<OffChainPayment> OffChainPayments { get; set; } = new List<OffChainPayment>();
+        public class OffChainPayment
+        {
+            public string Crypto { get; set; }
+            public string BOLT11 { get; set; }
+        }
 
         public string Status
         {

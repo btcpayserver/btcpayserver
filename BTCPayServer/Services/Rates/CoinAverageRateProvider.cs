@@ -30,52 +30,40 @@ namespace BTCPayServer.Services.Rates
 
         public string CryptoCode { get; set; }
 
-        public IRateProvider CreateRateProvider(IServiceProvider serviceProvider)
+        public CoinAverageRateProvider CreateRateProvider(IServiceProvider serviceProvider)
         {
             return new CoinAverageRateProvider(CryptoCode)
             {
                 Authenticator = serviceProvider.GetService<ICoinAverageAuthenticator>()
             };
         }
+
+        IRateProvider RateProviderDescription.CreateRateProvider(IServiceProvider serviceProvider)
+        {
+            return CreateRateProvider(serviceProvider);
+        }
+    }
+
+    public class GetExchangeTickersResponse
+    {
+        public class Exchange
+        {
+            public string Name { get; set; }
+            [JsonProperty("display_name")]
+            public string DisplayName { get; set; }
+            public string[] Symbols { get; set; }
+        }
+        public bool Success { get; set; }
+        public Exchange[] Exchanges { get; set; }
     }
 
     public class RatesSetting
     {
-        private static readonly DateTime _epochUtc = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         public string PublicKey { get; set; }
         public string PrivateKey { get; set; }
         [DefaultValue(15)]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public int CacheInMinutes { get; set; } = 15;
-
-        public string GetCoinAverageSignature()
-        {
-            if (string.IsNullOrEmpty(PublicKey) || string.IsNullOrEmpty(PrivateKey))
-                return null;
-            var timestamp = (int)((DateTime.UtcNow - _epochUtc).TotalSeconds);
-            var payload = timestamp + "." + PublicKey;
-            var digestValueBytes = new HMACSHA256(Encoding.ASCII.GetBytes(PrivateKey)).ComputeHash(Encoding.ASCII.GetBytes(payload));
-            var digestValueHex = NBitcoin.DataEncoders.Encoders.Hex.EncodeData(digestValueBytes);
-            return payload + "." + digestValueHex;
-        }
-    }
-    public class BTCPayCoinAverageAuthenticator : ICoinAverageAuthenticator
-    {
-        private SettingsRepository settingsRepo;
-
-        public BTCPayCoinAverageAuthenticator(SettingsRepository settingsRepo)
-        {
-            this.settingsRepo = settingsRepo;
-        }
-        public async Task AddHeader(HttpRequestMessage message)
-        {
-            var settings = (await settingsRepo.GetSettingAsync<RatesSetting>()) ?? new RatesSetting();
-            var signature = settings.GetCoinAverageSignature();
-            if (signature != null)
-            {
-                message.Headers.Add("X-signature", signature);
-            }
-        }
     }
 
     public interface ICoinAverageAuthenticator
@@ -181,5 +169,49 @@ namespace BTCPayServer.Services.Rates
             var resp = await _Client.SendAsync(request);
             resp.EnsureSuccessStatusCode();
         }
+
+        public async Task<GetRateLimitsResponse> GetRateLimitsAsync()
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, "https://apiv2.bitcoinaverage.com/info/ratelimits");
+            var auth = Authenticator;
+            if (auth != null)
+            {
+                await auth.AddHeader(request);
+            }
+            var resp = await _Client.SendAsync(request);
+            resp.EnsureSuccessStatusCode();
+            var jobj = JObject.Parse(await resp.Content.ReadAsStringAsync());
+            var response = new GetRateLimitsResponse();
+            response.CounterReset = TimeSpan.FromSeconds(jobj["counter_reset"].Value<int>());
+            response.RequestsLeft = jobj["requests_left"].Value<int>();
+            return response;
+        }
+
+        public async Task<GetExchangeTickersResponse> GetExchangeTickersAsync()
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, "https://apiv2.bitcoinaverage.com/symbols/exchanges/ticker");
+            var resp = await _Client.SendAsync(request);
+            resp.EnsureSuccessStatusCode();
+            var jobj = JObject.Parse(await resp.Content.ReadAsStringAsync());
+            var response = new GetExchangeTickersResponse();
+            response.Success = jobj["success"].Value<bool>();
+            var exchanges = (JObject)jobj["exchanges"];
+            response.Exchanges = exchanges
+                .Properties()
+                .Select(p => 
+                {
+                    var exchange = JsonConvert.DeserializeObject<GetExchangeTickersResponse.Exchange>(p.Value.ToString());
+                    exchange.Name = p.Name;
+                    return exchange;
+                })
+                .ToArray();
+            return response;
+        }
+    }
+
+    public class GetRateLimitsResponse
+    {
+        public TimeSpan CounterReset { get; set; }
+        public int RequestsLeft { get; set; }
     }
 }

@@ -1,7 +1,6 @@
 ﻿@model UserViewModel
 @{
-    ViewData["Title"] = Model.Email;
-    ViewData.AddActivePage(ServerNavPages.Users);
+    ViewData.SetActivePageAndTitle(ServerNavPages.Pages.Users, Model.Email);
 }
 
 

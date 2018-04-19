@@ -132,6 +132,7 @@ namespace BTCPayServer.Controllers
             var roles = await _UserManager.GetRolesAsync(user);
             var userVM = new UserViewModel();
             userVM.Id = user.Id;
+            userVM.Email = user.Email;
             userVM.IsAdmin = IsAdmin(roles);
             return View(userVM);
         }

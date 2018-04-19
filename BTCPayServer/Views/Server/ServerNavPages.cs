@@ -15,9 +15,9 @@ namespace BTCPayServer.Views.Server
         }
 
         public const string ACTIVE_PAGE_KEY = "ActivePage";
-        public static void SetActivePageAndTitle(this ViewDataDictionary viewData, Pages activePage, string titleOverride = null)
+        public static void SetActivePageAndTitle(this ViewDataDictionary viewData, Pages activePage)
         {
-            viewData["Title"] = titleOverride ?? activePage.ToString();
+            viewData["Title"] = activePage.ToString();
             viewData[ACTIVE_PAGE_KEY] = activePage;
         }
         

@@ -12,21 +12,19 @@ namespace BTCPayServer
     {
         public void InitLitecoin()
         {
-            NBitcoin.Altcoins.Litecoin.EnsureRegistered();
-
             var nbxplorerNetwork = NBXplorerNetworkProvider.GetFromCryptoCode("LTC");
             Add(new BTCPayNetwork()
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
-                BlockExplorerLink = NBXplorerNetworkProvider.ChainType == ChainType.Main ? "https://live.blockcypher.com/ltc/tx/{0}/" : "http://explorer.litecointools.com/tx/{0}",
+                BlockExplorerLink = NetworkType == NetworkType.Mainnet ? "https://live.blockcypher.com/ltc/tx/{0}/" : "http://explorer.litecointools.com/tx/{0}",
                 NBitcoinNetwork = nbxplorerNetwork.NBitcoinNetwork,
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "litecoin",
                 DefaultRateProvider = new CoinAverageRateProviderDescription("LTC"),
                 CryptoImagePath = "imlegacy/litecoin-symbol.svg",
                 LightningImagePath = "imlegacy/ltc-lightning.svg",
-                DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NBXplorerNetworkProvider.ChainType),
-                CoinType = NBXplorerNetworkProvider.ChainType == ChainType.Main ? new KeyPath("2'") : new KeyPath("1'")
+                DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
+                CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("2'") : new KeyPath("1'")
             });
         }
     }

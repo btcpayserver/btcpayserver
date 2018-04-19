@@ -403,7 +403,7 @@ namespace BTCPayServer.Controllers
 
         private DerivationStrategy ParseDerivationStrategy(string derivationScheme, Script hint, BTCPayNetwork network)
         {
-            var parser = new DerivationSchemeParser(network.NBitcoinNetwork, network.DefaultSettings.ChainType);
+            var parser = new DerivationSchemeParser(network.NBitcoinNetwork);
             parser.HintScriptPubKey = hint;
             return new DerivationStrategy(parser.Parse(derivationScheme), network);
         }

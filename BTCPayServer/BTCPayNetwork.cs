@@ -14,34 +14,28 @@ namespace BTCPayServer
     {
         static BTCPayDefaultSettings()
         {
-            _Settings = new Dictionary<ChainType, BTCPayDefaultSettings>();
-            foreach (var chainType in new[] { ChainType.Main, ChainType.Test, ChainType.Regtest })
+            _Settings = new Dictionary<NetworkType, BTCPayDefaultSettings>();
+            foreach (var chainType in new[] { NetworkType.Mainnet, NetworkType.Testnet, NetworkType.Regtest })
             {
-                var btcNetwork = (chainType == ChainType.Main ? Network.Main :
-                                  chainType == ChainType.Regtest ? Network.RegTest :
-                                  chainType == ChainType.Test ? Network.TestNet : throw new NotSupportedException(chainType.ToString()));
-
                 var settings = new BTCPayDefaultSettings();
                 _Settings.Add(chainType, settings);
-                settings.ChainType = chainType;
-                settings.DefaultDataDirectory = StandardConfiguration.DefaultDataDirectory.GetDirectory("BTCPayServer", btcNetwork.Name);
+                settings.DefaultDataDirectory = StandardConfiguration.DefaultDataDirectory.GetDirectory("BTCPayServer", NBXplorerDefaultSettings.GetFolderName(chainType));
                 settings.DefaultConfigurationFile = Path.Combine(settings.DefaultDataDirectory, "settings.config");
-                settings.DefaultPort = (chainType == ChainType.Main ? 23000 :
-                                                      chainType == ChainType.Regtest ? 23002 :
-                                                      chainType == ChainType.Test ? 23001 : throw new NotSupportedException(chainType.ToString()));
+                settings.DefaultPort = (chainType == NetworkType.Mainnet ? 23000 :
+                                                      chainType == NetworkType.Regtest ? 23002 :
+                                                      chainType == NetworkType.Testnet ? 23001 : throw new NotSupportedException(chainType.ToString()));
             }
         }
 
-        static Dictionary<ChainType, BTCPayDefaultSettings> _Settings;
+        static Dictionary<NetworkType, BTCPayDefaultSettings> _Settings;
 
-        public static BTCPayDefaultSettings GetDefaultSettings(ChainType chainType)
+        public static BTCPayDefaultSettings GetDefaultSettings(NetworkType chainType)
         {
             return _Settings[chainType];
         }
 
         public string DefaultDataDirectory { get; set; }
         public string DefaultConfigurationFile { get; set; }
-        public ChainType ChainType { get; internal set; }
         public int DefaultPort { get; set; }
     }
     public class BTCPayNetwork

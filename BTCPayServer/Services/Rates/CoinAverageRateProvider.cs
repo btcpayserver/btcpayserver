@@ -183,7 +183,21 @@ namespace BTCPayServer.Services.Rates
             var jobj = JObject.Parse(await resp.Content.ReadAsStringAsync());
             var response = new GetRateLimitsResponse();
             response.CounterReset = TimeSpan.FromSeconds(jobj["counter_reset"].Value<int>());
+            var totalPeriod = jobj["total_period"].Value<string>();
+            if (totalPeriod == "24h")
+            {
+                response.TotalPeriod = TimeSpan.FromHours(24);
+            }
+            else if (totalPeriod == "30d")
+            {
+                response.TotalPeriod = TimeSpan.FromDays(30);
+            }
+            else
+            {
+                response.TotalPeriod = TimeSpan.FromSeconds(jobj["total_period"].Value<int>());
+            }
             response.RequestsLeft = jobj["requests_left"].Value<int>();
+            response.RequestsPerPeriod = jobj["requests_per_period"].Value<int>();
             return response;
         }
 
@@ -213,5 +227,7 @@ namespace BTCPayServer.Services.Rates
     {
         public TimeSpan CounterReset { get; set; }
         public int RequestsLeft { get; set; }
+        public int RequestsPerPeriod { get; set; }
+        public TimeSpan TotalPeriod { get; set; }
     }
 }

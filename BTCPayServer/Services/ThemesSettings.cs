@@ -6,14 +6,12 @@ using Newtonsoft.Json;
 
 namespace BTCPayServer.Services
 {
-    public class PoliciesSettings
+    public class ThemeSettings
     {
-        public bool RequiresConfirmedEmail
-        {
-            get; set;
-        }
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+        public string BootstrapCssUri { get; set; }
 
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
-        public bool LockSubscription { get; set; }
+        public string CreativeStartCssUri { get; set; }
     }
 }

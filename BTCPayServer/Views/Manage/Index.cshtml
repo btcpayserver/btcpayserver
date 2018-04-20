@@ -1,7 +1,6 @@
 ﻿@model IndexViewModel
 @{
-    ViewData["Title"] = "Profile";
-    ViewData.AddActivePage(ManageNavPages.Index);
+    ViewData.SetActivePageAndTitle(ManageNavPages.Index, "Profile");
 }
 
 <h4>@ViewData["Title"]</h4>

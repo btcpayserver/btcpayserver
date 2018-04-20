@@ -132,6 +132,7 @@ namespace BTCPayServer.Controllers
             var roles = await _UserManager.GetRolesAsync(user);
             var userVM = new UserViewModel();
             userVM.Id = user.Id;
+            userVM.Email = user.Email;
             userVM.IsAdmin = IsAdmin(roles);
             return View(userVM);
         }
@@ -218,10 +219,25 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> Policies(PoliciesSettings settings)
         {
             await _SettingsRepository.UpdateSetting(settings);
+            TempData["StatusMessage"] = "Policies updated successfully";
+            return View(settings);
+        }
+
+        [Route("server/theme")]
+        public async Task<IActionResult> Theme()
+        {
+            var data = (await _SettingsRepository.GetSettingAsync<ThemeSettings>()) ?? new ThemeSettings();
+            return View(data);
+        }
+        [Route("server/theme")]
+        [HttpPost]
+        public async Task<IActionResult> Theme(ThemeSettings settings)
+        {
+            await _SettingsRepository.UpdateSetting(settings);
             // TODO: remove controller/class-level property and have only reference to 
             // CssThemeManager here in this method
             _CssThemeManager.Update(settings);
-            TempData["StatusMessage"] = "Policies upadated successfully";
+            TempData["StatusMessage"] = "Theme settings updated successfully";
             return View(settings);
         }
 

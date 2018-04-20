@@ -40,12 +40,16 @@
                 <h5>Current Bitcoin Average Quotas:</h5>
                 <table class="table table-sm">
                     <tr>
-                        <th>Requests left</th>
-                        <td>@Model.RateLimits.RequestsLeft</td>
+                        <th>Quota period</th>
+                        <td>@Model.RateLimits.TotalPeriod.Prettify()</td>
+                    </tr>
+                    <tr>
+                        <th>Requests quota</th>
+                        <td>@Model.RateLimits.RequestsLeft/@Model.RateLimits.RequestsPerPeriod</td>
                     </tr>
                     <tr>
                         <th>Quota reset in</th>
-                        <td>@Model.RateLimits.CounterReset</td>
+                        <td>@Model.RateLimits.CounterReset.Prettify()</td>
                     </tr>
                 </table>
             }

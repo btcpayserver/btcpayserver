@@ -13,13 +13,11 @@ namespace BTCPayServer
     public class DerivationSchemeParser
     {
         public Network Network { get; set; }
-        public ChainType ChainType { get; set; }
         public Script HintScriptPubKey { get; set; }
 
-        public DerivationSchemeParser(Network expectedNetwork, ChainType chainType)
+        public DerivationSchemeParser(Network expectedNetwork)
         {
             Network = expectedNetwork;
-            ChainType = chainType;
         }
 
         public DerivationStrategyBase Parse(string str)
@@ -78,7 +76,7 @@ namespace BTCPayServer
                     if (data.Length < 4)
                         continue;
                     var prefix = Utils.ToUInt32(data, false);
-                    var standardPrefix = Utils.ToBytes(ChainType == NBXplorer.ChainType.Main ? 0x0488b21eU : 0x043587cf, false);
+                    var standardPrefix = Utils.ToBytes(Network.NetworkType == NetworkType.Mainnet ? 0x0488b21eU : 0x043587cf, false);
                     for (int ii = 0; ii < 4; ii++)
                         data[ii] = standardPrefix[ii];
 

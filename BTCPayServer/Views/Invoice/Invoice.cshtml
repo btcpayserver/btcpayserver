@@ -4,14 +4,8 @@
 }
 
 <style type="text/css">
-    .overflowbox {
-        max-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-    .money {
-        text-align: right;
+    .linethrough {
+        text-decoration: line-through;
     }
 </style>
 
@@ -28,14 +22,13 @@
             <div class="col-lg-12 text-center">
                 <h2 class="section-heading">@ViewData["Title"]</h2>
                 <hr class="primary">
-                <p>Invoice details</p>
             </div>
         </div>
 
         <div class="row">
             <div class="col-md-6">
                 <h3>Information</h3>
-                <table class="table table-sm">
+                <table class="table table-sm table-responsive-md">
                     <tr>
                         <th>Store</th>
                         <td><a href="@Model.StoreLink">@Model.StoreName</a></td>
@@ -93,10 +86,9 @@
 
             <div class="col-md-6">
                 <h3>Buyer information</h3>
-                <table class="table table-sm">
+                <table class="table table-sm table-responsive-md">
                     <tr>
-                        <th>Name
-                        <th>
+                        <th>Name</th>
                         <td>@Model.BuyerInformation.BuyerName</td>
                     </tr>
                     <tr>
@@ -134,7 +126,7 @@
                 </table>
 
                 <h3>Product information</h3>
-                <table class="table table-sm">
+                <table class="table table-sm table-responsive-md">
                     <tr>
                         <th>Item code</th>
                         <td>@Model.ProductInformation.ItemCode</td>
@@ -153,77 +145,105 @@
         <div class="row">
             <div class="col-md-12">
                 <h3>Paid summary</h3>
-                <table class="table table-sm">
+                <table class="table table-sm table-responsive-md">
                     <thead class="thead-inverse">
                         <tr>
-                            <th style="white-space:nowrap;">Payment method</th>
+                            <th>Payment method</th>
                             <th>Address</th>
-                            <th class="money">Rate</th>
-                            <th class="money">Paid</th>
-                            <th class="money">Due</th>
+                            <th class="text-right">Rate</th>
+                            <th class="text-right">Paid</th>
+                            <th class="text-right">Due</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach(var payment in Model.CryptoPayments)
-                    {
-                        <tr>
-                            <td>@payment.PaymentMethod</td>
-                            <td>@payment.Address</td>
-                            <td class="money">@payment.Rate</td>
-                            <td class="money">@payment.Paid</td>
-                            <td class="money">@payment.Due</td>
-                        </tr>
-                }
+                        @foreach (var payment in Model.CryptoPayments)
+                        {
+                            <tr>
+                                <td>@payment.PaymentMethod</td>
+                                <td>@payment.Address</td>
+                                <td class="text-right">@payment.Rate</td>
+                                <td class="text-right">@payment.Paid</td>
+                                <td class="text-right">@payment.Due</td>
+                            </tr>
+                        }
                     </tbody>
                 </table>
             </div>
         </div>
-        <div class="row">
-            <div class="col-md-12">
-                <h3>Payments</h3>
-                <table class="table table-sm">
-                    <thead class="thead-inverse">
-                        <tr>
-                            <th style="white-space:nowrap;">Payment method</th>
-                            <th>Deposit address</th>
-                            <th>Transaction Id</th>
-                            <th style="text-align:right;">Confirmations</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach(var payment in Model.Payments)
-                    {
-                            var replaced = payment.Replaced ? "text-decoration: line-through;" : "";
-                        <tr>
-                            <td style="@replaced">@payment.PaymentMethod</td>
-                            <td style="@replaced">@payment.DepositAddress</td>
-                            <td style="@replaced"><a href="@payment.TransactionLink" target="_blank">@payment.TransactionId</a></td>
-                            <td style="text-align:right;">@payment.Confirmations</td>
-                        </tr>
-                }
-                    </tbody>
-                </table>
+        @if(Model.OnChainPayments.Count > 0)
+        {
+            <div class="row">
+                <div class="col-md-12">
+                    <h3>On-Chain payments</h3>
+                    <table class="table table-sm table-responsive-md">
+                        <thead class="thead-inverse">
+                            <tr>
+                                <th>Crypto</th>
+                                <th>Deposit address</th>
+                                <th>Transaction Id</th>
+                                <th class="text-right">Confirmations</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach(var payment in Model.OnChainPayments)
+                            {
+                                var replaced = payment.Replaced ? "class='linethrough'" : "";
+                                <tr>
+                                    <td @replaced>@payment.Crypto</td>
+                                    <td @replaced>@payment.DepositAddress</td>
+                                    <td @replaced><a href="@payment.TransactionLink" target="_blank">@payment.TransactionId</a></td>
+                                    <td class="text-right">@payment.Confirmations</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
+        }
+        @if(Model.OffChainPayments.Count > 0)
+        {
+            <div class="row">
+                <div class="col-md-12">
+                    <h3>Off-Chain payments</h3>
+                    <table class="table table-sm table-responsive-md">
+                        <thead class="thead-inverse">
+                            <tr>
+                                <th>Crypto</th>
+                                <th>BOLT11</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach(var payment in Model.OffChainPayments)
+                            {
+                                <tr>
+                                    <td>@payment.Crypto</td>
+                                    <td>@payment.BOLT11</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
         <div class="row">
             <div class="col-md-12">
                 <h3>Addresses</h3>
-                <table class="table table-sm">
+                <table class="table table-sm table-responsive-md">
                     <thead class="thead-inverse">
                         <tr>
-                            <th style="white-space:nowrap;">Payment method</th>
+                            <th>Payment method</th>
                             <th>Address</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach(var address in Model.Addresses)
+                        @foreach (var address in Model.Addresses)
                         {
-                            var current = address.Current ? "font-weight: bold;" : "";
-                        <tr>
-                            <td style="width:100px;@current">@address.PaymentMethod</td>
-                            <td style="max-width:100px;overflow:hidden;@current">@address.Destination</td>
-                        </tr>
-                    }
+                            var current = address.Current ? "class='font-weight-bold'" : "";
+                            <tr>
+                                <td>@address.PaymentMethod</td>
+                                <td @current>@address.Destination</td>
+                            </tr>
+                        }
                     </tbody>
                 </table>
             </div>
@@ -232,7 +252,7 @@
         <div class="row">
             <div class="col-md-12">
                 <h3>Events</h3>
-                <table class="table table-sm">
+                <table class="table table-sm table-responsive-md">
                     <thead class="thead-inverse">
                         <tr>
                             <th>Date</th>
@@ -240,7 +260,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach(var evt in Model.Events)
+                        @foreach (var evt in Model.Events)
                         {
                             <tr>
                                 <td>@evt.Timestamp</td>

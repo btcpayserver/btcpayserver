@@ -101,7 +101,7 @@ namespace BTCPayServer.Services
                 var pubKey = await ledger.GetWalletPubKeyAsync(account);
                 if (pubKey.Address.Network != network.NBitcoinNetwork)
                 {
-                    if (network.DefaultSettings.ChainType == NBXplorer.ChainType.Main)
+                    if (network.NBitcoinNetwork.NetworkType == NetworkType.Mainnet)
                         throw new Exception($"The opened ledger app should be for {network.NBitcoinNetwork.Name}, not for {pubKey.Address.Network}");
                 }
                 var fingerprint = onlyChaincode ? new byte[4] : (await ledger.GetWalletPubKeyAsync(account.Parent)).UncompressedPublicKey.Compress().Hash.ToBytes().Take(4).ToArray();

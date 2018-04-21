@@ -1,7 +1,6 @@
 ﻿@model EnableAuthenticatorViewModel
 @{
-    ViewData["Title"] = "Enable authenticator";
-    ViewData.AddActivePage(ManageNavPages.TwoFactorAuthentication);
+    ViewData.SetActivePageAndTitle(ManageNavPages.TwoFactorAuthentication, "Enable authenticator");
 }
 
 <h4>@ViewData["Title"]</h4>

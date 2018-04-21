@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using System.Text;
 using NBXplorer;
+using NBitcoin;
 
 namespace BTCPayServer.Services
 {
@@ -20,13 +21,13 @@ namespace BTCPayServer.Services
 			Build = "Release";
 #endif
             Environment = env;
-            ChainType = provider.NBXplorerNetworkProvider.ChainType;
+            NetworkType = provider.NetworkType;
         }
         public IHostingEnvironment Environment
         {
             get; set;
         }
-        public ChainType ChainType { get; set; }
+        public NetworkType NetworkType { get; set; }
         public string Version
         {
             get; set;
@@ -40,7 +41,7 @@ namespace BTCPayServer.Services
         {
             get
             {
-                return ChainType == ChainType.Regtest && Environment.IsDevelopment();
+                return NetworkType == NetworkType.Regtest && Environment.IsDevelopment();
             }
         }
         public override string ToString()

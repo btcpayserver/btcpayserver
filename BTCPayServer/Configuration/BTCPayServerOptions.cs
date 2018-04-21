@@ -23,7 +23,7 @@ namespace BTCPayServer.Configuration
 
     public class BTCPayServerOptions
     {
-        public ChainType ChainType
+        public NetworkType NetworkType
         {
             get; set;
         }
@@ -51,15 +51,15 @@ namespace BTCPayServer.Configuration
 
         public void LoadArgs(IConfiguration conf)
         {
-            ChainType = DefaultConfiguration.GetChainType(conf);
-            var defaultSettings = BTCPayDefaultSettings.GetDefaultSettings(ChainType);
+            NetworkType = DefaultConfiguration.GetNetworkType(conf);
+            var defaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType);
             DataDir = conf.GetOrDefault<string>("datadir", defaultSettings.DefaultDataDirectory);
-            Logs.Configuration.LogInformation("Network: " + ChainType.ToString());
+            Logs.Configuration.LogInformation("Network: " + NetworkType.ToString());
 
             var supportedChains = conf.GetOrDefault<string>("chains", "btc")
                                       .Split(',', StringSplitOptions.RemoveEmptyEntries)
                                       .Select(t => t.ToUpperInvariant());
-            NetworkProvider = new BTCPayNetworkProvider(ChainType).Filter(supportedChains.ToArray());
+            NetworkProvider = new BTCPayNetworkProvider(NetworkType).Filter(supportedChains.ToArray());
             foreach (var chain in supportedChains)
             {
                 if (NetworkProvider.GetNetwork(chain) == null)

@@ -28,11 +28,44 @@ using BTCPayServer.Payments;
 using Microsoft.AspNetCore.Identity;
 using BTCPayServer.Models;
 using System.Security.Claims;
+using System.Globalization;
 
 namespace BTCPayServer
 {
     public static class Extensions
     {
+        public static string Prettify(this TimeSpan timeSpan)
+        {
+            if (timeSpan.TotalMinutes < 1)
+            {
+                return $"{(int)timeSpan.TotalSeconds} second{Plural((int)timeSpan.TotalSeconds)}";
+            }
+            if (timeSpan.TotalHours < 1)
+            {
+                return $"{(int)timeSpan.TotalMinutes} minute{Plural((int)timeSpan.TotalMinutes)}";
+            }
+            if (timeSpan.Days < 1)
+            {
+                return $"{(int)timeSpan.TotalHours} hour{Plural((int)timeSpan.TotalHours)}";
+            }
+            return $"{(int)timeSpan.TotalDays} day{Plural((int)timeSpan.TotalDays)}";
+        }
+
+        private static string Plural(int totalDays)
+        {
+            return totalDays > 1 ? "s" : string.Empty;
+        }
+
+        public static string PrettyPrint(this TimeSpan expiration)
+        {
+            StringBuilder builder = new StringBuilder();
+            if (expiration.Days >= 1)
+                builder.Append(expiration.Days.ToString(CultureInfo.InvariantCulture));
+            if (expiration.Hours >= 1)
+                builder.Append(expiration.Hours.ToString("00", CultureInfo.InvariantCulture));
+            builder.Append($"{expiration.Minutes.ToString("00", CultureInfo.InvariantCulture)}:{expiration.Seconds.ToString("00", CultureInfo.InvariantCulture)}");
+            return builder.ToString();
+        }
         public static decimal RoundUp(decimal value, int precision)
         {
             for (int i = 0; i < precision; i++)

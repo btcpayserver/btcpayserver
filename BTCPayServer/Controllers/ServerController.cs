@@ -1,4 +1,5 @@
-﻿using BTCPayServer.Models;
+﻿using BTCPayServer.HostedServices;
+using BTCPayServer.Models;
 using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Mails;
@@ -24,45 +25,47 @@ namespace BTCPayServer.Controllers
         private UserManager<ApplicationUser> _UserManager;
         SettingsRepository _SettingsRepository;
         private IRateProviderFactory _RateProviderFactory;
+        private CssThemeManager _CssThemeManager;
 
         public ServerController(UserManager<ApplicationUser> userManager,
             IRateProviderFactory rateProviderFactory,
-            SettingsRepository settingsRepository)
+            SettingsRepository settingsRepository, 
+	    CssThemeManager cssThemeManager)
         {
             _UserManager = userManager;
             _SettingsRepository = settingsRepository;
             _RateProviderFactory = rateProviderFactory;
+            _CssThemeManager = cssThemeManager;
         }
 
         [Route("server/rates")]
         public async Task<IActionResult> Rates()
         {
             var rates = (await _SettingsRepository.GetSettingAsync<RatesSetting>()) ?? new RatesSetting();
-            return View(new RatesViewModel()
+
+            var vm = new RatesViewModel()
             {
                 CacheMinutes = rates.CacheInMinutes,
                 PrivateKey = rates.PrivateKey,
                 PublicKey = rates.PublicKey
-            });
-
+            };
+            await FetchRateLimits(vm);
+            return View(vm);
         }
 
-        class TestCoinAverageAuthenticator : ICoinAverageAuthenticator
+        private static async Task FetchRateLimits(RatesViewModel vm)
         {
-            private RatesSetting settings;
-
-            public TestCoinAverageAuthenticator(RatesSetting settings)
+            var coinAverage = GetCoinaverageService(vm, false);
+            if (coinAverage != null)
             {
-                this.settings = settings;
-            }
-            public Task AddHeader(HttpRequestMessage message)
-            {
-                var sig = settings.GetCoinAverageSignature();
-                if (sig != null)
-                    message.Headers.Add("X-signature", settings.GetCoinAverageSignature());
-                return Task.CompletedTask;
+                try
+                {
+                    vm.RateLimits = await coinAverage.GetRateLimitsAsync();
+                }
+                catch { }
             }
         }
+
         [Route("server/rates")]
         [HttpPost]
         public async Task<IActionResult> Rates(RatesViewModel vm)
@@ -73,22 +76,36 @@ namespace BTCPayServer.Controllers
             rates.CacheInMinutes = vm.CacheMinutes;
             try
             {
-                if (rates.GetCoinAverageSignature() != null)
-                {
-                    await new CoinAverageRateProvider("BTC")
-                    { Authenticator = new TestCoinAverageAuthenticator(rates) }.TestAuthAsync();
-                }
+                var service = GetCoinaverageService(vm, true);
+                if(service != null)
+                    await service.TestAuthAsync();
             }
             catch
             {
                 ModelState.AddModelError(nameof(vm.PrivateKey), "Invalid API key pair");
             }
             if (!ModelState.IsValid)
+            {
+                await FetchRateLimits(vm);
                 return View(vm);
+            }
             await _SettingsRepository.UpdateSetting(rates);
-            ((BTCPayRateProviderFactory)_RateProviderFactory).CacheSpan = TimeSpan.FromMinutes(vm.CacheMinutes);
             StatusMessage = "Rate settings successfully updated";
             return RedirectToAction(nameof(Rates));
+        }
+
+        private static CoinAverageRateProvider GetCoinaverageService(RatesViewModel vm, bool withAuth)
+        {
+            var settings = new CoinAverageSettings()
+            {
+                KeyPair = (vm.PublicKey, vm.PrivateKey)
+            };
+            if (!withAuth || settings.GetCoinAverageSignature() != null)
+            {
+                return new CoinAverageRateProvider("BTC")
+                { Authenticator = settings };
+            }
+            return null;
         }
 
         [Route("server/users")]
@@ -115,6 +132,7 @@ namespace BTCPayServer.Controllers
             var roles = await _UserManager.GetRolesAsync(user);
             var userVM = new UserViewModel();
             userVM.Id = user.Id;
+            userVM.Email = user.Email;
             userVM.IsAdmin = IsAdmin(roles);
             return View(userVM);
         }
@@ -201,7 +219,25 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> Policies(PoliciesSettings settings)
         {
             await _SettingsRepository.UpdateSetting(settings);
-            TempData["StatusMessage"] = "Policies upadated successfully";
+            TempData["StatusMessage"] = "Policies updated successfully";
+            return View(settings);
+        }
+
+        [Route("server/theme")]
+        public async Task<IActionResult> Theme()
+        {
+            var data = (await _SettingsRepository.GetSettingAsync<ThemeSettings>()) ?? new ThemeSettings();
+            return View(data);
+        }
+        [Route("server/theme")]
+        [HttpPost]
+        public async Task<IActionResult> Theme(ThemeSettings settings)
+        {
+            await _SettingsRepository.UpdateSetting(settings);
+            // TODO: remove controller/class-level property and have only reference to 
+            // CssThemeManager here in this method
+            _CssThemeManager.Update(settings);
+            TempData["StatusMessage"] = "Theme settings updated successfully";
             return View(settings);
         }
 

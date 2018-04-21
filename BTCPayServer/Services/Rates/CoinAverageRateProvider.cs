@@ -59,41 +59,11 @@ namespace BTCPayServer.Services.Rates
 
     public class RatesSetting
     {
-        private static readonly DateTime _epochUtc = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         public string PublicKey { get; set; }
         public string PrivateKey { get; set; }
         [DefaultValue(15)]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public int CacheInMinutes { get; set; } = 15;
-
-        public string GetCoinAverageSignature()
-        {
-            if (string.IsNullOrEmpty(PublicKey) || string.IsNullOrEmpty(PrivateKey))
-                return null;
-            var timestamp = (int)((DateTime.UtcNow - _epochUtc).TotalSeconds);
-            var payload = timestamp + "." + PublicKey;
-            var digestValueBytes = new HMACSHA256(Encoding.ASCII.GetBytes(PrivateKey)).ComputeHash(Encoding.ASCII.GetBytes(payload));
-            var digestValueHex = NBitcoin.DataEncoders.Encoders.Hex.EncodeData(digestValueBytes);
-            return payload + "." + digestValueHex;
-        }
-    }
-    public class BTCPayCoinAverageAuthenticator : ICoinAverageAuthenticator
-    {
-        private SettingsRepository settingsRepo;
-
-        public BTCPayCoinAverageAuthenticator(SettingsRepository settingsRepo)
-        {
-            this.settingsRepo = settingsRepo;
-        }
-        public async Task AddHeader(HttpRequestMessage message)
-        {
-            var settings = (await settingsRepo.GetSettingAsync<RatesSetting>()) ?? new RatesSetting();
-            var signature = settings.GetCoinAverageSignature();
-            if (signature != null)
-            {
-                message.Headers.Add("X-signature", signature);
-            }
-        }
     }
 
     public interface ICoinAverageAuthenticator
@@ -200,6 +170,37 @@ namespace BTCPayServer.Services.Rates
             resp.EnsureSuccessStatusCode();
         }
 
+        public async Task<GetRateLimitsResponse> GetRateLimitsAsync()
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, "https://apiv2.bitcoinaverage.com/info/ratelimits");
+            var auth = Authenticator;
+            if (auth != null)
+            {
+                await auth.AddHeader(request);
+            }
+            var resp = await _Client.SendAsync(request);
+            resp.EnsureSuccessStatusCode();
+            var jobj = JObject.Parse(await resp.Content.ReadAsStringAsync());
+            var response = new GetRateLimitsResponse();
+            response.CounterReset = TimeSpan.FromSeconds(jobj["counter_reset"].Value<int>());
+            var totalPeriod = jobj["total_period"].Value<string>();
+            if (totalPeriod == "24h")
+            {
+                response.TotalPeriod = TimeSpan.FromHours(24);
+            }
+            else if (totalPeriod == "30d")
+            {
+                response.TotalPeriod = TimeSpan.FromDays(30);
+            }
+            else
+            {
+                response.TotalPeriod = TimeSpan.FromSeconds(jobj["total_period"].Value<int>());
+            }
+            response.RequestsLeft = jobj["requests_left"].Value<int>();
+            response.RequestsPerPeriod = jobj["requests_per_period"].Value<int>();
+            return response;
+        }
+
         public async Task<GetExchangeTickersResponse> GetExchangeTickersAsync()
         {
             var request = new HttpRequestMessage(HttpMethod.Get, "https://apiv2.bitcoinaverage.com/symbols/exchanges/ticker");
@@ -220,5 +221,13 @@ namespace BTCPayServer.Services.Rates
                 .ToArray();
             return response;
         }
+    }
+
+    public class GetRateLimitsResponse
+    {
+        public TimeSpan CounterReset { get; set; }
+        public int RequestsLeft { get; set; }
+        public int RequestsPerPeriod { get; set; }
+        public TimeSpan TotalPeriod { get; set; }
     }
 }

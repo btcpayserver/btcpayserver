@@ -27,8 +27,8 @@ namespace BTCPayServer
 
         BTCPayNetworkProvider(BTCPayNetworkProvider filtered, string[] cryptoCodes)
         {
-            ChainType = filtered.ChainType;
-            _NBXplorerNetworkProvider = new NBXplorerNetworkProvider(filtered.ChainType);
+            NetworkType = filtered.NetworkType;
+            _NBXplorerNetworkProvider = new NBXplorerNetworkProvider(filtered.NetworkType);
             _Networks = new Dictionary<string, BTCPayNetwork>();
             cryptoCodes = cryptoCodes.Select(c => c.ToUpperInvariant()).ToArray();
             foreach (var network in filtered._Networks)
@@ -40,11 +40,11 @@ namespace BTCPayServer
             }
         }
 
-        public ChainType ChainType { get; set; }
-        public BTCPayNetworkProvider(ChainType chainType)
+        public NetworkType NetworkType { get; private set; }
+        public BTCPayNetworkProvider(NetworkType networkType)
         {
-            _NBXplorerNetworkProvider = new NBXplorerNetworkProvider(chainType);
-            ChainType = chainType;
+            _NBXplorerNetworkProvider = new NBXplorerNetworkProvider(networkType);
+            NetworkType = networkType;
             InitBitcoin();
             InitLitecoin();
             InitDogecoin();

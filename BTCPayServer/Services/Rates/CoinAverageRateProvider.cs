@@ -204,6 +204,11 @@ namespace BTCPayServer.Services.Rates
         public async Task<GetExchangeTickersResponse> GetExchangeTickersAsync()
         {
             var request = new HttpRequestMessage(HttpMethod.Get, "https://apiv2.bitcoinaverage.com/symbols/exchanges/ticker");
+            var auth = Authenticator;
+            if (auth != null)
+            {
+                await auth.AddHeader(request);
+            }
             var resp = await _Client.SendAsync(request);
             resp.EnsureSuccessStatusCode();
             var jobj = JObject.Parse(await resp.Content.ReadAsStringAsync());

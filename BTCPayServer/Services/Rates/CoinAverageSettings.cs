@@ -8,6 +8,18 @@ using System.Threading.Tasks;
 
 namespace BTCPayServer.Services.Rates
 {
+    public class CoinAverageSettingsAuthenticator : ICoinAverageAuthenticator
+    {
+        CoinAverageSettings _Settings;
+        public CoinAverageSettingsAuthenticator(CoinAverageSettings settings)
+        {
+            _Settings = settings;
+        }
+        public Task AddHeader(HttpRequestMessage message)
+        {
+            return _Settings.AddHeader(message);
+        }
+    }
     public class CoinAverageSettings : ICoinAverageAuthenticator
     {
         private static readonly DateTime _epochUtc = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);

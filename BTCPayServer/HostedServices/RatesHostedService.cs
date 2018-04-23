@@ -89,6 +89,10 @@ namespace BTCPayServer.HostedServices
                 {
                     _coinAverageSettings.KeyPair = (rates.PublicKey, rates.PrivateKey);
                 }
+                else
+                {
+                    _coinAverageSettings.KeyPair = null;
+                }
                 await _SettingsRepository.WaitSettingsChanged<RatesSetting>(cancellation);
             }, cancellation);
         }

@@ -16,47 +16,59 @@ namespace BTCPayServer.HostedServices
 {
     public class CssThemeManager
     {
-        public CssThemeManager(SettingsRepository settingsRepository)
-        {
-            Update(settingsRepository);
-        }
-
-        private async void Update(SettingsRepository settingsRepository)
-        {
-            var data = (await settingsRepository.GetSettingAsync<ThemeSettings>()) ?? new ThemeSettings();
-            Update(data);
-        }
-
         public void Update(ThemeSettings data)
         {
-            UpdateBootstrap(data.BootstrapCssUri);
-            UpdateCreativeStart(data.CreativeStartCssUri);
-        } 
+            if (String.IsNullOrWhiteSpace(data.BootstrapCssUri))
+                _bootstrapUri = "/vendor/bootstrap4/css/bootstrap.css?v=" + DateTime.Now.Ticks;
+            else
+                _bootstrapUri = data.BootstrapCssUri;
 
-        private string _bootstrapUri = "/vendor/bootstrap4/css/bootstrap.css?v=" + DateTime.Now.Ticks;
+
+            if (String.IsNullOrWhiteSpace(data.CreativeStartCssUri))
+                _creativeStartUri = "/vendor/bootstrap4-creativestart/creative.css?v=" + DateTime.Now.Ticks;
+            else
+                _creativeStartUri = data.CreativeStartCssUri;
+        }
+
+        private string _bootstrapUri;
         public string BootstrapUri
         {
             get { return _bootstrapUri; }
         }
-        public void UpdateBootstrap(string newUri)
-        {
-            if (String.IsNullOrWhiteSpace(newUri))
-                _bootstrapUri = "/vendor/bootstrap4/css/bootstrap.css?v="+ DateTime.Now.Ticks;
-            else
-                _bootstrapUri = newUri;
-        }
 
-        private string _creativeStartUri = "/vendor/bootstrap4-creativestart/creative.css?v=" + DateTime.Now.Ticks;
+        private string _creativeStartUri;
         public string CreativeStartUri
         {
             get { return _creativeStartUri; }
         }
-        public void UpdateCreativeStart(string newUri)
+    }
+
+    public class CssThemeManagerHostedService : BaseAsyncService
+    {
+        private SettingsRepository _SettingsRepository;
+        private CssThemeManager _CssThemeManager;
+
+        public CssThemeManagerHostedService(SettingsRepository settingsRepository, CssThemeManager cssThemeManager)
         {
-            if (String.IsNullOrWhiteSpace(newUri))
-                _creativeStartUri = "/vendor/bootstrap4-creativestart/creative.css?v=" + DateTime.Now.Ticks;
-            else
-                _creativeStartUri = newUri;
+            _SettingsRepository = settingsRepository;
+            _CssThemeManager = cssThemeManager;
+        }
+
+        internal override Task[] initializeTasks()
+        {
+            return new[]
+            {
+                createLoopTask(ListenForThemeChanges)
+            };
+        }
+
+        async Task ListenForThemeChanges()
+        {
+            await new SynchronizationContextRemover();
+            var data = (await _SettingsRepository.GetSettingAsync<ThemeSettings>()) ?? new ThemeSettings();
+            _CssThemeManager.Update(data);
+
+            await _SettingsRepository.WaitSettingsChanged<ThemeSettings>(_Cts.Token);
         }
     }
 }

@@ -138,7 +138,6 @@ namespace BTCPayServer.Hosting
 
             services.TryAddSingleton<LanguageService>();
             services.TryAddSingleton<NBXplorerDashboard>();
-            services.TryAddSingleton<CssThemeManager>();
             services.TryAddSingleton<StoreRepository>();
             services.TryAddSingleton<BTCPayWalletProvider>();
             services.TryAddSingleton<CurrencyNameTable>();
@@ -147,6 +146,9 @@ namespace BTCPayServer.Hosting
                 Fallback = new FeeRate(100, 1),
                 BlockTarget = 20
             });
+
+            services.AddSingleton<CssThemeManager>();
+            services.AddSingleton<IHostedService, CssThemeManagerHostedService>();
 
             services.AddSingleton<Payments.IPaymentMethodHandler<DerivationStrategy>, Payments.Bitcoin.BitcoinLikePaymentHandler>();
             services.AddSingleton<IHostedService, Payments.Bitcoin.NBXplorerListener>();

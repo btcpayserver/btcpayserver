@@ -42,22 +42,22 @@ namespace BTCPayServer.Services.Rates
 
         public async Task<ICollection<Rate>> GetRatesAsync()
         {
+            var response = await _Client.GetAsync($"https://api.quadrigacx.com/v2/ticker?book=all");
+            response.EnsureSuccessStatusCode();
+            var rates = JObject.Parse(await response.Content.ReadAsStringAsync());
+
             List<Rate> result = new List<Rate>();
-            // https://www.quadrigacx.com/api_info
-            foreach(var q in new[] { (Crypto: "BTC", Currency:"CAD" ),
-                (Crypto: "BTC", Currency:"USD" ),
-                (Crypto: "ETH", Currency:"CAD" ),
-                (Crypto: "LTC", Currency:"CAD" ),
-                (Crypto: "BCH", Currency:"CAD" ),
-                (Crypto: "BTG", Currency:"CAD" ) }
-            .Where(c => CryptoCode == c.Crypto)
-            .Select(c => (Crypto: c.Crypto, Currency: c.Currency, Rate: GetRatesAsyncCore(c.Crypto, c.Currency))))
+            foreach (var prop in rates.Properties())
             {
-                try
-                {
-                    result.Add(new Rate() { Currency = q.Currency, Value = await q.Rate });
-                }
-                catch(RateUnavailableException) { }
+                var rate = new Rate();
+                var splitted = prop.Name.Split('_');
+                var crypto = splitted[0].ToUpperInvariant();
+                if (crypto != CryptoCode)
+                    continue;
+                rate.Currency = splitted[1].ToUpperInvariant();
+                TryToDecimal((JObject)prop.Value, out var v);
+                rate.Value = v;
+                result.Add(rate);
             }
             return result;
         }

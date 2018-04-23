@@ -65,9 +65,17 @@ namespace BTCPayServer.Services.Rates
 
         private IRateProvider CreateExchangeRateProvider(BTCPayNetwork network, string exchange)
         {
+            List<IRateProvider> providers = new List<IRateProvider>();
+
+            if(exchange == "quadrigacx")
+            {
+                providers.Add(new QuadrigacxRateProvider(network.CryptoCode));
+            }
+
             var coinAverage = new CoinAverageRateProviderDescription(network.CryptoCode).CreateRateProvider(serviceProvider);
             coinAverage.Exchange = exchange;
-            return coinAverage;
+            providers.Add(coinAverage);
+            return new FallbackRateProvider(providers.ToArray());
         }
 
         private CachedRateProvider CreateCachedRateProvider(BTCPayNetwork network, IRateProvider rateProvider, string additionalScope)

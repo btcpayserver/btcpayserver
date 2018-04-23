@@ -633,7 +633,7 @@ namespace BTCPayServer.Tests
                 Assert.Equal(bitflyer, bitflyer2); // Should be equal because cache
                 rates.Add(bitflyer);
 
-                foreach(var rate in rates)
+                foreach (var rate in rates)
                 {
                     Assert.Single(rates.Where(r => r == rate));
                 }
@@ -1183,6 +1183,26 @@ namespace BTCPayServer.Tests
                     Assert.Equal("paidOver", (string)((JValue)localInvoice.ExceptionStatus).Value);
                 });
             }
+        }
+
+        [Fact]
+        public void CheckQuadrigacxRateProvider()
+        {
+            var quadri = new QuadrigacxRateProvider("BTC");
+            var rates = quadri.GetRatesAsync().GetAwaiter().GetResult();
+            Assert.NotEmpty(rates);
+            Assert.NotEqual(0.0m, rates.First().Value);
+            Assert.NotEqual(0.0m, quadri.GetRateAsync("CAD").GetAwaiter().GetResult());
+            Assert.NotEqual(0.0m, quadri.GetRateAsync("USD").GetAwaiter().GetResult());
+            Assert.Throws<RateUnavailableException>(() => quadri.GetRateAsync("IOEW").GetAwaiter().GetResult());
+
+            quadri = new QuadrigacxRateProvider("LTC");
+            rates = quadri.GetRatesAsync().GetAwaiter().GetResult();
+            Assert.NotEmpty(rates);
+            Assert.NotEqual(0.0m, rates.First().Value);
+            Assert.NotEqual(0.0m, quadri.GetRateAsync("CAD").GetAwaiter().GetResult());
+            Assert.Throws<RateUnavailableException>(() => quadri.GetRateAsync("IOEW").GetAwaiter().GetResult());
+            Assert.Throws<RateUnavailableException>(() => quadri.GetRateAsync("USD").GetAwaiter().GetResult());
         }
 
         [Fact]

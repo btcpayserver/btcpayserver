@@ -9,6 +9,8 @@ using BTCPayServer.Services.Rates;
 using Microsoft.Extensions.Hosting;
 using BTCPayServer.Logging;
 using System.Runtime.CompilerServices;
+using System.IO;
+using System.Text;
 
 namespace BTCPayServer.HostedServices
 {
@@ -67,12 +69,11 @@ namespace BTCPayServer.HostedServices
             return Timer(async () =>
             {
                 await new SynchronizationContextRemover();
-                var tickers = await new CoinAverageRateProvider("BTC").GetExchangeTickersAsync();
+                var tickers = await new CoinAverageRateProvider("BTC") { Authenticator = _coinAverageSettings }.GetExchangeTickersAsync();
                 _coinAverageSettings.AvailableExchanges = tickers
                     .Exchanges
                     .Select(c => (c.DisplayName, c.Name))
                     .ToArray();
-
                 await Task.Delay(TimeSpan.FromHours(5), cancellation);
             }, cancellation);
         }
@@ -87,6 +88,10 @@ namespace BTCPayServer.HostedServices
                 if (!string.IsNullOrWhiteSpace(rates.PrivateKey) && !string.IsNullOrWhiteSpace(rates.PublicKey))
                 {
                     _coinAverageSettings.KeyPair = (rates.PublicKey, rates.PrivateKey);
+                }
+                else
+                {
+                    _coinAverageSettings.KeyPair = null;
                 }
                 await _SettingsRepository.WaitSettingsChanged<RatesSetting>(cancellation);
             }, cancellation);

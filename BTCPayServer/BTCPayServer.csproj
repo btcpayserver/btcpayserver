@@ -112,7 +112,6 @@
 
 	<ItemGroup>
 	  <Folder Include="Build\" />
-	  <Folder Include="wwwroot\main\js\" />
 	  <Folder Include="wwwroot\vendor\clipboard.js\" />
 	</ItemGroup>
 

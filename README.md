@@ -9,7 +9,7 @@
 ## Introduction 
 
 BTCPayJungle is an Open Source payment processor, written in C#, that conforms to the invoice API of [Bitpay](https://bitpay.com/).
-This allows easy migration of your code base to your own, self-hosted payment processor, or you can registrar for a free btcpayjungle account today. if you enjoy our hosted server @ https://btcpayjungle.com please dont forget to donate, our machines need to eat ⚡️ 
+This allows easy migration of your code base to your own, self-hosted payment processor, or you can registrar for a free btcpayjungle account today. if you like & enjoy our hosted server @ https://btcpayjungle.com please dont forget to donate, our machines need to eat ⚡️ 
 
 This solution is for you if:
 

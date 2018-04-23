@@ -47,5 +47,8 @@ const locales_is = {
     "Archived_Body": "Vinsamlegast hafðu samband fyrir upplýsingar eða aðstoð.",
     // Lightning
     "BOLT 11 Invoice": "BOLT 11 Reikningur",
-    "Node Info": "Nótu upplýsingar"
+    "Node Info": "Nótu upplýsingar",
+    //
+    "txCount": "{{count}} reikningur",
+    "txCount_plural": "{{count}} reikningar"
 };

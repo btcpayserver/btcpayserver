@@ -67,7 +67,7 @@ namespace BTCPayServer.HostedServices
             return Timer(async () =>
             {
                 await new SynchronizationContextRemover();
-                var tickers = await new CoinAverageRateProvider("BTC").GetExchangeTickersAsync();
+                var tickers = await new CoinAverageRateProvider("BTC") { Authenticator = _coinAverageSettings }.GetExchangeTickersAsync();
                 _coinAverageSettings.AvailableExchanges = tickers
                     .Exchanges
                     .Select(c => (c.DisplayName, c.Name))

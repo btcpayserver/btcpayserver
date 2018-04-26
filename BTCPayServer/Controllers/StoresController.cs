@@ -201,6 +201,7 @@ namespace BTCPayServer.Controllers
             vm.LightningMaxValue = storeBlob.LightningMaxValue?.ToString() ?? "";
             vm.OnChainMinValue = storeBlob.OnChainMinValue?.ToString() ?? "";
             vm.AllowCoinConversion = storeBlob.AllowCoinConversion;
+            vm.RequiresRefundEmail = storeBlob.RequiresRefundEmail;
             vm.CustomCSS = storeBlob.CustomCSS?.AbsoluteUri;
             vm.CustomLogo = storeBlob.CustomLogo?.AbsoluteUri;
             return View(vm);
@@ -247,6 +248,7 @@ namespace BTCPayServer.Controllers
             }
             blob.DefaultLang = model.DefaultLang;
             blob.AllowCoinConversion = model.AllowCoinConversion;
+            blob.RequiresRefundEmail = model.RequiresRefundEmail;
             blob.LightningMaxValue = lightningMaxValue;
             blob.OnChainMinValue = onchainMinValue;
             blob.CustomLogo = string.IsNullOrWhiteSpace(model.CustomLogo) ? null : new Uri(model.CustomLogo, UriKind.Absolute);

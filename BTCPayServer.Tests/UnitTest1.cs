@@ -598,8 +598,18 @@ namespace BTCPayServer.Tests
             var search = new SearchString(filter);
             Assert.Equal("storeid:abc status:abed blabhbalh", search.ToString());
             Assert.Equal("blabhbalh", search.TextSearch);
-            Assert.Equal("abc", search.Filters["storeid"]);
-            Assert.Equal("abed", search.Filters["status"]);
+            Assert.Single(search.Filters["storeid"]);
+            Assert.Single(search.Filters["status"]);
+            Assert.Equal("abc", search.Filters["storeid"].First());
+            Assert.Equal("abed", search.Filters["status"].First());
+
+            filter = "status:abed status:abed2";
+            search = new SearchString(filter);
+            Assert.Equal("status:abed status:abed2", search.ToString());
+            Assert.Throws<KeyNotFoundException>(() => search.Filters["test"]);
+            Assert.Equal(2, search.Filters["status"].Count);
+            Assert.Equal("abed", search.Filters["status"].First());
+            Assert.Equal("abed2", search.Filters["status"].Skip(1).First());
         }
 
         [Fact]
@@ -987,7 +997,7 @@ namespace BTCPayServer.Tests
                 Assert.Equal("orange", vmview.Items[1].Title);
                 Assert.Equal(10.0m, vmview.Items[1].Price.Value);
                 Assert.Equal("$5.00", vmview.Items[0].Price.Formatted);
-                Assert.IsType<RedirectResult>(apps.ViewPointOfSale(appId, "orange").Result);
+                Assert.IsType<RedirectResult>(apps.ViewPointOfSale(appId, 0, "orange").Result);
                 var invoice = user.BitPay.GetInvoices().First();
                 Assert.Equal(10.00, invoice.Price);
                 Assert.Equal("CAD", invoice.Currency);
@@ -1054,13 +1064,13 @@ namespace BTCPayServer.Tests
                 {
                     var textSearchResult = tester.PayTester.InvoiceRepository.GetInvoices(new InvoiceQuery()
                     {
-                        StoreId = user.StoreId,
+                        StoreId = new[] { user.StoreId },
                         TextSearch = invoice.OrderId
                     }).GetAwaiter().GetResult();
                     Assert.Single(textSearchResult);
                     textSearchResult = tester.PayTester.InvoiceRepository.GetInvoices(new InvoiceQuery()
                     {
-                        StoreId = user.StoreId,
+                        StoreId = new[] { user.StoreId },
                         TextSearch = invoice.Id
                     }).GetAwaiter().GetResult();
 

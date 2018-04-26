@@ -42,10 +42,12 @@ namespace BTCPayServer.Controllers
                     "  price: 15\n\n" +
                     "tshirt:\n" +
                     "  price: 25";
+                ShowCustomAmount = true;
             }
             public string Title { get; set; }
             public string Currency { get; set; }
             public string Template { get; set; }
+            public bool ShowCustomAmount { get; set; }
         }
 
         [HttpGet]
@@ -57,7 +59,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
 
             var settings = app.GetSettings<PointOfSaleSettings>();
-            return View(new UpdatePointOfSaleViewModel() { Title = settings.Title, Currency = settings.Currency, Template = settings.Template });
+            return View(new UpdatePointOfSaleViewModel() { Title = settings.Title, ShowCustomAmount = settings.ShowCustomAmount, Currency = settings.Currency, Template = settings.Template });
         }
         [HttpPost]
         [Route("{appId}/settings/pos")]
@@ -83,6 +85,7 @@ namespace BTCPayServer.Controllers
             app.SetSettings(new PointOfSaleSettings()
             {
                 Title = vm.Title,
+                ShowCustomAmount = vm.ShowCustomAmount,
                 Currency = vm.Currency.ToUpperInvariant(),
                 Template = vm.Template
             });
@@ -99,9 +102,13 @@ namespace BTCPayServer.Controllers
             if (app == null)
                 return NotFound();
             var settings = app.GetSettings<PointOfSaleSettings>();
+            var currency = _Currencies.GetCurrencyData(settings.Currency);
+            double step = currency == null ? 1 : Math.Pow(10, -(currency.Divisibility));
             return View(new ViewPointOfSaleViewModel()
             {
                 Title = settings.Title,
+                Step = step.ToString(CultureInfo.InvariantCulture),
+                ShowCustomAmount = settings.ShowCustomAmount,
                 Items = Parse(settings.Template, settings.Currency)
             });
         }
@@ -155,23 +162,43 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("{appId}/pos")]
-        public async Task<IActionResult> ViewPointOfSale(string appId, string choiceKey)
+        public async Task<IActionResult> ViewPointOfSale(string appId, double amount, string choiceKey)
         {
             var app = await GetApp(appId, AppType.PointOfSale);
+            if (string.IsNullOrEmpty(choiceKey) && amount <= 0)
+            {
+                return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
+            }
             if (app == null)
                 return NotFound();
             var settings = app.GetSettings<PointOfSaleSettings>();
-            var choices = Parse(settings.Template, settings.Currency);
-            var choice = choices.FirstOrDefault(c => c.Id == choiceKey);
-            if (choice == null)
-                return NotFound();
+            if(string.IsNullOrEmpty(choiceKey) && !settings.ShowCustomAmount)
+            {
+                return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
+            }
+            string title = null;
+            double price = 0.0;
+            if (!string.IsNullOrEmpty(choiceKey))
+            {
+                var choices = Parse(settings.Template, settings.Currency);
+                var choice = choices.FirstOrDefault(c => c.Id == choiceKey);
+                if (choice == null)
+                    return NotFound();
+                title = choice.Title;
+                price = (double)choice.Price.Value;
+            }
+            else
+            {
+                price = amount;
+                title = settings.Title;
+            }
 
             var store = await GetStore(app);
             var invoice = await _InvoiceController.CreateInvoiceCore(new NBitpayClient.Invoice()
             {
-                ItemDesc = choice.Title,
+                ItemDesc = title,
                 Currency = settings.Currency,
-                Price = (double)choice.Price.Value,
+                Price = price,
             }, store, HttpContext.Request.GetAbsoluteRoot());
             return Redirect(invoice.Data.Url);
         }

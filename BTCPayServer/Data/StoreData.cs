@@ -214,6 +214,7 @@ namespace BTCPayServer.Data
         {
             InvoiceExpiration = 15;
             MonitoringExpiration = 60;
+            RequiresRefundEmail = true;
         }
         public bool NetworkFeeDisabled
         {
@@ -223,6 +224,9 @@ namespace BTCPayServer.Data
         {
             get; set;
         }
+
+        public bool RequiresRefundEmail { get; set; }
+
         public string DefaultLang { get; set; }
         [DefaultValue(60)]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]

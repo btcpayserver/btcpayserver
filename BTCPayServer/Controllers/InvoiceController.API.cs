@@ -87,8 +87,8 @@ namespace BTCPayServer.Controllers
                 StartDate = dateStart,
                 OrderId = orderId,
                 ItemCode = itemCode,
-                Status = status,
-                StoreId = store.Id
+                Status = status == null ? null : new[] { status },
+                StoreId = new[] { store.Id }
             };
 
 

@@ -18,6 +18,8 @@ namespace BTCPayServer.Models.AppViewModels
             public ItemPrice Price { get; set; }
             public string Title { get; set; }
         }
+        public bool ShowCustomAmount { get; set; }
+        public string Step { get; set; }
         public string Title { get; set; }
         public Item[] Items { get; set; }
     }

@@ -30,6 +30,10 @@
                         <span asp-validation-for="Currency" class="text-danger"></span>
                     </div>
                     <div class="form-group">
+                        <label asp-for="ShowCustomAmount"></label>
+                        <input asp-for="ShowCustomAmount" type="checkbox" class="form-check" />
+                    </div>
+                    <div class="form-group">
                         <label asp-for="Template" class="control-label"></label>*
                         <textarea asp-for="Template" rows="20" cols="40" class="form-control"></textarea>
                         <span asp-validation-for="Template" class="text-danger"></span>

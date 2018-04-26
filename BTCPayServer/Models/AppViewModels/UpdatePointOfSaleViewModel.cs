@@ -17,5 +17,8 @@ namespace BTCPayServer.Models.AppViewModels
         [Required]
         [MaxLength(5000)]
         public string Template { get; set; }
+
+        [Display(Name = "User can input custom amount")]
+        public bool ShowCustomAmount { get; set; }
     }
 }

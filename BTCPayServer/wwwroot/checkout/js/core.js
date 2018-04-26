@@ -108,7 +108,7 @@ $(document).ready(function () {
     if (srvModel.expirationSeconds > 0) {
         progressStart(srvModel.maxTimeSeconds); // Progress bar
 
-        if (!validateEmail(srvModel.customerEmail))
+        if (srvModel.requiresRefundEmail && !validateEmail(srvModel.customerEmail))
             emailForm(); // Email form Display
         else
             hideEmailForm();

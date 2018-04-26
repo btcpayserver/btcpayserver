@@ -39,6 +39,10 @@
                 <input asp-for="AllowCoinConversion" type="checkbox" class="form-check" />
             </div>
             <div class="form-group">
+                <label asp-for="RequiresRefundEmail"></label>
+                <input asp-for="RequiresRefundEmail" type="checkbox" class="form-check" />
+            </div>
+            <div class="form-group">
                 <label asp-for="LightningMaxValue"></label>
                 <input asp-for="LightningMaxValue" class="form-control" />
                 <span asp-validation-for="LightningMaxValue" class="text-danger"></span>

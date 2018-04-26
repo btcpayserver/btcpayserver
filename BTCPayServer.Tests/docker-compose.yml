@@ -46,7 +46,7 @@ services:
       - lightning-charged
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:1.0.2.0
+    image: nicolasdorier/nbxplorer:1.0.2.2
     ports:
       - "32838:32838"
     expose: 
@@ -89,7 +89,7 @@ services:
       - "bitcoin_datadir:/data"
 
   customer_lightningd:
-    image: nicolasdorier/clightning:0.0.0.3
+    image: nicolasdorier/clightning:0.0.0.9-dev
     environment: 
       EXPOSE_TCP: "true"
       LIGHTNINGD_OPT: |
@@ -98,6 +98,7 @@ services:
         network=regtest
         ipaddr=customer_lightningd
         log-level=debug
+        dev-broadcast-interval=1000
     ports:
       - "30992:9835" # api port
     expose:
@@ -129,7 +130,7 @@ services:
       - merchant_lightningd
 
   merchant_lightningd:
-    image: nicolasdorier/clightning:0.0.0.5-dev
+    image: nicolasdorier/clightning:0.0.0.9-dev
     environment: 
       EXPOSE_TCP: "true"
       LIGHTNINGD_OPT: |

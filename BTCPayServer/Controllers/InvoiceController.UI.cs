@@ -366,8 +366,8 @@ namespace BTCPayServer.Controllers
                 Count = count,
                 Skip = skip,
                 UserId = GetUserId(),
-                Status = filterString.Filters.TryGet("status"),
-                StoreId = filterString.Filters.TryGet("storeid")
+                Status = filterString.Filters.ContainsKey("status") ? filterString.Filters["status"].ToArray() : null,
+                StoreId = filterString.Filters.ContainsKey("storeid") ? filterString.Filters["storeid"].ToArray() : null
             }))
             {
                 model.SearchTerm = searchTerm;

@@ -21,7 +21,7 @@ namespace BTCPayServer
                     .Select(t => t.Split(new char[] { ':' }, StringSplitOptions.RemoveEmptyEntries))
                     .Where(kv => kv.Length == 2)
                     .Select(kv => new KeyValuePair<string, string>(kv[0].ToLowerInvariant(), kv[1]))
-                    .ToDictionary(o => o.Key, o => o.Value);
+                    .ToMultiValueDictionary(o => o.Key, o => o.Value);
 
             foreach(var filter in splitted)
             {
@@ -38,8 +38,8 @@ namespace BTCPayServer
             get;
             private set;
         }
-
-        public Dictionary<string, string> Filters { get; private set; }
+        
+        public MultiValueDictionary<string, string> Filters { get; private set; }
 
         public override string ToString()
         {

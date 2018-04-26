@@ -99,10 +99,14 @@ namespace BTCPayServer.Services
             try
             {
                 var pubKey = await ledger.GetWalletPubKeyAsync(account);
-                if (pubKey.Address.Network != network.NBitcoinNetwork)
+                try
+                {
+                    pubKey.GetAddress(network.NBitcoinNetwork);
+                }
+                catch
                 {
                     if (network.NBitcoinNetwork.NetworkType == NetworkType.Mainnet)
-                        throw new Exception($"The opened ledger app should be for {network.NBitcoinNetwork.Name}, not for {pubKey.Address.Network}");
+                        throw new Exception($"The opened ledger app does not seems to support {network.NBitcoinNetwork.Name}.");
                 }
                 var fingerprint = onlyChaincode ? new byte[4] : (await ledger.GetWalletPubKeyAsync(account.Parent)).UncompressedPublicKey.Compress().Hash.ToBytes().Take(4).ToArray();
                 var extpubkey = new ExtPubKey(pubKey.UncompressedPublicKey.Compress(), pubKey.ChainCode, (byte)account.Indexes.Length, fingerprint, account.Indexes.Last()).GetWif(network.NBitcoinNetwork);
@@ -195,6 +199,7 @@ namespace BTCPayServer.Services
 
             TransactionBuilder builder = new TransactionBuilder();
             builder.StandardTransactionPolicy.MinRelayTxFee = minTxRelayFee;
+            builder.SetConsensusFactory(network.NBitcoinNetwork);
             builder.AddCoins(coins.Select(c=>c.Coin).ToArray());
 
             foreach (var element in send)

@@ -80,8 +80,12 @@ services:
         rpcport=43782
         port=39388
         whitelist=0.0.0.0/0
+        zmqpubrawtx=tcp://0.0.0.0:28332
+        zmqpubrawtxlock=tcp://0.0.0.0:28332
+        zmqpubhashblock=tcp://0.0.0.0:28332
     ports: 
       - "43782:43782"
+      - "28332:28332"
     expose:
       - "43782" # RPC
       - "39388" # P2P

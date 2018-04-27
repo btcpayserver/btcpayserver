@@ -16,17 +16,22 @@ namespace BTCPayServer.HostedServices
 {
     public abstract class BaseAsyncService : IHostedService
     {
-        protected CancellationTokenSource _Cts;
+        private CancellationTokenSource _Cts;
         protected Task[] _Tasks;
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            _Cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            _Cts = new CancellationTokenSource();
             _Tasks = initializeTasks();
             return Task.CompletedTask;
         }
 
         internal abstract Task[] initializeTasks();
+
+        protected CancellationToken _SyncToken
+        {
+            get { return _Cts.Token; }
+        }
 
         protected async Task createLoopTask(Func<Task> act, [CallerMemberName]string caller = null)
         {

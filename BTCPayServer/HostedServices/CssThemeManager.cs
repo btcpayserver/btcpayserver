@@ -68,7 +68,7 @@ namespace BTCPayServer.HostedServices
             var data = (await _SettingsRepository.GetSettingAsync<ThemeSettings>()) ?? new ThemeSettings();
             _CssThemeManager.Update(data);
 
-            await _SettingsRepository.WaitSettingsChanged<ThemeSettings>(_Cts.Token);
+            await _SettingsRepository.WaitSettingsChanged<ThemeSettings>(_SyncToken);
         }
     }
 }

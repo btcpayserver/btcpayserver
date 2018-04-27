@@ -45,7 +45,7 @@ namespace BTCPayServer.HostedServices
                 .Exchanges
                 .Select(c => (c.DisplayName, c.Name))
                 .ToArray();
-            await Task.Delay(TimeSpan.FromHours(5), _Cts.Token);
+            await Task.Delay(TimeSpan.FromHours(5), _SyncToken);
         }
 
         async Task RefreshCoinAverageSettings()
@@ -61,7 +61,7 @@ namespace BTCPayServer.HostedServices
             {
                 _coinAverageSettings.KeyPair = null;
             }
-            await _SettingsRepository.WaitSettingsChanged<RatesSetting>(_Cts.Token);
+            await _SettingsRepository.WaitSettingsChanged<RatesSetting>(_SyncToken);
         }
     }
 }

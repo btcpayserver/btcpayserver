@@ -20,6 +20,8 @@ namespace BTCPayServer.Services.Stores
 
         public async Task<StoreData> FindStore(string storeId)
         {
+            if (storeId == null)
+                return null;
             using (var ctx = _ContextFactory.CreateContext())
             {
                 return await ctx.FindAsync<StoreData>(storeId).ConfigureAwait(false);

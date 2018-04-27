@@ -148,6 +148,11 @@ namespace BTCPayServer
             return principal.Claims.Where(c => c.Type == Claims.SIN).Select(c => c.Value).FirstOrDefault();
         }
 
+        public static string GetStoreId(this ClaimsPrincipal principal)
+        {
+            return principal.Claims.Where(c => c.Type == Claims.OwnStore).Select(c => c.Value).FirstOrDefault();
+        }
+
         private static JsonSerializerSettings jsonSettings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
         public static string ToJson(this object o)
         {

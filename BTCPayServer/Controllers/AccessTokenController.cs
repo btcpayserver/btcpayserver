@@ -23,7 +23,7 @@ namespace BTCPayServer.Controllers
         [Route("tokens")]
         public async Task<GetTokensResponse> Tokens()
         {
-            var tokens = await _TokenRepository.GetTokens(this.GetBitIdentity().SIN);
+            var tokens = await _TokenRepository.GetTokens(this.User.GetSIN());
             return new GetTokensResponse(tokens);
         }
 
@@ -51,7 +51,7 @@ namespace BTCPayServer.Controllers
             }
             else
             {
-                var sin = this.GetBitIdentity(false)?.SIN ?? request.Id;
+                var sin = this.User.GetSIN() ?? request.Id;
                 if (string.IsNullOrEmpty(request.Id) || !NBitpayClient.Extensions.BitIdExtensions.ValidateSIN(request.Id))
                     throw new BitpayHttpException(400, "'id' property is required, alternatively, use BitId");
 

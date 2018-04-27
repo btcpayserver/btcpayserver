@@ -33,6 +33,8 @@ namespace BTCPayServer.Authentication
 
         public async Task<BitTokenEntity[]> GetTokens(string sin)
         {
+            if (sin == null)
+                return Array.Empty<BitTokenEntity>();
             using (var ctx = _Factory.CreateContext())
             {
                 return (await ctx.PairedSINData

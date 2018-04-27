@@ -29,6 +29,7 @@ using Microsoft.AspNetCore.Identity;
 using BTCPayServer.Models;
 using System.Security.Claims;
 using System.Globalization;
+using BTCPayServer.Services;
 
 namespace BTCPayServer
 {
@@ -142,12 +143,9 @@ namespace BTCPayServer
             return services;
         }
 
-
-        public static BitIdentity GetBitIdentity(this Controller controller, bool throws = true)
+        public static string GetSIN(this ClaimsPrincipal principal)
         {
-            if (!(controller.User.Identity is BitIdentity))
-                return throws ? throw new UnauthorizedAccessException("no-bitid") : (BitIdentity)null;
-            return (BitIdentity)controller.User.Identity;
+            return principal.Claims.Where(c => c.Type == Claims.SIN).Select(c => c.Value).FirstOrDefault();
         }
 
         private static JsonSerializerSettings jsonSettings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };

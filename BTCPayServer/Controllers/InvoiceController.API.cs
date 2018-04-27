@@ -103,13 +103,13 @@ namespace BTCPayServer.Controllers
             if (facade == null)
                 throw new ArgumentNullException(nameof(facade));
 
-            var actualTokens = (await _TokenRepository.GetTokens(this.GetBitIdentity().SIN)).ToArray();
+            var actualTokens = (await _TokenRepository.GetTokens(this.User.GetSIN())).ToArray();
             actualTokens = actualTokens.SelectMany(t => GetCompatibleTokens(t)).ToArray();
 
             var actualToken = actualTokens.FirstOrDefault(a => a.Value.Equals(expectedToken, StringComparison.Ordinal));
             if (expectedToken == null || actualToken == null)
             {
-                Logs.PayServer.LogDebug($"No token found for facade {facade} for SIN {this.GetBitIdentity().SIN}");
+                Logs.PayServer.LogDebug($"No token found for facade {facade} for SIN {this.User.GetSIN()}");
                 throw new BitpayHttpException(401, $"This endpoint does not support the `{actualTokens.Select(a => a.Facade).Concat(new[] { "user" }).FirstOrDefault()}` facade");
             }
             return actualToken;

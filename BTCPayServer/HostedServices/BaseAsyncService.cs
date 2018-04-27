@@ -22,18 +22,18 @@ namespace BTCPayServer.HostedServices
         public Task StartAsync(CancellationToken cancellationToken)
         {
             _Cts = new CancellationTokenSource();
-            _Tasks = initializeTasks();
+            _Tasks = InitializeTasks();
             return Task.CompletedTask;
         }
 
-        internal abstract Task[] initializeTasks();
+        internal abstract Task[] InitializeTasks();
 
-        protected CancellationToken _SyncToken
+        protected CancellationToken Cancellation
         {
             get { return _Cts.Token; }
         }
 
-        protected async Task createLoopTask(Func<Task> act, [CallerMemberName]string caller = null)
+        protected async Task CreateLoopTask(Func<Task> act, [CallerMemberName]string caller = null)
         {
             await new SynchronizationContextRemover();
             while (!_Cts.IsCancellationRequested)

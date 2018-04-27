@@ -28,12 +28,12 @@ namespace BTCPayServer.HostedServices
             _coinAverageSettings = coinAverageSettings;
         }
 
-        internal override Task[] initializeTasks()
+        internal override Task[] InitializeTasks()
         {
             return new[]
             {
-                createLoopTask(RefreshCoinAverageSupportedExchanges),
-                createLoopTask(RefreshCoinAverageSettings)
+                CreateLoopTask(RefreshCoinAverageSupportedExchanges),
+                CreateLoopTask(RefreshCoinAverageSettings)
             };
         }
 
@@ -45,7 +45,7 @@ namespace BTCPayServer.HostedServices
                 .Exchanges
                 .Select(c => (c.DisplayName, c.Name))
                 .ToArray();
-            await Task.Delay(TimeSpan.FromHours(5), _SyncToken);
+            await Task.Delay(TimeSpan.FromHours(5), Cancellation);
         }
 
         async Task RefreshCoinAverageSettings()
@@ -61,7 +61,7 @@ namespace BTCPayServer.HostedServices
             {
                 _coinAverageSettings.KeyPair = null;
             }
-            await _SettingsRepository.WaitSettingsChanged<RatesSetting>(_SyncToken);
+            await _SettingsRepository.WaitSettingsChanged<RatesSetting>(Cancellation);
         }
     }
 }

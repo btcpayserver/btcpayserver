@@ -54,11 +54,11 @@ namespace BTCPayServer.HostedServices
             _CssThemeManager = cssThemeManager;
         }
 
-        internal override Task[] initializeTasks()
+        internal override Task[] InitializeTasks()
         {
             return new[]
             {
-                createLoopTask(ListenForThemeChanges)
+                CreateLoopTask(ListenForThemeChanges)
             };
         }
 
@@ -68,7 +68,7 @@ namespace BTCPayServer.HostedServices
             var data = (await _SettingsRepository.GetSettingAsync<ThemeSettings>()) ?? new ThemeSettings();
             _CssThemeManager.Update(data);
 
-            await _SettingsRepository.WaitSettingsChanged<ThemeSettings>(_SyncToken);
+            await _SettingsRepository.WaitSettingsChanged<ThemeSettings>(Cancellation);
         }
     }
 }

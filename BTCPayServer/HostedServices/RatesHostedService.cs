@@ -14,7 +14,7 @@ using System.Text;
 
 namespace BTCPayServer.HostedServices
 {
-    public class RatesHostedService : IHostedService
+    public class RatesHostedService : BaseAsyncService
     {
         private SettingsRepository _SettingsRepository;
         private IRateProviderFactory _RateProviderFactory;
@@ -28,79 +28,40 @@ namespace BTCPayServer.HostedServices
             _coinAverageSettings = coinAverageSettings;
         }
 
-
-        CancellationTokenSource _Cts = new CancellationTokenSource();
-
-        List<Task> _Tasks = new List<Task>();
-
-        public Task StartAsync(CancellationToken cancellationToken)
+        internal override Task[] InitializeTasks()
         {
-            _Tasks.Add(RefreshCoinAverageSupportedExchanges(_Cts.Token));
-            _Tasks.Add(RefreshCoinAverageSettings(_Cts.Token));
-            return Task.CompletedTask;
+            return new[]
+            {
+                CreateLoopTask(RefreshCoinAverageSupportedExchanges),
+                CreateLoopTask(RefreshCoinAverageSettings)
+            };
         }
 
-
-        async Task Timer(Func<Task> act, CancellationToken cancellation, [CallerMemberName]string caller = null)
+        async Task RefreshCoinAverageSupportedExchanges()
         {
             await new SynchronizationContextRemover();
-            while (!cancellation.IsCancellationRequested)
+            var tickers = await new CoinAverageRateProvider("BTC") { Authenticator = _coinAverageSettings }.GetExchangeTickersAsync();
+            _coinAverageSettings.AvailableExchanges = tickers
+                .Exchanges
+                .Select(c => (c.DisplayName, c.Name))
+                .ToArray();
+            await Task.Delay(TimeSpan.FromHours(5), Cancellation);
+        }
+
+        async Task RefreshCoinAverageSettings()
+        {
+            await new SynchronizationContextRemover();
+            var rates = (await _SettingsRepository.GetSettingAsync<RatesSetting>()) ?? new RatesSetting();
+            _RateProviderFactory.CacheSpan = TimeSpan.FromMinutes(rates.CacheInMinutes);
+            if (!string.IsNullOrWhiteSpace(rates.PrivateKey) && !string.IsNullOrWhiteSpace(rates.PublicKey))
             {
-                try
-                {
-                    await act();
-                }
-                catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
-                {
-                }
-                catch (Exception ex)
-                {
-                    Logs.PayServer.LogWarning(ex, caller + " failed");
-                    try
-                    {
-                        await Task.Delay(TimeSpan.FromMinutes(1), cancellation);
-                    }
-                    catch (OperationCanceledException) when (cancellation.IsCancellationRequested) { }
-                }
+                _coinAverageSettings.KeyPair = (rates.PublicKey, rates.PrivateKey);
             }
-        }
-        Task RefreshCoinAverageSupportedExchanges(CancellationToken cancellation)
-        {
-            return Timer(async () =>
+            else
             {
-                await new SynchronizationContextRemover();
-                var tickers = await new CoinAverageRateProvider("BTC") { Authenticator = _coinAverageSettings }.GetExchangeTickersAsync();
-                _coinAverageSettings.AvailableExchanges = tickers
-                    .Exchanges
-                    .Select(c => (c.DisplayName, c.Name))
-                    .ToArray();
-                await Task.Delay(TimeSpan.FromHours(5), cancellation);
-            }, cancellation);
-        }
-
-        Task RefreshCoinAverageSettings(CancellationToken cancellation)
-        {
-            return Timer(async () =>
-            {
-                await new SynchronizationContextRemover();
-                var rates = (await _SettingsRepository.GetSettingAsync<RatesSetting>()) ?? new RatesSetting();
-                _RateProviderFactory.CacheSpan = TimeSpan.FromMinutes(rates.CacheInMinutes);
-                if (!string.IsNullOrWhiteSpace(rates.PrivateKey) && !string.IsNullOrWhiteSpace(rates.PublicKey))
-                {
-                    _coinAverageSettings.KeyPair = (rates.PublicKey, rates.PrivateKey);
-                }
-                else
-                {
-                    _coinAverageSettings.KeyPair = null;
-                }
-                await _SettingsRepository.WaitSettingsChanged<RatesSetting>(cancellation);
-            }, cancellation);
-        }
-
-        public Task StopAsync(CancellationToken cancellationToken)
-        {
-            _Cts.Cancel();
-            return Task.WhenAll(_Tasks.ToArray());
+                _coinAverageSettings.KeyPair = null;
+            }
+            await _SettingsRepository.WaitSettingsChanged<RatesSetting>(Cancellation);
         }
     }
 }

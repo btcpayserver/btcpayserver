@@ -2,7 +2,7 @@ const locales_hr = {
     nested: {
         lang: 'Croatian'
     },
-    "Awaiting Payment...": "Čeka se uplata...",
+    "Awaiting Payment...": "Čekamo uplatu...",
     "Pay with": "Plati sa",
     "Contact and Refund Email": "E-mail za kontakt i povrat sredstava",
     "Contact_Body": "Molimo upišite Vašu e-mail adresu. Kontaktirat ćemo Vas ukoliko bude potrebe.",
@@ -10,7 +10,7 @@ const locales_hr = {
     "Continue": "Dalje",
     "Please enter a valid email address": "Molimo unesite ispravnu e-mail adresu",
     "Order Amount": "Količina",
-    "Network Cost": "Mrežni trošak",
+    "Network Cost": "Trošak mreže",
     "Already Paid": "Već plaćeno",
     "Due": "Rok",
     // Tabs

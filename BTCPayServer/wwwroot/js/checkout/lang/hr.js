@@ -1,6 +1,6 @@
-const locales_cs = {
+const locales_hr = {
     nested: {
-        lang: 'Jazyk'
+        lang: 'Croatian'
     },
     "Awaiting Payment...": "Čeka se uplata...",
     "Pay with": "Plati sa",

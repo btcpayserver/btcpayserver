@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -33,7 +34,16 @@ namespace BTCPayServer.Payments.Lightning.Lnd
                 Memo = description,
                 Expiry = (long)expiry.TotalSeconds
             });
-            throw new NotImplementedException();
+
+            var invoice = new LightningInvoice
+            {
+                // TODO: Verify id corresponds to R_hash
+                Id = BitString(resp.R_hash),
+                Amount = amount,
+                BOLT11 = resp.Payment_request,
+                Status = "unpaid"
+            };
+            return invoice;
         }
 
         public async Task<LightningNodeInformation> GetInfo(CancellationToken cancellation = default(CancellationToken))
@@ -52,8 +62,8 @@ namespace BTCPayServer.Payments.Lightning.Lnd
 
         public async Task<LightningInvoice> GetInvoice(string invoiceId, CancellationToken cancellation = default(CancellationToken))
         {
-            // var resp = await _decorator.LookupInvoiceAsync(invoiceId, null, cancellation);
-            throw new NotImplementedException();
+            var resp = await _Decorator.LookupInvoiceAsync(invoiceId, null, cancellation);
+            return ConvertLndInvoice(resp);
         }
 
         public Task<ILightningListenInvoiceSession> Listen(CancellationToken cancellation = default(CancellationToken))
@@ -63,13 +73,44 @@ namespace BTCPayServer.Payments.Lightning.Lnd
 
         async Task<LightningInvoice> ILightningListenInvoiceSession.WaitInvoice(CancellationToken cancellation)
         {
-            //var resp = await _decorator.SubscribeInvoicesAsync(cancellation);
-            throw new NotImplementedException();
+            var resp = await _Decorator.SubscribeInvoicesAsync(cancellation);
+            return ConvertLndInvoice(resp);
+
         }
 
         public void Dispose()
         {
             _HttpClient?.Dispose();
+        }
+
+        private static string BitString(byte[] bytes)
+        {
+            return BitConverter.ToString(bytes)
+                .Replace("-", "", StringComparison.InvariantCulture)
+                .ToLower(CultureInfo.InvariantCulture);
+        }
+
+        private static LightningInvoice ConvertLndInvoice(LnrpcInvoice resp)
+        {
+            var invoice = new LightningInvoice
+            {
+                // TODO: Verify id corresponds to R_hash
+                Id = BitString(resp.R_hash),
+                Amount = resp.Value,
+                BOLT11 = resp.Payment_request,
+                Status = "unpaid"
+            };
+
+            if (resp.Settle_date.HasValue)
+            {
+                invoice.PaidAt = DateTimeOffset.FromUnixTimeSeconds(resp.Settle_date.Value);
+                invoice.Status = "paid";
+            }
+            else if (DateTimeOffset.FromUnixTimeSeconds(resp.Creation_date.Value + resp.Expiry.Value) > DateTimeOffset.UtcNow)
+            {
+                invoice.Status = "expired";
+            }
+            return invoice;
         }
     }
 

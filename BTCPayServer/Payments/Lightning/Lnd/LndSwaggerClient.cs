@@ -4,19 +4,22 @@
 // </auto-generated>
 //----------------------
 
-namespace MyNamespace
+namespace BTCPayServer.Payments.Lightning.Lnd
 {
     #pragma warning disable // Disable all warnings
 
     [System.CodeDom.Compiler.GeneratedCode("NSwag", "11.11.1.0")]
-    public partial class Client 
+     partial class LndSwaggerClient 
     {
         private System.Lazy<Newtonsoft.Json.JsonSerializerSettings> _settings;
         private string _baseUrl = "";
         
-        public Client(string baseUrl)
+        private System.Net.Http.HttpClient _httpClient; 
+    
+        public LndSwaggerClient(string baseUrl, System.Net.Http.HttpClient httpClient)
         {
             BaseUrl = baseUrl; 
+            _httpClient = httpClient; 
     		_settings = new System.Lazy<Newtonsoft.Json.JsonSerializerSettings>(() => 
             {
                 var settings = new Newtonsoft.Json.JsonSerializerSettings();
@@ -57,7 +60,7 @@ namespace MyNamespace
             var urlBuilder_ = new System.Text.StringBuilder();
             urlBuilder_.Append(BaseUrl).Append("/v1/balance/blockchain");
     
-            var client_ = new System.Net.Http.HttpClient();
+            var client_ = _httpClient;
             try
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
@@ -112,8 +115,6 @@ namespace MyNamespace
             }
             finally
             {
-                if (client_ != null)
-                    client_.Dispose();
             }
         }
     
@@ -136,7 +137,7 @@ namespace MyNamespace
             var urlBuilder_ = new System.Text.StringBuilder();
             urlBuilder_.Append(BaseUrl).Append("/v1/balance/channels");
     
-            var client_ = new System.Net.Http.HttpClient();
+            var client_ = _httpClient;
             try
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
@@ -191,8 +192,6 @@ namespace MyNamespace
             }
             finally
             {
-                if (client_ != null)
-                    client_.Dispose();
             }
         }
     
@@ -220,7 +219,7 @@ namespace MyNamespace
             if (private_only != null) urlBuilder_.Append("private_only=").Append(System.Uri.EscapeDataString(System.Convert.ToString(private_only.Value, System.Globalization.CultureInfo.InvariantCulture))).Append("&");
             urlBuilder_.Length--;
     
-            var client_ = new System.Net.Http.HttpClient();
+            var client_ = _httpClient;
             try
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
@@ -275,8 +274,6 @@ namespace MyNamespace
             }
             finally
             {
-                if (client_ != null)
-                    client_.Dispose();
             }
         }
     
@@ -303,7 +300,7 @@ namespace MyNamespace
             var urlBuilder_ = new System.Text.StringBuilder();
             urlBuilder_.Append(BaseUrl).Append("/v1/channels");
     
-            var client_ = new System.Net.Http.HttpClient();
+            var client_ = _httpClient;
             try
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
@@ -361,8 +358,6 @@ namespace MyNamespace
             }
             finally
             {
-                if (client_ != null)
-                    client_.Dispose();
             }
         }
     
@@ -389,7 +384,7 @@ namespace MyNamespace
             var urlBuilder_ = new System.Text.StringBuilder();
             urlBuilder_.Append(BaseUrl).Append("/v1/channels/pending");
     
-            var client_ = new System.Net.Http.HttpClient();
+            var client_ = _httpClient;
             try
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
@@ -444,8 +439,6 @@ namespace MyNamespace
             }
             finally
             {
-                if (client_ != null)
-                    client_.Dispose();
             }
         }
     
@@ -472,7 +465,7 @@ namespace MyNamespace
             var urlBuilder_ = new System.Text.StringBuilder();
             urlBuilder_.Append(BaseUrl).Append("/v1/channels/transactions");
     
-            var client_ = new System.Net.Http.HttpClient();
+            var client_ = _httpClient;
             try
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
@@ -530,8 +523,6 @@ namespace MyNamespace
             }
             finally
             {
-                if (client_ != null)
-                    client_.Dispose();
             }
         }
     
@@ -574,7 +565,7 @@ namespace MyNamespace
             urlBuilder_.Replace("{channel_point.funding_txid_str}", System.Uri.EscapeDataString(System.Convert.ToString(channel_point_funding_txid_str, System.Globalization.CultureInfo.InvariantCulture)));
             urlBuilder_.Replace("{channel_point.output_index}", System.Uri.EscapeDataString(System.Convert.ToString(channel_point_output_index, System.Globalization.CultureInfo.InvariantCulture)));
     
-            var client_ = new System.Net.Http.HttpClient();
+            var client_ = _httpClient;
             try
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
@@ -629,8 +620,6 @@ namespace MyNamespace
             }
             finally
             {
-                if (client_ != null)
-                    client_.Dispose();
             }
         }
     
@@ -653,7 +642,7 @@ namespace MyNamespace
             var urlBuilder_ = new System.Text.StringBuilder();
             urlBuilder_.Append(BaseUrl).Append("/v1/chanpolicy");
     
-            var client_ = new System.Net.Http.HttpClient();
+            var client_ = _httpClient;
             try
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
@@ -711,8 +700,6 @@ namespace MyNamespace
             }
             finally
             {
-                if (client_ != null)
-                    client_.Dispose();
             }
         }
     
@@ -735,7 +722,7 @@ namespace MyNamespace
             var urlBuilder_ = new System.Text.StringBuilder();
             urlBuilder_.Append(BaseUrl).Append("/v1/fees");
     
-            var client_ = new System.Net.Http.HttpClient();
+            var client_ = _httpClient;
             try
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
@@ -790,8 +777,6 @@ namespace MyNamespace
             }
             finally
             {
-                if (client_ != null)
-                    client_.Dispose();
             }
         }
     
@@ -833,7 +818,7 @@ namespace MyNamespace
             if (seed_entropy != null) urlBuilder_.Append("seed_entropy=").Append(System.Uri.EscapeDataString(System.Convert.ToString(seed_entropy, System.Globalization.CultureInfo.InvariantCulture))).Append("&");
             urlBuilder_.Length--;
     
-            var client_ = new System.Net.Http.HttpClient();
+            var client_ = _httpClient;
             try
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
@@ -888,8 +873,6 @@ namespace MyNamespace
             }
             finally
             {
-                if (client_ != null)
-                    client_.Dispose();
             }
         }
     
@@ -914,7 +897,7 @@ namespace MyNamespace
             var urlBuilder_ = new System.Text.StringBuilder();
             urlBuilder_.Append(BaseUrl).Append("/v1/getinfo");
     
-            var client_ = new System.Net.Http.HttpClient();
+            var client_ = _httpClient;
             try
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
@@ -969,8 +952,6 @@ namespace MyNamespace
             }
             finally
             {
-                if (client_ != null)
-                    client_.Dispose();
             }
         }
     
@@ -1001,7 +982,7 @@ namespace MyNamespace
             var urlBuilder_ = new System.Text.StringBuilder();
             urlBuilder_.Append(BaseUrl).Append("/v1/graph");
     
-            var client_ = new System.Net.Http.HttpClient();
+            var client_ = _httpClient;
             try
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
@@ -1056,8 +1037,6 @@ namespace MyNamespace
             }
             finally
             {
-                if (client_ != null)
-                    client_.Dispose();
             }
         }
     
@@ -1088,7 +1067,7 @@ namespace MyNamespace
             urlBuilder_.Append(BaseUrl).Append("/v1/graph/edge/{chan_id}");
             urlBuilder_.Replace("{chan_id}", System.Uri.EscapeDataString(System.Convert.ToString(chan_id, System.Globalization.CultureInfo.InvariantCulture)));
     
-            var client_ = new System.Net.Http.HttpClient();
+            var client_ = _httpClient;
             try
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
@@ -1143,8 +1122,6 @@ namespace MyNamespace
             }
             finally
             {
-                if (client_ != null)
-                    client_.Dispose();
             }
         }
     
@@ -1167,7 +1144,7 @@ namespace MyNamespace
             var urlBuilder_ = new System.Text.StringBuilder();
             urlBuilder_.Append(BaseUrl).Append("/v1/graph/info");
     
-            var client_ = new System.Net.Http.HttpClient();
+            var client_ = _httpClient;
             try
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
@@ -1222,8 +1199,6 @@ namespace MyNamespace
             }
             finally
             {
-                if (client_ != null)
-                    client_.Dispose();
             }
         }
     
@@ -1250,7 +1225,7 @@ namespace MyNamespace
             urlBuilder_.Append(BaseUrl).Append("/v1/graph/node/{pub_key}");
             urlBuilder_.Replace("{pub_key}", System.Uri.EscapeDataString(System.Convert.ToString(pub_key, System.Globalization.CultureInfo.InvariantCulture)));
     
-            var client_ = new System.Net.Http.HttpClient();
+            var client_ = _httpClient;
             try
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
@@ -1305,8 +1280,6 @@ namespace MyNamespace
             }
             finally
             {
-                if (client_ != null)
-                    client_.Dispose();
             }
         }
     
@@ -1347,7 +1320,7 @@ namespace MyNamespace
             if (num_routes != null) urlBuilder_.Append("num_routes=").Append(System.Uri.EscapeDataString(System.Convert.ToString(num_routes.Value, System.Globalization.CultureInfo.InvariantCulture))).Append("&");
             urlBuilder_.Length--;
     
-            var client_ = new System.Net.Http.HttpClient();
+            var client_ = _httpClient;
             try
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
@@ -1402,8 +1375,6 @@ namespace MyNamespace
             }
             finally
             {
-                if (client_ != null)
-                    client_.Dispose();
             }
         }
     
@@ -1430,7 +1401,7 @@ namespace MyNamespace
             var urlBuilder_ = new System.Text.StringBuilder();
             urlBuilder_.Append(BaseUrl).Append("/v1/initwallet");
     
-            var client_ = new System.Net.Http.HttpClient();
+            var client_ = _httpClient;
             try
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
@@ -1488,8 +1459,6 @@ namespace MyNamespace
             }
             finally
             {
-                if (client_ != null)
-                    client_.Dispose();
             }
         }
     
@@ -1522,7 +1491,7 @@ namespace MyNamespace
             if (r_hash != null) urlBuilder_.Append("r_hash=").Append(System.Uri.EscapeDataString(System.Convert.ToString(r_hash, System.Globalization.CultureInfo.InvariantCulture))).Append("&");
             urlBuilder_.Length--;
     
-            var client_ = new System.Net.Http.HttpClient();
+            var client_ = _httpClient;
             try
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
@@ -1577,8 +1546,6 @@ namespace MyNamespace
             }
             finally
             {
-                if (client_ != null)
-                    client_.Dispose();
             }
         }
     
@@ -1605,7 +1572,7 @@ namespace MyNamespace
             if (pending_only != null) urlBuilder_.Append("pending_only=").Append(System.Uri.EscapeDataString(System.Convert.ToString(pending_only.Value, System.Globalization.CultureInfo.InvariantCulture))).Append("&");
             urlBuilder_.Length--;
     
-            var client_ = new System.Net.Http.HttpClient();
+            var client_ = _httpClient;
             try
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
@@ -1660,8 +1627,6 @@ namespace MyNamespace
             }
             finally
             {
-                if (client_ != null)
-                    client_.Dispose();
             }
         }
     
@@ -1686,7 +1651,7 @@ namespace MyNamespace
             var urlBuilder_ = new System.Text.StringBuilder();
             urlBuilder_.Append(BaseUrl).Append("/v1/invoices");
     
-            var client_ = new System.Net.Http.HttpClient();
+            var client_ = _httpClient;
             try
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
@@ -1744,8 +1709,6 @@ namespace MyNamespace
             }
             finally
             {
-                if (client_ != null)
-                    client_.Dispose();
             }
         }
     
@@ -1770,7 +1733,7 @@ namespace MyNamespace
             var urlBuilder_ = new System.Text.StringBuilder();
             urlBuilder_.Append(BaseUrl).Append("/v1/invoices/subscribe");
     
-            var client_ = new System.Net.Http.HttpClient();
+            var client_ = _httpClient;
             try
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
@@ -1825,8 +1788,6 @@ namespace MyNamespace
             }
             finally
             {
-                if (client_ != null)
-                    client_.Dispose();
             }
         }
     
@@ -1847,7 +1808,7 @@ namespace MyNamespace
             var urlBuilder_ = new System.Text.StringBuilder();
             urlBuilder_.Append(BaseUrl).Append("/v1/newaddress");
     
-            var client_ = new System.Net.Http.HttpClient();
+            var client_ = _httpClient;
             try
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
@@ -1902,8 +1863,6 @@ namespace MyNamespace
             }
             finally
             {
-                if (client_ != null)
-                    client_.Dispose();
             }
         }
     
@@ -1924,7 +1883,7 @@ namespace MyNamespace
             var urlBuilder_ = new System.Text.StringBuilder();
             urlBuilder_.Append(BaseUrl).Append("/v1/payments");
     
-            var client_ = new System.Net.Http.HttpClient();
+            var client_ = _httpClient;
             try
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
@@ -1979,8 +1938,6 @@ namespace MyNamespace
             }
             finally
             {
-                if (client_ != null)
-                    client_.Dispose();
             }
         }
     
@@ -2001,7 +1958,7 @@ namespace MyNamespace
             var urlBuilder_ = new System.Text.StringBuilder();
             urlBuilder_.Append(BaseUrl).Append("/v1/payments");
     
-            var client_ = new System.Net.Http.HttpClient();
+            var client_ = _httpClient;
             try
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
@@ -2056,8 +2013,6 @@ namespace MyNamespace
             }
             finally
             {
-                if (client_ != null)
-                    client_.Dispose();
             }
         }
     
@@ -2086,7 +2041,7 @@ namespace MyNamespace
             urlBuilder_.Append(BaseUrl).Append("/v1/payreq/{pay_req}");
             urlBuilder_.Replace("{pay_req}", System.Uri.EscapeDataString(System.Convert.ToString(pay_req, System.Globalization.CultureInfo.InvariantCulture)));
     
-            var client_ = new System.Net.Http.HttpClient();
+            var client_ = _httpClient;
             try
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
@@ -2141,8 +2096,6 @@ namespace MyNamespace
             }
             finally
             {
-                if (client_ != null)
-                    client_.Dispose();
             }
         }
     
@@ -2163,7 +2116,7 @@ namespace MyNamespace
             var urlBuilder_ = new System.Text.StringBuilder();
             urlBuilder_.Append(BaseUrl).Append("/v1/peers");
     
-            var client_ = new System.Net.Http.HttpClient();
+            var client_ = _httpClient;
             try
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
@@ -2218,8 +2171,6 @@ namespace MyNamespace
             }
             finally
             {
-                if (client_ != null)
-                    client_.Dispose();
             }
         }
     
@@ -2244,7 +2195,7 @@ namespace MyNamespace
             var urlBuilder_ = new System.Text.StringBuilder();
             urlBuilder_.Append(BaseUrl).Append("/v1/peers");
     
-            var client_ = new System.Net.Http.HttpClient();
+            var client_ = _httpClient;
             try
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
@@ -2302,8 +2253,6 @@ namespace MyNamespace
             }
             finally
             {
-                if (client_ != null)
-                    client_.Dispose();
             }
         }
     
@@ -2332,7 +2281,7 @@ namespace MyNamespace
             urlBuilder_.Append(BaseUrl).Append("/v1/peers/{pub_key}");
             urlBuilder_.Replace("{pub_key}", System.Uri.EscapeDataString(System.Convert.ToString(pub_key, System.Globalization.CultureInfo.InvariantCulture)));
     
-            var client_ = new System.Net.Http.HttpClient();
+            var client_ = _httpClient;
             try
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
@@ -2387,8 +2336,6 @@ namespace MyNamespace
             }
             finally
             {
-                if (client_ != null)
-                    client_.Dispose();
             }
         }
     
@@ -2415,7 +2362,7 @@ namespace MyNamespace
             var urlBuilder_ = new System.Text.StringBuilder();
             urlBuilder_.Append(BaseUrl).Append("/v1/switch");
     
-            var client_ = new System.Net.Http.HttpClient();
+            var client_ = _httpClient;
             try
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
@@ -2473,8 +2420,6 @@ namespace MyNamespace
             }
             finally
             {
-                if (client_ != null)
-                    client_.Dispose();
             }
         }
     
@@ -2497,7 +2442,7 @@ namespace MyNamespace
             var urlBuilder_ = new System.Text.StringBuilder();
             urlBuilder_.Append(BaseUrl).Append("/v1/transactions");
     
-            var client_ = new System.Net.Http.HttpClient();
+            var client_ = _httpClient;
             try
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
@@ -2552,8 +2497,6 @@ namespace MyNamespace
             }
             finally
             {
-                if (client_ != null)
-                    client_.Dispose();
             }
         }
     
@@ -2582,7 +2525,7 @@ namespace MyNamespace
             var urlBuilder_ = new System.Text.StringBuilder();
             urlBuilder_.Append(BaseUrl).Append("/v1/transactions");
     
-            var client_ = new System.Net.Http.HttpClient();
+            var client_ = _httpClient;
             try
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
@@ -2640,8 +2583,6 @@ namespace MyNamespace
             }
             finally
             {
-                if (client_ != null)
-                    client_.Dispose();
             }
         }
     
@@ -2664,7 +2605,7 @@ namespace MyNamespace
             var urlBuilder_ = new System.Text.StringBuilder();
             urlBuilder_.Append(BaseUrl).Append("/v1/unlockwallet");
     
-            var client_ = new System.Net.Http.HttpClient();
+            var client_ = _httpClient;
             try
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
@@ -2722,8 +2663,6 @@ namespace MyNamespace
             }
             finally
             {
-                if (client_ != null)
-                    client_.Dispose();
             }
         }
     
@@ -5532,6 +5471,7 @@ namespace MyNamespace
         private byte[] _wallet_password;
         private System.Collections.ObjectModel.ObservableCollection<string> _cipher_seed_mnemonic;
         private byte[] _aezeed_passphrase;
+        private int? _recovery_window;
     
         /// <summary>*
         /// wallet_password is the passphrase that should be used to encrypt the
@@ -5586,6 +5526,26 @@ namespace MyNamespace
             }
         }
     
+        /// <summary>*
+        /// recovery_window is an optional argument specifying the address lookahead
+        /// when restoring a wallet seed. The recovery window applies to each
+        /// invdividual branch of the BIP44 derivation paths. Supplying a recovery
+        /// window of zero indicates that no addresses should be recovered, such after
+        /// the first initialization of the wallet.</summary>
+        [Newtonsoft.Json.JsonProperty("recovery_window", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public int? Recovery_window
+        {
+            get { return _recovery_window; }
+            set 
+            {
+                if (_recovery_window != value)
+                {
+                    _recovery_window = value; 
+                    RaisePropertyChanged();
+                }
+            }
+        }
+    
         public event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
     
         public string ToJson() 
@@ -5613,15 +5573,15 @@ namespace MyNamespace
         private byte[] _receipt;
         private byte[] _r_preimage;
         private byte[] _r_hash;
-        private string _value;
+        private long? _value;
         private bool? _settled;
-        private string _creation_date;
-        private string _settle_date;
+        private long? _creation_date;
+        private long? _settle_date;
         private string _payment_request;
         private byte[] _description_hash;
-        private string _expiry;
+        private long? _expiry;
         private string _fallback_addr;
-        private string _cltv_expiry;
+        private int? _cltv_expiry;
         private System.Collections.ObjectModel.ObservableCollection<LnrpcRouteHint> _route_hints;
         private bool? _private;
     
@@ -5687,7 +5647,7 @@ namespace MyNamespace
         }
     
         [Newtonsoft.Json.JsonProperty("value", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public string Value
+        public long? Value
         {
             get { return _value; }
             set 
@@ -5715,7 +5675,7 @@ namespace MyNamespace
         }
     
         [Newtonsoft.Json.JsonProperty("creation_date", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public string Creation_date
+        public long? Creation_date
         {
             get { return _creation_date; }
             set 
@@ -5729,7 +5689,7 @@ namespace MyNamespace
         }
     
         [Newtonsoft.Json.JsonProperty("settle_date", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public string Settle_date
+        public long? Settle_date
         {
             get { return _settle_date; }
             set 
@@ -5780,7 +5740,7 @@ namespace MyNamespace
     
         /// <summary>/ Payment request expiry time in seconds. Default is 3600 (1 hour).</summary>
         [Newtonsoft.Json.JsonProperty("expiry", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public string Expiry
+        public long? Expiry
         {
             get { return _expiry; }
             set 
@@ -5810,7 +5770,7 @@ namespace MyNamespace
     
         /// <summary>/ Delta to use for the time-lock of the CLTV extended to the final hop.</summary>
         [Newtonsoft.Json.JsonProperty("cltv_expiry", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public string Cltv_expiry
+        public int? Cltv_expiry
         {
             get { return _cltv_expiry; }
             set 
@@ -8540,6 +8500,7 @@ namespace MyNamespace
     public partial class LnrpcUnlockWalletRequest : System.ComponentModel.INotifyPropertyChanged
     {
         private byte[] _wallet_password;
+        private int? _recovery_window;
     
         /// <summary>*
         /// wallet_password should be the current valid passphrase for the daemon. This
@@ -8554,6 +8515,26 @@ namespace MyNamespace
                 if (_wallet_password != value)
                 {
                     _wallet_password = value; 
+                    RaisePropertyChanged();
+                }
+            }
+        }
+    
+        /// <summary>*
+        /// recovery_window is an optional argument specifying the address lookahead
+        /// when restoring a wallet seed. The recovery window applies to each
+        /// invdividual branch of the BIP44 derivation paths. Supplying a recovery
+        /// window of zero indicates that no addresses should be recovered, such after
+        /// the first initialization of the wallet.</summary>
+        [Newtonsoft.Json.JsonProperty("recovery_window", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public int? Recovery_window
+        {
+            get { return _recovery_window; }
+            set 
+            {
+                if (_recovery_window != value)
+                {
+                    _recovery_window = value; 
                     RaisePropertyChanged();
                 }
             }

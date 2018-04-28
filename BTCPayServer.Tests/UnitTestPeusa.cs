@@ -1,9 +1,16 @@
-﻿using NBitcoin;
+﻿using BTCPayServer.Payments.Lightning.Lnd;
+using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitpayClient;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Net;
+using System.Net.Http;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace BTCPayServer.Tests
@@ -47,6 +54,18 @@ namespace BTCPayServer.Tests
 
             ExtPubKey pubkey = masterPubKey.Derive(0);
             Console.WriteLine("PubKey " + 0 + " : " + pubkey.ToString(network));
+        }
+
+        [Fact]
+        public async Task TestLndAsync()
+        {
+            var tls = File.ReadAllBytes(@"c:\Users\newdawn\AppData\Local\Lnd\tls.cert");
+            var macroon = File.ReadAllBytes(@"c:\Users\newdawn\AppData\Local\Lnd\admin.macaroon");
+
+            var lnd = new LndClient(new Uri("https://localhost:8080"), Network.RegTest, tls, macroon);
+            var res = await lnd.GetInfo();
+
+            Console.WriteLine("Address: " + res.Address);
         }
     }
 }

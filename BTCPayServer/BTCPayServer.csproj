@@ -113,7 +113,6 @@
 
 	<ItemGroup>
 	  <Folder Include="Build\" />
-	  <Folder Include="Payments\Lightning\Lnd\" />
 	  <Folder Include="wwwroot\vendor\clipboard.js\" />
 	</ItemGroup>
 

@@ -20,7 +20,7 @@ const locales_cs = {
     // Scan tab
     "Open in wallet": "Otvori u novčaniku",
     // Copy tab
-    "CompletePay_Body": "Kako bi završili uplatu poašljite {{btcDue}} {{cryptoCode}} na navedenu adresu",
+    "CompletePay_Body": "Kako bi završili uplatu pošaljite {{btcDue}} {{cryptoCode}} na navedenu adresu",
     "Amount": "Iznos",
     "Address": "Adresa",
     "Copied": "Kopirano",

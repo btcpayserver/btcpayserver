@@ -26,13 +26,17 @@ namespace BTCPayServer.Payments.Lightning.Lnd
         private HttpClient _HttpClient;
         private LndSwaggerClient _Decorator;
 
-        public async Task<LightningInvoice> CreateInvoice(LightMoney amount, string description, TimeSpan expiry, CancellationToken cancellation = default(CancellationToken))
+        public async Task<LightningInvoice> CreateInvoice(LightMoney amount, string description, TimeSpan expiry, 
+            CancellationToken cancellation = default(CancellationToken))
         {
+            var strAmount = ConvertInv.ToString(amount.ToUnit(LightMoneyUnit.Satoshi));
+            var strExpiry = ConvertInv.ToString(expiry.TotalSeconds);
+            // lnd requires numbers sent as strings. don't ask
             var resp = await _Decorator.AddInvoiceAsync(new LnrpcInvoice
             {
-                Value = (long)amount.ToDecimal(LightMoneyUnit.Satoshi),
+                Value = strAmount,
                 Memo = description,
-                Expiry = (long)expiry.TotalSeconds
+                Expiry = strExpiry
             });
 
             var invoice = new LightningInvoice
@@ -101,16 +105,39 @@ namespace BTCPayServer.Payments.Lightning.Lnd
                 Status = "unpaid"
             };
 
-            if (resp.Settle_date.HasValue)
+            if (resp.Settle_date != null)
             {
-                invoice.PaidAt = DateTimeOffset.FromUnixTimeSeconds(resp.Settle_date.Value);
+                invoice.PaidAt = DateTimeOffset.FromUnixTimeSeconds(ConvertInv.ToInt64(resp.Settle_date));
                 invoice.Status = "paid";
             }
-            else if (DateTimeOffset.FromUnixTimeSeconds(resp.Creation_date.Value + resp.Expiry.Value) > DateTimeOffset.UtcNow)
+            else
             {
-                invoice.Status = "expired";
+                var invoiceExpiry = ConvertInv.ToInt64(resp.Creation_date) + ConvertInv.ToInt64(resp.Expiry);
+                if (DateTimeOffset.FromUnixTimeSeconds(invoiceExpiry) > DateTimeOffset.UtcNow)
+                {
+                    invoice.Status = "expired";
+                }
             }
             return invoice;
+        }
+
+        // Invariant culture conversion
+        public static class ConvertInv
+        {
+            public static long ToInt64(string str)
+            {
+                return Convert.ToInt64(str, CultureInfo.InvariantCulture.NumberFormat);
+            }
+
+            public static string ToString(decimal d)
+            {
+                return d.ToString(CultureInfo.InvariantCulture);
+            }
+
+            public static string ToString(double d)
+            {
+                return d.ToString(CultureInfo.InvariantCulture);
+            }
         }
     }
 

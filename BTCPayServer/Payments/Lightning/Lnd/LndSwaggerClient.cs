@@ -5573,15 +5573,15 @@ namespace BTCPayServer.Payments.Lightning.Lnd
         private byte[] _receipt;
         private byte[] _r_preimage;
         private byte[] _r_hash;
-        private long? _value;
+        private string _value;
         private bool? _settled;
-        private long? _creation_date;
-        private long? _settle_date;
+        private string _creation_date;
+        private string _settle_date;
         private string _payment_request;
         private byte[] _description_hash;
-        private long? _expiry;
+        private string _expiry;
         private string _fallback_addr;
-        private int? _cltv_expiry;
+        private string _cltv_expiry;
         private System.Collections.ObjectModel.ObservableCollection<LnrpcRouteHint> _route_hints;
         private bool? _private;
     
@@ -5647,7 +5647,7 @@ namespace BTCPayServer.Payments.Lightning.Lnd
         }
     
         [Newtonsoft.Json.JsonProperty("value", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public long? Value
+        public string Value
         {
             get { return _value; }
             set 
@@ -5675,7 +5675,7 @@ namespace BTCPayServer.Payments.Lightning.Lnd
         }
     
         [Newtonsoft.Json.JsonProperty("creation_date", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public long? Creation_date
+        public string Creation_date
         {
             get { return _creation_date; }
             set 
@@ -5689,7 +5689,7 @@ namespace BTCPayServer.Payments.Lightning.Lnd
         }
     
         [Newtonsoft.Json.JsonProperty("settle_date", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public long? Settle_date
+        public string Settle_date
         {
             get { return _settle_date; }
             set 
@@ -5740,7 +5740,7 @@ namespace BTCPayServer.Payments.Lightning.Lnd
     
         /// <summary>/ Payment request expiry time in seconds. Default is 3600 (1 hour).</summary>
         [Newtonsoft.Json.JsonProperty("expiry", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public long? Expiry
+        public string Expiry
         {
             get { return _expiry; }
             set 
@@ -5770,7 +5770,7 @@ namespace BTCPayServer.Payments.Lightning.Lnd
     
         /// <summary>/ Delta to use for the time-lock of the CLTV extended to the final hop.</summary>
         [Newtonsoft.Json.JsonProperty("cltv_expiry", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public int? Cltv_expiry
+        public string Cltv_expiry
         {
             get { return _cltv_expiry; }
             set 

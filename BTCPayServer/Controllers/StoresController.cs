@@ -400,7 +400,10 @@ namespace BTCPayServer.Controllers
 
         private (String DisplayName, String Name)[] GetSupportedExchanges()
         {
-            return new[] { ("Coin Average", "coinaverage") }.Concat(_CoinAverage.AvailableExchanges).ToArray();
+            return new[] { ("Coin Average", "coinaverage") }
+                            .Concat(_CoinAverage.AvailableExchanges)
+                            .OrderBy(s => s.Item1, StringComparer.OrdinalIgnoreCase)
+                            .ToArray();
         }
 
         private DerivationStrategy ParseDerivationStrategy(string derivationScheme, Script hint, BTCPayNetwork network)

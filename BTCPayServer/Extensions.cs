@@ -139,7 +139,7 @@ namespace BTCPayServer
         {
             bool isRelative = redirectUrl.Length > 0 && redirectUrl[0] == '/';
             if (!isRelative)
-                isRelative = new Uri(redirectUrl, UriKind.RelativeOrAbsolute).IsAbsoluteUri;
+                isRelative = !new Uri(redirectUrl, UriKind.RelativeOrAbsolute).IsAbsoluteUri;
             if (!isRelative)
                 return redirectUrl;
             return request.GetAbsoluteRoot() + redirectUrl;

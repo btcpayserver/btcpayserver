@@ -58,40 +58,4 @@ namespace BTCPayServer.Security
             }
         }
     }
-    public class BTCPayClaimsPrincipalFactory : UserClaimsPrincipalFactory<ApplicationUser>
-    {
-        IHttpContextAccessor httpContext;
-        StoreRepository _StoreRepository;
-        public BTCPayClaimsPrincipalFactory(
-            UserManager<ApplicationUser> userManager,
-            IHttpContextAccessor httpContext,
-            StoreRepository storeRepository,
-            IOptions<IdentityOptions> options) : base(userManager, options)
-        {
-            this.httpContext = httpContext;
-            _StoreRepository = storeRepository;
-        }
-
-        public override async Task<ClaimsPrincipal> CreateAsync(ApplicationUser user)
-        {
-            var ctx = (IActionContextAccessor)httpContext.HttpContext.RequestServices.GetService(typeof(IActionContextAccessor));
-            var principal = await base.CreateAsync(user);
-            if (ctx.ActionContext.HttpContext.GetIsBitpayAPI())
-                return principal;
-            var identity = ((ClaimsIdentity)principal.Identity);
-            if (principal.IsInRole(Roles.ServerAdmin))
-            {
-                identity.AddClaim(new Claim(Policies.CanModifyServerSettings.Key, "true"));
-            }
-            if (ctx.ActionContext.RouteData.Values.TryGetValue("storeId", out var storeId))
-            {
-                var store = await _StoreRepository.FindStore((string)storeId, await UserManager.GetUserIdAsync(user));
-                if (store != null)
-                {
-                    identity.AddClaims(store.GetClaims());
-                }
-            }
-            return principal;
-        }
-    }
 }

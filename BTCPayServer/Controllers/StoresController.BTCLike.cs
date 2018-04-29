@@ -21,9 +21,9 @@ namespace BTCPayServer.Controllers
     {
         [HttpGet]
         [Route("{storeId}/derivations/{cryptoCode}")]
-        public async Task<IActionResult> AddDerivationScheme(string storeId, string cryptoCode)
+        public IActionResult AddDerivationScheme(string storeId, string cryptoCode)
         {
-            var store = await _Repo.FindStore(storeId, GetUserId());
+            var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
             var network = cryptoCode == null ? null : _ExplorerProvider.GetNetwork(cryptoCode);
@@ -60,7 +60,7 @@ namespace BTCPayServer.Controllers
         {
             vm.ServerUrl = GetStoreUrl(storeId);
             vm.CryptoCode = cryptoCode;
-            var store = await _Repo.FindStore(storeId, GetUserId());
+            var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
 
@@ -188,7 +188,7 @@ namespace BTCPayServer.Controllers
         {
             if (!HttpContext.WebSockets.IsWebSocketRequest)
                 return NotFound();
-            var store = await _Repo.FindStore(storeId, GetUserId());
+            var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
 

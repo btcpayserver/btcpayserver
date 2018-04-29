@@ -15,6 +15,9 @@ using BTCPayServer.Services.Rates;
 using BTCPayServer.Payments;
 using BTCPayServer.JsonConverters;
 using System.ComponentModel.DataAnnotations;
+using BTCPayServer.Services;
+using System.Security.Claims;
+using BTCPayServer.Security;
 
 namespace BTCPayServer.Data
 {
@@ -152,10 +155,35 @@ namespace BTCPayServer.Data
         }
 
         [NotMapped]
+        [Obsolete]
         public string Role
         {
             get; set;
         }
+
+        public Claim[] GetClaims()
+        {
+            List<Claim> claims = new List<Claim>();
+#pragma warning disable CS0612 // Type or member is obsolete
+            var role = Role;
+#pragma warning restore CS0612 // Type or member is obsolete
+            if (role == StoreRoles.Owner)
+            {
+                claims.Add(new Claim(Policies.CanModifyStoreSettings.Key, Id));
+                claims.Add(new Claim(Policies.CanUseStore.Key, Id));
+            }
+            if (role == StoreRoles.Guest)
+            {
+                claims.Add(new Claim(Policies.CanUseStore.Key, Id));
+            }
+            return claims.ToArray();
+        }
+
+        public bool HasClaim(string claim)
+        {
+            return GetClaims().Any(c => c.Type == claim);
+        }
+
         public byte[] StoreBlob
         {
             get;

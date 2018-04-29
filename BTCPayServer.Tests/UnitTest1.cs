@@ -306,9 +306,9 @@ namespace BTCPayServer.Tests
                 tester.Start();
                 var user = tester.NewAccount();
                 user.GrantAccess();
-                var storeController = tester.PayTester.GetController<StoresController>(user.UserId);
-                Assert.IsType<ViewResult>(storeController.UpdateStore(user.StoreId).GetAwaiter().GetResult());
-                Assert.IsType<ViewResult>(storeController.AddLightningNode(user.StoreId, "BTC").GetAwaiter().GetResult());
+                var storeController = user.GetController<StoresController>();
+                Assert.IsType<ViewResult>(storeController.UpdateStore(user.StoreId));
+                Assert.IsType<ViewResult>(storeController.AddLightningNode(user.StoreId, "BTC"));
 
                 var testResult = storeController.AddLightningNode(user.StoreId, new LightningNodeViewModel()
                 {
@@ -322,7 +322,7 @@ namespace BTCPayServer.Tests
                     Url = tester.MerchantCharge.Client.Uri.AbsoluteUri
                 }, "save", "BTC").GetAwaiter().GetResult());
 
-                var storeVm = Assert.IsType<Models.StoreViewModels.StoreViewModel>(Assert.IsType<ViewResult>(storeController.UpdateStore(user.StoreId).GetAwaiter().GetResult()).Model);
+                var storeVm = Assert.IsType<Models.StoreViewModels.StoreViewModel>(Assert.IsType<ViewResult>(storeController.UpdateStore(user.StoreId)).Model);
                 Assert.Single(storeVm.LightningNodes.Where(l => !string.IsNullOrEmpty(l.Address)));
             }
         }
@@ -468,7 +468,7 @@ namespace BTCPayServer.Tests
                 acc.Register();
                 acc.CreateStore();
 
-                var controller = tester.PayTester.GetController<StoresController>(acc.UserId);
+                var controller = acc.GetController<StoresController>();
                 var token = (RedirectToActionResult)controller.CreateToken(acc.StoreId, new Models.StoreViewModels.CreateTokenViewModel()
                 {
                     Facade = Facade.Merchant.ToString(),
@@ -685,8 +685,8 @@ namespace BTCPayServer.Tests
 
         private static decimal CreateInvoice(ServerTester tester, TestAccount user, string exchange)
         {
-            var storeController = tester.PayTester.GetController<StoresController>(user.UserId);
-            var vm = (StoreViewModel)((ViewResult)storeController.UpdateStore(user.StoreId).Result).Model;
+            var storeController = user.GetController<StoresController>();
+            var vm = (StoreViewModel)((ViewResult)storeController.UpdateStore(user.StoreId)).Model;
             vm.PreferredExchange = exchange;
             storeController.UpdateStore(user.StoreId, vm).Wait();
             var invoice2 = user.BitPay.CreateInvoice(new Invoice()
@@ -724,8 +724,8 @@ namespace BTCPayServer.Tests
                 }, Facade.Merchant);
 
 
-                var storeController = tester.PayTester.GetController<StoresController>(user.UserId);
-                var vm = (StoreViewModel)((ViewResult)storeController.UpdateStore(user.StoreId).Result).Model;
+                var storeController = user.GetController<StoresController>();
+                var vm = (StoreViewModel)((ViewResult)storeController.UpdateStore(user.StoreId)).Model;
                 Assert.Equal(1.0, vm.RateMultiplier);
                 vm.RateMultiplier = 0.5;
                 storeController.UpdateStore(user.StoreId, vm).Wait();
@@ -963,7 +963,7 @@ namespace BTCPayServer.Tests
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
                 user.RegisterLightningNode("BTC", LightningConnectionType.Charge);
-                var vm = Assert.IsType<CheckoutExperienceViewModel>(Assert.IsType<ViewResult>(user.GetController<StoresController>().CheckoutExperience(user.StoreId).Result).Model);
+                var vm = Assert.IsType<CheckoutExperienceViewModel>(Assert.IsType<ViewResult>(user.GetController<StoresController>().CheckoutExperience(user.StoreId)).Model);
                 vm.LightningMaxValue = "2 USD";
                 vm.OnChainMinValue = "5 USD";
                 Assert.IsType<RedirectToActionResult>(user.GetController<StoresController>().CheckoutExperience(user.StoreId, vm).Result);

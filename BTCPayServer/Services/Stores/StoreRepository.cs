@@ -44,7 +44,9 @@ namespace BTCPayServer.Services.Stores
                     }).ToArrayAsync())
                     .Select(us =>
                     {
+#pragma warning disable CS0612 // Type or member is obsolete
                         us.Store.Role = us.Role;
+#pragma warning restore CS0612 // Type or member is obsolete
                         return us.Store;
                     }).FirstOrDefault();
             }
@@ -84,7 +86,9 @@ namespace BTCPayServer.Services.Stores
                     .ToArrayAsync())
                     .Select(u =>
                     {
+#pragma warning disable CS0612 // Type or member is obsolete
                         u.StoreData.Role = u.Role;
+#pragma warning restore CS0612 // Type or member is obsolete
                         return u.StoreData;
                     }).ToArray();
             }

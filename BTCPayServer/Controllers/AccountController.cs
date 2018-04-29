@@ -19,7 +19,7 @@ using BTCPayServer.Logging;
 
 namespace BTCPayServer.Controllers
 {
-    [Authorize]
+    [Authorize(AuthenticationSchemes = "Identity.Application")]
     [Route("[controller]/[action]")]
     public class AccountController : Controller
     {

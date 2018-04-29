@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 
 namespace BTCPayServer.Controllers
 {
-    [Authorize(Roles = Roles.ServerAdmin)]
+    [Authorize(Policy = BTCPayServer.Security.Policies.CanModifyServerSettings.Key)]
     public class ServerController : Controller
     {
         private UserManager<ApplicationUser> _UserManager;

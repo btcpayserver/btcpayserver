@@ -135,6 +135,16 @@ namespace BTCPayServer
                         request.PathBase.ToUriComponent());
         }
 
+        public static string GetAbsoluteUri(this HttpRequest request, string redirectUrl)
+        {
+            bool isRelative = redirectUrl.Length > 0 && redirectUrl[0] == '/';
+            if (!isRelative)
+                isRelative = new Uri(redirectUrl, UriKind.RelativeOrAbsolute).IsAbsoluteUri;
+            if (!isRelative)
+                return redirectUrl;
+            return request.GetAbsoluteRoot() + redirectUrl;
+        }
+
         public static IServiceCollection ConfigureBTCPayServer(this IServiceCollection services, IConfiguration conf)
         {
             services.Configure<BTCPayServerOptions>(o =>
@@ -164,6 +174,7 @@ namespace BTCPayServer
             return ctx.Items.TryGetValue("IsBitpayAPI", out object obj) &&
                   obj is bool b && b;
         }
+
 
         public static StoreData GetStoreData(this HttpContext ctx)
         {

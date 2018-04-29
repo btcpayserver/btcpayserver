@@ -45,6 +45,46 @@ namespace BTCPayServer.Authentication
             }
         }
 
+        public async Task<String> GetStoreIdFromAPIKey(string apiKey)
+        {
+            using (var ctx = _Factory.CreateContext())
+            {
+                return await ctx.ApiKeys.Where(o => o.Id == apiKey).Select(o => o.StoreId).FirstOrDefaultAsync();
+            }
+        }
+
+        public async Task GenerateLegacyAPIKey(string storeId)
+        {
+            // It is legacy support and Bitpay generate string of unknown format, trying to replicate them
+            // as good as possible. The string below got generated for me.
+            var chars = "ERo0vkBMOYhyU0ZHvirCplbLDIGWPdi1ok77VnW7QdE";
+            var rand = new Random(Math.Abs(RandomUtils.GetInt32()));
+            var generated = new char[chars.Length];
+            for (int i = 0; i < generated.Length; i++)
+            {
+                generated[i] = chars[rand.Next(0, generated.Length)];
+            }
+
+            using (var ctx = _Factory.CreateContext())
+            {
+                var existing = await ctx.ApiKeys.Where(o => o.StoreId == storeId).FirstOrDefaultAsync();
+                if (existing != null)
+                {
+                    ctx.ApiKeys.Remove(existing);
+                }
+                ctx.ApiKeys.Add(new APIKeyData() { Id = new string(generated), StoreId = storeId });
+                await ctx.SaveChangesAsync().ConfigureAwait(false);
+            }
+        }
+
+        public async Task<string[]> GetLegacyAPIKeys(string storeId)
+        {
+            using (var ctx = _Factory.CreateContext())
+            {
+                return await ctx.ApiKeys.Where(o => o.StoreId == storeId).Select(c => c.Id).ToArrayAsync();
+            }
+        }
+
         private BitTokenEntity CreateTokenEntity(PairedSINData data)
         {
             return new BitTokenEntity()

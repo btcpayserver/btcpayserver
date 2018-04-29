@@ -427,6 +427,12 @@ namespace BTCPayServer.Controllers
                 SIN = t.SIN,
                 Id = t.Value
             }).ToArray();
+
+            model.ApiKey = (await _TokenRepository.GetLegacyAPIKeys(storeId)).FirstOrDefault();
+            if (model.ApiKey == null)
+                model.EncodedApiKey = "*API Key*";
+            else
+                model.EncodedApiKey = Encoders.Base64.EncodeData(Encoders.ASCII.DecodeData(model.ApiKey));
             return View(model);
         }
 
@@ -525,6 +531,17 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(ListTokens));
         }
 
+        [HttpPost]
+        [Route("{storeId}/tokens/apikey")]
+        public async Task<IActionResult> GenerateAPIKey(string storeId)
+        {
+            var store = await _Repo.FindStore(storeId, GetUserId());
+            if (store == null)
+                return NotFound();
+            await _TokenRepository.GenerateLegacyAPIKey(storeId);
+            StatusMessage = "API Key re-generated";
+            return RedirectToAction(nameof(ListTokens));
+        }
 
         [HttpGet]
         [Route("/api-access-request")]

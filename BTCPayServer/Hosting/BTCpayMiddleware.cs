@@ -53,12 +53,23 @@ namespace BTCPayServer.Hosting
             var sig = values.FirstOrDefault();
             httpContext.Request.Headers.TryGetValue("x-identity", out values);
             var id = values.FirstOrDefault();
+            httpContext.Request.Headers.TryGetValue("Authorization", out values);
+            var auth = values.FirstOrDefault();
             try
             {
+                bool isBitId = false;
                 if (!string.IsNullOrEmpty(sig) && !string.IsNullOrEmpty(id))
                 {
                     await HandleBitId(httpContext, sig, id);
+                    isBitId = httpContext.User.HasClaim(c => c.Type == Claims.SIN);
+                    if (!isBitId)
+                        Logs.PayServer.LogDebug("BitId signature check failed");
                 }
+                if (!isBitId && !string.IsNullOrEmpty(auth))
+                {
+                    await HandleLegacyAPIKey(httpContext, auth);
+                }
+
                 await _Next(httpContext);
             }
             catch (WebSocketException)
@@ -76,7 +87,7 @@ namespace BTCPayServer.Hosting
                 Logs.PayServer.LogCritical(new EventId(), ex, "Unhandled exception in BTCPayMiddleware");
                 throw;
             }
-        }        
+        }
 
         private void RewriteHostIfNeeded(HttpContext httpContext)
         {
@@ -221,11 +232,37 @@ namespace BTCPayServer.Hosting
                         identity.AddClaim(new Claim(Claims.OwnStore, bitToken.StoreId));
                     }
                     Logs.PayServer.LogDebug($"BitId signature check success for SIN {sin}");
+                    NBitcoin.Extensions.TryAdd(httpContext.Items, "IsBitpayAPI", true);
                 }
             }
             catch (FormatException) { }
-            if (!httpContext.User.HasClaim(c => c.Type == Claims.SIN))
-                Logs.PayServer.LogDebug("BitId signature check failed");
+        }
+
+        private async Task HandleLegacyAPIKey(HttpContext httpContext, string auth)
+        {
+            var splitted = auth.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (splitted.Length != 2 || !splitted[0].Equals("Basic", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new BitpayHttpException(401, $"Invalid Authorization header");
+            }
+
+            string apiKey = null;
+            try
+            {
+                apiKey = Encoders.ASCII.EncodeData(Encoders.Base64.DecodeData(splitted[1]));
+            }
+            catch
+            {
+                throw new BitpayHttpException(401, $"Invalid Authorization header");
+            }
+            var storeId = await _TokenRepository.GetStoreIdFromAPIKey(apiKey);
+            if (storeId == null)
+            {
+                throw new BitpayHttpException(401, $"Invalid Authorization header");
+            }
+            var identity = ((ClaimsIdentity)httpContext.User.Identity);
+            identity.AddClaim(new Claim(Claims.OwnStore, storeId));
+            NBitcoin.Extensions.TryAdd(httpContext.Items, "IsBitpayAPI", true);
         }
 
         private async Task<BitTokenEntity> GetTokenPermissionAsync(string sin, string expectedToken)

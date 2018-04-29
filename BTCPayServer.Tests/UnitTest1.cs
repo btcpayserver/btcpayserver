@@ -32,6 +32,9 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Services.Apps;
+using BTCPayServer.Services.Stores;
+using System.Net.Http;
+using System.Text;
 
 namespace BTCPayServer.Tests
 {
@@ -623,6 +626,36 @@ namespace BTCPayServer.Tests
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
                 Assert.True(user.BitPay.TestAccess(Facade.Merchant));
+
+                // Can generate API Key
+                var repo = tester.PayTester.GetService<TokenRepository>();
+                Assert.Empty(repo.GetLegacyAPIKeys(user.StoreId).GetAwaiter().GetResult());
+                Assert.IsType<RedirectToActionResult>(user.GetController<StoresController>().GenerateAPIKey(user.StoreId).GetAwaiter().GetResult());
+
+                var apiKey = Assert.Single(repo.GetLegacyAPIKeys(user.StoreId).GetAwaiter().GetResult());
+                ///////
+
+                // Generating a new one remove the previous
+                Assert.IsType<RedirectToActionResult>(user.GetController<StoresController>().GenerateAPIKey(user.StoreId).GetAwaiter().GetResult());
+                var apiKey2 = Assert.Single(repo.GetLegacyAPIKeys(user.StoreId).GetAwaiter().GetResult());
+                Assert.NotEqual(apiKey, apiKey2);
+                ////////
+
+                apiKey = apiKey2;
+
+                // Can create an invoice with this new API Key
+                HttpClient client = new HttpClient();
+                HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Post, tester.PayTester.ServerUri.AbsoluteUri + "invoices");
+                message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Encoders.Base64.EncodeData(Encoders.ASCII.DecodeData(apiKey)));
+                var invoice = new Invoice()
+                {
+                    Price = 5000.0,
+                    Currency = "USD"
+                };
+                message.Content = new StringContent(JsonConvert.SerializeObject(invoice), Encoding.UTF8, "application/json");
+                var result = client.SendAsync(message).GetAwaiter().GetResult();
+                result.EnsureSuccessStatusCode();
+                /////////////////////
             }
         }
 

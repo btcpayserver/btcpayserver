@@ -86,6 +86,11 @@ namespace BTCPayServer.Data
             get; set;
         }
 
+        public DbSet<APIKeyData> ApiKeys
+        {
+            get; set;
+        }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             var isConfigured = optionsBuilder.Options.Extensions.OfType<RelationalOptionsExtension>().Any();
@@ -112,6 +117,8 @@ namespace BTCPayServer.Data
                        t.StoreDataId
                    });
 
+            builder.Entity<APIKeyData>()
+                .HasIndex(o => o.StoreId);
 
             builder.Entity<AppData>()
                     .HasOne(a => a.StoreData);

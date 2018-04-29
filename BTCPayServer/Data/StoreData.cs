@@ -14,6 +14,7 @@ using Newtonsoft.Json.Linq;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Payments;
 using BTCPayServer.JsonConverters;
+using System.ComponentModel.DataAnnotations;
 
 namespace BTCPayServer.Data
 {
@@ -120,7 +121,7 @@ namespace BTCPayServer.Data
                 }
             }
 
-            if(!existing && supportedPaymentMethod == null && paymentMethodId.IsBTCOnChain)
+            if (!existing && supportedPaymentMethod == null && paymentMethodId.IsBTCOnChain)
             {
                 DerivationStrategy = null;
             }

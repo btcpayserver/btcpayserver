@@ -43,11 +43,7 @@ namespace BTCPayServer.Filters
 
         public bool Accept(ActionConstraintContext context)
         {
-            var hasVersion = context.RouteContext.HttpContext.Request.Headers["x-accept-version"].Where(h => h == "2.0.0").Any();
-            var isBitpayAPI =
-                context.RouteContext.HttpContext.Items.TryGetValue("IsBitpayAPI", out object obj) &&
-                obj is bool b && b;
-            return (hasVersion || isBitpayAPI) == IsBitpayAPI;
+            return context.RouteContext.HttpContext.GetIsBitpayAPI() == IsBitpayAPI;
         }
     }
 

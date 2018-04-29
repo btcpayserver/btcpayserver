@@ -30,6 +30,7 @@ using BTCPayServer.Models;
 using System.Security.Claims;
 using System.Globalization;
 using BTCPayServer.Services;
+using BTCPayServer.Data;
 
 namespace BTCPayServer
 {
@@ -151,6 +152,26 @@ namespace BTCPayServer
         public static string GetStoreId(this ClaimsPrincipal principal)
         {
             return principal.Claims.Where(c => c.Type == Claims.OwnStore).Select(c => c.Value).FirstOrDefault();
+        }
+
+        public static void SetIsBitpayAPI(this HttpContext ctx, bool value)
+        {
+            NBitcoin.Extensions.TryAdd(ctx.Items, "IsBitpayAPI", value);
+        }
+
+        public static bool GetIsBitpayAPI(this HttpContext ctx)
+        {
+            return ctx.Items.TryGetValue("IsBitpayAPI", out object obj) &&
+                  obj is bool b && b;
+        }
+
+        public static StoreData GetStoreData(this HttpContext ctx)
+        {
+            return ctx.Items.TryGet("BTCPAY.STOREDATA") as StoreData;
+        }
+        public static void SetStoreData(this HttpContext ctx, StoreData storeData)
+        {
+            ctx.Items["BTCPAY.STOREDATA"] = storeData;
         }
 
         private static JsonSerializerSettings jsonSettings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };

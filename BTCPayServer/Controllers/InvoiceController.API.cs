@@ -22,17 +22,14 @@ namespace BTCPayServer.Controllers
     {
         private InvoiceController _InvoiceController;
         private InvoiceRepository _InvoiceRepository;
-        private StoreRepository _StoreRepository;
         private BTCPayNetworkProvider _NetworkProvider;
 
         public InvoiceControllerAPI(InvoiceController invoiceController,
                                     InvoiceRepository invoceRepository,
-                                    StoreRepository storeRepository,
                                     BTCPayNetworkProvider networkProvider)
         {
             this._InvoiceController = invoiceController;
             this._InvoiceRepository = invoceRepository;
-            this._StoreRepository = storeRepository;
             this._NetworkProvider = networkProvider;
         }
 
@@ -41,20 +38,14 @@ namespace BTCPayServer.Controllers
         [MediaTypeConstraint("application/json")]
         public async Task<DataWrapper<InvoiceResponse>> CreateInvoice([FromBody] Invoice invoice)
         {
-            var store = await _StoreRepository.FindStore(this.User.GetStoreId());
-            if (store == null)
-                throw new BitpayHttpException(401, "Can't access to store");
-            return await _InvoiceController.CreateInvoiceCore(invoice, store, HttpContext.Request.GetAbsoluteRoot());
+            return await _InvoiceController.CreateInvoiceCore(invoice, HttpContext.GetStoreData(), HttpContext.Request.GetAbsoluteRoot());
         }
 
         [HttpGet]
         [Route("invoices/{id}")]
         public async Task<DataWrapper<InvoiceResponse>> GetInvoice(string id, string token)
         {
-            var store = await _StoreRepository.FindStore(this.User.GetStoreId());
-            if (store == null)
-                throw new BitpayHttpException(401, "Can't access to store");
-            var invoice = await _InvoiceRepository.GetInvoice(store.Id, id);
+            var invoice = await _InvoiceRepository.GetInvoice(HttpContext.GetStoreData().Id, id);
             if (invoice == null)
                 throw new BitpayHttpException(404, "Object not found");
             var resp = invoice.EntityToDTO(_NetworkProvider);
@@ -75,10 +66,7 @@ namespace BTCPayServer.Controllers
         {
             if (dateEnd != null)
                 dateEnd = dateEnd.Value + TimeSpan.FromDays(1); //Should include the end day
-
-            var store = await _StoreRepository.FindStore(this.User.GetStoreId());
-            if (store == null)
-                throw new BitpayHttpException(401, "Can't access to store");
+            
             var query = new InvoiceQuery()
             {
                 Count = limit,
@@ -88,9 +76,8 @@ namespace BTCPayServer.Controllers
                 OrderId = orderId,
                 ItemCode = itemCode,
                 Status = status == null ? null : new[] { status },
-                StoreId = new[] { store.Id }
+                StoreId = new[] { this.HttpContext.GetStoreData().Id }
             };
-
 
             var entities = (await _InvoiceRepository.GetInvoices(query))
                             .Select((o) => o.EntityToDTO(_NetworkProvider)).ToArray();

@@ -44,6 +44,7 @@ services:
       - customer_lightningd
       - merchant_lightningd
       - lightning-charged
+      - lnd
 
   nbxplorer:
     image: nicolasdorier/nbxplorer:1.0.2.2
@@ -179,8 +180,27 @@ services:
     expose:
       - "5432"
 
+  lnd:
+    image: testing_lnd
+    environment:
+      RPCHOST: bitcoind:43782
+      RPCUSER: ceiwHEbqWI83
+      RPCPASS: DwubwWsoo3
+      ZMQPATH: tcp://bitcoind:28332
+      NETWORK: regtest
+      CHAIN: bitcoin
+      BACKEND: bitcoind
+      DEBUG: debug
+    ports:
+      - "53280:8080"
+    volumes:
+      - "lnd_datadir:/root/.lnd"
+    links:
+      - bitcoind
+
 volumes:
     bitcoin_datadir:
     customer_lightningd_datadir:
     merchant_lightningd_datadir:
     lightning_charge_datadir:
+    lnd_datadir:

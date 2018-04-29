@@ -137,12 +137,10 @@ namespace BTCPayServer
 
         public static string GetAbsoluteUri(this HttpRequest request, string redirectUrl)
         {
-            bool isRelative = redirectUrl.Length > 0 && redirectUrl[0] == '/';
-            if (!isRelative)
-                isRelative = !new Uri(redirectUrl, UriKind.RelativeOrAbsolute).IsAbsoluteUri;
-            if (!isRelative)
-                return redirectUrl;
-            return request.GetAbsoluteRoot() + redirectUrl;
+            bool isRelative = 
+                (redirectUrl.Length > 0 && redirectUrl[0] == '/')
+                || !new Uri(redirectUrl, UriKind.RelativeOrAbsolute).IsAbsoluteUri;
+            return isRelative ? request.GetAbsoluteRoot() + redirectUrl : redirectUrl;
         }
 
         public static IServiceCollection ConfigureBTCPayServer(this IServiceCollection services, IConfiguration conf)

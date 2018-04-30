@@ -16,10 +16,11 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Logging;
+using BTCPayServer.Security;
 
 namespace BTCPayServer.Controllers
 {
-    [Authorize]
+    [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
     [Route("[controller]/[action]")]
     public class AccountController : Controller
     {

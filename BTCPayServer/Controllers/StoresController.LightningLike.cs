@@ -19,9 +19,9 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("{storeId}/lightning/{cryptoCode}")]
-        public async Task<IActionResult> AddLightningNode(string storeId, string cryptoCode)
+        public IActionResult AddLightningNode(string storeId, string cryptoCode)
         {
-            var store = await _Repo.FindStore(storeId, GetUserId());
+            var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
             LightningNodeViewModel vm = new LightningNodeViewModel();
@@ -59,7 +59,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> AddLightningNode(string storeId, LightningNodeViewModel vm, string command, string cryptoCode)
         {
             vm.CryptoCode = cryptoCode;
-            var store = await _Repo.FindStore(storeId, GetUserId());
+            var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
             var network = vm.CryptoCode == null ? null : _ExplorerProvider.GetNetwork(vm.CryptoCode);

@@ -22,6 +22,7 @@ using BTCPayServer.Events;
 using NBXplorer;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Security;
 
 namespace BTCPayServer.Controllers
 {
@@ -355,7 +356,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("invoices")]
-        [Authorize(AuthenticationSchemes = "Identity.Application")]
+        [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
         [BitpayAPIConstraint(false)]
         public async Task<IActionResult> ListInvoices(string searchTerm = null, int skip = 0, int count = 50)
         {
@@ -390,11 +391,11 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("invoices/create")]
-        [Authorize(AuthenticationSchemes = "Identity.Application")]
+        [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
         [BitpayAPIConstraint(false)]
         public async Task<IActionResult> CreateInvoice()
         {
-            var stores = await GetStores(GetUserId());
+            var stores = new SelectList(await _StoreRepository.GetStoresByUserId(GetUserId()), nameof(StoreData.Id), nameof(StoreData.StoreName), null);
             if (stores.Count() == 0)
             {
                 StatusMessage = "Error: You need to create at least one store before creating a transaction";
@@ -405,18 +406,23 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("invoices/create")]
-        [Authorize(AuthenticationSchemes = "Identity.Application")]
+        [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
         [BitpayAPIConstraint(false)]
         public async Task<IActionResult> CreateInvoice(CreateInvoiceModel model)
         {
-            model.Stores = await GetStores(GetUserId(), model.StoreId);
+            var stores = await _StoreRepository.GetStoresByUserId(GetUserId());
+            model.Stores = new SelectList(stores, nameof(StoreData.Id), nameof(StoreData.StoreName), model.StoreId);
+            var store = stores.FirstOrDefault(s => s.Id == model.StoreId);
+            if(store == null)
+            {
+                ModelState.AddModelError(nameof(model.StoreId), "Store not found");
+            }
             if (!ModelState.IsValid)
             {
                 return View(model);
             }
-            var store = await _StoreRepository.FindStore(model.StoreId, GetUserId());
             StatusMessage = null;
-            if (store.Role != StoreRoles.Owner)
+            if (!store.HasClaim(Policies.CanModifyStoreSettings.Key))
             {
                 ModelState.AddModelError(nameof(model.StoreId), "You need to be owner of this store to create an invoice");
                 return View(model);
@@ -461,13 +467,8 @@ namespace BTCPayServer.Controllers
             }
         }
 
-        private async Task<SelectList> GetStores(string userId, string storeId = null)
-        {
-            return new SelectList(await _StoreRepository.GetStoresByUserId(userId), nameof(StoreData.Id), nameof(StoreData.StoreName), storeId);
-        }
-
         [HttpPost]
-        [Authorize(AuthenticationSchemes = "Identity.Application")]
+        [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
         [BitpayAPIConstraint(false)]
         public IActionResult SearchInvoice(InvoicesModel invoices)
         {
@@ -481,7 +482,7 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("invoices/invalidatepaid")]
-        [Authorize(AuthenticationSchemes = "Identity.Application")]
+        [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
         [BitpayAPIConstraint(false)]
         public async Task<IActionResult> InvalidatePaidInvoice(string invoiceId)
         {

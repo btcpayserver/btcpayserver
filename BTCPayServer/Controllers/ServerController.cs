@@ -19,23 +19,20 @@ using System.Threading.Tasks;
 
 namespace BTCPayServer.Controllers
 {
-    [Authorize(Roles = Roles.ServerAdmin)]
+    [Authorize(Policy = BTCPayServer.Security.Policies.CanModifyServerSettings.Key)]
     public class ServerController : Controller
     {
         private UserManager<ApplicationUser> _UserManager;
         SettingsRepository _SettingsRepository;
         private IRateProviderFactory _RateProviderFactory;
-        private CssThemeManager _CssThemeManager;
 
         public ServerController(UserManager<ApplicationUser> userManager,
             IRateProviderFactory rateProviderFactory,
-            SettingsRepository settingsRepository, 
-	    CssThemeManager cssThemeManager)
+            SettingsRepository settingsRepository)
         {
             _UserManager = userManager;
             _SettingsRepository = settingsRepository;
             _RateProviderFactory = rateProviderFactory;
-            _CssThemeManager = cssThemeManager;
         }
 
         [Route("server/rates")]
@@ -234,9 +231,6 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> Theme(ThemeSettings settings)
         {
             await _SettingsRepository.UpdateSetting(settings);
-            // TODO: remove controller/class-level property and have only reference to 
-            // CssThemeManager here in this method
-            _CssThemeManager.Update(settings);
             TempData["StatusMessage"] = "Theme settings updated successfully";
             return View(settings);
         }

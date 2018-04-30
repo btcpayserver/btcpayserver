@@ -104,14 +104,11 @@ $(document).ready(function () {
     
     */
 
-    var display = $(".timer-row__time-left"); // Timer container
-
     // check if the Document expired
     if (srvModel.expirationSeconds > 0) {
         progressStart(srvModel.maxTimeSeconds); // Progress bar
-        startTimer(srvModel.expirationSeconds, display); // Timer
 
-        if (!validateEmail(srvModel.customerEmail))
+        if (srvModel.requiresRefundEmail && !validateEmail(srvModel.customerEmail))
             emailForm(); // Email form Display
         else
             hideEmailForm();
@@ -246,41 +243,20 @@ $(document).ready(function () {
         $(".single-item-order__right__btc-price__chevron").toggleClass("expanded");
     });
 
-    // Timer Countdown
-    function startTimer(duration, display) {
-        var timer = duration, minutes, seconds;
-        var timeout = setInterval(function () {
-            minutes = parseInt(timer / 60, 10);
-            seconds = parseInt(timer % 60, 10);
-
-            minutes = minutes < 10 ? "0" + minutes : minutes;
-            seconds = seconds < 10 ? "0" + seconds : seconds;
-
-            display.text(minutes + ":" + seconds);
-
-            if (--timer < 0) {
-                clearInterval(timeout);
-            }
-        }, 1000);
-    }
-
-    // Progress bar
+    // Timer Countdown && Progress bar
     function progressStart(timerMax) {
         var end = new Date(); // Setup Time Variable, should come from server
         end.setSeconds(end.getSeconds() + srvModel.expirationSeconds);
         timerMax *= 1000; // Usually 15 minutes = 9000 second= 900000 ms
-        var timeoutVal = Math.floor(timerMax / 100); // Timeout calc
         animateUpdate(); //Launch it
-
-        function updateProgress(percentage) {
-            $('.timer-row__progress-bar').css("width", percentage + "%");
-        }
 
         function animateUpdate() {
             var now = new Date();
             var timeDiff = end.getTime() - now.getTime();
             var perc = 100 - Math.round(timeDiff / timerMax * 100);
             var status = checkoutCtrl.srvModel.status;
+
+            updateTimer(timeDiff / 1000);
 
             if (perc === 75 && (status === "paidPartial" || status === "new")) {
                 $(".timer-row").addClass("expiring-soon");
@@ -289,11 +265,33 @@ $(document).ready(function () {
             }
             if (perc <= 100) {
                 updateProgress(perc);
+
+                var timeoutVal = 300; // Timeout calc
                 setTimeout(animateUpdate, timeoutVal);
             }
+
             //if (perc >= 100 && status === "expired") {
             //    onDataCallback(status);
             //}
+        }
+
+        function updateProgress(percentage) {
+            $('.timer-row__progress-bar').css("width", percentage + "%");
+        }
+
+        function updateTimer(timer) {
+            var display = $(".timer-row__time-left");
+            if (timer >= 0) {
+                var minutes = parseInt(timer / 60, 10);
+                minutes = minutes < 10 ? "0" + minutes : minutes;
+
+                var seconds = parseInt(timer % 60, 10);
+                seconds = seconds < 10 ? "0" + seconds : seconds;
+
+                display.text(minutes + ":" + seconds);
+            } else {
+                display.text("00:00");
+            }
         }
     }
 

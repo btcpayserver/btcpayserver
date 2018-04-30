@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
+using BTCPayServer.Security;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
@@ -15,7 +16,7 @@ using NBXplorer.DerivationStrategy;
 namespace BTCPayServer.Controllers
 {
     [Route("stores")]
-    [Authorize(AuthenticationSchemes = "Identity.Application")]
+    [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
     [AutoValidateAntiforgeryToken]
     public partial class UserStoresController : Controller
     {
@@ -37,9 +38,9 @@ namespace BTCPayServer.Controllers
         }
         [HttpGet]
         [Route("{storeId}/delete")]
-        public async Task<IActionResult> DeleteStore(string storeId)
+        public IActionResult DeleteStore(string storeId)
         {
-            var store = await _Repo.FindStore(storeId, GetUserId());
+            var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
             return View("Confirm", new ConfirmModel()
@@ -67,7 +68,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> DeleteStorePost(string storeId)
         {
             var userId = GetUserId();
-            var store = await _Repo.FindStore(storeId, GetUserId());
+            var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
             await _Repo.RemoveStore(storeId, userId);
@@ -102,8 +103,8 @@ namespace BTCPayServer.Controllers
                     Id = store.Id,
                     Name = store.StoreName,
                     WebSite = store.StoreWebsite,
-                    IsOwner = store.Role == StoreRoles.Owner,
-                    Balances = store.Role == StoreRoles.Owner ? balances[i].Select(t => t.Result).ToArray() : Array.Empty<string>()
+                    IsOwner = store.HasClaim(Policies.CanModifyStoreSettings.Key),
+                    Balances = store.HasClaim(Policies.CanModifyStoreSettings.Key) ? balances[i].Select(t => t.Result).ToArray() : Array.Empty<string>()
                 });
             }
             return View(result);

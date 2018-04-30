@@ -399,9 +399,10 @@ namespace BTCPayServer.Services.Invoices
                     query = query.Where(i => i.Id == queryObject.InvoiceId);
                 }
 
-                if (!string.IsNullOrEmpty(queryObject.StoreId))
+                if (queryObject.StoreId != null && queryObject.StoreId.Length > 0)
                 {
-                    query = query.Where(i => i.StoreDataId == queryObject.StoreId);
+                    var stores = queryObject.StoreId.ToHashSet();
+                    query = query.Where(i => stores.Contains(i.StoreDataId));
                 }
 
                 if (queryObject.UserId != null)
@@ -429,8 +430,11 @@ namespace BTCPayServer.Services.Invoices
                 if (queryObject.OrderId != null)
                     query = query.Where(i => i.OrderId == queryObject.OrderId);
 
-                if (queryObject.Status != null)
-                    query = query.Where(i => i.Status == queryObject.Status);
+                if (queryObject.Status != null && queryObject.Status.Length > 0)
+                {
+                    var statusSet = queryObject.Status.ToHashSet();
+                    query = query.Where(i => statusSet.Contains(i.Status));
+                }
 
                 query = query.OrderByDescending(q => q.Created);
 
@@ -568,7 +572,7 @@ namespace BTCPayServer.Services.Invoices
 
     public class InvoiceQuery
     {
-        public string StoreId
+        public string[] StoreId
         {
             get; set;
         }
@@ -610,7 +614,7 @@ namespace BTCPayServer.Services.Invoices
             get; set;
         }
 
-        public string Status
+        public string[] Status
         {
             get; set;
         }

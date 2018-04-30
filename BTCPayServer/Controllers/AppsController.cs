@@ -140,6 +140,8 @@ namespace BTCPayServer.Controllers
                                 .Where(us => us.ApplicationUserId == userId && us.Role == StoreRoles.Owner)
                                 .SelectMany(us => us.StoreData.Apps.Where(a => a.Id == appId))
                    .FirstOrDefaultAsync();
+                if (app == null)
+                    return null;
                 if (type != null && type.Value.ToString() != app.AppType)
                     return null;
                 return app;

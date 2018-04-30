@@ -2,8 +2,10 @@
 using BTCPayServer.Hosting;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Security;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
+using BTCPayServer.Services.Stores;
 using BTCPayServer.Tests.Logging;
 using BTCPayServer.Tests.Mocks;
 using Microsoft.AspNetCore.Hosting;
@@ -142,7 +144,7 @@ namespace BTCPayServer.Tests
             return _Host.Services.GetRequiredService<T>();
         }
 
-        public T GetController<T>(string userId = null) where T : Controller
+        public T GetController<T>(string userId = null, string storeId = null) where T : Controller
         {
             var context = new DefaultHttpContext();
             context.Request.Host = new HostString("127.0.0.1");
@@ -150,7 +152,11 @@ namespace BTCPayServer.Tests
             context.Request.Protocol = "http";
             if (userId != null)
             {
-                context.User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, userId) }));
+                context.User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, userId) }, Policies.CookieAuthentication));
+            }
+            if(storeId != null)
+            {
+                context.SetStoreData(GetService<StoreRepository>().FindStore(storeId, userId).GetAwaiter().GetResult());
             }
             var scope = (IServiceScopeFactory)_Host.Services.GetService(typeof(IServiceScopeFactory));
             var provider = scope.CreateScope().ServiceProvider;

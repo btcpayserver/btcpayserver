@@ -7,6 +7,19 @@
     .linethrough {
         text-decoration: line-through;
     }
+
+    .smMaxWidth {
+        max-width: 200px;
+    }
+    @@media (min-width: 768px) {
+        .smMaxWidth {
+            max-width: 400px;
+        }
+    }
+
+    .firstCol {
+        width: 140px;
+    }
 </style>
 
 <section>
@@ -170,12 +183,12 @@
                 </table>
             </div>
         </div>
-        @if(Model.OnChainPayments.Count > 0)
+        @if (Model.OnChainPayments.Count > 0)
         {
             <div class="row">
                 <div class="col-md-12">
                     <h3>On-Chain payments</h3>
-                    <table class="table table-sm table-responsive-md">
+                    <table class="table table-sm table-responsive-lg">
                         <thead class="thead-inverse">
                             <tr>
                                 <th>Crypto</th>
@@ -185,13 +198,17 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach(var payment in Model.OnChainPayments)
+                            @foreach (var payment in Model.OnChainPayments)
                             {
                                 var replaced = payment.Replaced ? "class='linethrough'" : "";
-                                <tr>
-                                    <td @replaced>@payment.Crypto</td>
-                                    <td @replaced>@payment.DepositAddress</td>
-                                    <td @replaced><a href="@payment.TransactionLink" target="_blank">@payment.TransactionId</a></td>
+                                <tr @replaced>
+                                    <td>@payment.Crypto</td>
+                                    <td>@payment.DepositAddress</td>
+                                    <td class="smMaxWidth text-truncate">
+                                        <a href="@payment.TransactionLink" target="_blank">
+                                            @payment.TransactionId
+                                        </a>
+                                    </td>
                                     <td class="text-right">@payment.Confirmations</td>
                                 </tr>
                             }
@@ -200,7 +217,7 @@
                 </div>
             </div>
         }
-        @if(Model.OffChainPayments.Count > 0)
+        @if (Model.OffChainPayments.Count > 0)
         {
             <div class="row">
                 <div class="col-md-12">
@@ -208,16 +225,16 @@
                     <table class="table table-sm table-responsive-md">
                         <thead class="thead-inverse">
                             <tr>
-                                <th>Crypto</th>
+                                <th class="firstCol">Crypto</th>
                                 <th>BOLT11</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach(var payment in Model.OffChainPayments)
+                            @foreach (var payment in Model.OffChainPayments)
                             {
                                 <tr>
                                     <td>@payment.Crypto</td>
-                                    <td>@payment.BOLT11</td>
+                                    <td class="smMaxWidth text-truncate">@payment.BOLT11</td>
                                 </tr>
                             }
                         </tbody>
@@ -231,17 +248,17 @@
                 <table class="table table-sm table-responsive-md">
                     <thead class="thead-inverse">
                         <tr>
-                            <th>Payment method</th>
+                            <th class="firstCol">Payment method</th>
                             <th>Address</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var address in Model.Addresses)
                         {
-                            var current = address.Current ? "class='font-weight-bold'" : "";
+                            var current = address.Current ? "font-weight-bold" : "";
                             <tr>
                                 <td>@address.PaymentMethod</td>
-                                <td @current>@address.Destination</td>
+                                <td class="smMaxWidth text-truncate @current">@address.Destination</td>
                             </tr>
                         }
                     </tbody>

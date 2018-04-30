@@ -24,6 +24,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public string BtcAddress { get; set; }
         public string BtcDue { get; set; }
         public string CustomerEmail { get; set; }
+        public bool RequiresRefundEmail { get; set; }
         public int ExpirationSeconds { get; set; }
         public string Status { get; set; }
         public string MerchantRefLink { get; set; }

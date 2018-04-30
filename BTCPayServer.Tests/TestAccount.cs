@@ -44,29 +44,27 @@ namespace BTCPayServer.Tests
         public async Task GrantAccessAsync()
         {
             await RegisterAsync();
-            var store = await CreateStoreAsync();
+            await CreateStoreAsync();
+            var store = this.GetController<StoresController>();
             var pairingCode = BitPay.RequestClientAuthorization("test", Facade.Merchant);
             Assert.IsType<ViewResult>(await store.RequestPairing(pairingCode.ToString()));
             await store.Pair(pairingCode.ToString(), StoreId);
         }
-        public StoresController CreateStore()
+        public void CreateStore()
         {
-            return CreateStoreAsync().GetAwaiter().GetResult();
+            CreateStoreAsync().GetAwaiter().GetResult();
         }
 
-        public T GetController<T>() where T : Controller
+        public T GetController<T>(bool setImplicitStore = true) where T : Controller
         {
-            return parent.PayTester.GetController<T>(UserId);
+            return parent.PayTester.GetController<T>(UserId, setImplicitStore ? StoreId : null);
         }
 
-        public async Task<StoresController> CreateStoreAsync()
+        public async Task CreateStoreAsync()
         {
-            var store = parent.PayTester.GetController<UserStoresController>(UserId);
+            var store = this.GetController<UserStoresController>();
             await store.CreateStore(new CreateStoreViewModel() { Name = "Test Store" });
             StoreId = store.CreatedStoreId;
-            var store2 = parent.PayTester.GetController<StoresController>(UserId);
-            store2.CreatedStoreId = store.CreatedStoreId;
-            return store2;
         }
 
         public BTCPayNetwork SupportedNetwork { get; set; }
@@ -78,12 +76,12 @@ namespace BTCPayServer.Tests
         public async Task RegisterDerivationSchemeAsync(string cryptoCode)
         {
             SupportedNetwork = parent.NetworkProvider.GetNetwork(cryptoCode);
-            var store = parent.PayTester.GetController<StoresController>(UserId);
+            var store = parent.PayTester.GetController<StoresController>(UserId, StoreId);
             ExtKey = new ExtKey().GetWif(SupportedNetwork.NBitcoinNetwork);
             DerivationScheme = new DerivationStrategyFactory(SupportedNetwork.NBitcoinNetwork).Parse(ExtKey.Neuter().ToString() + "-[legacy]");
-            var vm = (StoreViewModel)((ViewResult)await store.UpdateStore(StoreId)).Model;
+            var vm = (StoreViewModel)((ViewResult)store.UpdateStore(StoreId)).Model;
             vm.SpeedPolicy = SpeedPolicy.MediumSpeed;
-            await store.UpdateStore(StoreId, vm);
+            await store.UpdateStore(vm);
 
             await store.AddDerivationScheme(StoreId, new DerivationSchemeViewModel()
             {
@@ -127,7 +125,7 @@ namespace BTCPayServer.Tests
 
         public async Task RegisterLightningNodeAsync(string cryptoCode, LightningConnectionType connectionType)
         {
-            var storeController = parent.PayTester.GetController<StoresController>(UserId);
+            var storeController = this.GetController<StoresController>();
             await storeController.AddLightningNode(StoreId, new LightningNodeViewModel()
             {
                 Url = connectionType == LightningConnectionType.Charge ? parent.MerchantCharge.Client.Uri.AbsoluteUri :

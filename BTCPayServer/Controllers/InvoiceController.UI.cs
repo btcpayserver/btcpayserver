@@ -356,7 +356,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("invoices")]
-        [Authorize(AuthenticationSchemes = "Identity.Application")]
+        [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
         [BitpayAPIConstraint(false)]
         public async Task<IActionResult> ListInvoices(string searchTerm = null, int skip = 0, int count = 50)
         {
@@ -391,7 +391,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("invoices/create")]
-        [Authorize(AuthenticationSchemes = "Identity.Application")]
+        [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
         [BitpayAPIConstraint(false)]
         public async Task<IActionResult> CreateInvoice()
         {
@@ -406,7 +406,7 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("invoices/create")]
-        [Authorize(AuthenticationSchemes = "Identity.Application")]
+        [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
         [BitpayAPIConstraint(false)]
         public async Task<IActionResult> CreateInvoice(CreateInvoiceModel model)
         {
@@ -468,7 +468,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost]
-        [Authorize(AuthenticationSchemes = "Identity.Application")]
+        [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
         [BitpayAPIConstraint(false)]
         public IActionResult SearchInvoice(InvoicesModel invoices)
         {
@@ -482,7 +482,7 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("invoices/invalidatepaid")]
-        [Authorize(AuthenticationSchemes = "Identity.Application")]
+        [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
         [BitpayAPIConstraint(false)]
         public async Task<IActionResult> InvalidatePaidInvoice(string invoiceId)
         {

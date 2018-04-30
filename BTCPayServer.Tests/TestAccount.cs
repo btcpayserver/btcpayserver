@@ -54,9 +54,9 @@ namespace BTCPayServer.Tests
             return CreateStoreAsync().GetAwaiter().GetResult();
         }
 
-        public T GetController<T>() where T : Controller
+        public T GetController<T>(bool setImplicitStore = true) where T : Controller
         {
-            return parent.PayTester.GetController<T>(UserId, StoreId);
+            return parent.PayTester.GetController<T>(UserId, setImplicitStore ? StoreId : null);
         }
 
         public async Task<StoresController> CreateStoreAsync()
@@ -83,7 +83,7 @@ namespace BTCPayServer.Tests
             DerivationScheme = new DerivationStrategyFactory(SupportedNetwork.NBitcoinNetwork).Parse(ExtKey.Neuter().ToString() + "-[legacy]");
             var vm = (StoreViewModel)((ViewResult)store.UpdateStore(StoreId)).Model;
             vm.SpeedPolicy = SpeedPolicy.MediumSpeed;
-            await store.UpdateStore(StoreId, vm);
+            await store.UpdateStore(vm);
 
             await store.AddDerivationScheme(StoreId, new DerivationSchemeViewModel()
             {

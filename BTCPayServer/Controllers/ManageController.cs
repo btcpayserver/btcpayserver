@@ -21,10 +21,11 @@ using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Services.Mails;
 using System.Globalization;
+using BTCPayServer.Security;
 
 namespace BTCPayServer.Controllers
 {
-    [Authorize(AuthenticationSchemes = "Identity.Application")]
+    [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
     [Route("[controller]/[action]")]
     public class ManageController : Controller
     {

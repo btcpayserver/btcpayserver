@@ -469,7 +469,7 @@ namespace BTCPayServer.Tests
                 acc.CreateStore();
 
                 var controller = acc.GetController<StoresController>();
-                var token = (RedirectToActionResult)controller.CreateToken(acc.StoreId, new Models.StoreViewModels.CreateTokenViewModel()
+                var token = (RedirectToActionResult)controller.CreateToken(new Models.StoreViewModels.CreateTokenViewModel()
                 {
                     Facade = Facade.Merchant.ToString(),
                     Label = "bla",
@@ -630,13 +630,13 @@ namespace BTCPayServer.Tests
                 // Can generate API Key
                 var repo = tester.PayTester.GetService<TokenRepository>();
                 Assert.Empty(repo.GetLegacyAPIKeys(user.StoreId).GetAwaiter().GetResult());
-                Assert.IsType<RedirectToActionResult>(user.GetController<StoresController>().GenerateAPIKey(user.StoreId).GetAwaiter().GetResult());
+                Assert.IsType<RedirectToActionResult>(user.GetController<StoresController>().GenerateAPIKey().GetAwaiter().GetResult());
 
                 var apiKey = Assert.Single(repo.GetLegacyAPIKeys(user.StoreId).GetAwaiter().GetResult());
                 ///////
 
                 // Generating a new one remove the previous
-                Assert.IsType<RedirectToActionResult>(user.GetController<StoresController>().GenerateAPIKey(user.StoreId).GetAwaiter().GetResult());
+                Assert.IsType<RedirectToActionResult>(user.GetController<StoresController>().GenerateAPIKey().GetAwaiter().GetResult());
                 var apiKey2 = Assert.Single(repo.GetLegacyAPIKeys(user.StoreId).GetAwaiter().GetResult());
                 Assert.NotEqual(apiKey, apiKey2);
                 ////////
@@ -688,7 +688,7 @@ namespace BTCPayServer.Tests
             var storeController = user.GetController<StoresController>();
             var vm = (StoreViewModel)((ViewResult)storeController.UpdateStore(user.StoreId)).Model;
             vm.PreferredExchange = exchange;
-            storeController.UpdateStore(user.StoreId, vm).Wait();
+            storeController.UpdateStore(vm).Wait();
             var invoice2 = user.BitPay.CreateInvoice(new Invoice()
             {
                 Price = 5000.0,
@@ -728,7 +728,7 @@ namespace BTCPayServer.Tests
                 var vm = (StoreViewModel)((ViewResult)storeController.UpdateStore(user.StoreId)).Model;
                 Assert.Equal(1.0, vm.RateMultiplier);
                 vm.RateMultiplier = 0.5;
-                storeController.UpdateStore(user.StoreId, vm).Wait();
+                storeController.UpdateStore(vm).Wait();
 
 
                 var invoice2 = user.BitPay.CreateInvoice(new Invoice()
@@ -963,10 +963,10 @@ namespace BTCPayServer.Tests
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
                 user.RegisterLightningNode("BTC", LightningConnectionType.Charge);
-                var vm = Assert.IsType<CheckoutExperienceViewModel>(Assert.IsType<ViewResult>(user.GetController<StoresController>().CheckoutExperience(user.StoreId)).Model);
+                var vm = Assert.IsType<CheckoutExperienceViewModel>(Assert.IsType<ViewResult>(user.GetController<StoresController>().CheckoutExperience()).Model);
                 vm.LightningMaxValue = "2 USD";
                 vm.OnChainMinValue = "5 USD";
-                Assert.IsType<RedirectToActionResult>(user.GetController<StoresController>().CheckoutExperience(user.StoreId, vm).Result);
+                Assert.IsType<RedirectToActionResult>(user.GetController<StoresController>().CheckoutExperience(vm).Result);
 
                 var invoice = user.BitPay.CreateInvoice(new Invoice()
                 {

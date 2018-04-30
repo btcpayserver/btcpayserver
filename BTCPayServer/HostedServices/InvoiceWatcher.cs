@@ -261,7 +261,6 @@ namespace BTCPayServer.HostedServices
 
         private async Task WaitPendingInvoices()
         {
-            await new SynchronizationContextRemover();
             await Task.WhenAll((await _InvoiceRepository.GetPendingInvoices())
                 .Select(id => Wait(id)).ToArray());
             _WaitingInvoices = null;
@@ -269,8 +268,8 @@ namespace BTCPayServer.HostedServices
 
         async Task StartLoop(CancellationToken cancellation)
         {
-            await new SynchronizationContextRemover();
             Logs.PayServer.LogInformation("Start watching invoices");
+            await Task.Delay(1).ConfigureAwait(false); // Small hack so that the caller does not block on GetConsumingEnumerable
             try
             {
                 foreach (var invoiceId in _WatchRequests.GetConsumingEnumerable(cancellation))

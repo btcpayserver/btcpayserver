@@ -16,7 +16,7 @@ using NBXplorer.DerivationStrategy;
 namespace BTCPayServer.Controllers
 {
     [Route("stores")]
-    [Authorize(AuthenticationSchemes = "Identity.Application")]
+    [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
     [AutoValidateAntiforgeryToken]
     public partial class UserStoresController : Controller
     {

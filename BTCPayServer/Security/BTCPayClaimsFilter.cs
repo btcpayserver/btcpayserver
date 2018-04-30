@@ -48,10 +48,15 @@ namespace BTCPayServer.Security
                     if (claim != null)
                     {
                         var store = await _StoreRepository.FindStore((string)storeId, claim.Value);
-                        context.HttpContext.SetStoreData(store);
-                        if (store != null)
+                        if (store == null)
+                            context.Result = new ChallengeResult(Policies.CookieAuthentication);
+                        else
                         {
-                            identity.AddClaims(store.GetClaims());
+                            context.HttpContext.SetStoreData(store);
+                            if (store != null)
+                            {
+                                identity.AddClaims(store.GetClaims());
+                            }
                         }
                     }
                 }

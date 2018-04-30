@@ -28,7 +28,7 @@ using System.Threading.Tasks;
 namespace BTCPayServer.Controllers
 {
     [Route("stores")]
-    [Authorize(AuthenticationSchemes = "Identity.Application")]
+    [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
     [Authorize(Policy = Policies.CanModifyStoreSettings.Key)]
     [AutoValidateAntiforgeryToken]
     public partial class StoresController : Controller
@@ -94,13 +94,10 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("{storeId}/wallet/{cryptoCode}")]
-        public IActionResult Wallet(string storeId, string cryptoCode)
+        public IActionResult Wallet(string cryptoCode)
         {
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-                return NotFound();
             WalletModel model = new WalletModel();
-            model.ServerUrl = GetStoreUrl(storeId);
+            model.ServerUrl = GetStoreUrl(StoreData.Id);
             model.CryptoCurrency = cryptoCode;
             return View(model);
         }
@@ -112,17 +109,17 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("{storeId}/users")]
-        public async Task<IActionResult> StoreUsers(string storeId)
+        public async Task<IActionResult> StoreUsers()
         {
             StoreUsersViewModel vm = new StoreUsersViewModel();
-            await FillUsers(storeId, vm);
+            await FillUsers(vm);
             return View(vm);
         }
 
-        private async Task FillUsers(string storeId, StoreUsersViewModel vm)
+        private async Task FillUsers(StoreUsersViewModel vm)
         {
-            var users = await _Repo.GetStoreUsers(storeId);
-            vm.StoreId = storeId;
+            var users = await _Repo.GetStoreUsers(StoreData.Id);
+            vm.StoreId = StoreData.Id;
             vm.Users = users.Select(u => new StoreUsersViewModel.StoreUserViewModel()
             {
                 Email = u.Email,
@@ -131,11 +128,20 @@ namespace BTCPayServer.Controllers
             }).ToList();
         }
 
+        public StoreData StoreData
+        {
+            get
+            {
+                return this.HttpContext.GetStoreData();
+            }
+        }
+
+
         [HttpPost]
         [Route("{storeId}/users")]
-        public async Task<IActionResult> StoreUsers(string storeId, StoreUsersViewModel vm)
+        public async Task<IActionResult> StoreUsers(StoreUsersViewModel vm)
         {
-            await FillUsers(storeId, vm);
+            await FillUsers(vm);
             if (!ModelState.IsValid)
             {
                 return View(vm);
@@ -151,7 +157,7 @@ namespace BTCPayServer.Controllers
                 ModelState.AddModelError(nameof(vm.Role), "Invalid role");
                 return View(vm);
             }
-            if (!await _Repo.AddStoreUser(storeId, user.Id, vm.Role))
+            if (!await _Repo.AddStoreUser(StoreData.Id, user.Id, vm.Role))
             {
                 ModelState.AddModelError(nameof(vm.Email), "The user already has access to this store");
                 return View(vm);
@@ -162,12 +168,9 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("{storeId}/users/{userId}/delete")]
-        public async Task<IActionResult> DeleteStoreUser(string storeId, string userId)
+        public async Task<IActionResult> DeleteStoreUser(string userId)
         {
             StoreUsersViewModel vm = new StoreUsersViewModel();
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-                return NotFound();
             var user = await _UserManager.FindByIdAsync(userId);
             if (user == null)
                 return NotFound();
@@ -190,14 +193,11 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("{storeId}/checkout")]
-        public IActionResult CheckoutExperience(string storeId)
+        public IActionResult CheckoutExperience()
         {
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-                return NotFound();
-            var storeBlob = store.GetStoreBlob();
+            var storeBlob = StoreData.GetStoreBlob();
             var vm = new CheckoutExperienceViewModel();
-            vm.SetCryptoCurrencies(_ExplorerProvider, store.GetDefaultCrypto());
+            vm.SetCryptoCurrencies(_ExplorerProvider, StoreData.GetDefaultCrypto());
             vm.SetLanguages(_LangService, storeBlob.DefaultLang);
             vm.LightningMaxValue = storeBlob.LightningMaxValue?.ToString() ?? "";
             vm.OnChainMinValue = storeBlob.OnChainMinValue?.ToString() ?? "";
@@ -210,7 +210,7 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("{storeId}/checkout")]
-        public async Task<IActionResult> CheckoutExperience(string storeId, CheckoutExperienceViewModel model)
+        public async Task<IActionResult> CheckoutExperience(CheckoutExperienceViewModel model)
         {
             CurrencyValue lightningMaxValue = null;
             if (!string.IsNullOrWhiteSpace(model.LightningMaxValue))
@@ -229,16 +229,12 @@ namespace BTCPayServer.Controllers
                     ModelState.AddModelError(nameof(model.OnChainMinValue), "Invalid on chain min value");
                 }
             }
-
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-                return NotFound();
             bool needUpdate = false;
-            var blob = store.GetStoreBlob();
-            if (store.GetDefaultCrypto() != model.DefaultCryptoCurrency)
+            var blob = StoreData.GetStoreBlob();
+            if (StoreData.GetDefaultCrypto() != model.DefaultCryptoCurrency)
             {
                 needUpdate = true;
-                store.SetDefaultCrypto(model.DefaultCryptoCurrency);
+                StoreData.SetDefaultCrypto(model.DefaultCryptoCurrency);
             }
             model.SetCryptoCurrencies(_ExplorerProvider, model.DefaultCryptoCurrency);
             model.SetLanguages(_LangService, model.DefaultLang);
@@ -254,19 +250,19 @@ namespace BTCPayServer.Controllers
             blob.OnChainMinValue = onchainMinValue;
             blob.CustomLogo = string.IsNullOrWhiteSpace(model.CustomLogo) ? null : new Uri(model.CustomLogo, UriKind.Absolute);
             blob.CustomCSS = string.IsNullOrWhiteSpace(model.CustomCSS) ? null : new Uri(model.CustomCSS, UriKind.Absolute);
-            if (store.SetStoreBlob(blob))
+            if (StoreData.SetStoreBlob(blob))
             {
                 needUpdate = true;
             }
             if (needUpdate)
             {
-                await _Repo.UpdateStore(store);
+                await _Repo.UpdateStore(StoreData);
                 StatusMessage = "Store successfully updated";
             }
 
             return RedirectToAction(nameof(CheckoutExperience), new
             {
-                storeId = storeId
+                storeId = StoreData.Id
             });
         }
 
@@ -330,7 +326,7 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("{storeId}")]
-        public async Task<IActionResult> UpdateStore(string storeId, StoreViewModel model)
+        public async Task<IActionResult> UpdateStore(StoreViewModel model)
         {
             model.SetExchangeRates(GetSupportedExchanges(), model.PreferredExchange);
             if (!ModelState.IsValid)
@@ -339,29 +335,26 @@ namespace BTCPayServer.Controllers
             }
             if (model.PreferredExchange != null)
                 model.PreferredExchange = model.PreferredExchange.Trim().ToLowerInvariant();
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-                return NotFound();
-            AddPaymentMethods(store, model);
+            AddPaymentMethods(StoreData, model);
 
             bool needUpdate = false;
-            if (store.SpeedPolicy != model.SpeedPolicy)
+            if (StoreData.SpeedPolicy != model.SpeedPolicy)
             {
                 needUpdate = true;
-                store.SpeedPolicy = model.SpeedPolicy;
+                StoreData.SpeedPolicy = model.SpeedPolicy;
             }
-            if (store.StoreName != model.StoreName)
+            if (StoreData.StoreName != model.StoreName)
             {
                 needUpdate = true;
-                store.StoreName = model.StoreName;
+                StoreData.StoreName = model.StoreName;
             }
-            if (store.StoreWebsite != model.StoreWebsite)
+            if (StoreData.StoreWebsite != model.StoreWebsite)
             {
                 needUpdate = true;
-                store.StoreWebsite = model.StoreWebsite;
+                StoreData.StoreWebsite = model.StoreWebsite;
             }
 
-            var blob = store.GetStoreBlob();
+            var blob = StoreData.GetStoreBlob();
             blob.NetworkFeeDisabled = !model.NetworkFee;
             blob.MonitoringExpiration = model.MonitoringExpiration;
             blob.InvoiceExpiration = model.InvoiceExpiration;
@@ -372,7 +365,7 @@ namespace BTCPayServer.Controllers
 
             blob.SetRateMultiplier(model.RateMultiplier);
 
-            if (store.SetStoreBlob(blob))
+            if (StoreData.SetStoreBlob(blob))
             {
                 needUpdate = true;
             }
@@ -389,13 +382,13 @@ namespace BTCPayServer.Controllers
 
             if (needUpdate)
             {
-                await _Repo.UpdateStore(store);
+                await _Repo.UpdateStore(StoreData);
                 StatusMessage = "Store successfully updated";
             }
 
             return RedirectToAction(nameof(UpdateStore), new
             {
-                storeId = storeId
+                storeId = StoreData.Id
             });
         }
 
@@ -416,10 +409,10 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("{storeId}/Tokens")]
-        public async Task<IActionResult> ListTokens(string storeId)
+        public async Task<IActionResult> ListTokens()
         {
             var model = new TokensViewModel();
-            var tokens = await _TokenRepository.GetTokensByStoreIdAsync(storeId);
+            var tokens = await _TokenRepository.GetTokensByStoreIdAsync(StoreData.Id);
             model.StatusMessage = StatusMessage;
             model.Tokens = tokens.Select(t => new TokenViewModel()
             {
@@ -429,7 +422,7 @@ namespace BTCPayServer.Controllers
                 Id = t.Value
             }).ToArray();
 
-            model.ApiKey = (await _TokenRepository.GetLegacyAPIKeys(storeId)).FirstOrDefault();
+            model.ApiKey = (await _TokenRepository.GetLegacyAPIKeys(StoreData.Id)).FirstOrDefault();
             if (model.ApiKey == null)
                 model.EncodedApiKey = "*API Key*";
             else
@@ -440,24 +433,31 @@ namespace BTCPayServer.Controllers
         [HttpPost]
         [Route("/api-tokens")]
         [Route("{storeId}/Tokens/Create")]
-        public async Task<IActionResult> CreateToken(string storeId, CreateTokenViewModel model)
+        [AllowAnonymous]
+        public async Task<IActionResult> CreateToken(CreateTokenViewModel model)
         {
             if (!ModelState.IsValid)
             {
                 return View(model);
             }
             model.Label = model.Label ?? String.Empty;
-            storeId = model.StoreId ?? storeId;
             var userId = GetUserId();
             if (userId == null)
-                return Unauthorized();
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-                return Unauthorized();
+                return Challenge(Policies.CookieAuthentication);
+
+            var store = StoreData;
+            var storeId = StoreData?.Id;
+            if (storeId == null)
+            {
+                storeId = model.StoreId;
+                store = await _Repo.FindStore(storeId, userId);
+                if (store == null)
+                    return Challenge(Policies.CookieAuthentication);
+            }
+
             if (!store.HasClaim(Policies.CanModifyStoreSettings.Key))
             {
-                StatusMessage = "Error: You need to be owner of this store to request pairing codes";
-                return RedirectToAction(nameof(UserStoresController.ListStores), "UserStores");
+                return Challenge(Policies.CookieAuthentication);
             }
 
             var tokenRequest = new TokenRequest()
@@ -498,11 +498,20 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         [Route("/api-tokens")]
         [Route("{storeId}/Tokens/Create")]
-        public async Task<IActionResult> CreateToken(string storeId)
+        [AllowAnonymous]
+        public async Task<IActionResult> CreateToken()
         {
             var userId = GetUserId();
             if (string.IsNullOrWhiteSpace(userId))
-                return Unauthorized();
+                return Challenge(Policies.CookieAuthentication);
+            var storeId = StoreData?.Id;
+            if (StoreData != null)
+            {
+                if (!StoreData.HasClaim(Policies.CanModifyStoreSettings.Key))
+                {
+                    return Challenge(Policies.CookieAuthentication);
+                }
+            }
             var model = new CreateTokenViewModel();
             model.Facade = "merchant";
             ViewBag.HidePublicKey = storeId == null;
@@ -511,20 +520,25 @@ namespace BTCPayServer.Controllers
             model.StoreId = storeId;
             if (storeId == null)
             {
-                model.Stores = new SelectList(await _Repo.GetStoresByUserId(userId), nameof(StoreData.Id), nameof(StoreData.StoreName), storeId);
+                var stores = await _Repo.GetStoresByUserId(userId);
+                model.Stores = new SelectList(stores.Where(s => s.HasClaim(Policies.CanModifyStoreSettings.Key)), nameof(StoreData.Id), nameof(StoreData.StoreName), storeId);
             }
-
+            if (model.Stores.Count() == 0)
+            {
+                StatusMessage = "Error: You need to be owner of at least one store before pairing";
+                return RedirectToAction(nameof(UserStoresController.ListStores), "UserStores");
+            }
             return View(model);
         }
 
 
         [HttpPost]
         [Route("{storeId}/Tokens/Delete")]
-        public async Task<IActionResult> DeleteToken(string storeId, string tokenId)
+        public async Task<IActionResult> DeleteToken(string tokenId)
         {
             var token = await _TokenRepository.GetToken(tokenId);
             if (token == null ||
-                token.StoreId != storeId ||
+                token.StoreId != StoreData.Id ||
                !await _TokenRepository.DeleteToken(tokenId))
                 StatusMessage = "Failure to revoke this token";
             else
@@ -534,20 +548,24 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("{storeId}/tokens/apikey")]
-        public async Task<IActionResult> GenerateAPIKey(string storeId)
+        public async Task<IActionResult> GenerateAPIKey()
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
-            await _TokenRepository.GenerateLegacyAPIKey(storeId);
+            await _TokenRepository.GenerateLegacyAPIKey(StoreData.Id);
             StatusMessage = "API Key re-generated";
             return RedirectToAction(nameof(ListTokens));
         }
 
         [HttpGet]
         [Route("/api-access-request")]
+        [AllowAnonymous]
         public async Task<IActionResult> RequestPairing(string pairingCode, string selectedStore = null)
         {
+            var userId = GetUserId();
+            if (userId == null)
+                return Challenge(Policies.CookieAuthentication);
             if (pairingCode == null)
                 return NotFound();
             var pairing = await _TokenRepository.GetPairingAsync(pairingCode);
@@ -558,7 +576,7 @@ namespace BTCPayServer.Controllers
             }
             else
             {
-                var stores = await _Repo.GetStoresByUserId(GetUserId());
+                var stores = await _Repo.GetStoresByUserId(userId);
                 return View(new PairingModel()
                 {
                     Id = pairing.Id,
@@ -566,7 +584,7 @@ namespace BTCPayServer.Controllers
                     Label = pairing.Label,
                     SIN = pairing.SIN ?? "Server-Initiated Pairing",
                     SelectedStore = selectedStore ?? stores.FirstOrDefault()?.Id,
-                    Stores = stores.Select(s => new PairingModel.StoreViewModel()
+                    Stores = stores.Where(u => u.HasClaim(Policies.CanModifyStoreSettings.Key)).Select(s => new PairingModel.StoreViewModel()
                     {
                         Id = s.Id,
                         Name = string.IsNullOrEmpty(s.StoreName) ? s.Id : s.StoreName
@@ -577,19 +595,22 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("/api-access-request")]
+        [AllowAnonymous]
         public async Task<IActionResult> Pair(string pairingCode, string selectedStore)
         {
             if (pairingCode == null)
                 return NotFound();
-            var store = await _Repo.FindStore(selectedStore, GetUserId());
+            var userId = GetUserId();
+            if (userId == null)
+                return Challenge(Policies.CookieAuthentication);
+            var store = await _Repo.FindStore(selectedStore, userId);
             var pairing = await _TokenRepository.GetPairingAsync(pairingCode);
             if (store == null || pairing == null)
                 return NotFound();
 
             if (!store.HasClaim(Policies.CanModifyStoreSettings.Key))
             {
-                StatusMessage = "Error: You can't approve a pairing without being owner of the store";
-                return RedirectToAction(nameof(UserStoresController.ListStores), "UserStores");
+                return Challenge(Policies.CookieAuthentication);
             }
 
             var pairingResult = await _TokenRepository.PairWithStoreAsync(pairingCode, store.Id);
@@ -615,6 +636,8 @@ namespace BTCPayServer.Controllers
 
         private string GetUserId()
         {
+            if (User.Identity.AuthenticationType != Policies.CookieAuthentication)
+                return null;
             return _UserManager.GetUserId(User);
         }
     }

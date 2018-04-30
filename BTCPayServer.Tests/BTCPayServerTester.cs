@@ -2,6 +2,7 @@
 using BTCPayServer.Hosting;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Security;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
@@ -151,7 +152,7 @@ namespace BTCPayServer.Tests
             context.Request.Protocol = "http";
             if (userId != null)
             {
-                context.User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, userId) }));
+                context.User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, userId) }, Policies.CookieAuthentication));
             }
             if(storeId != null)
             {

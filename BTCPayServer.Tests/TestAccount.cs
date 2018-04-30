@@ -44,14 +44,15 @@ namespace BTCPayServer.Tests
         public async Task GrantAccessAsync()
         {
             await RegisterAsync();
-            var store = await CreateStoreAsync();
+            await CreateStoreAsync();
+            var store = this.GetController<StoresController>();
             var pairingCode = BitPay.RequestClientAuthorization("test", Facade.Merchant);
             Assert.IsType<ViewResult>(await store.RequestPairing(pairingCode.ToString()));
             await store.Pair(pairingCode.ToString(), StoreId);
         }
-        public StoresController CreateStore()
+        public void CreateStore()
         {
-            return CreateStoreAsync().GetAwaiter().GetResult();
+            CreateStoreAsync().GetAwaiter().GetResult();
         }
 
         public T GetController<T>(bool setImplicitStore = true) where T : Controller
@@ -59,14 +60,11 @@ namespace BTCPayServer.Tests
             return parent.PayTester.GetController<T>(UserId, setImplicitStore ? StoreId : null);
         }
 
-        public async Task<StoresController> CreateStoreAsync()
+        public async Task CreateStoreAsync()
         {
-            var store = parent.PayTester.GetController<UserStoresController>(UserId);
+            var store = this.GetController<UserStoresController>();
             await store.CreateStore(new CreateStoreViewModel() { Name = "Test Store" });
             StoreId = store.CreatedStoreId;
-            var store2 = parent.PayTester.GetController<StoresController>(UserId);
-            store2.CreatedStoreId = store.CreatedStoreId;
-            return store2;
         }
 
         public BTCPayNetwork SupportedNetwork { get; set; }

@@ -173,6 +173,16 @@ namespace BTCPayServer
                   obj is bool b && b;
         }
 
+        public static void SetBitpayAuth(this HttpContext ctx, (string Signature, String Id, String Authorization) value)
+        {
+            NBitcoin.Extensions.TryAdd(ctx.Items, "BitpayAuth", value);
+        }
+
+        public static (string Signature, String Id, String Authorization) GetBitpayAuth(this HttpContext ctx)
+        {
+            ctx.Items.TryGetValue("BitpayAuth", out object obj);
+            return ((string Signature, String Id, String Authorization))obj;
+        }
 
         public static StoreData GetStoreData(this HttpContext ctx)
         {

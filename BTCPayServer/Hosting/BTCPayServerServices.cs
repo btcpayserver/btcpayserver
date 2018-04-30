@@ -119,6 +119,7 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService, InvoiceWatcher>();
             services.AddSingleton<IHostedService, RatesHostedService>();
             services.AddTransient<IConfigureOptions<MvcOptions>, BTCPayClaimsFilter>();
+            services.AddTransient<IConfigureOptions<MvcOptions>, BitpayClaimsFilter>();
 
             services.TryAddSingleton<ExplorerClientProvider>();
             services.TryAddSingleton<Bitpay>(o =>

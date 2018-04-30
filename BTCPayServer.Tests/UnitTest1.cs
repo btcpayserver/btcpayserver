@@ -527,13 +527,15 @@ namespace BTCPayServer.Tests
                 tester.Start();
                 var acc = tester.NewAccount();
                 acc.Register();
-                var store = acc.CreateStore();
+                acc.CreateStore();
+                var store = acc.GetController<StoresController>();
                 var pairingCode = acc.BitPay.RequestClientAuthorization("test", Facade.Merchant);
                 Assert.IsType<RedirectToActionResult>(store.Pair(pairingCode.ToString(), acc.StoreId).GetAwaiter().GetResult());
 
                 pairingCode = acc.BitPay.RequestClientAuthorization("test1", Facade.Merchant);
-                var store2 = acc.CreateStore();
-                store2.Pair(pairingCode.ToString(), store2.CreatedStoreId).GetAwaiter().GetResult();
+                acc.CreateStore();
+                var store2 = acc.GetController<StoresController>();
+                store2.Pair(pairingCode.ToString(), store2.StoreData.Id).GetAwaiter().GetResult();
                 Assert.Contains(nameof(PairingResult.ReusedKey), store2.StatusMessage, StringComparison.CurrentCultureIgnoreCase);
             }
         }

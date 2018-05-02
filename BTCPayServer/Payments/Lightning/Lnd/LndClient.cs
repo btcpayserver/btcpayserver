@@ -17,16 +17,19 @@ namespace BTCPayServer.Payments.Lightning.Lnd
 {
     public class LndClient : ILightningInvoiceClient, ILightningListenInvoiceSession
     {
-        public LndClient(Uri uri, Network network, byte[] tlsCertificate, byte[] grpcMacaroon)
+        public LndClient(Uri uri, Network network, byte[] tlsCertificate = null, byte[] grpcMacaroon = null)
         {
-            _HttpClient = HttpClientFactoryForLnd.Generate(tlsCertificate, grpcMacaroon);
+            // for now working with custom build of lnd that has no macaroons and is on http
+            //_HttpClient = HttpClientFactoryForLnd.Generate(tlsCertificate, grpcMacaroon);
+
+            _HttpClient = new HttpClient();
             _Decorator = new LndSwaggerClient(uri.ToString().TrimEnd('/'), _HttpClient);
         }
 
         private HttpClient _HttpClient;
         private LndSwaggerClient _Decorator;
 
-        public async Task<LightningInvoice> CreateInvoice(LightMoney amount, string description, TimeSpan expiry, 
+        public async Task<LightningInvoice> CreateInvoice(LightMoney amount, string description, TimeSpan expiry,
             CancellationToken cancellation = default(CancellationToken))
         {
             var strAmount = ConvertInv.ToString(amount.ToUnit(LightMoneyUnit.Satoshi));
@@ -41,7 +44,6 @@ namespace BTCPayServer.Payments.Lightning.Lnd
 
             var invoice = new LightningInvoice
             {
-                // TODO: Verify id corresponds to R_hash
                 Id = BitString(resp.R_hash),
                 Amount = amount,
                 BOLT11 = resp.Payment_request,
@@ -154,7 +156,9 @@ namespace BTCPayServer.Payments.Lightning.Lnd
 
         private static HttpClientHandler GetCertificate(byte[] certFile)
         {
-            var clientCertificate = new X509Certificate2(certFile);
+            X509Certificate2 clientCertificate = null;
+            if (certFile != null)
+                clientCertificate = new X509Certificate2(certFile);
 
             var handler = new HttpClientHandler
             {
@@ -171,6 +175,9 @@ namespace BTCPayServer.Payments.Lightning.Lnd
                 {
                     return false;
                 }
+
+                if (clientCertificate == null)
+                    return true;
 
                 X509Certificate2 remoteRoot = chain.ChainElements[chain.ChainElements.Count - 1].Certificate;
                 var res = clientCertificate.RawData.SequenceEqual(remoteRoot.RawData);

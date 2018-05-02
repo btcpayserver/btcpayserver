@@ -55,29 +55,5 @@ namespace BTCPayServer.Tests
             ExtPubKey pubkey = masterPubKey.Derive(0);
             Console.WriteLine("PubKey " + 0 + " : " + pubkey.ToString(network));
         }
-
-        [Fact]
-        public async Task TestLndAsync()
-        {
-            var tls = File.ReadAllBytes(@"c:\Users\newdawn\AppData\Local\Lnd\tls.cert");
-            var macroon = File.ReadAllBytes(@"c:\Users\newdawn\AppData\Local\Lnd\admin.macaroon");
-
-            var lnd = new LndClient(new Uri("https://localhost:8080"), Network.RegTest, tls, macroon);
-            var res = await lnd.GetInfo();
-
-            Console.WriteLine("Address: " + res.Address);
-        }
-
-        [Fact]
-        public async Task LndCreateInvoice()
-        {
-            var tls = File.ReadAllBytes(@"c:\Users\newdawn\AppData\Local\Lnd\tls.cert");
-            var macroon = File.ReadAllBytes(@"c:\Users\newdawn\AppData\Local\Lnd\admin.macaroon");
-
-            var lnd = new LndClient(new Uri("https://127.0.0.1:8080"), Network.RegTest, tls, macroon);
-            var res = await lnd.CreateInvoice(10000, "Hello world", TimeSpan.FromSeconds(3600));
-
-            Console.WriteLine("Result: "+ res.ToJson());
-        }
     }
 }

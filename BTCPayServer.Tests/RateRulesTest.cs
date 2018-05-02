@@ -41,7 +41,8 @@ namespace BTCPayServer.Tests
             {
                 Assert.Equal(test.Expected, rules.GetRuleFor(CurrencyPair.Parse(test.Pair)).ToString());
             }
-            Assert.Equal("(bittrex(DOGE_BTC) * gdax(BTC_USD) * 1.1) * 2.32", rules.GetRuleFor(CurrencyPair.Parse("DOGE_USD"), 2.32m).ToString());
+            rules.GlobalMultiplier = 2.32m;
+            Assert.Equal("(bittrex(DOGE_BTC) * gdax(BTC_USD) * 1.1) * 2.32", rules.GetRuleFor(CurrencyPair.Parse("DOGE_USD")).ToString());
             ////////////////
 
             // Check errors conditions
@@ -107,7 +108,8 @@ namespace BTCPayServer.Tests
             builder.AppendLine("BTC_USD = -3 + coinbase(BTC_CAD) + 50 - 5");
             builder.AppendLine("DOGE_BTC = 2000");
             Assert.True(RateRules.TryParse(builder.ToString(), out rules));
-            rule2 = rules.GetRuleFor(CurrencyPair.Parse("DOGE_USD"), 1.1m);
+            rules.GlobalMultiplier = 1.1m;
+            rule2 = rules.GetRuleFor(CurrencyPair.Parse("DOGE_USD"));
             Assert.Equal("(2000 * (-3 + coinbase(BTC_CAD) + 50 - 5)) * 1.1", rule2.ToString());
             rule2.ExchangeRates.SetRate("coinbase", CurrencyPair.Parse("BTC_CAD"), 1000m);
             Assert.True(rule2.Reevaluate());

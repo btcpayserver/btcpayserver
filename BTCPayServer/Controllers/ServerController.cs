@@ -24,10 +24,10 @@ namespace BTCPayServer.Controllers
     {
         private UserManager<ApplicationUser> _UserManager;
         SettingsRepository _SettingsRepository;
-        private IRateProviderFactory _RateProviderFactory;
+        private BTCPayRateProviderFactory _RateProviderFactory;
 
         public ServerController(UserManager<ApplicationUser> userManager,
-            IRateProviderFactory rateProviderFactory,
+            BTCPayRateProviderFactory rateProviderFactory,
             SettingsRepository settingsRepository)
         {
             _UserManager = userManager;
@@ -99,7 +99,7 @@ namespace BTCPayServer.Controllers
             };
             if (!withAuth || settings.GetCoinAverageSignature() != null)
             {
-                return new CoinAverageRateProvider("BTC")
+                return new CoinAverageRateProvider()
                 { Authenticator = settings };
             }
             return null;

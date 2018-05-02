@@ -35,6 +35,7 @@ using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Stores;
 using System.Net.Http;
 using System.Text;
+using BTCPayServer.Rating;
 
 namespace BTCPayServer.Tests
 {
@@ -108,22 +109,11 @@ namespace BTCPayServer.Tests
         {
             var entity = new InvoiceEntity();
 #pragma warning disable CS0618
-            entity.TxFee = Money.Coins(0.1m);
-            entity.Rate = 5000;
-
             entity.Payments = new System.Collections.Generic.List<PaymentEntity>();
+            entity.SetPaymentMethod(new PaymentMethod() { CryptoCode = "BTC", Rate = 5000, TxFee = Money.Coins(0.1m) });
             entity.ProductInformation = new ProductInformation() { Price = 5000 };
 
-            // Some check that handling legacy stuff does not break things
-            var paymentMethod = entity.GetPaymentMethods(null, true).TryGet("BTC", PaymentTypes.BTCLike);
-            paymentMethod.Calculate();
-            Assert.NotNull(paymentMethod);
-            Assert.Null(entity.GetPaymentMethods(null, false).TryGet("BTC", PaymentTypes.BTCLike));
-            entity.SetPaymentMethod(new PaymentMethod() { ParentEntity = entity, Rate = entity.Rate, CryptoCode = "BTC", TxFee = entity.TxFee });
-            Assert.NotNull(entity.GetPaymentMethods(null, false).TryGet("BTC", PaymentTypes.BTCLike));
-            Assert.NotNull(entity.GetPaymentMethods(null, true).TryGet("BTC", PaymentTypes.BTCLike));
-            ////////////////////
-
+            var paymentMethod = entity.GetPaymentMethods(null).TryGet("BTC", PaymentTypes.BTCLike);
             var accounting = paymentMethod.Calculate();
             Assert.Equal(Money.Coins(1.1m), accounting.Due);
             Assert.Equal(Money.Coins(1.1m), accounting.TotalDue);
@@ -1128,8 +1118,6 @@ namespace BTCPayServer.Tests
 
                 var txFee = Money.Zero;
 
-                var rate = user.BitPay.GetRates();
-
                 var cashCow = tester.ExplorerNode;
 
                 var invoiceAddress = BitcoinAddress.Create(invoice.BitcoinAddress, cashCow.Network);
@@ -1233,40 +1221,52 @@ namespace BTCPayServer.Tests
         [Fact]
         public void CheckQuadrigacxRateProvider()
         {
-            var quadri = new QuadrigacxRateProvider("BTC");
+            var quadri = new QuadrigacxRateProvider();
             var rates = quadri.GetRatesAsync().GetAwaiter().GetResult();
             Assert.NotEmpty(rates);
             Assert.NotEqual(0.0m, rates.First().Value);
-            Assert.NotEqual(0.0m, quadri.GetRateAsync("CAD").GetAwaiter().GetResult());
-            Assert.NotEqual(0.0m, quadri.GetRateAsync("USD").GetAwaiter().GetResult());
-            Assert.Throws<RateUnavailableException>(() => quadri.GetRateAsync("IOEW").GetAwaiter().GetResult());
-
-            quadri = new QuadrigacxRateProvider("LTC");
-            rates = quadri.GetRatesAsync().GetAwaiter().GetResult();
-            Assert.NotEmpty(rates);
-            Assert.NotEqual(0.0m, rates.First().Value);
-            Assert.NotEqual(0.0m, quadri.GetRateAsync("CAD").GetAwaiter().GetResult());
-            Assert.Throws<RateUnavailableException>(() => quadri.GetRateAsync("IOEW").GetAwaiter().GetResult());
-            Assert.Throws<RateUnavailableException>(() => quadri.GetRateAsync("USD").GetAwaiter().GetResult());
+            Assert.NotEqual(0.0m, rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("BTC_CAD")).Value);
+            Assert.NotEqual(0.0m, rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("BTC_USD")).Value);
+            Assert.NotEqual(0.0m, rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("LTC_CAD")).Value);
+            Assert.Null(rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("LTC_USD")));
         }
 
         [Fact]
         public void CheckRatesProvider()
         {
-            var coinAverage = new CoinAverageRateProvider("BTC");
-            var jpy = coinAverage.GetRateAsync("JPY").GetAwaiter().GetResult();
-            var jpy2 = new BitpayRateProvider(new Bitpay(new Key(), new Uri("https://bitpay.com/"))).GetRateAsync("JPY").GetAwaiter().GetResult();
+            var provider = new BTCPayNetworkProvider(NetworkType.Mainnet);
+            var coinAverage = new CoinAverageRateProvider(provider);
+            var rates = coinAverage.GetRatesAsync().GetAwaiter().GetResult();
+            Assert.NotNull(rates.GetRate("coinaverage", new CurrencyPair("BTC", "JPY")));
+            var ratesBitpay = new BitpayRateProvider(new Bitpay(new Key(), new Uri("https://bitpay.com/"))).GetRatesAsync().GetAwaiter().GetResult();
+            Assert.NotNull(ratesBitpay.GetRate("bitpay", new CurrencyPair("BTC", "JPY")));
 
-            var cached = new CachedRateProvider("BTC", coinAverage, new MemoryCache(new MemoryCacheOptions() { ExpirationScanFrequency = TimeSpan.FromSeconds(1.0) }));
-            cached.CacheSpan = TimeSpan.FromSeconds(10);
-            var a = cached.GetRateAsync("JPY").GetAwaiter().GetResult();
-            var b = cached.GetRateAsync("JPY").GetAwaiter().GetResult();
-            //Manually check that cache get hit after 10 sec
-            var c = cached.GetRateAsync("JPY").GetAwaiter().GetResult();
+            RateRules.TryParse("X_X = coinaverage(X_X);", out var rateRules);
 
-            var bitstamp = new CoinAverageRateProvider("BTC") { Exchange = "bitstamp" };
-            var bitstampRate = bitstamp.GetRateAsync("USD").GetAwaiter().GetResult();
-            Assert.Throws<RateUnavailableException>(() => bitstamp.GetRateAsync("XXXXX").GetAwaiter().GetResult());
+            var factory = new BTCPayRateProviderFactory(new MemoryCacheOptions() { ExpirationScanFrequency = TimeSpan.FromSeconds(1.0) }, provider, new CoinAverageSettings());
+            factory.DirectProviders.Clear();
+            factory.CacheSpan = TimeSpan.FromSeconds(10);
+
+            var fetchedRate = factory.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules).GetAwaiter().GetResult();
+            Assert.False(fetchedRate.Cached);
+            fetchedRate = factory.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules).GetAwaiter().GetResult();
+            Assert.True(fetchedRate.Cached);
+
+            Thread.Sleep(11000);
+            fetchedRate = factory.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules).GetAwaiter().GetResult();
+            Assert.False(fetchedRate.Cached);
+            fetchedRate = factory.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules).GetAwaiter().GetResult();
+            Assert.True(fetchedRate.Cached);
+            // Should cache at exchange level so this should hit the cache
+            var fetchedRate2 = factory.FetchRate(CurrencyPair.Parse("LTC_USD"), rateRules).GetAwaiter().GetResult();
+            Assert.True(fetchedRate.Cached);
+            Assert.NotEqual(fetchedRate.Value.Value, fetchedRate2.Value.Value);
+
+            // Should cache at exchange level this should not hit the cache as it is different exchange
+            RateRules.TryParse("X_X = bittrex(X_X);", out rateRules);
+            fetchedRate = factory.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules).GetAwaiter().GetResult();
+            Assert.False(fetchedRate.Cached);
+
         }
 
         private static bool IsMapped(Invoice invoice, ApplicationDbContext ctx)

@@ -93,6 +93,8 @@ namespace BTCPayServer.Rating
         SyntaxNode root;
         RuleList ruleList;
 
+        public decimal GlobalMultiplier { get; set; } = 1.0m;
+
         RateRules(SyntaxNode root)
         {
             ruleList = new RuleList();
@@ -113,15 +115,15 @@ namespace BTCPayServer.Rating
             return true;
         }
 
-        public RateRule GetRuleFor(CurrencyPair currencyPair, decimal globalMultiplier = 1.0m)
+        public RateRule GetRuleFor(CurrencyPair currencyPair)
         {
             if (currencyPair.Left == "X" || currencyPair.Right == "X")
                 throw new ArgumentException(paramName: nameof(currencyPair), message: "Invalid X currency");
             var candidate = FindBestCandidate(currencyPair);
 
-            if (globalMultiplier != decimal.One)
+            if (GlobalMultiplier != decimal.One)
             {
-                candidate = CreateExpression($"({candidate}) * {globalMultiplier.ToString(CultureInfo.InvariantCulture)}");
+                candidate = CreateExpression($"({candidate}) * {GlobalMultiplier.ToString(CultureInfo.InvariantCulture)}");
             }
             return new RateRule(this, currencyPair, candidate);
         }

@@ -104,12 +104,6 @@ namespace BTCPayServer
             return activeProvider != "Microsoft.EntityFrameworkCore.Sqlite";
         }
 
-        public static bool IsCoinAverage(this string exchangeName)
-        {
-            string[] coinAverages = new[] { "coinaverage", "bitcoinaverage" };
-            return String.IsNullOrWhiteSpace(exchangeName) ? true : coinAverages.Contains(exchangeName, StringComparer.OrdinalIgnoreCase) ? true : false;
-        }
-
         public static async Task<Dictionary<uint256, TransactionResult>> GetTransactions(this BTCPayWallet client, uint256[] hashes, CancellationToken cts = default(CancellationToken))
         {
             hashes = hashes.Distinct().ToArray();

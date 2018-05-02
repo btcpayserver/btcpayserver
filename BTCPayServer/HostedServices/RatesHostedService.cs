@@ -17,15 +17,15 @@ namespace BTCPayServer.HostedServices
     public class RatesHostedService : BaseAsyncService
     {
         private SettingsRepository _SettingsRepository;
-        private IRateProviderFactory _RateProviderFactory;
         private CoinAverageSettings _coinAverageSettings;
+        BTCPayRateProviderFactory _RateProviderFactory;
         public RatesHostedService(SettingsRepository repo,
-                                  CoinAverageSettings coinAverageSettings,
-                                  IRateProviderFactory rateProviderFactory)
+                                  BTCPayRateProviderFactory rateProviderFactory,
+                                  CoinAverageSettings coinAverageSettings)
         {
             this._SettingsRepository = repo;
-            _RateProviderFactory = rateProviderFactory;
             _coinAverageSettings = coinAverageSettings;
+            _RateProviderFactory = rateProviderFactory;
         }
 
         internal override Task[] InitializeTasks()
@@ -40,11 +40,15 @@ namespace BTCPayServer.HostedServices
         async Task RefreshCoinAverageSupportedExchanges()
         {
             await new SynchronizationContextRemover();
-            var tickers = await new CoinAverageRateProvider("BTC") { Authenticator = _coinAverageSettings }.GetExchangeTickersAsync();
-            _coinAverageSettings.AvailableExchanges = tickers
+            var tickers = await new CoinAverageRateProvider() { Authenticator = _coinAverageSettings }.GetExchangeTickersAsync();
+            var exchanges = new CoinAverageExchanges();
+            foreach(var item in tickers
                 .Exchanges
-                .Select(c => (c.DisplayName, c.Name))
-                .ToArray();
+                .Select(c => new CoinAverageExchange(c.Name, c.DisplayName)))
+            {
+                exchanges.Add(item);
+            }
+            _coinAverageSettings.AvailableExchanges = exchanges;
             await Task.Delay(TimeSpan.FromHours(5), Cancellation);
         }
 

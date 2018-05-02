@@ -20,12 +20,35 @@ namespace BTCPayServer.Services.Rates
             return _Settings.AddHeader(message);
         }
     }
+
+    public class CoinAverageExchange
+    {
+        public CoinAverageExchange(string name, string display)
+        {
+            Name = name;
+            Display = display;
+        }
+        public string Name { get; set; }
+        public string Display { get; set; }
+    }
+    public class CoinAverageExchanges : Dictionary<string, CoinAverageExchange>
+    {
+        public CoinAverageExchanges()
+        {
+            Add(new CoinAverageExchange(CoinAverageRateProvider.CoinAverageName, "Coin Average"));
+        }
+
+        public void Add(CoinAverageExchange exchange)
+        {
+            Add(exchange.Name, exchange);
+        }
+    }
     public class CoinAverageSettings : ICoinAverageAuthenticator
     {
         private static readonly DateTime _epochUtc = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         public (String PublicKey, String PrivateKey)? KeyPair { get; set; }
-        public (String DisplayName, String Name)[] AvailableExchanges { get; set; } = Array.Empty<(String DisplayName, String Name)>();
+        public CoinAverageExchanges AvailableExchanges { get; set; } = new CoinAverageExchanges();
 
         public CoinAverageSettings()
         {
@@ -37,8 +60,9 @@ namespace BTCPayServer.Services.Rates
             //    b.AppendLine($"(DisplayName: \"{availableExchange.DisplayName}\", Name: \"{availableExchange.Name}\"),");
             //}
             //b.AppendLine("}.ToArray()");
-
-            AvailableExchanges = new[] {
+            AvailableExchanges = new CoinAverageExchanges();
+            foreach(var item in
+             new[] {
                 (DisplayName: "BitBargain", Name: "bitbargain"),
                 (DisplayName: "Tidex", Name: "tidex"),
                 (DisplayName: "LocalBitcoins", Name: "localbitcoins"),
@@ -89,7 +113,10 @@ namespace BTCPayServer.Services.Rates
                 (DisplayName: "Quoine", Name: "quoine"),
                 (DisplayName: "BTC Markets", Name: "btcmarkets"),
                 (DisplayName: "Bitso", Name: "bitso"),
-                }.ToArray();
+                })
+            {
+                AvailableExchanges.TryAdd(item.Name, new CoinAverageExchange(item.Name, item.DisplayName));
+            }
         }
 
         public Task AddHeader(HttpRequestMessage message)

@@ -10,6 +10,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.ComponentModel;
+using BTCPayServer.Rating;
 
 namespace BTCPayServer.Services.Rates
 {
@@ -18,29 +19,6 @@ namespace BTCPayServer.Services.Rates
         public CoinAverageException(string message) : base(message)
         {
 
-        }
-    }
-
-    public class CoinAverageRateProviderDescription : RateProviderDescription
-    {
-        public CoinAverageRateProviderDescription(string crypto)
-        {
-            CryptoCode = crypto;
-        }
-
-        public string CryptoCode { get; set; }
-
-        public CoinAverageRateProvider CreateRateProvider(IServiceProvider serviceProvider)
-        {
-            return new CoinAverageRateProvider(CryptoCode)
-            {
-                Authenticator = serviceProvider.GetService<ICoinAverageAuthenticator>()
-            };
-        }
-
-        IRateProvider RateProviderDescription.CreateRateProvider(IServiceProvider serviceProvider)
-        {
-            return CreateRateProvider(serviceProvider);
         }
     }
 
@@ -69,18 +47,25 @@ namespace BTCPayServer.Services.Rates
     public interface ICoinAverageAuthenticator
     {
         Task AddHeader(HttpRequestMessage message);
-    }    
+    }
 
     public class CoinAverageRateProvider : IRateProvider
     {
+        public const string CoinAverageName = "coinaverage";
+        BTCPayNetworkProvider _NetworkProvider;
+        public CoinAverageRateProvider()
+        {
+
+        }
+        public CoinAverageRateProvider(BTCPayNetworkProvider networkProvider)
+        {
+            if (networkProvider == null)
+                throw new ArgumentNullException(nameof(networkProvider));
+            _NetworkProvider = networkProvider;
+        }
         static HttpClient _Client = new HttpClient();
 
-        public CoinAverageRateProvider(string cryptoCode)
-        {
-            CryptoCode = cryptoCode ?? "BTC";
-        }
-
-        public string Exchange { get; set; }
+        public string Exchange { get; set; } = CoinAverageName;
 
         public string CryptoCode { get; set; }
 
@@ -88,27 +73,19 @@ namespace BTCPayServer.Services.Rates
         {
             get; set;
         } = "global";
-        public async Task<decimal> GetRateAsync(string currency)
-        {
-            var rates = await GetRatesCore();
-            return GetRate(rates, currency);
-        }
-
-        private decimal GetRate(Dictionary<string, decimal> rates, string currency)
-        {
-            if (currency == "BTC")
-                return 1.0m;
-            if (rates.TryGetValue(currency, out decimal result))
-                return result;
-            throw new RateUnavailableException(currency);
-        }
 
         public ICoinAverageAuthenticator Authenticator { get; set; }
 
-        private async Task<Dictionary<string, decimal>> GetRatesCore()
+        private bool TryToDecimal(JProperty p, out decimal v)
         {
-            string url = Exchange == null ? $"https://apiv2.bitcoinaverage.com/indices/{Market}/ticker/short"
-                                          : $"https://apiv2.bitcoinaverage.com/exchanges/{Exchange}";
+            JToken token = p.Value[Exchange == CoinAverageName ? "last" : "bid"];
+            return decimal.TryParse(token.Value<string>(), System.Globalization.NumberStyles.AllowExponent | System.Globalization.NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out v);
+        }
+
+        public async Task<ExchangeRates> GetRatesAsync()
+        {
+            string url = Exchange == CoinAverageName ? $"https://apiv2.bitcoinaverage.com/indices/{Market}/ticker/short"
+                                         : $"https://apiv2.bitcoinaverage.com/exchanges/{Exchange}";
 
             var request = new HttpRequestMessage(HttpMethod.Get, url);
             var auth = Authenticator;
@@ -128,34 +105,32 @@ namespace BTCPayServer.Services.Rates
                     throw new CoinAverageException("Unauthorized access to the API, premium plan needed");
                 resp.EnsureSuccessStatusCode();
                 var rates = JObject.Parse(await resp.Content.ReadAsStringAsync());
-                if(Exchange != null)
+                if (Exchange != CoinAverageName)
                 {
                     rates = (JObject)rates["symbols"];
                 }
-                return rates.Properties()
-                              .Where(p => p.Name.StartsWith(CryptoCode, StringComparison.OrdinalIgnoreCase) && TryToDecimal(p, out decimal unused))
-                              .ToDictionary(p => p.Name.Substring(CryptoCode.Length, p.Name.Length - CryptoCode.Length), p =>
-                              {
-                                  TryToDecimal(p, out decimal v);
-                                  return v;
-                              });
+
+                var exchangeRates = new ExchangeRates();
+                foreach (var prop in rates.Properties())
+                {
+                    ExchangeRate exchangeRate = new ExchangeRate();
+                    exchangeRate.Exchange = Exchange;
+                    if (!TryToDecimal(prop, out decimal value))
+                        continue;
+                    exchangeRate.Value = value;
+                    for (int i = 3; i < 5; i++)
+                    {
+                        var potentialCryptoName = prop.Name.Substring(0, i);
+                        if (_NetworkProvider.GetNetwork(potentialCryptoName) != null)
+                        {
+                            exchangeRate.CurrencyPair = new CurrencyPair(potentialCryptoName, prop.Name.Substring(i));
+                        }
+                    }
+                    if (exchangeRate.CurrencyPair != null)
+                        exchangeRates.Add(exchangeRate);
+                }
+                return exchangeRates;
             }
-        }
-
-        private bool TryToDecimal(JProperty p, out decimal v)
-        {
-            JToken token = p.Value[Exchange == null ? "last" : "bid"];
-            return decimal.TryParse(token.Value<string>(), System.Globalization.NumberStyles.AllowExponent | System.Globalization.NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out v);
-        }
-
-        public async Task<ICollection<Rate>> GetRatesAsync()
-        {
-            var rates = await GetRatesCore();
-            return rates.Select(o => new Rate()
-            {
-                Currency = o.Key,
-                Value = o.Value
-            }).ToList();
         }
 
         public async Task TestAuthAsync()
@@ -217,7 +192,7 @@ namespace BTCPayServer.Services.Rates
             var exchanges = (JObject)jobj["exchanges"];
             response.Exchanges = exchanges
                 .Properties()
-                .Select(p => 
+                .Select(p =>
                 {
                     var exchange = JsonConvert.DeserializeObject<GetExchangeTickersResponse.Exchange>(p.Value.ToString());
                     exchange.Name = p.Name;

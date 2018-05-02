@@ -181,7 +181,7 @@ services:
       - "5432"
 
   lnd:
-    image: testing_lnd
+    image: btcpayserver/lnd:0.4.1.0
     environment:
       RPCHOST: bitcoind:43782
       RPCUSER: ceiwHEbqWI83

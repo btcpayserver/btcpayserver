@@ -14,17 +14,21 @@ namespace BTCPayServer.Tests
         {
             // Check happy path
             StringBuilder builder = new StringBuilder();
+            builder.AppendLine("// Some cool comments");
             builder.AppendLine("DOGE_X = DOGE_BTC * BTC_X * 1.1");
             builder.AppendLine("DOGE_BTC = Bittrex(DOGE_BTC)");
+            builder.AppendLine("// Some other cool comments");
             builder.AppendLine("BTC_usd = GDax(BTC_USD)");
-            builder.AppendLine("BTC_X = Coinbase(BTC_X)");
+            builder.AppendLine("BTC_X = Coinbase(BTC_X);");
             builder.AppendLine("X_X = CoinAverage(X_X) * 1.02");
 
             Assert.False(RateRules.TryParse("DPW*&W&#hdi&#&3JJD", out var rules));
             Assert.True(RateRules.TryParse(builder.ToString(), out rules));
             Assert.Equal(
+                "// Some cool comments\n" +
                 "DOGE_X = DOGE_BTC * BTC_X * 1.1;\n" +
                 "DOGE_BTC = bittrex(DOGE_BTC);\n" +
+                "// Some other cool comments\n" +
                 "BTC_USD = gdax(BTC_USD);\n" +
                 "BTC_X = coinbase(BTC_X);\n" +
                 "X_X = coinaverage(X_X) * 1.02;",

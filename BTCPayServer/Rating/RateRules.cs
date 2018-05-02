@@ -55,7 +55,8 @@ namespace BTCPayServer.Rating
                 }
                 if (CurrencyPair.TryParse(node.Identifier.ValueText, out var currencyPair))
                 {
-                    return SyntaxFactory.IdentifierName(currencyPair.ToString());
+                    return SyntaxFactory.IdentifierName(currencyPair.ToString())
+                                        .WithTriviaFrom(node);
                 }
                 else
                 {
@@ -66,25 +67,30 @@ namespace BTCPayServer.Rating
         }
         class RuleList : CSharpSyntaxWalker
         {
-            public Dictionary<CurrencyPair, ExpressionSyntax> ExpressionsByPair = new Dictionary<CurrencyPair, ExpressionSyntax>();
+            public Dictionary<CurrencyPair, (ExpressionSyntax Expression, SyntaxNode Trivia)> ExpressionsByPair = new Dictionary<CurrencyPair, (ExpressionSyntax Expression, SyntaxNode Trivia)>();
             public override void VisitAssignmentExpression(AssignmentExpressionSyntax node)
             {
-                if (node.Left is IdentifierNameSyntax id)
+                if (node.Kind() == SyntaxKind.SimpleAssignmentExpression 
+                    && node.Left is IdentifierNameSyntax id
+                    && node.Right is ExpressionSyntax expression)
                 {
                     if (CurrencyPair.TryParse(id.Identifier.ValueText, out var currencyPair))
                     {
-                        ExpressionsByPair.TryAdd(currencyPair, node.Right);
+                        expression = expression.WithTriviaFrom(expression);
+                        ExpressionsByPair.Add(currencyPair, (expression, id));
                     }
                 }
+                base.VisitAssignmentExpression(node);
             }
+
             public SyntaxNode GetSyntaxNode()
             {
                 return SyntaxFactory.Block(
                         ExpressionsByPair.Select(e =>
                                 SyntaxFactory.ExpressionStatement(
                                     SyntaxFactory.AssignmentExpression(SyntaxKind.SimpleAssignmentExpression,
-                                            SyntaxFactory.IdentifierName(e.Key.ToString()),
-                                            e.Value)
+                                            SyntaxFactory.IdentifierName(e.Key.ToString()).WithTriviaFrom(e.Value.Trivia),
+                                            e.Value.Expression)
                                     ))
                     );
             }
@@ -98,8 +104,8 @@ namespace BTCPayServer.Rating
         RateRules(SyntaxNode root)
         {
             ruleList = new RuleList();
-            // Remove every irrelevant statements
             ruleList.Visit(root);
+            // Remove every irrelevant statements
             this.root = ruleList.GetSyntaxNode();
         }
         public static bool TryParse(string str, out RateRules rules)
@@ -139,9 +145,9 @@ namespace BTCPayServer.Rating
                 (Pair: new CurrencyPair("X", "X"), Priority: 2)
             })
             {
-                if (ruleList.ExpressionsByPair.TryGetValue(pair.Pair, out ExpressionSyntax expression))
+                if (ruleList.ExpressionsByPair.TryGetValue(pair.Pair, out var expression))
                 {
-                    candidates.Add((pair.Pair, pair.Priority, expression));
+                    candidates.Add((pair.Pair, pair.Priority, expression.Expression));
                 }
             }
             if (candidates.Count == 0)
@@ -161,9 +167,9 @@ namespace BTCPayServer.Rating
 
         public override string ToString()
         {
-            return this.root.NormalizeWhitespace("", "\n")
-                            .ToFullString()
-                            .Replace("{\n", string.Empty, StringComparison.OrdinalIgnoreCase)
+            return root.NormalizeWhitespace("", "\n")
+                .ToFullString()
+                .Replace("{\n", string.Empty, StringComparison.OrdinalIgnoreCase)
                             .Replace("\n}", string.Empty, StringComparison.OrdinalIgnoreCase);
         }
     }

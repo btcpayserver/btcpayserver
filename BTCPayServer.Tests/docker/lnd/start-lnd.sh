@@ -49,6 +49,7 @@ CHAIN=$(set_default "$CHAIN" "bitcoin")
 BACKEND=$(set_default "$BACKEND" "bitcoind")
 
 exec lnd \
+    --no-macaroons \
     --noencryptwallet \
     --logdir="/data" \
     "--$CHAIN.active" \

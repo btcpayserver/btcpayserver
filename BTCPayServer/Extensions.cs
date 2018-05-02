@@ -167,6 +167,13 @@ namespace BTCPayServer
             NBitcoin.Extensions.TryAdd(ctx.Items, "IsBitpayAPI", value);
         }
 
+        public static void AddRange<T>(this HashSet<T> hashSet, IEnumerable<T> items)
+        {
+            foreach(var item in items)
+            {
+                hashSet.Add(item);
+            }
+        }
         public static bool GetIsBitpayAPI(this HttpContext ctx)
         {
             return ctx.Items.TryGetValue("IsBitpayAPI", out object obj) &&

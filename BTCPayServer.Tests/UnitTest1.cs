@@ -1232,6 +1232,26 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        public void CanGetRateCryptoCurrenciesByDefault()
+        {
+            var provider = new BTCPayNetworkProvider(NetworkType.Mainnet);
+            var factory = new BTCPayRateProviderFactory(new MemoryCacheOptions() { ExpirationScanFrequency = TimeSpan.FromSeconds(1.0) }, provider, new CoinAverageSettings());
+
+            var pairs =
+                    provider.GetAll()
+                    .Select(c => new CurrencyPair(c.CryptoCode, "USD"))
+                    .ToHashSet();
+
+            var rules = new StoreBlob().GetDefaultRateRules(provider);
+            var result = factory.FetchRates(pairs, rules);
+            foreach(var value in result)
+            {
+                var rateResult = value.Value.GetAwaiter().GetResult();
+                Assert.NotNull(rateResult.Value);
+            }
+        }
+
+        [Fact]
         public void CheckRatesProvider()
         {
             var provider = new BTCPayNetworkProvider(NetworkType.Mainnet);

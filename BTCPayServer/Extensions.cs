@@ -200,13 +200,5 @@ namespace BTCPayServer
             var res = JsonConvert.SerializeObject(o, Formatting.None, jsonSettings);
             return res;
         }
-
-        public static HtmlString ToJSVariableModel(this object o, string variableName)
-        {
-            var encodedJson = JavaScriptEncoder.Default.Encode(o.ToJson());
-            return new HtmlString($"var {variableName} = JSON.parse('" + encodedJson + "');");
-        }
-
-
     }
 }

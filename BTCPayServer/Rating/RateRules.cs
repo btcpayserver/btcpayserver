@@ -20,6 +20,7 @@ namespace BTCPayServer.Rating
         DivideByZero,
         PreprocessError,
         RateUnavailable,
+        InvalidExchangeName,
     }
     public class RateRules
     {
@@ -28,13 +29,6 @@ namespace BTCPayServer.Rating
             public List<RateRulesErrors> Errors = new List<RateRulesErrors>();
 
             bool IsInvocation;
-            public override SyntaxNode VisitArgumentList(ArgumentListSyntax node)
-            {
-                IsInvocation = false;
-                var result = base.VisitArgumentList(node);
-                IsInvocation = true;
-                return result;
-            }
             public override SyntaxNode VisitInvocationExpression(InvocationExpressionSyntax node)
             {
                 if (IsInvocation)
@@ -42,17 +36,22 @@ namespace BTCPayServer.Rating
                     Errors.Add(RateRulesErrors.NestedInvocation);
                     return base.VisitInvocationExpression(node);
                 }
-                IsInvocation = true;
-                var result = base.VisitInvocationExpression(node);
-                IsInvocation = false;
-                return result;
+                if (node.Expression is IdentifierNameSyntax id)
+                {
+                    IsInvocation = true;
+                    var arglist = (ArgumentListSyntax)this.Visit(node.ArgumentList);
+                    IsInvocation = false;
+                    return SyntaxFactory.InvocationExpression(SyntaxFactory.IdentifierName(id.Identifier.ValueText.ToLowerInvariant()), arglist)
+                                        .WithTriviaFrom(id);
+                }
+                else
+                {
+                    Errors.Add(RateRulesErrors.InvalidExchangeName);
+                    return node;
+                }
             }
             public override SyntaxNode VisitIdentifierName(IdentifierNameSyntax node)
             {
-                if (IsInvocation)
-                {
-                    return SyntaxFactory.IdentifierName(node.Identifier.ValueText.ToLowerInvariant());
-                }
                 if (CurrencyPair.TryParse(node.Identifier.ValueText, out var currencyPair))
                 {
                     return SyntaxFactory.IdentifierName(currencyPair.ToString())
@@ -70,7 +69,7 @@ namespace BTCPayServer.Rating
             public Dictionary<CurrencyPair, (ExpressionSyntax Expression, SyntaxNode Trivia)> ExpressionsByPair = new Dictionary<CurrencyPair, (ExpressionSyntax Expression, SyntaxNode Trivia)>();
             public override void VisitAssignmentExpression(AssignmentExpressionSyntax node)
             {
-                if (node.Kind() == SyntaxKind.SimpleAssignmentExpression 
+                if (node.Kind() == SyntaxKind.SimpleAssignmentExpression
                     && node.Left is IdentifierNameSyntax id
                     && node.Right is ExpressionSyntax expression)
                 {
@@ -110,13 +109,21 @@ namespace BTCPayServer.Rating
         }
         public static bool TryParse(string str, out RateRules rules)
         {
+            return TryParse(str, out rules, out var unused);
+        }
+        public static bool TryParse(string str, out RateRules rules, out List<RateRulesErrors> errors)
+        {
             rules = null;
+            errors = null;
             var expression = CSharpSyntaxTree.ParseText(str, new CSharpParseOptions(LanguageVersion.Default).WithKind(SourceCodeKind.Script));
             var rewriter = new NormalizeCurrencyPairsRewritter();
             // Rename BTC_usd to BTC_USD and verify structure
             var root = rewriter.Visit(expression.GetRoot());
             if (rewriter.Errors.Count > 0)
+            {
+                errors = rewriter.Errors;
                 return false;
+            }
             rules = new RateRules(root);
             return true;
         }
@@ -154,7 +161,7 @@ namespace BTCPayServer.Rating
                 return CreateExpression($"ERR_NO_RULE_MATCH({p})");
             var best = candidates
                     .OrderBy(c => c.Prioriy)
-                    .ThenBy(c => c.Expression.Span)
+                    .ThenBy(c => c.Expression.Span.Start)
                     .First();
 
             return best.Expression;

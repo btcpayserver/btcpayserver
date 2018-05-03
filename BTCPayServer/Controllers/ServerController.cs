@@ -255,13 +255,19 @@ namespace BTCPayServer.Controllers
                 }
                 return View(model);
             }
-            else
+            else if(command == "Save")
             {
                 ModelState.Remove(nameof(model.TestEmail));
                 if (!ModelState.IsValid)
                     return View(model);
                 await _SettingsRepository.UpdateSetting(model.Settings);
                 model.StatusMessage = "Email settings saved";
+                return View(model);
+            }
+            else
+            {
+                await _SettingsRepository.UpdateSetting(new EmailSettings());
+                model.StatusMessage = "Email settings cleared";
                 return View(model);
             }
         }

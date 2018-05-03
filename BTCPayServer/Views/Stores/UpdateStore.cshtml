@@ -35,19 +35,6 @@
                 <input asp-for="NetworkFee" type="checkbox" class="form-check" />
             </div>
             <div class="form-group">
-                <label asp-for="PreferredExchange"></label>
-                <select asp-for="PreferredExchange" asp-items="Model.Exchanges" class="form-control"></select>
-                <span asp-validation-for="PreferredExchange" class="text-danger"></span>
-                <p id="PreferredExchangeHelpBlock" class="form-text text-muted">
-                    Current price source is <a href="@Model.RateSource" target="_blank">@Model.PreferredExchange</a>.
-                </p>
-            </div>
-            <div class="form-group">
-                <label asp-for="RateMultiplier"></label>
-                <input asp-for="RateMultiplier" class="form-control" />
-                <span asp-validation-for="RateMultiplier" class="text-danger"></span>
-            </div>
-            <div class="form-group">
                 <label asp-for="InvoiceExpiration"></label>
                 <input asp-for="InvoiceExpiration" class="form-control" />
                 <span asp-validation-for="InvoiceExpiration" class="text-danger"></span>

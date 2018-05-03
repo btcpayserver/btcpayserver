@@ -16,7 +16,7 @@
     <bundle name="wwwroot/bundles/checkout-bundle.min.css" />
 
     <script type="text/javascript">
-		@Model.ToJSVariableModel("srvModel")
+        var srvModel = @Html.Raw(Json.Serialize(Model));
     </script>
 
     <bundle name="wwwroot/bundles/checkout-bundle.min.js" />

@@ -27,6 +27,11 @@
                 <span asp-validation-for="CustomCSS" class="text-danger"></span>
             </div>
             <div class="form-group">
+                <label asp-for="HtmlTitle"></label>
+                <input asp-for="HtmlTitle" class="form-control" />
+                <span asp-validation-for="HtmlTitle" class="text-danger"></span>
+            </div>
+            <div class="form-group">
                 <label asp-for="DefaultCryptoCurrency"></label>
                 <select asp-for="DefaultCryptoCurrency" asp-items="Model.CryptoCurrencies" class="form-control"></select>
             </div>

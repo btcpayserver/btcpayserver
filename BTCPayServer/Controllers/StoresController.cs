@@ -347,6 +347,7 @@ namespace BTCPayServer.Controllers
             vm.RequiresRefundEmail = storeBlob.RequiresRefundEmail;
             vm.CustomCSS = storeBlob.CustomCSS?.AbsoluteUri;
             vm.CustomLogo = storeBlob.CustomLogo?.AbsoluteUri;
+            vm.HtmlTitle = storeBlob.HtmlTitle;
             return View(vm);
         }
 
@@ -392,6 +393,7 @@ namespace BTCPayServer.Controllers
             blob.OnChainMinValue = onchainMinValue;
             blob.CustomLogo = string.IsNullOrWhiteSpace(model.CustomLogo) ? null : new Uri(model.CustomLogo, UriKind.Absolute);
             blob.CustomCSS = string.IsNullOrWhiteSpace(model.CustomCSS) ? null : new Uri(model.CustomCSS, UriKind.Absolute);
+            blob.HtmlTitle = string.IsNullOrWhiteSpace(model.HtmlTitle) ? null : model.HtmlTitle;
             if (StoreData.SetStoreBlob(blob))
             {
                 needUpdate = true;

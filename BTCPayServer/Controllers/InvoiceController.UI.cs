@@ -228,6 +228,7 @@ namespace BTCPayServer.Controllers
                 OrderId = invoice.OrderId,
                 InvoiceId = invoice.Id,
                 DefaultLang = storeBlob.DefaultLang ?? "en-US",
+                HtmlTitle = storeBlob.HtmlTitle ?? "BTCPay Invoice",
                 CustomCSSLink = storeBlob.CustomCSS?.AbsoluteUri,
                 CustomLogoLink = storeBlob.CustomLogo?.AbsoluteUri,
                 BtcAddress = paymentMethodDetails.GetPaymentDestination(),

@@ -1,5 +1,6 @@
 ﻿using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Rates;
 using BTCPayServer.Validations;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
@@ -49,10 +50,10 @@ namespace BTCPayServer.Models.StoreViewModels
 
         public List<StoreViewModel.DerivationScheme> DerivationSchemes { get; set; } = new List<StoreViewModel.DerivationScheme>();
 
-        public void SetExchangeRates((String DisplayName, String Name)[] supportedList, string preferredExchange)
+        public void SetExchangeRates(CoinAverageExchange[] supportedList, string preferredExchange)
         {
-            var defaultStore = preferredExchange ?? "coinaverage";
-            var choices = supportedList.Select(o => new Format() { Name = o.DisplayName, Value = o.Name }).ToArray();
+            var defaultStore = preferredExchange ?? CoinAverageRateProvider.CoinAverageName;
+            var choices = supportedList.Select(o => new Format() { Name = o.Display, Value = o.Name }).ToArray();
             var chosen = choices.FirstOrDefault(f => f.Value == defaultStore) ?? choices.FirstOrDefault();
             Exchanges = new SelectList(choices, nameof(chosen.Value), nameof(chosen.Name), chosen);
             PreferredExchange = chosen.Value;
@@ -67,7 +68,7 @@ namespace BTCPayServer.Models.StoreViewModels
         {
             get
             {
-                return PreferredExchange.IsCoinAverage() ? "https://apiv2.bitcoinaverage.com/indices/global/ticker/short" : $"https://apiv2.bitcoinaverage.com/exchanges/{PreferredExchange}";
+                return PreferredExchange == CoinAverageRateProvider.CoinAverageName ? "https://apiv2.bitcoinaverage.com/indices/global/ticker/short" : $"https://apiv2.bitcoinaverage.com/exchanges/{PreferredExchange}";
             }
         }
 

@@ -8,17 +8,19 @@ using System.Threading.Tasks;
 using BTCPayServer.Filters;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
+using BTCPayServer.Rating;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Controllers
 {
     public class RateController : Controller
     {
-        IRateProviderFactory _RateProviderFactory;
+        BTCPayRateProviderFactory _RateProviderFactory;
         BTCPayNetworkProvider _NetworkProvider;
         CurrencyNameTable _CurrencyNameTable;
         StoreRepository _StoreRepo;
         public RateController(
-            IRateProviderFactory rateProviderFactory, 
+            BTCPayRateProviderFactory rateProviderFactory,
             BTCPayNetworkProvider networkProvider,
             StoreRepository storeRepo,
             CurrencyNameTable currencyNameTable)
@@ -32,45 +34,90 @@ namespace BTCPayServer.Controllers
         [Route("rates")]
         [HttpGet]
         [BitpayAPIConstraint]
-        public async Task<IActionResult> GetRates(string cryptoCode = null, string storeId = null)
+        public async Task<IActionResult> GetRates(string currencyPairs, string storeId)
         {
-            var result = await GetRates2(cryptoCode, storeId);
+            var result = await GetRates2(currencyPairs, storeId);
             var rates = (result as JsonResult)?.Value as NBitpayClient.Rate[];
-            if(rates == null)
+            if (rates == null)
                 return result;
-            return Json(new DataWrapper<NBitpayClient.Rate[]>(rates)); 
+            return Json(new DataWrapper<NBitpayClient.Rate[]>(rates));
         }
 
         [Route("api/rates")]
         [HttpGet]
-        public async Task<IActionResult> GetRates2(string cryptoCode = null, string storeId = null)
+        public async Task<IActionResult> GetRates2(string currencyPairs, string storeId)
         {
-            cryptoCode = cryptoCode ?? "BTC";
-            var network = _NetworkProvider.GetNetwork(cryptoCode);
-            if (network == null)
-                return NotFound();
-
-            RateRules rules = null;
-            if (storeId != null)
+            if(storeId == null || currencyPairs == null)
             {
-                var store = await _StoreRepo.FindStore(storeId);
-                if (store == null)
-                    return NotFound();
-                rules = store.GetStoreBlob().GetRateRules();
+                var result = Json(new BitpayErrorsModel() { Error = "You need to specify storeId (in your store settings) and currencyPairs (eg. BTC_USD,LTC_CAD)" });
+                result.StatusCode = 400;
+                return result;
             }
 
-            var rateProvider = _RateProviderFactory.GetRateProvider(network, rules);
-            if (rateProvider == null)
-                return NotFound();
+            
+            var store = await _StoreRepo.FindStore(storeId);
+            if (store == null)
+            {
+                var result = Json(new BitpayErrorsModel() { Error = "Store not found" });
+                result.StatusCode = 404;
+                return result;
+            }
+            var rules = store.GetStoreBlob().GetRateRules(_NetworkProvider);
 
-            var allRates = (await rateProvider.GetRatesAsync());
-            return Json(allRates.Select(r =>
-                            new NBitpayClient.Rate()
+            HashSet<CurrencyPair> pairs = new HashSet<CurrencyPair>();
+            foreach(var currency in currencyPairs.Split(','))
+            {
+                if(!CurrencyPair.TryParse(currency, out var pair))
+                {
+                    var result = Json(new BitpayErrorsModel() { Error = $"Currency pair {currency} uncorrectly formatted" });
+                    result.StatusCode = 400;
+                    return result;
+                }
+                pairs.Add(pair);
+            }
+
+            var fetching = _RateProviderFactory.FetchRates(pairs, rules);
+            await Task.WhenAll(fetching.Select(f => f.Value).ToArray());
+            return Json(pairs
+                            .Select(r => (Pair: r, Value: fetching[r].GetAwaiter().GetResult().Value))
+                            .Where(r => r.Value.HasValue)
+                            .Select(r =>
+                            new Rate()
                             {
-                                Code = r.Currency,
-                                Name = _CurrencyNameTable.GetCurrencyData(r.Currency)?.Name,
-                                Value = r.Value
+                                CryptoCode = r.Pair.Left,
+                                Code = r.Pair.Right,
+                                Name = _CurrencyNameTable.GetCurrencyData(r.Pair.Right)?.Name,
+                                Value = r.Value.Value
                             }).Where(n => n.Name != null).ToArray());
+        }
+
+        public class Rate
+        {
+
+            [JsonProperty(PropertyName = "name")]
+            public string Name
+            {
+                get;
+                set;
+            }
+            [JsonProperty(PropertyName = "cryptoCode")]
+            public string CryptoCode
+            {
+                get;
+                set;
+            }
+            [JsonProperty(PropertyName = "code")]
+            public string Code
+            {
+                get;
+                set;
+            }
+            [JsonProperty(PropertyName = "rate")]
+            public decimal Value
+            {
+                get;
+                set;
+            }
         }
     }
 }

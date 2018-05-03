@@ -18,6 +18,7 @@ using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Services;
 using System.Security.Claims;
 using BTCPayServer.Security;
+using BTCPayServer.Rating;
 
 namespace BTCPayServer.Data
 {
@@ -207,7 +208,10 @@ namespace BTCPayServer.Data
 
         public StoreBlob GetStoreBlob()
         {
-            return StoreBlob == null ? new StoreBlob() : new Serializer(Dummy).ToObject<StoreBlob>(Encoding.UTF8.GetString(StoreBlob));
+            var result = StoreBlob == null ? new StoreBlob() : new Serializer(Dummy).ToObject<StoreBlob>(Encoding.UTF8.GetString(StoreBlob));
+            if (result.PreferredExchange == null)
+                result.PreferredExchange = CoinAverageRateProvider.CoinAverageName;
+            return result;
         }
 
         public bool SetStoreBlob(StoreBlob storeBlob)
@@ -221,9 +225,9 @@ namespace BTCPayServer.Data
         }
     }
 
-    public class RateRule
+    public class RateRule_Obsolete
     {
-        public RateRule()
+        public RateRule_Obsolete()
         {
             RuleName = "Multiplier";
         }
@@ -275,8 +279,8 @@ namespace BTCPayServer.Data
 
         public void SetRateMultiplier(double rate)
         {
-            RateRules = new List<RateRule>();
-            RateRules.Add(new RateRule() { Multiplier = rate });
+            RateRules = new List<RateRule_Obsolete>();
+            RateRules.Add(new RateRule_Obsolete() { Multiplier = rate });
         }
         public decimal GetRateMultiplier()
         {
@@ -290,7 +294,7 @@ namespace BTCPayServer.Data
             return rate;
         }
 
-        public List<RateRule> RateRules { get; set; } = new List<RateRule>();
+        public List<RateRule_Obsolete> RateRules { get; set; } = new List<RateRule_Obsolete>();
         public string PreferredExchange { get; set; }
 
         [JsonConverter(typeof(CurrencyValueJsonConverter))]
@@ -302,6 +306,10 @@ namespace BTCPayServer.Data
         public Uri CustomLogo { get; set; }
         [JsonConverter(typeof(UriJsonConverter))]
         public Uri CustomCSS { get; set; }
+
+        public bool RateScripting { get; set; }
+
+        public string RateScript { get; set; }
 
 
         string _LightningDescriptionTemplate;
@@ -317,12 +325,44 @@ namespace BTCPayServer.Data
             }
         }
 
-        public RateRules GetRateRules()
+        public BTCPayServer.Rating.RateRules GetRateRules(BTCPayNetworkProvider networkProvider)
         {
-            return new RateRules(RateRules)
+            if (!RateScripting || 
+                string.IsNullOrEmpty(RateScript) || 
+                !BTCPayServer.Rating.RateRules.TryParse(RateScript, out var rules))
             {
-                PreferredExchange = PreferredExchange
-            };
+                return GetDefaultRateRules(networkProvider);
+            }
+            else
+            {
+                rules.GlobalMultiplier = GetRateMultiplier();
+                return rules;
+            }
+        }
+
+        public RateRules GetDefaultRateRules(BTCPayNetworkProvider networkProvider)
+        {
+            StringBuilder builder = new StringBuilder();
+            foreach (var network in networkProvider.GetAll())
+            {
+                if (network.DefaultRateRules.Length != 0)
+                {
+                    builder.AppendLine($"// Default rate rules for {network.CryptoCode}");
+                    foreach (var line in network.DefaultRateRules)
+                    {
+                        builder.AppendLine(line);
+                    }
+                    builder.AppendLine($"////////");
+                    builder.AppendLine();
+                }
+            }
+
+            var preferredExchange = string.IsNullOrEmpty(PreferredExchange) ? "coinaverage" : PreferredExchange;
+            builder.AppendLine($"X_X = {preferredExchange}(X_X);");
+
+            BTCPayServer.Rating.RateRules.TryParse(builder.ToString(), out var rules);
+            rules.GlobalMultiplier = GetRateMultiplier();
+            return rules;
         }
     }
 }

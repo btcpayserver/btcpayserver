@@ -14,9 +14,6 @@ namespace BTCPayServer
         public void InitBitcoin()
         {
             var nbxplorerNetwork = NBXplorerNetworkProvider.GetFromCryptoCode("BTC");
-            var coinaverage = new CoinAverageRateProviderDescription("BTC");
-            var bitpay = new BitpayRateProviderDescription();
-            var btcRate = new FallbackRateProviderDescription(new RateProviderDescription[] { coinaverage, bitpay });
             Add(new BTCPayNetwork()
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
@@ -24,7 +21,6 @@ namespace BTCPayServer
                 NBitcoinNetwork = nbxplorerNetwork.NBitcoinNetwork,
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "bitcoin",
-                DefaultRateProvider = btcRate,
                 CryptoImagePath = "imlegacy/bitcoin-symbol.svg",
                 LightningImagePath = "imlegacy/btc-lightning.svg",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),

@@ -460,7 +460,7 @@ namespace BTCPayServer.Controllers
                 StatusMessage = $"Invoice {result.Data.Id} just created!";
                 return RedirectToAction(nameof(ListInvoices));
             }
-            catch (RateUnavailableException)
+            catch (BitpayHttpException)
             {
                 ModelState.TryAddModelError(nameof(model.Currency), "Unsupported currency");
                 return View(model);

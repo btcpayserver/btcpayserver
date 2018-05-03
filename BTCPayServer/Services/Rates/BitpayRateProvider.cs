@@ -5,18 +5,13 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using NBitcoin;
+using BTCPayServer.Rating;
 
 namespace BTCPayServer.Services.Rates
 {
-    public class BitpayRateProviderDescription : RateProviderDescription
-    {
-        public IRateProvider CreateRateProvider(IServiceProvider serviceProvider)
-        {
-            return new BitpayRateProvider(new Bitpay(new Key(), new Uri("https://bitpay.com/")));
-        }
-    }
     public class BitpayRateProvider : IRateProvider
     {
+        public const string BitpayName = "bitpay";
         Bitpay _Bitpay;
         public BitpayRateProvider(Bitpay bitpay)
         {
@@ -24,21 +19,13 @@ namespace BTCPayServer.Services.Rates
                 throw new ArgumentNullException(nameof(bitpay));
             _Bitpay = bitpay;
         }
-        public async Task<decimal> GetRateAsync(string currency)
-        {
-            var rates = await _Bitpay.GetRatesAsync().ConfigureAwait(false);
-            var rate = rates.GetRate(currency);
-            if (rate == 0m)
-                throw new RateUnavailableException(currency);
-            return (decimal)rate;
-        }
 
-        public async Task<ICollection<Rate>> GetRatesAsync()
+        public async Task<ExchangeRates> GetRatesAsync()
         {
-            return (await _Bitpay.GetRatesAsync().ConfigureAwait(false))
+            return new ExchangeRates((await _Bitpay.GetRatesAsync().ConfigureAwait(false))
                 .AllRates
-                .Select(r => new Rate() { Currency = r.Code, Value = r.Value })
-                .ToList();
+                .Select(r => new ExchangeRate() { Exchange = BitpayName, CurrencyPair = new CurrencyPair("BTC", r.Code), Value = r.Value })
+                .ToList());
         }
     }
 }

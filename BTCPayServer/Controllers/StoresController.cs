@@ -276,7 +276,7 @@ namespace BTCPayServer.Controllers
 
             var storeBlob = store.GetStoreBlob();
             var vm = new StoreViewModel();
-            vm.SetExchangeRates(GetSupportedExchanges(), storeBlob.PreferredExchange.IsCoinAverage() ? "coinaverage" : storeBlob.PreferredExchange);
+            vm.SetExchangeRates(GetSupportedExchanges(), storeBlob.PreferredExchange ?? CoinAverageRateProvider.CoinAverageName);
             vm.Id = store.Id;
             vm.StoreName = store.StoreName;
             vm.StoreWebsite = store.StoreWebsite;
@@ -370,7 +370,7 @@ namespace BTCPayServer.Controllers
                 needUpdate = true;
             }
 
-            if (!blob.PreferredExchange.IsCoinAverage() && newExchange)
+            if (newExchange)
             {
 
                 if (!GetSupportedExchanges().Select(c => c.Name).Contains(blob.PreferredExchange, StringComparer.OrdinalIgnoreCase))
@@ -392,12 +392,12 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        private (String DisplayName, String Name)[] GetSupportedExchanges()
+        private CoinAverageExchange[] GetSupportedExchanges()
         {
-            return new[] { ("Coin Average", "coinaverage") }
-                            .Concat(_CoinAverage.AvailableExchanges)
-                            .OrderBy(s => s.Item1, StringComparer.OrdinalIgnoreCase)
-                            .ToArray();
+            return _CoinAverage.AvailableExchanges
+                    .Select(c => c.Value)
+                    .OrderBy(s => s.Name, StringComparer.OrdinalIgnoreCase)
+                    .ToArray();
         }
 
         private DerivationStrategy ParseDerivationStrategy(string derivationScheme, Script hint, BTCPayNetwork network)

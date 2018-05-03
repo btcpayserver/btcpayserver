@@ -11,6 +11,7 @@ namespace BTCPayServer.Views.Stores
     {
         public static string ActivePageKey => "ActivePage";
         public static string Index => "Index";
+        public static string Rates => "Rates";
         public static string Checkout => "Checkout experience";
 
         public static string Tokens => "Tokens";
@@ -20,6 +21,7 @@ namespace BTCPayServer.Views.Stores
 
         public static string CheckoutNavClass(ViewContext viewContext) => PageNavClass(viewContext, Checkout);
         public static string IndexNavClass(ViewContext viewContext) => PageNavClass(viewContext, Index);
+        public static string RatesNavClass(ViewContext viewContext) => PageNavClass(viewContext, Rates);
 
         public static string PageNavClass(ViewContext viewContext, string page)
         {

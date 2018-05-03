@@ -158,7 +158,7 @@ namespace BTCPayServer.Services.Rates
                 providers.Add(directProvider);
             if (_CoinAverageSettings.AvailableExchanges.ContainsKey(exchangeName))
             {
-                providers.Add(new CoinAverageRateProvider(btcpayNetworkProvider)
+                providers.Add(new CoinAverageRateProvider()
                 {
                     Exchange = exchangeName,
                     Authenticator = _CoinAverageSettings

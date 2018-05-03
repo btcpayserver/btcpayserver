@@ -30,6 +30,14 @@ namespace BTCPayServer.Services.Rates
         }
         public string Name { get; set; }
         public string Display { get; set; }
+        public string Url
+        {
+            get
+            {
+                return Name == CoinAverageRateProvider.CoinAverageName ? $"https://apiv2.bitcoinaverage.com/indices/global/ticker/short"
+                                     : $"https://apiv2.bitcoinaverage.com/exchanges/{Name}";
+            }
+        }
     }
     public class CoinAverageExchanges : Dictionary<string, CoinAverageExchange>
     {

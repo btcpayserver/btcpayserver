@@ -55,13 +55,7 @@ namespace BTCPayServer.Services.Rates
         BTCPayNetworkProvider _NetworkProvider;
         public CoinAverageRateProvider()
         {
-
-        }
-        public CoinAverageRateProvider(BTCPayNetworkProvider networkProvider)
-        {
-            if (networkProvider == null)
-                throw new ArgumentNullException(nameof(networkProvider));
-            _NetworkProvider = networkProvider;
+            _NetworkProvider = new BTCPayNetworkProvider(NBitcoin.NetworkType.Mainnet);
         }
         static HttpClient _Client = new HttpClient();
 

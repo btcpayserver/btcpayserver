@@ -30,6 +30,7 @@ namespace BTCPayServer.Rating
             if (str == null)
                 throw new ArgumentNullException(nameof(str));
             value = null;
+            str = str.Trim();
             var splitted = str.Split('_');
             if (splitted.Length != 2)
                 return false;

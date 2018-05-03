@@ -4,6 +4,7 @@ using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
+using BTCPayServer.Rating;
 using BTCPayServer.Security;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Rates;
@@ -20,6 +21,7 @@ using NBitcoin.DataEncoders;
 using NBXplorer.DerivationStrategy;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -33,6 +35,7 @@ namespace BTCPayServer.Controllers
     [AutoValidateAntiforgeryToken]
     public partial class StoresController : Controller
     {
+        BTCPayRateProviderFactory _RateFactory;
         public string CreatedStoreId { get; set; }
         public StoresController(
             NBXplorerDashboard dashboard,
@@ -46,12 +49,14 @@ namespace BTCPayServer.Controllers
             AccessTokenController tokenController,
             BTCPayWalletProvider walletProvider,
             BTCPayNetworkProvider networkProvider,
+            BTCPayRateProviderFactory rateFactory,
             ExplorerClientProvider explorerProvider,
             IFeeProviderFactory feeRateProvider,
             LanguageService langService,
             IHostingEnvironment env,
             CoinAverageSettings coinAverage)
         {
+            _RateFactory = rateFactory;
             _Dashboard = dashboard;
             _Repo = repo;
             _TokenRepository = tokenRepo;
@@ -192,6 +197,143 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
+        [Route("{storeId}/rates")]
+        public IActionResult Rates()
+        {
+            var storeBlob = StoreData.GetStoreBlob();
+            var vm = new RatesViewModel();
+            vm.SetExchangeRates(GetSupportedExchanges(), storeBlob.PreferredExchange ?? CoinAverageRateProvider.CoinAverageName);
+            vm.RateMultiplier = (double)storeBlob.GetRateMultiplier();
+            vm.Script = storeBlob.GetRateRules(_NetworkProvider).ToString();
+            vm.DefaultScript = storeBlob.GetDefaultRateRules(_NetworkProvider).ToString();
+            vm.AvailableExchanges = GetSupportedExchanges();
+            vm.ShowScripting = storeBlob.RateScripting;
+            return View(vm);
+        }
+
+        [HttpPost]
+        [Route("{storeId}/rates")]
+        public async Task<IActionResult> Rates(RatesViewModel model, string command = null)
+        {
+            model.SetExchangeRates(GetSupportedExchanges(), model.PreferredExchange);
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+            if (model.PreferredExchange != null)
+                model.PreferredExchange = model.PreferredExchange.Trim().ToLowerInvariant();
+
+            var blob = StoreData.GetStoreBlob();
+            model.DefaultScript = blob.GetDefaultRateRules(_NetworkProvider).ToString();
+            model.AvailableExchanges = GetSupportedExchanges();
+
+            blob.PreferredExchange = model.PreferredExchange;
+            blob.SetRateMultiplier(model.RateMultiplier);
+
+            if (!model.ShowScripting)
+            {
+                if (!GetSupportedExchanges().Select(c => c.Name).Contains(blob.PreferredExchange, StringComparer.OrdinalIgnoreCase))
+                {
+                    ModelState.AddModelError(nameof(model.PreferredExchange), $"Unsupported exchange ({model.RateSource})");
+                    return View(model);
+                }
+            }
+            RateRules rules = null;
+            if (model.ShowScripting)
+            {
+                if (!RateRules.TryParse(model.Script, out rules, out var errors))
+                {
+                    errors = errors ?? new List<RateRulesErrors>();
+                    var errorString = String.Join(", ", errors.ToArray());
+                    ModelState.AddModelError(nameof(model.Script), $"Parsing error ({errorString})");
+                    return View(model);
+                }
+                else
+                {
+                    blob.RateScript = rules.ToString();
+                }
+            }
+            rules = blob.GetRateRules(_NetworkProvider);
+
+            if (command == "Test")
+            {
+                if (string.IsNullOrWhiteSpace(model.ScriptTest))
+                {
+                    ModelState.AddModelError(nameof(model.ScriptTest), "Fill out currency pair to test for (like BTC_USD,BTC_CAD)");
+                    return View(model);
+                }
+                var splitted = model.ScriptTest.Split(',', StringSplitOptions.RemoveEmptyEntries);
+
+                var pairs = new List<CurrencyPair>();
+                foreach (var pair in splitted)
+                {
+                    if (!CurrencyPair.TryParse(pair, out var currencyPair))
+                    {
+                        ModelState.AddModelError(nameof(model.ScriptTest), $"Invalid currency pair '{pair}' (it should be formatted like BTC_USD,BTC_CAD)");
+                        return View(model);
+                    }
+                    pairs.Add(currencyPair);
+                }
+
+                var fetchs = _RateFactory.FetchRates(pairs.ToHashSet(), rules);
+                var testResults = new List<RatesViewModel.TestResultViewModel>();
+                foreach (var fetch in fetchs)
+                {
+                    var testResult = await (fetch.Value);
+                    testResults.Add(new RatesViewModel.TestResultViewModel()
+                    {
+                        CurrencyPair = fetch.Key.ToString(),
+                        Error = testResult.Errors.Count != 0,
+                        Rule = testResult.Errors.Count == 0 ? testResult.Rule + " = " + testResult.Value.Value.ToString(CultureInfo.InvariantCulture) 
+                                                            : testResult.EvaluatedRule
+                    });
+                }
+                model.TestRateRules = testResults;
+                return View(model);
+            }
+            else // command == Save
+            {
+                if (StoreData.SetStoreBlob(blob))
+                {
+                    await _Repo.UpdateStore(StoreData);
+                    StatusMessage = "Rate settings updated";
+                }
+                return RedirectToAction(nameof(Rates), new
+                {
+                    storeId = StoreData.Id
+                });
+            }
+        }
+
+        [HttpGet]
+        [Route("{storeId}/rates/confirm")]
+        public IActionResult ShowRateRules(bool scripting)
+        {
+            return View("Confirm", new ConfirmModel()
+            {
+                Action = nameof(ShowRateRulesPost),
+                Title = "Rate rule scripting",
+                Description = scripting ?
+                                "This action will mofify your current rate sources. Are you sure to turn on rate rules scripting? (Advanced users)"
+                                : "This action will delete your rate script. Are you sure to turn off rate rules scripting?",
+                ButtonClass = "btn-primary"
+            });
+        }
+
+        [HttpPost]
+        [Route("{storeId}/rates/confirm")]
+        public async Task<IActionResult> ShowRateRulesPost(bool scripting)
+        {
+            var blob = StoreData.GetStoreBlob();
+            blob.RateScripting = scripting;
+            blob.RateScript = blob.GetDefaultRateRules(_NetworkProvider).ToString();
+            StoreData.SetStoreBlob(blob);
+            await _Repo.UpdateStore(StoreData);
+            StatusMessage = "Rate rules scripting activated";
+            return RedirectToAction(nameof(Rates), new { storeId = StoreData.Id });
+        }
+
+        [HttpGet]
         [Route("{storeId}/checkout")]
         public IActionResult CheckoutExperience()
         {
@@ -268,7 +410,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("{storeId}")]
-        public IActionResult UpdateStore(string storeId)
+        public IActionResult UpdateStore()
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
@@ -276,7 +418,6 @@ namespace BTCPayServer.Controllers
 
             var storeBlob = store.GetStoreBlob();
             var vm = new StoreViewModel();
-            vm.SetExchangeRates(GetSupportedExchanges(), storeBlob.PreferredExchange ?? CoinAverageRateProvider.CoinAverageName);
             vm.Id = store.Id;
             vm.StoreName = store.StoreName;
             vm.StoreWebsite = store.StoreWebsite;
@@ -285,7 +426,6 @@ namespace BTCPayServer.Controllers
             AddPaymentMethods(store, vm);
             vm.MonitoringExpiration = storeBlob.MonitoringExpiration;
             vm.InvoiceExpiration = storeBlob.InvoiceExpiration;
-            vm.RateMultiplier = (double)storeBlob.GetRateMultiplier();
             vm.LightningDescriptionTemplate = storeBlob.LightningDescriptionTemplate;
             return View(vm);
         }
@@ -328,13 +468,6 @@ namespace BTCPayServer.Controllers
         [Route("{storeId}")]
         public async Task<IActionResult> UpdateStore(StoreViewModel model)
         {
-            model.SetExchangeRates(GetSupportedExchanges(), model.PreferredExchange);
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-            if (model.PreferredExchange != null)
-                model.PreferredExchange = model.PreferredExchange.Trim().ToLowerInvariant();
             AddPaymentMethods(StoreData, model);
 
             bool needUpdate = false;
@@ -360,24 +493,9 @@ namespace BTCPayServer.Controllers
             blob.InvoiceExpiration = model.InvoiceExpiration;
             blob.LightningDescriptionTemplate = model.LightningDescriptionTemplate ?? string.Empty;
 
-            bool newExchange = blob.PreferredExchange != model.PreferredExchange;
-            blob.PreferredExchange = model.PreferredExchange;
-
-            blob.SetRateMultiplier(model.RateMultiplier);
-
             if (StoreData.SetStoreBlob(blob))
             {
                 needUpdate = true;
-            }
-
-            if (newExchange)
-            {
-
-                if (!GetSupportedExchanges().Select(c => c.Name).Contains(blob.PreferredExchange, StringComparer.OrdinalIgnoreCase))
-                {
-                    ModelState.AddModelError(nameof(model.PreferredExchange), $"Unsupported exchange ({model.RateSource})");
-                    return View(model);
-                }
             }
 
             if (needUpdate)

@@ -66,9 +66,13 @@
             </div>
         </div>
         <div class="single-item-order__right">
-            <div class="single-item-order__right__btc-price" id="buyerTotalBtcAmount">
+            <div class="single-item-order__right__btc-price" v-if="srvModel.status === 'paid'">
+                <span>{{ srvModel.btcPaid }} {{ srvModel.cryptoCode }}</span>
+            </div>
+            <div class="single-item-order__right__btc-price" v-else>
                 <span>{{ srvModel.btcDue }} {{ srvModel.cryptoCode }}</span>
             </div>
+
             <div class="single-item-order__right__ex-rate">
                 1 {{ srvModel.cryptoCode }} = {{ srvModel.rate }}
             </div>

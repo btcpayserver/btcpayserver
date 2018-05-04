@@ -7,6 +7,7 @@ namespace BTCPayServer.Rating
 {
     public class CurrencyPair
     {
+        static readonly BTCPayNetworkProvider _NetworkProvider = new BTCPayNetworkProvider(NBitcoin.NetworkType.Mainnet);
         public CurrencyPair(string left, string right)
         {
             if (right == null)
@@ -31,11 +32,32 @@ namespace BTCPayServer.Rating
                 throw new ArgumentNullException(nameof(str));
             value = null;
             str = str.Trim();
-            var splitted = str.Split('_');
-            if (splitted.Length != 2)
+            if (str.Length > 12)
                 return false;
-            value = new CurrencyPair(splitted[0], splitted[1]);
-            return true;
+            var splitted = str.Split(new[] { '_', '-' }, StringSplitOptions.RemoveEmptyEntries);
+            if (splitted.Length == 2)
+            {
+                value = new CurrencyPair(splitted[0], splitted[1]);
+                return true;
+            }
+            else if (splitted.Length == 1)
+            {
+                var currencyPair = splitted[0];
+                if (currencyPair.Length < 6 || currencyPair.Length > 10)
+                    return false;
+                for (int i = 3; i < 5; i++)
+                {
+                    var potentialCryptoName = currencyPair.Substring(0, i);
+                    var network = _NetworkProvider.GetNetwork(potentialCryptoName);
+                    if (network != null)
+                    {
+                        value = new CurrencyPair(network.CryptoCode, currencyPair.Substring(i));
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
 

@@ -10,30 +10,25 @@ namespace BTCPayServer.Services.Mails
 {
     public class EmailSettings
     {
-        [Required]
         public string Server
         {
             get; set;
         }
 
-        [Required]
         public int? Port
         {
             get; set;
         }
 
-        [Required]
         public String Login
         {
             get; set;
         }
 
-        [Required]
         public String Password
         {
             get; set;
         }
-
         [EmailAddress]
         public string From
         {

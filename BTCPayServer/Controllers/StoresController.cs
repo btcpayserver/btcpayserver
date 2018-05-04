@@ -313,7 +313,7 @@ namespace BTCPayServer.Controllers
         {
             return View("Confirm", new ConfirmModel()
             {
-                Action = nameof(ShowRateRulesPost),
+                Action = "Continue",
                 Title = "Rate rule scripting",
                 Description = scripting ?
                                 "This action will mofify your current rate sources. Are you sure to turn on rate rules scripting? (Advanced users)"

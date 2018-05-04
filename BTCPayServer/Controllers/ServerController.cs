@@ -241,10 +241,16 @@ namespace BTCPayServer.Controllers
         {
             if (command == "Test")
             {
-                if (!ModelState.IsValid)
-                    return View(model);
                 try
                 {
+                    if(string.IsNullOrWhiteSpace(model.Settings.From)
+                       || string.IsNullOrWhiteSpace(model.TestEmail)
+                       || string.IsNullOrWhiteSpace(model.Settings.Login)
+                       || string.IsNullOrWhiteSpace(model.Settings.Server))
+                    {
+                        model.StatusMessage = "Error: Required fields missing";
+                        return View(model);
+                    }
                     var client = model.Settings.CreateSmtpClient();
                     await client.SendMailAsync(model.Settings.From, model.TestEmail, "BTCPay test", "BTCPay test");
                     model.StatusMessage = "Email sent to " + model.TestEmail + ", please, verify you received it";
@@ -255,19 +261,10 @@ namespace BTCPayServer.Controllers
                 }
                 return View(model);
             }
-            else if(command == "Save")
+            else // if(command == "Save")
             {
-                ModelState.Remove(nameof(model.TestEmail));
-                if (!ModelState.IsValid)
-                    return View(model);
                 await _SettingsRepository.UpdateSetting(model.Settings);
                 model.StatusMessage = "Email settings saved";
-                return View(model);
-            }
-            else
-            {
-                await _SettingsRepository.UpdateSetting(new EmailSettings());
-                model.StatusMessage = "Email settings cleared";
                 return View(model);
             }
         }

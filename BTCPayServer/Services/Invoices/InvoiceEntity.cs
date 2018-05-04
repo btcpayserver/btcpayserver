@@ -336,6 +336,8 @@ namespace BTCPayServer.Services.Invoices
                 Currency = ProductInformation.Currency,
                 Flags = new Flags() { Refundable = Refundable }
             };
+
+            dto.Url = ServerUrl.WithTrailingSlash() + $"invoice?id=" + Id;
             dto.CryptoInfo = new List<NBitpayClient.InvoiceCryptoInfo>();
             foreach (var info in this.GetPaymentMethods(networkProvider))
             {
@@ -358,23 +360,22 @@ namespace BTCPayServer.Services.Invoices
                 {
                     { ProductInformation.Currency, (double)cryptoInfo.Rate }
                 };
-
+                var paymentId = info.GetId();
                 var scheme = info.Network.UriScheme;
-                var cryptoSuffix = cryptoInfo.CryptoCode == "BTC" ? "" : "/" + cryptoInfo.CryptoCode;
-                cryptoInfo.Url = ServerUrl.WithTrailingSlash() + $"invoice{cryptoSuffix}?id=" + Id;
+                cryptoInfo.Url = ServerUrl.WithTrailingSlash() + $"i/{paymentId}/{Id}";
 
 
-                if (info.GetId().PaymentType == PaymentTypes.BTCLike)
+                if (paymentId.PaymentType == PaymentTypes.BTCLike)
                 {
                     cryptoInfo.PaymentUrls = new NBitpayClient.InvoicePaymentUrls()
                     {
-                        BIP72 = $"{scheme}:{cryptoInfo.Address}?amount={cryptoInfo.Due}&r={ServerUrl.WithTrailingSlash() + ($"i/{Id}{cryptoSuffix}")}",
-                        BIP72b = $"{scheme}:?r={ServerUrl.WithTrailingSlash() + ($"i/{Id}{cryptoSuffix}")}",
-                        BIP73 = ServerUrl.WithTrailingSlash() + ($"i/{Id}{cryptoSuffix}"),
+                        BIP72 = $"{scheme}:{cryptoInfo.Address}?amount={cryptoInfo.Due}&r={cryptoInfo.Url}",
+                        BIP72b = $"{scheme}:?r={cryptoInfo.Url}",
+                        BIP73 = cryptoInfo.Url,
                         BIP21 = $"{scheme}:{cryptoInfo.Address}?amount={cryptoInfo.Due}",
                     };
                 }
-                var paymentId = info.GetId();
+                
                 if (paymentId.PaymentType == PaymentTypes.LightningLike)
                 {
                     cryptoInfo.PaymentUrls = new NBitpayClient.InvoicePaymentUrls()
@@ -385,7 +386,6 @@ namespace BTCPayServer.Services.Invoices
 #pragma warning disable CS0618
                 if (info.CryptoCode == "BTC" && paymentId.PaymentType == PaymentTypes.BTCLike)
                 {
-                    dto.Url = cryptoInfo.Url;
                     dto.BTCPrice = cryptoInfo.Price;
                     dto.Rate = cryptoInfo.Rate;
                     dto.ExRates = cryptoInfo.ExRates;
@@ -403,7 +403,6 @@ namespace BTCPayServer.Services.Invoices
 
             dto.Token = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16)); //No idea what it is useful for
             dto.Guid = Guid.NewGuid().ToString();
-            dto.Url = dto.CryptoInfo[0].Url;
             dto.ExceptionStatus = ExceptionStatus == null ? new JValue(false) : new JValue(ExceptionStatus);
             return dto;
         }

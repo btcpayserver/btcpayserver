@@ -247,6 +247,7 @@ namespace BTCPayServer.Data
         {
             InvoiceExpiration = 15;
             MonitoringExpiration = 60;
+            PaymentTolerance = 0;
             RequiresRefundEmail = true;
         }
         public bool NetworkFeeDisabled
@@ -325,6 +326,10 @@ namespace BTCPayServer.Data
                 _LightningDescriptionTemplate = value;
             }
         }
+
+        [DefaultValue(0)]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+        public double PaymentTolerance { get; set; }
 
         public BTCPayServer.Rating.RateRules GetRateRules(BTCPayNetworkProvider networkProvider)
         {

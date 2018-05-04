@@ -178,7 +178,7 @@ namespace BTCPayServer.Models
         }
 
         //"exceptionStatus":false
-        //Can be `paidPartial`, `paidOver`, or false
+        //Can be `paidPartial`, `paidOver`, `paidWithinTolerance` or false
         [JsonProperty("exceptionStatus")]
         public JToken ExceptionStatus
         {

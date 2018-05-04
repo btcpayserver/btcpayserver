@@ -96,11 +96,28 @@ namespace BTCPayServer.HostedServices
                     }
                 }
 
-                if (accounting.Paid < accounting.TotalDue && invoice.GetPayments().Count != 0 && invoice.ExceptionStatus != "paidPartial")
+                if (accounting.Paid < accounting.TotalDue && invoice.GetPayments().Count != 0)
                 {
-                    invoice.ExceptionStatus = "paidPartial";
-                    context.MarkDirty();
+                    if (invoice.PaymentTolerance > 0)
+                    {
+                        var tolerantAmount = (accounting.TotalDue.Satoshi * (invoice.PaymentTolerance / 100));
+                        var minimumTotalDue = accounting.TotalDue.Satoshi - tolerantAmount;
+                        if (accounting.Paid.Satoshi >= minimumTotalDue)
+                        {
+                            context.Events.Add(new InvoiceEvent(invoice, 1003, "invoide_paidWithinTolerance"));
+                            invoice.ExceptionStatus = "paidWithinTolerance";
+                            invoice.Status = "paid";
+                        }
+                    }
+
+                    if (invoice.ExceptionStatus != "paidPartial")
+                    {
+                        invoice.ExceptionStatus = "paidPartial";
+                        context.MarkDirty();
+                    }
                 }
+
+               
             }
 
             // Just make sure RBF did not cancelled a payment

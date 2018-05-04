@@ -251,6 +251,8 @@ namespace BTCPayServer.Controllers
                 else
                 {
                     blob.RateScript = rules.ToString();
+                    ModelState.Remove(nameof(model.Script));
+                    model.Script = blob.RateScript;
                 }
             }
             rules = blob.GetRateRules(_NetworkProvider);

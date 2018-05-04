@@ -13,6 +13,7 @@ namespace BTCPayServer.Models.InvoicingModels
             public string CryptoImage { get; set; }
             public string Link { get; set; }
         }
+        public string HtmlTitle { get; set; }
         public string CustomCSSLink { get; set; }
         public string CustomLogoLink { get; set; }
         public string DefaultLang { get; set; }

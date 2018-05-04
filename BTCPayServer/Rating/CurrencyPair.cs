@@ -90,5 +90,10 @@ namespace BTCPayServer.Rating
         {
             return $"{Left}_{Right}";
         }
+
+        public CurrencyPair Inverse()
+        {
+            return new CurrencyPair(Right, Left);
+        }
     }
 }

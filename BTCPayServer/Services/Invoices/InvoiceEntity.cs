@@ -524,6 +524,22 @@ namespace BTCPayServer.Services.Invoices
         /// Total amount of network fee to pay to the invoice
         /// </summary>
         public Money NetworkFee { get; set; }
+
+        public bool IsPaid(double tolerance, out bool paidOver)
+        {
+            paidOver = false;
+            if (Paid < TotalDue)
+            {
+                var tolerantAmount = (TotalDue.Satoshi * (tolerance == 0 ? 1 : (tolerance / 100)));
+                var minimumTotalDue = TotalDue.Satoshi - tolerantAmount;
+                return Paid.Satoshi >= minimumTotalDue;
+            }else if (Paid > TotalDue)
+            {
+                paidOver = true;
+            }
+
+            return true;
+        }
     }
 
     public class PaymentMethod

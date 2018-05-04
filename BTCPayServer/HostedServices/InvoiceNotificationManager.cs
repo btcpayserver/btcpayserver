@@ -312,7 +312,6 @@ namespace BTCPayServer.HostedServices
                 {
                     if (e.Name == "invoice_expired" ||
                        e.Name == "invoice_paidInFull" ||
-                       e.Name == "invoice_paidWithinTolerance" ||
                        e.Name == "invoice_failedToConfirm" ||
                        e.Name == "invoice_markedInvalid" ||
                        e.Name == "invoice_failedToConfirm" ||

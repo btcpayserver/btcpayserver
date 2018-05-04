@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.0</TargetFramework>
-		<Version>1.0.1.96</Version>
+		<Version>1.0.2.2</Version>
     <NoWarn>NU1701,CA1816,CA1308,CA1810,CA2208</NoWarn>
   </PropertyGroup>
   <ItemGroup>
@@ -31,7 +31,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="BuildBundlerMinifier" Version="2.6.375" />
-    <PackageReference Include="DigitalRuby.ExchangeSharp" Version="0.4.0" />
+    <PackageReference Include="DigitalRuby.ExchangeSharp" Version="0.4.1" />
     <PackageReference Include="Hangfire" Version="1.6.19" />
     <PackageReference Include="Hangfire.MemoryStorage" Version="1.5.2" />
     <PackageReference Include="Hangfire.PostgreSql" Version="1.4.8.1" />
@@ -40,7 +40,7 @@
     <PackageReference Include="Meziantou.AspNetCore.BundleTagHelpers" Version="1.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.2" />
     <PackageReference Include="Microsoft.NetCore.Analyzers" Version="2.6.0" />
-    <PackageReference Include="NBitcoin" Version="4.1.1.3" />
+    <PackageReference Include="NBitcoin" Version="4.1.1.4" />
     <PackageReference Include="NBitpayClient" Version="1.0.0.18" />	  
     <PackageReference Include="DBreeze" Version="1.87.0" />
     <PackageReference Include="NBXplorer.Client" Version="1.0.2.3" />

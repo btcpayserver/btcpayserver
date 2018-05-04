@@ -44,7 +44,6 @@ namespace BTCPayServer
         public string CryptoCode { get; internal set; }
         public string BlockExplorerLink { get; internal set; }
         public string UriScheme { get; internal set; }
-        public RateProviderDescription DefaultRateProvider { get; set; }
 
         [Obsolete("Should not be needed")]
         public bool IsBTC
@@ -62,6 +61,7 @@ namespace BTCPayServer
         public BTCPayDefaultSettings DefaultSettings { get; set; }
         public KeyPath CoinType { get; internal set; }
         public int MaxTrackedConfirmation { get; internal set; } = 6;
+        public string[] DefaultRateRules { get; internal set; } = Array.Empty<string>();
 
         public override string ToString()
         {

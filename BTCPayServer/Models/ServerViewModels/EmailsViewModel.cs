@@ -18,8 +18,7 @@ namespace BTCPayServer.Models.ServerViewModels
         {
             get; set;
         }
-
-        [Required]
+        
         [EmailAddress]
         public string TestEmail
         {

@@ -53,6 +53,7 @@
             <div class="form-group">
                 <label asp-for="TestEmail"></label>
                 <input asp-for="TestEmail" class="form-control" />
+                <span asp-validation-for="TestEmail" class="text-danger"></span>
             </div>
 
             <button type="submit" class="btn btn-primary" name="command" value="Save">Save</button>

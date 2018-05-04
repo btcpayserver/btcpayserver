@@ -48,6 +48,10 @@ namespace BTCPayServer.Models.StoreViewModels
         [Url]
         public string CustomLogo { get; set; }
 
+        [Display(Name = "Custom HTML title to display on Checkout page")]
+        public string HtmlTitle { get; set; }
+
+
         public void SetCryptoCurrencies(ExplorerClientProvider explorerProvider, string defaultCrypto)
         {
             var choices = explorerProvider.GetAll().Select(o => new Format() { Name = o.Item1.CryptoCode, Value = o.Item1.CryptoCode }).ToArray();

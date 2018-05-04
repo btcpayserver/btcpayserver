@@ -75,6 +75,7 @@ namespace BTCPayServer.Controllers
                 cryptoPayment.PaymentMethod = ToString(paymentMethodId);
                 cryptoPayment.Due = accounting.Due.ToString() + $" {paymentMethodId.CryptoCode}";
                 cryptoPayment.Paid = accounting.CryptoPaid.ToString() + $" {paymentMethodId.CryptoCode}";
+                cryptoPayment.Overpaid = (accounting.DueUncapped > Money.Zero ? Money.Zero : -accounting.DueUncapped).ToString() + $" {paymentMethodId.CryptoCode}";
 
                 var onchainMethod = data.GetPaymentMethodDetails() as Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod;
                 if (onchainMethod != null)
@@ -227,6 +228,7 @@ namespace BTCPayServer.Controllers
                 OrderId = invoice.OrderId,
                 InvoiceId = invoice.Id,
                 DefaultLang = storeBlob.DefaultLang ?? "en-US",
+                HtmlTitle = storeBlob.HtmlTitle ?? "BTCPay Invoice",
                 CustomCSSLink = storeBlob.CustomCSS?.AbsoluteUri,
                 CustomLogoLink = storeBlob.CustomLogo?.AbsoluteUri,
                 BtcAddress = paymentMethodDetails.GetPaymentDestination(),
@@ -460,9 +462,9 @@ namespace BTCPayServer.Controllers
                 StatusMessage = $"Invoice {result.Data.Id} just created!";
                 return RedirectToAction(nameof(ListInvoices));
             }
-            catch (RateUnavailableException)
+            catch (BitpayHttpException ex)
             {
-                ModelState.TryAddModelError(nameof(model.Currency), "Unsupported currency");
+                ModelState.TryAddModelError(nameof(model.Currency), $"Error: {ex.Message}");
                 return View(model);
             }
         }

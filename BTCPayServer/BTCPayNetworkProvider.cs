@@ -87,7 +87,11 @@ namespace BTCPayServer
 
         public BTCPayNetwork GetNetwork(string cryptoCode)
         {
-            _Networks.TryGetValue(cryptoCode.ToUpperInvariant(), out BTCPayNetwork network);
+            if(!_Networks.TryGetValue(cryptoCode.ToUpperInvariant(), out BTCPayNetwork network))
+            {
+                if (cryptoCode == "XBT")
+                    return GetNetwork("BTC");
+            }
             return network;
         }
     }

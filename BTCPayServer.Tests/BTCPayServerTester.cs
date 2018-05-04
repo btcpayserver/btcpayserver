@@ -2,6 +2,7 @@
 using BTCPayServer.Hosting;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Rating;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
@@ -106,15 +107,6 @@ namespace BTCPayServer.Tests
                     .UseConfiguration(conf)
                     .ConfigureServices(s =>
                     {
-                        if (MockRates)
-                        {
-                            var mockRates = new MockRateProviderFactory();
-                            var btc = new MockRateProvider("BTC", new Rate("USD", 5000m), new Rate("CAD", 4500m));
-                            var ltc = new MockRateProvider("LTC", new Rate("USD", 500m));
-                            mockRates.AddMock(btc);
-                            mockRates.AddMock(ltc);
-                            s.AddSingleton<IRateProviderFactory>(mockRates);
-                        }
                         s.AddLogging(l =>
                         {
                             l.SetMinimumLevel(LogLevel.Information)
@@ -128,6 +120,30 @@ namespace BTCPayServer.Tests
                     .Build();
             _Host.Start();
             InvoiceRepository = (InvoiceRepository)_Host.Services.GetService(typeof(InvoiceRepository));
+
+            var rateProvider = (BTCPayRateProviderFactory)_Host.Services.GetService(typeof(BTCPayRateProviderFactory));
+            rateProvider.DirectProviders.Clear();
+
+            var coinAverageMock = new MockRateProvider();
+            coinAverageMock.ExchangeRates.Add(new Rating.ExchangeRate()
+            {
+                Exchange = "coinaverage",
+                CurrencyPair = CurrencyPair.Parse("BTC_USD"),
+                Value = 5000m
+            });
+            coinAverageMock.ExchangeRates.Add(new Rating.ExchangeRate()
+            {
+                Exchange = "coinaverage",
+                CurrencyPair = CurrencyPair.Parse("BTC_CAD"),
+                Value = 4500m
+            });
+            coinAverageMock.ExchangeRates.Add(new Rating.ExchangeRate()
+            {
+                Exchange = "coinaverage",
+                CurrencyPair = CurrencyPair.Parse("LTC_USD"),
+                Value = 500m
+            });
+            rateProvider.DirectProviders.Add("coinaverage", coinAverageMock);
         }
 
         public string HostName

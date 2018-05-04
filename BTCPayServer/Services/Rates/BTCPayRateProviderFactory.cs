@@ -3,13 +3,36 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Rating;
+using ExchangeSharp;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 
 namespace BTCPayServer.Services.Rates
 {
-    public class BTCPayRateProviderFactory : IRateProviderFactory
+    public class ExchangeException
     {
+        public Exception Exception { get; set; }
+        public string ExchangeName { get; set; }
+    }
+    public class RateResult
+    {
+        public List<ExchangeException> ExchangeExceptions { get; set; } = new List<ExchangeException>();
+        public string Rule { get; set; }
+        public string EvaluatedRule { get; set; }
+        public HashSet<RateRulesErrors> Errors { get; set; }
+        public decimal? Value { get; set; }
+        public bool Cached { get; internal set; }
+    }
+
+    public class BTCPayRateProviderFactory
+    {
+        class QueryRateResult
+        {
+            public bool CachedResult { get; set; }
+            public List<ExchangeException> Exceptions { get; set; }
+            public ExchangeRates ExchangeRates { get; set; }
+        }
         IMemoryCache _Cache;
         private IOptions<MemoryCacheOptions> _CacheOptions;
 
@@ -20,18 +43,57 @@ namespace BTCPayServer.Services.Rates
                 return _Cache;
             }
         }
-        public BTCPayRateProviderFactory(IOptions<MemoryCacheOptions> cacheOptions, IServiceProvider serviceProvider)
+        CoinAverageSettings _CoinAverageSettings;
+        public BTCPayRateProviderFactory(IOptions<MemoryCacheOptions> cacheOptions,
+                                         BTCPayNetworkProvider btcpayNetworkProvider,
+                                         CoinAverageSettings coinAverageSettings)
         {
             if (cacheOptions == null)
                 throw new ArgumentNullException(nameof(cacheOptions));
+            _CoinAverageSettings = coinAverageSettings;
             _Cache = new MemoryCache(cacheOptions);
             _CacheOptions = cacheOptions;
             // We use 15 min because of limits with free version of bitcoinaverage
             CacheSpan = TimeSpan.FromMinutes(15.0);
-            this.serviceProvider = serviceProvider;
+            this.btcpayNetworkProvider = btcpayNetworkProvider;
+            InitExchanges();
         }
 
-        IServiceProvider serviceProvider;
+        public bool UseCoinAverageAsFallback { get; set; } = true;
+
+        private void InitExchanges()
+        {
+            // We need to be careful to only add exchanges which OnGetTickers implementation make only 1 request
+            DirectProviders.Add("binance", new ExchangeSharpRateProvider("binance", new ExchangeBinanceAPI(), true));
+            DirectProviders.Add("bittrex", new ExchangeSharpRateProvider("bittrex", new ExchangeBittrexAPI(), true));
+            DirectProviders.Add("poloniex", new ExchangeSharpRateProvider("poloniex", new ExchangePoloniexAPI(), false));
+            DirectProviders.Add("hitbtc", new ExchangeSharpRateProvider("hitbtc", new ExchangeHitbtcAPI(), false));
+
+            // Handmade providers
+            DirectProviders.Add("bitpay", new BitpayRateProvider(new NBitpayClient.Bitpay(new NBitcoin.Key(), new Uri("https://bitpay.com/"))));
+            DirectProviders.Add(QuadrigacxRateProvider.QuadrigacxName, new QuadrigacxRateProvider());
+
+            // Those exchanges make multiple requests when calling GetTickers so we remove them
+            //DirectProviders.Add("kraken", new ExchangeSharpRateProvider("kraken", new ExchangeKrakenAPI(), true));
+            //DirectProviders.Add("gdax", new ExchangeSharpRateProvider("gdax", new ExchangeGdaxAPI()));
+            //DirectProviders.Add("gemini", new ExchangeSharpRateProvider("gemini", new ExchangeGeminiAPI()));
+            //DirectProviders.Add("bitfinex", new ExchangeSharpRateProvider("bitfinex", new ExchangeBitfinexAPI()));
+            //DirectProviders.Add("okex", new ExchangeSharpRateProvider("okex", new ExchangeOkexAPI()));
+            //DirectProviders.Add("bitstamp", new ExchangeSharpRateProvider("bitstamp", new ExchangeBitstampAPI()));
+        }
+
+
+        private readonly Dictionary<string, IRateProvider> _DirectProviders = new Dictionary<string, IRateProvider>();
+        public Dictionary<string, IRateProvider> DirectProviders
+        {
+            get
+            {
+                return _DirectProviders;
+            }
+        }
+
+
+        BTCPayNetworkProvider btcpayNetworkProvider;
         TimeSpan _CacheSpan;
         public TimeSpan CacheSpan
         {
@@ -51,45 +113,87 @@ namespace BTCPayServer.Services.Rates
             _Cache = new MemoryCache(_CacheOptions);
         }
 
-        public IRateProvider GetRateProvider(BTCPayNetwork network, RateRules rules)
+        public async Task<RateResult> FetchRate(CurrencyPair pair, RateRules rules)
         {
-            rules = rules ?? new RateRules();
-            var rateProvider = GetDefaultRateProvider(network);
-            if (!rules.PreferredExchange.IsCoinAverage())
-            {
-                rateProvider = CreateExchangeRateProvider(network, rules.PreferredExchange);
-            }
-            rateProvider = CreateCachedRateProvider(network, rateProvider, rules.PreferredExchange);
-            return new TweakRateProvider(network, rateProvider, rules);
+            return await FetchRates(new HashSet<CurrencyPair>(new[] { pair }), rules).First().Value;
         }
 
-        private IRateProvider CreateExchangeRateProvider(BTCPayNetwork network, string exchange)
+        public Dictionary<CurrencyPair, Task<RateResult>> FetchRates(HashSet<CurrencyPair> pairs, RateRules rules)
+        {
+            if (rules == null)
+                throw new ArgumentNullException(nameof(rules));
+
+            var fetchingRates = new Dictionary<CurrencyPair, Task<RateResult>>();
+            var fetchingExchanges = new Dictionary<string, Task<QueryRateResult>>();
+            var consolidatedRates = new ExchangeRates();
+
+            foreach (var i in pairs.Select(p => (Pair: p, RateRule: rules.GetRuleFor(p))))
+            {
+                var dependentQueries = new List<Task<QueryRateResult>>();
+                foreach (var requiredExchange in i.RateRule.ExchangeRates)
+                {
+                    if (!fetchingExchanges.TryGetValue(requiredExchange.Exchange, out var fetching))
+                    {
+                        fetching = QueryRates(requiredExchange.Exchange);
+                        fetchingExchanges.Add(requiredExchange.Exchange, fetching);
+                    }
+                    dependentQueries.Add(fetching);
+                }
+                fetchingRates.Add(i.Pair, GetRuleValue(dependentQueries, i.RateRule));
+            }
+            return fetchingRates;
+        }
+
+        private async Task<RateResult> GetRuleValue(List<Task<QueryRateResult>> dependentQueries, RateRule rateRule)
+        {
+            var result = new RateResult();
+            result.Cached = true;
+            foreach (var queryAsync in dependentQueries)
+            {
+                var query = await queryAsync;
+                if (!query.CachedResult)
+                    result.Cached = false;
+                result.ExchangeExceptions.AddRange(query.Exceptions);
+                foreach (var rule in query.ExchangeRates)
+                {
+                    rateRule.ExchangeRates.Add(rule);
+                }
+            }
+            rateRule.Reevaluate();
+            result.Value = rateRule.Value;
+            result.Errors = rateRule.Errors;
+            result.EvaluatedRule = rateRule.ToString(true);
+            result.Rule = rateRule.ToString(false);
+            return result;
+        }
+
+
+        private async Task<QueryRateResult> QueryRates(string exchangeName)
         {
             List<IRateProvider> providers = new List<IRateProvider>();
-
-            if(exchange == "quadrigacx")
+            if (DirectProviders.TryGetValue(exchangeName, out var directProvider))
+                providers.Add(directProvider);
+            if (_CoinAverageSettings.AvailableExchanges.ContainsKey(exchangeName))
             {
-                providers.Add(new QuadrigacxRateProvider(network.CryptoCode));
+                providers.Add(new CoinAverageRateProvider()
+                {
+                    Exchange = exchangeName,
+                    Authenticator = _CoinAverageSettings
+                });
             }
-
-            var coinAverage = new CoinAverageRateProviderDescription(network.CryptoCode).CreateRateProvider(serviceProvider);
-            coinAverage.Exchange = exchange;
-            providers.Add(coinAverage);
-            return new FallbackRateProvider(providers.ToArray());
-        }
-
-        private CachedRateProvider CreateCachedRateProvider(BTCPayNetwork network, IRateProvider rateProvider, string additionalScope)
-        {
-            return new CachedRateProvider(network.CryptoCode, rateProvider, _Cache) { CacheSpan = CacheSpan, AdditionalScope = additionalScope };
-        }
-
-        private IRateProvider GetDefaultRateProvider(BTCPayNetwork network)
-        {
-            if(network.DefaultRateProvider == null)
+            var fallback = new FallbackRateProvider(providers.ToArray());
+            var cached = new CachedRateProvider(exchangeName, fallback, _Cache)
             {
-                throw new RateUnavailableException(network.CryptoCode);
-            }
-            return network.DefaultRateProvider.CreateRateProvider(serviceProvider);
+                CacheSpan = CacheSpan
+            };
+            var value = await cached.GetRatesAsync();
+            return new QueryRateResult()
+            {
+                CachedResult = !fallback.Used,
+                ExchangeRates = value,
+                Exceptions = fallback.Exceptions
+                .Select(c => new ExchangeException() { Exception = c, ExchangeName = exchangeName }).ToList()
+            };
         }
     }
 }

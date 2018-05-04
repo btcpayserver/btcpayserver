@@ -104,12 +104,6 @@ namespace BTCPayServer
             return activeProvider != "Microsoft.EntityFrameworkCore.Sqlite";
         }
 
-        public static bool IsCoinAverage(this string exchangeName)
-        {
-            string[] coinAverages = new[] { "coinaverage", "bitcoinaverage" };
-            return String.IsNullOrWhiteSpace(exchangeName) ? true : coinAverages.Contains(exchangeName, StringComparer.OrdinalIgnoreCase) ? true : false;
-        }
-
         public static async Task<Dictionary<uint256, TransactionResult>> GetTransactions(this BTCPayWallet client, uint256[] hashes, CancellationToken cts = default(CancellationToken))
         {
             hashes = hashes.Distinct().ToArray();
@@ -167,6 +161,13 @@ namespace BTCPayServer
             NBitcoin.Extensions.TryAdd(ctx.Items, "IsBitpayAPI", value);
         }
 
+        public static void AddRange<T>(this HashSet<T> hashSet, IEnumerable<T> items)
+        {
+            foreach(var item in items)
+            {
+                hashSet.Add(item);
+            }
+        }
         public static bool GetIsBitpayAPI(this HttpContext ctx)
         {
             return ctx.Items.TryGetValue("IsBitpayAPI", out object obj) &&
@@ -199,13 +200,5 @@ namespace BTCPayServer
             var res = JsonConvert.SerializeObject(o, Formatting.None, jsonSettings);
             return res;
         }
-
-        public static HtmlString ToJSVariableModel(this object o, string variableName)
-        {
-            var encodedJson = JavaScriptEncoder.Default.Encode(o.ToJson());
-            return new HtmlString($"var {variableName} = JSON.parse('" + encodedJson + "');");
-        }
-
-
     }
 }

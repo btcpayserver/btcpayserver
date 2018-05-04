@@ -336,7 +336,6 @@ namespace BTCPayServer.Services.Invoices
                 Currency = ProductInformation.Currency,
                 Flags = new Flags() { Refundable = Refundable }
             };
-
             dto.CryptoInfo = new List<NBitpayClient.InvoiceCryptoInfo>();
             foreach (var info in this.GetPaymentMethods(networkProvider))
             {
@@ -404,7 +403,7 @@ namespace BTCPayServer.Services.Invoices
 
             dto.Token = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16)); //No idea what it is useful for
             dto.Guid = Guid.NewGuid().ToString();
-
+            dto.Url = dto.CryptoInfo[0].Url;
             dto.ExceptionStatus = ExceptionStatus == null ? new JValue(false) : new JValue(ExceptionStatus);
             return dto;
         }
@@ -745,7 +744,7 @@ namespace BTCPayServer.Services.Invoices
                 paymentData.Outpoint = Outpoint;
                 return paymentData;
             }
-            if(GetPaymentMethodId().PaymentType== PaymentTypes.LightningLike)
+            if (GetPaymentMethodId().PaymentType == PaymentTypes.LightningLike)
             {
                 return JsonConvert.DeserializeObject<Payments.Lightning.LightningLikePaymentData>(CryptoPaymentData);
             }

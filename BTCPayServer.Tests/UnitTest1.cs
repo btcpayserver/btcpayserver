@@ -36,6 +36,7 @@ using BTCPayServer.Services.Stores;
 using System.Net.Http;
 using System.Text;
 using BTCPayServer.Rating;
+using ExchangeSharp;
 
 namespace BTCPayServer.Tests
 {
@@ -1292,10 +1293,36 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        public void CanQueryDirectProviders()
+        {
+            var provider = new BTCPayNetworkProvider(NetworkType.Mainnet);
+            var factory = CreateBTCPayRateFactory(provider);
+            
+            foreach (var result in factory
+                .DirectProviders
+                .Select(p => (ExpectedName: p.Key, ResultAsync: p.Value.GetRatesAsync()))
+                .ToList())
+            {
+                var exchangeRates = result.ResultAsync.Result;
+                Assert.NotNull(exchangeRates);
+                Assert.NotEmpty(exchangeRates);
+                Assert.NotEmpty(exchangeRates.ByExchange[result.ExpectedName]);
+
+                // This check if the currency pair is using right currency pair
+                Assert.Contains(exchangeRates.ByExchange[result.ExpectedName], 
+                        e => ( e.CurrencyPair == new CurrencyPair("BTC", "USD") ||
+                               e.CurrencyPair == new CurrencyPair("BTC", "EUR") ||
+                               e.CurrencyPair == new CurrencyPair("BTC", "USDT"))
+                               && e.Value > 1.0m // 1BTC will always be more than 1USD
+                               );
+            }
+        }
+
+        [Fact]
         public void CanGetRateCryptoCurrenciesByDefault()
         {
             var provider = new BTCPayNetworkProvider(NetworkType.Mainnet);
-            var factory = new BTCPayRateProviderFactory(new MemoryCacheOptions() { ExpirationScanFrequency = TimeSpan.FromSeconds(1.0) }, provider, new CoinAverageSettings());
+            var factory = CreateBTCPayRateFactory(provider);
 
             var pairs =
                     provider.GetAll()
@@ -1304,11 +1331,16 @@ namespace BTCPayServer.Tests
 
             var rules = new StoreBlob().GetDefaultRateRules(provider);
             var result = factory.FetchRates(pairs, rules);
-            foreach(var value in result)
+            foreach (var value in result)
             {
                 var rateResult = value.Value.GetAwaiter().GetResult();
                 Assert.NotNull(rateResult.Value);
             }
+        }
+
+        private static BTCPayRateProviderFactory CreateBTCPayRateFactory(BTCPayNetworkProvider provider)
+        {
+            return new BTCPayRateProviderFactory(new MemoryCacheOptions() { ExpirationScanFrequency = TimeSpan.FromSeconds(1.0) }, provider, new CoinAverageSettings());
         }
 
         [Fact]
@@ -1323,7 +1355,7 @@ namespace BTCPayServer.Tests
 
             RateRules.TryParse("X_X = coinaverage(X_X);", out var rateRules);
 
-            var factory = new BTCPayRateProviderFactory(new MemoryCacheOptions() { ExpirationScanFrequency = TimeSpan.FromSeconds(1.0) }, provider, new CoinAverageSettings());
+            var factory = CreateBTCPayRateFactory(provider);
             factory.DirectProviders.Clear();
             factory.CacheSpan = TimeSpan.FromSeconds(10);
 

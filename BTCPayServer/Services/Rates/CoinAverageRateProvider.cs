@@ -52,10 +52,9 @@ namespace BTCPayServer.Services.Rates
     public class CoinAverageRateProvider : IRateProvider
     {
         public const string CoinAverageName = "coinaverage";
-        BTCPayNetworkProvider _NetworkProvider;
         public CoinAverageRateProvider()
         {
-            _NetworkProvider = new BTCPayNetworkProvider(NBitcoin.NetworkType.Mainnet);
+            
         }
         static HttpClient _Client = new HttpClient();
 
@@ -112,16 +111,11 @@ namespace BTCPayServer.Services.Rates
                     if (!TryToDecimal(prop, out decimal value))
                         continue;
                     exchangeRate.Value = value;
-                    for (int i = 3; i < 5; i++)
+                    if(CurrencyPair.TryParse(prop.Name, out var pair))
                     {
-                        var potentialCryptoName = prop.Name.Substring(0, i);
-                        if (_NetworkProvider.GetNetwork(potentialCryptoName) != null)
-                        {
-                            exchangeRate.CurrencyPair = new CurrencyPair(potentialCryptoName, prop.Name.Substring(i));
-                        }
-                    }
-                    if (exchangeRate.CurrencyPair != null)
+                        exchangeRate.CurrencyPair = pair;
                         exchangeRates.Add(exchangeRate);
+                    }
                 }
                 return exchangeRates;
             }

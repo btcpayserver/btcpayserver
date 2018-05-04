@@ -97,16 +97,11 @@ namespace BTCPayServer.HostedServices
                     }
                 }
 
-                if (!isPaid && invoice.GetPayments().Count != 0)
+                if (!isPaid && invoice.ExceptionStatus != "paidPartial" && invoice.GetPayments().Count != 0)
                 {
-                    if (invoice.ExceptionStatus != "paidPartial")
-                    {
                         invoice.ExceptionStatus = "paidPartial";
                         context.MarkDirty();
-                    }
                 }
-
-               
             }
 
             // Just make sure RBF did not cancelled a payment

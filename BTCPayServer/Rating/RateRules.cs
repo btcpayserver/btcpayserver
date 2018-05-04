@@ -149,9 +149,10 @@ namespace BTCPayServer.Rating
                 (Pair: p, Priority: 0, Inverse: false),
                 (Pair: new CurrencyPair(p.Left, "X"), Priority: 1, Inverse: false),
                 (Pair: new CurrencyPair("X", p.Right), Priority: 1, Inverse: false),
-                (Pair: new CurrencyPair(invP.Left, "X"), Priority: 2, Inverse: true),
-                (Pair: new CurrencyPair("X", invP.Right), Priority: 2, Inverse: true),
-                (Pair: new CurrencyPair("X", "X"), Priority: 3, Inverse: false)
+                (Pair: invP, Priority: 2, Inverse: true),
+                (Pair: new CurrencyPair(invP.Left, "X"), Priority: 3, Inverse: true),
+                (Pair: new CurrencyPair("X", invP.Right), Priority: 3, Inverse: true),
+                (Pair: new CurrencyPair("X", "X"), Priority: 4, Inverse: false)
             })
             {
                 if (ruleList.ExpressionsByPair.TryGetValue(pair.Pair, out var expression))

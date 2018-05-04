@@ -306,6 +306,7 @@ namespace BTCPayServer.Data
         public Uri CustomLogo { get; set; }
         [JsonConverter(typeof(UriJsonConverter))]
         public Uri CustomCSS { get; set; }
+        public string HtmlTitle { get; set; }
 
         public bool RateScripting { get; set; }
 

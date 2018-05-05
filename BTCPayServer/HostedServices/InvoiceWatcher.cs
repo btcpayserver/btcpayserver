@@ -68,6 +68,8 @@ namespace BTCPayServer.HostedServices
 
                 context.Events.Add(new InvoiceEvent(invoice, 1004, "invoice_expired"));
                 invoice.Status = "expired";
+                if(invoice.ExceptionStatus == "paidPartial")
+                    context.Events.Add(new InvoiceEvent(invoice, 2000, "invoice_expiredPaidPartial"));
             }
 
             var payments = invoice.GetPayments().Where(p => p.Accounted).ToArray();
@@ -84,7 +86,7 @@ namespace BTCPayServer.HostedServices
                     {
                         context.Events.Add(new InvoiceEvent(invoice, 1003, "invoice_paidInFull"));
                         invoice.Status = "paid";
-                        invoice.ExceptionStatus = accounting.Paid > accounting.MinimumTotalDue ? "paidOver" : null;
+                        invoice.ExceptionStatus = accounting.Paid > accounting.TotalDue ? "paidOver" : null;
                         await _InvoiceRepository.UnaffectAddress(invoice.Id);
                         context.MarkDirty();
                     }
@@ -106,13 +108,13 @@ namespace BTCPayServer.HostedServices
             // Just make sure RBF did not cancelled a payment
             if (invoice.Status == "paid")
             {
-                if (accounting.Paid == accounting.MinimumTotalDue && invoice.ExceptionStatus == "paidOver")
+                if (accounting.MinimumTotalDue <= accounting.Paid && accounting.Paid <= accounting.TotalDue && invoice.ExceptionStatus == "paidOver")
                 {
                     invoice.ExceptionStatus = null;
                     context.MarkDirty();
                 }
 
-                if (accounting.Paid > accounting.MinimumTotalDue && invoice.ExceptionStatus != "paidOver")
+                if (accounting.Paid > accounting.TotalDue && invoice.ExceptionStatus != "paidOver")
                 {
                     invoice.ExceptionStatus = "paidOver";
                     context.MarkDirty();

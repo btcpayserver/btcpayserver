@@ -257,6 +257,46 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        public void CanAcceptInvoiceWithTolerance2()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.Start();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                user.RegisterDerivationScheme("BTC");
+                
+                // Set tolerance to 50%
+                var stores = user.GetController<StoresController>();
+                var vm = Assert.IsType<StoreViewModel>(Assert.IsType<ViewResult>(stores.UpdateStore()).Model);
+                Assert.Equal(0.0, vm.PaymentTolerance);
+                vm.PaymentTolerance = 50.0;
+                Assert.IsType<RedirectToActionResult>(stores.UpdateStore(vm).Result);
+
+                var invoice = user.BitPay.CreateInvoice(new Invoice()
+                {
+                    Buyer = new Buyer() { email = "test@fwf.com" },
+                    Price = 5000.0,
+                    Currency = "USD",
+                    PosData = "posData",
+                    OrderId = "orderId",
+                    ItemDesc = "Some description",
+                    FullNotifications = true
+                }, Facade.Merchant);
+
+                // Pays 75%
+                var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, tester.ExplorerNode.Network);
+                tester.ExplorerNode.SendToAddress(invoiceAddress, Money.Satoshis((decimal)invoice.BtcDue.Satoshi * 0.75m));
+
+                Eventually(() =>
+                {
+                    var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
+                    Assert.Equal("paid", localInvoice.Status);
+                });
+            }
+        }
+
+        [Fact]
         public void CanPayUsingBIP70()
         {
             using (var tester = ServerTester.Create())

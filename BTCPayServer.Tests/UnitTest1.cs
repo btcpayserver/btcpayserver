@@ -230,6 +230,33 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        public void CanAcceptInvoiceWithTolerance()
+        {
+            var entity = new InvoiceEntity();
+#pragma warning disable CS0618
+            entity.Payments = new List<PaymentEntity>();
+            entity.SetPaymentMethod(new PaymentMethod() { CryptoCode = "BTC", Rate = 5000, TxFee = Money.Coins(0.1m) });
+            entity.ProductInformation = new ProductInformation() { Price = 5000 };
+            entity.PaymentTolerance = 0;
+
+
+            var paymentMethod = entity.GetPaymentMethods(null).TryGet("BTC", PaymentTypes.BTCLike);
+            var accounting = paymentMethod.Calculate();
+            Assert.Equal(Money.Coins(1.1m), accounting.Due);
+            Assert.Equal(Money.Coins(1.1m), accounting.TotalDue);
+            Assert.Equal(Money.Coins(1.1m), accounting.MinimumTotalDue);
+
+            entity.PaymentTolerance = 10;
+            accounting = paymentMethod.Calculate();
+            Assert.Equal(Money.Coins(0.99m), accounting.MinimumTotalDue);
+
+            entity.PaymentTolerance = 100;
+            accounting = paymentMethod.Calculate();
+            Assert.Equal(Money.Coins(0), accounting.MinimumTotalDue);
+
+        }
+
+        [Fact]
         public void CanPayUsingBIP70()
         {
             using (var tester = ServerTester.Create())

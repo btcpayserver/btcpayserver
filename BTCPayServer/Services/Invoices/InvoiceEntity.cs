@@ -524,22 +524,10 @@ namespace BTCPayServer.Services.Invoices
         /// Total amount of network fee to pay to the invoice
         /// </summary>
         public Money NetworkFee { get; set; }
-
-        public bool IsPaid(double tolerance, out bool paidOver)
-        {
-            paidOver = false;
-            if (Paid < TotalDue)
-            {
-                var tolerantAmount = (TotalDue.Satoshi * (tolerance == 0 ? 1 : (tolerance / 100)));
-                var minimumTotalDue = TotalDue.Satoshi - tolerantAmount;
-                return Paid.Satoshi >= minimumTotalDue;
-            }else if (Paid > TotalDue)
-            {
-                paidOver = true;
-            }
-
-            return true;
-        }
+        /// <summary>
+        /// Minimum required to be paid in order to accept invocie as paid
+        /// </summary>
+        public Money MinimumTotalDue { get; set; }
     }
 
     public class PaymentMethod
@@ -688,6 +676,10 @@ namespace BTCPayServer.Services.Invoices
             accounting.Due = Money.Max(accounting.TotalDue - accounting.Paid, Money.Zero);
             accounting.DueUncapped = accounting.TotalDue - accounting.Paid;
             accounting.NetworkFee = accounting.TotalDue - totalDueNoNetworkCost;
+            accounting.MinimumTotalDue = new Money(Convert.ToInt32(Math.Ceiling(accounting.TotalDue.Satoshi -
+                                                                                (accounting.TotalDue.Satoshi *
+                                                                                 (ParentEntity.PaymentTolerance / 100.0)
+                                                                                ))));
             return accounting;
         }
 

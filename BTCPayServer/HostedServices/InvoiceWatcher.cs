@@ -76,16 +76,15 @@ namespace BTCPayServer.HostedServices
             if (paymentMethod == null)
                 return;
             var network = _NetworkProvider.GetNetwork(paymentMethod.GetId().CryptoCode);
-            var isPaid = accounting.IsPaid(invoice.PaymentTolerance, out var paidOver);
             if (invoice.Status == "new" || invoice.Status == "expired")
             {
-                if (isPaid)
+                if (accounting.Paid >= accounting.MinimumTotalDue)
                 {
                     if (invoice.Status == "new")
                     {
                         context.Events.Add(new InvoiceEvent(invoice, 1003, "invoice_paidInFull"));
                         invoice.Status = "paid";
-                        invoice.ExceptionStatus = accounting.Paid > accounting.TotalDue ? "paidOver" : null;
+                        invoice.ExceptionStatus = accounting.Paid > accounting.MinimumTotalDue ? "paidOver" : null;
                         await _InvoiceRepository.UnaffectAddress(invoice.Id);
                         context.MarkDirty();
                     }
@@ -97,7 +96,7 @@ namespace BTCPayServer.HostedServices
                     }
                 }
 
-                if (!isPaid && invoice.ExceptionStatus != "paidPartial" && invoice.GetPayments().Count != 0)
+                if (accounting.Paid < accounting.MinimumTotalDue && invoice.GetPayments().Count != 0 && invoice.ExceptionStatus != "paidPartial")
                 {
                         invoice.ExceptionStatus = "paidPartial";
                         context.MarkDirty();
@@ -107,19 +106,19 @@ namespace BTCPayServer.HostedServices
             // Just make sure RBF did not cancelled a payment
             if (invoice.Status == "paid")
             {
-                if (!paidOver && invoice.ExceptionStatus == "paidOver")
+                if (accounting.Paid == accounting.MinimumTotalDue && invoice.ExceptionStatus == "paidOver")
                 {
                     invoice.ExceptionStatus = null;
                     context.MarkDirty();
                 }
 
-                if (paidOver&& invoice.ExceptionStatus != "paidOver")
+                if (accounting.Paid > accounting.MinimumTotalDue && invoice.ExceptionStatus != "paidOver")
                 {
                     invoice.ExceptionStatus = "paidOver";
                     context.MarkDirty();
                 }
 
-                if (!isPaid)
+                if (accounting.Paid < accounting.MinimumTotalDue)
                 {
                     invoice.Status = "new";
                     invoice.ExceptionStatus = accounting.Paid == Money.Zero ? null : "paidPartial";
@@ -130,19 +129,19 @@ namespace BTCPayServer.HostedServices
             if (invoice.Status == "paid")
             {
                 var confirmedAccounting = paymentMethod.Calculate(p => p.GetCryptoPaymentData().PaymentConfirmed(p, invoice.SpeedPolicy, network));
-                var confirmedIsPaid = confirmedAccounting.IsPaid(invoice.PaymentTolerance, out var confirmedPaidOver);
+
                 if (// Is after the monitoring deadline
                    (invoice.MonitoringExpiration < DateTimeOffset.UtcNow)
                    &&
                    // And not enough amount confirmed
-                   (!confirmedIsPaid))
+                   (confirmedAccounting.Paid < accounting.MinimumTotalDue))
                 {
                     await _InvoiceRepository.UnaffectAddress(invoice.Id);
                     context.Events.Add(new InvoiceEvent(invoice, 1013, "invoice_failedToConfirm"));
                     invoice.Status = "invalid";
                     context.MarkDirty();
                 }
-                else if (confirmedIsPaid)
+                else if (confirmedAccounting.Paid >= accounting.MinimumTotalDue)
                 {
                     await _InvoiceRepository.UnaffectAddress(invoice.Id);
                     context.Events.Add(new InvoiceEvent(invoice, 1005, "invoice_confirmed"));
@@ -154,8 +153,7 @@ namespace BTCPayServer.HostedServices
             if (invoice.Status == "confirmed")
             {
                 var completedAccounting = paymentMethod.Calculate(p => p.GetCryptoPaymentData().PaymentCompleted(p, network));
-                var confirmedIsPaid = completedAccounting.IsPaid(invoice.PaymentTolerance, out var completedPaidOver);
-                if (confirmedIsPaid)
+                if (completedAccounting.Paid >= accounting.MinimumTotalDue)
                 {
                     context.Events.Add(new InvoiceEvent(invoice, 1006, "invoice_completed"));
                     invoice.Status = "complete";

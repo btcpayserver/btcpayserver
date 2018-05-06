@@ -98,6 +98,7 @@ namespace BTCPayServer.Controllers
             entity.ExtendedNotifications = invoice.ExtendedNotifications;
             entity.NotificationURL = notificationUri?.AbsoluteUri;
             entity.BuyerInformation = Map<Invoice, BuyerInformation>(invoice);
+            entity.PaymentTolerance = storeBlob.PaymentTolerance;
             //Another way of passing buyer info to support
             FillBuyerInfo(invoice.Buyer, entity.BuyerInformation);
             if (entity?.BuyerInformation?.BuyerEmail != null)

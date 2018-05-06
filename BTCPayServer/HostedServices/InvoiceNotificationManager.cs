@@ -305,7 +305,10 @@ namespace BTCPayServer.HostedServices
             leases.Add(_EventAggregator.Subscribe<InvoiceEvent>(async e =>
             {
                 var invoice = await _InvoiceRepository.GetInvoice(null, e.InvoiceId);
-                await SaveEvent(invoice.Id, e);
+                List<Task> tasks = new List<Task>();
+
+                // Awaiting this later help make sure invoices should arrive in order
+                tasks.Add(SaveEvent(invoice.Id, e));
 
                 // we need to use the status in the event and not in the invoice. The invoice might now be in another status.
                 if (invoice.FullNotifications)
@@ -315,20 +318,22 @@ namespace BTCPayServer.HostedServices
                        e.Name == "invoice_failedToConfirm" ||
                        e.Name == "invoice_markedInvalid" ||
                        e.Name == "invoice_failedToConfirm" ||
-                       e.Name == "invoice_completed"
+                       e.Name == "invoice_completed" ||
+                       e.Name == "invoice_expiredPaidPartial"
                      )
-                        await Notify(invoice);
+                        tasks.Add(Notify(invoice));
                 }
 
                 if (e.Name == "invoice_confirmed")
                 {
-                    await Notify(invoice);
+                    tasks.Add(Notify(invoice));
                 }
 
                 if (invoice.ExtendedNotifications)
                 {
-                    await Notify(invoice, e.EventCode, e.Name);
+                    tasks.Add(Notify(invoice, e.EventCode, e.Name));
                 }
+                await Task.WhenAll(tasks.ToArray());
             }));
 
 

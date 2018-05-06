@@ -36,11 +36,12 @@ namespace BTCPayServer.Controllers
         [BitpayAPIConstraint]
         public async Task<IActionResult> GetRates(string currencyPairs, string storeId)
         {
+            storeId = storeId ?? this.HttpContext.GetStoreData()?.Id;
             var result = await GetRates2(currencyPairs, storeId);
-            var rates = (result as JsonResult)?.Value as NBitpayClient.Rate[];
+            var rates = (result as JsonResult)?.Value as Rate[];
             if (rates == null)
                 return result;
-            return Json(new DataWrapper<NBitpayClient.Rate[]>(rates));
+            return Json(new DataWrapper<Rate[]>(rates));
         }
 
         [Route("api/rates")]
@@ -54,8 +55,9 @@ namespace BTCPayServer.Controllers
                 return result;
             }
 
-            
-            var store = await _StoreRepo.FindStore(storeId);
+            var store = this.HttpContext.GetStoreData();
+            if(store == null || store.Id != storeId)
+                store = await _StoreRepo.FindStore(storeId);
             if (store == null)
             {
                 var result = Json(new BitpayErrorsModel() { Error = "Store not found" });
@@ -86,6 +88,7 @@ namespace BTCPayServer.Controllers
                             {
                                 CryptoCode = r.Pair.Left,
                                 Code = r.Pair.Right,
+                                CurrencyPair = r.Pair.ToString(),
                                 Name = _CurrencyNameTable.GetCurrencyData(r.Pair.Right)?.Name,
                                 Value = r.Value.Value
                             }).Where(n => n.Name != null).ToArray());
@@ -106,6 +109,14 @@ namespace BTCPayServer.Controllers
                 get;
                 set;
             }
+
+            [JsonProperty(PropertyName = "currencyPair")]
+            public string CurrencyPair
+            {
+                get;
+                set;
+            }
+
             [JsonProperty(PropertyName = "code")]
             public string Code
             {

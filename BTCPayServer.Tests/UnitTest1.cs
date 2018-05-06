@@ -230,6 +230,73 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        public void CanAcceptInvoiceWithTolerance()
+        {
+            var entity = new InvoiceEntity();
+#pragma warning disable CS0618
+            entity.Payments = new List<PaymentEntity>();
+            entity.SetPaymentMethod(new PaymentMethod() { CryptoCode = "BTC", Rate = 5000, TxFee = Money.Coins(0.1m) });
+            entity.ProductInformation = new ProductInformation() { Price = 5000 };
+            entity.PaymentTolerance = 0;
+
+
+            var paymentMethod = entity.GetPaymentMethods(null).TryGet("BTC", PaymentTypes.BTCLike);
+            var accounting = paymentMethod.Calculate();
+            Assert.Equal(Money.Coins(1.1m), accounting.Due);
+            Assert.Equal(Money.Coins(1.1m), accounting.TotalDue);
+            Assert.Equal(Money.Coins(1.1m), accounting.MinimumTotalDue);
+
+            entity.PaymentTolerance = 10;
+            accounting = paymentMethod.Calculate();
+            Assert.Equal(Money.Coins(0.99m), accounting.MinimumTotalDue);
+
+            entity.PaymentTolerance = 100;
+            accounting = paymentMethod.Calculate();
+            Assert.Equal(Money.Coins(0), accounting.MinimumTotalDue);
+
+        }
+
+        [Fact]
+        public void CanAcceptInvoiceWithTolerance2()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.Start();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                user.RegisterDerivationScheme("BTC");
+                
+                // Set tolerance to 50%
+                var stores = user.GetController<StoresController>();
+                var vm = Assert.IsType<StoreViewModel>(Assert.IsType<ViewResult>(stores.UpdateStore()).Model);
+                Assert.Equal(0.0, vm.PaymentTolerance);
+                vm.PaymentTolerance = 50.0;
+                Assert.IsType<RedirectToActionResult>(stores.UpdateStore(vm).Result);
+
+                var invoice = user.BitPay.CreateInvoice(new Invoice()
+                {
+                    Buyer = new Buyer() { email = "test@fwf.com" },
+                    Price = 5000.0,
+                    Currency = "USD",
+                    PosData = "posData",
+                    OrderId = "orderId",
+                    ItemDesc = "Some description",
+                    FullNotifications = true
+                }, Facade.Merchant);
+
+                // Pays 75%
+                var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, tester.ExplorerNode.Network);
+                tester.ExplorerNode.SendToAddress(invoiceAddress, Money.Satoshis((decimal)invoice.BtcDue.Satoshi * 0.75m));
+
+                Eventually(() =>
+                {
+                    var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
+                    Assert.Equal("paid", localInvoice.Status);
+                });
+            }
+        }
+
+        [Fact]
         public void CanPayUsingBIP70()
         {
             using (var tester = ServerTester.Create())
@@ -529,6 +596,53 @@ namespace BTCPayServer.Tests
                 store2.Pair(pairingCode.ToString(), store2.StoreData.Id).GetAwaiter().GetResult();
                 Assert.Contains(nameof(PairingResult.ReusedKey), store2.StatusMessage, StringComparison.CurrentCultureIgnoreCase);
             }
+        }
+
+        [Fact]
+        public void CanListInvoices()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.Start();
+                var acc = tester.NewAccount();
+                acc.GrantAccess();
+                acc.RegisterDerivationScheme("BTC");
+                // First we try payment with a merchant having only BTC
+                var invoice = acc.BitPay.CreateInvoice(new Invoice()
+                {
+                    Price = 500,
+                    Currency = "USD",
+                    PosData = "posData",
+                    OrderId = "orderId",
+                    ItemDesc = "Some description",
+                    FullNotifications = true
+                }, Facade.Merchant);
+                
+                var cashCow = tester.ExplorerNode;
+                var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, cashCow.Network);
+                var firstPayment = invoice.CryptoInfo[0].TotalDue - Money.Satoshis(10);
+                cashCow.SendToAddress(invoiceAddress, firstPayment);
+                Eventually(() =>
+                {
+                    invoice = acc.BitPay.GetInvoice(invoice.Id);
+                    Assert.Equal(firstPayment, invoice.CryptoInfo[0].Paid);
+                });
+
+
+                AssertSearchInvoice(acc, true, invoice.Id, $"storeid:{acc.StoreId}");
+                AssertSearchInvoice(acc, false, invoice.Id, $"storeid:blah");
+                AssertSearchInvoice(acc, true, invoice.Id, $"{invoice.Id}");
+                AssertSearchInvoice(acc, true, invoice.Id, $"exceptionstatus:paidPartial");
+                AssertSearchInvoice(acc, false, invoice.Id, $"exceptionstatus:paidOver");
+                AssertSearchInvoice(acc, true, invoice.Id, $"unusual:true");
+                AssertSearchInvoice(acc, false, invoice.Id, $"unusual:false");
+            }
+        }
+
+        private void AssertSearchInvoice(TestAccount acc, bool expected, string invoiceId, string filter)
+        {
+            var result = (Models.InvoicingModels.InvoicesModel)((ViewResult)acc.GetController<InvoiceController>().ListInvoices(filter).Result).Model;
+            Assert.Equal(expected, result.Invoices.Any(i => i.InvoiceId == invoiceId));
         }
 
         [Fact]

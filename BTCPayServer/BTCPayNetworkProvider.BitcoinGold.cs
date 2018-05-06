@@ -18,7 +18,6 @@ namespace BTCPayServer
                 {
                     "BTG_X = BTG_BTC * BTC_X",
                     "BTG_BTC = bitfinex(BTG_BTC)",
-                    "BTG_USD = bitfinex(BTG_USD)",
                 },
                 CryptoImagePath = "imlegacy/btg-symbol.svg",
                 LightningImagePath = "imlegacy/btg-symbol.svg",

@@ -13,7 +13,8 @@ namespace BTCPayServer
                 UriScheme = "ethereum",
                 CryptoImagePath = "imlegacy/ethereum.svg",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
-                CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("60'") : new KeyPath("1'")
+                CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("60'") : new KeyPath("1'"),
+                NetworkType = NetworkType,
             });
         }
     }

@@ -7,6 +7,7 @@ using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using NBitcoin;
 using NBXplorer;
+using Nethereum.Web3;
 
 namespace BTCPayServer
 {
@@ -57,21 +58,28 @@ namespace BTCPayServer
         public string CryptoImagePath { get; set; }
         public string LightningImagePath { get; set; }
         public NBXplorer.NBXplorerNetwork NBXplorerNetwork { get; set; }
+        //public Web3 Web3Client { get; set; }
 
         public BTCPayDefaultSettings DefaultSettings { get; set; }
         public KeyPath CoinType { get; internal set; }
         public int MaxTrackedConfirmation { get; internal set; } = 6;
         public string[] DefaultRateRules { get; internal set; } = Array.Empty<string>();
+        public NetworkType NetworkType { get; set; }
 
         public override string ToString()
         {
             return CryptoCode;
         }
 
+        public readonly KeyPath StandardPurposeDerivationPath = new KeyPath("44'");
+        public readonly KeyPath SegwitPurposeDerivationPath = new KeyPath("49'");
+
+        public bool SupportsSegwit => NBitcoinNetwork != null && NBitcoinNetwork.Consensus.SupportSegwit;
+
         internal KeyPath GetRootKeyPath()
         {
-            return new KeyPath(NBitcoinNetwork.Consensus.SupportSegwit ? "49'" : "44'")
-                        .Derive(CoinType); 
+           var value = SupportsSegwit? SegwitPurposeDerivationPath : StandardPurposeDerivationPath;
+           return value.Derive(CoinType); 
         }
     }
 }

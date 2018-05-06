@@ -6,29 +6,39 @@ namespace BTCPayServer.Payments.Ethereum
 {
     public class EthereumLikePaymentMethod : IPaymentMethodDetails
     {
-        public string GetPaymentDestination()
-        {
-            throw new NotImplementedException();
-        }
-
         public PaymentTypes GetPaymentType()
         {
-            return PaymentTypes.EthereumLike;
+            return PaymentTypes.BTCLike;
+        }
+
+        public string GetPaymentDestination()
+        {
+            return DepositAddress;
         }
 
         public decimal GetTxFee()
         {
-            throw new NotImplementedException();
+            return TxFee.ToDecimal(MoneyUnit.BTC);
         }
 
         public void SetNoTxFee()
         {
-            throw new NotImplementedException();
+            TxFee = Money.Zero;
         }
+
 
         public void SetPaymentDestination(string newPaymentDestination)
         {
-            throw new NotImplementedException();
+            DepositAddress = newPaymentDestination;
         }
+
+        // Those properties are JsonIgnore because their data is inside CryptoData class for legacy reason
+        [JsonIgnore]
+        public FeeRate FeeRate { get; set; }
+        [JsonIgnore]
+        public Money TxFee { get; set; }
+        [JsonIgnore]
+        public String DepositAddress { get; set; }
+
     }
 }

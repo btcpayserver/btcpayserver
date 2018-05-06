@@ -132,9 +132,11 @@ namespace BTCPayServer.Services
         private static async Task<KeyPath> GetKeyPath(LedgerClient ledger, BTCPayNetwork network, DirectDerivationStrategy directStrategy)
         {
             List<KeyPath> derivations = new List<KeyPath>();
-            if(network.NBitcoinNetwork.Consensus.SupportSegwit)
-                derivations.Add(new KeyPath("49'"));
-            derivations.Add(new KeyPath("44'"));
+            if (network.SupportsSegwit)
+            {
+                derivations.Add(network.SegwitPurposeDerivationPath);
+            }
+            derivations.Add(network.StandardPurposeDerivationPath);
             KeyPath foundKeyPath = null;
             foreach (var account in
                                   derivations

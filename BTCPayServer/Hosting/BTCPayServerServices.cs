@@ -116,6 +116,7 @@ namespace BTCPayServer.Hosting
 
             services.AddSingleton<Payments.IPaymentMethodHandler<DerivationStrategy>, EthereumLikePaymentHandler>();
             services.AddSingleton<IHostedService, Web3Listener>();
+            services.AddSingleton<Web3Provider>();
 
             services.AddSingleton<IHostedService, NBXplorerWaiters>();
             services.AddSingleton<IHostedService, InvoiceNotificationManager>();

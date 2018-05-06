@@ -21,6 +21,12 @@ namespace BTCPayServer.Configuration
         public string CookieFile { get; internal set; }
     }
 
+    public class Web3ConnectionSetting
+    {
+        public string CryptoCode { get; internal set; }
+        public Uri NodeUri { get; internal set; }
+    }
+
     public class BTCPayServerOptions
     {
         public NetworkType NetworkType
@@ -42,6 +48,8 @@ namespace BTCPayServer.Configuration
             get;
             set;
         }
+
+        public List<Web3ConnectionSetting> Web3ConnectionSettings { get; set; } = new List<Web3ConnectionSetting>();
 
         public List<NBXplorerConnectionSetting> NBXplorerConnectionSettings
         {
@@ -69,11 +77,19 @@ namespace BTCPayServer.Configuration
             var validChains = new List<string>();
             foreach (var net in NetworkProvider.GetAll())
             {
+                Web3ConnectionSettings.Add(new Web3ConnectionSetting()
+                {
+                    CryptoCode = net.CryptoCode,
+                    NodeUri = conf.GetOrDefault<Uri>($"{net.CryptoCode}.web3.url",null)
+                });
+
                 NBXplorerConnectionSetting setting = new NBXplorerConnectionSetting();
                 setting.CryptoCode = net.CryptoCode;
                 setting.ExplorerUri = conf.GetOrDefault<Uri>($"{net.CryptoCode}.explorer.url", net.NBXplorerNetwork.DefaultSettings.DefaultUrl);
                 setting.CookieFile = conf.GetOrDefault<string>($"{net.CryptoCode}.explorer.cookiefile", net.NBXplorerNetwork.DefaultSettings.DefaultCookieFile);
                 NBXplorerConnectionSettings.Add(setting);
+
+
                 var lightning = conf.GetOrDefault<string>($"{net.CryptoCode}.lightning", string.Empty);
                 if(lightning.Length != 0)
                 {

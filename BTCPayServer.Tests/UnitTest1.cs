@@ -599,6 +599,53 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        public void CanListInvoices()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.Start();
+                var acc = tester.NewAccount();
+                acc.GrantAccess();
+                acc.RegisterDerivationScheme("BTC");
+                // First we try payment with a merchant having only BTC
+                var invoice = acc.BitPay.CreateInvoice(new Invoice()
+                {
+                    Price = 500,
+                    Currency = "USD",
+                    PosData = "posData",
+                    OrderId = "orderId",
+                    ItemDesc = "Some description",
+                    FullNotifications = true
+                }, Facade.Merchant);
+                
+                var cashCow = tester.ExplorerNode;
+                var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, cashCow.Network);
+                var firstPayment = invoice.CryptoInfo[0].TotalDue - Money.Satoshis(10);
+                cashCow.SendToAddress(invoiceAddress, firstPayment);
+                Eventually(() =>
+                {
+                    invoice = acc.BitPay.GetInvoice(invoice.Id);
+                    Assert.Equal(firstPayment, invoice.CryptoInfo[0].Paid);
+                });
+
+
+                AssertSearchInvoice(acc, true, invoice.Id, $"storeid:{acc.StoreId}");
+                AssertSearchInvoice(acc, false, invoice.Id, $"storeid:blah");
+                AssertSearchInvoice(acc, true, invoice.Id, $"{invoice.Id}");
+                AssertSearchInvoice(acc, true, invoice.Id, $"exceptionstatus:paidPartial");
+                AssertSearchInvoice(acc, false, invoice.Id, $"exceptionstatus:paidOver");
+                AssertSearchInvoice(acc, true, invoice.Id, $"unusual:true");
+                AssertSearchInvoice(acc, false, invoice.Id, $"unusual:false");
+            }
+        }
+
+        private void AssertSearchInvoice(TestAccount acc, bool expected, string invoiceId, string filter)
+        {
+            var result = (Models.InvoicingModels.InvoicesModel)((ViewResult)acc.GetController<InvoiceController>().ListInvoices(filter).Result).Model;
+            Assert.Equal(expected, result.Invoices.Any(i => i.InvoiceId == invoiceId));
+        }
+
+        [Fact]
         public void CanRBFPayment()
         {
             using (var tester = ServerTester.Create())

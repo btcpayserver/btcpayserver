@@ -26,6 +26,7 @@
                         <li><code>storeid:id</code> for filtering a specific store</li>
                         <li><code>status:(expired|invalid|complete|confirmed|paid|new)</code> for filtering a specific status</li>
                         <li><code>exceptionstatus:(paidover|paidlate|paidpartial)</code> for filtering a specific exception state</li>
+                        <li><code>unusual:(true|false)</code> for filtering invoices which might requires merchant attention (those invalid or with an exceptionstatus)</li>
                     </ul>
                     <p>
                         If you want two confirmed and complete invoices, duplicate the filter: <code>status:confirmed status:complete</code>.

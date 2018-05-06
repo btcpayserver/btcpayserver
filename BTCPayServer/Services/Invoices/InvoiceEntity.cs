@@ -198,7 +198,7 @@ namespace BTCPayServer.Services.Invoices
                     }
                 }
             }
-
+            //legacy stuff?
             if (!btcReturned && !string.IsNullOrEmpty(DerivationStrategy))
             {
                 if (networks.BTC != null)
@@ -811,7 +811,7 @@ namespace BTCPayServer.Services.Invoices
         /// <returns>The search terms</returns>
         string[] GetSearchTerms();
         /// <summary>
-        /// Get value of what as been paid
+        /// Get value of what has been paid
         /// </summary>
         /// <returns>The amount paid</returns>
         decimal GetValue();

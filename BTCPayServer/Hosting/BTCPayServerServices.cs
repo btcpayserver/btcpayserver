@@ -39,6 +39,7 @@ using BTCPayServer.Logging;
 using BTCPayServer.HostedServices;
 using Meziantou.AspNetCore.BundleTagHelpers;
 using System.Security.Claims;
+using BTCPayServer.Payments.Ethereum;
 using BTCPayServer.Security;
 
 namespace BTCPayServer.Hosting
@@ -112,6 +113,9 @@ namespace BTCPayServer.Hosting
 
             services.AddSingleton<Payments.IPaymentMethodHandler<Payments.Lightning.LightningSupportedPaymentMethod>, Payments.Lightning.LightningLikePaymentHandler>();
             services.AddSingleton<IHostedService, Payments.Lightning.LightningListener>();
+
+            services.AddSingleton<Payments.IPaymentMethodHandler<DerivationStrategy>, EthereumLikePaymentHandler>();
+            services.AddSingleton<IHostedService, Web3Listener>();
 
             services.AddSingleton<IHostedService, NBXplorerWaiters>();
             services.AddSingleton<IHostedService, InvoiceNotificationManager>();

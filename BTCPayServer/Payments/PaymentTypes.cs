@@ -17,6 +17,10 @@ namespace BTCPayServer.Payments
         /// <summary>
         /// Lightning payment
         /// </summary>
-        LightningLike
+        LightningLike,
+        /// <summary>
+        /// On-Chain UTXO based, ethereum compatible
+        /// </summary>
+        EthereumLike
     }
 }

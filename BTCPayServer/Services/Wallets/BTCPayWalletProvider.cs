@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Payments.Ethereum;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 
@@ -12,8 +13,11 @@ namespace BTCPayServer.Services.Wallets
         private ExplorerClientProvider _Client;
         BTCPayNetworkProvider _NetworkProvider;
         IOptions<MemoryCacheOptions> _Options;
+        private readonly Web3Provider _web3Provider;
+
         public BTCPayWalletProvider(ExplorerClientProvider client,
                                     IOptions<MemoryCacheOptions> memoryCacheOption,
+                                    Web3Provider web3Provider,
                                     BTCPayNetworkProvider networkProvider)
         {
             if (client == null)
@@ -21,13 +25,25 @@ namespace BTCPayServer.Services.Wallets
             _Client = client;
             _NetworkProvider = networkProvider;
             _Options = memoryCacheOption;
+            _web3Provider = web3Provider;
 
-            foreach(var network in networkProvider.GetAll())
+            foreach (var network in networkProvider.GetAll())
             {
                 var explorerClient = _Client.GetExplorerClient(network.CryptoCode);
-                if (explorerClient == null)
+                if (explorerClient != null)
+                {
+                    _Wallets.Add(network.CryptoCode,
+                        new BTCPayWallet(explorerClient, new MemoryCache(_Options), network));
                     continue;
-                _Wallets.Add(network.CryptoCode, new BTCPayWallet(explorerClient, new MemoryCache(_Options), network));
+                }
+
+                var web3 = _web3Provider.GetWeb3(network);
+                if (web3 != null)
+                {
+                    _Wallets.Add(network.CryptoCode,
+                        new EthereumPayWallet(web3, new MemoryCache(_Options), network));
+                }
+
             }
         }
 
@@ -49,7 +65,7 @@ namespace BTCPayServer.Services.Wallets
 
         public bool IsAvailable(BTCPayNetwork network)
         {
-            return _Client.IsAvailable(network);
+            return _Client.IsAvailable(network) || _web3Provider.IsAvailable(network);
         }
 
         public IEnumerable<BTCPayWallet> GetWallets()

@@ -45,7 +45,7 @@ namespace BTCPayServer
         public string CryptoCode { get; internal set; }
         public string BlockExplorerLink { get; internal set; }
         public string UriScheme { get; internal set; }
-
+        public bool UsesWeb3 { get; set; }
         [Obsolete("Should not be needed")]
         public bool IsBTC
         {

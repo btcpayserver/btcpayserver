@@ -243,10 +243,7 @@ namespace BTCPayServer.Controllers
             {
                 try
                 {
-                    if(string.IsNullOrWhiteSpace(model.Settings.From)
-                       || string.IsNullOrWhiteSpace(model.TestEmail)
-                       || string.IsNullOrWhiteSpace(model.Settings.Login)
-                       || string.IsNullOrWhiteSpace(model.Settings.Server))
+                    if(!model.Settings.IsComplete())
                     {
                         model.StatusMessage = "Error: Required fields missing";
                         return View(model);

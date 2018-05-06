@@ -314,6 +314,7 @@ namespace BTCPayServer.Services.Invoices
         }
         public bool ExtendedNotifications { get; set; }
         public List<InvoiceEventData> Events { get; internal set; }
+        public double PaymentTolerance { get; set; }
 
         public bool IsExpired()
         {
@@ -364,14 +365,14 @@ namespace BTCPayServer.Services.Invoices
                 var scheme = info.Network.UriScheme;
                 cryptoInfo.Url = ServerUrl.WithTrailingSlash() + $"i/{paymentId}/{Id}";
 
-
                 if (paymentId.PaymentType == PaymentTypes.BTCLike)
                 {
+                    var cryptoSuffix = cryptoInfo.CryptoCode == "BTC" ? "" : "/" + cryptoInfo.CryptoCode;
                     cryptoInfo.PaymentUrls = new NBitpayClient.InvoicePaymentUrls()
                     {
-                        BIP72 = $"{scheme}:{cryptoInfo.Address}?amount={cryptoInfo.Due}&r={cryptoInfo.Url}",
-                        BIP72b = $"{scheme}:?r={cryptoInfo.Url}",
-                        BIP73 = cryptoInfo.Url,
+                        BIP72 = $"{scheme}:{cryptoInfo.Address}?amount={cryptoInfo.Due}&r={ServerUrl.WithTrailingSlash() + ($"i/{Id}{cryptoSuffix}")}",
+                        BIP72b = $"{scheme}:?r={ServerUrl.WithTrailingSlash() + ($"i/{Id}{cryptoSuffix}")}",
+                        BIP73 = ServerUrl.WithTrailingSlash() + ($"i/{Id}{cryptoSuffix}"),
                         BIP21 = $"{scheme}:{cryptoInfo.Address}?amount={cryptoInfo.Due}",
                     };
                 }
@@ -523,6 +524,10 @@ namespace BTCPayServer.Services.Invoices
         /// Total amount of network fee to pay to the invoice
         /// </summary>
         public Money NetworkFee { get; set; }
+        /// <summary>
+        /// Minimum required to be paid in order to accept invocie as paid
+        /// </summary>
+        public Money MinimumTotalDue { get; set; }
     }
 
     public class PaymentMethod
@@ -671,6 +676,7 @@ namespace BTCPayServer.Services.Invoices
             accounting.Due = Money.Max(accounting.TotalDue - accounting.Paid, Money.Zero);
             accounting.DueUncapped = accounting.TotalDue - accounting.Paid;
             accounting.NetworkFee = accounting.TotalDue - totalDueNoNetworkCost;
+            accounting.MinimumTotalDue = Money.Satoshis(accounting.TotalDue.Satoshi * (1.0m - ((decimal)ParentEntity.PaymentTolerance / 100.0m)));
             return accounting;
         }
 

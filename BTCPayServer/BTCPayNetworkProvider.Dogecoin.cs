@@ -20,7 +20,11 @@ namespace BTCPayServer
                 NBitcoinNetwork = nbxplorerNetwork.NBitcoinNetwork,
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "dogecoin",
-                DefaultRateRules = new[] { "DOGE_X = bittrex(DOGE_BTC) * BTC_X" },
+                DefaultRateRules = new[] 
+                {
+                                "DOGE_X = DOGE_BTC * BTC_X",
+                                "DOGE_BTC = bittrex(DOGE_BTC)"
+                },
                 CryptoImagePath = "imlegacy/dogecoin.png",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
                 CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("3'") : new KeyPath("1'")

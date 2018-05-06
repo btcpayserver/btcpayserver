@@ -371,13 +371,15 @@ namespace BTCPayServer.Controllers
                 Skip = skip,
                 UserId = GetUserId(),
                 Status = filterString.Filters.ContainsKey("status") ? filterString.Filters["status"].ToArray() : null,
+                ExceptionStatus = filterString.Filters.ContainsKey("exceptionstatus") ? filterString.Filters["exceptionstatus"].ToArray() : null,
                 StoreId = filterString.Filters.ContainsKey("storeid") ? filterString.Filters["storeid"].ToArray() : null
             }))
             {
                 model.SearchTerm = searchTerm;
                 model.Invoices.Add(new InvoiceModel()
                 {
-                    Status = invoice.Status,
+                    Status = invoice.Status + (invoice.ExceptionStatus == null ? string.Empty : $" ({invoice.ExceptionStatus})"),
+                    ShowCheckout = invoice.Status == "new",
                     Date = (DateTimeOffset.UtcNow - invoice.InvoiceTime).Prettify() + " ago",
                     InvoiceId = invoice.Id,
                     OrderId = invoice.OrderId ?? string.Empty,

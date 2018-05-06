@@ -431,6 +431,7 @@ namespace BTCPayServer.Controllers
             vm.MonitoringExpiration = storeBlob.MonitoringExpiration;
             vm.InvoiceExpiration = storeBlob.InvoiceExpiration;
             vm.LightningDescriptionTemplate = storeBlob.LightningDescriptionTemplate;
+            vm.PaymentTolerance = storeBlob.PaymentTolerance;
             return View(vm);
         }
 
@@ -496,6 +497,7 @@ namespace BTCPayServer.Controllers
             blob.MonitoringExpiration = model.MonitoringExpiration;
             blob.InvoiceExpiration = model.InvoiceExpiration;
             blob.LightningDescriptionTemplate = model.LightningDescriptionTemplate ?? string.Empty;
+            blob.PaymentTolerance = model.PaymentTolerance;
 
             if (StoreData.SetStoreBlob(blob))
             {

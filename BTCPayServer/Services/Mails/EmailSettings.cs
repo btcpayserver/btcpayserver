@@ -40,6 +40,18 @@ namespace BTCPayServer.Services.Mails
             get; set;
         }
 
+        public bool IsComplete()
+        {
+            SmtpClient smtp = null;
+            try
+            {
+                smtp = CreateSmtpClient();
+                return true;
+            }
+            catch { }
+            return false;
+        }
+
         public SmtpClient CreateSmtpClient()
         {
             SmtpClient client = new SmtpClient(Server, Port.Value);

@@ -676,7 +676,7 @@ namespace BTCPayServer.Services.Invoices
             accounting.Due = Money.Max(accounting.TotalDue - accounting.Paid, Money.Zero);
             accounting.DueUncapped = accounting.TotalDue - accounting.Paid;
             accounting.NetworkFee = accounting.TotalDue - totalDueNoNetworkCost;
-            accounting.MinimumTotalDue = Money.Satoshis(accounting.TotalDue.Satoshi * (1.0m - ((decimal)ParentEntity.PaymentTolerance / 100.0m)));
+            accounting.MinimumTotalDue = Money.Max(Money.Satoshis(1), Money.Satoshis(accounting.TotalDue.Satoshi * (1.0m - ((decimal)ParentEntity.PaymentTolerance / 100.0m))));
             return accounting;
         }
 

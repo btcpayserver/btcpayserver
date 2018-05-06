@@ -436,6 +436,12 @@ namespace BTCPayServer.Services.Invoices
                     query = query.Where(i => statusSet.Contains(i.Status));
                 }
 
+                if(queryObject.Unusual != null)
+                {
+                    var unused = queryObject.Unusual.Value;
+                    query = query.Where(i => unused == (i.Status == "invalid" || i.ExceptionStatus != null));
+                }
+
                 if (queryObject.ExceptionStatus != null && queryObject.ExceptionStatus.Length > 0)
                 {
                     var exceptionStatusSet = queryObject.ExceptionStatus.Select(s => NormalizeExceptionStatus(s)).ToHashSet();
@@ -642,6 +648,8 @@ namespace BTCPayServer.Services.Invoices
         {
             get; set;
         }
+
+        public bool? Unusual { get; set; }
 
         public string[] Status
         {

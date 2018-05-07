@@ -1,4 +1,6 @@
-﻿@model ViewPointOfSaleViewModel
+﻿@inject BTCPayServer.HostedServices.CssThemeManager themeManager
+
+@model ViewPointOfSaleViewModel
 @{
     ViewData["Title"] = Model.Title;
     Layout = null;
@@ -11,7 +13,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <link rel="stylesheet" href="~/vendor/bootstrap4/css/bootstrap.css" />
+    <link href="@this.Context.Request.GetAbsoluteUri(themeManager.BootstrapUri)" rel="stylesheet" />
 </head>
 <body class="h-100">
     <div class="container d-flex h-100">

@@ -48,6 +48,7 @@ namespace BTCPayServer
             InitBitcoin();
             InitLitecoin();
             InitDogecoin();
+            InitBitcoinGold();
         }
 
         /// <summary>

@@ -40,7 +40,6 @@ namespace BTCPayServer
                     .UseIISIntegration()
                     .UseContentRoot(Directory.GetCurrentDirectory())
                     .UseConfiguration(conf)
-                    .UseApplicationInsights()
                     .ConfigureLogging(l =>
                     {
                         l.AddFilter("Microsoft", LogLevel.Error);

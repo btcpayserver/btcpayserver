@@ -35,7 +35,6 @@ using Hangfire.Annotations;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Threading;
 using Microsoft.Extensions.Options;
-using Microsoft.ApplicationInsights.AspNetCore.Extensions;
 using Microsoft.AspNetCore.Mvc.Cors.Internal;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using System.Net;
@@ -104,10 +103,6 @@ namespace BTCPayServer.Hosting
                     b.AllowAnyMethod().AllowAnyHeader().AllowAnyOrigin();
                 });
             });
-            services.Configure<IOptions<ApplicationInsightsServiceOptions>>(o =>
-            {
-                o.Value.DeveloperMode = _Env.IsDevelopment();
-            });
 
             // Needed to debug U2F for ledger support
             //services.Configure<KestrelServerOptions>(kestrel =>
@@ -146,11 +141,7 @@ namespace BTCPayServer.Hosting
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.UseBrowserLink();
             }
-
-            //App insight do not that by itself...
-            loggerFactory.AddApplicationInsights(prov, LogLevel.Information);
 
             app.UsePayServer();
             app.UseStaticFiles();

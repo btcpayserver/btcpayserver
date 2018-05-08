@@ -5,7 +5,7 @@
     ViewData.AddActivePage(StoreNavPages.Tokens);
 }
 
-@Html.Partial("_StatusMessage", Model.StatusMessage)
+<partial name="_StatusMessage" for="StatusMessage" />
 <h4>Access token</h4>
 <div class="row">
     <div class="col-md-8">

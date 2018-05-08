@@ -252,7 +252,7 @@ namespace BTCPayServer.Tests
 
             entity.PaymentTolerance = 100;
             accounting = paymentMethod.Calculate();
-            Assert.Equal(Money.Coins(0), accounting.MinimumTotalDue);
+            Assert.Equal(Money.Satoshis(1), accounting.MinimumTotalDue);
 
         }
 

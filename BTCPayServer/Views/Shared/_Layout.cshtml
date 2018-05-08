@@ -93,7 +93,7 @@
 
     @if (!dashboard.IsFullySynched())
     {
-        @Html.Partial("SyncModal")
+        <partial name="SyncModal" />
     }
 
     @RenderSection("Scripts", required: false)

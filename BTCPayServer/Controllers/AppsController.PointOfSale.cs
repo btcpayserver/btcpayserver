@@ -162,6 +162,7 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("{appId}/pos")]
+        [IgnoreAntiforgeryToken]
         public async Task<IActionResult> ViewPointOfSale(string appId, double amount, string choiceKey)
         {
             var app = await GetApp(appId, AppType.PointOfSale);

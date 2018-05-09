@@ -7,6 +7,13 @@ COPY BTCPayServer/. .
 RUN dotnet publish --output /app/ --configuration Release
 
 FROM microsoft/dotnet:2.1.0-rc1-aspnetcore-runtime-alpine3.7
+
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT false
+RUN apk add --no-cache icu-libs
+
+ENV LC_ALL en_US.UTF-8
+ENV LANG en_US.UTF-8
+
 WORKDIR /app
 
 RUN mkdir /datadir

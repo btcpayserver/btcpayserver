@@ -41,6 +41,13 @@ namespace BTCPayServer.HostedServices
         {
             get { return _creativeStartUri; }
         }
+
+        public bool ShowRegister { get; set; }
+
+        internal void Update(PoliciesSettings data)
+        {
+            ShowRegister = !data.LockSubscription;
+        }
     }
 
     public class CssThemeManagerHostedService : BaseAsyncService
@@ -58,8 +65,17 @@ namespace BTCPayServer.HostedServices
         {
             return new[]
             {
-                CreateLoopTask(ListenForThemeChanges)
+                CreateLoopTask(ListenForThemeChanges),
+                CreateLoopTask(ListenForPoliciesChanges),
             };
+        }
+
+        async Task ListenForPoliciesChanges()
+        {
+            await new SynchronizationContextRemover();
+            var data = (await _SettingsRepository.GetSettingAsync<PoliciesSettings>()) ?? new PoliciesSettings();
+            _CssThemeManager.Update(data);
+            await _SettingsRepository.WaitSettingsChanged<PoliciesSettings>(Cancellation);
         }
 
         async Task ListenForThemeChanges()

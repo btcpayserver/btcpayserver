@@ -41,10 +41,10 @@ namespace BTCPayServer.Data
 
         public void ConfigureHangfireBuilder(IGlobalConfiguration builder)
         {
-            if (_Type == DatabaseType.Sqlite)
-                builder.UseMemoryStorage(); //Sql provider does not support multiple workers
-            else if (_Type == DatabaseType.Postgres)
-                builder.UsePostgreSqlStorage(_ConnectionString);
+            //if (_Type == DatabaseType.Sqlite)
+            builder.UseMemoryStorage(); //Sql provider does not support multiple workers
+            //else if (_Type == DatabaseType.Postgres)
+            //    builder.UsePostgreSqlStorage(_ConnectionString);
         }
     }
 }

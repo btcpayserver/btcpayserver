@@ -94,9 +94,9 @@ namespace BTCPayServer.Hosting
                 return true;
 
             if (
-                bitpayAuth &&
                 path.StartsWith("/invoices/", StringComparison.OrdinalIgnoreCase) &&
-                httpContext.Request.Method == "GET")
+                httpContext.Request.Method == "GET" &&
+                (httpContext.Request.ContentType ?? string.Empty).StartsWith("application/json", StringComparison.OrdinalIgnoreCase))
                 return true;
 
             if (path.Equals("/rates", StringComparison.OrdinalIgnoreCase) &&

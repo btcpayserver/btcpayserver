@@ -43,12 +43,11 @@ namespace BTCPayServer.Services.Rates
     {
         public CoinAverageExchanges()
         {
-            Add(new CoinAverageExchange(CoinAverageRateProvider.CoinAverageName, "Coin Average"));
         }
 
         public void Add(CoinAverageExchange exchange)
         {
-            Add(exchange.Name, exchange);
+            TryAdd(exchange.Name, exchange);
         }
     }
     public class CoinAverageSettings : ICoinAverageAuthenticator

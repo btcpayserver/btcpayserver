@@ -41,8 +41,10 @@ namespace BTCPayServer.Data
 
         public void ConfigureHangfireBuilder(IGlobalConfiguration builder)
         {
+            builder.UseMemoryStorage();
+            //We always use memory storage because of incompatibilities with the latest postgres in 2.1
             //if (_Type == DatabaseType.Sqlite)
-            builder.UseMemoryStorage(); //Sql provider does not support multiple workers
+            //    builder.UseMemoryStorage(); //Sqlite provider does not support multiple workers
             //else if (_Type == DatabaseType.Postgres)
             //    builder.UsePostgreSqlStorage(_ConnectionString);
         }

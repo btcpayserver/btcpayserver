@@ -45,7 +45,7 @@ namespace BTCPayServer.Controllers
         [Route("invoices/{id}")]
         public async Task<DataWrapper<InvoiceResponse>> GetInvoice(string id, string token)
         {
-            var invoice = await _InvoiceRepository.GetInvoice(HttpContext.GetStoreData().Id, id);
+            var invoice = await _InvoiceRepository.GetInvoice(null, id);
             if (invoice == null)
                 throw new BitpayHttpException(404, "Object not found");
             var resp = invoice.EntityToDTO(_NetworkProvider);

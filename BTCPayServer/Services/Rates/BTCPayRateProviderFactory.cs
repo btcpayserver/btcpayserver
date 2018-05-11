@@ -70,6 +70,7 @@ namespace BTCPayServer.Services.Rates
             DirectProviders.Add("bittrex", new ExchangeSharpRateProvider("bittrex", new ExchangeBittrexAPI(), true));
             DirectProviders.Add("poloniex", new ExchangeSharpRateProvider("poloniex", new ExchangePoloniexAPI(), false));
             DirectProviders.Add("hitbtc", new ExchangeSharpRateProvider("hitbtc", new ExchangeHitbtcAPI(), false));
+            DirectProviders.Add("cryptopia", new ExchangeSharpRateProvider("cryptopia", new ExchangeCryptopiaAPI(), false));
 
             // Handmade providers
             DirectProviders.Add("bitpay", new BitpayRateProvider(new NBitpayClient.Bitpay(new NBitcoin.Key(), new Uri("https://bitpay.com/"))));

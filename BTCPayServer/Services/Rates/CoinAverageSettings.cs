@@ -121,6 +121,7 @@ namespace BTCPayServer.Services.Rates
                 (DisplayName: "Quoine", Name: "quoine"),
                 (DisplayName: "BTC Markets", Name: "btcmarkets"),
                 (DisplayName: "Bitso", Name: "bitso"),
+                (DisplayName: "Cryptopia", Name: "cryptopia"),
                 })
             {
                 AvailableExchanges.TryAdd(item.Name, new CoinAverageExchange(item.Name, item.DisplayName));

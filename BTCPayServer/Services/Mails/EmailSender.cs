@@ -24,8 +24,8 @@ namespace BTCPayServer.Services.Mails
         }
         public async Task SendEmailAsync(string email, string subject, string message)
         {
-            var settings = await _Repository.GetSettingAsync<EmailSettings>();
-            if (settings == null)
+            var settings = await _Repository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
+            if (!settings.IsComplete())
             {
                 Logs.Configuration.LogWarning("Should have sent email, but email settings are not configured");
                 return;
@@ -36,8 +36,8 @@ namespace BTCPayServer.Services.Mails
 
         public async Task SendMailCore(string email, string subject, string message)
         {
-            var settings = await _Repository.GetSettingAsync<EmailSettings>();
-            if (settings == null)
+            var settings = await _Repository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
+            if (!settings.IsComplete())
                 throw new InvalidOperationException("Email settings not configured");
             var smtp = settings.CreateSmtpClient();
             MailMessage mail = new MailMessage(settings.From, email, subject, message);

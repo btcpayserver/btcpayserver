@@ -79,7 +79,7 @@ namespace BTCPayServer.Models
 
         //"price":5
         [JsonProperty("price")]
-        public double Price
+        public decimal Price
         {
             get; set;
         }
@@ -94,7 +94,7 @@ namespace BTCPayServer.Models
         //"exRates":{"USD":4320.02}
         [JsonProperty("exRates")]
         [Obsolete("Use CryptoInfo.ExRates instead")]
-        public Dictionary<string, double> ExRates
+        public Dictionary<string, decimal> ExRates
         {
             get; set;
         }

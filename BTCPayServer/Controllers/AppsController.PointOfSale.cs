@@ -162,7 +162,8 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("{appId}/pos")]
-        public async Task<IActionResult> ViewPointOfSale(string appId, double amount, string choiceKey)
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> ViewPointOfSale(string appId, decimal amount, string choiceKey)
         {
             var app = await GetApp(appId, AppType.PointOfSale);
             if (string.IsNullOrEmpty(choiceKey) && amount <= 0)
@@ -177,7 +178,7 @@ namespace BTCPayServer.Controllers
                 return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
             }
             string title = null;
-            double price = 0.0;
+            var price = 0.0m;
             if (!string.IsNullOrEmpty(choiceKey))
             {
                 var choices = Parse(settings.Template, settings.Currency);
@@ -185,7 +186,7 @@ namespace BTCPayServer.Controllers
                 if (choice == null)
                     return NotFound();
                 title = choice.Title;
-                price = (double)choice.Price.Value;
+                price = choice.Price.Value;
             }
             else
             {

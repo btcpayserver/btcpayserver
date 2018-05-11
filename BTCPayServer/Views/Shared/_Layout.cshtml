@@ -31,7 +31,7 @@
 <body id="page-top">
 
     @{
-        if (ViewBag.AlwaysShrinkNavBar == null)
+        if(ViewBag.AlwaysShrinkNavBar == null)
         {
             ViewBag.AlwaysShrinkNavBar = true;
         }
@@ -43,7 +43,7 @@
         <div class="container">
             <a class="navbar-brand js-scroll-trigger" href="~/">
                 <img src="~/img/logo.png" height="45">
-                @if (env.NetworkType != NBitcoin.NetworkType.Mainnet)
+                @if(env.NetworkType != NBitcoin.NetworkType.Mainnet)
                 {
                     <span class="badge badge-warning" style="font-size:10px;">@env.NetworkType.ToString()</span>
                 }
@@ -53,9 +53,9 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarResponsive">
                 <ul class="navbar-nav ml-auto">
-                    @if (SignInManager.IsSignedIn(User))
+                    @if(SignInManager.IsSignedIn(User))
                     {
-                        @if (User.IsInRole(Roles.ServerAdmin))
+                        @if(User.IsInRole(Roles.ServerAdmin))
                         {
                             <li class="nav-item"><a asp-area="" asp-controller="Server" asp-action="ListUsers" class="nav-link js-scroll-trigger">Server settings</a></li>
                         }
@@ -70,7 +70,10 @@
                         </li>}
                     else
                     {
-                        <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Register" class="nav-link js-scroll-trigger">Register</a></li>
+                        @if(themeManager.ShowRegister)
+                        {
+                            <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Register" class="nav-link js-scroll-trigger">Register</a></li>
+                        }
                         <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Login" class="nav-link js-scroll-trigger">Log in</a></li>}
 
                 </ul>
@@ -84,9 +87,9 @@
         <div class="container text-right">@env.ToString()</div>
     </footer>
 
-    @if (!dashboard.IsFullySynched())
+    @if(!dashboard.IsFullySynched())
     {
-        @Html.Partial("SyncModal")
+        <partial name="SyncModal" />
     }
 
     @RenderSection("Scripts", required: false)

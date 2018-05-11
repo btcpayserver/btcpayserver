@@ -431,6 +431,7 @@ namespace BTCPayServer.Controllers
             vm.MonitoringExpiration = storeBlob.MonitoringExpiration;
             vm.InvoiceExpiration = storeBlob.InvoiceExpiration;
             vm.LightningDescriptionTemplate = storeBlob.LightningDescriptionTemplate;
+            vm.PaymentTolerance = storeBlob.PaymentTolerance;
             return View(vm);
         }
 
@@ -496,6 +497,7 @@ namespace BTCPayServer.Controllers
             blob.MonitoringExpiration = model.MonitoringExpiration;
             blob.InvoiceExpiration = model.InvoiceExpiration;
             blob.LightningDescriptionTemplate = model.LightningDescriptionTemplate ?? string.Empty;
+            blob.PaymentTolerance = model.PaymentTolerance;
 
             if (StoreData.SetStoreBlob(blob))
             {
@@ -644,11 +646,11 @@ namespace BTCPayServer.Controllers
             {
                 var stores = await _Repo.GetStoresByUserId(userId);
                 model.Stores = new SelectList(stores.Where(s => s.HasClaim(Policies.CanModifyStoreSettings.Key)), nameof(StoreData.Id), nameof(StoreData.StoreName), storeId);
-            }
-            if (model.Stores.Count() == 0)
-            {
-                StatusMessage = "Error: You need to be owner of at least one store before pairing";
-                return RedirectToAction(nameof(UserStoresController.ListStores), "UserStores");
+                if (model.Stores.Count() == 0)
+                {
+                    StatusMessage = "Error: You need to be owner of at least one store before pairing";
+                    return RedirectToAction(nameof(UserStoresController.ListStores), "UserStores");
+                }
             }
             return View(model);
         }

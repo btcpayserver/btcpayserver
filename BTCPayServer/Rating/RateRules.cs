@@ -133,28 +133,31 @@ namespace BTCPayServer.Rating
             if (currencyPair.Left == "X" || currencyPair.Right == "X")
                 throw new ArgumentException(paramName: nameof(currencyPair), message: "Invalid X currency");
             var candidate = FindBestCandidate(currencyPair);
-
             if (GlobalMultiplier != decimal.One)
             {
                 candidate = CreateExpression($"({candidate}) * {GlobalMultiplier.ToString(CultureInfo.InvariantCulture)}");
             }
             return new RateRule(this, currencyPair, candidate);
         }
-
+        
         public ExpressionSyntax FindBestCandidate(CurrencyPair p)
         {
-            var candidates = new List<(CurrencyPair Pair, int Prioriy, ExpressionSyntax Expression)>();
+            var invP = p.Inverse();
+            var candidates = new List<(CurrencyPair Pair, int Prioriy, ExpressionSyntax Expression, bool Inverse)>();
             foreach (var pair in new[]
             {
-                (Pair: p, Priority: 0),
-                (Pair: new CurrencyPair(p.Left, "X"), Priority: 1),
-                (Pair: new CurrencyPair("X", p.Right), Priority: 1),
-                (Pair: new CurrencyPair("X", "X"), Priority: 2)
+                (Pair: p, Priority: 0, Inverse: false),
+                (Pair: new CurrencyPair(p.Left, "X"), Priority: 1, Inverse: false),
+                (Pair: new CurrencyPair("X", p.Right), Priority: 1, Inverse: false),
+                (Pair: invP, Priority: 2, Inverse: true),
+                (Pair: new CurrencyPair(invP.Left, "X"), Priority: 3, Inverse: true),
+                (Pair: new CurrencyPair("X", invP.Right), Priority: 3, Inverse: true),
+                (Pair: new CurrencyPair("X", "X"), Priority: 4, Inverse: false)
             })
             {
                 if (ruleList.ExpressionsByPair.TryGetValue(pair.Pair, out var expression))
                 {
-                    candidates.Add((pair.Pair, pair.Priority, expression.Expression));
+                    candidates.Add((pair.Pair, pair.Priority, expression.Expression, pair.Inverse));
                 }
             }
             if (candidates.Count == 0)
@@ -163,8 +166,9 @@ namespace BTCPayServer.Rating
                     .OrderBy(c => c.Prioriy)
                     .ThenBy(c => c.Expression.Span.Start)
                     .First();
-
-            return best.Expression;
+            return best.Inverse
+                   ? CreateExpression($"1 / {invP}")
+                   : best.Expression;
         }
 
         internal static ExpressionSyntax CreateExpression(string str)
@@ -364,7 +368,7 @@ namespace BTCPayServer.Rating
             string _ExchangeName = null;
 
             public List<RateRulesErrors> Errors = new List<RateRulesErrors>();
-            const int MaxNestedCount = 6;
+            const int MaxNestedCount = 8;
             public override SyntaxNode VisitIdentifierName(IdentifierNameSyntax node)
             {
                 if (CurrencyPair.TryParse(node.Identifier.ValueText, out var currentPair))
@@ -413,8 +417,19 @@ namespace BTCPayServer.Rating
 
         public RateRule(RateRules parent, CurrencyPair currencyPair, SyntaxNode candidate)
         {
+            _CurrencyPair = currencyPair;
             flatten = new FlattenExpressionRewriter(parent, currencyPair);
             this.expression = flatten.Visit(candidate);
+        }
+
+
+        private readonly CurrencyPair _CurrencyPair;
+        public CurrencyPair CurrencyPair
+        {
+            get
+            {
+                return _CurrencyPair;
+            }
         }
 
         public ExchangeRates ExchangeRates

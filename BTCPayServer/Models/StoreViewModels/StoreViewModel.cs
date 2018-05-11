@@ -85,5 +85,13 @@ namespace BTCPayServer.Models.StoreViewModels
         {
             get; set;
         } = new List<LightningNode>();
+
+        [Display(Name = "Consider the invoice paid even if the paid amount is ... % less than expected")]
+        [Range(0, 100)]
+        public double PaymentTolerance
+        {
+            get;
+            set;
+        }
     }
 }

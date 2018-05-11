@@ -118,18 +118,7 @@ namespace BTCPayServer.Services
             }
         }
 
-        public async Task<bool> SupportDerivation(BTCPayNetwork network, DirectDerivationStrategy strategy)
-        {
-            if (network == null)
-                throw new ArgumentNullException(nameof(network));
-            if (strategy == null)
-                throw new ArgumentNullException(nameof(strategy));
-            if (!strategy.Segwit)
-                return false;
-            return await GetKeyPath(_Ledger, network, strategy) != null;
-        }
-
-        private static async Task<KeyPath> GetKeyPath(LedgerClient ledger, BTCPayNetwork network, DirectDerivationStrategy directStrategy)
+        public async Task<KeyPath> GetKeyPath(BTCPayNetwork network, DirectDerivationStrategy directStrategy)
         {
             List<KeyPath> derivations = new List<KeyPath>();
             if(network.NBitcoinNetwork.Consensus.SupportSegwit)
@@ -143,7 +132,7 @@ namespace BTCPayServer.Services
             {
                 try
                 {
-                    var extpubkey = await GetExtPubKey(ledger, network, account, true);
+                    var extpubkey = await GetExtPubKey(_Ledger, network, account, true);
                     if (directStrategy.Root.PubKey == extpubkey.ExtPubKey.PubKey)
                     {
                         foundKeyPath = account;
@@ -159,79 +148,12 @@ namespace BTCPayServer.Services
             return foundKeyPath;
         }
 
-        public async Task<Transaction> SendToAddress(DirectDerivationStrategy strategy, 
-                                                             ReceivedCoin[] coins, BTCPayNetwork network, 
-                                                             (IDestination destination, Money amount, bool substractFees)[] send, 
-                                                             FeeRate feeRate, 
-                                                             IDestination changeAddress,
-                                                             KeyPath changeKeyPath,
-                                                             FeeRate minTxRelayFee)
+        public async Task<Transaction> SignTransactionAsync(SignatureRequest[] signatureRequests,
+                                                     Transaction unsigned,
+                                                     KeyPath changeKeyPath)
         {
-            if (strategy == null)
-                throw new ArgumentNullException(nameof(strategy));
-            if (network == null)
-                throw new ArgumentNullException(nameof(network));
-            if (feeRate == null)
-                throw new ArgumentNullException(nameof(feeRate));
-            if (changeAddress == null)
-                throw new ArgumentNullException(nameof(changeAddress));
-            if (feeRate.FeePerK <= Money.Zero)
-            {
-                throw new ArgumentOutOfRangeException(nameof(feeRate), "The fee rate should be above zero");
-            }
-
-            foreach (var element in send)
-            {
-                if (element.destination == null)
-                    throw new ArgumentNullException(nameof(element.destination));
-                if (element.amount == null)
-                    throw new ArgumentNullException(nameof(element.amount));
-                if (element.amount <= Money.Zero)
-                    throw new ArgumentOutOfRangeException(nameof(element.amount), "The amount should be above zero");
-            }
-
-            var foundKeyPath = await GetKeyPath(Ledger, network, strategy);
-
-            if (foundKeyPath == null)
-            {
-                throw new HardwareWalletException($"This store is not configured to use this ledger");
-            }
-
-            TransactionBuilder builder = new TransactionBuilder();
-            builder.StandardTransactionPolicy.MinRelayTxFee = minTxRelayFee;
-            builder.SetConsensusFactory(network.NBitcoinNetwork);
-            builder.AddCoins(coins.Select(c=>c.Coin).ToArray());
-
-            foreach (var element in send)
-            {
-                builder.Send(element.destination, element.amount);
-                if (element.substractFees)
-                    builder.SubtractFees();
-            }
-            builder.SetChange(changeAddress);
-            builder.SendEstimatedFees(feeRate);
-            builder.Shuffle();
-            var unsigned = builder.BuildTransaction(false);
-
-            var keypaths = new Dictionary<Script, KeyPath>();
-            foreach(var c in coins)
-            {
-                keypaths.TryAdd(c.Coin.ScriptPubKey, c.KeyPath);
-            }
-
-            var hasChange = unsigned.Outputs.Count == 2;
-            var usedCoins = builder.FindSpentCoins(unsigned);
             _Transport.Timeout = TimeSpan.FromMinutes(5);
-            var fullySigned = await Ledger.SignTransactionAsync(
-                usedCoins.Select(c => new SignatureRequest
-                {
-                    InputCoin = c,
-                    KeyPath = foundKeyPath.Derive(keypaths[c.TxOut.ScriptPubKey]),
-                    PubKey = strategy.Root.Derive(keypaths[c.TxOut.ScriptPubKey]).PubKey
-                }).ToArray(),
-                unsigned,
-                hasChange ? foundKeyPath.Derive(changeKeyPath) : null);
-            return fullySigned;
+            return await Ledger.SignTransactionAsync(signatureRequests, unsigned, changeKeyPath);
         }
     }
 

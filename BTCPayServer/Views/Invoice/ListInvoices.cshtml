@@ -8,7 +8,7 @@
 
         <div class="row">
             <div class="col-lg-12 text-center">
-                @Html.Partial("_StatusMessage", Model.StatusMessage)
+                <partial name="_StatusMessage" for="StatusMessage" />
             </div>
         </div>
 
@@ -20,14 +20,16 @@
                 <div id="help" class="collapse text-left">
                     <p>
                         You can search for invoice Id, deposit address, price, order id, store id, any buyer information and any product information.<br />
-                        You can also apply filters to your search by searching for `filtername:value`, here is a list of supported filters
+                        You can also apply filters to your search by searching for <code>filtername:value</code>, here is a list of supported filters
                     </p>
                     <ul>
-                        <li><b>storeid:id</b> for filtering a specific store</li>
-                        <li><b>status:(expired|invalid|complete|confirmed|paid|new)</b> for filtering a specific status</li>
+                        <li><code>storeid:id</code> for filtering a specific store</li>
+                        <li><code>status:(expired|invalid|complete|confirmed|paid|new)</code> for filtering a specific status</li>
+                        <li><code>exceptionstatus:(paidover|paidlate|paidpartial)</code> for filtering a specific exception state</li>
+                        <li><code>unusual:(true|false)</code> for filtering invoices which might requires merchant attention (those invalid or with an exceptionstatus)</li>
                     </ul>
                     <p>
-                        If you want two confirmed and complete invoices, duplicate the filter: `status:confirmed status:complete`.
+                        If you want all confirmed and complete invoices, you can duplicate a filter <code>status:confirmed status:complete</code>.
                     </p>
                 </div>
                 <div class="form-group">
@@ -95,7 +97,7 @@
                             }
                             <td style="text-align:right">@invoice.AmountCurrency</td>
                             <td style="text-align:right">
-                                @if(invoice.Status == "new")
+                                @if(invoice.ShowCheckout)
                                 {
                                     <a asp-action="Checkout" asp-route-invoiceId="@invoice.InvoiceId">Checkout</a> <span>-</span>
                                 }<a asp-action="Invoice" asp-route-invoiceId="@invoice.InvoiceId">Details</a>

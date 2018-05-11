@@ -192,7 +192,7 @@ namespace BTCPayServer.HostedServices
             {
                 State = NBXplorerState.NotConnected;
                 status = null;
-                _Aggregator.Publish(new NBXplorerErrorEvent(_Network, error));
+                Logs.PayServer.LogError($"{_Network.CryptoCode}: NBXplorer error `{error}`");
             }
 
             _Dashboard.Publish(_Network, State, status, error);

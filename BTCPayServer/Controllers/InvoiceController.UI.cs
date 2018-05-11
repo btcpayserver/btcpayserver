@@ -51,7 +51,10 @@ namespace BTCPayServer.Controllers
                 StoreLink = Url.Action(nameof(StoresController.UpdateStore), "Stores", new { storeId = store.Id }),
                 Id = invoice.Id,
                 Status = invoice.Status,
-                TransactionSpeed = invoice.SpeedPolicy == SpeedPolicy.HighSpeed ? "high" : invoice.SpeedPolicy == SpeedPolicy.MediumSpeed ? "medium" : "low",
+                TransactionSpeed = invoice.SpeedPolicy == SpeedPolicy.HighSpeed ? "high" : 
+                                   invoice.SpeedPolicy == SpeedPolicy.MediumSpeed ? "medium" :
+                                   invoice.SpeedPolicy == SpeedPolicy.LowMediumSpeed ? "low-medium" :
+                                   "low",
                 RefundEmail = invoice.RefundMail,
                 CreatedDate = invoice.InvoiceTime,
                 ExpirationDate = invoice.ExpirationTime,
@@ -201,6 +204,12 @@ namespace BTCPayServer.Controllers
 
             var paymentMethodId = PaymentMethodId.Parse(paymentMethodIdStr);
             var network = _NetworkProvider.GetNetwork(paymentMethodId.CryptoCode);
+            if (network == null && isDefaultCrypto)
+            {
+                network = _NetworkProvider.GetAll().FirstOrDefault();
+                paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
+                paymentMethodIdStr = paymentMethodId.ToString();
+            }
             if (invoice == null || network == null)
                 return null;
             if (!invoice.Support(paymentMethodId))
@@ -210,6 +219,7 @@ namespace BTCPayServer.Controllers
                 var paymentMethodTemp = invoice.GetPaymentMethods(_NetworkProvider).First();
                 network = paymentMethodTemp.Network;
                 paymentMethodId = paymentMethodTemp.GetId();
+                paymentMethodIdStr = paymentMethodId.ToString();
             }
 
             var paymentMethod = invoice.GetPaymentMethod(paymentMethodId, _NetworkProvider);
@@ -370,14 +380,19 @@ namespace BTCPayServer.Controllers
                 Count = count,
                 Skip = skip,
                 UserId = GetUserId(),
+                Unusual = !filterString.Filters.ContainsKey("unusual") ? null
+                          : !bool.TryParse(filterString.Filters["unusual"].First(), out var r) ? (bool?)null
+                          : r,
                 Status = filterString.Filters.ContainsKey("status") ? filterString.Filters["status"].ToArray() : null,
+                ExceptionStatus = filterString.Filters.ContainsKey("exceptionstatus") ? filterString.Filters["exceptionstatus"].ToArray() : null,
                 StoreId = filterString.Filters.ContainsKey("storeid") ? filterString.Filters["storeid"].ToArray() : null
             }))
             {
                 model.SearchTerm = searchTerm;
                 model.Invoices.Add(new InvoiceModel()
                 {
-                    Status = invoice.Status,
+                    Status = invoice.Status + (invoice.ExceptionStatus == null ? string.Empty : $" ({invoice.ExceptionStatus})"),
+                    ShowCheckout = invoice.Status == "new",
                     Date = (DateTimeOffset.UtcNow - invoice.InvoiceTime).Prettify() + " ago",
                     InvoiceId = invoice.Id,
                     OrderId = invoice.OrderId ?? string.Empty,

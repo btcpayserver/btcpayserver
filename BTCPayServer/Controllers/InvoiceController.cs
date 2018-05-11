@@ -98,6 +98,7 @@ namespace BTCPayServer.Controllers
             entity.ExtendedNotifications = invoice.ExtendedNotifications;
             entity.NotificationURL = notificationUri?.AbsoluteUri;
             entity.BuyerInformation = Map<Invoice, BuyerInformation>(invoice);
+            entity.PaymentTolerance = storeBlob.PaymentTolerance;
             //Another way of passing buyer info to support
             FillBuyerInfo(invoice.Buyer, entity.BuyerInformation);
             if (entity?.BuyerInformation?.BuyerEmail != null)
@@ -276,6 +277,7 @@ namespace BTCPayServer.Controllers
                 return defaultPolicy;
             var mappings = new Dictionary<string, SpeedPolicy>();
             mappings.Add("low", SpeedPolicy.LowSpeed);
+            mappings.Add("low-medium", SpeedPolicy.LowMediumSpeed);
             mappings.Add("medium", SpeedPolicy.MediumSpeed);
             mappings.Add("high", SpeedPolicy.HighSpeed);
             if (!mappings.TryGetValue(transactionSpeed, out SpeedPolicy policy))

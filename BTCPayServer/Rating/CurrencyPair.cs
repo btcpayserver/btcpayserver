@@ -45,6 +45,11 @@ namespace BTCPayServer.Rating
                 var currencyPair = splitted[0];
                 if (currencyPair.Length < 6 || currencyPair.Length > 10)
                     return false;
+                if (currencyPair.Length == 6)
+                { 
+                    value = new CurrencyPair(currencyPair.Substring(0,3), currencyPair.Substring(3, 3));
+                    return true;
+                }
                 for (int i = 3; i < 5; i++)
                 {
                     var potentialCryptoName = currencyPair.Substring(0, i);
@@ -89,6 +94,11 @@ namespace BTCPayServer.Rating
         public override string ToString()
         {
             return $"{Left}_{Right}";
+        }
+
+        public CurrencyPair Inverse()
+        {
+            return new CurrencyPair(Right, Left);
         }
     }
 }

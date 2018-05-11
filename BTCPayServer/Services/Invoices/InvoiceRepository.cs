@@ -436,6 +436,18 @@ namespace BTCPayServer.Services.Invoices
                     query = query.Where(i => statusSet.Contains(i.Status));
                 }
 
+                if(queryObject.Unusual != null)
+                {
+                    var unused = queryObject.Unusual.Value;
+                    query = query.Where(i => unused == (i.Status == "invalid" || i.ExceptionStatus != null));
+                }
+
+                if (queryObject.ExceptionStatus != null && queryObject.ExceptionStatus.Length > 0)
+                {
+                    var exceptionStatusSet = queryObject.ExceptionStatus.Select(s => NormalizeExceptionStatus(s)).ToHashSet();
+                    query = query.Where(i => exceptionStatusSet.Contains(i.ExceptionStatus));
+                }
+
                 query = query.OrderByDescending(q => q.Created);
 
                 if (queryObject.Skip != null)
@@ -449,6 +461,29 @@ namespace BTCPayServer.Services.Invoices
                 return data.Select(ToEntity).ToArray();
             }
 
+        }
+
+        private string NormalizeExceptionStatus(string status)
+        {
+            status = status.ToLowerInvariant();
+            switch (status)
+            {
+                case "paidover":
+                case "over":
+                case "overpaid":
+                    status = "paidOver";
+                    break;
+                case "paidlate":
+                case "late":
+                    status = "paidLate";
+                    break;
+                case "paidpartial":
+                case "underpaid":
+                case "partial":
+                    status = "paidPartial";
+                    break;
+            }
+            return status;
         }
 
         public async Task AddRefundsAsync(string invoiceId, TxOut[] outputs, Network network)
@@ -614,10 +649,18 @@ namespace BTCPayServer.Services.Invoices
             get; set;
         }
 
+        public bool? Unusual { get; set; }
+
         public string[] Status
         {
             get; set;
         }
+
+        public string[] ExceptionStatus
+        {
+            get; set;
+        }
+
         public string InvoiceId
         {
             get;

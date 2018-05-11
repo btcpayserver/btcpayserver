@@ -13,11 +13,14 @@ using BTCPayServer.Data;
 using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Cors;
 using BTCPayServer.Services.Stores;
+using Microsoft.AspNetCore.Authorization;
+using BTCPayServer.Security;
 
 namespace BTCPayServer.Controllers
 {
     [EnableCors("BitpayAPI")]
     [BitpayAPIConstraint]
+    [Authorize(Policies.CanUseStore.Key)]
     public class InvoiceControllerAPI : Controller
     {
         private InvoiceController _InvoiceController;
@@ -43,9 +46,10 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("invoices/{id}")]
+        [AllowAnonymous]
         public async Task<DataWrapper<InvoiceResponse>> GetInvoice(string id, string token)
         {
-            var invoice = await _InvoiceRepository.GetInvoice(HttpContext.GetStoreData().Id, id);
+            var invoice = await _InvoiceRepository.GetInvoice(null, id);
             if (invoice == null)
                 throw new BitpayHttpException(404, "Object not found");
             var resp = invoice.EntityToDTO(_NetworkProvider);

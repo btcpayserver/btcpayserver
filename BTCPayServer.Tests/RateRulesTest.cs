@@ -113,12 +113,21 @@ namespace BTCPayServer.Tests
             builder.AppendLine("DOGE_BTC = 2000");
             Assert.True(RateRules.TryParse(builder.ToString(), out rules));
             rules.GlobalMultiplier = 1.1m;
+
             rule2 = rules.GetRuleFor(CurrencyPair.Parse("DOGE_USD"));
             Assert.Equal("(2000 * (-3 + coinbase(BTC_CAD) + 50 - 5)) * 1.1", rule2.ToString());
             rule2.ExchangeRates.SetRate("coinbase", CurrencyPair.Parse("BTC_CAD"), 1000m);
             Assert.True(rule2.Reevaluate());
             Assert.Equal("(2000 * (-3 + 1000 + 50 - 5)) * 1.1", rule2.ToString(true));
             Assert.Equal((2000m * (-3m + 1000m + 50m - 5m)) * 1.1m, rule2.Value.Value);
+
+            // Test inverse
+            rule2 = rules.GetRuleFor(CurrencyPair.Parse("USD_DOGE"));
+            Assert.Equal("(1 / (2000 * (-3 + coinbase(BTC_CAD) + 50 - 5))) * 1.1", rule2.ToString());
+            rule2.ExchangeRates.SetRate("coinbase", CurrencyPair.Parse("BTC_CAD"), 1000m);
+            Assert.True(rule2.Reevaluate());
+            Assert.Equal("(1 / (2000 * (-3 + 1000 + 50 - 5))) * 1.1", rule2.ToString(true));
+            Assert.Equal(( 1.0m / (2000m * (-3m + 1000m + 50m - 5m))) * 1.1m, rule2.Value.Value);
             ////////
         }
     }

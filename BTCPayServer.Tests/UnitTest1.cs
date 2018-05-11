@@ -276,7 +276,7 @@ namespace BTCPayServer.Tests
                 var invoice = user.BitPay.CreateInvoice(new Invoice()
                 {
                     Buyer = new Buyer() { email = "test@fwf.com" },
-                    Price = 5000.0,
+                    Price = 5000.0m,
                     Currency = "USD",
                     PosData = "posData",
                     OrderId = "orderId",
@@ -308,7 +308,7 @@ namespace BTCPayServer.Tests
                 var invoice = user.BitPay.CreateInvoice(new Invoice()
                 {
                     Buyer = new Buyer() { email = "test@fwf.com" },
-                    Price = 5000.0,
+                    Price = 5000.0m,
                     Currency = "USD",
                     PosData = "posData",
                     OrderId = "orderId",
@@ -440,7 +440,7 @@ namespace BTCPayServer.Tests
 
                 var invoice = user.BitPay.CreateInvoice(new Invoice()
                 {
-                    Price = 0.01,
+                    Price = 0.01m,
                     Currency = "USD",
                     PosData = "posData",
                     OrderId = "orderId",
@@ -473,7 +473,7 @@ namespace BTCPayServer.Tests
 
                 var invoice = user.BitPay.CreateInvoice(new Invoice()
                 {
-                    Price = 0.01,
+                    Price = 0.01m,
                     Currency = "USD",
                     PosData = "posData",
                     OrderId = "orderId",
@@ -501,7 +501,7 @@ namespace BTCPayServer.Tests
             await Task.Delay(TimeSpan.FromSeconds(RandomUtils.GetUInt32() % 5));
             var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice()
             {
-                Price = 0.01,
+                Price = 0.01m,
                 Currency = "USD",
                 PosData = "posData",
                 OrderId = "orderId",
@@ -554,7 +554,7 @@ namespace BTCPayServer.Tests
                     acc.RegisterDerivationScheme("BTC");
                     var invoice = acc.BitPay.CreateInvoice(new Invoice()
                     {
-                        Price = 5.0,
+                        Price = 5.0m,
                         Currency = "USD",
                         PosData = "posData",
                         OrderId = "orderId",
@@ -656,7 +656,7 @@ namespace BTCPayServer.Tests
                 user.RegisterDerivationScheme("BTC");
                 var invoice = user.BitPay.CreateInvoice(new Invoice()
                 {
-                    Price = 5000.0,
+                    Price = 5000.0m,
                     Currency = "USD"
                 }, Facade.Merchant);
                 var payment1 = invoice.BtcDue + Money.Coins(0.0001m);
@@ -756,7 +756,7 @@ namespace BTCPayServer.Tests
                 message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Encoders.Base64.EncodeData(Encoders.ASCII.DecodeData(apiKey)));
                 var invoice = new Invoice()
                 {
-                    Price = 5000.0,
+                    Price = 5000.0m,
                     Currency = "USD"
                 };
                 message.Content = new StringContent(JsonConvert.SerializeObject(invoice), Encoding.UTF8, "application/json");
@@ -798,7 +798,7 @@ namespace BTCPayServer.Tests
             storeController.Rates(vm).Wait();
             var invoice2 = user.BitPay.CreateInvoice(new Invoice()
             {
-                Price = 5000.0,
+                Price = 5000.0m,
                 Currency = "USD",
                 PosData = "posData",
                 OrderId = "orderId",
@@ -822,7 +822,7 @@ namespace BTCPayServer.Tests
                 // First we try payment with a merchant having only BTC
                 var invoice1 = user.BitPay.CreateInvoice(new Invoice()
                 {
-                    Price = 5000.0,
+                    Price = 5000.0m,
                     Currency = "USD",
                     PosData = "posData",
                     OrderId = "orderId",
@@ -840,7 +840,7 @@ namespace BTCPayServer.Tests
 
                 var invoice2 = user.BitPay.CreateInvoice(new Invoice()
                 {
-                    Price = 5000.0,
+                    Price = 5000.0m,
                     Currency = "USD",
                     PosData = "posData",
                     OrderId = "orderId",
@@ -896,7 +896,7 @@ namespace BTCPayServer.Tests
 
                 // Despite it is called BitcoinAddress it should be LTC because BTC is not available
                 Assert.Null(invoice.BitcoinAddress);
-                Assert.NotEqual(1.0, invoice.Rate);
+                Assert.NotEqual(1.0m, invoice.Rate);
                 Assert.NotEqual(invoice.BtcDue, invoice.CryptoInfo[0].Due); // Should be BTC rate
                 cashCow.SendToAddress(invoiceAddress, invoice.CryptoInfo[0].Due);
 
@@ -983,7 +983,7 @@ namespace BTCPayServer.Tests
                 // First we try payment with a merchant having only BTC
                 var invoice = user.BitPay.CreateInvoice(new Invoice()
                 {
-                    Price = 5000.0,
+                    Price = 5000.0m,
                     Currency = "USD",
                     PosData = "posData",
                     OrderId = "orderId",
@@ -1015,7 +1015,7 @@ namespace BTCPayServer.Tests
                 user.RegisterDerivationScheme("LTC");
                 invoice = user.BitPay.CreateInvoice(new Invoice()
                 {
-                    Price = 5000.0,
+                    Price = 5000.0m,
                     Currency = "USD",
                     PosData = "posData",
                     OrderId = "orderId",
@@ -1137,7 +1137,7 @@ namespace BTCPayServer.Tests
 
                 var invoice = user.BitPay.CreateInvoice(new Invoice()
                 {
-                    Price = 1.5,
+                    Price = 1.5m,
                     Currency = "USD",
                     PosData = "posData",
                     OrderId = "orderId",
@@ -1150,7 +1150,7 @@ namespace BTCPayServer.Tests
 
                 invoice = user.BitPay.CreateInvoice(new Invoice()
                 {
-                    Price = 5.5,
+                    Price = 5.5m,
                     Currency = "USD",
                     PosData = "posData",
                     OrderId = "orderId",
@@ -1199,7 +1199,7 @@ namespace BTCPayServer.Tests
                 Assert.Equal("$5.00", vmview.Items[0].Price.Formatted);
                 Assert.IsType<RedirectResult>(apps.ViewPointOfSale(appId, 0, "orange").Result);
                 var invoice = user.BitPay.GetInvoices().First();
-                Assert.Equal(10.00, invoice.Price);
+                Assert.Equal(10.00m, invoice.Price);
                 Assert.Equal("CAD", invoice.Currency);
                 Assert.Equal("orange", invoice.ItemDesc);
             }
@@ -1250,7 +1250,7 @@ namespace BTCPayServer.Tests
                 user.RegisterDerivationScheme("BTC");
                 var invoice = user.BitPay.CreateInvoice(new Invoice()
                 {
-                    Price = 5000.0,
+                    Price = 5000.0m,
                     Currency = "USD",
                     PosData = "posData",
                     OrderId = "orderId",
@@ -1355,12 +1355,12 @@ namespace BTCPayServer.Tests
                 {
                     var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
                     Assert.Equal("complete", localInvoice.Status);
-                    Assert.NotEqual(0.0, localInvoice.Rate);
+                    Assert.NotEqual(0.0m, localInvoice.Rate);
                 });
 
                 invoice = user.BitPay.CreateInvoice(new Invoice()
                 {
-                    Price = 5000.0,
+                    Price = 5000.0m,
                     Currency = "USD",
                     PosData = "posData",
                     OrderId = "orderId",

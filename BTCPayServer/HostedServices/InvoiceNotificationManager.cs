@@ -207,7 +207,7 @@ namespace BTCPayServer.HostedServices
             if (btcCryptoInfo != null)
             {
 #pragma warning disable CS0618
-                notification.Rate = (double)dto.Rate;
+                notification.Rate = dto.Rate;
                 notification.Url = dto.Url;
                 notification.BTCDue = dto.BTCDue;
                 notification.BTCPaid = dto.BTCPaid;

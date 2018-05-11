@@ -79,7 +79,7 @@ namespace BTCPayServer.Models
 
         //"price":5
         [JsonProperty("price")]
-        public double Price
+        public decimal Price
         {
             get; set;
         }
@@ -94,7 +94,7 @@ namespace BTCPayServer.Models
         //"exRates":{"USD":4320.02}
         [JsonProperty("exRates")]
         [Obsolete("Use CryptoInfo.ExRates instead")]
-        public Dictionary<string, double> ExRates
+        public Dictionary<string, decimal> ExRates
         {
             get; set;
         }
@@ -224,6 +224,24 @@ namespace BTCPayServer.Models
         {
             get; set;
         }
+        
+        [JsonProperty("paymentSubtotals")]
+        public Dictionary<string, decimal> PaymentSubtotals { get; set; }
+
+        [JsonProperty("paymentTotals")]
+        public Dictionary<string, decimal> PaymentTotals { get; set; }
+        [JsonProperty("amountPaid")]
+        public decimal AmountPaid { get; set; }
+        [JsonProperty("exchangeRates")]
+        public Dictionary<string, Dictionary<string, decimal>> ExchangeRates{ get; set; }
+
+        [JsonProperty("supportedTransactionCurrencies")]
+        public Dictionary<string, NBitpayClient.InvoiceSupportedTransactionCurrency> SupportedTransactionCurrencies { get; set; }
+
+        [JsonProperty("addresses")]
+        public Dictionary<string, string> Addresses { get; set; }
+        [JsonProperty("paymentCodes")]
+        public Dictionary<string, NBitpayClient.InvoicePaymentUrls> PaymentCodes{get; set;}
     }
     public class Flags
     {
@@ -233,4 +251,5 @@ namespace BTCPayServer.Models
             get; set;
         }
     }
+
 }

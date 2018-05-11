@@ -12,6 +12,7 @@ using NBXplorer.Models;
 using NBXplorer;
 using NBXplorer.DerivationStrategy;
 using BTCPayServer.Payments;
+using NBitpayClient;
 
 namespace BTCPayServer.Services.Invoices
 {
@@ -335,7 +336,14 @@ namespace BTCPayServer.Services.Invoices
                 ExpirationTime = ExpirationTime,
                 Status = Status,
                 Currency = ProductInformation.Currency,
-                Flags = new Flags() { Refundable = Refundable }
+                Flags = new Flags() { Refundable = Refundable },
+
+                PaymentSubtotals = new Dictionary<string, decimal>(),
+                PaymentTotals= new Dictionary<string, decimal>(),
+                SupportedTransactionCurrencies = new Dictionary<string, InvoiceSupportedTransactionCurrency>(),
+                Addresses = new Dictionary<string, string>(),
+                PaymentCodes = new Dictionary<string, InvoicePaymentUrls>(),
+                ExchangeRates = new Dictionary<string, Dictionary<string, decimal>>()
             };
 
             dto.Url = ServerUrl.WithTrailingSlash() + $"invoice?id=" + Id;
@@ -344,10 +352,18 @@ namespace BTCPayServer.Services.Invoices
             {
                 var accounting = info.Calculate();
                 var cryptoInfo = new NBitpayClient.InvoiceCryptoInfo();
-                cryptoInfo.CryptoCode = info.GetId().CryptoCode;
+                var price = accounting.TotalDue - accounting.NetworkFee;
+                var cryptoCode = info.GetId().CryptoCode;
+                var address = info.GetPaymentMethodDetails()?.GetPaymentDestination();
+                var exrates = new Dictionary<string, decimal>
+                {
+                    { ProductInformation.Currency, cryptoInfo.Rate }
+                };
+
+                cryptoInfo.CryptoCode = cryptoCode;
                 cryptoInfo.PaymentType = info.GetId().PaymentType.ToString();
                 cryptoInfo.Rate = info.Rate;
-                cryptoInfo.Price = (accounting.TotalDue - accounting.NetworkFee).ToString();
+                cryptoInfo.Price = price.ToString();
 
                 cryptoInfo.Due = accounting.Due.ToString();
                 cryptoInfo.Paid = accounting.Paid.ToString();
@@ -356,11 +372,9 @@ namespace BTCPayServer.Services.Invoices
                 cryptoInfo.TxCount = accounting.TxCount;
                 cryptoInfo.CryptoPaid = accounting.CryptoPaid.ToString();
 
-                cryptoInfo.Address = info.GetPaymentMethodDetails()?.GetPaymentDestination();
-                cryptoInfo.ExRates = new Dictionary<string, double>
-                {
-                    { ProductInformation.Currency, (double)cryptoInfo.Rate }
-                };
+                cryptoInfo.Address = address;
+               
+                cryptoInfo.ExRates = exrates;
                 var paymentId = info.GetId();
                 var scheme = info.Network.UriScheme;
                 cryptoInfo.Url = ServerUrl.WithTrailingSlash() + $"i/{paymentId}/{Id}";
@@ -395,10 +409,19 @@ namespace BTCPayServer.Services.Invoices
                     dto.BTCDue = cryptoInfo.Due;
                     dto.PaymentUrls = cryptoInfo.PaymentUrls;
                 }
+
 #pragma warning restore CS0618
                 dto.CryptoInfo.Add(cryptoInfo);
-            }
 
+                dto.PaymentSubtotals.Add(cryptoCode, price.ToDecimal(MoneyUnit.BTC));
+                dto.PaymentTotals.Add(cryptoCode, accounting.CryptoPaid.ToDecimal(MoneyUnit.BTC));
+                dto.SupportedTransactionCurrencies.Add(cryptoCode, new InvoiceSupportedTransactionCurrency()
+                {
+                    Enabled = true
+                });
+                dto.Addresses.Add(cryptoCode, address);
+                dto.ExchangeRates.Add(cryptoCode, exrates);
+            }
             Populate(ProductInformation, dto);
             Populate(BuyerInformation, dto);
 

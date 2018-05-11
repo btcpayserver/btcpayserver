@@ -16,7 +16,7 @@ namespace BTCPayServer
             Add(new BTCPayNetwork()
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
-                BlockExplorerLink = NetworkType == NetworkType.Mainnet ? "https://insight.polispay.org/api/tx/{0}" : "https://insight.polispay.org/apitx/{0}",
+                BlockExplorerLink = NetworkType == NetworkType.Mainnet ? "https://insight.polispay.org/tx/{0}" : "https://insight.polispay.org/tx/{0}",
                 NBitcoinNetwork = nbxplorerNetwork.NBitcoinNetwork,
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "polis",

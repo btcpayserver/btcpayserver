@@ -54,6 +54,7 @@
                 <select asp-for="SpeedPolicy" class="form-control">
                     <option value="0">Is unconfirmed</option>
                     <option value="1">Has at least 1 confirmation</option>
+                    <option value="3">Has at least 2 confirmations</option>
                     <option value="2">Has at least 6 confirmations</option>
                 </select>
                 <span asp-validation-for="SpeedPolicy" class="text-danger"></span>

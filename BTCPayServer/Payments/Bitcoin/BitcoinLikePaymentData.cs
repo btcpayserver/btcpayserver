@@ -68,6 +68,10 @@ namespace BTCPayServer.Payments.Bitcoin
             {
                 return ConfirmationCount >= 1;
             }
+            else if (speedPolicy == SpeedPolicy.LowMediumSpeed)
+            {
+                return ConfirmationCount >= 2;
+            }
             else if (speedPolicy == SpeedPolicy.LowSpeed)
             {
                 return ConfirmationCount >= 6;

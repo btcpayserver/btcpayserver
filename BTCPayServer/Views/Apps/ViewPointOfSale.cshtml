@@ -19,7 +19,7 @@
     <div class="container d-flex h-100">
         <div class="justify-content-center align-self-center text-center mx-auto" style="margin: auto;">
             <h1 class="mb-4">@Model.Title</h1>
-            <form method="post">
+            <form method="post" asp-antiforgery="false">
                 <div class="row">
                     @for(int i = 0; i < Model.Items.Length; i++)
                     {
@@ -36,7 +36,7 @@
             {
                 <div class="row mt-4">
                     <div class="col-md-4 offset-md-4 col-sm-6 offset-sm-3">
-                        <form method="post" data-buy>
+                        <form method="post" asp-antiforgery="false" data-buy>
                             <div class="input-group">
                                 <input class="form-control" type="number" min="0" step="@Model.Step" name="amount" placeholder="amount"><div class="input-group-append">
                                     <button class="btn btn-primary" type="submit">Pay</button>

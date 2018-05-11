@@ -277,6 +277,7 @@ namespace BTCPayServer.Controllers
                 return defaultPolicy;
             var mappings = new Dictionary<string, SpeedPolicy>();
             mappings.Add("low", SpeedPolicy.LowSpeed);
+            mappings.Add("low-medium", SpeedPolicy.LowMediumSpeed);
             mappings.Add("medium", SpeedPolicy.MediumSpeed);
             mappings.Add("high", SpeedPolicy.HighSpeed);
             if (!mappings.TryGetValue(transactionSpeed, out SpeedPolicy policy))

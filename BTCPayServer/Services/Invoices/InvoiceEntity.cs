@@ -101,7 +101,8 @@ namespace BTCPayServer.Services.Invoices
     {
         HighSpeed = 0,
         MediumSpeed = 1,
-        LowSpeed = 2
+        LowSpeed = 2,
+        LowMediumSpeed = 3
     }
     public class InvoiceEntity
     {

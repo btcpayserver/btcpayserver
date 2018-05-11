@@ -417,8 +417,19 @@ namespace BTCPayServer.Rating
 
         public RateRule(RateRules parent, CurrencyPair currencyPair, SyntaxNode candidate)
         {
+            _CurrencyPair = currencyPair;
             flatten = new FlattenExpressionRewriter(parent, currencyPair);
             this.expression = flatten.Visit(candidate);
+        }
+
+
+        private readonly CurrencyPair _CurrencyPair;
+        public CurrencyPair CurrencyPair
+        {
+            get
+            {
+                return _CurrencyPair;
+            }
         }
 
         public ExchangeRates ExchangeRates

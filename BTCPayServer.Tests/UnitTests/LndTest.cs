@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Payments.Lightning.Lnd;
 using NBitcoin;
+using NBitcoin.RPC;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -16,31 +18,96 @@ namespace BTCPayServer.Tests.UnitTests
         public LndTest(ITestOutputHelper output)
         {
             this.output = output;
+            initializeEnvironment();
+
+            LndRpc = LndSwaggerClientCustomHttp.Create(new Uri("http://localhost:53280"), Network.RegTest);
+            InvoiceClient = new LndClient(LndRpc);
         }
 
-        private LndClient Client
-        {
-            get
-            {
-                var lnd = new LndClient(new Uri("http://localhost:53280"), Network.RegTest);
-                return lnd;
-            }
-        }
+        private LndSwaggerClientCustomHttp LndRpc { get; set; }
+        private LndClient InvoiceClient { get; set; }
 
         [Fact]
         public async Task GetInfo()
         {
-            var res = await Client.GetInfo();
-
+            var res = await InvoiceClient.GetInfo();
             output.WriteLine("Result: " + res.ToJson());
         }
 
         [Fact]
         public async Task CreateInvoice()
         {
-            var res = await Client.CreateInvoice(10000, "Hello world", TimeSpan.FromSeconds(3600));
-
+            var res = await InvoiceClient.CreateInvoice(10000, "Hello world", TimeSpan.FromSeconds(3600));
             output.WriteLine("Result: " + res.ToJson());
+        }
+
+        [Fact]
+        public async Task GetInvoice()
+        {
+            var createInvoice = await InvoiceClient.CreateInvoice(10000, "Hello world", TimeSpan.FromSeconds(3600));
+            var getInvoice = await InvoiceClient.GetInvoice(createInvoice.Id);
+
+            Assert.Equal(createInvoice.BOLT11, getInvoice.BOLT11);
+        }
+
+
+
+        [Fact]
+        public async Task SetupWalletForPayment()
+        {
+            var nodeInfo = GetInfo();
+            var addressResponse = await LndRpc.NewWitnessAddressAsync();
+            var address = BitcoinAddress.Create(addressResponse.Address, Network.RegTest);
+            await ExplorerNode.SendToAddressAsync(address, Money.Coins(0.2m));
+            ExplorerNode.Generate(1);
+            await WaitLNSynched();
+            await Task.Delay(1000);
+
+            // We need two instances of lnd... one for merchant, one for buyer
+            // prepare that in next commit
+            //var channelReq = new LnrpcOpenChannelRequest
+            //{
+            //    Local_funding_amount = 16777215.ToString()
+            //};
+            //var channelResp = await LndRpc.OpenChannelSyncAsync(channelReq);
+
+            output.WriteLine("Wallet Address: " + address);
+        }
+
+        private async Task<LightningNodeInformation> WaitLNSynched()
+        {
+            while (true)
+            {
+                var merchantInfo = await InvoiceClient.GetInfo();
+                var blockCount = await ExplorerNode.GetBlockCountAsync();
+                if (merchantInfo.BlockHeight != blockCount)
+                {
+                    await Task.Delay(1000);
+                }
+                else
+                {
+                    return merchantInfo;
+                }
+            }
+        }
+
+
+
+
+        //
+        private void initializeEnvironment()
+        {
+            NetworkProvider = new BTCPayNetworkProvider(NetworkType.Regtest);
+            ExplorerNode = new RPCClient(RPCCredentialString.Parse(GetEnvironment("TESTS_BTCRPCCONNECTION", "server=http://127.0.0.1:43782;ceiwHEbqWI83:DwubwWsoo3")), NetworkProvider.GetNetwork("BTC").NBitcoinNetwork);
+        }
+
+        public BTCPayNetworkProvider NetworkProvider { get; private set; }
+        public RPCClient ExplorerNode { get; set; }
+
+        internal string GetEnvironment(string variable, string defaultValue)
+        {
+            var var = Environment.GetEnvironmentVariable(variable);
+            return String.IsNullOrEmpty(var) ? defaultValue : var;
         }
     }
 }

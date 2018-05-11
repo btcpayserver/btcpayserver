@@ -17,17 +17,12 @@ namespace BTCPayServer.Payments.Lightning.Lnd
 {
     public class LndClient : ILightningInvoiceClient, ILightningListenInvoiceSession
     {
-        public LndClient(Uri uri, Network network, byte[] tlsCertificate = null, byte[] grpcMacaroon = null)
+        public LndSwaggerClient _Decorator;
+
+        public LndClient(LndSwaggerClient decorator)
         {
-            // for now working with custom build of lnd that has no macaroons and is on http
-            //_HttpClient = HttpClientFactoryForLnd.Generate(tlsCertificate, grpcMacaroon);
-
-            _HttpClient = new HttpClient();
-            _Decorator = new LndSwaggerClient(uri.ToString().TrimEnd('/'), _HttpClient);
+            _Decorator = decorator;
         }
-
-        private HttpClient _HttpClient;
-        private LndSwaggerClient _Decorator;
 
         public async Task<LightningInvoice> CreateInvoice(LightMoney amount, string description, TimeSpan expiry,
             CancellationToken cancellation = default(CancellationToken))
@@ -84,11 +79,8 @@ namespace BTCPayServer.Payments.Lightning.Lnd
 
         }
 
-        public void Dispose()
-        {
-            _HttpClient?.Dispose();
-        }
 
+        // utility static methods... maybe move to separate class
         private static string BitString(byte[] bytes)
         {
             return BitConverter.ToString(bytes)
@@ -123,6 +115,11 @@ namespace BTCPayServer.Payments.Lightning.Lnd
             return invoice;
         }
 
+        public void Dispose()
+        {
+            throw new NotImplementedException();
+        }
+
         // Invariant culture conversion
         public static class ConvertInv
         {
@@ -143,53 +140,7 @@ namespace BTCPayServer.Payments.Lightning.Lnd
         }
     }
 
-    internal class HttpClientFactoryForLnd
-    {
-        internal static HttpClient Generate(byte[] tlsCertificate, byte[] grpcMacaroon)
-        {
-            var httpClient = new HttpClient(GetCertificate(tlsCertificate));
-            var macaroonHex = BitConverter.ToString(grpcMacaroon).Replace("-", "", StringComparison.InvariantCulture);
-            httpClient.DefaultRequestHeaders.Add("Grpc-Metadata-macaroon", macaroonHex);
-
-            return httpClient;
-        }
-
-        private static HttpClientHandler GetCertificate(byte[] certFile)
-        {
-            X509Certificate2 clientCertificate = null;
-            if (certFile != null)
-                clientCertificate = new X509Certificate2(certFile);
-
-            var handler = new HttpClientHandler
-            {
-                SslProtocols = SslProtocols.Tls12
-            };
-
-            handler.ServerCertificateCustomValidationCallback = (request, cert, chain, errors) =>
-            {
-                const SslPolicyErrors unforgivableErrors =
-                    SslPolicyErrors.RemoteCertificateNotAvailable |
-                    SslPolicyErrors.RemoteCertificateNameMismatch;
-
-                if ((errors & unforgivableErrors) != 0)
-                {
-                    return false;
-                }
-
-                if (clientCertificate == null)
-                    return true;
-
-                X509Certificate2 remoteRoot = chain.ChainElements[chain.ChainElements.Count - 1].Certificate;
-                var res = clientCertificate.RawData.SequenceEqual(remoteRoot.RawData);
-
-                return res;
-            };
-
-            return handler;
-        }
-    }
-
-    partial class LndSwaggerClient
+    public partial class LndSwaggerClient
     {
     }
 }

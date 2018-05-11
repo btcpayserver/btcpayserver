@@ -352,7 +352,7 @@ namespace BTCPayServer.Services.Invoices
             {
                 var accounting = info.Calculate();
                 var cryptoInfo = new NBitpayClient.InvoiceCryptoInfo();
-                var price = accounting.TotalDue - accounting.NetworkFee;
+                var subtotalPrice = accounting.TotalDue - accounting.NetworkFee;
                 var cryptoCode = info.GetId().CryptoCode;
                 var address = info.GetPaymentMethodDetails()?.GetPaymentDestination();
                 var exrates = new Dictionary<string, decimal>
@@ -363,7 +363,7 @@ namespace BTCPayServer.Services.Invoices
                 cryptoInfo.CryptoCode = cryptoCode;
                 cryptoInfo.PaymentType = info.GetId().PaymentType.ToString();
                 cryptoInfo.Rate = info.Rate;
-                cryptoInfo.Price = price.ToString();
+                cryptoInfo.Price = subtotalPrice.ToString();
 
                 cryptoInfo.Due = accounting.Due.ToString();
                 cryptoInfo.Paid = accounting.Paid.ToString();
@@ -413,8 +413,8 @@ namespace BTCPayServer.Services.Invoices
 #pragma warning restore CS0618
                 dto.CryptoInfo.Add(cryptoInfo);
 
-                dto.PaymentSubtotals.Add(cryptoCode, price.ToDecimal(MoneyUnit.BTC));
-                dto.PaymentTotals.Add(cryptoCode, accounting.CryptoPaid.ToDecimal(MoneyUnit.BTC));
+                dto.PaymentSubtotals.Add(cryptoCode, subtotalPrice.ToDecimal(MoneyUnit.Satoshi));
+                dto.PaymentTotals.Add(cryptoCode, accounting.TotalDue.ToDecimal(MoneyUnit.Satoshi));
                 dto.SupportedTransactionCurrencies.Add(cryptoCode, new InvoiceSupportedTransactionCurrency()
                 {
                     Enabled = true
@@ -422,6 +422,9 @@ namespace BTCPayServer.Services.Invoices
                 dto.Addresses.Add(cryptoCode, address);
                 dto.ExchangeRates.Add(cryptoCode, exrates);
             }
+
+            //TODO: Populate dto.AmountPaid
+            //TODO: Populate dto.TransactionCurrency
             Populate(ProductInformation, dto);
             Populate(BuyerInformation, dto);
 

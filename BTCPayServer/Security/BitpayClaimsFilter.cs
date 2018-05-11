@@ -79,13 +79,13 @@ namespace BTCPayServer.Security
                 if (storeId != null)
                 {
                     var identity = ((ClaimsIdentity)context.HttpContext.User.Identity);
-                    identity.AddClaim(new Claim(Claims.OwnStore, storeId));
+                    identity.AddClaim(new Claim(Policies.CanUseStore.Key, storeId));
                     var store = await _StoreRepository.FindStore(storeId);
                     context.HttpContext.SetStoreData(store);
                 }
                 else if (failedAuth)
                 {
-                    throw new BitpayHttpException(401, "Can't access to store");
+                    throw new BitpayHttpException(401, "Invalid credentials");
                 }
             }
         }

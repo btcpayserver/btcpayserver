@@ -44,7 +44,22 @@ services:
       - customer_lightningd
       - merchant_lightningd
       - lightning-charged
-      - lnd
+      - customer_lnd
+      - merchant_lnd
+
+  devlnd: 
+    image: nicolasdorier/docker-bitcoin:0.16.0
+    environment:
+      BITCOIN_EXTRA_ARGS: |
+        regtest=1
+        connect=bitcoind:39388
+    links:
+      - nbxplorer
+      - postgres
+      - customer_lnd
+      - merchant_lnd
+
+
 
   nbxplorer:
     image: nicolasdorier/nbxplorer:1.0.2.2
@@ -180,7 +195,7 @@ services:
     expose:
       - "5432"
 
-  lnd:
+  merchant_lnd:
     image: btcpayserver/lnd:0.4.1.0
     environment:
       RPCHOST: bitcoind:43782
@@ -193,8 +208,32 @@ services:
       DEBUG: debug
     ports:
       - "53280:8080"
+    expose:
+      - "8080"
+      - "10009"
     volumes:
-      - "lnd_datadir:/root/.lnd"
+      - "merchant_lnd_datadir:/root/.lnd"
+    links:
+      - bitcoind
+
+  customer_lnd:
+    image: btcpayserver/lnd:0.4.1.0
+    environment:
+      RPCHOST: bitcoind:43782
+      RPCUSER: ceiwHEbqWI83
+      RPCPASS: DwubwWsoo3
+      ZMQPATH: tcp://bitcoind:28332
+      NETWORK: regtest
+      CHAIN: bitcoin
+      BACKEND: bitcoind
+      DEBUG: debug
+    ports:
+      - "53281:8080"
+    expose:
+      - "8080"
+      - "10009"
+    volumes:
+      - "customer_lnd_datadir:/root/.lnd"
     links:
       - bitcoind
 
@@ -203,4 +242,5 @@ volumes:
     customer_lightningd_datadir:
     merchant_lightningd_datadir:
     lightning_charge_datadir:
-    lnd_datadir:
+    customer_lnd_datadir:
+    merchant_lnd_datadir:

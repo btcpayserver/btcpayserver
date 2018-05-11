@@ -51,14 +51,18 @@ namespace BTCPayServer.Payments.Lightning.Lnd
         {
             var resp = await _Decorator.GetInfoAsync(cancellation);
 
-            var invoice = new LightningNodeInformation
+            var nodeInfo = new LightningNodeInformation
             {
-                Address = resp.Uris?.FirstOrDefault(),
                 BlockHeight = (int?)resp.Block_height ?? 0,
-                NodeId = resp.Alias,
-                P2PPort = 0
+                NodeId = resp.Identity_pubkey
             };
-            return invoice;
+
+            // Lnd doesn't return this data as Clightning so we add it manually from data we have
+            var uri = new Uri(_Decorator.BaseUrl);
+            nodeInfo.Address = uri.Host;
+            nodeInfo.P2PPort = uri.Port;
+
+            return nodeInfo;
         }
 
         public async Task<LightningInvoice> GetInvoice(string invoiceId, CancellationToken cancellation = default(CancellationToken))

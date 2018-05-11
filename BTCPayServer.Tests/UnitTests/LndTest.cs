@@ -11,6 +11,7 @@ using Xunit.Abstractions;
 
 namespace BTCPayServer.Tests.UnitTests
 {
+    // this depends for now on `docker-compose up devlnd`
     public class LndTest
     {
         private readonly ITestOutputHelper output;
@@ -20,12 +21,16 @@ namespace BTCPayServer.Tests.UnitTests
             this.output = output;
             initializeEnvironment();
 
-            LndRpc = LndSwaggerClientCustomHttp.Create(new Uri("http://localhost:53280"), Network.RegTest);
-            InvoiceClient = new LndClient(LndRpc);
+            MerchantLnd = LndSwaggerClientCustomHttp.Create(new Uri("http://127.0.0.1:53280"), Network.RegTest);
+            InvoiceClient = new LndClient(MerchantLnd);
+
+            CustomerLnd = LndSwaggerClientCustomHttp.Create(new Uri("http://127.0.0.1:53281"), Network.RegTest);
         }
 
-        private LndSwaggerClientCustomHttp LndRpc { get; set; }
+        private LndSwaggerClientCustomHttp MerchantLnd { get; set; }
         private LndClient InvoiceClient { get; set; }
+
+        private LndSwaggerClientCustomHttp CustomerLnd { get; set; }
 
         [Fact]
         public async Task GetInfo()
@@ -55,13 +60,22 @@ namespace BTCPayServer.Tests.UnitTests
         [Fact]
         public async Task SetupWalletForPayment()
         {
-            var nodeInfo = GetInfo();
-            var addressResponse = await LndRpc.NewWitnessAddressAsync();
+            var merchantNodeInfo = await InvoiceClient.GetInfo();
+            var addressResponse = await CustomerLnd.NewWitnessAddressAsync();
             var address = BitcoinAddress.Create(addressResponse.Address, Network.RegTest);
             await ExplorerNode.SendToAddressAsync(address, Money.Coins(0.2m));
             ExplorerNode.Generate(1);
             await WaitLNSynched();
             await Task.Delay(1000);
+
+            var connectResp = await CustomerLnd.ConnectPeerAsync(new LnrpcConnectPeerRequest
+            {
+                Addr = new LnrpcLightningAddress
+                {
+                    Pubkey = merchantNodeInfo.NodeId,
+                    Host = "merchant_lnd:8080"
+                }
+            });
 
             // We need two instances of lnd... one for merchant, one for buyer
             // prepare that in next commit

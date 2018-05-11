@@ -36,8 +36,8 @@ namespace BTCPayServer.Models.InvoicingModels
         public string ItemDesc { get; set; }
         public string TimeLeft { get; set; }
         public string Rate { get; set; }
-        public string FiatDue { get; set; }
         public string OrderAmount { get; set; }
+        public string OrderAmountFiat { get; set; }
         public string InvoiceBitcoinUrl { get; set; }
         public string InvoiceBitcoinUrlQR { get; set; }
         public int TxCount { get; set; }

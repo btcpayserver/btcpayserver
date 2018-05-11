@@ -239,9 +239,9 @@ namespace BTCPayServer.Controllers
                 CustomCSSLink = storeBlob.CustomCSS?.AbsoluteUri,
                 CustomLogoLink = storeBlob.CustomLogo?.AbsoluteUri,
                 BtcAddress = paymentMethodDetails.GetPaymentDestination(),
-                OrderAmount = (accounting.TotalDue - accounting.NetworkFee).ToString(),
                 BtcDue = accounting.Due.ToString(),
-                FiatDue = FiatDue(accounting.Due, paymentMethod),
+                OrderAmount = (accounting.TotalDue - accounting.NetworkFee).ToString(),
+                OrderAmountFiat = OrderAmountFiat(invoice.ProductInformation),
                 CustomerEmail = invoice.RefundMail,
                 RequiresRefundEmail = storeBlob.RequiresRefundEmail,
                 ExpirationSeconds = Math.Max(0, (int)(invoice.ExpirationTime - DateTimeOffset.UtcNow).TotalSeconds),
@@ -295,10 +295,9 @@ namespace BTCPayServer.Controllers
         {
             return price.ToString("C", _CurrencyNameTable.GetCurrencyProvider(currency)) + $" ({currency})";
         }
-        private string FiatDue(Money btcDue, PaymentMethod paymentMethod)
+        private string OrderAmountFiat(ProductInformation productInformation)
         {
-            var currency = paymentMethod.ParentEntity.ProductInformation.Currency;
-            return FormatCurrency(btcDue.ToUnit(MoneyUnit.BTC) * paymentMethod.Rate, currency);
+            return FormatCurrency(productInformation.Price, productInformation.Currency);
         }
 
         [HttpGet]

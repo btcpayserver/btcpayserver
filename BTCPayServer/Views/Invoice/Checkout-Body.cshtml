@@ -74,7 +74,7 @@
             </div>
 
             <div class="single-item-order__right__ex-rate">
-                {{srvModel.fiatDue}}
+                1 {{ srvModel.cryptoCode }} = {{ srvModel.rate }}
             </div>
         </div>
 
@@ -85,9 +85,9 @@
         <div class="line-items">
             <div class="line-items__item">
                 <div class="line-items__item__label">
-                    <span>{{$t("Exchange Rate")}}</span>
+                    <span>{{$t("Order Amount in Fiat")}}</span>
                 </div>
-                <div class="line-items__item__value">1 {{ srvModel.cryptoCode }} = {{ srvModel.rate }}</div>
+                <div class="line-items__item__value">{{srvModel.orderAmountFiat}}</div>
             </div>
             <div class="line-items__item">
                 <div class="line-items__item__label">{{$t("Order Amount")}}</div>

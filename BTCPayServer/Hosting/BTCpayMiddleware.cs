@@ -79,12 +79,13 @@ namespace BTCPayServer.Hosting
             if (!httpContext.Request.Path.HasValue)
                 return false;
 
+            var isJson = (httpContext.Request.ContentType ?? string.Empty).StartsWith("application/json", StringComparison.OrdinalIgnoreCase);
             var path = httpContext.Request.Path.Value;
             if (
                 bitpayAuth &&
                 path == "/invoices" &&
               httpContext.Request.Method == "POST" &&
-              (httpContext.Request.ContentType ?? string.Empty).StartsWith("application/json", StringComparison.OrdinalIgnoreCase))
+              isJson)
                 return true;
 
             if (
@@ -96,7 +97,7 @@ namespace BTCPayServer.Hosting
             if (
                 path.StartsWith("/invoices/", StringComparison.OrdinalIgnoreCase) &&
                 httpContext.Request.Method == "GET" &&
-                (httpContext.Request.ContentType ?? string.Empty).StartsWith("application/json", StringComparison.OrdinalIgnoreCase))
+                (isJson || httpContext.Request.Query.ContainsKey("token")))
                 return true;
 
             if (path.Equals("/rates", StringComparison.OrdinalIgnoreCase) &&

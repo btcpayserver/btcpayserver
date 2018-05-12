@@ -97,6 +97,7 @@ services:
         port=39388
         whitelist=0.0.0.0/0
         zmqpubrawtx=tcp://0.0.0.0:28332
+        zmqpubrawblock=tcp://0.0.0.0:28332
         zmqpubrawtxlock=tcp://0.0.0.0:28332
         zmqpubhashblock=tcp://0.0.0.0:28332
     ports: 
@@ -209,8 +210,7 @@ services:
     ports:
       - "53280:8080"
     expose:
-      - "8080"
-      - "10009"
+      - "9735"
     volumes:
       - "merchant_lnd_datadir:/root/.lnd"
     links:

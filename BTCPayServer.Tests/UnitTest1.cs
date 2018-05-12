@@ -1470,7 +1470,6 @@ namespace BTCPayServer.Tests
             RateRules.TryParse("X_X = coinaverage(X_X);", out var rateRules);
 
             var factory = CreateBTCPayRateFactory(provider);
-            factory.DirectProviders.Clear();
             factory.CacheSpan = TimeSpan.FromSeconds(10);
 
             var fetchedRate = factory.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules).GetAwaiter().GetResult();

@@ -100,7 +100,8 @@ namespace BTCPayServer.Services.Invoices
     {
         HighSpeed = 0,
         MediumSpeed = 1,
-        LowSpeed = 2
+        LowSpeed = 2,
+        LowMediumSpeed = 3
     }
     public class InvoiceEntity
     {
@@ -357,9 +358,9 @@ namespace BTCPayServer.Services.Invoices
                 cryptoInfo.CryptoPaid = accounting.CryptoPaid.ToString();
 
                 cryptoInfo.Address = info.GetPaymentMethodDetails()?.GetPaymentDestination();
-                cryptoInfo.ExRates = new Dictionary<string, double>
+                cryptoInfo.ExRates = new Dictionary<string, decimal>
                 {
-                    { ProductInformation.Currency, (double)cryptoInfo.Rate }
+                    { ProductInformation.Currency, cryptoInfo.Rate }
                 };
                 var paymentId = info.GetId();
                 var scheme = info.Network.UriScheme;

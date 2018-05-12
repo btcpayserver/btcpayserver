@@ -8,6 +8,7 @@ using NBitcoin;
 using NBitcoin.RPC;
 using Xunit;
 using Xunit.Abstractions;
+using System.Linq;
 
 namespace BTCPayServer.Tests.UnitTests
 {
@@ -60,32 +61,70 @@ namespace BTCPayServer.Tests.UnitTests
         [Fact]
         public async Task SetupWalletForPayment()
         {
-            var merchantNodeInfo = await InvoiceClient.GetInfo();
-            var addressResponse = await CustomerLnd.NewWitnessAddressAsync();
-            var address = BitcoinAddress.Create(addressResponse.Address, Network.RegTest);
-            await ExplorerNode.SendToAddressAsync(address, Money.Coins(0.2m));
-            ExplorerNode.Generate(1);
-            await WaitLNSynched();
-            await Task.Delay(1000);
+            await EnsureLightningChannelAsync();
+        }
 
-            var connectResp = await CustomerLnd.ConnectPeerAsync(new LnrpcConnectPeerRequest
+
+        public async Task<LnrpcChannel> EnsureLightningChannelAsync()
+        {
+            var merchantInfo = await WaitLNSynched();
+            var merchantAddress = new LnrpcLightningAddress
             {
-                Addr = new LnrpcLightningAddress
+                Pubkey = merchantInfo.NodeId,
+                Host = "merchant_lnd:9735"
+            };
+
+            while (true)
+            {
+                // if channel is pending generate blocks until confirmed
+                var pendingResponse = await CustomerLnd.PendingChannelsAsync();
+                if (pendingResponse.Pending_open_channels?
+                    .Any(a => a.Channel?.Remote_node_pub == merchantAddress.Pubkey) == true)
                 {
-                    Pubkey = merchantNodeInfo.NodeId,
-                    Host = "merchant_lnd:8080"
+                    ExplorerNode.Generate(1);
+                    await WaitLNSynched();
+                    continue;
                 }
-            });
 
-            // We need two instances of lnd... one for merchant, one for buyer
-            // prepare that in next commit
-            //var channelReq = new LnrpcOpenChannelRequest
-            //{
-            //    Local_funding_amount = 16777215.ToString()
-            //};
-            //var channelResp = await LndRpc.OpenChannelSyncAsync(channelReq);
+                // check if channel is established
+                var chanResponse = await CustomerLnd.ListChannelsAsync(null, null, null, null);
+                var channelToMerchant = chanResponse?.Channels
+                    .Where(a => a.Remote_pubkey == merchantAddress.Pubkey)
+                    .FirstOrDefault();
 
-            output.WriteLine("Wallet Address: " + address);
+                if (channelToMerchant == null)
+                {
+                    // create new channel
+                    var isConnected = await CustomerLnd.ListPeersAsync();
+                    if (!isConnected.Peers.Any(a => a.Pub_key == merchantInfo.NodeId))
+                    {
+                        var connectResp = await CustomerLnd.ConnectPeerAsync(new LnrpcConnectPeerRequest
+                        {
+                            Addr = merchantAddress
+                        });
+                    }
+
+                    var addressResponse = await CustomerLnd.NewWitnessAddressAsync();
+                    var address = BitcoinAddress.Create(addressResponse.Address, Network.RegTest);
+                    await ExplorerNode.SendToAddressAsync(address, Money.Coins(0.2m));
+                    ExplorerNode.Generate(1);
+                    await WaitLNSynched();
+
+                    var channelReq = new LnrpcOpenChannelRequest
+                    {
+                        Local_funding_amount = 16777215.ToString(),
+                        Node_pubkey_string = merchantInfo.NodeId
+                    };
+                    var channelResp = await CustomerLnd.OpenChannelSyncAsync(channelReq);
+                }
+                else
+                {
+                    // channel exists, return it
+                    ExplorerNode.Generate(1);
+                    await WaitLNSynched();
+                    return channelToMerchant;
+                }
+            }
         }
 
         private async Task<LightningNodeInformation> WaitLNSynched()
@@ -96,7 +135,7 @@ namespace BTCPayServer.Tests.UnitTests
                 var blockCount = await ExplorerNode.GetBlockCountAsync();
                 if (merchantInfo.BlockHeight != blockCount)
                 {
-                    await Task.Delay(1000);
+                    await Task.Delay(500);
                 }
                 else
                 {

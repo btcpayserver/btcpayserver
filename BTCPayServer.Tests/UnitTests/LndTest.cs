@@ -9,6 +9,7 @@ using NBitcoin.RPC;
 using Xunit;
 using Xunit.Abstractions;
 using System.Linq;
+using System.Threading;
 
 namespace BTCPayServer.Tests.UnitTests
 {
@@ -59,9 +60,19 @@ namespace BTCPayServer.Tests.UnitTests
 
 
         [Fact]
-        public async Task SetupWalletForPayment()
+        public async Task CreateLndInvoiceAndPay()
         {
+            var merchantInvoice = await InvoiceClient.CreateInvoice(10000, "Hello world", TimeSpan.FromSeconds(3600));
+
             await EnsureLightningChannelAsync();
+            var payResponse = await CustomerLnd.SendPaymentSyncAsync(new LnrpcSendRequest
+            {
+                Payment_request = merchantInvoice.BOLT11
+            });
+            
+            var invoice = await InvoiceClient.GetInvoice(merchantInvoice.Id);
+
+            Assert.True(invoice.PaidAt.HasValue);
         }
 
 

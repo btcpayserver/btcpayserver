@@ -57,10 +57,10 @@ namespace BTCPayServer.Payments.Lightning.Lnd
                 NodeId = resp.Identity_pubkey
             };
 
-            // Lnd doesn't return this data as Clightning so we add it manually from data we have
-            var uri = new Uri(_Decorator.BaseUrl);
-            nodeInfo.Address = uri.Host;
-            nodeInfo.P2PPort = uri.Port;
+            // Lnd doesn't return this data as Clightning, find alternative ways to supply
+            // it always should be merchant_lnd:9735 because of docker
+            nodeInfo.Address = null;
+            nodeInfo.P2PPort = 9735;
 
             return nodeInfo;
         }
@@ -71,6 +71,7 @@ namespace BTCPayServer.Payments.Lightning.Lnd
             return ConvertLndInvoice(resp);
         }
 
+        // TODO: These two methods where you wait on invoice are still work in progress
         public Task<ILightningListenInvoiceSession> Listen(CancellationToken cancellation = default(CancellationToken))
         {
             return Task.FromResult<ILightningListenInvoiceSession>(this);
@@ -80,8 +81,8 @@ namespace BTCPayServer.Payments.Lightning.Lnd
         {
             var resp = await _Decorator.SubscribeInvoicesAsync(cancellation);
             return ConvertLndInvoice(resp);
-
         }
+        // Eof work in progress
 
 
         // utility static methods... maybe move to separate class

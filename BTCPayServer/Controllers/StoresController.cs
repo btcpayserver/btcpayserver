@@ -53,8 +53,7 @@ namespace BTCPayServer.Controllers
             ExplorerClientProvider explorerProvider,
             IFeeProviderFactory feeRateProvider,
             LanguageService langService,
-            IHostingEnvironment env,
-            CoinAverageSettings coinAverage)
+            IHostingEnvironment env)
         {
             _RateFactory = rateFactory;
             _Dashboard = dashboard;
@@ -72,9 +71,7 @@ namespace BTCPayServer.Controllers
             _ServiceProvider = serviceProvider;
             _BtcpayServerOptions = btcpayServerOptions;
             _BTCPayEnv = btcpayEnv;
-            _CoinAverage = coinAverage;
         }
-        CoinAverageSettings _CoinAverage;
         NBXplorerDashboard _Dashboard;
         BTCPayServerOptions _BtcpayServerOptions;
         BTCPayServerEnvironment _BTCPayEnv;
@@ -518,7 +515,7 @@ namespace BTCPayServer.Controllers
 
         private CoinAverageExchange[] GetSupportedExchanges()
         {
-            return _CoinAverage.AvailableExchanges
+            return _RateFactory.GetSupportedExchanges()
                     .Select(c => c.Value)
                     .OrderBy(s => s.Name, StringComparer.OrdinalIgnoreCase)
                     .ToArray();

@@ -226,12 +226,17 @@ namespace BTCPayServer.Models
         }
         
         [JsonProperty("paymentSubtotals")]
-        public Dictionary<string, decimal> PaymentSubtotals { get; set; }
+        public Dictionary<string, long> PaymentSubtotals { get; set; }
 
         [JsonProperty("paymentTotals")]
-        public Dictionary<string, decimal> PaymentTotals { get; set; }
+        public Dictionary<string, long> PaymentTotals { get; set; }
+
         [JsonProperty("amountPaid")]
-        public decimal AmountPaid { get; set; }
+        public long AmountPaid { get; set; }
+
+        [JsonProperty("minerFees")]
+        public long MinerFees { get; set; }
+
         [JsonProperty("exchangeRates")]
         public Dictionary<string, Dictionary<string, decimal>> ExchangeRates{ get; set; }
 

@@ -339,8 +339,8 @@ namespace BTCPayServer.Services.Invoices
                 Currency = ProductInformation.Currency,
                 Flags = new Flags() { Refundable = Refundable },
 
-                PaymentSubtotals = new Dictionary<string, decimal>(),
-                PaymentTotals= new Dictionary<string, decimal>(),
+                PaymentSubtotals = new Dictionary<string, long>(),
+                PaymentTotals= new Dictionary<string, long>(),
                 SupportedTransactionCurrencies = new Dictionary<string, InvoiceSupportedTransactionCurrency>(),
                 Addresses = new Dictionary<string, string>(),
                 PaymentCodes = new Dictionary<string, InvoicePaymentUrls>(),
@@ -351,6 +351,7 @@ namespace BTCPayServer.Services.Invoices
             dto.CryptoInfo = new List<NBitpayClient.InvoiceCryptoInfo>();
             foreach (var info in this.GetPaymentMethods(networkProvider))
             {
+               
                 var accounting = info.Calculate();
                 var cryptoInfo = new NBitpayClient.InvoiceCryptoInfo();
                 var subtotalPrice = accounting.TotalDue - accounting.NetworkFee;
@@ -414,8 +415,8 @@ namespace BTCPayServer.Services.Invoices
 #pragma warning restore CS0618
                 dto.CryptoInfo.Add(cryptoInfo);
 
-                dto.PaymentSubtotals.Add(cryptoCode, subtotalPrice.ToDecimal(MoneyUnit.Satoshi));
-                dto.PaymentTotals.Add(cryptoCode, accounting.TotalDue.ToDecimal(MoneyUnit.Satoshi));
+                dto.PaymentSubtotals.Add(cryptoCode, subtotalPrice.Satoshi);
+                dto.PaymentTotals.Add(cryptoCode, accounting.TotalDue.Satoshi);
                 dto.SupportedTransactionCurrencies.Add(cryptoCode, new InvoiceSupportedTransactionCurrency()
                 {
                     Enabled = true
@@ -424,8 +425,11 @@ namespace BTCPayServer.Services.Invoices
                 dto.ExchangeRates.Add(cryptoCode, exrates);
             }
 
+
             //TODO: Populate dto.AmountPaid
+            //TODO: Populate dto.MinerFees
             //TODO: Populate dto.TransactionCurrency
+
             Populate(ProductInformation, dto);
             Populate(BuyerInformation, dto);
 

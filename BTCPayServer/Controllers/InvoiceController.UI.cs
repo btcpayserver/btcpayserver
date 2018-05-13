@@ -51,7 +51,7 @@ namespace BTCPayServer.Controllers
                 StoreLink = Url.Action(nameof(StoresController.UpdateStore), "Stores", new { storeId = store.Id }),
                 Id = invoice.Id,
                 Status = invoice.Status,
-                TransactionSpeed = invoice.SpeedPolicy == SpeedPolicy.HighSpeed ? "high" : 
+                TransactionSpeed = invoice.SpeedPolicy == SpeedPolicy.HighSpeed ? "high" :
                                    invoice.SpeedPolicy == SpeedPolicy.MediumSpeed ? "medium" :
                                    invoice.SpeedPolicy == SpeedPolicy.LowMediumSpeed ? "low-medium" :
                                    "low",
@@ -61,7 +61,7 @@ namespace BTCPayServer.Controllers
                 MonitoringDate = invoice.MonitoringExpiration,
                 OrderId = invoice.OrderId,
                 BuyerInformation = invoice.BuyerInformation,
-                Fiat = FormatCurrency((decimal)dto.Price, dto.Currency),
+                Fiat = FormatCurrency((decimal)dto.Price, dto.Currency, _CurrencyNameTable),
                 NotificationUrl = invoice.NotificationURL,
                 RedirectUrl = invoice.RedirectURL,
                 ProductInformation = invoice.ProductInformation,
@@ -291,11 +291,29 @@ namespace BTCPayServer.Controllers
         private string FormatCurrency(PaymentMethod paymentMethod)
         {
             string currency = paymentMethod.ParentEntity.ProductInformation.Currency;
-            return FormatCurrency(paymentMethod.Rate, currency);
+            return FormatCurrency(paymentMethod.Rate, currency, _CurrencyNameTable);
         }
-        public string FormatCurrency(decimal price, string currency)
+        public static string FormatCurrency(decimal price, string currency, CurrencyNameTable currencies)
         {
-            return price.ToString("C", _CurrencyNameTable.GetCurrencyProvider(currency)) + $" ({currency})";
+            var provider = ((CultureInfo)currencies.GetCurrencyProvider(currency)).NumberFormat;
+            var currencyData = currencies.GetCurrencyData(currency);
+            var divisibility = currencyData.Divisibility;
+            while (true)
+            {
+                var rounded = decimal.Round(price, divisibility, MidpointRounding.AwayFromZero);
+                if ((Math.Abs(rounded - price) / price) < 0.001m)
+                {
+                    price = rounded;
+                    break;
+                }
+                divisibility++;
+            }
+            if(divisibility != provider.CurrencyDecimalDigits)
+            {
+                provider = (NumberFormatInfo)provider.Clone();
+                provider.CurrencyDecimalDigits = divisibility;
+            }
+            return price.ToString("C", provider) + $" ({currency})";
         }
 
         [HttpGet]
@@ -430,7 +448,7 @@ namespace BTCPayServer.Controllers
             var stores = await _StoreRepository.GetStoresByUserId(GetUserId());
             model.Stores = new SelectList(stores, nameof(StoreData.Id), nameof(StoreData.StoreName), model.StoreId);
             var store = stores.FirstOrDefault(s => s.Id == model.StoreId);
-            if(store == null)
+            if (store == null)
             {
                 ModelState.AddModelError(nameof(model.StoreId), "Store not found");
             }

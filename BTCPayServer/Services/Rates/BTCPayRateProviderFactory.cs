@@ -36,7 +36,6 @@ namespace BTCPayServer.Services.Rates
         }
         IMemoryCache _Cache;
         private IOptions<MemoryCacheOptions> _CacheOptions;
-        CurrencyNameTable _CurrencyTable;
         public IMemoryCache Cache
         {
             get
@@ -47,12 +46,10 @@ namespace BTCPayServer.Services.Rates
         CoinAverageSettings _CoinAverageSettings;
         public BTCPayRateProviderFactory(IOptions<MemoryCacheOptions> cacheOptions,
                                          BTCPayNetworkProvider btcpayNetworkProvider,
-                                         CurrencyNameTable currencyTable,
                                          CoinAverageSettings coinAverageSettings)
         {
             if (cacheOptions == null)
                 throw new ArgumentNullException(nameof(cacheOptions));
-            _CurrencyTable = currencyTable;
             _CoinAverageSettings = coinAverageSettings;
             _Cache = new MemoryCache(cacheOptions);
             _CacheOptions = cacheOptions;
@@ -90,7 +87,7 @@ namespace BTCPayServer.Services.Rates
         public CoinAverageExchanges GetSupportedExchanges()
         {
             CoinAverageExchanges exchanges = new CoinAverageExchanges();
-            foreach(var exchange in _CoinAverageSettings.AvailableExchanges)
+            foreach (var exchange in _CoinAverageSettings.AvailableExchanges)
             {
                 exchanges.Add(exchange.Value);
             }
@@ -180,13 +177,6 @@ namespace BTCPayServer.Services.Rates
             }
             rateRule.Reevaluate();
             result.Value = rateRule.Value;
-
-            var currencyData = _CurrencyTable?.GetCurrencyData(rateRule.CurrencyPair.Right);
-            if(currencyData != null && result.Value.HasValue)
-            {
-                result.Value = decimal.Round(result.Value.Value, currencyData.Divisibility, MidpointRounding.AwayFromZero);
-            }
-
             result.Errors = rateRule.Errors;
             result.EvaluatedRule = rateRule.ToString(true);
             result.Rule = rateRule.ToString(false);

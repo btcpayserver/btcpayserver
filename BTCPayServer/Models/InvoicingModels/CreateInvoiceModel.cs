@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Validation;
 
 namespace BTCPayServer.Models.InvoicingModels
 {
@@ -52,8 +53,7 @@ namespace BTCPayServer.Models.InvoicingModels
             get; set;
         }
 
-
-        [Url]
+        [Uri]
         public string NotificationUrl
         {
             get; set;

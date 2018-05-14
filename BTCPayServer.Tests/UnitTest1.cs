@@ -62,6 +62,8 @@ namespace BTCPayServer.Tests
             Assert.True(attribute.IsValid("http://gozo.com"));
             Assert.True(attribute.IsValid("https://gozo.com"));
             Assert.True(attribute.IsValid("https://gozo.com:1234"));
+            Assert.True(attribute.IsValid("https://gozo.com:1234/test.css"));
+            Assert.True(attribute.IsValid("https://gozo.com:1234/test.png"));
             Assert.False(attribute.IsValid("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud e"));
             Assert.False(attribute.IsValid(2));
             Assert.False(attribute.IsValid("http://"));

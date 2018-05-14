@@ -328,6 +328,13 @@ namespace BTCPayServer.Tests
         public void CanParseLightningURL()
         {
             LightningConnectionString conn = null;
+
+            Assert.True(LightningConnectionString.TryParse("http://127.0.0.1:53280?type=lnd", out conn));
+            Assert.Equal("http://127.0.0.1:53280/", conn.ToString());
+            Assert.Equal("http://127.0.0.1:53280/", conn.ToUri(true).AbsoluteUri);
+            Assert.Equal("http://127.0.0.1:53280/", conn.ToUri(false).AbsoluteUri);
+            Assert.Equal(LightningConnectionType.Lnd, conn.ConnectionType);
+
             Assert.True(LightningConnectionString.TryParse("/test/a", out conn));
             Assert.Equal("unix://test/a", conn.ToString());
             Assert.Equal("unix://test/a", conn.ToUri(true).AbsoluteUri);

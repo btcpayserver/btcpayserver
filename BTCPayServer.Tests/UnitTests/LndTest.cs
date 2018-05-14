@@ -79,7 +79,7 @@ namespace BTCPayServer.Tests.UnitTests
         public async Task<LnrpcChannel> EnsureLightningChannelAsync()
         {
             var merchantInfo = await WaitLNSynched();
-            var merchantAddress = new LnrpcLightningAddress
+            var merchantNodeAddress = new LnrpcLightningAddress
             {
                 Pubkey = merchantInfo.NodeId,
                 Host = "merchant_lnd:9735"
@@ -90,7 +90,7 @@ namespace BTCPayServer.Tests.UnitTests
                 // if channel is pending generate blocks until confirmed
                 var pendingResponse = await CustomerLnd.PendingChannelsAsync();
                 if (pendingResponse.Pending_open_channels?
-                    .Any(a => a.Channel?.Remote_node_pub == merchantAddress.Pubkey) == true)
+                    .Any(a => a.Channel?.Remote_node_pub == merchantNodeAddress.Pubkey) == true)
                 {
                     ExplorerNode.Generate(1);
                     await WaitLNSynched();
@@ -100,7 +100,7 @@ namespace BTCPayServer.Tests.UnitTests
                 // check if channel is established
                 var chanResponse = await CustomerLnd.ListChannelsAsync(null, null, null, null);
                 var channelToMerchant = chanResponse?.Channels
-                    .Where(a => a.Remote_pubkey == merchantAddress.Pubkey)
+                    .Where(a => a.Remote_pubkey == merchantNodeAddress.Pubkey)
                     .FirstOrDefault();
 
                 if (channelToMerchant == null)
@@ -111,7 +111,7 @@ namespace BTCPayServer.Tests.UnitTests
                     {
                         var connectResp = await CustomerLnd.ConnectPeerAsync(new LnrpcConnectPeerRequest
                         {
-                            Addr = merchantAddress
+                            Addr = merchantNodeAddress
                         });
                     }
 

@@ -28,9 +28,12 @@ namespace BTCPayServer.Payments.Lightning.Lnd
         //
         public static LndSwaggerClientCustomHttp Create(Uri uri, Network network, byte[] tlsCertificate = null, byte[] grpcMacaroon = null)
         {
-            // for now working with custom build of lnd that has no macaroons and is on http
-            //_HttpClient = HttpClientFactoryForLnd.Generate(tlsCertificate, grpcMacaroon);
-            var httpClient = new HttpClient();
+            // for development we are working with custom build of lnd that allows no macaroons and http
+            var clientWithNoMacaroonsTls = tlsCertificate == null || grpcMacaroon == null;
+
+            var httpClient = clientWithNoMacaroonsTls ? new HttpClient() :
+                HttpClientFactoryForLnd.Generate(tlsCertificate, grpcMacaroon);
+
             return new LndSwaggerClientCustomHttp(uri.ToString().TrimEnd('/'), httpClient);
         }
     }

@@ -27,7 +27,7 @@ namespace BTCPayServer
                 },
                 CryptoImagePath = "imlegacy/polis.png",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
-                CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("3'") : new KeyPath("1'")
+                CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("1997'") : new KeyPath("1'")
             });
         }
     }

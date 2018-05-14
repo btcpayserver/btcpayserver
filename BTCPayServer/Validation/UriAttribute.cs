@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 
 namespace BTCPayServer.Validation
 {
@@ -9,7 +10,7 @@ namespace BTCPayServer.Validation
         protected override ValidationResult IsValid(object value, ValidationContext validationContext)
         {
             Uri uri;
-            bool valid = Uri.TryCreate(Convert.ToString(value), UriKind.Absolute, out uri);
+            bool valid = Uri.TryCreate(Convert.ToString(value, CultureInfo.InvariantCulture), UriKind.Absolute, out uri);
 
             if (!valid)
             {

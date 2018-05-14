@@ -36,6 +36,7 @@ using BTCPayServer.Services.Stores;
 using System.Net.Http;
 using System.Text;
 using BTCPayServer.Rating;
+using BTCPayServer.Validation;
 using ExchangeSharp;
 
 namespace BTCPayServer.Tests
@@ -46,6 +47,27 @@ namespace BTCPayServer.Tests
         {
             Logs.Tester = new XUnitLog(helper) { Name = "Tests" };
             Logs.LogProvider = new XUnitLogProvider(helper);
+        }
+
+        [Fact]
+        public void CanHandleUriValidation()
+        {
+            var attribute = new UriAttribute();
+            Assert.True(attribute.IsValid("http://localhost"));
+            Assert.True(attribute.IsValid("http://localhost:1234"));
+            Assert.True(attribute.IsValid("https://localhost"));
+            Assert.True(attribute.IsValid("https://127.0.0.1"));
+            Assert.True(attribute.IsValid("http://127.0.0.1"));
+            Assert.True(attribute.IsValid("http://127.0.0.1:1234"));
+            Assert.True(attribute.IsValid("http://gozo.com"));
+            Assert.True(attribute.IsValid("https://gozo.com"));
+            Assert.True(attribute.IsValid("https://gozo.com:1234"));
+            Assert.True(attribute.IsValid("https://gozo.com:1234/test.css"));
+            Assert.True(attribute.IsValid("https://gozo.com:1234/test.png"));
+            Assert.False(attribute.IsValid("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud e"));
+            Assert.False(attribute.IsValid(2));
+            Assert.False(attribute.IsValid("http://"));
+            Assert.False(attribute.IsValid("httpdsadsa.com"));
         }
 
         [Fact]
@@ -265,7 +287,7 @@ namespace BTCPayServer.Tests
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
-                
+
                 // Set tolerance to 50%
                 var stores = user.GetController<StoresController>();
                 var vm = Assert.IsType<StoreViewModel>(Assert.IsType<ViewResult>(stores.UpdateStore()).Model);
@@ -293,6 +315,22 @@ namespace BTCPayServer.Tests
                     var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
                     Assert.Equal("paid", localInvoice.Status);
                 });
+            }
+        }
+
+        [Fact]
+        public void RoundupCurrenciesCorrectly()
+        {
+            foreach(var test in new[] 
+            {
+                (0.0005m, "$0.0005 (USD)"),
+                (0.001m, "$0.001 (USD)"),
+                (0.01m, "$0.01 (USD)"),
+                (0.1m, "$0.10 (USD)"),
+            })
+            {
+                var actual = InvoiceController.FormatCurrency(test.Item1, "USD", new CurrencyNameTable());
+                Assert.Equal(test.Item2, actual);
             }
         }
 
@@ -617,7 +655,7 @@ namespace BTCPayServer.Tests
                     ItemDesc = "Some description",
                     FullNotifications = true
                 }, Facade.Merchant);
-                
+
                 var cashCow = tester.ExplorerNode;
                 var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, cashCow.Network);
                 var firstPayment = invoice.CryptoInfo[0].TotalDue - Money.Satoshis(10);
@@ -1411,7 +1449,7 @@ namespace BTCPayServer.Tests
         {
             var provider = new BTCPayNetworkProvider(NetworkType.Mainnet);
             var factory = CreateBTCPayRateFactory(provider);
-            
+
             foreach (var result in factory
                 .DirectProviders
                 .Select(p => (ExpectedName: p.Key, ResultAsync: p.Value.GetRatesAsync()))
@@ -1423,8 +1461,8 @@ namespace BTCPayServer.Tests
                 Assert.NotEmpty(exchangeRates.ByExchange[result.ExpectedName]);
 
                 // This check if the currency pair is using right currency pair
-                Assert.Contains(exchangeRates.ByExchange[result.ExpectedName], 
-                        e => ( e.CurrencyPair == new CurrencyPair("BTC", "USD") ||
+                Assert.Contains(exchangeRates.ByExchange[result.ExpectedName],
+                        e => (e.CurrencyPair == new CurrencyPair("BTC", "USD") ||
                                e.CurrencyPair == new CurrencyPair("BTC", "EUR") ||
                                e.CurrencyPair == new CurrencyPair("BTC", "USDT"))
                                && e.Value > 1.0m // 1BTC will always be more than 1USD
@@ -1454,7 +1492,7 @@ namespace BTCPayServer.Tests
 
         private static BTCPayRateProviderFactory CreateBTCPayRateFactory(BTCPayNetworkProvider provider)
         {
-            return new BTCPayRateProviderFactory(new MemoryCacheOptions() { ExpirationScanFrequency = TimeSpan.FromSeconds(1.0) }, provider, null, new CoinAverageSettings());
+            return new BTCPayRateProviderFactory(new MemoryCacheOptions() { ExpirationScanFrequency = TimeSpan.FromSeconds(1.0) }, provider, new CoinAverageSettings());
         }
 
         [Fact]
@@ -1470,7 +1508,6 @@ namespace BTCPayServer.Tests
             RateRules.TryParse("X_X = coinaverage(X_X);", out var rateRules);
 
             var factory = CreateBTCPayRateFactory(provider);
-            factory.DirectProviders.Clear();
             factory.CacheSpan = TimeSpan.FromSeconds(10);
 
             var fetchedRate = factory.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules).GetAwaiter().GetResult();

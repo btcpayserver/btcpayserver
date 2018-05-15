@@ -425,10 +425,7 @@ namespace BTCPayServer.Services.Invoices
                 dto.ExchangeRates.Add(cryptoCode, exrates);
             }
 
-
-            //TODO: Populate dto.AmountPaid
-            //TODO: Populate dto.MinerFees
-            //TODO: Populate dto.TransactionCurrency
+            //dto.AmountPaid dto.MinerFees & dto.TransactionCurrency are not supported by btcpayserver as we have multi currency payment support per invoice
 
             Populate(ProductInformation, dto);
             Populate(BuyerInformation, dto);

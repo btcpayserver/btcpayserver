@@ -297,6 +297,13 @@ namespace BTCPayServer.Controllers
         }
         private string OrderAmountFiat(ProductInformation productInformation)
         {
+            // check if invoice source currency is crypto... if it is there is no "order amount in fiat"
+            foreach (var net in _NetworkProvider.GetAll())
+            {
+                if (net.CryptoCode == productInformation.Currency)
+                    return null;
+            }
+
             return FormatCurrency(productInformation.Price, productInformation.Currency);
         }
 

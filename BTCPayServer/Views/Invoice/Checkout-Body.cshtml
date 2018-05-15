@@ -87,7 +87,7 @@
                 <div class="line-items__item__label">{{$t("Order Amount")}}</div>
                 <div class="line-items__item__value">{{srvModel.orderAmount}} {{ srvModel.cryptoCode }}</div>
             </div>
-            <div class="line-items__item line-items_fiatvalue">
+            <div class="line-items__item line-items_fiatvalue" v-if="srvModel.orderAmountFiat">
                 <div class="line-items__item__label">&nbsp;</div>
                 <div class="line-items__item__value single-item-order__right__ex-rate">
                     {{srvModel.orderAmountFiat}}

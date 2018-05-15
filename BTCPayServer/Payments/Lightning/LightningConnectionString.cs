@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Primitives;
 
 namespace BTCPayServer.Payments.Lightning
 {
@@ -20,6 +23,11 @@ namespace BTCPayServer.Payments.Lightning
         public Uri BaseUri { get; set; }
 
         public LightningConnectionType ConnectionType { get; private set; }
+
+        // Extract this to LndConnectionString class
+        public string Tls { get; set; }
+        public string Macaroon { get; set; }
+        //
 
         public Uri ToUri(bool withCredentials)
         {
@@ -46,15 +54,13 @@ namespace BTCPayServer.Payments.Lightning
 
         public static bool TryParse(string str, out LightningConnectionString connectionString, out string error)
         {
-            if (str == null)
-                throw new ArgumentNullException(nameof(str));
             if (str.StartsWith('/'))
                 str = "unix:" + str;
             connectionString = null;
             error = null;
 
             Uri uri;
-            if (!System.Uri.TryCreate(str, UriKind.Absolute, out uri))
+            if (!Uri.TryCreate(str, UriKind.Absolute, out uri))
             {
                 error = "Invalid URL";
                 return false;
@@ -102,6 +108,13 @@ namespace BTCPayServer.Payments.Lightning
             {
                 error = "The url should not have user information";
                 return false;
+            }
+
+            if (result.ConnectionType == LightningConnectionType.Lnd)
+            {
+                var queryString = QueryHelpers.ParseNullableQuery(uri.Query);
+                result.Macaroon = queryString.ContainsKey("macaroon") ? queryString["macaroon"] : StringValues.Empty;
+                result.Tls = queryString.ContainsKey("tls") ? queryString["tls"] : StringValues.Empty;
             }
 
             var uriWithoutQuery = uri.AbsoluteUri.Split('?')[0];

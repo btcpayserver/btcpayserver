@@ -24,13 +24,13 @@ namespace BTCPayServer.Tests.UnitTests
             initializeEnvironment();
 
             MerchantLnd = LndSwaggerClientCustomHttp.Create(new Uri("http://127.0.0.1:53280"), Network.RegTest);
-            InvoiceClient = new LndClient(MerchantLnd);
+            InvoiceClient = new LndInvoiceClient(MerchantLnd);
 
             CustomerLnd = LndSwaggerClientCustomHttp.Create(new Uri("http://127.0.0.1:53281"), Network.RegTest);
         }
 
         private LndSwaggerClientCustomHttp MerchantLnd { get; set; }
-        private LndClient InvoiceClient { get; set; }
+        private LndInvoiceClient InvoiceClient { get; set; }
 
         private LndSwaggerClientCustomHttp CustomerLnd { get; set; }
 

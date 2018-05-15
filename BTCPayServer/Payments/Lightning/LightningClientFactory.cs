@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Payments.Lightning.Charge;
 using BTCPayServer.Payments.Lightning.CLightning;
+using BTCPayServer.Payments.Lightning.Lnd;
 
 namespace BTCPayServer.Payments.Lightning
 {
@@ -11,17 +12,32 @@ namespace BTCPayServer.Payments.Lightning
     {
         public ILightningInvoiceClient CreateClient(LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network)
         {
-            var uri = supportedPaymentMethod.GetLightningUrl();
-            if (uri.ConnectionType == LightningConnectionType.Charge)
+            var connString = supportedPaymentMethod.GetLightningUrl();
+            if (connString.ConnectionType == LightningConnectionType.Charge)
             {
-                return new ChargeClient(uri.ToUri(true), network.NBitcoinNetwork);
+                return new ChargeClient(connString.ToUri(true), network.NBitcoinNetwork);
             }
-            else if (uri.ConnectionType == LightningConnectionType.CLightning)
+            else if (connString.ConnectionType == LightningConnectionType.CLightning)
             {
-                return new CLightningRPCClient(uri.ToUri(false), network.NBitcoinNetwork);
+                return new CLightningRPCClient(connString.ToUri(false), network.NBitcoinNetwork);
+            }
+            else if (connString.ConnectionType == LightningConnectionType.Lnd)
+            {
+                var hex = new NBitcoin.DataEncoders.HexEncoder();
+
+                byte[] macaroon = null;
+                if (!String.IsNullOrEmpty(connString.Macaroon))
+                    macaroon = hex.DecodeData(connString.Macaroon);
+
+                byte[] tls = null;
+                if (!String.IsNullOrEmpty(connString.Tls))
+                    tls = hex.DecodeData(connString.Tls);
+
+                var swagger = LndSwaggerClientCustomHttp.Create(connString.ToUri(false), network.NBitcoinNetwork, tls, macaroon);
+                return new LndInvoiceClient(swagger);
             }
             else
-                throw new NotSupportedException($"Unsupported connection string for lightning server ({uri.ConnectionType})");
+                throw new NotSupportedException($"Unsupported connection string for lightning server ({connString.ConnectionType})");
         }
     }
 }

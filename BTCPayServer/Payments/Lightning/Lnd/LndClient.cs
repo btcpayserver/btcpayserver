@@ -15,13 +15,13 @@ using NBitcoin;
 
 namespace BTCPayServer.Payments.Lightning.Lnd
 {
-    public class LndClient : ILightningInvoiceClient, ILightningListenInvoiceSession
+    public class LndInvoiceClient : ILightningInvoiceClient, ILightningListenInvoiceSession
     {
-        public LndSwaggerClient _Decorator;
+        public LndSwaggerClient _rpcClient;
 
-        public LndClient(LndSwaggerClient decorator)
+        public LndInvoiceClient(LndSwaggerClient rpcClient)
         {
-            _Decorator = decorator;
+            _rpcClient = rpcClient;
         }
 
         public async Task<LightningInvoice> CreateInvoice(LightMoney amount, string description, TimeSpan expiry,
@@ -30,7 +30,7 @@ namespace BTCPayServer.Payments.Lightning.Lnd
             var strAmount = ConvertInv.ToString(amount.ToUnit(LightMoneyUnit.Satoshi));
             var strExpiry = ConvertInv.ToString(expiry.TotalSeconds);
             // lnd requires numbers sent as strings. don't ask
-            var resp = await _Decorator.AddInvoiceAsync(new LnrpcInvoice
+            var resp = await _rpcClient.AddInvoiceAsync(new LnrpcInvoice
             {
                 Value = strAmount,
                 Memo = description,
@@ -49,7 +49,7 @@ namespace BTCPayServer.Payments.Lightning.Lnd
 
         public async Task<LightningNodeInformation> GetInfo(CancellationToken cancellation = default(CancellationToken))
         {
-            var resp = await _Decorator.GetInfoAsync(cancellation);
+            var resp = await _rpcClient.GetInfoAsync(cancellation);
 
             var nodeInfo = new LightningNodeInformation
             {
@@ -67,7 +67,7 @@ namespace BTCPayServer.Payments.Lightning.Lnd
 
         public async Task<LightningInvoice> GetInvoice(string invoiceId, CancellationToken cancellation = default(CancellationToken))
         {
-            var resp = await _Decorator.LookupInvoiceAsync(invoiceId, null, cancellation);
+            var resp = await _rpcClient.LookupInvoiceAsync(invoiceId, null, cancellation);
             return ConvertLndInvoice(resp);
         }
 
@@ -79,7 +79,7 @@ namespace BTCPayServer.Payments.Lightning.Lnd
 
         async Task<LightningInvoice> ILightningListenInvoiceSession.WaitInvoice(CancellationToken cancellation)
         {
-            var resp = await _Decorator.SubscribeInvoicesAsync(cancellation);
+            var resp = await _rpcClient.SubscribeInvoicesAsync(cancellation);
             return ConvertLndInvoice(resp);
         }
         // Eof work in progress

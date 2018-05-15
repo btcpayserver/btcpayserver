@@ -1,0 +1,9 @@
+version: '3'
+
+services:
+  btcpayserver:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "80"
+

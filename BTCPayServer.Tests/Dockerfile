@@ -1,12 +1,20 @@
-FROM microsoft/dotnet:2.1.300-rc1-sdk-alpine3.7
+FROM microsoft/dotnet:2.1-runtime AS base
 WORKDIR /app
- # caches restore result by copying csproj file separately
-COPY BTCPayServer.Tests/BTCPayServer.Tests.csproj BTCPayServer.Tests/BTCPayServer.Tests.csproj
-COPY BTCPayServer/BTCPayServer.csproj BTCPayServer/BTCPayServer.csproj
 
-WORKDIR /app/BTCPayServer.Tests
-RUN dotnet restore
-# copies the rest of your code
-COPY . ../.
+FROM microsoft/dotnet:2.1-sdk AS build
+WORKDIR /src
+COPY btcpayserver.sln ./
+COPY BTCPayServer.Tests/BTCPayServer.Tests.csproj BTCPayServer.Tests/
+COPY BTCPayServer/BTCPayServer.csproj BTCPayServer/
+RUN dotnet restore -nowarn:msb3202,nu1503
+COPY . .
+WORKDIR /src/BTCPayServer.Tests
+RUN dotnet build -c Release -o /app
 
-ENTRYPOINT ["dotnet", "test"]
+FROM build AS publish
+RUN dotnet publish -c Release -o /app
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app .
+ENTRYPOINT ["dotnet", "BTCPayServer.Tests.dll"]

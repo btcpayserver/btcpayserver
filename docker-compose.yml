@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  btcpayserver.tests:
+    image: btcpayservertests
+    build:
+      context: .
+      dockerfile: BTCPayServer.Tests/Dockerfile
+
+  btcpayserver:
+    image: btcpayserver
+    build:
+      context: .
+      dockerfile: BTCPayServer/Dockerfile
+

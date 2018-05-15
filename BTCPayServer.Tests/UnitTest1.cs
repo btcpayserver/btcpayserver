@@ -36,6 +36,7 @@ using BTCPayServer.Services.Stores;
 using System.Net.Http;
 using System.Text;
 using BTCPayServer.Rating;
+using BTCPayServer.Validation;
 using ExchangeSharp;
 
 namespace BTCPayServer.Tests
@@ -46,6 +47,27 @@ namespace BTCPayServer.Tests
         {
             Logs.Tester = new XUnitLog(helper) { Name = "Tests" };
             Logs.LogProvider = new XUnitLogProvider(helper);
+        }
+
+        [Fact]
+        public void CanHandleUriValidation()
+        {
+            var attribute = new UriAttribute();
+            Assert.True(attribute.IsValid("http://localhost"));
+            Assert.True(attribute.IsValid("http://localhost:1234"));
+            Assert.True(attribute.IsValid("https://localhost"));
+            Assert.True(attribute.IsValid("https://127.0.0.1"));
+            Assert.True(attribute.IsValid("http://127.0.0.1"));
+            Assert.True(attribute.IsValid("http://127.0.0.1:1234"));
+            Assert.True(attribute.IsValid("http://gozo.com"));
+            Assert.True(attribute.IsValid("https://gozo.com"));
+            Assert.True(attribute.IsValid("https://gozo.com:1234"));
+            Assert.True(attribute.IsValid("https://gozo.com:1234/test.css"));
+            Assert.True(attribute.IsValid("https://gozo.com:1234/test.png"));
+            Assert.False(attribute.IsValid("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud e"));
+            Assert.False(attribute.IsValid(2));
+            Assert.False(attribute.IsValid("http://"));
+            Assert.False(attribute.IsValid("httpdsadsa.com"));
         }
 
         [Fact]

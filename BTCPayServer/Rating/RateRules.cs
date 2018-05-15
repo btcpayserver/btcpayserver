@@ -347,21 +347,36 @@ namespace BTCPayServer.Rating
         class FlattenExpressionRewriter : CSharpSyntaxRewriter
         {
             RateRules parent;
+            CurrencyPair pair;
+            int nested = 0;
             public FlattenExpressionRewriter(RateRules parent, CurrencyPair pair)
             {
-                Context.Push(pair);
+                this.pair = pair;
                 this.parent = parent;
             }
 
             public ExchangeRates ExchangeRates = new ExchangeRates();
-            public Stack<CurrencyPair> Context { get; set; } = new Stack<CurrencyPair>();
             bool IsInvocation;
             public override SyntaxNode VisitInvocationExpression(InvocationExpressionSyntax node)
             {
+                if (IsInvocation)
+                {
+                    Errors.Add(RateRulesErrors.InvalidCurrencyIdentifier);
+                    return RateRules.CreateExpression($"ERR_INVALID_CURRENCY_PAIR({node.ToString()})");
+                }
                 IsInvocation = true;
                 _ExchangeName = node.Expression.ToString();
                 var result = base.VisitInvocationExpression(node);
                 IsInvocation = false;
+                return result;
+            }
+
+            bool IsArgumentList;
+            public override SyntaxNode VisitArgumentList(ArgumentListSyntax node)
+            {
+                IsArgumentList = true;
+                var result = base.VisitArgumentList(node);
+                IsArgumentList = false;
                 return result;
             }
 
@@ -371,12 +386,12 @@ namespace BTCPayServer.Rating
             const int MaxNestedCount = 8;
             public override SyntaxNode VisitIdentifierName(IdentifierNameSyntax node)
             {
-                if (CurrencyPair.TryParse(node.Identifier.ValueText, out var currentPair))
+                if (
+                    (!IsInvocation || IsArgumentList) &&
+                    CurrencyPair.TryParse(node.Identifier.ValueText, out var currentPair))
                 {
-                    var ctx = Context.Peek();
-
-                    var replacedPair = new CurrencyPair(left: currentPair.Left == "X" ? ctx.Left : currentPair.Left,
-                                                       right: currentPair.Right == "X" ? ctx.Right : currentPair.Right);
+                    var replacedPair = new CurrencyPair(left: currentPair.Left == "X" ? pair.Left : currentPair.Left,
+                                                       right: currentPair.Right == "X" ? pair.Right : currentPair.Right);
                     if (IsInvocation) // eg. replace bittrex(BTC_X) to bittrex(BTC_USD)
                     {
                         ExchangeRates.Add(new ExchangeRate() { CurrencyPair = replacedPair, Exchange = _ExchangeName });
@@ -385,13 +400,13 @@ namespace BTCPayServer.Rating
                     else // eg. replace BTC_X to BTC_USD, then replace by the expression for BTC_USD
                     {
                         var bestCandidate = parent.FindBestCandidate(replacedPair);
-                        if (Context.Count > MaxNestedCount)
+                        if (nested > MaxNestedCount)
                         {
                             Errors.Add(RateRulesErrors.TooMuchNestedCalls);
                             return RateRules.CreateExpression($"ERR_TOO_MUCH_NESTED_CALLS({replacedPair})");
                         }
-                        Context.Push(replacedPair);
-                        var replaced = Visit(bestCandidate);
+                        var innerFlatten = CreateNewContext(replacedPair);
+                        var replaced = innerFlatten.Visit(bestCandidate);
                         if (replaced is ExpressionSyntax expression)
                         {
                             var hasBinaryOps = new HasBinaryOperations();
@@ -401,7 +416,6 @@ namespace BTCPayServer.Rating
                                 replaced = SyntaxFactory.ParenthesizedExpression(expression);
                             }
                         }
-                        Context.Pop();
                         if (Errors.Contains(RateRulesErrors.TooMuchNestedCalls))
                         {
                             return RateRules.CreateExpression($"ERR_TOO_MUCH_NESTED_CALLS({replacedPair})");
@@ -410,6 +424,16 @@ namespace BTCPayServer.Rating
                     }
                 }
                 return base.VisitIdentifierName(node);
+            }
+
+            private FlattenExpressionRewriter CreateNewContext(CurrencyPair pair)
+            {
+                return new FlattenExpressionRewriter(parent, pair)
+                {
+                    Errors = Errors,
+                    nested = nested + 1,
+                    ExchangeRates = ExchangeRates,
+                };
             }
         }
         private SyntaxNode expression;

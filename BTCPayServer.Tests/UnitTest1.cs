@@ -1052,6 +1052,16 @@ namespace BTCPayServer.Tests
                 Assert.Single(checkout.AvailableCryptos);
                 Assert.Equal("BTC", checkout.CryptoCode);
 
+                Assert.Single(invoice.PaymentCodes);
+                Assert.Single(invoice.SupportedTransactionCurrencies);
+                Assert.Single(invoice.SupportedTransactionCurrencies);
+                Assert.Single(invoice.PaymentSubtotals);
+                Assert.Single(invoice.PaymentTotals);
+                Assert.True(invoice.PaymentCodes.ContainsKey("BTC"));
+                Assert.True(invoice.SupportedTransactionCurrencies.ContainsKey("BTC"));
+                Assert.True(invoice.SupportedTransactionCurrencies["BTC"].Enabled);
+                Assert.True(invoice.PaymentSubtotals.ContainsKey("BTC"));
+                Assert.True(invoice.PaymentTotals.ContainsKey("BTC"));
                 //////////////////////
 
                 // Retry now with LTC enabled
@@ -1100,6 +1110,18 @@ namespace BTCPayServer.Tests
                 checkout = (Models.InvoicingModels.PaymentModel)((JsonResult)controller.GetStatus(invoice.Id, "LTC").GetAwaiter().GetResult()).Value;
                 Assert.Equal(2, checkout.AvailableCryptos.Count);
                 Assert.Equal("LTC", checkout.CryptoCode);
+
+
+                Assert.Equal(2, invoice.PaymentCodes.Count());
+                Assert.Equal(2, invoice.SupportedTransactionCurrencies.Count());
+                Assert.Equal(2, invoice.SupportedTransactionCurrencies.Count());
+                Assert.Equal(2, invoice.PaymentSubtotals.Count());
+                Assert.Equal(2, invoice.PaymentTotals.Count());
+                Assert.True(invoice.PaymentCodes.ContainsKey("LTC"));
+                Assert.True(invoice.SupportedTransactionCurrencies.ContainsKey("LTC"));
+                Assert.True(invoice.SupportedTransactionCurrencies["LTC"].Enabled);
+                Assert.True(invoice.PaymentSubtotals.ContainsKey("LTC"));
+                Assert.True(invoice.PaymentTotals.ContainsKey("LTC"));
             }
         }
 

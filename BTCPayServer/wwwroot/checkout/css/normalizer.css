@@ -10328,6 +10328,7 @@ All mobile class names should be prefixed by m- */
 .wrong-email .payment-tabs {
     pointer-events: none;
     margin-top: -2.95rem;
+    z-index: -1;
     margin-bottom: 1rem;
 }
 
@@ -10410,10 +10411,6 @@ All mobile class names should be prefixed by m- */
 
 .refund-address-view {
     transform: translateY(20px);
-}
-
-.payment-tabs {
-    z-index: 1;
 }
 
 .single-item-order {

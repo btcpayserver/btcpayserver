@@ -1,15 +1,168 @@
-version: '3'
+version: '3.4'
 
 services:
+
   btcpayserver.tests:
     image: btcpayservertests
     build:
       context: .
       dockerfile: BTCPayServer.Tests/Dockerfile
+    extra_hosts: 
+      - "tests:127.0.0.1"
+    volumes:
+      - "customer_lightningd_datadir:/etc/customer_lightningd_datadir"
+      - "merchant_lightningd_datadir:/etc/merchant_lightningd_datadir"
 
   btcpayserver:
     image: btcpayserver
     build:
       context: .
       dockerfile: BTCPayServer/Dockerfile
+    environment:
+      BITCOIN_EXTRA_ARGS: |
+        regtest=1
+        connect=bitcoind:39388
+    links:
+      - nbxplorer
+      - postgres
+      - customer_lightningd
+      - merchant_lightningd
+      - lightning-charged
 
+  nbxplorer:
+    image: nicolasdorier/nbxplorer:latest
+    ports:
+      - "32838:32838"
+    expose: 
+      - "32838"
+    environment:
+      NBXPLORER_NETWORK: regtest
+      NBXPLORER_CHAINS: "btc,ltc"
+      NBXPLORER_BTCRPCURL: http://bitcoind:43782/
+      NBXPLORER_BTCNODEENDPOINT: bitcoind:39388
+      NBXPLORER_BTCRPCUSER: ceiwHEbqWI83
+      NBXPLORER_BTCRPCPASSWORD: DwubwWsoo3
+      NBXPLORER_LTCRPCURL: http://litecoind:43782/
+      NBXPLORER_LTCNODEENDPOINT: litecoind:39388
+      NBXPLORER_LTCRPCUSER: ceiwHEbqWI83
+      NBXPLORER_LTCRPCPASSWORD: DwubwWsoo3
+      NBXPLORER_BIND: 0.0.0.0:32838
+      NBXPLORER_VERBOSE: 1
+      NBXPLORER_NOAUTH: 1
+    links:
+      - bitcoind
+      - litecoind
+
+  bitcoind:
+    image: nicolasdorier/docker-bitcoin:0.16.0
+    environment:
+      BITCOIN_EXTRA_ARGS: |
+        rpcuser=ceiwHEbqWI83
+        rpcpassword=DwubwWsoo3
+        regtest=1
+        server=1
+        rpcport=43782
+        port=39388
+        whitelist=0.0.0.0/0
+    ports: 
+      - "43782:43782"
+    expose:
+      - "43782" # RPC
+      - "39388" # P2P
+    volumes:
+      - "bitcoin_datadir:/data"
+
+  customer_lightningd:
+    image: nicolasdorier/clightning:0.0.0.14-dev
+    environment: 
+      EXPOSE_TCP: "true"
+      LIGHTNINGD_OPT: |
+        bitcoin-datadir=/etc/bitcoin
+        bitcoin-rpcconnect=bitcoind
+        network=regtest
+        bind-addr=0.0.0.0
+        announce-addr=customer_lightningd
+        log-level=debug
+        dev-broadcast-interval=1000
+    ports:
+      - "30992:9835" # api port
+    expose:
+      - "9735" # server port
+      - "9835" # api port
+    volumes:
+      - "bitcoin_datadir:/etc/bitcoin"
+      - "customer_lightningd_datadir:/root/.lightning"
+    links:
+      - bitcoind
+
+  lightning-charged:
+    image: shesek/lightning-charge:0.3.9
+    environment:
+      NETWORK: regtest
+      API_TOKEN: foiewnccewuify
+      BITCOIND_RPCCONNECT: bitcoind
+    volumes:
+      - "bitcoin_datadir:/etc/bitcoin"
+      - "lightning_charge_datadir:/data"
+      - "merchant_lightningd_datadir:/etc/lightning"
+    expose:
+      - "9112" # Charge
+      - "9735" # Lightning
+    ports:
+      - "54938:9112" # Charge
+    links:
+      - bitcoind
+      - merchant_lightningd
+
+  merchant_lightningd:
+    image: nicolasdorier/clightning:0.0.0.14-dev
+    environment: 
+      EXPOSE_TCP: "true"
+      LIGHTNINGD_OPT: |
+        bitcoin-datadir=/etc/bitcoin
+        bitcoin-rpcconnect=bitcoind
+        bind-addr=0.0.0.0
+        announce-addr=merchant_lightningd
+        network=regtest
+        log-level=debug
+        dev-broadcast-interval=1000
+    ports:
+      - "30993:9835" # api port
+    expose:
+      - "9735" # server port
+      - "9835" # api port
+    volumes:
+      - "bitcoin_datadir:/etc/bitcoin"
+      - "merchant_lightningd_datadir:/root/.lightning"
+    links:
+      - bitcoind
+
+  litecoind:
+    image: nicolasdorier/docker-litecoin:0.15.1
+    environment:
+      BITCOIN_EXTRA_ARGS: |
+        rpcuser=ceiwHEbqWI83
+        rpcpassword=DwubwWsoo3
+        regtest=1
+        server=1
+        rpcport=43782
+        port=39388
+        whitelist=0.0.0.0/0
+    ports: 
+      - "43783:43782"
+    expose:
+      - "43782" # RPC
+      - "39388" # P2P
+
+  postgres:
+    image:  postgres:9.6.5
+    ports:
+      - "39372:5432"
+    expose:
+      - "5432"
+
+volumes:
+    bitcoin_datadir:
+    customer_lightningd_datadir:
+    merchant_lightningd_datadir:
+    lightning_charge_datadir:

@@ -9,8 +9,9 @@ namespace BTCPayServer.Validation
     {
         protected override ValidationResult IsValid(object value, ValidationContext validationContext)
         {
+            var str = value == null ? null : Convert.ToString(value, CultureInfo.InvariantCulture);
             Uri uri;
-            bool valid = Uri.TryCreate(Convert.ToString(value, CultureInfo.InvariantCulture), UriKind.Absolute, out uri);
+            bool valid = string.IsNullOrWhiteSpace(str) || Uri.TryCreate(str, UriKind.Absolute, out uri);
 
             if (!valid)
             {

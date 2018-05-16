@@ -49,6 +49,7 @@ namespace BTCPayServer
             InitLitecoin();
             InitDogecoin();
             InitBitcoinGold();
+            InitMonacoin();
             InitPolis();
         }
 

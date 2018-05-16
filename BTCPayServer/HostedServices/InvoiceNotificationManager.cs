@@ -198,7 +198,11 @@ namespace BTCPayServer.HostedServices
                 PosData = dto.PosData,
                 Price = dto.Price,
                 Status = dto.Status,
-                BuyerFields = invoice.RefundMail == null ? null : new Newtonsoft.Json.Linq.JObject() { new JProperty("buyerEmail", invoice.RefundMail) }
+                BuyerFields = invoice.RefundMail == null ? null : new Newtonsoft.Json.Linq.JObject() { new JProperty("buyerEmail", invoice.RefundMail) },
+                PaymentSubtotals = dto.PaymentSubtotals,
+                PaymentTotals = dto.PaymentTotals,
+                AmountPaid = dto.AmountPaid,
+                ExchangeRates = dto.ExchangeRates
             };
 
             // We keep backward compatibility with bitpay by passing BTC info to the notification

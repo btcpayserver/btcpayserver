@@ -31,6 +31,7 @@ namespace BTCPayServer.Services.Rates
             get;
             internal set;
         }
+        public bool Crypto { get; set; }
     }
     public class CurrencyNameTable
     {
@@ -40,6 +41,14 @@ namespace BTCPayServer.Services.Rates
         }
 
         static Dictionary<string, IFormatProvider> _CurrencyProviders = new Dictionary<string, IFormatProvider>();
+
+        public NumberFormatInfo GetNumberFormatInfo(string currency)
+        {
+            var data = GetCurrencyProvider(currency);
+            if (data is NumberFormatInfo nfi)
+                return nfi;
+            return ((CultureInfo)data).NumberFormat;
+        }
         public IFormatProvider GetCurrencyProvider(string currency)
         {
             lock (_CurrencyProviders)
@@ -54,7 +63,11 @@ namespace BTCPayServer.Services.Rates
                         }
                         catch { }
                     }
-                    AddCurrency(_CurrencyProviders, "BTC", 8, "BTC");
+
+                    foreach (var network in new BTCPayNetworkProvider(NetworkType.Mainnet).GetAll())
+                    {
+                        AddCurrency(_CurrencyProviders, network.CryptoCode, 8, network.CryptoCode);
+                    }
                 }
                 return _CurrencyProviders.TryGet(currency);
             }
@@ -106,6 +119,18 @@ namespace BTCPayServer.Services.Rates
                     info.Symbol = splitted[3];
                 }
             }
+
+            foreach (var network in new BTCPayNetworkProvider(NetworkType.Mainnet).GetAll())
+            {
+                dico.TryAdd(network.CryptoCode, new CurrencyData()
+                {
+                    Code = network.CryptoCode,
+                    Divisibility = 8,
+                    Name = network.CryptoCode,
+                    Crypto = true
+                });
+            }
+
             return dico.Values.ToArray();
         }
 

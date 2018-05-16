@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
-		<Version>1.0.2.18</Version>
+		<Version>1.0.2.21</Version>
     <NoWarn>NU1701,CA1816,CA1308,CA1810,CA2208</NoWarn>
   </PropertyGroup>
   <ItemGroup>
@@ -41,7 +41,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.2" />
     <PackageReference Include="Microsoft.NetCore.Analyzers" Version="2.6.0" />
     <PackageReference Include="NBitcoin" Version="4.1.1.7" />
-    <PackageReference Include="NBitpayClient" Version="1.0.0.21" />	  
+    <PackageReference Include="NBitpayClient" Version="1.0.0.23" />	  
     <PackageReference Include="DBreeze" Version="1.87.0" />
     <PackageReference Include="NBXplorer.Client" Version="1.0.2.8" />
     <PackageReference Include="NicolasDorier.CommandLine" Version="1.0.0.1" />

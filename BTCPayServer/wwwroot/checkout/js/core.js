@@ -237,8 +237,12 @@ $(document).ready(function () {
     });
 
     // Expand Line-Items
+    var lineItemsExpanded = false;
     $(".buyerTotalLine").click(function () {
         $("line-items").toggleClass("expanded");
+        lineItemsExpanded ? $("line-items").slideUp() : $("line-items").slideDown();
+        lineItemsExpanded = !lineItemsExpanded;
+
         $(".buyerTotalLine").toggleClass("expanded");
         $(".single-item-order__right__btc-price__chevron").toggleClass("expanded");
     });

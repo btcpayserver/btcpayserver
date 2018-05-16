@@ -35,9 +35,9 @@ namespace BTCPayServer.Tests
                 rules.ToString());
             var tests = new[]
             {
+                (Pair: "DOGE_USD", Expected: "bittrex(DOGE_BTC) * gdax(BTC_USD) * 1.1"),
                 (Pair: "BTC_USD", Expected: "gdax(BTC_USD)"),
                 (Pair: "BTC_CAD", Expected: "coinbase(BTC_CAD)"),
-                (Pair: "DOGE_USD", Expected: "bittrex(DOGE_BTC) * gdax(BTC_USD) * 1.1"),
                 (Pair: "DOGE_CAD", Expected: "bittrex(DOGE_BTC) * coinbase(BTC_CAD) * 1.1"),
                 (Pair: "LTC_CAD", Expected: "coinaverage(LTC_CAD) * 1.02"),
             };
@@ -81,9 +81,9 @@ namespace BTCPayServer.Tests
 
             var tests2 = new[]
             {
+                (Pair: "DOGE_USD", Expected: "bittrex(DOGE_BTC) * gdax(BTC_USD) * 1.1", ExpectedExchangeRates: "bittrex(DOGE_BTC),gdax(BTC_USD)"),
                 (Pair: "BTC_USD", Expected: "gdax(BTC_USD)", ExpectedExchangeRates: "gdax(BTC_USD)"),
                 (Pair: "BTC_CAD", Expected: "coinbase(BTC_CAD)", ExpectedExchangeRates: "coinbase(BTC_CAD)"),
-                (Pair: "DOGE_USD", Expected: "bittrex(DOGE_BTC) * gdax(BTC_USD) * 1.1", ExpectedExchangeRates: "bittrex(DOGE_BTC),gdax(BTC_USD)"),
                 (Pair: "DOGE_CAD", Expected: "bittrex(DOGE_BTC) * coinbase(BTC_CAD) * 1.1", ExpectedExchangeRates: "bittrex(DOGE_BTC),coinbase(BTC_CAD)"),
                 (Pair: "LTC_CAD", Expected: "coinaverage(LTC_CAD) * 1.02", ExpectedExchangeRates: "coinaverage(LTC_CAD)"),
             };
@@ -129,6 +129,14 @@ namespace BTCPayServer.Tests
             Assert.Equal("(1 / (2000 * (-3 + 1000 + 50 - 5))) * 1.1", rule2.ToString(true));
             Assert.Equal(( 1.0m / (2000m * (-3m + 1000m + 50m - 5m))) * 1.1m, rule2.Value.Value);
             ////////
+
+            // Make sure kraken is not converted to CurrencyPair
+            builder = new StringBuilder();
+            builder.AppendLine("BTC_USD = kraken(BTC_USD)");
+            Assert.True(RateRules.TryParse(builder.ToString(), out rules));
+            rule2 = rules.GetRuleFor(CurrencyPair.Parse("BTC_USD"));
+            rule2.ExchangeRates.SetRate("kraken", CurrencyPair.Parse("BTC_USD"), 1000m);
+            Assert.True(rule2.Reevaluate());
         }
     }
 }

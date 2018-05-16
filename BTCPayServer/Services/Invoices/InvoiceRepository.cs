@@ -112,7 +112,7 @@ namespace BTCPayServer.Services.Invoices
             invoice.StoreId = storeId;
             using (var context = _ContextFactory.CreateContext())
             {
-                context.Invoices.Add(new InvoiceData()
+                context.Invoices.Add(new Data.InvoiceData()
                 {
                     StoreDataId = storeId,
                     Id = invoice.Id,
@@ -267,7 +267,7 @@ namespace BTCPayServer.Services.Invoices
         {
             using (var context = _ContextFactory.CreateContext())
             {
-                var invoiceData = await context.FindAsync<InvoiceData>(invoiceId).ConfigureAwait(false);
+                var invoiceData = await context.FindAsync<Data.InvoiceData>(invoiceId).ConfigureAwait(false);
                 if (invoiceData == null)
                     return;
                 var invoiceEntity = ToObject<InvoiceEntity>(invoiceData.Blob, null);
@@ -307,7 +307,7 @@ namespace BTCPayServer.Services.Invoices
         {
             using (var context = _ContextFactory.CreateContext())
             {
-                var invoiceData = await context.FindAsync<InvoiceData>(invoiceId).ConfigureAwait(false);
+                var invoiceData = await context.FindAsync<Data.InvoiceData>(invoiceId).ConfigureAwait(false);
                 if (invoiceData == null)
                     return;
                 invoiceData.Status = status;
@@ -320,7 +320,7 @@ namespace BTCPayServer.Services.Invoices
         {
             using (var context = _ContextFactory.CreateContext())
             {
-                var invoiceData = await context.FindAsync<InvoiceData>(invoiceId).ConfigureAwait(false);
+                var invoiceData = await context.FindAsync<Data.InvoiceData>(invoiceId).ConfigureAwait(false);
                 if (invoiceData?.Status != "paid")
                     return;
                 invoiceData.Status = "invalid";
@@ -331,7 +331,7 @@ namespace BTCPayServer.Services.Invoices
         {
             using (var context = _ContextFactory.CreateContext())
             {
-                IQueryable<InvoiceData> query =
+                IQueryable<Data.InvoiceData> query =
                     context
                     .Invoices
                     .Include(o => o.Payments)
@@ -351,7 +351,7 @@ namespace BTCPayServer.Services.Invoices
             }
         }
 
-        private InvoiceEntity ToEntity(InvoiceData invoice)
+        private InvoiceEntity ToEntity(Data.InvoiceData invoice)
         {
             var entity = ToObject<InvoiceEntity>(invoice.Blob, null);
 #pragma warning disable CS0618
@@ -386,7 +386,7 @@ namespace BTCPayServer.Services.Invoices
         {
             using (var context = _ContextFactory.CreateContext())
             {
-                IQueryable<InvoiceData> query = context
+                IQueryable<Data.InvoiceData> query = context
                     .Invoices
                     .Include(o => o.Payments)
                     .Include(o => o.RefundAddresses);

@@ -12,6 +12,7 @@ using NBXplorer.Models;
 using NBXplorer;
 using NBXplorer.DerivationStrategy;
 using BTCPayServer.Payments;
+using NBitpayClient;
 
 namespace BTCPayServer.Services.Invoices
 {
@@ -336,19 +337,35 @@ namespace BTCPayServer.Services.Invoices
                 ExpirationTime = ExpirationTime,
                 Status = Status,
                 Currency = ProductInformation.Currency,
-                Flags = new Flags() { Refundable = Refundable }
+                Flags = new Flags() { Refundable = Refundable },
+
+                PaymentSubtotals = new Dictionary<string, long>(),
+                PaymentTotals= new Dictionary<string, long>(),
+                SupportedTransactionCurrencies = new Dictionary<string, InvoiceSupportedTransactionCurrency>(),
+                Addresses = new Dictionary<string, string>(),
+                PaymentCodes = new Dictionary<string, InvoicePaymentUrls>(),
+                ExchangeRates = new Dictionary<string, Dictionary<string, decimal>>()
             };
 
             dto.Url = ServerUrl.WithTrailingSlash() + $"invoice?id=" + Id;
             dto.CryptoInfo = new List<NBitpayClient.InvoiceCryptoInfo>();
             foreach (var info in this.GetPaymentMethods(networkProvider))
             {
+               
                 var accounting = info.Calculate();
                 var cryptoInfo = new NBitpayClient.InvoiceCryptoInfo();
-                cryptoInfo.CryptoCode = info.GetId().CryptoCode;
+                var subtotalPrice = accounting.TotalDue - accounting.NetworkFee;
+                var cryptoCode = info.GetId().CryptoCode;
+                var address = info.GetPaymentMethodDetails()?.GetPaymentDestination();
+                var exrates = new Dictionary<string, decimal>
+                {
+                    { ProductInformation.Currency, cryptoInfo.Rate }
+                };
+
+                cryptoInfo.CryptoCode = cryptoCode;
                 cryptoInfo.PaymentType = info.GetId().PaymentType.ToString();
                 cryptoInfo.Rate = info.Rate;
-                cryptoInfo.Price = (accounting.TotalDue - accounting.NetworkFee).ToString();
+                cryptoInfo.Price = subtotalPrice.ToString();
 
                 cryptoInfo.Due = accounting.Due.ToString();
                 cryptoInfo.Paid = accounting.Paid.ToString();
@@ -357,11 +374,9 @@ namespace BTCPayServer.Services.Invoices
                 cryptoInfo.TxCount = accounting.TxCount;
                 cryptoInfo.CryptoPaid = accounting.CryptoPaid.ToString();
 
-                cryptoInfo.Address = info.GetPaymentMethodDetails()?.GetPaymentDestination();
-                cryptoInfo.ExRates = new Dictionary<string, decimal>
-                {
-                    { ProductInformation.Currency, cryptoInfo.Rate }
-                };
+                cryptoInfo.Address = address;
+               
+                cryptoInfo.ExRates = exrates;
                 var paymentId = info.GetId();
                 var scheme = info.Network.UriScheme;
                 cryptoInfo.Url = ServerUrl.WithTrailingSlash() + $"i/{paymentId}/{Id}";
@@ -396,9 +411,22 @@ namespace BTCPayServer.Services.Invoices
                     dto.BTCDue = cryptoInfo.Due;
                     dto.PaymentUrls = cryptoInfo.PaymentUrls;
                 }
+
 #pragma warning restore CS0618
                 dto.CryptoInfo.Add(cryptoInfo);
+
+                dto.PaymentCodes.Add(paymentId.ToString(), cryptoInfo.PaymentUrls);
+                dto.PaymentSubtotals.Add(paymentId.ToString(), subtotalPrice.Satoshi);
+                dto.PaymentTotals.Add(paymentId.ToString(), accounting.TotalDue.Satoshi);
+                dto.SupportedTransactionCurrencies.TryAdd(cryptoCode, new InvoiceSupportedTransactionCurrency()
+                {
+                    Enabled = true
+                });
+                dto.Addresses.Add(paymentId.ToString(), address);
+                dto.ExchangeRates.TryAdd(cryptoCode, exrates);
             }
+
+            //dto.AmountPaid dto.MinerFees & dto.TransactionCurrency are not supported by btcpayserver as we have multi currency payment support per invoice
 
             Populate(ProductInformation, dto);
             Populate(BuyerInformation, dto);

@@ -31,6 +31,7 @@ namespace BTCPayServer.Services.Rates
             get;
             internal set;
         }
+        public bool Crypto { get; set; }
     }
     public class CurrencyNameTable
     {
@@ -125,7 +126,8 @@ namespace BTCPayServer.Services.Rates
                 {
                     Code = network.CryptoCode,
                     Divisibility = 8,
-                    Name = network.CryptoCode
+                    Name = network.CryptoCode,
+                    Crypto = true
                 });
             }
 

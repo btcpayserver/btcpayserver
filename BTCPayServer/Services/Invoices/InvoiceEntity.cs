@@ -415,14 +415,15 @@ namespace BTCPayServer.Services.Invoices
 #pragma warning restore CS0618
                 dto.CryptoInfo.Add(cryptoInfo);
 
-                dto.PaymentSubtotals.Add(cryptoCode, subtotalPrice.Satoshi);
-                dto.PaymentTotals.Add(cryptoCode, accounting.TotalDue.Satoshi);
-                dto.SupportedTransactionCurrencies.Add(cryptoCode, new InvoiceSupportedTransactionCurrency()
+                dto.PaymentCodes.Add(paymentId.ToString(), cryptoInfo.PaymentUrls);
+                dto.PaymentSubtotals.Add(paymentId.ToString(), subtotalPrice.Satoshi);
+                dto.PaymentTotals.Add(paymentId.ToString(), accounting.TotalDue.Satoshi);
+                dto.SupportedTransactionCurrencies.TryAdd(cryptoCode, new InvoiceSupportedTransactionCurrency()
                 {
                     Enabled = true
                 });
-                dto.Addresses.Add(cryptoCode, address);
-                dto.ExchangeRates.Add(cryptoCode, exrates);
+                dto.Addresses.Add(paymentId.ToString(), address);
+                dto.ExchangeRates.TryAdd(cryptoCode, exrates);
             }
 
             //dto.AmountPaid dto.MinerFees & dto.TransactionCurrency are not supported by btcpayserver as we have multi currency payment support per invoice

@@ -10328,6 +10328,7 @@ All mobile class names should be prefixed by m- */
 .wrong-email .payment-tabs {
     pointer-events: none;
     margin-top: -2.95rem;
+    z-index: -1;
     margin-bottom: 1rem;
 }
 
@@ -10410,10 +10411,6 @@ All mobile class names should be prefixed by m- */
 
 .refund-address-view {
     transform: translateY(20px);
-}
-
-.payment-tabs {
-    z-index: 1;
 }
 
 .single-item-order {
@@ -11146,31 +11143,13 @@ language-selector {
 
 line-items {
     background: #FBFBFB;
-    height: 25px;
-    border-top: 0;
+    border-top: 1px solid rgba(238, 238, 238, 0.5);
     z-index: 2;
-    position: relative;
-    display: block;
-    overflow: hidden;
-    height: 0;
-    transition: height 250ms ease;
+    display: none;
 }
 
-    line-items.expanded {
-        height: 120px;
-        border-top: 1px solid rgba(238, 238, 238, 0.5);
-    }
-
-        line-items.expanded.paid-over {
-            height: 295px;
-        }
-
-        line-items.expanded.paid-partial-expired, line-items.expanded.paid-full {
-            height: 272px;
-        }
-
     line-items .line-items {
-        padding: 1rem;
+        padding: 10px 1rem;
         color: #565D6E;
     }
 
@@ -11196,6 +11175,10 @@ line-items {
         font-size: 12px;
         font-weight: 100;
         padding: 2px 0;
+    }
+
+    line-items .line-items_fiatvalue {
+        margin-top: -5px;
     }
 
     line-items .line-items__item__label {

@@ -242,8 +242,9 @@ namespace BTCPayServer.Controllers
                 CustomCSSLink = storeBlob.CustomCSS?.AbsoluteUri,
                 CustomLogoLink = storeBlob.CustomLogo?.AbsoluteUri,
                 BtcAddress = paymentMethodDetails.GetPaymentDestination(),
-                OrderAmount = (accounting.TotalDue - accounting.NetworkFee).ToString(),
                 BtcDue = accounting.Due.ToString(),
+                OrderAmount = (accounting.TotalDue - accounting.NetworkFee).ToString(),
+                OrderAmountFiat = OrderAmountFiat(invoice.ProductInformation),
                 CustomerEmail = invoice.RefundMail,
                 RequiresRefundEmail = storeBlob.RequiresRefundEmail,
                 ExpirationSeconds = Math.Max(0, (int)(invoice.ExpirationTime - DateTimeOffset.UtcNow).TotalSeconds),
@@ -314,6 +315,17 @@ namespace BTCPayServer.Controllers
                 provider.CurrencyDecimalDigits = divisibility;
             }
             return price.ToString("C", provider) + $" ({currency})";
+        }
+        private string OrderAmountFiat(ProductInformation productInformation)
+        {
+            // check if invoice source currency is crypto... if it is there is no "order amount in fiat"
+            foreach (var net in _NetworkProvider.GetAll())
+            {
+                if (net.CryptoCode == productInformation.Currency)
+                    return null;
+            }
+
+            return FormatCurrency(productInformation.Price, productInformation.Currency);
         }
 
         [HttpGet]

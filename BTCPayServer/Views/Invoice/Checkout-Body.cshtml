@@ -73,7 +73,7 @@
                 <span>{{ srvModel.btcDue }} {{ srvModel.cryptoCode }}</span>
             </div>
 
-            <div class="single-item-order__right__ex-rate">
+            <div class="single-item-order__right__ex-rate"  v-if="srvModel.orderAmountFiat">
                 1 {{ srvModel.cryptoCode }} = {{ srvModel.rate }}
             </div>
         </div>
@@ -86,6 +86,12 @@
             <div class="line-items__item">
                 <div class="line-items__item__label">{{$t("Order Amount")}}</div>
                 <div class="line-items__item__value">{{srvModel.orderAmount}} {{ srvModel.cryptoCode }}</div>
+            </div>
+            <div class="line-items__item line-items_fiatvalue" v-if="srvModel.orderAmountFiat">
+                <div class="line-items__item__label">&nbsp;</div>
+                <div class="line-items__item__value single-item-order__right__ex-rate">
+                    {{srvModel.orderAmountFiat}}
+                </div>
             </div>
             <div class="line-items__item">
                 <div class="line-items__item__label">
@@ -133,7 +139,7 @@
     </div>
 </div>
 
-<div adjust-height="" class="payment-box">
+<div class="payment-box">
     <div class="bp-view payment manual-flow enter-contact-email active" id="emailAddressView">
         <form class="manual__step-one refund-address-form contact-email-form" id="emailAddressForm" name="emailAddressForm" novalidate="">
             <div class="manual__step-one__header">

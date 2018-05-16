@@ -323,13 +323,12 @@ namespace BTCPayServer.Controllers
                 provider = (NumberFormatInfo)provider.Clone();
                 provider.CurrencyDecimalDigits = divisibility;
             }
-
-            if (_specialCryptoFormat.Contains(currency))
+            
+            if (currencyData.Crypto)
                 return price.ToString("C", provider);
             else
                 return price.ToString("C", provider) + $" ({currency})";
         }
-        private static readonly string[] _specialCryptoFormat = new[] { "BTC", "LTC" };
 
         [HttpGet]
         [Route("i/{invoiceId}/status")]

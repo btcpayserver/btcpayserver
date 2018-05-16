@@ -85,7 +85,7 @@ namespace BTCPayServer.Controllers
                 {
                     cryptoPayment.Address = onchainMethod.DepositAddress;
                 }
-                cryptoPayment.Rate = FormatCurrency(data);
+                cryptoPayment.Rate = ExchangeRate(data);
                 cryptoPayment.PaymentUrl = cryptoInfo.PaymentUrls.BIP21;
                 model.CryptoPayments.Add(cryptoPayment);
             }
@@ -244,14 +244,14 @@ namespace BTCPayServer.Controllers
                 BtcAddress = paymentMethodDetails.GetPaymentDestination(),
                 BtcDue = accounting.Due.ToString(),
                 OrderAmount = (accounting.TotalDue - accounting.NetworkFee).ToString(),
-                OrderAmountFiat = OrderAmountFiat(invoice.ProductInformation),
+                OrderAmountFiat = OrderAmountFromInvoice(network.CryptoCode, invoice.ProductInformation),
                 CustomerEmail = invoice.RefundMail,
                 RequiresRefundEmail = storeBlob.RequiresRefundEmail,
                 ExpirationSeconds = Math.Max(0, (int)(invoice.ExpirationTime - DateTimeOffset.UtcNow).TotalSeconds),
                 MaxTimeSeconds = (int)(invoice.ExpirationTime - invoice.InvoiceTime).TotalSeconds,
                 MaxTimeMinutes = (int)(invoice.ExpirationTime - invoice.InvoiceTime).TotalMinutes,
                 ItemDesc = invoice.ProductInformation.ItemDesc,
-                Rate = FormatCurrency(paymentMethod),
+                Rate = ExchangeRate(paymentMethod),
                 MerchantRefLink = invoice.RedirectURL ?? "/",
                 StoreName = store.StoreName,
                 InvoiceBitcoinUrl = paymentMethodId.PaymentType == PaymentTypes.BTCLike ? cryptoInfo.PaymentUrls.BIP21 :
@@ -289,11 +289,20 @@ namespace BTCPayServer.Controllers
             return (paymentMethodId.PaymentType == PaymentTypes.BTCLike ? Url.Content(network.CryptoImagePath) : Url.Content(network.LightningImagePath));
         }
 
-        private string FormatCurrency(PaymentMethod paymentMethod)
+        private string OrderAmountFromInvoice(string cryptoCode, ProductInformation productInformation)
+        {
+            // if invoice source currency is the same as currently display currency, no need for "order amount from invoice"
+            if (cryptoCode == productInformation.Currency)
+                return null;
+
+            return FormatCurrency(productInformation.Price, productInformation.Currency, _CurrencyNameTable);
+        }
+        private string ExchangeRate(PaymentMethod paymentMethod)
         {
             string currency = paymentMethod.ParentEntity.ProductInformation.Currency;
             return FormatCurrency(paymentMethod.Rate, currency, _CurrencyNameTable);
         }
+
         public static string FormatCurrency(decimal price, string currency, CurrencyNameTable currencies)
         {
             var provider = currencies.GetNumberFormatInfo(currency);
@@ -314,18 +323,13 @@ namespace BTCPayServer.Controllers
                 provider = (NumberFormatInfo)provider.Clone();
                 provider.CurrencyDecimalDigits = divisibility;
             }
-            return price.ToString("C", provider) + $" ({currency})";
-        }
-        private string OrderAmountFiat(ProductInformation productInformation)
-        {
-            // check if invoice source currency is crypto... if it is there is no "order amount in fiat"
-            if (_NetworkProvider.GetNetwork(productInformation.Currency) != null)
-            {
-                return null;
-            }
 
-            return FormatCurrency(productInformation.Price, productInformation.Currency, _CurrencyNameTable);
+            if (_specialCryptoFormat.Contains(currency))
+                return price.ToString("C", provider);
+            else
+                return price.ToString("C", provider) + $" ({currency})";
         }
+        private static readonly string[] _specialCryptoFormat = new[] { "BTC", "LTC" };
 
         [HttpGet]
         [Route("i/{invoiceId}/status")]

@@ -309,7 +309,7 @@ namespace BTCPayServer.Controllers
                 }
                 divisibility++;
             }
-            if(divisibility != provider.CurrencyDecimalDigits)
+            if (divisibility != provider.CurrencyDecimalDigits)
             {
                 provider = (NumberFormatInfo)provider.Clone();
                 provider.CurrencyDecimalDigits = divisibility;
@@ -319,13 +319,12 @@ namespace BTCPayServer.Controllers
         private string OrderAmountFiat(ProductInformation productInformation)
         {
             // check if invoice source currency is crypto... if it is there is no "order amount in fiat"
-            foreach (var net in _NetworkProvider.GetAll())
+            if (_NetworkProvider.GetNetwork(productInformation.Currency) != null)
             {
-                if (net.CryptoCode == productInformation.Currency)
-                    return null;
+                return null;
             }
 
-            return FormatCurrency(productInformation.Price, productInformation.Currency);
+            return FormatCurrency(productInformation.Price, productInformation.Currency, _CurrencyNameTable);
         }
 
         [HttpGet]

@@ -28,7 +28,7 @@ namespace BTCPayServer.Payments.Bitcoin
     {
         EventAggregator _Aggregator;
         ExplorerClientProvider _ExplorerClients;
-        IApplicationLifetime _Lifetime;
+        Microsoft.Extensions.Hosting.IApplicationLifetime _Lifetime;
         InvoiceRepository _InvoiceRepository;
         private TaskCompletionSource<bool> _RunningTask;
         private CancellationTokenSource _Cts;
@@ -39,7 +39,7 @@ namespace BTCPayServer.Payments.Bitcoin
                                 BTCPayWalletProvider wallets,
                                 InvoiceRepository invoiceRepository,
                                 BTCPayNetworkProvider networkProvider,
-                                EventAggregator aggregator, IApplicationLifetime lifetime)
+                                EventAggregator aggregator, Microsoft.Extensions.Hosting.IApplicationLifetime lifetime)
         {
             PollInterval = TimeSpan.FromMinutes(1.0);
             _Wallets = wallets;

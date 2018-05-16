@@ -5,11 +5,6 @@ using System.Threading.Tasks;
 
 namespace BTCPayServer
 {
-    public class StorePolicies
-    {
-        public const string CanAccessStores = "CanAccessStore";
-        public const string OwnStore = "OwnStore";
-    }
     public class StoreRoles
     {
         public const string Owner = "Owner";

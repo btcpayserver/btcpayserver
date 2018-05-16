@@ -30,6 +30,7 @@ using BTCPayServer.Models;
 using System.Security.Claims;
 using System.Globalization;
 using BTCPayServer.Services;
+using BTCPayServer.Data;
 
 namespace BTCPayServer
 {
@@ -103,12 +104,6 @@ namespace BTCPayServer
             return activeProvider != "Microsoft.EntityFrameworkCore.Sqlite";
         }
 
-        public static bool IsCoinAverage(this string exchangeName)
-        {
-            string[] coinAverages = new[] { "coinaverage", "bitcoinaverage" };
-            return String.IsNullOrWhiteSpace(exchangeName) ? true : coinAverages.Contains(exchangeName, StringComparer.OrdinalIgnoreCase) ? true : false;
-        }
-
         public static async Task<Dictionary<uint256, TransactionResult>> GetTransactions(this BTCPayWallet client, uint256[] hashes, CancellationToken cts = default(CancellationToken))
         {
             hashes = hashes.Distinct().ToArray();
@@ -134,6 +129,14 @@ namespace BTCPayServer
                         request.PathBase.ToUriComponent());
         }
 
+        public static string GetAbsoluteUri(this HttpRequest request, string redirectUrl)
+        {
+            bool isRelative = 
+                (redirectUrl.Length > 0 && redirectUrl[0] == '/')
+                || !new Uri(redirectUrl, UriKind.RelativeOrAbsolute).IsAbsoluteUri;
+            return isRelative ? request.GetAbsoluteRoot() + redirectUrl : redirectUrl;
+        }
+
         public static IServiceCollection ConfigureBTCPayServer(this IServiceCollection services, IConfiguration conf)
         {
             services.Configure<BTCPayServerOptions>(o =>
@@ -153,19 +156,49 @@ namespace BTCPayServer
             return principal.Claims.Where(c => c.Type == Claims.OwnStore).Select(c => c.Value).FirstOrDefault();
         }
 
+        public static void SetIsBitpayAPI(this HttpContext ctx, bool value)
+        {
+            NBitcoin.Extensions.TryAdd(ctx.Items, "IsBitpayAPI", value);
+        }
+
+        public static void AddRange<T>(this HashSet<T> hashSet, IEnumerable<T> items)
+        {
+            foreach(var item in items)
+            {
+                hashSet.Add(item);
+            }
+        }
+        public static bool GetIsBitpayAPI(this HttpContext ctx)
+        {
+            return ctx.Items.TryGetValue("IsBitpayAPI", out object obj) &&
+                  obj is bool b && b;
+        }
+
+        public static void SetBitpayAuth(this HttpContext ctx, (string Signature, String Id, String Authorization) value)
+        {
+            NBitcoin.Extensions.TryAdd(ctx.Items, "BitpayAuth", value);
+        }
+
+        public static (string Signature, String Id, String Authorization) GetBitpayAuth(this HttpContext ctx)
+        {
+            ctx.Items.TryGetValue("BitpayAuth", out object obj);
+            return ((string Signature, String Id, String Authorization))obj;
+        }
+
+        public static StoreData GetStoreData(this HttpContext ctx)
+        {
+            return ctx.Items.TryGet("BTCPAY.STOREDATA") as StoreData;
+        }
+        public static void SetStoreData(this HttpContext ctx, StoreData storeData)
+        {
+            ctx.Items["BTCPAY.STOREDATA"] = storeData;
+        }
+
         private static JsonSerializerSettings jsonSettings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
         public static string ToJson(this object o)
         {
             var res = JsonConvert.SerializeObject(o, Formatting.None, jsonSettings);
             return res;
         }
-
-        public static HtmlString ToJSVariableModel(this object o, string variableName)
-        {
-            var encodedJson = JavaScriptEncoder.Default.Encode(o.ToJson());
-            return new HtmlString($"var {variableName} = JSON.parse('" + encodedJson + "');");
-        }
-
-
     }
 }

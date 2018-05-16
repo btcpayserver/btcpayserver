@@ -62,7 +62,7 @@ services:
 
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:1.0.2.2
+    image: nicolasdorier/nbxplorer:1.0.2.6
     ports:
       - "32838:32838"
     expose: 
@@ -110,14 +110,15 @@ services:
       - "bitcoin_datadir:/data"
 
   customer_lightningd:
-    image: nicolasdorier/clightning:0.0.0.11-dev
+    image: nicolasdorier/clightning:0.0.0.16-dev
     environment: 
       EXPOSE_TCP: "true"
       LIGHTNINGD_OPT: |
         bitcoin-datadir=/etc/bitcoin
         bitcoin-rpcconnect=bitcoind
         network=regtest
-        ipaddr=customer_lightningd
+        bind-addr=0.0.0.0
+        announce-addr=customer_lightningd
         log-level=debug
         dev-broadcast-interval=1000
     ports:
@@ -151,13 +152,14 @@ services:
       - merchant_lightningd
 
   merchant_lightningd:
-    image: nicolasdorier/clightning:0.0.0.11-dev
+    image: nicolasdorier/clightning:0.0.0.14-dev
     environment: 
       EXPOSE_TCP: "true"
       LIGHTNINGD_OPT: |
         bitcoin-datadir=/etc/bitcoin
         bitcoin-rpcconnect=bitcoind
-        ipaddr=merchant_lightningd
+        bind-addr=0.0.0.0
+        announce-addr=merchant_lightningd
         network=regtest
         log-level=debug
         dev-broadcast-interval=1000

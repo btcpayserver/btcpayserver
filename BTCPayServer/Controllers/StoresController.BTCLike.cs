@@ -10,6 +10,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
+using LedgerWallet;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBXplorer.DerivationStrategy;
@@ -21,9 +22,9 @@ namespace BTCPayServer.Controllers
     {
         [HttpGet]
         [Route("{storeId}/derivations/{cryptoCode}")]
-        public async Task<IActionResult> AddDerivationScheme(string storeId, string cryptoCode)
+        public IActionResult AddDerivationScheme(string storeId, string cryptoCode)
         {
-            var store = await _Repo.FindStore(storeId, GetUserId());
+            var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
             var network = cryptoCode == null ? null : _ExplorerProvider.GetNetwork(cryptoCode);
@@ -60,7 +61,7 @@ namespace BTCPayServer.Controllers
         {
             vm.ServerUrl = GetStoreUrl(storeId);
             vm.CryptoCode = cryptoCode;
-            var store = await _Repo.FindStore(storeId, GetUserId());
+            var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
 
@@ -188,7 +189,7 @@ namespace BTCPayServer.Controllers
         {
             if (!HttpContext.WebSockets.IsWebSocketRequest)
                 return NotFound();
-            var store = await _Repo.FindStore(storeId, GetUserId());
+            var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
 
@@ -264,7 +265,7 @@ namespace BTCPayServer.Controllers
                 {
                     var strategy = GetDirectDerivationStrategy(store, network);
                     var strategyBase = GetDerivationStrategy(store, network);
-                    if (strategy == null || !await hw.SupportDerivation(network, strategy))
+                    if (strategy == null || await hw.GetKeyPath(network, strategy) == null)
                     {
                         throw new Exception($"This store is not configured to use this ledger");
                     }
@@ -286,11 +287,76 @@ namespace BTCPayServer.Controllers
 
                     var unspentCoins = await wallet.GetUnspentCoins(strategyBase);
                     var changeAddress = await change;
-                    var transaction = await hw.SendToAddress(strategy, unspentCoins, network,
-                                            new[] { (destinationAddress as IDestination, amountBTC, subsctractFeesValue) },
-                                            feeRateValue,
-                                            changeAddress.Item1,
-                                            changeAddress.Item2, summary.Status.BitcoinStatus.MinRelayTxFee);
+                    var send = new[] { (
+                        destination: destinationAddress as IDestination, 
+                        amount: amountBTC,
+                        substractFees: subsctractFeesValue) };
+
+                    foreach (var element in send)
+                    {
+                        if (element.destination == null)
+                            throw new ArgumentNullException(nameof(element.destination));
+                        if (element.amount == null)
+                            throw new ArgumentNullException(nameof(element.amount));
+                        if (element.amount <= Money.Zero)
+                            throw new ArgumentOutOfRangeException(nameof(element.amount), "The amount should be above zero");
+                    }
+
+                    var foundKeyPath = await hw.GetKeyPath(network, strategy);
+                    if (foundKeyPath == null)
+                    {
+                        throw new HardwareWalletException($"This store is not configured to use this ledger");
+                    }
+
+                    TransactionBuilder builder = new TransactionBuilder();
+                    builder.StandardTransactionPolicy.MinRelayTxFee = summary.Status.BitcoinStatus.MinRelayTxFee;
+                    builder.SetConsensusFactory(network.NBitcoinNetwork);
+                    builder.AddCoins(unspentCoins.Select(c => c.Coin).ToArray());
+
+                    foreach (var element in send)
+                    {
+                        builder.Send(element.destination, element.amount);
+                        if (element.substractFees)
+                            builder.SubtractFees();
+                    }
+                    builder.SetChange(changeAddress.Item1);
+                    builder.SendEstimatedFees(feeRateValue);
+                    builder.Shuffle();
+                    var unsigned = builder.BuildTransaction(false);
+
+                    var keypaths = new Dictionary<Script, KeyPath>();
+                    foreach (var c in unspentCoins)
+                    {
+                        keypaths.TryAdd(c.Coin.ScriptPubKey, c.KeyPath);
+                    }
+
+                    var hasChange = unsigned.Outputs.Count == 2;
+                    var usedCoins = builder.FindSpentCoins(unsigned);
+
+                    Dictionary<uint256, Transaction> parentTransactions = new Dictionary<uint256, Transaction>();
+
+                    if(!strategy.Segwit)
+                    {
+                        var parentHashes = usedCoins.Select(c => c.Outpoint.Hash).ToHashSet();
+                        var explorer = _ExplorerProvider.GetExplorerClient(network);
+                        var getTransactionAsyncs = parentHashes.Select(h => (Op: explorer.GetTransactionAsync(h), Hash: h)).ToList();
+                        foreach(var getTransactionAsync in getTransactionAsyncs)
+                        {
+                            var tx = (await getTransactionAsync.Op);
+                            if(tx == null)
+                                throw new Exception($"Parent transaction {getTransactionAsync.Hash} not found");
+                            parentTransactions.Add(tx.Transaction.GetHash(), tx.Transaction);
+                        }
+                    }
+
+                    var transaction = await hw.SignTransactionAsync(usedCoins.Select(c => new SignatureRequest
+                    {
+                        InputTransaction = parentTransactions.TryGet(c.Outpoint.Hash),
+                        InputCoin = c,
+                        KeyPath = foundKeyPath.Derive(keypaths[c.TxOut.ScriptPubKey]),
+                        PubKey = strategy.Root.Derive(keypaths[c.TxOut.ScriptPubKey]).PubKey
+                    }).ToArray(), unsigned, hasChange ? foundKeyPath.Derive(changeAddress.Item2) : null);
+                    
                     try
                     {
                         var broadcastResult = await wallet.BroadcastTransactionsAsync(new List<Transaction>() { transaction });
@@ -336,8 +402,6 @@ namespace BTCPayServer.Controllers
             var directStrategy = strategy as DirectDerivationStrategy;
             if (directStrategy == null)
                 directStrategy = (strategy as P2SHDerivationStrategy).Inner as DirectDerivationStrategy;
-            if (!directStrategy.Segwit)
-                return null;
             return directStrategy;
         }
 

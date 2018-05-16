@@ -36,17 +36,25 @@ namespace BTCPayServer.Payments.Lightning
                 expiry = TimeSpan.FromSeconds(1);
 
             LightningInvoice lightningInvoice = null;
-            try
+
+            string description = storeBlob.LightningDescriptionTemplate;
+            description = description.Replace("{StoreName}", store.StoreName ?? "", StringComparison.OrdinalIgnoreCase)
+                                     .Replace("{ItemDescription}", invoice.ProductInformation.ItemDesc ?? "", StringComparison.OrdinalIgnoreCase)
+                                     .Replace("{OrderId}", invoice.OrderId ?? "", StringComparison.OrdinalIgnoreCase);
+            using (var cts = new CancellationTokenSource(5000))
             {
-                string description = storeBlob.LightningDescriptionTemplate;
-                description = description.Replace("{StoreName}", store.StoreName ?? "", StringComparison.OrdinalIgnoreCase)
-                                         .Replace("{ItemDescription}", invoice.ProductInformation.ItemDesc ?? "", StringComparison.OrdinalIgnoreCase)
-                                         .Replace("{OrderId}", invoice.OrderId ?? "", StringComparison.OrdinalIgnoreCase);
-                lightningInvoice = await client.CreateInvoice(new LightMoney(due, LightMoneyUnit.BTC), description, expiry);
-            }
-            catch (Exception ex)
-            {
-                throw new PaymentMethodUnavailableException($"Impossible to create lightning invoice ({ex.Message})", ex);
+                try
+                {
+                    lightningInvoice = await client.CreateInvoice(new LightMoney(due, LightMoneyUnit.BTC), description, expiry, cts.Token);
+                }
+                catch (OperationCanceledException) when (cts.IsCancellationRequested)
+                {
+                    throw new PaymentMethodUnavailableException($"The lightning node did not replied in a timely maner");
+                }
+                catch (Exception ex)
+                {
+                    throw new PaymentMethodUnavailableException($"Impossible to create lightning invoice ({ex.Message})", ex);
+                }
             }
             var nodeInfo = await test;
             return new LightningLikePaymentMethodDetails()
@@ -62,34 +70,36 @@ namespace BTCPayServer.Payments.Lightning
             if (!_Dashboard.IsFullySynched(network.CryptoCode, out var summary))
                 throw new PaymentMethodUnavailableException($"Full node not available");
 
-            var cts = new CancellationTokenSource(5000);
-            var client = _LightningClientFactory.CreateClient(supportedPaymentMethod, network);
-            LightningNodeInformation info = null;
-            try
+            using (var cts = new CancellationTokenSource(5000))
             {
-                info = await client.GetInfo(cts.Token);
-            }
-            catch (OperationCanceledException) when (cts.IsCancellationRequested)
-            {
-                throw new PaymentMethodUnavailableException($"The lightning node did not replied in a timely maner");
-            }
-            catch (Exception ex)
-            {
-                throw new PaymentMethodUnavailableException($"Error while connecting to the API ({ex.Message})");
-            }
+                var client = _LightningClientFactory.CreateClient(supportedPaymentMethod, network);
+                LightningNodeInformation info = null;
+                try
+                {
+                    info = await client.GetInfo(cts.Token);
+                }
+                catch (OperationCanceledException) when (cts.IsCancellationRequested)
+                {
+                    throw new PaymentMethodUnavailableException($"The lightning node did not replied in a timely maner");
+                }
+                catch (Exception ex)
+                {
+                    throw new PaymentMethodUnavailableException($"Error while connecting to the API ({ex.Message})");
+                }
 
-            if (info.Address == null)
-            {
-                throw new PaymentMethodUnavailableException($"No lightning node public address has been configured");
-            }
+                if (info.Address == null)
+                {
+                    throw new PaymentMethodUnavailableException($"No lightning node public address has been configured");
+                }
 
-            var blocksGap = Math.Abs(info.BlockHeight - summary.Status.ChainHeight);
-            if (blocksGap > 10)
-            {
-                throw new PaymentMethodUnavailableException($"The lightning is not synched ({blocksGap} blocks)");
-            }
+                var blocksGap = Math.Abs(info.BlockHeight - summary.Status.ChainHeight);
+                if (blocksGap > 10)
+                {
+                    throw new PaymentMethodUnavailableException($"The lightning is not synched ({blocksGap} blocks)");
+                }
 
-            return new NodeInfo(info.NodeId, info.Address, info.P2PPort);
+                return new NodeInfo(info.NodeId, info.Address, info.P2PPort);
+            }
         }
 
         public async Task TestConnection(NodeInfo nodeInfo, CancellationToken cancellation)

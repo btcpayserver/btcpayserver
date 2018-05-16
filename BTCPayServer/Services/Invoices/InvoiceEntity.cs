@@ -12,6 +12,7 @@ using NBXplorer.Models;
 using NBXplorer;
 using NBXplorer.DerivationStrategy;
 using BTCPayServer.Payments;
+using NBitpayClient;
 
 namespace BTCPayServer.Services.Invoices
 {
@@ -100,7 +101,8 @@ namespace BTCPayServer.Services.Invoices
     {
         HighSpeed = 0,
         MediumSpeed = 1,
-        LowSpeed = 2
+        LowSpeed = 2,
+        LowMediumSpeed = 3
     }
     public class InvoiceEntity
     {
@@ -314,6 +316,7 @@ namespace BTCPayServer.Services.Invoices
         }
         public bool ExtendedNotifications { get; set; }
         public List<InvoiceEventData> Events { get; internal set; }
+        public double PaymentTolerance { get; set; }
 
         public bool IsExpired()
         {
@@ -334,18 +337,35 @@ namespace BTCPayServer.Services.Invoices
                 ExpirationTime = ExpirationTime,
                 Status = Status,
                 Currency = ProductInformation.Currency,
-                Flags = new Flags() { Refundable = Refundable }
+                Flags = new Flags() { Refundable = Refundable },
+
+                PaymentSubtotals = new Dictionary<string, long>(),
+                PaymentTotals= new Dictionary<string, long>(),
+                SupportedTransactionCurrencies = new Dictionary<string, InvoiceSupportedTransactionCurrency>(),
+                Addresses = new Dictionary<string, string>(),
+                PaymentCodes = new Dictionary<string, InvoicePaymentUrls>(),
+                ExchangeRates = new Dictionary<string, Dictionary<string, decimal>>()
             };
 
+            dto.Url = ServerUrl.WithTrailingSlash() + $"invoice?id=" + Id;
             dto.CryptoInfo = new List<NBitpayClient.InvoiceCryptoInfo>();
-            foreach (var info in this.GetPaymentMethods(networkProvider, true))
+            foreach (var info in this.GetPaymentMethods(networkProvider))
             {
+               
                 var accounting = info.Calculate();
                 var cryptoInfo = new NBitpayClient.InvoiceCryptoInfo();
-                cryptoInfo.CryptoCode = info.GetId().CryptoCode;
+                var subtotalPrice = accounting.TotalDue - accounting.NetworkFee;
+                var cryptoCode = info.GetId().CryptoCode;
+                var address = info.GetPaymentMethodDetails()?.GetPaymentDestination();
+                var exrates = new Dictionary<string, decimal>
+                {
+                    { ProductInformation.Currency, cryptoInfo.Rate }
+                };
+
+                cryptoInfo.CryptoCode = cryptoCode;
                 cryptoInfo.PaymentType = info.GetId().PaymentType.ToString();
                 cryptoInfo.Rate = info.Rate;
-                cryptoInfo.Price = Money.Coins(ProductInformation.Price / cryptoInfo.Rate).ToString();
+                cryptoInfo.Price = subtotalPrice.ToString();
 
                 cryptoInfo.Due = accounting.Due.ToString();
                 cryptoInfo.Paid = accounting.Paid.ToString();
@@ -354,19 +374,16 @@ namespace BTCPayServer.Services.Invoices
                 cryptoInfo.TxCount = accounting.TxCount;
                 cryptoInfo.CryptoPaid = accounting.CryptoPaid.ToString();
 
-                cryptoInfo.Address = info.GetPaymentMethodDetails()?.GetPaymentDestination();
-                cryptoInfo.ExRates = new Dictionary<string, double>
-                {
-                    { ProductInformation.Currency, (double)cryptoInfo.Rate }
-                };
-
+                cryptoInfo.Address = address;
+               
+                cryptoInfo.ExRates = exrates;
+                var paymentId = info.GetId();
                 var scheme = info.Network.UriScheme;
-                var cryptoSuffix = cryptoInfo.CryptoCode == "BTC" ? "" : "/" + cryptoInfo.CryptoCode;
-                cryptoInfo.Url = ServerUrl.WithTrailingSlash() + $"invoice{cryptoSuffix}?id=" + Id;
+                cryptoInfo.Url = ServerUrl.WithTrailingSlash() + $"i/{paymentId}/{Id}";
 
-
-                if (info.GetId().PaymentType == PaymentTypes.BTCLike)
+                if (paymentId.PaymentType == PaymentTypes.BTCLike)
                 {
+                    var cryptoSuffix = cryptoInfo.CryptoCode == "BTC" ? "" : "/" + cryptoInfo.CryptoCode;
                     cryptoInfo.PaymentUrls = new NBitpayClient.InvoicePaymentUrls()
                     {
                         BIP72 = $"{scheme}:{cryptoInfo.Address}?amount={cryptoInfo.Due}&r={ServerUrl.WithTrailingSlash() + ($"i/{Id}{cryptoSuffix}")}",
@@ -375,7 +392,7 @@ namespace BTCPayServer.Services.Invoices
                         BIP21 = $"{scheme}:{cryptoInfo.Address}?amount={cryptoInfo.Due}",
                     };
                 }
-                var paymentId = info.GetId();
+                
                 if (paymentId.PaymentType == PaymentTypes.LightningLike)
                 {
                     cryptoInfo.PaymentUrls = new NBitpayClient.InvoicePaymentUrls()
@@ -386,7 +403,6 @@ namespace BTCPayServer.Services.Invoices
 #pragma warning disable CS0618
                 if (info.CryptoCode == "BTC" && paymentId.PaymentType == PaymentTypes.BTCLike)
                 {
-                    dto.Url = cryptoInfo.Url;
                     dto.BTCPrice = cryptoInfo.Price;
                     dto.Rate = cryptoInfo.Rate;
                     dto.ExRates = cryptoInfo.ExRates;
@@ -395,17 +411,28 @@ namespace BTCPayServer.Services.Invoices
                     dto.BTCDue = cryptoInfo.Due;
                     dto.PaymentUrls = cryptoInfo.PaymentUrls;
                 }
+
 #pragma warning restore CS0618
-                if (!info.IsPhantomBTC)
-                    dto.CryptoInfo.Add(cryptoInfo);
+                dto.CryptoInfo.Add(cryptoInfo);
+
+                dto.PaymentCodes.Add(paymentId.ToString(), cryptoInfo.PaymentUrls);
+                dto.PaymentSubtotals.Add(paymentId.ToString(), subtotalPrice.Satoshi);
+                dto.PaymentTotals.Add(paymentId.ToString(), accounting.TotalDue.Satoshi);
+                dto.SupportedTransactionCurrencies.TryAdd(cryptoCode, new InvoiceSupportedTransactionCurrency()
+                {
+                    Enabled = true
+                });
+                dto.Addresses.Add(paymentId.ToString(), address);
+                dto.ExchangeRates.TryAdd(cryptoCode, exrates);
             }
+
+            //dto.AmountPaid dto.MinerFees & dto.TransactionCurrency are not supported by btcpayserver as we have multi currency payment support per invoice
 
             Populate(ProductInformation, dto);
             Populate(BuyerInformation, dto);
 
             dto.Token = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16)); //No idea what it is useful for
             dto.Guid = Guid.NewGuid().ToString();
-
             dto.ExceptionStatus = ExceptionStatus == null ? new JValue(false) : new JValue(ExceptionStatus);
             return dto;
         }
@@ -432,26 +459,15 @@ namespace BTCPayServer.Services.Invoices
             return GetPaymentMethod(new PaymentMethodId(network.CryptoCode, paymentType), networkProvider);
         }
 
-        public PaymentMethodDictionary GetPaymentMethods(BTCPayNetworkProvider networkProvider, bool alwaysIncludeBTC = false)
+        public PaymentMethodDictionary GetPaymentMethods(BTCPayNetworkProvider networkProvider)
         {
             PaymentMethodDictionary rates = new PaymentMethodDictionary(networkProvider);
             var serializer = new Serializer(Dummy);
-            PaymentMethod phantom = null;
 #pragma warning disable CS0618
-            // Legacy
-            if (alwaysIncludeBTC)
-            {
-                var btcNetwork = networkProvider?.GetNetwork("BTC");
-                phantom = new PaymentMethod() { ParentEntity = this, IsPhantomBTC = true, Rate = Rate, CryptoCode = "BTC", TxFee = TxFee, FeeRate = new FeeRate(TxFee, 100), DepositAddress = DepositAddress, Network = btcNetwork };
-                if (btcNetwork != null || networkProvider == null)
-                    rates.Add(phantom);
-            }
             if (PaymentMethod != null)
             {
                 foreach (var prop in PaymentMethod.Properties())
                 {
-                    if (prop.Name == "BTC" && phantom != null)
-                        rates.Remove(phantom);
                     var r = serializer.ToObject<PaymentMethod>(prop.Value.ToString());
                     var paymentMethodId = PaymentMethodId.Parse(prop.Name);
                     r.CryptoCode = paymentMethodId.CryptoCode;
@@ -537,6 +553,10 @@ namespace BTCPayServer.Services.Invoices
         /// Total amount of network fee to pay to the invoice
         /// </summary>
         public Money NetworkFee { get; set; }
+        /// <summary>
+        /// Minimum required to be paid in order to accept invocie as paid
+        /// </summary>
+        public Money MinimumTotalDue { get; set; }
     }
 
     public class PaymentMethod
@@ -635,20 +655,17 @@ namespace BTCPayServer.Services.Invoices
         [Obsolete("Use ((BitcoinLikeOnChainPaymentMethod)GetPaymentMethod()).DepositAddress")]
         public string DepositAddress { get; set; }
 
-        [JsonIgnore]
-        public bool IsPhantomBTC { get; set; }
-
         public PaymentMethodAccounting Calculate(Func<PaymentEntity, bool> paymentPredicate = null)
         {
             paymentPredicate = paymentPredicate ?? new Func<PaymentEntity, bool>((p) => true);
-            var paymentMethods = ParentEntity.GetPaymentMethods(null, IsPhantomBTC);
+            var paymentMethods = ParentEntity.GetPaymentMethods(null);
 
             var totalDue = ParentEntity.ProductInformation.Price / Rate;
             var paid = 0m;
             var cryptoPaid = 0.0m;
 
             int precision = 8;
-            var paidTxFee = 0m;
+            var totalDueNoNetworkCost = Money.Coins(Extensions.RoundUp(totalDue, precision));
             bool paidEnough = paid >= Extensions.RoundUp(totalDue, precision);
             int txRequired = 0;
             var payments =
@@ -662,9 +679,8 @@ namespace BTCPayServer.Services.Invoices
                     if (!paidEnough)
                     {
                         totalDue += txFee;
-                        paidTxFee += txFee;
                     }
-                    paidEnough |= paid >= Extensions.RoundUp(totalDue, precision);
+                    paidEnough |= Extensions.RoundUp(paid, precision) >= Extensions.RoundUp(totalDue, precision);
                     if (GetId() == _.GetPaymentMethodId())
                     {
                         cryptoPaid += _.GetCryptoPaymentData().GetValue();
@@ -680,16 +696,16 @@ namespace BTCPayServer.Services.Invoices
             {
                 txRequired++;
                 totalDue += GetTxFee();
-                paidTxFee += GetTxFee();
             }
 
             accounting.TotalDue = Money.Coins(Extensions.RoundUp(totalDue, precision));
-            accounting.Paid = Money.Coins(paid);
+            accounting.Paid = Money.Coins(Extensions.RoundUp(paid, precision));
             accounting.TxRequired = txRequired;
-            accounting.CryptoPaid = Money.Coins(cryptoPaid);
+            accounting.CryptoPaid = Money.Coins(Extensions.RoundUp(cryptoPaid, precision));
             accounting.Due = Money.Max(accounting.TotalDue - accounting.Paid, Money.Zero);
             accounting.DueUncapped = accounting.TotalDue - accounting.Paid;
-            accounting.NetworkFee = Money.Coins(paidTxFee);
+            accounting.NetworkFee = accounting.TotalDue - totalDueNoNetworkCost;
+            accounting.MinimumTotalDue = Money.Max(Money.Satoshis(1), Money.Satoshis(accounting.TotalDue.Satoshi * (1.0m - ((decimal)ParentEntity.PaymentTolerance / 100.0m))));
             return accounting;
         }
 
@@ -762,7 +778,7 @@ namespace BTCPayServer.Services.Invoices
                 paymentData.Outpoint = Outpoint;
                 return paymentData;
             }
-            if(GetPaymentMethodId().PaymentType== PaymentTypes.LightningLike)
+            if (GetPaymentMethodId().PaymentType == PaymentTypes.LightningLike)
             {
                 return JsonConvert.DeserializeObject<Payments.Lightning.LightningLikePaymentData>(CryptoPaymentData);
             }

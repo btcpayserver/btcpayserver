@@ -2,8 +2,11 @@
 using BTCPayServer.Hosting;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Rating;
+using BTCPayServer.Security;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
+using BTCPayServer.Services.Stores;
 using BTCPayServer.Tests.Logging;
 using BTCPayServer.Tests.Mocks;
 using Microsoft.AspNetCore.Hosting;
@@ -104,15 +107,6 @@ namespace BTCPayServer.Tests
                     .UseConfiguration(conf)
                     .ConfigureServices(s =>
                     {
-                        if (MockRates)
-                        {
-                            var mockRates = new MockRateProviderFactory();
-                            var btc = new MockRateProvider("BTC", new Rate("USD", 5000m), new Rate("CAD", 4500m));
-                            var ltc = new MockRateProvider("LTC", new Rate("USD", 500m));
-                            mockRates.AddMock(btc);
-                            mockRates.AddMock(ltc);
-                            s.AddSingleton<IRateProviderFactory>(mockRates);
-                        }
                         s.AddLogging(l =>
                         {
                             l.SetMinimumLevel(LogLevel.Information)
@@ -126,6 +120,30 @@ namespace BTCPayServer.Tests
                     .Build();
             _Host.Start();
             InvoiceRepository = (InvoiceRepository)_Host.Services.GetService(typeof(InvoiceRepository));
+
+            var rateProvider = (BTCPayRateProviderFactory)_Host.Services.GetService(typeof(BTCPayRateProviderFactory));
+            rateProvider.DirectProviders.Clear();
+
+            var coinAverageMock = new MockRateProvider();
+            coinAverageMock.ExchangeRates.Add(new Rating.ExchangeRate()
+            {
+                Exchange = "coinaverage",
+                CurrencyPair = CurrencyPair.Parse("BTC_USD"),
+                Value = 5000m
+            });
+            coinAverageMock.ExchangeRates.Add(new Rating.ExchangeRate()
+            {
+                Exchange = "coinaverage",
+                CurrencyPair = CurrencyPair.Parse("BTC_CAD"),
+                Value = 4500m
+            });
+            coinAverageMock.ExchangeRates.Add(new Rating.ExchangeRate()
+            {
+                Exchange = "coinaverage",
+                CurrencyPair = CurrencyPair.Parse("LTC_USD"),
+                Value = 500m
+            });
+            rateProvider.DirectProviders.Add("coinaverage", coinAverageMock);
         }
 
         public string HostName
@@ -142,7 +160,7 @@ namespace BTCPayServer.Tests
             return _Host.Services.GetRequiredService<T>();
         }
 
-        public T GetController<T>(string userId = null) where T : Controller
+        public T GetController<T>(string userId = null, string storeId = null) where T : Controller
         {
             var context = new DefaultHttpContext();
             context.Request.Host = new HostString("127.0.0.1");
@@ -150,7 +168,11 @@ namespace BTCPayServer.Tests
             context.Request.Protocol = "http";
             if (userId != null)
             {
-                context.User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, userId) }));
+                context.User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, userId) }, Policies.CookieAuthentication));
+            }
+            if(storeId != null)
+            {
+                context.SetStoreData(GetService<StoreRepository>().FindStore(storeId, userId).GetAwaiter().GetResult());
             }
             var scope = (IServiceScopeFactory)_Host.Services.GetService(typeof(IServiceScopeFactory));
             var provider = scope.CreateScope().ServiceProvider;

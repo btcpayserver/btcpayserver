@@ -65,7 +65,7 @@
     @section Scripts
         {
         <script type="text/javascript">
-		@Model.ToJSVariableModel("srvModel")
+		    var srvModel = @Html.Raw(Json.Serialize(Model));
         </script>
         <script src="~/js/ledgerwebsocket.js" type="text/javascript" defer="defer"></script>
         <script src="~/js/StoreWallet.js" type="text/javascript" defer="defer"></script>

@@ -112,7 +112,7 @@ namespace BTCPayServer.Services.Invoices
             invoice.StoreId = storeId;
             using (var context = _ContextFactory.CreateContext())
             {
-                context.Invoices.Add(new InvoiceData()
+                context.Invoices.Add(new Data.InvoiceData()
                 {
                     StoreDataId = storeId,
                     Id = invoice.Id,
@@ -267,7 +267,7 @@ namespace BTCPayServer.Services.Invoices
         {
             using (var context = _ContextFactory.CreateContext())
             {
-                var invoiceData = await context.FindAsync<InvoiceData>(invoiceId).ConfigureAwait(false);
+                var invoiceData = await context.FindAsync<Data.InvoiceData>(invoiceId).ConfigureAwait(false);
                 if (invoiceData == null)
                     return;
                 var invoiceEntity = ToObject<InvoiceEntity>(invoiceData.Blob, null);
@@ -307,7 +307,7 @@ namespace BTCPayServer.Services.Invoices
         {
             using (var context = _ContextFactory.CreateContext())
             {
-                var invoiceData = await context.FindAsync<InvoiceData>(invoiceId).ConfigureAwait(false);
+                var invoiceData = await context.FindAsync<Data.InvoiceData>(invoiceId).ConfigureAwait(false);
                 if (invoiceData == null)
                     return;
                 invoiceData.Status = status;
@@ -320,7 +320,7 @@ namespace BTCPayServer.Services.Invoices
         {
             using (var context = _ContextFactory.CreateContext())
             {
-                var invoiceData = await context.FindAsync<InvoiceData>(invoiceId).ConfigureAwait(false);
+                var invoiceData = await context.FindAsync<Data.InvoiceData>(invoiceId).ConfigureAwait(false);
                 if (invoiceData?.Status != "paid")
                     return;
                 invoiceData.Status = "invalid";
@@ -331,7 +331,7 @@ namespace BTCPayServer.Services.Invoices
         {
             using (var context = _ContextFactory.CreateContext())
             {
-                IQueryable<InvoiceData> query =
+                IQueryable<Data.InvoiceData> query =
                     context
                     .Invoices
                     .Include(o => o.Payments)
@@ -351,7 +351,7 @@ namespace BTCPayServer.Services.Invoices
             }
         }
 
-        private InvoiceEntity ToEntity(InvoiceData invoice)
+        private InvoiceEntity ToEntity(Data.InvoiceData invoice)
         {
             var entity = ToObject<InvoiceEntity>(invoice.Blob, null);
 #pragma warning disable CS0618
@@ -386,7 +386,7 @@ namespace BTCPayServer.Services.Invoices
         {
             using (var context = _ContextFactory.CreateContext())
             {
-                IQueryable<InvoiceData> query = context
+                IQueryable<Data.InvoiceData> query = context
                     .Invoices
                     .Include(o => o.Payments)
                     .Include(o => o.RefundAddresses);
@@ -436,6 +436,18 @@ namespace BTCPayServer.Services.Invoices
                     query = query.Where(i => statusSet.Contains(i.Status));
                 }
 
+                if(queryObject.Unusual != null)
+                {
+                    var unused = queryObject.Unusual.Value;
+                    query = query.Where(i => unused == (i.Status == "invalid" || i.ExceptionStatus != null));
+                }
+
+                if (queryObject.ExceptionStatus != null && queryObject.ExceptionStatus.Length > 0)
+                {
+                    var exceptionStatusSet = queryObject.ExceptionStatus.Select(s => NormalizeExceptionStatus(s)).ToHashSet();
+                    query = query.Where(i => exceptionStatusSet.Contains(i.ExceptionStatus));
+                }
+
                 query = query.OrderByDescending(q => q.Created);
 
                 if (queryObject.Skip != null)
@@ -449,6 +461,29 @@ namespace BTCPayServer.Services.Invoices
                 return data.Select(ToEntity).ToArray();
             }
 
+        }
+
+        private string NormalizeExceptionStatus(string status)
+        {
+            status = status.ToLowerInvariant();
+            switch (status)
+            {
+                case "paidover":
+                case "over":
+                case "overpaid":
+                    status = "paidOver";
+                    break;
+                case "paidlate":
+                case "late":
+                    status = "paidLate";
+                    break;
+                case "paidpartial":
+                case "underpaid":
+                case "partial":
+                    status = "paidPartial";
+                    break;
+            }
+            return status;
         }
 
         public async Task AddRefundsAsync(string invoiceId, TxOut[] outputs, Network network)
@@ -614,10 +649,18 @@ namespace BTCPayServer.Services.Invoices
             get; set;
         }
 
+        public bool? Unusual { get; set; }
+
         public string[] Status
         {
             get; set;
         }
+
+        public string[] ExceptionStatus
+        {
+            get; set;
+        }
+
         public string InvoiceId
         {
             get;

@@ -12,7 +12,6 @@ using NBitcoin;
 using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore;
 using System.IO;
-using Microsoft.Data.Sqlite;
 using NBXplorer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Hosting;
@@ -38,55 +37,13 @@ using Microsoft.Extensions.Caching.Memory;
 using BTCPayServer.Logging;
 using BTCPayServer.HostedServices;
 using Meziantou.AspNetCore.BundleTagHelpers;
+using System.Security.Claims;
+using BTCPayServer.Security;
 
 namespace BTCPayServer.Hosting
 {
     public static class BTCPayServerServices
     {
-        public class OwnStoreAuthorizationRequirement : IAuthorizationRequirement
-        {
-            public OwnStoreAuthorizationRequirement()
-            {
-            }
-
-            public OwnStoreAuthorizationRequirement(string role)
-            {
-                Role = role;
-            }
-
-            public string Role
-            {
-                get; set;
-            }
-        }
-
-        public class OwnStoreHandler : AuthorizationHandler<OwnStoreAuthorizationRequirement>
-        {
-            StoreRepository _StoreRepository;
-            UserManager<ApplicationUser> _UserManager;
-            public OwnStoreHandler(StoreRepository storeRepository, UserManager<ApplicationUser> userManager)
-            {
-                _StoreRepository = storeRepository;
-                _UserManager = userManager;
-            }
-            protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, OwnStoreAuthorizationRequirement requirement)
-            {
-                object storeId = null;
-                if (!((Microsoft.AspNetCore.Mvc.ActionContext)context.Resource).RouteData.Values.TryGetValue("storeId", out storeId))
-                    context.Succeed(requirement);
-                else if (storeId != null)
-                {
-                    var user = _UserManager.GetUserId(((Microsoft.AspNetCore.Mvc.ActionContext)context.Resource).HttpContext.User);
-                    if (user != null)
-                    {
-                        var store = await _StoreRepository.FindStore((string)storeId, user);
-                        if (store != null)
-                            if (requirement.Role == null || requirement.Role == store.Role)
-                                context.Succeed(requirement);
-                    }
-                }
-            }
-        }
         public static IServiceCollection AddBTCPayServer(this IServiceCollection services)
         {
             services.AddDbContext<ApplicationDbContext>((provider, o) =>
@@ -110,7 +67,6 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<TokenRepository>();
             services.TryAddSingleton<EventAggregator>();
             services.TryAddSingleton<CoinAverageSettings>();
-            services.TryAddSingleton<ICoinAverageAuthenticator, CoinAverageSettingsAuthenticator>();
             services.TryAddSingleton<ApplicationDbContextFactory>(o => 
             {
                 var opts = o.GetRequiredService<BTCPayServerOptions>();
@@ -160,6 +116,8 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService, InvoiceNotificationManager>();
             services.AddSingleton<IHostedService, InvoiceWatcher>();
             services.AddSingleton<IHostedService, RatesHostedService>();
+            services.AddTransient<IConfigureOptions<MvcOptions>, BTCPayClaimsFilter>();
+            services.AddTransient<IConfigureOptions<MvcOptions>, BitpayClaimsFilter>();
 
             services.TryAddSingleton<ExplorerClientProvider>();
             services.TryAddSingleton<Bitpay>(o =>
@@ -169,29 +127,16 @@ namespace BTCPayServer.Hosting
                 else
                     return new Bitpay(new Key(), new Uri("https://test.bitpay.com/"));
             });
-            services.TryAddSingleton<IRateProviderFactory, BTCPayRateProviderFactory>();
+            services.TryAddSingleton<BTCPayRateProviderFactory>();
 
             services.TryAddScoped<IHttpContextAccessor, HttpContextAccessor>();
-            services.TryAddSingleton<IAuthorizationHandler, OwnStoreHandler>();
             services.AddTransient<AccessTokenController>();
             services.AddTransient<InvoiceController>();
             // Add application services.
             services.AddTransient<IEmailSender, EmailSender>();
-
-            services.AddAuthorization(o =>
-            {
-                o.AddPolicy(StorePolicies.CanAccessStores, builder =>
-                {
-                    builder.AddRequirements(new OwnStoreAuthorizationRequirement());
-                });
-
-                o.AddPolicy(StorePolicies.OwnStore, builder =>
-                {
-                    builder.AddRequirements(new OwnStoreAuthorizationRequirement(StoreRoles.Owner));
-                });
-            });
-
             // bundling
+
+            services.AddAuthorization(o => Policies.AddBTCPayPolicies(o));
 
             services.AddBundles();
             services.AddTransient<BundleOptions>(provider =>

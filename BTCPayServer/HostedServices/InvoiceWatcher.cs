@@ -68,6 +68,8 @@ namespace BTCPayServer.HostedServices
 
                 context.Events.Add(new InvoiceEvent(invoice, 1004, "invoice_expired"));
                 invoice.Status = "expired";
+                if(invoice.ExceptionStatus == "paidPartial")
+                    context.Events.Add(new InvoiceEvent(invoice, 2000, "invoice_expiredPaidPartial"));
             }
 
             var payments = invoice.GetPayments().Where(p => p.Accounted).ToArray();
@@ -78,7 +80,7 @@ namespace BTCPayServer.HostedServices
             var network = _NetworkProvider.GetNetwork(paymentMethod.GetId().CryptoCode);
             if (invoice.Status == "new" || invoice.Status == "expired")
             {
-                if (accounting.Paid >= accounting.TotalDue)
+                if (accounting.Paid >= accounting.MinimumTotalDue)
                 {
                     if (invoice.Status == "new")
                     {
@@ -96,17 +98,17 @@ namespace BTCPayServer.HostedServices
                     }
                 }
 
-                if (accounting.Paid < accounting.TotalDue && invoice.GetPayments().Count != 0 && invoice.ExceptionStatus != "paidPartial")
+                if (accounting.Paid < accounting.MinimumTotalDue && invoice.GetPayments().Count != 0 && invoice.ExceptionStatus != "paidPartial")
                 {
-                    invoice.ExceptionStatus = "paidPartial";
-                    context.MarkDirty();
+                        invoice.ExceptionStatus = "paidPartial";
+                        context.MarkDirty();
                 }
             }
 
             // Just make sure RBF did not cancelled a payment
             if (invoice.Status == "paid")
             {
-                if (accounting.Paid == accounting.TotalDue && invoice.ExceptionStatus == "paidOver")
+                if (accounting.MinimumTotalDue <= accounting.Paid && accounting.Paid <= accounting.TotalDue && invoice.ExceptionStatus == "paidOver")
                 {
                     invoice.ExceptionStatus = null;
                     context.MarkDirty();
@@ -118,7 +120,7 @@ namespace BTCPayServer.HostedServices
                     context.MarkDirty();
                 }
 
-                if (accounting.Paid < accounting.TotalDue)
+                if (accounting.Paid < accounting.MinimumTotalDue)
                 {
                     invoice.Status = "new";
                     invoice.ExceptionStatus = accounting.Paid == Money.Zero ? null : "paidPartial";
@@ -134,14 +136,14 @@ namespace BTCPayServer.HostedServices
                    (invoice.MonitoringExpiration < DateTimeOffset.UtcNow)
                    &&
                    // And not enough amount confirmed
-                   (confirmedAccounting.Paid < accounting.TotalDue))
+                   (confirmedAccounting.Paid < accounting.MinimumTotalDue))
                 {
                     await _InvoiceRepository.UnaffectAddress(invoice.Id);
                     context.Events.Add(new InvoiceEvent(invoice, 1013, "invoice_failedToConfirm"));
                     invoice.Status = "invalid";
                     context.MarkDirty();
                 }
-                else if (confirmedAccounting.Paid >= accounting.TotalDue)
+                else if (confirmedAccounting.Paid >= accounting.MinimumTotalDue)
                 {
                     await _InvoiceRepository.UnaffectAddress(invoice.Id);
                     context.Events.Add(new InvoiceEvent(invoice, 1005, "invoice_confirmed"));
@@ -153,7 +155,7 @@ namespace BTCPayServer.HostedServices
             if (invoice.Status == "confirmed")
             {
                 var completedAccounting = paymentMethod.Calculate(p => p.GetCryptoPaymentData().PaymentCompleted(p, network));
-                if (completedAccounting.Paid >= accounting.TotalDue)
+                if (completedAccounting.Paid >= accounting.MinimumTotalDue)
                 {
                     context.Events.Add(new InvoiceEvent(invoice, 1006, "invoice_completed"));
                     invoice.Status = "complete";
@@ -289,7 +291,7 @@ namespace BTCPayServer.HostedServices
                             if (updateContext.Dirty)
                             {
                                 await _InvoiceRepository.UpdateInvoiceStatus(invoice.Id, invoice.Status, invoice.ExceptionStatus);
-                                updateContext.Events.Add(new InvoiceDataChangedEvent(invoice));
+                                updateContext.Events.Insert(0, new InvoiceDataChangedEvent(invoice));
                             }
 
                             foreach (var evt in updateContext.Events)

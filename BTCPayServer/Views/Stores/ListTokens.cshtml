@@ -5,32 +5,60 @@
     ViewData.AddActivePage(StoreNavPages.Tokens);
 }
 
-<h4>@ViewData["Title"]</h4>
-<p>You can allow a public key to access the API of this store</p>
-@Html.Partial("_StatusMessage", Model.StatusMessage)
-<a asp-action="CreateToken" class="btn btn-primary" role="button"><span class="fa fa-plus"></span> Create a new token</a>
-<table class="table table-sm table-responsive-md">
-    <thead>
-        <tr>
-            <th>Label</th>
-            <th>SIN</th>
-            <th>Facade</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var token in Model.Tokens)
-        {
-            <tr>
-                <td>@token.Label</td>
-                <td>@token.SIN</td>
-                <td>@token.Facade</td>
-                <td>
-                    <form asp-action="DeleteToken" method="post">
-                        <input type="hidden" name="tokenId" value="@token.Id">
-                        <button type="submit" class="btn btn-danger" role="button">Revoke</button>
-                    </form>
-                </td>
-            </tr>}
-    </tbody>
-</table>
+<partial name="_StatusMessage" for="StatusMessage" />
+<h4>Access token</h4>
+<div class="row">
+    <div class="col-md-8">
+        <p>Authorize a public key to access Bitpay compatible Invoice API (<a href="https://support.bitpay.com/hc/en-us/articles/115003001183-How-do-I-pair-my-client-and-create-a-token-">More information</a>)</p>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-8">
+        <a asp-action="CreateToken" class="btn btn-primary" role="button"><span class="fa fa-plus"></span> Create a new token</a>
+        <table class="table table-sm table-responsive-md">
+            <thead>
+                <tr>
+                    <th>Label</th>
+                    <th>SIN</th>
+                    <th>Facade</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach(var token in Model.Tokens)
+                {
+                    <tr>
+                        <td>@token.Label</td>
+                        <td>@token.SIN</td>
+                        <td>@token.Facade</td>
+                        <td>
+                            <form asp-action="DeleteToken" method="post">
+                                <input type="hidden" name="tokenId" value="@token.Id">
+                                <button type="submit" class="btn btn-danger" role="button">Revoke</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<h4>Legacy API Keys</h4>
+<div class="row">
+    <div class="col-md-8">
+        <p>Alternatively, you can use the invoice API by including the following HTTP Header in your requests:<br /> <code>Authorization: Basic @Model.EncodedApiKey</code> </p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <form method="post" asp-action="GenerateAPIKey">
+            <div class="form-group">
+                <label asp-for="ApiKey"></label>
+                <input asp-for="ApiKey" readonly class="form-control" />
+            </div>
+            <button type="submit" class="btn btn-primary" role="button">Create new API Key</button>
+        </form>
+    </div>
+</div>

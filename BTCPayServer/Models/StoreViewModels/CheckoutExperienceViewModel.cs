@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Services;
+using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BTCPayServer.Models.StoreViewModels
@@ -42,11 +43,15 @@ namespace BTCPayServer.Models.StoreViewModels
         public string OnChainMinValue { get; set; }
 
         [Display(Name = "Link to a custom CSS stylesheet")]
-        [Url]
+        [Uri]
         public string CustomCSS { get; set; }
         [Display(Name = "Link to a custom logo")]
-        [Url]
+        [Uri]
         public string CustomLogo { get; set; }
+
+        [Display(Name = "Custom HTML title to display on Checkout page")]
+        public string HtmlTitle { get; set; }
+
 
         public void SetCryptoCurrencies(ExplorerClientProvider explorerProvider, string defaultCrypto)
         {

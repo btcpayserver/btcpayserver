@@ -20,7 +20,6 @@ namespace BTCPayServer
                 NBitcoinNetwork = nbxplorerNetwork.NBitcoinNetwork,
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "litecoin",
-                DefaultRateProvider = new CoinAverageRateProviderDescription("LTC"),
                 CryptoImagePath = "imlegacy/litecoin-symbol.svg",
                 LightningImagePath = "imlegacy/ltc-lightning.svg",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),

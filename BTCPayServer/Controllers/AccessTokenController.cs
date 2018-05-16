@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 
 namespace BTCPayServer.Controllers
 {
+    [BitpayAPIConstraint]
     public class AccessTokenController : Controller
     {
         TokenRepository _TokenRepository;

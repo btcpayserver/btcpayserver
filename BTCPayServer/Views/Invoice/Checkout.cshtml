@@ -11,12 +11,12 @@
 
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>BTCPay Invoice</title>
+    <title>@Model.HtmlTitle</title>
 
     <bundle name="wwwroot/bundles/checkout-bundle.min.css" />
 
     <script type="text/javascript">
-		@Model.ToJSVariableModel("srvModel")
+        var srvModel = @Html.Raw(Json.Serialize(Model));
     </script>
 
     <bundle name="wwwroot/bundles/checkout-bundle.min.js" />
@@ -57,7 +57,7 @@
                     <div class="modal-content long">
                         <div class="content">
                             <div class="invoice">
-                                @Html.Partial("Checkout-Body")
+                                <partial name="Checkout-Body" />
                             </div>
                         </div>
                     </div>
@@ -114,7 +114,8 @@
                 'pt-BR': { translation: locales_pt_br },
                 'nl': { translation: locales_nl },
                 'cs-CZ': { translation: locales_cs },
-                'is-IS': { translation: locales_is }
+                'is-IS': { translation: locales_is },
+                'hr-HR': { translation: locales_hr }
             },
         });
 

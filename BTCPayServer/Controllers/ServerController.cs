@@ -19,15 +19,15 @@ using System.Threading.Tasks;
 
 namespace BTCPayServer.Controllers
 {
-    [Authorize(Roles = Roles.ServerAdmin)]
+    [Authorize(Policy = BTCPayServer.Security.Policies.CanModifyServerSettings.Key)]
     public class ServerController : Controller
     {
         private UserManager<ApplicationUser> _UserManager;
         SettingsRepository _SettingsRepository;
-        private IRateProviderFactory _RateProviderFactory;
+        private BTCPayRateProviderFactory _RateProviderFactory;
 
         public ServerController(UserManager<ApplicationUser> userManager,
-            IRateProviderFactory rateProviderFactory,
+            BTCPayRateProviderFactory rateProviderFactory,
             SettingsRepository settingsRepository)
         {
             _UserManager = userManager;
@@ -99,7 +99,7 @@ namespace BTCPayServer.Controllers
             };
             if (!withAuth || settings.GetCoinAverageSignature() != null)
             {
-                return new CoinAverageRateProvider("BTC")
+                return new CoinAverageRateProvider()
                 { Authenticator = settings };
             }
             return null;
@@ -241,10 +241,13 @@ namespace BTCPayServer.Controllers
         {
             if (command == "Test")
             {
-                if (!ModelState.IsValid)
-                    return View(model);
                 try
                 {
+                    if(!model.Settings.IsComplete())
+                    {
+                        model.StatusMessage = "Error: Required fields missing";
+                        return View(model);
+                    }
                     var client = model.Settings.CreateSmtpClient();
                     await client.SendMailAsync(model.Settings.From, model.TestEmail, "BTCPay test", "BTCPay test");
                     model.StatusMessage = "Email sent to " + model.TestEmail + ", please, verify you received it";
@@ -255,11 +258,8 @@ namespace BTCPayServer.Controllers
                 }
                 return View(model);
             }
-            else
+            else // if(command == "Save")
             {
-                ModelState.Remove(nameof(model.TestEmail));
-                if (!ModelState.IsValid)
-                    return View(model);
                 await _SettingsRepository.UpdateSetting(model.Settings);
                 model.StatusMessage = "Email settings saved";
                 return View(model);

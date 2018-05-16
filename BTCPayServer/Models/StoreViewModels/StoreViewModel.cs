@@ -1,5 +1,7 @@
 ﻿using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Rates;
+using BTCPayServer.Validation;
 using BTCPayServer.Validations;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
@@ -12,11 +14,6 @@ namespace BTCPayServer.Models.StoreViewModels
 {
     public class StoreViewModel
     {
-        class Format
-        {
-            public string Name { get; set; }
-            public string Value { get; set; }
-        }
         public class DerivationScheme
         {
             public string Crypto { get; set; }
@@ -38,7 +35,7 @@ namespace BTCPayServer.Models.StoreViewModels
             get; set;
         }
 
-        [Url]
+        [Uri]
         [Display(Name = "Store Website")]
         [MaxLength(500)]
         public string StoreWebsite
@@ -48,36 +45,6 @@ namespace BTCPayServer.Models.StoreViewModels
         }
 
         public List<StoreViewModel.DerivationScheme> DerivationSchemes { get; set; } = new List<StoreViewModel.DerivationScheme>();
-
-        public void SetExchangeRates((String DisplayName, String Name)[] supportedList, string preferredExchange)
-        {
-            var defaultStore = preferredExchange ?? "coinaverage";
-            var choices = supportedList.Select(o => new Format() { Name = o.DisplayName, Value = o.Name }).ToArray();
-            var chosen = choices.FirstOrDefault(f => f.Value == defaultStore) ?? choices.FirstOrDefault();
-            Exchanges = new SelectList(choices, nameof(chosen.Value), nameof(chosen.Name), chosen);
-            PreferredExchange = chosen.Value;
-        }
-
-        public SelectList Exchanges { get; set; }
-
-        [Display(Name = "Preferred price source (eg. bitfinex, bitstamp...)")]
-        public string PreferredExchange { get; set; }
-
-        public string RateSource
-        {
-            get
-            {
-                return PreferredExchange.IsCoinAverage() ? "https://apiv2.bitcoinaverage.com/indices/global/ticker/short" : $"https://apiv2.bitcoinaverage.com/exchanges/{PreferredExchange}";
-            }
-        }
-
-        [Display(Name = "Multiply the original rate by ...")]
-        [Range(0.01, 10.0)]
-        public double RateMultiplier
-        {
-            get;
-            set;
-        }
 
         [Display(Name = "Invoice expires if the full amount has not been paid after ... minutes")]
         [Range(1, 60 * 24 * 24)]
@@ -119,5 +86,13 @@ namespace BTCPayServer.Models.StoreViewModels
         {
             get; set;
         } = new List<LightningNode>();
+
+        [Display(Name = "Consider the invoice paid even if the paid amount is ... % less than expected")]
+        [Range(0, 100)]
+        public double PaymentTolerance
+        {
+            get;
+            set;
+        }
     }
 }

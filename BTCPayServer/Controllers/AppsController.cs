@@ -140,6 +140,8 @@ namespace BTCPayServer.Controllers
                                 .Where(us => us.ApplicationUserId == userId && us.Role == StoreRoles.Owner)
                                 .SelectMany(us => us.StoreData.Apps.Where(a => a.Id == appId))
                    .FirstOrDefaultAsync();
+                if (app == null)
+                    return null;
                 if (type != null && type.Value.ToString() != app.AppType)
                     return null;
                 return app;
@@ -174,24 +176,19 @@ namespace BTCPayServer.Controllers
             using (var ctx = _ContextFactory.CreateContext())
             {
                 return await ctx.UserStore
-                   .Where(us => us.ApplicationUserId == userId)
-                   .Select(us => new
-                   {
-                       IsOwner = us.Role == StoreRoles.Owner,
-                       StoreId = us.StoreDataId,
-                       StoreName = us.StoreData.StoreName,
-                       Apps = us.StoreData.Apps
-                   })
-                   .SelectMany(us => us.Apps.Select(app => new ListAppsViewModel.ListAppViewModel()
-                   {
-                       IsOwner = us.IsOwner,
-                       AppName = app.Name,
-                       AppType = app.AppType,
-                       Id = app.Id,
-                       StoreId = us.StoreId,
-                       StoreName = us.StoreName
-                   }))
-                   .ToArrayAsync();
+                    .Where(us => us.ApplicationUserId == userId)
+                    .Join(ctx.Apps, us => us.StoreDataId, app => app.StoreDataId,
+                    (us, app) =>
+                    new ListAppsViewModel.ListAppViewModel()
+                    {
+                        IsOwner = us.Role == StoreRoles.Owner,
+                        StoreId = us.StoreDataId,
+                        StoreName = us.StoreData.StoreName,
+                        AppName = app.Name,
+                        AppType = app.AppType,
+                        Id = app.Id
+                    })
+                    .ToArrayAsync();
             }
         }
 

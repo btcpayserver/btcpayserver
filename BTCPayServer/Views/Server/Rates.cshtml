@@ -1,11 +1,11 @@
-﻿@model RatesViewModel
+﻿@model BTCPayServer.Models.ServerViewModels.RatesViewModel
 @{
     ViewData.SetActivePageAndTitle(ServerNavPages.Rates);
 }
 
 
 <h4>@ViewData["Title"]</h4>
-@Html.Partial("_StatusMessage", TempData["TempDataProperty-StatusMessage"])
+<partial name="_StatusMessage" for="@TempData["TempDataProperty-StatusMessage"]" />
 
 
 <div class="row">

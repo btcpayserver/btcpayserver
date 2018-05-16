@@ -6,7 +6,7 @@
 }
 
 <h4>@ViewData["Title"]</h4>
-@Html.Partial("_StatusMessage", TempData["TempDataProperty-StatusMessage"])
+<partial name="_StatusMessage" for="@TempData["TempDataProperty-StatusMessage"]" />
 
 <div class="row">
     <div class="col-md-6">
@@ -25,6 +25,11 @@
                 <label asp-for="CustomCSS"></label>
                 <input asp-for="CustomCSS" class="form-control" />
                 <span asp-validation-for="CustomCSS" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="HtmlTitle"></label>
+                <input asp-for="HtmlTitle" class="form-control" />
+                <span asp-validation-for="HtmlTitle" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="DefaultCryptoCurrency"></label>

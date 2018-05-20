@@ -42,19 +42,21 @@ namespace BTCPayServer.Services.Rates
 
         static Dictionary<string, IFormatProvider> _CurrencyProviders = new Dictionary<string, IFormatProvider>();
 
-        public NumberFormatInfo GetNumberFormatInfo(string currency)
+        public NumberFormatInfo GetNumberFormatInfo(string currency, bool useFallback)
         {
             var data = GetCurrencyProvider(currency);
             if (data is NumberFormatInfo nfi)
                 return nfi;
             if (data is CultureInfo ci)
                 return ci.NumberFormat;
+            if (!useFallback)
+                return null;
             return CreateFallbackCurrencyFormatInfo(currency);
         }
 
         private NumberFormatInfo CreateFallbackCurrencyFormatInfo(string currency)
         {
-            var usd = GetNumberFormatInfo("USD");
+            var usd = GetNumberFormatInfo("USD", false);
             var currencyInfo = (NumberFormatInfo)usd.Clone();
             currencyInfo.CurrencySymbol = currency;
             return currencyInfo;
@@ -145,10 +147,23 @@ namespace BTCPayServer.Services.Rates
             return dico.Values.ToArray();
         }
 
-        public CurrencyData GetCurrencyData(string currency)
+        public CurrencyData GetCurrencyData(string currency, bool useFallback)
         {
             CurrencyData result;
-            _Currencies.TryGetValue(currency.ToUpperInvariant(), out result);
+            if(!_Currencies.TryGetValue(currency.ToUpperInvariant(), out result))
+            {
+                if(useFallback)
+                {
+                    var usd = GetCurrencyData("USD", false);
+                    result = new CurrencyData()
+                    {
+                        Code = currency,
+                        Crypto = true,
+                        Name = currency,
+                        Divisibility = usd.Divisibility
+                    };
+                }
+            }
             return result;
         }
 

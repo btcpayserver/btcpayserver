@@ -122,7 +122,7 @@ namespace BTCPayServer.Payments.Lightning.Lnd
 
         public void Dispose()
         {
-            throw new NotImplementedException();
+            //
         }
 
         // Invariant culture conversion

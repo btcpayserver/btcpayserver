@@ -305,8 +305,8 @@ namespace BTCPayServer.Controllers
 
         public static string FormatCurrency(decimal price, string currency, CurrencyNameTable currencies)
         {
-            var provider = currencies.GetNumberFormatInfo(currency);
-            var currencyData = currencies.GetCurrencyData(currency);
+            var provider = currencies.GetNumberFormatInfo(currency, true);
+            var currencyData = currencies.GetCurrencyData(currency, true);
             var divisibility = currencyData.Divisibility;
             while (true)
             {

@@ -47,8 +47,19 @@ namespace BTCPayServer.Services.Rates
             var data = GetCurrencyProvider(currency);
             if (data is NumberFormatInfo nfi)
                 return nfi;
-            return ((CultureInfo)data).NumberFormat;
+            if (data is CultureInfo ci)
+                return ci.NumberFormat;
+            return CreateFallbackCurrencyFormatInfo(currency);
         }
+
+        private NumberFormatInfo CreateFallbackCurrencyFormatInfo(string currency)
+        {
+            var usd = GetNumberFormatInfo("USD");
+            var currencyInfo = (NumberFormatInfo)usd.Clone();
+            currencyInfo.CurrencySymbol = currency;
+            return currencyInfo;
+        }
+
         public IFormatProvider GetCurrencyProvider(string currency)
         {
             lock (_CurrencyProviders)

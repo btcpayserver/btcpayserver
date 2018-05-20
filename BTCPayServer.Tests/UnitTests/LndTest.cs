@@ -69,7 +69,7 @@ namespace BTCPayServer.Tests.UnitTests
             {
                 Payment_request = merchantInvoice.BOLT11
             });
-            
+
             var invoice = await InvoiceClient.GetInvoice(merchantInvoice.Id);
 
             Assert.True(invoice.PaidAt.HasValue);
@@ -99,15 +99,20 @@ namespace BTCPayServer.Tests.UnitTests
 
                 // check if channel is established
                 var chanResponse = await CustomerLnd.ListChannelsAsync(null, null, null, null);
-                var channelToMerchant = chanResponse?.Channels
+                LnrpcChannel channelToMerchant = null;
+                if (chanResponse != null && chanResponse.Channels != null)
+                {
+                    channelToMerchant = chanResponse.Channels
                     .Where(a => a.Remote_pubkey == merchantNodeAddress.Pubkey)
                     .FirstOrDefault();
+                }
 
                 if (channelToMerchant == null)
                 {
                     // create new channel
                     var isConnected = await CustomerLnd.ListPeersAsync();
-                    if (!isConnected.Peers.Any(a => a.Pub_key == merchantInfo.NodeId))
+                    if (isConnected.Peers == null ||
+                        !isConnected.Peers.Any(a => a.Pub_key == merchantInfo.NodeId))
                     {
                         var connectResp = await CustomerLnd.ConnectPeerAsync(new LnrpcConnectPeerRequest
                         {

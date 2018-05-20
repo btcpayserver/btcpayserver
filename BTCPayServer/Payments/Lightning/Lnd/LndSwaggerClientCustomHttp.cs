@@ -51,14 +51,20 @@ namespace BTCPayServer.Payments.Lightning.Lnd
 
         private static HttpClientHandler GetCertificate(byte[] certFile)
         {
-            X509Certificate2 clientCertificate = null;
-            if (certFile != null)
-                clientCertificate = new X509Certificate2(certFile);
-
             var handler = new HttpClientHandler
             {
                 SslProtocols = SslProtocols.Tls12
             };
+            if (certFile == null)
+            {
+                handler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+                return handler;
+            }
+
+            // if certificate is not null, try with custom accepting logic
+            X509Certificate2 clientCertificate = null;
+            if (certFile != null)
+                clientCertificate = new X509Certificate2(certFile);
 
             handler.ServerCertificateCustomValidationCallback = (request, cert, chain, errors) =>
             {

@@ -338,9 +338,8 @@ namespace BTCPayServer.Services.Invoices
                 Status = Status,
                 Currency = ProductInformation.Currency,
                 Flags = new Flags() { Refundable = Refundable },
-
                 PaymentSubtotals = new Dictionary<string, long>(),
-                PaymentTotals= new Dictionary<string, long>(),
+                PaymentTotals = new Dictionary<string, long>(),
                 SupportedTransactionCurrencies = new Dictionary<string, InvoiceSupportedTransactionCurrency>(),
                 Addresses = new Dictionary<string, string>(),
                 PaymentCodes = new Dictionary<string, InvoicePaymentUrls>(),
@@ -351,7 +350,6 @@ namespace BTCPayServer.Services.Invoices
             dto.CryptoInfo = new List<NBitpayClient.InvoiceCryptoInfo>();
             foreach (var info in this.GetPaymentMethods(networkProvider))
             {
-               
                 var accounting = info.Calculate();
                 var cryptoInfo = new NBitpayClient.InvoiceCryptoInfo();
                 var subtotalPrice = accounting.TotalDue - accounting.NetworkFee;
@@ -375,7 +373,7 @@ namespace BTCPayServer.Services.Invoices
                 cryptoInfo.CryptoPaid = accounting.CryptoPaid.ToString();
 
                 cryptoInfo.Address = address;
-               
+
                 cryptoInfo.ExRates = exrates;
                 var paymentId = info.GetId();
                 var scheme = info.Network.UriScheme;
@@ -392,7 +390,7 @@ namespace BTCPayServer.Services.Invoices
                         BIP21 = $"{scheme}:{cryptoInfo.Address}?amount={cryptoInfo.Due}",
                     };
                 }
-                
+
                 if (paymentId.PaymentType == PaymentTypes.LightningLike)
                 {
                     cryptoInfo.PaymentUrls = new NBitpayClient.InvoicePaymentUrls()

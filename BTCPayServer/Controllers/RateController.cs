@@ -158,7 +158,7 @@ namespace BTCPayServer.Controllers
                                 CryptoCode = r.Pair.Left,
                                 Code = r.Pair.Right,
                                 CurrencyPair = r.Pair.ToString(),
-                                Name = _CurrencyNameTable.GetCurrencyData(r.Pair.Right)?.Name,
+                                Name = _CurrencyNameTable.GetCurrencyData(r.Pair.Right, true).Name,
                                 Value = r.Value.Value
                             }).Where(n => n.Name != null).ToArray());
         }

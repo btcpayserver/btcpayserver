@@ -32,8 +32,9 @@ namespace BTCPayServer
 
         public BTCPayNetwork Network { get { return this._Network; } }
 
-        public DerivationStrategyBase DerivationStrategyBase { get { return this._DerivationStrategy; } }
+        public DerivationStrategyBase DerivationStrategyBase => this._DerivationStrategy;
 
+        public string CryptoCode => Network.CryptoCode;
         public PaymentMethodId PaymentId => new PaymentMethodId(Network.CryptoCode, PaymentTypes.BTCLike);
 
         public override string ToString()

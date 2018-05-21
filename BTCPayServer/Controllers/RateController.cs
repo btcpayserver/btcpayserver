@@ -31,6 +31,74 @@ namespace BTCPayServer.Controllers
             _CurrencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
         }
 
+        [Route("rates/{baseCurrency}/{currency}")]
+        [HttpGet]
+        [BitpayAPIConstraint]
+        public async Task<IActionResult> GetCurrencyPairRate(string baseCurrency, string currency, string storeId)
+        {
+            storeId = storeId ?? this.HttpContext.GetStoreData()?.Id;
+            var result = await GetRates2($"{baseCurrency}_{currency}", storeId);
+            var rates = (result as JsonResult)?.Value as Rate[];
+            if (rates == null)
+                return result;
+            return Json(new DataWrapper<Rate>(rates.First()));
+        }
+
+
+        [Route("rates")]
+        [HttpGet]
+        [BitpayAPIConstraint]
+        public async Task<IActionResult> GetRates()
+        {
+           var  store = this.HttpContext.GetStoreData();
+            var currencypairs = "";
+            var supportedMethods = store.GetSupportedPaymentMethods(_NetworkProvider);
+
+            foreach (var supportedPaymentMethod in supportedMethods)
+            {
+                if (!string.IsNullOrEmpty(currencypairs))
+                {
+                    currencypairs += ",";
+                }
+
+                currencypairs += supportedPaymentMethod.CryptoCode + "_USD,";
+                currencypairs += supportedPaymentMethod.CryptoCode + "_EUR";
+            }
+            var result = await GetRates2(currencypairs, store.Id);
+            var rates = (result as JsonResult)?.Value as Rate[];
+            if (rates == null)
+                return result;
+            return Json(new DataWrapper<Rate>(rates.First()));
+        }
+
+        [Route("rates/{baseCurrency}")]
+        [HttpGet]
+        [BitpayAPIConstraint]
+        public async Task<IActionResult> GetRates(string baseCurrency)
+        {
+           var  store = this.HttpContext.GetStoreData();
+            var currencypairs = "";
+            var supportedMethods = store.GetSupportedPaymentMethods(_NetworkProvider);
+
+            currencypairs += baseCurrency + "_USD,";
+            currencypairs += baseCurrency + "_EUR";
+            foreach (var supportedPaymentMethod in supportedMethods)
+            {
+                if (!string.IsNullOrEmpty(currencypairs))
+                {
+                    currencypairs += ",";
+                }
+
+                currencypairs += baseCurrency + "_ " +supportedPaymentMethod.CryptoCode +",";
+                currencypairs += baseCurrency + "_ " + supportedPaymentMethod.CryptoCode;
+            }
+            var result = await GetRates2(currencypairs, store.Id);
+            var rates = (result as JsonResult)?.Value as Rate[];
+            if (rates == null)
+                return result;
+            return Json(new DataWrapper<Rate>(rates.First()));
+        }
+
         [Route("rates")]
         [HttpGet]
         [BitpayAPIConstraint]
@@ -43,6 +111,7 @@ namespace BTCPayServer.Controllers
                 return result;
             return Json(new DataWrapper<Rate[]>(rates));
         }
+
 
         [Route("api/rates")]
         [HttpGet]

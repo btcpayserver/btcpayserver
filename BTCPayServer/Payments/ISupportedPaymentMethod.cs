@@ -13,6 +13,7 @@ namespace BTCPayServer.Payments
     /// </summary>
     public interface ISupportedPaymentMethod
     {
+        string CryptoCode { get;}
         PaymentMethodId PaymentId { get; }
     }
 }

@@ -55,7 +55,7 @@ namespace BTCPayServer.Services.Mails
         public SmtpClient CreateSmtpClient()
         {
             SmtpClient client = new SmtpClient(Server, Port.Value);
-            client.EnableSsl = true;
+            client.EnableSsl = EnableSSL;
             client.UseDefaultCredentials = false;
             client.Credentials = new NetworkCredential(Login, Password);
             client.DeliveryMethod = SmtpDeliveryMethod.Network;

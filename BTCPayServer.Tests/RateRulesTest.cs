@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using BTCPayServer.Rating;
 using Xunit;
+using System.Globalization;
 
 namespace BTCPayServer.Tests
 {
@@ -127,7 +128,7 @@ namespace BTCPayServer.Tests
             rule2.ExchangeRates.SetRate("coinbase", CurrencyPair.Parse("BTC_CAD"), new BidAsk(1000m));
             Assert.True(rule2.Reevaluate());
             Assert.Equal("(1 / (2000 * (-3 + 1000 + 50 - 5))) * 1.1", rule2.ToString(true));
-            Assert.Equal(( 1.0m / (2000m * (-3m + 1000m + 50m - 5m))) * 1.1m, rule2.Value.Value);
+            Assert.Equal((1.0m / (2000m * (-3m + 1000m + 50m - 5m))) * 1.1m, rule2.Value.Value);
             ////////
 
             // Make sure kraken is not converted to CurrencyPair
@@ -151,7 +152,7 @@ namespace BTCPayServer.Tests
             rule2.ExchangeRates.SetRate("kraken", CurrencyPair.Parse("BTC_USD"), new BidAsk(6000m, 6100m));
             Assert.True(rule2.Reevaluate());
             Assert.Equal("1 / (6000, 6100)", rule2.ToString(true));
-            Assert.Equal(1m/6100m, rule2.Value.Value);
+            Assert.Equal(1m / 6100m, rule2.Value.Value);
 
             // Make sure the inverse has more priority than X_X or CDNT_X
             builder = new StringBuilder();
@@ -164,6 +165,15 @@ namespace BTCPayServer.Tests
             rule2.ExchangeRates.SetRate("coinaverage", CurrencyPair.Parse("BTC_USD"), new BidAsk(6000m, 6100m));
             Assert.True(rule2.Reevaluate());
             Assert.Equal("1 / 10", rule2.ToString(false));
+
+            // Make sure an inverse can be solved on an exchange
+            builder = new StringBuilder();
+            builder.AppendLine("X_X = coinaverage(X_X);");
+            Assert.True(RateRules.TryParse(builder.ToString(), out rules));
+            rule2 = rules.GetRuleFor(CurrencyPair.Parse("USD_BTC"));
+            rule2.ExchangeRates.SetRate("coinaverage", CurrencyPair.Parse("BTC_USD"), new BidAsk(6000m, 6100m));
+            Assert.True(rule2.Reevaluate());
+            Assert.Equal($"({(1m / 6100m).ToString(CultureInfo.InvariantCulture)}, {(1m / 6000m).ToString(CultureInfo.InvariantCulture)})", rule2.ToString(true));
         }
     }
 }

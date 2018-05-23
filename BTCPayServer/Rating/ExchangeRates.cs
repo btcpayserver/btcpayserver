@@ -63,8 +63,16 @@ namespace BTCPayServer.Rating
             if (ByExchange.TryGetValue(exchangeName, out var rates))
             {
                 var rate = rates.FirstOrDefault(r => r.CurrencyPair == currencyPair);
-                if (rate != null)
+                if(rate != null)
+                {
                     rate.BidAsk = bidAsk;
+                }
+                var invPair = currencyPair.Inverse();
+                var invRate = rates.FirstOrDefault(r => r.CurrencyPair == invPair);
+                if (invRate != null)
+                {
+                    invRate.BidAsk = bidAsk?.Inverse();
+                }
             }
         }
         public BidAsk GetRate(string exchangeName, CurrencyPair currencyPair)
@@ -135,7 +143,7 @@ namespace BTCPayServer.Rating
             return new BidAsk(1.0m / Ask, 1.0m / Bid);
         }
 
-        public static BidAsk operator+(BidAsk a, BidAsk b)
+        public static BidAsk operator +(BidAsk a, BidAsk b)
         {
             return new BidAsk(a.Bid + b.Bid, a.Ask + b.Ask);
         }
@@ -169,7 +177,7 @@ namespace BTCPayServer.Rating
             return new BidAsk(a.Bid / b.Ask, a.Ask / b.Bid);
         }
 
-        public static BidAsk operator-(BidAsk a, BidAsk b)
+        public static BidAsk operator -(BidAsk a, BidAsk b)
         {
             return new BidAsk(a.Bid - b.Bid, a.Ask - b.Ask);
         }

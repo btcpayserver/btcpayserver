@@ -18,6 +18,7 @@ namespace BTCPayServer.Rating
         UnsupportedOperator,
         MissingArgument,
         DivideByZero,
+        InvalidNegative,
         PreprocessError,
         RateUnavailable,
         InvalidExchangeName,
@@ -139,7 +140,7 @@ namespace BTCPayServer.Rating
             }
             return new RateRule(this, currencyPair, candidate);
         }
-        
+
         public ExpressionSyntax FindBestCandidate(CurrencyPair p)
         {
             var invP = p.Inverse();
@@ -216,8 +217,7 @@ namespace BTCPayServer.Rating
                     }
                     else
                     {
-                        var token = SyntaxFactory.ParseToken(rate.Value.ToString(CultureInfo.InvariantCulture));
-                        return SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, token);
+                        return RateRules.CreateExpression(rate.ToString());
                     }
                 }
             }
@@ -225,7 +225,7 @@ namespace BTCPayServer.Rating
 
         class CalculateWalker : CSharpSyntaxWalker
         {
-            public Stack<decimal> Values = new Stack<decimal>();
+            public Stack<BidAsk> Values = new Stack<BidAsk>();
             public List<RateRulesErrors> Errors = new List<RateRulesErrors>();
 
             public override void VisitPrefixUnaryExpression(PrefixUnaryExpressionSyntax node)
@@ -254,7 +254,15 @@ namespace BTCPayServer.Rating
                 switch (node.Kind())
                 {
                     case SyntaxKind.UnaryMinusExpression:
-                        Values.Push(-Values.Pop());
+                        var v = Values.Pop();
+                        if(v.Bid == v.Ask)
+                        {
+                            Values.Push(-v);
+                        }
+                        else
+                        {
+                            Errors.Add(RateRulesErrors.InvalidNegative);
+                        }
                         break;
                     case SyntaxKind.UnaryPlusExpression:
                         Values.Push(+Values.Pop());
@@ -299,7 +307,7 @@ namespace BTCPayServer.Rating
                         Values.Push(a * b);
                         break;
                     case SyntaxKind.DivideExpression:
-                        if (b == decimal.Zero)
+                        if (a.Ask == decimal.Zero || b.Ask == decimal.Zero)
                         {
                             Errors.Add(RateRulesErrors.DivideByZero);
                         }
@@ -309,11 +317,36 @@ namespace BTCPayServer.Rating
                         }
                         break;
                     case SyntaxKind.SubtractExpression:
-                        Values.Push(a - b);
+                        if (b.Bid == b.Ask)
+                        {
+                            Values.Push(a - b);
+                        }
+                        else
+                        {
+                            Errors.Add(RateRulesErrors.InvalidNegative);
+                        }
                         break;
                     default:
                         throw new NotSupportedException("Should never happen");
                 }
+            }
+
+            Stack<decimal> _TupleValues = null;
+            public override void VisitTupleExpression(TupleExpressionSyntax node)
+            {
+                _TupleValues = new Stack<decimal>();
+                base.VisitTupleExpression(node);
+                if(_TupleValues.Count != 2)
+                {
+                    Errors.Add(RateRulesErrors.MissingArgument);
+                }
+                else
+                {
+                    var ask = _TupleValues.Pop();
+                    var bid = _TupleValues.Pop();
+                    Values.Push(new BidAsk(bid, ask));
+                }
+                _TupleValues = null;
             }
 
             public override void VisitLiteralExpression(LiteralExpressionSyntax node)
@@ -321,7 +354,11 @@ namespace BTCPayServer.Rating
                 switch (node.Kind())
                 {
                     case SyntaxKind.NumericLiteralExpression:
-                        Values.Push(decimal.Parse(node.ToString(), CultureInfo.InvariantCulture));
+                        var v = decimal.Parse(node.ToString(), CultureInfo.InvariantCulture);
+                        if (_TupleValues == null)
+                            Values.Push(new BidAsk(v));
+                        else
+                            _TupleValues.Push(v);
                         break;
                 }
             }
@@ -487,7 +524,7 @@ namespace BTCPayServer.Rating
                 Errors.AddRange(calculate.Errors);
                 return false;
             }
-            _Value = calculate.Values.Pop();
+            _Value = calculate.Values.Pop().Bid;
             _EvaluatedNode = result;
             return true;
         }

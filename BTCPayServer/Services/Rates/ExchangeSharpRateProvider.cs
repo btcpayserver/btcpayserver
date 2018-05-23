@@ -61,7 +61,7 @@ namespace BTCPayServer.Services.Rates
                 var rate = new ExchangeRate();
                 rate.CurrencyPair = pair;
                 rate.Exchange = _ExchangeName;
-                rate.Value = ticker.Value.Bid;
+                rate.BidAsk = new BidAsk(ticker.Value.Bid, ticker.Value.Ask);
                 return rate;
             }
             catch (ArgumentException)

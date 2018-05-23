@@ -129,19 +129,19 @@ namespace BTCPayServer.Tests
             {
                 Exchange = "coinaverage",
                 CurrencyPair = CurrencyPair.Parse("BTC_USD"),
-                Value = 5000m
+                BidAsk = new BidAsk(5000m)
             });
             coinAverageMock.ExchangeRates.Add(new Rating.ExchangeRate()
             {
                 Exchange = "coinaverage",
                 CurrencyPair = CurrencyPair.Parse("BTC_CAD"),
-                Value = 4500m
+                BidAsk = new BidAsk(4500m)
             });
             coinAverageMock.ExchangeRates.Add(new Rating.ExchangeRate()
             {
                 Exchange = "coinaverage",
                 CurrencyPair = CurrencyPair.Parse("LTC_USD"),
-                Value = 500m
+                BidAsk = new BidAsk(500m)
             });
             rateProvider.DirectProviders.Add("coinaverage", coinAverageMock);
         }

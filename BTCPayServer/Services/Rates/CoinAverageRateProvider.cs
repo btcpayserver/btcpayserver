@@ -84,7 +84,7 @@ namespace BTCPayServer.Services.Rates
             else
             {
                 JToken bid = p.Value["bid"];
-                JToken ask = p.Value["bid"];
+                JToken ask = p.Value["ask"];
                 if (!decimal.TryParse(bid.Value<string>(), System.Globalization.NumberStyles.AllowExponent | System.Globalization.NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var v1) ||
                     !decimal.TryParse(ask.Value<string>(), System.Globalization.NumberStyles.AllowExponent | System.Globalization.NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var v2) ||
                     v1 > v2 ||

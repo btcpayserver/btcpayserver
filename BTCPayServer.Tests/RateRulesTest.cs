@@ -141,6 +141,7 @@ namespace BTCPayServer.Tests
             // Make sure can handle pairs
             builder = new StringBuilder();
             builder.AppendLine("BTC_USD = kraken(BTC_USD)");
+            Assert.True(RateRules.TryParse(builder.ToString(), out rules));
             rule2 = rules.GetRuleFor(CurrencyPair.Parse("BTC_USD"));
             rule2.ExchangeRates.SetRate("kraken", CurrencyPair.Parse("BTC_USD"), new BidAsk(6000m, 6100m));
             Assert.True(rule2.Reevaluate());
@@ -151,6 +152,18 @@ namespace BTCPayServer.Tests
             Assert.True(rule2.Reevaluate());
             Assert.Equal("1 / (6000, 6100)", rule2.ToString(true));
             Assert.Equal(1m/6100m, rule2.Value.Value);
+
+            // Make sure the inverse has more priority than X_X or CDNT_X
+            builder = new StringBuilder();
+            builder.AppendLine("EUR_CDNT = 10");
+            builder.AppendLine("CDNT_BTC = CDNT_EUR * EUR_BTC;");
+            builder.AppendLine("CDNT_X = CDNT_BTC * BTC_X;");
+            builder.AppendLine("X_X = coinaverage(X_X);");
+            Assert.True(RateRules.TryParse(builder.ToString(), out rules));
+            rule2 = rules.GetRuleFor(CurrencyPair.Parse("CDNT_EUR"));
+            rule2.ExchangeRates.SetRate("coinaverage", CurrencyPair.Parse("BTC_USD"), new BidAsk(6000m, 6100m));
+            Assert.True(rule2.Reevaluate());
+            Assert.Equal("1 / 10", rule2.ToString(false));
         }
     }
 }

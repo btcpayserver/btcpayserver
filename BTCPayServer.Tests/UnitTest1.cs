@@ -1262,7 +1262,7 @@ namespace BTCPayServer.Tests
                 Assert.Equal("orange", vmview.Items[1].Title);
                 Assert.Equal(10.0m, vmview.Items[1].Price.Value);
                 Assert.Equal("$5.00", vmview.Items[0].Price.Formatted);
-                Assert.IsType<RedirectResult>(apps.ViewPointOfSale(appId, 0, "orange").Result);
+                Assert.IsType<RedirectResult>(apps.ViewPointOfSale(appId, 0, null, null, null, null, "orange").Result);
                 var invoice = user.BitPay.GetInvoices().First();
                 Assert.Equal(10.00m, invoice.Price);
                 Assert.Equal("CAD", invoice.Currency);

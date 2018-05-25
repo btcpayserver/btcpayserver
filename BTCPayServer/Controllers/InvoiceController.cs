@@ -109,6 +109,9 @@ namespace BTCPayServer.Controllers
             }
             entity.ProductInformation = Map<Invoice, ProductInformation>(invoice);
             entity.RedirectURL = invoice.RedirectURL ?? store.StoreWebsite;
+            if (!Uri.IsWellFormedUriString(entity.RedirectURL, UriKind.Absolute))
+                entity.RedirectURL = null;
+
             entity.Status = "new";
             entity.SpeedPolicy = ParseSpeedPolicy(invoice.TransactionSpeed, store.SpeedPolicy);
 

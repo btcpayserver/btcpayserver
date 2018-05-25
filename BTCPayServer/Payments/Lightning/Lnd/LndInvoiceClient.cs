@@ -74,13 +74,15 @@ namespace BTCPayServer.Payments.Lightning.Lnd
         // TODO: These two methods where you wait on invoice are still work in progress
         public Task<ILightningListenInvoiceSession> Listen(CancellationToken cancellation = default(CancellationToken))
         {
-            return Task.FromResult<ILightningListenInvoiceSession>(this);
+            throw new NotImplementedException();
+            //return Task.FromResult<ILightningListenInvoiceSession>(this);
         }
 
         async Task<LightningInvoice> ILightningListenInvoiceSession.WaitInvoice(CancellationToken cancellation)
         {
-            var resp = await _rpcClient.SubscribeInvoicesAsync(cancellation);
-            return ConvertLndInvoice(resp);
+            throw new NotImplementedException();
+            //var resp = await _rpcClient.SubscribeInvoicesAsync(cancellation);
+            //return ConvertLndInvoice(resp);
         }
         // Eof work in progress
 
@@ -143,9 +145,5 @@ namespace BTCPayServer.Payments.Lightning.Lnd
                 return d.ToString(CultureInfo.InvariantCulture);
             }
         }
-    }
-
-    public partial class LndSwaggerClient
-    {
     }
 }

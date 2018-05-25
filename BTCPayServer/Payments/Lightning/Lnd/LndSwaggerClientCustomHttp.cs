@@ -89,4 +89,8 @@ namespace BTCPayServer.Payments.Lightning.Lnd
             return handler;
         }
     }
+
+    public partial class LndSwaggerClient
+    {
+    }
 }

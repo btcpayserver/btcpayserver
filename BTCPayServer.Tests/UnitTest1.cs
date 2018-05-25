@@ -431,11 +431,11 @@ namespace BTCPayServer.Tests
             var macaroon = "0201036c6e640247030a10b0dbbde28f009f83d330bde05075ca251201301a160a0761646472657373120472656164120577726974651a170a08696e766f6963657312047265616412057772697465000006200ae088692e67cf14e767c3d2a4a67ce489150bf810654ff980e1b7a7e263d5e8";
             var tls = "2d2d2d2d2d424547494e2043455254494649434154452d2d2d2d2d0a4d494942396a4343415a7967417749424167495156397a62474252724e54716b4e4b55676d72524d377a414b42676771686b6a4f50515144416a41784d5238770a485159445651514b45785a73626d5167595856306232646c626d56795958526c5a43426a5a584a304d51347744415944565151444577564754304e56557a41650a467730784f4441304d6a55794d7a517a4d6a4261467730784f5441324d6a41794d7a517a4d6a42614d444578487a416442674e5642416f54466d78755a4342680a645852765a3256755a584a686447566b49474e6c636e5178446a414d42674e5642414d5442555a50513156544d466b77457759484b6f5a497a6a3043415159490a4b6f5a497a6a304441516344516741454b7557424568564f75707965434157476130766e713262712f59396b41755a78616865646d454553482b753936436d450a397577486b4b2b4a7667547a66385141783550513741357254637155374b57595170303175364f426c5443426b6a414f42674e56485138424166384542414d430a4171517744775944565230544151482f42415577417745422f7a427642674e56485245456144426d6767564754304e565534494a6247396a5957786f62334e300a6877522f4141414268784141414141414141414141414141414141414141414268775373474f69786877514b41457342687753702f717473687754417141724c0a687753702f6d4a72687753702f754f77687753702f714e59687753702f6874436877514b70514157687753702f6c42514d416f4743437147534d343942414d430a413067414d45554349464866716d595a5043647a4a5178386b47586859473834394c31766541364c784d6f7a4f5774356d726835416945413662756e51556c710a6558553070474168776c3041654d726a4d4974394c7652736179756162565a593278343d0a2d2d2d2d2d454e442043455254494649434154452d2d2d2d2d0a";
 
-            var lndUri = $"http://127.0.0.1:53280?type=lnd&macaroon={macaroon}&tls={tls}";
+            var lndUri = $"http://lnd:lnd@127.0.0.1:53280?macaroon={macaroon}&tls={tls}";
 
             Assert.True(LightningConnectionString.TryParse(lndUri, out conn));
-            Assert.Equal("http://127.0.0.1:53280/", conn.ToString());
-            Assert.Equal("http://127.0.0.1:53280/", conn.ToUri(true).AbsoluteUri);
+            Assert.Equal("http://lnd:lnd@127.0.0.1:53280/", conn.ToString());
+            Assert.Equal("http://lnd:lnd@127.0.0.1:53280/", conn.ToUri(true).AbsoluteUri);
             Assert.Equal("http://127.0.0.1:53280/", conn.ToUri(false).AbsoluteUri);
             Assert.Equal(LightningConnectionType.Lnd, conn.ConnectionType);
             Assert.Equal(macaroon, conn.Macaroon);
@@ -479,68 +479,37 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
-        public void CanSendLightningPayment2()
+        public void CanSendLightningPaymentCLightning()
         {
-            using (var tester = ServerTester.Create())
-            {
-                tester.Start();
-                tester.PrepareLightning();
-                var user = tester.NewAccount();
-                user.GrantAccess();
-                user.RegisterLightningNode("BTC", LightningConnectionType.CLightning);
-                user.RegisterDerivationScheme("BTC");
-
-                var invoice = user.BitPay.CreateInvoice(new Invoice()
-                {
-                    Price = 0.01m,
-                    Currency = "USD",
-                    PosData = "posData",
-                    OrderId = "orderId",
-                    ItemDesc = "Some description"
-                });
-
-                tester.SendLightningPayment(invoice);
-
-                Eventually(() =>
-                {
-                    var localInvoice = user.BitPay.GetInvoice(invoice.Id);
-                    Assert.Equal("complete", localInvoice.Status);
-                    Assert.Equal("False", localInvoice.ExceptionStatus.ToString());
-                });
-            }
+            ProcessLightningPayment(LightningConnectionType.CLightning);
         }
 
         [Fact]
-        public void CanSendLightningPayment()
+        public void CanSendLightningPaymentCharge()
         {
+            ProcessLightningPayment(LightningConnectionType.Charge);
+        }
 
+        // REQUIRING IMPLEMENTATION OF:
+        // LndInvoiceClient.Listen & LndInvoiceClient.WaitInvoice
+        //[Fact]
+        //public void CanSendLightningPaymentLnd()
+        //{
+        //    ProcessLightningPayment(LightningConnectionType.Lnd);
+        //}
+
+        void ProcessLightningPayment(LightningConnectionType type)
+        {
             using (var tester = ServerTester.Create())
             {
                 tester.Start();
                 tester.PrepareLightning();
                 var user = tester.NewAccount();
                 user.GrantAccess();
-                user.RegisterLightningNode("BTC", LightningConnectionType.Charge);
+                user.RegisterLightningNode("BTC", type);
                 user.RegisterDerivationScheme("BTC");
 
-                var invoice = user.BitPay.CreateInvoice(new Invoice()
-                {
-                    Price = 0.01m,
-                    Currency = "USD",
-                    PosData = "posData",
-                    OrderId = "orderId",
-                    ItemDesc = "Some description"
-                });
-
-                tester.SendLightningPayment(invoice);
-
-                Eventually(() =>
-                {
-                    var localInvoice = user.BitPay.GetInvoice(invoice.Id);
-                    Assert.Equal("complete", localInvoice.Status);
-                    Assert.Equal("False", localInvoice.ExceptionStatus.ToString());
-                });
-
+                Task.WaitAll(CanSendLightningPaymentCore(tester, user));
 
                 Task.WaitAll(Enumerable.Range(0, 5)
                     .Select(_ => CanSendLightningPaymentCore(tester, user))
@@ -550,7 +519,7 @@ namespace BTCPayServer.Tests
 
         async Task CanSendLightningPaymentCore(ServerTester tester, TestAccount user)
         {
-            await Task.Delay(TimeSpan.FromSeconds(RandomUtils.GetUInt32() % 5));
+            await Task.Delay(TimeSpan.FromMilliseconds(RandomUtils.GetUInt32() % 1000));
             var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice()
             {
                 Price = 0.01m,

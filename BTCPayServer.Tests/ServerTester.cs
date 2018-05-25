@@ -53,7 +53,7 @@ namespace BTCPayServer.Tests
 
             MerchantCharge = new ChargeTester(this, "TEST_MERCHANTCHARGE", "http://api-token:foiewnccewuify@127.0.0.1:54938/", "merchant_lightningd", btc);
 
-            MerchantLnd = new LndMockTester(this, "TEST_MERCHANTLND", "http://127.0.0.1:53280/", "merchant_lnd", btc);
+            MerchantLnd = new LndMockTester(this, "TEST_MERCHANTLND", "http://lnd:lnd@127.0.0.1:53280/", "merchant_lnd", btc);
 
             PayTester = new BTCPayServerTester(Path.Combine(_Directory, "pay"))
             {

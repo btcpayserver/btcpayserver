@@ -89,8 +89,12 @@ namespace BTCPayServer.Payments.Lightning
             result.ConnectionType = uri.Scheme == "http" || uri.Scheme == "https" ?
                 LightningConnectionType.Charge :
                 LightningConnectionType.CLightning;
-
-            if (uri.Query.Contains("type=lnd"))
+            
+            // TODO: We need to redo the way Lightning connection strings are detected
+            // now that we have Lnd and we can't depend on
+            // http => Charge
+            // / => CLightning
+            if (uri.ToString().Contains("lnd:lnd@"))
                 result.ConnectionType = LightningConnectionType.Lnd;
 
             if (result.ConnectionType == LightningConnectionType.Charge)
@@ -104,6 +108,11 @@ namespace BTCPayServer.Payments.Lightning
                 result.Username = parts[0];
                 result.Password = parts[1];
             }
+            else if (result.ConnectionType == LightningConnectionType.Lnd)
+            {
+                result.Username = "lnd";
+                result.Password = "lnd";
+            }
             else if (!string.IsNullOrEmpty(uri.UserInfo))
             {
                 error = "The url should not have user information";
@@ -113,8 +122,11 @@ namespace BTCPayServer.Payments.Lightning
             if (result.ConnectionType == LightningConnectionType.Lnd)
             {
                 var queryString = QueryHelpers.ParseNullableQuery(uri.Query);
-                result.Macaroon = queryString.ContainsKey("macaroon") ? queryString["macaroon"] : StringValues.Empty;
-                result.Tls = queryString.ContainsKey("tls") ? queryString["tls"] : StringValues.Empty;
+                if (queryString != null)
+                {
+                    result.Macaroon = queryString.ContainsKey("macaroon") ? queryString["macaroon"] : StringValues.Empty;
+                    result.Tls = queryString.ContainsKey("tls") ? queryString["tls"] : StringValues.Empty;
+                }
             }
 
             var uriWithoutQuery = uri.AbsoluteUri.Split('?')[0];

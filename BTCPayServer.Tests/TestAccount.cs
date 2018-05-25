@@ -133,7 +133,7 @@ namespace BTCPayServer.Tests
             else if (connectionType == LightningConnectionType.CLightning)
                 uri = parent.MerchantLightningD.Address.AbsoluteUri;
             else if (connectionType == LightningConnectionType.Lnd)
-                uri = parent.MerchantLnd.Swagger.BaseUrl + "?type=lnd";
+                uri = parent.MerchantLnd.Swagger.BaseUrl;
             else
                 throw new NotSupportedException(connectionType.ToString());
 

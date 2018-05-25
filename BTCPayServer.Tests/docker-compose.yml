@@ -20,6 +20,7 @@ services:
       TEST_MERCHANTLIGHTNINGD: "/etc/merchant_lightningd_datadir/lightning-rpc"
       TEST_CUSTOMERLIGHTNINGD: "/etc/customer_lightningd_datadir/lightning-rpc"
       TEST_MERCHANTCHARGE: http://api-token:foiewnccewuify@lightning-charged:9112/
+      TEST_MERCHANTLND: http://127.0.0.1:53280/?type=lnd
       TESTS_INCONTAINER: "true"
     expose:
       - "80"

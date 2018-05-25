@@ -117,7 +117,7 @@ namespace BTCPayServer.Tests
         {
             get; set;
         }
-        
+
         public void RegisterLightningNode(string cryptoCode, LightningConnectionType connectionType)
         {
             RegisterLightningNodeAsync(cryptoCode, connectionType).GetAwaiter().GetResult();
@@ -126,15 +126,24 @@ namespace BTCPayServer.Tests
         public async Task RegisterLightningNodeAsync(string cryptoCode, LightningConnectionType connectionType)
         {
             var storeController = this.GetController<StoresController>();
+
+            string uri = null;
+            if (connectionType == LightningConnectionType.Charge)
+                uri = parent.MerchantCharge.Client.Uri.AbsoluteUri;
+            else if (connectionType == LightningConnectionType.CLightning)
+                uri = parent.MerchantLightningD.Address.AbsoluteUri;
+            else if (connectionType == LightningConnectionType.Lnd)
+                uri = parent.MerchantLnd.Swagger.BaseUrl + "?type=lnd";
+            else
+                throw new NotSupportedException(connectionType.ToString());
+
             await storeController.AddLightningNode(StoreId, new LightningNodeViewModel()
             {
-                Url = connectionType == LightningConnectionType.Charge ? parent.MerchantCharge.Client.Uri.AbsoluteUri :
-                      connectionType == LightningConnectionType.CLightning ? parent.MerchantLightningD.Address.AbsoluteUri
-                      : throw new NotSupportedException(connectionType.ToString()),
+                Url = uri,
                 SkipPortTest = true
             }, "save", "BTC");
             if (storeController.ModelState.ErrorCount != 0)
                 Assert.False(true, storeController.ModelState.FirstOrDefault().Value.Errors[0].ErrorMessage);
         }
-}
+    }
 }

@@ -10,15 +10,16 @@ using Xunit;
 using Xunit.Abstractions;
 using System.Linq;
 using System.Threading;
+using NBitpayClient;
 
-namespace BTCPayServer.Tests.UnitTests
+namespace BTCPayServer.Tests.Lnd
 {
     // this depends for now on `docker-compose up devlnd`
-    public class LndTest
+    public class UnitTests
     {
         private readonly ITestOutputHelper output;
 
-        public LndTest(ITestOutputHelper output)
+        public UnitTests(ITestOutputHelper output)
         {
             this.output = output;
             initializeEnvironment();
@@ -58,6 +59,7 @@ namespace BTCPayServer.Tests.UnitTests
         }
 
 
+        //integration tests
 
         [Fact]
         public async Task CreateLndInvoiceAndPay()

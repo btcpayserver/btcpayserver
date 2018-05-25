@@ -20,6 +20,7 @@ using System.Threading;
 using System.Globalization;
 using BTCPayServer.Payments.Lightning.CLightning;
 using BTCPayServer.Payments.Lightning.Charge;
+using BTCPayServer.Tests.Lnd;
 
 namespace BTCPayServer.Tests
 {
@@ -51,6 +52,8 @@ namespace BTCPayServer.Tests
             MerchantLightningD = new CLightningRPCClient(new Uri(GetEnvironment("TEST_MERCHANTLIGHTNINGD", "tcp://127.0.0.1:30993/")), btc);
 
             MerchantCharge = new ChargeTester(this, "TEST_MERCHANTCHARGE", "http://api-token:foiewnccewuify@127.0.0.1:54938/", "merchant_lightningd", btc);
+
+            MerchantLnd = new LndMockTester(this, "TEST_MERCHANTLND", "http://127.0.0.1:53280/", "merchant_lnd", btc);
 
             PayTester = new BTCPayServerTester(Path.Combine(_Directory, "pay"))
             {
@@ -154,6 +157,7 @@ namespace BTCPayServer.Tests
         public CLightningRPCClient CustomerLightningD { get; set; }
         public CLightningRPCClient MerchantLightningD { get; private set; }
         public ChargeTester MerchantCharge { get; private set; }
+        public LndMockTester MerchantLnd { get; set; }
 
         internal string GetEnvironment(string variable, string defaultValue)
         {

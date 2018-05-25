@@ -235,7 +235,7 @@ namespace BTCPayServer.Models
         public long AmountPaid { get; set; }
 
         [JsonProperty("minerFees")]
-        public long MinerFees { get; set; }
+        public Dictionary<string, NBitpayClient.MinerFeeInfo> MinerFees { get; set; }
 
         [JsonProperty("exchangeRates")]
         public Dictionary<string, Dictionary<string, decimal>> ExchangeRates { get; set; }

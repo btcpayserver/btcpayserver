@@ -1325,6 +1325,8 @@ namespace BTCPayServer.Tests
                 var repo = tester.PayTester.GetService<InvoiceRepository>();
                 var ctx = tester.PayTester.GetService<ApplicationDbContextFactory>().CreateContext();
                 Assert.Equal(0, invoice.CryptoInfo[0].TxCount);
+                Assert.True(invoice.MinerFees.ContainsKey("BTC"));
+                Assert.Equal(100m, invoice.MinerFees["BTC"].SatoshiPerBytes);
                 Eventually(() =>
                 {
                     var textSearchResult = tester.PayTester.InvoiceRepository.GetInvoices(new InvoiceQuery()

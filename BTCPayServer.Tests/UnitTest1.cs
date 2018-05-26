@@ -1262,7 +1262,7 @@ namespace BTCPayServer.Tests
                 Assert.Equal("orange", vmview.Items[1].Title);
                 Assert.Equal(10.0m, vmview.Items[1].Price.Value);
                 Assert.Equal("$5.00", vmview.Items[0].Price.Formatted);
-                Assert.IsType<RedirectResult>(apps.ViewPointOfSale(appId, 0, "orange").Result);
+                Assert.IsType<RedirectResult>(apps.ViewPointOfSale(appId, 0, null, null, null, null, "orange").Result);
                 var invoice = user.BitPay.GetInvoices().First();
                 Assert.Equal(10.00m, invoice.Price);
                 Assert.Equal("CAD", invoice.Currency);
@@ -1325,6 +1325,8 @@ namespace BTCPayServer.Tests
                 var repo = tester.PayTester.GetService<InvoiceRepository>();
                 var ctx = tester.PayTester.GetService<ApplicationDbContextFactory>().CreateContext();
                 Assert.Equal(0, invoice.CryptoInfo[0].TxCount);
+                Assert.True(invoice.MinerFees.ContainsKey("BTC"));
+                Assert.Equal(100m, invoice.MinerFees["BTC"].SatoshiPerBytes);
                 Eventually(() =>
                 {
                     var textSearchResult = tester.PayTester.InvoiceRepository.GetInvoices(new InvoiceQuery()
@@ -1464,10 +1466,10 @@ namespace BTCPayServer.Tests
             var quadri = new QuadrigacxRateProvider();
             var rates = quadri.GetRatesAsync().GetAwaiter().GetResult();
             Assert.NotEmpty(rates);
-            Assert.NotEqual(0.0m, rates.First().Value);
-            Assert.NotEqual(0.0m, rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("BTC_CAD")).Value);
-            Assert.NotEqual(0.0m, rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("BTC_USD")).Value);
-            Assert.NotEqual(0.0m, rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("LTC_CAD")).Value);
+            Assert.NotEqual(0.0m, rates.First().BidAsk.Bid);
+            Assert.NotEqual(0.0m, rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("BTC_CAD")).Bid);
+            Assert.NotEqual(0.0m, rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("BTC_USD")).Bid);
+            Assert.NotEqual(0.0m, rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("LTC_CAD")).Bid);
             Assert.Null(rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("LTC_USD")));
         }
 
@@ -1492,7 +1494,7 @@ namespace BTCPayServer.Tests
                         e => (e.CurrencyPair == new CurrencyPair("BTC", "USD") ||
                                e.CurrencyPair == new CurrencyPair("BTC", "EUR") ||
                                e.CurrencyPair == new CurrencyPair("BTC", "USDT"))
-                               && e.Value > 1.0m // 1BTC will always be more than 1USD
+                               && e.BidAsk.Bid > 1.0m // 1BTC will always be more than 1USD
                                );
             }
         }

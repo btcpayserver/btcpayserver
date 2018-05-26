@@ -14,13 +14,19 @@ namespace BTCPayServer.Services.Rates
         public const string QuadrigacxName = "quadrigacx";
         static HttpClient _Client = new HttpClient();
 
-        private bool TryToDecimal(JObject p, out decimal v)
+        private bool TryToBidAsk(JObject p, out BidAsk v)
         {
-            v = 0.0m;
-            JToken token = p.Property("bid")?.Value;
-            if (token == null)
+            v = null;
+            JToken bid = p.Property("bid")?.Value;
+            JToken ask = p.Property("ask")?.Value;
+            if (bid == null || ask == null)
                 return false;
-            return decimal.TryParse(token.Value<string>(), System.Globalization.NumberStyles.AllowExponent | System.Globalization.NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out v);
+            if (!decimal.TryParse(bid.Value<string>(), System.Globalization.NumberStyles.AllowExponent | System.Globalization.NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var v1) ||
+               !decimal.TryParse(bid.Value<string>(), System.Globalization.NumberStyles.AllowExponent | System.Globalization.NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var v2) ||
+               v1 <= 0m || v2 <= 0m || v1 > v2)
+                return false;
+            v = new BidAsk(v1, v2);
+            return true;
         }
 
         public async Task<ExchangeRates> GetRatesAsync()
@@ -37,9 +43,9 @@ namespace BTCPayServer.Services.Rates
                     continue;
                 rate.CurrencyPair = pair;
                 rate.Exchange = QuadrigacxName;
-                if (!TryToDecimal((JObject)prop.Value, out var v))
+                if (!TryToBidAsk((JObject)prop.Value, out var v))
                     continue;
-                rate.Value = v;
+                rate.BidAsk = v;
                 exchangeRates.Add(rate);
             }
             return exchangeRates;

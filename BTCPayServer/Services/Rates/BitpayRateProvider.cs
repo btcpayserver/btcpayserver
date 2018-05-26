@@ -24,7 +24,7 @@ namespace BTCPayServer.Services.Rates
         {
             return new ExchangeRates((await _Bitpay.GetRatesAsync().ConfigureAwait(false))
                 .AllRates
-                .Select(r => new ExchangeRate() { Exchange = BitpayName, CurrencyPair = new CurrencyPair("BTC", r.Code), Value = r.Value })
+                .Select(r => new ExchangeRate() { Exchange = BitpayName, CurrencyPair = new CurrencyPair("BTC", r.Code), BidAsk = new BidAsk(r.Value) })
                 .ToList());
         }
     }

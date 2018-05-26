@@ -25,7 +25,7 @@ namespace BTCPayServer.Views
             return page.Equals(activePage) ? "active" : null;
         }
 
-        public static HtmlString BrowserDate(this DateTimeOffset date)
+        public static HtmlString ToBrowserDate(this DateTimeOffset date)
         {
             var hello = date.ToString("o", CultureInfo.InvariantCulture);
             return new HtmlString($"<span class='localizeDate'>{hello}</span>");

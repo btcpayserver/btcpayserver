@@ -40,7 +40,7 @@
                 <table class="table table-sm">
                     <tr>
                         <th>Quota period</th>
-                        <td>@Model.RateLimits.TotalPeriod.Prettify()</td>
+                        <td>@Model.RateLimits.TotalPeriod.TimeString()</td>
                     </tr>
                     <tr>
                         <th>Requests quota</th>
@@ -48,7 +48,7 @@
                     </tr>
                     <tr>
                         <th>Quota reset in</th>
-                        <td>@Model.RateLimits.CounterReset.Prettify()</td>
+                        <td>@Model.RateLimits.CounterReset.TimeString()</td>
                     </tr>
                 </table>
             }

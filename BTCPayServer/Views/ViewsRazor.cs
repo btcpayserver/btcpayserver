@@ -30,5 +30,33 @@ namespace BTCPayServer.Views
             var hello = date.ToString("o", CultureInfo.InvariantCulture);
             return new HtmlString($"<span class='localizeDate'>{hello}</span>");
         }
+
+        public static string ToBrowserAgo(this DateTimeOffset date)
+        {
+            var formatted = (DateTimeOffset.UtcNow - date).TimeString() + " ago";
+            return formatted;
+        }
+
+        public static string TimeString(this TimeSpan timeSpan)
+        {
+            if (timeSpan.TotalMinutes < 1)
+            {
+                return $"{(int)timeSpan.TotalSeconds} second{Plural((int)timeSpan.TotalSeconds)}";
+            }
+            if (timeSpan.TotalHours < 1)
+            {
+                return $"{(int)timeSpan.TotalMinutes} minute{Plural((int)timeSpan.TotalMinutes)}";
+            }
+            if (timeSpan.Days < 1)
+            {
+                return $"{(int)timeSpan.TotalHours} hour{Plural((int)timeSpan.TotalHours)}";
+            }
+            return $"{(int)timeSpan.TotalDays} day{Plural((int)timeSpan.TotalDays)}";
+        }
+
+        private static string Plural(int totalDays)
+        {
+            return totalDays > 1 ? "s" : string.Empty;
+        }
     }
 }

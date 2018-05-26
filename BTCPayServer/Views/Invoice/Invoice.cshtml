@@ -53,15 +53,15 @@
                     </tr>
                     <tr>
                         <th>Created date</th>
-                        <td>@Model.CreatedDate</td>
+                        <td>@Model.CreatedDate.ToBrowserDate()</td>
                     </tr>
                     <tr>
                         <th>Expiration date</th>
-                        <td>@Model.ExpirationDate</td>
+                        <td>@Model.ExpirationDate.ToBrowserDate()</td>
                     </tr>
                     <tr>
                         <th>Monitoring date</th>
-                        <td>@Model.MonitoringDate</td>
+                        <td>@Model.MonitoringDate.ToBrowserDate()</td>
                     </tr>
                     <tr>
                         <th>Transaction speed</th>
@@ -289,7 +289,7 @@
                         @foreach(var evt in Model.Events)
                         {
                             <tr>
-                                <td>@evt.Timestamp</td>
+                                <td>@evt.Timestamp.ToBrowserDate()</td>
                                 <td>@evt.Message</td>
                             </tr>
                         }

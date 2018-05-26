@@ -77,6 +77,7 @@ namespace BTCPayServer.Controllers
                 {
                     new PairingCodeResponse()
                     {
+                        Policies = new Newtonsoft.Json.Linq.JArray(),
                         PairingCode = pairingEntity.Id,
                         PairingExpiration = pairingEntity.Expiration,
                         DateCreated = pairingEntity.CreatedTime,

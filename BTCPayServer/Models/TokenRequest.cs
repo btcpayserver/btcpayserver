@@ -45,7 +45,7 @@ namespace BTCPayServer.Models
 
     public class PairingCodeResponse
     {
-        [JsonProperty(PropertyName = "pairingCode")]
+        [JsonProperty(PropertyName = "policies")]
         public JArray Policies { get; set; }
 
         [JsonProperty(PropertyName = "pairingCode")]

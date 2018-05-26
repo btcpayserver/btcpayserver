@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 
 namespace BTCPayServer.Views
@@ -21,6 +23,12 @@ namespace BTCPayServer.Views
         {
             var activePage = (T)viewData[ACTIVE_PAGE_KEY];
             return page.Equals(activePage) ? "active" : null;
+        }
+
+        public static HtmlString BrowserDate(this DateTimeOffset date)
+        {
+            var hello = date.ToString("o", CultureInfo.InvariantCulture);
+            return new HtmlString($"<span class='localizeDate'>{hello}</span>");
         }
     }
 }

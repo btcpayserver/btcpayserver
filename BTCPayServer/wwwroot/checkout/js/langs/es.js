@@ -5,7 +5,7 @@ const locales_es = {
     "Awaiting Payment...": "En espera de pago...",
     "Pay with": "Pagar con",
     "Contact and Refund Email": "Contacto y correo electrónico de reembolso",
-    "Contact_Body": "Por favor provee una dirección de correo electrónico a continuación. Nos pondremos en contacto contigo en esta dirección si hay un problema con tu pago.",
+    "Contact_Body": "Por favor indica una dirección de correo electrónico a continuación. Nos pondremos en contacto contigo en esta dirección si hay un problema con tu pago.",
     "Your email": "Tu correo electrónico",
     "Continue": "Continuar",
     "Please enter a valid email address": "Por favor ingresa un correo electrónico válido",
@@ -20,7 +20,7 @@ const locales_es = {
     // Scan tab
     "Open in wallet": "Abrir en billetera",
     // Copy tab
-    "CompletePay_Body": "Para completar tu pago, envía {{btcDue}} {{cryptoCode}} a la siguiente dirección.",
+    "CompletePay_Body": "Para completar tu pago, envía {{btcDue}} {{cryptoCode}} a la siguiente dirección:",
     "Amount": "Cantidad",
     "Address": "Dirección",
     "Copied": "Copiado",

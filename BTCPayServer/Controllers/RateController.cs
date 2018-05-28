@@ -33,10 +33,18 @@ namespace BTCPayServer.Controllers
 
         [Route("rates/{baseCurrency}")]
         [HttpGet]
-        [BitpayAPIConstraint]
-        public async Task<IActionResult> GetBaseCurrencyRates(string baseCurrency)
+        public async Task<IActionResult> GetBaseCurrencyRates(string baseCurrency, string storeId)
         {
+            storeId = storeId ?? this.HttpContext.GetStoreData()?.Id;
             var store = this.HttpContext.GetStoreData();
+            if (store == null || store.Id != storeId)
+                store = await _StoreRepo.FindStore(storeId);
+            if (store == null)
+            {
+                var err = Json(new BitpayErrorsModel() { Error = "Store not found" });
+                err.StatusCode = 404;
+                return err;
+            }
             var currencypairs = "";
             var supportedMethods = store.GetSupportedPaymentMethods(_NetworkProvider);
 
@@ -46,6 +54,10 @@ namespace BTCPayServer.Controllers
 
             foreach (var currencyCode in currencyCodes)
             {
+                if (baseCurrency == currencyCode)
+                {
+                    continue;
+                }
                 if (!string.IsNullOrEmpty(currencypairs))
                 {
                     currencypairs += ",";
@@ -56,13 +68,12 @@ namespace BTCPayServer.Controllers
             var rates = (result as JsonResult)?.Value as Rate[];
             if (rates == null)
                 return result;
-            return Json(new DataWrapper<Rate>(rates.First()));
+            return Json(new DataWrapper<Rate[]>(rates));
         }
 
 
         [Route("rates/{baseCurrency}/{currency}")]
         [HttpGet]
-        [BitpayAPIConstraint]
         public async Task<IActionResult> GetCurrencyPairRate(string baseCurrency, string currency, string storeId)
         {
             storeId = storeId ?? this.HttpContext.GetStoreData()?.Id;
@@ -156,6 +167,7 @@ namespace BTCPayServer.Controllers
             var fetching = _RateProviderFactory.FetchRates(pairs, rules);
             await Task.WhenAll(fetching.Select(f => f.Value).ToArray());
             return Json(pairs
+                            .AsParallel()
                             .Select(r => (Pair: r, Value: fetching[r].GetAwaiter().GetResult().Value))
                             .Where(r => r.Value.HasValue)
                             .Select(r =>

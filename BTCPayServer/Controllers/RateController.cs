@@ -31,18 +31,6 @@ namespace BTCPayServer.Controllers
             _CurrencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
         }
 
-        [Route("rates/{baseCurrency}/{currency}")]
-        [HttpGet]
-        [BitpayAPIConstraint]
-        public async Task<IActionResult> GetCurrencyPairRate(string baseCurrency, string currency, string storeId)
-        {
-            storeId = storeId ?? this.HttpContext.GetStoreData()?.Id;
-            var result = await GetRates2($"{baseCurrency}_{currency}", storeId);
-            var rates = (result as JsonResult)?.Value as Rate[];
-            if (rates == null)
-                return result;
-            return Json(new DataWrapper<Rate>(rates.First()));
-        }
 
 
         [Route("rates")]
@@ -93,6 +81,20 @@ namespace BTCPayServer.Controllers
                 currencypairs += baseCurrency + "_ " + supportedPaymentMethod.CryptoCode;
             }
             var result = await GetRates2(currencypairs, store.Id);
+            var rates = (result as JsonResult)?.Value as Rate[];
+            if (rates == null)
+                return result;
+            return Json(new DataWrapper<Rate>(rates.First()));
+        }
+
+
+        [Route("rates/{baseCurrency}/{currency}")]
+        [HttpGet]
+        [BitpayAPIConstraint]
+        public async Task<IActionResult> GetCurrencyPairRate(string baseCurrency, string currency, string storeId)
+        {
+            storeId = storeId ?? this.HttpContext.GetStoreData()?.Id;
+            var result = await GetRates2($"{baseCurrency}_{currency}", storeId);
             var rates = (result as JsonResult)?.Value as Rate[];
             if (rates == null)
                 return result;

@@ -8,8 +8,8 @@
     <div class="header-content">
         <div class="header-content-inner text-white">
             <h1 class="text-capitalize">BTCPAYJUNGLE DECENTRALISED</h1>
-            <hr class="primary">
             <p>Hosting for merchants that require a easy free hosted account to accept bitcoin for their business. direct blockchain payment from wallet to checkout, 0% service fees, Supported by BTCPay Server Community.</p>
+            <hr class="primary">
         </div>
     </div>
 </header>
@@ -43,7 +43,7 @@
                 <div class="service-box">
                     <img src="~/img/money-logo.png" />
                     <h3 class="text-dark">Visibility</h3>
-                    <p class="text-muted">Manage, generate reports, search your invoices easily, 9 language's currently supported for invoice checkout.</p>
+                    <p class="text-muted">Manage, generate reports, search your invoices easily, 11 language's currently supported for invoice checkout.</p>
                 </div>
             </div>
         </div>
@@ -114,6 +114,13 @@
         <p>Donation to this address will be reinvested into BTCPayJungle hosted servers.</p>
         <p><img src="~/img/donation.jpg"></p>
         <p>Bitcoin : 16k8Rbig7A9WxKWZAVQ9JSrYE2g5E82Xg6</p>
+        <form method="POST" action="https://btcpayjungle.com/apps/Gfpa4YSdzggHLHBR1iydXkrVmaKzsLS1X93MRpBhrct3/pos">
+            <input type="hidden" name="email" value="customer@example.com" />
+            <input type="hidden" name="orderId" value="CustomOrderId" />
+            <input type="hidden" name="notificationUrl" value="https://btcpayjungle.com" />
+            <input type="hidden" name="redirectUrl" value="https://btcpayjungle.com" />
+            <button type="submit" name="choiceKey" value="Server Maintenance">Donate now</button>
+        </form>
     </div>
 </div>
 

@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  btcpayserver:
+    image: btcpayserver
+    build:
+      context: .
+      dockerfile: BTCPayServer/Dockerfile

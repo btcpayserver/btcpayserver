@@ -25,7 +25,7 @@ const locales_es = {
     "Address": "Dirección",
     "Copied": "Copiado",
     // Conversion tab
-    "ConversionTab_BodyTop": "Puedes pagar {{btcDue}} {{cryptoCode}} usando altcoins que no sean los que el comercio soporta directamente.",
+    "ConversionTab_BodyTop": "Puedes pagar {{btcDue}} {{cryptoCode}} usando altcoins que no sean los que este comercio soporta directamente.",
     "ConversionTab_BodyDesc": "Este servicio es provisto por terceros. Ten en cuenta que no tenemos control sobre cómo estos terceros enviarán los fondos. La factura solo se marcará como abonada una vez que se reciban los fondos en la cadena de bloques de {{cryptoCode}} .",
     "Shapeshift_Button_Text": "Pagar con Altcoins",
     "ConversionTab_Lightning": "No hay proveedores de conversión disponibles para los pagos de Lightning Network.",

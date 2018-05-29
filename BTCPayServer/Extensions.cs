@@ -36,28 +36,6 @@ namespace BTCPayServer
 {
     public static class Extensions
     {
-        public static string Prettify(this TimeSpan timeSpan)
-        {
-            if (timeSpan.TotalMinutes < 1)
-            {
-                return $"{(int)timeSpan.TotalSeconds} second{Plural((int)timeSpan.TotalSeconds)}";
-            }
-            if (timeSpan.TotalHours < 1)
-            {
-                return $"{(int)timeSpan.TotalMinutes} minute{Plural((int)timeSpan.TotalMinutes)}";
-            }
-            if (timeSpan.Days < 1)
-            {
-                return $"{(int)timeSpan.TotalHours} hour{Plural((int)timeSpan.TotalHours)}";
-            }
-            return $"{(int)timeSpan.TotalDays} day{Plural((int)timeSpan.TotalDays)}";
-        }
-
-        private static string Plural(int totalDays)
-        {
-            return totalDays > 1 ? "s" : string.Empty;
-        }
-
         public static string PrettyPrint(this TimeSpan expiration)
         {
             StringBuilder builder = new StringBuilder();

@@ -104,7 +104,7 @@ namespace BTCPayServer.Controllers
         {
             if (storeId == null)
             {
-                var result = Json(new BitpayErrorsModel() { Error = "You need to specify storeId (in your store settings) and currencyPairs (eg. BTC_USD,LTC_CAD)" });
+                var result = Json(new BitpayErrorsModel() { Error = "You need to specify storeId (in your store settings)" });
                 result.StatusCode = 400;
                 return result;
             }
@@ -143,7 +143,7 @@ namespace BTCPayServer.Controllers
 
                 if (string.IsNullOrEmpty(currencyPairs))
                 {
-                    var result = Json(new BitpayErrorsModel() { Error = "You need to specify storeId (in your store settings) and currencyPairs (eg. BTC_USD,LTC_CAD)" });
+                    var result = Json(new BitpayErrorsModel() { Error = "You need to specify currencyPairs (eg. BTC_USD,LTC_CAD)" });
                     result.StatusCode = 400;
                     return result;
                 }

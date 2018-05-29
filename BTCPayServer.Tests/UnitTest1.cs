@@ -35,6 +35,7 @@ using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Stores;
 using System.Net.Http;
 using System.Text;
+using BTCPayServer.Models;
 using BTCPayServer.Rating;
 using BTCPayServer.Validation;
 using ExchangeSharp;
@@ -674,6 +675,40 @@ namespace BTCPayServer.Tests
                 AssertSearchInvoice(acc, false, invoice.Id, $"exceptionstatus:paidOver");
                 AssertSearchInvoice(acc, true, invoice.Id, $"unusual:true");
                 AssertSearchInvoice(acc, false, invoice.Id, $"unusual:false");
+            }
+        }
+
+        [Fact]
+        public void CanGetRates()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.Start();
+                var acc = tester.NewAccount();
+                acc.GrantAccess();
+                acc.RegisterDerivationScheme("BTC");
+                acc.RegisterDerivationScheme("LTC");
+
+                var rateController = acc.GetController<RateController>();
+                var GetBaseCurrencyRatesResult = JObject.Parse(((JsonResult)rateController.GetBaseCurrencyRates("BTC", acc.StoreId)
+                    .GetAwaiter().GetResult()).ToJson()).ToObject<DataWrapper<Rate[]>>();
+                Assert.NotNull(GetBaseCurrencyRatesResult);
+                Assert.NotNull(GetBaseCurrencyRatesResult.Data);
+                Assert.Single(GetBaseCurrencyRatesResult.Data);
+                Assert.Equal("LTC", GetBaseCurrencyRatesResult.Data.First().Code);
+
+                var GetRatesResult = JObject.Parse(((JsonResult)rateController.GetRates(null, acc.StoreId)
+                    .GetAwaiter().GetResult()).ToJson()).ToObject<DataWrapper<Rate[]>>();
+                Assert.NotNull(GetRatesResult);
+                Assert.NotNull(GetRatesResult.Data);
+                Assert.Equal(2, GetRatesResult.Data.Length);
+
+                var GetCurrencyPairRateResult = JObject.Parse(((JsonResult)rateController.GetCurrencyPairRate("BTC", "LTC", acc.StoreId)
+                    .GetAwaiter().GetResult()).ToJson()).ToObject<DataWrapper<Rate>>();
+
+                Assert.NotNull(GetCurrencyPairRateResult);
+                Assert.NotNull(GetCurrencyPairRateResult.Data);
+                Assert.Equal("LTC", GetCurrencyPairRateResult.Data.Code);
             }
         }
 

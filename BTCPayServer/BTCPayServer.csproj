@@ -41,7 +41,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.2" />
     <PackageReference Include="Microsoft.NetCore.Analyzers" Version="2.6.0" />
     <PackageReference Include="NBitcoin" Version="4.1.1.8" />
-    <PackageReference Include="NBitpayClient" Version="1.0.0.25" />	  
+    <PackageReference Include="NBitpayClient" Version="1.0.0.26" />	  
     <PackageReference Include="DBreeze" Version="1.87.0" />
     <PackageReference Include="NBXplorer.Client" Version="1.0.2.8" />
     <PackageReference Include="NicolasDorier.CommandLine" Version="1.0.0.1" />

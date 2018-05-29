@@ -5,7 +5,7 @@ const locales_es = {
     "Awaiting Payment...": "En espera de pago...",
     "Pay with": "Pagar con",
     "Contact and Refund Email": "Contacto y correo electrónico de reembolso",
-    "Contact_Body": "Por favor provee una dirección de correo electrónico a continuación. Nos pondremos en contacto contigo en esta dirección si hay un problema con tu pago.",
+    "Contact_Body": "Por favor indica una dirección de correo electrónico a continuación. Nos pondremos en contacto contigo en esta dirección si hay algún problema con tu pago.",
     "Your email": "Tu correo electrónico",
     "Continue": "Continuar",
     "Please enter a valid email address": "Por favor ingresa un correo electrónico válido",
@@ -18,15 +18,15 @@ const locales_es = {
     "Copy": "Copiar",
     "Conversion": "Conversión",
     // Scan tab
-    "Open in wallet": "Abrir en billetera",
+    "Open in wallet": "Abrir en la billetera",
     // Copy tab
-    "CompletePay_Body": "Para completar tu pago, envía {{btcDue}} {{cryptoCode}} a la siguiente dirección.",
+    "CompletePay_Body": "Para completar tu pago, envía {{btcDue}} {{cryptoCode}} a la siguiente dirección:",
     "Amount": "Cantidad",
     "Address": "Dirección",
     "Copied": "Copiado",
     // Conversion tab
-    "ConversionTab_BodyTop": "Puedes pagar {{btcDue}} {{cryptoCode}} usando altcoins que no sean los que el comercio soporta directamente.",
-    "ConversionTab_BodyDesc": "Este servicio es provisto por terceros. Ten en cuenta que no tenemos control sobre cómo estos terceros enviarán los fondos. La factura solo se marcará como abonada una vez que se reciban los fondos en la cadena de bloques de {{cryptoCode}} .",
+    "ConversionTab_BodyTop": "Puedes pagar {{btcDue}} {{cryptoCode}} usando Altcoins que este comercio no soporta directamente.",
+    "ConversionTab_BodyDesc": "Este servicio es provisto por terceros. Ten en cuenta que no tenemos control sobre cómo estos terceros envían los fondos. La factura solo se marcará como pagada una vez se reciban los fondos en la cadena de bloques de {{cryptoCode}} .",
     "Shapeshift_Button_Text": "Pagar con Altcoins",
     "ConversionTab_Lightning": "No hay proveedores de conversión disponibles para los pagos de Lightning Network.",
     // Invoice expired
@@ -36,8 +36,8 @@ const locales_es = {
     "InvoiceExpired_Body_1": "Esta factura ha expirado. Una factura solo es válida por {{maxTimeMinutes}} minutos. Puedes regresar a {{storeName}} si deseas volver a enviar tu pago.",
     "InvoiceExpired_Body_2": "Si intentaste enviar un pago, aún no ha sido aceptado por la red de Bitcoin. Todavía no hemos recibido tus fondos.",
     "InvoiceExpired_Body_3": "Si la transacción no es aceptada por la red de Bitcoin, los fondos se podrán gastar nuevamente en tu billetera. Dependiendo de tu billetera, esto puede tomar 48-72 horas.",
-    "Invoice ID": "ID de factura",
-    "Order ID": "ID de pedido",
+    "Invoice ID": "ID de la factura",
+    "Order ID": "ID del pedido",
     "Return to StoreName": "Regresar a {{storeName}}",
     // Invoice paid
     "This invoice has been paid": "Esta factura ha sido pagada",

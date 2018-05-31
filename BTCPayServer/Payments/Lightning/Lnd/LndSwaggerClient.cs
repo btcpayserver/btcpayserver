@@ -4,6 +4,8 @@
 // </auto-generated>
 //----------------------
 
+using System.Diagnostics;
+
 namespace BTCPayServer.Payments.Lightning.Lnd
 {
     #pragma warning disable // Disable all warnings
@@ -8698,6 +8700,8 @@ namespace BTCPayServer.Payments.Lightning.Lnd
             StatusCode = statusCode;
             Response = response; 
             Headers = headers;
+
+            Debug.WriteLine($"SwaggerException: {response}");
         }
 
         public override string ToString()

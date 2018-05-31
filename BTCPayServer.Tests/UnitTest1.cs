@@ -490,13 +490,11 @@ namespace BTCPayServer.Tests
             ProcessLightningPayment(LightningConnectionType.Charge);
         }
 
-        // REQUIRING IMPLEMENTATION OF:
-        // LndInvoiceClient.Listen & LndInvoiceClient.WaitInvoice
-        //[Fact]
-        //public void CanSendLightningPaymentLnd()
-        //{
-        //    ProcessLightningPayment(LightningConnectionType.Lnd);
-        //}
+        [Fact]
+        public void CanSendLightningPaymentLnd()
+        {
+            ProcessLightningPayment(LightningConnectionType.Lnd);
+        }
 
         void ProcessLightningPayment(LightningConnectionType type)
         {

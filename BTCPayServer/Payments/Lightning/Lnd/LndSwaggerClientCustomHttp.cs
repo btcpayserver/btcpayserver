@@ -11,6 +11,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NBitcoin;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Payments.Lightning.Lnd
 {
@@ -115,7 +117,7 @@ namespace BTCPayServer.Payments.Lightning.Lnd
         public TaskCompletionSource<LndSwaggerClient> SubscribeLost = new TaskCompletionSource<LndSwaggerClient>();
 
         // TODO: Refactor swagger generated wrapper to include this method directly
-        public async Task StartSubscribeInvoiceThread()
+        public async Task StartSubscribeInvoiceThread(CancellationToken token)
         {
             var urlBuilder = new StringBuilder();
             urlBuilder.Append(BaseUrl).Append("/v1/invoices/subscribe");
@@ -127,8 +129,7 @@ namespace BTCPayServer.Payments.Lightning.Lnd
                 var request = new HttpRequestMessage(HttpMethod.Get, urlBuilder.ToString());
 
                 using (var response = await client.SendAsync(
-                    request,
-                    HttpCompletionOption.ResponseHeadersRead))
+                    request, HttpCompletionOption.ResponseHeadersRead, token))
                 {
                     using (var body = await response.Content.ReadAsStreamAsync())
                     using (var reader = new StreamReader(body))
@@ -138,16 +139,21 @@ namespace BTCPayServer.Payments.Lightning.Lnd
                             while (!reader.EndOfStream)
                             {
                                 string line = reader.ReadLine();
-                                LnrpcInvoice parsedInvoice = Newtonsoft.Json.JsonConvert.DeserializeObject<LnrpcInvoice>(line, _settings.Value);                                
-
-                                InvoiceResponse?.SetResult(parsedInvoice);
+                                if (line != null && line.Contains("\"result\":"))
+                                {
+                                    dynamic parsedJson = JObject.Parse(line);
+                                    var result = parsedJson.result;
+                                    var invoiceString = result.ToString();
+                                    LnrpcInvoice parsedInvoice = JsonConvert.DeserializeObject<LnrpcInvoice>(invoiceString, _settings.Value);
+                                    InvoiceResponse.SetResult(parsedInvoice);
+                                }
                             }
                         }
                         catch (Exception e)
                         {
                             // TODO: check that the exception type is actually from a closed stream.
                             Debug.WriteLine(e.Message);
-                            SubscribeLost?.SetResult(this);
+                            SubscribeLost.SetResult(this);
                         }
                     }
                 }

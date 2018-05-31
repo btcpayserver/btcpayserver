@@ -70,21 +70,18 @@ namespace BTCPayServer.Payments.Lightning.Lnd
             var resp = await _rpcClient.LookupInvoiceAsync(invoiceId, null, cancellation);
             return ConvertLndInvoice(resp);
         }
-
-        // TODO: These two methods where you wait on invoice are still work in progress
+        
         public Task<ILightningListenInvoiceSession> Listen(CancellationToken cancellation = default(CancellationToken))
         {
-            throw new NotImplementedException();
-            //return Task.FromResult<ILightningListenInvoiceSession>(this);
+            Task.Run(_rpcClient.StartSubscribeInvoiceThread);
+            return Task.FromResult<ILightningListenInvoiceSession>(this);
         }
 
         async Task<LightningInvoice> ILightningListenInvoiceSession.WaitInvoice(CancellationToken cancellation)
         {
-            throw new NotImplementedException();
-            //var resp = await _rpcClient.SubscribeInvoicesAsync(cancellation);
-            //return ConvertLndInvoice(resp);
+            var resp = await _rpcClient.InvoiceResponse.Task;
+            return ConvertLndInvoice(resp);
         }
-        // Eof work in progress
 
 
         // utility static methods... maybe move to separate class

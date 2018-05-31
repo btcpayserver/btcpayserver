@@ -58,8 +58,26 @@ namespace BTCPayServer.Tests.Lnd
             Assert.Equal(createInvoice.BOLT11, getInvoice.BOLT11);
         }
 
+        // integration tests
+        [Fact]
+        public async Task TestWaitListenInvoice()
+        {
+            var merchantInvoice = await InvoiceClient.CreateInvoice(10000, "Hello world", TimeSpan.FromSeconds(3600));
 
-        //integration tests
+            var waitToken = default(CancellationToken);
+            var listener = await InvoiceClient.Listen(waitToken);
+            var waitTask = listener.WaitInvoice(waitToken);
+            
+            await EnsureLightningChannelAsync();
+            var payResponse = await CustomerLnd.SendPaymentSyncAsync(new LnrpcSendRequest
+            {
+                Payment_request = merchantInvoice.BOLT11
+            });
+
+            var invoice = await waitTask;
+
+            Assert.True(invoice.PaidAt.HasValue);
+        }
 
         [Fact]
         public async Task CreateLndInvoiceAndPay()

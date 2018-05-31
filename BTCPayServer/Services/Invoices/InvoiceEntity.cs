@@ -13,6 +13,7 @@ using NBXplorer;
 using NBXplorer.DerivationStrategy;
 using BTCPayServer.Payments;
 using NBitpayClient;
+using BTCPayServer.Payments.Bitcoin;
 
 namespace BTCPayServer.Services.Invoices
 {
@@ -338,9 +339,8 @@ namespace BTCPayServer.Services.Invoices
                 Status = Status,
                 Currency = ProductInformation.Currency,
                 Flags = new Flags() { Refundable = Refundable },
-
                 PaymentSubtotals = new Dictionary<string, long>(),
-                PaymentTotals= new Dictionary<string, long>(),
+                PaymentTotals = new Dictionary<string, long>(),
                 SupportedTransactionCurrencies = new Dictionary<string, InvoiceSupportedTransactionCurrency>(),
                 Addresses = new Dictionary<string, string>(),
                 PaymentCodes = new Dictionary<string, InvoicePaymentUrls>(),
@@ -349,9 +349,9 @@ namespace BTCPayServer.Services.Invoices
 
             dto.Url = ServerUrl.WithTrailingSlash() + $"invoice?id=" + Id;
             dto.CryptoInfo = new List<NBitpayClient.InvoiceCryptoInfo>();
+            dto.MinerFees = new Dictionary<string, MinerFeeInfo>();
             foreach (var info in this.GetPaymentMethods(networkProvider))
             {
-               
                 var accounting = info.Calculate();
                 var cryptoInfo = new NBitpayClient.InvoiceCryptoInfo();
                 var subtotalPrice = accounting.TotalDue - accounting.NetworkFee;
@@ -375,7 +375,7 @@ namespace BTCPayServer.Services.Invoices
                 cryptoInfo.CryptoPaid = accounting.CryptoPaid.ToString();
 
                 cryptoInfo.Address = address;
-               
+
                 cryptoInfo.ExRates = exrates;
                 var paymentId = info.GetId();
                 var scheme = info.Network.UriScheme;
@@ -383,6 +383,10 @@ namespace BTCPayServer.Services.Invoices
 
                 if (paymentId.PaymentType == PaymentTypes.BTCLike)
                 {
+                    var minerInfo = new MinerFeeInfo();
+                    minerInfo.TotalFee = accounting.NetworkFee.Satoshi;
+                    minerInfo.SatoshiPerBytes = ((BitcoinLikeOnChainPaymentMethod)info.GetPaymentMethodDetails()).FeeRate.GetFee(1).Satoshi;
+                    dto.MinerFees.TryAdd(paymentId.CryptoCode, minerInfo);
                     var cryptoSuffix = cryptoInfo.CryptoCode == "BTC" ? "" : "/" + cryptoInfo.CryptoCode;
                     cryptoInfo.PaymentUrls = new NBitpayClient.InvoicePaymentUrls()
                     {
@@ -392,7 +396,7 @@ namespace BTCPayServer.Services.Invoices
                         BIP21 = $"{scheme}:{cryptoInfo.Address}?amount={cryptoInfo.Due}",
                     };
                 }
-                
+
                 if (paymentId.PaymentType == PaymentTypes.LightningLike)
                 {
                     cryptoInfo.PaymentUrls = new NBitpayClient.InvoicePaymentUrls()

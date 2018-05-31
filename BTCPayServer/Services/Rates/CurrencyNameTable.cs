@@ -31,6 +31,7 @@ namespace BTCPayServer.Services.Rates
             get;
             internal set;
         }
+        public bool Crypto { get; set; }
     }
     public class CurrencyNameTable
     {
@@ -41,13 +42,26 @@ namespace BTCPayServer.Services.Rates
 
         static Dictionary<string, IFormatProvider> _CurrencyProviders = new Dictionary<string, IFormatProvider>();
 
-        public NumberFormatInfo GetNumberFormatInfo(string currency)
+        public NumberFormatInfo GetNumberFormatInfo(string currency, bool useFallback)
         {
             var data = GetCurrencyProvider(currency);
             if (data is NumberFormatInfo nfi)
                 return nfi;
-            return ((CultureInfo)data).NumberFormat;
+            if (data is CultureInfo ci)
+                return ci.NumberFormat;
+            if (!useFallback)
+                return null;
+            return CreateFallbackCurrencyFormatInfo(currency);
         }
+
+        private NumberFormatInfo CreateFallbackCurrencyFormatInfo(string currency)
+        {
+            var usd = GetNumberFormatInfo("USD", false);
+            var currencyInfo = (NumberFormatInfo)usd.Clone();
+            currencyInfo.CurrencySymbol = currency;
+            return currencyInfo;
+        }
+
         public IFormatProvider GetCurrencyProvider(string currency)
         {
             lock (_CurrencyProviders)
@@ -125,17 +139,31 @@ namespace BTCPayServer.Services.Rates
                 {
                     Code = network.CryptoCode,
                     Divisibility = 8,
-                    Name = network.CryptoCode
+                    Name = network.CryptoCode,
+                    Crypto = true
                 });
             }
 
             return dico.Values.ToArray();
         }
 
-        public CurrencyData GetCurrencyData(string currency)
+        public CurrencyData GetCurrencyData(string currency, bool useFallback)
         {
             CurrencyData result;
-            _Currencies.TryGetValue(currency.ToUpperInvariant(), out result);
+            if(!_Currencies.TryGetValue(currency.ToUpperInvariant(), out result))
+            {
+                if(useFallback)
+                {
+                    var usd = GetCurrencyData("USD", false);
+                    result = new CurrencyData()
+                    {
+                        Code = currency,
+                        Crypto = true,
+                        Name = currency,
+                        Divisibility = usd.Divisibility
+                    };
+                }
+            }
             return result;
         }
 

@@ -44,7 +44,7 @@ namespace BTCPayServer.Models.StoreViewModels
         public string ScriptTest { get; set; }
         public CoinAverageExchange[] AvailableExchanges { get; set; }
 
-        [Display(Name = "Multiply the rate by ...")]
+        [Display(Name = "Multiply the rate by... (Setting to 1.01 would apply a discount of 1% to the purchase)")]
         [Range(0.01, 10.0)]
         public double RateMultiplier
         {

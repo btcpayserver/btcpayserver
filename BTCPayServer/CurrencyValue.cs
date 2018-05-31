@@ -21,7 +21,7 @@ namespace BTCPayServer
                 return false;
 
             var currency = match.Groups.Last().Value.ToUpperInvariant();
-            var currencyData = _CurrencyTable.GetCurrencyData(currency);
+            var currencyData = _CurrencyTable.GetCurrencyData(currency, false);
             if (currencyData == null)
                 return false;
             v = Math.Round(v, currencyData.Divisibility);

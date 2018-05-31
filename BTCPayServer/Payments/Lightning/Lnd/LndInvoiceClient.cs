@@ -28,7 +28,7 @@ namespace BTCPayServer.Payments.Lightning.Lnd
             CancellationToken cancellation = default(CancellationToken))
         {
             var strAmount = ConvertInv.ToString(amount.ToUnit(LightMoneyUnit.Satoshi));
-            var strExpiry = ConvertInv.ToString(expiry.TotalSeconds);
+            var strExpiry = ConvertInv.ToString(Math.Round(expiry.TotalSeconds, 0));
             // lnd requires numbers sent as strings. don't ask
             var resp = await _rpcClient.AddInvoiceAsync(new LnrpcInvoice
             {

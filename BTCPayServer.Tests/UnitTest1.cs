@@ -493,6 +493,9 @@ namespace BTCPayServer.Tests
         [Fact]
         public void CanSendLightningPaymentLnd()
         {
+            // For easier debugging and testing
+            LightningLikePaymentHandler.LIGHTNING_TIMEOUT = int.MaxValue;
+
             ProcessLightningPayment(LightningConnectionType.Lnd);
         }
 

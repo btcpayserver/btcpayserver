@@ -51,6 +51,7 @@ namespace BTCPayServer
             InitBitcoinGold();
             InitMonacoin();
             InitPolis();
+            InitFeathercoin();
         }
 
         /// <summary>

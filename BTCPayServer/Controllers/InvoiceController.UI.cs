@@ -425,7 +425,7 @@ namespace BTCPayServer.Controllers
                 {
                     Status = invoice.Status + (invoice.ExceptionStatus == null ? string.Empty : $" ({invoice.ExceptionStatus})"),
                     ShowCheckout = invoice.Status == "new",
-                    Date = (DateTimeOffset.UtcNow - invoice.InvoiceTime).Prettify() + " ago",
+                    Date = invoice.InvoiceTime,
                     InvoiceId = invoice.Id,
                     OrderId = invoice.OrderId ?? string.Empty,
                     RedirectUrl = invoice.RedirectURL ?? string.Empty,

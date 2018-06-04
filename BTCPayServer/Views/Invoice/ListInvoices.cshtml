@@ -66,7 +66,7 @@
                     @foreach(var invoice in Model.Invoices)
                     {
                         <tr>
-                            <td>@invoice.Date</td>
+                            <td>@invoice.Date.ToTimeAgo()</td>
                             <td>
                                 @if(invoice.RedirectUrl != string.Empty)
                                 {

@@ -12,7 +12,8 @@ using System.Threading.Tasks;
 
 namespace BTCPayServer.Controllers
 {
-    [BitpayAPIConstraint]
+    [Authorize(AuthenticationSchemes = Security.Policies.BitpayAuthentication)]
+    [BitpayAPIConstraint(true)]
     public class AccessTokenController : Controller
     {
         TokenRepository _TokenRepository;
@@ -30,6 +31,7 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("tokens")]
+        [AllowAnonymous]
         public async Task<DataWrapper<List<PairingCodeResponse>>> Tokens([FromBody] TokenRequest request)
         {
             PairingCodeEntity pairingEntity = null;
@@ -53,7 +55,7 @@ namespace BTCPayServer.Controllers
             else
             {
                 var sin = this.User.GetSIN() ?? request.Id;
-                if (string.IsNullOrEmpty(request.Id) || !NBitpayClient.Extensions.BitIdExtensions.ValidateSIN(request.Id))
+                if (string.IsNullOrEmpty(sin) || !NBitpayClient.Extensions.BitIdExtensions.ValidateSIN(sin))
                     throw new BitpayHttpException(400, "'id' property is required, alternatively, use BitId");
 
                 pairingEntity = await _TokenRepository.GetPairingAsync(request.PairingCode);

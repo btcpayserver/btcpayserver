@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 namespace BTCPayServer.Controllers
 {
     [Authorize(AuthenticationSchemes = Security.Policies.BitpayAuthentication)]
+    [BitpayAPIConstraint(true)]
     public class AccessTokenController : Controller
     {
         TokenRepository _TokenRepository;

@@ -54,17 +54,19 @@ namespace BTCPayServer.Security
             {
                 if (Context.Request.HttpContext.GetIsBitpayAPI())
                 {
+                    List<Claim> claims = new List<Claim>();
                     var bitpayAuth = Context.Request.HttpContext.GetBitpayAuth();
                     string storeId = null;
+                    // Careful, those are not the opposite. failedAuth says if a the tentative failed.
+                    // successAuth, ensure that at least one succeed.
                     var failedAuth = false;
+                    var successAuth = false;
                     if (!string.IsNullOrEmpty(bitpayAuth.Signature) && !string.IsNullOrEmpty(bitpayAuth.Id))
                     {
-                        storeId = await CheckBitId(Context.Request.HttpContext, bitpayAuth.Signature, bitpayAuth.Id);
-                        if (!Context.User.Claims.Any(c => c.Type == Claims.SIN))
-                        {
-                            Logs.PayServer.LogDebug("BitId signature check failed");
-                            failedAuth = true;
-                        }
+                        var result = await CheckBitId(Context.Request.HttpContext, bitpayAuth.Signature, bitpayAuth.Id, claims);
+                        storeId = result.StoreId;
+                        failedAuth = !result.SuccessAuth;
+                        successAuth = result.SuccessAuth;
                     }
                     else if (!string.IsNullOrEmpty(bitpayAuth.Authorization))
                     {
@@ -74,25 +76,29 @@ namespace BTCPayServer.Security
                             Logs.PayServer.LogDebug("API key check failed");
                             failedAuth = true;
                         }
+                        successAuth = storeId != null;
                     }
 
-                    if (storeId != null)
-                    {
-                        var identity = ((ClaimsIdentity)Context.User.Identity);
-                        identity.AddClaim(new Claim(Policies.CanUseStore.Key, storeId));
-                        var store = await _StoreRepository.FindStore(storeId);
-                        Context.Request.HttpContext.SetStoreData(store);
-                        return AuthenticateResult.Success(new AuthenticationTicket(Context.User, Policies.BitpayAuthentication));
-                    }
-                    else if (failedAuth)
+                    if (failedAuth)
                     {
                         return AuthenticateResult.Fail("Invalid credentials");
+                    }
+
+                    if (successAuth)
+                    {
+                        if (storeId != null)
+                        {
+                            claims.Add(new Claim(Policies.CanUseStore.Key, storeId));
+                            var store = await _StoreRepository.FindStore(storeId);
+                            Context.Request.HttpContext.SetStoreData(store);
+                        }
+                        return AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(new ClaimsIdentity(claims, Policies.BitpayAuthentication)), Policies.BitpayAuthentication));
                     }
                 }
                 return AuthenticateResult.NoResult();
             }
 
-            private async Task<string> CheckBitId(HttpContext httpContext, string sig, string id)
+            private async Task<(string StoreId, bool SuccessAuth)> CheckBitId(HttpContext httpContext, string sig, string id, List<Claim> claims)
             {
                 httpContext.Request.EnableRewind();
 
@@ -114,8 +120,7 @@ namespace BTCPayServer.Security
                     if (BitIdExtensions.CheckBitIDSignature(key, sig, url, body))
                     {
                         var sin = key.GetBitIDSIN();
-                        var identity = ((ClaimsIdentity)httpContext.User.Identity);
-                        identity.AddClaim(new Claim(Claims.SIN, sin));
+                        claims.Add(new Claim(Claims.SIN, sin));
 
                         string token = null;
                         if (httpContext.Request.Query.TryGetValue("token", out var tokenValues))
@@ -137,14 +142,14 @@ namespace BTCPayServer.Security
                             var bitToken = await GetTokenPermissionAsync(sin, token);
                             if (bitToken == null)
                             {
-                                return null;
+                                return (null, false);
                             }
                             storeId = bitToken.StoreId;
                         }
                     }
                 }
                 catch (FormatException) { }
-                return storeId;
+                return (storeId, true);
             }
 
             private async Task<string> CheckLegacyAPIKey(HttpContext httpContext, string auth)
@@ -235,7 +240,7 @@ namespace BTCPayServer.Security
         }
         internal static void AddAuthentication(IServiceCollection services, Action<BitpayAuthOptions> bitpayAuth = null)
         {
-            bitpayAuth = bitpayAuth ?? new Action<BitpayAuthOptions>((o) =>{ });
+            bitpayAuth = bitpayAuth ?? new Action<BitpayAuthOptions>((o) => { });
             services.AddAuthentication().AddScheme<BitpayAuthOptions, BitpayAuthHandler>(Policies.BitpayAuthentication, bitpayAuth);
         }
     }

@@ -771,6 +771,7 @@ namespace BTCPayServer.Tests
                 Assert.False(user.BitPay.TestAccess(Facade.Merchant));
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
+
                 Assert.True(user.BitPay.TestAccess(Facade.Merchant));
 
                 // Test request pairing code client side
@@ -784,8 +785,13 @@ namespace BTCPayServer.Tests
                 Assert.NotNull(storeController.GeneratedPairingCode);
 
 
-                var bitpay = new Bitpay(new Key(), tester.PayTester.ServerUri);
+                var k = new Key();
+                var bitpay = new Bitpay(k, tester.PayTester.ServerUri);
                 bitpay.AuthorizeClient(new PairingCode(storeController.GeneratedPairingCode)).Wait();
+                Assert.True(bitpay.TestAccess(Facade.Merchant));
+                Assert.True(bitpay.TestAccess(Facade.PointOfSale));
+                // Same with new instance
+                bitpay = new Bitpay(k, tester.PayTester.ServerUri);
                 Assert.True(bitpay.TestAccess(Facade.Merchant));
                 Assert.True(bitpay.TestAccess(Facade.PointOfSale));
 

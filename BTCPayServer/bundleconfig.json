@@ -18,7 +18,8 @@
             "wwwroot/vendor/jquery-easing/jquery.easing.js",
             "wwwroot/vendor/scrollreveal/scrollreveal.min.js",
             "wwwroot/vendor/magnific-popup/jquery.magnific-popup.js",
-            "wwwroot/vendor/bootstrap4-creativestart/*.js"
+            "wwwroot/vendor/bootstrap4-creativestart/*.js",
+            "wwwroot/main/**/*.js"
         ]
     },
     {

@@ -20,7 +20,7 @@ namespace BTCPayServer.Controllers
 {
     [EnableCors("BitpayAPI")]
     [BitpayAPIConstraint]
-    [Authorize(Policies.CanUseStore.Key)]
+    [Authorize(Policies.CanUseStore.Key, AuthenticationSchemes = Policies.BitpayAuthentication)]
     public class InvoiceControllerAPI : Controller
     {
         private InvoiceController _InvoiceController;

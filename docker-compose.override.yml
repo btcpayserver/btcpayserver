@@ -47,6 +47,8 @@ services:
     volumes:
       - "customer_lightningd_datadir:/etc/customer_lightningd_datadir"
       - "merchant_lightningd_datadir:/etc/merchant_lightningd_datadir"
+    links:
+      - btcpayserver
 
 
   nbxplorer:

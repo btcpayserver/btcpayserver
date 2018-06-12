@@ -344,6 +344,7 @@ namespace BTCPayServer.Tests
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
+                Assert.True(user.BitPay.TestAccess(Facade.Merchant));
                 var invoice = user.BitPay.CreateInvoice(new Invoice()
                 {
                     Buyer = new Buyer() { email = "test@fwf.com" },
@@ -805,7 +806,29 @@ namespace BTCPayServer.Tests
                 Assert.False(user.BitPay.TestAccess(Facade.Merchant));
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
+
                 Assert.True(user.BitPay.TestAccess(Facade.Merchant));
+
+                // Test request pairing code client side
+                var storeController = user.GetController<StoresController>();
+                storeController.CreateToken(new CreateTokenViewModel()
+                {
+                    Facade = Facade.Merchant.ToString(),
+                    Label = "test2",
+                    StoreId = user.StoreId
+                }).GetAwaiter().GetResult();
+                Assert.NotNull(storeController.GeneratedPairingCode);
+
+
+                var k = new Key();
+                var bitpay = new Bitpay(k, tester.PayTester.ServerUri);
+                bitpay.AuthorizeClient(new PairingCode(storeController.GeneratedPairingCode)).Wait();
+                Assert.True(bitpay.TestAccess(Facade.Merchant));
+                Assert.True(bitpay.TestAccess(Facade.PointOfSale));
+                // Same with new instance
+                bitpay = new Bitpay(k, tester.PayTester.ServerUri);
+                Assert.True(bitpay.TestAccess(Facade.Merchant));
+                Assert.True(bitpay.TestAccess(Facade.PointOfSale));
 
                 // Can generate API Key
                 var repo = tester.PayTester.GetService<TokenRepository>();

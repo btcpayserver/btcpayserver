@@ -8,6 +8,7 @@ namespace BTCPayServer.Security
 {
     public static class Policies
     {
+        public const string BitpayAuthentication = "Bitpay.Auth";
         public const string CookieAuthentication = "Identity.Application";
         public static AuthorizationOptions AddBTCPayPolicies(this AuthorizationOptions options)
         {

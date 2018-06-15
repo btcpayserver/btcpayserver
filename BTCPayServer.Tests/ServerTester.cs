@@ -21,6 +21,7 @@ using System.Globalization;
 using BTCPayServer.Payments.Lightning.CLightning;
 using BTCPayServer.Payments.Lightning.Charge;
 using BTCPayServer.Tests.Lnd;
+using BTCPayServer.Payments.Lightning;
 
 namespace BTCPayServer.Tests
 {
@@ -81,41 +82,51 @@ namespace BTCPayServer.Tests
         /// <summary>
         /// Connect a customer LN node to the merchant LN node
         /// </summary>
-        public void PrepareLightning()
+        public void PrepareLightning(LightningConnectionType lndBackend)
         {
-            PrepareLightningAsync().GetAwaiter().GetResult();
+            ILightningInvoiceClient client = MerchantCharge.Client;
+            if (lndBackend == LightningConnectionType.Lnd)
+                client = MerchantLnd.Client;
+
+            PrepareLightningAsync(client).GetAwaiter().GetResult();
         }
 
+
+        private static readonly string[] SKIPPED_STATES =
+            { "ONCHAIN", "CHANNELD_SHUTTING_DOWN", "CLOSINGD_SIGEXCHANGE", "CLOSINGD_COMPLETE", "FUNDING_SPEND_SEEN" };
 
         /// <summary>
         /// Connect a customer LN node to the merchant LN node
         /// </summary>
         /// <returns></returns>
-        public async Task PrepareLightningAsync()
+        private async Task PrepareLightningAsync(ILightningInvoiceClient client)
         {
             while (true)
             {
-                var skippedStates = new[] { "ONCHAIN", "CHANNELD_SHUTTING_DOWN", "CLOSINGD_SIGEXCHANGE", "CLOSINGD_COMPLETE", "FUNDING_SPEND_SEEN" };
-                var channel = (await CustomerLightningD.ListPeersAsync())
+                var merchantInfo = await WaitLNSynched(client);
+
+                var peers = await CustomerLightningD.ListPeersAsync();
+                var filteringToTargetedPeers = peers.Where(a => a.Id == merchantInfo.NodeId);
+                var channel = filteringToTargetedPeers
                             .SelectMany(p => p.Channels)
-                            .Where(c => !skippedStates.Contains(c.State ?? ""))
+                            .Where(c => !SKIPPED_STATES.Contains(c.State ?? ""))
                             .FirstOrDefault();
+
                 switch (channel?.State)
                 {
                     case null:
-                        var merchantInfo = await WaitLNSynched();
-                        var clightning = new NodeInfo(merchantInfo.Id, MerchantCharge.P2PHost, merchantInfo.Port);
+                        var clightning = new NodeInfo(merchantInfo.NodeId, merchantInfo.Address, merchantInfo.P2PPort);
                         await CustomerLightningD.ConnectAsync(clightning);
                         var address = await CustomerLightningD.NewAddressAsync();
                         await ExplorerNode.SendToAddressAsync(address, Money.Coins(0.2m));
-                        ExplorerNode.Generate(1);
-                        await WaitLNSynched();
+                        ExplorerNode.Generate(6);
+                        await WaitLNSynched(client);
                         await Task.Delay(1000);
                         await CustomerLightningD.FundChannelAsync(clightning, Money.Satoshis(16777215));
                         break;
                     case "CHANNELD_AWAITING_LOCKIN":
                         ExplorerNode.Generate(1);
-                        await WaitLNSynched();
+                        await WaitLNSynched(client);
                         break;
                     case "CHANNELD_NORMAL":
                         return;
@@ -125,11 +136,11 @@ namespace BTCPayServer.Tests
             }
         }
 
-        private async Task<GetInfoResponse> WaitLNSynched()
+        private async Task<LightningNodeInformation> WaitLNSynched(ILightningInvoiceClient client)
         {
             while (true)
             {
-                var merchantInfo = await MerchantCharge.Client.GetInfoAsync();
+                var merchantInfo = await client.GetInfo();
                 var blockCount = await ExplorerNode.GetBlockCountAsync();
                 if (merchantInfo.BlockHeight != blockCount)
                 {
@@ -155,6 +166,7 @@ namespace BTCPayServer.Tests
         }
 
         public CLightningRPCClient CustomerLightningD { get; set; }
+
         public CLightningRPCClient MerchantLightningD { get; private set; }
         public ChargeTester MerchantCharge { get; private set; }
         public LndMockTester MerchantLnd { get; set; }

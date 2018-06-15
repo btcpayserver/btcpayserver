@@ -504,11 +504,12 @@ namespace BTCPayServer.Tests
             using (var tester = ServerTester.Create())
             {
                 tester.Start();
-                tester.PrepareLightning();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterLightningNode("BTC", type);
                 user.RegisterDerivationScheme("BTC");
+                
+                tester.PrepareLightning(type);
 
                 Task.WaitAll(CanSendLightningPaymentCore(tester, user));
 

@@ -522,7 +522,10 @@ namespace BTCPayServer.Tests
 
         async Task CanSendLightningPaymentCore(ServerTester tester, TestAccount user)
         {
-            await Task.Delay(TimeSpan.FromMilliseconds(RandomUtils.GetUInt32() % 1000));
+            // TODO: If this parameter is less than 1 second we start having concurrency problems
+            await Task.Delay(TimeSpan.FromMilliseconds(1000));
+            //
+
             var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice()
             {
                 Price = 0.01m,

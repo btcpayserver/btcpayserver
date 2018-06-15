@@ -499,7 +499,7 @@ namespace BTCPayServer.Tests
         void ProcessLightningPayment(LightningConnectionType type)
         {
             // For easier debugging and testing
-            LightningLikePaymentHandler.LIGHTNING_TIMEOUT = int.MaxValue;
+            // LightningLikePaymentHandler.LIGHTNING_TIMEOUT = int.MaxValue;
 
             using (var tester = ServerTester.Create())
             {

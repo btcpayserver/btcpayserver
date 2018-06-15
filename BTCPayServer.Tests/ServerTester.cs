@@ -115,14 +115,15 @@ namespace BTCPayServer.Tests
                 switch (channel?.State)
                 {
                     case null:
-                        var clightning = new NodeInfo(merchantInfo.NodeId, merchantInfo.Address, merchantInfo.P2PPort);
-                        await CustomerLightningD.ConnectAsync(clightning);
                         var address = await CustomerLightningD.NewAddressAsync();
-                        await ExplorerNode.SendToAddressAsync(address, Money.Coins(0.2m));
-                        ExplorerNode.Generate(6);
+                        await ExplorerNode.SendToAddressAsync(address, Money.Coins(0.5m));
+                        ExplorerNode.Generate(1);
                         await WaitLNSynched(client);
                         await Task.Delay(1000);
-                        await CustomerLightningD.FundChannelAsync(clightning, Money.Satoshis(16777215));
+
+                        var merchantNodeInfo = new NodeInfo(merchantInfo.NodeId, merchantInfo.Address, merchantInfo.P2PPort);
+                        await CustomerLightningD.ConnectAsync(merchantNodeInfo);
+                        await CustomerLightningD.FundChannelAsync(merchantNodeInfo, Money.Satoshis(16777215));
                         break;
                     case "CHANNELD_AWAITING_LOCKIN":
                         ExplorerNode.Generate(1);

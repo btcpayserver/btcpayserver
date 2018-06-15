@@ -200,7 +200,7 @@ services:
       - "5432"
 
   merchant_lnd:
-    image: btcpayserver/lnd:0.4.1.0
+    image: btcpayserver/lnd:latest
     environment:
       RPCHOST: bitcoind:43782
       RPCUSER: ceiwHEbqWI83
@@ -220,7 +220,7 @@ services:
       - bitcoind
 
   customer_lnd:
-    image: btcpayserver/lnd:0.4.1.0
+    image: btcpayserver/lnd:latest
     environment:
       RPCHOST: bitcoind:43782
       RPCUSER: ceiwHEbqWI83

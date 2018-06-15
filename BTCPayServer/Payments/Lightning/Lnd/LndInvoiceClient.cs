@@ -57,10 +57,16 @@ namespace BTCPayServer.Payments.Lightning.Lnd
                 NodeId = resp.Identity_pubkey
             };
 
-            // Lnd doesn't return this data as Clightning, find alternative ways to supply
-            // it always should be merchant_lnd:9735 because of docker
-            nodeInfo.Address = null;
-            nodeInfo.P2PPort = 9735;
+
+            var node = await _rpcClient.GetNodeInfoAsync(resp.Identity_pubkey, cancellation);
+            if (node.Node.Addresses == null || node.Node.Addresses.Count == 0)
+                throw new Exception("Lnd External IP not set, make sure you use --externalip=$EXTERNALIP parameter on lnd");
+
+            var firstNodeInfo = node.Node.Addresses.First();
+            var externalHostPort = firstNodeInfo.Addr.Split(':');
+
+            nodeInfo.Address = externalHostPort[0];
+            nodeInfo.P2PPort = ConvertInv.ToInt32(externalHostPort[1]);
 
             return nodeInfo;
         }
@@ -129,6 +135,11 @@ namespace BTCPayServer.Payments.Lightning.Lnd
         // Invariant culture conversion
         public static class ConvertInv
         {
+            public static int ToInt32(string str)
+            {
+                return Convert.ToInt32(str, CultureInfo.InvariantCulture.NumberFormat);
+            }
+
             public static long ToInt64(string str)
             {
                 return Convert.ToInt64(str, CultureInfo.InvariantCulture.NumberFormat);

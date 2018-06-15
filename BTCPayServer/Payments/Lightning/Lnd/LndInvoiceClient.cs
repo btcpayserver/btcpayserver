@@ -106,7 +106,7 @@ namespace BTCPayServer.Payments.Lightning.Lnd
             {
                 // TODO: Verify id corresponds to R_hash
                 Id = BitString(resp.R_hash),
-                Amount = resp.Value,
+                Amount = new LightMoney(ConvertInv.ToInt64(resp.Value), LightMoneyUnit.Satoshi),
                 BOLT11 = resp.Payment_request,
                 Status = "unpaid"
             };

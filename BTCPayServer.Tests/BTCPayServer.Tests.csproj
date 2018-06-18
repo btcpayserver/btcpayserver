@@ -5,6 +5,7 @@
 
     <IsPackable>false</IsPackable>
     <NoWarn>NU1701,CA1816,CA1308,CA1810,CA2208</NoWarn>
+    <LangVersion>7.2</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

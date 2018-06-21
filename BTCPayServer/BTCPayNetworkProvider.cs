@@ -53,6 +53,7 @@ namespace BTCPayServer
             InitPolis();
             InitFeathercoin();
             InitUfo();
+            InitViacoin();
         }
 
         /// <summary>

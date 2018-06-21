@@ -46,7 +46,7 @@ namespace BTCPayServer.Payments.Lightning
             {
                 if (inv.Name == "invoice_created")
                 {
-                    await EnsureListening(inv.InvoiceId, false);
+                    await EnsureListening(inv.Invoice.Id, false);
                 }
             }));
 
@@ -189,8 +189,12 @@ namespace BTCPayServer.Payments.Lightning
                 BOLT11 = notification.BOLT11,
                 Amount = notification.Amount
             }, network.CryptoCode, accounted: true);
-            if(payment != null)
-                _Aggregator.Publish(new InvoiceEvent(listenedInvoice.InvoiceId, 1002, "invoice_receivedPayment"));
+            if (payment != null)
+            {
+                var invoice = await _InvoiceRepository.GetInvoice(null, listenedInvoice.InvoiceId);
+                if(invoice != null)
+                    _Aggregator.Publish(new InvoiceEvent(invoice.EntityToDTO(_NetworkProvider), 1002, "invoice_receivedPayment"));
+            }
         }
 
         List<Task> _ListeningLightning = new List<Task>();

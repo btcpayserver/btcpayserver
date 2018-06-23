@@ -72,7 +72,7 @@ namespace BTCPayServer
                 }
                 try
                 {
-                    var data = Encoders.Base58Check.DecodeData(parts[i]);
+                    var data = Network.GetBase58CheckEncoder().DecodeData(parts[i]);
                     if (data.Length < 4)
                         continue;
                     var prefix = Utils.ToUInt32(data, false);
@@ -80,7 +80,7 @@ namespace BTCPayServer
                     for (int ii = 0; ii < 4; ii++)
                         data[ii] = standardPrefix[ii];
 
-                    var derivationScheme = new BitcoinExtPubKey(Encoders.Base58Check.EncodeData(data), Network).ToString();
+                    var derivationScheme = new BitcoinExtPubKey(Network.GetBase58CheckEncoder().EncodeData(data), Network).ToString();
                     electrumMapping.TryGetValue(prefix, out string[] labels);
                     if (labels != null)
                     {

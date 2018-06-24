@@ -8,8 +8,20 @@ namespace BTCPayServer.Payments.Lightning
     public class LightningSupportedPaymentMethod : ISupportedPaymentMethod
     {
         public string CryptoCode { get; set; }
+        public PaymentMethodId PaymentId => new PaymentMethodId(CryptoCode, PaymentTypes.LightningLike);
+
         [Obsolete("Use Get/SetLightningUrl")]
         public string LightningChargeUrl { get; set; }
+
+        [Obsolete("Use Get/SetLightningUrl")]
+        public string Username { get; set; }
+        [Obsolete("Use Get/SetLightningUrl")]
+        public string Password { get; set; }
+
+        [Obsolete("Use Get/SetLightningUrl")]
+        public string Macaroon { get; set; }
+        [Obsolete("Use Get/SetLightningUrl")]
+        public string Tls { get; set; }
 
         public LightningConnectionString GetLightningUrl()
         {
@@ -19,6 +31,8 @@ namespace BTCPayServer.Payments.Lightning
             {
                 throw new FormatException(error);
             }
+            connectionString.Macaroon = Macaroon;
+            connectionString.Tls = Tls;
             return connectionString;
 #pragma warning restore CS0618 // Type or member is obsolete
         }
@@ -31,14 +45,11 @@ namespace BTCPayServer.Payments.Lightning
 #pragma warning disable CS0618 // Type or member is obsolete
             Username = connectionString.Username;
             Password = connectionString.Password;
+            Macaroon = connectionString.Macaroon;
+            Tls = connectionString.Tls;
+
             LightningChargeUrl = connectionString.BaseUri.AbsoluteUri;
 #pragma warning restore CS0618 // Type or member is obsolete
         }
-
-        [Obsolete("Use Get/SetLightningUrl")]
-        public string Username { get; set; }
-        [Obsolete("Use Get/SetLightningUrl")]
-        public string Password { get; set; }
-        public PaymentMethodId PaymentId => new PaymentMethodId(CryptoCode, PaymentTypes.LightningLike);
     }
 }

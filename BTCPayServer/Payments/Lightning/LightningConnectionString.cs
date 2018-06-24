@@ -25,8 +25,8 @@ namespace BTCPayServer.Payments.Lightning
         public LightningConnectionType ConnectionType { get; private set; }
 
         // Extract this to LndConnectionString class
-        public string Tls { get; set; }
         public string Macaroon { get; set; }
+        public string Tls { get; set; }
         //
 
         public Uri UriWithCreds
@@ -42,6 +42,23 @@ namespace BTCPayServer.Payments.Lightning
         public override string ToString()
         {
             return UriWithCreds.AbsoluteUri;
+        }
+
+        public string ToFullEditString()
+        {
+            var dict = new Dictionary<string,string>();
+            if (!String.IsNullOrEmpty(Macaroon))
+                dict.Add("macaroon", Macaroon);
+            if (!String.IsNullOrEmpty(Tls))
+                dict.Add("tls", Tls);
+
+            if (dict.Count > 0)
+            {
+                var qs = dict.Select(a => $"{a.Key}={a.Value}");
+                return UriWithCreds.AbsoluteUri + "?" + String.Join("&", qs);
+}
+            else
+                return UriWithCreds.AbsoluteUri;
         }
 
         //

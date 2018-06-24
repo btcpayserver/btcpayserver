@@ -27,7 +27,7 @@ namespace BTCPayServer.Controllers
             LightningNodeViewModel vm = new LightningNodeViewModel();
             vm.CryptoCode = cryptoCode;
             vm.InternalLightningNode = GetInternalLighningNode(cryptoCode)?.UriWithCreds?.AbsoluteUri;
-            vm.Url = GetExistingLightningSupportedPaymentMethod(vm.CryptoCode, store)?.GetLightningUrl()?.UriWithCreds.AbsoluteUri;
+            vm.Url = GetExistingLightningSupportedPaymentMethod(vm.CryptoCode, store)?.GetLightningUrl()?.ToFullEditString();
             return View(vm);
         }
 

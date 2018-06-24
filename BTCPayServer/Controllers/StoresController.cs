@@ -461,7 +461,7 @@ namespace BTCPayServer.Controllers
                 vm.LightningNodes.Add(new StoreViewModel.LightningNode()
                 {
                     CryptoCode = network.CryptoCode,
-                    Address = lightning?.GetLightningUrl()?.UriPlain.AbsoluteUri ?? string.Empty
+                    Address = lightning?.GetLightningUrl()?.BaseUri.AbsoluteUri ?? string.Empty
                 });
             }
         }

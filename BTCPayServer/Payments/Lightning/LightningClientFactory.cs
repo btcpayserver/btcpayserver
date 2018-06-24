@@ -15,11 +15,11 @@ namespace BTCPayServer.Payments.Lightning
             var connString = supportedPaymentMethod.GetLightningUrl();
             if (connString.ConnectionType == LightningConnectionType.Charge)
             {
-                return new ChargeClient(connString.ToUri(true), network.NBitcoinNetwork);
+                return new ChargeClient(connString.UriWithCreds, network.NBitcoinNetwork);
             }
             else if (connString.ConnectionType == LightningConnectionType.CLightning)
             {
-                return new CLightningRPCClient(connString.ToUri(false), network.NBitcoinNetwork);
+                return new CLightningRPCClient(connString.UriPlain, network.NBitcoinNetwork);
             }
             else if (connString.ConnectionType == LightningConnectionType.Lnd)
             {
@@ -33,7 +33,7 @@ namespace BTCPayServer.Payments.Lightning
                 if (!String.IsNullOrEmpty(connString.Tls))
                     tls = hex.DecodeData(connString.Tls);
 
-                var swagger = LndSwaggerClientCustomHttp.Create(connString.ToUri(false), network.NBitcoinNetwork, tls, macaroon);
+                var swagger = LndSwaggerClientCustomHttp.Create(connString.UriPlain, network.NBitcoinNetwork, tls, macaroon);
                 return new LndInvoiceClient(swagger);
             }
             else

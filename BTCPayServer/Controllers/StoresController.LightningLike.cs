@@ -26,14 +26,9 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             LightningNodeViewModel vm = new LightningNodeViewModel();
             vm.CryptoCode = cryptoCode;
-            vm.InternalLightningNode = GetInternalLighningNode(cryptoCode)?.ToUri(true)?.AbsoluteUri;
-            SetExistingValues(store, vm);
+            vm.InternalLightningNode = GetInternalLighningNode(cryptoCode)?.UriWithCreds?.AbsoluteUri;
+            vm.Url = GetExistingLightningSupportedPaymentMethod(vm.CryptoCode, store)?.GetLightningUrl()?.UriWithCreds.AbsoluteUri;
             return View(vm);
-        }
-
-        private void SetExistingValues(StoreData store, LightningNodeViewModel vm)
-        {
-            vm.Url = GetExistingLightningSupportedPaymentMethod(vm.CryptoCode, store)?.GetLightningUrl()?.ToString();
         }
 
         private LightningSupportedPaymentMethod GetExistingLightningSupportedPaymentMethod(string cryptoCode, StoreData store)
@@ -65,7 +60,7 @@ namespace BTCPayServer.Controllers
             var network = vm.CryptoCode == null ? null : _ExplorerProvider.GetNetwork(vm.CryptoCode);
 
             var internalLightning = GetInternalLighningNode(network.CryptoCode);
-            vm.InternalLightningNode = internalLightning?.ToUri(true)?.AbsoluteUri;
+            vm.InternalLightningNode = internalLightning?.UriWithCreds?.AbsoluteUri;
             if (network == null)
             {
                 ModelState.AddModelError(nameof(vm.CryptoCode), "Invalid network");
@@ -82,7 +77,7 @@ namespace BTCPayServer.Controllers
                     return View(vm);
                 }
 
-                var internalDomain = internalLightning?.ToUri(false)?.DnsSafeHost;
+                var internalDomain = internalLightning?.UriPlain?.DnsSafeHost;
                 bool isLocal = (internalDomain == "127.0.0.1" || internalDomain == "localhost");
 
                 bool isInternalNode = connectionString.ConnectionType == LightningConnectionType.CLightning ||

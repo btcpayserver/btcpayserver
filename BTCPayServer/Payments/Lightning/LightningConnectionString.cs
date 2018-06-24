@@ -20,7 +20,7 @@ namespace BTCPayServer.Payments.Lightning
 
         public string Username { get; set; }
         public string Password { get; set; }
-        public Uri BaseUri { get; set; }
+        public Uri BaseUri { get; set; } // has no user and password
 
         public LightningConnectionType ConnectionType { get; private set; }
 
@@ -29,21 +29,19 @@ namespace BTCPayServer.Payments.Lightning
         public string Macaroon { get; set; }
         //
 
-        public Uri ToUri(bool withCredentials)
+        public Uri UriWithCreds
         {
-            if (withCredentials)
-            {
-                return new UriBuilder(BaseUri) { UserName = Username ?? "", Password = Password ?? "" }.Uri;
-            }
-            else
-            {
-                return BaseUri;
-            }
+            get { return new UriBuilder(BaseUri) { UserName = Username ?? "", Password = Password ?? "" }.Uri; }
+        }
+
+        public Uri UriPlain
+        {
+            get { return BaseUri; }
         }
 
         public override string ToString()
         {
-            return ToUri(true).AbsoluteUri;
+            return UriWithCreds.AbsoluteUri;
         }
 
         //
@@ -89,7 +87,7 @@ namespace BTCPayServer.Payments.Lightning
             result.ConnectionType = uri.Scheme == "http" || uri.Scheme == "https" ?
                 LightningConnectionType.Charge :
                 LightningConnectionType.CLightning;
-            
+
             // TODO: We need to redo the way Lightning connection strings are detected
             // now that we have Lnd and we can't depend on
             // http => Charge

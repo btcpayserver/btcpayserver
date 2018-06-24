@@ -436,40 +436,40 @@ namespace BTCPayServer.Tests
 
             Assert.True(LightningConnectionString.TryParse(lndUri, out conn));
             Assert.Equal("http://lnd:lnd@127.0.0.1:53280/", conn.ToString());
-            Assert.Equal("http://lnd:lnd@127.0.0.1:53280/", conn.ToUri(true).AbsoluteUri);
-            Assert.Equal("http://127.0.0.1:53280/", conn.ToUri(false).AbsoluteUri);
+            Assert.Equal("http://lnd:lnd@127.0.0.1:53280/", conn.UriWithCreds.AbsoluteUri);
+            Assert.Equal("http://127.0.0.1:53280/", conn.UriPlain.AbsoluteUri);
             Assert.Equal(LightningConnectionType.Lnd, conn.ConnectionType);
             Assert.Equal(macaroon, conn.Macaroon);
             Assert.Equal(tls, conn.Tls);
 
             Assert.True(LightningConnectionString.TryParse("/test/a", out conn));
             Assert.Equal("unix://test/a", conn.ToString());
-            Assert.Equal("unix://test/a", conn.ToUri(true).AbsoluteUri);
-            Assert.Equal("unix://test/a", conn.ToUri(false).AbsoluteUri);
+            Assert.Equal("unix://test/a", conn.UriWithCreds.AbsoluteUri);
+            Assert.Equal("unix://test/a", conn.UriPlain.AbsoluteUri);
             Assert.Equal(LightningConnectionType.CLightning, conn.ConnectionType);
 
             Assert.True(LightningConnectionString.TryParse("unix://test/a", out conn));
             Assert.Equal("unix://test/a", conn.ToString());
-            Assert.Equal("unix://test/a", conn.ToUri(true).AbsoluteUri);
-            Assert.Equal("unix://test/a", conn.ToUri(false).AbsoluteUri);
+            Assert.Equal("unix://test/a", conn.UriWithCreds.AbsoluteUri);
+            Assert.Equal("unix://test/a", conn.UriPlain.AbsoluteUri);
             Assert.Equal(LightningConnectionType.CLightning, conn.ConnectionType);
 
             Assert.True(LightningConnectionString.TryParse("unix://test/a", out conn));
             Assert.Equal("unix://test/a", conn.ToString());
-            Assert.Equal("unix://test/a", conn.ToUri(true).AbsoluteUri);
-            Assert.Equal("unix://test/a", conn.ToUri(false).AbsoluteUri);
+            Assert.Equal("unix://test/a", conn.UriWithCreds.AbsoluteUri);
+            Assert.Equal("unix://test/a", conn.UriPlain.AbsoluteUri);
             Assert.Equal(LightningConnectionType.CLightning, conn.ConnectionType);
 
             Assert.True(LightningConnectionString.TryParse("tcp://test/a", out conn));
             Assert.Equal("tcp://test/a", conn.ToString());
-            Assert.Equal("tcp://test/a", conn.ToUri(true).AbsoluteUri);
-            Assert.Equal("tcp://test/a", conn.ToUri(false).AbsoluteUri);
+            Assert.Equal("tcp://test/a", conn.UriWithCreds.AbsoluteUri);
+            Assert.Equal("tcp://test/a", conn.UriPlain.AbsoluteUri);
             Assert.Equal(LightningConnectionType.CLightning, conn.ConnectionType);
 
             Assert.True(LightningConnectionString.TryParse("http://aaa:bbb@test/a", out conn));
             Assert.Equal("http://aaa:bbb@test/a", conn.ToString());
-            Assert.Equal("http://aaa:bbb@test/a", conn.ToUri(true).AbsoluteUri);
-            Assert.Equal("http://test/a", conn.ToUri(false).AbsoluteUri);
+            Assert.Equal("http://aaa:bbb@test/a", conn.UriWithCreds.AbsoluteUri);
+            Assert.Equal("http://test/a", conn.UriPlain.AbsoluteUri);
             Assert.Equal(LightningConnectionType.Charge, conn.ConnectionType);
             Assert.Equal("aaa", conn.Username);
             Assert.Equal("bbb", conn.Password);

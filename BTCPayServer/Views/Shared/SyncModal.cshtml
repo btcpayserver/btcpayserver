@@ -10,8 +10,8 @@
         </div>
         <div class="modal-body">
             <p>
-                Some of your nodes are still synching...<br />
-                BTCPay Server will not work correctly until it is over.
+                Some of your nodes are still synchronizing...<br />
+                BTCPay Server will not create invoices with those cryptocurrencies.
             </p>
             @foreach (var line in dashboard.GetAll())
             {
@@ -47,12 +47,12 @@
                         }
                         else if (line.Status.BitcoinStatus.IsSynched)
                         {
-                            <li>The node is synched (Height: @line.Status.BitcoinStatus.Headers)</li>
+                            <li>The node is synchronized (Height: @line.Status.BitcoinStatus.Headers)</li>
                             @if (line.Status.BitcoinStatus.IsSynched &&
                                 line.Status.SyncHeight.HasValue &&
                                 line.Status.SyncHeight.Value < line.Status.BitcoinStatus.Headers)
                             {
-                                <li>NBXplorer is synching... (Height: @line.Status.SyncHeight.Value)</li>
+                                <li>NBXplorer is synchronizing... (Height: @line.Status.SyncHeight.Value)</li>
                             }
                         }
                         else

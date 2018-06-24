@@ -110,6 +110,7 @@ namespace BTCPayServer.Controllers
                 };
                 paymentMethod.SetLightningUrl(connectionString);
             }
+
             if (command == "save")
             {
                 store.SetSupportedPaymentMethod(paymentMethodId, paymentMethod);
@@ -135,7 +136,7 @@ namespace BTCPayServer.Controllers
                             await handler.TestConnection(info, cts.Token);
                         }
                     }
-                    vm.StatusMessage = $"Connection to the lightning node succeed ({info})";
+                    vm.StatusMessage = $"Connection to the lightning node succeeded ({info})";
                 }
                 catch (Exception ex)
                 {

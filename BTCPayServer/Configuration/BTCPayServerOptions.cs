@@ -81,7 +81,7 @@ namespace BTCPayServer.Configuration
                     {
                         throw new ConfigException($"Invalid setting {net.CryptoCode}.lightning, you need to pass either " +
                             $"the absolute path to the unix socket of a running CLightning instance (eg. /root/.lightning/lightning-rpc), " +
-                            $"or the url to a charge server with crendetials (eg. https://apitoken@API_TOKEN_SECRET:charge.example.com/)");
+                            $"or the url to a charge server with credentials (eg. https://apitoken@API_TOKEN_SECRET:charge.example.com/)");
                     }
                     InternalLightningByCryptoCode.Add(net.CryptoCode, connectionString);
                 }

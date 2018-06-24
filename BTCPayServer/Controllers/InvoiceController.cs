@@ -144,32 +144,26 @@ namespace BTCPayServer.Controllers
                                                     PaymentMethod: CreatePaymentMethodAsync(fetchingByCurrencyPair, o.Handler, o.SupportedPaymentMethod, o.Network, entity, store)))
                                                 .ToList();
 
-            List<string> paymentMethodErrors = new List<string>();
+            List<string> invoiceLogs = new List<string>();
             List<ISupportedPaymentMethod> supported = new List<ISupportedPaymentMethod>();
             var paymentMethods = new PaymentMethodDictionary();
 
-            foreach(var pair in fetchingByCurrencyPair)
+            foreach (var pair in fetchingByCurrencyPair)
             {
                 var rateResult = await pair.Value;
-                bool hasError = false;
-                if(rateResult.Errors.Count != 0)
+                invoiceLogs.Add($"{pair.Key}: The rating rule is {rateResult.Rule}");
+                invoiceLogs.Add($"{pair.Key}: The evaluated rating rule is {rateResult.EvaluatedRule}");
+                if (rateResult.Errors.Count != 0)
                 {
                     var allRateRuleErrors = string.Join(", ", rateResult.Errors.ToArray());
-                    paymentMethodErrors.Add($"{pair.Key}: Rate rule error ({allRateRuleErrors})");
-                    hasError = true;
+                    invoiceLogs.Add($"{pair.Key}: Rate rule error ({allRateRuleErrors})");
                 }
-                if(rateResult.ExchangeExceptions.Count != 0)
+                if (rateResult.ExchangeExceptions.Count != 0)
                 {
-                    foreach(var ex in rateResult.ExchangeExceptions)
+                    foreach (var ex in rateResult.ExchangeExceptions)
                     {
-                        paymentMethodErrors.Add($"{pair.Key}: Exception reaching exchange {ex.ExchangeName} ({ex.Exception.Message})");
+                        invoiceLogs.Add($"{pair.Key}: Exception reaching exchange {ex.ExchangeName} ({ex.Exception.Message})");
                     }
-                    hasError = true;
-                }
-                if(hasError)
-                {
-                    paymentMethodErrors.Add($"{pair.Key}: The rule is {rateResult.Rule}");
-                    paymentMethodErrors.Add($"{pair.Key}: Evaluated rule is {rateResult.EvaluatedRule}");
                 }
             }
 
@@ -185,11 +179,11 @@ namespace BTCPayServer.Controllers
                 }
                 catch (PaymentMethodUnavailableException ex)
                 {
-                    paymentMethodErrors.Add($"{o.SupportedPaymentMethod.PaymentId.CryptoCode} ({o.SupportedPaymentMethod.PaymentId.PaymentType}): Payment method unavailable ({ex.Message})");
+                    invoiceLogs.Add($"{o.SupportedPaymentMethod.PaymentId.CryptoCode} ({o.SupportedPaymentMethod.PaymentId.PaymentType}): Payment method unavailable ({ex.Message})");
                 }
                 catch (Exception ex)
                 {
-                    paymentMethodErrors.Add($"{o.SupportedPaymentMethod.PaymentId.CryptoCode} ({o.SupportedPaymentMethod.PaymentId.PaymentType}): Unexpected exception ({ex.ToString()})");
+                    invoiceLogs.Add($"{o.SupportedPaymentMethod.PaymentId.CryptoCode} ({o.SupportedPaymentMethod.PaymentId.PaymentType}): Unexpected exception ({ex.ToString()})");
                 }
             }
 
@@ -197,7 +191,7 @@ namespace BTCPayServer.Controllers
             {
                 StringBuilder errors = new StringBuilder();
                 errors.AppendLine("No payment method available for this store");
-                foreach (var error in paymentMethodErrors)
+                foreach (var error in invoiceLogs)
                 {
                     errors.AppendLine(error);
                 }
@@ -207,7 +201,7 @@ namespace BTCPayServer.Controllers
             entity.SetSupportedPaymentMethods(supported);
             entity.SetPaymentMethods(paymentMethods);
             entity.PosData = invoice.PosData;
-            entity = await _InvoiceRepository.CreateInvoiceAsync(store.Id, entity, paymentMethodErrors, _NetworkProvider);
+            entity = await _InvoiceRepository.CreateInvoiceAsync(store.Id, entity, invoiceLogs, _NetworkProvider);
 
             _EventAggregator.Publish(new Events.InvoiceEvent(entity.EntityToDTO(_NetworkProvider), 1001, "invoice_created"));
             var resp = entity.EntityToDTO(_NetworkProvider);

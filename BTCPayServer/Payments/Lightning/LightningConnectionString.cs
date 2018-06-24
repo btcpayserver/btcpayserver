@@ -20,7 +20,7 @@ namespace BTCPayServer.Payments.Lightning
 
         public string Username { get; set; }
         public string Password { get; set; }
-        public Uri BaseUri { get; set; } // has no user and password
+        public Uri BaseUri { get; set; } // has no user and password or query string
 
         public LightningConnectionType ConnectionType { get; private set; }
 

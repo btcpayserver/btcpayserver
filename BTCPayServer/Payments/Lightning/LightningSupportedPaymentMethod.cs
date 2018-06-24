@@ -8,6 +8,7 @@ namespace BTCPayServer.Payments.Lightning
     public class LightningSupportedPaymentMethod : ISupportedPaymentMethod
     {
         public string CryptoCode { get; set; }
+        // This property MUST be after CryptoCode or else JSON serialization fails
         public PaymentMethodId PaymentId => new PaymentMethodId(CryptoCode, PaymentTypes.LightningLike);
 
         [Obsolete("Use Get/SetLightningUrl")]

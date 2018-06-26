@@ -321,7 +321,7 @@ namespace BTCPayServer.Tests
         [Fact]
         public void RoundupCurrenciesCorrectly()
         {
-            foreach(var test in new[] 
+            foreach (var test in new[]
             {
                 (0.0005m, "$0.0005 (USD)"),
                 (0.001m, "$0.001 (USD)"),

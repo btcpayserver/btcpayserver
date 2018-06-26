@@ -35,8 +35,8 @@ const locales_de = {
     "What happened?": "Was ist passiert?",
     "InvoiceExpired_Body_1": "Diese Rechnung ist abgelaufen. Eine Rechnung ist nur für {{maxTimeMinutes}} Minuten gültig. \
 Sie können zu {{storeName}} zurückkehren, wenn Sie Ihre Zahlung erneut senden möchten.",
-    "InvoiceExpired_Body_2": "Wenn Sie versucht haben, eine Zahlung zu senden, wurde sie vom Bitcoin-Netzwerk noch nicht akzeptiert. Wir haben Ihre Gelder noch nicht erhalten.",
-    "InvoiceExpired_Body_3": "Wenn die Transaktion vom Bitcoin-Netzwerk nicht akzeptiert wird, ist das Geld wieder in Ihrer Wallet verfügbar. Abhängig von Ihrer Wallet, kann dies 48-72 Stunden dauern.",
+    "InvoiceExpired_Body_2": "Wenn Sie versucht haben, eine Zahlung zu senden, wurde sie vom Netzwerk noch nicht akzeptiert. Wir haben Ihre Gelder noch nicht erhalten.",
+    "InvoiceExpired_Body_3": "Wenn die Transaktion vom Netzwerk nicht akzeptiert wird, ist das Geld wieder in Ihrer Wallet verfügbar. Abhängig von Ihrer Wallet, kann dies 48-72 Stunden dauern.",
     "Invoice ID": "Rechnungs ID",
     "Order ID": "Auftrag ID",
     "Return to StoreName": "Zurück zu {{storeName}}",

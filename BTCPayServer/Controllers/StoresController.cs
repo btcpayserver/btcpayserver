@@ -313,7 +313,7 @@ namespace BTCPayServer.Controllers
                 Action = "Continue",
                 Title = "Rate rule scripting",
                 Description = scripting ?
-                                "This action will mofify your current rate sources. Are you sure to turn on rate rules scripting? (Advanced users)"
+                                "This action will modify your current rate sources. Are you sure to turn on rate rules scripting? (Advanced users)"
                                 : "This action will delete your rate script. Are you sure to turn off rate rules scripting?",
                 ButtonClass = "btn-primary"
             });

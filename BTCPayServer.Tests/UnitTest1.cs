@@ -466,7 +466,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
-        public void CanSendLightningPayment2()
+        public void CanSendLightningPaymentCLightning()
         {
             using (var tester = ServerTester.Create())
             {
@@ -498,7 +498,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
-        public void CanSendLightningPayment()
+        public void CanSendLightningPaymentCharge()
         {
 
             using (var tester = ServerTester.Create())

@@ -320,7 +320,17 @@ namespace BTCPayServer.Controllers
                             builder.SubtractFees();
                     }
                     builder.SetChange(changeAddress.Item1);
-                    builder.SendEstimatedFees(feeRateValue);
+
+                    if (network.MinFee == null)
+                    {
+                        builder.SendEstimatedFees(feeRateValue);
+                    }
+                    else
+                    {
+                        var estimatedFee = builder.EstimateFees(feeRateValue);
+                        if (network.MinFee > estimatedFee)
+                            builder.SendFees(network.MinFee);
+                    }
                     builder.Shuffle();
                     var unsigned = builder.BuildTransaction(false);
 

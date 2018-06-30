@@ -288,7 +288,7 @@ namespace BTCPayServer.Controllers
                     var unspentCoins = await wallet.GetUnspentCoins(strategyBase);
                     var changeAddress = await change;
                     var send = new[] { (
-                        destination: destinationAddress as IDestination, 
+                        destination: destinationAddress as IDestination,
                         amount: amountBTC,
                         substractFees: subsctractFeesValue) };
 
@@ -335,15 +335,15 @@ namespace BTCPayServer.Controllers
 
                     Dictionary<uint256, Transaction> parentTransactions = new Dictionary<uint256, Transaction>();
 
-                    if(!strategy.Segwit)
+                    if (!strategy.Segwit)
                     {
                         var parentHashes = usedCoins.Select(c => c.Outpoint.Hash).ToHashSet();
                         var explorer = _ExplorerProvider.GetExplorerClient(network);
                         var getTransactionAsyncs = parentHashes.Select(h => (Op: explorer.GetTransactionAsync(h), Hash: h)).ToList();
-                        foreach(var getTransactionAsync in getTransactionAsyncs)
+                        foreach (var getTransactionAsync in getTransactionAsyncs)
                         {
                             var tx = (await getTransactionAsync.Op);
-                            if(tx == null)
+                            if (tx == null)
                                 throw new Exception($"Parent transaction {getTransactionAsync.Hash} not found");
                             parentTransactions.Add(tx.Transaction.GetHash(), tx.Transaction);
                         }
@@ -356,7 +356,7 @@ namespace BTCPayServer.Controllers
                         KeyPath = foundKeyPath.Derive(keypaths[c.TxOut.ScriptPubKey]),
                         PubKey = strategy.Root.Derive(keypaths[c.TxOut.ScriptPubKey]).PubKey
                     }).ToArray(), unsigned, hasChange ? foundKeyPath.Derive(changeAddress.Item2) : null);
-                    
+
                     try
                     {
                         var broadcastResult = await wallet.BroadcastTransactionsAsync(new List<Transaction>() { transaction });
@@ -377,7 +377,7 @@ namespace BTCPayServer.Controllers
             { result = new LedgerTestResult() { Success = false, Error = "Timeout" }; }
             catch (Exception ex)
             { result = new LedgerTestResult() { Success = false, Error = ex.Message }; }
-
+            finally { hw.Dispose(); }
             try
             {
                 if (result != null)

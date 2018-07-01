@@ -15,6 +15,8 @@ namespace BTCPayServer.Payments.Lightning
 {
     public class LightningLikePaymentHandler : PaymentMethodHandlerBase<LightningSupportedPaymentMethod>
     {
+        public static int LIGHTNING_TIMEOUT = 5000;
+
         NBXplorerDashboard _Dashboard;
         LightningClientFactory _LightningClientFactory;
         public LightningLikePaymentHandler(
@@ -41,7 +43,7 @@ namespace BTCPayServer.Payments.Lightning
             description = description.Replace("{StoreName}", store.StoreName ?? "", StringComparison.OrdinalIgnoreCase)
                                      .Replace("{ItemDescription}", invoice.ProductInformation.ItemDesc ?? "", StringComparison.OrdinalIgnoreCase)
                                      .Replace("{OrderId}", invoice.OrderId ?? "", StringComparison.OrdinalIgnoreCase);
-            using (var cts = new CancellationTokenSource(5000))
+            using (var cts = new CancellationTokenSource(LIGHTNING_TIMEOUT))
             {
                 try
                 {
@@ -70,7 +72,7 @@ namespace BTCPayServer.Payments.Lightning
             if (!_Dashboard.IsFullySynched(network.CryptoCode, out var summary))
                 throw new PaymentMethodUnavailableException($"Full node not available");
 
-            using (var cts = new CancellationTokenSource(5000))
+            using (var cts = new CancellationTokenSource(LIGHTNING_TIMEOUT))
             {
                 var client = _LightningClientFactory.CreateClient(supportedPaymentMethod, network);
                 LightningNodeInformation info = null;

@@ -36,9 +36,9 @@
                 <span>This URL should point to an installed lightning charge server for @Model.CryptoCode</span>
             </div>
             <div class="form-group">
-                <label asp-for="Url"></label>
-                <input id="lightningurl" asp-for="Url" class="form-control" />
-                <span asp-validation-for="Url" class="text-danger"></span>
+                <label asp-for="ConnectionString"></label>
+                <input id="lightningurl" asp-for="ConnectionString" class="form-control" />
+                <span asp-validation-for="ConnectionString" class="text-danger"></span>
                 @if(Model.InternalLightningNode != null)
                 {
                     <p class="form-text text-muted">

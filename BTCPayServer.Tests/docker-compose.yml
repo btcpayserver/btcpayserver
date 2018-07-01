@@ -17,9 +17,9 @@ services:
       TESTS_POSTGRES: User ID=postgres;Host=postgres;Port=5432;Database=btcpayserver
       TESTS_PORT: 80
       TESTS_HOSTNAME: tests
-      TEST_MERCHANTLIGHTNINGD: "/etc/merchant_lightningd_datadir/lightning-rpc"
-      TEST_CUSTOMERLIGHTNINGD: "/etc/customer_lightningd_datadir/lightning-rpc"
-      TEST_MERCHANTCHARGE: http://api-token:foiewnccewuify@lightning-charged:9112/
+      TEST_MERCHANTLIGHTNINGD: "type=clightning;server=/etc/merchant_lightningd_datadir/lightning-rpc"
+      TEST_CUSTOMERLIGHTNINGD: "type=clightning;server=/etc/customer_lightningd_datadir/lightning-rpc"
+      TEST_MERCHANTCHARGE: "type=charge;server=http://lightning-charged:9112/;api-token=foiewnccewuify"
       TESTS_INCONTAINER: "true"
     expose:
       - "80"

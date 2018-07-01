@@ -20,6 +20,7 @@ services:
       TEST_MERCHANTLIGHTNINGD: "type=clightning;server=/etc/merchant_lightningd_datadir/lightning-rpc"
       TEST_CUSTOMERLIGHTNINGD: "type=clightning;server=/etc/customer_lightningd_datadir/lightning-rpc"
       TEST_MERCHANTCHARGE: "type=charge;server=http://lightning-charged:9112/;api-token=foiewnccewuify"
+      TEST_MERCHANTLND: "type=lnd;server=http://lnd:lnd@127.0.0.1:53280/"
       TESTS_INCONTAINER: "true"
     expose:
       - "80"
@@ -44,6 +45,22 @@ services:
       - customer_lightningd
       - merchant_lightningd
       - lightning-charged
+      - customer_lnd
+      - merchant_lnd
+
+  devlnd: 
+    image: nicolasdorier/docker-bitcoin:0.16.0
+    environment:
+      BITCOIN_EXTRA_ARGS: |
+        regtest=1
+        connect=bitcoind:39388
+    links:
+      - nbxplorer
+      - postgres
+      - customer_lnd
+      - merchant_lnd
+
+
 
   nbxplorer:
     image: nicolasdorier/nbxplorer:1.0.2.8
@@ -80,8 +97,13 @@ services:
         rpcport=43782
         port=39388
         whitelist=0.0.0.0/0
+        zmqpubrawtx=tcp://0.0.0.0:28332
+        zmqpubrawblock=tcp://0.0.0.0:28332
+        zmqpubrawtxlock=tcp://0.0.0.0:28332
+        zmqpubhashblock=tcp://0.0.0.0:28332
     ports: 
       - "43782:43782"
+      - "28332:28332"
     expose:
       - "43782" # RPC
       - "39388" # P2P
@@ -177,8 +199,52 @@ services:
     expose:
       - "5432"
 
+  merchant_lnd:
+    image: btcpayserver/lnd:0.4.2.0
+    environment:
+      RPCHOST: bitcoind:43782
+      RPCUSER: ceiwHEbqWI83
+      RPCPASS: DwubwWsoo3
+      ZMQPATH: tcp://bitcoind:28332
+      NETWORK: regtest
+      CHAIN: bitcoin
+      BACKEND: bitcoind
+      DEBUG: debug
+      EXTERNALIP: merchant_lnd:9735
+    ports:
+      - "53280:8080"
+    expose:
+      - "9735"
+    volumes:
+      - "merchant_lnd_datadir:/root/.lnd"
+    links:
+      - bitcoind
+
+  customer_lnd:
+    image: btcpayserver/lnd:0.4.2.0
+    environment:
+      RPCHOST: bitcoind:43782
+      RPCUSER: ceiwHEbqWI83
+      RPCPASS: DwubwWsoo3
+      ZMQPATH: tcp://bitcoind:28332
+      NETWORK: regtest
+      CHAIN: bitcoin
+      BACKEND: bitcoind
+      DEBUG: debug
+    ports:
+      - "53281:8080"
+    expose:
+      - "8080"
+      - "10009"
+    volumes:
+      - "customer_lnd_datadir:/root/.lnd"
+    links:
+      - bitcoind
+
 volumes:
     bitcoin_datadir:
     customer_lightningd_datadir:
     merchant_lightningd_datadir:
     lightning_charge_datadir:
+    customer_lnd_datadir:
+    merchant_lnd_datadir:

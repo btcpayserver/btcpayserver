@@ -8,6 +8,15 @@ namespace BTCPayServer.Payments.Lightning
     public class LightningSupportedPaymentMethod : ISupportedPaymentMethod
     {
         public string CryptoCode { get; set; }
+
+        [Obsolete("Use Get/SetLightningUrl")]
+        public string Username { get; set; }
+        [Obsolete("Use Get/SetLightningUrl")]
+        public string Password { get; set; }
+
+        // This property MUST be after CryptoCode or else JSON serialization fails
+        public PaymentMethodId PaymentId => new PaymentMethodId(CryptoCode, PaymentTypes.LightningLike);
+
         [Obsolete("Use Get/SetLightningUrl")]
         public string LightningChargeUrl { get; set; }
 
@@ -49,11 +58,5 @@ namespace BTCPayServer.Payments.Lightning
             LightningChargeUrl = null;
 #pragma warning restore CS0618 // Type or member is obsolete
         }
-
-        [Obsolete("Use Get/SetLightningUrl")]
-        public string Username { get; set; }
-        [Obsolete("Use Get/SetLightningUrl")]
-        public string Password { get; set; }
-        public PaymentMethodId PaymentId => new PaymentMethodId(CryptoCode, PaymentTypes.LightningLike);
     }
 }

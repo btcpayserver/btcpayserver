@@ -20,6 +20,7 @@ using System.Threading;
 using System.Globalization;
 using BTCPayServer.Payments.Lightning.CLightning;
 using BTCPayServer.Payments.Lightning.Charge;
+using BTCPayServer.Tests.Lnd;
 using BTCPayServer.Payments.Lightning;
 
 namespace BTCPayServer.Tests
@@ -53,6 +54,8 @@ namespace BTCPayServer.Tests
 
             MerchantCharge = new ChargeTester(this, "TEST_MERCHANTCHARGE", "type=charge;server=http://127.0.0.1:54938/;api-token=foiewnccewuify", "merchant_lightningd", btc);
 
+            MerchantLnd = new LndMockTester(this, "TEST_MERCHANTLND", "http://lnd:lnd@127.0.0.1:53280/", "merchant_lnd", btc);
+
             PayTester = new BTCPayServerTester(Path.Combine(_Directory, "pay"))
             {
                 NBXplorerUri = ExplorerClient.Address,
@@ -79,41 +82,52 @@ namespace BTCPayServer.Tests
         /// <summary>
         /// Connect a customer LN node to the merchant LN node
         /// </summary>
-        public void PrepareLightning()
+        public void PrepareLightning(LightningConnectionType lndBackend)
         {
-            PrepareLightningAsync().GetAwaiter().GetResult();
+            ILightningInvoiceClient client = MerchantCharge.Client;
+            if (lndBackend == LightningConnectionType.Lnd)
+                client = MerchantLnd.Client;
+
+            PrepareLightningAsync(client).GetAwaiter().GetResult();
         }
 
+
+        private static readonly string[] SKIPPED_STATES =
+            { "ONCHAIN", "CHANNELD_SHUTTING_DOWN", "CLOSINGD_SIGEXCHANGE", "CLOSINGD_COMPLETE", "FUNDING_SPEND_SEEN" };
 
         /// <summary>
         /// Connect a customer LN node to the merchant LN node
         /// </summary>
         /// <returns></returns>
-        public async Task PrepareLightningAsync()
+        private async Task PrepareLightningAsync(ILightningInvoiceClient client)
         {
             while (true)
             {
-                var skippedStates = new[] { "ONCHAIN", "CHANNELD_SHUTTING_DOWN", "CLOSINGD_SIGEXCHANGE", "CLOSINGD_COMPLETE", "FUNDING_SPEND_SEEN" };
-                var channel = (await CustomerLightningD.ListPeersAsync())
+                var merchantInfo = await WaitLNSynched(client, CustomerLightningD, MerchantLightningD);
+
+                var peers = await CustomerLightningD.ListPeersAsync();
+                var filteringToTargetedPeers = peers.Where(a => a.Id == merchantInfo.NodeId);
+                var channel = filteringToTargetedPeers
                             .SelectMany(p => p.Channels)
-                            .Where(c => !skippedStates.Contains(c.State ?? ""))
+                            .Where(c => !SKIPPED_STATES.Contains(c.State ?? ""))
                             .FirstOrDefault();
+
                 switch (channel?.State)
                 {
                     case null:
-                        var merchantInfo = await WaitLNSynched();
-                        var clightning = new NodeInfo(merchantInfo.Id, MerchantCharge.P2PHost, merchantInfo.Port);
-                        await CustomerLightningD.ConnectAsync(clightning);
                         var address = await CustomerLightningD.NewAddressAsync();
-                        await ExplorerNode.SendToAddressAsync(address, Money.Coins(0.2m));
+                        await ExplorerNode.SendToAddressAsync(address, Money.Coins(0.5m));
                         ExplorerNode.Generate(1);
-                        await WaitLNSynched();
+                        await WaitLNSynched(client, CustomerLightningD, MerchantLightningD);
                         await Task.Delay(1000);
-                        await CustomerLightningD.FundChannelAsync(clightning, Money.Satoshis(16777215));
+
+                        var merchantNodeInfo = new NodeInfo(merchantInfo.NodeId, merchantInfo.Address, merchantInfo.P2PPort);
+                        await CustomerLightningD.ConnectAsync(merchantNodeInfo);
+                        await CustomerLightningD.FundChannelAsync(merchantNodeInfo, Money.Satoshis(16777215));
                         break;
                     case "CHANNELD_AWAITING_LOCKIN":
                         ExplorerNode.Generate(1);
-                        await WaitLNSynched();
+                        await WaitLNSynched(client, CustomerLightningD, MerchantLightningD);
                         break;
                     case "CHANNELD_NORMAL":
                         return;
@@ -123,21 +137,27 @@ namespace BTCPayServer.Tests
             }
         }
 
-        private async Task<GetInfoResponse> WaitLNSynched()
+        private async Task<LightningNodeInformation> WaitLNSynched(params ILightningInvoiceClient[] clients)
         {
             while (true)
             {
-                var merchantInfo = await MerchantCharge.Client.GetInfoAsync();
                 var blockCount = await ExplorerNode.GetBlockCountAsync();
-                if (merchantInfo.BlockHeight != blockCount)
-                {
-                    await Task.Delay(1000);
-                }
-                else
-                {
-                    return merchantInfo;
-                }
+                var synching = clients.Select(c => WaitLNSynchedCore(blockCount, c)).ToArray();
+                await Task.WhenAll(synching);
+                if (synching.All(c => c.Result != null))
+                    return synching[0].Result;
+                await Task.Delay(1000);
             }
+        }
+
+        private async Task<LightningNodeInformation> WaitLNSynchedCore(int blockCount, ILightningInvoiceClient client)
+        {
+            var merchantInfo = await client.GetInfo();
+            if (merchantInfo.BlockHeight == blockCount)
+            {
+                return merchantInfo;
+            }
+            return null;
         }
 
         public void SendLightningPayment(Invoice invoice)
@@ -153,8 +173,10 @@ namespace BTCPayServer.Tests
         }
 
         public CLightningRPCClient CustomerLightningD { get; set; }
+
         public CLightningRPCClient MerchantLightningD { get; private set; }
         public ChargeTester MerchantCharge { get; private set; }
+        public LndMockTester MerchantLnd { get; set; }
 
         internal string GetEnvironment(string variable, string defaultValue)
         {

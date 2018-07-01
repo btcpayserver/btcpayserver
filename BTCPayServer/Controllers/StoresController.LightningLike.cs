@@ -35,7 +35,6 @@ namespace BTCPayServer.Controllers
         {
             vm.ConnectionString = GetExistingLightningSupportedPaymentMethod(vm.CryptoCode, store)?.GetLightningUrl()?.ToString();
         }
-
         private LightningSupportedPaymentMethod GetExistingLightningSupportedPaymentMethod(string cryptoCode, StoreData store)
         {
             var id = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
@@ -82,7 +81,7 @@ namespace BTCPayServer.Controllers
                     return View(vm);
                 }
 
-                var internalDomain = internalLightning?.ToUri(false)?.DnsSafeHost;
+                var internalDomain = internalLightning.BaseUri?.DnsSafeHost;
                 bool isLocal = (internalDomain == "127.0.0.1" || internalDomain == "localhost");
 
                 bool isInternalNode = connectionString.ConnectionType == LightningConnectionType.CLightning ||
@@ -110,6 +109,7 @@ namespace BTCPayServer.Controllers
                 };
                 paymentMethod.SetLightningUrl(connectionString);
             }
+
             if (command == "save")
             {
                 store.SetSupportedPaymentMethod(paymentMethodId, paymentMethod);
@@ -135,7 +135,7 @@ namespace BTCPayServer.Controllers
                             await handler.TestConnection(info, cts.Token);
                         }
                     }
-                    vm.StatusMessage = $"Connection to the lightning node succeed ({info})";
+                    vm.StatusMessage = $"Connection to the lightning node succeeded ({info})";
                 }
                 catch (Exception ex)
                 {

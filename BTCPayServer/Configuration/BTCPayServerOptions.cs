@@ -81,7 +81,8 @@ namespace BTCPayServer.Configuration
                     {
                         throw new ConfigException($"Invalid setting {net.CryptoCode}.lightning, " + Environment.NewLine +
                             $"If you have a lightning server use: 'type=clightning;server=/root/.lightning/lightning-rpc', " + Environment.NewLine +
-                            $"If you have a lightning charge server: 'type=charge;server=https://charge.example.com;api-token=yourapitoken'");
+                            $"If you have a lightning charge server: 'type=charge;server=https://charge.example.com;api-token=yourapitoken'" + Environment.NewLine +
+                            $"If you have a lnd server: 'type=lnd;server=https://lnd:lnd@lnd.example.com;macaron=abf239...;tls=2abdf302...'");
                     }
                     if(connectionString.IsLegacy)
                     {

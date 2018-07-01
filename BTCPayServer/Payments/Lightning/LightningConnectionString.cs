@@ -3,13 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Primitives;
 
 namespace BTCPayServer.Payments.Lightning
 {
     public enum LightningConnectionType
     {
         Charge,
-        CLightning
+        CLightning,
+        Lnd
     }
     public class LightningConnectionString
     {
@@ -20,6 +24,7 @@ namespace BTCPayServer.Payments.Lightning
             typeMapping = new Dictionary<string, LightningConnectionType>();
             typeMapping.Add("clightning", LightningConnectionType.CLightning);
             typeMapping.Add("charge", LightningConnectionType.Charge);
+            typeMapping.Add("lnd", LightningConnectionType.Lnd);
             typeMappingReverse = new Dictionary<LightningConnectionType, string>();
             foreach (var kv in typeMapping)
             {
@@ -153,6 +158,56 @@ namespace BTCPayServer.Payments.Lightning
                         result.BaseUri = uri;
                     }
                     break;
+                case LightningConnectionType.Lnd:
+                    {
+                        var server = Take(keyValues, "server");
+                        if (server == null)
+                        {
+                            error = $"The key 'server' is mandatory for lnd connection strings";
+                            return false;
+                        }
+                        if (!Uri.TryCreate(server, UriKind.Absolute, out var uri)
+                            || (uri.Scheme != "http" && uri.Scheme != "https"))
+                        {
+                            error = $"The key 'server' should be an URI starting by http:// or https://";
+                            return false;
+                        }
+                        parts = uri.UserInfo.Split(':');
+                        if (!string.IsNullOrEmpty(uri.UserInfo) && parts.Length == 2)
+                        {
+                            result.Username = parts[0];
+                            result.Password = parts[1];
+                        }
+                        result.BaseUri = new UriBuilder(uri) { UserName = "", Password = "" }.Uri;
+
+                        var macaroon = Take(keyValues, "macaroon");
+                        //if(macaroon == null)
+                        //{
+                        //    error = $"The key 'macaroon' is mandatory for lnd connection strings";
+                        //    return false;
+                        //}
+                        //try
+                        //{
+                        //    result.Macaroon = Encoder.DecodeData(macaroon);
+                        //}
+                        //catch
+                        //{
+                        //    error = $"The key 'macaroon' format should be in hex";
+                        //    return false;
+                        //}
+                        try
+                        {
+                            var tls = Take(keyValues, "tls");
+                            if (tls != null)
+                                result.Tls = Encoder.DecodeData(tls);
+                        }
+                        catch
+                        {
+                            error = $"The key 'tls' format should be in hex";
+                            return false;
+                        }
+                    }
+                    break;
                 default:
                     throw new NotSupportedException(connectionType.ToString());
             }
@@ -182,7 +237,7 @@ namespace BTCPayServer.Payments.Lightning
             error = null;
 
             Uri uri;
-            if (!System.Uri.TryCreate(str, UriKind.Absolute, out uri))
+            if (!Uri.TryCreate(str, UriKind.Absolute, out uri))
             {
                 error = "Invalid URL";
                 return false;
@@ -195,7 +250,6 @@ namespace BTCPayServer.Payments.Lightning
                 error = $"The url support the following protocols {protocols}";
                 return false;
             }
-
             if (uri.Scheme == "unix")
             {
                 str = uri.AbsoluteUri.Substring("unix:".Length);
@@ -248,6 +302,8 @@ namespace BTCPayServer.Payments.Lightning
             get;
             private set;
         }
+        public byte[] Macaroon { get; set; }
+        public byte[] Tls { get; set; }
 
         public Uri ToUri(bool withCredentials)
         {
@@ -260,7 +316,7 @@ namespace BTCPayServer.Payments.Lightning
                 return BaseUri;
             }
         }
-
+        static NBitcoin.DataEncoders.DataEncoder Encoder = NBitcoin.DataEncoders.Encoders.Hex;
         public override string ToString()
         {
             var type = typeMappingReverse[ConnectionType];
@@ -269,7 +325,7 @@ namespace BTCPayServer.Payments.Lightning
             switch (ConnectionType)
             {
                 case LightningConnectionType.Charge:
-                    if(Username == null || Username == "api-token")
+                    if (Username == null || Username == "api-token")
                     {
                         builder.Append($";server={BaseUri};api-token={Password}");
                     }
@@ -280,6 +336,24 @@ namespace BTCPayServer.Payments.Lightning
                     break;
                 case LightningConnectionType.CLightning:
                     builder.Append($";server={BaseUri}");
+                    break;
+                case LightningConnectionType.Lnd:
+                    if (Username == null)
+                    {
+                        builder.Append($";server={BaseUri}");
+                    }
+                    else
+                    {
+                        builder.Append($";server={ToUri(true)}");
+                    }
+                    if (Macaroon != null)
+                    {
+                        builder.Append($";macaroon={Encoder.EncodeData(Macaroon)}");
+                    }
+                    if (Tls != null)
+                    {
+                        builder.Append($";tls={Encoder.EncodeData(Tls)}");
+                    }
                     break;
                 default:
                     throw new NotSupportedException(type);

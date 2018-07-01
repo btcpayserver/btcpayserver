@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Payments.Lightning.Charge;
 using BTCPayServer.Payments.Lightning.CLightning;
 using NBitcoin;
+using BTCPayServer.Payments.Lightning.Lnd;
 
 namespace BTCPayServer.Payments.Lightning
 {
@@ -16,18 +17,24 @@ namespace BTCPayServer.Payments.Lightning
             return CreateClient(uri, network.NBitcoinNetwork);
         }
 
-        public static ILightningInvoiceClient CreateClient(LightningConnectionString uri, Network network)
+        public static ILightningInvoiceClient CreateClient(LightningConnectionString connString, Network network)
         {
-            if (uri.ConnectionType == LightningConnectionType.Charge)
+            if (connString.ConnectionType == LightningConnectionType.Charge)
             {
-                return new ChargeClient(uri.ToUri(true), network);
+                return new ChargeClient(connString.ToUri(true), network);
             }
-            else if (uri.ConnectionType == LightningConnectionType.CLightning)
+            else if (connString.ConnectionType == LightningConnectionType.CLightning)
             {
-                return new CLightningRPCClient(uri.ToUri(false), network);
+                return new CLightningRPCClient(connString.ToUri(false), network);
+
+            }
+            else if (connString.ConnectionType == LightningConnectionType.Lnd)
+            {
+                var swagger = LndSwaggerClientCustomHttp.Create(connString.BaseUri, network, connString.Tls, connString.Macaroon);
+                return new LndInvoiceClient(swagger);
             }
             else
-                throw new NotSupportedException($"Unsupported connection string for lightning server ({uri.ConnectionType})");
+                throw new NotSupportedException($"Unsupported connection string for lightning server ({connString.ConnectionType})");
         }
 
         public static ILightningInvoiceClient CreateClient(string connectionString, Network network)

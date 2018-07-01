@@ -330,6 +330,8 @@ namespace BTCPayServer.Controllers
                         var estimatedFee = builder.EstimateFees(feeRateValue);
                         if (network.MinFee > estimatedFee)
                             builder.SendFees(network.MinFee);
+                        else
+                            builder.SendEstimatedFees(feeRateValue);
                     }
                     builder.Shuffle();
                     var unsigned = builder.BuildTransaction(false);

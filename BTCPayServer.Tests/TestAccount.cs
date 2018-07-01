@@ -128,7 +128,7 @@ namespace BTCPayServer.Tests
             var storeController = this.GetController<StoresController>();
             await storeController.AddLightningNode(StoreId, new LightningNodeViewModel()
             {
-                Url = connectionType == LightningConnectionType.Charge ? parent.MerchantCharge.Client.Uri.AbsoluteUri :
+                ConnectionString = connectionType == LightningConnectionType.Charge ? parent.MerchantCharge.Client.Uri.AbsoluteUri :
                       connectionType == LightningConnectionType.CLightning ? parent.MerchantLightningD.Address.AbsoluteUri
                       : throw new NotSupportedException(connectionType.ToString()),
                 SkipPortTest = true

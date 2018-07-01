@@ -409,14 +409,14 @@ namespace BTCPayServer.Tests
 
                 var testResult = storeController.AddLightningNode(user.StoreId, new LightningNodeViewModel()
                 {
-                    Url = tester.MerchantCharge.Client.Uri.AbsoluteUri
+                    ConnectionString = tester.MerchantCharge.Client.Uri.AbsoluteUri
                 }, "test", "BTC").GetAwaiter().GetResult();
                 Assert.DoesNotContain("Error", ((LightningNodeViewModel)Assert.IsType<ViewResult>(testResult).Model).StatusMessage, StringComparison.OrdinalIgnoreCase);
                 Assert.True(storeController.ModelState.IsValid);
 
                 Assert.IsType<RedirectToActionResult>(storeController.AddLightningNode(user.StoreId, new LightningNodeViewModel()
                 {
-                    Url = tester.MerchantCharge.Client.Uri.AbsoluteUri
+                    ConnectionString = tester.MerchantCharge.Client.Uri.AbsoluteUri
                 }, "save", "BTC").GetAwaiter().GetResult());
 
                 var storeVm = Assert.IsType<Models.StoreViewModels.StoreViewModel>(Assert.IsType<ViewResult>(storeController.UpdateStore()).Model);
@@ -428,41 +428,84 @@ namespace BTCPayServer.Tests
         public void CanParseLightningURL()
         {
             LightningConnectionString conn = null;
-            Assert.True(LightningConnectionString.TryParse("/test/a", out conn));
-            Assert.Equal("unix://test/a", conn.ToString());
-            Assert.Equal("unix://test/a", conn.ToUri(true).AbsoluteUri);
-            Assert.Equal("unix://test/a", conn.ToUri(false).AbsoluteUri);
-            Assert.Equal(LightningConnectionType.CLightning, conn.ConnectionType);
+            Assert.True(LightningConnectionString.TryParse("/test/a", true, out conn));
+            for (int i = 0; i < 2; i++)
+            {
+                if (i == 1)
+                    Assert.True(LightningConnectionString.TryParse(conn.ToString(), false, out conn));
+                Assert.Equal(i == 0, conn.IsLegacy);
+                Assert.Equal("type=clightning;server=unix://test/a", conn.ToString());
+                Assert.Equal("unix://test/a", conn.ToUri(true).AbsoluteUri);
+                Assert.Equal("unix://test/a", conn.ToUri(false).AbsoluteUri);
+                Assert.Equal(LightningConnectionType.CLightning, conn.ConnectionType);
+            }
 
-            Assert.True(LightningConnectionString.TryParse("unix://test/a", out conn));
-            Assert.Equal("unix://test/a", conn.ToString());
-            Assert.Equal("unix://test/a", conn.ToUri(true).AbsoluteUri);
-            Assert.Equal("unix://test/a", conn.ToUri(false).AbsoluteUri);
-            Assert.Equal(LightningConnectionType.CLightning, conn.ConnectionType);
+            Assert.True(LightningConnectionString.TryParse("unix://test/a", true, out conn));
+            for (int i = 0; i < 2; i++)
+            {
+                if (i == 1)
+                    Assert.True(LightningConnectionString.TryParse(conn.ToString(), false, out conn));
+                Assert.Equal("type=clightning;server=unix://test/a", conn.ToString());
+                Assert.Equal("unix://test/a", conn.ToUri(true).AbsoluteUri);
+                Assert.Equal("unix://test/a", conn.ToUri(false).AbsoluteUri);
+                Assert.Equal(LightningConnectionType.CLightning, conn.ConnectionType);
+            }
 
-            Assert.True(LightningConnectionString.TryParse("unix://test/a", out conn));
-            Assert.Equal("unix://test/a", conn.ToString());
-            Assert.Equal("unix://test/a", conn.ToUri(true).AbsoluteUri);
-            Assert.Equal("unix://test/a", conn.ToUri(false).AbsoluteUri);
-            Assert.Equal(LightningConnectionType.CLightning, conn.ConnectionType);
+            Assert.True(LightningConnectionString.TryParse("unix://test/a", true, out conn));
+            for (int i = 0; i < 2; i++)
+            {
+                if (i == 1)
+                    Assert.True(LightningConnectionString.TryParse(conn.ToString(), false, out conn));
+                Assert.Equal("type=clightning;server=unix://test/a", conn.ToString());
+                Assert.Equal("unix://test/a", conn.ToUri(true).AbsoluteUri);
+                Assert.Equal("unix://test/a", conn.ToUri(false).AbsoluteUri);
+                Assert.Equal(LightningConnectionType.CLightning, conn.ConnectionType);
+            }
 
-            Assert.True(LightningConnectionString.TryParse("tcp://test/a", out conn));
-            Assert.Equal("tcp://test/a", conn.ToString());
-            Assert.Equal("tcp://test/a", conn.ToUri(true).AbsoluteUri);
-            Assert.Equal("tcp://test/a", conn.ToUri(false).AbsoluteUri);
-            Assert.Equal(LightningConnectionType.CLightning, conn.ConnectionType);
+            Assert.True(LightningConnectionString.TryParse("tcp://test/a", true, out conn));
+            for (int i = 0; i < 2; i++)
+            {
+                if (i == 1)
+                    Assert.True(LightningConnectionString.TryParse(conn.ToString(), false, out conn));
+                Assert.Equal("type=clightning;server=tcp://test/a", conn.ToString());
+                Assert.Equal("tcp://test/a", conn.ToUri(true).AbsoluteUri);
+                Assert.Equal("tcp://test/a", conn.ToUri(false).AbsoluteUri);
+                Assert.Equal(LightningConnectionType.CLightning, conn.ConnectionType);
+            }
 
-            Assert.True(LightningConnectionString.TryParse("http://aaa:bbb@test/a", out conn));
-            Assert.Equal("http://aaa:bbb@test/a", conn.ToString());
-            Assert.Equal("http://aaa:bbb@test/a", conn.ToUri(true).AbsoluteUri);
-            Assert.Equal("http://test/a", conn.ToUri(false).AbsoluteUri);
-            Assert.Equal(LightningConnectionType.Charge, conn.ConnectionType);
-            Assert.Equal("aaa", conn.Username);
-            Assert.Equal("bbb", conn.Password);
+            Assert.True(LightningConnectionString.TryParse("http://aaa:bbb@test/a", true, out conn));
+            for (int i = 0; i < 2; i++)
+            {
+                if (i == 1)
+                    Assert.True(LightningConnectionString.TryParse(conn.ToString(), false, out conn));
+                Assert.Equal("type=charge;server=http://aaa:bbb@test/a", conn.ToString());
+                Assert.Equal("http://aaa:bbb@test/a", conn.ToUri(true).AbsoluteUri);
+                Assert.Equal("http://test/a", conn.ToUri(false).AbsoluteUri);
+                Assert.Equal(LightningConnectionType.Charge, conn.ConnectionType);
+                Assert.Equal("aaa", conn.Username);
+                Assert.Equal("bbb", conn.Password);
+            }
 
-            Assert.False(LightningConnectionString.TryParse("lol://aaa:bbb@test/a", out conn));
-            Assert.False(LightningConnectionString.TryParse("https://test/a", out conn));
-            Assert.False(LightningConnectionString.TryParse("unix://dwewoi:dwdwqd@test/a", out conn));
+            Assert.True(LightningConnectionString.TryParse("http://api-token:bbb@test/a", true, out conn));
+            for (int i = 0; i < 2; i++)
+            {
+                if (i == 1)
+                    Assert.True(LightningConnectionString.TryParse(conn.ToString(), false, out conn));
+                Assert.Equal("type=charge;server=http://test/a;api-token=bbb", conn.ToString());
+            }
+
+            Assert.False(LightningConnectionString.TryParse("lol://aaa:bbb@test/a", true, out conn));
+            Assert.False(LightningConnectionString.TryParse("https://test/a", true, out conn));
+            Assert.False(LightningConnectionString.TryParse("unix://dwewoi:dwdwqd@test/a", true, out conn));
+            Assert.False(LightningConnectionString.TryParse("tcp://test/a", false, out conn));
+            Assert.False(LightningConnectionString.TryParse("type=charge;server=http://aaa:bbb@test/a;unk=lol", false, out conn));
+            Assert.False(LightningConnectionString.TryParse("type=charge;server=tcp://aaa:bbb@test/a", false, out conn));
+            Assert.False(LightningConnectionString.TryParse("type=charge", false, out conn));
+            Assert.False(LightningConnectionString.TryParse("type=clightning", false, out conn));
+            Assert.True(LightningConnectionString.TryParse("type=clightning;server=tcp://aaa:bbb@test/a", false, out conn));
+            Assert.True(LightningConnectionString.TryParse("type=clightning;server=/aaa:bbb@test/a", false, out conn));
+            Assert.True(LightningConnectionString.TryParse("type=clightning;server=unix://aaa:bbb@test/a", false, out conn));
+            Assert.False(LightningConnectionString.TryParse("type=clightning;server=wtf://aaa:bbb@test/a", false, out conn));
         }
 
         [Fact]

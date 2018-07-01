@@ -26,14 +26,14 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             LightningNodeViewModel vm = new LightningNodeViewModel();
             vm.CryptoCode = cryptoCode;
-            vm.InternalLightningNode = GetInternalLighningNode(cryptoCode)?.ToUri(true)?.AbsoluteUri;
+            vm.InternalLightningNode = GetInternalLighningNode(cryptoCode)?.ToString();
             SetExistingValues(store, vm);
             return View(vm);
         }
 
         private void SetExistingValues(StoreData store, LightningNodeViewModel vm)
         {
-            vm.Url = GetExistingLightningSupportedPaymentMethod(vm.CryptoCode, store)?.GetLightningUrl()?.ToString();
+            vm.ConnectionString = GetExistingLightningSupportedPaymentMethod(vm.CryptoCode, store)?.GetLightningUrl()?.ToString();
         }
 
         private LightningSupportedPaymentMethod GetExistingLightningSupportedPaymentMethod(string cryptoCode, StoreData store)
@@ -65,7 +65,7 @@ namespace BTCPayServer.Controllers
             var network = vm.CryptoCode == null ? null : _ExplorerProvider.GetNetwork(vm.CryptoCode);
 
             var internalLightning = GetInternalLighningNode(network.CryptoCode);
-            vm.InternalLightningNode = internalLightning?.ToUri(true)?.AbsoluteUri;
+            vm.InternalLightningNode = internalLightning?.ToString();
             if (network == null)
             {
                 ModelState.AddModelError(nameof(vm.CryptoCode), "Invalid network");
@@ -74,11 +74,11 @@ namespace BTCPayServer.Controllers
 
             PaymentMethodId paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.LightningLike);
             Payments.Lightning.LightningSupportedPaymentMethod paymentMethod = null;
-            if (!string.IsNullOrEmpty(vm.Url))
+            if (!string.IsNullOrEmpty(vm.ConnectionString))
             {
-                if (!LightningConnectionString.TryParse(vm.Url, out var connectionString, out var error))
+                if (!LightningConnectionString.TryParse(vm.ConnectionString, false, out var connectionString, out var error))
                 {
-                    ModelState.AddModelError(nameof(vm.Url), $"Invalid URL ({error})");
+                    ModelState.AddModelError(nameof(vm.ConnectionString), $"Invalid URL ({error})");
                     return View(vm);
                 }
 
@@ -93,14 +93,14 @@ namespace BTCPayServer.Controllers
                 {
                     if (!isInternalNode || (isInternalNode && !CanUseInternalLightning()))
                     {
-                        ModelState.AddModelError(nameof(vm.Url), "The url must be HTTPS");
+                        ModelState.AddModelError(nameof(vm.ConnectionString), "The url must be HTTPS");
                         return View(vm);
                     }
                 }
 
                 if (isInternalNode && !CanUseInternalLightning())
                 {
-                    ModelState.AddModelError(nameof(vm.Url), "Unauthorized url");
+                    ModelState.AddModelError(nameof(vm.ConnectionString), "Unauthorized url");
                     return View(vm);
                 }
 
@@ -121,7 +121,7 @@ namespace BTCPayServer.Controllers
             {
                 if (paymentMethod == null)
                 {
-                    ModelState.AddModelError(nameof(vm.Url), "Missing url parameter");
+                    ModelState.AddModelError(nameof(vm.ConnectionString), "Missing url parameter");
                     return View(vm);
                 }
                 var handler = (LightningLikePaymentHandler)_ServiceProvider.GetRequiredService<IPaymentMethodHandler<Payments.Lightning.LightningSupportedPaymentMethod>>();

@@ -102,9 +102,9 @@ namespace BTCPayServer.Controllers
                 StatusMessage = "Error: You are not owner of this store";
                 return RedirectToAction(nameof(ListApps));
             }
+            var id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(32));
             using (var ctx = _ContextFactory.CreateContext())
             {
-                var id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(32));
                 var appData = new AppData() { Id = id };
                 appData.StoreDataId = selectedStore;
                 appData.Name = vm.Name;
@@ -113,6 +113,9 @@ namespace BTCPayServer.Controllers
                 await ctx.SaveChangesAsync();
             }
             StatusMessage = "App successfully created";
+
+            if (appType == AppType.PointOfSale)
+                return RedirectToAction(nameof(UpdatePointOfSale), new { appId = id });
             return RedirectToAction(nameof(ListApps));
         }
 

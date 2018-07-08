@@ -38,19 +38,19 @@ namespace BTCPayServer.Payments.Lightning.Lnd
                 urlBuilder.Append(_Parent.BaseUrl).Append("/v1/invoices/subscribe");
                 try
                 {
-                    while (!_Cts.IsCancellationRequested)
+                    using (var client = _Parent.CreateHttpClient())
                     {
-                        using (var client = _Parent.CreateHttpClient())
+                        client.Timeout = TimeSpan.FromMilliseconds(Timeout.Infinite);
+
+                        var request = new HttpRequestMessage(HttpMethod.Get, urlBuilder.ToString());
+
+                        using (var response = await client.SendAsync(
+                            request, HttpCompletionOption.ResponseHeadersRead, _Cts.Token))
                         {
-                            client.Timeout = TimeSpan.FromMilliseconds(Timeout.Infinite);
-
-                            var request = new HttpRequestMessage(HttpMethod.Get, urlBuilder.ToString());
-
-                            using (var response = await client.SendAsync(
-                                request, HttpCompletionOption.ResponseHeadersRead, _Cts.Token))
+                            using (var body = await response.Content.ReadAsStreamAsync())
+                            using (var reader = new StreamReader(body))
                             {
-                                using (var body = await response.Content.ReadAsStreamAsync())
-                                using (var reader = new StreamReader(body))
+                                while (!_Cts.IsCancellationRequested)
                                 {
                                     string line = await reader.ReadLineAsync().WithCancellation(_Cts.Token);
                                     if (line != null && line.StartsWith("{\"result\":", StringComparison.OrdinalIgnoreCase))

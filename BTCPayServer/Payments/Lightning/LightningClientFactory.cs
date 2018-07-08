@@ -32,8 +32,9 @@ namespace BTCPayServer.Payments.Lightning
             {
                 return new LndInvoiceClient(new LndSwaggerClient(new LndRestSettings(connString.BaseUri)
                 {
-                   Macaroon = connString.Macaroon,
-                   TLS = connString.Tls
+                    Macaroon = connString.Macaroon,
+                    CertificateThumbprint = connString.CertificateThumbprint,
+                    AllowInsecure = connString.AllowInsecure,
                 }));
             }
             else

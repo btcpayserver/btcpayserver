@@ -10,7 +10,6 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -27,8 +26,12 @@ namespace BTCPayServer.Payments.Lightning.Lnd
             Uri = uri;
         }
         public Uri Uri { get; set; }
-        public X509Certificate2 TLS { get; set; }
+        /// <summary>
+        /// The SHA256 of the PEM certificate
+        /// </summary>
+        public byte[] CertificateThumbprint { get; set; }
         public byte[] Macaroon { get; set; }
+        public bool AllowInsecure { get; set; }
     }
 
     public partial class LndSwaggerClient
@@ -46,15 +49,27 @@ namespace BTCPayServer.Payments.Lightning.Lnd
                 SslProtocols = SslProtocols.Tls12
             };
 
-            var expectedCertificate = settings.TLS;
-            if (expectedCertificate != null)
+            var expectedThumbprint = settings.CertificateThumbprint?.ToArray();
+            if (expectedThumbprint != null)
             {
                 handler.ServerCertificateCustomValidationCallback = (request, cert, chain, errors) =>
                 {
-                    X509Certificate2 remoteRoot = chain.ChainElements[chain.ChainElements.Count - 1].Certificate;
-                    return expectedCertificate.RawData.SequenceEqual(remoteRoot.RawData);
+                    var actualCert = chain.ChainElements[chain.ChainElements.Count - 1].Certificate;
+                    var hash = actualCert.GetCertHash(System.Security.Cryptography.HashAlgorithmName.SHA256);
+                    return hash.SequenceEqual(expectedThumbprint);
                 };
             }
+
+            if(settings.AllowInsecure)
+            {
+                handler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+            }
+            else
+            {
+                if (settings.Uri.Scheme == "http")
+                    throw new InvalidOperationException("AllowInsecure is set to false, but the URI is not using https");
+            }
+
             var httpClient = new HttpClient(handler);
             if (settings.Macaroon != null)
             {

@@ -25,10 +25,10 @@ namespace BTCPayServer.Tests.Lnd
             this.output = output;
             initializeEnvironment();
 
-            MerchantLnd = new LndSwaggerClient(new LndRestSettings(new Uri("http://127.0.0.1:53280")));
+            MerchantLnd = new LndSwaggerClient(new LndRestSettings(new Uri("http://127.0.0.1:53280")) { AllowInsecure = true });
             InvoiceClient = new LndInvoiceClient(MerchantLnd);
 
-            CustomerLnd = new LndSwaggerClient(new LndRestSettings(new Uri("http://127.0.0.1:53281")));
+            CustomerLnd = new LndSwaggerClient(new LndRestSettings(new Uri("http://127.0.0.1:53281")) { AllowInsecure = true });
         }
 
         private LndSwaggerClient MerchantLnd { get; set; }
@@ -68,7 +68,7 @@ namespace BTCPayServer.Tests.Lnd
             var waitToken = default(CancellationToken);
             var listener = await InvoiceClient.Listen(waitToken);
             var waitTask = listener.WaitInvoice(waitToken);
-            
+
             await EnsureLightningChannelAsync();
             var payResponse = await CustomerLnd.SendPaymentSyncAsync(new LnrpcSendRequest
             {

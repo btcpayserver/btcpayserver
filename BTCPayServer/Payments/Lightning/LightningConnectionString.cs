@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Primitives;
+using NBitcoin.DataEncoders;
 
 namespace BTCPayServer.Payments.Lightning
 {
@@ -194,15 +195,52 @@ namespace BTCPayServer.Payments.Lightning
                                 return false;
                             }
                         }
-                        try
+
+                        string securitySet = null;
+                        var certthumbprint = Take(keyValues, "certthumbprint");
+                        if (certthumbprint != null)
                         {
-                            var tls = Take(keyValues, "tls");
-                            if (tls != null)
-                                result.Tls = new X509Certificate2(Encoder.DecodeData(tls));
+                            try
+                            {
+                                var bytes = Encoders.Hex.DecodeData(certthumbprint.Replace(":", string.Empty, StringComparison.OrdinalIgnoreCase));
+                                if (bytes.Length != 32)
+                                {
+                                    error = $"The key 'certthumbprint' has invalid length: it should be the SHA256 of the PEM format of the certificate (32 bytes)";
+                                    return false;
+                                }
+                                result.CertificateThumbprint = bytes;
+                            }
+                            catch
+                            {
+                                error = $"The key 'certthumbprint' has invalid format: it should be the SHA256 of the PEM format of the certificate";
+                                return false;
+                            }
+                            securitySet = "certthumbprint";
                         }
-                        catch
+
+                        var allowinsecureStr = Take(keyValues, "allowinsecure");
+
+                        if (allowinsecureStr != null)
                         {
-                            error = $"The key 'tls' should be the X509 certificate in hex";
+                            var allowedValues = new[] { "true", "false" };
+                            if(!allowedValues.Any(v=> v.Equals(allowinsecureStr,  StringComparison.OrdinalIgnoreCase)))
+                            {
+                                error = $"The key 'allowinsecure' should be true or false";
+                                return false;
+                            }
+                            
+                            bool allowInsecure = allowinsecureStr.Equals("true", StringComparison.OrdinalIgnoreCase);
+                            if (securitySet != null && allowInsecure)
+                            {
+                                error = $"The key 'allowinsecure' conflict with '{securitySet}'";
+                                return false;
+                            }
+                            result.AllowInsecure = allowInsecure;
+                        }
+
+                        if(!result.AllowInsecure && result.BaseUri.Scheme == "http")
+                        {
+                            error = $"The key 'allowinsecure' is false, but server's Uri is not using https";
                             return false;
                         }
                     }
@@ -302,7 +340,8 @@ namespace BTCPayServer.Payments.Lightning
             private set;
         }
         public byte[] Macaroon { get; set; }
-        public X509Certificate2 Tls { get; set; }
+        public byte[] CertificateThumbprint { get; set; }
+        public bool AllowInsecure { get; set; }
 
         public Uri ToUri(bool withCredentials)
         {
@@ -349,9 +388,13 @@ namespace BTCPayServer.Payments.Lightning
                     {
                         builder.Append($";macaroon={Encoder.EncodeData(Macaroon)}");
                     }
-                    if (Tls != null)
+                    if (CertificateThumbprint != null)
                     {
-                        builder.Append($";tls={Encoder.EncodeData(Tls.RawData)}");
+                        builder.Append($";certthumbprint={Encoders.Hex.EncodeData(CertificateThumbprint)}");
+                    }
+                    if(AllowInsecure)
+                    {
+                        builder.Append($";allowinsecure=true");
                     }
                     break;
                 default:

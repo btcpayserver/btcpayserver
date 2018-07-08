@@ -15,7 +15,7 @@ namespace BTCPayServer.Tests.Lnd
             this._Parent = serverTester;
             var url = serverTester.GetEnvironment(environmentName, defaultValue);
 
-            Swagger = new LndSwaggerClient(new LndRestSettings(new Uri(url)));
+            Swagger = new LndSwaggerClient(new LndRestSettings(new Uri(url)) { AllowInsecure = true });
             Client = new LndInvoiceClient(Swagger);
             P2PHost = _Parent.GetEnvironment(environmentName + "_HOST", defaultHost);
         }

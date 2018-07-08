@@ -133,7 +133,7 @@ namespace BTCPayServer.Tests
             else if (connectionType == LightningConnectionType.CLightning)
                 connectionString = "type=clightning;server=" + parent.MerchantLightningD.Address.AbsoluteUri;
             else if (connectionType == LightningConnectionType.LndREST)
-                connectionString = $"type=lnd-rest;server={parent.MerchantLnd.Swagger.BaseUrl}";
+                connectionString = $"type=lnd-rest;server={parent.MerchantLnd.Swagger.BaseUrl};allowinsecure=true";
             else
                 throw new NotSupportedException(connectionType.ToString());
 

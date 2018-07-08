@@ -19,9 +19,11 @@ namespace BTCPayServer.Payments.Lightning.Lnd
     {
         public LndSwaggerClient _rpcClient;
 
-        public LndInvoiceClient(LndSwaggerClient rpcClient)
+        public LndInvoiceClient(LndSwaggerClient swaggerClient)
         {
-            _rpcClient = rpcClient;
+            if (swaggerClient == null)
+                throw new ArgumentNullException(nameof(swaggerClient));
+            _rpcClient = swaggerClient;
         }
 
         public async Task<LightningInvoice> CreateInvoice(LightMoney amount, string description, TimeSpan expiry,

@@ -521,7 +521,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(lndUri, conn.ToString());
             Assert.Equal(LightningConnectionType.LndREST, conn.ConnectionType);
             Assert.Equal(macaroon, Encoders.Hex.EncodeData(conn.Macaroon));
-            Assert.Equal(tls, Encoders.Hex.EncodeData(conn.Tls));
+            Assert.Equal(tls, Encoders.Hex.EncodeData(conn.Tls.RawData));
         }
 
         [Fact]

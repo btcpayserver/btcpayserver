@@ -15,12 +15,12 @@ namespace BTCPayServer.Tests.Lnd
             this._Parent = serverTester;
             var url = serverTester.GetEnvironment(environmentName, defaultValue);
 
-            Swagger = LndSwaggerClientCustomHttp.Create(new Uri(url), network);
+            Swagger = new LndSwaggerClient(new LndRestSettings(new Uri(url)));
             Client = new LndInvoiceClient(Swagger);
             P2PHost = _Parent.GetEnvironment(environmentName + "_HOST", defaultHost);
         }
 
-        public LndSwaggerClientCustomHttp Swagger { get; set; }
+        public LndSwaggerClient Swagger { get; set; }
         public LndInvoiceClient Client { get; set; }
         public string P2PHost { get; }
     }

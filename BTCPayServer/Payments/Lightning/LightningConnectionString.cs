@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -197,11 +198,11 @@ namespace BTCPayServer.Payments.Lightning
                         {
                             var tls = Take(keyValues, "tls");
                             if (tls != null)
-                                result.Tls = Encoder.DecodeData(tls);
+                                result.Tls = new X509Certificate2(Encoder.DecodeData(tls));
                         }
                         catch
                         {
-                            error = $"The key 'tls' format should be in hex";
+                            error = $"The key 'tls' should be the X509 certificate in hex";
                             return false;
                         }
                     }
@@ -301,7 +302,7 @@ namespace BTCPayServer.Payments.Lightning
             private set;
         }
         public byte[] Macaroon { get; set; }
-        public byte[] Tls { get; set; }
+        public X509Certificate2 Tls { get; set; }
 
         public Uri ToUri(bool withCredentials)
         {
@@ -350,7 +351,7 @@ namespace BTCPayServer.Payments.Lightning
                     }
                     if (Tls != null)
                     {
-                        builder.Append($";tls={Encoder.EncodeData(Tls)}");
+                        builder.Append($";tls={Encoder.EncodeData(Tls.RawData)}");
                     }
                     break;
                 default:

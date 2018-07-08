@@ -30,8 +30,11 @@ namespace BTCPayServer.Payments.Lightning
             }
             else if (connString.ConnectionType == LightningConnectionType.LndREST)
             {
-                var swagger = LndSwaggerClientCustomHttp.Create(connString.BaseUri, network, connString.Tls, connString.Macaroon);
-                return new LndInvoiceClient(swagger);
+                return new LndInvoiceClient(new LndSwaggerClient(new LndRestSettings(connString.BaseUri)
+                {
+                   Macaroon = connString.Macaroon,
+                   TLS = connString.Tls
+                }));
             }
             else
                 throw new NotSupportedException($"Unsupported connection string for lightning server ({connString.ConnectionType})");

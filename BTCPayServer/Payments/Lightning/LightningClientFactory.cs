@@ -26,7 +26,6 @@ namespace BTCPayServer.Payments.Lightning
             else if (connString.ConnectionType == LightningConnectionType.CLightning)
             {
                 return new CLightningRPCClient(connString.ToUri(false), network);
-
             }
             else if (connString.ConnectionType == LightningConnectionType.LndREST)
             {

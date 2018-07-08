@@ -64,6 +64,7 @@ namespace BTCPayServer.Tests.Lnd
         public async Task TestWaitListenInvoice()
         {
             var merchantInvoice = await InvoiceClient.CreateInvoice(10000, "Hello world", TimeSpan.FromSeconds(3600));
+            var merchantInvoice2 = await InvoiceClient.CreateInvoice(10000, "Hello world", TimeSpan.FromSeconds(3600));
 
             var waitToken = default(CancellationToken);
             var listener = await InvoiceClient.Listen(waitToken);
@@ -76,8 +77,22 @@ namespace BTCPayServer.Tests.Lnd
             });
 
             var invoice = await waitTask;
-
             Assert.True(invoice.PaidAt.HasValue);
+
+            var waitTask2 = listener.WaitInvoice(waitToken);
+
+            payResponse = await CustomerLnd.SendPaymentSyncAsync(new LnrpcSendRequest
+            {
+                Payment_request = merchantInvoice2.BOLT11
+            });
+
+            invoice = await waitTask2;
+            Assert.True(invoice.PaidAt.HasValue);
+
+            var waitTask3 = listener.WaitInvoice(waitToken);
+            await Task.Delay(100);
+            listener.Dispose();
+            Assert.Throws<TaskCanceledException>(()=> waitTask3.GetAwaiter().GetResult());
         }
 
         [Fact]

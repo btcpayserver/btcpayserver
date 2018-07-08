@@ -10,13 +10,91 @@ using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using NBitcoin;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Payments.Lightning.Lnd
 {
-    public class LndInvoiceClient : ILightningInvoiceClient, ILightningListenInvoiceSession
+    public class LndInvoiceClient : ILightningInvoiceClient
     {
+        class LndInvoiceClientSession : ILightningListenInvoiceSession
+        {
+            private LndSwaggerClient _Parent;
+            Channel<LightningInvoice> _Invoices = Channel.CreateBounded<LightningInvoice>(50);
+            CancellationTokenSource _Cts = new CancellationTokenSource();
+            ManualResetEventSlim _Stopped = new ManualResetEventSlim(false);
+
+            public LndInvoiceClientSession(LndSwaggerClient parent)
+            {
+                _Parent = parent;
+            }
+
+            public async void StartListening()
+            {
+                var urlBuilder = new StringBuilder();
+                urlBuilder.Append(_Parent.BaseUrl).Append("/v1/invoices/subscribe");
+                try
+                {
+                    while (!_Cts.IsCancellationRequested)
+                    {
+                        using (var client = _Parent.CreateHttpClient())
+                        {
+                            client.Timeout = TimeSpan.FromMilliseconds(Timeout.Infinite);
+
+                            var request = new HttpRequestMessage(HttpMethod.Get, urlBuilder.ToString());
+
+                            using (var response = await client.SendAsync(
+                                request, HttpCompletionOption.ResponseHeadersRead, _Cts.Token))
+                            {
+                                using (var body = await response.Content.ReadAsStreamAsync())
+                                using (var reader = new StreamReader(body))
+                                {
+                                    string line = await reader.ReadLineAsync().WithCancellation(_Cts.Token);
+                                    if (line != null && line.StartsWith("{\"result\":", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        var invoiceString = JObject.Parse(line)["result"].ToString();
+                                        LnrpcInvoice parsedInvoice = _Parent.Deserialize<LnrpcInvoice>(invoiceString);
+                                        await _Invoices.Writer.WriteAsync(ConvertLndInvoice(parsedInvoice));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                catch when (_Cts.IsCancellationRequested)
+                {
+
+                }
+                finally
+                {
+                    _Stopped.Set();
+                }
+            }
+
+            public async Task<LightningInvoice> WaitInvoice(CancellationToken cancellation)
+            {
+                try
+                {
+                    return await _Invoices.Reader.ReadAsync(cancellation);
+                }
+                catch (ChannelClosedException)
+                {
+                    throw new TaskCanceledException();
+                }
+            }
+
+            public void Dispose()
+            {
+                _Cts.Cancel();
+                _Stopped.Wait();
+                _Invoices.Writer.Complete();
+            }
+        }
+
+
         public LndSwaggerClient _rpcClient;
 
         public LndInvoiceClient(LndSwaggerClient swaggerClient)
@@ -78,31 +156,15 @@ namespace BTCPayServer.Payments.Lightning.Lnd
             var resp = await _rpcClient.LookupInvoiceAsync(invoiceId, null, cancellation);
             return ConvertLndInvoice(resp);
         }
-        
+
         public Task<ILightningListenInvoiceSession> Listen(CancellationToken cancellation = default(CancellationToken))
         {
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            _rpcClient.StartSubscribeInvoiceThread(cancellation);
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            return Task.FromResult<ILightningListenInvoiceSession>(this);
+            var session = new LndInvoiceClientSession(this._rpcClient);
+            session.StartListening();
+            return Task.FromResult<ILightningListenInvoiceSession>(session);
         }
 
-        async Task<LightningInvoice> ILightningListenInvoiceSession.WaitInvoice(CancellationToken cancellation)
-        {
-            var resp = await _rpcClient.InvoiceResponse.Task;
-            return ConvertLndInvoice(resp);
-        }
-
-
-        // utility static methods... maybe move to separate class
-        private static string BitString(byte[] bytes)
-        {
-            return BitConverter.ToString(bytes)
-                .Replace("-", "", StringComparison.InvariantCulture)
-                .ToLower(CultureInfo.InvariantCulture);
-        }
-
-        private static LightningInvoice ConvertLndInvoice(LnrpcInvoice resp)
+        internal static LightningInvoice ConvertLndInvoice(LnrpcInvoice resp)
         {
             var invoice = new LightningInvoice
             {
@@ -129,9 +191,13 @@ namespace BTCPayServer.Payments.Lightning.Lnd
             return invoice;
         }
 
-        public void Dispose()
+
+        // utility static methods... maybe move to separate class
+        private static string BitString(byte[] bytes)
         {
-            //
+            return BitConverter.ToString(bytes)
+                .Replace("-", "", StringComparison.InvariantCulture)
+                .ToLower(CultureInfo.InvariantCulture);
         }
 
         // Invariant culture conversion

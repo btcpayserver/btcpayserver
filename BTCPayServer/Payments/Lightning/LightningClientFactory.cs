@@ -28,7 +28,7 @@ namespace BTCPayServer.Payments.Lightning
                 return new CLightningRPCClient(connString.ToUri(false), network);
 
             }
-            else if (connString.ConnectionType == LightningConnectionType.Lnd)
+            else if (connString.ConnectionType == LightningConnectionType.LndREST)
             {
                 var swagger = LndSwaggerClientCustomHttp.Create(connString.BaseUri, network, connString.Tls, connString.Macaroon);
                 return new LndInvoiceClient(swagger);

@@ -20,7 +20,7 @@ services:
       TEST_MERCHANTLIGHTNINGD: "type=clightning;server=/etc/merchant_lightningd_datadir/lightning-rpc"
       TEST_CUSTOMERLIGHTNINGD: "type=clightning;server=/etc/customer_lightningd_datadir/lightning-rpc"
       TEST_MERCHANTCHARGE: "type=charge;server=http://lightning-charged:9112/;api-token=foiewnccewuify"
-      TEST_MERCHANTLND: "type=lnd;server=http://lnd:lnd@127.0.0.1:53280/"
+      TEST_MERCHANTLND: "type=lnd-rest;server=http://lnd:lnd@127.0.0.1:53280/"
       TESTS_INCONTAINER: "true"
     expose:
       - "80"

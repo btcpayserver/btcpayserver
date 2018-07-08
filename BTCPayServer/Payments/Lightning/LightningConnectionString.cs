@@ -13,7 +13,7 @@ namespace BTCPayServer.Payments.Lightning
     {
         Charge,
         CLightning,
-        Lnd
+        LndREST
     }
     public class LightningConnectionString
     {
@@ -24,7 +24,7 @@ namespace BTCPayServer.Payments.Lightning
             typeMapping = new Dictionary<string, LightningConnectionType>();
             typeMapping.Add("clightning", LightningConnectionType.CLightning);
             typeMapping.Add("charge", LightningConnectionType.Charge);
-            typeMapping.Add("lnd", LightningConnectionType.Lnd);
+            typeMapping.Add("lnd-rest", LightningConnectionType.LndREST);
             typeMappingReverse = new Dictionary<LightningConnectionType, string>();
             foreach (var kv in typeMapping)
             {
@@ -158,7 +158,7 @@ namespace BTCPayServer.Payments.Lightning
                         result.BaseUri = uri;
                     }
                     break;
-                case LightningConnectionType.Lnd:
+                case LightningConnectionType.LndREST:
                     {
                         var server = Take(keyValues, "server");
                         if (server == null)
@@ -181,20 +181,18 @@ namespace BTCPayServer.Payments.Lightning
                         result.BaseUri = new UriBuilder(uri) { UserName = "", Password = "" }.Uri;
 
                         var macaroon = Take(keyValues, "macaroon");
-                        //if(macaroon == null)
-                        //{
-                        //    error = $"The key 'macaroon' is mandatory for lnd connection strings";
-                        //    return false;
-                        //}
-                        //try
-                        //{
-                        //    result.Macaroon = Encoder.DecodeData(macaroon);
-                        //}
-                        //catch
-                        //{
-                        //    error = $"The key 'macaroon' format should be in hex";
-                        //    return false;
-                        //}
+                        if (macaroon != null)
+                        {
+                            try
+                            {
+                                result.Macaroon = Encoder.DecodeData(macaroon);
+                            }
+                            catch
+                            {
+                                error = $"The key 'macaroon' format should be in hex";
+                                return false;
+                            }
+                        }
                         try
                         {
                             var tls = Take(keyValues, "tls");
@@ -337,7 +335,7 @@ namespace BTCPayServer.Payments.Lightning
                 case LightningConnectionType.CLightning:
                     builder.Append($";server={BaseUri}");
                     break;
-                case LightningConnectionType.Lnd:
+                case LightningConnectionType.LndREST:
                     if (Username == null)
                     {
                         builder.Append($";server={BaseUri}");

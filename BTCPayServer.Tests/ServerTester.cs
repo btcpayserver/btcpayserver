@@ -85,7 +85,7 @@ namespace BTCPayServer.Tests
         public void PrepareLightning(LightningConnectionType lndBackend)
         {
             ILightningInvoiceClient client = MerchantCharge.Client;
-            if (lndBackend == LightningConnectionType.Lnd)
+            if (lndBackend == LightningConnectionType.LndREST)
                 client = MerchantLnd.Client;
 
             PrepareLightningAsync(client).GetAwaiter().GetResult();

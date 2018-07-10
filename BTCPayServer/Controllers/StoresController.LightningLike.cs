@@ -82,15 +82,14 @@ namespace BTCPayServer.Controllers
                 }
 
                 var internalDomain = internalLightning.BaseUri?.DnsSafeHost;
-                bool isLocal = (internalDomain == "127.0.0.1" || internalDomain == "localhost");
 
                 bool isInternalNode = connectionString.ConnectionType == LightningConnectionType.CLightning ||
                                       connectionString.BaseUri.DnsSafeHost == internalDomain ||
-                                      isLocal;
+                                      (internalDomain == "127.0.0.1" || internalDomain == "localhost");
 
-                if (connectionString.BaseUri.Scheme == "http" && !isLocal)
+                if (connectionString.BaseUri.Scheme == "http")
                 {
-                    if (!isInternalNode || (isInternalNode && !CanUseInternalLightning()))
+                    if (!isInternalNode)
                     {
                         ModelState.AddModelError(nameof(vm.ConnectionString), "The url must be HTTPS");
                         return View(vm);

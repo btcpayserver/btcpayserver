@@ -97,6 +97,20 @@ namespace BTCPayServer.Controllers
                     }
                 }
 
+                if(connectionString.MacaroonFilePath != null)
+                {
+                    if(!CanUseInternalLightning())
+                    {
+                        ModelState.AddModelError(nameof(vm.ConnectionString), "You are not authorized to use macaroonfilepath");
+                        return View(vm);
+                    }
+                    if(!System.IO.File.Exists(connectionString.MacaroonFilePath))
+                    {
+                        ModelState.AddModelError(nameof(vm.ConnectionString), "The macaroonfilepath file does exist");
+                        return View(vm);
+                    }
+                }
+
                 if (isInternalNode && !CanUseInternalLightning())
                 {
                     ModelState.AddModelError(nameof(vm.ConnectionString), "Unauthorized url");

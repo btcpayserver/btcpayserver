@@ -10,38 +10,28 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using NBitcoin.DataEncoders;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Payments.Lightning.Lnd
 {
-    public class LndRestSettings
-    {
-        public LndRestSettings()
-        {
-
-        }
-        public LndRestSettings(Uri uri)
-        {
-            Uri = uri;
-        }
-        public Uri Uri { get; set; }
-        /// <summary>
-        /// The SHA256 of the PEM certificate
-        /// </summary>
-        public byte[] CertificateThumbprint { get; set; }
-        public byte[] Macaroon { get; set; }
-        public bool AllowInsecure { get; set; }
-    }
-
     public partial class LndSwaggerClient
     {
         public LndSwaggerClient(LndRestSettings settings)
             : this(settings.Uri.AbsoluteUri.TrimEnd('/'), CreateHttpClient(settings))
         {
             _Settings = settings;
+            _Authentication = settings.CreateLndAuthentication();
         }
         LndRestSettings _Settings;
+        LndAuthentication _Authentication;
+
+        partial void PrepareRequest(HttpClient client, HttpRequestMessage request, string url)
+        {
+            _Authentication.AddAuthentication(request);
+        }
+
         internal static HttpClient CreateHttpClient(LndRestSettings settings)
         {
             var handler = new HttpClientHandler
@@ -60,7 +50,7 @@ namespace BTCPayServer.Payments.Lightning.Lnd
                 };
             }
 
-            if(settings.AllowInsecure)
+            if (settings.AllowInsecure)
             {
                 handler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
             }
@@ -69,14 +59,7 @@ namespace BTCPayServer.Payments.Lightning.Lnd
                 if (settings.Uri.Scheme == "http")
                     throw new InvalidOperationException("AllowInsecure is set to false, but the URI is not using https");
             }
-
-            var httpClient = new HttpClient(handler);
-            if (settings.Macaroon != null)
-            {
-                var macaroonHex = BitConverter.ToString(settings.Macaroon).Replace("-", "", StringComparison.InvariantCulture);
-                httpClient.DefaultRequestHeaders.Add("Grpc-Metadata-macaroon", macaroonHex);
-            }
-            return httpClient;
+            return new HttpClient(handler);
         }
 
         internal HttpClient CreateHttpClient()

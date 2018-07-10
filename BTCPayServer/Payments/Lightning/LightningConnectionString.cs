@@ -196,6 +196,22 @@ namespace BTCPayServer.Payments.Lightning
                             }
                         }
 
+                        var macaroonFilePath = Take(keyValues, "macaroonfilepath");
+                        if (macaroonFilePath != null)
+                        {
+                            if(macaroon != null)
+                            {
+                                error = $"The key 'macaroon' is already specified";
+                                return false;
+                            }
+                            if(!macaroonFilePath.EndsWith(".macaroon", StringComparison.OrdinalIgnoreCase))
+                            {
+                                error = $"The key 'macaroonfilepath' should point to a .macaroon file";
+                                return false;
+                            }
+                            result.MacaroonFilePath = macaroonFilePath;
+                        }
+
                         string securitySet = null;
                         var certthumbprint = Take(keyValues, "certthumbprint");
                         if (certthumbprint != null)
@@ -223,12 +239,12 @@ namespace BTCPayServer.Payments.Lightning
                         if (allowinsecureStr != null)
                         {
                             var allowedValues = new[] { "true", "false" };
-                            if(!allowedValues.Any(v=> v.Equals(allowinsecureStr,  StringComparison.OrdinalIgnoreCase)))
+                            if (!allowedValues.Any(v => v.Equals(allowinsecureStr, StringComparison.OrdinalIgnoreCase)))
                             {
                                 error = $"The key 'allowinsecure' should be true or false";
                                 return false;
                             }
-                            
+
                             bool allowInsecure = allowinsecureStr.Equals("true", StringComparison.OrdinalIgnoreCase);
                             if (securitySet != null && allowInsecure)
                             {
@@ -238,7 +254,7 @@ namespace BTCPayServer.Payments.Lightning
                             result.AllowInsecure = allowInsecure;
                         }
 
-                        if(!result.AllowInsecure && result.BaseUri.Scheme == "http")
+                        if (!result.AllowInsecure && result.BaseUri.Scheme == "http")
                         {
                             error = $"The key 'allowinsecure' is false, but server's Uri is not using https";
                             return false;
@@ -340,6 +356,7 @@ namespace BTCPayServer.Payments.Lightning
             private set;
         }
         public byte[] Macaroon { get; set; }
+        public string MacaroonFilePath { get; set; }
         public byte[] CertificateThumbprint { get; set; }
         public bool AllowInsecure { get; set; }
 
@@ -388,11 +405,15 @@ namespace BTCPayServer.Payments.Lightning
                     {
                         builder.Append($";macaroon={Encoder.EncodeData(Macaroon)}");
                     }
+                    if (MacaroonFilePath != null)
+                    {
+                        builder.Append($";macaroonfilepath={MacaroonFilePath}");
+                    }
                     if (CertificateThumbprint != null)
                     {
                         builder.Append($";certthumbprint={Encoders.Hex.EncodeData(CertificateThumbprint)}");
                     }
-                    if(AllowInsecure)
+                    if (AllowInsecure)
                     {
                         builder.Append($";allowinsecure=true");
                     }

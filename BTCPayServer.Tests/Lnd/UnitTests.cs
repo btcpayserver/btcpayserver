@@ -59,6 +59,14 @@ namespace BTCPayServer.Tests.Lnd
             Assert.Equal(createInvoice.BOLT11, getInvoice.BOLT11);
         }
 
+        [Fact]
+        public void Play()
+        {
+            var seq = new System.Buffers.ReadOnlySequence<byte>(new ReadOnlyMemory<byte>(new byte[1000]));
+            var seq2 = seq.Slice(3);
+            var pos = seq2.GetPosition(0);
+        }
+
         // integration tests
         [Fact]
         public async Task TestWaitListenInvoice()

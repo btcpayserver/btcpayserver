@@ -19,8 +19,8 @@ services:
       TESTS_HOSTNAME: tests
       TEST_MERCHANTLIGHTNINGD: "type=clightning;server=/etc/merchant_lightningd_datadir/lightning-rpc"
       TEST_CUSTOMERLIGHTNINGD: "type=clightning;server=/etc/customer_lightningd_datadir/lightning-rpc"
-      TEST_MERCHANTCHARGE: "type=charge;server=http://lightning-charged:9112/;api-token=foiewnccewuify;allowinsecure=true"
-      TEST_MERCHANTLND: "type=lnd-rest;server=http://lnd:lnd@127.0.0.1:53280/;allowinsecure=true"
+      TEST_MERCHANTCHARGE: "type=charge;server=https://lightning-charged:9112/;api-token=foiewnccewuify;allowinsecure=true"
+      TEST_MERCHANTLND: "type=lnd-rest;server=https://lnd:lnd@127.0.0.1:53280/;allowinsecure=true"
       TESTS_INCONTAINER: "true"
     expose:
       - "80"
@@ -202,35 +202,45 @@ services:
   merchant_lnd:
     image: btcpayserver/lnd:0.4.2.0
     environment:
-      RPCHOST: bitcoind:43782
-      RPCUSER: ceiwHEbqWI83
-      RPCPASS: DwubwWsoo3
-      ZMQPATH: tcp://bitcoind:28332
-      NETWORK: regtest
-      CHAIN: bitcoin
-      BACKEND: bitcoind
-      DEBUG: debug
-      EXTERNALIP: merchant_lnd:9735
+      LND_CHAIN: "btc"
+      LND_ENVIRONMENT: "regtest"
+      LND_EXTRA_ARGS: |
+        restlisten=0.0.0.0:8080
+        bitcoin.node=bitcoind
+        bitcoind.rpchost=bitcoind:43782
+        bitcoind.zmqpath=tcp://bitcoind:28332
+        bitcoind.rpcuser=ceiwHEbqWI83
+        bitcoind.rpcpass=DwubwWsoo3
+        externalip=merchant_lnd:9735
+        no-macaroons=1
+        debuglevel=debug
+        noencryptwallet=1
     ports:
       - "53280:8080"
     expose:
       - "9735"
     volumes:
-      - "merchant_lnd_datadir:/root/.lnd"
+      - "merchant_lnd_datadir:/data"
+      - "bitcoin_datadir:/deps/.bitcoin"
     links:
       - bitcoind
 
   customer_lnd:
     image: btcpayserver/lnd:0.4.2.0
     environment:
-      RPCHOST: bitcoind:43782
-      RPCUSER: ceiwHEbqWI83
-      RPCPASS: DwubwWsoo3
-      ZMQPATH: tcp://bitcoind:28332
-      NETWORK: regtest
-      CHAIN: bitcoin
-      BACKEND: bitcoind
-      DEBUG: debug
+      LND_CHAIN: "btc"
+      LND_ENVIRONMENT: "regtest"
+      LND_EXTRA_ARGS: |
+        restlisten=0.0.0.0:8080
+        bitcoin.node=bitcoind
+        bitcoind.rpchost=bitcoind:43782
+        bitcoind.zmqpath=tcp://bitcoind:28332
+        bitcoind.rpcuser=ceiwHEbqWI83
+        bitcoind.rpcpass=DwubwWsoo3
+        externalip=customer_lnd:10009
+        no-macaroons=1
+        debuglevel=debug
+        noencryptwallet=1
     ports:
       - "53281:8080"
     expose:
@@ -238,6 +248,7 @@ services:
       - "10009"
     volumes:
       - "customer_lnd_datadir:/root/.lnd"
+      - "bitcoin_datadir:/deps/.bitcoin"
     links:
       - bitcoind
 

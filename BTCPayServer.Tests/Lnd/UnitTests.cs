@@ -25,10 +25,10 @@ namespace BTCPayServer.Tests.Lnd
             this.output = output;
             initializeEnvironment();
 
-            MerchantLnd = new LndSwaggerClient(new LndRestSettings(new Uri("http://127.0.0.1:53280")) { AllowInsecure = true });
+            MerchantLnd = new LndSwaggerClient(new LndRestSettings(new Uri("https://127.0.0.1:53280")) { AllowInsecure = true });
             InvoiceClient = new LndInvoiceClient(MerchantLnd);
 
-            CustomerLnd = new LndSwaggerClient(new LndRestSettings(new Uri("http://127.0.0.1:53281")) { AllowInsecure = true });
+            CustomerLnd = new LndSwaggerClient(new LndRestSettings(new Uri("https://127.0.0.1:53281")) { AllowInsecure = true });
         }
 
         private LndSwaggerClient MerchantLnd { get; set; }

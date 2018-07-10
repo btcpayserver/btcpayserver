@@ -540,7 +540,7 @@ namespace BTCPayServer.Tests
             // AllowInsecure can be set to allow http
             Assert.False(LightningConnectionString.TryParse($"type=lnd-rest;server=http://127.0.0.1:53280/;macaroon={macaroon};allowinsecure=false", false, out conn2));
             Assert.True(LightningConnectionString.TryParse($"type=lnd-rest;server=http://127.0.0.1:53280/;macaroon={macaroon};allowinsecure=true", false, out conn2));
-            Assert.True(LightningConnectionString.TryParse($"type=lnd-rest;server=https://127.0.0.1:53280/;macaroon={macaroon};allowinsecure=true", false, out conn2));
+            Assert.True(LightningConnectionString.TryParse($"type=lnd-rest;server=http://127.0.0.1:53280/;macaroon={macaroon};allowinsecure=true", false, out conn2));
         }
 
         [Fact]

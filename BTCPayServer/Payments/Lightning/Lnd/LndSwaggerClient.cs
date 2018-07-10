@@ -16,19 +16,7 @@ namespace BTCPayServer.Payments.Lightning.Lnd
         private System.Lazy<Newtonsoft.Json.JsonSerializerSettings> _settings;
         private string _baseUrl = "";
         
-        private System.Net.Http.HttpClient _httpClient; 
-    
-        public LndSwaggerClient(string baseUrl, System.Net.Http.HttpClient httpClient)
-        {
-            BaseUrl = baseUrl; 
-            _httpClient = httpClient; 
-    		_settings = new System.Lazy<Newtonsoft.Json.JsonSerializerSettings>(() => 
-            {
-                var settings = new Newtonsoft.Json.JsonSerializerSettings();
-                UpdateJsonSerializerSettings(settings);
-                return settings;
-            });
-    	}
+        private System.Net.Http.HttpClient _httpClient;     
     
         public string BaseUrl 
         {

@@ -19,12 +19,21 @@ namespace BTCPayServer.Payments.Lightning.Lnd
     public partial class LndSwaggerClient
     {
         public LndSwaggerClient(LndRestSettings settings)
-            : this(settings.Uri.AbsoluteUri.TrimEnd('/'), CreateHttpClient(settings))
         {
-            _Settings = settings;
+            if (settings == null)
+                throw new ArgumentNullException(nameof(settings));
+            _LndSettings = settings;
             _Authentication = settings.CreateLndAuthentication();
+            BaseUrl = settings.Uri.AbsoluteUri.TrimEnd('/');
+            _httpClient = CreateHttpClient(settings);
+            _settings = new System.Lazy<Newtonsoft.Json.JsonSerializerSettings>(() =>
+            {
+                var json = new Newtonsoft.Json.JsonSerializerSettings();
+                UpdateJsonSerializerSettings(json);
+                return json;
+            });
         }
-        LndRestSettings _Settings;
+        LndRestSettings _LndSettings;
         LndAuthentication _Authentication;
 
         partial void PrepareRequest(HttpClient client, HttpRequestMessage request, string url)
@@ -64,7 +73,7 @@ namespace BTCPayServer.Payments.Lightning.Lnd
 
         internal HttpClient CreateHttpClient()
         {
-            return LndSwaggerClient.CreateHttpClient(_Settings);
+            return LndSwaggerClient.CreateHttpClient(_LndSettings);
         }
 
         internal T Deserialize<T>(string str)

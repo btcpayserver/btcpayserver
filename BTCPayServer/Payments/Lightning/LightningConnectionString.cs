@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Primitives;
+using NBitcoin.DataEncoders;
 
 namespace BTCPayServer.Payments.Lightning
 {
@@ -13,7 +15,7 @@ namespace BTCPayServer.Payments.Lightning
     {
         Charge,
         CLightning,
-        Lnd
+        LndREST
     }
     public class LightningConnectionString
     {
@@ -24,7 +26,7 @@ namespace BTCPayServer.Payments.Lightning
             typeMapping = new Dictionary<string, LightningConnectionType>();
             typeMapping.Add("clightning", LightningConnectionType.CLightning);
             typeMapping.Add("charge", LightningConnectionType.Charge);
-            typeMapping.Add("lnd", LightningConnectionType.Lnd);
+            typeMapping.Add("lnd-rest", LightningConnectionType.LndREST);
             typeMappingReverse = new Dictionary<LightningConnectionType, string>();
             foreach (var kv in typeMapping)
             {
@@ -158,7 +160,7 @@ namespace BTCPayServer.Payments.Lightning
                         result.BaseUri = uri;
                     }
                     break;
-                case LightningConnectionType.Lnd:
+                case LightningConnectionType.LndREST:
                     {
                         var server = Take(keyValues, "server");
                         if (server == null)
@@ -181,29 +183,80 @@ namespace BTCPayServer.Payments.Lightning
                         result.BaseUri = new UriBuilder(uri) { UserName = "", Password = "" }.Uri;
 
                         var macaroon = Take(keyValues, "macaroon");
-                        //if(macaroon == null)
-                        //{
-                        //    error = $"The key 'macaroon' is mandatory for lnd connection strings";
-                        //    return false;
-                        //}
-                        //try
-                        //{
-                        //    result.Macaroon = Encoder.DecodeData(macaroon);
-                        //}
-                        //catch
-                        //{
-                        //    error = $"The key 'macaroon' format should be in hex";
-                        //    return false;
-                        //}
-                        try
+                        if (macaroon != null)
                         {
-                            var tls = Take(keyValues, "tls");
-                            if (tls != null)
-                                result.Tls = Encoder.DecodeData(tls);
+                            try
+                            {
+                                result.Macaroon = Encoder.DecodeData(macaroon);
+                            }
+                            catch
+                            {
+                                error = $"The key 'macaroon' format should be in hex";
+                                return false;
+                            }
                         }
-                        catch
+
+                        var macaroonFilePath = Take(keyValues, "macaroonfilepath");
+                        if (macaroonFilePath != null)
                         {
-                            error = $"The key 'tls' format should be in hex";
+                            if(macaroon != null)
+                            {
+                                error = $"The key 'macaroon' is already specified";
+                                return false;
+                            }
+                            if(!macaroonFilePath.EndsWith(".macaroon", StringComparison.OrdinalIgnoreCase))
+                            {
+                                error = $"The key 'macaroonfilepath' should point to a .macaroon file";
+                                return false;
+                            }
+                            result.MacaroonFilePath = macaroonFilePath;
+                        }
+
+                        string securitySet = null;
+                        var certthumbprint = Take(keyValues, "certthumbprint");
+                        if (certthumbprint != null)
+                        {
+                            try
+                            {
+                                var bytes = Encoders.Hex.DecodeData(certthumbprint.Replace(":", string.Empty, StringComparison.OrdinalIgnoreCase));
+                                if (bytes.Length != 32)
+                                {
+                                    error = $"The key 'certthumbprint' has invalid length: it should be the SHA256 of the PEM format of the certificate (32 bytes)";
+                                    return false;
+                                }
+                                result.CertificateThumbprint = bytes;
+                            }
+                            catch
+                            {
+                                error = $"The key 'certthumbprint' has invalid format: it should be the SHA256 of the PEM format of the certificate";
+                                return false;
+                            }
+                            securitySet = "certthumbprint";
+                        }
+
+                        var allowinsecureStr = Take(keyValues, "allowinsecure");
+
+                        if (allowinsecureStr != null)
+                        {
+                            var allowedValues = new[] { "true", "false" };
+                            if (!allowedValues.Any(v => v.Equals(allowinsecureStr, StringComparison.OrdinalIgnoreCase)))
+                            {
+                                error = $"The key 'allowinsecure' should be true or false";
+                                return false;
+                            }
+
+                            bool allowInsecure = allowinsecureStr.Equals("true", StringComparison.OrdinalIgnoreCase);
+                            if (securitySet != null && allowInsecure)
+                            {
+                                error = $"The key 'allowinsecure' conflict with '{securitySet}'";
+                                return false;
+                            }
+                            result.AllowInsecure = allowInsecure;
+                        }
+
+                        if (!result.AllowInsecure && result.BaseUri.Scheme == "http")
+                        {
+                            error = $"The key 'allowinsecure' is false, but server's Uri is not using https";
                             return false;
                         }
                     }
@@ -303,7 +356,9 @@ namespace BTCPayServer.Payments.Lightning
             private set;
         }
         public byte[] Macaroon { get; set; }
-        public byte[] Tls { get; set; }
+        public string MacaroonFilePath { get; set; }
+        public byte[] CertificateThumbprint { get; set; }
+        public bool AllowInsecure { get; set; }
 
         public Uri ToUri(bool withCredentials)
         {
@@ -337,7 +392,7 @@ namespace BTCPayServer.Payments.Lightning
                 case LightningConnectionType.CLightning:
                     builder.Append($";server={BaseUri}");
                     break;
-                case LightningConnectionType.Lnd:
+                case LightningConnectionType.LndREST:
                     if (Username == null)
                     {
                         builder.Append($";server={BaseUri}");
@@ -350,9 +405,17 @@ namespace BTCPayServer.Payments.Lightning
                     {
                         builder.Append($";macaroon={Encoder.EncodeData(Macaroon)}");
                     }
-                    if (Tls != null)
+                    if (MacaroonFilePath != null)
                     {
-                        builder.Append($";tls={Encoder.EncodeData(Tls)}");
+                        builder.Append($";macaroonfilepath={MacaroonFilePath}");
+                    }
+                    if (CertificateThumbprint != null)
+                    {
+                        builder.Append($";certthumbprint={Encoders.Hex.EncodeData(CertificateThumbprint)}");
+                    }
+                    if (AllowInsecure)
+                    {
+                        builder.Append($";allowinsecure=true");
                     }
                     break;
                 default:

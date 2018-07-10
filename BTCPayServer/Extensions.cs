@@ -109,7 +109,7 @@ namespace BTCPayServer
 
         public static string GetAbsoluteUri(this HttpRequest request, string redirectUrl)
         {
-            bool isRelative = 
+            bool isRelative =
                 (redirectUrl.Length > 0 && redirectUrl[0] == '/')
                 || !new Uri(redirectUrl, UriKind.RelativeOrAbsolute).IsAbsoluteUri;
             return isRelative ? request.GetAbsoluteRoot() + redirectUrl : redirectUrl;
@@ -141,7 +141,7 @@ namespace BTCPayServer
 
         public static void AddRange<T>(this HashSet<T> hashSet, IEnumerable<T> items)
         {
-            foreach(var item in items)
+            foreach (var item in items)
             {
                 hashSet.Add(item);
             }
@@ -155,6 +155,15 @@ namespace BTCPayServer
         public static void SetBitpayAuth(this HttpContext ctx, (string Signature, String Id, String Authorization) value)
         {
             NBitcoin.Extensions.TryAdd(ctx.Items, "BitpayAuth", value);
+        }
+
+        public static async Task<T> WithCancellation<T>(this Task<T> task, CancellationToken cancellationToken)
+        {
+            var waiting = Task.Delay(-1, cancellationToken);
+            var doing = task;
+            await Task.WhenAny(waiting, doing);
+            cancellationToken.ThrowIfCancellationRequested();
+            return await doing;
         }
 
         public static (string Signature, String Id, String Authorization) GetBitpayAuth(this HttpContext ctx)

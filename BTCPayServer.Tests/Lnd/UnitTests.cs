@@ -25,16 +25,16 @@ namespace BTCPayServer.Tests.Lnd
             this.output = output;
             initializeEnvironment();
 
-            MerchantLnd = LndSwaggerClientCustomHttp.Create(new Uri("http://127.0.0.1:53280"), Network.RegTest);
+            MerchantLnd = new LndSwaggerClient(new LndRestSettings(new Uri("https://127.0.0.1:53280")) { AllowInsecure = true });
             InvoiceClient = new LndInvoiceClient(MerchantLnd);
 
-            CustomerLnd = LndSwaggerClientCustomHttp.Create(new Uri("http://127.0.0.1:53281"), Network.RegTest);
+            CustomerLnd = new LndSwaggerClient(new LndRestSettings(new Uri("https://127.0.0.1:53281")) { AllowInsecure = true });
         }
 
-        private LndSwaggerClientCustomHttp MerchantLnd { get; set; }
+        private LndSwaggerClient MerchantLnd { get; set; }
         private LndInvoiceClient InvoiceClient { get; set; }
 
-        private LndSwaggerClientCustomHttp CustomerLnd { get; set; }
+        private LndSwaggerClient CustomerLnd { get; set; }
 
         [Fact]
         public async Task GetInfo()
@@ -59,16 +59,25 @@ namespace BTCPayServer.Tests.Lnd
             Assert.Equal(createInvoice.BOLT11, getInvoice.BOLT11);
         }
 
+        [Fact]
+        public void Play()
+        {
+            var seq = new System.Buffers.ReadOnlySequence<byte>(new ReadOnlyMemory<byte>(new byte[1000]));
+            var seq2 = seq.Slice(3);
+            var pos = seq2.GetPosition(0);
+        }
+
         // integration tests
         [Fact]
         public async Task TestWaitListenInvoice()
         {
             var merchantInvoice = await InvoiceClient.CreateInvoice(10000, "Hello world", TimeSpan.FromSeconds(3600));
+            var merchantInvoice2 = await InvoiceClient.CreateInvoice(10000, "Hello world", TimeSpan.FromSeconds(3600));
 
             var waitToken = default(CancellationToken);
             var listener = await InvoiceClient.Listen(waitToken);
             var waitTask = listener.WaitInvoice(waitToken);
-            
+
             await EnsureLightningChannelAsync();
             var payResponse = await CustomerLnd.SendPaymentSyncAsync(new LnrpcSendRequest
             {
@@ -76,8 +85,22 @@ namespace BTCPayServer.Tests.Lnd
             });
 
             var invoice = await waitTask;
-
             Assert.True(invoice.PaidAt.HasValue);
+
+            var waitTask2 = listener.WaitInvoice(waitToken);
+
+            payResponse = await CustomerLnd.SendPaymentSyncAsync(new LnrpcSendRequest
+            {
+                Payment_request = merchantInvoice2.BOLT11
+            });
+
+            invoice = await waitTask2;
+            Assert.True(invoice.PaidAt.HasValue);
+
+            var waitTask3 = listener.WaitInvoice(waitToken);
+            await Task.Delay(100);
+            listener.Dispose();
+            Assert.Throws<TaskCanceledException>(()=> waitTask3.GetAwaiter().GetResult());
         }
 
         [Fact]

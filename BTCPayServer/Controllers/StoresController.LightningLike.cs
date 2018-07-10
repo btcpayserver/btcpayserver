@@ -82,17 +82,35 @@ namespace BTCPayServer.Controllers
                 }
 
                 var internalDomain = internalLightning.BaseUri?.DnsSafeHost;
-                bool isLocal = (internalDomain == "127.0.0.1" || internalDomain == "localhost");
 
                 bool isInternalNode = connectionString.ConnectionType == LightningConnectionType.CLightning ||
                                       connectionString.BaseUri.DnsSafeHost == internalDomain ||
-                                      isLocal;
+                                      (internalDomain == "127.0.0.1" || internalDomain == "localhost");
 
-                if (connectionString.BaseUri.Scheme == "http" && !isLocal)
+                if (connectionString.BaseUri.Scheme == "http")
                 {
-                    if (!isInternalNode || (isInternalNode && !CanUseInternalLightning()))
+                    if (!isInternalNode)
                     {
                         ModelState.AddModelError(nameof(vm.ConnectionString), "The url must be HTTPS");
+                        return View(vm);
+                    }
+                }
+
+                if(connectionString.MacaroonFilePath != null)
+                {
+                    if(!CanUseInternalLightning())
+                    {
+                        ModelState.AddModelError(nameof(vm.ConnectionString), "You are not authorized to use macaroonfilepath");
+                        return View(vm);
+                    }
+                    if(!System.IO.File.Exists(connectionString.MacaroonFilePath))
+                    {
+                        ModelState.AddModelError(nameof(vm.ConnectionString), "The macaroonfilepath file does exist");
+                        return View(vm);
+                    }
+                    if(!System.IO.Path.IsPathRooted(connectionString.MacaroonFilePath))
+                    {
+                        ModelState.AddModelError(nameof(vm.ConnectionString), "The macaroonfilepath should be fully rooted");
                         return View(vm);
                     }
                 }

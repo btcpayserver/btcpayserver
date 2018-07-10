@@ -109,6 +109,11 @@ namespace BTCPayServer.Controllers
                         ModelState.AddModelError(nameof(vm.ConnectionString), "The macaroonfilepath file does exist");
                         return View(vm);
                     }
+                    if(!System.IO.Path.IsPathRooted(connectionString.MacaroonFilePath))
+                    {
+                        ModelState.AddModelError(nameof(vm.ConnectionString), "The macaroonfilepath should be fully rooted");
+                        return View(vm);
+                    }
                 }
 
                 if (isInternalNode && !CanUseInternalLightning())

@@ -7,13 +7,17 @@ using System.Threading.Tasks;
 using System.Text;
 using NBXplorer;
 using NBitcoin;
+using Microsoft.AspNetCore.Http;
 
 namespace BTCPayServer.Services
 {
     public class BTCPayServerEnvironment
     {
-        public BTCPayServerEnvironment(IHostingEnvironment env, BTCPayNetworkProvider provider)
+        public BTCPayServerEnvironment(IHostingEnvironment env, BTCPayNetworkProvider provider, IHttpContextAccessor httpContext)
         {
+            ExpectedHost = httpContext.HttpContext.Request.Host.Value;
+            ExpectedDomain = httpContext.HttpContext.Request.Host.Host;
+            ExpectedProtocol = httpContext.HttpContext.Request.Scheme;
             Version = typeof(BTCPayServerEnvironment).GetTypeInfo().Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>().Version;
 #if DEBUG
             Build = "Debug";
@@ -27,6 +31,11 @@ namespace BTCPayServer.Services
         {
             get; set;
         }
+
+        public string ExpectedDomain { get; set; }
+        public string ExpectedHost { get; set; }
+        public string ExpectedProtocol { get; set; }
+
         public NetworkType NetworkType { get; set; }
         public string Version
         {

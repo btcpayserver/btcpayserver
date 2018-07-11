@@ -79,6 +79,8 @@ namespace BTCPayServer.Hosting
             services.AddMvc(o =>
             {
                 o.Filters.Add(new XFrameOptionsAttribute("DENY"));
+                o.Filters.Add(new XContentTypeOptionsAttribute("nosniff"));
+                o.Filters.Add(new XXSSProtectionAttribute());
             });
 
             services.Configure<IdentityOptions>(options =>

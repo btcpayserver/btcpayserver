@@ -23,11 +23,11 @@ namespace BTCPayServer.Filters
 
         public void OnActionExecuting(ActionExecutingContext context)
         {
-            var existing = context.HttpContext.Response.Headers["x-frame-options"].FirstOrDefault();
+            var existing = context.HttpContext.Response.Headers["X-Frame-Options"].FirstOrDefault();
             if (existing != null && Value == null)
-                context.HttpContext.Response.Headers.Remove("x-frame-options");
+                context.HttpContext.Response.Headers.Remove("X-Frame-Options");
             else
-                context.HttpContext.Response.Headers["x-frame-options"] = Value;
+                context.HttpContext.Response.Headers["X-Frame-Options"] = Value;
         }
     }
 }

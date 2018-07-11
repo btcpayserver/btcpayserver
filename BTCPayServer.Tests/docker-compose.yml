@@ -209,8 +209,6 @@ services:
         bitcoin.node=bitcoind
         bitcoind.rpchost=bitcoind:43782
         bitcoind.zmqpath=tcp://bitcoind:28332
-        bitcoind.rpcuser=ceiwHEbqWI83
-        bitcoind.rpcpass=DwubwWsoo3
         externalip=merchant_lnd:9735
         no-macaroons=1
         debuglevel=debug
@@ -235,8 +233,6 @@ services:
         bitcoin.node=bitcoind
         bitcoind.rpchost=bitcoind:43782
         bitcoind.zmqpath=tcp://bitcoind:28332
-        bitcoind.rpcuser=ceiwHEbqWI83
-        bitcoind.rpcpass=DwubwWsoo3
         externalip=customer_lnd:10009
         no-macaroons=1
         debuglevel=debug

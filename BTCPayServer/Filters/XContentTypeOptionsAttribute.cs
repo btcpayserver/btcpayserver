@@ -19,11 +19,11 @@ namespace BTCPayServer.Filters
         public string Value { get; set; }
         public void OnActionExecuting(ActionExecutingContext context)
         {
-            var existing = context.HttpContext.Response.Headers["x-content-type-options"].FirstOrDefault();
+            var existing = context.HttpContext.Response.Headers["X-Content-Type-Options"].FirstOrDefault();
             if (existing != null && Value == null)
-                context.HttpContext.Response.Headers.Remove("x-content-type-options");
+                context.HttpContext.Response.Headers.Remove("X-Content-Type-Options");
             else
-                context.HttpContext.Response.Headers["x-content-type-options"] = Value;
+                context.HttpContext.Response.Headers["X-Content-Type-Options"] = Value;
         }
     }
 }

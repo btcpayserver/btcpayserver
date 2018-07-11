@@ -111,6 +111,7 @@
 	<ItemGroup>
 	  <Folder Include="Build\" />
 	  <Folder Include="wwwroot\vendor\clipboard.js\" />
+	  <Folder Include="wwwroot\vendor\highlightjs\" />
 	</ItemGroup>
 
 	<ItemGroup>

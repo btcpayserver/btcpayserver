@@ -83,14 +83,14 @@ namespace BTCPayServer.Hosting
                 o.Filters.Add(new XContentTypeOptionsAttribute("nosniff"));
                 o.Filters.Add(new XXSSProtectionAttribute());
                 o.Filters.Add(new ReferrerPolicyAttribute("same-origin"));
-                o.Filters.Add(new ContentSecurityPolicyAttribute()
-                {
-                    FontSrc = "'self' https://fonts.gstatic.com/",
-                    ImgSrc = "'self' data:",
-                    DefaultSrc = "'none'",
-                    StyleSrc = "'self' 'unsafe-inline'",
-                    ScriptSrc = "'self' 'unsafe-inline'"
-                });
+                //o.Filters.Add(new ContentSecurityPolicyAttribute()
+                //{
+                //    FontSrc = "'self' https://fonts.gstatic.com/",
+                //    ImgSrc = "'self' data:",
+                //    DefaultSrc = "'none'",
+                //    StyleSrc = "'self' 'unsafe-inline'",
+                //    ScriptSrc = "'self' 'unsafe-inline'"
+                //});
             });
             services.TryAddScoped<ContentSecurityPolicies>();
             services.Configure<IdentityOptions>(options =>

@@ -98,6 +98,26 @@ namespace BTCPayServer
             return str + "/";
         }
 
+        public static void SetHeaderOnStarting(this HttpResponse resp, string name, string value)
+        {
+            if (resp.HasStarted)
+                return;
+            resp.OnStarting(() =>
+            {
+                SetHeader(resp, name, value);
+                return Task.CompletedTask;
+            });
+        }
+
+        public static void SetHeader(this HttpResponse resp, string name, string value)
+        {
+            var existing = resp.Headers[name].FirstOrDefault();
+            if (existing != null && value == null)
+                resp.Headers.Remove(name);
+            else
+                resp.Headers[name] = value;
+        }
+
         public static string GetAbsoluteRoot(this HttpRequest request)
         {
             return string.Concat(

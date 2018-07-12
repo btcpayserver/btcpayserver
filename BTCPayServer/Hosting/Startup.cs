@@ -39,6 +39,7 @@ using Microsoft.AspNetCore.Mvc.Cors.Internal;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using System.Net;
 using Meziantou.AspNetCore.BundleTagHelpers;
+using BTCPayServer.Security;
 
 namespace BTCPayServer.Hosting
 {
@@ -82,8 +83,16 @@ namespace BTCPayServer.Hosting
                 o.Filters.Add(new XContentTypeOptionsAttribute("nosniff"));
                 o.Filters.Add(new XXSSProtectionAttribute());
                 o.Filters.Add(new ReferrerPolicyAttribute("same-origin"));
+                o.Filters.Add(new ContentSecurityPolicyAttribute()
+                {
+                    FontSrc = "'self' https://fonts.gstatic.com/",
+                    ImgSrc = "'self' data:",
+                    DefaultSrc = "'none'",
+                    StyleSrc = "'self' 'unsafe-inline'",
+                    ScriptSrc = "'self' 'unsafe-inline'"
+                });
             });
-
+            services.TryAddScoped<ContentSecurityPolicies>();
             services.Configure<IdentityOptions>(options =>
             {
                 options.Password.RequireDigit = false;

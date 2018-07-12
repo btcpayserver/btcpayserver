@@ -23,11 +23,7 @@ namespace BTCPayServer.Filters
         {
             if (context.IsEffectivePolicy<ReferrerPolicyAttribute>(this))
             {
-                var existing = context.HttpContext.Response.Headers["Referrer-Policy"].FirstOrDefault();
-                if (existing != null && Value == null)
-                    context.HttpContext.Response.Headers.Remove("Referrer-Policy");
-                else
-                    context.HttpContext.Response.Headers["Referrer-Policy"] = Value;
+                context.HttpContext.Response.SetHeaderOnStarting("Referrer-Policy", Value);
             }
         }
     }

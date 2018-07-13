@@ -64,11 +64,24 @@ namespace BTCPayServer.Payments.Lightning.Lnd
                     while (!_Cts.IsCancellationRequested)
                     {
                         string line = await _Reader.ReadLineAsync().WithCancellation(_Cts.Token);
-                        if (line != null && line.StartsWith("{\"result\":", StringComparison.OrdinalIgnoreCase))
+                        if (line != null)
                         {
-                            var invoiceString = JObject.Parse(line)["result"].ToString();
-                            LnrpcInvoice parsedInvoice = _Parent.Deserialize<LnrpcInvoice>(invoiceString);
-                            await _Invoices.Writer.WriteAsync(ConvertLndInvoice(parsedInvoice), _Cts.Token);
+                            if (line.StartsWith("{\"result\":", StringComparison.OrdinalIgnoreCase))
+                            {
+                                var invoiceString = JObject.Parse(line)["result"].ToString();
+                                LnrpcInvoice parsedInvoice = _Parent.Deserialize<LnrpcInvoice>(invoiceString);
+                                await _Invoices.Writer.WriteAsync(ConvertLndInvoice(parsedInvoice), _Cts.Token);
+                            }
+                            else if (line.StartsWith("{\"error\":", StringComparison.OrdinalIgnoreCase))
+                            {
+                                var errorString = JObject.Parse(line)["error"].ToString();
+                                var error = _Parent.Deserialize<LndError>(errorString);
+                                throw new LndException(error);
+                            }
+                            else
+                            {
+                                throw new LndException("Unknown result from LND: " + line);
+                            }
                         }
                     }
                 }
@@ -76,7 +89,7 @@ namespace BTCPayServer.Payments.Lightning.Lnd
                 {
 
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     _Invoices.Writer.TryComplete(ex);
                 }
@@ -95,7 +108,7 @@ namespace BTCPayServer.Payments.Lightning.Lnd
                 {
                     throw new TaskCanceledException();
                 }
-                catch(ChannelClosedException ex)
+                catch (ChannelClosedException ex)
                 {
                     ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
                     throw;
@@ -119,7 +132,7 @@ namespace BTCPayServer.Payments.Lightning.Lnd
                 _Response = null;
                 _Client?.Dispose();
                 _Client = null;
-                if(waitLoop)
+                if (waitLoop)
                     _ListenLoop?.Wait();
                 _Invoices.Writer.TryComplete();
             }

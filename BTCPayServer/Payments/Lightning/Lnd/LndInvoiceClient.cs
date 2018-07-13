@@ -41,16 +41,24 @@ namespace BTCPayServer.Payments.Lightning.Lnd
 
             public async Task StartListening()
             {
-                _Client = _Parent.CreateHttpClient();
-                _Client.Timeout = TimeSpan.FromMilliseconds(Timeout.Infinite);
-                var request = new HttpRequestMessage(HttpMethod.Get, _Parent.BaseUrl.WithTrailingSlash() + "v1/invoices/subscribe");
-                _Response = await _Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, _Cts.Token);
-                _Body = await _Response.Content.ReadAsStreamAsync();
-                _Reader = new StreamReader(_Body);
+                try
+                {
+                    _Client = _Parent.CreateHttpClient();
+                    _Client.Timeout = TimeSpan.FromMilliseconds(Timeout.Infinite);
+                    var request = new HttpRequestMessage(HttpMethod.Get, _Parent.BaseUrl.WithTrailingSlash() + "v1/invoices/subscribe");
+                    _Response = await _Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, _Cts.Token);
+                    _Body = await _Response.Content.ReadAsStreamAsync();
+                    _Reader = new StreamReader(_Body);
 
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                ListenLoop();
+                    ListenLoop();
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                }
+                catch
+                {
+                    _Stopped.Set();
+                    Dispose();
+                }
             }
 
             private async Task ListenLoop()

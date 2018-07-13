@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Security;
+using System.Runtime.ExceptionServices;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -27,40 +28,43 @@ namespace BTCPayServer.Payments.Lightning.Lnd
             CancellationTokenSource _Cts = new CancellationTokenSource();
             ManualResetEventSlim _Stopped = new ManualResetEventSlim(false);
 
+
+            HttpClient _Client;
+            HttpResponseMessage _Response;
+            Stream _Body;
+            StreamReader _Reader;
+
             public LndInvoiceClientSession(LndSwaggerClient parent)
             {
                 _Parent = parent;
             }
 
-            public async void StartListening()
+            public async Task StartListening()
             {
-                var urlBuilder = new StringBuilder();
-                urlBuilder.Append(_Parent.BaseUrl).Append("/v1/invoices/subscribe");
+                _Client = _Parent.CreateHttpClient();
+                _Client.Timeout = TimeSpan.FromMilliseconds(Timeout.Infinite);
+                var request = new HttpRequestMessage(HttpMethod.Get, _Parent.BaseUrl.WithTrailingSlash() + "v1/invoices/subscribe");
+                _Response = await _Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, _Cts.Token);
+                _Body = await _Response.Content.ReadAsStreamAsync();
+                _Reader = new StreamReader(_Body);
+
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                ListenLoop();
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            }
+
+            private async Task ListenLoop()
+            {
                 try
                 {
-                    using (var client = _Parent.CreateHttpClient())
+                    while (!_Cts.IsCancellationRequested)
                     {
-                        client.Timeout = TimeSpan.FromMilliseconds(Timeout.Infinite);
-
-                        var request = new HttpRequestMessage(HttpMethod.Get, urlBuilder.ToString());
-
-                        using (var response = await client.SendAsync(
-                            request, HttpCompletionOption.ResponseHeadersRead, _Cts.Token))
+                        string line = await _Reader.ReadLineAsync().WithCancellation(_Cts.Token);
+                        if (line != null && line.StartsWith("{\"result\":", StringComparison.OrdinalIgnoreCase))
                         {
-                            using (var body = await response.Content.ReadAsStreamAsync())
-                            using (var reader = new StreamReader(body))
-                            {
-                                while (!_Cts.IsCancellationRequested)
-                                {
-                                    string line = await reader.ReadLineAsync().WithCancellation(_Cts.Token);
-                                    if (line != null && line.StartsWith("{\"result\":", StringComparison.OrdinalIgnoreCase))
-                                    {
-                                        var invoiceString = JObject.Parse(line)["result"].ToString();
-                                        LnrpcInvoice parsedInvoice = _Parent.Deserialize<LnrpcInvoice>(invoiceString);
-                                        await _Invoices.Writer.WriteAsync(ConvertLndInvoice(parsedInvoice));
-                                    }
-                                }
-                            }
+                            var invoiceString = JObject.Parse(line)["result"].ToString();
+                            LnrpcInvoice parsedInvoice = _Parent.Deserialize<LnrpcInvoice>(invoiceString);
+                            await _Invoices.Writer.WriteAsync(ConvertLndInvoice(parsedInvoice), _Cts.Token);
                         }
                     }
                 }
@@ -68,17 +72,27 @@ namespace BTCPayServer.Payments.Lightning.Lnd
                 {
 
                 }
+                catch (Exception ex)
+                {
+                    _Ex = ex;
+                }
                 finally
                 {
                     _Stopped.Set();
+                    Dispose();
                 }
             }
-
+            Exception _Ex;
             public async Task<LightningInvoice> WaitInvoice(CancellationToken cancellation)
             {
                 try
                 {
                     return await _Invoices.Reader.ReadAsync(cancellation);
+                }
+                catch when (!cancellation.IsCancellationRequested && _Ex != null)
+                {
+                    ExceptionDispatchInfo.Capture(_Ex).Throw();
+                    throw;
                 }
                 catch (ChannelClosedException)
                 {
@@ -88,6 +102,18 @@ namespace BTCPayServer.Payments.Lightning.Lnd
 
             public void Dispose()
             {
+                if (_Cts.IsCancellationRequested)
+                    return;
+
+                _Reader?.Dispose();
+                _Reader = null;
+                _Body?.Dispose();
+                _Body = null;
+                _Response?.Dispose();
+                _Response = null;
+                _Client?.Dispose();
+                _Client = null;
+                
                 _Cts.Cancel();
                 _Stopped.Wait();
                 _Invoices.Writer.Complete();
@@ -157,11 +183,11 @@ namespace BTCPayServer.Payments.Lightning.Lnd
             return ConvertLndInvoice(resp);
         }
 
-        public Task<ILightningListenInvoiceSession> Listen(CancellationToken cancellation = default(CancellationToken))
+        public async Task<ILightningListenInvoiceSession> Listen(CancellationToken cancellation = default(CancellationToken))
         {
             var session = new LndInvoiceClientSession(this._rpcClient);
-            session.StartListening();
-            return Task.FromResult<ILightningListenInvoiceSession>(session);
+            await session.StartListening();
+            return session;
         }
 
         internal static LightningInvoice ConvertLndInvoice(LnrpcInvoice resp)

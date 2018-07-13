@@ -101,6 +101,7 @@ namespace BTCPayServer.Tests
         /// <returns></returns>
         private async Task PrepareLightningAsync(ILightningInvoiceClient client)
         {
+            bool awaitingLocking = false;
             while (true)
             {
                 var merchantInfo = await WaitLNSynched(client, CustomerLightningD, MerchantLightningD);
@@ -126,8 +127,9 @@ namespace BTCPayServer.Tests
                         await CustomerLightningD.FundChannelAsync(merchantNodeInfo, Money.Satoshis(16777215));
                         break;
                     case "CHANNELD_AWAITING_LOCKIN":
-                        ExplorerNode.Generate(1);
+                        ExplorerNode.Generate(awaitingLocking ? 1 : 10);
                         await WaitLNSynched(client, CustomerLightningD, MerchantLightningD);
+                        awaitingLocking = true;
                         break;
                     case "CHANNELD_NORMAL":
                         return;

@@ -185,6 +185,14 @@ namespace BTCPayServer
             cancellationToken.ThrowIfCancellationRequested();
             return await doing;
         }
+        public static async Task WithCancellation(this Task task, CancellationToken cancellationToken)
+        {
+            var waiting = Task.Delay(-1, cancellationToken);
+            var doing = task;
+            await Task.WhenAny(waiting, doing);
+            cancellationToken.ThrowIfCancellationRequested();
+            await doing;
+        }
 
         public static (string Signature, String Id, String Authorization) GetBitpayAuth(this HttpContext ctx)
         {

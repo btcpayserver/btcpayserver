@@ -1662,7 +1662,7 @@ namespace BTCPayServer.Tests
 
         private async Task EventuallyAsync(Func<Task> act)
         {
-            CancellationTokenSource cts = new CancellationTokenSource(20000000);
+            CancellationTokenSource cts = new CancellationTokenSource(20000);
             while (true)
             {
                 try

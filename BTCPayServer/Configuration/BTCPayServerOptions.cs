@@ -77,11 +77,18 @@ namespace BTCPayServer.Configuration
                 var lightning = conf.GetOrDefault<string>($"{net.CryptoCode}.lightning", string.Empty);
                 if(lightning.Length != 0)
                 {
-                    if(!LightningConnectionString.TryParse(lightning, out var connectionString, out var error))
+                    if(!LightningConnectionString.TryParse(lightning, true, out var connectionString, out var error))
                     {
-                        throw new ConfigException($"Invalid setting {net.CryptoCode}.lightning, you need to pass either " +
-                            $"the absolute path to the unix socket of a running CLightning instance (eg. /root/.lightning/lightning-rpc), " +
-                            $"or the url to a charge server with crendetials (eg. https://apitoken@API_TOKEN_SECRET:charge.example.com/)");
+                        throw new ConfigException($"Invalid setting {net.CryptoCode}.lightning, " + Environment.NewLine +
+                            $"If you have a lightning server use: 'type=clightning;server=/root/.lightning/lightning-rpc', " + Environment.NewLine +
+                            $"If you have a lightning charge server: 'type=charge;server=https://charge.example.com;api-token=yourapitoken'" + Environment.NewLine +
+                            $"If you have a lnd server: 'type=lnd-rest;server=https://lnd:lnd@lnd.example.com;macaroon=abf239...;certthumbprint=2abdf302...'" + Environment.NewLine +
+                            $"              lnd server: 'type=lnd-rest;server=https://lnd:lnd@lnd.example.com;macaroonfilepath=/root/.lnd/admin.macaroon;certthumbprint=2abdf302...'" + Environment.NewLine +
+                            error);
+                    }
+                    if(connectionString.IsLegacy)
+                    {
+                        Logs.Configuration.LogWarning($"Setting {net.CryptoCode}.lightning will work but use an deprecated format, please replace it by '{connectionString.ToString()}'");
                     }
                     InternalLightningByCryptoCode.Add(net.CryptoCode, connectionString);
                 }

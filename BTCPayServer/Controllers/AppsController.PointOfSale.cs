@@ -134,7 +134,7 @@ namespace BTCPayServer.Controllers
             });
             await UpdateAppSettings(app);
             StatusMessage = "App updated";
-            return RedirectToAction(nameof(UpdatePointOfSale));
+            return RedirectToAction(nameof(ListApps));
         }
 
         [HttpGet]

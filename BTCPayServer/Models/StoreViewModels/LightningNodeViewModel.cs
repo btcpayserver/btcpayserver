@@ -9,8 +9,8 @@ namespace BTCPayServer.Models.StoreViewModels
 {
     public class LightningNodeViewModel
     {
-        [Display(Name = "Lightning charge url")]
-        public string Url
+        [Display(Name = "Connection string")]
+        public string ConnectionString
         {
             get;
             set;

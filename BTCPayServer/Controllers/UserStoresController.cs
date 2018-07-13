@@ -121,7 +121,10 @@ namespace BTCPayServer.Controllers
             var store = await _Repo.CreateStore(GetUserId(), vm.Name);
             CreatedStoreId = store.Id;
             StatusMessage = "Store successfully created";
-            return RedirectToAction(nameof(ListStores));
+            return RedirectToAction(nameof(StoresController.UpdateStore), "Stores", new
+            {
+                storeId = store.Id
+            });
         }
 
         private static async Task<string> GetBalanceString((BTCPayWallet Wallet, DerivationStrategyBase DerivationStrategy) _)

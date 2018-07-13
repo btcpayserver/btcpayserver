@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
-		<Version>1.0.2.34</Version>
+		<Version>1.0.2.45</Version>
     <NoWarn>NU1701,CA1816,CA1308,CA1810,CA2208</NoWarn>
   </PropertyGroup>
   <ItemGroup>
@@ -40,10 +40,10 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.1.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.2" />
     <PackageReference Include="Microsoft.NetCore.Analyzers" Version="2.6.0" />
-    <PackageReference Include="NBitcoin" Version="4.1.1.10" />
-    <PackageReference Include="NBitpayClient" Version="1.0.0.28" />	  
+    <PackageReference Include="NBitcoin" Version="4.1.1.27" />
+    <PackageReference Include="NBitpayClient" Version="1.0.0.29" />	  
     <PackageReference Include="DBreeze" Version="1.87.0" />
-    <PackageReference Include="NBXplorer.Client" Version="1.0.2.10" />
+    <PackageReference Include="NBXplorer.Client" Version="1.0.2.13" />
     <PackageReference Include="NicolasDorier.CommandLine" Version="1.0.0.2" />
     <PackageReference Include="NicolasDorier.CommandLine.Configuration" Version="1.0.0.3" />
     <PackageReference Include="NicolasDorier.StandardConfiguration" Version="1.0.0.14" />
@@ -111,6 +111,7 @@
 	<ItemGroup>
 	  <Folder Include="Build\" />
 	  <Folder Include="wwwroot\vendor\clipboard.js\" />
+	  <Folder Include="wwwroot\vendor\highlightjs\" />
 	</ItemGroup>
 
 	<ItemGroup>

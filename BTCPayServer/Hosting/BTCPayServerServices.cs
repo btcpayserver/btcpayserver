@@ -104,6 +104,7 @@ namespace BTCPayServer.Hosting
             });
 
             services.AddSingleton<CssThemeManager>();
+            services.Configure<MvcOptions>((o) => { o.Filters.Add(new ContentSecurityPolicyCssThemeManager()); });
             services.AddSingleton<IHostedService, CssThemeManagerHostedService>();
 
             services.AddSingleton<Payments.IPaymentMethodHandler<DerivationStrategy>, Payments.Bitcoin.BitcoinLikePaymentHandler>();

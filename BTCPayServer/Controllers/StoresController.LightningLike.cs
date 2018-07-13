@@ -26,16 +26,15 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             LightningNodeViewModel vm = new LightningNodeViewModel();
             vm.CryptoCode = cryptoCode;
-            vm.InternalLightningNode = GetInternalLighningNode(cryptoCode)?.ToUri(true)?.AbsoluteUri;
+            vm.InternalLightningNode = GetInternalLighningNode(cryptoCode)?.ToString();
             SetExistingValues(store, vm);
             return View(vm);
         }
 
         private void SetExistingValues(StoreData store, LightningNodeViewModel vm)
         {
-            vm.Url = GetExistingLightningSupportedPaymentMethod(vm.CryptoCode, store)?.GetLightningUrl()?.ToString();
+            vm.ConnectionString = GetExistingLightningSupportedPaymentMethod(vm.CryptoCode, store)?.GetLightningUrl()?.ToString();
         }
-
         private LightningSupportedPaymentMethod GetExistingLightningSupportedPaymentMethod(string cryptoCode, StoreData store)
         {
             var id = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
@@ -65,7 +64,7 @@ namespace BTCPayServer.Controllers
             var network = vm.CryptoCode == null ? null : _ExplorerProvider.GetNetwork(vm.CryptoCode);
 
             var internalLightning = GetInternalLighningNode(network.CryptoCode);
-            vm.InternalLightningNode = internalLightning?.ToUri(true)?.AbsoluteUri;
+            vm.InternalLightningNode = internalLightning?.ToString();
             if (network == null)
             {
                 ModelState.AddModelError(nameof(vm.CryptoCode), "Invalid network");
@@ -74,33 +73,51 @@ namespace BTCPayServer.Controllers
 
             PaymentMethodId paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.LightningLike);
             Payments.Lightning.LightningSupportedPaymentMethod paymentMethod = null;
-            if (!string.IsNullOrEmpty(vm.Url))
+            if (!string.IsNullOrEmpty(vm.ConnectionString))
             {
-                if (!LightningConnectionString.TryParse(vm.Url, out var connectionString, out var error))
+                if (!LightningConnectionString.TryParse(vm.ConnectionString, false, out var connectionString, out var error))
                 {
-                    ModelState.AddModelError(nameof(vm.Url), $"Invalid URL ({error})");
+                    ModelState.AddModelError(nameof(vm.ConnectionString), $"Invalid URL ({error})");
                     return View(vm);
                 }
 
-                var internalDomain = internalLightning?.ToUri(false)?.DnsSafeHost;
-                bool isLocal = (internalDomain == "127.0.0.1" || internalDomain == "localhost");
+                var internalDomain = internalLightning?.BaseUri?.DnsSafeHost;
 
                 bool isInternalNode = connectionString.ConnectionType == LightningConnectionType.CLightning ||
                                       connectionString.BaseUri.DnsSafeHost == internalDomain ||
-                                      isLocal;
+                                      (internalDomain == "127.0.0.1" || internalDomain == "localhost");
 
-                if (connectionString.BaseUri.Scheme == "http" && !isLocal)
+                if (connectionString.BaseUri.Scheme == "http")
                 {
-                    if (!isInternalNode || (isInternalNode && !CanUseInternalLightning()))
+                    if (!isInternalNode)
                     {
-                        ModelState.AddModelError(nameof(vm.Url), "The url must be HTTPS");
+                        ModelState.AddModelError(nameof(vm.ConnectionString), "The url must be HTTPS");
+                        return View(vm);
+                    }
+                }
+
+                if(connectionString.MacaroonFilePath != null)
+                {
+                    if(!CanUseInternalLightning())
+                    {
+                        ModelState.AddModelError(nameof(vm.ConnectionString), "You are not authorized to use macaroonfilepath");
+                        return View(vm);
+                    }
+                    if(!System.IO.File.Exists(connectionString.MacaroonFilePath))
+                    {
+                        ModelState.AddModelError(nameof(vm.ConnectionString), "The macaroonfilepath file does exist");
+                        return View(vm);
+                    }
+                    if(!System.IO.Path.IsPathRooted(connectionString.MacaroonFilePath))
+                    {
+                        ModelState.AddModelError(nameof(vm.ConnectionString), "The macaroonfilepath should be fully rooted");
                         return View(vm);
                     }
                 }
 
                 if (isInternalNode && !CanUseInternalLightning())
                 {
-                    ModelState.AddModelError(nameof(vm.Url), "Unauthorized url");
+                    ModelState.AddModelError(nameof(vm.ConnectionString), "Unauthorized url");
                     return View(vm);
                 }
 
@@ -110,6 +127,7 @@ namespace BTCPayServer.Controllers
                 };
                 paymentMethod.SetLightningUrl(connectionString);
             }
+
             if (command == "save")
             {
                 store.SetSupportedPaymentMethod(paymentMethodId, paymentMethod);
@@ -121,7 +139,7 @@ namespace BTCPayServer.Controllers
             {
                 if (paymentMethod == null)
                 {
-                    ModelState.AddModelError(nameof(vm.Url), "Missing url parameter");
+                    ModelState.AddModelError(nameof(vm.ConnectionString), "Missing url parameter");
                     return View(vm);
                 }
                 var handler = (LightningLikePaymentHandler)_ServiceProvider.GetRequiredService<IPaymentMethodHandler<Payments.Lightning.LightningSupportedPaymentMethod>>();
@@ -135,7 +153,7 @@ namespace BTCPayServer.Controllers
                             await handler.TestConnection(info, cts.Token);
                         }
                     }
-                    vm.StatusMessage = $"Connection to the lightning node succeed ({info})";
+                    vm.StatusMessage = $"Connection to the lightning node succeeded ({info})";
                 }
                 catch (Exception ex)
                 {

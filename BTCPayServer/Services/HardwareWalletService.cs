@@ -20,9 +20,9 @@ namespace BTCPayServer.Services
         public HardwareWalletException(string message) : base(message) { }
         public HardwareWalletException(string message, Exception inner) : base(message, inner) { }
     }
-    public class HardwareWalletService
+    public class HardwareWalletService : IDisposable
     {
-        class WebSocketTransport : LedgerWallet.Transports.ILedgerTransport
+        class WebSocketTransport : LedgerWallet.Transports.ILedgerTransport, IDisposable
         {
             private readonly WebSocket webSocket;
 
@@ -33,25 +33,39 @@ namespace BTCPayServer.Services
                 this.webSocket = webSocket;
             }
 
+            SemaphoreSlim _Semaphore = new SemaphoreSlim(1, 1);
             public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(10);
             public async Task<byte[][]> Exchange(byte[][] apdus)
             {
+                await _Semaphore.WaitAsync();
                 List<byte[]> responses = new List<byte[]>();
-                using (CancellationTokenSource cts = new CancellationTokenSource(Timeout))
+                try
                 {
-                    foreach (var apdu in apdus)
+                    using (CancellationTokenSource cts = new CancellationTokenSource(Timeout))
                     {
-                        await this.webSocket.SendAsync(new ArraySegment<byte>(apdu), WebSocketMessageType.Binary, true, cts.Token);
-                    }
-                    foreach (var apdu in apdus)
-                    {
-                        byte[] response = new byte[300];
-                        var result = await this.webSocket.ReceiveAsync(new ArraySegment<byte>(response), cts.Token);
-                        Array.Resize(ref response, result.Count);
-                        responses.Add(response);
+                        foreach (var apdu in apdus)
+                        {
+                            await this.webSocket.SendAsync(new ArraySegment<byte>(apdu), WebSocketMessageType.Binary, true, cts.Token);
+                        }
+                        foreach (var apdu in apdus)
+                        {
+                            byte[] response = new byte[300];
+                            var result = await this.webSocket.ReceiveAsync(new ArraySegment<byte>(response), cts.Token);
+                            Array.Resize(ref response, result.Count);
+                            responses.Add(response);
+                        }
                     }
                 }
+                finally
+                {
+                    _Semaphore.Release();
+                }
                 return responses.ToArray();
+            }
+
+            public void Dispose()
+            {
+                _Semaphore.Dispose();
             }
         }
 
@@ -121,7 +135,7 @@ namespace BTCPayServer.Services
         public async Task<KeyPath> GetKeyPath(BTCPayNetwork network, DirectDerivationStrategy directStrategy)
         {
             List<KeyPath> derivations = new List<KeyPath>();
-            if(network.NBitcoinNetwork.Consensus.SupportSegwit)
+            if (network.NBitcoinNetwork.Consensus.SupportSegwit)
                 derivations.Add(new KeyPath("49'"));
             derivations.Add(new KeyPath("44'"));
             KeyPath foundKeyPath = null;
@@ -154,6 +168,12 @@ namespace BTCPayServer.Services
         {
             _Transport.Timeout = TimeSpan.FromMinutes(5);
             return await Ledger.SignTransactionAsync(signatureRequests, unsigned, changeKeyPath);
+        }
+
+        public void Dispose()
+        {
+            if(_Transport != null)
+                _Transport.Dispose();
         }
     }
 

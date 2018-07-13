@@ -175,6 +175,7 @@ namespace BTCPayServer.Controllers
         [Route("invoice")]
         [AcceptMediaTypeConstraint("application/bitcoin-paymentrequest", false)]
         [XFrameOptionsAttribute(null)]
+        [ReferrerPolicyAttribute("origin")]
         public async Task<IActionResult> Checkout(string invoiceId, string id = null, string paymentMethodId = null)
         {
             //Keep compatibility with Bitpay
@@ -185,6 +186,20 @@ namespace BTCPayServer.Controllers
             var model = await GetInvoiceModel(invoiceId, paymentMethodId);
             if (model == null)
                 return NotFound();
+
+
+            _CSP.Add(new ConsentSecurityPolicy("script-src", "'unsafe-eval'")); // Needed by Vue
+            if(!string.IsNullOrEmpty(model.CustomCSSLink) && 
+                Uri.TryCreate(model.CustomCSSLink, UriKind.Absolute, out var uri))
+            {
+                _CSP.Clear();
+            }
+
+            if (!string.IsNullOrEmpty(model.CustomLogoLink) &&
+                Uri.TryCreate(model.CustomLogoLink, UriKind.Absolute, out uri))
+            {
+                _CSP.Clear();
+            }
 
             return View(nameof(Checkout), model);
         }

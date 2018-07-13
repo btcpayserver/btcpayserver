@@ -78,8 +78,18 @@
 
                 </ul>
             </div>
+            <div id="badUrl" class="alert alert-danger alert-dismissible" style="display:none; position:absolute; top:75px;" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <span>BTCPay is expecting you to access this website from <b>@(env.ExpectedProtocol)://@(env.ExpectedHost)/</b>. If you want to change this expectation:</span>
+                <ul>
+                    <li>Either starts BTCPay with <b>--externalurl @(env.ExpectedProtocol)://@(env.ExpectedHost)/</b></li>
+                    <li>Or, if using docker-compose deployment, setting environment variable <b>BTCPAY_PROTOCOL=@(env.ExpectedProtocol)</b> and <b>BTCPAY_HOST=@(env.ExpectedDomain)</b></li>
+                </ul>
+                
+            </div>
         </div>
     </nav>
+
 
     @RenderBody()
 
@@ -93,6 +103,14 @@
     }
 
     @RenderSection("Scripts", required: false)
+
+    <script type="text/javascript">
+        var expectedDomain = @Html.Raw(Json.Serialize(env.ExpectedHost));
+        var expectedProtocol = @Html.Raw(Json.Serialize(env.ExpectedProtocol));
+        if (window.location.host != expectedDomain || window.location.protocol != expectedProtocol + ":") {
+            document.getElementById("badUrl").style.display = "block";
+        }
+    </script>
 </body>
 
 </html>

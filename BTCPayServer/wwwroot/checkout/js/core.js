@@ -30,6 +30,7 @@ function onDataCallback(jsonData) {
         newStatus === "paid") {
         if ($(".modal-dialog").hasClass("expired")) {
             $(".modal-dialog").removeClass("expired");
+            $("#expired").removeClass("active");
         }
 
         $(".modal-dialog").addClass("paid");
@@ -39,6 +40,11 @@ function onDataCallback(jsonData) {
     }
 
     if (newStatus === "expired" || newStatus === "invalid") { //TODO: different state if the invoice is invalid (failed to confirm after timeout)
+        if ($(".modal-dialog").hasClass("paid")) {
+            $(".modal-dialog").removeClass("paid");
+            $("#paid").removeClass("active");
+        }
+
         $(".timer-row").removeClass("expiring-soon");
         $(".timer-row__spinner").html("");
         $("#emailAddressView").removeClass("active");

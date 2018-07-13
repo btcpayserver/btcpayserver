@@ -15,6 +15,8 @@ namespace BTCPayServer.Payments.Lightning
 {
     public class LightningLikePaymentHandler : PaymentMethodHandlerBase<LightningSupportedPaymentMethod>
     {
+        public static int LIGHTNING_TIMEOUT = 5000;
+
         NBXplorerDashboard _Dashboard;
         LightningClientFactory _LightningClientFactory;
         public LightningLikePaymentHandler(
@@ -41,7 +43,7 @@ namespace BTCPayServer.Payments.Lightning
             description = description.Replace("{StoreName}", store.StoreName ?? "", StringComparison.OrdinalIgnoreCase)
                                      .Replace("{ItemDescription}", invoice.ProductInformation.ItemDesc ?? "", StringComparison.OrdinalIgnoreCase)
                                      .Replace("{OrderId}", invoice.OrderId ?? "", StringComparison.OrdinalIgnoreCase);
-            using (var cts = new CancellationTokenSource(5000))
+            using (var cts = new CancellationTokenSource(LIGHTNING_TIMEOUT))
             {
                 try
                 {
@@ -70,7 +72,7 @@ namespace BTCPayServer.Payments.Lightning
             if (!_Dashboard.IsFullySynched(network.CryptoCode, out var summary))
                 throw new PaymentMethodUnavailableException($"Full node not available");
 
-            using (var cts = new CancellationTokenSource(5000))
+            using (var cts = new CancellationTokenSource(LIGHTNING_TIMEOUT))
             {
                 var client = _LightningClientFactory.CreateClient(supportedPaymentMethod, network);
                 LightningNodeInformation info = null;
@@ -121,23 +123,13 @@ namespace BTCPayServer.Payments.Lightning
 
                 using (var tcp = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp))
                 {
-                    await WithTimeout(tcp.ConnectAsync(new IPEndPoint(address, nodeInfo.Port)), cancellation);
+                    await tcp.ConnectAsync(new IPEndPoint(address, nodeInfo.Port)).WithCancellation(cancellation);
                 }
             }
             catch (Exception ex)
             {
                 throw new PaymentMethodUnavailableException($"Error while connecting to the lightning node via {nodeInfo.Host}:{nodeInfo.Port} ({ex.Message})");
             }
-        }
-
-        static Task WithTimeout(Task task, CancellationToken token)
-        {
-            TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
-            var registration = token.Register(() => { try { tcs.TrySetResult(true); } catch { } });
-#pragma warning disable CA2008 // Do not create tasks without passing a TaskScheduler
-            var timeoutTask = tcs.Task;
-#pragma warning restore CA2008 // Do not create tasks without passing a TaskScheduler
-            return Task.WhenAny(task, timeoutTask).Unwrap().ContinueWith(t => registration.Dispose(), TaskScheduler.Default);
         }
     }
 }

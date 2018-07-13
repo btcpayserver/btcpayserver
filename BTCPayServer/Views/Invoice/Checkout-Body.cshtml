@@ -42,13 +42,22 @@
                 </div>
             </div>
             <div class="single-item-order__right">
-                <div class="payment__currencies">
+                <div class="payment__currencies" style="font-size: 14px; cursor:pointer;" onclick="bringupDialog()">
+                    <img style='height:32px;' v-bind:src="srvModel.cryptoImage" />
+                    <span style="color: #000000; border-bottom: 1px dotted gray;">{{srvModel.paymentMethodName}}</span>
+                </div>
+                <div id="vexPopupDialog">
+                    <ul class="vexmenu">
                     @foreach (var crypto in Model.AvailableCryptos)
                     {
-                        <a href="@crypto.Link" onclick="return changeCurrency('@crypto.PaymentMethodId');">
-                            <img style="height:32px; margin-left:5px;" alt="@crypto.PaymentMethodId" src="@crypto.CryptoImage" />
-                        </a>
+                        <li class="vexmenuitem">
+                            <a href="@crypto.Link" onclick="return closeVexChangeCurrency('@crypto.PaymentMethodId');">
+                                <img style="height:24px;" alt="@crypto.PaymentMethodId" src="@crypto.CryptoImage" />
+                                @crypto.PaymentMethodName
+                            </a>
+                        </li>
                     }
+                    </ul>
                 </div>
                 <div class="payment__spinner">
                     <partial name="Checkout-Spinner" />

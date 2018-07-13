@@ -8289,7 +8289,7 @@ strong {
     .modal.page {
         overflow-y: hidden;
         position: relative;
-        z-index: 105111;
+        z-index: 10;
     }
 
 .content {
@@ -8420,6 +8420,7 @@ strong {
     color: #565D6E;
     letter-spacing: .45px;
     background: #fff;
+    height: 40px;
 }
 
 .single-item-order {

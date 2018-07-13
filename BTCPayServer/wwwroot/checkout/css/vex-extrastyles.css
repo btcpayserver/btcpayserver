@@ -1,0 +1,32 @@
+﻿.vexmenu {
+    margin: 0;
+    list-style: none;
+    padding: 0;
+}
+
+.vexmenuitem {
+    display: block;
+    float: none;
+    line-height: inherit;
+    position: relative;
+    list-style: none;
+    cursor: pointer;
+    padding: 5px;
+    border-bottom: 1px solid #eee;
+}
+
+    .vexmenuitem a {
+        display: block;
+    }
+
+    .vexmenuitem:hover {
+        background-color: #eee;
+    }
+
+    .vexmenuitem:last-child {
+        border-bottom: none;
+    }
+
+#vexPopupDialog {
+    display: none;
+}

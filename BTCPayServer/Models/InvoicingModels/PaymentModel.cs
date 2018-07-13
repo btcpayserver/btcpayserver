@@ -12,6 +12,7 @@ namespace BTCPayServer.Models.InvoicingModels
             public string PaymentMethodId { get; set; }
             public string CryptoImage { get; set; }
             public string Link { get; set; }
+            public string PaymentMethodName { get; set; }
         }
         public string HtmlTitle { get; set; }
         public string CustomCSSLink { get; set; }
@@ -45,12 +46,13 @@ namespace BTCPayServer.Models.InvoicingModels
         public string StoreEmail { get; set; }
 
         public string OrderId { get; set; }
-        public string CryptoImage { get; set; }
         public decimal NetworkFee { get; set; }
         public bool IsMultiCurrency { get; set; }
-        public int MaxTimeMinutes { get; internal set; }
-        public string PaymentType { get; internal set; }
-        public string PaymentMethodId { get; internal set; }
+        public int MaxTimeMinutes { get; set; }
+        public string PaymentType { get; set; }
+        public string PaymentMethodId { get; set; }
+        public string PaymentMethodName { get; set; }
+        public string CryptoImage { get; set; }
 
         public bool AllowCoinConversion { get; set; }
         public string PeerInfo { get; set; }

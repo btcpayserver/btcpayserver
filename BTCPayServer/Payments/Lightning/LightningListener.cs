@@ -143,11 +143,12 @@ namespace BTCPayServer.Payments.Lightning
         CancellationTokenSource _Cts = new CancellationTokenSource();
         private async Task Listen(LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network)
         {
+            ILightningListenInvoiceSession session = null;
             try
             {
                 Logs.PayServer.LogInformation($"{supportedPaymentMethod.CryptoCode} (Lightning): Start listening {supportedPaymentMethod.GetLightningUrl().BaseUri}");
                 var lightningClient = _LightningClientFactory.CreateClient(supportedPaymentMethod, network);
-                var session = await lightningClient.Listen(_Cts.Token);
+                session = await lightningClient.Listen(_Cts.Token);
                 while (true)
                 {
                     var notification = await session.WaitInvoice(_Cts.Token);
@@ -178,6 +179,10 @@ namespace BTCPayServer.Payments.Lightning
             {
                 Logs.PayServer.LogError(ex, $"{supportedPaymentMethod.CryptoCode} (Lightning): Error while contacting {supportedPaymentMethod.GetLightningUrl().BaseUri}");
                 DoneListening(supportedPaymentMethod.GetLightningUrl());
+            }
+            finally
+            {
+                session?.Dispose();
             }
             Logs.PayServer.LogInformation($"{supportedPaymentMethod.CryptoCode} (Lightning): Stop listening {supportedPaymentMethod.GetLightningUrl().BaseUri}");
         }

@@ -179,19 +179,26 @@ namespace BTCPayServer
 
         public static async Task<T> WithCancellation<T>(this Task<T> task, CancellationToken cancellationToken)
         {
-            var waiting = Task.Delay(-1, cancellationToken);
-            var doing = task;
-            await Task.WhenAny(waiting, doing);
-            cancellationToken.ThrowIfCancellationRequested();
-            return await doing;
+            using (var delayCTS = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
+            {
+                var waiting = Task.Delay(-1, delayCTS.Token);
+                var doing = task;
+                await Task.WhenAny(waiting, doing);
+                delayCTS.Cancel();
+                cancellationToken.ThrowIfCancellationRequested();
+                return await doing;
+            }
         }
         public static async Task WithCancellation(this Task task, CancellationToken cancellationToken)
         {
-            var waiting = Task.Delay(-1, cancellationToken);
-            var doing = task;
-            await Task.WhenAny(waiting, doing);
-            cancellationToken.ThrowIfCancellationRequested();
-            await doing;
+            using (var delayCTS = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
+            {
+                var waiting = Task.Delay(-1, delayCTS.Token);
+                var doing = task;
+                await Task.WhenAny(waiting, doing);
+                delayCTS.Cancel();
+                cancellationToken.ThrowIfCancellationRequested();
+            }
         }
 
         public static (string Signature, String Id, String Authorization) GetBitpayAuth(this HttpContext ctx)

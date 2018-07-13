@@ -26,13 +26,13 @@ namespace BTCPayServer.Payments.Lightning.Lnd
             private LndSwaggerClient _Parent;
             Channel<LightningInvoice> _Invoices = Channel.CreateBounded<LightningInvoice>(50);
             CancellationTokenSource _Cts = new CancellationTokenSource();
-            ManualResetEventSlim _Stopped = new ManualResetEventSlim(false);
 
 
             HttpClient _Client;
             HttpResponseMessage _Response;
             Stream _Body;
             StreamReader _Reader;
+            Task _ListenLoop;
 
             public LndInvoiceClientSession(LndSwaggerClient parent)
             {
@@ -49,14 +49,10 @@ namespace BTCPayServer.Payments.Lightning.Lnd
                     _Response = await _Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, _Cts.Token);
                     _Body = await _Response.Content.ReadAsStreamAsync();
                     _Reader = new StreamReader(_Body);
-
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                    ListenLoop();
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                    _ListenLoop = ListenLoop();
                 }
                 catch
                 {
-                    _Stopped.Set();
                     Dispose();
                 }
             }
@@ -68,11 +64,24 @@ namespace BTCPayServer.Payments.Lightning.Lnd
                     while (!_Cts.IsCancellationRequested)
                     {
                         string line = await _Reader.ReadLineAsync().WithCancellation(_Cts.Token);
-                        if (line != null && line.StartsWith("{\"result\":", StringComparison.OrdinalIgnoreCase))
+                        if (line != null)
                         {
-                            var invoiceString = JObject.Parse(line)["result"].ToString();
-                            LnrpcInvoice parsedInvoice = _Parent.Deserialize<LnrpcInvoice>(invoiceString);
-                            await _Invoices.Writer.WriteAsync(ConvertLndInvoice(parsedInvoice), _Cts.Token);
+                            if (line.StartsWith("{\"result\":", StringComparison.OrdinalIgnoreCase))
+                            {
+                                var invoiceString = JObject.Parse(line)["result"].ToString();
+                                LnrpcInvoice parsedInvoice = _Parent.Deserialize<LnrpcInvoice>(invoiceString);
+                                await _Invoices.Writer.WriteAsync(ConvertLndInvoice(parsedInvoice), _Cts.Token);
+                            }
+                            else if (line.StartsWith("{\"error\":", StringComparison.OrdinalIgnoreCase))
+                            {
+                                var errorString = JObject.Parse(line)["error"].ToString();
+                                var error = _Parent.Deserialize<LndError>(errorString);
+                                throw new LndException(error);
+                            }
+                            else
+                            {
+                                throw new LndException("Unknown result from LND: " + line);
+                            }
                         }
                     }
                 }
@@ -82,37 +91,39 @@ namespace BTCPayServer.Payments.Lightning.Lnd
                 }
                 catch (Exception ex)
                 {
-                    _Ex = ex;
+                    _Invoices.Writer.TryComplete(ex);
                 }
                 finally
                 {
-                    _Stopped.Set();
-                    Dispose();
+                    Dispose(false);
                 }
             }
-            Exception _Ex;
             public async Task<LightningInvoice> WaitInvoice(CancellationToken cancellation)
             {
                 try
                 {
                     return await _Invoices.Reader.ReadAsync(cancellation);
                 }
-                catch when (!cancellation.IsCancellationRequested && _Ex != null)
-                {
-                    ExceptionDispatchInfo.Capture(_Ex).Throw();
-                    throw;
-                }
-                catch (ChannelClosedException)
+                catch (ChannelClosedException ex) when (ex.InnerException == null)
                 {
                     throw new TaskCanceledException();
+                }
+                catch (ChannelClosedException ex)
+                {
+                    ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
+                    throw;
                 }
             }
 
             public void Dispose()
             {
+                Dispose(true);
+            }
+            void Dispose(bool waitLoop)
+            {
                 if (_Cts.IsCancellationRequested)
                     return;
-
+                _Cts.Cancel();
                 _Reader?.Dispose();
                 _Reader = null;
                 _Body?.Dispose();
@@ -121,10 +132,9 @@ namespace BTCPayServer.Payments.Lightning.Lnd
                 _Response = null;
                 _Client?.Dispose();
                 _Client = null;
-                
-                _Cts.Cancel();
-                _Stopped.Wait();
-                _Invoices.Writer.Complete();
+                if (waitLoop)
+                    _ListenLoop?.Wait();
+                _Invoices.Writer.TryComplete();
             }
         }
 

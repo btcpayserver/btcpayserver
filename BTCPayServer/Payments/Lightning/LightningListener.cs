@@ -146,8 +146,8 @@ namespace BTCPayServer.Payments.Lightning
             try
             {
                 Logs.PayServer.LogInformation($"{supportedPaymentMethod.CryptoCode} (Lightning): Start listening {supportedPaymentMethod.GetLightningUrl().BaseUri}");
-                var charge = _LightningClientFactory.CreateClient(supportedPaymentMethod, network);
-                var session = await charge.Listen(_Cts.Token);
+                var lightningClient = _LightningClientFactory.CreateClient(supportedPaymentMethod, network);
+                var session = await lightningClient.Listen(_Cts.Token);
                 while (true)
                 {
                     var notification = await session.WaitInvoice(_Cts.Token);

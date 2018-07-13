@@ -41,12 +41,14 @@ using NBXplorer;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Payments;
 using BTCPayServer.Rating;
+using BTCPayServer.Security;
 
 namespace BTCPayServer.Controllers
 {
     public partial class InvoiceController : Controller
     {
         InvoiceRepository _InvoiceRepository;
+        ContentSecurityPolicies _CSP;
         BTCPayRateProviderFactory _RateProvider;
         StoreRepository _StoreRepository;
         UserManager<ApplicationUser> _UserManager;
@@ -64,6 +66,7 @@ namespace BTCPayServer.Controllers
             StoreRepository storeRepository,
             EventAggregator eventAggregator,
             BTCPayWalletProvider walletProvider,
+            ContentSecurityPolicies csp,
             BTCPayNetworkProvider networkProvider)
         {
             _ServiceProvider = serviceProvider;
@@ -75,6 +78,7 @@ namespace BTCPayServer.Controllers
             _EventAggregator = eventAggregator;
             _NetworkProvider = networkProvider;
             _WalletProvider = walletProvider;
+            _CSP = csp;
         }
 
 

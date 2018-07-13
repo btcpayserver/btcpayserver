@@ -16,11 +16,7 @@ namespace BTCPayServer.Filters
 
         public void OnActionExecuting(ActionExecutingContext context)
         {
-            var existing = context.HttpContext.Response.Headers["X-XSS-Protection"].FirstOrDefault();
-            if (existing != null)
-                context.HttpContext.Response.Headers.Remove("X-XSS-Protection");
-            else
-                context.HttpContext.Response.Headers["X-XSS-Protection"] = "1; mode=block";
+            context.HttpContext.Response.SetHeaderOnStarting("X-XSS-Protection", "1; mode=block");
         }
         
     }

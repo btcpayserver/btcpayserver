@@ -98,6 +98,26 @@ namespace BTCPayServer
             return str + "/";
         }
 
+        public static void SetHeaderOnStarting(this HttpResponse resp, string name, string value)
+        {
+            if (resp.HasStarted)
+                return;
+            resp.OnStarting(() =>
+            {
+                SetHeader(resp, name, value);
+                return Task.CompletedTask;
+            });
+        }
+
+        public static void SetHeader(this HttpResponse resp, string name, string value)
+        {
+            var existing = resp.Headers[name].FirstOrDefault();
+            if (existing != null && value == null)
+                resp.Headers.Remove(name);
+            else
+                resp.Headers[name] = value;
+        }
+
         public static string GetAbsoluteRoot(this HttpRequest request)
         {
             return string.Concat(
@@ -164,6 +184,14 @@ namespace BTCPayServer
             await Task.WhenAny(waiting, doing);
             cancellationToken.ThrowIfCancellationRequested();
             return await doing;
+        }
+        public static async Task WithCancellation(this Task task, CancellationToken cancellationToken)
+        {
+            var waiting = Task.Delay(-1, cancellationToken);
+            var doing = task;
+            await Task.WhenAny(waiting, doing);
+            cancellationToken.ThrowIfCancellationRequested();
+            await doing;
         }
 
         public static (string Signature, String Id, String Authorization) GetBitpayAuth(this HttpContext ctx)

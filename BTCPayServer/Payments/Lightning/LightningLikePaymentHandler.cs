@@ -123,23 +123,13 @@ namespace BTCPayServer.Payments.Lightning
 
                 using (var tcp = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp))
                 {
-                    await WithTimeout(tcp.ConnectAsync(new IPEndPoint(address, nodeInfo.Port)), cancellation);
+                    await tcp.ConnectAsync(new IPEndPoint(address, nodeInfo.Port)).WithCancellation(cancellation);
                 }
             }
             catch (Exception ex)
             {
                 throw new PaymentMethodUnavailableException($"Error while connecting to the lightning node via {nodeInfo.Host}:{nodeInfo.Port} ({ex.Message})");
             }
-        }
-
-        static Task WithTimeout(Task task, CancellationToken token)
-        {
-            TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
-            var registration = token.Register(() => { try { tcs.TrySetResult(true); } catch { } });
-#pragma warning disable CA2008 // Do not create tasks without passing a TaskScheduler
-            var timeoutTask = tcs.Task;
-#pragma warning restore CA2008 // Do not create tasks without passing a TaskScheduler
-            return Task.WhenAny(task, timeoutTask).Unwrap().ContinueWith(t => registration.Dispose(), TaskScheduler.Default);
         }
     }
 }

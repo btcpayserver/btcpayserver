@@ -81,7 +81,7 @@ namespace BTCPayServer.Controllers
                     return View(vm);
                 }
 
-                var internalDomain = internalLightning.BaseUri?.DnsSafeHost;
+                var internalDomain = internalLightning?.BaseUri?.DnsSafeHost;
 
                 bool isInternalNode = connectionString.ConnectionType == LightningConnectionType.CLightning ||
                                       connectionString.BaseUri.DnsSafeHost == internalDomain ||

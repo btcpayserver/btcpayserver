@@ -189,7 +189,7 @@ namespace BTCPayServer.Controllers
 
 
             _CSP.Add(new ConsentSecurityPolicy("script-src", "'unsafe-eval'")); // Needed by Vue
-            if(!string.IsNullOrEmpty(model.CustomCSSLink) && 
+            if (!string.IsNullOrEmpty(model.CustomCSSLink) &&
                 Uri.TryCreate(model.CustomCSSLink, UriKind.Absolute, out var uri))
             {
                 _CSP.Clear();
@@ -293,7 +293,8 @@ namespace BTCPayServer.Controllers
                                               CryptoImage = "/" + GetImage(kv.GetId(), kv.Network),
                                               Link = Url.Action(nameof(Checkout), new { invoiceId = invoiceId, paymentMethodId = kv.GetId().ToString() })
                                           }).Where(c => c.CryptoImage != "/")
-                .ToList()
+                                          .OrderBy(a => a.PaymentMethodName)
+                                          .ToList()
             };
 
             var expiration = TimeSpan.FromSeconds(model.ExpirationSeconds);
@@ -301,7 +302,7 @@ namespace BTCPayServer.Controllers
             return model;
         }
 
-        private static readonly Dictionary<string,string> CURRENCY_NAMES = new Dictionary<string, string>
+        private static readonly Dictionary<string, string> CURRENCY_NAMES = new Dictionary<string, string>
             {
                 {"BTC", "Bitcoin (BTC)" },
                 {"BTC_LightningLike", "Bitcoin (BTC) Lightning" },
@@ -353,7 +354,7 @@ namespace BTCPayServer.Controllers
                 provider = (NumberFormatInfo)provider.Clone();
                 provider.CurrencyDecimalDigits = divisibility;
             }
-            
+
             if (currencyData.Crypto)
                 return price.ToString("C", provider);
             else

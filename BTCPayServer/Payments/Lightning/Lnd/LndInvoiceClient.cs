@@ -46,6 +46,7 @@ namespace BTCPayServer.Payments.Lightning.Lnd
                     _Client = _Parent.CreateHttpClient();
                     _Client.Timeout = TimeSpan.FromMilliseconds(Timeout.Infinite);
                     var request = new HttpRequestMessage(HttpMethod.Get, _Parent.BaseUrl.WithTrailingSlash() + "v1/invoices/subscribe");
+                    _Parent._Authentication.AddAuthentication(request);
                     _Response = await _Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, _Cts.Token);
                     _Body = await _Response.Content.ReadAsStreamAsync();
                     _Reader = new StreamReader(_Body);

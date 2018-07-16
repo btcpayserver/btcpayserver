@@ -69,7 +69,7 @@ namespace BTCPayServer.Payments.Lightning.Lnd
             });
         }
         LndRestSettings _LndSettings;
-        internal LndAuthentication _Authentication;
+        LndAuthentication _Authentication;
 
         partial void PrepareRequest(HttpClient client, HttpRequestMessage request, string url)
         {

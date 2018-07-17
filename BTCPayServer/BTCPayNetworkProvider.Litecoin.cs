@@ -21,8 +21,8 @@ namespace BTCPayServer
                 NBitcoinNetwork = nbxplorerNetwork.NBitcoinNetwork,
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "litecoin",
-                CryptoImagePath = "imlegacy/litecoin-symbol.svg",
-                LightningImagePath = "imlegacy/ltc-lightning.svg",
+                CryptoImagePath = "imlegacy/litecoin.svg",
+                LightningImagePath = "imlegacy/litecoin-lightning.svg",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
                 CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("2'") : new KeyPath("1'")
             });

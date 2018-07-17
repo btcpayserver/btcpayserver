@@ -24,6 +24,10 @@
             color: gray;
         }
 
+        .vexmenuitem a img {
+            height: 24px;
+        }
+
 .vexmenuitem:hover {
     background-color: #eee;
 }
@@ -35,3 +39,16 @@
 #vexPopupDialog {
     display: none;
 }
+
+.payment__currencies {
+    font-size: 14px;
+    cursor: pointer;
+}
+
+    .payment__currencies img {
+        height: 32px;
+    }
+
+    .payment__currencies span {
+        border-bottom: 1px dotted gray;
+    }

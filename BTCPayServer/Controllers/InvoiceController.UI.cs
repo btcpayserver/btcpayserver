@@ -307,7 +307,7 @@ namespace BTCPayServer.Controllers
         private string GetDisplayName(PaymentMethodId paymentMethodId, BTCPayNetwork network)
         {
             return paymentMethodId.PaymentType == PaymentTypes.BTCLike ?
-                network.DisplayName : network.DisplayName + " - Lightning Network";
+                network.DisplayName : network.DisplayName + " - Lightning";
         }
 
         private string GetImage(PaymentMethodId paymentMethodId, BTCPayNetwork network)

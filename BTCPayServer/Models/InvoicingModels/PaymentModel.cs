@@ -14,6 +14,7 @@ namespace BTCPayServer.Models.InvoicingModels
             public string Link { get; set; }
             public string PaymentMethodName { get; set; }
             public bool LightningLike { get; set; }
+            public string CryptoCode { get; set; }
         }
         public string HtmlTitle { get; set; }
         public string CustomCSSLink { get; set; }

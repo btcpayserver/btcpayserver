@@ -248,8 +248,8 @@ namespace BTCPayServer.Controllers
             {
                 CryptoCode = network.CryptoCode,
                 PaymentMethodId = paymentMethodId.ToString(),
-                PaymentMethodName = network.DisplayName,
-                CryptoImage = "/" + GetImage(paymentMethodId, network),
+                PaymentMethodName = GetDisplayName(paymentMethodId, network),
+                CryptoImage = GetImage(paymentMethodId, network),
                 IsLightning = paymentMethodId.PaymentType == PaymentTypes.LightningLike,
                 ServerUrl = HttpContext.Request.GetAbsoluteRoot(),
                 OrderId = invoice.OrderId,
@@ -289,9 +289,10 @@ namespace BTCPayServer.Controllers
                                           .Select(kv => new PaymentModel.AvailableCrypto()
                                           {
                                               PaymentMethodId = kv.GetId().ToString(),
-                                              PaymentMethodName = kv.Network.DisplayName,
+                                              CryptoCode = kv.GetId().CryptoCode,
+                                              PaymentMethodName = GetDisplayName(kv.GetId(), kv.Network),
                                               LightningLike = kv.GetId().PaymentType == PaymentTypes.LightningLike,
-                                              CryptoImage = "/" + GetImage(kv.GetId(), kv.Network),
+                                              CryptoImage = GetImage(kv.GetId(), kv.Network),
                                               Link = Url.Action(nameof(Checkout), new { invoiceId = invoiceId, paymentMethodId = kv.GetId().ToString() })
                                           }).Where(c => c.CryptoImage != "/")
                                           .OrderBy(a => a.PaymentMethodName).ThenBy(a => a.LightningLike ? 1 : 0)
@@ -303,9 +304,17 @@ namespace BTCPayServer.Controllers
             return model;
         }
 
+        private string GetDisplayName(PaymentMethodId paymentMethodId, BTCPayNetwork network)
+        {
+            return paymentMethodId.PaymentType == PaymentTypes.BTCLike ?
+                network.DisplayName : network.DisplayName + " - Lightning Network";
+        }
+
         private string GetImage(PaymentMethodId paymentMethodId, BTCPayNetwork network)
         {
-            return (paymentMethodId.PaymentType == PaymentTypes.BTCLike ? Url.Content(network.CryptoImagePath) : Url.Content(network.LightningImagePath));
+            var res = paymentMethodId.PaymentType == PaymentTypes.BTCLike ?
+                Url.Content(network.CryptoImagePath) : Url.Content(network.LightningImagePath);
+            return "/" + res;
         }
 
         private string OrderAmountFromInvoice(string cryptoCode, ProductInformation productInformation)

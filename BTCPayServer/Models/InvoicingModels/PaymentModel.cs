@@ -13,6 +13,7 @@ namespace BTCPayServer.Models.InvoicingModels
             public string CryptoImage { get; set; }
             public string Link { get; set; }
             public string PaymentMethodName { get; set; }
+            public bool LightningLike { get; set; }
         }
         public string HtmlTitle { get; set; }
         public string CustomCSSLink { get; set; }
@@ -31,8 +32,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public string Status { get; set; }
         public string MerchantRefLink { get; set; }
         public int MaxTimeSeconds { get; set; }
-
-        // These properties are not used in client side code
+        
         public string StoreName { get; set; }
         public string ItemDesc { get; set; }
         public string TimeLeft { get; set; }

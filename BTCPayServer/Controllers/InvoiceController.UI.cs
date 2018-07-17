@@ -248,7 +248,7 @@ namespace BTCPayServer.Controllers
             {
                 CryptoCode = network.CryptoCode,
                 PaymentMethodId = paymentMethodId.ToString(),
-                PaymentMethodName = GetPaymentMethodName(paymentMethodId.ToString()),
+                PaymentMethodName = network.DisplayName,
                 CryptoImage = "/" + GetImage(paymentMethodId, network),
                 IsLightning = paymentMethodId.PaymentType == PaymentTypes.LightningLike,
                 ServerUrl = HttpContext.Request.GetAbsoluteRoot(),
@@ -289,30 +289,18 @@ namespace BTCPayServer.Controllers
                                           .Select(kv => new PaymentModel.AvailableCrypto()
                                           {
                                               PaymentMethodId = kv.GetId().ToString(),
-                                              PaymentMethodName = GetPaymentMethodName(kv.GetId().ToString()),
+                                              PaymentMethodName = kv.Network.DisplayName,
+                                              LightningLike = kv.GetId().PaymentType == PaymentTypes.LightningLike,
                                               CryptoImage = "/" + GetImage(kv.GetId(), kv.Network),
                                               Link = Url.Action(nameof(Checkout), new { invoiceId = invoiceId, paymentMethodId = kv.GetId().ToString() })
                                           }).Where(c => c.CryptoImage != "/")
-                                          .OrderBy(a => a.PaymentMethodName)
+                                          .OrderBy(a => a.PaymentMethodName).ThenBy(a => a.LightningLike ? 1 : 0)
                                           .ToList()
             };
 
             var expiration = TimeSpan.FromSeconds(model.ExpirationSeconds);
             model.TimeLeft = expiration.PrettyPrint();
             return model;
-        }
-
-        private static readonly Dictionary<string, string> CURRENCY_NAMES = new Dictionary<string, string>
-            {
-                {"BTC", "Bitcoin (BTC)" },
-                {"BTC_LightningLike", "Bitcoin (BTC) Lightning" },
-                {"LTC", "Litecoin (LTC)" },
-                {"LTC_LightningLike", "Litecoin (LTC) Lightning" },
-                {"DOGE", "Dogecoin (DOGE)" },
-            };
-        private string GetPaymentMethodName(string key)
-        {
-            return CURRENCY_NAMES[key];
         }
 
         private string GetImage(PaymentMethodId paymentMethodId, BTCPayNetwork network)

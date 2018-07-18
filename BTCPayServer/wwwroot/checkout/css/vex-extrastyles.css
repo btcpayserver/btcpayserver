@@ -28,13 +28,13 @@
             height: 24px;
         }
 
-.vexmenuitem:hover {
-    background-color: #eee;
-}
+    .vexmenuitem:hover {
+        background-color: #eee;
+    }
 
-.vexmenuitem:last-child {
-    border-bottom: none;
-}
+    .vexmenuitem:last-child {
+        border-bottom: none;
+    }
 
 #vexPopupDialog {
     display: none;
@@ -49,6 +49,19 @@
         height: 32px;
     }
 
-    .payment__currencies span {
-        border-bottom: 1px dotted gray;
-    }
+.clickable_underline {
+    border-bottom: 1px dotted #ccc;
+}
+
+.payment__currencies:hover .clickable_underline {
+    border-bottom: 1px dotted black;
+}
+
+.clickable_indicator {
+    margin-right: -10px;
+    opacity: 0.3;
+}
+
+.payment__currencies:hover .clickable_indicator {
+    opacity: 1;
+}

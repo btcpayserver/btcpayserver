@@ -42,27 +42,36 @@
                 </div>
             </div>
             <div class="single-item-order__right">
-                <div class="payment__currencies" onclick="openPaymentMethodDialog()">
-                    <img v-bind:src="srvModel.cryptoImage" />
-                    <span>
+                @if (Model.AvailableCryptos.Count == 1)
+                {
+                    <div class="payment__currencies">
+                        <img v-bind:src="srvModel.cryptoImage" />
                         {{srvModel.paymentMethodName}}
                         ({{srvModel.cryptoCode}})
-                    </span>
-                </div>
-                <div id="vexPopupDialog">
-                    <ul class="vexmenu">
-                    @foreach (var crypto in Model.AvailableCryptos)
-                    {
-                        <li class="vexmenuitem">
-                            <a href="@crypto.Link" onclick="return closePaymentMethodDialog('@crypto.PaymentMethodId');">
-                                <img alt="@crypto.PaymentMethodName" src="@crypto.CryptoImage" />
-                                @crypto.PaymentMethodName
-                                <span>@crypto.CryptoCode</span>
-                            </a>
-                        </li>
-                    }
-                    </ul>
-                </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="payment__currencies" onclick="openPaymentMethodDialog()">
+                        <img v-bind:src="srvModel.cryptoImage" />
+                        <span class="clickable_underline">{{srvModel.paymentMethodName}} ({{srvModel.cryptoCode}})</span>
+                        <span class="clickable_indicator fa fa-angle-right"></span>
+                    </div>
+                    <div id="vexPopupDialog">
+                        <ul class="vexmenu">
+                            @foreach (var crypto in Model.AvailableCryptos)
+                            {
+                                <li class="vexmenuitem">
+                                    <a href="@crypto.Link" onclick="return closePaymentMethodDialog('@crypto.PaymentMethodId');">
+                                        <img alt="@crypto.PaymentMethodName" src="@crypto.CryptoImage" />
+                                        @crypto.PaymentMethodName
+                                        <span>@crypto.CryptoCode</span>
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                }
                 <div class="payment__spinner">
                     <partial name="Checkout-Spinner" />
                 </div>

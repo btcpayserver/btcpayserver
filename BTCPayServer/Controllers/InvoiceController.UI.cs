@@ -295,7 +295,7 @@ namespace BTCPayServer.Controllers
                                               CryptoImage = GetImage(kv.GetId(), kv.Network),
                                               Link = Url.Action(nameof(Checkout), new { invoiceId = invoiceId, paymentMethodId = kv.GetId().ToString() })
                                           }).Where(c => c.CryptoImage != "/")
-                                          .OrderBy(a => a.PaymentMethodName).ThenBy(a => a.LightningLike ? 1 : 0)
+                                          .OrderByDescending(a => a.CryptoCode == "BTC").ThenBy(a => a.PaymentMethodName).ThenBy(a => a.LightningLike ? 1 : 0)
                                           .ToList()
             };
 

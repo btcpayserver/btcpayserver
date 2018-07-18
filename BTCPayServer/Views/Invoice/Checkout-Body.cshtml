@@ -42,15 +42,7 @@
                 </div>
             </div>
             <div class="single-item-order__right">
-                @if (Model.AvailableCryptos.Count == 1)
-                {
-                    <div class="payment__currencies">
-                        <img v-bind:src="srvModel.cryptoImage" />
-                        {{srvModel.paymentMethodName}}
-                        ({{srvModel.cryptoCode}})
-                    </div>
-                }
-                else
+                @if (Model.AvailableCryptos.Count > 1)
                 {
                     <div class="payment__currencies" onclick="openPaymentMethodDialog()">
                         <img v-bind:src="srvModel.cryptoImage" />

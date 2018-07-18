@@ -21,7 +21,7 @@ namespace BTCPayServer
                     "BTG_BTC = bitfinex(BTG_BTC)",
                 },
                 CryptoImagePath = "imlegacy/btg-symbol.svg",
-                LightningImagePath = "imlegacy/btg-symbol.svg",
+                LightningImagePath = "imlegacy/btg-lightning.svg",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
                 CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("156'") : new KeyPath("1'")
             });

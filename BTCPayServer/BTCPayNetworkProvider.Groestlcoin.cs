@@ -15,6 +15,7 @@ namespace BTCPayServer
             Add(new BTCPayNetwork()
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
+                DisplayName = "Groestlcoin",
                 BlockExplorerLink = NetworkType == NetworkType.Mainnet ? "https://chainz.cryptoid.info/grs/tx.dws?{0}.htm" : "https://chainz.cryptoid.info/grs-test/tx.dws?{0}.htm",
                 NBitcoinNetwork = nbxplorerNetwork.NBitcoinNetwork,
                 NBXplorerNetwork = nbxplorerNetwork,

@@ -20,12 +20,15 @@
     </script>
 
     <bundle name="wwwroot/bundles/checkout-bundle.min.js" />
+    <script>vex.defaultOptions.className = 'vex-theme-btcpay'</script>
 
-
-    @if(Model.CustomCSSLink != null)
+    @if (Model.CustomCSSLink != null)
     {
         <link href="@Model.CustomCSSLink" rel="stylesheet" />
     }
+
+    <style type="text/css">
+    </style>
 </head>
 <body style="background: #E4E4E4">
     <noscript>
@@ -82,7 +85,7 @@
 
                                 $('select').prettyDropdown({
                                     classic: false,
-                                    height: 30,
+                                    height: 32,
                                     reverse: true,
                                     hoverIntent: 5000
                                 });

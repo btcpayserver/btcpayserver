@@ -39,7 +39,7 @@ namespace BTCPayServer.Payments.Lightning.Lnd
                 _Parent = parent;
             }
 
-            public async Task StartListening()
+            public Task StartListening()
             {
                 try
                 {
@@ -47,21 +47,22 @@ namespace BTCPayServer.Payments.Lightning.Lnd
                     _Client.Timeout = TimeSpan.FromMilliseconds(Timeout.Infinite);
                     var request = new HttpRequestMessage(HttpMethod.Get, _Parent.BaseUrl.WithTrailingSlash() + "v1/invoices/subscribe");
                     _Parent._Authentication.AddAuthentication(request);
-                    _Response = await _Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, _Cts.Token);
-                    _Body = await _Response.Content.ReadAsStreamAsync();
-                    _Reader = new StreamReader(_Body);
-                    _ListenLoop = ListenLoop();
+                    _ListenLoop = ListenLoop(request);
                 }
                 catch
                 {
                     Dispose();
                 }
+                return Task.CompletedTask;
             }
 
-            private async Task ListenLoop()
+            private async Task ListenLoop(HttpRequestMessage request)
             {
                 try
                 {
+                    _Response = await _Client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, _Cts.Token);
+                    _Body = await _Response.Content.ReadAsStreamAsync();
+                    _Reader = new StreamReader(_Body);
                     while (!_Cts.IsCancellationRequested)
                     {
                         string line = await _Reader.ReadLineAsync().WithCancellation(_Cts.Token);

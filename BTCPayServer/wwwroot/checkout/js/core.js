@@ -16,6 +16,8 @@ function resetTabsSlider() {
 
     $("#altcoins").hide();
     $("#altcoins").removeClass("active");
+
+    closePaymentMethodDialog(null);
 }
 
 function onDataCallback(jsonData) {
@@ -69,7 +71,7 @@ function onDataCallback(jsonData) {
 }
 
 function changeCurrency(currency) {
-    if (srvModel.paymentMethodId !== currency) {
+    if (currency !== null && srvModel.paymentMethodId !== currency) {
         $(".payment__currencies").hide();
         $(".payment__spinner").show();
         srvModel.paymentMethodId = currency;

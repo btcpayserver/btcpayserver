@@ -29,6 +29,15 @@ namespace BTCPayServer.Data
             _Type = type;
         }
 
+
+        public DatabaseType Type
+        {
+            get
+            {
+                return _Type;
+            }
+        }
+
         public ApplicationDbContext CreateContext()
         {
             var builder = new DbContextOptionsBuilder<ApplicationDbContext>();

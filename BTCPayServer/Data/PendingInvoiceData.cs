@@ -11,5 +11,6 @@ namespace BTCPayServer.Data
         {
             get; set;
         }
+        public InvoiceData InvoiceData { get; set; }
     }
 }

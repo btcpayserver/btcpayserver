@@ -207,6 +207,8 @@ namespace BTCPayServer.Payments.Bitcoin
         async Task<InvoiceEntity> UpdatePaymentStates(BTCPayWallet wallet, string invoiceId)
         {
             var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId, false);
+            if (invoice == null)
+                return null;
             List<PaymentEntity> updatedPaymentEntities = new List<PaymentEntity>();
             var transactions = await wallet.GetTransactions(GetAllBitcoinPaymentData(invoice)
                     .Select(p => p.Outpoint.Hash)
@@ -315,6 +317,8 @@ namespace BTCPayServer.Payments.Bitcoin
             foreach (var invoiceId in invoices)
             {
                 var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId, true);
+                if (invoice == null)
+                    continue;
                 var alreadyAccounted = GetAllBitcoinPaymentData(invoice).Select(p => p.Outpoint).ToHashSet();
                 var strategy = GetDerivationStrategy(invoice, network);
                 if (strategy == null)
@@ -332,8 +336,12 @@ namespace BTCPayServer.Payments.Bitcoin
                     var payment = await _InvoiceRepository.AddPayment(invoice.Id, coin.Timestamp, paymentData, network.CryptoCode).ConfigureAwait(false);
                     alreadyAccounted.Add(coin.Coin.Outpoint);
                     if (payment != null)
+                    {
                         invoice = await ReceivedPayment(wallet, invoice, payment, strategy);
-                    totalPayment++;
+                        if(invoice == null)
+                            continue;
+                        totalPayment++;
+                    }
                 }
             }
             return totalPayment;
@@ -350,6 +358,8 @@ namespace BTCPayServer.Payments.Bitcoin
         {
             var paymentData = (BitcoinLikePaymentData)payment.GetCryptoPaymentData();
             invoice = (await UpdatePaymentStates(wallet, invoice.Id));
+            if (invoice == null)
+                return null;
             var paymentMethod = invoice.GetPaymentMethod(wallet.Network, PaymentTypes.BTCLike, _ExplorerClients.NetworkProviders);
             if (paymentMethod != null &&
                 paymentMethod.GetPaymentMethodDetails() is BitcoinLikeOnChainPaymentMethod btc &&

@@ -12,6 +12,7 @@ using System.Linq;
 using System.Threading;
 using NBitpayClient;
 using System.Globalization;
+using Xunit.Sdk;
 
 namespace BTCPayServer.Tests.Lnd
 {
@@ -100,7 +101,7 @@ namespace BTCPayServer.Tests.Lnd
             var waitTask3 = listener.WaitInvoice(waitToken);
             await Task.Delay(100);
             listener.Dispose();
-            Assert.Throws<TaskCanceledException>(()=> waitTask3.GetAwaiter().GetResult());
+            Assert.Throws<TaskCanceledException>(() => waitTask3.GetAwaiter().GetResult());
         }
 
         [Fact]
@@ -114,11 +115,29 @@ namespace BTCPayServer.Tests.Lnd
                 Payment_request = merchantInvoice.BOLT11
             });
 
-            var invoice = await InvoiceClient.GetInvoice(merchantInvoice.Id);
-
-            Assert.True(invoice.PaidAt.HasValue);
+            await EventuallyAsync(async () =>
+            {
+                var invoice = await InvoiceClient.GetInvoice(merchantInvoice.Id);
+                Assert.True(invoice.PaidAt.HasValue);
+            });
         }
 
+        private async Task EventuallyAsync(Func<Task> act)
+        {
+            CancellationTokenSource cts = new CancellationTokenSource(20000);
+            while (true)
+            {
+                try
+                {
+                    await act();
+                    break;
+                }
+                catch (XunitException) when (!cts.Token.IsCancellationRequested)
+                {
+                    await Task.Delay(500);
+                }
+            }
+        }
 
         public async Task<LnrpcChannel> EnsureLightningChannelAsync()
         {

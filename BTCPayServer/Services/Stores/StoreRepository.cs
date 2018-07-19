@@ -169,5 +169,18 @@ namespace BTCPayServer.Services.Stores
                 await ctx.SaveChangesAsync().ConfigureAwait(false);
             }
         }
+
+        public async Task<bool> DeleteStore(string storeId)
+        {
+            using (var ctx = _ContextFactory.CreateContext())
+            {
+                var store = await ctx.Stores.FindAsync(storeId);
+                if (store == null)
+                    return false;
+                ctx.Stores.Remove(store);
+                await ctx.SaveChangesAsync();
+                return true;
+            }
+        }
     }
 }

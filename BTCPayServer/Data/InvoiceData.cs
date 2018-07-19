@@ -80,5 +80,6 @@ namespace BTCPayServer.Data
         {
             get; set;
         }
+        public List<PendingInvoiceData> PendingInvoices { get; set; }
     }
 }

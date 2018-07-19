@@ -114,17 +114,34 @@ namespace BTCPayServer.Services.Stores
 
         public async Task RemoveStoreUser(string storeId, string userId)
         {
-            bool delete = false;
             using (var ctx = _ContextFactory.CreateContext())
             {
                 var userStore = new UserStore() { StoreDataId = storeId, ApplicationUserId = userId };
                 ctx.UserStore.Add(userStore);
                 ctx.Entry<UserStore>(userStore).State = EntityState.Deleted;
                 await ctx.SaveChangesAsync();
-                delete = await ctx.UserStore.Where(u => u.StoreDataId == storeId && u.Role == StoreRoles.Owner).CountAsync() == 0;
+
             }
-            if (delete)
-                await DeleteStore(storeId);
+            await DeleteStoreIfOrphan(storeId);
+        }
+
+        private async Task DeleteStoreIfOrphan(string storeId)
+        {
+            using (var ctx = _ContextFactory.CreateContext())
+            {
+                if (ctx.Database.SupportDropForeignKey())
+                {
+                    if (await ctx.UserStore.Where(u => u.StoreDataId == storeId && u.Role == StoreRoles.Owner).CountAsync() == 0)
+                    {
+                        var store = await ctx.Stores.FindAsync(storeId);
+                        if (store != null)
+                        {
+                            ctx.Stores.Remove(store);
+                            await ctx.SaveChangesAsync();
+                        }
+                    }
+                }
+            }
         }
 
         public async Task<StoreData> CreateStore(string ownerId, string name)
@@ -162,6 +179,7 @@ namespace BTCPayServer.Services.Stores
                 ctx.UserStore.Remove(storeUser);
                 await ctx.SaveChangesAsync();
             }
+            await DeleteStoreIfOrphan(storeId);
         }
 
         public async Task UpdateStore(StoreData store)

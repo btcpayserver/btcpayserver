@@ -25,6 +25,7 @@ namespace BTCPayServer.Models.StoreViewModels
 
         }
 
+        public bool CanDelete { get; set; }
         public string Id { get; set; }
         [Display(Name = "Store Name")]
         [Required]

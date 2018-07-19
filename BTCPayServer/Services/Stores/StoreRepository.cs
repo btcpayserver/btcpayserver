@@ -188,5 +188,13 @@ namespace BTCPayServer.Services.Stores
                 return true;
             }
         }
+
+        public bool CanDeleteStores()
+        {
+            using (var ctx = _ContextFactory.CreateContext())
+            {
+                return ctx.Database.SupportDropForeignKey();
+            }
+        }
     }
 }

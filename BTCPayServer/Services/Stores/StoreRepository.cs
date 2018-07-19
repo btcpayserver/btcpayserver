@@ -174,6 +174,8 @@ namespace BTCPayServer.Services.Stores
         {
             using (var ctx = _ContextFactory.CreateContext())
             {
+                if (!ctx.Database.SupportDropForeignKey())
+                    return false;
                 var store = await ctx.Stores.FindAsync(storeId);
                 if (store == null)
                     return false;

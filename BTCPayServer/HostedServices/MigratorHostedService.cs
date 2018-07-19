@@ -43,7 +43,7 @@ namespace BTCPayServer.HostedServices
                 var settings = (await _Settings.GetSettingAsync<MigrationSettings>()) ?? new MigrationSettings();
                 if (!settings.DeprecatedLightningConnectionStringCheck)
                 {
-                    await DepracatedLightningConnectionStringCheck();
+                    await DeprecatedLightningConnectionStringCheck();
                     settings.DeprecatedLightningConnectionStringCheck = true;
                     await _Settings.UpdateSetting(settings);
                 }
@@ -54,7 +54,7 @@ namespace BTCPayServer.HostedServices
                     await _Settings.UpdateSetting(settings);
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Logs.PayServer.LogError(ex, "Error on the MigratorHostedService");
                 throw;
@@ -65,6 +65,8 @@ namespace BTCPayServer.HostedServices
         {
             using (var ctx = _DBContextFactory.CreateContext())
             {
+                if (!ctx.Database.SupportDropForeignKey())
+                    return;
                 foreach (var store in await ctx.Stores.Where(s => s.UserStores.Count() == 0).ToArrayAsync())
                 {
                     ctx.Stores.Remove(store);
@@ -73,7 +75,7 @@ namespace BTCPayServer.HostedServices
             }
         }
 
-        private async Task DepracatedLightningConnectionStringCheck()
+        private async Task DeprecatedLightningConnectionStringCheck()
         {
             using (var ctx = _DBContextFactory.CreateContext())
             {

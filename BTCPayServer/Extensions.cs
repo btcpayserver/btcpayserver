@@ -31,6 +31,7 @@ using System.Security.Claims;
 using System.Globalization;
 using BTCPayServer.Services;
 using BTCPayServer.Data;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace BTCPayServer
 {
@@ -80,6 +81,15 @@ namespace BTCPayServer
         public static bool SupportDropColumn(this Microsoft.EntityFrameworkCore.Migrations.Migration migration, string activeProvider)
         {
             return activeProvider != "Microsoft.EntityFrameworkCore.Sqlite";
+        }
+
+        public static bool SupportDropForeignKey(this Microsoft.EntityFrameworkCore.Migrations.Migration migration, string activeProvider)
+        {
+            return activeProvider != "Microsoft.EntityFrameworkCore.Sqlite";
+        }
+        public static bool SupportDropForeignKey(this DatabaseFacade facade)
+        {
+            return facade.ProviderName != "Microsoft.EntityFrameworkCore.Sqlite";
         }
 
         public static async Task<Dictionary<uint256, TransactionResult>> GetTransactions(this BTCPayWallet client, uint256[] hashes, CancellationToken cts = default(CancellationToken))

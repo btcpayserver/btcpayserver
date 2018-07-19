@@ -67,7 +67,7 @@ namespace BTCPayServer.HostedServices
             {
                 if (!ctx.Database.SupportDropForeignKey())
                     return;
-                foreach (var store in await ctx.Stores.Where(s => s.UserStores.Count() == 0).ToArrayAsync())
+                foreach (var store in await ctx.Stores.Where(s => s.UserStores.Where(u => u.Role == StoreRoles.Owner).Count() == 0).ToArrayAsync())
                 {
                     ctx.Stores.Remove(store);
                 }

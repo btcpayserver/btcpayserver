@@ -114,13 +114,17 @@ namespace BTCPayServer.Services.Stores
 
         public async Task RemoveStoreUser(string storeId, string userId)
         {
+            bool delete = false;
             using (var ctx = _ContextFactory.CreateContext())
             {
                 var userStore = new UserStore() { StoreDataId = storeId, ApplicationUserId = userId };
                 ctx.UserStore.Add(userStore);
                 ctx.Entry<UserStore>(userStore).State = EntityState.Deleted;
                 await ctx.SaveChangesAsync();
+                delete = await ctx.UserStore.Where(u => u.StoreDataId == storeId && u.Role == StoreRoles.Owner).CountAsync() == 0;
             }
+            if (delete)
+                await DeleteStore(storeId);
         }
 
         public async Task<StoreData> CreateStore(string ownerId, string name)

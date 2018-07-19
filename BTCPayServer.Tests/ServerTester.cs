@@ -52,7 +52,7 @@ namespace BTCPayServer.Tests
             CustomerLightningD = (CLightningRPCClient)LightningClientFactory.CreateClient(GetEnvironment("TEST_CUSTOMERLIGHTNINGD", "type=clightning;server=tcp://127.0.0.1:30992/"), btc);
             MerchantLightningD = (CLightningRPCClient)LightningClientFactory.CreateClient(GetEnvironment("TEST_MERCHANTLIGHTNINGD", "type=clightning;server=tcp://127.0.0.1:30993/"), btc);
 
-            MerchantCharge = new ChargeTester(this, "TEST_MERCHANTCHARGE", "type=charge;server=https://127.0.0.1:54938/;api-token=foiewnccewuify", "merchant_lightningd", btc);
+            MerchantCharge = new ChargeTester(this, "TEST_MERCHANTCHARGE", "type=charge;server=http://127.0.0.1:54938/;api-token=foiewnccewuify", "merchant_lightningd", btc);
 
             MerchantLnd = new LndMockTester(this, "TEST_MERCHANTLND", "https://lnd:lnd@127.0.0.1:53280/", "merchant_lnd", btc);
 

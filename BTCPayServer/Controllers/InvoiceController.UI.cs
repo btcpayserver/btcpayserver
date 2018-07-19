@@ -291,11 +291,11 @@ namespace BTCPayServer.Controllers
                                               PaymentMethodId = kv.GetId().ToString(),
                                               CryptoCode = kv.GetId().CryptoCode,
                                               PaymentMethodName = GetDisplayName(kv.GetId(), kv.Network),
-                                              LightningLike = kv.GetId().PaymentType == PaymentTypes.LightningLike,
+                                              IsLightning = kv.GetId().PaymentType == PaymentTypes.LightningLike,
                                               CryptoImage = GetImage(kv.GetId(), kv.Network),
                                               Link = Url.Action(nameof(Checkout), new { invoiceId = invoiceId, paymentMethodId = kv.GetId().ToString() })
                                           }).Where(c => c.CryptoImage != "/")
-                                          .OrderByDescending(a => a.CryptoCode == "BTC").ThenBy(a => a.PaymentMethodName).ThenBy(a => a.LightningLike ? 1 : 0)
+                                          .OrderByDescending(a => a.CryptoCode == "BTC").ThenBy(a => a.PaymentMethodName).ThenBy(a => a.IsLightning ? 1 : 0)
                                           .ToList()
             };
 

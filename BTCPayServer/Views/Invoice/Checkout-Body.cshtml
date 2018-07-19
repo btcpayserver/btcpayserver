@@ -47,6 +47,7 @@
                     <div class="payment__currencies" onclick="openPaymentMethodDialog()">
                         <img v-bind:src="srvModel.cryptoImage" />
                         <span class="clickable_underline">{{srvModel.paymentMethodName}} ({{srvModel.cryptoCode}})</span>
+                        <span v-show="srvModel.isLightning">&#9889;</span>
                         <span class="clickable_indicator fa fa-angle-right"></span>
                     </div>
                     <div id="vexPopupDialog">
@@ -57,6 +58,7 @@
                                     <a href="@crypto.Link" onclick="return closePaymentMethodDialog('@crypto.PaymentMethodId');">
                                         <img alt="@crypto.PaymentMethodName" src="@crypto.CryptoImage" />
                                         @crypto.PaymentMethodName
+                                        @(crypto.IsLightning ? Html.Raw("&#9889;") : null)
                                         <span>@crypto.CryptoCode</span>
                                     </a>
                                 </li>

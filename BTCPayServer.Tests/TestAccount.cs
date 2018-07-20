@@ -65,6 +65,7 @@ namespace BTCPayServer.Tests
             var store = this.GetController<UserStoresController>();
             await store.CreateStore(new CreateStoreViewModel() { Name = "Test Store" });
             StoreId = store.CreatedStoreId;
+            parent.Stores.Add(StoreId);
         }
 
         public BTCPayNetwork SupportedNetwork { get; set; }

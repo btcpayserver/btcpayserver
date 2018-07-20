@@ -35,21 +35,7 @@ namespace BTCPayServer.Controllers
             _NetworkProvider = networkProvider;
             _UserManager = userManager;
             _WalletProvider = walletProvider;
-        }
-        [HttpGet]
-        [Route("{storeId}/delete")]
-        public IActionResult DeleteStore(string storeId)
-        {
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-                return NotFound();
-            return View("Confirm", new ConfirmModel()
-            {
-                Title = "Delete store " + store.StoreName,
-                Description = "This store will still be accessible to users sharing it",
-                Action = "Delete"
-            });
-        }
+        }        
 
         [HttpGet]
         [Route("create")]
@@ -63,8 +49,23 @@ namespace BTCPayServer.Controllers
             get; set;
         }
 
+        [HttpGet]
+        [Route("{storeId}/me/delete")]
+        public IActionResult DeleteStore(string storeId)
+        {
+            var store = HttpContext.GetStoreData();
+            if (store == null)
+                return NotFound();
+            return View("Confirm", new ConfirmModel()
+            {
+                Title = "Delete store " + store.StoreName,
+                Description = "This store will still be accessible to users sharing it",
+                Action = "Delete"
+            });
+        }
+
         [HttpPost]
-        [Route("{storeId}/delete")]
+        [Route("{storeId}/me/delete")]
         public async Task<IActionResult> DeleteStorePost(string storeId)
         {
             var userId = GetUserId();

@@ -34,11 +34,12 @@ namespace BTCPayServer.Data
         {
             get; set;
         }
-
         public List<AppData> Apps
         {
             get; set;
         }
+
+        public List<InvoiceData> Invoices { get; set; }
 
         [Obsolete("Use GetDerivationStrategies instead")]
         public string DerivationStrategy
@@ -192,6 +193,8 @@ namespace BTCPayServer.Data
         }
         [Obsolete("Use GetDefaultCrypto instead")]
         public string DefaultCrypto { get; set; }
+        public List<PairedSINData> PairedSINs { get; set; }
+        public IEnumerable<APIKeyData> APIKeys { get; set; }
 
 #pragma warning disable CS0618
         public string GetDefaultCrypto()

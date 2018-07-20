@@ -122,8 +122,6 @@ namespace BTCPayServer.Controllers
             HashSet<CurrencyPair> currencyPairsToFetch = new HashSet<CurrencyPair>();
             var rules = storeBlob.GetRateRules(_NetworkProvider);
 
-            await UpdateCLightningConnectionStringIfNeeded(store);
-
             foreach (var network in store.GetSupportedPaymentMethods(_NetworkProvider)
                                                .Select(c => _NetworkProvider.GetNetwork(c.PaymentId.CryptoCode))
                                                 .Where(c => c != null))
@@ -211,22 +209,6 @@ namespace BTCPayServer.Controllers
             _EventAggregator.Publish(new Events.InvoiceEvent(entity.EntityToDTO(_NetworkProvider), 1001, "invoice_created"));
             var resp = entity.EntityToDTO(_NetworkProvider);
             return new DataWrapper<InvoiceResponse>(resp) { Facade = "pos/invoice" };
-        }
-
-        private async Task UpdateCLightningConnectionStringIfNeeded(StoreData store)
-        {
-            bool needUpdate = false;
-            foreach (var method in store.GetSupportedPaymentMethods(_NetworkProvider).OfType<Payments.Lightning.LightningSupportedPaymentMethod>())
-            {
-                var lightning = method.GetLightningUrl();
-                if (lightning.IsLegacy)
-                {
-                    method.SetLightningUrl(lightning);
-                    needUpdate = true;
-                }
-            }
-            if(needUpdate)
-                await _StoreRepository.UpdateStore(store);
         }
 
         private async Task<PaymentMethod> CreatePaymentMethodAsync(Dictionary<CurrencyPair, Task<RateResult>> fetchingByCurrencyPair, IPaymentMethodHandler handler, ISupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network, InvoiceEntity entity, StoreData store)

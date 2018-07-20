@@ -130,6 +130,16 @@
                     Available placeholders are: {StoreName}, {ItemDescription} and {OrderId}
                 </p>
             </div>
+            @if(Model.CanDelete)
+            {
+                <div class="form-group">
+                    <h5>Other actions...</h5>
+                    <p><a href="#danger-zone" data-toggle="collapse"><b>Click here to see more actions</b></a></p>
+                    <div id="danger-zone" class="collapse">
+                        <a class="btn btn-outline-danger form-control" asp-action="DeleteStore" asp-route-storeId="@Model.Id">Delete this store</a>
+                    </div>
+                </div>
+            }
             <button name="command" type="submit" class="btn btn-primary" value="Save">Save</button>
         </form>
     </div>

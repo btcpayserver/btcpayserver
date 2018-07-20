@@ -283,7 +283,7 @@ namespace BTCPayServer.Controllers
                     {
                         CurrencyPair = fetch.Key.ToString(),
                         Error = testResult.Errors.Count != 0,
-                        Rule = testResult.Errors.Count == 0 ? testResult.Rule + " = " + testResult.Value.Value.ToString(CultureInfo.InvariantCulture) 
+                        Rule = testResult.Errors.Count == 0 ? testResult.Rule + " = " + testResult.Value.Value.ToString(CultureInfo.InvariantCulture)
                                                             : testResult.EvaluatedRule
                     });
                 }
@@ -424,6 +424,7 @@ namespace BTCPayServer.Controllers
             vm.StoreWebsite = store.StoreWebsite;
             vm.NetworkFee = !storeBlob.NetworkFeeDisabled;
             vm.SpeedPolicy = store.SpeedPolicy;
+            vm.CanDelete = _Repo.CanDeleteStores();
             AddPaymentMethods(store, vm);
             vm.MonitoringExpiration = storeBlob.MonitoringExpiration;
             vm.InvoiceExpiration = storeBlob.InvoiceExpiration;
@@ -468,10 +469,8 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("{storeId}")]
-        public async Task<IActionResult> UpdateStore(StoreViewModel model)
+        public async Task<IActionResult> UpdateStore(StoreViewModel model, string command = null)
         {
-            AddPaymentMethods(StoreData, model);
-
             bool needUpdate = false;
             if (StoreData.SpeedPolicy != model.SpeedPolicy)
             {
@@ -511,6 +510,29 @@ namespace BTCPayServer.Controllers
             {
                 storeId = StoreData.Id
             });
+
+        }
+
+        [HttpGet]
+        [Route("{storeId}/delete")]
+        public IActionResult DeleteStore(string storeId)
+        {
+            return View("Confirm", new ConfirmModel()
+            {
+                Action = "Delete this store",
+                Title = "Delete this store",
+                Description = "This action is irreversible and will remove all information related to this store. (Invoices, Apps etc...)",
+                ButtonClass = "btn-danger"
+            });
+        }
+
+        [HttpPost]
+        [Route("{storeId}/delete")]
+        public async Task<IActionResult> DeleteStorePost(string storeId)
+        {
+            await _Repo.DeleteStore(StoreData.Id);
+            StatusMessage = "Success: Store successfully deleted";
+            return RedirectToAction(nameof(UserStoresController.ListStores), "UserStores");
         }
 
         private CoinAverageExchange[] GetSupportedExchanges()

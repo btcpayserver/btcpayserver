@@ -162,7 +162,8 @@ namespace BTCPayServer.Controllers
             using (var ctx = _ContextFactory.CreateContext())
             {
                 return await ctx.Apps
-                                .Where(us => us.Id == appId && us.AppType == appType.ToString())
+                                .Where(us => us.Id == appId && 
+                                             us.AppType == appType.ToString())
                                 .FirstOrDefaultAsync();
             }
         }

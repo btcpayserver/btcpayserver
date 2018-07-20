@@ -120,6 +120,27 @@ namespace BTCPayServer.Services.Stores
                 ctx.UserStore.Add(userStore);
                 ctx.Entry<UserStore>(userStore).State = EntityState.Deleted;
                 await ctx.SaveChangesAsync();
+
+            }
+            await DeleteStoreIfOrphan(storeId);
+        }
+
+        private async Task DeleteStoreIfOrphan(string storeId)
+        {
+            using (var ctx = _ContextFactory.CreateContext())
+            {
+                if (ctx.Database.SupportDropForeignKey())
+                {
+                    if (await ctx.UserStore.Where(u => u.StoreDataId == storeId && u.Role == StoreRoles.Owner).CountAsync() == 0)
+                    {
+                        var store = await ctx.Stores.FindAsync(storeId);
+                        if (store != null)
+                        {
+                            ctx.Stores.Remove(store);
+                            await ctx.SaveChangesAsync();
+                        }
+                    }
+                }
             }
         }
 
@@ -158,6 +179,7 @@ namespace BTCPayServer.Services.Stores
                 ctx.UserStore.Remove(storeUser);
                 await ctx.SaveChangesAsync();
             }
+            await DeleteStoreIfOrphan(storeId);
         }
 
         public async Task UpdateStore(StoreData store)
@@ -167,6 +189,29 @@ namespace BTCPayServer.Services.Stores
                 var existing = await ctx.FindAsync<StoreData>(store.Id);
                 ctx.Entry(existing).CurrentValues.SetValues(store);
                 await ctx.SaveChangesAsync().ConfigureAwait(false);
+            }
+        }
+
+        public async Task<bool> DeleteStore(string storeId)
+        {
+            using (var ctx = _ContextFactory.CreateContext())
+            {
+                if (!ctx.Database.SupportDropForeignKey())
+                    return false;
+                var store = await ctx.Stores.FindAsync(storeId);
+                if (store == null)
+                    return false;
+                ctx.Stores.Remove(store);
+                await ctx.SaveChangesAsync();
+                return true;
+            }
+        }
+
+        public bool CanDeleteStores()
+        {
+            using (var ctx = _ContextFactory.CreateContext())
+            {
+                return ctx.Database.SupportDropForeignKey();
             }
         }
     }

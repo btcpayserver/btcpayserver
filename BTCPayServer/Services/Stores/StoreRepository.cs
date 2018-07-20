@@ -112,6 +112,20 @@ namespace BTCPayServer.Services.Stores
             }
         }
 
+        public async Task CleanUnreachableStores()
+        {
+            using (var ctx = _ContextFactory.CreateContext())
+            {
+                if (!ctx.Database.SupportDropForeignKey())
+                    return;
+                foreach (var store in await ctx.Stores.Where(s => s.UserStores.Where(u => u.Role == StoreRoles.Owner).Count() == 0).ToArrayAsync())
+                {
+                    ctx.Stores.Remove(store);
+                }
+                await ctx.SaveChangesAsync();
+            }
+        }
+
         public async Task RemoveStoreUser(string storeId, string userId)
         {
             using (var ctx = _ContextFactory.CreateContext())

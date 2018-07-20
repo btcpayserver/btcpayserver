@@ -4,6 +4,7 @@ using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Rates;
+using BTCPayServer.Services.Stores;
 using BTCPayServer.Validations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -25,14 +26,17 @@ namespace BTCPayServer.Controllers
         private UserManager<ApplicationUser> _UserManager;
         SettingsRepository _SettingsRepository;
         private BTCPayRateProviderFactory _RateProviderFactory;
+        private StoreRepository _StoreRepository;
 
         public ServerController(UserManager<ApplicationUser> userManager,
             BTCPayRateProviderFactory rateProviderFactory,
-            SettingsRepository settingsRepository)
+            SettingsRepository settingsRepository,
+            Services.Stores.StoreRepository storeRepository)
         {
             _UserManager = userManager;
             _SettingsRepository = settingsRepository;
             _RateProviderFactory = rateProviderFactory;
+            _StoreRepository = storeRepository;
         }
 
         [Route("server/rates")]
@@ -188,6 +192,7 @@ namespace BTCPayServer.Controllers
             if (user == null)
                 return NotFound();
             await _UserManager.DeleteAsync(user);
+            await _StoreRepository.CleanUnreachableStores();
             StatusMessage = "User deleted";
             return RedirectToAction(nameof(ListUsers));
         }

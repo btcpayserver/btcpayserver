@@ -61,18 +61,9 @@ namespace BTCPayServer.HostedServices
             }
         }
 
-        private async Task UnreachableStoreCheck()
+        private Task UnreachableStoreCheck()
         {
-            using (var ctx = _DBContextFactory.CreateContext())
-            {
-                if (!ctx.Database.SupportDropForeignKey())
-                    return;
-                foreach (var store in await ctx.Stores.Where(s => s.UserStores.Where(u => u.Role == StoreRoles.Owner).Count() == 0).ToArrayAsync())
-                {
-                    ctx.Stores.Remove(store);
-                }
-                await ctx.SaveChangesAsync();
-            }
+            return _StoreRepository.CleanUnreachableStores();
         }
 
         private async Task DeprecatedLightningConnectionStringCheck()

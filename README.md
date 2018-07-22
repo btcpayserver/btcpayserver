@@ -32,6 +32,7 @@ In addition to Bitcoin, we support the following crypto currencies:
 * Monacoin
 * Polis
 * UFO
+* Viacoin
 
 ## Documentation
 

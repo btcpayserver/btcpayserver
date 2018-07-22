@@ -6,11 +6,11 @@
     var cryptoCode = $("#cryptoCode").val();
 
     function WriteAlert(type, message) {
-        $(".alert").removeClass("alert-danger");
-        $(".alert").removeClass("alert-warning");
-        $(".alert").removeClass("alert-success");
-        $(".alert").addClass("alert-" + type);
-        $(".alert").css("display", "block");
+        $("#walletAlert").removeClass("alert-danger");
+        $("#walletAlert").removeClass("alert-warning");
+        $("#walletAlert").removeClass("alert-success");
+        $("#walletAlert").addClass("alert-" + type);
+        $("#walletAlert").css("display", "block");
         $("#alertMessage").text(message);
     }
 

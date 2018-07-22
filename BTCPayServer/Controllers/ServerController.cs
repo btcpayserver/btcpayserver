@@ -320,6 +320,7 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
         [Route("lnd-config/{secret}/lnd.config")]
+        [AllowAnonymous]
         public IActionResult GetLNDConfig(ulong secret)
         {
             var conf = _LnConfigProvider.GetConfig(secret);

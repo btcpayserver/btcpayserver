@@ -50,10 +50,10 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.1.0" />
     <PackageReference Include="System.Xml.XmlSerializer" Version="4.3.0" />
     <PackageReference Include="Text.Analyzers" Version="2.6.0" />
+    <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.0" />
   </ItemGroup>
 
 	<ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version=" 2.1.0" PrivateAssets="All" />
 		<PackageReference Include="YamlDotNet" Version="4.3.1" />
 	</ItemGroup>

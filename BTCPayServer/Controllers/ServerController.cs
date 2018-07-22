@@ -298,8 +298,7 @@ namespace BTCPayServer.Controllers
             var model = new LNDGRPCServicesViewModel();
             var external = GetExternalLNDConnectionString(connectionString);
 
-            model.Host = external.BaseUri.DnsSafeHost;
-            model.Port = external.BaseUri.Port;
+            model.Host = $"{external.BaseUri.DnsSafeHost}:{external.BaseUri.Port}";
             model.SSL = external.BaseUri.Scheme == "https";
             if (external.CertificateThumbprint != null)
             {
@@ -314,7 +313,8 @@ namespace BTCPayServer.Controllers
                 var lnConfig = _LnConfigProvider.GetConfig(secret.Value);
                 if (lnConfig != null)
                 {
-                    model.QRCode = $"config={this.Request.GetAbsoluteRoot().WithTrailingSlash()}lnd-config/{secret.Value}/lnd.config";
+                    model.QRCodeLink = $"{this.Request.GetAbsoluteRoot().WithTrailingSlash()}lnd-config/{secret.Value}/lnd.config";
+                    model.QRCode = $"config={model.QRCodeLink}";
                 }
             }
             return View(model);

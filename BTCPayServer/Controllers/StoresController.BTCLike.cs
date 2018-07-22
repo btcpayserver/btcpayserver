@@ -195,216 +195,221 @@ namespace BTCPayServer.Controllers
 
             var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
 
-            var hw = new HardwareWalletService(webSocket);
-            object result = null;
-            try
+            using (var normalOperationTimeout = new CancellationTokenSource())
+            using (var signTimeout = new CancellationTokenSource())
             {
-                BTCPayNetwork network = null;
-                if (cryptoCode != null)
+                normalOperationTimeout.CancelAfter(TimeSpan.FromMinutes(30));
+                var hw = new HardwareWalletService(webSocket);
+                object result = null;
+                try
                 {
-                    network = _NetworkProvider.GetNetwork(cryptoCode);
-                    if (network == null)
-                        throw new FormatException("Invalid value for crypto code");
-                }
-
-                BitcoinAddress destinationAddress = null;
-                if (destination != null)
-                {
-                    try
+                    BTCPayNetwork network = null;
+                    if (cryptoCode != null)
                     {
-                        destinationAddress = BitcoinAddress.Create(destination, network.NBitcoinNetwork);
-                    }
-                    catch { }
-                    if (destinationAddress == null)
-                        throw new FormatException("Invalid value for destination");
-                }
-
-                FeeRate feeRateValue = null;
-                if (feeRate != null)
-                {
-                    try
-                    {
-                        feeRateValue = new FeeRate(Money.Satoshis(int.Parse(feeRate, CultureInfo.InvariantCulture)), 1);
-                    }
-                    catch { }
-                    if (feeRateValue == null || feeRateValue.FeePerK <= Money.Zero)
-                        throw new FormatException("Invalid value for fee rate");
-                }
-
-                Money amountBTC = null;
-                if (amount != null)
-                {
-                    try
-                    {
-                        amountBTC = Money.Parse(amount);
-                    }
-                    catch { }
-                    if (amountBTC == null || amountBTC <= Money.Zero)
-                        throw new FormatException("Invalid value for amount");
-                }
-
-                bool subsctractFeesValue = false;
-                if (substractFees != null)
-                {
-                    try
-                    {
-                        subsctractFeesValue = bool.Parse(substractFees);
-                    }
-                    catch { throw new FormatException("Invalid value for subtract fees"); }
-                }
-                if (command == "test")
-                {
-                    result = await hw.Test();
-                }
-                if (command == "getxpub")
-                {
-                    var getxpubResult = await hw.GetExtPubKey(network, account);
-                    result = getxpubResult;
-                }
-                if (command == "getinfo")
-                {
-                    var strategy = GetDirectDerivationStrategy(store, network);
-                    var strategyBase = GetDerivationStrategy(store, network);
-                    if (strategy == null || await hw.GetKeyPath(network, strategy) == null)
-                    {
-                        throw new Exception($"This store is not configured to use this ledger");
+                        network = _NetworkProvider.GetNetwork(cryptoCode);
+                        if (network == null)
+                            throw new FormatException("Invalid value for crypto code");
                     }
 
-                    var feeProvider = _FeeRateProvider.CreateFeeProvider(network);
-                    var recommendedFees = feeProvider.GetFeeRateAsync();
-                    var balance = _WalletProvider.GetWallet(network).GetBalance(strategyBase);
-                    result = new GetInfoResult() { Balance = (double)(await balance).ToDecimal(MoneyUnit.BTC), RecommendedSatoshiPerByte = (int)(await recommendedFees).GetFee(1).Satoshi };
-                }
+                    BitcoinAddress destinationAddress = null;
+                    if (destination != null)
+                    {
+                        try
+                        {
+                            destinationAddress = BitcoinAddress.Create(destination, network.NBitcoinNetwork);
+                        }
+                        catch { }
+                        if (destinationAddress == null)
+                            throw new FormatException("Invalid value for destination");
+                    }
 
-                if (command == "sendtoaddress")
-                {
-                    if (!_Dashboard.IsFullySynched(network.CryptoCode, out var summary))
-                        throw new Exception($"{network.CryptoCode}: not started or fully synched");
-                    var strategy = GetDirectDerivationStrategy(store, network);
-                    var strategyBase = GetDerivationStrategy(store, network);
-                    var wallet = _WalletProvider.GetWallet(network);
-                    var change = wallet.GetChangeAddressAsync(strategyBase);
+                    FeeRate feeRateValue = null;
+                    if (feeRate != null)
+                    {
+                        try
+                        {
+                            feeRateValue = new FeeRate(Money.Satoshis(int.Parse(feeRate, CultureInfo.InvariantCulture)), 1);
+                        }
+                        catch { }
+                        if (feeRateValue == null || feeRateValue.FeePerK <= Money.Zero)
+                            throw new FormatException("Invalid value for fee rate");
+                    }
 
-                    var unspentCoins = await wallet.GetUnspentCoins(strategyBase);
-                    var changeAddress = await change;
-                    var send = new[] { (
+                    Money amountBTC = null;
+                    if (amount != null)
+                    {
+                        try
+                        {
+                            amountBTC = Money.Parse(amount);
+                        }
+                        catch { }
+                        if (amountBTC == null || amountBTC <= Money.Zero)
+                            throw new FormatException("Invalid value for amount");
+                    }
+
+                    bool subsctractFeesValue = false;
+                    if (substractFees != null)
+                    {
+                        try
+                        {
+                            subsctractFeesValue = bool.Parse(substractFees);
+                        }
+                        catch { throw new FormatException("Invalid value for subtract fees"); }
+                    }
+                    if (command == "test")
+                    {
+                        result = await hw.Test(normalOperationTimeout.Token);
+                    }
+                    if (command == "getxpub")
+                    {
+                        var getxpubResult = await hw.GetExtPubKey(network, account, normalOperationTimeout.Token);
+                        result = getxpubResult;
+                    }
+                    if (command == "getinfo")
+                    {
+                        var strategy = GetDirectDerivationStrategy(store, network);
+                        var strategyBase = GetDerivationStrategy(store, network);
+                        if (strategy == null || await hw.GetKeyPath(network, strategy, normalOperationTimeout.Token) == null)
+                        {
+                            throw new Exception($"This store is not configured to use this ledger");
+                        }
+
+                        var feeProvider = _FeeRateProvider.CreateFeeProvider(network);
+                        var recommendedFees = feeProvider.GetFeeRateAsync();
+                        var balance = _WalletProvider.GetWallet(network).GetBalance(strategyBase);
+                        result = new GetInfoResult() { Balance = (double)(await balance).ToDecimal(MoneyUnit.BTC), RecommendedSatoshiPerByte = (int)(await recommendedFees).GetFee(1).Satoshi };
+                    }
+
+                    if (command == "sendtoaddress")
+                    {
+                        if (!_Dashboard.IsFullySynched(network.CryptoCode, out var summary))
+                            throw new Exception($"{network.CryptoCode}: not started or fully synched");
+                        var strategy = GetDirectDerivationStrategy(store, network);
+                        var strategyBase = GetDerivationStrategy(store, network);
+                        var wallet = _WalletProvider.GetWallet(network);
+                        var change = wallet.GetChangeAddressAsync(strategyBase);
+
+                        var unspentCoins = await wallet.GetUnspentCoins(strategyBase);
+                        var changeAddress = await change;
+                        var send = new[] { (
                         destination: destinationAddress as IDestination,
                         amount: amountBTC,
                         substractFees: subsctractFeesValue) };
 
-                    foreach (var element in send)
-                    {
-                        if (element.destination == null)
-                            throw new ArgumentNullException(nameof(element.destination));
-                        if (element.amount == null)
-                            throw new ArgumentNullException(nameof(element.amount));
-                        if (element.amount <= Money.Zero)
-                            throw new ArgumentOutOfRangeException(nameof(element.amount), "The amount should be above zero");
-                    }
+                        foreach (var element in send)
+                        {
+                            if (element.destination == null)
+                                throw new ArgumentNullException(nameof(element.destination));
+                            if (element.amount == null)
+                                throw new ArgumentNullException(nameof(element.amount));
+                            if (element.amount <= Money.Zero)
+                                throw new ArgumentOutOfRangeException(nameof(element.amount), "The amount should be above zero");
+                        }
 
-                    var foundKeyPath = await hw.GetKeyPath(network, strategy);
-                    if (foundKeyPath == null)
-                    {
-                        throw new HardwareWalletException($"This store is not configured to use this ledger");
-                    }
+                        var foundKeyPath = await hw.GetKeyPath(network, strategy, normalOperationTimeout.Token);
+                        if (foundKeyPath == null)
+                        {
+                            throw new HardwareWalletException($"This store is not configured to use this ledger");
+                        }
 
-                    TransactionBuilder builder = new TransactionBuilder();
-                    builder.StandardTransactionPolicy.MinRelayTxFee = summary.Status.BitcoinStatus.MinRelayTxFee;
-                    builder.SetConsensusFactory(network.NBitcoinNetwork);
-                    builder.AddCoins(unspentCoins.Select(c => c.Coin).ToArray());
+                        TransactionBuilder builder = new TransactionBuilder();
+                        builder.StandardTransactionPolicy.MinRelayTxFee = summary.Status.BitcoinStatus.MinRelayTxFee;
+                        builder.SetConsensusFactory(network.NBitcoinNetwork);
+                        builder.AddCoins(unspentCoins.Select(c => c.Coin).ToArray());
 
-                    foreach (var element in send)
-                    {
-                        builder.Send(element.destination, element.amount);
-                        if (element.substractFees)
-                            builder.SubtractFees();
-                    }
-                    builder.SetChange(changeAddress.Item1);
+                        foreach (var element in send)
+                        {
+                            builder.Send(element.destination, element.amount);
+                            if (element.substractFees)
+                                builder.SubtractFees();
+                        }
+                        builder.SetChange(changeAddress.Item1);
 
-                    if (network.MinFee == null)
-                    {
-                        builder.SendEstimatedFees(feeRateValue);
-                    }
-                    else
-                    {
-                        var estimatedFee = builder.EstimateFees(feeRateValue);
-                        if (network.MinFee > estimatedFee)
-                            builder.SendFees(network.MinFee);
-                        else
+                        if (network.MinFee == null)
+                        {
                             builder.SendEstimatedFees(feeRateValue);
-                    }
-                    builder.Shuffle();
-                    var unsigned = builder.BuildTransaction(false);
-
-                    var keypaths = new Dictionary<Script, KeyPath>();
-                    foreach (var c in unspentCoins)
-                    {
-                        keypaths.TryAdd(c.Coin.ScriptPubKey, c.KeyPath);
-                    }
-
-                    var hasChange = unsigned.Outputs.Count == 2;
-                    var usedCoins = builder.FindSpentCoins(unsigned);
-
-                    Dictionary<uint256, Transaction> parentTransactions = new Dictionary<uint256, Transaction>();
-
-                    if (!strategy.Segwit)
-                    {
-                        var parentHashes = usedCoins.Select(c => c.Outpoint.Hash).ToHashSet();
-                        var explorer = _ExplorerProvider.GetExplorerClient(network);
-                        var getTransactionAsyncs = parentHashes.Select(h => (Op: explorer.GetTransactionAsync(h), Hash: h)).ToList();
-                        foreach (var getTransactionAsync in getTransactionAsyncs)
-                        {
-                            var tx = (await getTransactionAsync.Op);
-                            if (tx == null)
-                                throw new Exception($"Parent transaction {getTransactionAsync.Hash} not found");
-                            parentTransactions.Add(tx.Transaction.GetHash(), tx.Transaction);
                         }
-                    }
-
-                    var transaction = await hw.SignTransactionAsync(usedCoins.Select(c => new SignatureRequest
-                    {
-                        InputTransaction = parentTransactions.TryGet(c.Outpoint.Hash),
-                        InputCoin = c,
-                        KeyPath = foundKeyPath.Derive(keypaths[c.TxOut.ScriptPubKey]),
-                        PubKey = strategy.Root.Derive(keypaths[c.TxOut.ScriptPubKey]).PubKey
-                    }).ToArray(), unsigned, hasChange ? foundKeyPath.Derive(changeAddress.Item2) : null);
-
-                    try
-                    {
-                        var broadcastResult = await wallet.BroadcastTransactionsAsync(new List<Transaction>() { transaction });
-                        if (!broadcastResult[0].Success)
+                        else
                         {
-                            throw new Exception($"RPC Error while broadcasting: {broadcastResult[0].RPCCode} {broadcastResult[0].RPCCodeMessage} {broadcastResult[0].RPCMessage}");
+                            var estimatedFee = builder.EstimateFees(feeRateValue);
+                            if (network.MinFee > estimatedFee)
+                                builder.SendFees(network.MinFee);
+                            else
+                                builder.SendEstimatedFees(feeRateValue);
                         }
+                        builder.Shuffle();
+                        var unsigned = builder.BuildTransaction(false);
+
+                        var keypaths = new Dictionary<Script, KeyPath>();
+                        foreach (var c in unspentCoins)
+                        {
+                            keypaths.TryAdd(c.Coin.ScriptPubKey, c.KeyPath);
+                        }
+
+                        var hasChange = unsigned.Outputs.Count == 2;
+                        var usedCoins = builder.FindSpentCoins(unsigned);
+
+                        Dictionary<uint256, Transaction> parentTransactions = new Dictionary<uint256, Transaction>();
+
+                        if (!strategy.Segwit)
+                        {
+                            var parentHashes = usedCoins.Select(c => c.Outpoint.Hash).ToHashSet();
+                            var explorer = _ExplorerProvider.GetExplorerClient(network);
+                            var getTransactionAsyncs = parentHashes.Select(h => (Op: explorer.GetTransactionAsync(h), Hash: h)).ToList();
+                            foreach (var getTransactionAsync in getTransactionAsyncs)
+                            {
+                                var tx = (await getTransactionAsync.Op);
+                                if (tx == null)
+                                    throw new Exception($"Parent transaction {getTransactionAsync.Hash} not found");
+                                parentTransactions.Add(tx.Transaction.GetHash(), tx.Transaction);
+                            }
+                        }
+
+
+                        signTimeout.CancelAfter(TimeSpan.FromMinutes(5));
+                        var transaction = await hw.SignTransactionAsync(usedCoins.Select(c => new SignatureRequest
+                        {
+                            InputTransaction = parentTransactions.TryGet(c.Outpoint.Hash),
+                            InputCoin = c,
+                            KeyPath = foundKeyPath.Derive(keypaths[c.TxOut.ScriptPubKey]),
+                            PubKey = strategy.Root.Derive(keypaths[c.TxOut.ScriptPubKey]).PubKey
+                        }).ToArray(), unsigned, hasChange ? foundKeyPath.Derive(changeAddress.Item2) : null, signTimeout.Token);
+                        try
+                        {
+                            var broadcastResult = await wallet.BroadcastTransactionsAsync(new List<Transaction>() { transaction });
+                            if (!broadcastResult[0].Success)
+                            {
+                                throw new Exception($"RPC Error while broadcasting: {broadcastResult[0].RPCCode} {broadcastResult[0].RPCCodeMessage} {broadcastResult[0].RPCMessage}");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            throw new Exception("Error while broadcasting: " + ex.Message);
+                        }
+                        wallet.InvalidateCache(strategyBase);
+                        result = new SendToAddressResult() { TransactionId = transaction.GetHash().ToString() };
                     }
-                    catch (Exception ex)
-                    {
-                        throw new Exception("Error while broadcasting: " + ex.Message);
-                    }
-                    wallet.InvalidateCache(strategyBase);
-                    result = new SendToAddressResult() { TransactionId = transaction.GetHash().ToString() };
                 }
-            }
-            catch (OperationCanceledException)
-            { result = new LedgerTestResult() { Success = false, Error = "Timeout" }; }
-            catch (Exception ex)
-            { result = new LedgerTestResult() { Success = false, Error = ex.Message }; }
-            finally { hw.Dispose(); }
-            try
-            {
-                if (result != null)
+                catch (OperationCanceledException)
+                { result = new LedgerTestResult() { Success = false, Error = "Timeout" }; }
+                catch (Exception ex)
+                { result = new LedgerTestResult() { Success = false, Error = ex.Message }; }
+                finally { hw.Dispose(); }
+                try
                 {
-                    UTF8Encoding UTF8NOBOM = new UTF8Encoding(false);
-                    var bytes = UTF8NOBOM.GetBytes(JsonConvert.SerializeObject(result, _MvcJsonOptions.SerializerSettings));
-                    await webSocket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, new CancellationTokenSource(2000).Token);
+                    if (result != null)
+                    {
+                        UTF8Encoding UTF8NOBOM = new UTF8Encoding(false);
+                        var bytes = UTF8NOBOM.GetBytes(JsonConvert.SerializeObject(result, _MvcJsonOptions.SerializerSettings));
+                        await webSocket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, new CancellationTokenSource(2000).Token);
+                    }
+                }
+                catch { }
+                finally
+                {
+                    await webSocket.CloseSocket();
                 }
             }
-            catch { }
-            finally
-            {
-                await webSocket.CloseSocket();
-            }
-
             return new EmptyResult();
         }
 

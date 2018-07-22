@@ -115,6 +115,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Content Update="Views\Server\LNDGRPCServices.cshtml">
+	    <Pack>$(IncludeRazorContentInPack)</Pack>
+	  </Content>
+	  <Content Update="Views\Server\Services.cshtml">
+	    <Pack>$(IncludeRazorContentInPack)</Pack>
+	  </Content>
+	</ItemGroup>
+
+	<ItemGroup>
 	  <None Update="devtest.pfx">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>

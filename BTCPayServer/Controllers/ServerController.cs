@@ -1,6 +1,8 @@
-﻿using BTCPayServer.HostedServices;
+﻿using BTCPayServer.Configuration;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Models;
 using BTCPayServer.Models.ServerViewModels;
+using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Rates;
@@ -9,6 +11,7 @@ using BTCPayServer.Validations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using NBitcoin.DataEncoders;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -27,16 +30,22 @@ namespace BTCPayServer.Controllers
         SettingsRepository _SettingsRepository;
         private BTCPayRateProviderFactory _RateProviderFactory;
         private StoreRepository _StoreRepository;
+        LightningConfigurationProvider _LnConfigProvider;
+        BTCPayServerOptions _Options;
 
         public ServerController(UserManager<ApplicationUser> userManager,
+            Configuration.BTCPayServerOptions options,
             BTCPayRateProviderFactory rateProviderFactory,
             SettingsRepository settingsRepository,
+            LightningConfigurationProvider lnConfigProvider,
             Services.Stores.StoreRepository storeRepository)
         {
+            _Options = options;
             _UserManager = userManager;
             _SettingsRepository = settingsRepository;
             _RateProviderFactory = rateProviderFactory;
             _StoreRepository = storeRepository;
+            _LnConfigProvider = lnConfigProvider;
         }
 
         [Route("server/rates")]
@@ -78,7 +87,7 @@ namespace BTCPayServer.Controllers
             try
             {
                 var service = GetCoinaverageService(vm, true);
-                if(service != null)
+                if (service != null)
                     await service.TestAuthAsync();
             }
             catch
@@ -225,6 +234,121 @@ namespace BTCPayServer.Controllers
             return View(settings);
         }
 
+        [Route("server/services")]
+        public IActionResult Services()
+        {
+            var result = new ServicesViewModel();
+            foreach (var internalNode in _Options.InternalLightningByCryptoCode)
+            {
+                //Only BTC can be supported because gRPC does not allow http path rewriting.
+                if (internalNode.Key == "BTC" && GetExternalLNDConnectionString(internalNode.Value) != null)
+                {
+                    result.LNDServices.Add(new ServicesViewModel.LNDServiceViewModel()
+                    {
+                        Crypto = internalNode.Key,
+                        Type = "gRPC"
+                    });
+                }
+            }
+            return View(result);
+        }
+
+        private LightningConnectionString GetExternalLNDConnectionString(LightningConnectionString value)
+        {
+            if (value.ConnectionType != LightningConnectionType.LndREST)
+                return null;
+            var external = new LightningConnectionString();
+            external.ConnectionType = LightningConnectionType.LndREST;
+            external.BaseUri = _Options.ExternalUrl ?? value.BaseUri;
+            if (external.BaseUri.Scheme == "http" || value.AllowInsecure)
+            {
+                external.AllowInsecure = true;
+            }
+
+            try
+            {
+                if (value.MacaroonFilePath != null)
+                    external.Macaroon = System.IO.File.ReadAllBytes(value.MacaroonFilePath);
+            }
+            catch
+            {
+                return null;
+            }
+            if (value.Macaroon != null)
+                external.Macaroon = value.Macaroon;
+
+            // If external url is provided, then we don't care about cert thumbprint
+            // because we override it at the reverse proxy level with a trusted certificate
+            if (_Options.ExternalUrl == null)
+            {
+                if (value.CertificateThumbprint != null)
+                {
+                    external.CertificateThumbprint = value.CertificateThumbprint;
+                    external.AllowInsecure = false;
+                }
+            }
+            return external;
+        }
+
+        [Route("server/services/lnd-grpc/{cryptoCode}")]
+        public IActionResult LNDGRPCServices(string cryptoCode, ulong? secret)
+        {
+            if (!_Options.InternalLightningByCryptoCode.TryGetValue(cryptoCode.ToUpperInvariant(), out var connectionString))
+                return NotFound();
+            var model = new LNDGRPCServicesViewModel();
+            var external = GetExternalLNDConnectionString(connectionString);
+
+            model.Host = external.BaseUri.DnsSafeHost;
+            model.Port = external.BaseUri.Port;
+            model.SSL = external.BaseUri.Scheme == "https";
+            if (external.CertificateThumbprint != null)
+            {
+                model.CertificateThumbprint = Encoders.Hex.EncodeData(external.CertificateThumbprint);
+            }
+            if (external.Macaroon != null)
+            {
+                model.Macaroon = Encoders.Hex.EncodeData(external.Macaroon);
+            }
+            if (secret != null)
+            {
+                var lnConfig = _LnConfigProvider.GetConfig(secret.Value);
+                if (lnConfig != null)
+                {
+                    model.QRCode = $"config={this.Request.GetAbsoluteRoot().WithTrailingSlash()}lnd-config/{secret.Value}/lnd.config";
+                }
+            }
+            return View(model);
+        }
+        [Route("lnd-config/{secret}/lnd.config")]
+        public IActionResult GetLNDConfig(ulong secret)
+        {
+            var conf = _LnConfigProvider.GetConfig(secret);
+            if (conf == null)
+                return NotFound();
+            return Json(conf);
+        }
+
+        [Route("server/services/lnd-grpc/{cryptoCode}")]
+        [HttpPost]
+        public IActionResult LNDGRPCServicesPOST(string cryptoCode)
+        {
+            if (!_Options.InternalLightningByCryptoCode.TryGetValue(cryptoCode.ToUpperInvariant(), out var connectionString))
+                return NotFound();
+            var external = GetExternalLNDConnectionString(connectionString);
+            LightningConfigurations confs = new LightningConfigurations();
+            LightningConfiguration conf = new LightningConfiguration();
+            conf.Type = "grpc";
+            conf.CryptoCode = cryptoCode;
+            conf.Host = external.BaseUri.DnsSafeHost;
+            conf.Port = external.BaseUri.Port;
+            conf.SSL = external.BaseUri.Scheme == "https";
+            conf.Macaroon = external.Macaroon == null ? null : Encoders.Hex.EncodeData(external.Macaroon);
+            conf.CertificateThumbprint = external.CertificateThumbprint == null ? null : Encoders.Hex.EncodeData(external.CertificateThumbprint);
+            confs.Configurations.Add(conf);
+            var secret = _LnConfigProvider.KeepConfig(confs);
+            return RedirectToAction(nameof(LNDGRPCServices), new { cryptoCode = cryptoCode, secret = secret });
+        }
+
         [Route("server/theme")]
         public async Task<IActionResult> Theme()
         {
@@ -248,7 +372,7 @@ namespace BTCPayServer.Controllers
             {
                 try
                 {
-                    if(!model.Settings.IsComplete())
+                    if (!model.Settings.IsComplete())
                     {
                         model.StatusMessage = "Error: Required fields missing";
                         return View(model);

@@ -353,7 +353,7 @@ namespace BTCPayServer.Payments.Lightning
         public LightningConnectionType ConnectionType
         {
             get;
-            private set;
+            set;
         }
         public byte[] Macaroon { get; set; }
         public string MacaroonFilePath { get; set; }

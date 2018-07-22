@@ -34,26 +34,22 @@ namespace BTCPayServer.Services
             }
 
             SemaphoreSlim _Semaphore = new SemaphoreSlim(1, 1);
-            public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(10);
-            public async Task<byte[][]> Exchange(byte[][] apdus)
+            public async Task<byte[][]> Exchange(byte[][] apdus, CancellationToken cancellationToken)
             {
                 await _Semaphore.WaitAsync();
                 List<byte[]> responses = new List<byte[]>();
                 try
                 {
-                    using (CancellationTokenSource cts = new CancellationTokenSource(Timeout))
+                    foreach (var apdu in apdus)
                     {
-                        foreach (var apdu in apdus)
-                        {
-                            await this.webSocket.SendAsync(new ArraySegment<byte>(apdu), WebSocketMessageType.Binary, true, cts.Token);
-                        }
-                        foreach (var apdu in apdus)
-                        {
-                            byte[] response = new byte[300];
-                            var result = await this.webSocket.ReceiveAsync(new ArraySegment<byte>(response), cts.Token);
-                            Array.Resize(ref response, result.Count);
-                            responses.Add(response);
-                        }
+                        await this.webSocket.SendAsync(new ArraySegment<byte>(apdu), WebSocketMessageType.Binary, true, cancellationToken);
+                    }
+                    foreach (var apdu in apdus)
+                    {
+                        byte[] response = new byte[300];
+                        var result = await this.webSocket.ReceiveAsync(new ArraySegment<byte>(response), cancellationToken);
+                        Array.Resize(ref response, result.Count);
+                        responses.Add(response);
                     }
                 }
                 finally
@@ -86,20 +82,20 @@ namespace BTCPayServer.Services
             _Ledger = new LedgerClient(_Transport);
         }
 
-        public async Task<LedgerTestResult> Test()
+        public async Task<LedgerTestResult> Test(CancellationToken cancellation)
         {
-            var version = await _Ledger.GetFirmwareVersionAsync();
+            var version = await Ledger.GetFirmwareVersionAsync(cancellation);
             return new LedgerTestResult() { Success = true };
         }
 
-        public async Task<GetXPubResult> GetExtPubKey(BTCPayNetwork network, int account)
+        public async Task<GetXPubResult> GetExtPubKey(BTCPayNetwork network, int account, CancellationToken cancellation)
         {
             if (network == null)
                 throw new ArgumentNullException(nameof(network));
 
             var segwit = network.NBitcoinNetwork.Consensus.SupportSegwit;
             var path = network.GetRootKeyPath().Derive(account, true);
-            var pubkey = await GetExtPubKey(_Ledger, network, path, false);
+            var pubkey = await GetExtPubKey(Ledger, network, path, false, cancellation);
             var derivation = new DerivationStrategyFactory(network.NBitcoinNetwork).CreateDirectDerivationStrategy(pubkey, new DerivationStrategyOptions()
             {
                 P2SH = segwit,
@@ -108,11 +104,11 @@ namespace BTCPayServer.Services
             return new GetXPubResult() { ExtPubKey = derivation.ToString(), KeyPath = path };
         }
 
-        private static async Task<BitcoinExtPubKey> GetExtPubKey(LedgerClient ledger, BTCPayNetwork network, KeyPath account, bool onlyChaincode)
+        private static async Task<BitcoinExtPubKey> GetExtPubKey(LedgerClient ledger, BTCPayNetwork network, KeyPath account, bool onlyChaincode, CancellationToken cancellation)
         {
             try
             {
-                var pubKey = await ledger.GetWalletPubKeyAsync(account);
+                var pubKey = await ledger.GetWalletPubKeyAsync(account, cancellation: cancellation);
                 try
                 {
                     pubKey.GetAddress(network.NBitcoinNetwork);
@@ -122,7 +118,7 @@ namespace BTCPayServer.Services
                     if (network.NBitcoinNetwork.NetworkType == NetworkType.Mainnet)
                         throw new Exception($"The opened ledger app does not seems to support {network.NBitcoinNetwork.Name}.");
                 }
-                var fingerprint = onlyChaincode ? new byte[4] : (await ledger.GetWalletPubKeyAsync(account.Parent)).UncompressedPublicKey.Compress().Hash.ToBytes().Take(4).ToArray();
+                var fingerprint = onlyChaincode ? new byte[4] : (await ledger.GetWalletPubKeyAsync(account.Parent, cancellation: cancellation)).UncompressedPublicKey.Compress().Hash.ToBytes().Take(4).ToArray();
                 var extpubkey = new ExtPubKey(pubKey.UncompressedPublicKey.Compress(), pubKey.ChainCode, (byte)account.Indexes.Length, fingerprint, account.Indexes.Last()).GetWif(network.NBitcoinNetwork);
                 return extpubkey;
             }
@@ -132,7 +128,7 @@ namespace BTCPayServer.Services
             }
         }
 
-        public async Task<KeyPath> GetKeyPath(BTCPayNetwork network, DirectDerivationStrategy directStrategy)
+        public async Task<KeyPath> GetKeyPath(BTCPayNetwork network, DirectDerivationStrategy directStrategy, CancellationToken cancellation)
         {
             List<KeyPath> derivations = new List<KeyPath>();
             if (network.NBitcoinNetwork.Consensus.SupportSegwit)
@@ -146,7 +142,7 @@ namespace BTCPayServer.Services
             {
                 try
                 {
-                    var extpubkey = await GetExtPubKey(_Ledger, network, account, true);
+                    var extpubkey = await GetExtPubKey(Ledger, network, account, true, cancellation);
                     if (directStrategy.Root.PubKey == extpubkey.ExtPubKey.PubKey)
                     {
                         foundKeyPath = account;
@@ -164,15 +160,15 @@ namespace BTCPayServer.Services
 
         public async Task<Transaction> SignTransactionAsync(SignatureRequest[] signatureRequests,
                                                      Transaction unsigned,
-                                                     KeyPath changeKeyPath)
+                                                     KeyPath changeKeyPath,
+                                                     CancellationToken cancellationToken)
         {
-            _Transport.Timeout = TimeSpan.FromMinutes(5);
-            return await Ledger.SignTransactionAsync(signatureRequests, unsigned, changeKeyPath);
+            return await Ledger.SignTransactionAsync(signatureRequests, unsigned, changeKeyPath, cancellationToken);
         }
 
         public void Dispose()
         {
-            if(_Transport != null)
+            if (_Transport != null)
                 _Transport.Dispose();
         }
     }

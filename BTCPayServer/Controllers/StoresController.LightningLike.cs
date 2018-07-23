@@ -81,6 +81,12 @@ namespace BTCPayServer.Controllers
                     return View(vm);
                 }
 
+                if(connectionString.ConnectionType == LightningConnectionType.LndGRPC)
+                {
+                    ModelState.AddModelError(nameof(vm.ConnectionString), $"BTCPay does not support gRPC connections");
+                    return View(vm);
+                }
+
                 var internalDomain = internalLightning?.BaseUri?.DnsSafeHost;
 
                 bool isInternalNode = connectionString.ConnectionType == LightningConnectionType.CLightning ||

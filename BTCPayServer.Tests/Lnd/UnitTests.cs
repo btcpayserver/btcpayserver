@@ -110,13 +110,14 @@ namespace BTCPayServer.Tests.Lnd
             var merchantInvoice = await InvoiceClient.CreateInvoice(10000, "Hello world", TimeSpan.FromSeconds(3600));
 
             await EnsureLightningChannelAsync();
-            var payResponse = await CustomerLnd.SendPaymentSyncAsync(new LnrpcSendRequest
-            {
-                Payment_request = merchantInvoice.BOLT11
-            });
 
             await EventuallyAsync(async () =>
             {
+                var payResponse = await CustomerLnd.SendPaymentSyncAsync(new LnrpcSendRequest
+                {
+                    Payment_request = merchantInvoice.BOLT11
+                });
+                
                 var invoice = await InvoiceClient.GetInvoice(merchantInvoice.Id);
                 Assert.True(invoice.PaidAt.HasValue);
             });

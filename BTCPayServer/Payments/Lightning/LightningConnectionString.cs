@@ -277,6 +277,13 @@ namespace BTCPayServer.Payments.Lightning
             connectionString = result;
             return true;
         }
+
+        public LightningConnectionString Clone()
+        {
+            LightningConnectionString.TryParse(this.ToString(), false, out var result);
+            return result;
+        }
+
         private static string Take(Dictionary<string, string> keyValues, string key)
         {
             if (keyValues.TryGetValue(key, out var v))

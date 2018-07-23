@@ -1,4 +1,5 @@
 ﻿using BTCPayServer.Configuration;
+using Microsoft.Extensions.Logging;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Models;
 using BTCPayServer.Models.ServerViewModels;
@@ -331,9 +332,26 @@ namespace BTCPayServer.Controllers
 
         private LightningConnectionString GetExternalLNDConnectionString(string cryptoCode, int index)
         {
-            return _Options.ExternalServicesByCryptoCode.GetServices<ExternalLNDGRPC>(cryptoCode).Skip(index).Select(c => c.ConnectionString).FirstOrDefault();
+            var connectionString = _Options.ExternalServicesByCryptoCode.GetServices<ExternalLNDGRPC>(cryptoCode).Skip(index).Select(c => c.ConnectionString).FirstOrDefault();
+            if (connectionString == null)
+                return null;
+            connectionString = connectionString.Clone();
+            if(connectionString.MacaroonFilePath != null)
+            {
+                try
+                {
+                    connectionString.Macaroon = System.IO.File.ReadAllBytes(connectionString.MacaroonFilePath);
+                    connectionString.MacaroonFilePath = null;
+                }
+                catch
+                {
+                    Logging.Logs.Configuration.LogWarning($"{cryptoCode}: The macaroon file path of the external LND grpc config was not found ({connectionString.MacaroonFilePath})");
+                    return null;
+                }
+            }
+            return connectionString;
         }
-
+        
         [Route("server/theme")]
         public async Task<IActionResult> Theme()
         {

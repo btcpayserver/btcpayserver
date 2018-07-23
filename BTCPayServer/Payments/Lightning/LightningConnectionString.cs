@@ -15,7 +15,8 @@ namespace BTCPayServer.Payments.Lightning
     {
         Charge,
         CLightning,
-        LndREST
+        LndREST,
+        LndGRPC
     }
     public class LightningConnectionString
     {
@@ -27,6 +28,7 @@ namespace BTCPayServer.Payments.Lightning
             typeMapping.Add("clightning", LightningConnectionType.CLightning);
             typeMapping.Add("charge", LightningConnectionType.Charge);
             typeMapping.Add("lnd-rest", LightningConnectionType.LndREST);
+            typeMapping.Add("lnd-grpc", LightningConnectionType.LndGRPC);
             typeMappingReverse = new Dictionary<LightningConnectionType, string>();
             foreach (var kv in typeMapping)
             {
@@ -161,6 +163,7 @@ namespace BTCPayServer.Payments.Lightning
                     }
                     break;
                 case LightningConnectionType.LndREST:
+                case LightningConnectionType.LndGRPC:
                     {
                         var server = Take(keyValues, "server");
                         if (server == null)
@@ -199,12 +202,12 @@ namespace BTCPayServer.Payments.Lightning
                         var macaroonFilePath = Take(keyValues, "macaroonfilepath");
                         if (macaroonFilePath != null)
                         {
-                            if(macaroon != null)
+                            if (macaroon != null)
                             {
                                 error = $"The key 'macaroon' is already specified";
                                 return false;
                             }
-                            if(!macaroonFilePath.EndsWith(".macaroon", StringComparison.OrdinalIgnoreCase))
+                            if (!macaroonFilePath.EndsWith(".macaroon", StringComparison.OrdinalIgnoreCase))
                             {
                                 error = $"The key 'macaroonfilepath' should point to a .macaroon file";
                                 return false;
@@ -274,6 +277,13 @@ namespace BTCPayServer.Payments.Lightning
             connectionString = result;
             return true;
         }
+
+        public LightningConnectionString Clone()
+        {
+            LightningConnectionString.TryParse(this.ToString(), false, out var result);
+            return result;
+        }
+
         private static string Take(Dictionary<string, string> keyValues, string key)
         {
             if (keyValues.TryGetValue(key, out var v))
@@ -393,6 +403,7 @@ namespace BTCPayServer.Payments.Lightning
                     builder.Append($";server={BaseUri}");
                     break;
                 case LightningConnectionType.LndREST:
+                case LightningConnectionType.LndGRPC:
                     if (Username == null)
                     {
                         builder.Append($";server={BaseUri}");

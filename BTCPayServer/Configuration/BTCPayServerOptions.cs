@@ -74,23 +74,40 @@ namespace BTCPayServer.Configuration
                 setting.ExplorerUri = conf.GetOrDefault<Uri>($"{net.CryptoCode}.explorer.url", net.NBXplorerNetwork.DefaultSettings.DefaultUrl);
                 setting.CookieFile = conf.GetOrDefault<string>($"{net.CryptoCode}.explorer.cookiefile", net.NBXplorerNetwork.DefaultSettings.DefaultCookieFile);
                 NBXplorerConnectionSettings.Add(setting);
-                var lightning = conf.GetOrDefault<string>($"{net.CryptoCode}.lightning", string.Empty);
-                if(lightning.Length != 0)
                 {
-                    if(!LightningConnectionString.TryParse(lightning, true, out var connectionString, out var error))
+                    var lightning = conf.GetOrDefault<string>($"{net.CryptoCode}.lightning", string.Empty);
+                    if (lightning.Length != 0)
                     {
-                        throw new ConfigException($"Invalid setting {net.CryptoCode}.lightning, " + Environment.NewLine +
-                            $"If you have a lightning server use: 'type=clightning;server=/root/.lightning/lightning-rpc', " + Environment.NewLine +
-                            $"If you have a lightning charge server: 'type=charge;server=https://charge.example.com;api-token=yourapitoken'" + Environment.NewLine +
-                            $"If you have a lnd server: 'type=lnd-rest;server=https://lnd:lnd@lnd.example.com;macaroon=abf239...;certthumbprint=2abdf302...'" + Environment.NewLine +
-                            $"              lnd server: 'type=lnd-rest;server=https://lnd:lnd@lnd.example.com;macaroonfilepath=/root/.lnd/admin.macaroon;certthumbprint=2abdf302...'" + Environment.NewLine +
-                            error);
+                        if (!LightningConnectionString.TryParse(lightning, true, out var connectionString, out var error))
+                        {
+                            throw new ConfigException($"Invalid setting {net.CryptoCode}.lightning, " + Environment.NewLine +
+                                $"If you have a lightning server use: 'type=clightning;server=/root/.lightning/lightning-rpc', " + Environment.NewLine +
+                                $"If you have a lightning charge server: 'type=charge;server=https://charge.example.com;api-token=yourapitoken'" + Environment.NewLine +
+                                $"If you have a lnd server: 'type=lnd-rest;server=https://lnd:lnd@lnd.example.com;macaroon=abf239...;certthumbprint=2abdf302...'" + Environment.NewLine +
+                                $"              lnd server: 'type=lnd-rest;server=https://lnd:lnd@lnd.example.com;macaroonfilepath=/root/.lnd/admin.macaroon;certthumbprint=2abdf302...'" + Environment.NewLine +
+                                error);
+                        }
+                        if (connectionString.IsLegacy)
+                        {
+                            Logs.Configuration.LogWarning($"Setting {net.CryptoCode}.lightning will work but use an deprecated format, please replace it by '{connectionString.ToString()}'");
+                        }
+                        InternalLightningByCryptoCode.Add(net.CryptoCode, connectionString);
                     }
-                    if(connectionString.IsLegacy)
+                }
+
+                {
+                    var lightning = conf.GetOrDefault<string>($"{net.CryptoCode}.external.lnd.grpc", string.Empty);
+                    if (lightning.Length != 0)
                     {
-                        Logs.Configuration.LogWarning($"Setting {net.CryptoCode}.lightning will work but use an deprecated format, please replace it by '{connectionString.ToString()}'");
+                        if (!LightningConnectionString.TryParse(lightning, false, out var connectionString, out var error))
+                        {
+                            throw new ConfigException($"Invalid setting {net.CryptoCode}.external.lnd.grpc, " + Environment.NewLine +
+                                $"lnd server: 'type=lnd-grpc;server=https://lnd.example.com;macaroon=abf239...;certthumbprint=2abdf302...'" + Environment.NewLine +
+                                $"lnd server: 'type=lnd-grpc;server=https://lnd.example.com;macaroonfilepath=/root/.lnd/admin.macaroon;certthumbprint=2abdf302...'" + Environment.NewLine +
+                                error);
+                        }
+                        ExternalServicesByCryptoCode.Add(net.CryptoCode, new ExternalLNDGRPC(connectionString));
                     }
-                    InternalLightningByCryptoCode.Add(net.CryptoCode, connectionString);
                 }
             }
 
@@ -104,11 +121,12 @@ namespace BTCPayServer.Configuration
             if (!RootPath.StartsWith("/", StringComparison.InvariantCultureIgnoreCase))
                 RootPath = "/" + RootPath;
             var old = conf.GetOrDefault<Uri>("internallightningnode", null);
-            if(old != null)
+            if (old != null)
                 throw new ConfigException($"internallightningnode should not be used anymore, use btclightning instead");
         }
         public string RootPath { get; set; }
         public Dictionary<string, LightningConnectionString> InternalLightningByCryptoCode { get; set; } = new Dictionary<string, LightningConnectionString>();
+        public ExternalServices ExternalServicesByCryptoCode { get; set; } = new ExternalServices();
 
         public BTCPayNetworkProvider NetworkProvider { get; set; }
         public string PostgresConnectionString
@@ -135,5 +153,30 @@ namespace BTCPayServer.Configuration
             builder.Path = RootPath;
             return builder.ToString();
         }
+    }
+    
+    public class ExternalServices : MultiValueDictionary<string, ExternalService>
+    {
+        public IEnumerable<T> GetServices<T>(string cryptoCode) where T : ExternalService
+        {
+            if (!this.TryGetValue(cryptoCode.ToUpperInvariant(), out var services))
+                return Array.Empty<T>();
+            return services.OfType<T>();
+        }
+    }
+
+    public class ExternalService
+    {
+
+    }
+
+    public class ExternalLNDGRPC : ExternalService
+    {
+        public ExternalLNDGRPC(LightningConnectionString connectionString)
+        {
+            ConnectionString = connectionString;
+        }
+
+        public LightningConnectionString ConnectionString { get; set; }
     }
 }

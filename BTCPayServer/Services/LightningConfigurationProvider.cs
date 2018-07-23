@@ -10,10 +10,9 @@ namespace BTCPayServer.Services
     public class LightningConfigurationProvider
     {
         ConcurrentDictionary<ulong, (DateTimeOffset expiration, LightningConfigurations config)> _Map = new ConcurrentDictionary<ulong, (DateTimeOffset expiration, LightningConfigurations config)>();
-        public ulong KeepConfig(LightningConfigurations configuration)
+        public ulong KeepConfig(ulong secret, LightningConfigurations configuration)
         {
             CleanExpired();
-            var secret = RandomUtils.GetUInt64();
             _Map.AddOrReplace(secret, (DateTimeOffset.UtcNow + TimeSpan.FromMinutes(10), configuration));
             return secret;
         }

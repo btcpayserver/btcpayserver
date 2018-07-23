@@ -1,12 +1,25 @@
-FROM microsoft/dotnet:2.1.300-sdk-alpine3.7
+FROM microsoft/dotnet:2.1-aspnetcore-runtime AS base
+
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT false
+
+ENV LC_ALL en_US.UTF-8
+ENV LANG en_US.UTF-8
+
 WORKDIR /app
- # caches restore result by copying csproj file separately
-COPY BTCPayServer.Tests/BTCPayServer.Tests.csproj BTCPayServer.Tests/BTCPayServer.Tests.csproj
-COPY BTCPayServer/BTCPayServer.csproj BTCPayServer/BTCPayServer.csproj
 
-WORKDIR /app/BTCPayServer.Tests
-RUN dotnet restore
-# copies the rest of your code
-COPY . ../.
+FROM microsoft/dotnet:2.1-sdk AS build
+WORKDIR /src
+COPY BTCPayServer.Tests/BTCPayServer.Tests.csproj BTCPayServer.Tests/
+RUN dotnet restore BTCPayServer.Tests/BTCPayServer.Tests.csproj
+COPY . .
+WORKDIR /src/BTCPayServer.Tests/BTCPayServer.Tests
+RUN dotnet build BTCPayServer.Tests.csproj -c Release -o /app
 
+FROM build AS publish
+RUN dotnet publish  BTCPayServer.Tests.csproj  -c Release -o /app
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app .
 ENTRYPOINT ["dotnet", "test"]
+

@@ -1,0 +1,180 @@
+version: '3.4'
+
+services:
+  btcpayserver:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - BTCPAY_NETWORK=regtest
+      - BTCPAY_LTCEXPLORERURL=http://nbxplorer:32838/
+      - BTCPAY_BTCEXPLORERURL=http://nbxplorer:32838/
+      - BTCPAY_CHAINS=btc,ltc
+      - BTCPAY_BTCLIGHTNING=http://api-token:foiewnccewuify@lightning-charged:9112
+      - BTCPAY_POSTGRES=User ID=postgres;Host=postgres;Port=5432;Database=btcpayserver
+      - BTCPAY_BUNDLEJSCSS=false
+    ports:
+      - "14142:80"
+    links:
+      - nbxplorer
+      - postgres
+      - customer_lightningd
+      - merchant_lightningd
+      - lightning-charged
+
+
+
+  tests:
+    image: tests
+    build:
+      context: .
+      dockerfile: BTCPayServer.Tests/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      TESTS_BTCRPCCONNECTION: server=http://bitcoind:43782;ceiwHEbqWI83:DwubwWsoo3
+      TESTS_LTCRPCCONNECTION: server=http://litecoind:43783;ceiwHEbqWI83:DwubwWsoo3
+      TESTS_BTCNBXPLORERURL: http://nbxplorer:32838/
+      TESTS_LTCNBXPLORERURL: http://nbxplorer:32838/
+      TESTS_POSTGRES: User ID=postgres;Host=postgres;Port=5432;Database=btcpayserver
+      TESTS_PORT: 80
+      TESTS_HOSTNAME: tests
+      TEST_MERCHANTLIGHTNINGD: "/etc/merchant_lightningd_datadir/lightning-rpc"
+      TEST_CUSTOMERLIGHTNINGD: "/etc/customer_lightningd_datadir/lightning-rpc"
+      TEST_MERCHANTCHARGE: http://api-token:foiewnccewuify@lightning-charged:9112/
+      TESTS_INCONTAINER: "true"
+    expose:
+      - "80"
+    extra_hosts: 
+      - "tests:127.0.0.1"
+    volumes:
+      - "customer_lightningd_datadir:/etc/customer_lightningd_datadir"
+      - "merchant_lightningd_datadir:/etc/merchant_lightningd_datadir"
+    links:
+      - btcpayserver
+
+
+  nbxplorer:
+    image: nicolasdorier/nbxplorer:1.0.2.8
+    expose: 
+      - "32838"
+    environment:
+      NBXPLORER_NETWORK: regtest
+      NBXPLORER_CHAINS: "btc,ltc"
+      NBXPLORER_BTCRPCURL: http://bitcoind:43782/
+      NBXPLORER_BTCNODEENDPOINT: bitcoind:39388
+      NBXPLORER_BTCRPCUSER: ceiwHEbqWI83
+      NBXPLORER_BTCRPCPASSWORD: DwubwWsoo3
+      NBXPLORER_LTCRPCURL: http://litecoind:43783/
+      NBXPLORER_LTCNODEENDPOINT: litecoind:39389
+      NBXPLORER_LTCRPCUSER: ceiwHEbqWI83
+      NBXPLORER_LTCRPCPASSWORD: DwubwWsoo3
+      NBXPLORER_BIND: 0.0.0.0:32838
+      NBXPLORER_VERBOSE: 1
+      NBXPLORER_NOAUTH: 1
+    links:
+      - bitcoind
+      - litecoind
+
+  bitcoind:
+    image: nicolasdorier/docker-bitcoin:0.16.0
+    environment:
+      BITCOIN_EXTRA_ARGS: |
+        rpcuser=ceiwHEbqWI83
+        rpcpassword=DwubwWsoo3
+        regtest=1
+        server=1
+        rpcport=43782
+        port=39388
+        whitelist=0.0.0.0/0
+    expose:
+      - "43782" # RPC
+      - "39388" # P2P
+    volumes:
+      - "bitcoin_datadir:/data"
+
+  customer_lightningd:
+    image: nicolasdorier/clightning:0.0.0.20-dev
+    environment: 
+      EXPOSE_TCP: "true"
+      LIGHTNINGD_OPT: |
+        bitcoin-datadir=/etc/bitcoin
+        bitcoin-rpcconnect=bitcoind
+        network=regtest
+        bind-addr=0.0.0.0
+        announce-addr=customer_lightningd
+        log-level=debug
+        dev-broadcast-interval=1000
+    ports:
+      - "30992:9835" # api port
+    expose:
+      - "9735" # server port
+      - "9835" # api port
+    volumes:
+      - "bitcoin_datadir:/etc/bitcoin"
+      - "customer_lightningd_datadir:/root/.lightning"
+    links:
+      - bitcoind
+
+  lightning-charged:
+    image: shesek/lightning-charge:0.3.12
+    environment:
+      NETWORK: regtest
+      API_TOKEN: foiewnccewuify
+      BITCOIND_RPCCONNECT: bitcoind
+    volumes:
+      - "bitcoin_datadir:/etc/bitcoin"
+      - "lightning_charge_datadir:/data"
+      - "merchant_lightningd_datadir:/etc/lightning"
+    expose:
+      - "9112" # Charge
+      - "9735" # Lightning
+    links:
+      - bitcoind
+      - merchant_lightningd
+
+  merchant_lightningd:
+    image: nicolasdorier/clightning:0.0.0.20-dev
+    environment: 
+      EXPOSE_TCP: "true"
+      LIGHTNINGD_OPT: |
+        bitcoin-datadir=/etc/bitcoin
+        bitcoin-rpcconnect=bitcoind
+        bind-addr=0.0.0.0
+        announce-addr=merchant_lightningd
+        network=regtest
+        log-level=debug
+        dev-broadcast-interval=1000
+    ports:
+      - "30993:9835" # api port
+    expose:
+      - "9735" # server port
+      - "9835" # api port
+    volumes:
+      - "bitcoin_datadir:/etc/bitcoin"
+      - "merchant_lightningd_datadir:/root/.lightning"
+    links:
+      - bitcoind
+
+  litecoind:
+    image: nicolasdorier/docker-litecoin:0.15.1
+    environment:
+      BITCOIN_EXTRA_ARGS: |
+        rpcuser=ceiwHEbqWI83
+        rpcpassword=DwubwWsoo3
+        regtest=1
+        server=1
+        rpcport=43783
+        port=39389
+        whitelist=0.0.0.0/0
+    expose:
+      - "43783" # RPC
+      - "39389" # P2P
+
+  postgres:
+    image:  postgres:9.6.5
+    expose:
+      - "5432"
+
+volumes:
+    bitcoin_datadir:
+    customer_lightningd_datadir:
+    merchant_lightningd_datadir:
+    lightning_charge_datadir:

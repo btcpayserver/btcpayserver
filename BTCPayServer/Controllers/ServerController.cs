@@ -227,7 +227,7 @@ namespace BTCPayServer.Controllers
             }
             else if (command == "update")
             {
-                var error = RunSSH(vm, command, $"btcpay-update.sh");
+                var error = RunSSH(vm, $"btcpay-update.sh");
                 if (error != null)
                     return error;
                 StatusMessage = $"The server might restart soon if an update is available...";

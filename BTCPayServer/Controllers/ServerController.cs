@@ -217,7 +217,7 @@ namespace BTCPayServer.Controllers
                     }
                 }
 
-                var error = RunSSH(vm, command, $"sudo bash -c '. /etc/profile.d/btcpay-env.sh && . changedomain.sh {vm.DNSDomain}'");
+                var error = RunSSH(vm, command, $"sudo bash -c '. /etc/profile.d/btcpay-env.sh && nohup . changedomain.sh {vm.DNSDomain} &'");
                 if (error != null)
                     return error;
 
@@ -227,7 +227,7 @@ namespace BTCPayServer.Controllers
             }
             else if (command == "update")
             {
-                var error = RunSSH(vm, command, $"sudo bash -c '. /etc/profile.d/btcpay-env.sh && btcpay-update.sh'");
+                var error = RunSSH(vm, command, $"sudo bash -c '. /etc/profile.d/btcpay-env.sh && nohup btcpay-update.sh &'");
                 if (error != null)
                     return error;
                 StatusMessage = $"The server might restart soon if an update is available...";

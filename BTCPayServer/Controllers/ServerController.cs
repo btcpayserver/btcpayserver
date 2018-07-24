@@ -217,7 +217,7 @@ namespace BTCPayServer.Controllers
                     }
                 }
 
-                var error = RunSSH(vm, command, $"changedomain.sh {vm.DNSDomain}");
+                var error = RunSSH(vm, $"changedomain.sh {vm.DNSDomain}");
                 if (error != null)
                     return error;
 
@@ -250,9 +250,9 @@ namespace BTCPayServer.Controllers
             return BadRequest();
         }
 
-        private IActionResult RunSSH(MaintenanceViewModel vm, string command, string ssh)
+        private IActionResult RunSSH(MaintenanceViewModel vm, string ssh)
         {
-            command = $"sudo bash -c '. /etc/profile.d/btcpay-env.sh && nohup {command} > /dev/null 2>&1 & disown'";
+            ssh = $"sudo bash -c '. /etc/profile.d/btcpay-env.sh && nohup {ssh} > /dev/null 2>&1 & disown'";
             var sshClient = vm.CreateSSHClient(this.Request.Host.Host);
             try
             {
@@ -282,7 +282,7 @@ namespace BTCPayServer.Controllers
             {
                 try
                 {
-                    Logs.PayServer.LogInformation("Running SSH command: " + command);
+                    Logs.PayServer.LogInformation("Running SSH command: " + ssh);
                     var result = sshCommand.EndExecute(ar);
                     Logs.PayServer.LogInformation("SSH command executed: " + result);
                 }

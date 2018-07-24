@@ -309,6 +309,8 @@ namespace BTCPayServer.HostedServices
             leases.Add(_EventAggregator.Subscribe<InvoiceEvent>(async e =>
             {
                 var invoice = await _InvoiceRepository.GetInvoice(null, e.Invoice.Id);
+                if (invoice == null)
+                    return;
                 List<Task> tasks = new List<Task>();
 
                 // Awaiting this later help make sure invoices should arrive in order

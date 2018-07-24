@@ -22,6 +22,8 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Mail;
 using System.Threading.Tasks;
+using Renci.SshNet;
+using BTCPayServer.Logging;
 
 namespace BTCPayServer.Controllers
 {
@@ -147,6 +149,138 @@ namespace BTCPayServer.Controllers
             userVM.Email = user.Email;
             userVM.IsAdmin = IsAdmin(roles);
             return View(userVM);
+        }
+
+        [Route("server/maintenance")]
+        public IActionResult Maintenance()
+        {
+            MaintenanceViewModel vm = new MaintenanceViewModel();
+            vm.UserName = "btcpayserver";
+            vm.DNSDomain = this.Request.Host.Host;
+            if (IPAddress.TryParse(vm.DNSDomain, out var unused))
+                vm.DNSDomain = null;
+            return View(vm);
+        }
+        [Route("server/maintenance")]
+        [HttpPost]
+        public async Task<IActionResult> Maintenance(MaintenanceViewModel vm, string command)
+        {
+            if (!ModelState.IsValid)
+                return View(vm);
+            if (command == "changedomain")
+            {
+                if (string.IsNullOrWhiteSpace(vm.DNSDomain))
+                {
+                    ModelState.AddModelError(nameof(vm.DNSDomain), $"Required field");
+                    return View(vm);
+                }
+                vm.DNSDomain = vm.DNSDomain.Trim().ToLowerInvariant();
+                if (IPAddress.TryParse(vm.DNSDomain, out var unused))
+                {
+                    ModelState.AddModelError(nameof(vm.DNSDomain), $"This should be a domain name");
+                    return View(vm);
+                }
+                if (vm.DNSDomain.Equals(this.Request.Host.Host, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    ModelState.AddModelError(nameof(vm.DNSDomain), $"The server is already set to use this domain");
+                    return View(vm);
+                }
+                var builder = new UriBuilder();
+                using (var client = new HttpClient(new HttpClientHandler()
+                {
+                    ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+                }))
+                {
+                    try
+                    {
+                        builder.Scheme = this.Request.Scheme;
+                        builder.Host = vm.DNSDomain;
+                        if (this.Request.Host.Port != null)
+                            builder.Port = this.Request.Host.Port.Value;
+                        builder.Path = "runid";
+                        builder.Query = $"expected={RunId}";
+                        var response = await client.GetAsync(builder.Uri);
+                        if (!response.IsSuccessStatusCode)
+                        {
+                            ModelState.AddModelError(nameof(vm.DNSDomain), $"Invalid host ({vm.DNSDomain} is not pointing to this BTCPay instance)");
+                            return View(vm);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        ModelState.AddModelError(nameof(vm.DNSDomain), $"Invalid domain ({ex.Message})");
+                        return View(vm);
+                    }
+                }
+
+                var error = RunSSH(vm, command, $"sudo bash -c '. /etc/profile.d/btcpay-env.sh && . changedomain.sh {vm.DNSDomain}'");
+                if (error != null)
+                    return error;
+
+                builder.Path = null;
+                builder.Query = null;
+                StatusMessage = $"Domain name changing... the server will restart, please use \"{builder.Uri.AbsoluteUri}\"";
+            }
+            else
+            {
+                return NotFound();
+            }
+            return RedirectToAction(nameof(Maintenance));
+        }
+
+        public static string RunId = Encoders.Hex.EncodeData(NBitcoin.RandomUtils.GetBytes(32));
+        [HttpGet]
+        [Route("runid")]
+        [AllowAnonymous]
+        public IActionResult SeeRunId(string expected = null)
+        {
+            if (expected == RunId)
+                return Ok();
+            return BadRequest();
+        }
+
+        private IActionResult RunSSH(MaintenanceViewModel vm, string command, string ssh)
+        {
+            var sshClient = vm.CreateSSHClient(this.Request.Host.Host);
+            try
+            {
+                sshClient.Connect();
+            }
+            catch (Renci.SshNet.Common.SshAuthenticationException)
+            {
+                ModelState.AddModelError(nameof(vm.Password), "Invalid credentials");
+                sshClient.Dispose();
+                return View(vm);
+            }
+            catch (Exception ex)
+            {
+                var message = ex.Message;
+                if (ex is AggregateException aggrEx && aggrEx.InnerException?.Message != null)
+                {
+                    message = aggrEx.InnerException.Message;
+                }
+                ModelState.AddModelError(nameof(vm.UserName), $"Connection problem ({message})");
+                sshClient.Dispose();
+                return View(vm);
+            }
+
+            var sshCommand = sshClient.CreateCommand(ssh);
+            sshCommand.CommandTimeout = TimeSpan.FromMinutes(1.0);
+            sshCommand.BeginExecute(ar =>
+            {
+                try
+                {
+                    Logs.PayServer.LogInformation("Running SSH command: " + command);
+                    var result = sshCommand.EndExecute(ar);
+                    Logs.PayServer.LogInformation("SSH command executed: " + result);
+                }
+                catch (Exception ex)
+                {
+                    Logs.PayServer.LogWarning("Error while executing SSH command: " + ex.Message);
+                }
+                sshClient.Dispose();
+            });
+            return null;
         }
 
         private static bool IsAdmin(IList<string> roles)
@@ -336,7 +470,7 @@ namespace BTCPayServer.Controllers
             if (connectionString == null)
                 return null;
             connectionString = connectionString.Clone();
-            if(connectionString.MacaroonFilePath != null)
+            if (connectionString.MacaroonFilePath != null)
             {
                 try
                 {
@@ -351,7 +485,7 @@ namespace BTCPayServer.Controllers
             }
             return connectionString;
         }
-        
+
         [Route("server/theme")]
         public async Task<IActionResult> Theme()
         {

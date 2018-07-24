@@ -208,7 +208,11 @@ namespace BTCPayServer.Controllers
                     }
                     catch (Exception ex)
                     {
-                        ModelState.AddModelError(nameof(vm.DNSDomain), $"Invalid domain ({ex.Message})");
+                        var messages = new List<object>();
+                        messages.Add(ex.Message);
+                        if (ex.InnerException != null)
+                            messages.Add(ex.InnerException.Message);
+                        ModelState.AddModelError(nameof(vm.DNSDomain), $"Invalid domain ({string.Join(", ", messages.ToArray())})");
                         return View(vm);
                     }
                 }
@@ -220,6 +224,13 @@ namespace BTCPayServer.Controllers
                 builder.Path = null;
                 builder.Query = null;
                 StatusMessage = $"Domain name changing... the server will restart, please use \"{builder.Uri.AbsoluteUri}\"";
+            }
+            else if (command == "update")
+            {
+                var error = RunSSH(vm, command, $"sudo bash -c '. /etc/profile.d/btcpay-env.sh && btcpay-update.sh'");
+                if (error != null)
+                    return error;
+                StatusMessage = $"The server might restart soon if an update is available...";
             }
             else
             {

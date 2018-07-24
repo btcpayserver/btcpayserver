@@ -19,6 +19,7 @@ using System.Globalization;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Logging;
 using BTCPayServer.Payments;
+using System.Data.Common;
 
 namespace BTCPayServer.Services.Invoices
 {
@@ -101,7 +102,7 @@ namespace BTCPayServer.Services.Invoices
             }
         }
 
-        public async Task<InvoiceEntity> CreateInvoiceAsync(string storeId, InvoiceEntity invoice, IEnumerable<string> creationLogs, BTCPayNetworkProvider networkProvider)
+        public async Task<InvoiceEntity> CreateInvoiceAsync(string storeId, InvoiceEntity invoice, InvoiceLogs creationLogs, BTCPayNetworkProvider networkProvider)
         {
             List<string> textSearch = new List<string>();
             invoice = Clone(invoice, null);
@@ -147,13 +148,13 @@ namespace BTCPayServer.Services.Invoices
                 }
                 context.PendingInvoices.Add(new PendingInvoiceData() { Id = invoice.Id });
 
-                foreach(var log in creationLogs)
+                foreach(var log in creationLogs.ToList())
                 {
                     context.InvoiceEvents.Add(new InvoiceEventData()
                     {
                         InvoiceDataId = invoice.Id,
-                        Message = log,
-                        Timestamp = invoice.InvoiceTime,
+                        Message = log.Log,
+                        Timestamp = log.Timestamp,
                         UniqueId = Encoders.Hex.EncodeData(RandomUtils.GetBytes(10))
                     });
                 }
@@ -244,7 +245,11 @@ namespace BTCPayServer.Services.Invoices
                     Timestamp = DateTimeOffset.UtcNow,
                     UniqueId = Encoders.Hex.EncodeData(RandomUtils.GetBytes(10))
                 });
-                await context.SaveChangesAsync();
+                try
+                {
+                    await context.SaveChangesAsync();
+                }
+                catch(DbUpdateException) { } // Probably the invoice does not exists anymore
             }
         }
 

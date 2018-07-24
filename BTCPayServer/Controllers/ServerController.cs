@@ -225,6 +225,13 @@ namespace BTCPayServer.Controllers
                 builder.Query = null;
                 StatusMessage = $"Domain name changing... the server will restart, please use \"{builder.Uri.AbsoluteUri}\"";
             }
+            else if (command == "update")
+            {
+                var error = RunSSH(vm, command, $"sudo bash -c '. /etc/profile.d/btcpay-env.sh && btcpay-update.sh'");
+                if (error != null)
+                    return error;
+                StatusMessage = $"The server might restart soon if an update is available...";
+            }
             else
             {
                 return NotFound();

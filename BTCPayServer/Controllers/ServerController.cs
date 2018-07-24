@@ -217,7 +217,7 @@ namespace BTCPayServer.Controllers
                     }
                 }
 
-                var error = RunSSH(vm, command, $"sudo bash -c '. /etc/profile.d/btcpay-env.sh && nohup . changedomain.sh {vm.DNSDomain} &'");
+                var error = RunSSH(vm, command, $"sudo bash -c '. /etc/profile.d/btcpay-env.sh && nohup changedomain.sh {vm.DNSDomain} &'");
                 if (error != null)
                     return error;
 

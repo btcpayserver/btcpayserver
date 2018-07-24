@@ -1,0 +1,52 @@
+﻿@model BTCPayServer.Models.ServerViewModels.MaintenanceViewModel
+@{
+    ViewData.SetActivePageAndTitle(ServerNavPages.Maintainance);
+}
+
+
+<h4>@ViewData["Title"]</h4>
+<partial name="_StatusMessage" for="@TempData["TempDataProperty-StatusMessage"]" />
+
+<div class="row">
+
+    <div class="col-md-8">
+        <form method="post">
+            <div class="form-group">
+                <h5>SSH Settings</h5>
+                <span>You need SSH credentials to run any of those actions</span>
+            </div>
+            <div class="form-group">
+                <label asp-for="UserName"></label>
+                <input asp-for="UserName" class="form-control" />
+                <span asp-validation-for="UserName" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Password"></label>
+                <input asp-for="Password" class="form-control" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <h5>Actions</h5>
+                <span>Run any of those administrative functions</span>
+            </div>
+
+            <div class="form-group">
+                <div class="input-group">
+                    <input asp-for="DNSDomain" class="form-control" />
+                    <span class="input-group-btn">
+                        <button type="submit" class="btn btn-primary" name="command" value="changedomain" title="Change domain">
+                            <span class="fa fa-check"></span> Confirm
+                        </button>
+                    </span>
+                </div>
+                <span asp-validation-for="DNSDomain" class="text-danger"></span>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

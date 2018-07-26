@@ -117,13 +117,13 @@ namespace BTCPayServer.Hosting
             });
 
             // Needed to debug U2F for ledger support
-            services.Configure<KestrelServerOptions>(kestrel =>
-            {
-                kestrel.Listen(IPAddress.Loopback, 5012, l =>
-                {
-                    l.UseHttps("devtest.pfx", "toto");
-                });
-            });
+            //services.Configure<KestrelServerOptions>(kestrel =>
+            //{
+            //    kestrel.Listen(IPAddress.Loopback, 5012, l =>
+            //    {
+            //        l.UseHttps("devtest.pfx", "toto");
+            //    });
+            //});
         }
 
         public void Configure(

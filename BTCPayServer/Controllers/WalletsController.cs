@@ -13,6 +13,7 @@ using BTCPayServer.Models;
 using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Security;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
 using LedgerWallet;
@@ -41,17 +42,22 @@ namespace BTCPayServer.Controllers
         private readonly ExplorerClientProvider _explorerProvider;
         private readonly IFeeProviderFactory _feeRateProvider;
         private readonly BTCPayWalletProvider _walletProvider;
-
+        BTCPayRateProviderFactory _RateProvider;
+        CurrencyNameTable _currencyTable;
         public WalletsController(StoreRepository repo,
+                                 CurrencyNameTable currencyTable,
                                  BTCPayNetworkProvider networkProvider,
                                  UserManager<ApplicationUser> userManager,
                                  IOptions<MvcJsonOptions> mvcJsonOptions,
                                  NBXplorerDashboard dashboard,
+                                 BTCPayRateProviderFactory rateProvider,
                                  ExplorerClientProvider explorerProvider,
                                  IFeeProviderFactory feeRateProvider,
                                  BTCPayWalletProvider walletProvider)
         {
+            _currencyTable = currencyTable;
             _Repo = repo;
+            _RateProvider = rateProvider;
             _NetworkProvider = networkProvider;
             _userManager = userManager;
             _mvcJsonOptions = mvcJsonOptions;
@@ -118,9 +124,30 @@ namespace BTCPayServer.Controllers
 
             if (paymentMethod == null)
                 return NotFound();
+
+            var storeData = store.GetStoreBlob();
+            var rateRules = store.GetStoreBlob().GetRateRules(_NetworkProvider);
+            rateRules.GlobalMultiplier = 1.0m;
+            var currencyPair = new Rating.CurrencyPair(paymentMethod.PaymentId.CryptoCode, storeData.DefaultLang ?? "USD");
             WalletModel model = new WalletModel();
             model.ServerUrl = GetLedgerWebsocketUrl(this.HttpContext, walletId.CryptoCode, paymentMethod.DerivationStrategyBase);
             model.CryptoCurrency = walletId.CryptoCode;
+
+            using (CancellationTokenSource cts = new CancellationTokenSource())
+            {
+                try
+                {
+                    cts.CancelAfter(TimeSpan.FromSeconds(5));
+                    var result = await _RateProvider.FetchRate(currencyPair, rateRules).WithCancellation(cts.Token);
+                    if (result.Value != null)
+                    {
+                        model.Rate = result.Value;
+                        model.Divisibility = _currencyTable.GetNumberFormatInfo(currencyPair.Right, true).CurrencyDecimalDigits;
+                        model.Fiat = currencyPair.Right;
+                    }
+                }
+                catch { }
+            }
             return View(model);
         }
 

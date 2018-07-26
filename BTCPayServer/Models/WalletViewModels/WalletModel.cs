@@ -15,5 +15,8 @@ namespace BTCPayServer.Models.WalletViewModels
             get;
             set;
         }
+        public decimal? Rate { get; set; }
+        public int Divisibility { get; set; }
+        public string Fiat { get; set; }
     }
 }

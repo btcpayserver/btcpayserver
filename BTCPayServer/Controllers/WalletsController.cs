@@ -150,7 +150,7 @@ namespace BTCPayServer.Controllers
             var storeData = store.GetStoreBlob();
             var rateRules = store.GetStoreBlob().GetRateRules(_NetworkProvider);
             rateRules.GlobalMultiplier = 1.0m;
-            var currencyPair = new Rating.CurrencyPair(paymentMethod.PaymentId.CryptoCode, storeData.DefaultLang ?? "USD");
+            var currencyPair = new Rating.CurrencyPair(paymentMethod.PaymentId.CryptoCode, GetCurrencyCode(storeData.DefaultLang) ?? "USD");
             WalletModel model = new WalletModel();
             model.ServerUrl = GetLedgerWebsocketUrl(this.HttpContext, walletId.CryptoCode, paymentMethod.DerivationStrategyBase);
             model.CryptoCurrency = walletId.CryptoCode;
@@ -175,6 +175,19 @@ namespace BTCPayServer.Controllers
                 catch(Exception ex) { model.RateError = ex.Message; }
             }
             return View(model);
+        }
+
+        private string GetCurrencyCode(string defaultLang)
+        {
+            if (defaultLang == null)
+                return null;
+            try
+            {
+                var ri = new RegionInfo(defaultLang);
+                return ri.ISOCurrencySymbol;
+            }
+            catch(ArgumentException) { }
+            return null;
         }
 
         private DerivationStrategy GetPaymentMethod(WalletId walletId, StoreData store)

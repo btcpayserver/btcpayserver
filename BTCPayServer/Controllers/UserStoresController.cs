@@ -23,18 +23,15 @@ namespace BTCPayServer.Controllers
         private StoreRepository _Repo;
         private BTCPayNetworkProvider _NetworkProvider;
         private UserManager<ApplicationUser> _UserManager;
-        private BTCPayWalletProvider _WalletProvider;
 
         public UserStoresController(
             UserManager<ApplicationUser> userManager,
             BTCPayNetworkProvider networkProvider,
-            BTCPayWalletProvider walletProvider,
             StoreRepository storeRepository)
         {
             _Repo = storeRepository;
             _NetworkProvider = networkProvider;
             _UserManager = userManager;
-            _WalletProvider = walletProvider;
         }        
 
         [HttpGet]
@@ -85,17 +82,6 @@ namespace BTCPayServer.Controllers
         {
             StoresViewModel result = new StoresViewModel();
             var stores = await _Repo.GetStoresByUserId(GetUserId());
-
-            var balances = stores
-                                .Select(s => s.GetSupportedPaymentMethods(_NetworkProvider)
-                                              .OfType<DerivationStrategy>()
-                                              .Select(d => ((Wallet: _WalletProvider.GetWallet(d.Network),
-                                                            DerivationStrategy: d.DerivationStrategyBase)))
-                                              .Where(_ => _.Wallet != null)
-                                              .Select(async _ => (await GetBalanceString(_)) + " " + _.Wallet.Network.CryptoCode))
-                                .ToArray();
-
-            await Task.WhenAll(balances.SelectMany(_ => _));
             for (int i = 0; i < stores.Length; i++)
             {
                 var store = stores[i];
@@ -104,8 +90,7 @@ namespace BTCPayServer.Controllers
                     Id = store.Id,
                     Name = store.StoreName,
                     WebSite = store.StoreWebsite,
-                    IsOwner = store.HasClaim(Policies.CanModifyStoreSettings.Key),
-                    Balances = store.HasClaim(Policies.CanModifyStoreSettings.Key) ? balances[i].Select(t => t.Result).ToArray() : Array.Empty<string>()
+                    IsOwner = store.HasClaim(Policies.CanModifyStoreSettings.Key)
                 });
             }
             return View(result);
@@ -127,22 +112,6 @@ namespace BTCPayServer.Controllers
                 storeId = store.Id
             });
         }
-
-        private static async Task<string> GetBalanceString((BTCPayWallet Wallet, DerivationStrategyBase DerivationStrategy) _)
-        {
-            using (CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
-            {
-                try
-                {
-                    return (await _.Wallet.GetBalance(_.DerivationStrategy, cts.Token)).ToString();
-                }
-                catch
-                {
-                    return "--";
-                }
-            }
-        }
-
 
         private string GetUserId()
         {

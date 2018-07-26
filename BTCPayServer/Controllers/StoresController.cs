@@ -38,11 +38,9 @@ namespace BTCPayServer.Controllers
         BTCPayRateProviderFactory _RateFactory;
         public string CreatedStoreId { get; set; }
         public StoresController(
-            NBXplorerDashboard dashboard,
             IServiceProvider serviceProvider,
             BTCPayServerOptions btcpayServerOptions,
             BTCPayServerEnvironment btcpayEnv,
-            IOptions<MvcJsonOptions> mvcJsonOptions,
             StoreRepository repo,
             TokenRepository tokenRepo,
             UserManager<ApplicationUser> userManager,
@@ -56,7 +54,6 @@ namespace BTCPayServer.Controllers
             IHostingEnvironment env)
         {
             _RateFactory = rateFactory;
-            _Dashboard = dashboard;
             _Repo = repo;
             _TokenRepository = tokenRepo;
             _UserManager = userManager;
@@ -66,19 +63,16 @@ namespace BTCPayServer.Controllers
             _Env = env;
             _NetworkProvider = networkProvider;
             _ExplorerProvider = explorerProvider;
-            _MvcJsonOptions = mvcJsonOptions.Value;
             _FeeRateProvider = feeRateProvider;
             _ServiceProvider = serviceProvider;
             _BtcpayServerOptions = btcpayServerOptions;
             _BTCPayEnv = btcpayEnv;
         }
-        NBXplorerDashboard _Dashboard;
         BTCPayServerOptions _BtcpayServerOptions;
         BTCPayServerEnvironment _BTCPayEnv;
         IServiceProvider _ServiceProvider;
         BTCPayNetworkProvider _NetworkProvider;
         private ExplorerClientProvider _ExplorerProvider;
-        private MvcJsonOptions _MvcJsonOptions;
         private IFeeProviderFactory _FeeRateProvider;
         BTCPayWalletProvider _WalletProvider;
         AccessTokenController _TokenController;
@@ -92,21 +86,6 @@ namespace BTCPayServer.Controllers
         public string StatusMessage
         {
             get; set;
-        }
-
-        [HttpGet]
-        [Route("{storeId}/wallet/{cryptoCode}")]
-        public IActionResult Wallet(string cryptoCode)
-        {
-            WalletModel model = new WalletModel();
-            model.ServerUrl = GetStoreUrl(StoreData.Id);
-            model.CryptoCurrency = cryptoCode;
-            return View(model);
-        }
-
-        private string GetStoreUrl(string storeId)
-        {
-            return HttpContext.Request.GetAbsoluteRoot() + "/stores/" + storeId + "/";
         }
 
         [HttpGet]
@@ -447,7 +426,8 @@ namespace BTCPayServer.Controllers
                 vm.DerivationSchemes.Add(new StoreViewModel.DerivationScheme()
                 {
                     Crypto = network.CryptoCode,
-                    Value = strategy?.DerivationStrategyBase?.ToString() ?? string.Empty
+                    Value = strategy?.DerivationStrategyBase?.ToString() ?? string.Empty,
+                    WalletId = new WalletId(store.Id, network.CryptoCode),
                 });
             }
 

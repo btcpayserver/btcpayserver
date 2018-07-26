@@ -125,6 +125,18 @@
 	  <Content Update="Views\Server\Services.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
+	  <Content Update="Views\Wallets\ListWallets.cshtml">
+	    <Pack>$(IncludeRazorContentInPack)</Pack>
+	  </Content>
+	  <Content Update="Views\Wallets\_Nav.cshtml">
+	    <Pack>$(IncludeRazorContentInPack)</Pack>
+	  </Content>
+	  <Content Update="Views\Wallets\_ViewImports.cshtml">
+	    <Pack>$(IncludeRazorContentInPack)</Pack>
+	  </Content>
+	  <Content Update="Views\Wallets\_ViewStart.cshtml">
+	    <Pack>$(IncludeRazorContentInPack)</Pack>
+	  </Content>
 	</ItemGroup>
 
 	<ItemGroup>

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
-namespace BTCPayServer.Models.StoreViewModels
+namespace BTCPayServer.Models.WalletViewModels
 {
     public class WalletModel
     {

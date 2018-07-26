@@ -167,8 +167,12 @@ namespace BTCPayServer.Controllers
                         model.Divisibility = _currencyTable.GetNumberFormatInfo(currencyPair.Right, true).CurrencyDecimalDigits;
                         model.Fiat = currencyPair.Right;
                     }
+                    else
+                    {
+                        model.RateError = $"{result.EvaluatedRule} ({string.Join(", ", result.Errors.OfType<object>().ToArray())})";
+                    }
                 }
-                catch { }
+                catch(Exception ex) { model.RateError = ex.Message; }
             }
             return View(model);
         }

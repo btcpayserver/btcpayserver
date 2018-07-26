@@ -151,6 +151,11 @@ namespace BTCPayServer.Services.Wallets
             return await completionSource.Task;
         }
 
+        public Task<GetTransactionsResponse> FetchTransactions(DerivationStrategyBase derivationStrategyBase)
+        {
+            return _Client.GetTransactionsAsync(derivationStrategyBase, null, false);
+        }
+
         public Task<BroadcastResult[]> BroadcastTransactionsAsync(List<Transaction> transactions)
         {
             var tasks = transactions.Select(t => _Client.BroadcastAsync(t)).ToArray();

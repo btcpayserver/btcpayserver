@@ -1,0 +1,54 @@
+﻿@model ListTransactionsViewModel
+@{
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData["Title"] = "Manage wallet";
+    ViewData.SetActivePageAndTitle(WalletsNavPages.Transactions);
+}
+
+<style type="text/css">
+    .smMaxWidth {
+        max-width: 200px;
+    }
+
+    @@media (min-width: 768px) {
+        .smMaxWidth {
+            max-width: 400px;
+        }
+    }
+</style>
+
+<h4>@ViewData["Title"]</h4>
+<div class="row">
+    <div class="col-md-10">
+        <table class="table table-sm table-responsive-lg">
+            <thead class="thead-inverse">
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Transaction Id</th>
+                    <th style="text-align:right">Balance</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach(var transaction in Model.Transactions)
+                {
+                    <tr>
+                        <td>@transaction.Timestamp.ToBrowserDate()</td>
+                        <td class="smMaxWidth text-truncate">
+                            <a href="@transaction.Link" target="_blank">
+                                @transaction.Id
+                            </a>
+                        </td>
+                        @if(transaction.Positive)
+                        {
+                            <td style="text-align:right; color:green;">@transaction.Balance</td>
+                        }
+                        else
+                        {
+                            <td style="text-align:right; color:red;">@transaction.Balance</td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

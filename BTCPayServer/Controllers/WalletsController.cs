@@ -107,6 +107,35 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("{walletId}")]
+        public async Task<IActionResult> WalletTransactions(
+            [ModelBinder(typeof(WalletIdModelBinder))]
+            WalletId walletId)
+        {
+            var store = await _Repo.FindStore(walletId.StoreId, GetUserId());
+            DerivationStrategy paymentMethod = GetPaymentMethod(walletId, store);
+            if (paymentMethod == null)
+                return NotFound();
+
+            var wallet = _walletProvider.GetWallet(paymentMethod.Network);
+            var transactions = await wallet.FetchTransactions(paymentMethod.DerivationStrategyBase);
+
+            var model = new ListTransactionsViewModel();
+            foreach(var tx in transactions.UnconfirmedTransactions.Transactions.Concat(transactions.ConfirmedTransactions.Transactions))
+            {
+                var vm = new ListTransactionsViewModel.TransactionViewModel();
+                model.Transactions.Add(vm);
+                vm.Id = tx.TransactionId.ToString();
+                vm.Link = string.Format(CultureInfo.InvariantCulture, paymentMethod.Network.BlockExplorerLink, vm.Id);
+                vm.Timestamp = tx.Timestamp;
+                vm.Positive = tx.BalanceChange >= Money.Zero;
+                vm.Balance = tx.BalanceChange.ToString();
+            }
+            return View(model);
+        }
+
+
+        [HttpGet]
+        [Route("{walletId}/send")]
         public async Task<IActionResult> WalletSend(
             [ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId)
@@ -114,14 +143,7 @@ namespace BTCPayServer.Controllers
             if (walletId?.StoreId == null)
                 return NotFound();
             var store = await _Repo.FindStore(walletId.StoreId, GetUserId());
-            if (store == null || !store.HasClaim(Policies.CanModifyStoreSettings.Key))
-                return NotFound();
-
-            var paymentMethod = store
-                            .GetSupportedPaymentMethods(_NetworkProvider)
-                            .OfType<DerivationStrategy>()
-                            .FirstOrDefault(p => p.PaymentId.PaymentType == Payments.PaymentTypes.BTCLike && p.PaymentId.CryptoCode == walletId.CryptoCode);
-
+            DerivationStrategy paymentMethod = GetPaymentMethod(walletId, store);
             if (paymentMethod == null)
                 return NotFound();
 
@@ -149,6 +171,18 @@ namespace BTCPayServer.Controllers
                 catch { }
             }
             return View(model);
+        }
+
+        private DerivationStrategy GetPaymentMethod(WalletId walletId, StoreData store)
+        {
+            if (store == null || !store.HasClaim(Policies.CanModifyStoreSettings.Key))
+                return null;
+
+            var paymentMethod = store
+                            .GetSupportedPaymentMethods(_NetworkProvider)
+                            .OfType<DerivationStrategy>()
+                            .FirstOrDefault(p => p.PaymentId.PaymentType == Payments.PaymentTypes.BTCLike && p.PaymentId.CryptoCode == walletId.CryptoCode);
+            return paymentMethod;
         }
 
         private static async Task<string> GetBalanceString(BTCPayWallet wallet, DerivationStrategyBase derivationStrategy)

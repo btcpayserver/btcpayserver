@@ -7,6 +7,7 @@ namespace BTCPayServer.Views.Wallets
 {
     public enum WalletsNavPages
     {
-        Send
+        Send,
+        Transactions
     }
 }

@@ -35,6 +35,7 @@ namespace BTCPayServer
         public DerivationStrategyBase DerivationStrategyBase => this._DerivationStrategy;
 
         public PaymentMethodId PaymentId => new PaymentMethodId(Network.CryptoCode, PaymentTypes.BTCLike);
+        public bool Enabled { get; set; }
 
         public override string ToString()
         {

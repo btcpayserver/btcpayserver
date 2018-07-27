@@ -14,5 +14,6 @@ namespace BTCPayServer.Payments
     public interface ISupportedPaymentMethod
     {
         PaymentMethodId PaymentId { get; }
+        bool Enabled { get; set; }
     }
 }

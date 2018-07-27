@@ -262,7 +262,7 @@ namespace BTCPayServer.Controllers
                     {
                         CurrencyPair = fetch.Key.ToString(),
                         Error = testResult.Errors.Count != 0,
-                        Rule = testResult.Errors.Count == 0 ? testResult.Rule + " = " + testResult.Value.Value.ToString(CultureInfo.InvariantCulture)
+                        Rule = testResult.Errors.Count == 0 ? testResult.Rule + " = " + testResult.BidAsk.Bid.ToString(CultureInfo.InvariantCulture)
                                                             : testResult.EvaluatedRule
                     });
                 }
@@ -317,7 +317,7 @@ namespace BTCPayServer.Controllers
         {
             var storeBlob = StoreData.GetStoreBlob();
             var vm = new CheckoutExperienceViewModel();
-            vm.SetCryptoCurrencies(_ExplorerProvider, StoreData.GetDefaultCrypto());
+            vm.SetCryptoCurrencies(_ExplorerProvider, StoreData.GetDefaultCrypto(_NetworkProvider));
             vm.SetLanguages(_LangService, storeBlob.DefaultLang);
             vm.LightningMaxValue = storeBlob.LightningMaxValue?.ToString() ?? "";
             vm.OnChainMinValue = storeBlob.OnChainMinValue?.ToString() ?? "";
@@ -352,7 +352,7 @@ namespace BTCPayServer.Controllers
             }
             bool needUpdate = false;
             var blob = StoreData.GetStoreBlob();
-            if (StoreData.GetDefaultCrypto() != model.DefaultCryptoCurrency)
+            if (StoreData.GetDefaultCrypto(_NetworkProvider) != model.DefaultCryptoCurrency)
             {
                 needUpdate = true;
                 StoreData.SetDefaultCrypto(model.DefaultCryptoCurrency);

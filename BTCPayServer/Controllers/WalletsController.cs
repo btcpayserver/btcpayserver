@@ -162,9 +162,9 @@ namespace BTCPayServer.Controllers
                 {
                     cts.CancelAfter(TimeSpan.FromSeconds(5));
                     var result = await _RateProvider.FetchRate(currencyPair, rateRules).WithCancellation(cts.Token);
-                    if (result.Value != null)
+                    if (result.BidAsk != null)
                     {
-                        model.Rate = result.Value;
+                        model.Rate = result.BidAsk.Center;
                         model.Divisibility = _currencyTable.GetNumberFormatInfo(currencyPair.Right, true).CurrencyDecimalDigits;
                         model.Fiat = currencyPair.Right;
                     }

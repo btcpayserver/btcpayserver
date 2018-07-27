@@ -104,7 +104,7 @@ namespace BTCPayServer.Tests
             rule2.Reevaluate();
             Assert.False(rule2.HasError);
             Assert.Equal("5000 * 2000.4 * 1.1", rule2.ToString(true));
-            Assert.Equal(rule2.Value, 5000m * 2000.4m * 1.1m);
+            Assert.Equal(rule2.BidAsk.Bid, 5000m * 2000.4m * 1.1m);
             ////////
 
             // Make sure parenthesis are correctly calculated
@@ -120,7 +120,7 @@ namespace BTCPayServer.Tests
             rule2.ExchangeRates.SetRate("coinbase", CurrencyPair.Parse("BTC_CAD"), new BidAsk(1000m));
             Assert.True(rule2.Reevaluate());
             Assert.Equal("(2000 * (-3 + 1000 + 50 - 5)) * 1.1", rule2.ToString(true));
-            Assert.Equal((2000m * (-3m + 1000m + 50m - 5m)) * 1.1m, rule2.Value.Value);
+            Assert.Equal((2000m * (-3m + 1000m + 50m - 5m)) * 1.1m, rule2.BidAsk.Bid);
 
             // Test inverse
             rule2 = rules.GetRuleFor(CurrencyPair.Parse("USD_DOGE"));
@@ -128,7 +128,7 @@ namespace BTCPayServer.Tests
             rule2.ExchangeRates.SetRate("coinbase", CurrencyPair.Parse("BTC_CAD"), new BidAsk(1000m));
             Assert.True(rule2.Reevaluate());
             Assert.Equal("(1 / (2000 * (-3 + 1000 + 50 - 5))) * 1.1", rule2.ToString(true));
-            Assert.Equal((1.0m / (2000m * (-3m + 1000m + 50m - 5m))) * 1.1m, rule2.Value.Value);
+            Assert.Equal((1.0m / (2000m * (-3m + 1000m + 50m - 5m))) * 1.1m, rule2.BidAsk.Bid);
             ////////
 
             // Make sure kraken is not converted to CurrencyPair
@@ -147,12 +147,12 @@ namespace BTCPayServer.Tests
             rule2.ExchangeRates.SetRate("kraken", CurrencyPair.Parse("BTC_USD"), new BidAsk(6000m, 6100m));
             Assert.True(rule2.Reevaluate());
             Assert.Equal("(6000, 6100)", rule2.ToString(true));
-            Assert.Equal(6000m, rule2.Value.Value);
+            Assert.Equal(6000m, rule2.BidAsk.Bid);
             rule2 = rules.GetRuleFor(CurrencyPair.Parse("USD_BTC"));
             rule2.ExchangeRates.SetRate("kraken", CurrencyPair.Parse("BTC_USD"), new BidAsk(6000m, 6100m));
             Assert.True(rule2.Reevaluate());
             Assert.Equal("1 / (6000, 6100)", rule2.ToString(true));
-            Assert.Equal(1m / 6100m, rule2.Value.Value);
+            Assert.Equal(1m / 6100m, rule2.BidAsk.Bid);
 
             // Make sure the inverse has more priority than X_X or CDNT_X
             builder = new StringBuilder();

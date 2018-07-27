@@ -100,7 +100,7 @@ namespace BTCPayServer.Hosting
                 (isJson || httpContext.Request.Query.ContainsKey("token")))
                 return true;
 
-            if (path.Equals("/rates", StringComparison.OrdinalIgnoreCase) &&
+            if (path.StartsWith("/rates", StringComparison.OrdinalIgnoreCase) &&
                 httpContext.Request.Method == "GET")
                 return true;
 

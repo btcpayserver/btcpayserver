@@ -209,7 +209,7 @@ namespace BTCPayServer.Controllers
             {
                 var storeBlob = store.GetStoreBlob();
                 var rate = await fetchingByCurrencyPair[new CurrencyPair(network.CryptoCode, entity.ProductInformation.Currency)];
-                if (rate.Value == null)
+                if (rate.BidAsk == null)
                 {
                     return null;
                 }
@@ -217,7 +217,7 @@ namespace BTCPayServer.Controllers
                 paymentMethod.ParentEntity = entity;
                 paymentMethod.Network = network;
                 paymentMethod.SetId(supportedPaymentMethod.PaymentId);
-                paymentMethod.Rate = rate.Value.Value;
+                paymentMethod.Rate = rate.BidAsk.Bid;
                 var paymentDetails = await handler.CreatePaymentMethodDetails(supportedPaymentMethod, paymentMethod, store, network);
                 if (storeBlob.NetworkFeeDisabled)
                     paymentDetails.SetNoTxFee();
@@ -244,9 +244,9 @@ namespace BTCPayServer.Controllers
                 if (compare != null)
                 {
                     var limitValueRate = await fetchingByCurrencyPair[new CurrencyPair(network.CryptoCode, limitValue.Currency)];
-                    if (limitValueRate.Value.HasValue)
+                    if (limitValueRate.BidAsk != null)
                     {
-                        var limitValueCrypto = Money.Coins(limitValue.Value / limitValueRate.Value.Value);
+                        var limitValueCrypto = Money.Coins(limitValue.Value / limitValueRate.BidAsk.Bid);
                         if (compare(paymentMethod.Calculate().Due, limitValueCrypto))
                         {
                             logs.Write($"{supportedPaymentMethod.PaymentId.CryptoCode}: {errorMessage}");

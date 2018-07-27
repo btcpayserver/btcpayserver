@@ -213,7 +213,7 @@ namespace BTCPayServer.Controllers
             bool isDefaultCrypto = false;
             if (paymentMethodIdStr == null)
             {
-                paymentMethodIdStr = store.GetDefaultCrypto();
+                paymentMethodIdStr = store.GetDefaultCrypto(_NetworkProvider);
                 isDefaultCrypto = true;
             }
 

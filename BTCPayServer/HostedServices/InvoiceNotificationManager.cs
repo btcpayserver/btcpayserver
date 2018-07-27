@@ -202,7 +202,8 @@ namespace BTCPayServer.HostedServices
                 PaymentSubtotals = dto.PaymentSubtotals,
                 PaymentTotals = dto.PaymentTotals,
                 AmountPaid = dto.AmountPaid,
-                ExchangeRates = dto.ExchangeRates
+                ExchangeRates = dto.ExchangeRates,
+                
             };
 
             // We keep backward compatibility with bitpay by passing BTC info to the notification

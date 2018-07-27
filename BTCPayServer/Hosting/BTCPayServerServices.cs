@@ -39,6 +39,8 @@ using BTCPayServer.HostedServices;
 using Meziantou.AspNetCore.BundleTagHelpers;
 using System.Security.Claims;
 using BTCPayServer.Security;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using NBXplorer.DerivationStrategy;
 
 namespace BTCPayServer.Hosting
 {
@@ -105,7 +107,11 @@ namespace BTCPayServer.Hosting
             });
 
             services.AddSingleton<CssThemeManager>();
-            services.Configure<MvcOptions>((o) => { o.Filters.Add(new ContentSecurityPolicyCssThemeManager()); });
+            services.Configure<MvcOptions>((o) => {
+                o.Filters.Add(new ContentSecurityPolicyCssThemeManager());
+                o.ModelMetadataDetailsProviders.Add(new SuppressChildValidationMetadataProvider(typeof(WalletId)));
+                o.ModelMetadataDetailsProviders.Add(new SuppressChildValidationMetadataProvider(typeof(DerivationStrategyBase)));
+            });
             services.AddSingleton<IHostedService, CssThemeManagerHostedService>();
             services.AddSingleton<IHostedService, MigratorHostedService>();
 

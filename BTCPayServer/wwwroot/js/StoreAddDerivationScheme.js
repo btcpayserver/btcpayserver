@@ -1,6 +1,6 @@
 ﻿$(function () {
     var ledgerDetected = false;
-    var bridge = new ledgerwebsocket.LedgerWebSocketBridge(srvModel + "ws/ledger");
+    var bridge = new ledgerwebsocket.LedgerWebSocketBridge(srvModel);
 
     var cryptoSelector = $("#CryptoCurrency");
     function GetSelectedCryptoCode() {

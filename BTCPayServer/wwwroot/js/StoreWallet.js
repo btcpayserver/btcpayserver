@@ -1,6 +1,17 @@
-﻿$(function () {
+﻿
+function updateFiatValue() {
+    if (srvModel.rate !== null) {
+        var fiatValue = $("#fiatValue");
+        fiatValue.css("display", "inline");
+        var amountValue = parseFloat($("#amount-textbox").val());
+        if (!isNaN(amountValue)) {
+            fiatValue.text("= " + (srvModel.rate * amountValue).toFixed(srvModel.divisibility) + " " + srvModel.fiat);
+        }
+    }
+}
+$(function () {
     var ledgerDetected = false;
-    var bridge = new ledgerwebsocket.LedgerWebSocketBridge(srvModel.serverUrl + "ws/ledger");
+    var bridge = new ledgerwebsocket.LedgerWebSocketBridge(srvModel.serverUrl);
     var recommendedFees = "";
     var recommendedBalance = "";
     var cryptoCode = $("#cryptoCode").val();

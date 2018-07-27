@@ -78,7 +78,11 @@
                     </table>
                 </div>
                 <button name="command" type="submit" class="btn btn-primary" value="save">Continue</button>
-                <button name="command" type="submit" value="toggle" class="btn btn-secondary">Toggle</button>
+                if(!string.IsNullOrEmpty(Model.DerivationScheme))
+                {
+                    <button name="command" type="submit" value="toggle" class="btn btn-secondary">@(Model.Enabled ? "Disable" : "Enable") </button>
+
+                }
             }
             else
             {

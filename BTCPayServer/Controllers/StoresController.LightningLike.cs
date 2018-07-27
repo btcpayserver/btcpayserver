@@ -174,6 +174,10 @@ namespace BTCPayServer.Controllers
                 vm.StatusMessage = $"Toggled!";
                 return View(vm);
             }
+            else
+            {
+                return View(vm);
+            }
         }
 
         private bool CanUseInternalLightning()

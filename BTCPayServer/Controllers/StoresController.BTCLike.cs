@@ -37,13 +37,17 @@ namespace BTCPayServer.Controllers
             vm.ServerUrl = WalletsController.GetLedgerWebsocketUrl(this.HttpContext, cryptoCode, null);
             vm.CryptoCode = cryptoCode;
             vm.RootKeyPath = network.GetRootKeyPath();
+           
             SetExistingValues(store, vm);
             return View(vm);
         }
 
         private void SetExistingValues(StoreData store, DerivationSchemeViewModel vm)
         {
-            vm.DerivationScheme = GetExistingDerivationStrategy(vm.CryptoCode, store)?.DerivationStrategyBase.ToString();
+            var strategy = GetExistingDerivationStrategy(vm.CryptoCode, store);
+            
+            vm.DerivationScheme = strategy?.DerivationStrategyBase.ToString();
+            vm.Enabled = strategy.Enabled;
         }
 
         private DerivationStrategy GetExistingDerivationStrategy(string cryptoCode, StoreData store)
@@ -85,6 +89,7 @@ namespace BTCPayServer.Controllers
                 {
                     strategy = ParseDerivationStrategy(vm.DerivationScheme, null, network);
                     vm.DerivationScheme = strategy.ToString();
+                    vm.Enabled = strategy.Enabled;
                 }
             }
             catch
@@ -93,16 +98,18 @@ namespace BTCPayServer.Controllers
                 vm.Confirmation = false;
                 return View(vm);
             }
-
-            if (!vm.Confirmation && strategy != null)
-                return ShowAddresses(vm, strategy);
-
             if (command == "toggle")
             {
-                StatusMessage = $"Toggled!";
+                strategy.Enabled = !strategy.Enabled;
+                vm.Enabled = strategy.Enabled;
+                store.SetSupportedPaymentMethod(paymentMethodId, strategy);
+                StatusMessage = $"Derivation Scheme({cryptoCode}) {(strategy.Enabled ? "Enabled" : "Disabled")}";
                 return RedirectToAction(nameof(UpdateStore), new { storeId = storeId });
             }
 
+            if (!vm.Confirmation && strategy != null)
+                return ShowAddresses(vm, strategy);
+            
             if (vm.Confirmation && !string.IsNullOrWhiteSpace(vm.HintAddress))
             {
                 BitcoinAddress address = null;

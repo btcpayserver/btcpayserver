@@ -77,7 +77,8 @@
                         </tbody>
                     </table>
                 </div>
-                <button name="command" type="submit" class="btn btn-primary">Continue</button>
+                <button name="command" type="submit" class="btn btn-primary" value="save">Continue</button>
+                <button name="command" type="submit" value="toggle" class="btn btn-secondary">Toggle</button>
             }
             else
             {
@@ -116,7 +117,7 @@
                     <input asp-for="HintAddress" class="form-control" />
                     <span asp-validation-for="HintAddress" class="text-danger"></span>
                 </div>
-                <button name="command" type="submit" class="btn btn-primary">Confirm</button>
+                <button name="command" type="submit" class="btn btn-primary" value="save">Confirm</button>
             }
         </form>
     </div>

@@ -57,7 +57,7 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("{storeId}/derivations/{cryptoCode}")]
-        public async Task<IActionResult> AddDerivationScheme(string storeId, DerivationSchemeViewModel vm, string cryptoCode)
+        public async Task<IActionResult> AddDerivationScheme(string storeId, DerivationSchemeViewModel vm, string command, string cryptoCode)
         {
             vm.ServerUrl = WalletsController.GetLedgerWebsocketUrl(this.HttpContext, cryptoCode, null);
             vm.CryptoCode = cryptoCode;
@@ -96,6 +96,12 @@ namespace BTCPayServer.Controllers
 
             if (!vm.Confirmation && strategy != null)
                 return ShowAddresses(vm, strategy);
+
+            if (command == "toggle")
+            {
+                StatusMessage = $"Toggled!";
+                return RedirectToAction(nameof(UpdateStore), new { storeId = storeId });
+            }
 
             if (vm.Confirmation && !string.IsNullOrWhiteSpace(vm.HintAddress))
             {

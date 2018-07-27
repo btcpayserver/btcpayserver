@@ -141,7 +141,7 @@ namespace BTCPayServer.Controllers
                 StatusMessage = $"Lightning node modified ({network.CryptoCode})";
                 return RedirectToAction(nameof(UpdateStore), new { storeId = storeId });
             }
-            else // if(command == "test")
+            else if(command == "test")
             {
                 if (paymentMethod == null)
                 {
@@ -166,6 +166,12 @@ namespace BTCPayServer.Controllers
                     vm.StatusMessage = $"Error: {ex.Message}";
                     return View(vm);
                 }
+                return View(vm);
+            }
+            else if (command == "toggle")
+            {
+
+                vm.StatusMessage = $"Toggled!";
                 return View(vm);
             }
         }

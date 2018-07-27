@@ -126,22 +126,17 @@ namespace BTCPayServer.Controllers
                 var supportedMethods = store.GetSupportedPaymentMethods(_NetworkProvider);
                 var currencyCodes = supportedMethods.Where(method => !string.IsNullOrEmpty(method.CryptoCode))
                     .Select(method => method.CryptoCode).Distinct();
+                var defaultCrypto = store.GetDefaultCrypto(_NetworkProvider);
 
                 foreach (var currencyCode in currencyCodes)
                 {
-                    foreach (var currencyCode2 in currencyCodes)
+                    if (!string.IsNullOrEmpty(currencyPairs))
                     {
-                        if (currencyCode == currencyCode2)
-                        {
-                            continue;
-                        }
-                        if (!string.IsNullOrEmpty(currencyPairs))
-                        {
-                            currencyPairs += ",";
-                        }
-                        currencyPairs += $"{currencyCode}_{currencyCode2}";
+                        currencyPairs += ",";
                     }
+                    currencyPairs += $"{defaultCrypto}_{currencyCode}";
                 }
+
 
                 if (string.IsNullOrEmpty(currencyPairs))
                 {

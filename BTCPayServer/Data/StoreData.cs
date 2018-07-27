@@ -197,9 +197,9 @@ namespace BTCPayServer.Data
         public IEnumerable<APIKeyData> APIKeys { get; set; }
 
 #pragma warning disable CS0618
-        public string GetDefaultCrypto()
+        public string GetDefaultCrypto(BTCPayNetworkProvider networkProvider = null)
         {
-            return DefaultCrypto ?? "BTC";
+            return DefaultCrypto ?? (networkProvider == null? "BTC" : GetSupportedPaymentMethods(networkProvider).First().CryptoCode);
         }
         public void SetDefaultCrypto(string defaultCryptoCurrency)
         {

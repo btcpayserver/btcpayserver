@@ -55,10 +55,6 @@ namespace BTCPayServer.Controllers
 
             foreach (var currencyCode in currencyCodes)
             {
-                if (baseCurrency == currencyCode)
-                {
-                    continue;
-                }
                 if (!string.IsNullOrEmpty(currencypairs))
                 {
                     currencypairs += ",";

@@ -1,7 +1,7 @@
 ﻿@model DerivationSchemeViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["Title"] = "Add derivation scheme";
+    ViewData["Title"] = $"{Model.CryptoCode} Derivation scheme";
     ViewData.AddActivePage(BTCPayServer.Views.Stores.StoreNavPages.Index);
 }
 
@@ -77,7 +77,12 @@
                         </tbody>
                     </table>
                 </div>
-                <button name="command" type="submit" class="btn btn-primary">Continue</button>
+                <div class="form-check">
+                    <input id="enabled" asp-for="Enabled" class="form-check-input" />
+                    <label asp-for="Enabled" class="form-check-label"></label>
+                    <span asp-validation-for="Enabled" class="text-danger"></span>
+                </div>
+                <button name="command" type="submit" class="btn btn-primary" value="save">Continue</button>
             }
             else
             {
@@ -87,6 +92,7 @@
                 </div>
                 <input type="hidden" asp-for="Confirmation" />
                 <input type="hidden" asp-for="DerivationScheme" />
+                <input type="hidden" asp-for="Enabled" />
                 <div class="form-group">
                     <table class="table table-sm table-responsive-md">
                         <thead>
@@ -116,7 +122,7 @@
                     <input asp-for="HintAddress" class="form-control" />
                     <span asp-validation-for="HintAddress" class="text-danger"></span>
                 </div>
-                <button name="command" type="submit" class="btn btn-primary">Confirm</button>
+                <button name="command" type="submit" class="btn btn-primary" value="save">Confirm</button>
             }
         </form>
     </div>

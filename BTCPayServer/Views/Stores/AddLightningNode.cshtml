@@ -55,12 +55,17 @@
                 <label asp-for="ConnectionString"></label>
                 <input id="lightningurl" asp-for="ConnectionString" class="form-control" />
                 <span asp-validation-for="ConnectionString" class="text-danger"></span>
-                @if(Model.InternalLightningNode != null)
+                @if (Model.InternalLightningNode != null)
                 {
                     <p class="form-text text-muted">
                         You can use the internal lightning node by <a href="#" onclick="$('#lightningurl').val('@Model.InternalLightningNode'); return false;">clicking here</a>
                     </p>
                 }
+            </div>
+            <div class="form-check">
+                <input id="enabled" asp-for="Enabled" class="form-check-input" />
+                <label asp-for="Enabled" class="form-check-label"></label>
+                <span asp-validation-for="Enabled" class="text-danger"></span>
             </div>
             <button name="command" type="submit" value="save" class="btn btn-primary">Submit</button>
             <button name="command" type="submit" value="test" class="btn btn-secondary">Test connection</button>

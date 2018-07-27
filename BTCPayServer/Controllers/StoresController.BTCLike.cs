@@ -44,6 +44,7 @@ namespace BTCPayServer.Controllers
         private void SetExistingValues(StoreData store, DerivationSchemeViewModel vm)
         {
             vm.DerivationScheme = GetExistingDerivationStrategy(vm.CryptoCode, store)?.DerivationStrategyBase.ToString();
+            vm.Enabled = !store.GetStoreBlob().IsExcluded(new PaymentMethodId(vm.CryptoCode, PaymentTypes.BTCLike));
         }
 
         private DerivationStrategy GetExistingDerivationStrategy(string cryptoCode, StoreData store)
@@ -93,10 +94,8 @@ namespace BTCPayServer.Controllers
                 vm.Confirmation = false;
                 return View(vm);
             }
-
             if (!vm.Confirmation && strategy != null)
                 return ShowAddresses(vm, strategy);
-
             if (vm.Confirmation && !string.IsNullOrWhiteSpace(vm.HintAddress))
             {
                 BitcoinAddress address = null;
@@ -132,6 +131,10 @@ namespace BTCPayServer.Controllers
                     if (strategy != null)
                         await wallet.TrackAsync(strategy.DerivationStrategyBase);
                     store.SetSupportedPaymentMethod(paymentMethodId, strategy);
+
+                    var storeBlob = store.GetStoreBlob();
+                    storeBlob.SetExcluded(paymentMethodId, !vm.Enabled);
+                    store.SetStoreBlob(storeBlob);
                 }
                 catch
                 {

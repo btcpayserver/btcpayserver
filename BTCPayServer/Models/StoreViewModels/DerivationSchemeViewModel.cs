@@ -27,6 +27,7 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Hint address")]
         public string HintAddress { get; set; }
         public bool Confirmation { get; set; }
+        public bool Enabled { get; set; } = true;
 
         public string ServerUrl { get; set; }
         public string StatusMessage { get; internal set; }

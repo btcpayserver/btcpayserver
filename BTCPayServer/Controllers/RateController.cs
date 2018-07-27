@@ -49,8 +49,8 @@ namespace BTCPayServer.Controllers
             var currencypairs = "";
             var supportedMethods = store.GetSupportedPaymentMethods(_NetworkProvider);
 
-            var currencyCodes = supportedMethods.Where(method => !string.IsNullOrEmpty(method.CryptoCode))
-                .Select(method => method.CryptoCode).Distinct();
+            var currencyCodes = supportedMethods.Where(method => !string.IsNullOrEmpty(method.PaymentId.CryptoCode))
+                .Select(method => method.PaymentId.CryptoCode).Distinct();
 
 
             foreach (var currencyCode in currencyCodes)
@@ -120,8 +120,8 @@ namespace BTCPayServer.Controllers
             {
                 currencyPairs = "";
                 var supportedMethods = store.GetSupportedPaymentMethods(_NetworkProvider);
-                var currencyCodes = supportedMethods.Where(method => !string.IsNullOrEmpty(method.CryptoCode))
-                    .Select(method => method.CryptoCode).Distinct();
+                var currencyCodes = supportedMethods.Where(method => !string.IsNullOrEmpty(method.PaymentId.CryptoCode))
+                    .Select(method => method.PaymentId.CryptoCode).Distinct();
                 var defaultCrypto = store.GetDefaultCrypto(_NetworkProvider);
 
                 foreach (var currencyCode in currencyCodes)

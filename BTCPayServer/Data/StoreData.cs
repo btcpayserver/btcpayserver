@@ -199,7 +199,7 @@ namespace BTCPayServer.Data
 #pragma warning disable CS0618
         public string GetDefaultCrypto(BTCPayNetworkProvider networkProvider = null)
         {
-            return DefaultCrypto ?? (networkProvider == null? "BTC" : GetSupportedPaymentMethods(networkProvider).First().CryptoCode);
+            return DefaultCrypto ?? (networkProvider == null? "BTC" : GetSupportedPaymentMethods(networkProvider).First().PaymentId.CryptoCode);
         }
         public void SetDefaultCrypto(string defaultCryptoCurrency)
         {

@@ -22,7 +22,7 @@ namespace BTCPayServer.Services.Rates
         public string Rule { get; set; }
         public string EvaluatedRule { get; set; }
         public HashSet<RateRulesErrors> Errors { get; set; }
-        public decimal? Value { get; set; }
+        public BidAsk BidAsk { get; set; }
         public bool Cached { get; internal set; }
     }
 
@@ -172,11 +172,11 @@ namespace BTCPayServer.Services.Rates
                 result.ExchangeExceptions.AddRange(query.Exceptions);
                 foreach (var rule in query.ExchangeRates)
                 {
-                    rateRule.ExchangeRates.Add(rule);
+                    rateRule.ExchangeRates.SetRate(rule.Exchange, rule.CurrencyPair, rule.BidAsk);
                 }
             }
             rateRule.Reevaluate();
-            result.Value = rateRule.Value;
+            result.BidAsk = rateRule.BidAsk;
             result.Errors = rateRule.Errors;
             result.EvaluatedRule = rateRule.ToString(true);
             result.Rule = rateRule.ToString(false);

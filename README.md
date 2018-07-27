@@ -29,6 +29,7 @@ In addition to Bitcoin, we support the following crypto currencies:
 * Feathercoin
 * Groestlcoin
 * Litecoin
+* Dash
 * Monacoin
 * Polis
 * UFO

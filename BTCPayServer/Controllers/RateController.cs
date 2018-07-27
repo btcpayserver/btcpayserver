@@ -33,6 +33,7 @@ namespace BTCPayServer.Controllers
 
         [Route("rates/{baseCurrency}")]
         [HttpGet]
+        [BitpayAPIConstraint]
         public async Task<IActionResult> GetBaseCurrencyRates(string baseCurrency, string storeId)
         {
             storeId = storeId ?? this.HttpContext.GetStoreData()?.Id;
@@ -74,6 +75,7 @@ namespace BTCPayServer.Controllers
 
         [Route("rates/{baseCurrency}/{currency}")]
         [HttpGet]
+        [BitpayAPIConstraint]
         public async Task<IActionResult> GetCurrencyPairRate(string baseCurrency, string currency, string storeId)
         {
             storeId = storeId ?? this.HttpContext.GetStoreData()?.Id;

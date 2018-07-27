@@ -78,7 +78,7 @@ namespace BTCPayServer.Controllers
             var wallet = _WalletProvider.GetWallet(network);
             if (wallet == null)
                 return NotFound();
-            var payment = PaymentMessage.Load(Request.Body);
+            var payment = PaymentMessage.Load(Request.Body, network.NBitcoinNetwork);
             var unused = wallet.BroadcastTransactionsAsync(payment.Transactions);
             await _InvoiceRepository.AddRefundsAsync(invoiceId, payment.RefundTo.Select(p => new TxOut(p.Amount, p.Script)).ToArray(), network.NBitcoinNetwork);
             return new PaymentAckActionResult(payment.CreateACK(invoiceId + " is currently processing, thanks for your purchase..."));

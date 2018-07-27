@@ -8,24 +8,20 @@ namespace BTCPayServer.Events
 {
     public class InvoiceEvent
     {
-        public InvoiceEvent(InvoiceEntity invoice, int code, string name) : this(invoice.Id, code, name)
+        public InvoiceEvent(Models.InvoiceResponse invoice, int code, string name)
         {
-
-        }
-        public InvoiceEvent(string invoiceId, int code, string name)
-        {
-            InvoiceId = invoiceId;
+            Invoice = invoice;
             EventCode = code;
             Name = name;
         }
 
-        public string InvoiceId { get; set; }
+        public Models.InvoiceResponse Invoice { get; set; }
         public int EventCode { get; set; }
         public string Name { get; set; }
 
         public override string ToString()
         {
-            return $"Invoice {InvoiceId} new event: {Name} ({EventCode})";
+            return $"Invoice {Invoice.Id} new event: {Name} ({EventCode})";
         }
     }
 }

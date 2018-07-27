@@ -38,11 +38,9 @@ namespace BTCPayServer.Controllers
         BTCPayRateProviderFactory _RateFactory;
         public string CreatedStoreId { get; set; }
         public StoresController(
-            NBXplorerDashboard dashboard,
             IServiceProvider serviceProvider,
             BTCPayServerOptions btcpayServerOptions,
             BTCPayServerEnvironment btcpayEnv,
-            IOptions<MvcJsonOptions> mvcJsonOptions,
             StoreRepository repo,
             TokenRepository tokenRepo,
             UserManager<ApplicationUser> userManager,
@@ -56,7 +54,6 @@ namespace BTCPayServer.Controllers
             IHostingEnvironment env)
         {
             _RateFactory = rateFactory;
-            _Dashboard = dashboard;
             _Repo = repo;
             _TokenRepository = tokenRepo;
             _UserManager = userManager;
@@ -66,19 +63,16 @@ namespace BTCPayServer.Controllers
             _Env = env;
             _NetworkProvider = networkProvider;
             _ExplorerProvider = explorerProvider;
-            _MvcJsonOptions = mvcJsonOptions.Value;
             _FeeRateProvider = feeRateProvider;
             _ServiceProvider = serviceProvider;
             _BtcpayServerOptions = btcpayServerOptions;
             _BTCPayEnv = btcpayEnv;
         }
-        NBXplorerDashboard _Dashboard;
         BTCPayServerOptions _BtcpayServerOptions;
         BTCPayServerEnvironment _BTCPayEnv;
         IServiceProvider _ServiceProvider;
         BTCPayNetworkProvider _NetworkProvider;
         private ExplorerClientProvider _ExplorerProvider;
-        private MvcJsonOptions _MvcJsonOptions;
         private IFeeProviderFactory _FeeRateProvider;
         BTCPayWalletProvider _WalletProvider;
         AccessTokenController _TokenController;
@@ -92,21 +86,6 @@ namespace BTCPayServer.Controllers
         public string StatusMessage
         {
             get; set;
-        }
-
-        [HttpGet]
-        [Route("{storeId}/wallet/{cryptoCode}")]
-        public IActionResult Wallet(string cryptoCode)
-        {
-            WalletModel model = new WalletModel();
-            model.ServerUrl = GetStoreUrl(StoreData.Id);
-            model.CryptoCurrency = cryptoCode;
-            return View(model);
-        }
-
-        private string GetStoreUrl(string storeId)
-        {
-            return HttpContext.Request.GetAbsoluteRoot() + "/stores/" + storeId + "/";
         }
 
         [HttpGet]
@@ -283,7 +262,7 @@ namespace BTCPayServer.Controllers
                     {
                         CurrencyPair = fetch.Key.ToString(),
                         Error = testResult.Errors.Count != 0,
-                        Rule = testResult.Errors.Count == 0 ? testResult.Rule + " = " + testResult.Value.Value.ToString(CultureInfo.InvariantCulture) 
+                        Rule = testResult.Errors.Count == 0 ? testResult.Rule + " = " + testResult.Value.Value.ToString(CultureInfo.InvariantCulture)
                                                             : testResult.EvaluatedRule
                     });
                 }
@@ -313,7 +292,7 @@ namespace BTCPayServer.Controllers
                 Action = "Continue",
                 Title = "Rate rule scripting",
                 Description = scripting ?
-                                "This action will mofify your current rate sources. Are you sure to turn on rate rules scripting? (Advanced users)"
+                                "This action will modify your current rate sources. Are you sure to turn on rate rules scripting? (Advanced users)"
                                 : "This action will delete your rate script. Are you sure to turn off rate rules scripting?",
                 ButtonClass = "btn-primary"
             });
@@ -424,6 +403,7 @@ namespace BTCPayServer.Controllers
             vm.StoreWebsite = store.StoreWebsite;
             vm.NetworkFee = !storeBlob.NetworkFeeDisabled;
             vm.SpeedPolicy = store.SpeedPolicy;
+            vm.CanDelete = _Repo.CanDeleteStores();
             AddPaymentMethods(store, vm);
             vm.MonitoringExpiration = storeBlob.MonitoringExpiration;
             vm.InvoiceExpiration = storeBlob.InvoiceExpiration;
@@ -446,7 +426,8 @@ namespace BTCPayServer.Controllers
                 vm.DerivationSchemes.Add(new StoreViewModel.DerivationScheme()
                 {
                     Crypto = network.CryptoCode,
-                    Value = strategy?.DerivationStrategyBase?.ToString() ?? string.Empty
+                    Value = strategy?.DerivationStrategyBase?.ToString() ?? string.Empty,
+                    WalletId = new WalletId(store.Id, network.CryptoCode),
                 });
             }
 
@@ -468,10 +449,8 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("{storeId}")]
-        public async Task<IActionResult> UpdateStore(StoreViewModel model)
+        public async Task<IActionResult> UpdateStore(StoreViewModel model, string command = null)
         {
-            AddPaymentMethods(StoreData, model);
-
             bool needUpdate = false;
             if (StoreData.SpeedPolicy != model.SpeedPolicy)
             {
@@ -511,6 +490,29 @@ namespace BTCPayServer.Controllers
             {
                 storeId = StoreData.Id
             });
+
+        }
+
+        [HttpGet]
+        [Route("{storeId}/delete")]
+        public IActionResult DeleteStore(string storeId)
+        {
+            return View("Confirm", new ConfirmModel()
+            {
+                Action = "Delete this store",
+                Title = "Delete this store",
+                Description = "This action is irreversible and will remove all information related to this store. (Invoices, Apps etc...)",
+                ButtonClass = "btn-danger"
+            });
+        }
+
+        [HttpPost]
+        [Route("{storeId}/delete")]
+        public async Task<IActionResult> DeleteStorePost(string storeId)
+        {
+            await _Repo.DeleteStore(StoreData.Id);
+            StatusMessage = "Success: Store successfully deleted";
+            return RedirectToAction(nameof(UserStoresController.ListStores), "UserStores");
         }
 
         private CoinAverageExchange[] GetSupportedExchanges()

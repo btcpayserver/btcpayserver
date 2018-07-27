@@ -175,6 +175,7 @@ namespace BTCPayServer.Controllers
         [Route("invoice")]
         [AcceptMediaTypeConstraint("application/bitcoin-paymentrequest", false)]
         [XFrameOptionsAttribute(null)]
+        [ReferrerPolicyAttribute("origin")]
         public async Task<IActionResult> Checkout(string invoiceId, string id = null, string paymentMethodId = null)
         {
             //Keep compatibility with Bitpay
@@ -185,6 +186,20 @@ namespace BTCPayServer.Controllers
             var model = await GetInvoiceModel(invoiceId, paymentMethodId);
             if (model == null)
                 return NotFound();
+
+
+            _CSP.Add(new ConsentSecurityPolicy("script-src", "'unsafe-eval'")); // Needed by Vue
+            if (!string.IsNullOrEmpty(model.CustomCSSLink) &&
+                Uri.TryCreate(model.CustomCSSLink, UriKind.Absolute, out var uri))
+            {
+                _CSP.Clear();
+            }
+
+            if (!string.IsNullOrEmpty(model.CustomLogoLink) &&
+                Uri.TryCreate(model.CustomLogoLink, UriKind.Absolute, out uri))
+            {
+                _CSP.Clear();
+            }
 
             return View(nameof(Checkout), model);
         }
@@ -233,6 +248,8 @@ namespace BTCPayServer.Controllers
             {
                 CryptoCode = network.CryptoCode,
                 PaymentMethodId = paymentMethodId.ToString(),
+                PaymentMethodName = GetDisplayName(paymentMethodId, network),
+                CryptoImage = GetImage(paymentMethodId, network),
                 IsLightning = paymentMethodId.PaymentType == PaymentTypes.LightningLike,
                 ServerUrl = HttpContext.Request.GetAbsoluteRoot(),
                 OrderId = invoice.OrderId,
@@ -264,7 +281,6 @@ namespace BTCPayServer.Controllers
                 TxCount = accounting.TxRequired,
                 BtcPaid = accounting.Paid.ToString(),
                 Status = invoice.Status,
-                CryptoImage = "/" + GetImage(paymentMethodId, network),
                 NetworkFee = paymentMethodDetails.GetTxFee(),
                 IsMultiCurrency = invoice.GetPayments().Select(p => p.GetPaymentMethodId()).Concat(new[] { paymentMethod.GetId() }).Distinct().Count() > 1,
                 AllowCoinConversion = storeBlob.AllowCoinConversion,
@@ -273,10 +289,14 @@ namespace BTCPayServer.Controllers
                                           .Select(kv => new PaymentModel.AvailableCrypto()
                                           {
                                               PaymentMethodId = kv.GetId().ToString(),
-                                              CryptoImage = "/" + GetImage(kv.GetId(), kv.Network),
+                                              CryptoCode = kv.GetId().CryptoCode,
+                                              PaymentMethodName = GetDisplayName(kv.GetId(), kv.Network),
+                                              IsLightning = kv.GetId().PaymentType == PaymentTypes.LightningLike,
+                                              CryptoImage = GetImage(kv.GetId(), kv.Network),
                                               Link = Url.Action(nameof(Checkout), new { invoiceId = invoiceId, paymentMethodId = kv.GetId().ToString() })
                                           }).Where(c => c.CryptoImage != "/")
-                .ToList()
+                                          .OrderByDescending(a => a.CryptoCode == "BTC").ThenBy(a => a.PaymentMethodName).ThenBy(a => a.IsLightning ? 1 : 0)
+                                          .ToList()
             };
 
             var expiration = TimeSpan.FromSeconds(model.ExpirationSeconds);
@@ -284,9 +304,17 @@ namespace BTCPayServer.Controllers
             return model;
         }
 
+        private string GetDisplayName(PaymentMethodId paymentMethodId, BTCPayNetwork network)
+        {
+            return paymentMethodId.PaymentType == PaymentTypes.BTCLike ?
+                network.DisplayName : network.DisplayName + " (via Lightning)";
+        }
+
         private string GetImage(PaymentMethodId paymentMethodId, BTCPayNetwork network)
         {
-            return (paymentMethodId.PaymentType == PaymentTypes.BTCLike ? Url.Content(network.CryptoImagePath) : Url.Content(network.LightningImagePath));
+            var res = paymentMethodId.PaymentType == PaymentTypes.BTCLike ?
+                Url.Content(network.CryptoImagePath) : Url.Content(network.LightningImagePath);
+            return "/" + res;
         }
 
         private string OrderAmountFromInvoice(string cryptoCode, ProductInformation productInformation)
@@ -323,7 +351,7 @@ namespace BTCPayServer.Controllers
                 provider = (NumberFormatInfo)provider.Clone();
                 provider.CurrencyDecimalDigits = divisibility;
             }
-            
+
             if (currencyData.Crypto)
                 return price.ToString("C", provider);
             else
@@ -356,7 +384,7 @@ namespace BTCPayServer.Controllers
             {
                 leases.Add(_EventAggregator.Subscribe<Events.InvoiceDataChangedEvent>(async o => await NotifySocket(webSocket, o.InvoiceId, invoiceId)));
                 leases.Add(_EventAggregator.Subscribe<Events.InvoiceNewAddressEvent>(async o => await NotifySocket(webSocket, o.InvoiceId, invoiceId)));
-                leases.Add(_EventAggregator.Subscribe<Events.InvoiceEvent>(async o => await NotifySocket(webSocket, o.InvoiceId, invoiceId)));
+                leases.Add(_EventAggregator.Subscribe<Events.InvoiceEvent>(async o => await NotifySocket(webSocket, o.Invoice.Id, invoiceId)));
                 while (true)
                 {
                     var message = await webSocket.ReceiveAsync(DummyBuffer, default(CancellationToken));
@@ -535,8 +563,11 @@ namespace BTCPayServer.Controllers
         [BitpayAPIConstraint(false)]
         public async Task<IActionResult> InvalidatePaidInvoice(string invoiceId)
         {
+            var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
+            if (invoice == null)
+                return NotFound();
             await _InvoiceRepository.UpdatePaidInvoiceToInvalid(invoiceId);
-            _EventAggregator.Publish(new InvoiceEvent(invoiceId, 1008, "invoice_markedInvalid"));
+            _EventAggregator.Publish(new InvoiceEvent(invoice.EntityToDTO(_NetworkProvider), 1008, "invoice_markedInvalid"));
             return RedirectToAction(nameof(ListInvoices));
         }
 

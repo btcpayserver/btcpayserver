@@ -16,6 +16,8 @@ function resetTabsSlider() {
 
     $("#altcoins").hide();
     $("#altcoins").removeClass("active");
+
+    closePaymentMethodDialog(null);
 }
 
 function onDataCallback(jsonData) {
@@ -30,6 +32,7 @@ function onDataCallback(jsonData) {
         newStatus === "paid") {
         if ($(".modal-dialog").hasClass("expired")) {
             $(".modal-dialog").removeClass("expired");
+            $("#expired").removeClass("active");
         }
 
         $(".modal-dialog").addClass("paid");
@@ -39,6 +42,11 @@ function onDataCallback(jsonData) {
     }
 
     if (newStatus === "expired" || newStatus === "invalid") { //TODO: different state if the invoice is invalid (failed to confirm after timeout)
+        if ($(".modal-dialog").hasClass("paid")) {
+            $(".modal-dialog").removeClass("paid");
+            $("#paid").removeClass("active");
+        }
+
         $(".timer-row").removeClass("expiring-soon");
         $(".timer-row__spinner").html("");
         $("#emailAddressView").removeClass("active");
@@ -63,7 +71,7 @@ function onDataCallback(jsonData) {
 }
 
 function changeCurrency(currency) {
-    if (srvModel.paymentMethodId !== currency) {
+    if (currency !== null && srvModel.paymentMethodId !== currency) {
         $(".payment__currencies").hide();
         $(".payment__spinner").show();
         srvModel.paymentMethodId = currency;

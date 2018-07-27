@@ -46,7 +46,7 @@ namespace BTCPayServer.Payments.Lightning
             {
                 if (inv.Name == "invoice_created")
                 {
-                    await EnsureListening(inv.InvoiceId, false);
+                    await EnsureListening(inv.Invoice.Id, false);
                 }
             }));
 
@@ -143,11 +143,12 @@ namespace BTCPayServer.Payments.Lightning
         CancellationTokenSource _Cts = new CancellationTokenSource();
         private async Task Listen(LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network)
         {
+            ILightningListenInvoiceSession session = null;
             try
             {
                 Logs.PayServer.LogInformation($"{supportedPaymentMethod.CryptoCode} (Lightning): Start listening {supportedPaymentMethod.GetLightningUrl().BaseUri}");
-                var charge = _LightningClientFactory.CreateClient(supportedPaymentMethod, network);
-                var session = await charge.Listen(_Cts.Token);
+                var lightningClient = _LightningClientFactory.CreateClient(supportedPaymentMethod, network);
+                session = await lightningClient.Listen(_Cts.Token);
                 while (true)
                 {
                     var notification = await session.WaitInvoice(_Cts.Token);
@@ -179,6 +180,10 @@ namespace BTCPayServer.Payments.Lightning
                 Logs.PayServer.LogError(ex, $"{supportedPaymentMethod.CryptoCode} (Lightning): Error while contacting {supportedPaymentMethod.GetLightningUrl().BaseUri}");
                 DoneListening(supportedPaymentMethod.GetLightningUrl());
             }
+            finally
+            {
+                session?.Dispose();
+            }
             Logs.PayServer.LogInformation($"{supportedPaymentMethod.CryptoCode} (Lightning): Stop listening {supportedPaymentMethod.GetLightningUrl().BaseUri}");
         }
 
@@ -189,8 +194,12 @@ namespace BTCPayServer.Payments.Lightning
                 BOLT11 = notification.BOLT11,
                 Amount = notification.Amount
             }, network.CryptoCode, accounted: true);
-            if(payment != null)
-                _Aggregator.Publish(new InvoiceEvent(listenedInvoice.InvoiceId, 1002, "invoice_receivedPayment"));
+            if (payment != null)
+            {
+                var invoice = await _InvoiceRepository.GetInvoice(null, listenedInvoice.InvoiceId);
+                if(invoice != null)
+                    _Aggregator.Publish(new InvoiceEvent(invoice.EntityToDTO(_NetworkProvider), 1002, "invoice_receivedPayment"));
+            }
         }
 
         List<Task> _ListeningLightning = new List<Task>();

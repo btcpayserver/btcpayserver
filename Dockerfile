@@ -15,7 +15,8 @@ ENV LC_ALL en_US.UTF-8
 ENV LANG en_US.UTF-8
 
 WORKDIR /app
-
+# This should be removed soon https://github.com/dotnet/corefx/issues/30003
+RUN apk add --no-cache curl 
 RUN mkdir /datadir
 ENV BTCPAY_DATADIR=/datadir
 VOLUME /datadir

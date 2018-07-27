@@ -15,9 +15,14 @@ namespace BTCPayServer.Logging
         }
         public static void Configure(ILoggerFactory factory)
         {
-            Configuration = factory.CreateLogger("Configuration");
-            PayServer = factory.CreateLogger("PayServer");
-            Events = factory.CreateLogger("Events");
+            if (factory == null)
+                Configure(new FuncLoggerFactory(n => NullLogger.Instance));
+            else
+            {
+                Configuration = factory.CreateLogger("Configuration");
+                PayServer = factory.CreateLogger("PayServer");
+                Events = factory.CreateLogger("Events");
+            }
         }
         public static ILogger Configuration
         {

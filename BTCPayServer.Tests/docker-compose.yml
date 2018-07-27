@@ -17,9 +17,10 @@ services:
       TESTS_POSTGRES: User ID=postgres;Host=postgres;Port=5432;Database=btcpayserver
       TESTS_PORT: 80
       TESTS_HOSTNAME: tests
-      TEST_MERCHANTLIGHTNINGD: "/etc/merchant_lightningd_datadir/lightning-rpc"
-      TEST_CUSTOMERLIGHTNINGD: "/etc/customer_lightningd_datadir/lightning-rpc"
-      TEST_MERCHANTCHARGE: http://api-token:foiewnccewuify@lightning-charged:9112/
+      TEST_MERCHANTLIGHTNINGD: "type=clightning;server=/etc/merchant_lightningd_datadir/lightning-rpc"
+      TEST_CUSTOMERLIGHTNINGD: "type=clightning;server=/etc/customer_lightningd_datadir/lightning-rpc"
+      TEST_MERCHANTCHARGE: "type=charge;server=https://lightning-charged:9112/;api-token=foiewnccewuify;allowinsecure=true"
+      TEST_MERCHANTLND: "type=lnd-rest;server=https://lnd:lnd@127.0.0.1:53280/;allowinsecure=true"
       TESTS_INCONTAINER: "true"
     expose:
       - "80"
@@ -44,9 +45,25 @@ services:
       - customer_lightningd
       - merchant_lightningd
       - lightning-charged
+      - customer_lnd
+      - merchant_lnd
+
+  devlnd: 
+    image: nicolasdorier/docker-bitcoin:0.16.0
+    environment:
+      BITCOIN_EXTRA_ARGS: |
+        regtest=1
+        connect=bitcoind:39388
+    links:
+      - nbxplorer
+      - postgres
+      - customer_lnd
+      - merchant_lnd
+
+
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:1.0.2.8
+    image: nicolasdorier/nbxplorer:1.0.2.14
     ports:
       - "32838:32838"
     expose: 
@@ -80,8 +97,13 @@ services:
         rpcport=43782
         port=39388
         whitelist=0.0.0.0/0
+        zmqpubrawtx=tcp://0.0.0.0:28332
+        zmqpubrawblock=tcp://0.0.0.0:28332
+        zmqpubrawtxlock=tcp://0.0.0.0:28332
+        zmqpubhashblock=tcp://0.0.0.0:28332
     ports: 
       - "43782:43782"
+      - "28332:28332"
     expose:
       - "43782" # RPC
       - "39388" # P2P
@@ -89,7 +111,7 @@ services:
       - "bitcoin_datadir:/data"
 
   customer_lightningd:
-    image: nicolasdorier/clightning:0.0.0.20-dev
+    image: nicolasdorier/clightning:v0.6-dev
     environment: 
       EXPOSE_TCP: "true"
       LIGHTNINGD_OPT: |
@@ -112,7 +134,7 @@ services:
       - bitcoind
 
   lightning-charged:
-    image: shesek/lightning-charge:0.3.12
+    image: shesek/lightning-charge:0.3.15
     environment:
       NETWORK: regtest
       API_TOKEN: foiewnccewuify
@@ -131,7 +153,7 @@ services:
       - merchant_lightningd
 
   merchant_lightningd:
-    image: nicolasdorier/clightning:0.0.0.20-dev
+    image: nicolasdorier/clightning:v0.6-dev
     environment: 
       EXPOSE_TCP: "true"
       LIGHTNINGD_OPT: |
@@ -177,8 +199,59 @@ services:
     expose:
       - "5432"
 
+  merchant_lnd:
+    image: btcpayserver/lnd:0.4.2.0
+    environment:
+      LND_CHAIN: "btc"
+      LND_ENVIRONMENT: "regtest"
+      LND_EXTRA_ARGS: |
+        restlisten=0.0.0.0:8080
+        bitcoin.node=bitcoind
+        bitcoind.rpchost=bitcoind:43782
+        bitcoind.zmqpath=tcp://bitcoind:28332
+        externalip=merchant_lnd:9735
+        no-macaroons=1
+        debuglevel=debug
+        noencryptwallet=1
+    ports:
+      - "53280:8080"
+    expose:
+      - "9735"
+    volumes:
+      - "merchant_lnd_datadir:/data"
+      - "bitcoin_datadir:/deps/.bitcoin"
+    links:
+      - bitcoind
+
+  customer_lnd:
+    image: btcpayserver/lnd:0.4.2.0
+    environment:
+      LND_CHAIN: "btc"
+      LND_ENVIRONMENT: "regtest"
+      LND_EXTRA_ARGS: |
+        restlisten=0.0.0.0:8080
+        bitcoin.node=bitcoind
+        bitcoind.rpchost=bitcoind:43782
+        bitcoind.zmqpath=tcp://bitcoind:28332
+        externalip=customer_lnd:10009
+        no-macaroons=1
+        debuglevel=debug
+        noencryptwallet=1
+    ports:
+      - "53281:8080"
+    expose:
+      - "8080"
+      - "10009"
+    volumes:
+      - "customer_lnd_datadir:/root/.lnd"
+      - "bitcoin_datadir:/deps/.bitcoin"
+    links:
+      - bitcoind
+
 volumes:
     bitcoin_datadir:
     customer_lightningd_datadir:
     merchant_lightningd_datadir:
     lightning_charge_datadir:
+    customer_lnd_datadir:
+    merchant_lnd_datadir:

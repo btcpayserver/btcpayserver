@@ -1,13 +1,19 @@
-﻿using BTCPayServer.HostedServices;
+﻿using BTCPayServer.Configuration;
+using Microsoft.Extensions.Logging;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Models;
 using BTCPayServer.Models.ServerViewModels;
+using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Rates;
+using BTCPayServer.Services.Stores;
 using BTCPayServer.Validations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using NBitcoin;
+using NBitcoin.DataEncoders;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -16,6 +22,8 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Mail;
 using System.Threading.Tasks;
+using Renci.SshNet;
+using BTCPayServer.Logging;
 
 namespace BTCPayServer.Controllers
 {
@@ -25,14 +33,23 @@ namespace BTCPayServer.Controllers
         private UserManager<ApplicationUser> _UserManager;
         SettingsRepository _SettingsRepository;
         private BTCPayRateProviderFactory _RateProviderFactory;
+        private StoreRepository _StoreRepository;
+        LightningConfigurationProvider _LnConfigProvider;
+        BTCPayServerOptions _Options;
 
         public ServerController(UserManager<ApplicationUser> userManager,
+            Configuration.BTCPayServerOptions options,
             BTCPayRateProviderFactory rateProviderFactory,
-            SettingsRepository settingsRepository)
+            SettingsRepository settingsRepository,
+            LightningConfigurationProvider lnConfigProvider,
+            Services.Stores.StoreRepository storeRepository)
         {
+            _Options = options;
             _UserManager = userManager;
             _SettingsRepository = settingsRepository;
             _RateProviderFactory = rateProviderFactory;
+            _StoreRepository = storeRepository;
+            _LnConfigProvider = lnConfigProvider;
         }
 
         [Route("server/rates")]
@@ -74,7 +91,7 @@ namespace BTCPayServer.Controllers
             try
             {
                 var service = GetCoinaverageService(vm, true);
-                if(service != null)
+                if (service != null)
                     await service.TestAuthAsync();
             }
             catch
@@ -134,6 +151,150 @@ namespace BTCPayServer.Controllers
             return View(userVM);
         }
 
+        [Route("server/maintenance")]
+        public IActionResult Maintenance()
+        {
+            MaintenanceViewModel vm = new MaintenanceViewModel();
+            vm.UserName = "btcpayserver";
+            vm.DNSDomain = this.Request.Host.Host;
+            if (IPAddress.TryParse(vm.DNSDomain, out var unused))
+                vm.DNSDomain = null;
+            return View(vm);
+        }
+        [Route("server/maintenance")]
+        [HttpPost]
+        public async Task<IActionResult> Maintenance(MaintenanceViewModel vm, string command)
+        {
+            if (!ModelState.IsValid)
+                return View(vm);
+            if (command == "changedomain")
+            {
+                if (string.IsNullOrWhiteSpace(vm.DNSDomain))
+                {
+                    ModelState.AddModelError(nameof(vm.DNSDomain), $"Required field");
+                    return View(vm);
+                }
+                vm.DNSDomain = vm.DNSDomain.Trim().ToLowerInvariant();
+                if (IPAddress.TryParse(vm.DNSDomain, out var unused))
+                {
+                    ModelState.AddModelError(nameof(vm.DNSDomain), $"This should be a domain name");
+                    return View(vm);
+                }
+                if (vm.DNSDomain.Equals(this.Request.Host.Host, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    ModelState.AddModelError(nameof(vm.DNSDomain), $"The server is already set to use this domain");
+                    return View(vm);
+                }
+                var builder = new UriBuilder();
+                using (var client = new HttpClient(new HttpClientHandler()
+                {
+                    ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+                }))
+                {
+                    try
+                    {
+                        builder.Scheme = this.Request.Scheme;
+                        builder.Host = vm.DNSDomain;
+                        if (this.Request.Host.Port != null)
+                            builder.Port = this.Request.Host.Port.Value;
+                        builder.Path = "runid";
+                        builder.Query = $"expected={RunId}";
+                        var response = await client.GetAsync(builder.Uri);
+                        if (!response.IsSuccessStatusCode)
+                        {
+                            ModelState.AddModelError(nameof(vm.DNSDomain), $"Invalid host ({vm.DNSDomain} is not pointing to this BTCPay instance)");
+                            return View(vm);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        var messages = new List<object>();
+                        messages.Add(ex.Message);
+                        if (ex.InnerException != null)
+                            messages.Add(ex.InnerException.Message);
+                        ModelState.AddModelError(nameof(vm.DNSDomain), $"Invalid domain ({string.Join(", ", messages.ToArray())})");
+                        return View(vm);
+                    }
+                }
+
+                var error = RunSSH(vm, $"changedomain.sh {vm.DNSDomain}");
+                if (error != null)
+                    return error;
+
+                builder.Path = null;
+                builder.Query = null;
+                StatusMessage = $"Domain name changing... the server will restart, please use \"{builder.Uri.AbsoluteUri}\"";
+            }
+            else if (command == "update")
+            {
+                var error = RunSSH(vm, $"btcpay-update.sh");
+                if (error != null)
+                    return error;
+                StatusMessage = $"The server might restart soon if an update is available...";
+            }
+            else
+            {
+                return NotFound();
+            }
+            return RedirectToAction(nameof(Maintenance));
+        }
+
+        public static string RunId = Encoders.Hex.EncodeData(NBitcoin.RandomUtils.GetBytes(32));
+        [HttpGet]
+        [Route("runid")]
+        [AllowAnonymous]
+        public IActionResult SeeRunId(string expected = null)
+        {
+            if (expected == RunId)
+                return Ok();
+            return BadRequest();
+        }
+
+        private IActionResult RunSSH(MaintenanceViewModel vm, string ssh)
+        {
+            ssh = $"sudo bash -c '. /etc/profile.d/btcpay-env.sh && nohup {ssh} > /dev/null 2>&1 & disown'";
+            var sshClient = vm.CreateSSHClient(this.Request.Host.Host);
+            try
+            {
+                sshClient.Connect();
+            }
+            catch (Renci.SshNet.Common.SshAuthenticationException)
+            {
+                ModelState.AddModelError(nameof(vm.Password), "Invalid credentials");
+                sshClient.Dispose();
+                return View(vm);
+            }
+            catch (Exception ex)
+            {
+                var message = ex.Message;
+                if (ex is AggregateException aggrEx && aggrEx.InnerException?.Message != null)
+                {
+                    message = aggrEx.InnerException.Message;
+                }
+                ModelState.AddModelError(nameof(vm.UserName), $"Connection problem ({message})");
+                sshClient.Dispose();
+                return View(vm);
+            }
+
+            var sshCommand = sshClient.CreateCommand(ssh);
+            sshCommand.CommandTimeout = TimeSpan.FromMinutes(1.0);
+            sshCommand.BeginExecute(ar =>
+            {
+                try
+                {
+                    Logs.PayServer.LogInformation("Running SSH command: " + ssh);
+                    var result = sshCommand.EndExecute(ar);
+                    Logs.PayServer.LogInformation("SSH command executed: " + result);
+                }
+                catch (Exception ex)
+                {
+                    Logs.PayServer.LogWarning("Error while executing SSH command: " + ex.Message);
+                }
+                sshClient.Dispose();
+            });
+            return null;
+        }
+
         private static bool IsAdmin(IList<string> roles)
         {
             return roles.Contains(Roles.ServerAdmin, StringComparer.Ordinal);
@@ -188,6 +349,7 @@ namespace BTCPayServer.Controllers
             if (user == null)
                 return NotFound();
             await _UserManager.DeleteAsync(user);
+            await _StoreRepository.CleanUnreachableStores();
             StatusMessage = "User deleted";
             return RedirectToAction(nameof(ListUsers));
         }
@@ -220,6 +382,122 @@ namespace BTCPayServer.Controllers
             return View(settings);
         }
 
+        [Route("server/services")]
+        public IActionResult Services()
+        {
+            var result = new ServicesViewModel();
+            foreach (var cryptoCode in _Options.ExternalServicesByCryptoCode.Keys)
+            {
+                {
+                    int i = 0;
+                    foreach (var grpcService in _Options.ExternalServicesByCryptoCode.GetServices<ExternalLNDGRPC>(cryptoCode))
+                    {
+                        result.LNDServices.Add(new ServicesViewModel.LNDServiceViewModel()
+                        {
+                            Crypto = cryptoCode,
+                            Type = "gRPC",
+                            Index = i++,
+                        });
+                    }
+                }
+            }
+            return View(result);
+        }
+
+        [Route("server/services/lnd-grpc/{cryptoCode}/{index}")]
+        public IActionResult LNDGRPCServices(string cryptoCode, int index, uint? nonce)
+        {
+            var external = GetExternalLNDConnectionString(cryptoCode, index);
+            if (external == null)
+                return NotFound();
+            var model = new LNDGRPCServicesViewModel();
+
+            model.Host = $"{external.BaseUri.DnsSafeHost}:{external.BaseUri.Port}";
+            model.SSL = external.BaseUri.Scheme == "https";
+            if (external.CertificateThumbprint != null)
+            {
+                model.CertificateThumbprint = Encoders.Hex.EncodeData(external.CertificateThumbprint);
+            }
+            if (external.Macaroon != null)
+            {
+                model.Macaroon = Encoders.Hex.EncodeData(external.Macaroon);
+            }
+
+            if (nonce != null)
+            {
+                var configKey = GetConfigKey("lnd-grpc", cryptoCode, index, nonce.Value);
+                var lnConfig = _LnConfigProvider.GetConfig(configKey);
+                if (lnConfig != null)
+                {
+                    model.QRCodeLink = $"{this.Request.GetAbsoluteRoot().WithTrailingSlash()}lnd-config/{configKey}/lnd.config";
+                    model.QRCode = $"config={model.QRCodeLink}";
+                }
+            }
+
+            return View(model);
+        }
+
+        private static uint GetConfigKey(string type, string cryptoCode, int index, uint nonce)
+        {
+            return (uint)HashCode.Combine(type, cryptoCode, index, nonce);
+        }
+
+        [Route("lnd-config/{configKey}/lnd.config")]
+        [AllowAnonymous]
+        public IActionResult GetLNDConfig(uint configKey)
+        {
+            var conf = _LnConfigProvider.GetConfig(configKey);
+            if (conf == null)
+                return NotFound();
+            return Json(conf);
+        }
+
+        [Route("server/services/lnd-grpc/{cryptoCode}/{index}")]
+        [HttpPost]
+        public IActionResult LNDGRPCServicesPOST(string cryptoCode, int index)
+        {
+            var external = GetExternalLNDConnectionString(cryptoCode, index);
+            if (external == null)
+                return NotFound();
+            LightningConfigurations confs = new LightningConfigurations();
+            LightningConfiguration conf = new LightningConfiguration();
+            conf.Type = "grpc";
+            conf.CryptoCode = cryptoCode;
+            conf.Host = external.BaseUri.DnsSafeHost;
+            conf.Port = external.BaseUri.Port;
+            conf.SSL = external.BaseUri.Scheme == "https";
+            conf.Macaroon = external.Macaroon == null ? null : Encoders.Hex.EncodeData(external.Macaroon);
+            conf.CertificateThumbprint = external.CertificateThumbprint == null ? null : Encoders.Hex.EncodeData(external.CertificateThumbprint);
+            confs.Configurations.Add(conf);
+
+            var nonce = RandomUtils.GetUInt32();
+            var configKey = GetConfigKey("lnd-grpc", cryptoCode, index, nonce);
+            _LnConfigProvider.KeepConfig(configKey, confs);
+            return RedirectToAction(nameof(LNDGRPCServices), new { cryptoCode = cryptoCode, nonce = nonce });
+        }
+
+        private LightningConnectionString GetExternalLNDConnectionString(string cryptoCode, int index)
+        {
+            var connectionString = _Options.ExternalServicesByCryptoCode.GetServices<ExternalLNDGRPC>(cryptoCode).Skip(index).Select(c => c.ConnectionString).FirstOrDefault();
+            if (connectionString == null)
+                return null;
+            connectionString = connectionString.Clone();
+            if (connectionString.MacaroonFilePath != null)
+            {
+                try
+                {
+                    connectionString.Macaroon = System.IO.File.ReadAllBytes(connectionString.MacaroonFilePath);
+                    connectionString.MacaroonFilePath = null;
+                }
+                catch
+                {
+                    Logging.Logs.Configuration.LogWarning($"{cryptoCode}: The macaroon file path of the external LND grpc config was not found ({connectionString.MacaroonFilePath})");
+                    return null;
+                }
+            }
+            return connectionString;
+        }
+
         [Route("server/theme")]
         public async Task<IActionResult> Theme()
         {
@@ -243,7 +521,7 @@ namespace BTCPayServer.Controllers
             {
                 try
                 {
-                    if(!model.Settings.IsComplete())
+                    if (!model.Settings.IsComplete())
                     {
                         model.StatusMessage = "Error: Required fields missing";
                         return View(model);

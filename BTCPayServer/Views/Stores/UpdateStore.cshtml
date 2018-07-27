@@ -82,7 +82,7 @@
                                 <td style="text-align:right">
                                     @if(!string.IsNullOrWhiteSpace(scheme.Value))
                                     {
-                                        <a asp-action="Wallet" asp-route-cryptoCode="@scheme.Crypto">Wallet</a><span> - </span>
+                                        <a asp-action="WalletTransactions" asp-controller="Wallets" asp-route-walletId="@scheme.WalletId">Wallet</a><span> - </span>
                                     }
                                     <a asp-action="AddDerivationScheme" asp-route-cryptoCode="@scheme.Crypto">Modify</a>
                                 </td>
@@ -130,6 +130,16 @@
                     Available placeholders are: {StoreName}, {ItemDescription} and {OrderId}
                 </p>
             </div>
+            @if(Model.CanDelete)
+            {
+                <div class="form-group">
+                    <h5>Other actions...</h5>
+                    <p><a href="#danger-zone" data-toggle="collapse"><b>Click here to see more actions</b></a></p>
+                    <div id="danger-zone" class="collapse">
+                        <a class="btn btn-outline-danger form-control" asp-action="DeleteStore" asp-route-storeId="@Model.Id">Delete this store</a>
+                    </div>
+                </div>
+            }
             <button name="command" type="submit" class="btn btn-primary" value="Save">Save</button>
         </form>
     </div>

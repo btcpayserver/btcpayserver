@@ -23,33 +23,16 @@ namespace BTCPayServer.Controllers
         private StoreRepository _Repo;
         private BTCPayNetworkProvider _NetworkProvider;
         private UserManager<ApplicationUser> _UserManager;
-        private BTCPayWalletProvider _WalletProvider;
 
         public UserStoresController(
             UserManager<ApplicationUser> userManager,
             BTCPayNetworkProvider networkProvider,
-            BTCPayWalletProvider walletProvider,
             StoreRepository storeRepository)
         {
             _Repo = storeRepository;
             _NetworkProvider = networkProvider;
             _UserManager = userManager;
-            _WalletProvider = walletProvider;
-        }
-        [HttpGet]
-        [Route("{storeId}/delete")]
-        public IActionResult DeleteStore(string storeId)
-        {
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-                return NotFound();
-            return View("Confirm", new ConfirmModel()
-            {
-                Title = "Delete store " + store.StoreName,
-                Description = "This store will still be accessible to users sharing it",
-                Action = "Delete"
-            });
-        }
+        }        
 
         [HttpGet]
         [Route("create")]
@@ -63,8 +46,23 @@ namespace BTCPayServer.Controllers
             get; set;
         }
 
+        [HttpGet]
+        [Route("{storeId}/me/delete")]
+        public IActionResult DeleteStore(string storeId)
+        {
+            var store = HttpContext.GetStoreData();
+            if (store == null)
+                return NotFound();
+            return View("Confirm", new ConfirmModel()
+            {
+                Title = "Delete store " + store.StoreName,
+                Description = "This store will still be accessible to users sharing it",
+                Action = "Delete"
+            });
+        }
+
         [HttpPost]
-        [Route("{storeId}/delete")]
+        [Route("{storeId}/me/delete")]
         public async Task<IActionResult> DeleteStorePost(string storeId)
         {
             var userId = GetUserId();
@@ -84,17 +82,6 @@ namespace BTCPayServer.Controllers
         {
             StoresViewModel result = new StoresViewModel();
             var stores = await _Repo.GetStoresByUserId(GetUserId());
-
-            var balances = stores
-                                .Select(s => s.GetSupportedPaymentMethods(_NetworkProvider)
-                                              .OfType<DerivationStrategy>()
-                                              .Select(d => ((Wallet: _WalletProvider.GetWallet(d.Network),
-                                                            DerivationStrategy: d.DerivationStrategyBase)))
-                                              .Where(_ => _.Wallet != null)
-                                              .Select(async _ => (await GetBalanceString(_)) + " " + _.Wallet.Network.CryptoCode))
-                                .ToArray();
-
-            await Task.WhenAll(balances.SelectMany(_ => _));
             for (int i = 0; i < stores.Length; i++)
             {
                 var store = stores[i];
@@ -103,8 +90,7 @@ namespace BTCPayServer.Controllers
                     Id = store.Id,
                     Name = store.StoreName,
                     WebSite = store.StoreWebsite,
-                    IsOwner = store.HasClaim(Policies.CanModifyStoreSettings.Key),
-                    Balances = store.HasClaim(Policies.CanModifyStoreSettings.Key) ? balances[i].Select(t => t.Result).ToArray() : Array.Empty<string>()
+                    IsOwner = store.HasClaim(Policies.CanModifyStoreSettings.Key)
                 });
             }
             return View(result);
@@ -121,24 +107,11 @@ namespace BTCPayServer.Controllers
             var store = await _Repo.CreateStore(GetUserId(), vm.Name);
             CreatedStoreId = store.Id;
             StatusMessage = "Store successfully created";
-            return RedirectToAction(nameof(ListStores));
-        }
-
-        private static async Task<string> GetBalanceString((BTCPayWallet Wallet, DerivationStrategyBase DerivationStrategy) _)
-        {
-            using (CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
+            return RedirectToAction(nameof(StoresController.UpdateStore), "Stores", new
             {
-                try
-                {
-                    return (await _.Wallet.GetBalance(_.DerivationStrategy, cts.Token)).ToString();
-                }
-                catch
-                {
-                    return "--";
-                }
-            }
+                storeId = store.Id
+            });
         }
-
 
         private string GetUserId()
         {

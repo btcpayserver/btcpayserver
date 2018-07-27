@@ -41,12 +41,14 @@ using NBXplorer;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Payments;
 using BTCPayServer.Rating;
+using BTCPayServer.Security;
 
 namespace BTCPayServer.Controllers
 {
     public partial class InvoiceController : Controller
     {
         InvoiceRepository _InvoiceRepository;
+        ContentSecurityPolicies _CSP;
         BTCPayRateProviderFactory _RateProvider;
         StoreRepository _StoreRepository;
         UserManager<ApplicationUser> _UserManager;
@@ -64,6 +66,7 @@ namespace BTCPayServer.Controllers
             StoreRepository storeRepository,
             EventAggregator eventAggregator,
             BTCPayWalletProvider walletProvider,
+            ContentSecurityPolicies csp,
             BTCPayNetworkProvider networkProvider)
         {
             _ServiceProvider = serviceProvider;
@@ -75,11 +78,14 @@ namespace BTCPayServer.Controllers
             _EventAggregator = eventAggregator;
             _NetworkProvider = networkProvider;
             _WalletProvider = walletProvider;
+            _CSP = csp;
         }
 
 
         internal async Task<DataWrapper<InvoiceResponse>> CreateInvoiceCore(Invoice invoice, StoreData store, string serverUrl)
         {
+            InvoiceLogs logs = new InvoiceLogs();
+            logs.Write("Creation of invoice starting");
             var entity = new InvoiceEntity
             {
                 InvoiceTime = DateTimeOffset.UtcNow
@@ -115,7 +121,6 @@ namespace BTCPayServer.Controllers
             entity.Status = "new";
             entity.SpeedPolicy = ParseSpeedPolicy(invoice.TransactionSpeed, store.SpeedPolicy);
 
-
             HashSet<CurrencyPair> currencyPairsToFetch = new HashSet<CurrencyPair>();
             var rules = storeBlob.GetRateRules(_NetworkProvider);
 
@@ -133,6 +138,7 @@ namespace BTCPayServer.Controllers
             var rateRules = storeBlob.GetRateRules(_NetworkProvider);
             var fetchingByCurrencyPair = _RateProvider.FetchRates(currencyPairsToFetch, rateRules);
 
+            var fetchingAll = WhenAllFetched(logs, fetchingByCurrencyPair);
             var supportedPaymentMethods = store.GetSupportedPaymentMethods(_NetworkProvider)
                                                .Select(c =>
                                                 (Handler: (IPaymentMethodHandler)_ServiceProvider.GetService(typeof(IPaymentMethodHandler<>).MakeGenericType(c.GetType())),
@@ -141,65 +147,26 @@ namespace BTCPayServer.Controllers
                                                 .Where(c => c.Network != null)
                                                 .Select(o =>
                                                     (SupportedPaymentMethod: o.SupportedPaymentMethod,
-                                                    PaymentMethod: CreatePaymentMethodAsync(fetchingByCurrencyPair, o.Handler, o.SupportedPaymentMethod, o.Network, entity, store)))
+                                                    PaymentMethod: CreatePaymentMethodAsync(fetchingByCurrencyPair, o.Handler, o.SupportedPaymentMethod, o.Network, entity, store, logs)))
                                                 .ToList();
-
-            List<string> paymentMethodErrors = new List<string>();
             List<ISupportedPaymentMethod> supported = new List<ISupportedPaymentMethod>();
             var paymentMethods = new PaymentMethodDictionary();
-
-            foreach(var pair in fetchingByCurrencyPair)
-            {
-                var rateResult = await pair.Value;
-                bool hasError = false;
-                if(rateResult.Errors.Count != 0)
-                {
-                    var allRateRuleErrors = string.Join(", ", rateResult.Errors.ToArray());
-                    paymentMethodErrors.Add($"{pair.Key}: Rate rule error ({allRateRuleErrors})");
-                    hasError = true;
-                }
-                if(rateResult.ExchangeExceptions.Count != 0)
-                {
-                    foreach(var ex in rateResult.ExchangeExceptions)
-                    {
-                        paymentMethodErrors.Add($"{pair.Key}: Exception reaching exchange {ex.ExchangeName} ({ex.Exception.Message})");
-                    }
-                    hasError = true;
-                }
-                if(hasError)
-                {
-                    paymentMethodErrors.Add($"{pair.Key}: The rule is {rateResult.Rule}");
-                    paymentMethodErrors.Add($"{pair.Key}: Evaluated rule is {rateResult.EvaluatedRule}");
-                }
-            }
-
             foreach (var o in supportedPaymentMethods)
             {
-                try
-                {
-                    var paymentMethod = await o.PaymentMethod;
-                    if (paymentMethod == null)
-                        throw new PaymentMethodUnavailableException("Payment method unavailable");
-                    supported.Add(o.SupportedPaymentMethod);
-                    paymentMethods.Add(paymentMethod);
-                }
-                catch (PaymentMethodUnavailableException ex)
-                {
-                    paymentMethodErrors.Add($"{o.SupportedPaymentMethod.PaymentId.CryptoCode} ({o.SupportedPaymentMethod.PaymentId.PaymentType}): Payment method unavailable ({ex.Message})");
-                }
-                catch (Exception ex)
-                {
-                    paymentMethodErrors.Add($"{o.SupportedPaymentMethod.PaymentId.CryptoCode} ({o.SupportedPaymentMethod.PaymentId.PaymentType}): Unexpected exception ({ex.ToString()})");
-                }
+                var paymentMethod = await o.PaymentMethod;
+                if (paymentMethod == null)
+                    continue;
+                supported.Add(o.SupportedPaymentMethod);
+                paymentMethods.Add(paymentMethod);
             }
 
             if (supported.Count == 0)
             {
                 StringBuilder errors = new StringBuilder();
                 errors.AppendLine("No payment method available for this store");
-                foreach (var error in paymentMethodErrors)
+                foreach (var error in logs.ToList())
                 {
-                    errors.AppendLine(error);
+                    errors.AppendLine(error.ToString());
                 }
                 throw new BitpayHttpException(400, errors.ToString());
             }
@@ -207,71 +174,108 @@ namespace BTCPayServer.Controllers
             entity.SetSupportedPaymentMethods(supported);
             entity.SetPaymentMethods(paymentMethods);
             entity.PosData = invoice.PosData;
-            entity = await _InvoiceRepository.CreateInvoiceAsync(store.Id, entity, paymentMethodErrors, _NetworkProvider);
-
-            _EventAggregator.Publish(new Events.InvoiceEvent(entity, 1001, "invoice_created"));
+            entity = await _InvoiceRepository.CreateInvoiceAsync(store.Id, entity, logs, _NetworkProvider);
+            await fetchingAll;
+            _EventAggregator.Publish(new Events.InvoiceEvent(entity.EntityToDTO(_NetworkProvider), 1001, "invoice_created"));
             var resp = entity.EntityToDTO(_NetworkProvider);
             return new DataWrapper<InvoiceResponse>(resp) { Facade = "pos/invoice" };
         }
 
-        private async Task<PaymentMethod> CreatePaymentMethodAsync(Dictionary<CurrencyPair, Task<RateResult>> fetchingByCurrencyPair, IPaymentMethodHandler handler, ISupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network, InvoiceEntity entity, StoreData store)
+        private Task WhenAllFetched(InvoiceLogs logs, Dictionary<CurrencyPair, Task<RateResult>> fetchingByCurrencyPair)
         {
-            var storeBlob = store.GetStoreBlob();
-            var rate = await fetchingByCurrencyPair[new CurrencyPair(network.CryptoCode, entity.ProductInformation.Currency)];
-            if (rate.Value == null)
-                return null;
-            PaymentMethod paymentMethod = new PaymentMethod();
-            paymentMethod.ParentEntity = entity;
-            paymentMethod.Network = network;
-            paymentMethod.SetId(supportedPaymentMethod.PaymentId);
-            paymentMethod.Rate = rate.Value.Value;
-            var paymentDetails = await handler.CreatePaymentMethodDetails(supportedPaymentMethod, paymentMethod, store, network);
-            if (storeBlob.NetworkFeeDisabled)
-                paymentDetails.SetNoTxFee();
-            paymentMethod.SetPaymentMethodDetails(paymentDetails);
-
-            Func<Money, Money, bool> compare = null;
-            CurrencyValue limitValue = null;
-            string errorMessage = null;
-            if (supportedPaymentMethod.PaymentId.PaymentType == PaymentTypes.LightningLike &&
-               storeBlob.LightningMaxValue != null)
+            return Task.WhenAll(fetchingByCurrencyPair.Select(async pair =>
             {
-                compare = (a, b) => a > b;
-                limitValue = storeBlob.LightningMaxValue;
-                errorMessage = "The amount of the invoice is too high to be paid with lightning";
-            }
-            else if (supportedPaymentMethod.PaymentId.PaymentType == PaymentTypes.BTCLike &&
-               storeBlob.OnChainMinValue != null)
-            {
-                compare = (a, b) => a < b;
-                limitValue = storeBlob.OnChainMinValue;
-                errorMessage = "The amount of the invoice is too low to be paid on chain";
-            }
-
-            if (compare != null)
-            {
-                var limitValueRate = await fetchingByCurrencyPair[new CurrencyPair(network.CryptoCode, limitValue.Currency)];
-                if (limitValueRate.Value.HasValue)
+                var rateResult = await pair.Value;
+                logs.Write($"{pair.Key}: The rating rule is {rateResult.Rule}");
+                logs.Write($"{pair.Key}: The evaluated rating rule is {rateResult.EvaluatedRule}");
+                if (rateResult.Errors.Count != 0)
                 {
-                    var limitValueCrypto = Money.Coins(limitValue.Value / limitValueRate.Value.Value);
-                    if (compare(paymentMethod.Calculate().Due, limitValueCrypto))
+                    var allRateRuleErrors = string.Join(", ", rateResult.Errors.ToArray());
+                    logs.Write($"{pair.Key}: Rate rule error ({allRateRuleErrors})");
+                }
+                if (rateResult.ExchangeExceptions.Count != 0)
+                {
+                    foreach (var ex in rateResult.ExchangeExceptions)
                     {
-                        throw new PaymentMethodUnavailableException(errorMessage);
+                        logs.Write($"{pair.Key}: Exception reaching exchange {ex.ExchangeName} ({ex.Exception.Message})");
                     }
                 }
-            }
-            ///////////////
+            }).ToArray());
+        }
+
+        private async Task<PaymentMethod> CreatePaymentMethodAsync(Dictionary<CurrencyPair, Task<RateResult>> fetchingByCurrencyPair, IPaymentMethodHandler handler, ISupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network, InvoiceEntity entity, StoreData store, InvoiceLogs logs)
+        {
+            try
+            {
+                var storeBlob = store.GetStoreBlob();
+                var rate = await fetchingByCurrencyPair[new CurrencyPair(network.CryptoCode, entity.ProductInformation.Currency)];
+                if (rate.Value == null)
+                {
+                    return null;
+                }
+                PaymentMethod paymentMethod = new PaymentMethod();
+                paymentMethod.ParentEntity = entity;
+                paymentMethod.Network = network;
+                paymentMethod.SetId(supportedPaymentMethod.PaymentId);
+                paymentMethod.Rate = rate.Value.Value;
+                var paymentDetails = await handler.CreatePaymentMethodDetails(supportedPaymentMethod, paymentMethod, store, network);
+                if (storeBlob.NetworkFeeDisabled)
+                    paymentDetails.SetNoTxFee();
+                paymentMethod.SetPaymentMethodDetails(paymentDetails);
+
+                Func<Money, Money, bool> compare = null;
+                CurrencyValue limitValue = null;
+                string errorMessage = null;
+                if (supportedPaymentMethod.PaymentId.PaymentType == PaymentTypes.LightningLike &&
+                   storeBlob.LightningMaxValue != null)
+                {
+                    compare = (a, b) => a > b;
+                    limitValue = storeBlob.LightningMaxValue;
+                    errorMessage = "The amount of the invoice is too high to be paid with lightning";
+                }
+                else if (supportedPaymentMethod.PaymentId.PaymentType == PaymentTypes.BTCLike &&
+                   storeBlob.OnChainMinValue != null)
+                {
+                    compare = (a, b) => a < b;
+                    limitValue = storeBlob.OnChainMinValue;
+                    errorMessage = "The amount of the invoice is too low to be paid on chain";
+                }
+
+                if (compare != null)
+                {
+                    var limitValueRate = await fetchingByCurrencyPair[new CurrencyPair(network.CryptoCode, limitValue.Currency)];
+                    if (limitValueRate.Value.HasValue)
+                    {
+                        var limitValueCrypto = Money.Coins(limitValue.Value / limitValueRate.Value.Value);
+                        if (compare(paymentMethod.Calculate().Due, limitValueCrypto))
+                        {
+                            logs.Write($"{supportedPaymentMethod.PaymentId.CryptoCode}: {errorMessage}");
+                            return null;
+                        }
+                    }
+                }
+                ///////////////
 
 
 #pragma warning disable CS0618
-            if (paymentMethod.GetId().IsBTCOnChain)
-            {
-                entity.TxFee = paymentMethod.TxFee;
-                entity.Rate = paymentMethod.Rate;
-                entity.DepositAddress = paymentMethod.DepositAddress;
-            }
+                if (paymentMethod.GetId().IsBTCOnChain)
+                {
+                    entity.TxFee = paymentMethod.TxFee;
+                    entity.Rate = paymentMethod.Rate;
+                    entity.DepositAddress = paymentMethod.DepositAddress;
+                }
 #pragma warning restore CS0618
-            return paymentMethod;
+                return paymentMethod;
+            }
+            catch (PaymentMethodUnavailableException ex)
+            {
+                logs.Write($"{supportedPaymentMethod.PaymentId.CryptoCode}: Payment method unavailable ({ex.Message})");
+            }
+            catch (Exception ex)
+            {
+                logs.Write($"{supportedPaymentMethod.PaymentId.CryptoCode}: Unexpected exception ({ex.ToString()})");
+            }
+            return null;
         }
 
         private SpeedPolicy ParseSpeedPolicy(string transactionSpeed, SpeedPolicy defaultPolicy)

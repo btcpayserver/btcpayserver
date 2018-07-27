@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
-namespace BTCPayServer.Models.StoreViewModels
+namespace BTCPayServer.Models.WalletViewModels
 {
     public class WalletModel
     {
@@ -15,5 +15,9 @@ namespace BTCPayServer.Models.StoreViewModels
             get;
             set;
         }
+        public decimal? Rate { get; set; }
+        public int Divisibility { get; set; }
+        public string Fiat { get; set; }
+        public string RateError { get; set; }
     }
 }

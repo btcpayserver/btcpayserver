@@ -1,0 +1,56 @@
+﻿@model BTCPayServer.Models.WalletViewModels.ListWalletsViewModel
+@{
+    ViewData["Title"] = "Wallets";
+}
+
+<section>
+    <div class="container">
+
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                <partial name="_StatusMessage" for="@TempData["TempDataProperty-StatusMessage"]" />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                <h2 class="section-heading">@ViewData["Title"]</h2>
+                <hr class="primary">
+                <p>Create and manage wallets.</p>
+            </div>
+        </div>
+
+        <div class="row">
+            <table class="table table-sm table-responsive-md">
+                <thead>
+                    <tr>
+                        <th>Store Name</th>
+                        <th>Crypto Code</th>
+                        <th>Balance</th>
+                        <th style="text-align:right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach(var wallet in Model.Wallets)
+                    {
+                    <tr>
+                        @if(wallet.IsOwner)
+                        {
+                            <td><a asp-action="UpdateStore" asp-controller="Stores" asp-route-storeId="@wallet.StoreId">@wallet.StoreName</a></td>
+                        }
+                        else
+                        {
+                            <td>@wallet.StoreName</td>
+                        }
+                        <td>@wallet.CryptoCode</td>
+                        <td>@wallet.Balance</td>
+                        <td style="text-align:right">
+                            <a asp-action="WalletTransactions" asp-route-walletId="@wallet.Id">Manage</a>
+                        </td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>

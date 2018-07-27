@@ -1,16 +1,27 @@
-﻿$(function () {
+﻿
+function updateFiatValue() {
+    if (srvModel.rate !== null) {
+        var fiatValue = $("#fiatValue");
+        fiatValue.css("display", "inline");
+        var amountValue = parseFloat($("#amount-textbox").val());
+        if (!isNaN(amountValue)) {
+            fiatValue.text("= " + (srvModel.rate * amountValue).toFixed(srvModel.divisibility) + " " + srvModel.fiat);
+        }
+    }
+}
+$(function () {
     var ledgerDetected = false;
-    var bridge = new ledgerwebsocket.LedgerWebSocketBridge(srvModel.serverUrl + "ws/ledger");
+    var bridge = new ledgerwebsocket.LedgerWebSocketBridge(srvModel.serverUrl);
     var recommendedFees = "";
     var recommendedBalance = "";
     var cryptoCode = $("#cryptoCode").val();
 
     function WriteAlert(type, message) {
-        $(".alert").removeClass("alert-danger");
-        $(".alert").removeClass("alert-warning");
-        $(".alert").removeClass("alert-success");
-        $(".alert").addClass("alert-" + type);
-        $(".alert").css("display", "block");
+        $("#walletAlert").removeClass("alert-danger");
+        $("#walletAlert").removeClass("alert-warning");
+        $("#walletAlert").removeClass("alert-success");
+        $("#walletAlert").addClass("alert-" + type);
+        $("#walletAlert").css("display", "block");
         $("#alertMessage").text(message);
     }
 

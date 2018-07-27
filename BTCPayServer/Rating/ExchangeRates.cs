@@ -138,6 +138,9 @@ namespace BTCPayServer.Rating
                 return _Ask;
             }
         }
+
+        public decimal Center => (Ask + Bid) / 2.0m;
+
         public BidAsk Inverse()
         {
             return new BidAsk(1.0m / Ask, 1.0m / Bid);

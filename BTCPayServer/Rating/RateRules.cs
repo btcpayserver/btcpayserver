@@ -504,7 +504,7 @@ namespace BTCPayServer.Rating
 
         public bool Reevaluate()
         {
-            _Value = null;
+            _BidAsk = null;
             _EvaluatedNode = null;
             _Evaluated = null;
             Errors.Clear();
@@ -524,7 +524,7 @@ namespace BTCPayServer.Rating
                 Errors.AddRange(calculate.Errors);
                 return false;
             }
-            _Value = calculate.Values.Pop().Bid;
+            _BidAsk = calculate.Values.Pop();
             _EvaluatedNode = result;
             return true;
         }
@@ -563,12 +563,12 @@ namespace BTCPayServer.Rating
             return expression.NormalizeWhitespace("", "\n").ToString();
         }
 
-        decimal? _Value;
-        public decimal? Value
+        BidAsk _BidAsk;
+        public BidAsk BidAsk
         {
             get
             {
-                return _Value;
+                return _BidAsk;
             }
         }
     }

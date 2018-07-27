@@ -183,18 +183,24 @@ namespace BTCPayServer.Payments.Lightning.Lnd
                 NodeId = resp.Identity_pubkey
             };
 
+            try
+            {
+                var node = await _rpcClient.GetNodeInfoAsync(resp.Identity_pubkey, cancellation);
+                if (node.Node.Addresses == null || node.Node.Addresses.Count == 0)
+                    throw new Exception("Lnd External IP not set, make sure you use --externalip=$EXTERNALIP parameter on lnd");
 
-            var node = await _rpcClient.GetNodeInfoAsync(resp.Identity_pubkey, cancellation);
-            if (node.Node.Addresses == null || node.Node.Addresses.Count == 0)
-                throw new Exception("Lnd External IP not set, make sure you use --externalip=$EXTERNALIP parameter on lnd");
+                var firstNodeInfo = node.Node.Addresses.First();
+                var externalHostPort = firstNodeInfo.Addr.Split(':');
 
-            var firstNodeInfo = node.Node.Addresses.First();
-            var externalHostPort = firstNodeInfo.Addr.Split(':');
+                nodeInfo.Address = externalHostPort[0];
+                nodeInfo.P2PPort = ConvertInv.ToInt32(externalHostPort[1]);
 
-            nodeInfo.Address = externalHostPort[0];
-            nodeInfo.P2PPort = ConvertInv.ToInt32(externalHostPort[1]);
-
-            return nodeInfo;
+                return nodeInfo;
+            }
+            catch (SwaggerException ex) when (!string.IsNullOrEmpty(ex.Response))
+            {
+                throw new Exception("LND threw an error: " + ex.Response);
+            }
         }
 
         public async Task<LightningInvoice> GetInvoice(string invoiceId, CancellationToken cancellation = default(CancellationToken))

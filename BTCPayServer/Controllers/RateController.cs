@@ -161,7 +161,7 @@ namespace BTCPayServer.Controllers
             await Task.WhenAll(fetching.Select(f => f.Value).ToArray());
             return Json(pairs
                             .AsParallel()
-                            .Select(r => (Pair: r, Value: fetching[r].GetAwaiter().GetResult().Value))
+                            .Select(r => (Pair: r, Value: fetching[r].GetAwaiter().GetResult().BidAsk?.Bid))
                             .Where(r => r.Value.HasValue)
                             .Select(r =>
                             new Rate()

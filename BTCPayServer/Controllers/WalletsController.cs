@@ -130,6 +130,7 @@ namespace BTCPayServer.Controllers
                 vm.Positive = tx.BalanceChange >= Money.Zero;
                 vm.Balance = tx.BalanceChange.ToString();
             }
+            model.Transactions = model.Transactions.OrderByDescending(t => t.Timestamp).ToList();
             return View(model);
         }
 

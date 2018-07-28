@@ -428,7 +428,7 @@ namespace BTCPayServer.Controllers
                     Crypto = network.CryptoCode,
                     Value = strategy?.DerivationStrategyBase?.ToString() ?? string.Empty,
                     WalletId = new WalletId(store.Id, network.CryptoCode),
-                    Enabled = strategy?.Enabled
+                    Enabled = strategy?.Enabled ?? false
                 });
             }
 
@@ -444,7 +444,7 @@ namespace BTCPayServer.Controllers
                 {
                     CryptoCode = network.CryptoCode,
                     Address = lightning?.GetLightningUrl()?.BaseUri.AbsoluteUri ?? string.Empty,
-                    Enabled = lightning?.Enabled
+                    Enabled = lightning?.Enabled ?? false
                 });
             }
         }

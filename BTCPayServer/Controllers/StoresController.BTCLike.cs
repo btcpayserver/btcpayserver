@@ -47,7 +47,7 @@ namespace BTCPayServer.Controllers
             var strategy = GetExistingDerivationStrategy(vm.CryptoCode, store);
             
             vm.DerivationScheme = strategy?.DerivationStrategyBase.ToString();
-            vm.Enabled = strategy.Enabled;
+            vm.Enabled = strategy?.Enabled ?? false;
         }
 
         private DerivationStrategy GetExistingDerivationStrategy(string cryptoCode, StoreData store)

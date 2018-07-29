@@ -45,8 +45,7 @@ namespace BTCPayServer.Payments
 
         public static JToken Serialize(ISupportedPaymentMethod factory)
         {
-            var str = JsonConvert.SerializeObject(factory);
-            return JObject.Parse(str);
+            return JObject.FromObject(factory);
         }
 
     }

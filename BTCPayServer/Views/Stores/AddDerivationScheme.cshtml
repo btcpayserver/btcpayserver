@@ -122,6 +122,10 @@
                     <span asp-validation-for="HintAddress" class="text-danger"></span>
                 </div>
                 <button name="command" type="submit" class="btn btn-primary" value="save">Confirm</button>
+                if (!Model.Enabled)
+                {
+                    <button name="command" type="submit" class="btn btn-primary" value="save_toggle">Confirm & Enable</button>
+                }
             }
         </form>
     </div>

@@ -24,16 +24,20 @@ namespace BTCPayServer.Controllers
             var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
-            LightningNodeViewModel vm = new LightningNodeViewModel();
-            vm.CryptoCode = cryptoCode;
-            vm.InternalLightningNode = GetInternalLighningNode(cryptoCode)?.ToString();
+            LightningNodeViewModel vm = new LightningNodeViewModel
+            {
+                CryptoCode = cryptoCode,
+                InternalLightningNode = GetInternalLighningNode(cryptoCode)?.ToString()
+            };
             SetExistingValues(store, vm);
             return View(vm);
         }
 
         private void SetExistingValues(StoreData store, LightningNodeViewModel vm)
         {
-            vm.ConnectionString = GetExistingLightningSupportedPaymentMethod(vm.CryptoCode, store)?.GetLightningUrl()?.ToString();
+            var paymentMethod = GetExistingLightningSupportedPaymentMethod(vm.CryptoCode, store);
+            vm.ConnectionString = paymentMethod?.GetLightningUrl()?.ToString();
+            vm.Enabled = paymentMethod?.Enabled ??false;
         }
         private LightningSupportedPaymentMethod GetExistingLightningSupportedPaymentMethod(string cryptoCode, StoreData store)
         {
@@ -134,8 +138,18 @@ namespace BTCPayServer.Controllers
                 paymentMethod.SetLightningUrl(connectionString);
             }
 
-            if (command == "save")
+            if (command == "toggle" && paymentMethod != null)
             {
+                paymentMethod.Enabled = !paymentMethod.Enabled;
+            }
+
+            if (command == "save" || command == "toggle" || command== "save_toggle")
+            {
+                if (command == "save_toggle" && paymentMethod != null)
+                {
+                    paymentMethod.Enabled = !paymentMethod.Enabled;
+                }
+
                 store.SetSupportedPaymentMethod(paymentMethodId, paymentMethod);
                 await _Repo.UpdateStore(store);
                 StatusMessage = $"Lightning node modified ({network.CryptoCode})";

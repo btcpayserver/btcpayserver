@@ -63,8 +63,10 @@
                 }
             </div>
             <button name="command" type="submit" value="save" class="btn btn-primary">Submit</button>
+            <button name="command" type="submit" value="save_toggle" class="btn btn-primary">Submit & Enable</button>
             <button name="command" type="submit" value="test" class="btn btn-secondary">Test connection</button>
-            <button name="command" type="submit" value="toggle" class="btn btn-secondary">Toggle</button>
+            <button name="command" type="submit" value="toggle" class="btn btn-secondary">
+            @(Model.Enabled? "Disable" : "Enable")</button>
         </form>
     </div>
 </div>

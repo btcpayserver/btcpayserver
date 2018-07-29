@@ -41,6 +41,7 @@ using System.Net;
 using BTCPayServer.JsonConverters;
 using Meziantou.AspNetCore.BundleTagHelpers;
 using BTCPayServer.Security;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Hosting
 {
@@ -96,7 +97,13 @@ namespace BTCPayServer.Hosting
             {
                 options.SerializerSettings.Converters.Add(new DerivationStrategyConverter());
             });
-
+            JsonConvert.DefaultSettings = () => new JsonSerializerSettings()
+            {
+                Converters = new List<JsonConverter>()
+                {
+                    new DerivationStrategyConverter()
+                }
+            };
             services.TryAddScoped<ContentSecurityPolicies>();
             services.Configure<IdentityOptions>(options =>
             {

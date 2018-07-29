@@ -103,6 +103,7 @@ namespace BTCPayServer.Controllers
                 strategy.Enabled = !strategy.Enabled;
                 vm.Enabled = strategy.Enabled;
                 store.SetSupportedPaymentMethod(paymentMethodId, strategy);
+                await _Repo.UpdateStore(store);
                 StatusMessage = $"Derivation Scheme({cryptoCode}) {(strategy.Enabled ? "Enabled" : "Disabled")}";
                 return RedirectToAction(nameof(UpdateStore), new { storeId = storeId });
             }
@@ -143,15 +144,24 @@ namespace BTCPayServer.Controllers
                 try
                 {
                     if (strategy != null)
+                    {
                         await wallet.TrackAsync(strategy.DerivationStrategyBase);
+                        if (command == "save_toggle")
+                        {
+                            strategy.Enabled = !strategy.Enabled;
+                            vm.Enabled = strategy.Enabled;
+                        }
+                    }
+
                     store.SetSupportedPaymentMethod(paymentMethodId, strategy);
                 }
-                catch
+                catch (Exception e)
                 {
                     ModelState.AddModelError(nameof(vm.DerivationScheme), "Invalid Derivation Scheme");
                     return View(vm);
                 }
 
+               
                 await _Repo.UpdateStore(store);
                 StatusMessage = $"Derivation scheme for {network.CryptoCode} has been modified.";
                 return RedirectToAction(nameof(UpdateStore), new { storeId = storeId });

@@ -65,7 +65,7 @@ namespace BTCPayServer.Data
                 if (networks.BTC != null)
                 {
                     btcReturned = true;
-                    yield return BTCPayServer.DerivationStrategy.Parse(DerivationStrategy, networks.BTC);
+                    yield return BTCPayServer.DerivationStrategy.Parse(DerivationStrategy, networks.BTC, true);
                 }
             }
 

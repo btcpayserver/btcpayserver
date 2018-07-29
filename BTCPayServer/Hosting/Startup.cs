@@ -38,6 +38,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Mvc.Cors.Internal;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using System.Net;
+using BTCPayServer.JsonConverters;
 using Meziantou.AspNetCore.BundleTagHelpers;
 using BTCPayServer.Security;
 
@@ -91,7 +92,11 @@ namespace BTCPayServer.Hosting
                 //    StyleSrc = "'self' 'unsafe-inline'",
                 //    ScriptSrc = "'self' 'unsafe-inline'"
                 //});
+            }).AddJsonOptions(options =>
+            {
+                options.SerializerSettings.Converters.Add(new DerivationStrategyConverter());
             });
+
             services.TryAddScoped<ContentSecurityPolicies>();
             services.Configure<IdentityOptions>(options =>
             {

@@ -14,20 +14,21 @@ namespace BTCPayServer
         private DerivationStrategyBase _DerivationStrategy;
         private BTCPayNetwork _Network;
 
-        public DerivationStrategy(DerivationStrategyBase result, BTCPayNetwork network)
+        public DerivationStrategy(DerivationStrategyBase result, BTCPayNetwork network, bool enabled)
         {
             this._DerivationStrategy = result;
             this._Network = network;
+            Enabled = enabled;
         }
         
-        public static DerivationStrategy Parse(string derivationStrategy, BTCPayNetwork network)
+        public static DerivationStrategy Parse(string derivationStrategy, BTCPayNetwork network, bool enabled)
         {
             if (network == null)
                 throw new ArgumentNullException(nameof(network));
             if (derivationStrategy == null)
                 throw new ArgumentNullException(nameof(derivationStrategy));
             var result = new NBXplorer.DerivationStrategy.DerivationStrategyFactory(network.NBitcoinNetwork).Parse(derivationStrategy);
-            return new DerivationStrategy(result, network);
+            return new DerivationStrategy(result, network, enabled);
         }
 
         public BTCPayNetwork Network { get { return this._Network; } }
@@ -41,5 +42,11 @@ namespace BTCPayServer
         {
             return _DerivationStrategy.ToString();
         }
+    }
+
+    public class DerivationStrategyData
+    {
+        public string DerivationStrategy { get; set; }
+        public bool Enabled { get; set; }
     }
 }

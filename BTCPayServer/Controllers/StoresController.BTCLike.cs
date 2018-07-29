@@ -87,7 +87,7 @@ namespace BTCPayServer.Controllers
             {
                 if (!string.IsNullOrEmpty(vm.DerivationScheme))
                 {
-                    strategy = ParseDerivationStrategy(vm.DerivationScheme, null, network);
+                    strategy = ParseDerivationStrategy(vm.DerivationScheme, null, network, vm.Enabled);
                     vm.DerivationScheme = strategy.ToString();
                     vm.Enabled = strategy.Enabled;
                 }
@@ -125,7 +125,7 @@ namespace BTCPayServer.Controllers
 
                 try
                 {
-                    strategy = ParseDerivationStrategy(vm.DerivationScheme, address.ScriptPubKey, network);
+                    strategy = ParseDerivationStrategy(vm.DerivationScheme, address.ScriptPubKey, network, vm.Enabled);
                 }
                 catch
                 {

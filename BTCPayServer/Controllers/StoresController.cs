@@ -525,11 +525,11 @@ namespace BTCPayServer.Controllers
                     .ToArray();
         }
 
-        private DerivationStrategy ParseDerivationStrategy(string derivationScheme, Script hint, BTCPayNetwork network)
+        private DerivationStrategy ParseDerivationStrategy(string derivationScheme, Script hint, BTCPayNetwork network, bool enabled)
         {
             var parser = new DerivationSchemeParser(network.NBitcoinNetwork);
             parser.HintScriptPubKey = hint;
-            return new DerivationStrategy(parser.Parse(derivationScheme), network);
+            return new DerivationStrategy(parser.Parse(derivationScheme), network, enabled);
         }
 
         [HttpGet]

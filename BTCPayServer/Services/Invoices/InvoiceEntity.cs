@@ -206,7 +206,7 @@ namespace BTCPayServer.Services.Invoices
             {
                 if (networks.BTC != null)
                 {
-                    yield return BTCPayServer.DerivationStrategy.Parse(DerivationStrategy, networks.BTC);
+                    yield return BTCPayServer.DerivationStrategy.Parse(DerivationStrategy, networks.BTC, true);
                 }
             }
 #pragma warning restore CS0618

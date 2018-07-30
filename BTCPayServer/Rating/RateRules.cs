@@ -133,6 +133,8 @@ namespace BTCPayServer.Rating
         {
             if (currencyPair.Left == "X" || currencyPair.Right == "X")
                 throw new ArgumentException(paramName: nameof(currencyPair), message: "Invalid X currency");
+            if (currencyPair.Left == currencyPair.Right)
+                return new RateRule(this, currencyPair, CreateExpression("1.0"));
             var candidate = FindBestCandidate(currencyPair);
             if (GlobalMultiplier != decimal.One)
             {

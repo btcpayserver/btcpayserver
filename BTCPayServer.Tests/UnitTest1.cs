@@ -745,20 +745,20 @@ namespace BTCPayServer.Tests
 
                 var rateController = acc.GetController<RateController>();
                 var GetBaseCurrencyRatesResult = JObject.Parse(((JsonResult)rateController.GetBaseCurrencyRates("BTC", acc.StoreId)
-                    .GetAwaiter().GetResult()).ToJson()).ToObject<DataWrapper<Rate[]>>();
+                    .GetAwaiter().GetResult()).Value.ToJson()).ToObject<DataWrapper<Rate[]>>();
                 Assert.NotNull(GetBaseCurrencyRatesResult);
                 Assert.NotNull(GetBaseCurrencyRatesResult.Data);
-                Assert.Single(GetBaseCurrencyRatesResult.Data);
-                Assert.Equal("LTC", GetBaseCurrencyRatesResult.Data.First().Code);
+                Assert.Equal(2, GetBaseCurrencyRatesResult.Data.Length);
+                Assert.Single(GetBaseCurrencyRatesResult.Data.Where(o => o.Code == "LTC"));
 
                 var GetRatesResult = JObject.Parse(((JsonResult)rateController.GetRates(null, acc.StoreId)
-                    .GetAwaiter().GetResult()).ToJson()).ToObject<DataWrapper<Rate[]>>();
+                    .GetAwaiter().GetResult()).Value.ToJson()).ToObject<DataWrapper<Rate[]>>();
                 Assert.NotNull(GetRatesResult);
                 Assert.NotNull(GetRatesResult.Data);
                 Assert.Equal(2, GetRatesResult.Data.Length);
 
                 var GetCurrencyPairRateResult = JObject.Parse(((JsonResult)rateController.GetCurrencyPairRate("BTC", "LTC", acc.StoreId)
-                    .GetAwaiter().GetResult()).ToJson()).ToObject<DataWrapper<Rate>>();
+                    .GetAwaiter().GetResult()).Value.ToJson()).ToObject<DataWrapper<Rate>>();
 
                 Assert.NotNull(GetCurrencyPairRateResult);
                 Assert.NotNull(GetCurrencyPairRateResult.Data);

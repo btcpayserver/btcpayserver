@@ -140,6 +140,12 @@ namespace BTCPayServer.Tests
             coinAverageMock.ExchangeRates.Add(new Rating.ExchangeRate()
             {
                 Exchange = "coinaverage",
+                CurrencyPair = CurrencyPair.Parse("LTC_BTC"),
+                BidAsk = new BidAsk(0.001m)
+            });
+            coinAverageMock.ExchangeRates.Add(new Rating.ExchangeRate()
+            {
+                Exchange = "coinaverage",
                 CurrencyPair = CurrencyPair.Parse("LTC_USD"),
                 BidAsk = new BidAsk(500m)
             });

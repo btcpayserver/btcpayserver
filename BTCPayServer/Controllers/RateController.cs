@@ -46,21 +46,13 @@ namespace BTCPayServer.Controllers
                 err.StatusCode = 404;
                 return err;
             }
-            var currencypairs = "";
             var supportedMethods = store.GetSupportedPaymentMethods(_NetworkProvider);
 
             var currencyCodes = supportedMethods.Where(method => !string.IsNullOrEmpty(method.PaymentId.CryptoCode))
                 .Select(method => method.PaymentId.CryptoCode).Distinct();
 
-
-            foreach (var currencyCode in currencyCodes)
-            {
-                if (!string.IsNullOrEmpty(currencypairs))
-                {
-                    currencypairs += ",";
-                }
-                currencypairs += baseCurrency + "_ " + currencyCode;
-            }
+            var currencypairs = BuildCurrencyPairs(currencyCodes, baseCurrency);
+            
             var result = await GetRates2(currencypairs, store.Id);
             var rates = (result as JsonResult)?.Value as Rate[];
             if (rates == null)
@@ -118,21 +110,11 @@ namespace BTCPayServer.Controllers
 
             if (currencyPairs == null)
             {
-                currencyPairs = "";
                 var supportedMethods = store.GetSupportedPaymentMethods(_NetworkProvider);
                 var currencyCodes = supportedMethods.Select(method => method.PaymentId.CryptoCode).Distinct();
                 var defaultCrypto = store.GetDefaultCrypto(_NetworkProvider);
 
-                StringBuilder currencyPairsBuilder = new StringBuilder();
-                foreach (var currencyCode in currencyCodes)
-                {
-                    if (!string.IsNullOrEmpty(currencyPairs))
-                    {
-                        currencyPairsBuilder.Append(",");
-                    }
-                    currencyPairsBuilder.Append($"{defaultCrypto}_{currencyCode}");
-                }
-                currencyPairs = currencyPairsBuilder.ToString();
+                currencyPairs = BuildCurrencyPairs(currencyCodes, defaultCrypto);
 
                 if (string.IsNullOrEmpty(currencyPairs))
                 {
@@ -172,6 +154,19 @@ namespace BTCPayServer.Controllers
                                 Name = _CurrencyNameTable.GetCurrencyData(r.Pair.Right, true).Name,
                                 Value = r.Value.Value
                             }).Where(n => n.Name != null).ToArray());
+        }
+
+        private static string BuildCurrencyPairs(IEnumerable<string> currencyCodes, string baseCrypto)
+        {
+            StringBuilder currencyPairsBuilder = new StringBuilder();
+            bool first = true;
+            foreach (var currencyCode in currencyCodes)
+            {
+                if(!first)
+                    currencyPairsBuilder.Append(",");
+                currencyPairsBuilder.Append($"{baseCrypto}_{currencyCode}");
+            }
+            return currencyPairsBuilder.ToString();
         }
 
         public class Rate

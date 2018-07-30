@@ -417,7 +417,7 @@ namespace BTCPayServer.Controllers
         {
             var derivationByCryptoCode =
                 store
-                .GetSupportedPaymentMethods(_NetworkProvider)
+                .GetSupportedPaymentMethods(_NetworkProvider, false)
                 .OfType<DerivationStrategy>()
                 .ToDictionary(c => c.Network.CryptoCode);
             foreach (var network in _NetworkProvider.GetAll())
@@ -433,7 +433,7 @@ namespace BTCPayServer.Controllers
             }
 
             var lightningByCryptoCode = store
-                                        .GetSupportedPaymentMethods(_NetworkProvider)
+                                        .GetSupportedPaymentMethods(_NetworkProvider, false)
                                         .OfType<Payments.Lightning.LightningSupportedPaymentMethod>()
                                         .ToDictionary(c => c.CryptoCode);
 

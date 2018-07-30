@@ -1,7 +1,7 @@
 ﻿@model DerivationSchemeViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["Title"] = "Add derivation scheme";
+    ViewData["Title"] = $"{Model.CryptoCode} Derivation scheme";
     ViewData.AddActivePage(BTCPayServer.Views.Stores.StoreNavPages.Index);
 }
 
@@ -44,45 +44,45 @@
                     <span>BTCPay format memo</span>
                     <table class="table table-sm table-responsive-md">
                         <thead>
-                            <tr>
-                                <th>Address type</th>
-                                <th>Example</th>
-                            </tr>
+                        <tr>
+                            <th>Address type</th>
+                            <th>Example</th>
+                        </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td>P2WPKH</td>
-                                <td>xpub</td>
-                            </tr>
-                            <tr>
-                                <td>P2SH-P2WPKH</td>
-                                <td>xpub-[p2sh]</td>
-                            </tr>
-                            <tr>
-                                <td>P2PKH</td>
-                                <td>xpub-[legacy]</td>
-                            </tr>
-                            <tr>
-                                <td>Multi-sig P2WSH</td>
-                                <td>2-of-xpub1-xpub2</td>
-                            </tr>
-                            <tr>
-                                <td>Multi-sig P2SH-P2WSH</td>
-                                <td>2-of-xpub1-xpub2-[p2sh]</td>
-                            </tr>
-                            <tr>
-                                <td>Multi-sig P2SH</td>
-                                <td>2-of-xpub1-xpub2-[legacy]</td>
-                            </tr>
+                        <tr>
+                            <td>P2WPKH</td>
+                            <td>xpub</td>
+                        </tr>
+                        <tr>
+                            <td>P2SH-P2WPKH</td>
+                            <td>xpub-[p2sh]</td>
+                        </tr>
+                        <tr>
+                            <td>P2PKH</td>
+                            <td>xpub-[legacy]</td>
+                        </tr>
+                        <tr>
+                            <td>Multi-sig P2WSH</td>
+                            <td>2-of-xpub1-xpub2</td>
+                        </tr>
+                        <tr>
+                            <td>Multi-sig P2SH-P2WSH</td>
+                            <td>2-of-xpub1-xpub2-[p2sh]</td>
+                        </tr>
+                        <tr>
+                            <td>Multi-sig P2SH</td>
+                            <td>2-of-xpub1-xpub2-[legacy]</td>
+                        </tr>
                         </tbody>
                     </table>
                 </div>
+                <div class="form-check">
+                    <input id="enabled" asp-for="Enabled" class="form-check-input" />
+                    <label asp-for="Enabled" class="form-check-label"></label>
+                    <span asp-validation-for="Enabled" class="text-danger"></span>
+                </div>
                 <button name="command" type="submit" class="btn btn-primary" value="save">Continue</button>
-                if(!string.IsNullOrEmpty(Model.DerivationScheme))
-                {
-                    <button name="command" type="submit" value="toggle" class="btn btn-secondary">@(Model.Enabled ? "Disable" : "Enable") </button>
-
-                }
             }
             else
             {
@@ -92,6 +92,7 @@
                 </div>
                 <input type="hidden" asp-for="Confirmation" />
                 <input type="hidden" asp-for="DerivationScheme" />
+                <input type="hidden" asp-for="Enabled" />
                 <div class="form-group">
                     <table class="table table-sm table-responsive-md">
                         <thead>
@@ -122,10 +123,6 @@
                     <span asp-validation-for="HintAddress" class="text-danger"></span>
                 </div>
                 <button name="command" type="submit" class="btn btn-primary" value="save">Confirm</button>
-                if (!Model.Enabled)
-                {
-                    <button name="command" type="submit" class="btn btn-primary" value="save_toggle">Confirm & Enable</button>
-                }
             }
         </form>
     </div>

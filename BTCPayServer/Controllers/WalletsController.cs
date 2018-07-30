@@ -73,7 +73,7 @@ namespace BTCPayServer.Controllers
             var stores = await _Repo.GetStoresByUserId(GetUserId());
 
             var onChainWallets = stores
-                                .SelectMany(s => s.GetSupportedPaymentMethods(_NetworkProvider)
+                                .SelectMany(s => s.GetSupportedPaymentMethods(_NetworkProvider, false)
                                               .OfType<DerivationStrategy>()
                                               .Select(d => ((Wallet: _walletProvider.GetWallet(d.Network),
                                                             DerivationStrategy: d.DerivationStrategyBase,
@@ -197,7 +197,7 @@ namespace BTCPayServer.Controllers
                 return null;
 
             var paymentMethod = store
-                            .GetSupportedPaymentMethods(_NetworkProvider)
+                            .GetSupportedPaymentMethods(_NetworkProvider, false)
                             .OfType<DerivationStrategy>()
                             .FirstOrDefault(p => p.PaymentId.PaymentType == Payments.PaymentTypes.BTCLike && p.PaymentId.CryptoCode == walletId.CryptoCode);
             return paymentMethod;

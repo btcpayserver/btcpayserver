@@ -124,7 +124,7 @@ namespace BTCPayServer.Controllers
             HashSet<CurrencyPair> currencyPairsToFetch = new HashSet<CurrencyPair>();
             var rules = storeBlob.GetRateRules(_NetworkProvider);
 
-            foreach (var network in store.GetSupportedPaymentMethods(_NetworkProvider)
+            foreach (var network in store.GetSupportedPaymentMethods(_NetworkProvider, true)
                                                .Select(c => _NetworkProvider.GetNetwork(c.PaymentId.CryptoCode))
                                                 .Where(c => c != null))
             {
@@ -139,7 +139,7 @@ namespace BTCPayServer.Controllers
             var fetchingByCurrencyPair = _RateProvider.FetchRates(currencyPairsToFetch, rateRules);
 
             var fetchingAll = WhenAllFetched(logs, fetchingByCurrencyPair);
-            var supportedPaymentMethods = store.GetSupportedPaymentMethods(_NetworkProvider)
+            var supportedPaymentMethods = store.GetSupportedPaymentMethods(_NetworkProvider, true)
                                                .Select(c =>
                                                 (Handler: (IPaymentMethodHandler)_ServiceProvider.GetService(typeof(IPaymentMethodHandler<>).MakeGenericType(c.GetType())),
                                                 SupportedPaymentMethod: c,

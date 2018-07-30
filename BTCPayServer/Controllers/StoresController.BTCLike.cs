@@ -53,7 +53,7 @@ namespace BTCPayServer.Controllers
         private DerivationStrategy GetExistingDerivationStrategy(string cryptoCode, StoreData store)
         {
             var id = new PaymentMethodId(cryptoCode, PaymentTypes.BTCLike);
-            var existing = store.GetSupportedPaymentMethods(_NetworkProvider)
+            var existing = store.GetSupportedPaymentMethods(_NetworkProvider, false)
                 .OfType<DerivationStrategy>()
                 .FirstOrDefault(d => d.PaymentId == id);
             return existing;
@@ -98,16 +98,6 @@ namespace BTCPayServer.Controllers
                 vm.Confirmation = false;
                 return View(vm);
             }
-            if (command == "toggle")
-            {
-                strategy.Enabled = !strategy.Enabled;
-                vm.Enabled = strategy.Enabled;
-                store.SetSupportedPaymentMethod(paymentMethodId, strategy);
-                await _Repo.UpdateStore(store);
-                StatusMessage = $"Derivation Scheme({cryptoCode}) {(strategy.Enabled ? "Enabled" : "Disabled")}";
-                return RedirectToAction(nameof(UpdateStore), new { storeId = storeId });
-            }
-
             if (!vm.Confirmation && strategy != null)
                 return ShowAddresses(vm, strategy);
             
@@ -143,16 +133,8 @@ namespace BTCPayServer.Controllers
             {
                 try
                 {
-                    if (strategy != null)
-                    {
+                    if (strategy != null)                 
                         await wallet.TrackAsync(strategy.DerivationStrategyBase);
-                        if (command == "save_toggle")
-                        {
-                            strategy.Enabled = !strategy.Enabled;
-                            vm.Enabled = strategy.Enabled;
-                        }
-                    }
-
                     store.SetSupportedPaymentMethod(paymentMethodId, strategy);
                 }
                 catch (Exception e)

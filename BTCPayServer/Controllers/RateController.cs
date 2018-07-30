@@ -47,7 +47,7 @@ namespace BTCPayServer.Controllers
                 return err;
             }
             var currencypairs = "";
-            var supportedMethods = store.GetSupportedPaymentMethods(_NetworkProvider);
+            var supportedMethods = store.GetSupportedPaymentMethods(_NetworkProvider, true);
 
             var currencyCodes = supportedMethods.Where(method => !string.IsNullOrEmpty(method.PaymentId.CryptoCode))
                 .Select(method => method.PaymentId.CryptoCode).Distinct();
@@ -119,7 +119,7 @@ namespace BTCPayServer.Controllers
             if (currencyPairs == null)
             {
                 currencyPairs = "";
-                var supportedMethods = store.GetSupportedPaymentMethods(_NetworkProvider);
+                var supportedMethods = store.GetSupportedPaymentMethods(_NetworkProvider, false);
                 var currencyCodes = supportedMethods.Where(method => !string.IsNullOrEmpty(method.PaymentId.CryptoCode))
                     .Select(method => method.PaymentId.CryptoCode).Distinct();
                 var defaultCrypto = store.GetDefaultCrypto(_NetworkProvider);

@@ -72,7 +72,7 @@ namespace BTCPayServer.HostedServices
             {
                 foreach (var store in await ctx.Stores.ToArrayAsync())
                 {
-                    foreach (var method in store.GetSupportedPaymentMethods(_NetworkProvider).OfType<Payments.Lightning.LightningSupportedPaymentMethod>())
+                    foreach (var method in store.GetSupportedPaymentMethods(_NetworkProvider, false).OfType<Payments.Lightning.LightningSupportedPaymentMethod>())
                     {
                         var lightning = method.GetLightningUrl();
                         if (lightning.IsLegacy)

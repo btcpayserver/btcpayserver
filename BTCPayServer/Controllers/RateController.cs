@@ -142,7 +142,6 @@ namespace BTCPayServer.Controllers
             var fetching = _RateProviderFactory.FetchRates(pairs, rules);
             await Task.WhenAll(fetching.Select(f => f.Value).ToArray());
             return Json(pairs
-                            .AsParallel()
                             .Select(r => (Pair: r, Value: fetching[r].GetAwaiter().GetResult().BidAsk?.Bid))
                             .Where(r => r.Value.HasValue)
                             .Select(r =>
@@ -164,6 +163,7 @@ namespace BTCPayServer.Controllers
             {
                 if(!first)
                     currencyPairsBuilder.Append(",");
+                first = false;
                 currencyPairsBuilder.Append($"{baseCrypto}_{currencyCode}");
             }
             return currencyPairsBuilder.ToString();

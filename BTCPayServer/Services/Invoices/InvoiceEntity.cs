@@ -206,7 +206,7 @@ namespace BTCPayServer.Services.Invoices
             {
                 if (networks.BTC != null)
                 {
-                    yield return BTCPayServer.DerivationStrategy.Parse(DerivationStrategy, networks.BTC);
+                    yield return BTCPayServer.DerivationStrategy.Parse(DerivationStrategy, networks.BTC, true);
                 }
             }
 #pragma warning restore CS0618
@@ -220,7 +220,7 @@ namespace BTCPayServer.Services.Invoices
                 obj.Add(strat.PaymentId.ToString(), PaymentMethodExtensions.Serialize(strat));
 #pragma warning disable CS0618
                 if (strat.PaymentId.IsBTCOnChain)
-                    DerivationStrategy = ((JValue)PaymentMethodExtensions.Serialize(strat)).Value<string>();
+                    DerivationStrategy = ((DerivationStrategy)strat).DerivationStrategyBase.ToString();
             }
             DerivationStrategies = JsonConvert.SerializeObject(obj);
 #pragma warning restore CS0618

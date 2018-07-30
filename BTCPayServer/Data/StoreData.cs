@@ -54,7 +54,7 @@ namespace BTCPayServer.Data
             set;
         }
 
-        public IEnumerable<ISupportedPaymentMethod> GetSupportedPaymentMethods(BTCPayNetworkProvider networks)
+        public IEnumerable<ISupportedPaymentMethod> GetSupportedPaymentMethods(BTCPayNetworkProvider networks, bool enabledOnly)
         {
 #pragma warning disable CS0618
             bool btcReturned = false;
@@ -65,7 +65,7 @@ namespace BTCPayServer.Data
                 if (networks.BTC != null)
                 {
                     btcReturned = true;
-                    yield return BTCPayServer.DerivationStrategy.Parse(DerivationStrategy, networks.BTC);
+                    yield return BTCPayServer.DerivationStrategy.Parse(DerivationStrategy, networks.BTC, true);
                 }
             }
 
@@ -83,7 +83,10 @@ namespace BTCPayServer.Data
                             continue;
                         if (strat.Value.Type == JTokenType.Null)
                             continue;
-                        yield return PaymentMethodExtensions.Deserialize(paymentMethodId, strat.Value, network);
+                        var paymentMethod = PaymentMethodExtensions.Deserialize(paymentMethodId, strat.Value, network);
+                        if (enabledOnly && !paymentMethod.Enabled)
+                            continue;
+                        yield return paymentMethod;
                     }
                 }
             }
@@ -199,7 +202,7 @@ namespace BTCPayServer.Data
 #pragma warning disable CS0618
         public string GetDefaultCrypto(BTCPayNetworkProvider networkProvider = null)
         {
-            return DefaultCrypto ?? (networkProvider == null? "BTC" : GetSupportedPaymentMethods(networkProvider).First().PaymentId.CryptoCode);
+            return DefaultCrypto ?? (networkProvider == null? "BTC" : GetSupportedPaymentMethods(networkProvider, true).First().PaymentId.CryptoCode);
         }
         public void SetDefaultCrypto(string defaultCryptoCurrency)
         {

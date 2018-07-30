@@ -43,13 +43,15 @@ namespace BTCPayServer.Controllers
 
         private void SetExistingValues(StoreData store, DerivationSchemeViewModel vm)
         {
-            vm.DerivationScheme = GetExistingDerivationStrategy(vm.CryptoCode, store)?.DerivationStrategyBase.ToString();
+            var strategy = GetExistingDerivationStrategy(vm.CryptoCode, store);
+            vm.DerivationScheme = strategy?.DerivationStrategyBase.ToString();
+            vm.Enabled = strategy?.Enabled ?? false;
         }
 
         private DerivationStrategy GetExistingDerivationStrategy(string cryptoCode, StoreData store)
         {
             var id = new PaymentMethodId(cryptoCode, PaymentTypes.BTCLike);
-            var existing = store.GetSupportedPaymentMethods(_NetworkProvider)
+            var existing = store.GetSupportedPaymentMethods(_NetworkProvider, false)
                 .OfType<DerivationStrategy>()
                 .FirstOrDefault(d => d.PaymentId == id);
             return existing;
@@ -57,7 +59,7 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("{storeId}/derivations/{cryptoCode}")]
-        public async Task<IActionResult> AddDerivationScheme(string storeId, DerivationSchemeViewModel vm, string cryptoCode)
+        public async Task<IActionResult> AddDerivationScheme(string storeId, DerivationSchemeViewModel vm, string command, string cryptoCode)
         {
             vm.ServerUrl = WalletsController.GetLedgerWebsocketUrl(this.HttpContext, cryptoCode, null);
             vm.CryptoCode = cryptoCode;
@@ -83,8 +85,9 @@ namespace BTCPayServer.Controllers
             {
                 if (!string.IsNullOrEmpty(vm.DerivationScheme))
                 {
-                    strategy = ParseDerivationStrategy(vm.DerivationScheme, null, network);
+                    strategy = ParseDerivationStrategy(vm.DerivationScheme, null, network, vm.Enabled);
                     vm.DerivationScheme = strategy.ToString();
+                    vm.Enabled = strategy.Enabled;
                 }
             }
             catch
@@ -93,10 +96,8 @@ namespace BTCPayServer.Controllers
                 vm.Confirmation = false;
                 return View(vm);
             }
-
             if (!vm.Confirmation && strategy != null)
                 return ShowAddresses(vm, strategy);
-
             if (vm.Confirmation && !string.IsNullOrWhiteSpace(vm.HintAddress))
             {
                 BitcoinAddress address = null;
@@ -112,7 +113,7 @@ namespace BTCPayServer.Controllers
 
                 try
                 {
-                    strategy = ParseDerivationStrategy(vm.DerivationScheme, address.ScriptPubKey, network);
+                    strategy = ParseDerivationStrategy(vm.DerivationScheme, address.ScriptPubKey, network, vm.Enabled);
                 }
                 catch
                 {
@@ -129,7 +130,7 @@ namespace BTCPayServer.Controllers
             {
                 try
                 {
-                    if (strategy != null)
+                    if (strategy != null)                 
                         await wallet.TrackAsync(strategy.DerivationStrategyBase);
                     store.SetSupportedPaymentMethod(paymentMethodId, strategy);
                 }
@@ -139,6 +140,7 @@ namespace BTCPayServer.Controllers
                     return View(vm);
                 }
 
+               
                 await _Repo.UpdateStore(store);
                 StatusMessage = $"Derivation scheme for {network.CryptoCode} has been modified.";
                 return RedirectToAction(nameof(UpdateStore), new { storeId = storeId });

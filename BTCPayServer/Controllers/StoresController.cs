@@ -417,7 +417,7 @@ namespace BTCPayServer.Controllers
         {
             var derivationByCryptoCode =
                 store
-                .GetSupportedPaymentMethods(_NetworkProvider)
+                .GetSupportedPaymentMethods(_NetworkProvider, false)
                 .OfType<DerivationStrategy>()
                 .ToDictionary(c => c.Network.CryptoCode);
             foreach (var network in _NetworkProvider.GetAll())
@@ -428,11 +428,12 @@ namespace BTCPayServer.Controllers
                     Crypto = network.CryptoCode,
                     Value = strategy?.DerivationStrategyBase?.ToString() ?? string.Empty,
                     WalletId = new WalletId(store.Id, network.CryptoCode),
+                    Enabled = strategy?.Enabled ?? false
                 });
             }
 
             var lightningByCryptoCode = store
-                                        .GetSupportedPaymentMethods(_NetworkProvider)
+                                        .GetSupportedPaymentMethods(_NetworkProvider, false)
                                         .OfType<Payments.Lightning.LightningSupportedPaymentMethod>()
                                         .ToDictionary(c => c.CryptoCode);
 
@@ -442,7 +443,8 @@ namespace BTCPayServer.Controllers
                 vm.LightningNodes.Add(new StoreViewModel.LightningNode()
                 {
                     CryptoCode = network.CryptoCode,
-                    Address = lightning?.GetLightningUrl()?.BaseUri.AbsoluteUri ?? string.Empty
+                    Address = lightning?.GetLightningUrl()?.BaseUri.AbsoluteUri ?? string.Empty,
+                    Enabled = lightning?.Enabled ?? false
                 });
             }
         }
@@ -523,11 +525,11 @@ namespace BTCPayServer.Controllers
                     .ToArray();
         }
 
-        private DerivationStrategy ParseDerivationStrategy(string derivationScheme, Script hint, BTCPayNetwork network)
+        private DerivationStrategy ParseDerivationStrategy(string derivationScheme, Script hint, BTCPayNetwork network, bool enabled)
         {
             var parser = new DerivationSchemeParser(network.NBitcoinNetwork);
             parser.HintScriptPubKey = hint;
-            return new DerivationStrategy(parser.Parse(derivationScheme), network);
+            return new DerivationStrategy(parser.Parse(derivationScheme), network, enabled);
         }
 
         [HttpGet]

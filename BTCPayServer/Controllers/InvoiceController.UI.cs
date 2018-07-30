@@ -505,7 +505,7 @@ namespace BTCPayServer.Controllers
                 return View(model);
             }
 
-            if (store.GetSupportedPaymentMethods(_NetworkProvider).Count() == 0)
+            if (!store.GetSupportedPaymentMethods(_NetworkProvider, true).Any())
             {
                 ModelState.AddModelError(nameof(model.StoreId), "You need to configure the derivation scheme in order to create an invoice");
                 return View(model);

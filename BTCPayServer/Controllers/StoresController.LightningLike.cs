@@ -136,7 +136,7 @@ namespace BTCPayServer.Controllers
                 };
                 paymentMethod.SetLightningUrl(connectionString);
                 var storeBlob = store.GetStoreBlob();
-                storeBlob.SetExcluded(paymentMethod.PaymentId , vm.Enabled);
+                storeBlob.SetExcluded(paymentMethod.PaymentId , !vm.Enabled);
                 store.SetStoreBlob(storeBlob);
             }
 

@@ -29,6 +29,7 @@ In addition to Bitcoin, we support the following crypto currencies:
 * Feathercoin
 * Groestlcoin
 * Litecoin
+* Dash
 * Monacoin
 * Polis
 * UFO
@@ -72,4 +73,4 @@ On linux:
 
 ## Other dependencies
 
-For more information see the documentation [How to deploy a BTCPay server instance](https://github.com/btcpayserver/btcpayserver-doc/blob/master/Deployment.md).
+For more information see the documentation [How to deploy a BTCPay server instance](https://github.com/btcpayserver/btcpayserver-doc/#deployment).

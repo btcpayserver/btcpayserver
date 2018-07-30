@@ -120,19 +120,19 @@ namespace BTCPayServer.Controllers
             {
                 currencyPairs = "";
                 var supportedMethods = store.GetSupportedPaymentMethods(_NetworkProvider);
-                var currencyCodes = supportedMethods.Where(method => !string.IsNullOrEmpty(method.PaymentId.CryptoCode))
-                    .Select(method => method.PaymentId.CryptoCode).Distinct();
+                var currencyCodes = supportedMethods.Select(method => method.PaymentId.CryptoCode).Distinct();
                 var defaultCrypto = store.GetDefaultCrypto(_NetworkProvider);
 
+                StringBuilder currencyPairsBuilder = new StringBuilder();
                 foreach (var currencyCode in currencyCodes)
                 {
                     if (!string.IsNullOrEmpty(currencyPairs))
                     {
-                        currencyPairs += ",";
+                        currencyPairsBuilder.Append(",");
                     }
-                    currencyPairs += $"{defaultCrypto}_{currencyCode}";
+                    currencyPairsBuilder.Append($"{defaultCrypto}_{currencyCode}");
                 }
-
+                currencyPairs = currencyPairsBuilder.ToString();
 
                 if (string.IsNullOrEmpty(currencyPairs))
                 {

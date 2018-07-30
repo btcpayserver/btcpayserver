@@ -16,7 +16,7 @@
 <div class="row">
     <div class="col-md-8">
         <form method="post">
-            @if (!Model.Confirmation)
+            @if(!Model.Confirmation)
             {
                 <div class="form-group">
                     <h5>Derivation Scheme</h5>
@@ -33,7 +33,7 @@
                     <div id="ledger-info" class="form-text text-muted" style="display: none;">
                         <span>A ledger wallet is detected, which account do you want to use?</span>
                         <ul>
-                            @for (int i = 0; i < 4; i++)
+                            @for(int i = 0; i < 4; i++)
                             {
                                 <li><a class="ledger-info-recommended" data-ledgeraccount="@i" href="#">Account @i (<span>@Model.RootKeyPath.Derive(i, true)</span>)</a></li>
                             }
@@ -77,10 +77,9 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="form-check">
-                    <input id="enabled" asp-for="Enabled" class="form-check-input" />
-                    <label asp-for="Enabled" class="form-check-label"></label>
-                    <span asp-validation-for="Enabled" class="text-danger"></span>
+                <div class="form-group">
+                    <label asp-for="Enabled"></label>
+                    <input asp-for="Enabled" type="checkbox" class="form-check" />
                 </div>
                 <button name="command" type="submit" class="btn btn-primary" value="save">Continue</button>
             }
@@ -102,7 +101,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var sample in Model.AddressSamples)
+                            @foreach(var sample in Model.AddressSamples)
                             {
                                 <tr>
                                     <td>@sample.KeyPath</td>

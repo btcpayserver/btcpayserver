@@ -37,7 +37,6 @@ namespace BTCPayServer.Controllers
             vm.ServerUrl = WalletsController.GetLedgerWebsocketUrl(this.HttpContext, cryptoCode, null);
             vm.CryptoCode = cryptoCode;
             vm.RootKeyPath = network.GetRootKeyPath();
-           
             SetExistingValues(store, vm);
             return View(vm);
         }
@@ -45,7 +44,6 @@ namespace BTCPayServer.Controllers
         private void SetExistingValues(StoreData store, DerivationSchemeViewModel vm)
         {
             var strategy = GetExistingDerivationStrategy(vm.CryptoCode, store);
-            
             vm.DerivationScheme = strategy?.DerivationStrategyBase.ToString();
             vm.Enabled = strategy?.Enabled ?? false;
         }
@@ -100,7 +98,6 @@ namespace BTCPayServer.Controllers
             }
             if (!vm.Confirmation && strategy != null)
                 return ShowAddresses(vm, strategy);
-            
             if (vm.Confirmation && !string.IsNullOrWhiteSpace(vm.HintAddress))
             {
                 BitcoinAddress address = null;
@@ -137,7 +134,7 @@ namespace BTCPayServer.Controllers
                         await wallet.TrackAsync(strategy.DerivationStrategyBase);
                     store.SetSupportedPaymentMethod(paymentMethodId, strategy);
                 }
-                catch (Exception e)
+                catch
                 {
                     ModelState.AddModelError(nameof(vm.DerivationScheme), "Invalid Derivation Scheme");
                     return View(vm);

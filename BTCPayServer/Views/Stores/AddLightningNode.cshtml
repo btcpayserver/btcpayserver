@@ -52,7 +52,7 @@
                 <p>You can set <code>allowinsecure</code> to <code>true</code> if your LND REST server is using HTTP or HTTPS with an untrusted certificate which you don't know the <code>certthumprint</code></p>
             </div>
             <div class="form-group">
-                <label asp-for="ConnectionString" class=""></label>
+                <label asp-for="ConnectionString"></label>
                 <input id="lightningurl" asp-for="ConnectionString" class="form-control" />
                 <span asp-validation-for="ConnectionString" class="text-danger"></span>
                 @if (Model.InternalLightningNode != null)

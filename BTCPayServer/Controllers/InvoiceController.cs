@@ -123,9 +123,10 @@ namespace BTCPayServer.Controllers
 
             HashSet<CurrencyPair> currencyPairsToFetch = new HashSet<CurrencyPair>();
             var rules = storeBlob.GetRateRules(_NetworkProvider);
-
+            var excludeFilter = storeBlob.GetExcludedPaymentMethods(); // Here we can compose filters from other origin with PaymentFilter.Any()
             foreach (var network in store.GetSupportedPaymentMethods(_NetworkProvider)
-                                               .Select(c => _NetworkProvider.GetNetwork(c.PaymentId.CryptoCode))
+                                                .Where(s => !excludeFilter.Match(s.PaymentId))
+                                                .Select(c => _NetworkProvider.GetNetwork(c.PaymentId.CryptoCode))
                                                 .Where(c => c != null))
             {
                 currencyPairsToFetch.Add(new CurrencyPair(network.CryptoCode, invoice.Currency));
@@ -140,6 +141,7 @@ namespace BTCPayServer.Controllers
 
             var fetchingAll = WhenAllFetched(logs, fetchingByCurrencyPair);
             var supportedPaymentMethods = store.GetSupportedPaymentMethods(_NetworkProvider)
+                                               .Where(s => !excludeFilter.Match(s.PaymentId))
                                                .Select(c =>
                                                 (Handler: (IPaymentMethodHandler)_ServiceProvider.GetService(typeof(IPaymentMethodHandler<>).MakeGenericType(c.GetType())),
                                                 SupportedPaymentMethod: c,

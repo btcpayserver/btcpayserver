@@ -404,7 +404,7 @@ namespace BTCPayServer.Controllers
             vm.NetworkFee = !storeBlob.NetworkFeeDisabled;
             vm.SpeedPolicy = store.SpeedPolicy;
             vm.CanDelete = _Repo.CanDeleteStores();
-            AddPaymentMethods(store, vm);
+            AddPaymentMethods(store, storeBlob, vm);
             vm.MonitoringExpiration = storeBlob.MonitoringExpiration;
             vm.InvoiceExpiration = storeBlob.InvoiceExpiration;
             vm.LightningDescriptionTemplate = storeBlob.LightningDescriptionTemplate;
@@ -413,8 +413,9 @@ namespace BTCPayServer.Controllers
         }
 
 
-        private void AddPaymentMethods(StoreData store, StoreViewModel vm)
+        private void AddPaymentMethods(StoreData store, StoreBlob storeBlob, StoreViewModel vm)
         {
+            var excludeFilters = storeBlob.GetExcludedPaymentMethods();
             var derivationByCryptoCode =
                 store
                 .GetSupportedPaymentMethods(_NetworkProvider)
@@ -428,6 +429,7 @@ namespace BTCPayServer.Controllers
                     Crypto = network.CryptoCode,
                     Value = strategy?.DerivationStrategyBase?.ToString() ?? string.Empty,
                     WalletId = new WalletId(store.Id, network.CryptoCode),
+                    Enabled = !excludeFilters.Match(new Payments.PaymentMethodId(network.CryptoCode, Payments.PaymentTypes.BTCLike))
                 });
             }
 
@@ -439,10 +441,12 @@ namespace BTCPayServer.Controllers
             foreach (var network in _NetworkProvider.GetAll())
             {
                 var lightning = lightningByCryptoCode.TryGet(network.CryptoCode);
+                var paymentId = new Payments.PaymentMethodId(network.CryptoCode, Payments.PaymentTypes.LightningLike);
                 vm.LightningNodes.Add(new StoreViewModel.LightningNode()
                 {
                     CryptoCode = network.CryptoCode,
-                    Address = lightning?.GetLightningUrl()?.BaseUri.AbsoluteUri ?? string.Empty
+                    Address = lightning?.GetLightningUrl()?.BaseUri.AbsoluteUri ?? string.Empty,
+                    Enabled = !excludeFilters.Match(paymentId)
                 });
             }
         }

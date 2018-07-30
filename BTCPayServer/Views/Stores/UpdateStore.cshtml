@@ -70,6 +70,7 @@
                         <tr>
                             <th>Crypto</th>
                             <th>Derivation Scheme</th>
+                            <th>Enabled</th>
                             <th style="text-align:right">Actions</th>
                         </tr>
                     </thead>
@@ -79,6 +80,9 @@
                             <tr>
                                 <td>@scheme.Crypto</td>
                                 <td style="max-width:300px;overflow:hidden;">@scheme.Value</td>
+                                <td>
+                                        @(scheme.Enabled ? "Yes" : "No")
+                                </td>
                                 <td style="text-align:right">
                                     @if(!string.IsNullOrWhiteSpace(scheme.Value))
                                     {
@@ -106,6 +110,7 @@
                             <tr>
                                 <th>Crypto</th>
                                 <th>Address</th>
+                                <th>Enabled</th>
                                 <th style="text-align:right">Actions</th>
                             </tr>
                         </thead>
@@ -115,6 +120,9 @@
                                 <tr>
                                     <td>@scheme.CryptoCode</td>
                                     <td>@scheme.Address</td>
+                                    <td>
+                                        @(scheme.Enabled ? "Yes" : "No")
+                                    </td>
                                     <td style="text-align:right"><a asp-action="AddLightningNode" asp-route-cryptoCode="@scheme.CryptoCode">Modify</a></td>
                                 </tr>
                             }

@@ -745,20 +745,20 @@ namespace BTCPayServer.Tests
 
                 var rateController = acc.GetController<RateController>();
                 var GetBaseCurrencyRatesResult = JObject.Parse(((JsonResult)rateController.GetBaseCurrencyRates("BTC", acc.StoreId)
-                    .GetAwaiter().GetResult()).ToJson()).ToObject<DataWrapper<Rate[]>>();
+                    .GetAwaiter().GetResult()).Value.ToJson()).ToObject<DataWrapper<Rate[]>>();
                 Assert.NotNull(GetBaseCurrencyRatesResult);
                 Assert.NotNull(GetBaseCurrencyRatesResult.Data);
-                Assert.Single(GetBaseCurrencyRatesResult.Data);
-                Assert.Equal("LTC", GetBaseCurrencyRatesResult.Data.First().Code);
+                Assert.Equal(2, GetBaseCurrencyRatesResult.Data.Length);
+                Assert.Single(GetBaseCurrencyRatesResult.Data.Where(o => o.Code == "LTC"));
 
                 var GetRatesResult = JObject.Parse(((JsonResult)rateController.GetRates(null, acc.StoreId)
-                    .GetAwaiter().GetResult()).ToJson()).ToObject<DataWrapper<Rate[]>>();
+                    .GetAwaiter().GetResult()).Value.ToJson()).ToObject<DataWrapper<Rate[]>>();
                 Assert.NotNull(GetRatesResult);
                 Assert.NotNull(GetRatesResult.Data);
                 Assert.Equal(2, GetRatesResult.Data.Length);
 
                 var GetCurrencyPairRateResult = JObject.Parse(((JsonResult)rateController.GetCurrencyPairRate("BTC", "LTC", acc.StoreId)
-                    .GetAwaiter().GetResult()).ToJson()).ToObject<DataWrapper<Rate>>();
+                    .GetAwaiter().GetResult()).Value.ToJson()).ToObject<DataWrapper<Rate>>();
 
                 Assert.NotNull(GetCurrencyPairRateResult);
                 Assert.NotNull(GetCurrencyPairRateResult.Data);
@@ -1294,6 +1294,63 @@ namespace BTCPayServer.Tests
 
             result = parser.Parse(tpub);
             Assert.Equal($"{tpub}-[p2sh]", result.ToString());
+        }
+
+        [Fact]
+        public void CanDisablePaymentMethods()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.Start();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                user.RegisterDerivationScheme("BTC");
+                user.RegisterDerivationScheme("LTC");
+                user.RegisterLightningNode("BTC", LightningConnectionType.CLightning);
+
+                var invoice = user.BitPay.CreateInvoice(new Invoice()
+                {
+                    Price = 1.5m,
+                    Currency = "USD",
+                    PosData = "posData",
+                    OrderId = "orderId",
+                    ItemDesc = "Some description",
+                    FullNotifications = true
+                }, Facade.Merchant);
+
+                Assert.Equal(3, invoice.CryptoInfo.Length);
+
+                var controller = user.GetController<StoresController>();
+                var lightningVM = (LightningNodeViewModel)Assert.IsType<ViewResult>(controller.AddLightningNode(user.StoreId, "BTC")).Model;
+                Assert.True(lightningVM.Enabled);
+                lightningVM.Enabled = false;
+                controller.AddLightningNode(user.StoreId, lightningVM, "save", "BTC").GetAwaiter().GetResult();
+                lightningVM = (LightningNodeViewModel)Assert.IsType<ViewResult>(controller.AddLightningNode(user.StoreId, "BTC")).Model;
+                Assert.False(lightningVM.Enabled);
+
+                var derivationVM = (DerivationSchemeViewModel)Assert.IsType<ViewResult>(controller.AddDerivationScheme(user.StoreId, "BTC")).Model;
+                Assert.True(derivationVM.Enabled);
+                derivationVM.Enabled = false;
+                derivationVM = (DerivationSchemeViewModel)Assert.IsType<ViewResult>(controller.AddDerivationScheme(user.StoreId, derivationVM, "BTC").GetAwaiter().GetResult()).Model;
+                // Confirmation
+                controller.AddDerivationScheme(user.StoreId, derivationVM, "BTC").GetAwaiter().GetResult();
+                Assert.False(derivationVM.Enabled);
+                derivationVM = (DerivationSchemeViewModel)Assert.IsType<ViewResult>(controller.AddDerivationScheme(user.StoreId, "BTC")).Model;
+                Assert.False(derivationVM.Enabled);
+
+                invoice = user.BitPay.CreateInvoice(new Invoice()
+                {
+                    Price = 1.5m,
+                    Currency = "USD",
+                    PosData = "posData",
+                    OrderId = "orderId",
+                    ItemDesc = "Some description",
+                    FullNotifications = true
+                }, Facade.Merchant);
+
+                Assert.Single(invoice.CryptoInfo);
+                Assert.Equal("LTC", invoice.CryptoInfo[0].CryptoCode);
+            }
         }
 
         [Fact]

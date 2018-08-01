@@ -5,6 +5,21 @@
     ViewData.AddActivePage(BTCPayServer.Views.Stores.StoreNavPages.Index);
 }
 
+
+
+<style type="text/css">
+    .smMaxWidth {
+        max-width: 150px;
+    }
+
+    @@media (min-width: 768px) {
+        .smMaxWidth {
+            max-width: 300px;
+        }
+    }
+</style>
+
+
 <h4>@ViewData["Title"]</h4>
 <partial name="_StatusMessage" for="@TempData["TempDataProperty-StatusMessage"]" />
 
@@ -70,8 +85,8 @@
                         <tr>
                             <th>Crypto</th>
                             <th>Derivation Scheme</th>
-                            <th>Enabled</th>
-                            <th style="text-align:right">Actions</th>
+                            <th style="text-align:center;">Enabled</th>
+                            <th style="text-align:right;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -79,9 +94,16 @@
                         {
                             <tr>
                                 <td>@scheme.Crypto</td>
-                                <td style="max-width:300px;overflow:hidden;">@scheme.Value</td>
-                                <td>
-                                        @(scheme.Enabled ? "Yes" : "No")
+                                <td class="smMaxWidth text-truncate">@scheme.Value</td>
+                                <td style="text-align:center;">
+                                    @if(scheme.Enabled)
+                                    {
+                                        <span class="fa fa-check"></span>
+                                    }
+                                    else
+                                    {
+                                        <span class="fa fa-times"></span>
+                                    }
                                 </td>
                                 <td style="text-align:right">
                                     @if(!string.IsNullOrWhiteSpace(scheme.Value))
@@ -110,7 +132,7 @@
                             <tr>
                                 <th>Crypto</th>
                                 <th>Address</th>
-                                <th>Enabled</th>
+                                <th style="text-align:center;">Enabled</th>
                                 <th style="text-align:right">Actions</th>
                             </tr>
                         </thead>
@@ -119,9 +141,16 @@
                             {
                                 <tr>
                                     <td>@scheme.CryptoCode</td>
-                                    <td>@scheme.Address</td>
-                                    <td>
-                                        @(scheme.Enabled ? "Yes" : "No")
+                                    <td class="smMaxWidth text-truncate">@scheme.Address</td>
+                                    <td style="text-align:center;">
+                                        @if(scheme.Enabled)
+                                        {
+                                            <span class="fa fa-check"></span>
+                                        }
+                                        else
+                                        {
+                                            <span class="fa fa-times"></span>
+                                        }
                                     </td>
                                     <td style="text-align:right"><a asp-action="AddLightningNode" asp-route-cryptoCode="@scheme.CryptoCode">Modify</a></td>
                                 </tr>

@@ -137,6 +137,23 @@ namespace BTCPayServer
                         request.PathBase.ToUriComponent());
         }
 
+        public static string GetCurrentUrl(this HttpRequest request)
+        {
+            return string.Concat(
+                        request.Scheme,
+                        "://",
+                        request.Host.ToUriComponent(),
+                        request.PathBase.ToUriComponent(),
+                        request.Path.ToUriComponent());
+        }
+
+        public static string GetCurrentPath(this HttpRequest request)
+        {
+            return string.Concat(
+                        request.PathBase.ToUriComponent(),
+                        request.Path.ToUriComponent());
+        }
+
         public static string GetAbsoluteUri(this HttpRequest request, string redirectUrl)
         {
             bool isRelative =

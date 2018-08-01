@@ -17,6 +17,7 @@ using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Logging;
 using BTCPayServer.Security;
+using System.Globalization;
 
 namespace BTCPayServer.Controllers
 {
@@ -236,23 +237,25 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        public async Task<IActionResult> Register(string returnUrl = null)
+        public async Task<IActionResult> Register(string returnUrl = null, bool logon = true)
         {
             var policies = await _SettingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
-            if (policies.LockSubscription)
+            if (policies.LockSubscription && !User.IsInRole(Roles.ServerAdmin))
                 return RedirectToAction(nameof(HomeController.Index), "Home");
             ViewData["ReturnUrl"] = returnUrl;
+            ViewData["Logon"] = logon.ToString(CultureInfo.InvariantCulture).ToLowerInvariant();
             return View();
         }
 
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(RegisterViewModel model, string returnUrl = null)
+        public async Task<IActionResult> Register(RegisterViewModel model, string returnUrl = null, bool logon = true)
         {
             ViewData["ReturnUrl"] = returnUrl;
+            ViewData["Logon"] = logon.ToString(CultureInfo.InvariantCulture).ToLowerInvariant();
             var policies = await _SettingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
-            if (policies.LockSubscription)
+            if (policies.LockSubscription && !User.IsInRole(Roles.ServerAdmin))
                 return RedirectToAction(nameof(HomeController.Index), "Home");
             if (ModelState.IsValid)
             {
@@ -274,7 +277,8 @@ namespace BTCPayServer.Controllers
                     await _emailSender.SendEmailConfirmationAsync(model.Email, callbackUrl);
                     if (!policies.RequiresConfirmedEmail)
                     {
-                        await _signInManager.SignInAsync(user, isPersistent: false);
+                        if(logon)
+                            await _signInManager.SignInAsync(user, isPersistent: false);
                         return RedirectToLocal(returnUrl);
                     }
                     else

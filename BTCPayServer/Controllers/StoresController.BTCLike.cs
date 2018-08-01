@@ -79,6 +79,11 @@ namespace BTCPayServer.Controllers
             }
 
             PaymentMethodId paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
+            var exisingStrategy = store.GetSupportedPaymentMethods(_NetworkProvider)
+                                       .Where(c => c.PaymentId == paymentMethodId)
+                                       .OfType<DerivationStrategy>()
+                                       .Select(c => c.DerivationStrategyBase.ToString())
+                                       .FirstOrDefault();
             DerivationStrategy strategy = null;
             try
             {
@@ -94,9 +99,33 @@ namespace BTCPayServer.Controllers
                 vm.Confirmation = false;
                 return View(vm);
             }
-            if (!vm.Confirmation && strategy != null)
-                return ShowAddresses(vm, strategy);
-            if (vm.Confirmation && !string.IsNullOrWhiteSpace(vm.HintAddress))
+
+            var showAddress = (vm.Confirmation && !string.IsNullOrWhiteSpace(vm.HintAddress)) || // Testing hint address
+                              (!vm.Confirmation && strategy != null && exisingStrategy != strategy.DerivationStrategyBase.ToString());  // Checking addresses after setting xpub
+
+            if (!showAddress)
+            {
+                try
+                {
+                    if (strategy != null)
+                        await wallet.TrackAsync(strategy.DerivationStrategyBase);
+                    store.SetSupportedPaymentMethod(paymentMethodId, strategy);
+
+                    var storeBlob = store.GetStoreBlob();
+                    storeBlob.SetExcluded(paymentMethodId, !vm.Enabled);
+                    store.SetStoreBlob(storeBlob);
+                }
+                catch
+                {
+                    ModelState.AddModelError(nameof(vm.DerivationScheme), "Invalid Derivation Scheme");
+                    return View(vm);
+                }
+
+                await _Repo.UpdateStore(store);
+                StatusMessage = $"Derivation scheme for {network.CryptoCode} has been modified.";
+                return RedirectToAction(nameof(UpdateStore), new { storeId = storeId });
+            }
+            else if (!string.IsNullOrEmpty(vm.HintAddress))
             {
                 BitcoinAddress address = null;
                 try
@@ -122,30 +151,8 @@ namespace BTCPayServer.Controllers
                 vm.StatusMessage = "Address successfully found, please verify that the rest is correct and click on \"Confirm\"";
                 ModelState.Remove(nameof(vm.HintAddress));
                 ModelState.Remove(nameof(vm.DerivationScheme));
-                return ShowAddresses(vm, strategy);
             }
-            else
-            {
-                try
-                {
-                    if (strategy != null)
-                        await wallet.TrackAsync(strategy.DerivationStrategyBase);
-                    store.SetSupportedPaymentMethod(paymentMethodId, strategy);
-
-                    var storeBlob = store.GetStoreBlob();
-                    storeBlob.SetExcluded(paymentMethodId, !vm.Enabled);
-                    store.SetStoreBlob(storeBlob);
-                }
-                catch
-                {
-                    ModelState.AddModelError(nameof(vm.DerivationScheme), "Invalid Derivation Scheme");
-                    return View(vm);
-                }
-
-                await _Repo.UpdateStore(store);
-                StatusMessage = $"Derivation scheme for {network.CryptoCode} has been modified.";
-                return RedirectToAction(nameof(UpdateStore), new { storeId = storeId });
-            }
+            return ShowAddresses(vm, strategy);
         }
 
         private IActionResult ShowAddresses(DerivationSchemeViewModel vm, DerivationStrategy strategy)

@@ -281,23 +281,9 @@ namespace BTCPayServer.Data
             set;
         }
 
-        public void SetRateMultiplier(double rate)
-        {
-            RateRules = new List<RateRule_Obsolete>();
-            RateRules.Add(new RateRule_Obsolete() { Multiplier = rate });
-        }
-        public decimal GetRateMultiplier()
-        {
-            decimal rate = 1.0m;
-            if (RateRules == null || RateRules.Count == 0)
-                return rate;
-            foreach (var rule in RateRules)
-            {
-                rate = rule.Apply(null, rate);
-            }
-            return rate;
-        }
+        public decimal Spread { get; set; } = 0.0m;
 
+        [Obsolete]
         public List<RateRule_Obsolete> RateRules { get; set; } = new List<RateRule_Obsolete>();
         public string PreferredExchange { get; set; }
 
@@ -344,7 +330,7 @@ namespace BTCPayServer.Data
             }
             else
             {
-                rules.GlobalMultiplier = GetRateMultiplier();
+                rules.Spread = Spread;
                 return rules;
             }
         }
@@ -370,7 +356,7 @@ namespace BTCPayServer.Data
             builder.AppendLine($"X_X = {preferredExchange}(X_X);");
 
             BTCPayServer.Rating.RateRules.TryParse(builder.ToString(), out var rules);
-            rules.GlobalMultiplier = GetRateMultiplier();
+            rules.Spread = Spread;
             return rules;
         }
 

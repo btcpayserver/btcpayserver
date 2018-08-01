@@ -99,7 +99,20 @@ namespace BTCPayServer.Rating
         SyntaxNode root;
         RuleList ruleList;
 
-        public decimal GlobalMultiplier { get; set; } = 1.0m;
+        decimal _Spread;
+        public decimal Spread
+        {
+            get
+            {
+                return _Spread;
+            }
+            set
+            {
+                if (value > 1.0m || value < 0.0m)
+                    throw new ArgumentOutOfRangeException(paramName: nameof(value), message: "The spread should be between 0 and 1");
+                _Spread = value;
+            }
+        }
 
         RateRules(SyntaxNode root)
         {
@@ -136,9 +149,9 @@ namespace BTCPayServer.Rating
             if (currencyPair.Left == currencyPair.Right)
                 return new RateRule(this, currencyPair, CreateExpression("1.0"));
             var candidate = FindBestCandidate(currencyPair);
-            if (GlobalMultiplier != decimal.One)
+            if (Spread != decimal.Zero)
             {
-                candidate = CreateExpression($"({candidate}) * {GlobalMultiplier.ToString(CultureInfo.InvariantCulture)}");
+                candidate = CreateExpression($"({candidate}) * ({(1.0m - Spread).ToString(CultureInfo.InvariantCulture)}, {(1.0m + Spread).ToString(CultureInfo.InvariantCulture)})");
             }
             return new RateRule(this, currencyPair, candidate);
         }
@@ -257,7 +270,7 @@ namespace BTCPayServer.Rating
                 {
                     case SyntaxKind.UnaryMinusExpression:
                         var v = Values.Pop();
-                        if(v.Bid == v.Ask)
+                        if (v.Bid == v.Ask)
                         {
                             Values.Push(-v);
                         }
@@ -338,7 +351,7 @@ namespace BTCPayServer.Rating
             {
                 _TupleValues = new Stack<decimal>();
                 base.VisitTupleExpression(node);
-                if(_TupleValues.Count != 2)
+                if (_TupleValues.Count != 2)
                 {
                     Errors.Add(RateRulesErrors.MissingArgument);
                 }

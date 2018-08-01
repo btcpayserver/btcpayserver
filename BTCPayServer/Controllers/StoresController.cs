@@ -179,7 +179,7 @@ namespace BTCPayServer.Controllers
             var storeBlob = StoreData.GetStoreBlob();
             var vm = new RatesViewModel();
             vm.SetExchangeRates(GetSupportedExchanges(), storeBlob.PreferredExchange ?? CoinAverageRateProvider.CoinAverageName);
-            vm.RateMultiplier = (double)storeBlob.GetRateMultiplier();
+            vm.Spread = (double)(storeBlob.Spread * 100m);
             vm.Script = storeBlob.GetRateRules(_NetworkProvider).ToString();
             vm.DefaultScript = storeBlob.GetDefaultRateRules(_NetworkProvider).ToString();
             vm.AvailableExchanges = GetSupportedExchanges();
@@ -204,7 +204,7 @@ namespace BTCPayServer.Controllers
             model.AvailableExchanges = GetSupportedExchanges();
 
             blob.PreferredExchange = model.PreferredExchange;
-            blob.SetRateMultiplier(model.RateMultiplier);
+            blob.Spread = (decimal)model.Spread / 100.0m;
 
             if (!model.ShowScripting)
             {

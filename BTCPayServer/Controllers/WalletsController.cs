@@ -150,7 +150,7 @@ namespace BTCPayServer.Controllers
 
             var storeData = store.GetStoreBlob();
             var rateRules = store.GetStoreBlob().GetRateRules(_NetworkProvider);
-            rateRules.GlobalMultiplier = 1.0m;
+            rateRules.Spread = 0.0m;
             var currencyPair = new Rating.CurrencyPair(paymentMethod.PaymentId.CryptoCode, GetCurrencyCode(storeData.DefaultLang) ?? "USD");
             WalletModel model = new WalletModel();
             model.ServerUrl = GetLedgerWebsocketUrl(this.HttpContext, walletId.CryptoCode, paymentMethod.DerivationStrategyBase);

@@ -85,6 +85,7 @@ namespace BTCPayServer.HostedServices
                     }
                     blob.RateRules = null;
                     blob.Spread = Math.Min(1.0m, Math.Max(0m, -(multiplier - 1.0m)));
+                    store.SetStoreBlob(blob);
 #pragma warning restore CS0612 // Type or member is obsolete
                 }
                 await ctx.SaveChangesAsync();

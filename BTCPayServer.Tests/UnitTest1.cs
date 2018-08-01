@@ -982,8 +982,8 @@ namespace BTCPayServer.Tests
 
                 var storeController = user.GetController<StoresController>();
                 var vm = (RatesViewModel)((ViewResult)storeController.Rates()).Model;
-                Assert.Equal(1.0, vm.RateMultiplier);
-                vm.RateMultiplier = 0.5;
+                Assert.Equal(0.0, vm.Spread);
+                vm.Spread = 40;
                 storeController.Rates(vm).Wait();
 
 
@@ -997,7 +997,11 @@ namespace BTCPayServer.Tests
                     FullNotifications = true
                 }, Facade.Merchant);
 
-                Assert.True(invoice2.BtcPrice.Almost(invoice1.BtcPrice * 2, 0.00001m));
+                // The rate was 5000 USD per BTC
+                // Now it should be 3000 USD per BTC
+                // So the expected price should be
+                var expected = Money.Coins(5000m / 3000m);
+                Assert.True(invoice2.BtcPrice.Almost(expected, 0.00001m));
             }
         }
 
@@ -1079,7 +1083,7 @@ namespace BTCPayServer.Tests
                 var rateVm = Assert.IsType<RatesViewModel>(Assert.IsType<ViewResult>(store.Rates()).Model);
                 Assert.False(rateVm.ShowScripting);
                 Assert.Equal("coinaverage", rateVm.PreferredExchange);
-                Assert.Equal(1.0, rateVm.RateMultiplier);
+                Assert.Equal(0.0, rateVm.Spread);
                 Assert.Null(rateVm.TestRateRules);
 
                 rateVm.PreferredExchange = "bitflyer";
@@ -1088,13 +1092,13 @@ namespace BTCPayServer.Tests
                 Assert.Equal("bitflyer", rateVm.PreferredExchange);
 
                 rateVm.ScriptTest = "BTC_JPY,BTC_CAD";
-                rateVm.RateMultiplier = 1.1;
+                rateVm.Spread = 10;
                 store = user.GetController<StoresController>();
                 rateVm = Assert.IsType<RatesViewModel>(Assert.IsType<ViewResult>(store.Rates(rateVm, "Test").Result).Model);
                 Assert.NotNull(rateVm.TestRateRules);
                 Assert.Equal(2, rateVm.TestRateRules.Count);
                 Assert.False(rateVm.TestRateRules[0].Error);
-                Assert.StartsWith("(bitflyer(BTC_JPY)) * 1.10 =", rateVm.TestRateRules[0].Rule, StringComparison.OrdinalIgnoreCase);
+                Assert.StartsWith("(bitflyer(BTC_JPY)) * (0.9, 1.1) =", rateVm.TestRateRules[0].Rule, StringComparison.OrdinalIgnoreCase);
                 Assert.True(rateVm.TestRateRules[1].Error);
                 Assert.IsType<RedirectToActionResult>(store.Rates(rateVm, "Save").Result);
 
@@ -1107,19 +1111,19 @@ namespace BTCPayServer.Tests
                 rateVm.ScriptTest = "BTC_JPY";
                 rateVm = Assert.IsType<RatesViewModel>(Assert.IsType<ViewResult>(store.Rates(rateVm, "Test").Result).Model);
                 Assert.True(rateVm.ShowScripting);
-                Assert.Contains("(bitflyer(BTC_JPY)) * 1.10 = ", rateVm.TestRateRules[0].Rule, StringComparison.OrdinalIgnoreCase);
+                Assert.Contains("(bitflyer(BTC_JPY)) * (0.9, 1.1) = ", rateVm.TestRateRules[0].Rule, StringComparison.OrdinalIgnoreCase);
 
                 rateVm.ScriptTest = "BTC_USD,BTC_CAD,DOGE_USD,DOGE_CAD";
                 rateVm.Script = "DOGE_X = bittrex(DOGE_BTC) * BTC_X;\n" +
                                 "X_CAD = quadrigacx(X_CAD);\n" +
                                  "X_X = gdax(X_X);";
-                rateVm.RateMultiplier = 0.5;
+                rateVm.Spread = 50;
                 rateVm = Assert.IsType<RatesViewModel>(Assert.IsType<ViewResult>(store.Rates(rateVm, "Test").Result).Model);
                 Assert.True(rateVm.TestRateRules.All(t => !t.Error));
                 Assert.IsType<RedirectToActionResult>(store.Rates(rateVm, "Save").Result);
                 store = user.GetController<StoresController>();
                 rateVm = Assert.IsType<RatesViewModel>(Assert.IsType<ViewResult>(store.Rates()).Model);
-                Assert.Equal(0.5, rateVm.RateMultiplier);
+                Assert.Equal(50, rateVm.Spread);
                 Assert.True(rateVm.ShowScripting);
                 Assert.Contains("DOGE_X", rateVm.Script, StringComparison.OrdinalIgnoreCase);
             }

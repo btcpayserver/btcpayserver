@@ -53,11 +53,41 @@ namespace BTCPayServer.HostedServices
                     settings.UnreachableStoreCheck = true;
                     await _Settings.UpdateSetting(settings);
                 }
+                if (!settings.ConvertMultiplierToSpread)
+                {
+                    await ConvertMultiplierToSpread();
+                    settings.ConvertMultiplierToSpread = true;
+                    await _Settings.UpdateSetting(settings);
+                }
             }
             catch (Exception ex)
             {
                 Logs.PayServer.LogError(ex, "Error on the MigratorHostedService");
                 throw;
+            }
+        }
+
+        private async Task ConvertMultiplierToSpread()
+        {
+            using (var ctx = _DBContextFactory.CreateContext())
+            {
+                foreach (var store in await ctx.Stores.ToArrayAsync())
+                {
+                    var blob = store.GetStoreBlob();
+#pragma warning disable CS0612 // Type or member is obsolete
+                    decimal multiplier = 1.0m;
+                    if (blob.RateRules != null && blob.RateRules.Count != 0)
+                    {
+                        foreach (var rule in blob.RateRules)
+                        {
+                            multiplier = rule.Apply(null, multiplier);
+                        }
+                    }
+                    blob.RateRules = null;
+                    blob.Spread = Math.Min(1.0m, Math.Max(0m, -(multiplier - 1.0m)));
+#pragma warning restore CS0612 // Type or member is obsolete
+                }
+                await ctx.SaveChangesAsync();
             }
         }
 

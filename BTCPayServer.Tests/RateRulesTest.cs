@@ -46,8 +46,8 @@ namespace BTCPayServer.Tests
             {
                 Assert.Equal(test.Expected, rules.GetRuleFor(CurrencyPair.Parse(test.Pair)).ToString());
             }
-            rules.GlobalMultiplier = 2.32m;
-            Assert.Equal("(bittrex(DOGE_BTC) * gdax(BTC_USD) * 1.1) * 2.32", rules.GetRuleFor(CurrencyPair.Parse("DOGE_USD")).ToString());
+            rules.Spread = 0.2m;
+            Assert.Equal("(bittrex(DOGE_BTC) * gdax(BTC_USD) * 1.1) * (0.8, 1.2)", rules.GetRuleFor(CurrencyPair.Parse("DOGE_USD")).ToString());
             ////////////////
 
             // Check errors conditions
@@ -113,22 +113,22 @@ namespace BTCPayServer.Tests
             builder.AppendLine("BTC_USD = -3 + coinbase(BTC_CAD) + 50 - 5");
             builder.AppendLine("DOGE_BTC = 2000");
             Assert.True(RateRules.TryParse(builder.ToString(), out rules));
-            rules.GlobalMultiplier = 1.1m;
+            rules.Spread = 0.1m;
 
             rule2 = rules.GetRuleFor(CurrencyPair.Parse("DOGE_USD"));
-            Assert.Equal("(2000 * (-3 + coinbase(BTC_CAD) + 50 - 5)) * 1.1", rule2.ToString());
+            Assert.Equal("(2000 * (-3 + coinbase(BTC_CAD) + 50 - 5)) * (0.9, 1.1)", rule2.ToString());
             rule2.ExchangeRates.SetRate("coinbase", CurrencyPair.Parse("BTC_CAD"), new BidAsk(1000m));
             Assert.True(rule2.Reevaluate());
-            Assert.Equal("(2000 * (-3 + 1000 + 50 - 5)) * 1.1", rule2.ToString(true));
-            Assert.Equal((2000m * (-3m + 1000m + 50m - 5m)) * 1.1m, rule2.BidAsk.Bid);
+            Assert.Equal("(2000 * (-3 + 1000 + 50 - 5)) * (0.9, 1.1)", rule2.ToString(true));
+            Assert.Equal((2000m * (-3m + 1000m + 50m - 5m)) * 0.9m, rule2.BidAsk.Bid);
 
             // Test inverse
             rule2 = rules.GetRuleFor(CurrencyPair.Parse("USD_DOGE"));
-            Assert.Equal("(1 / (2000 * (-3 + coinbase(BTC_CAD) + 50 - 5))) * 1.1", rule2.ToString());
+            Assert.Equal("(1 / (2000 * (-3 + coinbase(BTC_CAD) + 50 - 5))) * (0.9, 1.1)", rule2.ToString());
             rule2.ExchangeRates.SetRate("coinbase", CurrencyPair.Parse("BTC_CAD"), new BidAsk(1000m));
             Assert.True(rule2.Reevaluate());
-            Assert.Equal("(1 / (2000 * (-3 + 1000 + 50 - 5))) * 1.1", rule2.ToString(true));
-            Assert.Equal((1.0m / (2000m * (-3m + 1000m + 50m - 5m))) * 1.1m, rule2.BidAsk.Bid);
+            Assert.Equal("(1 / (2000 * (-3 + 1000 + 50 - 5))) * (0.9, 1.1)", rule2.ToString(true));
+            Assert.Equal((1.0m / (2000m * (-3m + 1000m + 50m - 5m))) * 0.9m, rule2.BidAsk.Bid);
             ////////
 
             // Make sure kraken is not converted to CurrencyPair

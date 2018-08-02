@@ -56,8 +56,7 @@
                         <p><strong>Never</strong> trust anything but <code>id</code>, <strong>ignore</strong> the other fields completely, an attacker can spoof those, they are present only for backward compatibility reason:</p>
                         <p>
                             <ul>
-                                <li><strong>Build the invoice's url by yourself</strong> do not trust the <code>url</code> field, this can be spoofed to use attacker's server.</li>
-                                <li>Send a <code>GET</code> request to the invoice's url with <code>Content-Type: application/json</code></li>
+                                <li>Send a <code>GET</code> request to <code>https://btcpay.example.com/invoices/{invoiceId}</code> with <code>Content-Type: application/json</code></li>
                                 <li>Verify that the <code>orderId</code> is from your backend, that the <code>price</code> is correct and that <code>status</code> is either <code>confirmed</code> or <code>complete</code></li>
                                 <li>You can then ship your order</li>
                             </ul>

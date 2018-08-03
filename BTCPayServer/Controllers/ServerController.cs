@@ -32,6 +32,7 @@ namespace BTCPayServer.Controllers
     {
         private UserManager<ApplicationUser> _UserManager;
         SettingsRepository _SettingsRepository;
+        private readonly NBXplorerDashboard _dashBoard;
         private BTCPayRateProviderFactory _RateProviderFactory;
         private StoreRepository _StoreRepository;
         LightningConfigurationProvider _LnConfigProvider;
@@ -41,12 +42,14 @@ namespace BTCPayServer.Controllers
             Configuration.BTCPayServerOptions options,
             BTCPayRateProviderFactory rateProviderFactory,
             SettingsRepository settingsRepository,
+            NBXplorerDashboard dashBoard,
             LightningConfigurationProvider lnConfigProvider,
             Services.Stores.StoreRepository storeRepository)
         {
             _Options = options;
             _UserManager = userManager;
             _SettingsRepository = settingsRepository;
+            _dashBoard = dashBoard;
             _RateProviderFactory = rateProviderFactory;
             _StoreRepository = storeRepository;
             _LnConfigProvider = lnConfigProvider;
@@ -407,6 +410,11 @@ namespace BTCPayServer.Controllers
         [Route("server/services/lnd-grpc/{cryptoCode}/{index}")]
         public IActionResult LNDGRPCServices(string cryptoCode, int index, uint? nonce)
         {
+            if(!_dashBoard.IsFullySynched(cryptoCode, out var unusud))
+            {
+                StatusMessage = $"Error: {cryptoCode} is not fully synched";
+                return RedirectToAction(nameof(Services));
+            }
             var external = GetExternalLNDConnectionString(cryptoCode, index);
             if (external == null)
                 return NotFound();

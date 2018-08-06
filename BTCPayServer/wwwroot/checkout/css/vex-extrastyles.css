@@ -40,9 +40,12 @@
     display: none;
 }
 
+.cursorPointer {
+    cursor: pointer;
+}
+
 .payment__currencies {
     font-size: 14px;
-    cursor: pointer;
 }
 
     .payment__currencies img {

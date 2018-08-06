@@ -157,6 +157,10 @@ namespace BTCPayServer.Hosting
                 return bundle;
             });
 
+            services.AddCors(options=> 
+            {
+                options.AddPolicy(CorsPolicies.All, p=>p.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
+            });
             return services;
         }
 

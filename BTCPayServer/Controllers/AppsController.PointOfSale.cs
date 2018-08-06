@@ -19,6 +19,7 @@ using BTCPayServer.Services.Rates;
 using System.Globalization;
 using System.Text;
 using System.Text.Encodings.Web;
+using Microsoft.AspNetCore.Cors;
 
 namespace BTCPayServer.Controllers
 {
@@ -208,6 +209,7 @@ namespace BTCPayServer.Controllers
         [HttpPost]
         [Route("{appId}/pos")]
         [IgnoreAntiforgeryToken]
+        [EnableCors(CorsPolicies.All)]
         public async Task<IActionResult> ViewPointOfSale(string appId,
                                                         decimal amount,
                                                         string email,

@@ -231,7 +231,11 @@ namespace BTCPayServer.Controllers
             {
                 if (!isDefaultCrypto)
                     return null;
-                var paymentMethodTemp = invoice.GetPaymentMethods(_NetworkProvider).First();
+                var paymentMethodTemp = invoice.GetPaymentMethods(_NetworkProvider)
+                                               .Where(c=> paymentMethodId.CryptoCode == c.GetId().CryptoCode)
+                                               .FirstOrDefault();
+                if (paymentMethodTemp == null)
+                    paymentMethodTemp = invoice.GetPaymentMethods(_NetworkProvider).First();
                 network = paymentMethodTemp.Network;
                 paymentMethodId = paymentMethodTemp.GetId();
                 paymentMethodIdStr = paymentMethodId.ToString();

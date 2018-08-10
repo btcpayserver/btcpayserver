@@ -163,7 +163,7 @@ namespace BTCPayServer.Controllers
             using (var ctx = _ContextFactory.CreateContext())
             {
                 return await ctx.Apps
-                                .Where(us => us.Id == appId && 
+                                .Where(us => us.Id == appId &&
                                              us.AppType == appType.ToString())
                                 .FirstOrDefaultAsync();
             }
@@ -280,6 +280,13 @@ namespace BTCPayServer.Controllers
                 ctx.Entry<AppData>(app).Property(a => a.Settings).IsModified = true;
                 await ctx.SaveChangesAsync();
             }
+        }
+
+        [Route("{appId}/paybutton")]
+        public async Task<IActionResult> PayButton(string appId)
+        {
+            var model = new PayButtonViewModel();
+            return View(model);
         }
     }
 }

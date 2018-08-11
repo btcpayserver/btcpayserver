@@ -22,7 +22,7 @@
                 <div class="form-row">
                     <div class="form-group col-md-8">
                         <label>Price</label>
-                        <input type="email" class="form-control" id="inputEmail4">
+                        <input type="text" class="form-control" id="inputEmail4">
                     </div>
                     <div class="form-group col-md-4">
                         <label>&nbsp;</label>
@@ -31,6 +31,10 @@
                 </div>
                 <div class="form-group">
                     <label>Checkout Description</label>
+                    <input type="text" class="form-control" id="inputAddress" placeholder="(optional)">
+                </div>
+                <div class="form-group">
+                    <label>Order Id</label>
                     <input type="text" class="form-control" id="inputAddress" placeholder="(optional)">
                 </div>
                 <div class="form-group">
@@ -50,5 +54,54 @@
                 Clicking on the button will redirect customer to checkout.
             </div>
         </div>
+        <hr />
+        <h3>Payment Notifications</h3>
+        <br />
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="form-group">
+                    <label>Server IPN</label>
+                    <input type="text" class="form-control" id="inputAddress" placeholder="(optional)">
+                </div>
+                <div class="form-group">
+                    <label>Send Email Notifications to</label>
+                    <input type="text" class="form-control" id="inputAddress" placeholder="(optional)">
+                </div>
+                <div class="form-group">
+                    <label>Browser Redirect</label>
+                    <input type="text" class="form-control" id="inputAddress" placeholder="(optional)">
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <br />
+                These parameters allow you to influence process after purchase. <i>Server IPN</i> is location we'll query with details.
+                We can also deliver email notification to specified addres.
+                <br /><br />
+                Finally <i>Browser Redirect</i> defines where BtcPayServer will redirect customer after puchase is completed.
+            </div>
+        </div>
+        <hr />
+        <h3>Generated code</h3>
+        <div class="row">
+            <div class="col-lg-8">
+                <pre><code class="html">&lt;form method="POST" action="http://127.0.0.1:14142/apps/3jVExUHqRkGi4eaJEFCTxw5zjk14VAFzoVZXZJ3fbwED/pos"&gt;
+    &lt;input type="hidden" name="amount" value="10" /&gt;
+    &lt;input type="hidden" name="currency" value="USD" /&gt;
+    &lt;button type="submit"&gt;Buy now&lt;/button&gt;
+&lt;/form&gt;
+</code></pre>
+            </div>
+            <div class="col-lg-4">
+                <img src="~/img/paywithbtcpay.png" />
+            </div>
+        </div>
+        <br />
     </div>
 </section>
+
+
+@section Scripts {
+    <link rel="stylesheet" href="~/vendor/highlightjs/default.min.css">
+    <script src="~/vendor/highlightjs/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+}

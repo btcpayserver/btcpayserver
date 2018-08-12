@@ -38,6 +38,7 @@ namespace BTCPayServer.Configuration
             app.Option("--sshpassword", "SSH password to manage BTCPay (default: empty)", CommandOptionType.SingleValue);
             app.Option("--sshkeyfile", "SSH private key file to manage BTCPay (default: empty)", CommandOptionType.SingleValue);
             app.Option("--sshkeyfilepassword", "Password of the SSH keyfile (default: empty)", CommandOptionType.SingleValue);
+            app.Option("--sshtrustedfingerprints", "SSH Host SHA256 rsa fingerprint in base64 or hex (default: empty, it will allow untrusted connections)", CommandOptionType.SingleValue);
             foreach (var network in provider.GetAll())
             {
                 var crypto = network.CryptoCode.ToLowerInvariant();

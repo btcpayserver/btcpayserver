@@ -260,6 +260,29 @@ namespace BTCPayServer.Controllers
             ssh = $"sudo bash -c '. /etc/profile.d/btcpay-env.sh && nohup {ssh} > /dev/null 2>&1 & disown'";
             var sshClient = _Options.SSHSettings == null ? vm.CreateSSHClient(this.Request.Host.Host)
                                                          : new SshClient(_Options.SSHSettings.CreateConnectionInfo());
+
+            if (_Options.TrustedFingerprints.Count != 0)
+            {
+                sshClient.HostKeyReceived += (object sender, Renci.SshNet.Common.HostKeyEventArgs e) =>
+                {
+                    if (_Options.TrustedFingerprints.Count == 0)
+                    {
+                        Logs.Configuration.LogWarning($"SSH host fingerprint for {e.HostKey} is untrusted, start BTCPay with -sshtrustedfingerprints \"{Encoders.Hex.EncodeData(e.FingerPrint)}\"");
+                        e.CanTrust = true; // Not a typo, we want the connection to succeed with a warning
+                    }
+                    else
+                    {
+                        e.CanTrust = _Options.IsTrustedFingerprint(e.FingerPrint);
+                        if(!e.CanTrust)
+                            Logs.Configuration.LogError($"SSH host fingerprint for {e.HostKey} is untrusted, start BTCPay with -sshtrustedfingerprints \"{Encoders.Hex.EncodeData(e.FingerPrint)}\"");
+                    }
+                };
+            }
+            else
+            {
+
+            }
+
             try
             {
                 sshClient.Connect();

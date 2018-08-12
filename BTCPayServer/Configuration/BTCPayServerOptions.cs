@@ -12,6 +12,7 @@ using Microsoft.Extensions.Configuration;
 using NBXplorer;
 using BTCPayServer.Payments.Lightning;
 using Renci.SshNet;
+using NBitcoin.DataEncoders;
 
 namespace BTCPayServer.Configuration
 {
@@ -72,7 +73,7 @@ namespace BTCPayServer.Configuration
                     settings.Username = "root";
                 }
             }
-            else if(externalUrl != null)
+            else if (externalUrl != null)
             {
                 settings.Port = 22;
                 settings.Username = "root";
@@ -182,7 +183,7 @@ namespace BTCPayServer.Configuration
             ExternalUrl = conf.GetOrDefault<Uri>("externalurl", null);
 
             var sshSettings = SSHSettings.ParseConfiguration(conf);
-            if (!string.IsNullOrEmpty(sshSettings.Password) || !string.IsNullOrEmpty(sshSettings.KeyFile))
+            if ((!string.IsNullOrEmpty(sshSettings.Password) || !string.IsNullOrEmpty(sshSettings.KeyFile)) && !string.IsNullOrEmpty(sshSettings.Server))
             {
                 if (!string.IsNullOrEmpty(sshSettings.KeyFile) && !File.Exists(sshSettings.KeyFile))
                     throw new ConfigException($"sshkeyfile does not exist");
@@ -199,8 +200,17 @@ namespace BTCPayServer.Configuration
                 {
                     throw new ConfigException($"sshkeyfilepassword is invalid");
                 }
-
                 SSHSettings = sshSettings;
+            }
+
+            var fingerPrints = conf.GetOrDefault<string>("sshtrustedfingerprints", "");
+            if (!string.IsNullOrEmpty(fingerPrints))
+            {
+                foreach (var fingerprint in fingerPrints.Split(';', StringSplitOptions.RemoveEmptyEntries)
+                                                        .Select(str => str.Replace(":", "", StringComparison.OrdinalIgnoreCase)))
+                {
+                    TrustedFingerprints.Add(DecodeFingerprint(fingerprint));
+                }
             }
 
             RootPath = conf.GetOrDefault<string>("rootpath", "/");
@@ -210,6 +220,45 @@ namespace BTCPayServer.Configuration
             if (old != null)
                 throw new ConfigException($"internallightningnode should not be used anymore, use btclightning instead");
         }
+
+        private static byte[] DecodeFingerprint(string fingerprint)
+        {
+            try
+            {
+                return Encoders.Hex.DecodeData(fingerprint.Trim());
+            }
+            catch
+            {
+            }
+
+            var localFingerprint = fingerprint;
+            if (localFingerprint.StartsWith("SHA256", StringComparison.OrdinalIgnoreCase))
+                localFingerprint = localFingerprint.Substring("SHA256".Length).Trim();
+            try
+            {
+                return Encoders.Base64.DecodeData(localFingerprint);
+            }
+            catch
+            {
+            }
+
+            if (!localFingerprint.EndsWith('='))
+                localFingerprint = localFingerprint + "=";
+            try
+            {
+                return Encoders.Base64.DecodeData(localFingerprint);
+            }
+            catch
+            {
+                throw new ConfigException($"sshtrustedfingerprints is invalid");
+            }
+        }
+
+        internal bool IsTrustedFingerprint(byte[] fingerPrint)
+        {
+            return TrustedFingerprints.Any(f => Utils.ArrayEqual(f, fingerPrint));
+        }
+
         public string RootPath { get; set; }
         public Dictionary<string, LightningConnectionString> InternalLightningByCryptoCode { get; set; } = new Dictionary<string, LightningConnectionString>();
         public ExternalServices ExternalServicesByCryptoCode { get; set; } = new ExternalServices();
@@ -230,6 +279,7 @@ namespace BTCPayServer.Configuration
             get;
             set;
         }
+        public List<byte[]> TrustedFingerprints { get; set; } = new List<byte[]>();
         public SSHSettings SSHSettings
         {
             get;

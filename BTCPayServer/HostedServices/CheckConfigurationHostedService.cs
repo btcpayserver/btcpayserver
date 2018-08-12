@@ -10,6 +10,7 @@ using Microsoft.Extensions.Hosting;
 using System.Threading;
 using BTCPayServer.Configuration;
 using BTCPayServer.Logging;
+using NBitcoin.DataEncoders;
 
 namespace BTCPayServer.HostedServices
 {
@@ -30,6 +31,14 @@ namespace BTCPayServer.HostedServices
                 {
                     Logs.Configuration.LogInformation($"SSH settings detected, testing connection to {_options.SSHSettings.Username}@{_options.SSHSettings.Server} on port {_options.SSHSettings.Port} ...");
                     var connection = new Renci.SshNet.SshClient(_options.SSHSettings.CreateConnectionInfo());
+                    connection.HostKeyReceived += (object sender, Renci.SshNet.Common.HostKeyEventArgs e) =>
+                    {
+                        e.CanTrust = true;
+                        if (!_options.IsTrustedFingerprint(e.FingerPrint))
+                        {
+                            Logs.Configuration.LogWarning($"SSH host fingerprint for {e.HostKey} is untrusted, start BTCPay with -sshtrustedfingerprints \"{Encoders.Hex.EncodeData(e.FingerPrint)}\"");
+                        }
+                    };
                     try
                     {
                         connection.Connect();

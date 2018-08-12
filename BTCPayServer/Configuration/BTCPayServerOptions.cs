@@ -11,6 +11,7 @@ using StandardConfiguration;
 using Microsoft.Extensions.Configuration;
 using NBXplorer;
 using BTCPayServer.Payments.Lightning;
+using Renci.SshNet;
 
 namespace BTCPayServer.Configuration
 {
@@ -19,6 +20,69 @@ namespace BTCPayServer.Configuration
         public string CryptoCode { get; internal set; }
         public Uri ExplorerUri { get; internal set; }
         public string CookieFile { get; internal set; }
+    }
+
+    public class SSHSettings
+    {
+        public string Server { get; set; }
+        public int Port { get; set; } = 22;
+        public string KeyFile { get; set; }
+        public string KeyFilePassword { get; set; }
+        public string Username { get; set; }
+        public string Password { get; set; }
+
+        public ConnectionInfo CreateConnectionInfo()
+        {
+            if (!string.IsNullOrEmpty(KeyFile))
+            {
+                return new ConnectionInfo(Server, Port, Username, new[] { new PrivateKeyAuthenticationMethod(Username, new PrivateKeyFile(KeyFile, KeyFilePassword)) });
+            }
+            else
+            {
+                return new ConnectionInfo(Server, Port, Username, new[] { new PasswordAuthenticationMethod(Username, Password) });
+            }
+        }
+
+        public static SSHSettings ParseConfiguration(IConfiguration conf)
+        {
+            var externalUrl = conf.GetOrDefault<Uri>("externalurl", null);
+            var settings = new SSHSettings();
+            settings.Server = conf.GetOrDefault<string>("sshconnection", null);
+            if (settings.Server != null)
+            {
+                var parts = settings.Server.Split(':');
+                if (parts.Length == 2 && int.TryParse(parts[1], out int port))
+                {
+                    settings.Port = port;
+                    settings.Server = parts[0];
+                }
+                else
+                {
+                    settings.Port = 22;
+                }
+
+                parts = settings.Server.Split('@');
+                if (parts.Length == 2)
+                {
+                    settings.Username = parts[0];
+                    settings.Server = parts[1];
+                }
+                else
+                {
+                    settings.Username = "root";
+                }
+            }
+            else if(externalUrl != null)
+            {
+                settings.Port = 22;
+                settings.Username = "root";
+                settings.Server = externalUrl.DnsSafeHost;
+            }
+            settings.Password = conf.GetOrDefault<string>("sshpassword", "");
+            settings.KeyFile = conf.GetOrDefault<string>("sshkeyfile", "");
+            settings.KeyFilePassword = conf.GetOrDefault<string>("sshkeyfilepassword", "");
+            return settings;
+        }
     }
 
     public class BTCPayServerOptions
@@ -117,6 +181,28 @@ namespace BTCPayServer.Configuration
             BundleJsCss = conf.GetOrDefault<bool>("bundlejscss", true);
             ExternalUrl = conf.GetOrDefault<Uri>("externalurl", null);
 
+            var sshSettings = SSHSettings.ParseConfiguration(conf);
+            if (!string.IsNullOrEmpty(sshSettings.Password) || !string.IsNullOrEmpty(sshSettings.KeyFile))
+            {
+                if (!string.IsNullOrEmpty(sshSettings.KeyFile) && !File.Exists(sshSettings.KeyFile))
+                    throw new ConfigException($"sshkeyfile does not exist");
+                if (sshSettings.Port > ushort.MaxValue ||
+                   sshSettings.Port < ushort.MinValue)
+                    throw new ConfigException($"ssh port is invalid");
+                if (!string.IsNullOrEmpty(sshSettings.Password) && !string.IsNullOrEmpty(sshSettings.KeyFile))
+                    throw new ConfigException($"sshpassword or sshkeyfile should be provided, but not both");
+                try
+                {
+                    sshSettings.CreateConnectionInfo();
+                }
+                catch
+                {
+                    throw new ConfigException($"sshkeyfilepassword is invalid");
+                }
+
+                SSHSettings = sshSettings;
+            }
+
             RootPath = conf.GetOrDefault<string>("rootpath", "/");
             if (!RootPath.StartsWith("/", StringComparison.InvariantCultureIgnoreCase))
                 RootPath = "/" + RootPath;
@@ -144,6 +230,11 @@ namespace BTCPayServer.Configuration
             get;
             set;
         }
+        public SSHSettings SSHSettings
+        {
+            get;
+            set;
+        }
 
         internal string GetRootUri()
         {
@@ -154,7 +245,7 @@ namespace BTCPayServer.Configuration
             return builder.ToString();
         }
     }
-    
+
     public class ExternalServices : MultiValueDictionary<string, ExternalService>
     {
         public IEnumerable<T> GetServices<T>(string cryptoCode) where T : ExternalService

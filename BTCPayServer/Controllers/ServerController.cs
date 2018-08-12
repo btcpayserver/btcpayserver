@@ -160,6 +160,7 @@ namespace BTCPayServer.Controllers
             MaintenanceViewModel vm = new MaintenanceViewModel();
             vm.UserName = "btcpayserver";
             vm.DNSDomain = this.Request.Host.Host;
+            vm.SetConfiguredSSH(_Options.SSHSettings);
             if (IPAddress.TryParse(vm.DNSDomain, out var unused))
                 vm.DNSDomain = null;
             return View(vm);
@@ -170,6 +171,7 @@ namespace BTCPayServer.Controllers
         {
             if (!ModelState.IsValid)
                 return View(vm);
+            vm.SetConfiguredSSH(_Options.SSHSettings);
             if (command == "changedomain")
             {
                 if (string.IsNullOrWhiteSpace(vm.DNSDomain))
@@ -256,7 +258,8 @@ namespace BTCPayServer.Controllers
         private IActionResult RunSSH(MaintenanceViewModel vm, string ssh)
         {
             ssh = $"sudo bash -c '. /etc/profile.d/btcpay-env.sh && nohup {ssh} > /dev/null 2>&1 & disown'";
-            var sshClient = vm.CreateSSHClient(this.Request.Host.Host);
+            var sshClient = _Options.SSHSettings == null ? vm.CreateSSHClient(this.Request.Host.Host)
+                                                         : new SshClient(_Options.SSHSettings.CreateConnectionInfo());
             try
             {
                 sshClient.Connect();
@@ -404,13 +407,14 @@ namespace BTCPayServer.Controllers
                     }
                 }
             }
+            result.HasSSH = _Options.SSHSettings != null;
             return View(result);
         }
 
         [Route("server/services/lnd-grpc/{cryptoCode}/{index}")]
         public IActionResult LNDGRPCServices(string cryptoCode, int index, uint? nonce)
         {
-            if(!_dashBoard.IsFullySynched(cryptoCode, out var unusud))
+            if (!_dashBoard.IsFullySynched(cryptoCode, out var unusud))
             {
                 StatusMessage = $"Error: {cryptoCode} is not fully synched";
                 return RedirectToAction(nameof(Services));
@@ -505,6 +509,27 @@ namespace BTCPayServer.Controllers
                 }
             }
             return connectionString;
+        }
+
+        [Route("server/services/ssh")]
+        public IActionResult SSHService(bool downloadKeyFile = false)
+        {
+            var settings = _Options.SSHSettings;
+            if (settings == null)
+                return NotFound();
+            if (downloadKeyFile)
+            {
+                if (!System.IO.File.Exists(settings.KeyFile))
+                    return NotFound();
+                return File(System.IO.File.ReadAllBytes(settings.KeyFile), "application/octet-stream", "id_rsa");
+            }
+            SSHServiceViewModel vm = new SSHServiceViewModel();
+            string port = settings.Port == 22 ? "" : $" -p {settings.Port}";
+            vm.CommandLine = $"ssh {settings.Username}@{settings.Server}{port}";
+            vm.Password = settings.Password;
+            vm.KeyFilePassword = settings.KeyFilePassword;
+            vm.HasKeyFile = !string.IsNullOrEmpty(settings.KeyFile);
+            return View(vm);
         }
 
         [Route("server/theme")]

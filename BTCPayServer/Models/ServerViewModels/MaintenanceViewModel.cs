@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Configuration;
 using Renci.SshNet;
 
 namespace BTCPayServer.Models.ServerViewModels
 {
     public class MaintenanceViewModel
     {
+        public bool ExposedSSH { get; set; }
         [Required]
         public string UserName { get; set; }
         [Required]
@@ -19,6 +21,16 @@ namespace BTCPayServer.Models.ServerViewModels
         public SshClient CreateSSHClient(string host)
         {
             return new SshClient(host, UserName, Password);
+        }
+
+        internal void SetConfiguredSSH(SSHSettings settings)
+        {
+            if(settings != null)
+            {
+                ExposedSSH = true;
+                UserName = "unknown";
+                Password = "unknown";
+            }
         }
     }
 }

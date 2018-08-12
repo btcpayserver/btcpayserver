@@ -41,6 +41,16 @@
                                 </td>
                             </tr>
                         }
+                        @if(Model.HasSSH)
+                        {
+                            <tr>
+                                <td>None</td>
+                                <td>SSH</td>
+                                <td style="text-align:right">
+                                    <a asp-action="SSHService">See information</a>
+                                </td>
+                            </tr>
+                        }
                     </tbody>
                 </table>
             </div>

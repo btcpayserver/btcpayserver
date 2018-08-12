@@ -470,6 +470,7 @@ namespace BTCPayServer.Controllers
             LightningConfigurations confs = new LightningConfigurations();
             LightningConfiguration conf = new LightningConfiguration();
             conf.Type = "grpc";
+            conf.ChainType = _Options.NetworkType.ToString();
             conf.CryptoCode = cryptoCode;
             conf.Host = external.BaseUri.DnsSafeHost;
             conf.Port = external.BaseUri.Port;

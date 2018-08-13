@@ -180,6 +180,8 @@ namespace BTCPayServer.Controllers
                     return View(vm);
                 }
                 vm.DNSDomain = vm.DNSDomain.Trim().ToLowerInvariant();
+                if (vm.DNSDomain.Equals(this.Request.Host.Host, StringComparison.OrdinalIgnoreCase))
+                    return View(vm);
                 if (IPAddress.TryParse(vm.DNSDomain, out var unused))
                 {
                     ModelState.AddModelError(nameof(vm.DNSDomain), $"This should be a domain name");
@@ -198,14 +200,13 @@ namespace BTCPayServer.Controllers
                 {
                     try
                     {
-                        builder.Scheme = this.Request.Scheme;
-                        builder.Host = vm.DNSDomain;
-                        if (this.Request.Host.Port != null)
-                            builder.Port = this.Request.Host.Port.Value;
-                        builder.Path = "runid";
-                        builder.Query = $"expected={RunId}";
-                        var response = await client.GetAsync(builder.Uri);
-                        if (!response.IsSuccessStatusCode)
+                        var addresses1 = Dns.GetHostAddressesAsync(this.Request.Host.Host);
+                        var addresses2 = Dns.GetHostAddressesAsync(vm.DNSDomain);
+                        await Task.WhenAll(addresses1, addresses2);
+
+                        var addressesSet = addresses1.GetAwaiter().GetResult().Select(c => c.ToString()).ToHashSet();
+                        var hasCommonAddress = addresses2.GetAwaiter().GetResult().Select(c => c.ToString()).Any(s => addressesSet.Contains(s));
+                        if (!hasCommonAddress)
                         {
                             ModelState.AddModelError(nameof(vm.DNSDomain), $"Invalid host ({vm.DNSDomain} is not pointing to this BTCPay instance)");
                             return View(vm);

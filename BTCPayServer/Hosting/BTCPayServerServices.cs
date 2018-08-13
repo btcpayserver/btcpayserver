@@ -118,6 +118,8 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<Payments.IPaymentMethodHandler<DerivationStrategy>, Payments.Bitcoin.BitcoinLikePaymentHandler>();
             services.AddSingleton<IHostedService, Payments.Bitcoin.NBXplorerListener>();
 
+            services.AddSingleton<IHostedService, HostedServices.CheckConfigurationHostedService>();
+
             services.AddSingleton<Payments.IPaymentMethodHandler<Payments.Lightning.LightningSupportedPaymentMethod>, Payments.Lightning.LightningLikePaymentHandler>();
             services.AddSingleton<IHostedService, Payments.Lightning.LightningListener>();
 

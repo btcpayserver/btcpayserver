@@ -160,6 +160,7 @@ namespace BTCPayServer.Controllers
             MaintenanceViewModel vm = new MaintenanceViewModel();
             vm.UserName = "btcpayserver";
             vm.DNSDomain = this.Request.Host.Host;
+            vm.SetConfiguredSSH(_Options.SSHSettings);
             if (IPAddress.TryParse(vm.DNSDomain, out var unused))
                 vm.DNSDomain = null;
             return View(vm);
@@ -170,6 +171,7 @@ namespace BTCPayServer.Controllers
         {
             if (!ModelState.IsValid)
                 return View(vm);
+            vm.SetConfiguredSSH(_Options.SSHSettings);
             if (command == "changedomain")
             {
                 if (string.IsNullOrWhiteSpace(vm.DNSDomain))
@@ -178,6 +180,8 @@ namespace BTCPayServer.Controllers
                     return View(vm);
                 }
                 vm.DNSDomain = vm.DNSDomain.Trim().ToLowerInvariant();
+                if (vm.DNSDomain.Equals(this.Request.Host.Host, StringComparison.OrdinalIgnoreCase))
+                    return View(vm);
                 if (IPAddress.TryParse(vm.DNSDomain, out var unused))
                 {
                     ModelState.AddModelError(nameof(vm.DNSDomain), $"This should be a domain name");
@@ -198,12 +202,13 @@ namespace BTCPayServer.Controllers
                     {
                         builder.Scheme = this.Request.Scheme;
                         builder.Host = vm.DNSDomain;
-                        if (this.Request.Host.Port != null)
-                            builder.Port = this.Request.Host.Port.Value;
-                        builder.Path = "runid";
-                        builder.Query = $"expected={RunId}";
-                        var response = await client.GetAsync(builder.Uri);
-                        if (!response.IsSuccessStatusCode)
+                        var addresses1 = Dns.GetHostAddressesAsync(this.Request.Host.Host);
+                        var addresses2 = Dns.GetHostAddressesAsync(vm.DNSDomain);
+                        await Task.WhenAll(addresses1, addresses2);
+
+                        var addressesSet = addresses1.GetAwaiter().GetResult().Select(c => c.ToString()).ToHashSet();
+                        var hasCommonAddress = addresses2.GetAwaiter().GetResult().Select(c => c.ToString()).Any(s => addressesSet.Contains(s));
+                        if (!hasCommonAddress)
                         {
                             ModelState.AddModelError(nameof(vm.DNSDomain), $"Invalid host ({vm.DNSDomain} is not pointing to this BTCPay instance)");
                             return View(vm);
@@ -256,7 +261,31 @@ namespace BTCPayServer.Controllers
         private IActionResult RunSSH(MaintenanceViewModel vm, string ssh)
         {
             ssh = $"sudo bash -c '. /etc/profile.d/btcpay-env.sh && nohup {ssh} > /dev/null 2>&1 & disown'";
-            var sshClient = vm.CreateSSHClient(this.Request.Host.Host);
+            var sshClient = _Options.SSHSettings == null ? vm.CreateSSHClient(this.Request.Host.Host)
+                                                         : new SshClient(_Options.SSHSettings.CreateConnectionInfo());
+
+            if (_Options.TrustedFingerprints.Count != 0)
+            {
+                sshClient.HostKeyReceived += (object sender, Renci.SshNet.Common.HostKeyEventArgs e) =>
+                {
+                    if (_Options.TrustedFingerprints.Count == 0)
+                    {
+                        Logs.Configuration.LogWarning($"SSH host fingerprint for {e.HostKeyName} is untrusted, start BTCPay with -sshtrustedfingerprints \"{Encoders.Hex.EncodeData(e.FingerPrint)}\"");
+                        e.CanTrust = true; // Not a typo, we want the connection to succeed with a warning
+                    }
+                    else
+                    {
+                        e.CanTrust = _Options.IsTrustedFingerprint(e.FingerPrint, e.HostKey);
+                        if(!e.CanTrust)
+                            Logs.Configuration.LogError($"SSH host fingerprint for {e.HostKeyName} is untrusted, start BTCPay with -sshtrustedfingerprints \"{Encoders.Hex.EncodeData(e.FingerPrint)}\"");
+                    }
+                };
+            }
+            else
+            {
+
+            }
+
             try
             {
                 sshClient.Connect();
@@ -404,13 +433,14 @@ namespace BTCPayServer.Controllers
                     }
                 }
             }
+            result.HasSSH = _Options.SSHSettings != null;
             return View(result);
         }
 
         [Route("server/services/lnd-grpc/{cryptoCode}/{index}")]
         public IActionResult LNDGRPCServices(string cryptoCode, int index, uint? nonce)
         {
-            if(!_dashBoard.IsFullySynched(cryptoCode, out var unusud))
+            if (!_dashBoard.IsFullySynched(cryptoCode, out var unusud))
             {
                 StatusMessage = $"Error: {cryptoCode} is not fully synched";
                 return RedirectToAction(nameof(Services));
@@ -470,6 +500,7 @@ namespace BTCPayServer.Controllers
             LightningConfigurations confs = new LightningConfigurations();
             LightningConfiguration conf = new LightningConfiguration();
             conf.Type = "grpc";
+            conf.ChainType = _Options.NetworkType.ToString();
             conf.CryptoCode = cryptoCode;
             conf.Host = external.BaseUri.DnsSafeHost;
             conf.Port = external.BaseUri.Port;
@@ -504,6 +535,27 @@ namespace BTCPayServer.Controllers
                 }
             }
             return connectionString;
+        }
+
+        [Route("server/services/ssh")]
+        public IActionResult SSHService(bool downloadKeyFile = false)
+        {
+            var settings = _Options.SSHSettings;
+            if (settings == null)
+                return NotFound();
+            if (downloadKeyFile)
+            {
+                if (!System.IO.File.Exists(settings.KeyFile))
+                    return NotFound();
+                return File(System.IO.File.ReadAllBytes(settings.KeyFile), "application/octet-stream", "id_rsa");
+            }
+            SSHServiceViewModel vm = new SSHServiceViewModel();
+            string port = settings.Port == 22 ? "" : $" -p {settings.Port}";
+            vm.CommandLine = $"ssh {settings.Username}@{settings.Server}{port}";
+            vm.Password = settings.Password;
+            vm.KeyFilePassword = settings.KeyFilePassword;
+            vm.HasKeyFile = !string.IsNullOrEmpty(settings.KeyFile);
+            return View(vm);
         }
 
         [Route("server/theme")]

@@ -200,6 +200,8 @@ namespace BTCPayServer.Controllers
                 {
                     try
                     {
+                        builder.Scheme = this.Request.Scheme;
+                        builder.Host = vm.DNSDomain;
                         var addresses1 = Dns.GetHostAddressesAsync(this.Request.Host.Host);
                         var addresses2 = Dns.GetHostAddressesAsync(vm.DNSDomain);
                         await Task.WhenAll(addresses1, addresses2);

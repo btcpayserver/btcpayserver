@@ -13,6 +13,7 @@ using NBXplorer;
 using BTCPayServer.Payments.Lightning;
 using Renci.SshNet;
 using NBitcoin.DataEncoders;
+using BTCPayServer.SSH;
 
 namespace BTCPayServer.Configuration
 {
@@ -21,69 +22,6 @@ namespace BTCPayServer.Configuration
         public string CryptoCode { get; internal set; }
         public Uri ExplorerUri { get; internal set; }
         public string CookieFile { get; internal set; }
-    }
-
-    public class SSHSettings
-    {
-        public string Server { get; set; }
-        public int Port { get; set; } = 22;
-        public string KeyFile { get; set; }
-        public string KeyFilePassword { get; set; }
-        public string Username { get; set; }
-        public string Password { get; set; }
-
-        public ConnectionInfo CreateConnectionInfo()
-        {
-            if (!string.IsNullOrEmpty(KeyFile))
-            {
-                return new ConnectionInfo(Server, Port, Username, new[] { new PrivateKeyAuthenticationMethod(Username, new PrivateKeyFile(KeyFile, KeyFilePassword)) });
-            }
-            else
-            {
-                return new ConnectionInfo(Server, Port, Username, new[] { new PasswordAuthenticationMethod(Username, Password) });
-            }
-        }
-
-        public static SSHSettings ParseConfiguration(IConfiguration conf)
-        {
-            var externalUrl = conf.GetOrDefault<Uri>("externalurl", null);
-            var settings = new SSHSettings();
-            settings.Server = conf.GetOrDefault<string>("sshconnection", null);
-            if (settings.Server != null)
-            {
-                var parts = settings.Server.Split(':');
-                if (parts.Length == 2 && int.TryParse(parts[1], out int port))
-                {
-                    settings.Port = port;
-                    settings.Server = parts[0];
-                }
-                else
-                {
-                    settings.Port = 22;
-                }
-
-                parts = settings.Server.Split('@');
-                if (parts.Length == 2)
-                {
-                    settings.Username = parts[0];
-                    settings.Server = parts[1];
-                }
-                else
-                {
-                    settings.Username = "root";
-                }
-            }
-            else if (externalUrl != null)
-            {
-                settings.Port = 22;
-                settings.Username = "root";
-                settings.Server = externalUrl.DnsSafeHost;
-            }
-            settings.Password = conf.GetOrDefault<string>("sshpassword", "");
-            settings.KeyFile = conf.GetOrDefault<string>("sshkeyfile", "");
-            settings.KeyFilePassword = conf.GetOrDefault<string>("sshkeyfilepassword", "");
-            return settings;
-        }
     }
 
     public class BTCPayServerOptions
@@ -182,11 +120,18 @@ namespace BTCPayServer.Configuration
             BundleJsCss = conf.GetOrDefault<bool>("bundlejscss", true);
             ExternalUrl = conf.GetOrDefault<Uri>("externalurl", null);
 
-            var sshSettings = SSHSettings.ParseConfiguration(conf);
+            var sshSettings = ParseSSHConfiguration(conf);
             if ((!string.IsNullOrEmpty(sshSettings.Password) || !string.IsNullOrEmpty(sshSettings.KeyFile)) && !string.IsNullOrEmpty(sshSettings.Server))
             {
-                if (!string.IsNullOrEmpty(sshSettings.KeyFile) && !File.Exists(sshSettings.KeyFile))
-                    throw new ConfigException($"sshkeyfile does not exist");
+                int waitTime = 0;
+                while (!string.IsNullOrEmpty(sshSettings.KeyFile) && !File.Exists(sshSettings.KeyFile))
+                {
+                    if(waitTime++ < 5)
+                        System.Threading.Thread.Sleep(1000);
+                    else
+                        throw new ConfigException($"sshkeyfile does not exist");
+                }
+                    
                 if (sshSettings.Port > ushort.MaxValue ||
                    sshSettings.Port < ushort.MinValue)
                     throw new ConfigException($"ssh port is invalid");
@@ -206,10 +151,11 @@ namespace BTCPayServer.Configuration
             var fingerPrints = conf.GetOrDefault<string>("sshtrustedfingerprints", "");
             if (!string.IsNullOrEmpty(fingerPrints))
             {
-                foreach (var fingerprint in fingerPrints.Split(';', StringSplitOptions.RemoveEmptyEntries)
-                                                        .Select(str => str.Replace(":", "", StringComparison.OrdinalIgnoreCase)))
+                foreach (var fingerprint in fingerPrints.Split(';', StringSplitOptions.RemoveEmptyEntries))
                 {
-                    TrustedFingerprints.Add(DecodeFingerprint(fingerprint));
+                    if (!SSHFingerprint.TryParse(fingerprint, out var f))
+                        throw new ConfigException($"Invalid ssh fingerprint format {fingerprint}");
+                    TrustedFingerprints.Add(f);
                 }
             }
 
@@ -221,42 +167,50 @@ namespace BTCPayServer.Configuration
                 throw new ConfigException($"internallightningnode should not be used anymore, use btclightning instead");
         }
 
-        private static byte[] DecodeFingerprint(string fingerprint)
+        private SSHSettings ParseSSHConfiguration(IConfiguration conf)
         {
-            try
+            var externalUrl = conf.GetOrDefault<Uri>("externalurl", null);
+            var settings = new SSHSettings();
+            settings.Server = conf.GetOrDefault<string>("sshconnection", null);
+            if (settings.Server != null)
             {
-                return Encoders.Hex.DecodeData(fingerprint.Trim());
-            }
-            catch
-            {
-            }
+                var parts = settings.Server.Split(':');
+                if (parts.Length == 2 && int.TryParse(parts[1], out int port))
+                {
+                    settings.Port = port;
+                    settings.Server = parts[0];
+                }
+                else
+                {
+                    settings.Port = 22;
+                }
 
-            var localFingerprint = fingerprint;
-            if (localFingerprint.StartsWith("SHA256", StringComparison.OrdinalIgnoreCase))
-                localFingerprint = localFingerprint.Substring("SHA256".Length).Trim();
-            try
-            {
-                return Encoders.Base64.DecodeData(localFingerprint);
+                parts = settings.Server.Split('@');
+                if (parts.Length == 2)
+                {
+                    settings.Username = parts[0];
+                    settings.Server = parts[1];
+                }
+                else
+                {
+                    settings.Username = "root";
+                }
             }
-            catch
+            else if (externalUrl != null)
             {
+                settings.Port = 22;
+                settings.Username = "root";
+                settings.Server = externalUrl.DnsSafeHost;
             }
-
-            if (!localFingerprint.EndsWith('='))
-                localFingerprint = localFingerprint + "=";
-            try
-            {
-                return Encoders.Base64.DecodeData(localFingerprint);
-            }
-            catch
-            {
-                throw new ConfigException($"sshtrustedfingerprints is invalid");
-            }
+            settings.Password = conf.GetOrDefault<string>("sshpassword", "");
+            settings.KeyFile = conf.GetOrDefault<string>("sshkeyfile", "");
+            settings.KeyFilePassword = conf.GetOrDefault<string>("sshkeyfilepassword", "");
+            return settings;
         }
 
-        internal bool IsTrustedFingerprint(byte[] fingerPrint)
+        internal bool IsTrustedFingerprint(byte[] fingerPrint, byte[] hostKey)
         {
-            return TrustedFingerprints.Any(f => Utils.ArrayEqual(f, fingerPrint));
+            return TrustedFingerprints.Any(f => f.Match(fingerPrint, hostKey));
         }
 
         public string RootPath { get; set; }
@@ -279,7 +233,7 @@ namespace BTCPayServer.Configuration
             get;
             set;
         }
-        public List<byte[]> TrustedFingerprints { get; set; } = new List<byte[]>();
+        public List<SSHFingerprint> TrustedFingerprints { get; set; } = new List<SSHFingerprint>();
         public SSHSettings SSHSettings
         {
             get;

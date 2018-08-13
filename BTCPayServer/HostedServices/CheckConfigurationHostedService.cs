@@ -34,9 +34,9 @@ namespace BTCPayServer.HostedServices
                     connection.HostKeyReceived += (object sender, Renci.SshNet.Common.HostKeyEventArgs e) =>
                     {
                         e.CanTrust = true;
-                        if (!_options.IsTrustedFingerprint(e.FingerPrint))
+                        if (!_options.IsTrustedFingerprint(e.FingerPrint, e.HostKey))
                         {
-                            Logs.Configuration.LogWarning($"SSH host fingerprint for {e.HostKey} is untrusted, start BTCPay with -sshtrustedfingerprints \"{Encoders.Hex.EncodeData(e.FingerPrint)}\"");
+                            Logs.Configuration.LogWarning($"SSH host fingerprint for {e.HostKeyName} is untrusted, start BTCPay with -sshtrustedfingerprints \"{Encoders.Hex.EncodeData(e.FingerPrint)}\"");
                         }
                     };
                     try

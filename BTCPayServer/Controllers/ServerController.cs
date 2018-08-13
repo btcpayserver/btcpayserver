@@ -267,14 +267,14 @@ namespace BTCPayServer.Controllers
                 {
                     if (_Options.TrustedFingerprints.Count == 0)
                     {
-                        Logs.Configuration.LogWarning($"SSH host fingerprint for {e.HostKey} is untrusted, start BTCPay with -sshtrustedfingerprints \"{Encoders.Hex.EncodeData(e.FingerPrint)}\"");
+                        Logs.Configuration.LogWarning($"SSH host fingerprint for {e.HostKeyName} is untrusted, start BTCPay with -sshtrustedfingerprints \"{Encoders.Hex.EncodeData(e.FingerPrint)}\"");
                         e.CanTrust = true; // Not a typo, we want the connection to succeed with a warning
                     }
                     else
                     {
-                        e.CanTrust = _Options.IsTrustedFingerprint(e.FingerPrint);
+                        e.CanTrust = _Options.IsTrustedFingerprint(e.FingerPrint, e.HostKey);
                         if(!e.CanTrust)
-                            Logs.Configuration.LogError($"SSH host fingerprint for {e.HostKey} is untrusted, start BTCPay with -sshtrustedfingerprints \"{Encoders.Hex.EncodeData(e.FingerPrint)}\"");
+                            Logs.Configuration.LogError($"SSH host fingerprint for {e.HostKeyName} is untrusted, start BTCPay with -sshtrustedfingerprints \"{Encoders.Hex.EncodeData(e.FingerPrint)}\"");
                     }
                 };
             }

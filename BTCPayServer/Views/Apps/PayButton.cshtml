@@ -39,16 +39,16 @@
                 <div class="form-group">
                     <label>Button Size</label>
                     <div style="vertical-align:top; font-size:12px; display:flex;">
-                        <button class="btn btn-default" style="width:95px;height:40px;margin-right:40px;"
-                                v-on:click="inputChanges($event, 0)">
+                        <button class="btn" style="width:95px;height:40px;margin-right:40px;"
+                                v-on:click="inputChanges($event, 0)" v-bind:class="{'btn-primary': (srvModel.buttonSize == 0) }">
                             146 x 40 px
                         </button>
                         <button class="btn btn-default" style="width:126px;height:46px;margin-right:40px;"
-                                v-on:click="inputChanges($event, 1)">
+                                v-on:click="inputChanges($event, 1)" v-bind:class="{'btn-primary': (srvModel.buttonSize == 1) }">
                             168 x 46 px
                         </button>
                         <button class="btn btn-default" style="width:146px;height:57px;"
-                                v-on:click="inputChanges($event, 2)">
+                                v-on:click="inputChanges($event, 2)" v-bind:class="{'btn-primary': (srvModel.buttonSize == 2) }">
                             209 x 57 px
                         </button>
                     </div>
@@ -69,15 +69,18 @@
             <div class="col-lg-6">
                 <div class="form-group">
                     <label>Server IPN</label>
-                    <input type="text" class="form-control" id="inputAddress" placeholder="(optional)">
+                    <input type="text" class="form-control" placeholder="(optional)"
+                           v-model="srvModel.serverIpn" v-on:change="inputChanges">
                 </div>
                 <div class="form-group">
                     <label>Send Email Notifications to</label>
-                    <input type="text" class="form-control" id="inputAddress" placeholder="(optional)">
+                    <input type="text" class="form-control" placeholder="(optional)"
+                           v-model="srvModel.emailToNotify" v-on:change="inputChanges">
                 </div>
                 <div class="form-group">
                     <label>Browser Redirect</label>
-                    <input type="text" class="form-control" id="inputAddress" placeholder="(optional)">
+                    <input type="text" class="form-control" placeholder="(optional)"
+                           v-model="srvModel.browserRedirect" v-on:change="inputChanges">
                 </div>
             </div>
             <div class="col-lg-6">
@@ -125,45 +128,66 @@
             },
             methods: {
                 inputChanges: function (event, buttonSize) {
-                    if (buttonSize != null) {
-                        srvModel.buttonSize = buttonSize;
-                        alert(buttonSize);
-                    }
-
-                    var html = '&lt;form method="POST" action="' + srvModel.urlRoot + '/apps/3jVExUHqRkGi4eaJEFCTxw5zjk14VAFzoVZXZJ3fbwED/pos"&gt;';
-                    html += '\n    &lt;input type="hidden" name="amount" value="' + srvModel.price + '" /&gt;';
-                    if (srvModel.currency) {
-                        html += '\n    &lt;input type="hidden" name="currency" value="' + srvModel.currency + '" /&gt;';
-                    }
-                    if (srvModel.checkoutDesc) {
-                        html += '\n    &lt;input type="hidden" name="checkoutDesc" value="' + srvModel.checkoutDesc + '" /&gt;';
-                    }
-                    if (srvModel.orderId) {
-                        html += '\n    &lt;input type="hidden" name="orderId" value="' + srvModel.orderId + '" /&gt;';
-                    }
-
-                    var width = "209px";
-                    if (srvModel.buttonSize == 0) {
-                        width = "146px";
-                    } else if (srvModel.buttonSize == 1) {
-                        width = "168px";
-                    } else if (srvModel.buttonSize == 2) {
-                        width = "209px";
-                    }
-                    $("#previewButton").css("width", width);
-
-                    html += '\n    &lt;input type="image" src="' + srvModel.urlRoot + '/img/paywithbtcpay.png" name="submit" style="width:' + width +
-                        '" alt="Pay with BtcPay, Self-Hosted Bitcoin Payment Processor">';
-
-                    html += '\n&lt;/form&gt;';
-
-                    $("#mainCode").html(html);
-
-                    $('pre code').each(function (i, block) {
-                        hljs.highlightBlock(block);
-                    });
-                }
+        inputChanges(event, buttonSize);
+        }
             }
-        });
+            });
+
+        function inputChanges(event, buttonSize) {
+            if (buttonSize != null) {
+                srvModel.buttonSize = buttonSize;
+            }
+
+            var html = '&lt;form method="POST" action="' + srvModel.urlRoot + '/apps/3jVExUHqRkGi4eaJEFCTxw5zjk14VAFzoVZXZJ3fbwED/pos"&gt;';
+            html += addinput("amount", srvModel.price);
+            if (srvModel.currency) {
+                html += addinput("currency", srvModel.currency);
+            }
+            if (srvModel.checkoutDesc) {
+                html += addinput("checkoutDesc", srvModel.checkoutDesc);
+            }
+            if (srvModel.orderId) {
+                html += addinput("orderId", srvModel.orderId);
+            }
+
+            if (srvModel.serverIpn) {
+                html += addinput("serverIpn", srvModel.serverIpn);
+            }
+            if (srvModel.browserRedirect) {
+                html += addinput("browserRedirect", srvModel.browserRedirect);
+            }
+            if (srvModel.emailToNotify) {
+                html += addinput("emailToNotify", srvModel.emailToNotify);
+            }
+
+            var width = "209px";
+            if (srvModel.buttonSize == 0) {
+                width = "146px";
+            } else if (srvModel.buttonSize == 1) {
+                width = "168px";
+            } else if (srvModel.buttonSize == 2) {
+                width = "209px";
+            }
+            $("#previewButton").css("width", width);
+            html += '\n    &lt;input type="image" src="' + srvModel.urlRoot + '/img/paywithbtcpay.png" name="submit" style="width:' + width +
+                '" alt="Pay with BtcPay, Self-Hosted Bitcoin Payment Processor">';
+
+            html += '\n&lt;/form&gt;';
+
+            $("#mainCode").html(html);
+
+            $('pre code').each(function (i, block) {
+                hljs.highlightBlock(block);
+            });
+        }
+
+        function addinput(name, value, width) {
+            var html = '\n    &lt;input type="hidden" name="' + name + '" value="' + value + '" ';
+            if (width != null)
+                html += 'style="width:' + width + '" ';
+
+            html += "/&gt;";
+            return html;
+        }
     </script>
 }

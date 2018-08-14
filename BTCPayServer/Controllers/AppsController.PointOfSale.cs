@@ -290,13 +290,21 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             var settings = app.GetSettings<PointOfSaleSettings>();
 
+            var store = await GetStore(app);
+            var paymentMethods = store.GetSupportedPaymentMethods(_NetworkProvider)
+                .Select(a=>a.PaymentId.ToString()).ToList();
+
+            var currencyDropdown = new List<string>();
+            currencyDropdown.Add(settings.Currency);
+            currencyDropdown.AddRange(paymentMethods);
 
             var model = new PayButtonViewModel
             {
                 Price = 10,
                 Currency = settings.Currency,
                 ButtonSize = 2,
-                UrlRoot = "http://127.0.0.1:14142"
+                UrlRoot = "http://127.0.0.1:14142",
+                CurrencyDropdown = currencyDropdown
             };
             return View(model);
         }

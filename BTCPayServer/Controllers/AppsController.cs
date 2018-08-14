@@ -24,6 +24,7 @@ namespace BTCPayServer.Controllers
         UserManager<ApplicationUser> _UserManager;
         CurrencyNameTable _Currencies;
         InvoiceController _InvoiceController;
+        BTCPayNetworkProvider _NetworkProvider;
 
         [TempData]
         public string StatusMessage { get; set; }
@@ -32,12 +33,14 @@ namespace BTCPayServer.Controllers
             UserManager<ApplicationUser> userManager,
             ApplicationDbContextFactory contextFactory,
             CurrencyNameTable currencies,
-            InvoiceController invoiceController)
+            InvoiceController invoiceController,
+            BTCPayNetworkProvider networkProvider)
         {
             _InvoiceController = invoiceController;
             _UserManager = userManager;
             _ContextFactory = contextFactory;
             _Currencies = currencies;
+            _NetworkProvider = networkProvider;
         }
         public async Task<IActionResult> ListApps()
         {

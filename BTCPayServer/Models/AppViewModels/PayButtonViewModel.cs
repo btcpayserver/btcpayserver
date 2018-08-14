@@ -18,5 +18,6 @@ namespace BTCPayServer.Models.AppViewModels
 
         //
         public string UrlRoot { get; set; }
+        public List<string> CurrencyDropdown { get; set; }
     }
 }

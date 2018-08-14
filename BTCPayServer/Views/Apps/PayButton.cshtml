@@ -39,9 +39,18 @@
                 <div class="form-group">
                     <label>Button Size</label>
                     <div style="vertical-align:top; font-size:12px; display:flex;">
-                        <button class="btn btn-default" style="width:95px;height:32px;margin-right:40px;">146 x 57 px</button>
-                        <button class="btn btn-default" style="width:126px;height:48px;margin-right:40px;">168 x 65 px</button>
-                        <button class="btn btn-default" style="width:146px;height:57px;">210 x 82 px</button>
+                        <button class="btn btn-default" style="width:95px;height:40px;margin-right:40px;"
+                                v-on:click="inputChanges($event, 0)">
+                            146 x 40 px
+                        </button>
+                        <button class="btn btn-default" style="width:126px;height:46px;margin-right:40px;"
+                                v-on:click="inputChanges($event, 1)">
+                            168 x 46 px
+                        </button>
+                        <button class="btn btn-default" style="width:146px;height:57px;"
+                                v-on:click="inputChanges($event, 2)">
+                            209 x 57 px
+                        </button>
                     </div>
                 </div>
             </div>
@@ -93,7 +102,7 @@
                 <i class="fa fa-copy"></i> <a href="#">Copy Code</a>
             </div>
             <div class="col-lg-4">
-                <img src="~/img/paywithbtcpay.png" />
+                <img id="previewButton" src="~/img/paywithbtcpay.png" />
             </div>
         </div>
         <br />
@@ -115,14 +124,37 @@
                 srvModel: srvModel
             },
             methods: {
-                inputChanges: function () {
-                    var html = '&lt;form method="POST" action="' + srvModel.urlRoot + '/apps/3jVExUHqRkGi4eaJEFCTxw5zjk14VAFzoVZXZJ3fbwED/pos"&gt;';
-                    html += '\n\t&lt;input type="hidden" name="amount" value="' + srvModel.price + '" /&gt;';
-                    if (srvModel.currency) {
-                        html += '\n\t&lt;input type="hidden" name="currency" value="' + srvModel.currency + '" /&gt;';
+                inputChanges: function (event, buttonSize) {
+                    if (buttonSize != null) {
+                        srvModel.buttonSize = buttonSize;
+                        alert(buttonSize);
                     }
 
-                    html += '\n\t&lt;input type="image" src="' + srvModel.urlRoot + '/img/paywithbtcpay.png" name="submit" style="width:210px;" alt="Pay with BtcPay, Self-Hosted Bitcoin Payment Processor">';
+                    var html = '&lt;form method="POST" action="' + srvModel.urlRoot + '/apps/3jVExUHqRkGi4eaJEFCTxw5zjk14VAFzoVZXZJ3fbwED/pos"&gt;';
+                    html += '\n    &lt;input type="hidden" name="amount" value="' + srvModel.price + '" /&gt;';
+                    if (srvModel.currency) {
+                        html += '\n    &lt;input type="hidden" name="currency" value="' + srvModel.currency + '" /&gt;';
+                    }
+                    if (srvModel.checkoutDesc) {
+                        html += '\n    &lt;input type="hidden" name="checkoutDesc" value="' + srvModel.checkoutDesc + '" /&gt;';
+                    }
+                    if (srvModel.orderId) {
+                        html += '\n    &lt;input type="hidden" name="orderId" value="' + srvModel.orderId + '" /&gt;';
+                    }
+
+                    var width = "209px";
+                    if (srvModel.buttonSize == 0) {
+                        width = "146px";
+                    } else if (srvModel.buttonSize == 1) {
+                        width = "168px";
+                    } else if (srvModel.buttonSize == 2) {
+                        width = "209px";
+                    }
+                    $("#previewButton").css("width", width);
+
+                    html += '\n    &lt;input type="image" src="' + srvModel.urlRoot + '/img/paywithbtcpay.png" name="submit" style="width:' + width +
+                        '" alt="Pay with BtcPay, Self-Hosted Bitcoin Payment Processor">';
+
                     html += '\n&lt;/form&gt;';
 
                     $("#mainCode").html(html);

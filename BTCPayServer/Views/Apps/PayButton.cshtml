@@ -95,13 +95,7 @@
         <h3>Generated code</h3>
         <div class="row">
             <div class="col-lg-8">
-                <pre><code id="mainCode" class="html">
-    &lt;form method="POST" action="{{srvModel.urlRoot}}/apps/3jVExUHqRkGi4eaJEFCTxw5zjk14VAFzoVZXZJ3fbwED/pos"&gt;
-    &lt;input type="hidden" name="amount" value="10" /&gt;
-    &lt;input type="hidden" name="currency" value="USD" /&gt;
-    &lt;input type="image" src="{{srvModel.urlRoot}}/img/paywithbtcpay.png" name="submit" style="width:210px;" alt="Pay with BtcPay, Self-Hosted Bitcoin Payment Processor">
-    &lt;/form&gt;
-</code></pre>
+                <pre><code id="mainCode" class="html"></code></pre>
                 <i class="fa fa-copy"></i> <a href="#">Copy Code</a>
             </div>
             <div class="col-lg-4">
@@ -116,7 +110,6 @@
 @section Scripts {
     <link rel="stylesheet" href="~/vendor/highlightjs/default.min.css">
     <script src="~/vendor/highlightjs/highlight.min.js"></script>
-    <script>hljs.initHighlightingOnLoad();</script>
 
     <script src="~/vendor/vuejs/vue.js"></script>
     <script type="text/javascript">
@@ -128,8 +121,8 @@
             },
             methods: {
                 inputChanges: function (event, buttonSize) {
-        inputChanges(event, buttonSize);
-        }
+                    inputChanges(event, buttonSize);
+                }
             }
             });
 
@@ -181,13 +174,13 @@
             });
         }
 
-        function addinput(name, value, width) {
-            var html = '\n    &lt;input type="hidden" name="' + name + '" value="' + value + '" ';
-            if (width != null)
-                html += 'style="width:' + width + '" ';
-
-            html += "/&gt;";
+        function addinput(name, value) {
+            var html = '\n    &lt;input type="hidden" name="' + name + '" value="' + value + '" /&gt;';
             return html;
         }
+
+        $(function () {
+            inputChanges();
+        });
     </script>
 }

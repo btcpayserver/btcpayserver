@@ -10,9 +10,13 @@ namespace BTCPayServer.Models.AppViewModels
         public decimal Price { get; set; }
         public string Currency { get; set; }
         public string CheckoutDesc { get; set; }
+        public string OrderId { get; set; }
         public int ButtonSize { get; set; }
         public string ServerIpn { get; set; }
         public string BrowserRedirect { get; set; }
         public string EmailToNotify { get; set; }
+
+        //
+        public string UrlRoot { get; set; }
     }
 }

@@ -285,7 +285,10 @@ namespace BTCPayServer.Controllers
         [Route("{appId}/paybutton")]
         public async Task<IActionResult> PayButton(string appId)
         {
-            var model = new PayButtonViewModel();
+            var model = new PayButtonViewModel
+            {
+                UrlRoot = "http://127.0.0.1:14142"
+            };
             return View(model);
         }
     }

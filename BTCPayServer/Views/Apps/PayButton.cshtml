@@ -4,16 +4,11 @@
 }
 
 <section>
-    <div class="container">
+    <div class="container" id="payButtonCtrl">
         <div class="row">
             <div class="col-lg-12 text-center">
                 <h2 class="section-heading">@ViewData["Title"]</h2>
                 <hr class="primary">
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-lg-12 text-center">
-                <partial name="_StatusMessage" for="@TempData["TempDataProperty-StatusMessage"]" />
             </div>
         </div>
         <br />
@@ -22,20 +17,24 @@
                 <div class="form-row">
                     <div class="form-group col-md-8">
                         <label>Price</label>
-                        <input type="text" class="form-control" id="inputEmail4">
+                        <input type="text" class="form-control"
+                               v-model="srvModel.price" v-on:change="inputChanges">
                     </div>
                     <div class="form-group col-md-4">
                         <label>&nbsp;</label>
-                        <input type="text" class="form-control" id="inputPassword4" value="USD">
+                        <input type="text" class="form-control"
+                               v-model="srvModel.currency" v-on:change="inputChanges">
                     </div>
                 </div>
                 <div class="form-group">
                     <label>Checkout Description</label>
-                    <input type="text" class="form-control" id="inputAddress" placeholder="(optional)">
+                    <input type="text" class="form-control" placeholder="(optional)"
+                           v-model="srvModel.checkoutDesc" v-on:change="inputChanges">
                 </div>
                 <div class="form-group">
                     <label>Order Id</label>
-                    <input type="text" class="form-control" id="inputAddress" placeholder="(optional)">
+                    <input type="text" class="form-control" id="inputAddress" placeholder="(optional)"
+                           v-model="srvModel.orderId" v-on:change="inputChanges">
                 </div>
                 <div class="form-group">
                     <label>Button Size</label>
@@ -84,12 +83,14 @@
         <h3>Generated code</h3>
         <div class="row">
             <div class="col-lg-8">
-                <pre><code class="html">&lt;form method="POST" action="http://127.0.0.1:14142/apps/3jVExUHqRkGi4eaJEFCTxw5zjk14VAFzoVZXZJ3fbwED/pos"&gt;
+                <pre><code id="mainCode" class="html">
+    &lt;form method="POST" action="{{srvModel.urlRoot}}/apps/3jVExUHqRkGi4eaJEFCTxw5zjk14VAFzoVZXZJ3fbwED/pos"&gt;
     &lt;input type="hidden" name="amount" value="10" /&gt;
     &lt;input type="hidden" name="currency" value="USD" /&gt;
-    &lt;button type="submit"&gt;Buy now&lt;/button&gt;
-&lt;/form&gt;
+    &lt;input type="image" src="{{srvModel.urlRoot}}/img/paywithbtcpay.png" name="submit" style="width:210px;" alt="Pay with BtcPay, Self-Hosted Bitcoin Payment Processor">
+    &lt;/form&gt;
 </code></pre>
+                <i class="fa fa-copy"></i> <a href="#">Copy Code</a>
             </div>
             <div class="col-lg-4">
                 <img src="~/img/paywithbtcpay.png" />
@@ -104,4 +105,33 @@
     <link rel="stylesheet" href="~/vendor/highlightjs/default.min.css">
     <script src="~/vendor/highlightjs/highlight.min.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
+
+    <script src="~/vendor/vuejs/vue.js"></script>
+    <script type="text/javascript">
+        var srvModel = @Html.Raw(Json.Serialize(Model));
+        var payButtonCtrl = new Vue({
+            el: '#payButtonCtrl',
+            data: {
+                srvModel: srvModel
+            },
+            methods: {
+                inputChanges: function () {
+                    var html = '&lt;form method="POST" action="' + srvModel.urlRoot + '/apps/3jVExUHqRkGi4eaJEFCTxw5zjk14VAFzoVZXZJ3fbwED/pos"&gt;';
+                    html += '\n\t&lt;input type="hidden" name="amount" value="' + srvModel.price + '" /&gt;';
+                    if (srvModel.currency) {
+                        html += '\n\t&lt;input type="hidden" name="currency" value="' + srvModel.currency + '" /&gt;';
+                    }
+
+                    html += '\n\t&lt;input type="image" src="' + srvModel.urlRoot + '/img/paywithbtcpay.png" name="submit" style="width:210px;" alt="Pay with BtcPay, Self-Hosted Bitcoin Payment Processor">';
+                    html += '\n&lt;/form&gt;';
+
+                    $("#mainCode").html(html);
+
+                    $('pre code').each(function (i, block) {
+                        hljs.highlightBlock(block);
+                    });
+                }
+            }
+        });
+    </script>
 }

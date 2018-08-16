@@ -109,7 +109,10 @@
         <div class="row" v-show="!errors.any()">
             <div class="col-lg-8">
                 <pre><code id="mainCode" class="html"></code></pre>
-                <i class="fa fa-copy"></i> <a href="#">Copy Code</a>
+                <button class="btn btn-primary" id="copyCode">
+                    <i class="fa fa-copy"></i> Copy Code
+                </button>
+                <span class="copyLabelPopup" style="display:none;">Copied</span>
             </div>
             <div class="col-lg-4">
                 <img id="previewButton" src="~/img/paywithbtcpay.png" />
@@ -132,6 +135,8 @@
     <script src="~/vendor/vuejs/vue.js"></script>
     <!-- jsdelivr cdn -->
     <script src="https://cdn.jsdelivr.net/npm/vee-validate@latest/dist/vee-validate.js"></script>
+
+    <script src="~/vendor/clipboard.js/clipboard.js"></script>
 
     <script type="text/javascript">
         var srvModel = @Html.Raw(Json.Serialize(Model));
@@ -185,7 +190,7 @@
             }
             $("#previewButton").css("width", width);
             html += '\n    &lt;input type="image" src="' + srvModel.urlRoot + '/img/paywithbtcpay.png" name="submit" style="width:' + width +
-                '" alt="Pay with BtcPay, Self-Hosted Bitcoin Payment Processor">';
+                '" alt="Pay with BtcPay, Self-Hosted Bitcoin Payment Processor"&gt;';
 
             html += '\n&lt;/form&gt;';
 
@@ -194,6 +199,8 @@
             $('pre code').each(function (i, block) {
                 hljs.highlightBlock(block);
             });
+
+            return html;
         }
 
         function addinput(name, value) {
@@ -204,5 +211,20 @@
         $(function () {
             inputChanges();
         });
+
+        String.prototype.replaceAll = function (search, replacement) {
+            var target = this;
+            return target.replace(new RegExp(search, 'g'), replacement);
+        };
+
+        // Clipboard Copy
+        new Clipboard('#copyCode', {
+            text: function (trigger) {
+                $(".copyLabelPopup").show().delay(1000).fadeOut(500);
+                return inputChanges().replaceAll("&lt;", "<").replaceAll("&gt;", ">");
+            }
+        });
+
+
     </script>
 }

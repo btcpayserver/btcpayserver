@@ -14,8 +14,11 @@ namespace BTCPayServer.Models.AppViewModels
         public string CheckoutDesc { get; set; }
         public string OrderId { get; set; }
         public int ButtonSize { get; set; }
+        [Url]
         public string ServerIpn { get; set; }
+        [Url]
         public string BrowserRedirect { get; set; }
+        [EmailAddress]
         public string NotifyEmail { get; set; }
 
         //

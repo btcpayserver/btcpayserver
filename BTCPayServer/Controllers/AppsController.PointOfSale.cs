@@ -308,5 +308,37 @@ namespace BTCPayServer.Controllers
             };
             return View(model);
         }
+
+
+        [HttpPost]
+        [Route("{appId}/pay")]
+        [IgnoreAntiforgeryToken]
+        [EnableCors(CorsPolicies.All)]
+        public async Task<IActionResult> PayButtonHandle(string appId, [FromForm]PayButtonViewModel model)
+        {
+            var app = await GetApp(appId, AppType.PointOfSale);
+            var settings = app.GetSettings<PointOfSaleSettings>();
+            
+            var store = await GetStore(app);
+            var invoice = await _InvoiceController.CreateInvoiceCore(new NBitpayClient.Invoice()
+            {
+                Price = model.Price,
+                Currency = model.Currency,
+                ItemDesc = model.CheckoutDesc,
+                OrderId = model.OrderId,
+                BuyerEmail = model.NotifyEmail,
+                NotificationURL = model.ServerIpn,
+                RedirectURL = model.BrowserRedirect,
+                FullNotifications = true
+            }, store, HttpContext.Request.GetAbsoluteRoot());
+            return Redirect(invoice.Data.Url);
+        }
+
+        [HttpGet]
+        [Route("{appId}/paybuttontest")]
+        public async Task<IActionResult> PayButtonTest(string appId)
+        {
+            return View();
+        }
     }
 }

@@ -82,10 +82,10 @@
                 </div>
                 <div class="form-group">
                     <label>Send Email Notifications to</label>
-                    <input name="emailToNotify" type="text" class="form-control" placeholder="(optional)"
-                           v-model="srvModel.emailToNotify" v-on:change="inputChanges"
-                           v-validate="'email'" :class="{'is-invalid': errors.has('emailToNotify') }">
-                    <small class="text-danger">{{ errors.first('emailToNotify') }}</small>
+                    <input name="notifyEmail" type="text" class="form-control" placeholder="(optional)"
+                           v-model="srvModel.notifyEmail" v-on:change="inputChanges"
+                           v-validate="'email'" :class="{'is-invalid': errors.has('notifyEmail') }">
+                    <small class="text-danger">{{ errors.first('notifyEmail') }}</small>
 
                 </div>
                 <div class="form-group">
@@ -145,7 +145,7 @@
             en: {
                 attributes: {
                     price: 'Price', checkoutDesc: 'Checkout Description', orderId: 'Order Id',
-                    serverIpn: 'Server IPN', emailToNotify: 'Send Email Notifications', browserRedirect: 'Browser Redirect'
+                    serverIpn: 'Server IPN', notifyEmail: 'Send Email Notifications', browserRedirect: 'Browser Redirect'
                 }
             }
         };
@@ -167,8 +167,8 @@
                 srvModel.buttonSize = buttonSize;
             }
 
-            var html = '&lt;form method="POST" action="' + srvModel.urlRoot + '/apps/3jVExUHqRkGi4eaJEFCTxw5zjk14VAFzoVZXZJ3fbwED/pos"&gt;';
-            html += addinput("amount", srvModel.price);
+            var html = '&lt;form method="POST" action="' + srvModel.urlRoot + '/apps/3jVExUHqRkGi4eaJEFCTxw5zjk14VAFzoVZXZJ3fbwED/pay"&gt;';
+            html += addinput("price", srvModel.price);
             if (srvModel.currency) {
                 html += addinput("currency", srvModel.currency);
             }
@@ -185,8 +185,8 @@
             if (srvModel.browserRedirect) {
                 html += addinput("browserRedirect", srvModel.browserRedirect);
             }
-            if (srvModel.emailToNotify) {
-                html += addinput("emailToNotify", srvModel.emailToNotify);
+            if (srvModel.notifyEmail) {
+                html += addinput("notifyEmail", srvModel.notifyEmail);
             }
 
             var width = "209px";

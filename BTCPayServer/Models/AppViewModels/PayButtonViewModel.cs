@@ -14,7 +14,7 @@ namespace BTCPayServer.Models.AppViewModels
         public int ButtonSize { get; set; }
         public string ServerIpn { get; set; }
         public string BrowserRedirect { get; set; }
-        public string EmailToNotify { get; set; }
+        public string NotifyEmail { get; set; }
 
         //
         public string UrlRoot { get; set; }

@@ -106,6 +106,7 @@ namespace BTCPayServer.Hosting
 
                     // Accept token requests that don't specify a client_id.
                     options.AcceptAnonymousClients();
+                    options.DisableScopeValidation();
 
                 })
 

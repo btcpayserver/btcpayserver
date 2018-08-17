@@ -116,7 +116,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Content Update="Views\Server\SSHService.cshtml">
+    <Content Update="Views\Server\SSHService.cshtml">
+      <Pack>$(IncludeRazorContentInPack)</Pack>
+    </Content>
 	  <Content Update="Views\Apps\PayButton.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>

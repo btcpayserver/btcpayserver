@@ -291,12 +291,7 @@ namespace BTCPayServer.Controllers
             var settings = app.GetSettings<PointOfSaleSettings>();
 
             var store = await GetStore(app);
-            var paymentMethods = store.GetSupportedPaymentMethods(_NetworkProvider)
-                .Select(a=>a.PaymentId.ToString()).ToList();
-
-            var currencyDropdown = new List<string>();
-            currencyDropdown.Add(settings.Currency);
-            currencyDropdown.AddRange(paymentMethods);
+            List<string> currencyDropdown = supportedCurrencies(settings, store);
 
             var model = new PayButtonViewModel
             {
@@ -309,6 +304,15 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
+        private List<string> supportedCurrencies(PointOfSaleSettings settings, StoreData store)
+        {
+            var paymentMethods = store.GetSupportedPaymentMethods(_NetworkProvider)
+                            .Select(a => a.PaymentId.ToString()).ToList();
+            var currencyDropdown = new List<string>();
+            currencyDropdown.Add(settings.Currency);
+            currencyDropdown.AddRange(paymentMethods);
+            return currencyDropdown;
+        }
 
         [HttpPost]
         [Route("{appId}/pay")]
@@ -318,8 +322,20 @@ namespace BTCPayServer.Controllers
         {
             var app = await GetApp(appId, AppType.PointOfSale);
             var settings = app.GetSettings<PointOfSaleSettings>();
-            
             var store = await GetStore(app);
+
+            // TODO: extract validation to model
+            if (model.Price <= 0)
+                ModelState.AddModelError("Price", "Price must be greater than 0");
+
+            var curr = supportedCurrencies(settings, store);
+            if (!curr.Contains(model.Currency))
+                ModelState.AddModelError("Currency", $"Selected currency {model.Currency} is not supported in this store");
+            //
+
+            if (!ModelState.IsValid)
+                return View();
+
             var invoice = await _InvoiceController.CreateInvoiceCore(new NBitpayClient.Invoice()
             {
                 Price = model.Price,

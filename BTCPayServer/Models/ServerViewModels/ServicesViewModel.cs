@@ -14,5 +14,6 @@ namespace BTCPayServer.Models.ServerViewModels
             public int Index { get; set; }
         }
         public List<LNDServiceViewModel> LNDServices { get; set; } = new List<LNDServiceViewModel>();
+        public bool HasSSH { get; set; }
     }
 }

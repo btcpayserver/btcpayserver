@@ -11,6 +11,9 @@ using StandardConfiguration;
 using Microsoft.Extensions.Configuration;
 using NBXplorer;
 using BTCPayServer.Payments.Lightning;
+using Renci.SshNet;
+using NBitcoin.DataEncoders;
+using BTCPayServer.SSH;
 
 namespace BTCPayServer.Configuration
 {
@@ -117,6 +120,45 @@ namespace BTCPayServer.Configuration
             BundleJsCss = conf.GetOrDefault<bool>("bundlejscss", true);
             ExternalUrl = conf.GetOrDefault<Uri>("externalurl", null);
 
+            var sshSettings = ParseSSHConfiguration(conf);
+            if ((!string.IsNullOrEmpty(sshSettings.Password) || !string.IsNullOrEmpty(sshSettings.KeyFile)) && !string.IsNullOrEmpty(sshSettings.Server))
+            {
+                int waitTime = 0;
+                while (!string.IsNullOrEmpty(sshSettings.KeyFile) && !File.Exists(sshSettings.KeyFile))
+                {
+                    if(waitTime++ < 5)
+                        System.Threading.Thread.Sleep(1000);
+                    else
+                        throw new ConfigException($"sshkeyfile does not exist");
+                }
+                    
+                if (sshSettings.Port > ushort.MaxValue ||
+                   sshSettings.Port < ushort.MinValue)
+                    throw new ConfigException($"ssh port is invalid");
+                if (!string.IsNullOrEmpty(sshSettings.Password) && !string.IsNullOrEmpty(sshSettings.KeyFile))
+                    throw new ConfigException($"sshpassword or sshkeyfile should be provided, but not both");
+                try
+                {
+                    sshSettings.CreateConnectionInfo();
+                }
+                catch
+                {
+                    throw new ConfigException($"sshkeyfilepassword is invalid");
+                }
+                SSHSettings = sshSettings;
+            }
+
+            var fingerPrints = conf.GetOrDefault<string>("sshtrustedfingerprints", "");
+            if (!string.IsNullOrEmpty(fingerPrints))
+            {
+                foreach (var fingerprint in fingerPrints.Split(';', StringSplitOptions.RemoveEmptyEntries))
+                {
+                    if (!SSHFingerprint.TryParse(fingerprint, out var f))
+                        throw new ConfigException($"Invalid ssh fingerprint format {fingerprint}");
+                    TrustedFingerprints.Add(f);
+                }
+            }
+
             RootPath = conf.GetOrDefault<string>("rootpath", "/");
             if (!RootPath.StartsWith("/", StringComparison.InvariantCultureIgnoreCase))
                 RootPath = "/" + RootPath;
@@ -124,6 +166,53 @@ namespace BTCPayServer.Configuration
             if (old != null)
                 throw new ConfigException($"internallightningnode should not be used anymore, use btclightning instead");
         }
+
+        private SSHSettings ParseSSHConfiguration(IConfiguration conf)
+        {
+            var externalUrl = conf.GetOrDefault<Uri>("externalurl", null);
+            var settings = new SSHSettings();
+            settings.Server = conf.GetOrDefault<string>("sshconnection", null);
+            if (settings.Server != null)
+            {
+                var parts = settings.Server.Split(':');
+                if (parts.Length == 2 && int.TryParse(parts[1], out int port))
+                {
+                    settings.Port = port;
+                    settings.Server = parts[0];
+                }
+                else
+                {
+                    settings.Port = 22;
+                }
+
+                parts = settings.Server.Split('@');
+                if (parts.Length == 2)
+                {
+                    settings.Username = parts[0];
+                    settings.Server = parts[1];
+                }
+                else
+                {
+                    settings.Username = "root";
+                }
+            }
+            else if (externalUrl != null)
+            {
+                settings.Port = 22;
+                settings.Username = "root";
+                settings.Server = externalUrl.DnsSafeHost;
+            }
+            settings.Password = conf.GetOrDefault<string>("sshpassword", "");
+            settings.KeyFile = conf.GetOrDefault<string>("sshkeyfile", "");
+            settings.KeyFilePassword = conf.GetOrDefault<string>("sshkeyfilepassword", "");
+            return settings;
+        }
+
+        internal bool IsTrustedFingerprint(byte[] fingerPrint, byte[] hostKey)
+        {
+            return TrustedFingerprints.Any(f => f.Match(fingerPrint, hostKey));
+        }
+
         public string RootPath { get; set; }
         public Dictionary<string, LightningConnectionString> InternalLightningByCryptoCode { get; set; } = new Dictionary<string, LightningConnectionString>();
         public ExternalServices ExternalServicesByCryptoCode { get; set; } = new ExternalServices();
@@ -144,6 +233,12 @@ namespace BTCPayServer.Configuration
             get;
             set;
         }
+        public List<SSHFingerprint> TrustedFingerprints { get; set; } = new List<SSHFingerprint>();
+        public SSHSettings SSHSettings
+        {
+            get;
+            set;
+        }
 
         internal string GetRootUri()
         {
@@ -154,7 +249,7 @@ namespace BTCPayServer.Configuration
             return builder.ToString();
         }
     }
-    
+
     public class ExternalServices : MultiValueDictionary<string, ExternalService>
     {
         public IEnumerable<T> GetServices<T>(string cryptoCode) where T : ExternalService

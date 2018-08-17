@@ -43,6 +43,7 @@ namespace BTCPayServer.Services
     }
     public class LightningConfiguration
     {
+        public string ChainType { get; set; }
         public string Type { get; set; }
         public string CryptoCode { get; set; }
         public string Host { get; set; }

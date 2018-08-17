@@ -34,6 +34,11 @@ namespace BTCPayServer.Configuration
             app.Option("--externalurl", $"The expected external URL of this service, to use if BTCPay is behind a reverse proxy (default: empty, use the incoming HTTP request to figure out)", CommandOptionType.SingleValue);
             app.Option("--bundlejscss", $"Bundle JavaScript and CSS files for better performance (default: true)", CommandOptionType.SingleValue);
             app.Option("--rootpath", "The root path in the URL to access BTCPay (default: /)", CommandOptionType.SingleValue);
+            app.Option("--sshconnection", "SSH server to manage BTCPay under the form user@server:port (default: root@externalhost or empty)", CommandOptionType.SingleValue);
+            app.Option("--sshpassword", "SSH password to manage BTCPay (default: empty)", CommandOptionType.SingleValue);
+            app.Option("--sshkeyfile", "SSH private key file to manage BTCPay (default: empty)", CommandOptionType.SingleValue);
+            app.Option("--sshkeyfilepassword", "Password of the SSH keyfile (default: empty)", CommandOptionType.SingleValue);
+            app.Option("--sshtrustedfingerprints", "SSH Host public key fingerprint or sha256 (default: empty, it will allow untrusted connections)", CommandOptionType.SingleValue);
             foreach (var network in provider.GetAll())
             {
                 var crypto = network.CryptoCode.ToLowerInvariant();

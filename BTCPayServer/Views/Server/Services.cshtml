@@ -13,39 +13,46 @@
 </div>
 
 <div class="row">
-    @if(Model.LNDServices.Count != 0)
-    {
-        <div class="col-md-8">
-            <div class="form-group">
-                <h5>LND nodes</h5>
-                <span>You can get access to internal LND services here. For gRPC, only BTC is supported.</span>
-            </div>
 
-            <div class="form-group">
-                <table class="table table-sm table-responsive-md">
-                    <thead>
-                        <tr>
-                            <th>Crypto</th>
-                            <th>Access Type</th>
-                            <th style="text-align:right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach(var lnd in Model.LNDServices)
-                        {
-                            <tr>
-                                <td>@lnd.Crypto</td>
-                                <td>@lnd.Type</td>
-                                <td style="text-align:right">
-                                    <a asp-action="LNDGRPCServices" asp-route-cryptoCode="@lnd.Crypto" asp-route-index="@lnd.Index">See information</a>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+    <div class="col-md-8">
+        <div class="form-group">
+            <span>You can get access here to LND-gRPC or SSH services exposed by your server</span>
         </div>
-    }
+
+        <div class="form-group">
+            <table class="table table-sm table-responsive-md">
+                <thead>
+                    <tr>
+                        <th>Crypto</th>
+                        <th>Access Type</th>
+                        <th style="text-align:right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach(var lnd in Model.LNDServices)
+                    {
+                        <tr>
+                            <td>@lnd.Crypto</td>
+                            <td>@lnd.Type</td>
+                            <td style="text-align:right">
+                                <a asp-action="LNDGRPCServices" asp-route-cryptoCode="@lnd.Crypto" asp-route-index="@lnd.Index">See information</a>
+                            </td>
+                        </tr>
+                    }
+                    @if(Model.HasSSH)
+                    {
+                        <tr>
+                            <td>None</td>
+                            <td>SSH</td>
+                            <td style="text-align:right">
+                                <a asp-action="SSHService">See information</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
 @section Scripts {

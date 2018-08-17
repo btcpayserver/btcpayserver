@@ -1,0 +1,50 @@
+﻿@model BTCPayServer.Models.ServerViewModels.SSHServiceViewModel
+@{
+    ViewData.SetActivePageAndTitle(ServerNavPages.Services);
+}
+
+
+<h4>SSH settings</h4>
+<partial name="_StatusMessage" for="@TempData["StatusMessage"]" />
+<div class="row">
+    <div class="col-md-6">
+        <div asp-validation-summary="All" class="text-danger"></div>
+    </div>
+</div>
+
+<div class="row">
+
+    <div class="col-md-8">
+        <div class="form-group">
+            <p>
+                <span>SSH servies are used by the maintenance operations<br /></span>
+            </p>
+        </div>
+
+
+        <div class="form-group">
+            <div class="form-group">
+                <label asp-for="CommandLine"></label>
+                <input asp-for="CommandLine" readonly class="form-control" />
+            </div>
+            @if(!string.IsNullOrEmpty(Model.Password))
+            {
+                <div class="form-group">
+                    <label asp-for="Password"></label>
+                    <input asp-for="Password" readonly class="form-control" />
+                </div>
+            }
+            @if(!string.IsNullOrEmpty(Model.KeyFilePassword))
+            {
+                <div class="form-group">
+                    <label asp-for="KeyFilePassword"></label>
+                    <input asp-for="KeyFilePassword" readonly class="form-control" />
+                </div>
+            }
+            @if(Model.HasKeyFile)
+            {
+                <a class="btn btn-primary form-control" asp-action="SSHService" asp-route-downloadKeyFile="true">Download Key File</a>
+            }
+        </div>
+    </div>
+</div>

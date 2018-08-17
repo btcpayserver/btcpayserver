@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using BTCPayServer.Models;
 using Microsoft.EntityFrameworkCore.Infrastructure.Internal;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace BTCPayServer.Data
 {
@@ -204,6 +205,9 @@ namespace BTCPayServer.Data
                     o.UniqueId
 #pragma warning restore CS0618
                 });
+
+            builder.UseOpenIddict();
+
         }
     }
 }

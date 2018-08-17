@@ -293,12 +293,13 @@ namespace BTCPayServer.Controllers
             var store = await GetStore(app);
             List<string> currencyDropdown = supportedCurrencies(settings, store);
 
+            var appUrl = HttpContext.Request.GetAbsoluteRoot();
             var model = new PayButtonViewModel
             {
                 Price = 10,
                 Currency = settings.Currency,
                 ButtonSize = 2,
-                UrlRoot = "http://127.0.0.1:14142",
+                UrlRoot = appUrl,
                 CurrencyDropdown = currencyDropdown
             };
             return View(model);
@@ -352,7 +353,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("{appId}/paybuttontest")]
-        public async Task<IActionResult> PayButtonTest(string appId)
+        public IActionResult PayButtonTest(string appId)
         {
             return View();
         }

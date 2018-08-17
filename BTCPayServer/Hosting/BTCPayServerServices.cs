@@ -41,6 +41,9 @@ using System.Security.Claims;
 using BTCPayServer.Security;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using NBXplorer.DerivationStrategy;
+using OpenIddict.Abstractions;
+using OpenIddict.Core;
+using OpenIddict.EntityFrameworkCore.Models;
 
 namespace BTCPayServer.Hosting
 {
@@ -52,6 +55,8 @@ namespace BTCPayServer.Hosting
             {
                 var factory = provider.GetRequiredService<ApplicationDbContextFactory>();
                 factory.ConfigureBuilder(o);
+
+                o.UseOpenIddict();
             });
             services.TryAddSingleton<SettingsRepository>();
             services.TryAddSingleton<InvoicePaymentNotification>();
@@ -171,9 +176,32 @@ namespace BTCPayServer.Hosting
             using (var scope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
             {
                 //Wait the DB is ready
-                Retry(() =>
+                Retry(async () =>
                 {
                     scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.Migrate();
+
+
+                    var manager = scope.ServiceProvider.GetRequiredService<OpenIddictApplicationManager<OpenIddictApplication>>();
+                    if (await manager.FindByClientIdAsync("postman") == null)
+                    {
+                        var descriptor = new OpenIddictApplicationDescriptor
+                        {
+                            ClientId = "postman",
+                            DisplayName = "Postman",
+                            RedirectUris = { new Uri("https://www.getpostman.com/oauth2/callback") },
+                            Permissions =
+                            {
+                                OpenIddictConstants.Permissions.Endpoints.Authorization,
+                                OpenIddictConstants.Permissions.Endpoints.Token,
+                                OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode,
+                                OpenIddictConstants.Permissions.Scopes.Email,
+                                OpenIddictConstants.Permissions.Scopes.Profile,
+                                OpenIddictConstants.Permissions.Scopes.Roles
+                            }
+                        };
+
+                        await manager.CreateAsync(descriptor);
+                    }
                 });
             }
 

@@ -76,6 +76,41 @@ namespace BTCPayServer.Hosting
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
 
+            // Register the OpenIddict services.
+            services.AddOpenIddict()
+                .AddCore(options =>
+                {
+                    // Configure OpenIddict to use the Entity Framework Core stores and entities.
+                    options.UseEntityFrameworkCore()
+                        .UseDbContext<ApplicationDbContext>();
+                })
+
+                .AddServer(options =>
+                {
+                    // Register the ASP.NET Core MVC binder used by OpenIddict.
+                    // Note: if you don't call this method, you won't be able to
+                    // bind OpenIdConnectRequest or OpenIdConnectResponse parameters.
+                    options.UseMvc();
+
+                    // Enable the token endpoint (required to use the password flow).
+                    options.EnableTokenEndpoint("/connect/token");
+                    options.EnableAuthorizationEndpoint("/connect/authorize");
+                    options.EnableAuthorizationEndpoint("/connect/logout");
+
+                    // Allow client applications to use the grant_type=password flow.
+                    options.AllowPasswordFlow();
+                    options.AllowAuthorizationCodeFlow();
+                    // During development, you can disable the HTTPS requirement.
+                    options.DisableHttpsRequirement();
+
+                    // Accept token requests that don't specify a client_id.
+                    options.AcceptAnonymousClients();
+
+                })
+
+                .AddValidation();
+
+
             services.AddBTCPayServer();
             services.AddMvc(o =>
             {

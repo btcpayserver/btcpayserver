@@ -179,28 +179,6 @@ namespace BTCPayServer.Hosting
                 Retry(() =>
                 {
                     scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.Migrate();
-
-                    var manager = scope.ServiceProvider.GetRequiredService<OpenIddictApplicationManager<OpenIddictApplication>>();
-                    if (manager.FindByClientIdAsync("postman").Result == null)
-                    {
-                        var descriptor = new OpenIddictApplicationDescriptor
-                        {
-                            ClientId = "postman",
-                            DisplayName = "Postman",
-                            RedirectUris = { new Uri("https://www.getpostman.com/oauth2/callback") },
-                            Permissions =
-                            {
-                                OpenIddictConstants.Permissions.Endpoints.Authorization,
-                                OpenIddictConstants.Permissions.Endpoints.Token,
-                                OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode,
-                                OpenIddictConstants.Permissions.Scopes.Email,
-                                OpenIddictConstants.Permissions.Scopes.Profile,
-                                OpenIddictConstants.Permissions.Scopes.Roles
-                            }
-                        };
-
-                        manager.CreateAsync(descriptor).RunSynchronously();
-                    }
                 });
             }
 

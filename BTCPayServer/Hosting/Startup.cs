@@ -38,6 +38,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Mvc.Cors.Internal;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using System.Net;
+using AspNet.Security.OpenIdConnect.Primitives;
 using Meziantou.AspNetCore.BundleTagHelpers;
 using BTCPayServer.Security;
 
@@ -111,6 +112,7 @@ namespace BTCPayServer.Hosting
                 .AddValidation();
 
 
+
             services.AddBTCPayServer();
             services.AddMvc(o =>
             {
@@ -134,7 +136,13 @@ namespace BTCPayServer.Hosting
                 options.Password.RequiredLength = 7;
                 options.Password.RequireLowercase = false;
                 options.Password.RequireNonAlphanumeric = false;
-                options.Password.RequireUppercase = false;
+                options.Password.RequireUppercase = false;            
+                // Configure Identity to use the same JWT claims as OpenIddict instead
+                // of the legacy WS-Federation claims it uses by default (ClaimTypes),
+                // which saves you from doing the mapping in your authorization controller.
+                options.ClaimsIdentity.UserNameClaimType = OpenIdConnectConstants.Claims.Name;
+                options.ClaimsIdentity.UserIdClaimType = OpenIdConnectConstants.Claims.Subject;
+                options.ClaimsIdentity.RoleClaimType = OpenIdConnectConstants.Claims.Role;
             });
 
             services.AddHangfire((o) =>

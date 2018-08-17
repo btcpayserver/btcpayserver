@@ -176,13 +176,12 @@ namespace BTCPayServer.Hosting
             using (var scope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
             {
                 //Wait the DB is ready
-                Retry(async () =>
+                Retry(() =>
                 {
                     scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.Migrate();
 
-
                     var manager = scope.ServiceProvider.GetRequiredService<OpenIddictApplicationManager<OpenIddictApplication>>();
-                    if (await manager.FindByClientIdAsync("postman") == null)
+                    if (manager.FindByClientIdAsync("postman").Result == null)
                     {
                         var descriptor = new OpenIddictApplicationDescriptor
                         {
@@ -200,7 +199,7 @@ namespace BTCPayServer.Hosting
                             }
                         };
 
-                        await manager.CreateAsync(descriptor);
+                        manager.CreateAsync(descriptor).RunSynchronously();
                     }
                 });
             }

@@ -36,6 +36,8 @@ namespace BTCPayServer.Services.Rates
         }
         IMemoryCache _Cache;
         private IOptions<MemoryCacheOptions> _CacheOptions;
+        private readonly IHttpClientFactory _httpClientFactory;
+
         public IMemoryCache Cache
         {
             get
@@ -45,6 +47,7 @@ namespace BTCPayServer.Services.Rates
         }
         CoinAverageSettings _CoinAverageSettings;
         public BTCPayRateProviderFactory(IOptions<MemoryCacheOptions> cacheOptions,
+                                         IHttpClientFactory httpClientFactory,
                                          BTCPayNetworkProvider btcpayNetworkProvider,
                                          CoinAverageSettings coinAverageSettings)
         {
@@ -53,6 +56,7 @@ namespace BTCPayServer.Services.Rates
             _CoinAverageSettings = coinAverageSettings;
             _Cache = new MemoryCache(cacheOptions);
             _CacheOptions = cacheOptions;
+            _httpClientFactory = httpClientFactory;
             // We use 15 min because of limits with free version of bitcoinaverage
             CacheSpan = TimeSpan.FromMinutes(15.0);
             this.btcpayNetworkProvider = btcpayNetworkProvider;
@@ -73,7 +77,7 @@ namespace BTCPayServer.Services.Rates
             // Handmade providers
             DirectProviders.Add("bitpay", new BitpayRateProvider(new NBitpayClient.Bitpay(new NBitcoin.Key(), new Uri("https://bitpay.com/"))));
             DirectProviders.Add(QuadrigacxRateProvider.QuadrigacxName, new QuadrigacxRateProvider());
-            DirectProviders.Add(CoinAverageRateProvider.CoinAverageName, new CoinAverageRateProvider() { Exchange = CoinAverageRateProvider.CoinAverageName, Authenticator = _CoinAverageSettings });
+            DirectProviders.Add(CoinAverageRateProvider.CoinAverageName, new CoinAverageRateProvider() { Exchange = CoinAverageRateProvider.CoinAverageName, HttpClient = _httpClientFactory?.CreateClient(), Authenticator = _CoinAverageSettings });
 
             // Those exchanges make multiple requests when calling GetTickers so we remove them
             //DirectProviders.Add("kraken", new ExchangeSharpRateProvider("kraken", new ExchangeKrakenAPI(), true));
@@ -194,6 +198,7 @@ namespace BTCPayServer.Services.Rates
                 providers.Add(new CoinAverageRateProvider()
                 {
                     Exchange = exchangeName,
+                    HttpClient = _httpClientFactory?.CreateClient(),
                     Authenticator = _CoinAverageSettings
                 });
             }

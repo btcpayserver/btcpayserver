@@ -1687,6 +1687,8 @@ namespace BTCPayServer.Tests
                                && e.BidAsk.Bid > 1.0m // 1BTC will always be more than 1USD
                                );
             }
+            // Kraken emit one request only after first GetRates
+            factory.DirectProviders["kraken"].GetRatesAsync().GetAwaiter().GetResult();
         }
 
         [Fact]

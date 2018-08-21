@@ -26,7 +26,7 @@ namespace BTCPayServer.Payments.Lightning
             _LightningClientFactory = lightningClientFactory;
             _Dashboard = dashboard;
         }
-        public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(LightningSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store, BTCPayNetwork network)
+        public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(LightningSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store, BTCPayNetwork network, object preparePaymentObject)
         {
             var storeBlob = store.GetStoreBlob();
             var test = Test(supportedPaymentMethod, network);

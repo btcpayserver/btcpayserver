@@ -210,6 +210,7 @@ namespace BTCPayServer.Controllers
             try
             {
                 var storeBlob = store.GetStoreBlob();
+                var preparePayment = handler.PreparePayment(supportedPaymentMethod, store, network);
                 var rate = await fetchingByCurrencyPair[new CurrencyPair(network.CryptoCode, entity.ProductInformation.Currency)];
                 if (rate.BidAsk == null)
                 {
@@ -220,7 +221,7 @@ namespace BTCPayServer.Controllers
                 paymentMethod.Network = network;
                 paymentMethod.SetId(supportedPaymentMethod.PaymentId);
                 paymentMethod.Rate = rate.BidAsk.Bid;
-                var paymentDetails = await handler.CreatePaymentMethodDetails(supportedPaymentMethod, paymentMethod, store, network);
+                var paymentDetails = await handler.CreatePaymentMethodDetails(supportedPaymentMethod, paymentMethod, store, network, preparePayment);
                 if (storeBlob.NetworkFeeDisabled)
                     paymentDetails.SetNoTxFee();
                 paymentMethod.SetPaymentMethodDetails(paymentDetails);

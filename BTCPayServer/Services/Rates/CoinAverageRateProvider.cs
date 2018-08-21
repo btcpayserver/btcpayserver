@@ -56,6 +56,19 @@ namespace BTCPayServer.Services.Rates
         {
 
         }
+
+        public HttpClient HttpClient
+        {
+            get
+            {
+                return _LocalClient ?? _Client;
+            }
+            set
+            {
+                _LocalClient = null;
+            }
+        }
+        HttpClient _LocalClient;
         static HttpClient _Client = new HttpClient();
 
         public string Exchange { get; set; } = CoinAverageName;
@@ -107,7 +120,7 @@ namespace BTCPayServer.Services.Rates
             {
                 await auth.AddHeader(request);
             }
-            var resp = await _Client.SendAsync(request);
+            var resp = await HttpClient.SendAsync(request);
             using (resp)
             {
 
@@ -150,7 +163,7 @@ namespace BTCPayServer.Services.Rates
             {
                 await auth.AddHeader(request);
             }
-            var resp = await _Client.SendAsync(request);
+            var resp = await HttpClient.SendAsync(request);
             resp.EnsureSuccessStatusCode();
         }
 
@@ -162,7 +175,7 @@ namespace BTCPayServer.Services.Rates
             {
                 await auth.AddHeader(request);
             }
-            var resp = await _Client.SendAsync(request);
+            var resp = await HttpClient.SendAsync(request);
             resp.EnsureSuccessStatusCode();
             var jobj = JObject.Parse(await resp.Content.ReadAsStringAsync());
             var response = new GetRateLimitsResponse();
@@ -193,7 +206,7 @@ namespace BTCPayServer.Services.Rates
             {
                 await auth.AddHeader(request);
             }
-            var resp = await _Client.SendAsync(request);
+            var resp = await HttpClient.SendAsync(request);
             resp.EnsureSuccessStatusCode();
             var jobj = JObject.Parse(await resp.Content.ReadAsStringAsync());
             var response = new GetExchangeTickersResponse();

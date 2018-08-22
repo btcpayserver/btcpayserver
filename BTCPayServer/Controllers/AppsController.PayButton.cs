@@ -32,7 +32,8 @@ namespace BTCPayServer.Controllers
                 Currency = DEFAULT_CURRENCY,
                 ButtonSize = 2,
                 UrlRoot = appUrl,
-                CurrencyDropdown = currencyDropdown
+                CurrencyDropdown = currencyDropdown,
+                PayButtonImageUrl = appUrl + "/img/paywithbtcpay.png"
             };
             return View(model);
         }

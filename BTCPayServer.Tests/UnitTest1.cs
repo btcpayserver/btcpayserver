@@ -1687,6 +1687,8 @@ namespace BTCPayServer.Tests
                                && e.BidAsk.Bid > 1.0m // 1BTC will always be more than 1USD
                                );
             }
+            // Kraken emit one request only after first GetRates
+            factory.DirectProviders["kraken"].GetRatesAsync().GetAwaiter().GetResult();
         }
 
         [Fact]
@@ -1711,7 +1713,7 @@ namespace BTCPayServer.Tests
 
         private static BTCPayRateProviderFactory CreateBTCPayRateFactory(BTCPayNetworkProvider provider)
         {
-            return new BTCPayRateProviderFactory(new MemoryCacheOptions() { ExpirationScanFrequency = TimeSpan.FromSeconds(1.0) }, provider, new CoinAverageSettings());
+            return new BTCPayRateProviderFactory(new MemoryCacheOptions() { ExpirationScanFrequency = TimeSpan.FromSeconds(1.0) }, null, provider, new CoinAverageSettings());
         }
 
         [Fact]

@@ -2,8 +2,11 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
-		<Version>1.0.2.93</Version>
+		<Version>1.0.2.94</Version>
     <NoWarn>NU1701,CA1816,CA1308,CA1810,CA2208</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup>
+    <LangVersion>7.3</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Build\dockerfiles\**" />
@@ -31,22 +34,22 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="BuildBundlerMinifier" Version="2.7.385" />
-    <PackageReference Include="DigitalRuby.ExchangeSharp" Version="0.4.1" />
+    <PackageReference Include="DigitalRuby.ExchangeSharp" Version="0.5.3" />
     <PackageReference Include="Hangfire" Version="1.6.19" />
     <PackageReference Include="Hangfire.MemoryStorage" Version="1.5.2" />
     <PackageReference Include="Hangfire.PostgreSql" Version="1.4.8.2" />
-    <PackageReference Include="LedgerWallet" Version="2.0.0" />
+    <PackageReference Include="LedgerWallet" Version="2.0.0.1" />
     <PackageReference Include="Meziantou.AspNetCore.BundleTagHelpers" Version="2.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.1.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.2" />
     <PackageReference Include="Microsoft.NetCore.Analyzers" Version="2.6.0" />
-    <PackageReference Include="NBitcoin" Version="4.1.1.32" />
+    <PackageReference Include="NBitcoin" Version="4.1.1.45" />
     <PackageReference Include="NBitpayClient" Version="1.0.0.29" />	  
     <PackageReference Include="DBreeze" Version="1.87.0" />
-    <PackageReference Include="NBXplorer.Client" Version="1.0.2.15" />
+    <PackageReference Include="NBXplorer.Client" Version="1.0.2.18" />
     <PackageReference Include="NicolasDorier.CommandLine" Version="1.0.0.2" />
     <PackageReference Include="NicolasDorier.CommandLine.Configuration" Version="1.0.0.3" />
-    <PackageReference Include="NicolasDorier.StandardConfiguration" Version="1.0.0.16" />
+    <PackageReference Include="NicolasDorier.StandardConfiguration" Version="1.0.0.17" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.1.0" />
     <PackageReference Include="SSH.NET" Version="2016.1.0" />
     <PackageReference Include="System.Xml.XmlSerializer" Version="4.3.0" />

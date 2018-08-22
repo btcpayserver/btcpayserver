@@ -33,14 +33,14 @@ namespace BTCPayServer.Controllers
         private UserManager<ApplicationUser> _UserManager;
         SettingsRepository _SettingsRepository;
         private readonly NBXplorerDashboard _dashBoard;
-        private BTCPayRateProviderFactory _RateProviderFactory;
+        private RateFetcher _RateProviderFactory;
         private StoreRepository _StoreRepository;
         LightningConfigurationProvider _LnConfigProvider;
         BTCPayServerOptions _Options;
 
         public ServerController(UserManager<ApplicationUser> userManager,
             Configuration.BTCPayServerOptions options,
-            BTCPayRateProviderFactory rateProviderFactory,
+            RateFetcher rateProviderFactory,
             SettingsRepository settingsRepository,
             NBXplorerDashboard dashBoard,
             LightningConfigurationProvider lnConfigProvider,

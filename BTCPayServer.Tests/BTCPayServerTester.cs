@@ -121,7 +121,7 @@ namespace BTCPayServer.Tests
             _Host.Start();
             InvoiceRepository = (InvoiceRepository)_Host.Services.GetService(typeof(InvoiceRepository));
             StoreRepository = (StoreRepository)_Host.Services.GetService(typeof(StoreRepository)); 
-            var rateProvider = (BTCPayRateProviderFactory)_Host.Services.GetService(typeof(BTCPayRateProviderFactory));
+            var rateProvider = (RateProviderFactory)_Host.Services.GetService(typeof(RateProviderFactory));
             rateProvider.DirectProviders.Clear();
 
             var coinAverageMock = new MockRateProvider();

@@ -49,7 +49,7 @@ namespace BTCPayServer.Controllers
     {
         InvoiceRepository _InvoiceRepository;
         ContentSecurityPolicies _CSP;
-        BTCPayRateProviderFactory _RateProvider;
+        RateFetcher _RateProvider;
         StoreRepository _StoreRepository;
         UserManager<ApplicationUser> _UserManager;
         private CurrencyNameTable _CurrencyNameTable;
@@ -62,7 +62,7 @@ namespace BTCPayServer.Controllers
             InvoiceRepository invoiceRepository,
             CurrencyNameTable currencyNameTable,
             UserManager<ApplicationUser> userManager,
-            BTCPayRateProviderFactory rateProvider,
+            RateFetcher rateProvider,
             StoreRepository storeRepository,
             EventAggregator eventAggregator,
             BTCPayWalletProvider walletProvider,

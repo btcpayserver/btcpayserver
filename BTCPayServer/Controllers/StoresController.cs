@@ -35,7 +35,7 @@ namespace BTCPayServer.Controllers
     [AutoValidateAntiforgeryToken]
     public partial class StoresController : Controller
     {
-        BTCPayRateProviderFactory _RateFactory;
+        RateFetcher _RateFactory;
         public string CreatedStoreId { get; set; }
         public StoresController(
             IServiceProvider serviceProvider,
@@ -47,7 +47,7 @@ namespace BTCPayServer.Controllers
             AccessTokenController tokenController,
             BTCPayWalletProvider walletProvider,
             BTCPayNetworkProvider networkProvider,
-            BTCPayRateProviderFactory rateFactory,
+            RateFetcher rateFactory,
             ExplorerClientProvider explorerProvider,
             IFeeProviderFactory feeRateProvider,
             LanguageService langService,
@@ -521,7 +521,7 @@ namespace BTCPayServer.Controllers
 
         private CoinAverageExchange[] GetSupportedExchanges()
         {
-            return _RateFactory.GetSupportedExchanges()
+            return _RateFactory.RateProviderFactory.GetSupportedExchanges()
                     .Select(c => c.Value)
                     .OrderBy(s => s.Name, StringComparer.OrdinalIgnoreCase)
                     .ToArray();

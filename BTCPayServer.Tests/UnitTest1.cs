@@ -1666,8 +1666,7 @@ namespace BTCPayServer.Tests
         [Fact]
         public void CanQueryDirectProviders()
         {
-            var provider = new BTCPayNetworkProvider(NetworkType.Mainnet);
-            var factory = CreateBTCPayRateFactory(provider);
+            var factory = CreateBTCPayRateFactory();
 
             foreach (var result in factory
                 .DirectProviders
@@ -1695,15 +1694,15 @@ namespace BTCPayServer.Tests
         public void CanGetRateCryptoCurrenciesByDefault()
         {
             var provider = new BTCPayNetworkProvider(NetworkType.Mainnet);
-            var factory = CreateBTCPayRateFactory(provider);
-
+            var factory = CreateBTCPayRateFactory();
+            var fetcher = new RateFetcher(factory);
             var pairs =
                     provider.GetAll()
                     .Select(c => new CurrencyPair(c.CryptoCode, "USD"))
                     .ToHashSet();
 
             var rules = new StoreBlob().GetDefaultRateRules(provider);
-            var result = factory.FetchRates(pairs, rules);
+            var result = fetcher.FetchRates(pairs, rules);
             foreach (var value in result)
             {
                 var rateResult = value.Value.GetAwaiter().GetResult();
@@ -1711,15 +1710,14 @@ namespace BTCPayServer.Tests
             }
         }
 
-        private static BTCPayRateProviderFactory CreateBTCPayRateFactory(BTCPayNetworkProvider provider)
+        private static RateProviderFactory CreateBTCPayRateFactory()
         {
-            return new BTCPayRateProviderFactory(new MemoryCacheOptions() { ExpirationScanFrequency = TimeSpan.FromSeconds(1.0) }, null, provider, new CoinAverageSettings());
+            return new RateProviderFactory(new MemoryCacheOptions() { ExpirationScanFrequency = TimeSpan.FromSeconds(1.0) }, null, new CoinAverageSettings());
         }
 
         [Fact]
         public void CheckRatesProvider()
         {
-            var provider = new BTCPayNetworkProvider(NetworkType.Mainnet);
             var coinAverage = new CoinAverageRateProvider();
             var rates = coinAverage.GetRatesAsync().GetAwaiter().GetResult();
             Assert.NotNull(rates.GetRate("coinaverage", new CurrencyPair("BTC", "JPY")));
@@ -1728,27 +1726,28 @@ namespace BTCPayServer.Tests
 
             RateRules.TryParse("X_X = coinaverage(X_X);", out var rateRules);
 
-            var factory = CreateBTCPayRateFactory(provider);
+            var factory = CreateBTCPayRateFactory();
+            var fetcher = new RateFetcher(CreateBTCPayRateFactory());
             factory.CacheSpan = TimeSpan.FromSeconds(10);
 
-            var fetchedRate = factory.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules).GetAwaiter().GetResult();
+            var fetchedRate = fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules).GetAwaiter().GetResult();
             Assert.False(fetchedRate.Cached);
-            fetchedRate = factory.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules).GetAwaiter().GetResult();
+            fetchedRate = fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules).GetAwaiter().GetResult();
             Assert.True(fetchedRate.Cached);
 
             Thread.Sleep(11000);
-            fetchedRate = factory.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules).GetAwaiter().GetResult();
+            fetchedRate = fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules).GetAwaiter().GetResult();
             Assert.False(fetchedRate.Cached);
-            fetchedRate = factory.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules).GetAwaiter().GetResult();
+            fetchedRate = fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules).GetAwaiter().GetResult();
             Assert.True(fetchedRate.Cached);
             // Should cache at exchange level so this should hit the cache
-            var fetchedRate2 = factory.FetchRate(CurrencyPair.Parse("LTC_USD"), rateRules).GetAwaiter().GetResult();
+            var fetchedRate2 = fetcher.FetchRate(CurrencyPair.Parse("LTC_USD"), rateRules).GetAwaiter().GetResult();
             Assert.True(fetchedRate.Cached);
             Assert.NotEqual(fetchedRate.BidAsk.Bid, fetchedRate2.BidAsk.Bid);
 
             // Should cache at exchange level this should not hit the cache as it is different exchange
             RateRules.TryParse("X_X = bittrex(X_X);", out rateRules);
-            fetchedRate = factory.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules).GetAwaiter().GetResult();
+            fetchedRate = fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules).GetAwaiter().GetResult();
             Assert.False(fetchedRate.Cached);
 
         }

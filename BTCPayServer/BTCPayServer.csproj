@@ -122,13 +122,13 @@
     <Content Update="Views\Server\SSHService.cshtml">
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>
-	  <Content Update="Views\Apps\ViewPayButton.cshtml">
+	  <Content Update="Views\Stores\PayButton.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
-	  <Content Update="Views\Apps\PayButtonHandle.cshtml">
+	  <Content Update="Views\Stores\PayButtonHandle.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
-	  <Content Update="Views\Apps\PayButtonTest.cshtml">
+	  <Content Update="Views\Stores\PayButtonTest.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
 	  <Content Update="Views\Server\LNDGRPCServices.cshtml">

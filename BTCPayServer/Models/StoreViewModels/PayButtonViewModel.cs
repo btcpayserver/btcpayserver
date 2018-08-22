@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace BTCPayServer.Models.AppViewModels
+namespace BTCPayServer.Models.StoreViewModels
 {
     public class PayButtonViewModel
     {
@@ -21,7 +21,7 @@ namespace BTCPayServer.Models.AppViewModels
         [EmailAddress]
         public string NotifyEmail { get; set; }
 
-        public string AppId { get; set; }
+        public string StoreId { get; set; }
 
         // Data that influences Pay Button UI, but not invoice creation
         public string UrlRoot { get; set; }

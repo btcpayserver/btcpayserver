@@ -49,7 +49,7 @@ namespace BTCPayServer.Controllers
     {
         InvoiceRepository _InvoiceRepository;
         ContentSecurityPolicies _CSP;
-        BTCPayRateProviderFactory _RateProvider;
+        RateFetcher _RateProvider;
         StoreRepository _StoreRepository;
         UserManager<ApplicationUser> _UserManager;
         private CurrencyNameTable _CurrencyNameTable;
@@ -62,7 +62,7 @@ namespace BTCPayServer.Controllers
             InvoiceRepository invoiceRepository,
             CurrencyNameTable currencyNameTable,
             UserManager<ApplicationUser> userManager,
-            BTCPayRateProviderFactory rateProvider,
+            RateFetcher rateProvider,
             StoreRepository storeRepository,
             EventAggregator eventAggregator,
             BTCPayWalletProvider walletProvider,
@@ -195,12 +195,9 @@ namespace BTCPayServer.Controllers
                     var allRateRuleErrors = string.Join(", ", rateResult.Errors.ToArray());
                     logs.Write($"{pair.Key}: Rate rule error ({allRateRuleErrors})");
                 }
-                if (rateResult.ExchangeExceptions.Count != 0)
+                foreach (var ex in rateResult.ExchangeExceptions)
                 {
-                    foreach (var ex in rateResult.ExchangeExceptions)
-                    {
-                        logs.Write($"{pair.Key}: Exception reaching exchange {ex.ExchangeName} ({ex.Exception.Message})");
-                    }
+                    logs.Write($"{pair.Key}: Exception reaching exchange {ex.ExchangeName} ({ex.Exception.Message})");
                 }
             }).ToArray());
         }

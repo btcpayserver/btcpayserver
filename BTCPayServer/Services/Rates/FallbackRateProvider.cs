@@ -9,7 +9,6 @@ namespace BTCPayServer.Services.Rates
     public class FallbackRateProvider : IRateProvider
     {
         IRateProvider[] _Providers;
-        public bool Used { get; set; }
         public FallbackRateProvider(IRateProvider[] providers)
         {
             if (providers == null)
@@ -19,7 +18,6 @@ namespace BTCPayServer.Services.Rates
 
         public async Task<ExchangeRates> GetRatesAsync()
         {
-            Used = true;
             foreach (var p in _Providers)
             {
                 try

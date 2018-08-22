@@ -38,7 +38,7 @@ namespace BTCPayServer.Services.Rates
             get;
             set;
         } = TimeSpan.FromMinutes(1.0);
-        public IMemoryCache MemoryCache { get => _MemoryCache; private set => _MemoryCache = value; }
+        public IMemoryCache MemoryCache { get => _MemoryCache; set => _MemoryCache = value; }
         
         public Task<ExchangeRates> GetRatesAsync()
         {

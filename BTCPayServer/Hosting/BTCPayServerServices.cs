@@ -138,7 +138,8 @@ namespace BTCPayServer.Hosting
                 else
                     return new Bitpay(new Key(), new Uri("https://test.bitpay.com/"));
             });
-            services.TryAddSingleton<BTCPayRateProviderFactory>();
+            services.TryAddSingleton<RateProviderFactory>();
+            services.TryAddSingleton<RateFetcher>();
 
             services.TryAddScoped<IHttpContextAccessor, HttpContextAccessor>();
             services.AddTransient<AccessTokenController>();

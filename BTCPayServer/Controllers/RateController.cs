@@ -15,12 +15,12 @@ namespace BTCPayServer.Controllers
 {
     public class RateController : Controller
     {
-        BTCPayRateProviderFactory _RateProviderFactory;
+        RateFetcher _RateProviderFactory;
         BTCPayNetworkProvider _NetworkProvider;
         CurrencyNameTable _CurrencyNameTable;
         StoreRepository _StoreRepo;
         public RateController(
-            BTCPayRateProviderFactory rateProviderFactory,
+            RateFetcher rateProviderFactory,
             BTCPayNetworkProvider networkProvider,
             StoreRepository storeRepo,
             CurrencyNameTable currencyNameTable)

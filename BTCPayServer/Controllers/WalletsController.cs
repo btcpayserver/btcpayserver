@@ -42,7 +42,7 @@ namespace BTCPayServer.Controllers
         private readonly ExplorerClientProvider _explorerProvider;
         private readonly IFeeProviderFactory _feeRateProvider;
         private readonly BTCPayWalletProvider _walletProvider;
-        BTCPayRateProviderFactory _RateProvider;
+        RateFetcher _RateProvider;
         CurrencyNameTable _currencyTable;
         public WalletsController(StoreRepository repo,
                                  CurrencyNameTable currencyTable,
@@ -50,7 +50,7 @@ namespace BTCPayServer.Controllers
                                  UserManager<ApplicationUser> userManager,
                                  IOptions<MvcJsonOptions> mvcJsonOptions,
                                  NBXplorerDashboard dashboard,
-                                 BTCPayRateProviderFactory rateProvider,
+                                 RateFetcher rateProvider,
                                  ExplorerClientProvider explorerProvider,
                                  IFeeProviderFactory feeRateProvider,
                                  BTCPayWalletProvider walletProvider)

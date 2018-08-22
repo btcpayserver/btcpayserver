@@ -49,7 +49,7 @@
                             <td>@app.AppName</td>
                             <td>@app.AppType</td>
                             <td style="text-align:right">
-                                @if (app.IsOwner && app.AppType != AppType.PayButton.ToString())
+                                @if (app.IsOwner)
                                 {
                                     <a asp-action="@app.UpdateAction" asp-controller="Apps" asp-route-appId="@app.Id">Settings</a><span> - </span>
                                 }

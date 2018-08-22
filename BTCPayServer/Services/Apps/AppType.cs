@@ -7,7 +7,6 @@ namespace BTCPayServer.Services.Apps
 {
     public enum AppType
     {
-        PointOfSale,
-        PayButton
+        PointOfSale
     }
 }

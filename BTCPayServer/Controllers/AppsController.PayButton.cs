@@ -33,7 +33,8 @@ namespace BTCPayServer.Controllers
                 ButtonSize = 2,
                 UrlRoot = appUrl,
                 CurrencyDropdown = currencyDropdown,
-                PayButtonImageUrl = appUrl + "/img/paybutton/pay.png"
+                PayButtonImageUrl = appUrl + "/img/paybutton/pay.png",
+                AppId = appId
             };
             return View(model);
         }
@@ -55,7 +56,6 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> PayButtonHandle(string appId, [FromForm]PayButtonViewModel model)
         {
             var app = await GetApp(appId, AppType.PayButton);
-            var settings = app.GetSettings<PointOfSaleSettings>();
             var store = await GetStore(app);
 
             // TODO: extract validation to model

@@ -21,6 +21,8 @@ namespace BTCPayServer.Models.AppViewModels
         [EmailAddress]
         public string NotifyEmail { get; set; }
 
+        public string AppId { get; set; }
+
         // Data that influences Pay Button UI, but not invoice creation
         public string UrlRoot { get; set; }
         public List<string> CurrencyDropdown { get; set; }

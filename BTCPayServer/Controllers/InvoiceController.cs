@@ -195,12 +195,9 @@ namespace BTCPayServer.Controllers
                     var allRateRuleErrors = string.Join(", ", rateResult.Errors.ToArray());
                     logs.Write($"{pair.Key}: Rate rule error ({allRateRuleErrors})");
                 }
-                if (rateResult.ExchangeExceptions.Count != 0)
+                foreach (var ex in rateResult.ExchangeExceptions)
                 {
-                    foreach (var ex in rateResult.ExchangeExceptions)
-                    {
-                        logs.Write($"{pair.Key}: Exception reaching exchange {ex.ExchangeName} ({ex.Exception.Message})");
-                    }
+                    logs.Write($"{pair.Key}: Exception reaching exchange {ex.ExchangeName} ({ex.Exception.Message})");
                 }
             }).ToArray());
         }

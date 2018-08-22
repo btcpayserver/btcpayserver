@@ -10,7 +10,7 @@ namespace BTCPayServer.Services.Rates
 {
     public class BackgroundFetcherRateProvider : IRateProvider
     {
-        class LatestFetch
+        public class LatestFetch
         {
             public ExchangeRates Latest;
             public DateTimeOffset Timestamp;
@@ -41,20 +41,24 @@ namespace BTCPayServer.Services.Rates
             get
             {
                 var latest = _Latest;
-                if (latest == null)
+                if (latest == null || latest.Exception != null)
                     return DateTimeOffset.UtcNow;
                 return latest.Timestamp + RefreshRate;
             }
         }
 
-        public async Task<bool> UpdateIfNecessary()
+        public async Task<LatestFetch> UpdateIfNecessary()
         {
             if (NextUpdate <= DateTimeOffset.UtcNow)
             {
-                await Fetch();
-                return true;
+                try
+                {
+                    await Fetch();
+                }
+                catch { } // Exception is inside _Latest
+                return _Latest;
             }
-            return false;
+            return _Latest;
         }
 
         LatestFetch _Latest;
@@ -77,7 +81,14 @@ namespace BTCPayServer.Services.Rates
             }
             fetch.Timestamp = DateTimeOffset.UtcNow;
             _Latest = fetch;
+            if (fetch.Exception != null)
+                ExceptionDispatchInfo.Capture(fetch.Exception).Throw();
             return fetch;
+        }
+
+        public void InvalidateCache()
+        {
+            _Latest = null;
         }
     }
 }

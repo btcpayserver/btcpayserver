@@ -14,6 +14,7 @@ using Xunit;
 using NBXplorer.DerivationStrategy;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Tests.Logging;
 
 namespace BTCPayServer.Tests
 {

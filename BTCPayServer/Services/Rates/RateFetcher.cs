@@ -24,7 +24,7 @@ namespace BTCPayServer.Services.Rates
         public string EvaluatedRule { get; set; }
         public HashSet<RateRulesErrors> Errors { get; set; }
         public BidAsk BidAsk { get; set; }
-        public bool Cached { get; internal set; }
+        public TimeSpan Latency { get; internal set; }
     }
 
     public class RateFetcher
@@ -72,13 +72,12 @@ namespace BTCPayServer.Services.Rates
         private async Task<RateResult> GetRuleValue(List<Task<QueryRateResult>> dependentQueries, RateRule rateRule)
         {
             var result = new RateResult();
-            result.Cached = true;
             foreach (var queryAsync in dependentQueries)
             {
                 var query = await queryAsync;
-                if (!query.CachedResult)
-                    result.Cached = false;
-                result.ExchangeExceptions.AddRange(query.Exceptions);
+                result.Latency = query.Latency;
+                if (query.Exception != null)
+                    result.ExchangeExceptions.Add(query.Exception);
                 foreach (var rule in query.ExchangeRates)
                 {
                     rateRule.ExchangeRates.SetRate(rule.Exchange, rule.CurrencyPair, rule.BidAsk);

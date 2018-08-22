@@ -119,7 +119,7 @@
     <Content Update="Views\Server\SSHService.cshtml">
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>
-	  <Content Update="Views\Apps\PayButton.cshtml">
+	  <Content Update="Views\Apps\ViewPayButton.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
 	  <Content Update="Views\Apps\PayButtonHandle.cshtml">

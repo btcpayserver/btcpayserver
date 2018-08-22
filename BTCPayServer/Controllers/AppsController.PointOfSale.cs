@@ -263,14 +263,6 @@ namespace BTCPayServer.Controllers
             return Redirect(invoice.Data.Url);
         }
 
-        private async Task<StoreData> GetStore(AppData app)
-        {
-            using (var ctx = _ContextFactory.CreateContext())
-            {
-                return await ctx.Stores.FirstOrDefaultAsync(s => s.Id == app.StoreDataId);
-            }
-        }
-
         private async Task UpdateAppSettings(AppData app)
         {
             using (var ctx = _ContextFactory.CreateContext())
@@ -280,82 +272,6 @@ namespace BTCPayServer.Controllers
                 ctx.Entry<AppData>(app).Property(a => a.Settings).IsModified = true;
                 await ctx.SaveChangesAsync();
             }
-        }
-
-        [Route("{appId}/paybutton")]
-        public async Task<IActionResult> PayButton(string appId)
-        {
-            var app = await GetApp(appId, AppType.PointOfSale);
-            if (app == null)
-                return NotFound();
-            var settings = app.GetSettings<PointOfSaleSettings>();
-
-            var store = await GetStore(app);
-            List<string> currencyDropdown = supportedCurrencies(settings, store);
-
-            var appUrl = HttpContext.Request.GetAbsoluteRoot();
-            var model = new PayButtonViewModel
-            {
-                Price = 10,
-                Currency = settings.Currency,
-                ButtonSize = 2,
-                UrlRoot = appUrl,
-                CurrencyDropdown = currencyDropdown
-            };
-            return View(model);
-        }
-
-        private List<string> supportedCurrencies(PointOfSaleSettings settings, StoreData store)
-        {
-            var paymentMethods = store.GetSupportedPaymentMethods(_NetworkProvider)
-                            .Select(a => a.PaymentId.ToString()).ToList();
-            var currencyDropdown = new List<string>();
-            currencyDropdown.Add(settings.Currency);
-            currencyDropdown.AddRange(paymentMethods);
-            return currencyDropdown;
-        }
-
-        [HttpPost]
-        [Route("{appId}/pay")]
-        [IgnoreAntiforgeryToken]
-        [EnableCors(CorsPolicies.All)]
-        public async Task<IActionResult> PayButtonHandle(string appId, [FromForm]PayButtonViewModel model)
-        {
-            var app = await GetApp(appId, AppType.PointOfSale);
-            var settings = app.GetSettings<PointOfSaleSettings>();
-            var store = await GetStore(app);
-
-            // TODO: extract validation to model
-            if (model.Price <= 0)
-                ModelState.AddModelError("Price", "Price must be greater than 0");
-
-            var curr = supportedCurrencies(settings, store);
-            if (!curr.Contains(model.Currency))
-                ModelState.AddModelError("Currency", $"Selected currency {model.Currency} is not supported in this store");
-            //
-
-            if (!ModelState.IsValid)
-                return View();
-
-            var invoice = await _InvoiceController.CreateInvoiceCore(new NBitpayClient.Invoice()
-            {
-                Price = model.Price,
-                Currency = model.Currency,
-                ItemDesc = model.CheckoutDesc,
-                OrderId = model.OrderId,
-                BuyerEmail = model.NotifyEmail,
-                NotificationURL = model.ServerIpn,
-                RedirectURL = model.BrowserRedirect,
-                FullNotifications = true
-            }, store, HttpContext.Request.GetAbsoluteRoot());
-            return Redirect(invoice.Data.Url);
-        }
-
-        [HttpGet]
-        [Route("{appId}/paybuttontest")]
-        public IActionResult PayButtonTest(string appId)
-        {
-            return View();
         }
     }
 }

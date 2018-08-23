@@ -778,7 +778,6 @@ namespace BTCPayServer.Controllers
         public IActionResult PayButton()
         {
             var store = StoreData;
-            var currencyDropdown = supportedCurrencies(store);
 
             var appUrl = HttpContext.Request.GetAbsoluteRoot().WithTrailingSlash();
             var model = new PayButtonViewModel
@@ -787,21 +786,10 @@ namespace BTCPayServer.Controllers
                 Currency = DEFAULT_CURRENCY,
                 ButtonSize = 2,
                 UrlRoot = appUrl,
-                CurrencyDropdown = currencyDropdown,
                 PayButtonImageUrl = appUrl + "img/paybutton/pay.png",
                 StoreId = store.Id
             };
             return View(model);
-        }
-
-        private List<string> supportedCurrencies(StoreData store)
-        {
-            var paymentMethods = store.GetSupportedPaymentMethods(_NetworkProvider)
-                            .Select(a => a.PaymentId.ToString()).ToList();
-            var currencyDropdown = new List<string>();
-            currencyDropdown.Add(DEFAULT_CURRENCY);
-            currencyDropdown.AddRange(paymentMethods);
-            return currencyDropdown;
         }
 
         [HttpPost]
@@ -815,11 +803,6 @@ namespace BTCPayServer.Controllers
             // TODO: extract validation to model
             if (model.Price <= 0)
                 ModelState.AddModelError("Price", "Price must be greater than 0");
-
-            var curr = supportedCurrencies(store);
-            if (!curr.Contains(model.Currency))
-                ModelState.AddModelError("Currency", $"Selected currency {model.Currency} is not supported in this store");
-            //
 
             if (!ModelState.IsValid)
                 return View();

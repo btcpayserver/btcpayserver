@@ -119,7 +119,16 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Content Update="Views\Server\SSHService.cshtml">
+    <Content Update="Views\Server\SSHService.cshtml">
+      <Pack>$(IncludeRazorContentInPack)</Pack>
+    </Content>
+	  <Content Update="Views\Stores\PayButton.cshtml">
+	    <Pack>$(IncludeRazorContentInPack)</Pack>
+	  </Content>
+	  <Content Update="Views\Stores\PayButtonHandle.cshtml">
+	    <Pack>$(IncludeRazorContentInPack)</Pack>
+	  </Content>
+	  <Content Update="Views\Stores\PayButtonTest.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
 	  <Content Update="Views\Server\LNDGRPCServices.cshtml">

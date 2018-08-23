@@ -1,18 +1,17 @@
 ﻿using System;
-using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Models.AppViewModels;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using NBitcoin.DataEncoders;
-using NBitcoin;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Rates;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using NBitcoin;
+using NBitcoin.DataEncoders;
 
 namespace BTCPayServer.Controllers
 {
@@ -24,6 +23,7 @@ namespace BTCPayServer.Controllers
         UserManager<ApplicationUser> _UserManager;
         CurrencyNameTable _Currencies;
         InvoiceController _InvoiceController;
+        BTCPayNetworkProvider _NetworkProvider;
 
         [TempData]
         public string StatusMessage { get; set; }
@@ -32,12 +32,14 @@ namespace BTCPayServer.Controllers
             UserManager<ApplicationUser> userManager,
             ApplicationDbContextFactory contextFactory,
             CurrencyNameTable currencies,
-            InvoiceController invoiceController)
+            InvoiceController invoiceController,
+            BTCPayNetworkProvider networkProvider)
         {
             _InvoiceController = invoiceController;
             _UserManager = userManager;
             _ContextFactory = contextFactory;
             _Currencies = currencies;
+            _NetworkProvider = networkProvider;
         }
         public async Task<IActionResult> ListApps()
         {
@@ -198,6 +200,14 @@ namespace BTCPayServer.Controllers
         private string GetUserId()
         {
             return _UserManager.GetUserId(User);
+        }
+
+        private async Task<StoreData> GetStore(AppData app)
+        {
+            using (var ctx = _ContextFactory.CreateContext())
+            {
+                return await ctx.Stores.FirstOrDefaultAsync(s => s.Id == app.StoreDataId);
+            }
         }
     }
 }

@@ -7,28 +7,8 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 
 namespace BTCPayServer.Views.Stores
 {
-    public static class StoreNavPages
+    public enum StoreNavPages
     {
-        public static string ActivePageKey => "ActivePage";
-        public static string Index => "Index";
-        public static string Rates => "Rates";
-        public static string Checkout => "Checkout experience";
-
-        public static string Tokens => "Tokens";
-        public static string Users => "Users";
-        public static string UsersNavClass(ViewContext viewContext) => PageNavClass(viewContext, Users);
-        public static string TokensNavClass(ViewContext viewContext) => PageNavClass(viewContext, Tokens);
-
-        public static string CheckoutNavClass(ViewContext viewContext) => PageNavClass(viewContext, Checkout);
-        public static string IndexNavClass(ViewContext viewContext) => PageNavClass(viewContext, Index);
-        public static string RatesNavClass(ViewContext viewContext) => PageNavClass(viewContext, Rates);
-
-        public static string PageNavClass(ViewContext viewContext, string page)
-        {
-            var activePage = viewContext.ViewData["ActivePage"] as string;
-            return string.Equals(activePage, page, StringComparison.OrdinalIgnoreCase) ? "active" : null;
-        }
-
-        public static void AddActivePage(this ViewDataDictionary viewData, string activePage) => viewData[ActivePageKey] = activePage;
+        ActivePage, Index, Rates, Checkout, Tokens, Users, PayButton
     }
 }

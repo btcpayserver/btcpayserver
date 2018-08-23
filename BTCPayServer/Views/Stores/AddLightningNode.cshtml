@@ -1,8 +1,7 @@
 ﻿@model LightningNodeViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["Title"] = "Add lightning node (Experimental)";
-    ViewData.AddActivePage(BTCPayServer.Views.Stores.StoreNavPages.Index);
+    ViewData.SetActivePageAndTitle(StoreNavPages.Index, "Add lightning node (Experimental)");
 }
 
 <h4>@ViewData["Title"]</h4>

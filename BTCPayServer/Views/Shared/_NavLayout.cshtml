@@ -3,7 +3,6 @@
     ViewBag.ShowMenu = ViewBag.ShowMenu ?? true;
 }
 
-
 <section>
     <div class="container">
         <div class="row">
@@ -16,7 +15,7 @@
         <div>
             <div class="row">
                 <div class="col-md-3">
-                    @if(ViewBag.ShowMenu)
+                    @if (ViewBag.ShowMenu)
                     {
                         @await Html.PartialAsync("_Nav")
                     }
@@ -28,6 +27,10 @@
         </div>
     </div>
 </section>
+@section HeadScripts {
+    @RenderSection("HeadScripts", required: false)
+}
+
 @section Scripts {
     @RenderSection("Scripts", required: false)
 }

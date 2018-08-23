@@ -1,8 +1,7 @@
 ﻿@model StoreUsersViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["Title"] = "Manage users";
-    ViewData.AddActivePage(StoreNavPages.Users);
+    ViewData.SetActivePageAndTitle(StoreNavPages.Users, "Manage users");
 }
 
 <h4>@ViewData["Title"]</h4>

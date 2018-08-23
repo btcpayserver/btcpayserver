@@ -1794,8 +1794,12 @@ namespace BTCPayServer.Tests
             Thread.Sleep(1020);
             fetchedRate = fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules).GetAwaiter().GetResult();
             spy.AssertNotHit();
+            fetch.ValidatyTime = TimeSpan.FromSeconds(1.0);
             fetch.UpdateIfNecessary().GetAwaiter().GetResult();
             spy.AssertHit();
+            fetch.GetRatesAsync().GetAwaiter().GetResult();
+            Thread.Sleep(1000);
+            Assert.Throws<InvalidOperationException>(() => fetch.GetRatesAsync().GetAwaiter().GetResult());
         }
 
         private static bool IsMapped(Invoice invoice, ApplicationDbContext ctx)

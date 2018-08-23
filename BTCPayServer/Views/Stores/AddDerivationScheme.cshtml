@@ -1,8 +1,7 @@
 ﻿@model DerivationSchemeViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["Title"] = $"{Model.CryptoCode} Derivation scheme";
-    ViewData.AddActivePage(BTCPayServer.Views.Stores.StoreNavPages.Index);
+    ViewData.SetActivePageAndTitle(StoreNavPages.Index, $"{Model.CryptoCode} Derivation scheme");
 }
 
 <partial name="_StatusMessage" for="StatusMessage" />

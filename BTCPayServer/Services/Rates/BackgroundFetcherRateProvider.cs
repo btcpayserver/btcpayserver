@@ -14,15 +14,31 @@ namespace BTCPayServer.Services.Rates
         {
             public ExchangeRates Latest;
             public DateTimeOffset Timestamp;
+            public DateTimeOffset Expiration;
             public Exception Exception;
 
             internal ExchangeRates GetResult()
             {
-                if (Exception != null)
+                if(Expiration < DateTimeOffset.UtcNow)
                 {
-                    ExceptionDispatchInfo.Capture(Exception).Throw();
+                    if(Exception != null)
+                    {
+                        ExceptionDispatchInfo.Capture(Exception).Throw();
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("The rate has expired");
+                    }
                 }
                 return Latest;
+            }
+
+            internal void CopyFrom(LatestFetch previous)
+            {
+                Latest = previous.Latest;
+                Timestamp = previous.Timestamp;
+                Expiration = previous.Expiration;
+                Exception = previous.Exception;
             }
         }
 
@@ -35,6 +51,7 @@ namespace BTCPayServer.Services.Rates
         }
 
         public TimeSpan RefreshRate { get; set; } = TimeSpan.FromSeconds(30);
+        public TimeSpan ValidatyTime { get; set; } = TimeSpan.FromMinutes(10);
 
         public DateTimeOffset NextUpdate
         {
@@ -69,20 +86,25 @@ namespace BTCPayServer.Services.Rates
 
         private async Task<LatestFetch> Fetch()
         {
+            var previous = _Latest;
             var fetch = new LatestFetch();
             try
             {
                 var rates = await _Inner.GetRatesAsync();
                 fetch.Latest = rates;
+                fetch.Expiration = DateTimeOffset.UtcNow + ValidatyTime;
             }
             catch (Exception ex)
             {
+                if(previous != null)
+                {
+                    fetch.CopyFrom(previous);
+                }
                 fetch.Exception = ex;
             }
             fetch.Timestamp = DateTimeOffset.UtcNow;
             _Latest = fetch;
-            if (fetch.Exception != null)
-                ExceptionDispatchInfo.Capture(fetch.Exception).Throw();
+            fetch.GetResult(); // Will throw if not valid
             return fetch;
         }
 

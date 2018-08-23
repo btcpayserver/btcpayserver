@@ -1,8 +1,7 @@
 ﻿@model CreateTokenViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["Title"] = "Create a new token";
-    ViewData.AddActivePage(StoreNavPages.Tokens);
+    ViewData.SetActivePageAndTitle(StoreNavPages.Tokens, "Create a new token");
     ViewBag.HidePublicKey = ViewBag.HidePublicKey ?? false;
     ViewBag.ShowStores = ViewBag.ShowStores ?? false;
 }

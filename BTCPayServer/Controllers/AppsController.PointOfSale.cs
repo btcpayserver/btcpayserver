@@ -163,7 +163,7 @@ namespace BTCPayServer.Controllers
             using (var ctx = _ContextFactory.CreateContext())
             {
                 return await ctx.Apps
-                                .Where(us => us.Id == appId && 
+                                .Where(us => us.Id == appId &&
                                              us.AppType == appType.ToString())
                                 .FirstOrDefaultAsync();
             }
@@ -261,14 +261,6 @@ namespace BTCPayServer.Controllers
                 FullNotifications = true
             }, store, HttpContext.Request.GetAbsoluteRoot());
             return Redirect(invoice.Data.Url);
-        }
-
-        private async Task<StoreData> GetStore(AppData app)
-        {
-            using (var ctx = _ContextFactory.CreateContext())
-            {
-                return await ctx.Stores.FirstOrDefaultAsync(s => s.Id == app.StoreDataId);
-            }
         }
 
         private async Task UpdateAppSettings(AppData app)

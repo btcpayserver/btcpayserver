@@ -775,12 +775,12 @@ namespace BTCPayServer.Controllers
         const string DEFAULT_CURRENCY = "USD";
 
         [Route("{storeId}/paybutton")]
-        public async Task<IActionResult> PayButton()
+        public IActionResult PayButton()
         {
             var store = StoreData;
             var currencyDropdown = supportedCurrencies(store);
 
-            var appUrl = HttpContext.Request.GetAbsoluteRoot();
+            var appUrl = HttpContext.Request.GetAbsoluteRoot().WithTrailingSlash();
             var model = new PayButtonViewModel
             {
                 Price = 10,
@@ -788,7 +788,7 @@ namespace BTCPayServer.Controllers
                 ButtonSize = 2,
                 UrlRoot = appUrl,
                 CurrencyDropdown = currencyDropdown,
-                PayButtonImageUrl = appUrl + "/img/paybutton/pay.png",
+                PayButtonImageUrl = appUrl + "img/paybutton/pay.png",
                 StoreId = store.Id
             };
             return View(model);

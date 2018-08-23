@@ -5,10 +5,25 @@ $(function () {
     new Clipboard('#copyCode', {
         text: function (trigger) {
             $(".copyLabelPopup").show().delay(1000).fadeOut(500);
-            return inputChanges().replaceAll("&lt;", "<").replaceAll("&gt;", ">");
+            return inputChanges();
         }
     });
 });
+
+function esc(input) {
+    return ('' + input) /* Forces the conversion to string. */
+        .replace(/&/g, '&amp;') /* This MUST be the 1st replacement. */
+        .replace(/'/g, '&apos;') /* The 4 other predefined entities, required. */
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        /*
+        You may add other replacements here for HTML only 
+        (but it's not necessary).
+        Or for XML, only if the named entities are defined in its DTD.
+        */
+    ;
+}
 
 Vue.use(VeeValidate);
 const dictionary = {
@@ -23,11 +38,11 @@ const dictionary = {
 VeeValidate.Validator.localize(dictionary);
 
 function inputChanges(event, buttonSize) {
-    if (buttonSize != null) {
+    if (buttonSize !== null && buttonSize !== undefined) {
         srvModel.buttonSize = buttonSize;
     }
 
-    var html = '&lt;form method="POST" action="' + srvModel.urlRoot + '/stores/'+ srvModel.storeId +'/pay"&gt;';
+    var html = '<form method="POST" action="' + esc(srvModel.urlRoot + 'stores/'+ srvModel.storeId +  '/pay') + '">';
     html += addinput("price", srvModel.price);
     if (srvModel.currency) {
         html += addinput("currency", srvModel.currency);
@@ -50,36 +65,30 @@ function inputChanges(event, buttonSize) {
     }
 
     var width = "209px";
-    if (srvModel.buttonSize == 0) {
+    if (srvModel.buttonSize === 0) {
         width = "146px";
-    } else if (srvModel.buttonSize == 1) {
+    } else if (srvModel.buttonSize === 1) {
         width = "168px";
-    } else if (srvModel.buttonSize == 2) {
+    } else if (srvModel.buttonSize === 2) {
         width = "209px";
     }
-    html += '\n    &lt;input type="image" src="' + srvModel.payButtonImageUrl + '" name="submit" style="width:' + width +
-        '" alt="Pay with BtcPay, Self-Hosted Bitcoin Payment Processor"&gt;';
+    html += '\n    <input type="image" src="' + esc(srvModel.payButtonImageUrl) + '" name="submit" style="width:' + width +
+        '" alt="Pay with BtcPay, Self-Hosted Bitcoin Payment Processor">';
 
-    html += '\n&lt;/form&gt;';
+    html += '\n</form>';
 
-    $("#mainCode").html(html);
+    $("#mainCode").text(html).html();
+    $("#preview").html(html);
 
     $('pre code').each(function (i, block) {
         hljs.highlightBlock(block);
     });
 
-    $("#previewButton").css("width", width);
-    $("#previewButton").attr("src", srvModel.payButtonImageUrl);
-
     return html;
 }
 
 function addinput(name, value) {
-    var html = '\n    &lt;input type="hidden" name="' + name + '" value="' + value + '" /&gt;';
+    var html = '\n    <input type="hidden" name="' + esc(name) + '" value="' + esc(value) + '" />';
     return html;
 }
 
-String.prototype.replaceAll = function (search, replacement) {
-    var target = this;
-    return target.replace(new RegExp(search, 'g'), replacement);
-};

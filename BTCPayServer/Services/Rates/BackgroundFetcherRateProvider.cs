@@ -44,8 +44,39 @@ namespace BTCPayServer.Services.Rates
             _Inner = inner;
         }
 
-        public TimeSpan RefreshRate { get; set; } = TimeSpan.FromSeconds(30);
-        public TimeSpan ValidatyTime { get; set; } = TimeSpan.FromMinutes(10);
+        TimeSpan _RefreshRate = TimeSpan.FromSeconds(30);
+        public TimeSpan RefreshRate
+        {
+            get
+            {
+                return _RefreshRate;
+            }
+            set
+            {
+                var diff = value - _RefreshRate;
+                var latest = _Latest;
+                if (latest != null)
+                    latest.NextRefresh += diff;
+                _RefreshRate = value;
+            }
+        }
+
+        TimeSpan _ValidatyTime = TimeSpan.FromMinutes(10);
+        public TimeSpan ValidatyTime
+        {
+            get
+            {
+                return _ValidatyTime;
+            }
+            set
+            {
+                var diff = value - _ValidatyTime;
+                var latest = _Latest;
+                if (latest != null)
+                    latest.Expiration += diff;
+                _ValidatyTime = value;
+            }
+        }
 
         public DateTimeOffset NextUpdate
         {
@@ -57,6 +88,8 @@ namespace BTCPayServer.Services.Rates
                 return latest.NextRefresh;
             }
         }
+
+        public bool DoNotAutoFetchIfExpired { get; set; }
 
         public async Task<LatestFetch> UpdateIfNecessary()
         {
@@ -76,7 +109,7 @@ namespace BTCPayServer.Services.Rates
         public async Task<ExchangeRates> GetRatesAsync()
         {
             var latest = _Latest;
-            if(latest != null && latest.Expiration <= DateTimeOffset.UtcNow + TimeSpan.FromSeconds(1.0))
+            if (!DoNotAutoFetchIfExpired && latest != null && latest.Expiration <= DateTimeOffset.UtcNow + TimeSpan.FromSeconds(1.0))
             {
                 Logs.PayServer.LogWarning($"GetRatesAsync was called on {GetExchangeName()} when the rate is outdated. It should never happen, let BTCPayServer developers know about this.");
                 latest = null;

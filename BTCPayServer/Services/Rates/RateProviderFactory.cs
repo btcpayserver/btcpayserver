@@ -21,17 +21,17 @@ namespace BTCPayServer.Services.Rates
             {
                 _inner = inner;
             }
-            public Task<ExchangeRates> GetRatesAsync()
+            public async Task<ExchangeRates> GetRatesAsync()
             {
                 DateTimeOffset now = DateTimeOffset.UtcNow;
                 try
                 {
-                    return _inner.GetRatesAsync();
+                    return await _inner.GetRatesAsync();
                 }
                 catch (Exception ex)
                 {
                     Exception = ex;
-                    return Task.FromResult(new ExchangeRates());
+                    return new ExchangeRates();
                 }
                 finally
                 {

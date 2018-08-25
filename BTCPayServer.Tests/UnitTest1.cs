@@ -1783,6 +1783,7 @@ namespace BTCPayServer.Tests
 
             factory.Providers.Clear();
             var fetch = new BackgroundFetcherRateProvider(spy);
+            fetch.DoNotAutoFetchIfExpired = true;
             factory.Providers.Add("bittrex", fetch);
             fetchedRate = fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules).GetAwaiter().GetResult();
             spy.AssertHit();

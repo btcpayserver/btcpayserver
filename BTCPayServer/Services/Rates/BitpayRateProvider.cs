@@ -9,7 +9,7 @@ using BTCPayServer.Rating;
 
 namespace BTCPayServer.Services.Rates
 {
-    public class BitpayRateProvider : IRateProvider
+    public class BitpayRateProvider : IRateProvider, IHasExchangeName
     {
         public const string BitpayName = "bitpay";
         Bitpay _Bitpay;
@@ -19,6 +19,8 @@ namespace BTCPayServer.Services.Rates
                 throw new ArgumentNullException(nameof(bitpay));
             _Bitpay = bitpay;
         }
+
+        public string ExchangeName => BitpayName;
 
         public async Task<ExchangeRates> GetRatesAsync()
         {

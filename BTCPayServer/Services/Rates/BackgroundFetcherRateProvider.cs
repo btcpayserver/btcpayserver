@@ -1,9 +1,11 @@
 ﻿using System;
+using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
+using BTCPayServer.Logging;
 using BTCPayServer.Rating;
 
 namespace BTCPayServer.Services.Rates
@@ -13,15 +15,15 @@ namespace BTCPayServer.Services.Rates
         public class LatestFetch
         {
             public ExchangeRates Latest;
-            public DateTimeOffset Timestamp;
+            public DateTimeOffset NextRefresh;
             public DateTimeOffset Expiration;
             public Exception Exception;
 
             internal ExchangeRates GetResult()
             {
-                if(Expiration < DateTimeOffset.UtcNow)
+                if (Expiration <= DateTimeOffset.UtcNow)
                 {
-                    if(Exception != null)
+                    if (Exception != null)
                     {
                         ExceptionDispatchInfo.Capture(Exception).Throw();
                     }
@@ -31,14 +33,6 @@ namespace BTCPayServer.Services.Rates
                     }
                 }
                 return Latest;
-            }
-
-            internal void CopyFrom(LatestFetch previous)
-            {
-                Latest = previous.Latest;
-                Timestamp = previous.Timestamp;
-                Expiration = previous.Expiration;
-                Exception = previous.Exception;
             }
         }
 
@@ -50,19 +44,52 @@ namespace BTCPayServer.Services.Rates
             _Inner = inner;
         }
 
-        public TimeSpan RefreshRate { get; set; } = TimeSpan.FromSeconds(30);
-        public TimeSpan ValidatyTime { get; set; } = TimeSpan.FromMinutes(10);
+        TimeSpan _RefreshRate = TimeSpan.FromSeconds(30);
+        public TimeSpan RefreshRate
+        {
+            get
+            {
+                return _RefreshRate;
+            }
+            set
+            {
+                var diff = value - _RefreshRate;
+                var latest = _Latest;
+                if (latest != null)
+                    latest.NextRefresh += diff;
+                _RefreshRate = value;
+            }
+        }
+
+        TimeSpan _ValidatyTime = TimeSpan.FromMinutes(10);
+        public TimeSpan ValidatyTime
+        {
+            get
+            {
+                return _ValidatyTime;
+            }
+            set
+            {
+                var diff = value - _ValidatyTime;
+                var latest = _Latest;
+                if (latest != null)
+                    latest.Expiration += diff;
+                _ValidatyTime = value;
+            }
+        }
 
         public DateTimeOffset NextUpdate
         {
             get
             {
                 var latest = _Latest;
-                if (latest == null || latest.Exception != null)
+                if (latest == null)
                     return DateTimeOffset.UtcNow;
-                return latest.Timestamp + RefreshRate;
+                return latest.NextRefresh;
             }
         }
+
+        public bool DoNotAutoFetchIfExpired { get; set; }
 
         public async Task<LatestFetch> UpdateIfNecessary()
         {
@@ -81,7 +108,20 @@ namespace BTCPayServer.Services.Rates
         LatestFetch _Latest;
         public async Task<ExchangeRates> GetRatesAsync()
         {
-            return (_Latest ?? (await Fetch())).GetResult();
+            var latest = _Latest;
+            if (!DoNotAutoFetchIfExpired && latest != null && latest.Expiration <= DateTimeOffset.UtcNow + TimeSpan.FromSeconds(1.0))
+            {
+                Logs.PayServer.LogWarning($"GetRatesAsync was called on {GetExchangeName()} when the rate is outdated. It should never happen, let BTCPayServer developers know about this.");
+                latest = null;
+            }
+            return (latest ?? (await Fetch())).GetResult();
+        }
+
+        private string GetExchangeName()
+        {
+            if (_Inner is IHasExchangeName exchangeName)
+                return exchangeName.ExchangeName ?? "???";
+            return "???";
         }
 
         private async Task<LatestFetch> Fetch()
@@ -93,16 +133,22 @@ namespace BTCPayServer.Services.Rates
                 var rates = await _Inner.GetRatesAsync();
                 fetch.Latest = rates;
                 fetch.Expiration = DateTimeOffset.UtcNow + ValidatyTime;
+                fetch.NextRefresh = DateTimeOffset.UtcNow + RefreshRate;
             }
             catch (Exception ex)
             {
-                if(previous != null)
+                if (previous != null)
                 {
-                    fetch.CopyFrom(previous);
+                    fetch.Latest = previous.Latest;
+                    fetch.Expiration = previous.Expiration;
                 }
+                else
+                {
+                    fetch.Expiration = DateTimeOffset.UtcNow;
+                }
+                fetch.NextRefresh = DateTimeOffset.UtcNow;
                 fetch.Exception = ex;
             }
-            fetch.Timestamp = DateTimeOffset.UtcNow;
             _Latest = fetch;
             fetch.GetResult(); // Will throw if not valid
             return fetch;

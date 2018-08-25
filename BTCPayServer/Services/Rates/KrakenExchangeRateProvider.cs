@@ -13,7 +13,7 @@ using Newtonsoft.Json.Linq;
 namespace BTCPayServer.Services.Rates
 {
     // Make sure that only one request is sent to kraken in general
-    public class KrakenExchangeRateProvider : IRateProvider
+    public class KrakenExchangeRateProvider : IRateProvider, IHasExchangeName
     {
         public KrakenExchangeRateProvider()
         {
@@ -31,6 +31,9 @@ namespace BTCPayServer.Services.Rates
                 _LocalClient = null;
             }
         }
+
+        public string ExchangeName => "kraken";
+
         HttpClient _LocalClient;
         static HttpClient _Client = new HttpClient();
 

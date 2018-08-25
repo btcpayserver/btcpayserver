@@ -10,7 +10,7 @@ using ExchangeSharp;
 
 namespace BTCPayServer.Services.Rates
 {
-    public class ExchangeSharpRateProvider : IRateProvider
+    public class ExchangeSharpRateProvider : IRateProvider, IHasExchangeName
     {
         readonly ExchangeAPI _ExchangeAPI;
         readonly string _ExchangeName;
@@ -28,6 +28,8 @@ namespace BTCPayServer.Services.Rates
         {
             get; set;
         }
+
+        public string ExchangeName => _ExchangeName;
 
         public async Task<ExchangeRates> GetRatesAsync()
         {

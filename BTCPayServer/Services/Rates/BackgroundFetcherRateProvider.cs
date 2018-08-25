@@ -13,15 +13,15 @@ namespace BTCPayServer.Services.Rates
         public class LatestFetch
         {
             public ExchangeRates Latest;
-            public DateTimeOffset Timestamp;
+            public DateTimeOffset NextRefresh;
             public DateTimeOffset Expiration;
             public Exception Exception;
 
             internal ExchangeRates GetResult()
             {
-                if(Expiration < DateTimeOffset.UtcNow)
+                if (Expiration <= DateTimeOffset.UtcNow)
                 {
-                    if(Exception != null)
+                    if (Exception != null)
                     {
                         ExceptionDispatchInfo.Capture(Exception).Throw();
                     }
@@ -31,14 +31,6 @@ namespace BTCPayServer.Services.Rates
                     }
                 }
                 return Latest;
-            }
-
-            internal void CopyFrom(LatestFetch previous)
-            {
-                Latest = previous.Latest;
-                Timestamp = previous.Timestamp;
-                Expiration = previous.Expiration;
-                Exception = previous.Exception;
             }
         }
 
@@ -58,9 +50,9 @@ namespace BTCPayServer.Services.Rates
             get
             {
                 var latest = _Latest;
-                if (latest == null || latest.Exception != null)
+                if (latest == null)
                     return DateTimeOffset.UtcNow;
-                return latest.Timestamp + RefreshRate;
+                return latest.NextRefresh;
             }
         }
 
@@ -93,16 +85,22 @@ namespace BTCPayServer.Services.Rates
                 var rates = await _Inner.GetRatesAsync();
                 fetch.Latest = rates;
                 fetch.Expiration = DateTimeOffset.UtcNow + ValidatyTime;
+                fetch.NextRefresh = DateTimeOffset.UtcNow + RefreshRate;
             }
             catch (Exception ex)
             {
-                if(previous != null)
+                if (previous != null)
                 {
-                    fetch.CopyFrom(previous);
+                    fetch.Latest = previous.Latest;
+                    fetch.Expiration = previous.Expiration;
                 }
+                else
+                {
+                    fetch.Expiration = DateTimeOffset.UtcNow;
+                }
+                fetch.NextRefresh = DateTimeOffset.UtcNow;
                 fetch.Exception = ex;
             }
-            fetch.Timestamp = DateTimeOffset.UtcNow;
             _Latest = fetch;
             fetch.GetResult(); // Will throw if not valid
             return fetch;

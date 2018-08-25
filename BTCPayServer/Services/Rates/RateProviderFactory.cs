@@ -79,7 +79,10 @@ namespace BTCPayServer.Services.Rates
                 provider.MemoryCache = cache;
             }
             if (Providers.TryGetValue(CoinAverageRateProvider.CoinAverageName, out var coinAverage) && coinAverage is BackgroundFetcherRateProvider c)
+            {
                 c.RefreshRate = CacheSpan;
+                c.ValidatyTime = CacheSpan + TimeSpan.FromMinutes(1.0);
+            }
         }
         CoinAverageSettings _CoinAverageSettings;
         private readonly IHttpClientFactory _httpClientFactory;
@@ -117,7 +120,16 @@ namespace BTCPayServer.Services.Rates
             foreach (var provider in Providers.ToArray())
             {
                 var prov = new BackgroundFetcherRateProvider(Providers[provider.Key]);
-                prov.RefreshRate = provider.Key == CoinAverageRateProvider.CoinAverageName ? CacheSpan : TimeSpan.FromMinutes(1.0);
+                if(provider.Key == CoinAverageRateProvider.CoinAverageName)
+                {
+                    prov.RefreshRate = CacheSpan;
+                    prov.ValidatyTime = CacheSpan + TimeSpan.FromMinutes(1.0);
+                }
+                else
+                {
+                    prov.RefreshRate = TimeSpan.FromMinutes(1.0);
+                    prov.ValidatyTime = TimeSpan.FromMinutes(5.0);
+                }
                 Providers[provider.Key] = prov;
             }
 

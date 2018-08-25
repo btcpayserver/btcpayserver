@@ -7,7 +7,7 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace BTCPayServer.Services.Rates
 {
-    public class CachedRateProvider : IRateProvider
+    public class CachedRateProvider : IRateProvider, IHasExchangeName
     {
         private IRateProvider _Inner;
         private IMemoryCache _MemoryCache;
@@ -31,7 +31,7 @@ namespace BTCPayServer.Services.Rates
             }
         }
 
-        public string ExchangeName { get; set; }
+        public string ExchangeName { get; }
 
         public TimeSpan CacheSpan
         {

@@ -49,7 +49,7 @@ namespace BTCPayServer.Services.Rates
         Task AddHeader(HttpRequestMessage message);
     }
 
-    public class CoinAverageRateProvider : IRateProvider
+    public class CoinAverageRateProvider : IRateProvider, IHasExchangeName
     {
         public const string CoinAverageName = "coinaverage";
         public CoinAverageRateProvider()
@@ -81,6 +81,8 @@ namespace BTCPayServer.Services.Rates
         } = "global";
 
         public ICoinAverageAuthenticator Authenticator { get; set; }
+
+        public string ExchangeName => Exchange ?? CoinAverageName;
 
         private bool TryToBidAsk(JProperty p, out BidAsk bidAsk)
         {

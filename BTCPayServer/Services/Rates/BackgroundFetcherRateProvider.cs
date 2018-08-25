@@ -1,9 +1,11 @@
 ﻿using System;
+using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
+using BTCPayServer.Logging;
 using BTCPayServer.Rating;
 
 namespace BTCPayServer.Services.Rates
@@ -73,7 +75,20 @@ namespace BTCPayServer.Services.Rates
         LatestFetch _Latest;
         public async Task<ExchangeRates> GetRatesAsync()
         {
-            return (_Latest ?? (await Fetch())).GetResult();
+            var latest = _Latest;
+            if(latest != null && latest.Expiration <= DateTimeOffset.UtcNow + TimeSpan.FromSeconds(1.0))
+            {
+                Logs.PayServer.LogWarning($"GetRatesAsync was called on {GetExchangeName()} when the rate is outdated. It should never happen, let BTCPayServer developers know about this.");
+                latest = null;
+            }
+            return (latest ?? (await Fetch())).GetResult();
+        }
+
+        private string GetExchangeName()
+        {
+            if (_Inner is IHasExchangeName exchangeName)
+                return exchangeName.ExchangeName ?? "???";
+            return "???";
         }
 
         private async Task<LatestFetch> Fetch()

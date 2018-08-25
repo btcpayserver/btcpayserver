@@ -166,6 +166,7 @@ namespace BTCPayServer.Hosting
                 Authorization = new[] { new NeedRole(Roles.ServerAdmin) }
             });
             app.UseWebSockets();
+            app.UseStatusCodePages();
             app.UseMvc(routes =>
             {
                 routes.MapRoute(

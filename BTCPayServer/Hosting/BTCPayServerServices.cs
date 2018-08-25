@@ -41,6 +41,7 @@ using System.Security.Claims;
 using BTCPayServer.Security;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using NBXplorer.DerivationStrategy;
+using NicolasDorier.RateLimits;
 
 namespace BTCPayServer.Hosting
 {
@@ -165,6 +166,10 @@ namespace BTCPayServer.Hosting
             {
                 options.AddPolicy(CorsPolicies.All, p=>p.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
             });
+
+            var rateLimits = new RateLimitService();
+            rateLimits.SetZone($"zone={ZoneLimits.Login} rate=5r/min burst=3 nodelay");
+            services.AddSingleton(rateLimits);
             return services;
         }
 

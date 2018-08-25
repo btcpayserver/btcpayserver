@@ -49,6 +49,7 @@
     <PackageReference Include="NBXplorer.Client" Version="1.0.2.18" />
     <PackageReference Include="NicolasDorier.CommandLine" Version="1.0.0.2" />
     <PackageReference Include="NicolasDorier.CommandLine.Configuration" Version="1.0.0.3" />
+    <PackageReference Include="NicolasDorier.RateLimits" Version="1.0.0.3" />
     <PackageReference Include="NicolasDorier.StandardConfiguration" Version="1.0.0.17" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.1.0" />
     <PackageReference Include="SSH.NET" Version="2016.1.0" />

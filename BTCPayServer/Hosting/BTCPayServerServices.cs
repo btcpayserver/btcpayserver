@@ -157,7 +157,7 @@ namespace BTCPayServer.Hosting
             {
                 var opts = provider.GetRequiredService<BTCPayServerOptions>();
                 var bundle = new BundleOptions();
-                bundle.UseMinifiedFiles = opts.BundleJsCss;
+                bundle.UseBundles = opts.BundleJsCss;
                 bundle.AppendVersion = true;
                 return bundle;
             });

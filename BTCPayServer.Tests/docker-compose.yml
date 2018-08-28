@@ -122,6 +122,7 @@ services:
         announce-addr=customer_lightningd
         log-level=debug
         dev-broadcast-interval=1000
+        dev-bitcoind-poll=1
     ports:
       - "30992:9835" # api port
     expose:

@@ -235,7 +235,7 @@ namespace BTCPayServer.Payments.Lightning.Lnd
             else
             {
                 var invoiceExpiry = ConvertInv.ToInt64(resp.Creation_date) + ConvertInv.ToInt64(resp.Expiry);
-                if (DateTimeOffset.FromUnixTimeSeconds(invoiceExpiry) > DateTimeOffset.UtcNow)
+                if (DateTimeOffset.FromUnixTimeSeconds(invoiceExpiry) < DateTimeOffset.UtcNow)
                 {
                     invoice.Status = "expired";
                 }

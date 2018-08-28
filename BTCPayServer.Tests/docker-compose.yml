@@ -214,6 +214,7 @@ services:
         no-macaroons=1
         debuglevel=debug
         noencryptwallet=1
+        trickledelay=1000
     ports:
       - "53280:8080"
     expose:
@@ -238,6 +239,7 @@ services:
         no-macaroons=1
         debuglevel=debug
         noencryptwallet=1
+        trickledelay=1000
     ports:
       - "53281:8080"
     expose:

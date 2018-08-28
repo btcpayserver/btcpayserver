@@ -211,13 +211,26 @@ namespace BTCPayServer.Payments.Lightning.CLightning
         async Task<LightningNodeInformation> ILightningInvoiceClient.GetInfo(CancellationToken cancellation)
         {
             var info = await GetInfoAsync(cancellation);
-            var address = info.Address.Select(a => a.Address).FirstOrDefault();
-            var port = info.Port;
+            return ToLightningNodeInformation(info);
+        }
+
+        internal static LightningNodeInformation ToLightningNodeInformation(Charge.GetInfoResponse info)
+        {
+            var addr = info.Address.FirstOrDefault();
+            if (addr == null)
+            {
+                addr = new Charge.GetInfoResponse.GetInfoAddress();
+                addr.Address = "127.0.0.1";
+            }
+            if (addr.Port == 0)
+            {
+                addr.Port = 9735;
+            }
             return new LightningNodeInformation()
             {
                 NodeId = info.Id,
-                P2PPort = port,
-                Address = address,
+                P2PPort = addr.Port,
+                Address = addr.Address,
                 BlockHeight = info.BlockHeight
             };
         }

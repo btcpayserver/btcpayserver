@@ -15,7 +15,6 @@ namespace BTCPayServer.Payments.Lightning.Charge
             public int Port { get; set; }
         }
         public string Id { get; set; }
-        public int Port { get; set; }
         public GetInfoAddress[] Address { get; set; }
         public string Version { get; set; }
         public int BlockHeight { get; set; }

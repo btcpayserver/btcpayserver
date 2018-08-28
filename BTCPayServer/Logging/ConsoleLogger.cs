@@ -133,7 +133,7 @@ namespace BTCPayServer.Logging
         public bool DisableColors
         {
             get; set;
-        }
+        } = true;
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {

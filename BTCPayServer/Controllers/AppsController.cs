@@ -16,6 +16,7 @@ using NBitcoin.DataEncoders;
 
 namespace BTCPayServer.Controllers
 {
+    [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
     [AutoValidateAntiforgeryToken]
     [Route("apps")]
     public partial class AppsController : Controller

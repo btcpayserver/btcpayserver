@@ -7,8 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
-using BTCPayServer.Payments.Lightning.Charge;
-using BTCPayServer.Payments.Lightning.CLightning;
+using BTCPayServer.Lightning;
 using BTCPayServer.Services.Invoices;
 
 namespace BTCPayServer.Payments.Lightning
@@ -18,12 +17,9 @@ namespace BTCPayServer.Payments.Lightning
         public static int LIGHTNING_TIMEOUT = 5000;
 
         NBXplorerDashboard _Dashboard;
-        LightningClientFactory _LightningClientFactory;
         public LightningLikePaymentHandler(
-            LightningClientFactory lightningClientFactory,
             NBXplorerDashboard dashboard)
         {
-            _LightningClientFactory = lightningClientFactory;
             _Dashboard = dashboard;
         }
         public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(LightningSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store, BTCPayNetwork network, object preparePaymentObject)
@@ -32,7 +28,7 @@ namespace BTCPayServer.Payments.Lightning
             var test = Test(supportedPaymentMethod, network);
             var invoice = paymentMethod.ParentEntity;
             var due = Extensions.RoundUp(invoice.ProductInformation.Price / paymentMethod.Rate, 8);
-            var client = _LightningClientFactory.CreateClient(supportedPaymentMethod, network);
+            var client = supportedPaymentMethod.CreateClient(network);
             var expiry = invoice.ExpirationTime - DateTimeOffset.UtcNow;
             if (expiry < TimeSpan.Zero)
                 expiry = TimeSpan.FromSeconds(1);
@@ -74,7 +70,7 @@ namespace BTCPayServer.Payments.Lightning
 
             using (var cts = new CancellationTokenSource(LIGHTNING_TIMEOUT))
             {
-                var client = _LightningClientFactory.CreateClient(supportedPaymentMethod, network);
+                var client = supportedPaymentMethod.CreateClient(network);
                 LightningNodeInformation info = null;
                 try
                 {
@@ -89,7 +85,7 @@ namespace BTCPayServer.Payments.Lightning
                     throw new PaymentMethodUnavailableException($"Error while connecting to the API ({ex.Message})");
                 }
 
-                if (info.Address == null)
+                if (info.NodeInfo == null)
                 {
                     throw new PaymentMethodUnavailableException($"No lightning node public address has been configured");
                 }
@@ -100,7 +96,7 @@ namespace BTCPayServer.Payments.Lightning
                     throw new PaymentMethodUnavailableException($"The lightning is not synched ({blocksGap} blocks)");
                 }
 
-                return new NodeInfo(info.NodeId, info.Address, info.P2PPort);
+                return info.NodeInfo;
             }
         }
 

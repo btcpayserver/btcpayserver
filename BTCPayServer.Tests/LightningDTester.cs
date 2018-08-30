@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-using BTCPayServer.Payments.Lightning.CLightning;
+using BTCPayServer.Lightning.CLightning;
 using NBitcoin;
 
 namespace BTCPayServer.Tests
@@ -13,10 +13,10 @@ namespace BTCPayServer.Tests
         public LightningDTester(ServerTester parent, string environmentName, string defaultRPC, string defaultHost, Network network)
         {
             this.parent = parent;
-            RPC = new CLightningRPCClient(new Uri(parent.GetEnvironment(environmentName, defaultRPC)), network);
+            RPC = new CLightningClient(new Uri(parent.GetEnvironment(environmentName, defaultRPC)), network);
         }
 
-        public CLightningRPCClient RPC { get; }
+        public CLightningClient RPC { get; }
         public string P2PHost { get; }
         
     }

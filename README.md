@@ -25,11 +25,11 @@ This solution is for you if:
 In addition to Bitcoin, we support the following crypto currencies:
 
 * BGold
+* Dash
 * Dogecoin
 * Feathercoin
 * Groestlcoin
 * Litecoin
-* Dash
 * Monacoin
 * Polis
 * UFO

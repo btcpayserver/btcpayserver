@@ -15,6 +15,8 @@ using NBXplorer.DerivationStrategy;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Tests.Logging;
+using BTCPayServer.Lightning;
+using BTCPayServer.Lightning.CLightning;
 
 namespace BTCPayServer.Tests
 {
@@ -133,7 +135,7 @@ namespace BTCPayServer.Tests
             if (connectionType == LightningConnectionType.Charge)
                 connectionString = "type=charge;server=" + parent.MerchantCharge.Client.Uri.AbsoluteUri;
             else if (connectionType == LightningConnectionType.CLightning)
-                connectionString = "type=clightning;server=" + parent.MerchantLightningD.Address.AbsoluteUri;
+                connectionString = "type=clightning;server=" + ((CLightningClient)parent.MerchantLightningD).Address.AbsoluteUri;
             else if (connectionType == LightningConnectionType.LndREST)
                 connectionString = $"type=lnd-rest;server={parent.MerchantLnd.Swagger.BaseUrl};allowinsecure=true";
             else

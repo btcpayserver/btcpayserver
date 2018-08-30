@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Lightning;
+using NBitcoin;
 
 namespace BTCPayServer.Payments.Lightning
 {
@@ -28,7 +30,7 @@ namespace BTCPayServer.Payments.Lightning
 #pragma warning disable CS0618 // Type or member is obsolete
             if (!string.IsNullOrEmpty(LightningConnectionString))
             {
-                if (!BTCPayServer.Payments.Lightning.LightningConnectionString.TryParse(LightningConnectionString, false, out var connectionString, out var error))
+                if (!BTCPayServer.Lightning.LightningConnectionString.TryParse(LightningConnectionString, false, out var connectionString, out var error))
                 {
                     throw new FormatException(error);
                 }
@@ -37,7 +39,7 @@ namespace BTCPayServer.Payments.Lightning
             else
             {
                 var fullUri = new UriBuilder(LightningChargeUrl) { UserName = Username, Password = Password }.Uri.AbsoluteUri;
-                if (!BTCPayServer.Payments.Lightning.LightningConnectionString.TryParse(fullUri, true, out var connectionString, out var error))
+                if (!BTCPayServer.Lightning.LightningConnectionString.TryParse(fullUri, true, out var connectionString, out var error))
                 {
                     throw new FormatException(error);
                 }
@@ -57,6 +59,11 @@ namespace BTCPayServer.Payments.Lightning
             Password = null;
             LightningChargeUrl = null;
 #pragma warning restore CS0618 // Type or member is obsolete
+        }
+
+        public ILightningClient CreateClient(BTCPayNetwork network)
+        {
+            return LightningClientFactory.CreateClient(this.GetLightningUrl(), network.NBitcoinNetwork);
         }
     }
 }

@@ -88,7 +88,6 @@ namespace BTCPayServer.Hosting
                 }
                 return dbContext;
             });
-            services.TryAddSingleton<Payments.Lightning.LightningClientFactory>();
 
             services.TryAddSingleton<BTCPayNetworkProvider>(o => 
             {

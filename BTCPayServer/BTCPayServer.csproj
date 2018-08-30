@@ -127,10 +127,10 @@
 	  <Content Update="Views\Stores\PayButton.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
-	  <Content Update="Views\Stores\PayButtonHandle.cshtml">
+	  <Content Update="Views\Public\PayButtonHandle.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
-	  <Content Update="Views\Stores\PayButtonTest.cshtml">
+	  <Content Update="Views\Public\PayButtonTest.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
 	  <Content Update="Views\Server\LNDGRPCServices.cshtml">

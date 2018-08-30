@@ -48,8 +48,7 @@ namespace BTCPayServer.Controllers
             ExplorerClientProvider explorerProvider,
             IFeeProviderFactory feeRateProvider,
             LanguageService langService,
-            IHostingEnvironment env,
-            InvoiceController invoiceController)
+            IHostingEnvironment env)
         {
             _RateFactory = rateFactory;
             _Repo = repo;
@@ -65,7 +64,6 @@ namespace BTCPayServer.Controllers
             _ServiceProvider = serviceProvider;
             _BtcpayServerOptions = btcpayServerOptions;
             _BTCPayEnv = btcpayEnv;
-            _InvoiceController = invoiceController;
         }
         BTCPayServerOptions _BtcpayServerOptions;
         BTCPayServerEnvironment _BTCPayEnv;
@@ -80,7 +78,6 @@ namespace BTCPayServer.Controllers
         UserManager<ApplicationUser> _UserManager;
         private LanguageService _LangService;
         IHostingEnvironment _Env;
-        InvoiceController _InvoiceController;
 
         [TempData]
         public string StatusMessage
@@ -790,42 +787,6 @@ namespace BTCPayServer.Controllers
                 StoreId = store.Id
             };
             return View(model);
-        }
-
-        [HttpPost]
-        [Route("{storeId}/pay")]
-        [IgnoreAntiforgeryToken]
-        [EnableCors(CorsPolicies.All)]
-        public async Task<IActionResult> PayButtonHandle(string storeId, [FromForm]PayButtonViewModel model)
-        {
-            var store = StoreData;
-
-            // TODO: extract validation to model
-            if (model.Price <= 0)
-                ModelState.AddModelError("Price", "Price must be greater than 0");
-
-            if (!ModelState.IsValid)
-                return View();
-
-            var invoice = await _InvoiceController.CreateInvoiceCore(new NBitpayClient.Invoice()
-            {
-                Price = model.Price,
-                Currency = model.Currency,
-                ItemDesc = model.CheckoutDesc,
-                OrderId = model.OrderId,
-                BuyerEmail = model.NotifyEmail,
-                NotificationURL = model.ServerIpn,
-                RedirectURL = model.BrowserRedirect,
-                FullNotifications = true
-            }, store, HttpContext.Request.GetAbsoluteRoot());
-            return Redirect(invoice.Data.Url);
-        }
-
-        [HttpGet]
-        [Route("{storeId}/paybuttontest")]
-        public IActionResult PayButtonTest(string storeId)
-        {
-            return View();
         }
     }
 }

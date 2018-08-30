@@ -33,6 +33,7 @@
     <EmbeddedResource Include="Currencies.txt" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="BTCPayServer.Lightning.All" Version="1.0.0.4" />
     <PackageReference Include="BuildBundlerMinifier" Version="2.7.385" />
     <PackageReference Include="DigitalRuby.ExchangeSharp" Version="0.5.3" />
     <PackageReference Include="Hangfire" Version="1.6.19" />

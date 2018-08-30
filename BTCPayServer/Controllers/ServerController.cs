@@ -24,6 +24,7 @@ using System.Net.Mail;
 using System.Threading.Tasks;
 using Renci.SshNet;
 using BTCPayServer.Logging;
+using BTCPayServer.Lightning;
 
 namespace BTCPayServer.Controllers
 {

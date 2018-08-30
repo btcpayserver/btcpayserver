@@ -1,25 +1,11 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Text;
+using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
-using BTCPayServer.Models;
 using BTCPayServer.Models.AppViewModels;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using NBitcoin.DataEncoders;
-using NBitcoin;
 using BTCPayServer.Services.Apps;
-using Newtonsoft.Json;
-using YamlDotNet.RepresentationModel;
-using System.IO;
-using BTCPayServer.Services.Rates;
-using System.Globalization;
-using System.Text;
-using System.Text.Encodings.Web;
-using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Controllers
 {
@@ -87,7 +73,7 @@ namespace BTCPayServer.Controllers
                 }
                 try
                 {
-                    var items = Parse(settings.Template, settings.Currency);
+                    var items = _AppsHelper.Parse(settings.Template, settings.Currency);
                     var builder = new StringBuilder();
                     builder.AppendLine($"<form method=\"POST\" action=\"{encoder.Encode(appUrl)}\">");
                     builder.AppendLine($"  <input type=\"hidden\" name=\"email\" value=\"customer@example.com\" />");
@@ -109,11 +95,11 @@ namespace BTCPayServer.Controllers
         [Route("{appId}/settings/pos")]
         public async Task<IActionResult> UpdatePointOfSale(string appId, UpdatePointOfSaleViewModel vm)
         {
-            if (_Currencies.GetCurrencyData(vm.Currency, false) == null)
+            if (_AppsHelper.GetCurrencyData(vm.Currency, false) == null)
                 ModelState.AddModelError(nameof(vm.Currency), "Invalid currency");
             try
             {
-                Parse(vm.Template, vm.Currency);
+                _AppsHelper.Parse(vm.Template, vm.Currency);
             }
             catch
             {
@@ -136,131 +122,6 @@ namespace BTCPayServer.Controllers
             await UpdateAppSettings(app);
             StatusMessage = "App updated";
             return RedirectToAction(nameof(ListApps));
-        }
-
-        [HttpGet]
-        [Route("{appId}/pos")]
-        public async Task<IActionResult> ViewPointOfSale(string appId)
-        {
-            var app = await GetApp(appId, AppType.PointOfSale);
-            if (app == null)
-                return NotFound();
-            var settings = app.GetSettings<PointOfSaleSettings>();
-            var currency = _Currencies.GetCurrencyData(settings.Currency, false);
-            double step = currency == null ? 1 : Math.Pow(10, -(currency.Divisibility));
-
-            return View(new ViewPointOfSaleViewModel()
-            {
-                Title = settings.Title,
-                Step = step.ToString(CultureInfo.InvariantCulture),
-                ShowCustomAmount = settings.ShowCustomAmount,
-                Items = Parse(settings.Template, settings.Currency)
-            });
-        }
-
-        private async Task<AppData> GetApp(string appId, AppType appType)
-        {
-            using (var ctx = _ContextFactory.CreateContext())
-            {
-                return await ctx.Apps
-                                .Where(us => us.Id == appId &&
-                                             us.AppType == appType.ToString())
-                                .FirstOrDefaultAsync();
-            }
-        }
-
-        private ViewPointOfSaleViewModel.Item[] Parse(string template, string currency)
-        {
-            var input = new StringReader(template);
-            YamlStream stream = new YamlStream();
-            stream.Load(input);
-            var root = (YamlMappingNode)stream.Documents[0].RootNode;
-            return root
-                .Children
-                .Select(kv => new { Key = (kv.Key as YamlScalarNode)?.Value, Value = kv.Value as YamlMappingNode })
-                .Where(kv => kv.Value != null)
-                .Select(c => new ViewPointOfSaleViewModel.Item()
-                {
-                    Id = c.Key,
-                    Title = c.Value.Children
-                             .Select(kv => new { Key = (kv.Key as YamlScalarNode)?.Value, Value = kv.Value as YamlScalarNode })
-                             .Where(kv => kv.Value != null)
-                             .Where(cc => cc.Key == "title")
-                             .FirstOrDefault()?.Value?.Value ?? c.Key,
-                    Price = c.Value.Children
-                             .Select(kv => new { Key = (kv.Key as YamlScalarNode)?.Value, Value = kv.Value as YamlScalarNode })
-                             .Where(kv => kv.Value != null)
-                             .Where(cc => cc.Key == "price")
-                             .Select(cc => new ViewPointOfSaleViewModel.Item.ItemPrice()
-                             {
-                                 Value = decimal.Parse(cc.Value.Value, CultureInfo.InvariantCulture),
-                                 Formatted = FormatCurrency(cc.Value.Value, currency)
-                             })
-                             .Single()
-                })
-                .ToArray();
-        }
-
-        string FormatCurrency(string price, string currency)
-        {
-            return decimal.Parse(price, CultureInfo.InvariantCulture).ToString("C", _Currencies.GetCurrencyProvider(currency));
-        }
-
-        [HttpPost]
-        [Route("{appId}/pos")]
-        [IgnoreAntiforgeryToken]
-        [EnableCors(CorsPolicies.All)]
-        public async Task<IActionResult> ViewPointOfSale(string appId,
-                                                        decimal amount,
-                                                        string email,
-                                                        string orderId,
-                                                        string notificationUrl,
-                                                        string redirectUrl,
-                                                        string choiceKey)
-        {
-            var app = await GetApp(appId, AppType.PointOfSale);
-            if (string.IsNullOrEmpty(choiceKey) && amount <= 0)
-            {
-                return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
-            }
-            if (app == null)
-                return NotFound();
-            var settings = app.GetSettings<PointOfSaleSettings>();
-            if (string.IsNullOrEmpty(choiceKey) && !settings.ShowCustomAmount)
-            {
-                return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
-            }
-            string title = null;
-            var price = 0.0m;
-            if (!string.IsNullOrEmpty(choiceKey))
-            {
-                var choices = Parse(settings.Template, settings.Currency);
-                var choice = choices.FirstOrDefault(c => c.Id == choiceKey);
-                if (choice == null)
-                    return NotFound();
-                title = choice.Title;
-                price = choice.Price.Value;
-            }
-            else
-            {
-                if (!settings.ShowCustomAmount)
-                    return NotFound();
-                price = amount;
-                title = settings.Title;
-            }
-            var store = await GetStore(app);
-            var invoice = await _InvoiceController.CreateInvoiceCore(new NBitpayClient.Invoice()
-            {
-                ItemDesc = title,
-                Currency = settings.Currency,
-                Price = price,
-                BuyerEmail = email,
-                OrderId = orderId,
-                NotificationURL = notificationUrl,
-                RedirectURL = redirectUrl,
-                FullNotifications = true
-            }, store, HttpContext.Request.GetAbsoluteRoot());
-            return Redirect(invoice.Data.Url);
         }
 
         private async Task UpdateAppSettings(AppData app)

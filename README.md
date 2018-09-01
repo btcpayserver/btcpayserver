@@ -56,7 +56,7 @@ In addition to Bitcoin, BTCPay supports the following cryptocurrencies:
 
 Please check out our [complete documentation](https://github.com/btcpayserver/btcpayserver-doc) for more details.
 
-You can also read the [BTCPay Merchant's Guide](https://www.reddit.com/r/Bitcoin/comments/8f1eqf/the_ultimate_guide_to_btcpay_the_free_and/).
+You can also read the [BTCPay Merchants Guide](https://www.reddit.com/r/Bitcoin/comments/8f1eqf/the_ultimate_guide_to_btcpay_the_free_and/).
 
 ## How to build
 

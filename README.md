@@ -37,14 +37,6 @@ Thanks to the apps built on top of it, you can use BTCPay to receive donations o
 * No middleman
 * No KYC
 
-
-* You are currently using Bitpay as a payment processor but are worried about their commitment to Bitcoin in the future
-* You want to be in control of your own funds
-* Bitpay compliance team decided to reject your application
-* You want lower fees (we support Segwit)
-* You want to become a payment processor yourself and offer a BTCPay hosted solution to merchants
-* You want a way to support currencies other than those offered by Bitpay
-
 ## We support altcoins!
 
 In addition to Bitcoin, BTCPay supports the following cryptocurrencies:

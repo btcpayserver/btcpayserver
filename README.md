@@ -19,6 +19,7 @@ You can run BTCPay as a self-hosted solution on your own server, or use a third-
 The self-hosted solution allows you not only to attach an unlimited number of stores and use the Lightning Network but also become the payment processor for others.
 
 Thanks to the apps built on top of it, you can use BTCPay to receive donations or have an in-store POS system.
+
 This solution is for you if:
 
 * You are currently using Bitpay as a payment processor but are worried about their commitment to Bitcoin in the future
@@ -47,7 +48,7 @@ In addition to Bitcoin, we support the following crypto currencies:
 
 Please check out our [complete documentation](https://github.com/btcpayserver/btcpayserver-doc) for more details.
 
-You can also checkout [The Merchants Guide to accepting Bitcoin directly with no intermediates through BTCPay](https://www.reddit.com/r/Bitcoin/comments/81h1oy/the_merchants_guide_to_accepting_bitcoin_directly/).
+You can also checkout [The Ultimate Guide to BTCPay - The free and open-source Bitcoin Payment processor](https://www.reddit.com/r/Bitcoin/comments/8f1eqf/the_ultimate_guide_to_btcpay_the_free_and/).
 
 ## How to build
 

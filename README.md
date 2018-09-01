@@ -8,9 +8,17 @@
 
 ## Introduction 
 
-BTCPay Server is an Open Source payment processor, written in C#, that conforms to the invoice API of [Bitpay](https://bitpay.com/).
-This allows easy migration of your code base to your own, self-hosted payment processor.
+BTCPay Server is a free and open-source cryptocurrency payment processor which allows you to receive payments in Bitcoin and altcoins directly, with no fees, transaction cost or a middleman.
 
+BTCPay is a non-custodial invoicing system which eliminates the involvement of a third-party. Payments with BTCPay go directly to your wallet, which increases the privacy and security. Your private keys are never uploaded to the server. There is no address re-use, since each invoice 
+
+The software is built in C# language and conforms to the invoice API of BitPay. It allows easy migration of your code base to your own, self-hosted payment processor.
+
+You can run BTCPay as a self-hosted solution on your own server, or use a third-party host.
+
+The self-hosted solution allows you not only to attach an unlimited number of stores and use the Lightning Network but also become the payment processor for others.
+
+Thanks to the apps built on top of it, you can use BTCPay to receive donations or have an in-store POS system.
 This solution is for you if:
 
 * You are currently using Bitpay as a payment processor but are worried about their commitment to Bitcoin in the future

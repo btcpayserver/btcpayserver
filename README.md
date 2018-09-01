@@ -20,7 +20,23 @@ The self-hosted solution allows you not only to attach an unlimited number of st
 
 Thanks to the apps built on top of it, you can use BTCPay to receive donations or have an in-store POS system.
 
-This solution is for you if:
+## Features
+
+* Direct, P2P Bitcoin payments
+* Lightning Network support (LND and c-lightning)
+* Altcoin support
+* Complete control over private keys
+* Fully compatability with BitPay API (easy migration)
+* Enchanced Privacy
+* SegWit support
+* Process payments for others
+* Payment Buttons
+* Point of Sale
+* No transaction fees
+* No processing fees
+* No middleman
+* No KYC
+
 
 * You are currently using Bitpay as a payment processor but are worried about their commitment to Bitcoin in the future
 * You want to be in control of your own funds
@@ -31,7 +47,7 @@ This solution is for you if:
 
 ## We support altcoins!
 
-In addition to Bitcoin, we support the following crypto currencies:
+In addition to Bitcoin, BTCPay supports the following cryptocurrencies:
 
 * BGold
 * Dash

@@ -37,7 +37,7 @@ Thanks to the apps built on top of it, you can use BTCPay to receive donations o
 * No middleman
 * No KYC
 
-## We support altcoins!
+## Supported Altcoins
 
 In addition to Bitcoin, BTCPay supports the following cryptocurrencies:
 

@@ -45,7 +45,7 @@ You can also checkout [The Merchants Guide to accepting Bitcoin directly with no
 
 While the documentation advise using docker-compose, you may want to build yourself outside of development purpose.
 
-First install .NET Core SDK 2.1 as specified by [Microsoft website](https://www.microsoft.com/net/download/dotnet-core).
+First install .NET Core SDK 2.1 as specified by [Microsoft website](https://www.microsoft.com/net/download/dotnet-core/2.1).
 
 On Powershell:
 ```

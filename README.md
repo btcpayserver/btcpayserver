@@ -10,11 +10,11 @@
 
 BTCPay Server is a free and open-source cryptocurrency payment processor which allows you to receive payments in Bitcoin and altcoins directly, with no fees, transaction cost or a middleman.
 
-BTCPay is a non-custodial invoicing system which eliminates the involvement of a third-party. Payments with BTCPay go directly to your wallet, which increases the privacy and security. Your private keys are never uploaded to the server. There is no address re-use, since each invoice generates a new address diriving from your xpub key.
+BTCPay is a non-custodial invoicing system which eliminates the involvement of a third-party. Payments with BTCPay go directly to your wallet, which increases the privacy and security. Your private keys are never uploaded to the server. There is no address re-use, since each invoice generates a new address deriving from your xpubkey.
 
-The software is built in C# language and conforms to the invoice API of BitPay. It allows easy migration of your code base to your own, self-hosted payment processor.
+The software is built in C# and conforms to the invoice [API of BitPay](https://bitpay.com/api). It allows easy migration of your code base to your own, self-hosted payment processor.
 
-You can run BTCPay as a self-hosted solution on your own server, or use a third-party host.
+You can run BTCPay as a self-hosted solution on your own server, or use a [third-party host](https://github.com/btcpayserver/btcpayserver-doc/blob/master/Managed.md).
 
 The self-hosted solution allows you not only to attach an unlimited number of stores and use the Lightning Network but also become the payment processor for others.
 
@@ -27,12 +27,12 @@ Thanks to the apps built on top of it, you can use BTCPay to receive donations o
 * Altcoin support
 * Complete control over private keys
 * Fully compatability with BitPay API (easy migration)
-* Enchanced Privacy
+* Enchanced privacy
 * SegWit support
 * Process payments for others
-* Payment Buttons
-* Point of Sale
-* No transaction fees
+* Payment buttons
+* Point of sale
+* No transaction fees (other than those for the crypto networks)
 * No processing fees
 * No middleman
 * No KYC

@@ -57,12 +57,5 @@ namespace BTCPayServer.Controllers
             }, store, HttpContext.Request.GetAbsoluteRoot());
             return Redirect(invoice.Data.Url);
         }
-
-        [HttpGet]
-        [Route("/paybuttontest")]
-        public IActionResult PayButtonTest()
-        {
-            return View();
-        }
     }
 }

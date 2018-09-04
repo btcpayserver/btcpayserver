@@ -137,9 +137,6 @@
 	  <Content Update="Views\Public\PayButtonHandle.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
-	  <Content Update="Views\Public\PayButtonTest.cshtml">
-	    <Pack>$(IncludeRazorContentInPack)</Pack>
-	  </Content>
 	  <Content Update="Views\Server\LNDGRPCServices.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>

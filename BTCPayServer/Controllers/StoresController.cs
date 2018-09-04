@@ -48,8 +48,7 @@ namespace BTCPayServer.Controllers
             ExplorerClientProvider explorerProvider,
             IFeeProviderFactory feeRateProvider,
             LanguageService langService,
-            IHostingEnvironment env,
-            InvoiceController invoiceController)
+            IHostingEnvironment env)
         {
             _RateFactory = rateFactory;
             _Repo = repo;
@@ -65,7 +64,6 @@ namespace BTCPayServer.Controllers
             _ServiceProvider = serviceProvider;
             _BtcpayServerOptions = btcpayServerOptions;
             _BTCPayEnv = btcpayEnv;
-            _InvoiceController = invoiceController;
         }
         BTCPayServerOptions _BtcpayServerOptions;
         BTCPayServerEnvironment _BTCPayEnv;
@@ -80,7 +78,6 @@ namespace BTCPayServer.Controllers
         UserManager<ApplicationUser> _UserManager;
         private LanguageService _LangService;
         IHostingEnvironment _Env;
-        InvoiceController _InvoiceController;
 
         [TempData]
         public string StatusMessage
@@ -779,6 +776,12 @@ namespace BTCPayServer.Controllers
         {
             var store = StoreData;
 
+            var storeBlob = store.GetStoreBlob();
+            if (!storeBlob.PayButtonEnabled)
+            {
+                return View("PayButtonEnable", null);
+            }
+
             var appUrl = HttpContext.Request.GetAbsoluteRoot().WithTrailingSlash();
             var model = new PayButtonViewModel
             {
@@ -793,39 +796,22 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost]
-        [Route("{storeId}/pay")]
-        [IgnoreAntiforgeryToken]
-        [EnableCors(CorsPolicies.All)]
-        public async Task<IActionResult> PayButtonHandle(string storeId, [FromForm]PayButtonViewModel model)
+        [Route("{storeId}/paybutton")]
+        public async Task<IActionResult> PayButton(bool enableStore)
         {
-            var store = StoreData;
-
-            // TODO: extract validation to model
-            if (model.Price <= 0)
-                ModelState.AddModelError("Price", "Price must be greater than 0");
-
-            if (!ModelState.IsValid)
-                return View();
-
-            var invoice = await _InvoiceController.CreateInvoiceCore(new NBitpayClient.Invoice()
+            var blob = StoreData.GetStoreBlob();
+            blob.PayButtonEnabled = enableStore;
+            if (StoreData.SetStoreBlob(blob))
             {
-                Price = model.Price,
-                Currency = model.Currency,
-                ItemDesc = model.CheckoutDesc,
-                OrderId = model.OrderId,
-                BuyerEmail = model.NotifyEmail,
-                NotificationURL = model.ServerIpn,
-                RedirectURL = model.BrowserRedirect,
-                FullNotifications = true
-            }, store, HttpContext.Request.GetAbsoluteRoot());
-            return Redirect(invoice.Data.Url);
-        }
+                await _Repo.UpdateStore(StoreData);
+                StatusMessage = "Store successfully updated";
+            }
 
-        [HttpGet]
-        [Route("{storeId}/paybuttontest")]
-        public IActionResult PayButtonTest(string storeId)
-        {
-            return View();
+            return RedirectToAction(nameof(PayButton), new
+            {
+                storeId = StoreData.Id
+            });
+
         }
     }
 }

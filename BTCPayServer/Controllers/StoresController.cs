@@ -776,6 +776,12 @@ namespace BTCPayServer.Controllers
         {
             var store = StoreData;
 
+            var storeBlob = store.GetStoreBlob();
+            if (!storeBlob.PayButtonEnabled)
+            {
+                return View("PayButtonEnable", null);
+            }
+
             var appUrl = HttpContext.Request.GetAbsoluteRoot().WithTrailingSlash();
             var model = new PayButtonViewModel
             {
@@ -787,6 +793,25 @@ namespace BTCPayServer.Controllers
                 StoreId = store.Id
             };
             return View(model);
+        }
+
+        [HttpPost]
+        [Route("{storeId}/paybutton")]
+        public async Task<IActionResult> PayButton(bool enableStore)
+        {
+            var blob = StoreData.GetStoreBlob();
+            blob.PayButtonEnabled = enableStore;
+            if (StoreData.SetStoreBlob(blob))
+            {
+                await _Repo.UpdateStore(StoreData);
+                StatusMessage = "Store successfully updated";
+            }
+
+            return RedirectToAction(nameof(PayButton), new
+            {
+                storeId = StoreData.Id
+            });
+
         }
     }
 }

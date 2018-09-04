@@ -17,7 +17,7 @@ namespace BTCPayServer.Controllers
             _InvoiceController = invoiceController;
             _StoreRepository = storeRepository;
         }
-        
+
         private InvoiceController _InvoiceController;
         private StoreRepository _StoreRepository;
 
@@ -30,9 +30,15 @@ namespace BTCPayServer.Controllers
             var store = await _StoreRepository.FindStore(storeId);
             if (store == null)
                 ModelState.AddModelError("Store", "Invalid store");
+            else
+            {
+                var storeBlob = store.GetStoreBlob();
+                if (!storeBlob.PayButtonEnabled)
+                    ModelState.AddModelError("Store", "Store has not enabled Pay Button");
+            }
 
             // TODO: extract validation to model
-            if (model.Price <= 0)
+            if (model == null || model.Price <= 0)
                 ModelState.AddModelError("Price", "Price must be greater than 0");
 
             if (!ModelState.IsValid)

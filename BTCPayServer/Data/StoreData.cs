@@ -302,6 +302,8 @@ namespace BTCPayServer.Data
 
         public string RateScript { get; set; }
 
+        public bool PayButtonEnabled { get; set; }
+
 
         string _LightningDescriptionTemplate;
         public string LightningDescriptionTemplate

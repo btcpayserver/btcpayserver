@@ -5,12 +5,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
-using BTCPayServer.Payments.Lightning.CLightning;
 using Microsoft.AspNetCore.Mvc;
 using BTCPayServer.Payments.Lightning;
 using System.Net;
 using BTCPayServer.Data;
 using System.Threading;
+using BTCPayServer.Lightning;
 
 namespace BTCPayServer.Controllers
 {

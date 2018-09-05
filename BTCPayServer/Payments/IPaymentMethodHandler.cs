@@ -20,23 +20,46 @@ namespace BTCPayServer.Payments
         /// <param name="store"></param>
         /// <param name="network"></param>
         /// <returns></returns>
-        Task<IPaymentMethodDetails> CreatePaymentMethodDetails(ISupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store, BTCPayNetwork network);
+        Task<IPaymentMethodDetails> CreatePaymentMethodDetails(ISupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store, BTCPayNetwork network, object preparePaymentObject);
+
+        /// <summary>
+        /// This method called before the rate have been fetched
+        /// </summary>
+        /// <param name="supportedPaymentMethod"></param>
+        /// <param name="store"></param>
+        /// <param name="network"></param>
+        /// <returns></returns>
+        object PreparePayment(ISupportedPaymentMethod supportedPaymentMethod, StoreData store, BTCPayNetwork network);
     }
 
     public interface IPaymentMethodHandler<T> : IPaymentMethodHandler where T : ISupportedPaymentMethod
     {
-        Task<IPaymentMethodDetails> CreatePaymentMethodDetails(T supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store, BTCPayNetwork network);
+        Task<IPaymentMethodDetails> CreatePaymentMethodDetails(T supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store, BTCPayNetwork network, object preparePaymentObject);
     }
 
     public abstract class PaymentMethodHandlerBase<T> : IPaymentMethodHandler<T> where T : ISupportedPaymentMethod
     {
-        public abstract Task<IPaymentMethodDetails> CreatePaymentMethodDetails(T supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store, BTCPayNetwork network);
+        
+        public abstract Task<IPaymentMethodDetails> CreatePaymentMethodDetails(T supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store, BTCPayNetwork network, object preparePaymentObject);
+        public virtual object PreparePayment(T supportedPaymentMethod, StoreData store, BTCPayNetwork network)
+        {
+            return null;
+        }
 
-        Task<IPaymentMethodDetails> IPaymentMethodHandler.CreatePaymentMethodDetails(ISupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store, BTCPayNetwork network)
+        object IPaymentMethodHandler.PreparePayment(ISupportedPaymentMethod supportedPaymentMethod, StoreData store, BTCPayNetwork network)
         {
             if (supportedPaymentMethod is T method)
             {
-                return CreatePaymentMethodDetails(method, paymentMethod, store, network);
+                return PreparePayment(method, store, network);
+            }
+            throw new NotSupportedException("Invalid supportedPaymentMethod");
+        }
+
+        Task<IPaymentMethodDetails> IPaymentMethodHandler.CreatePaymentMethodDetails(ISupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store, BTCPayNetwork network, object preparePaymentObject)
+        {
+            if (supportedPaymentMethod is T method)
+            {
+                return CreatePaymentMethodDetails(method, paymentMethod, store, network, preparePaymentObject);
             }
             throw new NotSupportedException("Invalid supportedPaymentMethod");
         }

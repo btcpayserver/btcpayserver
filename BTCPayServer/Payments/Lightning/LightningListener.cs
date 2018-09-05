@@ -9,6 +9,7 @@ using BTCPayServer.Logging;
 using BTCPayServer.Services.Invoices;
 using Microsoft.Extensions.Hosting;
 using NBXplorer;
+using BTCPayServer.Lightning;
 
 namespace BTCPayServer.Payments.Lightning
 {
@@ -27,16 +28,13 @@ namespace BTCPayServer.Payments.Lightning
         EventAggregator _Aggregator;
         InvoiceRepository _InvoiceRepository;
         BTCPayNetworkProvider _NetworkProvider;
-        LightningClientFactory _LightningClientFactory;
         public LightningListener(EventAggregator aggregator,
                               InvoiceRepository invoiceRepository,
-                              LightningClientFactory lightningClientFactory,
                               BTCPayNetworkProvider networkProvider)
         {
             _Aggregator = aggregator;
             _InvoiceRepository = invoiceRepository;
             _NetworkProvider = networkProvider;
-            _LightningClientFactory = lightningClientFactory;
         }
 
         CompositeDisposable leases = new CompositeDisposable();
@@ -100,22 +98,22 @@ namespace BTCPayServer.Payments.Lightning
 
                 if (poll)
                 {
-                    var charge = _LightningClientFactory.CreateClient(lightningSupportedMethod, network);
+                    var charge = lightningSupportedMethod.CreateClient(network);
                     LightningInvoice chargeInvoice = null;
                     try
                     {
                         chargeInvoice = await charge.GetInvoice(lightningMethod.InvoiceId);
                     }
-                    catch(Exception ex)
+                    catch (Exception ex)
                     {
                         Logs.PayServer.LogError(ex, $"{lightningSupportedMethod.CryptoCode} (Lightning): Can't connect to the lightning server");
                         continue;
                     }
                     if (chargeInvoice == null)
                         continue;
-                    if (chargeInvoice.Status == "paid")
+                    if (chargeInvoice.Status == LightningInvoiceStatus.Paid)
                         await AddPayment(network, chargeInvoice, listenedInvoice);
-                    if (chargeInvoice.Status == "paid" || chargeInvoice.Status == "expired")
+                    if (chargeInvoice.Status == LightningInvoiceStatus.Paid || chargeInvoice.Status == LightningInvoiceStatus.Expired)
                         continue;
                 }
 
@@ -143,11 +141,11 @@ namespace BTCPayServer.Payments.Lightning
         CancellationTokenSource _Cts = new CancellationTokenSource();
         private async Task Listen(LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network)
         {
-            ILightningListenInvoiceSession session = null;
+            ILightningInvoiceListener session = null;
             try
             {
                 Logs.PayServer.LogInformation($"{supportedPaymentMethod.CryptoCode} (Lightning): Start listening {supportedPaymentMethod.GetLightningUrl().BaseUri}");
-                var lightningClient = _LightningClientFactory.CreateClient(supportedPaymentMethod, network);
+                var lightningClient = supportedPaymentMethod.CreateClient(network);
                 session = await lightningClient.Listen(_Cts.Token);
                 while (true)
                 {
@@ -158,13 +156,13 @@ namespace BTCPayServer.Payments.Lightning
                     if (notification.Id == listenedInvoice.PaymentMethodDetails.InvoiceId &&
                        notification.BOLT11 == listenedInvoice.PaymentMethodDetails.BOLT11)
                     {
-                        if (notification.Status == "paid" && notification.PaidAt.HasValue)
+                        if (notification.Status == LightningInvoiceStatus.Paid && notification.PaidAt.HasValue)
                         {
                             await AddPayment(network, notification, listenedInvoice);
                             if (DoneListening(listenedInvoice))
                                 break;
                         }
-                        if (notification.Status == "expired")
+                        if (notification.Status == LightningInvoiceStatus.Expired)
                         {
                             if (DoneListening(listenedInvoice))
                                 break;
@@ -197,7 +195,7 @@ namespace BTCPayServer.Payments.Lightning
             if (payment != null)
             {
                 var invoice = await _InvoiceRepository.GetInvoice(null, listenedInvoice.InvoiceId);
-                if(invoice != null)
+                if (invoice != null)
                     _Aggregator.Publish(new InvoiceEvent(invoice.EntityToDTO(_NetworkProvider), 1002, "invoice_receivedPayment"));
             }
         }

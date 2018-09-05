@@ -15,6 +15,7 @@ namespace BTCPayServer.Models.AppViewModels
             public string AppName { get; set; }
             public string AppType { get; set; }
             public bool IsOwner { get; set; }
+
             public string UpdateAction { get { return "Update" + AppType; } }
             public string ViewAction { get { return "View" + AppType; } }
         }

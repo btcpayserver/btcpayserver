@@ -63,7 +63,7 @@ services:
 
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:1.0.2.14
+    image: nicolasdorier/nbxplorer:1.0.2.31
     ports:
       - "32838:32838"
     expose: 
@@ -122,6 +122,7 @@ services:
         announce-addr=customer_lightningd
         log-level=debug
         dev-broadcast-interval=1000
+        dev-bitcoind-poll=1
     ports:
       - "30992:9835" # api port
     expose:
@@ -213,6 +214,7 @@ services:
         no-macaroons=1
         debuglevel=debug
         noencryptwallet=1
+        trickledelay=1000
     ports:
       - "53280:8080"
     expose:
@@ -237,6 +239,7 @@ services:
         no-macaroons=1
         debuglevel=debug
         noencryptwallet=1
+        trickledelay=1000
     ports:
       - "53281:8080"
     expose:

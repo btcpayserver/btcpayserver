@@ -1,8 +1,7 @@
 ﻿@model CheckoutExperienceViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["Title"] = "Checkout experience";
-    ViewData.AddActivePage(BTCPayServer.Views.Stores.StoreNavPages.Checkout);
+    ViewData.SetActivePageAndTitle(StoreNavPages.Checkout, "Checkout experience");
 }
 
 <h4>@ViewData["Title"]</h4>

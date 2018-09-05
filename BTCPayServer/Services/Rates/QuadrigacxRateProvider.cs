@@ -9,10 +9,12 @@ using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services.Rates
 {
-    public class QuadrigacxRateProvider : IRateProvider
+    public class QuadrigacxRateProvider : IRateProvider, IHasExchangeName
     {
         public const string QuadrigacxName = "quadrigacx";
         static HttpClient _Client = new HttpClient();
+
+        public string ExchangeName => QuadrigacxName;
 
         private bool TryToBidAsk(JObject p, out BidAsk v)
         {

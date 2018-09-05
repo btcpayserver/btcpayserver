@@ -49,7 +49,7 @@ namespace BTCPayServer.Controllers
     {
         InvoiceRepository _InvoiceRepository;
         ContentSecurityPolicies _CSP;
-        BTCPayRateProviderFactory _RateProvider;
+        RateFetcher _RateProvider;
         StoreRepository _StoreRepository;
         UserManager<ApplicationUser> _UserManager;
         private CurrencyNameTable _CurrencyNameTable;
@@ -62,7 +62,7 @@ namespace BTCPayServer.Controllers
             InvoiceRepository invoiceRepository,
             CurrencyNameTable currencyNameTable,
             UserManager<ApplicationUser> userManager,
-            BTCPayRateProviderFactory rateProvider,
+            RateFetcher rateProvider,
             StoreRepository storeRepository,
             EventAggregator eventAggregator,
             BTCPayWalletProvider walletProvider,
@@ -195,12 +195,9 @@ namespace BTCPayServer.Controllers
                     var allRateRuleErrors = string.Join(", ", rateResult.Errors.ToArray());
                     logs.Write($"{pair.Key}: Rate rule error ({allRateRuleErrors})");
                 }
-                if (rateResult.ExchangeExceptions.Count != 0)
+                foreach (var ex in rateResult.ExchangeExceptions)
                 {
-                    foreach (var ex in rateResult.ExchangeExceptions)
-                    {
-                        logs.Write($"{pair.Key}: Exception reaching exchange {ex.ExchangeName} ({ex.Exception.Message})");
-                    }
+                    logs.Write($"{pair.Key}: Exception reaching exchange {ex.ExchangeName} ({ex.Exception.Message})");
                 }
             }).ToArray());
         }
@@ -210,6 +207,7 @@ namespace BTCPayServer.Controllers
             try
             {
                 var storeBlob = store.GetStoreBlob();
+                var preparePayment = handler.PreparePayment(supportedPaymentMethod, store, network);
                 var rate = await fetchingByCurrencyPair[new CurrencyPair(network.CryptoCode, entity.ProductInformation.Currency)];
                 if (rate.BidAsk == null)
                 {
@@ -220,7 +218,7 @@ namespace BTCPayServer.Controllers
                 paymentMethod.Network = network;
                 paymentMethod.SetId(supportedPaymentMethod.PaymentId);
                 paymentMethod.Rate = rate.BidAsk.Bid;
-                var paymentDetails = await handler.CreatePaymentMethodDetails(supportedPaymentMethod, paymentMethod, store, network);
+                var paymentDetails = await handler.CreatePaymentMethodDetails(supportedPaymentMethod, paymentMethod, store, network, preparePayment);
                 if (storeBlob.NetworkFeeDisabled)
                     paymentDetails.SetNoTxFee();
                 paymentMethod.SetPaymentMethodDetails(paymentDetails);

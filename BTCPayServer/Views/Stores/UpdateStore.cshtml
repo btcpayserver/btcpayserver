@@ -1,11 +1,8 @@
 ﻿@model StoreViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["Title"] = "Profile";
-    ViewData.AddActivePage(BTCPayServer.Views.Stores.StoreNavPages.Index);
+    ViewData.SetActivePageAndTitle(StoreNavPages.Index, "Profile");
 }
-
-
 
 <style type="text/css">
     .smMaxWidth {

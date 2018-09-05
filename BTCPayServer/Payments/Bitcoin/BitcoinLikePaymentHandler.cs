@@ -27,16 +27,30 @@ namespace BTCPayServer.Payments.Bitcoin
             _WalletProvider = walletProvider;
         }
 
-        public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(DerivationStrategy supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store, BTCPayNetwork network)
+        class Prepare
+        {
+            public Task<FeeRate> GetFeeRate;
+            public Task<BitcoinAddress> ReserveAddress;
+        }
+
+        public override object PreparePayment(DerivationStrategy supportedPaymentMethod, StoreData store, BTCPayNetwork network)
+        {
+            return new Prepare()
+            {
+                GetFeeRate = _FeeRateProviderFactory.CreateFeeProvider(network).GetFeeRateAsync(),
+                ReserveAddress = _WalletProvider.GetWallet(network).ReserveAddressAsync(supportedPaymentMethod.DerivationStrategyBase)
+            };
+        }
+
+        public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(DerivationStrategy supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store, BTCPayNetwork network, object preparePaymentObject)
         {
             if (!_ExplorerProvider.IsAvailable(network))
                 throw new PaymentMethodUnavailableException($"Full node not available");
-            var getFeeRate = _FeeRateProviderFactory.CreateFeeProvider(network).GetFeeRateAsync();
-            var getAddress = _WalletProvider.GetWallet(network).ReserveAddressAsync(supportedPaymentMethod.DerivationStrategyBase);
+            var prepare = (Prepare)preparePaymentObject;
             Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod onchainMethod = new Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod();
-            onchainMethod.FeeRate = await getFeeRate;
+            onchainMethod.FeeRate = await prepare.GetFeeRate;
             onchainMethod.TxFee = onchainMethod.FeeRate.GetFee(100); // assume price for 100 bytes
-            onchainMethod.DepositAddress = (await getAddress).ToString();
+            onchainMethod.DepositAddress = (await prepare.ReserveAddress).ToString();
             return onchainMethod;
         }
     }

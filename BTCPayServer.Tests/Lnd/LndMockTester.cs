@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using BTCPayServer.Payments.Lightning.Lnd;
+using BTCPayServer.Lightning.LND;
 using NBitcoin;
 
 namespace BTCPayServer.Tests.Lnd
@@ -16,12 +16,12 @@ namespace BTCPayServer.Tests.Lnd
             var url = serverTester.GetEnvironment(environmentName, defaultValue);
 
             Swagger = new LndSwaggerClient(new LndRestSettings(new Uri(url)) { AllowInsecure = true });
-            Client = new LndInvoiceClient(Swagger);
+            Client = new LndClient(Swagger, network);
             P2PHost = _Parent.GetEnvironment(environmentName + "_HOST", defaultHost);
         }
 
         public LndSwaggerClient Swagger { get; set; }
-        public LndInvoiceClient Client { get; set; }
+        public LndClient Client { get; set; }
         public string P2PHost { get; }
     }
 }

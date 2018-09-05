@@ -1,8 +1,7 @@
 ﻿@model TokensViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["Title"] = "Access Tokens";
-    ViewData.AddActivePage(StoreNavPages.Tokens);
+    ViewData.SetActivePageAndTitle(StoreNavPages.Tokens, "Access Tokens");
 }
 
 <partial name="_StatusMessage" for="StatusMessage" />

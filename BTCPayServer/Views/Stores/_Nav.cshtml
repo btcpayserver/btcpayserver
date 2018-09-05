@@ -1,11 +1,9 @@
-﻿@using BTCPayServer.Views.Stores
-@inject SignInManager<ApplicationUser> SignInManager
-
-<div class="nav flex-column nav-pills">
-    <a class="nav-link @StoreNavPages.IndexNavClass(ViewContext)" asp-action="UpdateStore">General settings</a>
-    <a class="nav-link @StoreNavPages.RatesNavClass(ViewContext)" asp-action="Rates">Rates</a>
-    <a class="nav-link @StoreNavPages.CheckoutNavClass(ViewContext)" asp-action="CheckoutExperience">Checkout experience</a>
-    <a class="nav-link @StoreNavPages.TokensNavClass(ViewContext)" asp-action="ListTokens">Access Tokens</a>
-    <a class="nav-link @StoreNavPages.UsersNavClass(ViewContext)" asp-action="StoreUsers">Users</a>
+﻿<div class="nav flex-column nav-pills">
+    <a class="nav-link @ViewData.IsActivePage(StoreNavPages.Index)" asp-action="UpdateStore">General settings</a>
+    <a class="nav-link @ViewData.IsActivePage(StoreNavPages.Rates)" asp-action="Rates">Rates</a>
+    <a class="nav-link @ViewData.IsActivePage(StoreNavPages.Checkout)" asp-action="CheckoutExperience">Checkout experience</a>
+    <a class="nav-link @ViewData.IsActivePage(StoreNavPages.Tokens)" asp-action="ListTokens">Access Tokens</a>
+    <a class="nav-link @ViewData.IsActivePage(StoreNavPages.Users)" asp-action="StoreUsers">Users</a>
+    <a class="nav-link @ViewData.IsActivePage(StoreNavPages.PayButton)" asp-action="PayButton">Pay Button</a>
 </div>
 

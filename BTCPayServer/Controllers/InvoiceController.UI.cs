@@ -34,7 +34,6 @@ namespace BTCPayServer.Controllers
         {
             var invoice = (await _InvoiceRepository.GetInvoices(new InvoiceQuery()
             {
-                UserId = GetUserId(),
                 InvoiceId = invoiceId,
                 IncludeAddresses = true,
                 IncludeEvents = true

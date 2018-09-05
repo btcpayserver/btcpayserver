@@ -1,8 +1,13 @@
-﻿using BTCPayServer.Authentication;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Threading.Tasks;
+using BTCPayServer.Authentication;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
-using BTCPayServer.HostedServices;
 using BTCPayServer.Models;
+using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Rating;
 using BTCPayServer.Security;
@@ -11,21 +16,13 @@ using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitcoin.DataEncoders;
-using NBXplorer.DerivationStrategy;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace BTCPayServer.Controllers
 {
@@ -35,7 +32,7 @@ namespace BTCPayServer.Controllers
     [AutoValidateAntiforgeryToken]
     public partial class StoresController : Controller
     {
-        BTCPayRateProviderFactory _RateFactory;
+        RateFetcher _RateFactory;
         public string CreatedStoreId { get; set; }
         public StoresController(
             IServiceProvider serviceProvider,
@@ -47,11 +44,12 @@ namespace BTCPayServer.Controllers
             AccessTokenController tokenController,
             BTCPayWalletProvider walletProvider,
             BTCPayNetworkProvider networkProvider,
-            BTCPayRateProviderFactory rateFactory,
+            RateFetcher rateFactory,
             ExplorerClientProvider explorerProvider,
             IFeeProviderFactory feeRateProvider,
             LanguageService langService,
-            IHostingEnvironment env)
+            IHostingEnvironment env,
+            InvoiceController invoiceController)
         {
             _RateFactory = rateFactory;
             _Repo = repo;
@@ -67,6 +65,7 @@ namespace BTCPayServer.Controllers
             _ServiceProvider = serviceProvider;
             _BtcpayServerOptions = btcpayServerOptions;
             _BTCPayEnv = btcpayEnv;
+            _InvoiceController = invoiceController;
         }
         BTCPayServerOptions _BtcpayServerOptions;
         BTCPayServerEnvironment _BTCPayEnv;
@@ -81,6 +80,7 @@ namespace BTCPayServer.Controllers
         UserManager<ApplicationUser> _UserManager;
         private LanguageService _LangService;
         IHostingEnvironment _Env;
+        InvoiceController _InvoiceController;
 
         [TempData]
         public string StatusMessage
@@ -521,7 +521,7 @@ namespace BTCPayServer.Controllers
 
         private CoinAverageExchange[] GetSupportedExchanges()
         {
-            return _RateFactory.GetSupportedExchanges()
+            return _RateFactory.RateProviderFactory.GetSupportedExchanges()
                     .Select(c => c.Value)
                     .OrderBy(s => s.Name, StringComparer.OrdinalIgnoreCase)
                     .ToArray();
@@ -766,6 +766,66 @@ namespace BTCPayServer.Controllers
             if (User.Identity.AuthenticationType != Policies.CookieAuthentication)
                 return null;
             return _UserManager.GetUserId(User);
+        }
+
+
+
+        // TODO: Need to have talk about how architect default currency implementation
+        // For now we have also hardcoded USD for Store creation and then Invoice creation
+        const string DEFAULT_CURRENCY = "USD";
+
+        [Route("{storeId}/paybutton")]
+        public IActionResult PayButton()
+        {
+            var store = StoreData;
+
+            var appUrl = HttpContext.Request.GetAbsoluteRoot().WithTrailingSlash();
+            var model = new PayButtonViewModel
+            {
+                Price = 10,
+                Currency = DEFAULT_CURRENCY,
+                ButtonSize = 2,
+                UrlRoot = appUrl,
+                PayButtonImageUrl = appUrl + "img/paybutton/pay.png",
+                StoreId = store.Id
+            };
+            return View(model);
+        }
+
+        [HttpPost]
+        [Route("{storeId}/pay")]
+        [IgnoreAntiforgeryToken]
+        [EnableCors(CorsPolicies.All)]
+        public async Task<IActionResult> PayButtonHandle(string storeId, [FromForm]PayButtonViewModel model)
+        {
+            var store = StoreData;
+
+            // TODO: extract validation to model
+            if (model.Price <= 0)
+                ModelState.AddModelError("Price", "Price must be greater than 0");
+
+            if (!ModelState.IsValid)
+                return View();
+
+            var invoice = await _InvoiceController.CreateInvoiceCore(new NBitpayClient.Invoice()
+            {
+                Price = model.Price,
+                Currency = model.Currency,
+                ItemDesc = model.CheckoutDesc,
+                OrderId = model.OrderId,
+                BuyerEmail = model.NotifyEmail,
+                NotificationURL = model.ServerIpn,
+                RedirectURL = model.BrowserRedirect,
+                FullNotifications = true
+            }, store, HttpContext.Request.GetAbsoluteRoot());
+            return Redirect(invoice.Data.Url);
+        }
+
+        [HttpGet]
+        [Route("{storeId}/paybuttontest")]
+        public IActionResult PayButtonTest(string storeId)
+        {
+            return View();
         }
     }
 }

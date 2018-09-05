@@ -260,10 +260,31 @@
                     </span>
                 </div>
                 <center>
+
+                    @*
+                    R.I.P. Shapeshift
                     <script>function shapeshift_click(a, e) { e.preventDefault(); var link = a.href; var shapeshiftWindow = window.open(link, '1418115287605', 'width=700,height=500,toolbar=0,menubar=0,location=0,status=1,scrollbars=1,resizable=0,left=0,top=0'); shapeshiftWindow.focus(); return false; }</script>
-                    <a onclick="shapeshift_click(this, event);" v-bind:href="srvModel.shapeshiftUrl">
+                    <a onclick="shapeshift_click(this, event);" >
                         <img src="https://shapeshift.io/images/shifty/xs_light_altcoins.png" class="ss-button">
+                    </a>*@
+
+
+                    <script type="text/javascript">
+                        function open_widget(a, e) {
+                            e.preventDefault();
+                            var link = a.href;
+                            window.open(link,
+                                'Changelly',
+                                'width=600,height=470,toolbar=0,menubar=0,location=0,status=1,scrollbars=1,resizable=0,left=0,top=0');
+                            return false;
+                        }
+                    </script>
+                    <a onclick="open_widget(this, event);" v-bind:href="srvModel.changellyUrl">
+                        <img src="https://changelly.com/pay_button.png" alt="Changelly"/>
                     </a>
+
+
+
 
                     @*Changelly doesn't have TO_AMOUNT support so we can't include it
                             <script type="text/javascript">function open_widget(a, e) { e.preventDefault(); var link = a.href; var changellyWindow = window.open(link, 'Changelly', 'width=600,height=470,toolbar=0,menubar=0,location=0,status=1,scrollbars=1,resizable=0,left=0,top=0'); changellyWindow.focus(); return false; }</script>

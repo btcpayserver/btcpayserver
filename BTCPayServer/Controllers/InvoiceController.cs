@@ -1,47 +1,25 @@
-﻿using BTCPayServer.Authentication;
-using System.Reflection;
-using System.Linq;
-using Microsoft.Extensions.Logging;
-using BTCPayServer.Logging;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using NBitpayClient;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using BTCPayServer.Models;
-using Newtonsoft.Json;
-using System.Globalization;
-using NBitcoin;
-using NBitcoin.DataEncoders;
-using BTCPayServer.Filters;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using System.Net;
-using Microsoft.AspNetCore.Identity;
-using Newtonsoft.Json.Linq;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
-using NBitcoin.Payment;
 using BTCPayServer.Data;
-using BTCPayServer.Models.InvoicingModels;
-using System.Security.Claims;
-using BTCPayServer.Services;
-using System.ComponentModel.DataAnnotations;
-using System.Text.RegularExpressions;
-using BTCPayServer.Services.Stores;
-using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services.Rates;
-using BTCPayServer.Services.Wallets;
-using BTCPayServer.Validations;
-
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Mvc.Routing;
-using NBXplorer.DerivationStrategy;
-using NBXplorer;
-using BTCPayServer.HostedServices;
+using BTCPayServer.Logging;
+using BTCPayServer.Models;
 using BTCPayServer.Payments;
 using BTCPayServer.Rating;
 using BTCPayServer.Security;
+using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Rates;
+using BTCPayServer.Services.Stores;
+using BTCPayServer.Services.Wallets;
+using BTCPayServer.Validations;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using NBitcoin;
+using NBitpayClient;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Controllers
 {
@@ -84,6 +62,8 @@ namespace BTCPayServer.Controllers
 
         internal async Task<DataWrapper<InvoiceResponse>> CreateInvoiceCore(Invoice invoice, StoreData store, string serverUrl)
         {
+            if (!store.HasClaim(Policies.CanCreateInvoice.Key))
+                throw new UnauthorizedAccessException();
             InvoiceLogs logs = new InvoiceLogs();
             logs.Write("Creation of invoice starting");
             var entity = new InvoiceEntity

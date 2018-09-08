@@ -499,7 +499,7 @@ namespace BTCPayServer.Controllers
                 return View(model);
             }
             StatusMessage = null;
-            if (!store.HasClaim(Policies.CanModifyStoreSettings.Key))
+            if (!store.HasClaim(Policies.CanCreateInvoice.Key))
             {
                 ModelState.AddModelError(nameof(model.StoreId), "You need to be owner of this store to create an invoice");
                 return View(model);

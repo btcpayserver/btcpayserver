@@ -33,7 +33,7 @@ namespace BTCPayServer.Controllers
             else
             {
                 var storeBlob = store.GetStoreBlob();
-                if (!storeBlob.PayButtonEnabled)
+                if (!storeBlob.AnyoneCanInvoice)
                     ModelState.AddModelError("Store", "Store has not enabled Pay Button");
             }
 

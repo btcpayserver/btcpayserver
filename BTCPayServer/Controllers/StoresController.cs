@@ -399,6 +399,7 @@ namespace BTCPayServer.Controllers
             vm.StoreName = store.StoreName;
             vm.StoreWebsite = store.StoreWebsite;
             vm.NetworkFee = !storeBlob.NetworkFeeDisabled;
+            vm.AnyoneCanCreateInvoice = storeBlob.AnyoneCanInvoice;
             vm.SpeedPolicy = store.SpeedPolicy;
             vm.CanDelete = _Repo.CanDeleteStores();
             AddPaymentMethods(store, storeBlob, vm);
@@ -470,6 +471,7 @@ namespace BTCPayServer.Controllers
             }
 
             var blob = StoreData.GetStoreBlob();
+            blob.AnyoneCanInvoice = model.AnyoneCanCreateInvoice;
             blob.NetworkFeeDisabled = !model.NetworkFee;
             blob.MonitoringExpiration = model.MonitoringExpiration;
             blob.InvoiceExpiration = model.InvoiceExpiration;
@@ -777,7 +779,7 @@ namespace BTCPayServer.Controllers
             var store = StoreData;
 
             var storeBlob = store.GetStoreBlob();
-            if (!storeBlob.PayButtonEnabled)
+            if (!storeBlob.AnyoneCanInvoice)
             {
                 return View("PayButtonEnable", null);
             }
@@ -800,7 +802,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> PayButton(bool enableStore)
         {
             var blob = StoreData.GetStoreBlob();
-            blob.PayButtonEnabled = enableStore;
+            blob.AnyoneCanInvoice = enableStore;
             if (StoreData.SetStoreBlob(blob))
             {
                 await _Repo.UpdateStore(StoreData);

@@ -1,6 +1,6 @@
 ﻿@{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(StoreNavPages.PayButton, "Please confirm you want to enable Pay Button");
+    ViewData.SetActivePageAndTitle(StoreNavPages.PayButton, "Please confirm you want to allow anyone to create invoices in your store");
     ViewBag.MainTitle = "Pay Button";
 }
 
@@ -12,10 +12,10 @@
             <div class="form-group">
                 <p>
                     To start using Pay Buttons you need to explicitly turn on this feature.
-                    Once you do so, valid POST requests from any source will allow creation of Invoices on your instance of BtcPayServer.
+                    Once you do so, any source will be able to create an invoice on your instance store.
                 </p>
                 @Html.Hidden("EnableStore", true)
-                <button name="command" type="submit" value="save" class="btn btn-primary">Enable Pay Button</button>
+                <button name="command" type="submit" value="save" class="btn btn-primary">Allow anyone to create invoices</button>
             </div>
         </form>
     </div>

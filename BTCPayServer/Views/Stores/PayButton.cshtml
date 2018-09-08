@@ -122,25 +122,6 @@
         </div>
     </div>
 
-    <br /><br />
-    <hr />
-    <h3>Disable Pay Button</h3>
-    <div class="row">
-        <div class="col-md-10">
-            <form method="post">
-                <div class="form-group">
-                    <p>
-                        Disabling this feature will cause your currently used Pay Buttons to stop working.
-                        Customers trying to use Pay Button to create Invoices will be displayed appropriate message.
-                        You can always reenable Pay Buttons at later time.
-                    </p>
-                    @Html.Hidden("EnableStore", false)
-                    <button name="command" type="submit" value="save" class="btn btn-primary">Disable Pay Button</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
 
 @section HeadScripts {
     <link rel="stylesheet" href="~/vendor/highlightjs/default.min.css">

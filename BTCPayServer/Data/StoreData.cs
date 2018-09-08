@@ -166,24 +166,25 @@ namespace BTCPayServer.Data
         public Claim[] GetClaims()
         {
             List<Claim> claims = new List<Claim>();
+            claims.AddRange(AdditionalClaims);
 #pragma warning disable CS0612 // Type or member is obsolete
             var role = Role;
 #pragma warning restore CS0612 // Type or member is obsolete
             if (role == StoreRoles.Owner)
             {
                 claims.Add(new Claim(Policies.CanModifyStoreSettings.Key, Id));
-                claims.Add(new Claim(Policies.CanUseStore.Key, Id));
             }
-            if (role == StoreRoles.Guest)
+
+            if(role == StoreRoles.Owner || role == StoreRoles.Guest || GetStoreBlob().AnyoneCanInvoice)
             {
-                claims.Add(new Claim(Policies.CanUseStore.Key, Id));
+                claims.Add(new Claim(Policies.CanCreateInvoice.Key, Id));
             }
             return claims.ToArray();
         }
 
         public bool HasClaim(string claim)
         {
-            return GetClaims().Any(c => c.Type == claim);
+            return GetClaims().Any(c => c.Type == claim && c.Value == Id);
         }
 
         public byte[] StoreBlob
@@ -195,6 +196,9 @@ namespace BTCPayServer.Data
         public string DefaultCrypto { get; set; }
         public List<PairedSINData> PairedSINs { get; set; }
         public IEnumerable<APIKeyData> APIKeys { get; set; }
+
+        [NotMapped]
+        public List<Claim> AdditionalClaims { get; set; } = new List<Claim>();
 
 #pragma warning disable CS0618
         public string GetDefaultCrypto(BTCPayNetworkProvider networkProvider = null)
@@ -302,7 +306,7 @@ namespace BTCPayServer.Data
 
         public string RateScript { get; set; }
 
-        public bool PayButtonEnabled { get; set; }
+        public bool AnyoneCanInvoice { get; set; }
 
 
         string _LightningDescriptionTemplate;

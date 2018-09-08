@@ -2,9 +2,11 @@
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Models.AppViewModels;
+using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Authorization;
@@ -46,7 +48,7 @@ namespace BTCPayServer.Controllers
                 Items = _AppsHelper.Parse(settings.Template, settings.Currency)
             });
         }
-        
+
         [HttpPost]
         [Route("/apps/{appId}/pos")]
         [IgnoreAntiforgeryToken]
@@ -90,6 +92,7 @@ namespace BTCPayServer.Controllers
                 title = settings.Title;
             }
             var store = await _AppsHelper.GetStore(app);
+            store.AdditionalClaims.Add(new Claim(Policies.CanCreateInvoice.Key, store.Id));
             var invoice = await _InvoiceController.CreateInvoiceCore(new NBitpayClient.Invoice()
             {
                 ItemDesc = title,

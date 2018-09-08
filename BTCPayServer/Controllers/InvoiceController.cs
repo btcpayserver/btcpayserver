@@ -62,6 +62,8 @@ namespace BTCPayServer.Controllers
 
         internal async Task<DataWrapper<InvoiceResponse>> CreateInvoiceCore(Invoice invoice, StoreData store, string serverUrl)
         {
+            if (!store.HasClaim(Policies.CanCreateInvoice.Key))
+                throw new UnauthorizedAccessException();
             InvoiceLogs logs = new InvoiceLogs();
             logs.Write("Creation of invoice starting");
             var entity = new InvoiceEntity

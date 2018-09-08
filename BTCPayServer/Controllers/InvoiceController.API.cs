@@ -1,26 +1,20 @@
-﻿using BTCPayServer.Authentication;
-using Microsoft.Extensions.Logging;
-using BTCPayServer.Filters;
-using BTCPayServer.Logging;
-using BTCPayServer.Models;
-using Microsoft.AspNetCore.Mvc;
-using NBitpayClient;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using BTCPayServer.Data;
-using BTCPayServer.Services.Invoices;
-using Microsoft.AspNetCore.Cors;
-using BTCPayServer.Services.Stores;
-using Microsoft.AspNetCore.Authorization;
+using BTCPayServer.Filters;
+using BTCPayServer.Models;
 using BTCPayServer.Security;
+using BTCPayServer.Services.Invoices;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Mvc;
+using NBitpayClient;
 
 namespace BTCPayServer.Controllers
 {
     [EnableCors("BitpayAPI")]
     [BitpayAPIConstraint]
-    [Authorize(Policies.CanUseStore.Key, AuthenticationSchemes = Policies.BitpayAuthentication)]
+    [Authorize(Policies.CanCreateInvoice.Key, AuthenticationSchemes = Policies.BitpayAuthentication)]
     public class InvoiceControllerAPI : Controller
     {
         private InvoiceController _InvoiceController;

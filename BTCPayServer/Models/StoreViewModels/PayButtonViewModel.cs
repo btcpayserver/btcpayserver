@@ -9,6 +9,7 @@ namespace BTCPayServer.Models.StoreViewModels
     public class PayButtonViewModel
     {
         public decimal Price { get; set; }
+        public string InvoiceId { get; set; }
         [Required]
         public string Currency { get; set; }
         public string CheckoutDesc { get; set; }

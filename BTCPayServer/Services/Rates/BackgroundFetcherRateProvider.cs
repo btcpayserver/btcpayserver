@@ -18,7 +18,7 @@ namespace BTCPayServer.Services.Rates
             public DateTimeOffset NextRefresh;
             public DateTimeOffset Expiration;
             public Exception Exception;
-
+            public string ExchangeName;
             internal ExchangeRates GetResult()
             {
                 if (Expiration <= DateTimeOffset.UtcNow)
@@ -29,7 +29,7 @@ namespace BTCPayServer.Services.Rates
                     }
                     else
                     {
-                        throw new InvalidOperationException("The rate has expired");
+                        throw new InvalidOperationException($"The rate has expired ({ExchangeName})");
                     }
                 }
                 return Latest;
@@ -128,6 +128,7 @@ namespace BTCPayServer.Services.Rates
         {
             var previous = _Latest;
             var fetch = new LatestFetch();
+            fetch.ExchangeName = GetExchangeName();
             try
             {
                 var rates = await _Inner.GetRatesAsync();

@@ -1,16 +1,14 @@
-﻿using BTCPayServer.Filters;
-using Microsoft.Extensions.Logging;
-using BTCPayServer.Logging;
-using Microsoft.AspNetCore.Mvc;
-using NBitcoin;
-using NBitcoin.Payment;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using BTCPayServer.Services.Invoices;
+using BTCPayServer.Filters;
+using BTCPayServer.Logging;
 using BTCPayServer.Payments;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using NBitcoin;
+using NBitcoin.Payment;
 
 namespace BTCPayServer.Controllers
 {
@@ -82,6 +80,38 @@ namespace BTCPayServer.Controllers
             var unused = wallet.BroadcastTransactionsAsync(payment.Transactions);
             await _InvoiceRepository.AddRefundsAsync(invoiceId, payment.RefundTo.Select(p => new TxOut(p.Amount, p.Script)).ToArray(), network.NBitcoinNetwork);
             return new PaymentAckActionResult(payment.CreateACK(invoiceId + " is currently processing, thanks for your purchase..."));
+        }
+    }
+
+
+    public class PaymentRequestActionResult : IActionResult
+    {
+        PaymentRequest req;
+        public PaymentRequestActionResult(PaymentRequest req)
+        {
+            this.req = req;
+        }
+        public Task ExecuteResultAsync(ActionContext context)
+        {
+            context.HttpContext.Response.Headers["Content-Transfer-Encoding"] = "binary";
+            context.HttpContext.Response.ContentType = "application/bitcoin-paymentrequest";
+            req.WriteTo(context.HttpContext.Response.Body);
+            return Task.CompletedTask;
+        }
+    }
+    public class PaymentAckActionResult : IActionResult
+    {
+        PaymentACK req;
+        public PaymentAckActionResult(PaymentACK req)
+        {
+            this.req = req;
+        }
+        public Task ExecuteResultAsync(ActionContext context)
+        {
+            context.HttpContext.Response.Headers["Content-Transfer-Encoding"] = "binary";
+            context.HttpContext.Response.ContentType = "application/bitcoin-paymentack";
+            req.WriteTo(context.HttpContext.Response.Body);
+            return Task.CompletedTask;
         }
     }
 }

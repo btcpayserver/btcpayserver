@@ -1,7 +1,8 @@
 ﻿@model PayButtonViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(StoreNavPages.PayButton, "Pay Button");
+    ViewData.SetActivePageAndTitle(StoreNavPages.PayButton);
+    ViewBag.MainTitle = "Pay Button";
 }
 
 <div class="container" id="payButtonCtrl">
@@ -120,8 +121,6 @@
             Please fix errors shown in order for code generation to successfully execute.
         </div>
     </div>
-    <br />
-</div>
 
 
 @section HeadScripts {

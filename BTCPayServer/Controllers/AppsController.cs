@@ -5,8 +5,9 @@ using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Models.AppViewModels;
+using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
-using BTCPayServer.Services.Rates;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -15,32 +16,31 @@ using NBitcoin.DataEncoders;
 
 namespace BTCPayServer.Controllers
 {
+    [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
     [AutoValidateAntiforgeryToken]
     [Route("apps")]
     public partial class AppsController : Controller
     {
-        ApplicationDbContextFactory _ContextFactory;
-        UserManager<ApplicationUser> _UserManager;
-        CurrencyNameTable _Currencies;
-        InvoiceController _InvoiceController;
-        BTCPayNetworkProvider _NetworkProvider;
+        public AppsController(
+            UserManager<ApplicationUser> userManager,
+            ApplicationDbContextFactory contextFactory,
+            BTCPayNetworkProvider networkProvider,
+            AppsHelper appsHelper)
+        {
+            _UserManager = userManager;
+            _ContextFactory = contextFactory;
+            _NetworkProvider = networkProvider;
+            _AppsHelper = appsHelper;
+        }
+
+        private UserManager<ApplicationUser> _UserManager;
+        private ApplicationDbContextFactory _ContextFactory;
+        private BTCPayNetworkProvider _NetworkProvider;
+        private AppsHelper _AppsHelper;
 
         [TempData]
         public string StatusMessage { get; set; }
 
-        public AppsController(
-            UserManager<ApplicationUser> userManager,
-            ApplicationDbContextFactory contextFactory,
-            CurrencyNameTable currencies,
-            InvoiceController invoiceController,
-            BTCPayNetworkProvider networkProvider)
-        {
-            _InvoiceController = invoiceController;
-            _UserManager = userManager;
-            _ContextFactory = contextFactory;
-            _Currencies = currencies;
-            _NetworkProvider = networkProvider;
-        }
         public async Task<IActionResult> ListApps()
         {
             var apps = await GetAllApps();
@@ -200,14 +200,6 @@ namespace BTCPayServer.Controllers
         private string GetUserId()
         {
             return _UserManager.GetUserId(User);
-        }
-
-        private async Task<StoreData> GetStore(AppData app)
-        {
-            using (var ctx = _ContextFactory.CreateContext())
-            {
-                return await ctx.Stores.FirstOrDefaultAsync(s => s.Id == app.StoreDataId);
-            }
         }
     }
 }

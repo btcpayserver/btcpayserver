@@ -121,16 +121,20 @@
 	</ItemGroup>
 
 	<ItemGroup>
+    <Content Update="Views\Apps\_ViewImports.cshtml">
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <Pack>$(IncludeRazorContentInPack)</Pack>
+    </Content>
     <Content Update="Views\Server\SSHService.cshtml">
+      <Pack>$(IncludeRazorContentInPack)</Pack>
+    </Content>
+    <Content Update="Views\Stores\PayButtonEnable.cshtml">
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>
 	  <Content Update="Views\Stores\PayButton.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
-	  <Content Update="Views\Stores\PayButtonHandle.cshtml">
-	    <Pack>$(IncludeRazorContentInPack)</Pack>
-	  </Content>
-	  <Content Update="Views\Stores\PayButtonTest.cshtml">
+	  <Content Update="Views\Public\PayButtonHandle.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
 	  <Content Update="Views\Server\LNDGRPCServices.cshtml">

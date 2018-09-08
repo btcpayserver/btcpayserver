@@ -47,6 +47,9 @@ namespace BTCPayServer.Models.StoreViewModels
             set;
         }
 
+        [Display(Name = "Allow anyone to create invoice")]
+        public bool AnyoneCanCreateInvoice { get; set; }
+
         public List<StoreViewModel.DerivationScheme> DerivationSchemes { get; set; } = new List<StoreViewModel.DerivationScheme>();
 
         [Display(Name = "Invoice expires if the full amount has not been paid after ... minutes")]

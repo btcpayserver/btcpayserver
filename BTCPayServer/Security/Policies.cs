@@ -12,9 +12,9 @@ namespace BTCPayServer.Security
         public const string CookieAuthentication = "Identity.Application";
         public static AuthorizationOptions AddBTCPayPolicies(this AuthorizationOptions options)
         {
-            AddClaim(options, CanUseStore.Key);
             AddClaim(options, CanModifyStoreSettings.Key);
             AddClaim(options, CanModifyServerSettings.Key);
+            AddClaim(options, CanCreateInvoice.Key);
             return options;
         }
 
@@ -27,13 +27,14 @@ namespace BTCPayServer.Security
         {
             public const string Key = "btcpay.store.canmodifyserversettings";
         }
-        public class CanUseStore
-        {
-            public const string Key = "btcpay.store.canusestore";
-        }
         public class CanModifyStoreSettings
         {
             public const string Key = "btcpay.store.canmodifystoresettings";
+        }
+
+        public class CanCreateInvoice
+        {
+            public const string Key = "btcpay.store.cancreateinvoice";
         }
     }
 }

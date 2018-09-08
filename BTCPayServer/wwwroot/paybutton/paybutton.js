@@ -42,7 +42,8 @@ function inputChanges(event, buttonSize) {
         srvModel.buttonSize = buttonSize;
     }
 
-    var html = '<form method="POST" action="' + esc(srvModel.urlRoot + 'stores/'+ srvModel.storeId +  '/pay') + '">';
+    var html = '<form method="POST" action="' + esc(srvModel.urlRoot) + 'api/v1/invoices">';
+    html += addinput("storeId", srvModel.storeId);
     html += addinput("price", srvModel.price);
     if (srvModel.currency) {
         html += addinput("currency", srvModel.currency);

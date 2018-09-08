@@ -95,6 +95,8 @@ namespace BTCPayServer.Hosting
                 return opts.NetworkProvider;
             });
 
+            services.TryAddSingleton<AppsHelper>();
+
             services.TryAddSingleton<LightningConfigurationProvider>();
             services.TryAddSingleton<LanguageService>();
             services.TryAddSingleton<NBXplorerDashboard>();

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Filters;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Cors;
@@ -22,12 +23,13 @@ namespace BTCPayServer.Controllers
         private StoreRepository _StoreRepository;
 
         [HttpPost]
-        [Route("/pay/{storeId}")]
+        [Route("api/v1/invoices")]
+        [MediaTypeAcceptConstraintAttribute("text/html")]
         [IgnoreAntiforgeryToken]
         [EnableCors(CorsPolicies.All)]
-        public async Task<IActionResult> PayButtonHandle(string storeId, [FromForm]PayButtonViewModel model)
+        public async Task<IActionResult> PayButtonHandle([FromForm]PayButtonViewModel model)
         {
-            var store = await _StoreRepository.FindStore(storeId);
+            var store = await _StoreRepository.FindStore(model.StoreId);
             if (store == null)
                 ModelState.AddModelError("Store", "Invalid store");
             else
@@ -36,8 +38,7 @@ namespace BTCPayServer.Controllers
                 if (!storeBlob.AnyoneCanInvoice)
                     ModelState.AddModelError("Store", "Store has not enabled Pay Button");
             }
-
-            // TODO: extract validation to model
+            
             if (model == null || model.Price <= 0)
                 ModelState.AddModelError("Price", "Price must be greater than 0");
 

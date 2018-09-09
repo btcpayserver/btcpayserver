@@ -33,7 +33,7 @@
     <EmbeddedResource Include="Currencies.txt" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="BTCPayServer.Lightning.All" Version="1.0.0.4" />
+    <PackageReference Include="BTCPayServer.Lightning.All" Version="1.1.0.0" />
     <PackageReference Include="BuildBundlerMinifier" Version="2.7.385" />
     <PackageReference Include="DigitalRuby.ExchangeSharp" Version="0.5.3" />
     <PackageReference Include="Hangfire" Version="1.6.19" />
@@ -44,8 +44,8 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.1.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.2" />
     <PackageReference Include="Microsoft.NetCore.Analyzers" Version="2.6.0" />
-    <PackageReference Include="NBitcoin" Version="4.1.1.45" />
-    <PackageReference Include="NBitpayClient" Version="1.0.0.29" />	  
+    <PackageReference Include="NBitcoin" Version="4.1.1.46" />
+    <PackageReference Include="NBitpayClient" Version="1.0.0.30" />	  
     <PackageReference Include="DBreeze" Version="1.87.0" />
     <PackageReference Include="NBXplorer.Client" Version="1.0.2.18" />
     <PackageReference Include="NicolasDorier.CommandLine" Version="1.0.0.2" />

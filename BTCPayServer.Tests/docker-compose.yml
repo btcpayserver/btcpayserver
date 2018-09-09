@@ -111,7 +111,7 @@ services:
       - "bitcoin_datadir:/data"
 
   customer_lightningd:
-    image: nicolasdorier/clightning:v0.6-dev
+    image: nicolasdorier/clightning:634f19a7b230edc686be56ab950b80784e56252c-dev
     environment: 
       EXPOSE_TCP: "true"
       LIGHTNINGD_OPT: |
@@ -154,7 +154,7 @@ services:
       - merchant_lightningd
 
   merchant_lightningd:
-    image: nicolasdorier/clightning:v0.6-dev
+    image: nicolasdorier/clightning:634f19a7b230edc686be56ab950b80784e56252c-dev
     environment: 
       EXPOSE_TCP: "true"
       LIGHTNINGD_OPT: |

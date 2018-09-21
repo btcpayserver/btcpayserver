@@ -34,7 +34,7 @@ services:
 
   # The dev container is not actually used, it is just handy to run `docker-compose up dev` to start all services
   dev: 
-    image: nicolasdorier/docker-bitcoin:0.16.0
+    image: nicolasdorier/docker-bitcoin:0.16.3
     environment:
       BITCOIN_EXTRA_ARGS: |
         regtest=1
@@ -49,7 +49,7 @@ services:
       - merchant_lnd
 
   devlnd: 
-    image: nicolasdorier/docker-bitcoin:0.16.0
+    image: nicolasdorier/docker-bitcoin:0.16.3
     environment:
       BITCOIN_EXTRA_ARGS: |
         regtest=1
@@ -87,7 +87,7 @@ services:
       - litecoind
 
   bitcoind:
-    image: nicolasdorier/docker-bitcoin:0.16.0
+    image: nicolasdorier/docker-bitcoin:0.16.3
     environment:
       BITCOIN_EXTRA_ARGS: |
         rpcuser=ceiwHEbqWI83

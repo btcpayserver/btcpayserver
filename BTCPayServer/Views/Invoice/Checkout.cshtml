@@ -54,7 +54,7 @@
     <![endif]-->
 
     <invoice>
-        <div class="no-bounce" id="checkoutCtrl">
+        <div class="no-bounce" id="checkoutCtrl" v-cloak>
             <div class="modal page">
                 <div class="modal-dialog open opened enter-purchaser-email" role="document">
                     <div class="modal-content long">
@@ -64,6 +64,7 @@
                             </div>
                         </div>
                     </div>
+
                     <div style="margin-top: 10px; text-align: center;">
                         @* Not working because of nsSeparator: false, keySeparator: false,
                             {{$t("nested.lang")}} >>

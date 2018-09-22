@@ -116,7 +116,7 @@
                     {{srvModel.orderAmountFiat}}
                 </div>
             </div>
-            <div class="line-items__item">
+            <div class="line-items__item" v-show="srvModel.networkFee > 0">
                 <div class="line-items__item__label">
                     <span>{{$t("Network Cost")}}</span>
                 </div>
@@ -275,7 +275,7 @@
         </div>
     }
 
-    <div class="bp-view pad" id="paid">
+    <div class="bp-view" id="paid">
         <div class="status-block">
             <div class="success-block">
                 <div class="status-icon">

@@ -88,8 +88,9 @@ namespace BTCPayServer.Security
                     {
                         if (storeId != null)
                         {
-                            claims.Add(new Claim(Policies.CanUseStore.Key, storeId));
+                            claims.Add(new Claim(Policies.CanCreateInvoice.Key, storeId));
                             var store = await _StoreRepository.FindStore(storeId);
+                            store.AdditionalClaims.AddRange(claims);
                             Context.Request.HttpContext.SetStoreData(store);
                         }
                         return AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(new ClaimsIdentity(claims, Policies.BitpayAuthentication)), Policies.BitpayAuthentication));

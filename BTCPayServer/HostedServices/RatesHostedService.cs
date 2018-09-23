@@ -18,9 +18,9 @@ namespace BTCPayServer.HostedServices
     {
         private SettingsRepository _SettingsRepository;
         private CoinAverageSettings _coinAverageSettings;
-        BTCPayRateProviderFactory _RateProviderFactory;
+        RateProviderFactory _RateProviderFactory;
         public RatesHostedService(SettingsRepository repo,
-                                  BTCPayRateProviderFactory rateProviderFactory,
+                                  RateProviderFactory rateProviderFactory,
                                   CoinAverageSettings coinAverageSettings)
         {
             this._SettingsRepository = repo;
@@ -33,16 +33,41 @@ namespace BTCPayServer.HostedServices
             return new[]
             {
                 CreateLoopTask(RefreshCoinAverageSupportedExchanges),
-                CreateLoopTask(RefreshCoinAverageSettings)
+                CreateLoopTask(RefreshCoinAverageSettings),
+                CreateLoopTask(RefreshRates)
             };
+        }
+        async Task RefreshRates()
+        {
+
+            using (var timeout = CancellationTokenSource.CreateLinkedTokenSource(Cancellation))
+            {
+                timeout.CancelAfter(TimeSpan.FromSeconds(20.0));
+                try
+                {
+                    await Task.WhenAll(_RateProviderFactory.Providers
+                                    .Select(p => (Fetcher: p.Value as BackgroundFetcherRateProvider, ExchangeName: p.Key)).Where(p => p.Fetcher != null)
+                                    .Select(p => p.Fetcher.UpdateIfNecessary().ContinueWith(t =>
+                                    {
+                                        if (t.Result.Exception != null)
+                                        {
+                                            Logs.PayServer.LogWarning($"Error while contacting {p.ExchangeName}: {t.Result.Exception.Message}");
+                                        }
+                                    }, TaskScheduler.Default))
+                                    .ToArray()).WithCancellation(timeout.Token);
+                }
+                catch (OperationCanceledException) when (timeout.IsCancellationRequested)
+                {
+                }
+            }
+            await Task.Delay(TimeSpan.FromSeconds(30), Cancellation);
         }
 
         async Task RefreshCoinAverageSupportedExchanges()
         {
-            await new SynchronizationContextRemover();
             var tickers = await new CoinAverageRateProvider() { Authenticator = _coinAverageSettings }.GetExchangeTickersAsync();
             var exchanges = new CoinAverageExchanges();
-            foreach(var item in tickers
+            foreach (var item in tickers
                 .Exchanges
                 .Select(c => new CoinAverageExchange(c.Name, c.DisplayName)))
             {
@@ -54,7 +79,6 @@ namespace BTCPayServer.HostedServices
 
         async Task RefreshCoinAverageSettings()
         {
-            await new SynchronizationContextRemover();
             var rates = (await _SettingsRepository.GetSettingAsync<RatesSetting>()) ?? new RatesSetting();
             _RateProviderFactory.CacheSpan = TimeSpan.FromMinutes(rates.CacheInMinutes);
             if (!string.IsNullOrWhiteSpace(rates.PrivateKey) && !string.IsNullOrWhiteSpace(rates.PublicKey))

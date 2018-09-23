@@ -14,6 +14,7 @@ using BTCPayServer.Payments.Lightning;
 using Renci.SshNet;
 using NBitcoin.DataEncoders;
 using BTCPayServer.SSH;
+using BTCPayServer.Lightning;
 
 namespace BTCPayServer.Configuration
 {

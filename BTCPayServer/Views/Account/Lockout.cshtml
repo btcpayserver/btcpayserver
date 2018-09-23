@@ -1,8 +1,19 @@
 ﻿@{
     ViewData["Title"] = "Locked out";
 }
+<section>
+    <div class="container">
 
-<header>
-    <h2 class="text-danger">@ViewData["Title"]</h2>
-    <p class="text-danger">This account has been locked out, please try again later.</p>
-</header>
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                <h2 class="section-heading">@ViewData["Title"]</h2>
+                <hr class="primary">
+            </div>
+
+            <div class="col-lg-12 lead">
+                <p>This account has been locked out because of multiple invalid login attempts. Please try again later.</p>
+            </div>
+
+        </div>
+    </div>
+</section>

@@ -137,6 +137,10 @@ namespace BTCPayServer.Hosting
                 options.Password.RequiredLength = 7;
                 options.Password.RequireLowercase = false;
                 options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequireUppercase = false;
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+                options.Lockout.MaxFailedAccessAttempts = 5;
+                options.Lockout.AllowedForNewUsers = true;
                 options.Password.RequireUppercase = false;            
                 // Configure Identity to use the same JWT claims as OpenIddict instead
                 // of the legacy WS-Federation claims it uses by default (ClaimTypes),
@@ -210,6 +214,7 @@ namespace BTCPayServer.Hosting
                 Authorization = new[] { new NeedRole(Roles.ServerAdmin) }
             });
             app.UseWebSockets();
+            app.UseStatusCodePages();
             app.UseMvc(routes =>
             {
                 routes.MapRoute(

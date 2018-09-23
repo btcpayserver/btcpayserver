@@ -83,7 +83,7 @@ namespace BTCPayServer.Services
         MultiValueDictionary<Type, TaskCompletionSource<bool>> _Subscriptions = new MultiValueDictionary<Type, TaskCompletionSource<bool>>();
         public async Task WaitSettingsChanged<T>(CancellationToken cancellation)
         {
-            var tcs = new TaskCompletionSource<bool>();
+            var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             using (cancellation.Register(() =>
              {
                  try

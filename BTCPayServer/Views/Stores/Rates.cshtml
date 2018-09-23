@@ -1,8 +1,7 @@
 ﻿@model BTCPayServer.Models.StoreViewModels.RatesViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["Title"] = "Rates";
-    ViewData.AddActivePage(BTCPayServer.Views.Stores.StoreNavPages.Rates);
+    ViewData.SetActivePageAndTitle(StoreNavPages.Rates, "Rates");
 }
 
 <h4>@ViewData["Title"]</h4>

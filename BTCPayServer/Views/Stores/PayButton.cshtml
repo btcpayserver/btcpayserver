@@ -1,0 +1,154 @@
+﻿@model PayButtonViewModel
+@{
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData.SetActivePageAndTitle(StoreNavPages.PayButton);
+    ViewBag.MainTitle = "Pay Button";
+}
+
+<div class="container" id="payButtonCtrl">
+    <div class="row">
+        <div class="col-lg-7">
+            <div class="form-row">
+                <div class="form-group col-md-8">
+                    <label>Price</label>
+                    <input name="price" type="text" class="form-control"
+                           v-model="srvModel.price" v-on:change="inputChanges"
+                           v-validate="'required|decimal|min_value:0'" :class="{'is-invalid': errors.has('price') }">
+                    <small class="text-danger">{{ errors.first('price') }}</small>
+                </div>
+                <div class="form-group col-md-4">
+                    <label>&nbsp;</label>
+                    <input name="price" type="text" class="form-control"
+                           v-model="srvModel.currency" v-on:change="inputChanges"
+                           :class="{'is-invalid': errors.has('currency') }">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Checkout Description</label>
+                <input name="checkoutDesc" type="text" class="form-control" placeholder="(optional)"
+                       v-model="srvModel.checkoutDesc" v-on:change="inputChanges">
+            </div>
+            <div class="form-group">
+                <label>Order Id</label>
+                <input name="orderId" type="text" class="form-control" id="inputAddress" placeholder="(optional)"
+                       v-model="srvModel.orderId" v-on:change="inputChanges">
+            </div>
+            <div class="form-group">
+                <label>Pay Button Image Url</label>
+                <input name="payButtonImageUrl" type="text" class="form-control" id="inputAddress"
+                       v-model="srvModel.payButtonImageUrl" v-on:change="inputChanges"
+                       v-validate="'required|url'" :class="{'is-invalid': errors.has('payButtonImageUrl') }">
+                <small class="text-danger">{{ errors.first('payButtonImageUrl') }}</small>
+            </div>
+            <div class="form-group">
+                <label>Button Size</label>
+                <div style="vertical-align:top; font-size:12px; display:flex;">
+                    <button class="btn" style="width:95px;height:40px;margin-right:40px;"
+                            v-on:click="inputChanges($event, 0)" v-bind:class="{'btn-primary': (srvModel.buttonSize == 0) }">
+                        146 x 40 px
+                    </button>
+                    <button class="btn btn-default" style="width:126px;height:46px;margin-right:40px;"
+                            v-on:click="inputChanges($event, 1)" v-bind:class="{'btn-primary': (srvModel.buttonSize == 1) }">
+                        168 x 46 px
+                    </button>
+                    <button class="btn btn-default" style="width:146px;height:57px;"
+                            v-on:click="inputChanges($event, 2)" v-bind:class="{'btn-primary': (srvModel.buttonSize == 2) }">
+                        209 x 57 px
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <br />
+            Define parameters that define the purchase: price, currency and then optional description of purchase.
+            <br /><br />
+            Generated HTML will be displayed at the bottom of this page and all you need is to paste that HTML into your final page.
+            Clicking on the button will redirect customer to checkout.
+        </div>
+    </div>
+    <hr />
+    <h3>Payment Notifications</h3>
+    <br />
+    <div class="row">
+        <div class="col-lg-7">
+            <div class="form-group">
+                <label>Server IPN</label>
+                <input name="serverIpn" type="text" class="form-control" placeholder="(optional)"
+                       v-model="srvModel.serverIpn" v-on:change="inputChanges"
+                       v-validate="'url'" :class="{'is-invalid': errors.has('serverIpn') }">
+                <small class="text-danger">{{ errors.first('serverIpn') }}</small>
+            </div>
+            <div class="form-group">
+                <label>Send Email Notifications to</label>
+                <input name="notifyEmail" type="text" class="form-control" placeholder="(optional)"
+                       v-model="srvModel.notifyEmail" v-on:change="inputChanges"
+                       v-validate="'email'" :class="{'is-invalid': errors.has('notifyEmail') }">
+                <small class="text-danger">{{ errors.first('notifyEmail') }}</small>
+
+            </div>
+            <div class="form-group">
+                <label>Browser Redirect</label>
+                <input name="browserRedirect" type="text" class="form-control" placeholder="(optional)"
+                       v-model="srvModel.browserRedirect" v-on:change="inputChanges"
+                       v-validate="'url'" :class="{'is-invalid': errors.has('browserRedirect') }">
+                <small class="text-danger">{{ errors.first('browserRedirect') }}</small>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <br />
+            These parameters allow you to influence process after purchase. <i>Server IPN</i> is location we'll query with details.
+            We can also deliver email notification to specified addres.
+            <br /><br />
+            Finally <i>Browser Redirect</i> defines where BtcPayServer will redirect customer after puchase is completed.
+        </div>
+    </div>
+    <hr />
+    <h3>Generated code</h3>
+    <div class="row" v-show="!errors.any()">
+        <div class="col-lg-9">
+            <pre><code id="mainCode" class="html"></code></pre>
+            <button class="btn btn-primary" id="copyCode">
+                <i class="fa fa-copy"></i> Copy Code
+            </button>
+            <span class="copyLabelPopup" style="display:none;">Copied</span>
+        </div>
+        <div class="col-lg-3">
+            <div id="preview"></div>
+        </div>
+    </div>
+    <div class="row" v-show="errors.any()">
+        <div class="col-lg-12 text-danger">
+            Please fix errors shown in order for code generation to successfully execute.
+        </div>
+    </div>
+
+
+@section HeadScripts {
+    <link rel="stylesheet" href="~/vendor/highlightjs/default.min.css">
+    <script src="~/vendor/highlightjs/highlight.min.js"></script>
+
+    <script src="~/vendor/vuejs/vue.js"></script>
+    <script src="~/vendor/vuejs-vee-validate/vee-validate.js"></script>
+
+    <script src="~/vendor/clipboard.js/clipboard.js"></script>
+
+    <script src="~/paybutton/paybutton.js"></script>
+}
+
+@section Scripts {
+    <script type="text/javascript">
+        var srvModel = @Html.Raw(Json.Serialize(Model));
+
+        var payButtonCtrl = new Vue({
+            el: '#payButtonCtrl',
+            data: {
+                srvModel: srvModel
+            },
+            methods: {
+                inputChanges: function (event, buttonSize) {
+                    inputChanges(event, buttonSize);
+                }
+            }
+        });
+    </script>
+}

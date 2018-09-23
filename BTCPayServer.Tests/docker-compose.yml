@@ -34,7 +34,7 @@ services:
 
   # The dev container is not actually used, it is just handy to run `docker-compose up dev` to start all services
   dev: 
-    image: nicolasdorier/docker-bitcoin:0.16.0
+    image: nicolasdorier/docker-bitcoin:0.16.3
     environment:
       BITCOIN_EXTRA_ARGS: |
         regtest=1
@@ -49,7 +49,7 @@ services:
       - merchant_lnd
 
   devlnd: 
-    image: nicolasdorier/docker-bitcoin:0.16.0
+    image: nicolasdorier/docker-bitcoin:0.16.3
     environment:
       BITCOIN_EXTRA_ARGS: |
         regtest=1
@@ -63,7 +63,7 @@ services:
 
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:1.0.2.14
+    image: nicolasdorier/nbxplorer:1.0.2.31
     ports:
       - "32838:32838"
     expose: 
@@ -87,7 +87,7 @@ services:
       - litecoind
 
   bitcoind:
-    image: nicolasdorier/docker-bitcoin:0.16.0
+    image: nicolasdorier/docker-bitcoin:0.16.3
     environment:
       BITCOIN_EXTRA_ARGS: |
         rpcuser=ceiwHEbqWI83
@@ -111,7 +111,7 @@ services:
       - "bitcoin_datadir:/data"
 
   customer_lightningd:
-    image: nicolasdorier/clightning:v0.6-dev
+    image: nicolasdorier/clightning:634f19a7b230edc686be56ab950b80784e56252c-dev
     environment: 
       EXPOSE_TCP: "true"
       LIGHTNINGD_OPT: |
@@ -122,6 +122,7 @@ services:
         announce-addr=customer_lightningd
         log-level=debug
         dev-broadcast-interval=1000
+        dev-bitcoind-poll=1
     ports:
       - "30992:9835" # api port
     expose:
@@ -153,7 +154,7 @@ services:
       - merchant_lightningd
 
   merchant_lightningd:
-    image: nicolasdorier/clightning:v0.6-dev
+    image: nicolasdorier/clightning:634f19a7b230edc686be56ab950b80784e56252c-dev
     environment: 
       EXPOSE_TCP: "true"
       LIGHTNINGD_OPT: |
@@ -213,6 +214,7 @@ services:
         no-macaroons=1
         debuglevel=debug
         noencryptwallet=1
+        trickledelay=1000
     ports:
       - "53280:8080"
     expose:
@@ -237,6 +239,7 @@ services:
         no-macaroons=1
         debuglevel=debug
         noencryptwallet=1
+        trickledelay=1000
     ports:
       - "53281:8080"
     expose:

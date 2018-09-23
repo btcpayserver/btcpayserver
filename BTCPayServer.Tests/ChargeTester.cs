@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using BTCPayServer.Lightning;
+using BTCPayServer.Lightning.Charge;
 using BTCPayServer.Payments.Lightning;
-using BTCPayServer.Payments.Lightning.Charge;
-using BTCPayServer.Payments.Lightning.CLightning;
 using NBitcoin;
 
 namespace BTCPayServer.Tests

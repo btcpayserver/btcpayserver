@@ -148,7 +148,7 @@ namespace BTCPayServer.Services.Invoices
                 }
                 context.PendingInvoices.Add(new PendingInvoiceData() { Id = invoice.Id });
 
-                foreach(var log in creationLogs.ToList())
+                foreach (var log in creationLogs.ToList())
                 {
                     context.InvoiceEvents.Add(new InvoiceEventData()
                     {
@@ -249,7 +249,7 @@ namespace BTCPayServer.Services.Invoices
                 {
                     await context.SaveChangesAsync();
                 }
-                catch(DbUpdateException) { } // Probably the invoice does not exists anymore
+                catch (DbUpdateException) { } // Probably the invoice does not exists anymore
             }
         }
 
@@ -441,7 +441,7 @@ namespace BTCPayServer.Services.Invoices
                     query = query.Where(i => statusSet.Contains(i.Status));
                 }
 
-                if(queryObject.Unusual != null)
+                if (queryObject.Unusual != null)
                 {
                     var unused = queryObject.Unusual.Value;
                     query = query.Where(i => unused == (i.Status == "invalid" || i.ExceptionStatus != null));
@@ -554,7 +554,7 @@ namespace BTCPayServer.Services.Invoices
                 {
                     await context.SaveChangesAsync().ConfigureAwait(false);
                 }
-                catch(DbUpdateException) { return null; } // Already exists
+                catch (DbUpdateException) { return null; } // Already exists
                 AddToTextSearch(invoiceId, paymentData.GetSearchTerms());
                 return entity;
             }

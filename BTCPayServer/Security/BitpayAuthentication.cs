@@ -239,10 +239,20 @@ namespace BTCPayServer.Security
                 return false;
             }
         }
-        internal static void AddAuthentication(IServiceCollection services, Action<BitpayAuthOptions> bitpayAuth = null)
+        public static void AddAuthentication(AuthenticationBuilder builder, Action<BitpayAuthOptions> bitpayAuth = null)
         {
             bitpayAuth = bitpayAuth ?? new Action<BitpayAuthOptions>((o) => { });
-            services.AddAuthentication().AddScheme<BitpayAuthOptions, BitpayAuthHandler>(Policies.BitpayAuthentication, bitpayAuth);
+            builder.AddScheme<BitpayAuthOptions, BitpayAuthHandler>(Policies.BitpayAuthentication, bitpayAuth);
+        }
+    }
+
+    public static class BitpayAuthenticationExtensions
+    {
+        public static AuthenticationBuilder AddBitpayAuthentication(this AuthenticationBuilder builder,
+            Action<BitpayAuthentication.BitpayAuthOptions> bitpayAuth = null)
+        {
+            BitpayAuthentication.AddAuthentication(builder,bitpayAuth);
+            return builder;
         }
     }
 }

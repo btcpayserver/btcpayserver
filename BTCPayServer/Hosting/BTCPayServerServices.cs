@@ -3,6 +3,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Hosting;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -39,7 +41,9 @@ using BTCPayServer.HostedServices;
 using Meziantou.AspNetCore.BundleTagHelpers;
 using System.Security.Claims;
 using BTCPayServer.Security;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.IdentityModel.Logging;
 using NBXplorer.DerivationStrategy;
 using OpenIddict.Abstractions;
 using OpenIddict.Core;
@@ -76,7 +80,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<TokenRepository>();
             services.TryAddSingleton<EventAggregator>();
             services.TryAddSingleton<CoinAverageSettings>();
-            services.TryAddSingleton<ApplicationDbContextFactory>(o => 
+            services.TryAddSingleton<ApplicationDbContextFactory>(o =>
             {
                 var opts = o.GetRequiredService<BTCPayServerOptions>();
                 ApplicationDbContextFactory dbContext = null;
@@ -94,7 +98,7 @@ namespace BTCPayServer.Hosting
                 return dbContext;
             });
 
-            services.TryAddSingleton<BTCPayNetworkProvider>(o => 
+            services.TryAddSingleton<BTCPayNetworkProvider>(o =>
             {
                 var opts = o.GetRequiredService<BTCPayServerOptions>();
                 return opts.NetworkProvider;
@@ -115,7 +119,8 @@ namespace BTCPayServer.Hosting
             });
 
             services.AddSingleton<CssThemeManager>();
-            services.Configure<MvcOptions>((o) => {
+            services.Configure<MvcOptions>((o) =>
+            {
                 o.Filters.Add(new ContentSecurityPolicyCssThemeManager());
                 o.ModelMetadataDetailsProviders.Add(new SuppressChildValidationMetadataProvider(typeof(WalletId)));
                 o.ModelMetadataDetailsProviders.Add(new SuppressChildValidationMetadataProvider(typeof(DerivationStrategyBase)));
@@ -154,9 +159,30 @@ namespace BTCPayServer.Hosting
             // Add application services.
             services.AddTransient<IEmailSender, EmailSender>();
             // bundling
+            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+            JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
 
-            services.AddAuthorization(o => Policies.AddBTCPayPolicies(o));
-            BitpayAuthentication.AddAuthentication(services);
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+                {
+                    options.Authority = "http://localhost:14142/";
+                    options.Audience = "http://localhost:14142/";
+                    options.RequireHttpsMetadata = false;
+                    options.TokenValidationParameters.ValidateAudience = false;
+                    options.TokenValidationParameters.ValidateIssuer = false;
+
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = context => { return Task.CompletedTask; },
+                        OnTokenValidated = context => { return Task.CompletedTask; },
+                        OnChallenge = context => { return Task.CompletedTask; },
+                        OnAuthenticationFailed = context => { return Task.CompletedTask; }
+                    };
+                })
+                .AddCookie()
+                .AddBitpayAuthentication();
+            IdentityModelEventSource.ShowPII = true;
+            services.AddAuthorization(o => o.AddBTCPayPolicies());
+
 
             services.AddBundles();
             services.AddTransient<BundleOptions>(provider =>
@@ -168,9 +194,9 @@ namespace BTCPayServer.Hosting
                 return bundle;
             });
 
-            services.AddCors(options=> 
+            services.AddCors(options =>
             {
-                options.AddPolicy(CorsPolicies.All, p=>p.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
+                options.AddPolicy(CorsPolicies.All, p => p.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
             });
 
             var rateLimits = new RateLimitService();
@@ -189,9 +215,8 @@ namespace BTCPayServer.Hosting
                     scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.Migrate();
                 });
             }
-
             app.UseMiddleware<BTCPayMiddleware>();
-            return app; 
+            return app;
         }
 
         static void Retry(Action act)
@@ -204,7 +229,7 @@ namespace BTCPayServer.Hosting
                     act();
                     return;
                 }
-                catch when(!cts.IsCancellationRequested)
+                catch when (!cts.IsCancellationRequested)
                 {
                     Thread.Sleep(100);
                 }

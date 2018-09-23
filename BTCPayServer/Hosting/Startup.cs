@@ -108,9 +108,10 @@ namespace BTCPayServer.Hosting
                     options.AcceptAnonymousClients();
                     options.DisableScopeValidation();
 
-                })
+                    options.UseJsonWebTokens();
+                    options.AddEphemeralSigningKey();
 
-                .AddValidation();
+                });
 
 
 

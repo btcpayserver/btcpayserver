@@ -33,12 +33,12 @@ const locales_ar = {
     "Invoice expiring soon...": "المعاملة تنتهي صلاحيتها قريبا...",
     "Invoice expired": "المعاملة انتهت صلاحيتها",
     "What happened?": "ماذا حدث?",
-    "InvoiceExpired_Body_1": "هذه المعاملة انتهت صلاحيتها المعاملة صالحة فقط ل {{maxTimeMinutes}} دقائق.  \
+    "InvoiceExpired_Body_1": "هذه المعاملة انتهت صلاحيتها المعاملة صالحة فقط ل {{maxTimeMinutes}} دقيقة.  \
 تستطيع الرجوع الي {{storeName}} اذا كنت تريد عمل معاملة جديدة.",
     "InvoiceExpired_Body_2": "اذا كنت قد حاولت ارسال عملات, فهي لم تقبل بعد من خلال الشبكة. نحن لم نستلم بعد عملاتك.",
     "InvoiceExpired_Body_3": "اذا كانت التحويلة غير مقبولة من الشبكة, فعملاتك ستكون قابلة للدفع مجددا في محفظتك. بالإعتماد علي نوع محفظتك, هذا قد يستغرق 48-72 ساعة.",
-    "Invoice ID": "المعاملة ID",
-    "Order ID": "الطلب ID",
+    "Invoice ID": "معرف المعاملة",
+    "Order ID": "معرف الطلب",
     "Return to StoreName": "الرجوع الي {{storeName}}",
     // Invoice paid
     "This invoice has been paid": "هذه المعاملة تم دفعها بنجاح",

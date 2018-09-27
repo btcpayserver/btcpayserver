@@ -20,6 +20,7 @@ using BTCPayServer.Events;
 using NBXplorer;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Payments;
+using BTCPayServer.Services.Mails;
 
 namespace BTCPayServer.HostedServices
 {
@@ -52,24 +53,35 @@ namespace BTCPayServer.HostedServices
         EventAggregator _EventAggregator;
         InvoiceRepository _InvoiceRepository;
         BTCPayNetworkProvider _NetworkProvider;
+        IEmailSender _EmailSender;
 
         public InvoiceNotificationManager(
             IBackgroundJobClient jobClient,
             EventAggregator eventAggregator,
             InvoiceRepository invoiceRepository,
             BTCPayNetworkProvider networkProvider,
-            ILogger<InvoiceNotificationManager> logger)
+            ILogger<InvoiceNotificationManager> logger,
+            IEmailSender emailSender)
         {
             Logger = logger as ILogger ?? NullLogger.Instance;
             _JobClient = jobClient;
             _EventAggregator = eventAggregator;
             _InvoiceRepository = invoiceRepository;
             _NetworkProvider = networkProvider;
+            _EmailSender = emailSender;
         }
 
         async Task Notify(InvoiceEntity invoice, int? eventCode = null, string name = null)
         {
             CancellationTokenSource cts = new CancellationTokenSource(10000);
+
+            if (!String.IsNullOrEmpty(invoice.NotificationEmail))
+            {
+                var emailBody = NBitcoin.JsonConverters.Serializer.ToString(invoice);
+                await _EmailSender.SendEmailAsync(
+                    invoice.NotificationEmail, "BtcPayServer Invoice", emailBody);
+            }
+
             try
             {
                 if (string.IsNullOrEmpty(invoice.NotificationURL))
@@ -203,7 +215,7 @@ namespace BTCPayServer.HostedServices
                 PaymentTotals = dto.PaymentTotals,
                 AmountPaid = dto.AmountPaid,
                 ExchangeRates = dto.ExchangeRates,
-                
+
             };
 
             // We keep backward compatibility with bitpay by passing BTC info to the notification
@@ -264,15 +276,15 @@ namespace BTCPayServer.HostedServices
                         sendRequest()
                             .ContinueWith(t =>
                             {
-                                if(t.Status == TaskStatus.RanToCompletion)
-                                { 
+                                if (t.Status == TaskStatus.RanToCompletion)
+                                {
                                     completion.TrySetResult(t.Result);
                                 }
-                                if(t.Status == TaskStatus.Faulted)
+                                if (t.Status == TaskStatus.Faulted)
                                 {
                                     completion.TrySetException(t.Exception);
                                 }
-                                if(t.Status == TaskStatus.Canceled)
+                                if (t.Status == TaskStatus.Canceled)
                                 {
                                     completion.TrySetCanceled();
                                 }
@@ -289,7 +301,7 @@ namespace BTCPayServer.HostedServices
                     lock (_SendingRequestsByInvoiceId)
                     {
                         _SendingRequestsByInvoiceId.TryGetValue(id, out var executing2);
-                        if(executing2 == sending)
+                        if (executing2 == sending)
                             _SendingRequestsByInvoiceId.Remove(id);
                     }
                 }, TaskScheduler.Default);

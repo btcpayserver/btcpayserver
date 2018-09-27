@@ -135,7 +135,7 @@ $(function () {
                 bridge.sendCommand('test', null, 5)
                     .catch(function (reason)
                     {
-                        if (reason.message === "Sign failed")
+                        if (reason.name === "TransportError")
                             reason = "Are you running the ledger app with version equals or above 1.2.4?";
                         Write('hw', 'error', reason);
                     })

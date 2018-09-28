@@ -173,6 +173,8 @@ namespace BTCPayServer.Hosting
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
             JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
 
+           var sp = services.BuildServiceProvider();
+            var btcPayServerOptions = sp.GetRequiredService<BTCPayServerOptions>();
             services.AddAuthentication(options =>
                 {
                     options.DefaultAuthenticateScheme = "dynamic";
@@ -180,8 +182,8 @@ namespace BTCPayServer.Hosting
                 })
                 .AddJwtBearer(options =>
                 {
-                    options.Authority = "http://localhost:14142/";
-                    options.Audience = "http://localhost:14142/";
+                    options.Authority = btcPayServerOptions.ExternalUrl?.ToString()?? "http://127.0.0.1:14142/";
+                    options.Audience = btcPayServerOptions.ExternalUrl?.ToString()?? "http://127.0.0.1:14142/";
                     options.RequireHttpsMetadata = false;
                     options.TokenValidationParameters.ValidateAudience = false;
                     options.TokenValidationParameters.ValidateIssuer = false;

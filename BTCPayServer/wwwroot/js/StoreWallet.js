@@ -61,7 +61,7 @@ $(function () {
         confirmButton.prop("disabled", true);
         confirmButton.addClass("disabled");
 
-        bridge.sendCommand('sendtoaddress', args, 60 * 5 /* timeout */)
+        bridge.sendCommand('sendtoaddress', args, 60 * 10 /* timeout */)
             .catch(function (reason) {
                 WriteAlert("danger", reason);
                 confirmButton.prop("disabled", false);

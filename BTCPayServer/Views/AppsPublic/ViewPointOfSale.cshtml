@@ -21,7 +21,7 @@
             <h1 class="mb-4">@Model.Title</h1>
             <form method="post" asp-antiforgery="false">
                 <div class="row">
-                    @for(int i = 0; i < Model.Items.Length; i++)
+                    @for (int i = 0; i < Model.Items.Length; i++)
                     {
                         var className = (Model.Items.Length - i) > (Model.Items.Length % 3) ? "col-sm-4 mb-3" : "col align-self-center";
                         var item = Model.Items[i];
@@ -32,10 +32,11 @@
                     }
                 </div>
             </form>
-            @if(Model.ShowCustomAmount)
+            @if (Model.ShowCustomAmount)
             {
                 <div class="row mt-4">
-                    <div class="col-md-4 offset-md-4 col-sm-6 offset-sm-3">
+                    <div class="col-sm-3">&nbsp;</div>
+                    <div class="col-sm-6">
                         <form method="post" asp-antiforgery="false" data-buy>
                             <div class="input-group">
                                 <input class="form-control" type="number" min="0" step="@Model.Step" name="amount" placeholder="amount"><div class="input-group-append">
@@ -44,6 +45,7 @@
                             </div>
                         </form>
                     </div>
+                    <div class="col-sm-3">&nbsp;</div>
                 </div>
             }
         </div>

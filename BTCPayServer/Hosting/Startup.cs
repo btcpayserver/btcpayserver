@@ -38,9 +38,11 @@ using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Mvc.Cors.Internal;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using System.Net;
+using System.Security.Cryptography;
 using AspNet.Security.OpenIdConnect.Primitives;
 using Meziantou.AspNetCore.BundleTagHelpers;
 using BTCPayServer.Security;
+using Microsoft.IdentityModel.Tokens;
 
 namespace BTCPayServer.Hosting
 {
@@ -109,7 +111,12 @@ namespace BTCPayServer.Hosting
                     options.DisableScopeValidation();
 
                     options.UseJsonWebTokens();
-                    options.AddEphemeralSigningKey();
+
+                    //TODO: we can persist this key to allow reuse of tokens if we restart the server
+                    RSACryptoServiceProvider RSA = new RSACryptoServiceProvider(2048);
+                    RSAParameters KeyParam = RSA.ExportParameters(true);
+                    var key = new RsaSecurityKey(KeyParam);
+                    options.AddSigningKey(key);
 
                 });
 
@@ -146,6 +153,7 @@ namespace BTCPayServer.Hosting
                 // Configure Identity to use the same JWT claims as OpenIddict instead
                 // of the legacy WS-Federation claims it uses by default (ClaimTypes),
                 // which saves you from doing the mapping in your authorization controller.
+                
                 options.ClaimsIdentity.UserNameClaimType = OpenIdConnectConstants.Claims.Name;
                 options.ClaimsIdentity.UserIdClaimType = OpenIdConnectConstants.Claims.Subject;
                 options.ClaimsIdentity.RoleClaimType = OpenIdConnectConstants.Claims.Role;

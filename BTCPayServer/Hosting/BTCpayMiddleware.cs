@@ -13,6 +13,7 @@ using Newtonsoft.Json;
 using BTCPayServer.Models;
 using BTCPayServer.Configuration;
 using System.Net.WebSockets;
+using System.Security.Claims;
 using BTCPayServer.Services.Stores;
 
 namespace BTCPayServer.Hosting
@@ -39,10 +40,12 @@ namespace BTCPayServer.Hosting
                 var bitpayAuth = GetBitpayAuth(httpContext, out bool isBitpayAuth);
                 var isBitpayAPI = IsBitpayAPI(httpContext, isBitpayAuth);
                 httpContext.SetIsBitpayAPI(isBitpayAPI);
+                httpContext.SetIsJSONAPI(IsJSONAPI(httpContext));
                 if (isBitpayAPI)
                 {
                     httpContext.SetBitpayAuth(bitpayAuth);
                 }
+                
                 await _Next(httpContext);
             }
             catch (WebSocketException)
@@ -74,6 +77,15 @@ namespace BTCPayServer.Hosting
             return (sig, id, auth);
         }
 
+        private bool IsJSONAPI(HttpContext httpContext)
+        {
+            if (!httpContext.Request.Path.HasValue)
+                return false;
+            
+            var isJson = (httpContext.Request.ContentType ?? string.Empty).StartsWith("application/json", StringComparison.OrdinalIgnoreCase);
+
+            return httpContext.Request.Path.Value.StartsWith("/api");
+        }
         private bool IsBitpayAPI(HttpContext httpContext, bool bitpayAuth)
         {
             if (!httpContext.Request.Path.HasValue)

@@ -199,6 +199,17 @@ namespace BTCPayServer
                   obj is bool b && b;
         }
 
+        public static bool GetIsJSONAPI(this HttpContext ctx)
+        {
+            return ctx.Items.TryGetValue("IsJSONAPI", out object obj) &&
+                   obj is bool b && b;
+        }
+        
+        public static void SetIsJSONAPI(this HttpContext ctx, bool value)
+        {
+            NBitcoin.Extensions.TryAdd(ctx.Items, "IsJSONAPI", value);
+        }
+        
         public static void SetBitpayAuth(this HttpContext ctx, (string Signature, String Id, String Authorization) value)
         {
             NBitcoin.Extensions.TryAdd(ctx.Items, "BitpayAuth", value);

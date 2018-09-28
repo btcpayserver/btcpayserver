@@ -162,13 +162,16 @@ namespace BTCPayServer
             return isRelative ? request.GetAbsoluteRoot() + redirectUrl : redirectUrl;
         }
 
-        public static IServiceCollection ConfigureBTCPayServer(this IServiceCollection services, IConfiguration conf)
+        public static BTCPayServerOptions ConfigureBTCPayServer(this IServiceCollection services, IConfiguration conf)
         {
             services.Configure<BTCPayServerOptions>(o =>
             {
                 o.LoadArgs(conf);
             });
-            return services;
+            //There must be a betetr way to share these options with the ConfigureServices?
+            var result = new BTCPayServerOptions();
+            result.LoadArgs(conf);
+            return result;
         }
 
         public static string GetSIN(this ClaimsPrincipal principal)

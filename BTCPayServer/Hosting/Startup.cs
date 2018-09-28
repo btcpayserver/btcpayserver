@@ -1,31 +1,14 @@
 ﻿using Microsoft.AspNetCore.Hosting;
-using System.Reflection;
-using System.Linq;
 using Microsoft.AspNetCore.Builder;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using Microsoft.Extensions.DependencyInjection;
-
-using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
-using Microsoft.AspNetCore.Mvc;
-using NBitpayClient;
-using BTCPayServer.Authentication;
-using Microsoft.EntityFrameworkCore;
 using BTCPayServer.Filters;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using BTCPayServer.Services;
 using BTCPayServer.Models;
 using Microsoft.AspNetCore.Identity;
 using BTCPayServer.Data;
 using Microsoft.Extensions.Logging;
 using Hangfire;
 using BTCPayServer.Logging;
-using Microsoft.AspNetCore.Authorization;
-using System.Threading.Tasks;
-using BTCPayServer.Controllers;
-using BTCPayServer.Services.Stores;
-using BTCPayServer.Services.Mails;
 using Microsoft.Extensions.Configuration;
 using Hangfire.AspNetCore;
 using BTCPayServer.Configuration;
@@ -33,16 +16,11 @@ using System.IO;
 using Hangfire.Dashboard;
 using Hangfire.Annotations;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using System.Threading;
-using Microsoft.Extensions.Options;
-using Microsoft.AspNetCore.Mvc.Cors.Internal;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
-using System.Net;
 using System.Security.Cryptography;
 using AspNet.Security.OpenIdConnect.Primitives;
-using Meziantou.AspNetCore.BundleTagHelpers;
 using BTCPayServer.Security;
 using Microsoft.IdentityModel.Tokens;
+using NETCore.Encrypt.Extensions.Internal;
 
 namespace BTCPayServer.Hosting
 {
@@ -73,12 +51,15 @@ namespace BTCPayServer.Hosting
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.ConfigureBTCPayServer(Configuration);
+            var btcPayServerOptions= services.ConfigureBTCPayServer(Configuration);
             services.AddMemoryCache();
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
 
+           
+
+            
             // Register the OpenIddict services.
             services.AddOpenIddict()
                 .AddCore(options =>
@@ -112,10 +93,24 @@ namespace BTCPayServer.Hosting
 
                     options.UseJsonWebTokens();
 
-                    //TODO: we can persist this key to allow reuse of tokens if we restart the server
+                    
+                    var file = Path.Combine(btcPayServerOptions.DataDir, "rsaparams");
+                    
                     RSACryptoServiceProvider RSA = new RSACryptoServiceProvider(2048);
+                    RsaSecurityKey key = null;
+                    
+                    if (File.Exists(file))
+                    {
+                        RSA.FromXmlString2( File.ReadAllText(file)); 
+                    }
+                    else
+                    {
+                        var contents = RSA.ToXmlString2(true);
+                        File.WriteAllText(file,contents );
+                    }
+
                     RSAParameters KeyParam = RSA.ExportParameters(true);
-                    var key = new RsaSecurityKey(KeyParam);
+                    key = new RsaSecurityKey(KeyParam);
                     options.AddSigningKey(key);
 
                 });

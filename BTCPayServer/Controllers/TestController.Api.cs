@@ -9,7 +9,7 @@ namespace BTCPayServer.Controllers
 {
     [ApiController]
     [Route("api/v1.0/[controller]")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize()]
     public class TestController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
@@ -27,8 +27,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{storeId}")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme,
-            Policy = Policies.CanModifyStoreSettings.Key)]
+        [Authorize(Policy = Policies.CanModifyStoreSettings.Key)]
         public IActionResult TestStoreApi(string storeId)
         {
             var x = _userManager.GetUserId(User);

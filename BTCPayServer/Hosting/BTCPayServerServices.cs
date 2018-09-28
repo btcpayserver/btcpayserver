@@ -195,14 +195,12 @@ namespace BTCPayServer.Hosting
                 })
                 .AddCookie(options =>
                 {
-                    options.Events = new CookieAuthenticationEvents()
-                    {
-                        OnValidatePrincipal = context => { return Task.CompletedTask; },
-                        OnRedirectToLogin = context => { return Task.CompletedTask; },
-                        OnRedirectToReturnUrl = context => { return Task.CompletedTask; },
-                        OnSignedIn = context => { return Task.CompletedTask; },
-                        OnSigningOut = context => { return Task.CompletedTask; },
-                    };
+                    options.Events.OnValidatePrincipal = context => { return Task.CompletedTask; };
+                    options.Events.OnRedirectToLogin = context => { return Task.CompletedTask; };
+                    options.Events.OnRedirectToReturnUrl = context => { return Task.CompletedTask; };
+                    options.Events.OnSignedIn = context => { return Task.CompletedTask; };
+                    options.Events.OnSigningOut = context => { return Task.CompletedTask; };
+                
                 })
                 .AddBitpayAuthentication()
                 .AddPolicyScheme("dynamic", "Bearer, Cookie or BitPay Auth", options =>
@@ -220,7 +218,7 @@ namespace BTCPayServer.Hosting
                             return JwtBearerDefaults.AuthenticationScheme;
                         }
 
-                        return CookieAuthenticationDefaults.AuthenticationScheme;
+                        return IdentityConstants.ApplicationScheme;
                     };
                 });
 

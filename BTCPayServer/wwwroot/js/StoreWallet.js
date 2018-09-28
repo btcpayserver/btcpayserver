@@ -61,7 +61,7 @@ $(function () {
         confirmButton.prop("disabled", true);
         confirmButton.addClass("disabled");
 
-        bridge.sendCommand('sendtoaddress', args, 60 * 5 /* timeout */)
+        bridge.sendCommand('sendtoaddress', args, 60 * 10 /* timeout */)
             .catch(function (reason) {
                 WriteAlert("danger", reason);
                 confirmButton.prop("disabled", false);
@@ -135,7 +135,7 @@ $(function () {
                 bridge.sendCommand('test', null, 5)
                     .catch(function (reason)
                     {
-                        if (reason.message === "Sign failed")
+                        if (reason.name === "TransportError")
                             reason = "Are you running the ledger app with version equals or above 1.2.4?";
                         Write('hw', 'error', reason);
                     })

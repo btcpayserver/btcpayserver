@@ -64,7 +64,7 @@
             else {
                 bridge.sendCommand('test', null, 5)
                     .catch(function (reason) {
-                        if (reason.message === "Sign failed")
+                        if (reason.name === "TransportError")
                             reason = "Have you forgot to activate browser support in your ledger app?";
                         Write('hw', 'error', reason);
                     })

@@ -26,8 +26,8 @@ Thanks to the apps built on top of it, you can use BTCPay to receive donations o
 * Lightning Network support (LND and c-lightning)
 * Altcoin support
 * Complete control over private keys
-* Fully compatability with BitPay API (easy migration)
-* Enchanced privacy
+* Full compatibility with BitPay API (easy migration)
+* Enhanced privacy
 * SegWit support
 * Process payments for others
 * Payment buttons
@@ -60,7 +60,7 @@ You can also read the [BTCPay Merchants Guide](https://www.reddit.com/r/Bitcoin/
 
 ## How to build
 
-While the documentation advise using docker-compose, you may want to build yourself outside of development purpose.
+While the documentation advises to use docker-compose, you may want to build BTCPay yourself.
 
 First install .NET Core SDK 2.1 as specified by [Microsoft website](https://www.microsoft.com/net/download/dotnet-core/2.1).
 
@@ -90,4 +90,4 @@ On linux:
 
 ## Other dependencies
 
-For more information see the documentation [How to deploy a BTCPay server instance](https://github.com/btcpayserver/btcpayserver-doc/#deployment).
+For more information, see the documentation: [How to deploy a BTCPay server instance](https://github.com/btcpayserver/btcpayserver-doc/#deployment).

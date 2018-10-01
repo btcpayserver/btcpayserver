@@ -229,7 +229,7 @@ namespace BTCPayServer.Controllers
                 if (!isDefaultCrypto)
                     return null;
                 var paymentMethodTemp = invoice.GetPaymentMethods(_NetworkProvider)
-                                               .Where(c=> paymentMethodId.CryptoCode == c.GetId().CryptoCode)
+                                               .Where(c => paymentMethodId.CryptoCode == c.GetId().CryptoCode)
                                                .FirstOrDefault();
                 if (paymentMethodTemp == null)
                     paymentMethodTemp = invoice.GetPaymentMethods(_NetworkProvider).First();
@@ -433,23 +433,17 @@ namespace BTCPayServer.Controllers
         [BitpayAPIConstraint(false)]
         public async Task<IActionResult> ListInvoices(string searchTerm = null, int skip = 0, int count = 50)
         {
-            var model = new InvoicesModel();
-            var filterString = new SearchString(searchTerm);
-            foreach (var invoice in await _InvoiceRepository.GetInvoices(new InvoiceQuery()
+            var model = new InvoicesModel
             {
-                TextSearch = filterString.TextSearch,
-                Count = count,
+                SearchTerm = searchTerm,
                 Skip = skip,
-                UserId = GetUserId(),
-                Unusual = !filterString.Filters.ContainsKey("unusual") ? null
-                          : !bool.TryParse(filterString.Filters["unusual"].First(), out var r) ? (bool?)null
-                          : r,
-                Status = filterString.Filters.ContainsKey("status") ? filterString.Filters["status"].ToArray() : null,
-                ExceptionStatus = filterString.Filters.ContainsKey("exceptionstatus") ? filterString.Filters["exceptionstatus"].ToArray() : null,
-                StoreId = filterString.Filters.ContainsKey("storeid") ? filterString.Filters["storeid"].ToArray() : null
-            }))
+                Count = count,
+                StatusMessage = StatusMessage
+            };
+
+            var list = await listInvoicesProcess(searchTerm, skip, count);
+            foreach (var invoice in list)
             {
-                model.SearchTerm = searchTerm;
                 model.Invoices.Add(new InvoiceModel()
                 {
                     Status = invoice.Status + (invoice.ExceptionStatus == null ? string.Empty : $" ({invoice.ExceptionStatus})"),
@@ -461,10 +455,27 @@ namespace BTCPayServer.Controllers
                     AmountCurrency = $"{invoice.ProductInformation.Price.ToString(CultureInfo.InvariantCulture)} {invoice.ProductInformation.Currency}"
                 });
             }
-            model.Skip = skip;
-            model.Count = count;
-            model.StatusMessage = StatusMessage;
             return View(model);
+        }
+
+        private async Task<InvoiceEntity[]> listInvoicesProcess(string searchTerm = null, int skip = 0, int count = 50)
+        {
+            var filterString = new SearchString(searchTerm);
+            var list = await _InvoiceRepository.GetInvoices(new InvoiceQuery()
+            {
+                TextSearch = filterString.TextSearch,
+                Count = count,
+                Skip = skip,
+                UserId = GetUserId(),
+                Unusual = !filterString.Filters.ContainsKey("unusual") ? null
+                          : !bool.TryParse(filterString.Filters["unusual"].First(), out var r) ? (bool?)null
+                          : r,
+                Status = filterString.Filters.ContainsKey("status") ? filterString.Filters["status"].ToArray() : null,
+                ExceptionStatus = filterString.Filters.ContainsKey("exceptionstatus") ? filterString.Filters["exceptionstatus"].ToArray() : null,
+                StoreId = filterString.Filters.ContainsKey("storeid") ? filterString.Filters["storeid"].ToArray() : null
+            });
+
+            return list;
         }
 
         [HttpGet]
@@ -544,6 +555,21 @@ namespace BTCPayServer.Controllers
                 ModelState.TryAddModelError(nameof(model.Currency), $"Error: {ex.Message}");
                 return View(model);
             }
+        }
+
+
+        [HttpGet]
+        [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
+        [BitpayAPIConstraint(false)]
+        public async Task<IActionResult> Export(string format, string searchTerm = null)
+        {
+            var model = new ExportInvoicesModel
+            {
+                Format = format,
+                List = await listInvoicesProcess(searchTerm, 0, int.MaxValue)
+            };
+
+            return Content(model.Process(), "application/"+ format);
         }
 
         [HttpPost]

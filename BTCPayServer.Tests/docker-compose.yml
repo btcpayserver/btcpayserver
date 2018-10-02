@@ -63,7 +63,7 @@ services:
 
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:1.0.2.31
+    image: nicolasdorier/nbxplorer:1.0.3.1
     ports:
       - "32838:32838"
     expose: 
@@ -105,6 +105,8 @@ services:
     expose:
       - "43782" # RPC
       - "39388" # P2P
+      - "28332" # ZMQ
+      - "28333" # ZMQ
     volumes:
       - "bitcoin_datadir:/data"
 

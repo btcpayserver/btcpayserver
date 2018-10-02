@@ -97,10 +97,8 @@ services:
         rpcport=43782
         port=39388
         whitelist=0.0.0.0/0
-        zmqpubrawtx=tcp://0.0.0.0:28332
         zmqpubrawblock=tcp://0.0.0.0:28332
-        zmqpubrawtxlock=tcp://0.0.0.0:28332
-        zmqpubhashblock=tcp://0.0.0.0:28332
+        zmqpubrawtx=tcp://0.0.0.0:28333
     ports: 
       - "43782:43782"
       - "28332:28332"
@@ -111,7 +109,7 @@ services:
       - "bitcoin_datadir:/data"
 
   customer_lightningd:
-    image: nicolasdorier/clightning:634f19a7b230edc686be56ab950b80784e56252c-dev
+    image: nicolasdorier/clightning:v0.6.1-dev
     environment: 
       EXPOSE_TCP: "true"
       LIGHTNINGD_OPT: |
@@ -135,7 +133,7 @@ services:
       - bitcoind
 
   lightning-charged:
-    image: shesek/lightning-charge:0.3.15
+    image: shesek/lightning-charge:0.4.3
     environment:
       NETWORK: regtest
       API_TOKEN: foiewnccewuify
@@ -154,7 +152,7 @@ services:
       - merchant_lightningd
 
   merchant_lightningd:
-    image: nicolasdorier/clightning:634f19a7b230edc686be56ab950b80784e56252c-dev
+    image: nicolasdorier/clightning:v0.6.1-dev
     environment: 
       EXPOSE_TCP: "true"
       LIGHTNINGD_OPT: |
@@ -201,7 +199,7 @@ services:
       - "5432"
 
   merchant_lnd:
-    image: btcpayserver/lnd:0.4.2.0
+    image: btcpayserver/lnd:0.5-beta
     environment:
       LND_CHAIN: "btc"
       LND_ENVIRONMENT: "regtest"
@@ -209,11 +207,12 @@ services:
         restlisten=0.0.0.0:8080
         bitcoin.node=bitcoind
         bitcoind.rpchost=bitcoind:43782
-        bitcoind.zmqpath=tcp://bitcoind:28332
+        bitcoind.zmqpubrawblock=tcp://bitcoind:28332
+        bitcoind.zmqpubrawtx=tcp://bitcoind:28333
         externalip=merchant_lnd:9735
         no-macaroons=1
         debuglevel=debug
-        noencryptwallet=1
+        noseedbackup=1
         trickledelay=1000
     ports:
       - "53280:8080"
@@ -226,7 +225,7 @@ services:
       - bitcoind
 
   customer_lnd:
-    image: btcpayserver/lnd:0.4.2.0
+    image: btcpayserver/lnd:0.5-beta
     environment:
       LND_CHAIN: "btc"
       LND_ENVIRONMENT: "regtest"
@@ -234,11 +233,12 @@ services:
         restlisten=0.0.0.0:8080
         bitcoin.node=bitcoind
         bitcoind.rpchost=bitcoind:43782
-        bitcoind.zmqpath=tcp://bitcoind:28332
+        bitcoind.zmqpubrawblock=tcp://bitcoind:28332
+        bitcoind.zmqpubrawtx=tcp://bitcoind:28333
         externalip=customer_lnd:10009
         no-macaroons=1
         debuglevel=debug
-        noencryptwallet=1
+        noseedbackup=1
         trickledelay=1000
     ports:
       - "53281:8080"

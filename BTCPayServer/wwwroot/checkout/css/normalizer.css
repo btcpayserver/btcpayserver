@@ -9379,16 +9379,18 @@ strong {
 .wrapBtnGroup {
     text-align: center;
     margin: -2px 0px 12px;
+    padding: 0 15px;
 }
 
 .btnGroupLnd {
     margin: 0 auto;
     text-align: center;
     width: inherit;
-    display: inline-block;
+    display: table;
     background-color: #fff;
     color: #000;
     font-size: 0px;
+    width:100%;
 }
 
     .btnGroupLnd button:first-child {
@@ -9403,10 +9405,12 @@ strong {
     }
 
     .btnGroupLnd button {
+        display: table-cell;
         border: solid 1px #24725B;
-        padding: 4px 9px 3px;
+        padding: 6px 9px;
         margin: 0px;
-        font-size: 14px;
+        font-size: 12px;
+        width: 50%;
     }
 
         .btnGroupLnd button:hover {

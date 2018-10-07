@@ -40,7 +40,6 @@ namespace BTCPayServer.Hosting
                 var bitpayAuth = GetBitpayAuth(httpContext, out bool isBitpayAuth);
                 var isBitpayAPI = IsBitpayAPI(httpContext, isBitpayAuth);
                 httpContext.SetIsBitpayAPI(isBitpayAPI);
-                httpContext.SetIsJSONAPI(IsJSONAPI(httpContext));
                 if (isBitpayAPI)
                 {
                     httpContext.SetBitpayAuth(bitpayAuth);

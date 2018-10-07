@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Builder;
 using System;
 using Microsoft.Extensions.DependencyInjection;
@@ -51,14 +51,11 @@ namespace BTCPayServer.Hosting
 
         public void ConfigureServices(IServiceCollection services)
         {
-            var btcPayServerOptions= services.ConfigureBTCPayServer(Configuration);
+            services.ConfigureBTCPayServer(Configuration);
             services.AddMemoryCache();
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddDefaultTokenProviders();
-
-           
-
+                .AddDefaultTokenProviders();      
             
             // Register the OpenIddict services.
             services.AddOpenIddict()
@@ -93,31 +90,13 @@ namespace BTCPayServer.Hosting
 
                     options.UseJsonWebTokens();
 
-                    
-                    var file = Path.Combine(btcPayServerOptions.DataDir, "rsaparams");
-                    
-                    RSACryptoServiceProvider RSA = new RSACryptoServiceProvider(2048);
-                    RsaSecurityKey key = null;
-                    
-                    if (File.Exists(file))
-                    {
-                        RSA.FromXmlString2( File.ReadAllText(file)); 
-                    }
-                    else
-                    {
-                        var contents = RSA.ToXmlString2(true);
-                        File.WriteAllText(file,contents );
-                    }
-
-                    RSAParameters KeyParam = RSA.ExportParameters(true);
-                    key = new RsaSecurityKey(KeyParam);
-                    options.AddSigningKey(key);
+                    options.ConfigureSigningKey(Configuration);
 
                 });
 
 
 
-            services.AddBTCPayServer();
+            services.AddBTCPayServer(Configuration);
             services.AddMvc(o =>
             {
                 o.Filters.Add(new XFrameOptionsAttribute("DENY"));

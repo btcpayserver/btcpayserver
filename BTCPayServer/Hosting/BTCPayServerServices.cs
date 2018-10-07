@@ -57,13 +57,12 @@ namespace BTCPayServer.Hosting
 {
     public static class BTCPayServerServices
     {
-        public static IServiceCollection AddBTCPayServer(this IServiceCollection services)
+        public static IServiceCollection AddBTCPayServer(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddDbContext<ApplicationDbContext>((provider, o) =>
             {
                 var factory = provider.GetRequiredService<ApplicationDbContextFactory>();
                 factory.ConfigureBuilder(o);
-
                 o.UseOpenIddict();
             });
             services.AddHttpClient();
@@ -169,66 +168,10 @@ namespace BTCPayServer.Hosting
             services.AddTransient<InvoiceController>();
             // Add application services.
             services.AddTransient<IEmailSender, EmailSender>();
-            // bundling
-            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
-            JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
 
-           var sp = services.BuildServiceProvider();
-            var btcPayServerOptions = sp.GetRequiredService<BTCPayServerOptions>();
-            services.AddAuthentication(options =>
-                {
-                    options.DefaultAuthenticateScheme = "dynamic";
-                    options.DefaultChallengeScheme = "dynamic";
-                })
-                .AddJwtBearer(options =>
-                {
-                    options.Authority = btcPayServerOptions.ExternalUrl?.ToString()?? "http://127.0.0.1:14142/";
-                    options.Audience = btcPayServerOptions.ExternalUrl?.ToString()?? "http://127.0.0.1:14142/";
-                    options.RequireHttpsMetadata = false;
-                    options.TokenValidationParameters.ValidateAudience = false;
-                    options.TokenValidationParameters.ValidateIssuer = false;
-
-                    options.Events = new JwtBearerEvents
-                    {
-                        OnMessageReceived = context => { return Task.CompletedTask; },
-                        OnTokenValidated = context => { return Task.CompletedTask; },
-                        OnChallenge = context => { return Task.CompletedTask; },
-                        OnAuthenticationFailed = context => { return Task.CompletedTask; }
-                    };
-                })
-                .AddCookie(options =>
-                {
-                    options.Events.OnValidatePrincipal = context => { return Task.CompletedTask; };
-                    options.Events.OnRedirectToLogin = context => { return Task.CompletedTask; };
-                    options.Events.OnRedirectToReturnUrl = context => { return Task.CompletedTask; };
-                    options.Events.OnSignedIn = context => { return Task.CompletedTask; };
-                    options.Events.OnSigningOut = context => { return Task.CompletedTask; };
-                
-                })
-                .AddBitpayAuthentication()
-                .AddPolicyScheme("dynamic", "Bearer, Cookie or BitPay Auth", options =>
-                {
-                    options.ForwardDefaultSelector = context =>
-                    {
-                        if (context.GetIsBitpayAPI())
-                        {
-                            return Policies.BitpayAuthentication;
-                        }
-
-                        if (context.Request.Headers.TryGetValue("Authorization", out var authHeader) &&
-                            authHeader.ToString().StartsWith("Bearer "))
-                        {
-                            return JwtBearerDefaults.AuthenticationScheme;
-                        }
-
-                        return IdentityConstants.ApplicationScheme;
-                    };
-                });
-
-            IdentityModelEventSource.ShowPII = true;
+            services.AddBtcPayServerAuthenticationSchemes(configuration);
             services.AddAuthorization(o => o.AddBTCPayPolicies());
-
-
+            //bundling
             services.AddBundles();
             services.AddTransient<BundleOptions>(provider =>
             {
@@ -248,6 +191,47 @@ namespace BTCPayServer.Hosting
             rateLimits.SetZone($"zone={ZoneLimits.Login} rate=5r/min burst=3 nodelay");
             services.AddSingleton(rateLimits);
             return services;
+        }
+
+        private static void AddBtcPayServerAuthenticationSchemes(this IServiceCollection services, IConfiguration configuration)
+        {
+            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+            JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
+
+            var externalUrl = configuration.GetExternalUri();
+            services.AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = "dynamic";
+                    options.DefaultChallengeScheme = "dynamic";
+                })
+                .AddJwtBearer(options =>
+                {
+                    options.Authority = externalUrl?.ToString()?? "http://127.0.0.1:14142/";
+                    options.Audience = externalUrl?.ToString()?? "http://127.0.0.1:14142/";
+                    options.RequireHttpsMetadata = false;
+                    options.TokenValidationParameters.ValidateAudience = false;
+                    options.TokenValidationParameters.ValidateIssuer = false;
+                })
+                .AddCookie()
+                .AddBitpayAuthentication()
+                .AddPolicyScheme("dynamic", "Bearer, Cookie or BitPay Auth", options =>
+                {
+                    options.ForwardDefaultSelector = context =>
+                    {
+                        if (context.GetIsBitpayAPI())
+                        {
+                            return Policies.BitpayAuthentication;
+                        }
+
+                        if (context.Request.Headers.TryGetValue("Authorization", out var authHeader) &&
+                            authHeader.ToString().StartsWith("Bearer "))
+                        {
+                            return JwtBearerDefaults.AuthenticationScheme;
+                        }
+
+                        return IdentityConstants.ApplicationScheme;
+                    };
+                });
         }
 
         public static IApplicationBuilder UsePayServer(this IApplicationBuilder app)

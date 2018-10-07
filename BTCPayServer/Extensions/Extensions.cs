@@ -162,16 +162,9 @@ namespace BTCPayServer
             return isRelative ? request.GetAbsoluteRoot() + redirectUrl : redirectUrl;
         }
 
-        public static BTCPayServerOptions ConfigureBTCPayServer(this IServiceCollection services, IConfiguration conf)
+        public static IServiceCollection ConfigureBTCPayServer(this IServiceCollection services, IConfiguration conf)
         {
-            services.Configure<BTCPayServerOptions>(o =>
-            {
-                o.LoadArgs(conf);
-            });
-            //There must be a betetr way to share these options with the ConfigureServices?
-            var result = new BTCPayServerOptions();
-            result.LoadArgs(conf);
-            return result;
+            return services.Configure<BTCPayServerOptions>(o => { o.LoadArgs(conf); });
         }
 
         public static string GetSIN(this ClaimsPrincipal principal)
@@ -200,17 +193,6 @@ namespace BTCPayServer
         {
             return ctx.Items.TryGetValue("IsBitpayAPI", out object obj) &&
                   obj is bool b && b;
-        }
-
-        public static bool GetIsJSONAPI(this HttpContext ctx)
-        {
-            return ctx.Items.TryGetValue("IsJSONAPI", out object obj) &&
-                   obj is bool b && b;
-        }
-        
-        public static void SetIsJSONAPI(this HttpContext ctx, bool value)
-        {
-            NBitcoin.Extensions.TryAdd(ctx.Items, "IsJSONAPI", value);
         }
         
         public static void SetBitpayAuth(this HttpContext ctx, (string Signature, String Id, String Authorization) value)

@@ -33,7 +33,7 @@
 <body id="page-top">
 
     @{
-        if(ViewBag.AlwaysShrinkNavBar == null)
+        if (ViewBag.AlwaysShrinkNavBar == null)
         {
             ViewBag.AlwaysShrinkNavBar = true;
         }
@@ -45,7 +45,7 @@
         <div class="container">
             <a class="navbar-brand js-scroll-trigger" href="~/">
                 <img src="~/img/logo.png" height="45">
-                @if(env.NetworkType != NBitcoin.NetworkType.Mainnet)
+                @if (env.NetworkType != NBitcoin.NetworkType.Mainnet)
                 {
                     <span class="badge badge-warning" style="font-size:10px;">@env.NetworkType.ToString()</span>
                 }
@@ -55,9 +55,9 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarResponsive">
                 <ul class="navbar-nav ml-auto">
-                    @if(SignInManager.IsSignedIn(User))
+                    @if (SignInManager.IsSignedIn(User))
                     {
-                        @if(User.IsInRole(Roles.ServerAdmin))
+                        @if (User.IsInRole(Roles.ServerAdmin))
                         {
                             <li class="nav-item"><a asp-area="" asp-controller="Server" asp-action="ListUsers" class="nav-link js-scroll-trigger">Server settings</a></li>
                         }
@@ -73,7 +73,7 @@
                         </li>}
                     else
                     {
-                        @if(themeManager.ShowRegister)
+                        @if (themeManager.ShowRegister)
                         {
                             <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Register" class="nav-link js-scroll-trigger">Register</a></li>
                         }
@@ -88,7 +88,7 @@
                     <li>Either starts BTCPay with <b>--externalurl @(env.ExpectedProtocol)://@(env.ExpectedHost)/</b></li>
                     <li>Or, if using docker-compose deployment, setting environment variable <b>BTCPAY_PROTOCOL=@(env.ExpectedProtocol)</b> and <b>BTCPAY_HOST=@(env.ExpectedDomain)</b></li>
                 </ul>
-                
+
             </div>
         </div>
     </nav>
@@ -96,11 +96,14 @@
 
     @RenderBody()
 
-    <footer class="siteFooter bg-dark text-white">
-        <div class="container text-right">@env.ToString()</div>
-    </footer>
+    @if (User.Identity.IsAuthenticated)
+    {
+        <footer class="siteFooter bg-dark text-white">
+            <div class="container text-right">@env.ToString()</div>
+        </footer>
+    }
 
-    @if(!dashboard.IsFullySynched())
+    @if (!dashboard.IsFullySynched())
     {
         <partial name="SyncModal" />
     }

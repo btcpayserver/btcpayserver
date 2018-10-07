@@ -70,7 +70,7 @@
                             {{$t("nested.lang")}} >>
                         *@
                         <select class="cmblang reverse invisible" onchange="changeLanguage($(this).val())">
-                            @foreach(var lang in langService.GetLanguages())
+                            @foreach (var lang in langService.GetLanguages())
                             {
                                 <option value="@lang.Code">@lang.DisplayName</option>
                             }
@@ -151,6 +151,8 @@
             },
             data: {
                 srvModel: srvModel,
+                lndModel: null,
+                scanDisplayQr: "",
                 expiringSoon: false
             }
         });

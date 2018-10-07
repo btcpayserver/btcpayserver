@@ -20,6 +20,17 @@ function resetTabsSlider() {
     closePaymentMethodDialog(null);
 }
 
+function changeCurrency(currency) {
+    if (currency !== null && srvModel.paymentMethodId !== currency) {
+        $(".payment__currencies").hide();
+        $(".payment__spinner").show();
+        checkoutCtrl.scanDisplayQr = "";
+        srvModel.paymentMethodId = currency;
+        fetchStatus();
+    }
+    return false;
+}
+
 function onDataCallback(jsonData) {
     // extender properties used 
     jsonData.shapeshiftUrl = "https://shapeshift.io/shifty.html?destination=" + jsonData.btcAddress + "&output=" + jsonData.paymentMethodId + "&amount=" + jsonData.btcDue;
@@ -66,18 +77,24 @@ function onDataCallback(jsonData) {
         $(".payment__spinner").hide();
     }
 
+    if (checkoutCtrl.scanDisplayQr === "") {
+        checkoutCtrl.scanDisplayQr = jsonData.invoiceBitcoinUrlQR;
+    }
+
+    if (jsonData.isLightning && checkoutCtrl.lndModel === null) {
+        var lndModel = {
+            toggle: 0
+        };
+
+        checkoutCtrl.lndModel = lndModel;
+    }
+
+    if (!jsonData.isLightning) {
+        checkoutCtrl.lndModel = null;
+    }
+
     // updating ui
     checkoutCtrl.srvModel = jsonData;
-}
-
-function changeCurrency(currency) {
-    if (currency !== null && srvModel.paymentMethodId !== currency) {
-        $(".payment__currencies").hide();
-        $(".payment__spinner").show();
-        srvModel.paymentMethodId = currency;
-        fetchStatus();
-    }
-    return false;
 }
 
 function fetchStatus() {
@@ -91,6 +108,16 @@ function fetchStatus() {
     }).fail(function (jqXHR, textStatus, errorThrown) {
 
     });
+}
+
+function lndToggleBolt11() {
+    checkoutCtrl.lndModel.toggle = 0;
+    checkoutCtrl.scanDisplayQr = checkoutCtrl.srvModel.invoiceBitcoinUrlQR;
+}
+
+function lndToggleNode() {
+    checkoutCtrl.lndModel.toggle = 1;
+    checkoutCtrl.scanDisplayQr = checkoutCtrl.srvModel.peerInfo;
 }
 
 // private methods

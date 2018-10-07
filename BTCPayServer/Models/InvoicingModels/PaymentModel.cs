@@ -56,6 +56,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public string CryptoImage { get; set; }
 
         public bool AllowCoinConversion { get; set; }
+        public bool ChangellyEnabled { get; set; }
         public string PeerInfo { get; set; }
     }
 }

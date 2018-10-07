@@ -24,6 +24,8 @@ function onDataCallback(jsonData) {
     // extender properties used
     jsonData.shapeshiftUrl = "https://shapeshift.io/shifty.html?destination=" + jsonData.btcAddress + "&output=" + jsonData.paymentMethodId + "&amount=" + jsonData.btcDue;
     jsonData.changellyUrl = "https://changelly.com/widget/v1?auth=email&from=ETH&to=" + jsonData.paymentMethodId + "&address=" + jsonData.btcAddress;
+    //TODO:
+    //1.Get supported currencies
     //
 
     var newStatus = jsonData.status;

@@ -10,6 +10,7 @@ using BTCPayServer.Events;
 using BTCPayServer.Filters;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
+using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Invoices;
@@ -212,7 +213,6 @@ namespace BTCPayServer.Controllers
                 paymentMethodIdStr = store.GetDefaultCrypto(_NetworkProvider);
                 isDefaultCrypto = true;
             }
-
             var paymentMethodId = PaymentMethodId.Parse(paymentMethodIdStr);
             var network = _NetworkProvider.GetNetwork(paymentMethodId.CryptoCode);
             if (network == null && isDefaultCrypto)
@@ -284,6 +284,9 @@ namespace BTCPayServer.Controllers
                 NetworkFee = paymentMethodDetails.GetTxFee(),
                 IsMultiCurrency = invoice.GetPayments().Select(p => p.GetPaymentMethodId()).Concat(new[] { paymentMethod.GetId() }).Distinct().Count() > 1,
                 AllowCoinConversion = storeBlob.AllowCoinConversion,
+                ChangellyEnabled = store.GetSupportedPaymentMethods(_NetworkProvider).Any(method =>
+                    !storeBlob.IsExcluded(ChangellySupportedPaymentMethod.ChangellySupportedPaymentMethodId) &&
+                    method.Equals(ChangellySupportedPaymentMethod.ChangellySupportedPaymentMethodId)),
                 AvailableCryptos = invoice.GetPaymentMethods(_NetworkProvider)
                                           .Where(i => i.Network != null)
                                           .Select(kv => new PaymentModel.AvailableCrypto()

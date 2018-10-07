@@ -148,7 +148,7 @@
         <div class="payment-tabs__tab" id="copy-tab">
             <span>{{$t("Copy")}}</span>
         </div>
-        @if (Model.AllowCoinConversion)
+        @if (Model.ChangellyEnabled)
         {
             <div class="payment-tabs__tab" id="altcoins-tab">
                 <span>{{$t("Conversion")}}</span>
@@ -241,7 +241,7 @@
             </div>
         </nav>
     </div>
-    @if (Model.AllowCoinConversion)
+    @if (Model.ChangellyEnabled)
     {
         <div id="altcoins" class="bp-view payment manual-flow">
             <nav v-if="srvModel.isLightning">

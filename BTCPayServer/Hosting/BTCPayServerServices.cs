@@ -170,6 +170,7 @@ namespace BTCPayServer.Hosting
 
             var rateLimits = new RateLimitService();
             rateLimits.SetZone($"zone={ZoneLimits.Login} rate=5r/min burst=3 nodelay");
+            rateLimits.SetZone($"zone={ZoneLimits.Changelly} rate=5r/min burst=3 nodelay");
             services.AddSingleton(rateLimits);
             return services;
         }

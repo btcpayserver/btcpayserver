@@ -84,6 +84,9 @@ namespace BTCPayServer.Data
                         if (strat.Value.Type == JTokenType.Null)
                             continue;
                         yield return PaymentMethodExtensions.Deserialize(paymentMethodId, strat.Value, network);
+                    }else if (paymentMethodId.PaymentType == PaymentTypes.ThirdParty)
+                    {
+                        yield return PaymentMethodExtensions.Deserialize(paymentMethodId, strat.Value);
                     }
                 }
             }

@@ -9,6 +9,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Models.StoreViewModels;
+using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Rating;
 using BTCPayServer.Security;
 using BTCPayServer.Services;
@@ -447,6 +448,13 @@ namespace BTCPayServer.Controllers
                     Enabled = !excludeFilters.Match(paymentId)
                 });
             }
+            
+            vm.ThirdPartyPaymentMethods.Add(new StoreViewModel.ThirdPartyPaymentMethod()
+            {
+                Enabled = !excludeFilters.Match(ChangellySupportedPaymentMethod.ChangellySupportedPaymentMethodId),
+                Action = nameof(UpdateChangellySettings),
+                Provider = ChangellySupportedPaymentMethod.ChangellySupportedPaymentMethodId.CryptoCode
+            });
         }
 
         [HttpPost]

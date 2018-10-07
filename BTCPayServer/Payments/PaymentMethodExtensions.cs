@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Payments.Changelly;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -9,7 +10,7 @@ namespace BTCPayServer.Payments
 {
     public class PaymentMethodExtensions
     {
-        public static ISupportedPaymentMethod Deserialize(PaymentMethodId paymentMethodId, JToken value, BTCPayNetwork network)
+        public static ISupportedPaymentMethod Deserialize(PaymentMethodId paymentMethodId, JToken value, BTCPayNetwork network = null)
         {
             // Legacy
             if (paymentMethodId.PaymentType == PaymentTypes.BTCLike)
@@ -20,6 +21,13 @@ namespace BTCPayServer.Payments
             else if (paymentMethodId.PaymentType == PaymentTypes.LightningLike)
             {
                 return JsonConvert.DeserializeObject<Payments.Lightning.LightningSupportedPaymentMethod>(value.ToString());
+            }else if (paymentMethodId.PaymentType == PaymentTypes.ThirdParty)
+            {
+                switch (paymentMethodId.CryptoCode)
+                {
+                        case "Changelly":
+                            return JsonConvert.DeserializeObject<ChangellySupportedPaymentMethod>(value.ToString());
+                }
             }
             throw new NotSupportedException();
         }

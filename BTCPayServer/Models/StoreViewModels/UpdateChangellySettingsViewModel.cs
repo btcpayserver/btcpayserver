@@ -17,7 +17,7 @@ namespace BTCPayServer.Models.StoreViewModels
         [Required]
         public string ApiUrl { get; set; } = "https://api.changelly.com";
         
-        [Optional(), Display(Name="Optional, Changelly Merchant Id")]
+        [Display(Name="Optional, Changelly Merchant Id")]
         public string ChangellyMerchantId { get; set; } = "804298eb5753";
         
         public bool Enabled { get; set; } = true;

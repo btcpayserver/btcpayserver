@@ -147,15 +147,16 @@
     var ChangellyComponent =
     {
         props: ["storeId", "toCurrency", "toCurrencyDue", "toCurrencyAddress", "merchantId"],
-        data: {
-            currencies: [],
-            isLoading: false,
-            calculatedAmount: 0,
-            selectedFromCurrency: ""
+        data: function () {
+            return {
+                currencies: [],
+                isLoading: false,
+                calculatedAmount: 0,
+                selectedFromCurrency: ""
+            };
         },
         computed: {
             url: function() {
-                debugger;
                 if (this.calculatedAmount && this.selectedFromCurrency && !this.isLoading) {
                     return "https://changelly.com/widget/v1?auth=email&to=" +
                         this.toCurrency +
@@ -192,7 +193,6 @@
                         url: this.getUrl() + "/currencies",
                         dataType: "json",
                         success: function(result) {
-                            debugger;
                             self.currencies = result.item1;
                         },
                         complete: function() {

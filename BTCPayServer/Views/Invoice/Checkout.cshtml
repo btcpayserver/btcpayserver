@@ -100,60 +100,153 @@
             </div>
         </div>
     </invoice>
-    <script type="text/javascript">
-        var storeDefaultLang = '@Model.DefaultLang';
-        // initialization
-        i18next.init({
-            lng: storeDefaultLang,
-            fallbackLng: 'en-US',
-            nsSeparator: false,
-            keySeparator: false,
-            resources: {
-                'en-US': { translation: locales_en },
-                'de-DE': { translation: locales_de },
-                'es-ES': { translation: locales_es },
-                'ja-JP': { translation: locales_ja },
-                'fr-FR': { translation: locales_fr },
-                'pt': { translation: locales_pt },
-                'pt-BR': { translation: locales_pt_br },
-                'nl': { translation: locales_nl },
-                'cs-CZ': { translation: locales_cs },
-                'is-IS': { translation: locales_is },
-                'hr-HR': { translation: locales_hr }
-            },
-        });
+<script type="text/javascript">
+    var storeDefaultLang = '@Model.DefaultLang';
+    // initialization
+    i18next.init({
+        lng: storeDefaultLang,
+        fallbackLng: 'en-US',
+        nsSeparator: false,
+        keySeparator: false,
+        resources: {
+            'en-US': { translation: locales_en },
+            'de-DE': { translation: locales_de },
+            'es-ES': { translation: locales_es },
+            'ja-JP': { translation: locales_ja },
+            'fr-FR': { translation: locales_fr },
+            'pt': { translation: locales_pt },
+            'pt-BR': { translation: locales_pt_br },
+            'nl': { translation: locales_nl },
+            'cs-CZ': { translation: locales_cs },
+            'is-IS': { translation: locales_is },
+            'hr-HR': { translation: locales_hr }
+        },
+    });
 
-        function changeLanguage(lang) {
-            i18next.changeLanguage(lang);
-        }
+    function changeLanguage(lang) {
+        i18next.changeLanguage(lang);
+    }
 
-        if (urlParams.lang) {
-            changeLanguage(urlParams.lang);
-        }
-        else if (storeDefaultLang) {
-            changeLanguage(storeDefaultLang);
-        }
+    if (urlParams.lang) {
+        changeLanguage(urlParams.lang);
+    }
+    else if (storeDefaultLang) {
+        changeLanguage(storeDefaultLang);
+    }
 
-        const i18n = new VueI18next(i18next);
+    const i18n = new VueI18next(i18next);
 
-        // TODO: Move all logic from core.js to Vue controller
-        Vue.config.ignoredElements = [
-            'line-items',
-            'low-fee-timeline',
-            // Ignoring custom HTML5 elements, eg: bp-spinner
-            /^bp-/
-        ];
-        var checkoutCtrl = new Vue({
-            i18n: i18n,
-            el: '#checkoutCtrl',
-            components: {
-                qrcode: VueQr
-            },
-            data: {
-                srvModel: srvModel,
-                expiringSoon: false
+    // TODO: Move all logic from core.js to Vue controller
+    Vue.config.ignoredElements = [
+        'line-items',
+        'low-fee-timeline',
+        // Ignoring custom HTML5 elements, eg: bp-spinner
+        /^bp-/
+    ];
+
+    var ChangellyComponent =
+    {
+        props: ["storeId", "toCurrency", "toCurrencyDue", "toCurrencyAddress"],
+        data: {
+            currencies: [],
+            isLoading: false,
+            calculatedAmount: 0,
+            selectedFromCurrency: ""
+        },
+        computed: {
+            url: function() {
+                debugger;
+                if (this.calculatedAmount && this.selectedFromCurrency && !this.isLoading) {
+                    return "https://changelly.com/widget/v1?auth=email&to=" +
+                        this.toCurrency +
+                        "&address=" +
+                        this.toCurrencyAddress +
+                        "&amount=" +
+                        this.calculatedAmount;
+                }
+                return null;
             }
-        });
-    </script>
+        },
+        watch: {
+            selectedFromCurrency: function(val) {
+                if (val) {
+                    this.calculateAmount();
+                } else {
+                    this.calculateAmount = 0;
+                }
+            }
+        },
+        mounted: function() {
+            this.loadCurrencies();
+        },
+        methods: {
+            getUrl: function() {
+                return window.location.origin + "/changelly/" + this.storeId;
+            },
+            loadCurrencies: function() {
+                var self = this;
+                this.isLoading = true;
+                $.ajax(
+                    {
+                        url: this.getUrl() + "/currencies",
+                        dataType: "json",
+                        success: function(result) {
+                            debugger;
+                            self.currencies = result.item1;
+                        },
+                        complete: function() {
+                            self.isLoading = false;
+                        }
+                    });
+            },
+            calculateAmount: function() {
+
+                var self = this;
+                this.isLoading = true;
+                $.ajax(
+                    {
+                        url: this.getUrl() + "/getExchangeAmount",
+                        dataType: "json",
+                        data: {
+                            fromCurrency: self.selectedFromCurrency,
+                            toCurrency: self.toCurrency,
+                            amount: 1
+                        },
+                        context: this,
+                        success: function(result) {
+                            self.calculatedAmount = 1 / result.item1;
+                        },
+                        complete: function() {
+                            self.isLoading = false;
+                        }
+                    });
+            },
+            openDialog: function(e) {
+                if (e && e.preventDefault) {
+                    e.preventDefault();
+                }
+
+                var changellyWindow = window.open(
+                    this.url,
+                    'Changelly',
+                    'width=600,height=470,toolbar=0,menubar=0,location=0,status=1,scrollbars=1,resizable=0,left=0,top=0');
+                changellyWindow.focus();
+            }
+        }
+    };
+        
+    var checkoutCtrl = new Vue({
+        i18n: i18n,
+        el: '#checkoutCtrl',
+        components: {
+            qrcode: VueQr,
+            changelly: ChangellyComponent
+        },
+        data: {
+            srvModel: srvModel,
+            expiringSoon: false
+        }
+    });
+</script>
 </body>
 </html>

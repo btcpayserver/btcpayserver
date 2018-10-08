@@ -27,10 +27,6 @@
                 <span asp-validation-for="ApiSecret" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="TargetCryptoCode"></label>
-                <select asp-for="TargetCryptoCode" asp-items="@(new SelectList(Model.AvailableTargetPaymentMethods, "PaymentId.CryptoCode", "PaymentId.CryptoCode"))" class="form-control"></select>
-            </div>
-            <div class="form-group">
                 <label asp-for="Enabled"></label>
                 <input asp-for="Enabled" type="checkbox" class="form-check"/>
             </div>

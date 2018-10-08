@@ -8,7 +8,6 @@ using NicolasDorier.RateLimits;
 
 namespace BTCPayServer.Controllers
 {
-    
     [RateLimitsFilter(ZoneLimits.Changelly, Scope = RateLimitsScope.RemoteAddress)]
     [Route("[controller]/{storeId}")]
     public class ChangellyController : Controller
@@ -23,39 +22,15 @@ namespace BTCPayServer.Controllers
             _networkProvider = networkProvider;
             _storeRepo = storeRepo;
         }
-        
+
         [HttpGet]
         [Route("currencies")]
-        public async Task<IActionResult> GetCurrencyList(string storeId)
+        public async Task<IActionResult> GetCurrencyList(string storeId, bool enabledOnly = true)
         {
-            storeId = storeId ?? this.HttpContext.GetStoreData()?.Id;
-            var store = this.HttpContext.GetStoreData();
-            if (store == null || store.Id != storeId)
-                store = await _storeRepo.FindStore(storeId);
-            if (store == null)
+            if (!TryGetChangellyClient(storeId, out var actionResult, out var client))
             {
-                var err = Json(new BitpayErrorsModel() { Error = "Store not found" });
-                err.StatusCode = 404;
-                return err;
+                return actionResult;
             }
-
-            var blob = store.GetStoreBlob();
-            if (blob.IsExcluded(ChangellySupportedPaymentMethod.ChangellySupportedPaymentMethodId))
-            {
-                return BadRequest();
-            }
-
-            var paymentMethod = store.GetSupportedPaymentMethods(_networkProvider).SingleOrDefault(method =>
-                method.PaymentId == ChangellySupportedPaymentMethod.ChangellySupportedPaymentMethodId);
-
-            if (paymentMethod == null)
-            {
-                return BadRequest();
-            }
-
-            var changellyPaymentMethod = paymentMethod as ChangellySupportedPaymentMethod;
-            var client = new Changelly.Changelly(changellyPaymentMethod.ApiKey, changellyPaymentMethod.ApiSecret,
-                changellyPaymentMethod.ApiUrl);
 
             var result = client.GetCurrenciesFull();
             if (result.Success)
@@ -65,38 +40,17 @@ namespace BTCPayServer.Controllers
 
             return BadRequest(result);
         }
+
+
         [HttpGet]
         [Route("getExchangeAmount")]
-        public async Task<IActionResult> GetExchangeAmount(string storeId, string fromCurrency, string toCurrency, double amount)
+        public async Task<IActionResult> GetExchangeAmount(string storeId, string fromCurrency, string toCurrency,
+            double amount)
         {
-            storeId = storeId ?? this.HttpContext.GetStoreData()?.Id;
-            var store = this.HttpContext.GetStoreData();
-            if (store == null || store.Id != storeId)
-                store = await _storeRepo.FindStore(storeId);
-            if (store == null)
+            if (!TryGetChangellyClient(storeId, out var actionResult, out var client))
             {
-                var err = Json(new BitpayErrorsModel() { Error = "Store not found" });
-                err.StatusCode = 404;
-                return err;
+                return actionResult;
             }
-
-            var blob = store.GetStoreBlob();
-            if (blob.IsExcluded(ChangellySupportedPaymentMethod.ChangellySupportedPaymentMethodId))
-            {
-                return BadRequest();
-            }
-
-            var paymentMethod = store.GetSupportedPaymentMethods(_networkProvider).SingleOrDefault(method =>
-                method.PaymentId == ChangellySupportedPaymentMethod.ChangellySupportedPaymentMethodId);
-
-            if (paymentMethod == null)
-            {
-                return BadRequest();
-            }
-
-            var changellyPaymentMethod = paymentMethod as ChangellySupportedPaymentMethod;
-            var client = new Changelly.Changelly(changellyPaymentMethod.ApiKey, changellyPaymentMethod.ApiSecret,
-                changellyPaymentMethod.ApiUrl);
 
             var result = client.GetExchangeAmount(fromCurrency, toCurrency, amount);
             if (result.Success)
@@ -106,26 +60,55 @@ namespace BTCPayServer.Controllers
 
             return BadRequest(result);
         }
-        
-        [HttpPost]
-        [Route("createTransaction")]
-        public async Task<IActionResult> CreateTransaction(string storeId, [FromBody] CreateChangellyTransaction request)
+
+//        [HttpPost]
+//        [Route("createTransaction")]
+//        public async Task<IActionResult> CreateTransaction(string storeId,
+//            [FromBody] CreateChangellyTransaction request)
+//        {
+//            if (!TryGetChangellyClient(storeId, out var actionResult, out var client))
+//            {
+//                return actionResult;
+//            }
+//
+//            var result = client.CreateTransaction(request.FromCurrency, request.ToCurrency, request.Address,
+//                request.Amount);
+//            if (result.Success)
+//            {
+//                return Ok(result);
+//            }
+//
+//            return BadRequest(result);
+//        }
+//
+//        public class CreateChangellyTransaction
+//        {
+//            public string FromCurrency { get; set; }
+//            public string ToCurrency { get; set; }
+//            public double Amount { get; set; }
+//            public string Address { get; set; }
+//        }
+
+        private bool TryGetChangellyClient(string storeId, out IActionResult actionResult,
+            out Changelly.Changelly changelly)
         {
+            changelly = null;
+            actionResult = null;
             storeId = storeId ?? this.HttpContext.GetStoreData()?.Id;
+
             var store = this.HttpContext.GetStoreData();
             if (store == null || store.Id != storeId)
-                store = await _storeRepo.FindStore(storeId);
+                store = _storeRepo.FindStore(storeId).Result;
             if (store == null)
             {
-                var err = Json(new BitpayErrorsModel() { Error = "Store not found" });
-                err.StatusCode = 404;
-                return err;
+                actionResult = NotFound(new BitpayErrorsModel() {Error = "Store not found"});
+                return false;
             }
 
             var blob = store.GetStoreBlob();
             if (blob.IsExcluded(ChangellySupportedPaymentMethod.ChangellySupportedPaymentMethodId))
             {
-                return BadRequest();
+                actionResult = BadRequest(new BitpayErrorsModel() {Error = "Changelly not enabled for this store"});
             }
 
             var paymentMethod = store.GetSupportedPaymentMethods(_networkProvider).SingleOrDefault(method =>
@@ -133,28 +116,14 @@ namespace BTCPayServer.Controllers
 
             if (paymentMethod == null)
             {
-                return BadRequest();
+                actionResult = BadRequest(new BitpayErrorsModel() {Error = "Changelly not configured for this store"});
+                return false;
             }
 
             var changellyPaymentMethod = paymentMethod as ChangellySupportedPaymentMethod;
-            var client = new Changelly.Changelly(changellyPaymentMethod.ApiKey, changellyPaymentMethod.ApiSecret,
+            changelly = new Changelly.Changelly(changellyPaymentMethod.ApiKey, changellyPaymentMethod.ApiSecret,
                 changellyPaymentMethod.ApiUrl);
-
-            var result = client.CreateTransaction(request.FromCurrency, request.ToCurrency, request.Address, request.Amount);
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
-        }
-
-        public class CreateChangellyTransaction
-        {
-            public string FromCurrency { get; set; }
-            public string ToCurrency { get; set; }
-            public double Amount { get; set; }
-            public string Address { get; set; }
+            return true;
         }
     }
 }

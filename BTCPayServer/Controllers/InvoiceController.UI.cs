@@ -244,6 +244,23 @@ namespace BTCPayServer.Controllers
             var storeBlob = store.GetStoreBlob();
             var currency = invoice.ProductInformation.Currency;
             var accounting = paymentMethod.Calculate();
+
+            var changelly = (ChangellySupportedPaymentMethod) store.GetSupportedPaymentMethods(_NetworkProvider).SingleOrDefault(method =>
+                !storeBlob.IsExcluded(ChangellySupportedPaymentMethod.ChangellySupportedPaymentMethodId) &&
+                method.PaymentId.Equals( ChangellySupportedPaymentMethod.ChangellySupportedPaymentMethodId));
+//
+//            if (changelly != null)
+//            {
+//                var changellypaymentAddress = paymentMethodDetails.GetPaymentDestination();
+//                var changellyCurrency = paymentMethodId.CryptoCode; 
+//                if (changelly.Target != null)
+//                {
+//                    
+//                }
+//                var paymentMethod = invoice.GetPaymentMethod(paymentMethodId, _NetworkProvider);
+//            }
+            
+            
             var model = new PaymentModel()
             {
                 CryptoCode = network.CryptoCode,
@@ -284,9 +301,8 @@ namespace BTCPayServer.Controllers
                 NetworkFee = paymentMethodDetails.GetTxFee(),
                 IsMultiCurrency = invoice.GetPayments().Select(p => p.GetPaymentMethodId()).Concat(new[] { paymentMethod.GetId() }).Distinct().Count() > 1,
                 AllowCoinConversion = storeBlob.AllowCoinConversion,
-                ChangellyEnabled = store.GetSupportedPaymentMethods(_NetworkProvider).Any(method =>
-                    !storeBlob.IsExcluded(ChangellySupportedPaymentMethod.ChangellySupportedPaymentMethodId) &&
-                    method.Equals(ChangellySupportedPaymentMethod.ChangellySupportedPaymentMethodId)),
+                ChangellyEnabled = changelly != null,
+                StoreId = store.Id,
                 AvailableCryptos = invoice.GetPaymentMethods(_NetworkProvider)
                                           .Where(i => i.Network != null)
                                           .Select(kv => new PaymentModel.AvailableCrypto()

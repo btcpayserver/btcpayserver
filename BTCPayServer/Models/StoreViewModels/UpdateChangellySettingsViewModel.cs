@@ -18,8 +18,5 @@ namespace BTCPayServer.Models.StoreViewModels
         public IEnumerable<DerivationStrategy> AvailableTargetPaymentMethods { get; set; }
         
         public string StatusMessage { get; set; }
-        [Required]
-        [Display(Name = "To which Crypto to tell Changelly to convert to")]
-        public string TargetCryptoCode { get; set; }
     }
 }

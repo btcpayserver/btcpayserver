@@ -261,6 +261,7 @@
                 </div>
                 <center>
                     <changelly inline-template
+                               :merchant-id="srvModel.merchantId'"
                                :store-id="srvModel.storeId"
                                :to-currency="srvModel.paymentMethodId"
                                :to-currency-due="srvModel.btcDue"
@@ -272,10 +273,12 @@
                             toCurrencyDue: {{toCurrencyDue}}
                             toCurrencyAddress: {{toCurrencyAddress}} 
                             calculated : {{calculatedAmount}} 
+                            merchantId : {{merchantId}} 
                             <select v-model="selectedFromCurrency" :disabled="isLoading">
                                 <option>Selected a currency to convert from</option>
                                 <option v-for="currency of currencies" :value="currency.name" v-if="currency.enabled">{{currency.fullName}}</option>
                             </select>
+                            
                             
                             <a v-if="url" v-on:click="openDialog($event)" href="url"><img src="https://changelly.com/pay_button.png" alt="Changelly"/></a>
                         </div>

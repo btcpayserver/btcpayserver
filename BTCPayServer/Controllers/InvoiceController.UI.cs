@@ -247,19 +247,7 @@ namespace BTCPayServer.Controllers
 
             var changelly = (ChangellySupportedPaymentMethod) store.GetSupportedPaymentMethods(_NetworkProvider).SingleOrDefault(method =>
                 !storeBlob.IsExcluded(ChangellySupportedPaymentMethod.ChangellySupportedPaymentMethodId) &&
-                method.PaymentId.Equals( ChangellySupportedPaymentMethod.ChangellySupportedPaymentMethodId));
-//
-//            if (changelly != null)
-//            {
-//                var changellypaymentAddress = paymentMethodDetails.GetPaymentDestination();
-//                var changellyCurrency = paymentMethodId.CryptoCode; 
-//                if (changelly.Target != null)
-//                {
-//                    
-//                }
-//                var paymentMethod = invoice.GetPaymentMethod(paymentMethodId, _NetworkProvider);
-//            }
-            
+                method.PaymentId.Equals( ChangellySupportedPaymentMethod.ChangellySupportedPaymentMethodId));           
             
             var model = new PaymentModel()
             {
@@ -302,6 +290,7 @@ namespace BTCPayServer.Controllers
                 IsMultiCurrency = invoice.GetPayments().Select(p => p.GetPaymentMethodId()).Concat(new[] { paymentMethod.GetId() }).Distinct().Count() > 1,
                 AllowCoinConversion = storeBlob.AllowCoinConversion,
                 ChangellyEnabled = changelly != null,
+                ChangellyMerchantId = changelly?.ChangellyMerchantId,
                 StoreId = store.Id,
                 AvailableCryptos = invoice.GetPaymentMethods(_NetworkProvider)
                                           .Where(i => i.Network != null)

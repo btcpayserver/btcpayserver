@@ -30,6 +30,7 @@ namespace BTCPayServer.Controllers
                 vm.ApiKey = existing.ApiKey;
                 vm.ApiSecret = existing.ApiSecret;
                 vm.ApiUrl = existing.ApiUrl;
+                vm.ChangellyMerchantId = existing.ChangellyMerchantId;
             }
 
             vm.Enabled = !store.GetStoreBlob()
@@ -64,6 +65,7 @@ namespace BTCPayServer.Controllers
             paymentMethod.ApiKey = vm.ApiKey;
             paymentMethod.ApiSecret = vm.ApiSecret;
             paymentMethod.ApiUrl = vm.ApiUrl;
+            paymentMethod.ChangellyMerchantId = vm.ChangellyMerchantId;
             switch (command)
             {
                 case "save":

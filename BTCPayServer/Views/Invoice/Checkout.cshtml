@@ -146,7 +146,7 @@
 
     var ChangellyComponent =
     {
-        props: ["storeId", "toCurrency", "toCurrencyDue", "toCurrencyAddress"],
+        props: ["storeId", "toCurrency", "toCurrencyDue", "toCurrencyAddress", "merchantId"],
         data: {
             currencies: [],
             isLoading: false,
@@ -162,7 +162,8 @@
                         "&address=" +
                         this.toCurrencyAddress +
                         "&amount=" +
-                        this.calculatedAmount;
+                        this.calculatedAmount +
+                        (this.merchantId ? "&merchant_id="+this.merchantId +"&ref_id="+this.merchantId  : "");
                 }
                 return null;
             }

@@ -15,11 +15,14 @@ using System.Collections.Generic;
 using System.Collections;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using System.Threading;
+using Serilog;
 
 namespace BTCPayServer
 {
     class Program
     {
+        private const long MAX_DEBUG_LOG_FILE_SIZE = 2000000; // If debug log is in use roll it every N MB.
+
         static void Main(string[] args)
         {
             ServicePointManager.DefaultConnectionLimit = 100;
@@ -31,11 +34,20 @@ namespace BTCPayServer
             var logger = loggerFactory.CreateLogger("Configuration");
             try
             {
-                // This is the only way toat LoadArgs can print to console. Because LoadArgs is called by the HostBuilder before Logs.Configure is called
+                // This is the only way that LoadArgs can print to console. Because LoadArgs is called by the HostBuilder before Logs.Configure is called
                 var conf = new DefaultConfiguration() { Logger = logger }.CreateConfiguration(args);
                 if (conf == null)
                     return;
                 Logs.Configure(loggerFactory);
+                string debugLogFile = conf.GetOrDefault<string>("debuglog", null);
+                if (String.IsNullOrEmpty(debugLogFile) == false)
+                {
+                    Log.Logger = new LoggerConfiguration()
+                    .Enrich.FromLogContext()
+                    .MinimumLevel.Debug()
+                    .WriteTo.File(debugLogFile, rollingInterval: RollingInterval.Day, fileSizeLimitBytes: MAX_DEBUG_LOG_FILE_SIZE, rollOnFileSizeLimit: true, retainedFileCountLimit: 1)
+                    .CreateLogger();
+                }
                 new BTCPayServerOptions().LoadArgs(conf);
                 Logs.Configure(null);
                 /////
@@ -50,6 +62,7 @@ namespace BTCPayServer
                         l.AddFilter("Microsoft", LogLevel.Error);
                         l.AddFilter("Microsoft.AspNetCore.Antiforgery.Internal", LogLevel.Critical);
                         l.AddProvider(new CustomConsoleLogProvider(processor));
+                        l.AddSerilog();
                     })
                     .UseStartup<Startup>()
                     .Build();

@@ -9236,7 +9236,7 @@ strong {
     }
 
     .bp-view.scan {
-        padding-top: .9em !important;
+        padding-top: 0em !important;
     }
 
     .bp-view:not(.active) {
@@ -9376,11 +9376,64 @@ strong {
     border-bottom: 1px dotted;
 }
 
+.wrapBtnGroup {
+    text-align: center;
+    margin: -2px 0px 12px;
+    padding: 0 15px;
+}
+
+.btnGroupLnd {
+    margin: 0 auto;
+    text-align: center;
+    width: inherit;
+    display: table;
+    background-color: #fff;
+    color: #000;
+    font-size: 0px;
+    width:100%;
+}
+
+    .btnGroupLnd button:first-child {
+        border-top-left-radius: 5px;
+        border-bottom-left-radius: 5px;
+        border-right: 0px;
+    }
+
+    .btnGroupLnd button:last-child {
+        border-top-right-radius: 5px;
+        border-bottom-right-radius: 5px;
+    }
+
+    .btnGroupLnd button {
+        display: table-cell;
+        border: solid 1px #24725B;
+        padding: 6px 9px;
+        margin: 0px;
+        font-size: 12px;
+        width: 50%;
+    }
+
+        .btnGroupLnd button:hover {
+            background-color: #eeffee;
+        }
+
+        .btnGroupLnd button.active {
+            background-color: #329F80;
+            border-color: #329F80;
+            color: #fff;
+        }
+
+            .btnGroupLnd button.active:hover {
+                background-color: #24725B;
+                border-color: #24725B;
+                color: #fff;
+            }
+
 .payment__details__instruction__open-wallet {
     display: block;
     margin-left: auto;
     margin-right: auto;
-    margin: 15px 15px 18px;
+    margin: 0px 15px 18px;
     text-align: center;
 }
 

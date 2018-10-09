@@ -70,7 +70,7 @@
                             {{$t("nested.lang")}} >>
                         *@
                         <select class="cmblang reverse invisible" onchange="changeLanguage($(this).val())">
-                            @foreach(var lang in langService.GetLanguages())
+                            @foreach (var lang in langService.GetLanguages())
                             {
                                 <option value="@lang.Code">@lang.DisplayName</option>
                             }
@@ -246,6 +246,11 @@
                     'Changelly',
                     'width=600,height=470,toolbar=0,menubar=0,location=0,status=1,scrollbars=1,resizable=0,left=0,top=0');
                 changellyWindow.focus();
+            data: {
+                srvModel: srvModel,
+                lndModel: null,
+                scanDisplayQr: "",
+                expiringSoon: false
             }
         }
     };

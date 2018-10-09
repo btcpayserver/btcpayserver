@@ -54,6 +54,7 @@
 
 .clickable_underline {
     border-bottom: 1px dotted #ccc;
+    font-size: 13px;
 }
 
 .payment__currencies:hover .clickable_underline {

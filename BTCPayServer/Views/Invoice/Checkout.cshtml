@@ -53,213 +53,61 @@
     </center>
     <![endif]-->
 
-    <invoice>
-        <div class="no-bounce" id="checkoutCtrl" v-cloak>
-            <div class="modal page">
-                <div class="modal-dialog open opened enter-purchaser-email" role="document">
-                    <div class="modal-content long">
-                        <div class="content">
-                            <div class="invoice">
-                                <partial name="Checkout-Body" />
-                            </div>
+<invoice>
+    <div class="no-bounce" id="checkoutCtrl" v-cloak>
+        <div class="modal page">
+            <div class="modal-dialog open opened enter-purchaser-email" role="document">
+                <div class="modal-content long">
+                    <div class="content">
+                        <div class="invoice">
+                            <partial name="Checkout-Body" />
                         </div>
                     </div>
+                </div>
 
-                    <div style="margin-top: 10px; text-align: center;">
-                        @* Not working because of nsSeparator: false, keySeparator: false,
+                <div style="margin-top: 10px; text-align: center;">
+                    @* Not working because of nsSeparator: false, keySeparator: false,
                             {{$t("nested.lang")}} >>
                         *@
-                        <select class="cmblang reverse invisible" onchange="changeLanguage($(this).val())">
-                            @foreach (var lang in langService.GetLanguages())
-                            {
-                                <option value="@lang.Code">@lang.DisplayName</option>
+                    <select class="cmblang reverse invisible" onchange="changeLanguage($(this).val())">
+                        @foreach (var lang in langService.GetLanguages())
+                        {
+                            <option value="@lang.Code">@lang.DisplayName</option>
+                        }
+                    </select>
+                    <script>
+                        $(function() {
+                            var storeDefaultLang = '@Model.DefaultLang';
+                            if (urlParams.lang) {
+                                $(".cmblang").val(urlParams.lang);
+                            } else if (storeDefaultLang) {
+                                $(".cmblang").val(storeDefaultLang);
                             }
-                        </select>
-                        <script>
-                            $(function() {
-                                var storeDefaultLang = '@Model.DefaultLang';
-                                if (urlParams.lang) {
-                                    $(".cmblang").val(urlParams.lang);
-                                } else if (storeDefaultLang) {
-                                    $(".cmblang").val(storeDefaultLang);
-                                }
 
-                                initDropdown("select");
+                            initDropdown("select");
 
+                        });
+
+                        function initDropdown(selector) {
+                            return $(selector).prettyDropdown({
+                                classic: false,
+                                height: 32,
+                                reverse: true,
+                                hoverIntent: 5000
                             });
-
-                            function initDropdown(selector) {
-                                return $(selector).prettyDropdown({
-                                    classic: false,
-                                    height: 32,
-                                    reverse: true,
-                                    hoverIntent: 5000
-                                });
-                            }
-                        </script>
-                    </div>
-                    <div style="margin-top: 10px; text-align: center;" class="form-text small text-muted">
-                        <span>Powered by <a target="_blank" href="https://github.com/btcpayserver/btcpayserver">BTCPay Server</a></span>
-                    </div>
+                        }
+                    </script>
+                </div>
+                <div style="margin-top: 10px; text-align: center;" class="form-text small text-muted">
+                    <span>Powered by <a target="_blank" href="https://github.com/btcpayserver/btcpayserver">BTCPay Server</a></span>
                 </div>
             </div>
         </div>
-    </invoice>
+    </div>
+</invoice>
+<partial name="ChangellyComponent"></partial>
 <script type="text/javascript">
-    var storeDefaultLang = '@Model.DefaultLang';
-    // initialization
-    i18next.init({
-        lng: storeDefaultLang,
-        fallbackLng: 'en-US',
-        nsSeparator: false,
-        keySeparator: false,
-        resources: {
-            'en-US': { translation: locales_en },
-            'de-DE': { translation: locales_de },
-            'es-ES': { translation: locales_es },
-            'ja-JP': { translation: locales_ja },
-            'fr-FR': { translation: locales_fr },
-            'pt': { translation: locales_pt },
-            'pt-BR': { translation: locales_pt_br },
-            'nl': { translation: locales_nl },
-            'cs-CZ': { translation: locales_cs },
-            'is-IS': { translation: locales_is },
-            'hr-HR': { translation: locales_hr }
-        },
-    });
-
-    function changeLanguage(lang) {
-        i18next.changeLanguage(lang);
-    }
-
-    if (urlParams.lang) {
-        changeLanguage(urlParams.lang);
-    }
-    else if (storeDefaultLang) {
-        changeLanguage(storeDefaultLang);
-    }
-
-    const i18n = new VueI18next(i18next);
-
-    // TODO: Move all logic from core.js to Vue controller
-    Vue.config.ignoredElements = [
-        'line-items',
-        'low-fee-timeline',
-        // Ignoring custom HTML5 elements, eg: bp-spinner
-        /^bp-/
-    ];
-
-    var ChangellyComponent =
-    {
-        props: ["storeId", "toCurrency", "toCurrencyDue", "toCurrencyAddress", "merchantId"],
-        data: function() {
-            return {
-                currencies: [],
-                isLoading: false,
-                calculatedAmount: 0,
-                selectedFromCurrency: ""
-            };
-        },
-        computed: {
-            url: function() {
-                if (this.calculatedAmount && this.selectedFromCurrency && !this.isLoading) {
-                    return "https://changelly.com/widget/v1?auth=email" +
-                        "&from="+
-                        this.selectedFromCurrency + 
-                        "&to=" +
-                        this.toCurrency +
-                        "&address=" +
-                        this.toCurrencyAddress +
-                        "&amount=" +
-                        this.calculatedAmount +
-                        (this.merchantId ? "&merchant_id=" + this.merchantId + "&ref_id=" + this.merchantId : "");
-                }
-                return null;
-            }
-        },
-        watch: {
-            selectedFromCurrency: function(val) {
-                if (val) {
-                    this.calculateAmount();
-                } else {
-                    this.calculateAmount = 0;
-                }
-            }
-        },
-        mounted: function() {
-            this.loadCurrencies();
-        },
-        methods: {
-            getUrl: function() {
-                return window.location.origin + "/changelly/" + this.storeId;
-            },
-            loadCurrencies: function() {
-                this.isLoading = true;
-                $.ajax(
-                    {
-                        context: this,
-                        url: this.getUrl() + "/currencies",
-                        dataType: "json",
-                        success: function(result) {
-                            if (result.item2) {
-                                this.currencies.splice(0,
-                                    0,
-                                    ...result.item1.filter(function(x) { return x && x.enabled }));
-                                var self = this;
-                                Vue.nextTick(function() {
-                                    initDropdown(self.$refs.changellyCurrenciesDropdown)
-                                        .refresh()
-                                        .on("change", function(event) {
-                                            self.onCurrencyChange(self.$refs.changellyCurrenciesDropdown.value);
-                                        });
-                                });
-                            }
-                            console.log(result);
-                        },
-                        complete: function() {
-                            this.isLoading = false;
-                        }
-                    });
-            },
-            calculateAmount: function() {
-
-                var self = this;
-                this.isLoading = true;
-                $.ajax(
-                    {
-                        url: this.getUrl() + "/getExchangeAmount",
-                        dataType: "json",
-                        data: {
-                            fromCurrency: self.selectedFromCurrency,
-                            toCurrency: self.toCurrency,
-                            amount: 1
-                        },
-                        context: this,
-                        success: function(result) {
-                            self.calculatedAmount = self.toCurrencyDue / result.item1;
-                        },
-                        complete: function() {
-                            self.isLoading = false;
-                        }
-                    });
-            },
-            onCurrencyChange: function(value) {
-                this.selectedFromCurrency = value;
-            },
-            openDialog: function(e) {
-                if (e && e.preventDefault) {
-                    e.preventDefault();
-                }
-
-                var changellyWindow = window.open(
-                    this.url,
-                    'Changelly',
-                    'width=600,height=470,toolbar=0,menubar=0,location=0,status=1,scrollbars=1,resizable=0,left=0,top=0');
-                changellyWindow.focus();
-            }
-        }
-    };
-        
+   
     var checkoutCtrl = new Vue({
         i18n: i18n,
         el: '#checkoutCtrl',

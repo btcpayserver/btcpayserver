@@ -58,7 +58,7 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("{storeId}/derivations/{cryptoCode}")]
-        public async Task<IActionResult> AddDerivationScheme(string storeId, DerivationSchemeViewModel vm, string cryptoCode)
+        public async Task<IActionResult> AddDerivationScheme(string storeId, DerivationSchemeViewModel vm, string cryptoCode, string command)
         {
             vm.ServerUrl = WalletsController.GetLedgerWebsocketUrl(this.HttpContext, cryptoCode, null);
             vm.CryptoCode = cryptoCode;
@@ -100,7 +100,7 @@ namespace BTCPayServer.Controllers
                 return View(vm);
             }
 
-            var showAddress = (vm.Confirmation && !string.IsNullOrWhiteSpace(vm.HintAddress)) || // Testing hint address
+            var showAddress = command == "confirm" || (vm.Confirmation && !string.IsNullOrWhiteSpace(vm.HintAddress)) || // Testing hint address
                               (!vm.Confirmation && strategy != null && exisingStrategy != strategy.DerivationStrategyBase.ToString());  // Checking addresses after setting xpub
 
             if (!showAddress)

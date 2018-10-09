@@ -40,6 +40,7 @@ namespace BTCPayServer.Controllers
 
         [TempData]
         public string StatusMessage { get; set; }
+        public string CreatedAppId { get; set; }
 
         public async Task<IActionResult> ListApps()
         {
@@ -104,7 +105,7 @@ namespace BTCPayServer.Controllers
                 StatusMessage = "Error: You are not owner of this store";
                 return RedirectToAction(nameof(ListApps));
             }
-            var id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(32));
+            var id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(20));
             using (var ctx = _ContextFactory.CreateContext())
             {
                 var appData = new AppData() { Id = id };
@@ -115,7 +116,7 @@ namespace BTCPayServer.Controllers
                 await ctx.SaveChangesAsync();
             }
             StatusMessage = "App successfully created";
-
+            CreatedAppId = id;
             if (appType == AppType.PointOfSale)
                 return RedirectToAction(nameof(UpdatePointOfSale), new { appId = id });
             return RedirectToAction(nameof(ListApps));
@@ -136,7 +137,7 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        private async Task<AppData> GetOwnedApp(string appId, AppType? type = null)
+        private Task<AppData> GetOwnedApp(string appId, AppType? type = null)
         {
             return _AppsHelper.GetAppDataIfOwner(GetUserId(), appId, type);
         }

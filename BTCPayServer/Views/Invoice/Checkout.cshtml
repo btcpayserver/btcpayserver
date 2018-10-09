@@ -108,6 +108,48 @@
 <partial name="ChangellyComponent"></partial>
 <script type="text/javascript">
    
+    var storeDefaultLang = '@Model.DefaultLang';
+    // initialization
+    i18next.init({
+        lng: storeDefaultLang,
+        fallbackLng: 'en-US',
+        nsSeparator: false,
+        keySeparator: false,
+        resources: {
+            'en-US': { translation: locales_en },
+            'de-DE': { translation: locales_de },
+            'es-ES': { translation: locales_es },
+            'ja-JP': { translation: locales_ja },
+            'fr-FR': { translation: locales_fr },
+            'pt': { translation: locales_pt },
+            'pt-BR': { translation: locales_pt_br },
+            'nl': { translation: locales_nl },
+            'cs-CZ': { translation: locales_cs },
+            'is-IS': { translation: locales_is },
+            'hr-HR': { translation: locales_hr }
+        },
+    });
+
+    function changeLanguage(lang) {
+        i18next.changeLanguage(lang);
+    }
+
+    if (urlParams.lang) {
+        changeLanguage(urlParams.lang);
+    } else if (storeDefaultLang) {
+        changeLanguage(storeDefaultLang);
+    }
+
+    const i18n = new VueI18next(i18next);
+
+    // TODO: Move all logic from core.js to Vue controller
+    Vue.config.ignoredElements = [
+        'line-items',
+        'low-fee-timeline',
+        // Ignoring custom HTML5 elements, eg: bp-spinner
+        /^bp-/
+    ];
+    
     var checkoutCtrl = new Vue({
         i18n: i18n,
         el: '#checkoutCtrl',

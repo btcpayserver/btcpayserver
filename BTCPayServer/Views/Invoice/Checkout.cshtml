@@ -1,4 +1,4 @@
-﻿@addTagHelper *, Meziantou.AspNetCore.BundleTagHelpers
+@addTagHelper *, Meziantou.AspNetCore.BundleTagHelpers
 @inject BTCPayServer.Services.LanguageService langService
 @model PaymentModel
 @{
@@ -246,12 +246,6 @@
                     'Changelly',
                     'width=600,height=470,toolbar=0,menubar=0,location=0,status=1,scrollbars=1,resizable=0,left=0,top=0');
                 changellyWindow.focus();
-            data: {
-                srvModel: srvModel,
-                lndModel: null,
-                scanDisplayQr: "",
-                expiringSoon: false
-            }
         }
     };
         
@@ -263,8 +257,10 @@
             changelly: ChangellyComponent
         },
         data: {
-            srvModel: srvModel,
-            expiringSoon: false
+                srvModel: srvModel,
+                lndModel: null,
+                scanDisplayQr: "",
+                expiringSoon: false
         }
     });
 </script>

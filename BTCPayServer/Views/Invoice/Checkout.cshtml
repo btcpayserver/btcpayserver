@@ -1,4 +1,4 @@
-@addTagHelper *, Meziantou.AspNetCore.BundleTagHelpers
+﻿@addTagHelper *, Meziantou.AspNetCore.BundleTagHelpers
 @inject BTCPayServer.Services.LanguageService langService
 @model PaymentModel
 @{
@@ -89,7 +89,7 @@
                             });
 
                             function initDropdown(selector) {
-                                $(selector).prettyDropdown({
+                                return $(selector).prettyDropdown({
                                     classic: false,
                                     height: 32,
                                     reverse: true,
@@ -152,7 +152,7 @@
     var ChangellyComponent =
     {
         props: ["storeId", "toCurrency", "toCurrencyDue", "toCurrencyAddress", "merchantId"],
-        data: function () {
+        data: function() {
             return {
                 currencies: [],
                 isLoading: false,
@@ -163,13 +163,16 @@
         computed: {
             url: function() {
                 if (this.calculatedAmount && this.selectedFromCurrency && !this.isLoading) {
-                    return "https://changelly.com/widget/v1?auth=email&to=" +
+                    return "https://changelly.com/widget/v1?auth=email" +
+                        "&from="+
+                        this.selectedFromCurrency + 
+                        "&to=" +
                         this.toCurrency +
                         "&address=" +
                         this.toCurrencyAddress +
                         "&amount=" +
                         this.calculatedAmount +
-                        (this.merchantId ? "&merchant_id="+this.merchantId +"&ref_id="+this.merchantId  : "");
+                        (this.merchantId ? "&merchant_id=" + this.merchantId + "&ref_id=" + this.merchantId : "");
                 }
                 return null;
             }
@@ -199,12 +202,16 @@
                         dataType: "json",
                         success: function(result) {
                             if (result.item2) {
-                                this.currencies.splice(0,0,...result.item1.filter(function(x){ return x && x.enabled}));
+                                this.currencies.splice(0,
+                                    0,
+                                    ...result.item1.filter(function(x) { return x && x.enabled }));
                                 var self = this;
                                 Vue.nextTick(function() {
-                                    debugger;
-                                    console.log(self.$refs.changellyCurrenciesDropdown)
-                                    initDropdown(self.$refs.changellyCurrenciesDropdown);
+                                    initDropdown(self.$refs.changellyCurrenciesDropdown)
+                                        .refresh()
+                                        .on("change", function(event) {
+                                            self.onCurrencyChange(self.$refs.changellyCurrenciesDropdown.value);
+                                        });
                                 });
                             }
                             console.log(result);
@@ -229,12 +236,15 @@
                         },
                         context: this,
                         success: function(result) {
-                            self.calculatedAmount = 1 / result.item1;
+                            self.calculatedAmount = self.toCurrencyDue / result.item1;
                         },
                         complete: function() {
                             self.isLoading = false;
                         }
                     });
+            },
+            onCurrencyChange: function(value) {
+                this.selectedFromCurrency = value;
             },
             openDialog: function(e) {
                 if (e && e.preventDefault) {
@@ -246,6 +256,7 @@
                     'Changelly',
                     'width=600,height=470,toolbar=0,menubar=0,location=0,status=1,scrollbars=1,resizable=0,left=0,top=0');
                 changellyWindow.focus();
+            }
         }
     };
         

@@ -138,19 +138,7 @@ namespace BTCPayServer.Controllers
 
         private async Task<AppData> GetOwnedApp(string appId, AppType? type = null)
         {
-            var userId = GetUserId();
-            using (var ctx = _ContextFactory.CreateContext())
-            {
-                var app = await ctx.UserStore
-                                .Where(us => us.ApplicationUserId == userId && us.Role == StoreRoles.Owner)
-                                .SelectMany(us => us.StoreData.Apps.Where(a => a.Id == appId))
-                   .FirstOrDefaultAsync();
-                if (app == null)
-                    return null;
-                if (type != null && type.Value.ToString() != app.AppType)
-                    return null;
-                return app;
-            }
+            return _AppsHelper.GetAppDataIfOwner(GetUserId(), appId, type);
         }
 
         private async Task<StoreData[]> GetOwnedStores()

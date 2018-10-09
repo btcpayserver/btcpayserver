@@ -261,7 +261,7 @@
                 </div>
                 <center>
                     <changelly inline-template
-                               :merchant-id="srvModel.merchantId"
+                               :merchant-id="srvModel.changellyMerchantId"
                                :store-id="srvModel.storeId"
                                :to-currency="srvModel.paymentMethodId"
                                :to-currency-due="srvModel.btcDue"
@@ -274,9 +274,11 @@
                             toCurrencyAddress: {{toCurrencyAddress}} 
                             calculated : {{calculatedAmount}} 
                             merchantId : {{merchantId}} 
-                            <select v-model="selectedFromCurrency" :disabled="isLoading">
-                                <option>Selected a currency to convert from</option>
-                                <option v-for="currency of currencies" :value="currency.name" v-if="currency.enabled">{{currency.fullName}}</option>
+                            currencies: {{currencies.length}}
+                            selectedFromCurrency: {{selectedFromCurrency}}
+                            <select v-model="selectedFromCurrency" :disabled="isLoading" v-if="currencies.length> 0" ref="changellyCurrenciesDropdown">
+                                <option selected>Select a currency to convert from</option>
+                                <option v-for="currency of currencies" :value="currency.name">{{currency.fullName}}</option>
                             </select>
                             
                             

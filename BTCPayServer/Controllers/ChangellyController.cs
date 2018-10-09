@@ -41,7 +41,6 @@ namespace BTCPayServer.Controllers
             return BadRequest(result);
         }
 
-
         [HttpGet]
         [Route("getExchangeAmount")]
         public async Task<IActionResult> GetExchangeAmount(string storeId, string fromCurrency, string toCurrency,
@@ -60,35 +59,7 @@ namespace BTCPayServer.Controllers
 
             return BadRequest(result);
         }
-
-//        [HttpPost]
-//        [Route("createTransaction")]
-//        public async Task<IActionResult> CreateTransaction(string storeId,
-//            [FromBody] CreateChangellyTransaction request)
-//        {
-//            if (!TryGetChangellyClient(storeId, out var actionResult, out var client))
-//            {
-//                return actionResult;
-//            }
-//
-//            var result = client.CreateTransaction(request.FromCurrency, request.ToCurrency, request.Address,
-//                request.Amount);
-//            if (result.Success)
-//            {
-//                return Ok(result);
-//            }
-//
-//            return BadRequest(result);
-//        }
-//
-//        public class CreateChangellyTransaction
-//        {
-//            public string FromCurrency { get; set; }
-//            public string ToCurrency { get; set; }
-//            public double Amount { get; set; }
-//            public string Address { get; set; }
-//        }
-
+        
         private bool TryGetChangellyClient(string storeId, out IActionResult actionResult,
             out Changelly.Changelly changelly)
         {

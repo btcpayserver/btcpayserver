@@ -101,6 +101,40 @@ namespace BTCPayServer.Services.Rates
             currencyProviders.TryAdd(code, number);
         }
 
+        /// <summary>
+        /// Format a currency like "0.004 $ (USD)", round to significant divisibility
+        /// </summary>
+        /// <param name="value">The value</param>
+        /// <param name="currency">Currency code</param>
+        /// <param name="threeLetterSuffix">Add three letter suffix (like USD)</param>
+        /// <returns></returns>
+        public string DisplayFormatCurrency(decimal value, string currency, bool threeLetterSuffix = true)
+        {
+            var provider = GetNumberFormatInfo(currency, true);
+            var currencyData = GetCurrencyData(currency, true);
+            var divisibility = currencyData.Divisibility;
+            while (true)
+            {
+                var rounded = decimal.Round(value, divisibility, MidpointRounding.AwayFromZero);
+                if ((Math.Abs(rounded - value) / value) < 0.001m)
+                {
+                    value = rounded;
+                    break;
+                }
+                divisibility++;
+            }
+            if (divisibility != provider.CurrencyDecimalDigits)
+            {
+                provider = (NumberFormatInfo)provider.Clone();
+                provider.CurrencyDecimalDigits = divisibility;
+            }
+
+            if (currencyData.Crypto)
+                return value.ToString("C", provider);
+            else
+                return value.ToString("C", provider) + $" ({currency})";
+        }
+
         Dictionary<string, CurrencyData> _Currencies;
 
         static CurrencyData[] LoadCurrency()
@@ -135,13 +169,16 @@ namespace BTCPayServer.Services.Rates
 
             foreach (var network in new BTCPayNetworkProvider(NetworkType.Mainnet).GetAll())
             {
-                dico.TryAdd(network.CryptoCode, new CurrencyData()
+                if (!dico.TryAdd(network.CryptoCode, new CurrencyData()
                 {
                     Code = network.CryptoCode,
                     Divisibility = 8,
                     Name = network.CryptoCode,
                     Crypto = true
-                });
+                }))
+                {
+                    dico[network.CryptoCode].Crypto = true;
+                }
             }
 
             return dico.Values.ToArray();
@@ -150,9 +187,9 @@ namespace BTCPayServer.Services.Rates
         public CurrencyData GetCurrencyData(string currency, bool useFallback)
         {
             CurrencyData result;
-            if(!_Currencies.TryGetValue(currency.ToUpperInvariant(), out result))
+            if (!_Currencies.TryGetValue(currency.ToUpperInvariant(), out result))
             {
-                if(useFallback)
+                if (useFallback)
                 {
                     var usd = GetCurrencyData("USD", false);
                     result = new CurrencyData()

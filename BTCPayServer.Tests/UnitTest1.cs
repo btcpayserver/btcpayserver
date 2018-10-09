@@ -332,7 +332,7 @@ namespace BTCPayServer.Tests
                 (0.1m, "$0.10 (USD)"),
             })
             {
-                var actual = InvoiceController.FormatCurrency(test.Item1, "USD", new CurrencyNameTable());
+                var actual = new CurrencyNameTable().DisplayFormatCurrency(test.Item1, "USD");
                 Assert.Equal(test.Item2, actual);
             }
         }

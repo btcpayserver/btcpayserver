@@ -58,15 +58,15 @@ namespace BTCPayServer.Controllers
 
             return BadRequest(result);
         }
-        
+
         private bool TryGetChangellyClient(string storeId, out IActionResult actionResult,
             out Changelly.Changelly changelly)
         {
             changelly = null;
             actionResult = null;
-            storeId = storeId ?? this.HttpContext.GetStoreData()?.Id;
+            storeId = storeId ?? HttpContext.GetStoreData()?.Id;
 
-            var store = this.HttpContext.GetStoreData();
+            var store = HttpContext.GetStoreData();
             if (store == null || store.Id != storeId)
                 store = _storeRepo.FindStore(storeId).Result;
             if (store == null)
@@ -81,18 +81,18 @@ namespace BTCPayServer.Controllers
                 actionResult = BadRequest(new BitpayErrorsModel() {Error = "Changelly not enabled for this store"});
             }
 
-            var paymentMethod = store.GetSupportedPaymentMethods(_networkProvider).SingleOrDefault(method =>
-                method.PaymentId == ChangellySupportedPaymentMethod.ChangellySupportedPaymentMethodId);
+            var paymentMethod = (ChangellySupportedPaymentMethod)store.GetSupportedPaymentMethods(_networkProvider)
+                .SingleOrDefault(method =>
+                    method.PaymentId == ChangellySupportedPaymentMethod.ChangellySupportedPaymentMethodId);
 
-            if (paymentMethod == null)
+            if (paymentMethod == null || !paymentMethod.IsConfigured())
             {
                 actionResult = BadRequest(new BitpayErrorsModel() {Error = "Changelly not configured for this store"});
                 return false;
             }
 
-            var changellyPaymentMethod = paymentMethod as ChangellySupportedPaymentMethod;
-            changelly = new Changelly.Changelly(changellyPaymentMethod.ApiKey, changellyPaymentMethod.ApiSecret,
-                changellyPaymentMethod.ApiUrl);
+            changelly = new Changelly.Changelly(paymentMethod.ApiKey, paymentMethod.ApiSecret,
+                paymentMethod.ApiUrl);
             return true;
         }
     }

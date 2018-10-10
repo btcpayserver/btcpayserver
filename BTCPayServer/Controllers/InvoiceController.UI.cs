@@ -245,9 +245,11 @@ namespace BTCPayServer.Controllers
             var currency = invoice.ProductInformation.Currency;
             var accounting = paymentMethod.Calculate();
 
-            var changelly = (ChangellySupportedPaymentMethod) store.GetSupportedPaymentMethods(_NetworkProvider).SingleOrDefault(method =>
-                !storeBlob.IsExcluded(ChangellySupportedPaymentMethod.ChangellySupportedPaymentMethodId) &&
-                method.PaymentId.Equals( ChangellySupportedPaymentMethod.ChangellySupportedPaymentMethodId));           
+            var changelly = (ChangellySupportedPaymentMethod)store.GetSupportedPaymentMethods(_NetworkProvider)
+                .SingleOrDefault(method =>
+                    !storeBlob.IsExcluded(ChangellySupportedPaymentMethod.ChangellySupportedPaymentMethodId) &&
+                    method.PaymentId.Equals(ChangellySupportedPaymentMethod.ChangellySupportedPaymentMethodId)
+                    && ((method as ChangellySupportedPaymentMethod)?.IsConfigured() ?? false));           
             
             var model = new PaymentModel()
             {

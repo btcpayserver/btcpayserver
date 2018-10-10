@@ -10,5 +10,14 @@ namespace BTCPayServer.Payments.Changelly
         public string ApiUrl { get; set; }
         public bool Enabled { get; set; }
         public string ChangellyMerchantId { get; set; }
+
+        public bool IsConfigured()
+        {
+            return
+                !string.IsNullOrEmpty(ApiKey) ||
+                !string.IsNullOrEmpty(ApiSecret) ||
+                !string.IsNullOrEmpty(ApiUrl);
+        }
+        
     }
 }

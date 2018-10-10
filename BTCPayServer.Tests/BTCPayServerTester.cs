@@ -201,7 +201,7 @@ namespace BTCPayServer.Tests
         public T GetController<T>(string userId = null, string storeId = null) where T : Controller
         {
             var context = new DefaultHttpContext();
-            context.Request.Host = new HostString("127.0.0.1");
+            context.Request.Host = new HostString("127.0.0.1", Port);
             context.Request.Scheme = "http";
             context.Request.Protocol = "http";
             if (userId != null)

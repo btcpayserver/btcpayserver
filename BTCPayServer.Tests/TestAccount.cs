@@ -73,11 +73,11 @@ namespace BTCPayServer.Tests
 
         public BTCPayNetwork SupportedNetwork { get; set; }
 
-        public void RegisterDerivationScheme(string crytoCode)
+        public WalletId RegisterDerivationScheme(string crytoCode)
         {
-            RegisterDerivationSchemeAsync(crytoCode).GetAwaiter().GetResult();
+            return RegisterDerivationSchemeAsync(crytoCode).GetAwaiter().GetResult();
         }
-        public async Task RegisterDerivationSchemeAsync(string cryptoCode)
+        public async Task<WalletId> RegisterDerivationSchemeAsync(string cryptoCode)
         {
             SupportedNetwork = parent.NetworkProvider.GetNetwork(cryptoCode);
             var store = parent.PayTester.GetController<StoresController>(UserId, StoreId);
@@ -92,6 +92,8 @@ namespace BTCPayServer.Tests
                 DerivationScheme = DerivationScheme.ToString(),
                 Confirmation = true
             }, cryptoCode);
+
+            return new WalletId(StoreId, cryptoCode);
         }
 
         public DerivationStrategyBase DerivationScheme { get; set; }

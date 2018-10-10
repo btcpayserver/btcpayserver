@@ -11,6 +11,19 @@ namespace BTCPayServer.Tests
     public class RateRulesTest
     {
         [Fact]
+        public void SecondDuplicatedRuleIsIgnored()
+        {
+            StringBuilder builder = new StringBuilder();
+            builder.AppendLine("DOGE_X = 1.1");
+            builder.AppendLine("DOGE_X = 1.2");
+            Assert.True(RateRules.TryParse(builder.ToString(), out var rules));
+            var rule = rules.GetRuleFor(new CurrencyPair("DOGE", "BTC"));
+            rule.Reevaluate();
+            Assert.True(!rule.HasError);
+            Assert.Equal(1.1m, rule.BidAsk.Ask);
+        }
+
+        [Fact]
         public void CanParseRateRules()
         {
             // Check happy path

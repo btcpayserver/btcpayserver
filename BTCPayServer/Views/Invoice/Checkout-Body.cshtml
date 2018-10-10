@@ -272,20 +272,22 @@
                                :to-currency="srvModel.paymentMethodId"
                                :to-currency-due="srvModel.btcDue"
                                :to-currency-address="srvModel.btcAddress">
-                        <div>
-                            <select v-show="isLoading"
-                                    v-model="selectedFromCurrency"
-                                    :disabled="isLoading"
-                                    v-on:change="onCurrencyChange($event)"
-                                    ref="changellyCurrenciesDropdown">
-                                <option value="">Select a currency to convert from</option>
-                                <option v-for="currency of currencies" :value="currency.name">{{currency.fullName}}</option>
-                            </select>
-                            <a v-if="url && !spinnerActive" v-on:click="openDialog($event)" :href="url">
-                                <img src="https://changelly.com/pay_button.png" alt="Changelly" />
+                        <div class="changelly-component">
+                            <div class="changelly-component-dropdown-holder" v-show="prettyDropdownInstance">
+                                <select 
+                                        v-model="selectedFromCurrency"
+                                        :disabled="isLoading"
+                                        v-on:change="onCurrencyChange($event)"
+                                        ref="changellyCurrenciesDropdown">
+                                    <option value="">Select a currency to convert from</option>
+                                    <option v-for="currency of currencies" :value="currency.name">{{currency.fullName}}</option>
+                                </select>
+                            </div>
+                            <a  v-on:click="openDialog($event)" :href="url" class="changelly-component-button">
+                                <img src="https://changelly.com/pay_button.png" alt="Changelly" v-show="url"/>
                             </a>
-                            <div v-if="spinnerActive" class="general__spinner" style="display:block">
-                                <partial name="Checkout-Spinner" />
+                            <div v-show="isLoading" class="general__spinner">
+                                <partial name="Checkout-Spinner"/>
                             </div>
                         </div>
                     </changelly>

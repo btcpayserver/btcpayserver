@@ -11465,3 +11465,16 @@ low-fee-timeline {
         opacity: 1;
         transition: opacity 1s ease;
     }
+
+.changelly-component {
+    position: relative;
+}
+
+.changelly-component-dropdown-holder {
+    height: 32px;
+    margin-bottom: 10px;
+}
+.changelly-component .general__spinner bp-spinner {
+    width: 50px;
+    height: 50px;
+}

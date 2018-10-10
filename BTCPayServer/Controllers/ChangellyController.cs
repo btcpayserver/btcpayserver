@@ -8,7 +8,6 @@ using NicolasDorier.RateLimits;
 
 namespace BTCPayServer.Controllers
 {
-    [RateLimitsFilter(ZoneLimits.Changelly, Scope = RateLimitsScope.RemoteAddress)]
     [Route("[controller]/{storeId}")]
     public class ChangellyController : Controller
     {

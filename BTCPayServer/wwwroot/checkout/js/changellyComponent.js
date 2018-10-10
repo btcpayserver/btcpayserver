@@ -6,7 +6,8 @@
             currencies: [],
             isLoading: false,
             calculatedAmount: 0,
-            selectedFromCurrency: ""
+            selectedFromCurrency: "",
+            spinnerActive: true
         };
     },
     computed: {
@@ -73,7 +74,6 @@
                 });
         },
         calculateAmount: function () {
-
             var self = this;
             internal(1);
 
@@ -90,7 +90,7 @@
                         },
                         context: this,
                         success: function (result) {
-                            if (amount == 1) {
+                            if (amount === 1) {
                                 var rate = result.item1;
                                 var baseCost = self.toCurrencyDue / rate;
                                 var fee = baseCost * 0.005;
@@ -106,11 +106,13 @@
                         },
                         complete: function () {
                             self.isLoading = false;
+                            self.spinnerActive = false;
                         }
                     });
             }
         },
         onCurrencyChange: function (value) {
+            this.spinnerActive = true;
             this.selectedFromCurrency = value;
         },
         openDialog: function (e) {

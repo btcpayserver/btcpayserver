@@ -120,30 +120,67 @@ namespace BTCPayServer.Tests
                     .Build();
             _Host.Start();
             InvoiceRepository = (InvoiceRepository)_Host.Services.GetService(typeof(InvoiceRepository));
+            StoreRepository = (StoreRepository)_Host.Services.GetService(typeof(StoreRepository));
 
-            var rateProvider = (BTCPayRateProviderFactory)_Host.Services.GetService(typeof(BTCPayRateProviderFactory));
-            rateProvider.DirectProviders.Clear();
+            if (MockRates)
+            {
+                var rateProvider = (RateProviderFactory)_Host.Services.GetService(typeof(RateProviderFactory));
+                rateProvider.Providers.Clear();
 
-            var coinAverageMock = new MockRateProvider();
-            coinAverageMock.ExchangeRates.Add(new Rating.ExchangeRate()
-            {
-                Exchange = "coinaverage",
-                CurrencyPair = CurrencyPair.Parse("BTC_USD"),
-                Value = 5000m
-            });
-            coinAverageMock.ExchangeRates.Add(new Rating.ExchangeRate()
-            {
-                Exchange = "coinaverage",
-                CurrencyPair = CurrencyPair.Parse("BTC_CAD"),
-                Value = 4500m
-            });
-            coinAverageMock.ExchangeRates.Add(new Rating.ExchangeRate()
-            {
-                Exchange = "coinaverage",
-                CurrencyPair = CurrencyPair.Parse("LTC_USD"),
-                Value = 500m
-            });
-            rateProvider.DirectProviders.Add("coinaverage", coinAverageMock);
+                var coinAverageMock = new MockRateProvider();
+                coinAverageMock.ExchangeRates.Add(new Rating.ExchangeRate()
+                {
+                    Exchange = "coinaverage",
+                    CurrencyPair = CurrencyPair.Parse("BTC_USD"),
+                    BidAsk = new BidAsk(5000m)
+                });
+                coinAverageMock.ExchangeRates.Add(new Rating.ExchangeRate()
+                {
+                    Exchange = "coinaverage",
+                    CurrencyPair = CurrencyPair.Parse("BTC_CAD"),
+                    BidAsk = new BidAsk(4500m)
+                });
+                coinAverageMock.ExchangeRates.Add(new Rating.ExchangeRate()
+                {
+                    Exchange = "coinaverage",
+                    CurrencyPair = CurrencyPair.Parse("LTC_BTC"),
+                    BidAsk = new BidAsk(0.001m)
+                });
+                coinAverageMock.ExchangeRates.Add(new Rating.ExchangeRate()
+                {
+                    Exchange = "coinaverage",
+                    CurrencyPair = CurrencyPair.Parse("LTC_USD"),
+                    BidAsk = new BidAsk(500m)
+                });
+                rateProvider.Providers.Add("coinaverage", coinAverageMock);
+
+                var bitflyerMock = new MockRateProvider();
+                bitflyerMock.ExchangeRates.Add(new Rating.ExchangeRate()
+                {
+                    Exchange = "bitflyer",
+                    CurrencyPair = CurrencyPair.Parse("BTC_JPY"),
+                    BidAsk = new BidAsk(700000m)
+                });
+                rateProvider.Providers.Add("bitflyer", bitflyerMock);
+
+                var quadrigacx = new MockRateProvider();
+                quadrigacx.ExchangeRates.Add(new Rating.ExchangeRate()
+                {
+                    Exchange = "quadrigacx",
+                    CurrencyPair = CurrencyPair.Parse("BTC_CAD"),
+                    BidAsk = new BidAsk(6000m)
+                });
+                rateProvider.Providers.Add("quadrigacx", quadrigacx);
+
+                var bittrex = new MockRateProvider();
+                bittrex.ExchangeRates.Add(new Rating.ExchangeRate()
+                {
+                    Exchange = "bittrex",
+                    CurrencyPair = CurrencyPair.Parse("DOGE_BTC"),
+                    BidAsk = new BidAsk(0.004m)
+                });
+                rateProvider.Providers.Add("bittrex", bittrex);
+            }
         }
 
         public string HostName
@@ -152,6 +189,7 @@ namespace BTCPayServer.Tests
             internal set;
         }
         public InvoiceRepository InvoiceRepository { get; private set; }
+        public StoreRepository StoreRepository { get; private set; }
         public Uri IntegratedLightning { get; internal set; }
         public bool InContainer { get; internal set; }
 
@@ -163,14 +201,14 @@ namespace BTCPayServer.Tests
         public T GetController<T>(string userId = null, string storeId = null) where T : Controller
         {
             var context = new DefaultHttpContext();
-            context.Request.Host = new HostString("127.0.0.1");
+            context.Request.Host = new HostString("127.0.0.1", Port);
             context.Request.Scheme = "http";
             context.Request.Protocol = "http";
             if (userId != null)
             {
                 context.User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, userId) }, Policies.CookieAuthentication));
             }
-            if(storeId != null)
+            if (storeId != null)
             {
                 context.SetStoreData(GetService<StoreRepository>().FindStore(storeId, userId).GetAwaiter().GetResult());
             }

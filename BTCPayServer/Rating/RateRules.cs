@@ -18,6 +18,7 @@ namespace BTCPayServer.Rating
         UnsupportedOperator,
         MissingArgument,
         DivideByZero,
+        InvalidNegative,
         PreprocessError,
         RateUnavailable,
         InvalidExchangeName,
@@ -76,7 +77,7 @@ namespace BTCPayServer.Rating
                     if (CurrencyPair.TryParse(id.Identifier.ValueText, out var currencyPair))
                     {
                         expression = expression.WithTriviaFrom(expression);
-                        ExpressionsByPair.Add(currencyPair, (expression, id));
+                        ExpressionsByPair.TryAdd(currencyPair, (expression, id));
                     }
                 }
                 base.VisitAssignmentExpression(node);
@@ -98,7 +99,20 @@ namespace BTCPayServer.Rating
         SyntaxNode root;
         RuleList ruleList;
 
-        public decimal GlobalMultiplier { get; set; } = 1.0m;
+        decimal _Spread;
+        public decimal Spread
+        {
+            get
+            {
+                return _Spread;
+            }
+            set
+            {
+                if (value > 1.0m || value < 0.0m)
+                    throw new ArgumentOutOfRangeException(paramName: nameof(value), message: "The spread should be between 0 and 1");
+                _Spread = value;
+            }
+        }
 
         RateRules(SyntaxNode root)
         {
@@ -132,14 +146,16 @@ namespace BTCPayServer.Rating
         {
             if (currencyPair.Left == "X" || currencyPair.Right == "X")
                 throw new ArgumentException(paramName: nameof(currencyPair), message: "Invalid X currency");
+            if (currencyPair.Left == currencyPair.Right)
+                return new RateRule(this, currencyPair, CreateExpression("1.0"));
             var candidate = FindBestCandidate(currencyPair);
-            if (GlobalMultiplier != decimal.One)
+            if (Spread != decimal.Zero)
             {
-                candidate = CreateExpression($"({candidate}) * {GlobalMultiplier.ToString(CultureInfo.InvariantCulture)}");
+                candidate = CreateExpression($"({candidate}) * ({(1.0m - Spread).ToString(CultureInfo.InvariantCulture)}, {(1.0m + Spread).ToString(CultureInfo.InvariantCulture)})");
             }
             return new RateRule(this, currencyPair, candidate);
         }
-        
+
         public ExpressionSyntax FindBestCandidate(CurrencyPair p)
         {
             var invP = p.Inverse();
@@ -147,9 +163,9 @@ namespace BTCPayServer.Rating
             foreach (var pair in new[]
             {
                 (Pair: p, Priority: 0, Inverse: false),
-                (Pair: new CurrencyPair(p.Left, "X"), Priority: 1, Inverse: false),
-                (Pair: new CurrencyPair("X", p.Right), Priority: 1, Inverse: false),
-                (Pair: invP, Priority: 2, Inverse: true),
+                (Pair: invP, Priority: 1, Inverse: true),
+                (Pair: new CurrencyPair(p.Left, "X"), Priority: 2, Inverse: false),
+                (Pair: new CurrencyPair("X", p.Right), Priority: 2, Inverse: false),
                 (Pair: new CurrencyPair(invP.Left, "X"), Priority: 3, Inverse: true),
                 (Pair: new CurrencyPair("X", invP.Right), Priority: 3, Inverse: true),
                 (Pair: new CurrencyPair("X", "X"), Priority: 4, Inverse: false)
@@ -216,8 +232,7 @@ namespace BTCPayServer.Rating
                     }
                     else
                     {
-                        var token = SyntaxFactory.ParseToken(rate.Value.ToString(CultureInfo.InvariantCulture));
-                        return SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, token);
+                        return RateRules.CreateExpression(rate.ToString());
                     }
                 }
             }
@@ -225,7 +240,7 @@ namespace BTCPayServer.Rating
 
         class CalculateWalker : CSharpSyntaxWalker
         {
-            public Stack<decimal> Values = new Stack<decimal>();
+            public Stack<BidAsk> Values = new Stack<BidAsk>();
             public List<RateRulesErrors> Errors = new List<RateRulesErrors>();
 
             public override void VisitPrefixUnaryExpression(PrefixUnaryExpressionSyntax node)
@@ -254,7 +269,15 @@ namespace BTCPayServer.Rating
                 switch (node.Kind())
                 {
                     case SyntaxKind.UnaryMinusExpression:
-                        Values.Push(-Values.Pop());
+                        var v = Values.Pop();
+                        if (v.Bid == v.Ask)
+                        {
+                            Values.Push(-v);
+                        }
+                        else
+                        {
+                            Errors.Add(RateRulesErrors.InvalidNegative);
+                        }
                         break;
                     case SyntaxKind.UnaryPlusExpression:
                         Values.Push(+Values.Pop());
@@ -299,7 +322,7 @@ namespace BTCPayServer.Rating
                         Values.Push(a * b);
                         break;
                     case SyntaxKind.DivideExpression:
-                        if (b == decimal.Zero)
+                        if (a.Ask == decimal.Zero || b.Ask == decimal.Zero)
                         {
                             Errors.Add(RateRulesErrors.DivideByZero);
                         }
@@ -309,11 +332,36 @@ namespace BTCPayServer.Rating
                         }
                         break;
                     case SyntaxKind.SubtractExpression:
-                        Values.Push(a - b);
+                        if (b.Bid == b.Ask)
+                        {
+                            Values.Push(a - b);
+                        }
+                        else
+                        {
+                            Errors.Add(RateRulesErrors.InvalidNegative);
+                        }
                         break;
                     default:
                         throw new NotSupportedException("Should never happen");
                 }
+            }
+
+            Stack<decimal> _TupleValues = null;
+            public override void VisitTupleExpression(TupleExpressionSyntax node)
+            {
+                _TupleValues = new Stack<decimal>();
+                base.VisitTupleExpression(node);
+                if (_TupleValues.Count != 2)
+                {
+                    Errors.Add(RateRulesErrors.MissingArgument);
+                }
+                else
+                {
+                    var ask = _TupleValues.Pop();
+                    var bid = _TupleValues.Pop();
+                    Values.Push(new BidAsk(bid, ask));
+                }
+                _TupleValues = null;
             }
 
             public override void VisitLiteralExpression(LiteralExpressionSyntax node)
@@ -321,7 +369,11 @@ namespace BTCPayServer.Rating
                 switch (node.Kind())
                 {
                     case SyntaxKind.NumericLiteralExpression:
-                        Values.Push(decimal.Parse(node.ToString(), CultureInfo.InvariantCulture));
+                        var v = decimal.Parse(node.ToString(), CultureInfo.InvariantCulture);
+                        if (_TupleValues == null)
+                            Values.Push(new BidAsk(v));
+                        else
+                            _TupleValues.Push(v);
                         break;
                 }
             }
@@ -347,21 +399,36 @@ namespace BTCPayServer.Rating
         class FlattenExpressionRewriter : CSharpSyntaxRewriter
         {
             RateRules parent;
+            CurrencyPair pair;
+            int nested = 0;
             public FlattenExpressionRewriter(RateRules parent, CurrencyPair pair)
             {
-                Context.Push(pair);
+                this.pair = pair;
                 this.parent = parent;
             }
 
             public ExchangeRates ExchangeRates = new ExchangeRates();
-            public Stack<CurrencyPair> Context { get; set; } = new Stack<CurrencyPair>();
             bool IsInvocation;
             public override SyntaxNode VisitInvocationExpression(InvocationExpressionSyntax node)
             {
+                if (IsInvocation)
+                {
+                    Errors.Add(RateRulesErrors.InvalidCurrencyIdentifier);
+                    return RateRules.CreateExpression($"ERR_INVALID_CURRENCY_PAIR({node.ToString()})");
+                }
                 IsInvocation = true;
                 _ExchangeName = node.Expression.ToString();
                 var result = base.VisitInvocationExpression(node);
                 IsInvocation = false;
+                return result;
+            }
+
+            bool IsArgumentList;
+            public override SyntaxNode VisitArgumentList(ArgumentListSyntax node)
+            {
+                IsArgumentList = true;
+                var result = base.VisitArgumentList(node);
+                IsArgumentList = false;
                 return result;
             }
 
@@ -371,12 +438,12 @@ namespace BTCPayServer.Rating
             const int MaxNestedCount = 8;
             public override SyntaxNode VisitIdentifierName(IdentifierNameSyntax node)
             {
-                if (CurrencyPair.TryParse(node.Identifier.ValueText, out var currentPair))
+                if (
+                    (!IsInvocation || IsArgumentList) &&
+                    CurrencyPair.TryParse(node.Identifier.ValueText, out var currentPair))
                 {
-                    var ctx = Context.Peek();
-
-                    var replacedPair = new CurrencyPair(left: currentPair.Left == "X" ? ctx.Left : currentPair.Left,
-                                                       right: currentPair.Right == "X" ? ctx.Right : currentPair.Right);
+                    var replacedPair = new CurrencyPair(left: currentPair.Left == "X" ? pair.Left : currentPair.Left,
+                                                       right: currentPair.Right == "X" ? pair.Right : currentPair.Right);
                     if (IsInvocation) // eg. replace bittrex(BTC_X) to bittrex(BTC_USD)
                     {
                         ExchangeRates.Add(new ExchangeRate() { CurrencyPair = replacedPair, Exchange = _ExchangeName });
@@ -385,13 +452,13 @@ namespace BTCPayServer.Rating
                     else // eg. replace BTC_X to BTC_USD, then replace by the expression for BTC_USD
                     {
                         var bestCandidate = parent.FindBestCandidate(replacedPair);
-                        if (Context.Count > MaxNestedCount)
+                        if (nested > MaxNestedCount)
                         {
                             Errors.Add(RateRulesErrors.TooMuchNestedCalls);
                             return RateRules.CreateExpression($"ERR_TOO_MUCH_NESTED_CALLS({replacedPair})");
                         }
-                        Context.Push(replacedPair);
-                        var replaced = Visit(bestCandidate);
+                        var innerFlatten = CreateNewContext(replacedPair);
+                        var replaced = innerFlatten.Visit(bestCandidate);
                         if (replaced is ExpressionSyntax expression)
                         {
                             var hasBinaryOps = new HasBinaryOperations();
@@ -401,7 +468,6 @@ namespace BTCPayServer.Rating
                                 replaced = SyntaxFactory.ParenthesizedExpression(expression);
                             }
                         }
-                        Context.Pop();
                         if (Errors.Contains(RateRulesErrors.TooMuchNestedCalls))
                         {
                             return RateRules.CreateExpression($"ERR_TOO_MUCH_NESTED_CALLS({replacedPair})");
@@ -411,14 +477,35 @@ namespace BTCPayServer.Rating
                 }
                 return base.VisitIdentifierName(node);
             }
+
+            private FlattenExpressionRewriter CreateNewContext(CurrencyPair pair)
+            {
+                return new FlattenExpressionRewriter(parent, pair)
+                {
+                    Errors = Errors,
+                    nested = nested + 1,
+                    ExchangeRates = ExchangeRates,
+                };
+            }
         }
         private SyntaxNode expression;
         FlattenExpressionRewriter flatten;
 
         public RateRule(RateRules parent, CurrencyPair currencyPair, SyntaxNode candidate)
         {
+            _CurrencyPair = currencyPair;
             flatten = new FlattenExpressionRewriter(parent, currencyPair);
             this.expression = flatten.Visit(candidate);
+        }
+
+
+        private readonly CurrencyPair _CurrencyPair;
+        public CurrencyPair CurrencyPair
+        {
+            get
+            {
+                return _CurrencyPair;
+            }
         }
 
         public ExchangeRates ExchangeRates
@@ -432,7 +519,7 @@ namespace BTCPayServer.Rating
 
         public bool Reevaluate()
         {
-            _Value = null;
+            _BidAsk = null;
             _EvaluatedNode = null;
             _Evaluated = null;
             Errors.Clear();
@@ -452,7 +539,7 @@ namespace BTCPayServer.Rating
                 Errors.AddRange(calculate.Errors);
                 return false;
             }
-            _Value = calculate.Values.Pop();
+            _BidAsk = calculate.Values.Pop();
             _EvaluatedNode = result;
             return true;
         }
@@ -491,12 +578,12 @@ namespace BTCPayServer.Rating
             return expression.NormalizeWhitespace("", "\n").ToString();
         }
 
-        decimal? _Value;
-        public decimal? Value
+        BidAsk _BidAsk;
+        public BidAsk BidAsk
         {
             get
             {
-                return _Value;
+                return _BidAsk;
             }
         }
     }

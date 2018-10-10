@@ -49,13 +49,26 @@ namespace BTCPayServer.Services.Rates
         Task AddHeader(HttpRequestMessage message);
     }
 
-    public class CoinAverageRateProvider : IRateProvider
+    public class CoinAverageRateProvider : IRateProvider, IHasExchangeName
     {
         public const string CoinAverageName = "coinaverage";
         public CoinAverageRateProvider()
         {
-            
+
         }
+
+        public HttpClient HttpClient
+        {
+            get
+            {
+                return _LocalClient ?? _Client;
+            }
+            set
+            {
+                _LocalClient = null;
+            }
+        }
+        HttpClient _LocalClient;
         static HttpClient _Client = new HttpClient();
 
         public string Exchange { get; set; } = CoinAverageName;
@@ -69,10 +82,33 @@ namespace BTCPayServer.Services.Rates
 
         public ICoinAverageAuthenticator Authenticator { get; set; }
 
-        private bool TryToDecimal(JProperty p, out decimal v)
+        public string ExchangeName => Exchange ?? CoinAverageName;
+
+        private bool TryToBidAsk(JProperty p, out BidAsk bidAsk)
         {
-            JToken token = p.Value[Exchange == CoinAverageName ? "last" : "bid"];
-            return decimal.TryParse(token.Value<string>(), System.Globalization.NumberStyles.AllowExponent | System.Globalization.NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out v);
+            bidAsk = null;
+            if (Exchange == CoinAverageName)
+            {
+                JToken last = p.Value["last"];
+                if (!decimal.TryParse(last.Value<string>(), System.Globalization.NumberStyles.AllowExponent | System.Globalization.NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var v) ||
+                    v <= 0)
+                    return false;
+                bidAsk = new BidAsk(v);
+                return true;
+            }
+            else
+            {
+                JToken bid = p.Value["bid"];
+                JToken ask = p.Value["ask"];
+                if (bid == null || ask == null ||
+                    !decimal.TryParse(bid.Value<string>(), System.Globalization.NumberStyles.AllowExponent | System.Globalization.NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var v1) ||
+                    !decimal.TryParse(ask.Value<string>(), System.Globalization.NumberStyles.AllowExponent | System.Globalization.NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var v2) ||
+                    v1 > v2 ||
+                    v1 <= 0 || v2 <= 0)
+                    return false;
+                bidAsk = new BidAsk(v1, v2);
+                return true;
+            }
         }
 
         public async Task<ExchangeRates> GetRatesAsync()
@@ -86,7 +122,7 @@ namespace BTCPayServer.Services.Rates
             {
                 await auth.AddHeader(request);
             }
-            var resp = await _Client.SendAsync(request);
+            var resp = await HttpClient.SendAsync(request);
             using (resp)
             {
 
@@ -108,10 +144,10 @@ namespace BTCPayServer.Services.Rates
                 {
                     ExchangeRate exchangeRate = new ExchangeRate();
                     exchangeRate.Exchange = Exchange;
-                    if (!TryToDecimal(prop, out decimal value))
+                    if (!TryToBidAsk(prop, out var value))
                         continue;
-                    exchangeRate.Value = value;
-                    if(CurrencyPair.TryParse(prop.Name, out var pair))
+                    exchangeRate.BidAsk = value;
+                    if (CurrencyPair.TryParse(prop.Name, out var pair))
                     {
                         exchangeRate.CurrencyPair = pair;
                         exchangeRates.Add(exchangeRate);
@@ -129,7 +165,7 @@ namespace BTCPayServer.Services.Rates
             {
                 await auth.AddHeader(request);
             }
-            var resp = await _Client.SendAsync(request);
+            var resp = await HttpClient.SendAsync(request);
             resp.EnsureSuccessStatusCode();
         }
 
@@ -141,7 +177,7 @@ namespace BTCPayServer.Services.Rates
             {
                 await auth.AddHeader(request);
             }
-            var resp = await _Client.SendAsync(request);
+            var resp = await HttpClient.SendAsync(request);
             resp.EnsureSuccessStatusCode();
             var jobj = JObject.Parse(await resp.Content.ReadAsStringAsync());
             var response = new GetRateLimitsResponse();
@@ -172,7 +208,7 @@ namespace BTCPayServer.Services.Rates
             {
                 await auth.AddHeader(request);
             }
-            var resp = await _Client.SendAsync(request);
+            var resp = await HttpClient.SendAsync(request);
             resp.EnsureSuccessStatusCode();
             var jobj = JObject.Parse(await resp.Content.ReadAsStringAsync());
             var response = new GetExchangeTickersResponse();

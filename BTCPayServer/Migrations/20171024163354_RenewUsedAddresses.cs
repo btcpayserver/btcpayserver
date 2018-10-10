@@ -17,8 +17,8 @@ namespace BTCPayServer.Migrations
                 name: "HistoricalAddressInvoices",
                 columns: table => new
                 {
-                    InvoiceDataId = table.Column<string>(type: "TEXT", nullable: false),
-                    Address = table.Column<string>(type: "TEXT", nullable: false),
+                    InvoiceDataId = table.Column<string>(nullable: false),
+                    Address = table.Column<string>(nullable: false),
                     Assigned = table.Column<DateTimeOffset>(nullable: false),
                     UnAssigned = table.Column<DateTimeOffset>(nullable: true)
                 },

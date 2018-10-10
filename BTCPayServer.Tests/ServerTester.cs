@@ -18,8 +18,10 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Globalization;
-using BTCPayServer.Payments.Lightning.CLightning;
-using BTCPayServer.Payments.Lightning.Charge;
+using BTCPayServer.Tests.Lnd;
+using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Lightning.CLightning;
+using BTCPayServer.Lightning;
 
 namespace BTCPayServer.Tests
 {
@@ -47,10 +49,12 @@ namespace BTCPayServer.Tests
             LTCExplorerClient = new ExplorerClient(NetworkProvider.GetNetwork("LTC").NBXplorerNetwork, new Uri(GetEnvironment("TESTS_LTCNBXPLORERURL", "http://127.0.0.1:32838/")));
 
             var btc = NetworkProvider.GetNetwork("BTC").NBitcoinNetwork;
-            CustomerLightningD = new CLightningRPCClient(new Uri(GetEnvironment("TEST_CUSTOMERLIGHTNINGD", "tcp://127.0.0.1:30992/")), btc);
-            MerchantLightningD = new CLightningRPCClient(new Uri(GetEnvironment("TEST_MERCHANTLIGHTNINGD", "tcp://127.0.0.1:30993/")), btc);
+            CustomerLightningD = LightningClientFactory.CreateClient(GetEnvironment("TEST_CUSTOMERLIGHTNINGD", "type=clightning;server=tcp://127.0.0.1:30992/"), btc);
+            MerchantLightningD = LightningClientFactory.CreateClient(GetEnvironment("TEST_MERCHANTLIGHTNINGD", "type=clightning;server=tcp://127.0.0.1:30993/"), btc);
 
-            MerchantCharge = new ChargeTester(this, "TEST_MERCHANTCHARGE", "http://api-token:foiewnccewuify@127.0.0.1:54938/", "merchant_lightningd", btc);
+            MerchantCharge = new ChargeTester(this, "TEST_MERCHANTCHARGE", "type=charge;server=http://127.0.0.1:54938/;api-token=foiewnccewuify", "merchant_lightningd", btc);
+
+            MerchantLnd = new LndMockTester(this, "TEST_MERCHANTLND", "https://lnd:lnd@127.0.0.1:53280/", "merchant_lnd", btc);
 
             PayTester = new BTCPayServerTester(Path.Combine(_Directory, "pay"))
             {
@@ -74,69 +78,24 @@ namespace BTCPayServer.Tests
             PayTester.Start();
         }
 
-
-        /// <summary>
-        /// Connect a customer LN node to the merchant LN node
-        /// </summary>
-        public void PrepareLightning()
-        {
-            PrepareLightningAsync().GetAwaiter().GetResult();
-        }
-
-
         /// <summary>
         /// Connect a customer LN node to the merchant LN node
         /// </summary>
         /// <returns></returns>
-        public async Task PrepareLightningAsync()
+        public Task EnsureConnectedToDestinations()
         {
-            while (true)
-            {
-                var skippedStates = new[] { "ONCHAIN", "CHANNELD_SHUTTING_DOWN", "CLOSINGD_SIGEXCHANGE", "CLOSINGD_COMPLETE", "FUNDING_SPEND_SEEN" };
-                var channel = (await CustomerLightningD.ListPeersAsync())
-                            .SelectMany(p => p.Channels)
-                            .Where(c => !skippedStates.Contains(c.State ?? ""))
-                            .FirstOrDefault();
-                switch (channel?.State)
-                {
-                    case null:
-                        var merchantInfo = await WaitLNSynched();
-                        var clightning = new NodeInfo(merchantInfo.Id, MerchantCharge.P2PHost, merchantInfo.Port);
-                        await CustomerLightningD.ConnectAsync(clightning);
-                        var address = await CustomerLightningD.NewAddressAsync();
-                        await ExplorerNode.SendToAddressAsync(address, Money.Coins(0.2m));
-                        ExplorerNode.Generate(1);
-                        await WaitLNSynched();
-                        await Task.Delay(1000);
-                        await CustomerLightningD.FundChannelAsync(clightning, Money.Satoshis(16777215));
-                        break;
-                    case "CHANNELD_AWAITING_LOCKIN":
-                        ExplorerNode.Generate(1);
-                        await WaitLNSynched();
-                        break;
-                    case "CHANNELD_NORMAL":
-                        return;
-                    default:
-                        throw new NotSupportedException(channel?.State ?? "");
-                }
-            }
+            return BTCPayServer.Lightning.Tests.ConnectChannels.ConnectAll(ExplorerNode, GetLightningSenderClients(), GetLightningDestClients());
         }
 
-        private async Task<GetInfoResponse> WaitLNSynched()
+        private IEnumerable<ILightningClient> GetLightningSenderClients()
         {
-            while (true)
-            {
-                var merchantInfo = await MerchantCharge.Client.GetInfoAsync();
-                var blockCount = await ExplorerNode.GetBlockCountAsync();
-                if (merchantInfo.BlockHeight != blockCount)
-                {
-                    await Task.Delay(1000);
-                }
-                else
-                {
-                    return merchantInfo;
-                }
-            }
+            yield return CustomerLightningD;
+        }
+
+        private IEnumerable<ILightningClient> GetLightningDestClients()
+        {
+            yield return MerchantLightningD;
+            yield return MerchantLnd.Client;
         }
 
         public void SendLightningPayment(Invoice invoice)
@@ -148,12 +107,14 @@ namespace BTCPayServer.Tests
         {
             var bolt11 = invoice.CryptoInfo.Where(o => o.PaymentUrls.BOLT11 != null).First().PaymentUrls.BOLT11;
             bolt11 = bolt11.Replace("lightning:", "", StringComparison.OrdinalIgnoreCase);
-            await CustomerLightningD.SendAsync(bolt11);
+            await CustomerLightningD.Pay(bolt11);
         }
 
-        public CLightningRPCClient CustomerLightningD { get; set; }
-        public CLightningRPCClient MerchantLightningD { get; private set; }
+        public ILightningClient CustomerLightningD { get; set; }
+
+        public ILightningClient MerchantLightningD { get; private set; }
         public ChargeTester MerchantCharge { get; private set; }
+        public LndMockTester MerchantLnd { get; set; }
 
         internal string GetEnvironment(string variable, string defaultValue)
         {
@@ -185,106 +146,18 @@ namespace BTCPayServer.Tests
 
         HttpClient _Http = new HttpClient();
 
-        class MockHttpRequest : HttpRequest
-        {
-            Uri serverUri;
-            public MockHttpRequest(Uri serverUri)
-            {
-                this.serverUri = serverUri;
-            }
-            public override HttpContext HttpContext => throw new NotImplementedException();
-
-            public override string Method
-            {
-                get => throw new NotImplementedException();
-                set => throw new NotImplementedException();
-            }
-            public override string Scheme
-            {
-                get => serverUri.Scheme;
-                set => throw new NotImplementedException();
-            }
-            public override bool IsHttps
-            {
-                get => throw new NotImplementedException();
-                set => throw new NotImplementedException();
-            }
-            public override HostString Host
-            {
-                get => new HostString(serverUri.Host, serverUri.Port);
-                set => throw new NotImplementedException();
-            }
-            public override PathString PathBase
-            {
-                get => "";
-                set => throw new NotImplementedException();
-            }
-            public override PathString Path
-            {
-                get => throw new NotImplementedException();
-                set => throw new NotImplementedException();
-            }
-            public override QueryString QueryString
-            {
-                get => throw new NotImplementedException();
-                set => throw new NotImplementedException();
-            }
-            public override IQueryCollection Query
-            {
-                get => throw new NotImplementedException();
-                set => throw new NotImplementedException();
-            }
-            public override string Protocol
-            {
-                get => throw new NotImplementedException();
-                set => throw new NotImplementedException();
-            }
-
-            public override IHeaderDictionary Headers => throw new NotImplementedException();
-
-            public override IRequestCookieCollection Cookies
-            {
-                get => throw new NotImplementedException();
-                set => throw new NotImplementedException();
-            }
-            public override long? ContentLength
-            {
-                get => throw new NotImplementedException();
-                set => throw new NotImplementedException();
-            }
-            public override string ContentType
-            {
-                get => throw new NotImplementedException();
-                set => throw new NotImplementedException();
-            }
-            public override Stream Body
-            {
-                get => throw new NotImplementedException();
-                set => throw new NotImplementedException();
-            }
-
-            public override bool HasFormContentType => throw new NotImplementedException();
-
-            public override IFormCollection Form
-            {
-                get => throw new NotImplementedException();
-                set => throw new NotImplementedException();
-            }
-
-            public override Task<IFormCollection> ReadFormAsync(CancellationToken cancellationToken = default(CancellationToken))
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-
         public BTCPayServerTester PayTester
         {
             get; set;
         }
+        public List<string> Stores { get; internal set; } = new List<string>();
 
         public void Dispose()
         {
+            foreach (var store in Stores)
+            {
+                Xunit.Assert.True(PayTester.StoreRepository.DeleteStore(store).GetAwaiter().GetResult());
+            }
             if (PayTester != null)
                 PayTester.Dispose();
         }

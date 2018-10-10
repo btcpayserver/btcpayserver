@@ -1,23 +1,20 @@
-﻿using BTCPayServer.Authentication;
-using Microsoft.Extensions.Logging;
-using BTCPayServer.Filters;
-using BTCPayServer.Logging;
-using BTCPayServer.Models;
-using Microsoft.AspNetCore.Mvc;
-using NBitpayClient;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using BTCPayServer.Data;
+using BTCPayServer.Filters;
+using BTCPayServer.Models;
+using BTCPayServer.Security;
 using BTCPayServer.Services.Invoices;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
-using BTCPayServer.Services.Stores;
+using Microsoft.AspNetCore.Mvc;
+using NBitpayClient;
 
 namespace BTCPayServer.Controllers
 {
     [EnableCors("BitpayAPI")]
     [BitpayAPIConstraint]
+    [Authorize(Policies.CanCreateInvoice.Key, AuthenticationSchemes = Policies.BitpayAuthentication)]
     public class InvoiceControllerAPI : Controller
     {
         private InvoiceController _InvoiceController;
@@ -43,9 +40,10 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("invoices/{id}")]
+        [AllowAnonymous]
         public async Task<DataWrapper<InvoiceResponse>> GetInvoice(string id, string token)
         {
-            var invoice = await _InvoiceRepository.GetInvoice(HttpContext.GetStoreData().Id, id);
+            var invoice = await _InvoiceRepository.GetInvoice(null, id);
             if (invoice == null)
                 throw new BitpayHttpException(404, "Object not found");
             var resp = invoice.EntityToDTO(_NetworkProvider);

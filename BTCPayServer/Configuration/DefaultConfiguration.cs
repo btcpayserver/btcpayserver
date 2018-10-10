@@ -27,19 +27,25 @@ namespace BTCPayServer.Configuration
             };
             app.HelpOption("-? | -h | --help");
             app.Option("-n | --network", $"Set the network among (mainnet,testnet,regtest) (default: mainnet)", CommandOptionType.SingleValue);
-            app.Option("--testnet | -testnet", $"Use testnet (Deprecated, use --network instead)", CommandOptionType.BoolValue);
-            app.Option("--regtest | -regtest", $"Use regtest (Deprecated, use --network instead)", CommandOptionType.BoolValue);
-            app.Option("--chains | -c", $"Chains to support comma separated (default: btc, available: {chains})", CommandOptionType.SingleValue);
-            app.Option("--postgres", $"Connection string to postgres database (default: sqlite is used)", CommandOptionType.SingleValue);
-            app.Option("--externalurl", $"The expected external url of this service, to use if BTCPay is behind a reverse proxy (default: empty, use the incoming HTTP request to figure out)", CommandOptionType.SingleValue);
-            app.Option("--bundlejscss", $"Bundle javascript and css files for better performance (default: true)", CommandOptionType.SingleValue);
+            app.Option("--testnet | -testnet", $"Use testnet (deprecated, use --network instead)", CommandOptionType.BoolValue);
+            app.Option("--regtest | -regtest", $"Use regtest (deprecated, use --network instead)", CommandOptionType.BoolValue);
+            app.Option("--chains | -c", $"Chains to support as a comma separated (default: btc; available: {chains})", CommandOptionType.SingleValue);
+            app.Option("--postgres", $"Connection string to a PostgreSQL database (default: SQLite)", CommandOptionType.SingleValue);
+            app.Option("--externalurl", $"The expected external URL of this service, to use if BTCPay is behind a reverse proxy (default: empty, use the incoming HTTP request to figure out)", CommandOptionType.SingleValue);
+            app.Option("--bundlejscss", $"Bundle JavaScript and CSS files for better performance (default: true)", CommandOptionType.SingleValue);
             app.Option("--rootpath", "The root path in the URL to access BTCPay (default: /)", CommandOptionType.SingleValue);
+            app.Option("--sshconnection", "SSH server to manage BTCPay under the form user@server:port (default: root@externalhost or empty)", CommandOptionType.SingleValue);
+            app.Option("--sshpassword", "SSH password to manage BTCPay (default: empty)", CommandOptionType.SingleValue);
+            app.Option("--sshkeyfile", "SSH private key file to manage BTCPay (default: empty)", CommandOptionType.SingleValue);
+            app.Option("--sshkeyfilepassword", "Password of the SSH keyfile (default: empty)", CommandOptionType.SingleValue);
+            app.Option("--sshtrustedfingerprints", "SSH Host public key fingerprint or sha256 (default: empty, it will allow untrusted connections)", CommandOptionType.SingleValue);
             foreach (var network in provider.GetAll())
             {
                 var crypto = network.CryptoCode.ToLowerInvariant();
-                app.Option($"--{crypto}explorerurl", $"Url of the NBxplorer for {network.CryptoCode} (default: {network.NBXplorerNetwork.DefaultSettings.DefaultUrl})", CommandOptionType.SingleValue);
+                app.Option($"--{crypto}explorerurl", $"URL of the NBXplorer for {network.CryptoCode} (default: {network.NBXplorerNetwork.DefaultSettings.DefaultUrl})", CommandOptionType.SingleValue);
                 app.Option($"--{crypto}explorercookiefile", $"Path to the cookie file (default: {network.NBXplorerNetwork.DefaultSettings.DefaultCookieFile})", CommandOptionType.SingleValue);
-                app.Option($"--{crypto}lightning", $"Easy configuration of lightning for the server adnistrator: Must be a unix socket of CLightning (lightning-rpc) or URL to a charge server (default: empty)", CommandOptionType.SingleValue);
+                app.Option($"--{crypto}lightning", $"Easy configuration of lightning for the server administrator: Must be a UNIX socket of c-lightning (lightning-rpc) or URL to a charge server (default: empty)", CommandOptionType.SingleValue);
+                app.Option($"--{crypto}externallndgrpc", $"The LND gRPC configuration BTCPay will expose to easily connect to the internal lnd wallet from Zap wallet (default: empty)", CommandOptionType.SingleValue);
             }
             return app;
         }

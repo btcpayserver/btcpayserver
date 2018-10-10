@@ -12,6 +12,9 @@ namespace BTCPayServer.Models.InvoicingModels
             public string PaymentMethodId { get; set; }
             public string CryptoImage { get; set; }
             public string Link { get; set; }
+            public string PaymentMethodName { get; set; }
+            public bool IsLightning { get; set; }
+            public string CryptoCode { get; set; }
         }
         public string HtmlTitle { get; set; }
         public string CustomCSSLink { get; set; }
@@ -30,13 +33,13 @@ namespace BTCPayServer.Models.InvoicingModels
         public string Status { get; set; }
         public string MerchantRefLink { get; set; }
         public int MaxTimeSeconds { get; set; }
-
-        // These properties are not used in client side code
+        
         public string StoreName { get; set; }
         public string ItemDesc { get; set; }
         public string TimeLeft { get; set; }
         public string Rate { get; set; }
         public string OrderAmount { get; set; }
+        public string OrderAmountFiat { get; set; }
         public string InvoiceBitcoinUrl { get; set; }
         public string InvoiceBitcoinUrlQR { get; set; }
         public int TxCount { get; set; }
@@ -44,12 +47,13 @@ namespace BTCPayServer.Models.InvoicingModels
         public string StoreEmail { get; set; }
 
         public string OrderId { get; set; }
-        public string CryptoImage { get; set; }
         public decimal NetworkFee { get; set; }
         public bool IsMultiCurrency { get; set; }
-        public int MaxTimeMinutes { get; internal set; }
-        public string PaymentType { get; internal set; }
-        public string PaymentMethodId { get; internal set; }
+        public int MaxTimeMinutes { get; set; }
+        public string PaymentType { get; set; }
+        public string PaymentMethodId { get; set; }
+        public string PaymentMethodName { get; set; }
+        public string CryptoImage { get; set; }
 
         public bool AllowCoinConversion { get; set; }
         public string PeerInfo { get; set; }

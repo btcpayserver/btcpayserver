@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,7 +10,7 @@ using ExchangeSharp;
 
 namespace BTCPayServer.Services.Rates
 {
-    public class ExchangeSharpRateProvider : IRateProvider
+    public class ExchangeSharpRateProvider : IRateProvider, IHasExchangeName
     {
         readonly ExchangeAPI _ExchangeAPI;
         readonly string _ExchangeName;
@@ -28,6 +29,8 @@ namespace BTCPayServer.Services.Rates
             get; set;
         }
 
+        public string ExchangeName => _ExchangeName;
+
         public async Task<ExchangeRates> GetRatesAsync()
         {
             await new SynchronizationContextRemover();
@@ -43,17 +46,17 @@ namespace BTCPayServer.Services.Rates
         }
 
         // ExchangeSymbolToGlobalSymbol throws exception which would kill perf
-        HashSet<string> notFoundSymbols = new HashSet<string>();
+        ConcurrentDictionary<string, string> notFoundSymbols = new ConcurrentDictionary<string, string>();
         private ExchangeRate CreateExchangeRate(KeyValuePair<string, ExchangeTicker> ticker)
         {
-            if (notFoundSymbols.Contains(ticker.Key))
+            if (notFoundSymbols.ContainsKey(ticker.Key))
                 return null;
             try
             {
                 var tickerName = _ExchangeAPI.ExchangeSymbolToGlobalSymbol(ticker.Key);
                 if (!CurrencyPair.TryParse(tickerName, out var pair))
                 {
-                    notFoundSymbols.Add(ticker.Key);
+                    notFoundSymbols.TryAdd(ticker.Key, ticker.Key);
                     return null;
                 }
                 if(ReverseCurrencyPair)
@@ -61,12 +64,12 @@ namespace BTCPayServer.Services.Rates
                 var rate = new ExchangeRate();
                 rate.CurrencyPair = pair;
                 rate.Exchange = _ExchangeName;
-                rate.Value = ticker.Value.Bid;
+                rate.BidAsk = new BidAsk(ticker.Value.Bid, ticker.Value.Ask);
                 return rate;
             }
             catch (ArgumentException)
             {
-                notFoundSymbols.Add(ticker.Key);
+                notFoundSymbols.TryAdd(ticker.Key, ticker.Key);
                 return null;
             }
         }

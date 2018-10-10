@@ -34,10 +34,6 @@ namespace BTCPayServer.Models.StoreViewModels
                 get;
                 set;
             }
-            public string[] Balances
-            {
-                get; set;
-            }
         }
     }
 }

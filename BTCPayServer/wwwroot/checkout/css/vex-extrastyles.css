@@ -1,0 +1,71 @@
+﻿.vexmenu {
+    margin: 0;
+    list-style: none;
+    padding: 0;
+}
+
+.vexmenuitem {
+    display: block;
+    float: none;
+    line-height: inherit;
+    position: relative;
+    list-style: none;
+    cursor: pointer;
+    padding: 5px;
+    border-bottom: 1px solid #eee;
+}
+
+    .vexmenuitem a {
+        display: block;
+    }
+
+        .vexmenuitem a span {
+            float: right;
+            color: gray;
+        }
+
+        .vexmenuitem a img {
+            height: 24px;
+        }
+
+    .vexmenuitem:hover {
+        background-color: #eee;
+    }
+
+    .vexmenuitem:last-child {
+        border-bottom: none;
+    }
+
+#vexPopupDialog {
+    display: none;
+}
+
+.cursorPointer {
+    cursor: pointer;
+}
+
+.payment__currencies {
+    font-size: 14px;
+}
+
+    .payment__currencies img {
+        height: 32px;
+    }
+
+.clickable_underline {
+    border-bottom: 1px dotted #ccc;
+    font-size: 13px;
+}
+
+.payment__currencies:hover .clickable_underline {
+    border-bottom: 1px dotted black;
+}
+
+.clickable_indicator {
+    margin-right: -10px;
+    opacity: 0.3;
+}
+
+.payment__currencies:hover .clickable_indicator {
+    opacity: 1;
+}

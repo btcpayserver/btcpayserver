@@ -15,12 +15,12 @@ namespace BTCPayServer.Controllers
 {
     public class RateController : Controller
     {
-        BTCPayRateProviderFactory _RateProviderFactory;
+        RateFetcher _RateProviderFactory;
         BTCPayNetworkProvider _NetworkProvider;
         CurrencyNameTable _CurrencyNameTable;
         StoreRepository _StoreRepo;
         public RateController(
-            BTCPayRateProviderFactory rateProviderFactory,
+            RateFetcher rateProviderFactory,
             BTCPayNetworkProvider networkProvider,
             StoreRepository storeRepo,
             CurrencyNameTable currencyNameTable)
@@ -29,6 +29,49 @@ namespace BTCPayServer.Controllers
             _NetworkProvider = networkProvider;
             _StoreRepo = storeRepo;
             _CurrencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
+        }
+
+        [Route("rates/{baseCurrency}")]
+        [HttpGet]
+        [BitpayAPIConstraint]
+        public async Task<IActionResult> GetBaseCurrencyRates(string baseCurrency, string storeId)
+        {
+            storeId = storeId ?? this.HttpContext.GetStoreData()?.Id;
+            var store = this.HttpContext.GetStoreData();
+            if (store == null || store.Id != storeId)
+                store = await _StoreRepo.FindStore(storeId);
+            if (store == null)
+            {
+                var err = Json(new BitpayErrorsModel() { Error = "Store not found" });
+                err.StatusCode = 404;
+                return err;
+            }
+            var supportedMethods = store.GetSupportedPaymentMethods(_NetworkProvider);
+
+            var currencyCodes = supportedMethods.Where(method => !string.IsNullOrEmpty(method.PaymentId.CryptoCode))
+                .Select(method => method.PaymentId.CryptoCode).Distinct();
+
+            var currencypairs = BuildCurrencyPairs(currencyCodes, baseCurrency);
+            
+            var result = await GetRates2(currencypairs, store.Id);
+            var rates = (result as JsonResult)?.Value as Rate[];
+            if (rates == null)
+                return result;
+            return Json(new DataWrapper<Rate[]>(rates));
+        }
+
+
+        [Route("rates/{baseCurrency}/{currency}")]
+        [HttpGet]
+        [BitpayAPIConstraint]
+        public async Task<IActionResult> GetCurrencyPairRate(string baseCurrency, string currency, string storeId)
+        {
+            storeId = storeId ?? this.HttpContext.GetStoreData()?.Id;
+            var result = await GetRates2($"{baseCurrency}_{currency}", storeId);
+            var rates = (result as JsonResult)?.Value as Rate[];
+            if (rates == null)
+                return result;
+            return Json(new DataWrapper<Rate>(rates.First()));
         }
 
         [Route("rates")]
@@ -44,19 +87,19 @@ namespace BTCPayServer.Controllers
             return Json(new DataWrapper<Rate[]>(rates));
         }
 
+
         [Route("api/rates")]
         [HttpGet]
         public async Task<IActionResult> GetRates2(string currencyPairs, string storeId)
         {
-            if(storeId == null || currencyPairs == null)
+            if (storeId == null)
             {
-                var result = Json(new BitpayErrorsModel() { Error = "You need to specify storeId (in your store settings) and currencyPairs (eg. BTC_USD,LTC_CAD)" });
+                var result = Json(new BitpayErrorsModel() { Error = "You need to specify storeId (in your store settings)" });
                 result.StatusCode = 400;
                 return result;
             }
-
             var store = this.HttpContext.GetStoreData();
-            if(store == null || store.Id != storeId)
+            if (store == null || store.Id != storeId)
                 store = await _StoreRepo.FindStore(storeId);
             if (store == null)
             {
@@ -64,12 +107,30 @@ namespace BTCPayServer.Controllers
                 result.StatusCode = 404;
                 return result;
             }
+
+            if (currencyPairs == null)
+            {
+                var supportedMethods = store.GetSupportedPaymentMethods(_NetworkProvider);
+                var currencyCodes = supportedMethods.Select(method => method.PaymentId.CryptoCode).Distinct();
+                var defaultCrypto = store.GetDefaultCrypto(_NetworkProvider);
+
+                currencyPairs = BuildCurrencyPairs(currencyCodes, defaultCrypto);
+
+                if (string.IsNullOrEmpty(currencyPairs))
+                {
+                    var result = Json(new BitpayErrorsModel() { Error = "You need to specify currencyPairs (eg. BTC_USD,LTC_CAD)" });
+                    result.StatusCode = 400;
+                    return result;
+                }
+            }
+
+
             var rules = store.GetStoreBlob().GetRateRules(_NetworkProvider);
 
             HashSet<CurrencyPair> pairs = new HashSet<CurrencyPair>();
-            foreach(var currency in currencyPairs.Split(','))
+            foreach (var currency in currencyPairs.Split(','))
             {
-                if(!CurrencyPair.TryParse(currency, out var pair))
+                if (!CurrencyPair.TryParse(currency, out var pair))
                 {
                     var result = Json(new BitpayErrorsModel() { Error = $"Currency pair {currency} uncorrectly formatted" });
                     result.StatusCode = 400;
@@ -81,7 +142,7 @@ namespace BTCPayServer.Controllers
             var fetching = _RateProviderFactory.FetchRates(pairs, rules);
             await Task.WhenAll(fetching.Select(f => f.Value).ToArray());
             return Json(pairs
-                            .Select(r => (Pair: r, Value: fetching[r].GetAwaiter().GetResult().Value))
+                            .Select(r => (Pair: r, Value: fetching[r].GetAwaiter().GetResult().BidAsk?.Bid))
                             .Where(r => r.Value.HasValue)
                             .Select(r =>
                             new Rate()
@@ -89,9 +150,23 @@ namespace BTCPayServer.Controllers
                                 CryptoCode = r.Pair.Left,
                                 Code = r.Pair.Right,
                                 CurrencyPair = r.Pair.ToString(),
-                                Name = _CurrencyNameTable.GetCurrencyData(r.Pair.Right)?.Name,
+                                Name = _CurrencyNameTable.GetCurrencyData(r.Pair.Right, true).Name,
                                 Value = r.Value.Value
                             }).Where(n => n.Name != null).ToArray());
+        }
+
+        private static string BuildCurrencyPairs(IEnumerable<string> currencyCodes, string baseCrypto)
+        {
+            StringBuilder currencyPairsBuilder = new StringBuilder();
+            bool first = true;
+            foreach (var currencyCode in currencyCodes)
+            {
+                if(!first)
+                    currencyPairsBuilder.Append(",");
+                first = false;
+                currencyPairsBuilder.Append($"{baseCrypto}_{currencyCode}");
+            }
+            return currencyPairsBuilder.ToString();
         }
 
         public class Rate

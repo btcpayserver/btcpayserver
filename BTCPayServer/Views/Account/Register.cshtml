@@ -7,7 +7,7 @@
     <div class="container">
         <div class="row">
             <div class="col-lg-12 text-center">
-                @Html.Partial("_StatusMessage", TempData["StatusMessage"])
+                <partial name="_StatusMessage" for="@TempData["StatusMessage"]" />
             </div>
         </div>
         <div class="row">
@@ -16,7 +16,7 @@
                 <hr class="primary">
             </div>
             <div class="col-md-4">
-                <form asp-route-returnUrl="@ViewData["ReturnUrl"]" method="post">
+                <form asp-route-returnUrl="@ViewData["ReturnUrl"]" asp-route-logon="@ViewData["Logon"]" method="post">
                     <h4>Create a new account.</h4>
                     <hr />
                     <div asp-validation-summary="All" class="text-danger"></div>

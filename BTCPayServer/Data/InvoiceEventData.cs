@@ -11,6 +11,10 @@ namespace BTCPayServer.Data
         {
             get; set;
         }
+        public InvoiceData InvoiceData
+        {
+            get; set;
+        }
         public string UniqueId { get; internal set; }
         public DateTimeOffset Timestamp
         {

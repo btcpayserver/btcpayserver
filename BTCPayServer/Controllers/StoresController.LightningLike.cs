@@ -5,12 +5,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
-using BTCPayServer.Payments.Lightning.CLightning;
 using Microsoft.AspNetCore.Mvc;
 using BTCPayServer.Payments.Lightning;
 using System.Net;
 using BTCPayServer.Data;
 using System.Threading;
+using BTCPayServer.Lightning;
 
 namespace BTCPayServer.Controllers
 {
@@ -24,18 +24,20 @@ namespace BTCPayServer.Controllers
             var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
-            LightningNodeViewModel vm = new LightningNodeViewModel();
-            vm.CryptoCode = cryptoCode;
-            vm.InternalLightningNode = GetInternalLighningNode(cryptoCode)?.ToUri(true)?.AbsoluteUri;
+            LightningNodeViewModel vm = new LightningNodeViewModel
+            {
+                CryptoCode = cryptoCode,
+                InternalLightningNode = GetInternalLighningNode(cryptoCode)?.ToString()
+            };
             SetExistingValues(store, vm);
             return View(vm);
         }
 
         private void SetExistingValues(StoreData store, LightningNodeViewModel vm)
         {
-            vm.Url = GetExistingLightningSupportedPaymentMethod(vm.CryptoCode, store)?.GetLightningUrl()?.ToString();
+            vm.ConnectionString = GetExistingLightningSupportedPaymentMethod(vm.CryptoCode, store)?.GetLightningUrl()?.ToString();
+            vm.Enabled = !store.GetStoreBlob().IsExcluded(new PaymentMethodId(vm.CryptoCode, PaymentTypes.LightningLike));
         }
-
         private LightningSupportedPaymentMethod GetExistingLightningSupportedPaymentMethod(string cryptoCode, StoreData store)
         {
             var id = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
@@ -65,7 +67,7 @@ namespace BTCPayServer.Controllers
             var network = vm.CryptoCode == null ? null : _ExplorerProvider.GetNetwork(vm.CryptoCode);
 
             var internalLightning = GetInternalLighningNode(network.CryptoCode);
-            vm.InternalLightningNode = internalLightning?.ToUri(true)?.AbsoluteUri;
+            vm.InternalLightningNode = internalLightning?.ToString();
             if (network == null)
             {
                 ModelState.AddModelError(nameof(vm.CryptoCode), "Invalid network");
@@ -74,33 +76,57 @@ namespace BTCPayServer.Controllers
 
             PaymentMethodId paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.LightningLike);
             Payments.Lightning.LightningSupportedPaymentMethod paymentMethod = null;
-            if (!string.IsNullOrEmpty(vm.Url))
+            if (!string.IsNullOrEmpty(vm.ConnectionString))
             {
-                if (!LightningConnectionString.TryParse(vm.Url, out var connectionString, out var error))
+                if (!LightningConnectionString.TryParse(vm.ConnectionString, false, out var connectionString, out var error))
                 {
-                    ModelState.AddModelError(nameof(vm.Url), $"Invalid URL ({error})");
+                    ModelState.AddModelError(nameof(vm.ConnectionString), $"Invalid URL ({error})");
                     return View(vm);
                 }
 
-                var internalDomain = internalLightning?.ToUri(false)?.DnsSafeHost;
-                bool isLocal = (internalDomain == "127.0.0.1" || internalDomain == "localhost");
+                if(connectionString.ConnectionType == LightningConnectionType.LndGRPC)
+                {
+                    ModelState.AddModelError(nameof(vm.ConnectionString), $"BTCPay does not support gRPC connections");
+                    return View(vm);
+                }
+
+                var internalDomain = internalLightning?.BaseUri?.DnsSafeHost;
 
                 bool isInternalNode = connectionString.ConnectionType == LightningConnectionType.CLightning ||
                                       connectionString.BaseUri.DnsSafeHost == internalDomain ||
-                                      isLocal;
+                                      (internalDomain == "127.0.0.1" || internalDomain == "localhost");
 
-                if (connectionString.BaseUri.Scheme == "http" && !isLocal)
+                if (connectionString.BaseUri.Scheme == "http")
                 {
-                    if (!isInternalNode || (isInternalNode && !CanUseInternalLightning()))
+                    if (!isInternalNode)
                     {
-                        ModelState.AddModelError(nameof(vm.Url), "The url must be HTTPS");
+                        ModelState.AddModelError(nameof(vm.ConnectionString), "The url must be HTTPS");
+                        return View(vm);
+                    }
+                }
+
+                if(connectionString.MacaroonFilePath != null)
+                {
+                    if(!CanUseInternalLightning())
+                    {
+                        ModelState.AddModelError(nameof(vm.ConnectionString), "You are not authorized to use macaroonfilepath");
+                        return View(vm);
+                    }
+                    if(!System.IO.File.Exists(connectionString.MacaroonFilePath))
+                    {
+                        ModelState.AddModelError(nameof(vm.ConnectionString), "The macaroonfilepath file does exist");
+                        return View(vm);
+                    }
+                    if(!System.IO.Path.IsPathRooted(connectionString.MacaroonFilePath))
+                    {
+                        ModelState.AddModelError(nameof(vm.ConnectionString), "The macaroonfilepath should be fully rooted");
                         return View(vm);
                     }
                 }
 
                 if (isInternalNode && !CanUseInternalLightning())
                 {
-                    ModelState.AddModelError(nameof(vm.Url), "Unauthorized url");
+                    ModelState.AddModelError(nameof(vm.ConnectionString), "Unauthorized url");
                     return View(vm);
                 }
 
@@ -110,39 +136,42 @@ namespace BTCPayServer.Controllers
                 };
                 paymentMethod.SetLightningUrl(connectionString);
             }
-            if (command == "save")
+
+            switch (command)
             {
-                store.SetSupportedPaymentMethod(paymentMethodId, paymentMethod);
-                await _Repo.UpdateStore(store);
-                StatusMessage = $"Lightning node modified ({network.CryptoCode})";
-                return RedirectToAction(nameof(UpdateStore), new { storeId = storeId });
-            }
-            else // if(command == "test")
-            {
-                if (paymentMethod == null)
-                {
-                    ModelState.AddModelError(nameof(vm.Url), "Missing url parameter");
+                case "save":
+                    var storeBlob = store.GetStoreBlob();
+                    storeBlob.SetExcluded(paymentMethodId, !vm.Enabled);
+                    store.SetStoreBlob(storeBlob);
+                    store.SetSupportedPaymentMethod(paymentMethodId, paymentMethod);
+                    await _Repo.UpdateStore(store);
+                    StatusMessage = $"Lightning node modified ({network.CryptoCode})";
+                    return RedirectToAction(nameof(UpdateStore), new { storeId = storeId });
+                case "test" when paymentMethod == null:
+                    ModelState.AddModelError(nameof(vm.ConnectionString), "Missing url parameter");
                     return View(vm);
-                }
-                var handler = (LightningLikePaymentHandler)_ServiceProvider.GetRequiredService<IPaymentMethodHandler<Payments.Lightning.LightningSupportedPaymentMethod>>();
-                try
-                {
-                    var info = await handler.Test(paymentMethod, network);
-                    if (!vm.SkipPortTest)
+                case "test":
+                    var handler = (LightningLikePaymentHandler)_ServiceProvider.GetRequiredService<IPaymentMethodHandler<Payments.Lightning.LightningSupportedPaymentMethod>>();
+                    try
                     {
-                        using (CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
+                        var info = await handler.Test(paymentMethod, network);
+                        if (!vm.SkipPortTest)
                         {
-                            await handler.TestConnection(info, cts.Token);
+                            using (CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(20)))
+                            {
+                                await handler.TestConnection(info, cts.Token);
+                            }
                         }
+                        vm.StatusMessage = $"Connection to the lightning node succeeded ({info})";
                     }
-                    vm.StatusMessage = $"Connection to the lightning node succeed ({info})";
-                }
-                catch (Exception ex)
-                {
-                    vm.StatusMessage = $"Error: {ex.Message}";
+                    catch (Exception ex)
+                    {
+                        vm.StatusMessage = $"Error: {ex.Message}";
+                        return View(vm);
+                    }
                     return View(vm);
-                }
-                return View(vm);
+                default:
+                    return View(vm);
             }
         }
 

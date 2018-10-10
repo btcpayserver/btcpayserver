@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using BTCPayServer.Payments.Lightning.Charge;
-using BTCPayServer.Payments.Lightning.CLightning;
+using BTCPayServer.Lightning;
+using BTCPayServer.Lightning.Charge;
+using BTCPayServer.Payments.Lightning;
 using NBitcoin;
 
 namespace BTCPayServer.Tests
@@ -15,7 +16,7 @@ namespace BTCPayServer.Tests
         {
             this._Parent = serverTester;
             var url = serverTester.GetEnvironment(environmentName, defaultValue);
-            Client = new ChargeClient(new Uri(url), network);
+            Client = (ChargeClient)LightningClientFactory.CreateClient(url, network);
             P2PHost = _Parent.GetEnvironment(environmentName + "_HOST", defaultHost);
         }        
         public ChargeClient Client { get; set; }

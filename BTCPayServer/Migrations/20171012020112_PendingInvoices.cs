@@ -22,7 +22,7 @@ namespace BTCPayServer.Migrations
                 name: "PendingInvoices",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "TEXT", nullable: false)
+                    Id = table.Column<string>(nullable: false)
                 },
                 constraints: table =>
                 {

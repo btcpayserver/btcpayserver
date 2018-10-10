@@ -31,16 +31,20 @@ namespace BTCPayServer
             var logger = loggerFactory.CreateLogger("Configuration");
             try
             {
+                // This is the only way toat LoadArgs can print to console. Because LoadArgs is called by the HostBuilder before Logs.Configure is called
                 var conf = new DefaultConfiguration() { Logger = logger }.CreateConfiguration(args);
                 if (conf == null)
                     return;
+                Logs.Configure(loggerFactory);
+                new BTCPayServerOptions().LoadArgs(conf);
+                Logs.Configure(null);
+                /////
 
                 host = new WebHostBuilder()
                     .UseKestrel()
                     .UseIISIntegration()
                     .UseContentRoot(Directory.GetCurrentDirectory())
                     .UseConfiguration(conf)
-                    .UseApplicationInsights()
                     .ConfigureLogging(l =>
                     {
                         l.AddFilter("Microsoft", LogLevel.Error);
@@ -65,6 +69,8 @@ namespace BTCPayServer
             finally
             {
                 processor.Dispose();
+                if(host == null)
+                    Logs.Configuration.LogError("Configuration error");
                 if (host != null)
                     host.Dispose();
                 loggerProvider.Dispose();

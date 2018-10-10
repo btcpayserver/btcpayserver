@@ -16,6 +16,19 @@ function resetTabsSlider() {
 
     $("#altcoins").hide();
     $("#altcoins").removeClass("active");
+
+    closePaymentMethodDialog(null);
+}
+
+function changeCurrency(currency) {
+    if (currency !== null && srvModel.paymentMethodId !== currency) {
+        $(".payment__currencies").hide();
+        $(".payment__spinner").show();
+        checkoutCtrl.scanDisplayQr = "";
+        srvModel.paymentMethodId = currency;
+        fetchStatus();
+    }
+    return false;
 }
 
 function onDataCallback(jsonData) {
@@ -30,6 +43,7 @@ function onDataCallback(jsonData) {
         newStatus === "paid") {
         if ($(".modal-dialog").hasClass("expired")) {
             $(".modal-dialog").removeClass("expired");
+            $("#expired").removeClass("active");
         }
 
         $(".modal-dialog").addClass("paid");
@@ -39,6 +53,11 @@ function onDataCallback(jsonData) {
     }
 
     if (newStatus === "expired" || newStatus === "invalid") { //TODO: different state if the invoice is invalid (failed to confirm after timeout)
+        if ($(".modal-dialog").hasClass("paid")) {
+            $(".modal-dialog").removeClass("paid");
+            $("#paid").removeClass("active");
+        }
+
         $(".timer-row").removeClass("expiring-soon");
         $(".timer-row__spinner").html("");
         $("#emailAddressView").removeClass("active");
@@ -58,18 +77,24 @@ function onDataCallback(jsonData) {
         $(".payment__spinner").hide();
     }
 
+    if (checkoutCtrl.scanDisplayQr === "") {
+        checkoutCtrl.scanDisplayQr = jsonData.invoiceBitcoinUrlQR;
+    }
+
+    if (jsonData.isLightning && checkoutCtrl.lndModel === null) {
+        var lndModel = {
+            toggle: 0
+        };
+
+        checkoutCtrl.lndModel = lndModel;
+    }
+
+    if (!jsonData.isLightning) {
+        checkoutCtrl.lndModel = null;
+    }
+
     // updating ui
     checkoutCtrl.srvModel = jsonData;
-}
-
-function changeCurrency(currency) {
-    if (srvModel.paymentMethodId !== currency) {
-        $(".payment__currencies").hide();
-        $(".payment__spinner").show();
-        srvModel.paymentMethodId = currency;
-        fetchStatus();
-    }
-    return false;
 }
 
 function fetchStatus() {
@@ -83,6 +108,16 @@ function fetchStatus() {
     }).fail(function (jqXHR, textStatus, errorThrown) {
 
     });
+}
+
+function lndToggleBolt11() {
+    checkoutCtrl.lndModel.toggle = 0;
+    checkoutCtrl.scanDisplayQr = checkoutCtrl.srvModel.invoiceBitcoinUrlQR;
+}
+
+function lndToggleNode() {
+    checkoutCtrl.lndModel.toggle = 1;
+    checkoutCtrl.scanDisplayQr = checkoutCtrl.srvModel.peerInfo;
 }
 
 // private methods
@@ -237,8 +272,12 @@ $(document).ready(function () {
     });
 
     // Expand Line-Items
+    var lineItemsExpanded = false;
     $(".buyerTotalLine").click(function () {
         $("line-items").toggleClass("expanded");
+        lineItemsExpanded ? $("line-items").slideUp() : $("line-items").slideDown();
+        lineItemsExpanded = !lineItemsExpanded;
+
         $(".buyerTotalLine").toggleClass("expanded");
         $(".single-item-order__right__btc-price__chevron").toggleClass("expanded");
     });

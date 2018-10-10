@@ -19,6 +19,7 @@ using System.Globalization;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Logging;
 using BTCPayServer.Payments;
+using System.Data.Common;
 
 namespace BTCPayServer.Services.Invoices
 {
@@ -101,7 +102,7 @@ namespace BTCPayServer.Services.Invoices
             }
         }
 
-        public async Task<InvoiceEntity> CreateInvoiceAsync(string storeId, InvoiceEntity invoice, IEnumerable<string> creationLogs, BTCPayNetworkProvider networkProvider)
+        public async Task<InvoiceEntity> CreateInvoiceAsync(string storeId, InvoiceEntity invoice, InvoiceLogs creationLogs, BTCPayNetworkProvider networkProvider)
         {
             List<string> textSearch = new List<string>();
             invoice = Clone(invoice, null);
@@ -112,7 +113,7 @@ namespace BTCPayServer.Services.Invoices
             invoice.StoreId = storeId;
             using (var context = _ContextFactory.CreateContext())
             {
-                context.Invoices.Add(new InvoiceData()
+                context.Invoices.Add(new Data.InvoiceData()
                 {
                     StoreDataId = storeId,
                     Id = invoice.Id,
@@ -147,13 +148,13 @@ namespace BTCPayServer.Services.Invoices
                 }
                 context.PendingInvoices.Add(new PendingInvoiceData() { Id = invoice.Id });
 
-                foreach(var log in creationLogs)
+                foreach (var log in creationLogs.ToList())
                 {
                     context.InvoiceEvents.Add(new InvoiceEventData()
                     {
                         InvoiceDataId = invoice.Id,
-                        Message = log,
-                        Timestamp = invoice.InvoiceTime,
+                        Message = log.Log,
+                        Timestamp = log.Timestamp,
                         UniqueId = Encoders.Hex.EncodeData(RandomUtils.GetBytes(10))
                     });
                 }
@@ -244,7 +245,11 @@ namespace BTCPayServer.Services.Invoices
                     Timestamp = DateTimeOffset.UtcNow,
                     UniqueId = Encoders.Hex.EncodeData(RandomUtils.GetBytes(10))
                 });
-                await context.SaveChangesAsync();
+                try
+                {
+                    await context.SaveChangesAsync();
+                }
+                catch (DbUpdateException) { } // Probably the invoice does not exists anymore
             }
         }
 
@@ -267,7 +272,7 @@ namespace BTCPayServer.Services.Invoices
         {
             using (var context = _ContextFactory.CreateContext())
             {
-                var invoiceData = await context.FindAsync<InvoiceData>(invoiceId).ConfigureAwait(false);
+                var invoiceData = await context.FindAsync<Data.InvoiceData>(invoiceId).ConfigureAwait(false);
                 if (invoiceData == null)
                     return;
                 var invoiceEntity = ToObject<InvoiceEntity>(invoiceData.Blob, null);
@@ -307,7 +312,7 @@ namespace BTCPayServer.Services.Invoices
         {
             using (var context = _ContextFactory.CreateContext())
             {
-                var invoiceData = await context.FindAsync<InvoiceData>(invoiceId).ConfigureAwait(false);
+                var invoiceData = await context.FindAsync<Data.InvoiceData>(invoiceId).ConfigureAwait(false);
                 if (invoiceData == null)
                     return;
                 invoiceData.Status = status;
@@ -320,7 +325,7 @@ namespace BTCPayServer.Services.Invoices
         {
             using (var context = _ContextFactory.CreateContext())
             {
-                var invoiceData = await context.FindAsync<InvoiceData>(invoiceId).ConfigureAwait(false);
+                var invoiceData = await context.FindAsync<Data.InvoiceData>(invoiceId).ConfigureAwait(false);
                 if (invoiceData?.Status != "paid")
                     return;
                 invoiceData.Status = "invalid";
@@ -331,7 +336,7 @@ namespace BTCPayServer.Services.Invoices
         {
             using (var context = _ContextFactory.CreateContext())
             {
-                IQueryable<InvoiceData> query =
+                IQueryable<Data.InvoiceData> query =
                     context
                     .Invoices
                     .Include(o => o.Payments)
@@ -351,7 +356,7 @@ namespace BTCPayServer.Services.Invoices
             }
         }
 
-        private InvoiceEntity ToEntity(InvoiceData invoice)
+        private InvoiceEntity ToEntity(Data.InvoiceData invoice)
         {
             var entity = ToObject<InvoiceEntity>(invoice.Blob, null);
 #pragma warning disable CS0618
@@ -386,7 +391,7 @@ namespace BTCPayServer.Services.Invoices
         {
             using (var context = _ContextFactory.CreateContext())
             {
-                IQueryable<InvoiceData> query = context
+                IQueryable<Data.InvoiceData> query = context
                     .Invoices
                     .Include(o => o.Payments)
                     .Include(o => o.RefundAddresses);
@@ -436,7 +441,7 @@ namespace BTCPayServer.Services.Invoices
                     query = query.Where(i => statusSet.Contains(i.Status));
                 }
 
-                if(queryObject.Unusual != null)
+                if (queryObject.Unusual != null)
                 {
                     var unused = queryObject.Unusual.Value;
                     query = query.Where(i => unused == (i.Status == "invalid" || i.ExceptionStatus != null));
@@ -549,7 +554,7 @@ namespace BTCPayServer.Services.Invoices
                 {
                     await context.SaveChangesAsync().ConfigureAwait(false);
                 }
-                catch(DbUpdateException) { return null; } // Already exists
+                catch (DbUpdateException) { return null; } // Already exists
                 AddToTextSearch(invoiceId, paymentData.GetSearchTerms());
                 return entity;
             }

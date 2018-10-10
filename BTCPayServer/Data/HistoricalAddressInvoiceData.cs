@@ -12,6 +12,11 @@ namespace BTCPayServer.Data
             get; set;
         }
 
+        public InvoiceData InvoiceData
+        {
+            get; set;
+        }
+
         /// <summary>
         /// Some crypto currencies share same address prefix
         /// For not having exceptions thrown by two address on different network, we suffix by "#CRYPTOCODE" 

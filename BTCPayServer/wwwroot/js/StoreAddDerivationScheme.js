@@ -1,6 +1,6 @@
 ﻿$(function () {
     var ledgerDetected = false;
-    var bridge = new ledgerwebsocket.LedgerWebSocketBridge(srvModel + "ws/ledger");
+    var bridge = new ledgerwebsocket.LedgerWebSocketBridge(srvModel);
 
     var cryptoSelector = $("#CryptoCurrency");
     function GetSelectedCryptoCode() {
@@ -64,7 +64,7 @@
             else {
                 bridge.sendCommand('test', null, 5)
                     .catch(function (reason) {
-                        if (reason.message === "Sign failed")
+                        if (reason.name === "TransportError")
                             reason = "Have you forgot to activate browser support in your ledger app?";
                         Write('hw', 'error', reason);
                     })

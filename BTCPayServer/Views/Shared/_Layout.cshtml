@@ -26,6 +26,8 @@
 
     @* JS *@
     <bundle name="wwwroot/bundles/main-bundle.min.js" />
+
+    @RenderSection("HeadScripts", required: false)
 </head>
 
 <body id="page-top">
@@ -61,6 +63,7 @@
                         }
                         <li class="nav-item"><a asp-area="" asp-controller="UserStores" asp-action="ListStores" class="nav-link js-scroll-trigger">Stores</a></li>
                         <li class="nav-item"><a asp-area="" asp-controller="Apps" asp-action="ListApps" class="nav-link js-scroll-trigger">Apps</a></li>
+                        <li class="nav-item"><a asp-area="" asp-controller="Wallets" asp-action="ListWallets" class="nav-link js-scroll-trigger">Wallets</a></li>
                         <li class="nav-item"><a asp-area="" asp-controller="Invoice" asp-action="ListInvoices" class="nav-link js-scroll-trigger">Invoices</a></li>
                         <li class="nav-item">
                             <a asp-area="" asp-controller="Manage" asp-action="Index" title="Manage" class="nav-link js-scroll-trigger">My settings</a>
@@ -70,26 +73,50 @@
                         </li>}
                     else
                     {
-                        <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Register" class="nav-link js-scroll-trigger">Register</a></li>
+                        @if (themeManager.ShowRegister)
+                        {
+                            <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Register" class="nav-link js-scroll-trigger">Register</a></li>
+                        }
                         <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Login" class="nav-link js-scroll-trigger">Log in</a></li>}
 
                 </ul>
             </div>
+            <div id="badUrl" class="alert alert-danger alert-dismissible" style="display:none; position:absolute; top:75px;" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <span>BTCPay is expecting you to access this website from <b>@(env.ExpectedProtocol)://@(env.ExpectedHost)/</b>. If you want to change this expectation:</span>
+                <ul>
+                    <li>Either starts BTCPay with <b>--externalurl @(env.ExpectedProtocol)://@(env.ExpectedHost)/</b></li>
+                    <li>Or, if using docker-compose deployment, setting environment variable <b>BTCPAY_PROTOCOL=@(env.ExpectedProtocol)</b> and <b>BTCPAY_HOST=@(env.ExpectedDomain)</b></li>
+                </ul>
+
+            </div>
         </div>
     </nav>
 
+
     @RenderBody()
 
-    <footer class="siteFooter bg-dark text-white">
-        <div class="container text-right">@env.ToString()</div>
-    </footer>
+    @if (User.Identity.IsAuthenticated)
+    {
+        <footer class="siteFooter bg-dark text-white">
+            <div class="container text-right">@env.ToString()</div>
+        </footer>
+    }
 
     @if (!dashboard.IsFullySynched())
     {
-        @Html.Partial("SyncModal")
+        <partial name="SyncModal" />
     }
 
     @RenderSection("Scripts", required: false)
+
+    <script type="text/javascript">
+        var expectedDomain = @Html.Raw(Json.Serialize(env.ExpectedHost));
+        var expectedProtocol = @Html.Raw(Json.Serialize(env.ExpectedProtocol));
+        if (window.location.host != expectedDomain || window.location.protocol != expectedProtocol + ":") {
+            document.getElementById("badUrl").style.display = "block";
+        }
+    </script>
 </body>
 
 </html>

@@ -1,6 +1,7 @@
 ﻿using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
+using BTCPayServer.Validation;
 using BTCPayServer.Validations;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
@@ -17,6 +18,8 @@ namespace BTCPayServer.Models.StoreViewModels
         {
             public string Crypto { get; set; }
             public string Value { get; set; }
+            public WalletId WalletId { get; set; }
+            public bool Enabled { get; set; }
         }
 
         public StoreViewModel()
@@ -24,6 +27,7 @@ namespace BTCPayServer.Models.StoreViewModels
 
         }
 
+        public bool CanDelete { get; set; }
         public string Id { get; set; }
         [Display(Name = "Store Name")]
         [Required]
@@ -34,7 +38,7 @@ namespace BTCPayServer.Models.StoreViewModels
             get; set;
         }
 
-        [Url]
+        [Uri]
         [Display(Name = "Store Website")]
         [MaxLength(500)]
         public string StoreWebsite
@@ -42,6 +46,9 @@ namespace BTCPayServer.Models.StoreViewModels
             get;
             set;
         }
+
+        [Display(Name = "Allow anyone to create invoice")]
+        public bool AnyoneCanCreateInvoice { get; set; }
 
         public List<StoreViewModel.DerivationScheme> DerivationSchemes { get; set; } = new List<StoreViewModel.DerivationScheme>();
 
@@ -80,6 +87,7 @@ namespace BTCPayServer.Models.StoreViewModels
         {
             public string CryptoCode { get; set; }
             public string Address { get; set; }
+            public bool Enabled { get; set; }
         }
         public List<LightningNode> LightningNodes
         {

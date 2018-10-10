@@ -8,7 +8,7 @@
 
         <div class="row">
             <div class="col-lg-12 text-center">
-                @Html.Partial("_StatusMessage", Model.StatusMessage)
+                <partial name="_StatusMessage" for="StatusMessage" />
             </div>
         </div>
 
@@ -66,7 +66,7 @@
                     @foreach(var invoice in Model.Invoices)
                     {
                         <tr>
-                            <td>@invoice.Date</td>
+                            <td>@invoice.Date.ToTimeAgo()</td>
                             <td>
                                 @if(invoice.RedirectUrl != string.Empty)
                                 {

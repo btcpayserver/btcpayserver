@@ -12,13 +12,13 @@ namespace BTCPayServer.Migrations
                 name: "PairedSINData",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "TEXT", nullable: false),
-                    Facade = table.Column<string>(type: "TEXT", nullable: true),
-                    Label = table.Column<string>(type: "TEXT", nullable: true),
-                    Name = table.Column<string>(type: "TEXT", nullable: true),
+                    Id = table.Column<string>(nullable: false),
+                    Facade = table.Column<string>(nullable: true),
+                    Label = table.Column<string>(nullable: true),
+                    Name = table.Column<string>(nullable: true),
                     PairingTime = table.Column<DateTimeOffset>(nullable: false),
-                    SIN = table.Column<string>(type: "TEXT", nullable: true),
-                    StoreDataId = table.Column<string>(type: "TEXT", nullable: true)
+                    SIN = table.Column<string>(nullable: true),
+                    StoreDataId = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -29,15 +29,15 @@ namespace BTCPayServer.Migrations
                 name: "PairingCodes",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "TEXT", nullable: false),
+                    Id = table.Column<string>(nullable: false),
                     DateCreated = table.Column<DateTime>(nullable: false),
                     Expiration = table.Column<DateTimeOffset>(nullable: false),
-                    Facade = table.Column<string>(type: "TEXT", nullable: true),
-                    Label = table.Column<string>(type: "TEXT", nullable: true),
-                    Name = table.Column<string>(type: "TEXT", nullable: true),
-                    SIN = table.Column<string>(type: "TEXT", nullable: true),
-                    StoreDataId = table.Column<string>(type: "TEXT", nullable: true),
-                    TokenValue = table.Column<string>(type: "TEXT", nullable: true)
+                    Facade = table.Column<string>(nullable: true),
+                    Label = table.Column<string>(nullable: true),
+                    Name = table.Column<string>(nullable: true),
+                    SIN = table.Column<string>(nullable: true),
+                    StoreDataId = table.Column<string>(nullable: true),
+                    TokenValue = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {

@@ -8289,7 +8289,7 @@ strong {
     .modal.page {
         overflow-y: hidden;
         position: relative;
-        z-index: 105111;
+        z-index: 10;
     }
 
 .content {
@@ -8420,6 +8420,7 @@ strong {
     color: #565D6E;
     letter-spacing: .45px;
     background: #fff;
+    height: 40px;
 }
 
 .single-item-order {
@@ -9235,7 +9236,7 @@ strong {
     }
 
     .bp-view.scan {
-        padding-top: .9em !important;
+        padding-top: 0em !important;
     }
 
     .bp-view:not(.active) {
@@ -9375,11 +9376,64 @@ strong {
     border-bottom: 1px dotted;
 }
 
+.wrapBtnGroup {
+    text-align: center;
+    margin: -2px 0px 12px;
+    padding: 0 15px;
+}
+
+.btnGroupLnd {
+    margin: 0 auto;
+    text-align: center;
+    width: inherit;
+    display: table;
+    background-color: #fff;
+    color: #000;
+    font-size: 0px;
+    width:100%;
+}
+
+    .btnGroupLnd button:first-child {
+        border-top-left-radius: 5px;
+        border-bottom-left-radius: 5px;
+        border-right: 0px;
+    }
+
+    .btnGroupLnd button:last-child {
+        border-top-right-radius: 5px;
+        border-bottom-right-radius: 5px;
+    }
+
+    .btnGroupLnd button {
+        display: table-cell;
+        border: solid 1px #24725B;
+        padding: 6px 9px;
+        margin: 0px;
+        font-size: 12px;
+        width: 50%;
+    }
+
+        .btnGroupLnd button:hover {
+            background-color: #eeffee;
+        }
+
+        .btnGroupLnd button.active {
+            background-color: #329F80;
+            border-color: #329F80;
+            color: #fff;
+        }
+
+            .btnGroupLnd button.active:hover {
+                background-color: #24725B;
+                border-color: #24725B;
+                color: #fff;
+            }
+
 .payment__details__instruction__open-wallet {
     display: block;
     margin-left: auto;
     margin-right: auto;
-    margin: 15px 15px 18px;
+    margin: 0px 15px 18px;
     text-align: center;
 }
 
@@ -10156,6 +10210,8 @@ All mobile class names should be prefixed by m- */
 .manual-flow {
     opacity: 0;
     margin-top: -15px;
+    padding-left: 20px;
+    padding-right: 20px;
     transition: all .3s ease-out;
 }
 
@@ -10328,6 +10384,7 @@ All mobile class names should be prefixed by m- */
 .wrong-email .payment-tabs {
     pointer-events: none;
     margin-top: -2.95rem;
+    z-index: -1;
     margin-bottom: 1rem;
 }
 
@@ -10410,10 +10467,6 @@ All mobile class names should be prefixed by m- */
 
 .refund-address-view {
     transform: translateY(20px);
-}
-
-.payment-tabs {
-    z-index: 1;
 }
 
 .single-item-order {
@@ -11146,31 +11199,13 @@ language-selector {
 
 line-items {
     background: #FBFBFB;
-    height: 25px;
-    border-top: 0;
+    border-top: 1px solid rgba(238, 238, 238, 0.5);
     z-index: 2;
-    position: relative;
-    display: block;
-    overflow: hidden;
-    height: 0;
-    transition: height 250ms ease;
+    display: none;
 }
 
-    line-items.expanded {
-        height: 120px;
-        border-top: 1px solid rgba(238, 238, 238, 0.5);
-    }
-
-        line-items.expanded.paid-over {
-            height: 295px;
-        }
-
-        line-items.expanded.paid-partial-expired, line-items.expanded.paid-full {
-            height: 272px;
-        }
-
     line-items .line-items {
-        padding: 1rem;
+        padding: 10px 1rem;
         color: #565D6E;
     }
 
@@ -11196,6 +11231,10 @@ line-items {
         font-size: 12px;
         font-weight: 100;
         padding: 2px 0;
+    }
+
+    line-items .line-items_fiatvalue {
+        margin-top: -5px;
     }
 
     line-items .line-items__item__label {
@@ -11303,7 +11342,7 @@ low-fee-timeline {
 }
 
 .copySectionBox {
-    padding: 12px;
+    padding: 12px 10px;
 }
 
     .copySectionBox label {
@@ -11340,17 +11379,18 @@ low-fee-timeline {
     border: 1px solid #e9e9e9;
     border-radius: 4px;
     outline: none;
-    padding: 8px 10px;
+    padding: 8px 4px 8px;
     background: #f6f6f6;
     box-sizing: border-box;
     transition: .3s;
     font-size: 11px;
     color: #4a4a4a;
     cursor: copy;
+    text-overflow: ellipsis
 }
 
 .inputWithIcon .checkoutTextbox {
-    padding-left: 40px;
+    padding-left: 31px;
 }
 
 .inputWithIcon {
@@ -11360,10 +11400,10 @@ low-fee-timeline {
     .inputWithIcon img {
         position: absolute;
         left: 2px;
-        top: 8px;
+        top: 9px;
         color: #aaa;
         height: 16px;
-        padding: 0px 6px;
+        padding: 0px 4px;
         border-right: 1px solid #e9e9e9;
     }
 

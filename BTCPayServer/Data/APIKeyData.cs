@@ -19,5 +19,7 @@ namespace BTCPayServer.Data
         {
             get; set;
         }
+
+        public StoreData StoreData { get; set; }
     }
 }

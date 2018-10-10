@@ -20,5 +20,9 @@ namespace BTCPayServer.Models.AppViewModels
 
         [Display(Name = "User can input custom amount")]
         public bool ShowCustomAmount { get; set; }
+        public string Example1 { get; internal set; }
+        public string Example2 { get; internal set; }
+        public string ExampleCallback { get; internal set; }
+        public string InvoiceUrl { get; internal set; }
     }
 }

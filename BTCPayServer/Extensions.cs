@@ -31,33 +31,12 @@ using System.Security.Claims;
 using System.Globalization;
 using BTCPayServer.Services;
 using BTCPayServer.Data;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace BTCPayServer
 {
     public static class Extensions
     {
-        public static string Prettify(this TimeSpan timeSpan)
-        {
-            if (timeSpan.TotalMinutes < 1)
-            {
-                return $"{(int)timeSpan.TotalSeconds} second{Plural((int)timeSpan.TotalSeconds)}";
-            }
-            if (timeSpan.TotalHours < 1)
-            {
-                return $"{(int)timeSpan.TotalMinutes} minute{Plural((int)timeSpan.TotalMinutes)}";
-            }
-            if (timeSpan.Days < 1)
-            {
-                return $"{(int)timeSpan.TotalHours} hour{Plural((int)timeSpan.TotalHours)}";
-            }
-            return $"{(int)timeSpan.TotalDays} day{Plural((int)timeSpan.TotalDays)}";
-        }
-
-        private static string Plural(int totalDays)
-        {
-            return totalDays > 1 ? "s" : string.Empty;
-        }
-
         public static string PrettyPrint(this TimeSpan expiration)
         {
             StringBuilder builder = new StringBuilder();
@@ -104,6 +83,15 @@ namespace BTCPayServer
             return activeProvider != "Microsoft.EntityFrameworkCore.Sqlite";
         }
 
+        public static bool SupportDropForeignKey(this Microsoft.EntityFrameworkCore.Migrations.Migration migration, string activeProvider)
+        {
+            return activeProvider != "Microsoft.EntityFrameworkCore.Sqlite";
+        }
+        public static bool SupportDropForeignKey(this DatabaseFacade facade)
+        {
+            return facade.ProviderName != "Microsoft.EntityFrameworkCore.Sqlite";
+        }
+
         public static async Task<Dictionary<uint256, TransactionResult>> GetTransactions(this BTCPayWallet client, uint256[] hashes, CancellationToken cts = default(CancellationToken))
         {
             hashes = hashes.Distinct().ToArray();
@@ -120,6 +108,26 @@ namespace BTCPayServer
             return str + "/";
         }
 
+        public static void SetHeaderOnStarting(this HttpResponse resp, string name, string value)
+        {
+            if (resp.HasStarted)
+                return;
+            resp.OnStarting(() =>
+            {
+                SetHeader(resp, name, value);
+                return Task.CompletedTask;
+            });
+        }
+
+        public static void SetHeader(this HttpResponse resp, string name, string value)
+        {
+            var existing = resp.Headers[name].FirstOrDefault();
+            if (existing != null && value == null)
+                resp.Headers.Remove(name);
+            else
+                resp.Headers[name] = value;
+        }
+
         public static string GetAbsoluteRoot(this HttpRequest request)
         {
             return string.Concat(
@@ -129,9 +137,26 @@ namespace BTCPayServer
                         request.PathBase.ToUriComponent());
         }
 
+        public static string GetCurrentUrl(this HttpRequest request)
+        {
+            return string.Concat(
+                        request.Scheme,
+                        "://",
+                        request.Host.ToUriComponent(),
+                        request.PathBase.ToUriComponent(),
+                        request.Path.ToUriComponent());
+        }
+
+        public static string GetCurrentPath(this HttpRequest request)
+        {
+            return string.Concat(
+                        request.PathBase.ToUriComponent(),
+                        request.Path.ToUriComponent());
+        }
+
         public static string GetAbsoluteUri(this HttpRequest request, string redirectUrl)
         {
-            bool isRelative = 
+            bool isRelative =
                 (redirectUrl.Length > 0 && redirectUrl[0] == '/')
                 || !new Uri(redirectUrl, UriKind.RelativeOrAbsolute).IsAbsoluteUri;
             return isRelative ? request.GetAbsoluteRoot() + redirectUrl : redirectUrl;
@@ -163,7 +188,7 @@ namespace BTCPayServer
 
         public static void AddRange<T>(this HashSet<T> hashSet, IEnumerable<T> items)
         {
-            foreach(var item in items)
+            foreach (var item in items)
             {
                 hashSet.Add(item);
             }
@@ -177,6 +202,30 @@ namespace BTCPayServer
         public static void SetBitpayAuth(this HttpContext ctx, (string Signature, String Id, String Authorization) value)
         {
             NBitcoin.Extensions.TryAdd(ctx.Items, "BitpayAuth", value);
+        }
+
+        public static async Task<T> WithCancellation<T>(this Task<T> task, CancellationToken cancellationToken)
+        {
+            using (var delayCTS = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
+            {
+                var waiting = Task.Delay(-1, delayCTS.Token);
+                var doing = task;
+                await Task.WhenAny(waiting, doing);
+                delayCTS.Cancel();
+                cancellationToken.ThrowIfCancellationRequested();
+                return await doing;
+            }
+        }
+        public static async Task WithCancellation(this Task task, CancellationToken cancellationToken)
+        {
+            using (var delayCTS = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
+            {
+                var waiting = Task.Delay(-1, delayCTS.Token);
+                var doing = task;
+                await Task.WhenAny(waiting, doing);
+                delayCTS.Cancel();
+                cancellationToken.ThrowIfCancellationRequested();
+            }
         }
 
         public static (string Signature, String Id, String Authorization) GetBitpayAuth(this HttpContext ctx)

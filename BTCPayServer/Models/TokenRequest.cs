@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using NBitcoin;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Models
 {
@@ -44,6 +45,9 @@ namespace BTCPayServer.Models
 
     public class PairingCodeResponse
     {
+        [JsonProperty(PropertyName = "policies")]
+        public JArray Policies { get; set; }
+
         [JsonProperty(PropertyName = "pairingCode")]
         public string PairingCode
         {

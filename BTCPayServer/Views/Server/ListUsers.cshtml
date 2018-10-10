@@ -5,9 +5,9 @@
 
 
 <h4>@ViewData["Title"]</h4>
-@Html.Partial("_StatusMessage", Model.StatusMessage)
+<partial name="_StatusMessage" for="StatusMessage" />
 
-
+<a asp-controller="Account" asp-action="Register" asp-route-returnUrl="@Context.Request.GetCurrentPath()" asp-route-logon="false" class="btn btn-primary" role="button"><span class="fa fa-plus"></span> Create a new user</a>
 <table class="table table-sm table-responsive-md">
     <thead>
         <tr>

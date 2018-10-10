@@ -35,11 +35,11 @@ using Hangfire.Annotations;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Threading;
 using Microsoft.Extensions.Options;
-using Microsoft.ApplicationInsights.AspNetCore.Extensions;
 using Microsoft.AspNetCore.Mvc.Cors.Internal;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using System.Net;
 using Meziantou.AspNetCore.BundleTagHelpers;
+using BTCPayServer.Security;
 
 namespace BTCPayServer.Hosting
 {
@@ -80,8 +80,19 @@ namespace BTCPayServer.Hosting
             services.AddMvc(o =>
             {
                 o.Filters.Add(new XFrameOptionsAttribute("DENY"));
+                o.Filters.Add(new XContentTypeOptionsAttribute("nosniff"));
+                o.Filters.Add(new XXSSProtectionAttribute());
+                o.Filters.Add(new ReferrerPolicyAttribute("same-origin"));
+                //o.Filters.Add(new ContentSecurityPolicyAttribute()
+                //{
+                //    FontSrc = "'self' https://fonts.gstatic.com/",
+                //    ImgSrc = "'self' data:",
+                //    DefaultSrc = "'none'",
+                //    StyleSrc = "'self' 'unsafe-inline'",
+                //    ScriptSrc = "'self' 'unsafe-inline'"
+                //});
             });
-
+            services.TryAddScoped<ContentSecurityPolicies>();
             services.Configure<IdentityOptions>(options =>
             {
                 options.Password.RequireDigit = false;
@@ -89,6 +100,9 @@ namespace BTCPayServer.Hosting
                 options.Password.RequireLowercase = false;
                 options.Password.RequireNonAlphanumeric = false;
                 options.Password.RequireUppercase = false;
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+                options.Lockout.MaxFailedAccessAttempts = 5;
+                options.Lockout.AllowedForNewUsers = true;
             });
 
             services.AddHangfire((o) =>
@@ -103,10 +117,6 @@ namespace BTCPayServer.Hosting
                 {
                     b.AllowAnyMethod().AllowAnyHeader().AllowAnyOrigin();
                 });
-            });
-            services.Configure<IOptions<ApplicationInsightsServiceOptions>>(o =>
-            {
-                o.Value.DeveloperMode = _Env.IsDevelopment();
             });
 
             // Needed to debug U2F for ledger support
@@ -146,12 +156,9 @@ namespace BTCPayServer.Hosting
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.UseBrowserLink();
             }
 
-            //App insight do not that by itself...
-            loggerFactory.AddApplicationInsights(prov, LogLevel.Information);
-
+            app.UseCors();
             app.UsePayServer();
             app.UseStaticFiles();
             app.UseAuthentication();
@@ -162,6 +169,7 @@ namespace BTCPayServer.Hosting
                 Authorization = new[] { new NeedRole(Roles.ServerAdmin) }
             });
             app.UseWebSockets();
+            app.UseStatusCodePages();
             app.UseMvc(routes =>
             {
                 routes.MapRoute(

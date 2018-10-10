@@ -53,12 +53,12 @@
                         dataType: "json",
                         success: function (result) {
                             if (result.item2) {
-                                var enabledeCurrencies = result.item1.filter(function (x) {
-                                    return x && x.enabled
-                                });
-                                for(i = 0; i< enabledeCurrencies.length; i++){
-                                    this.currencies.push(enabledeCurrencies[i]);
-                                }                                
+                                for (i = 0; i < result.item1.length; i++) {
+                                    if (result.item1[i].enabled &&
+                                        result.item1[i].name.toLowerCase() !== this.toCurrency.toLowerCase()) {
+                                        this.currencies.push(result.item1[i]);
+                                    }
+                                }
                                 var self = this;
                                 Vue.nextTick(function () {
                                     self.prettyDropdownInstance
@@ -95,20 +95,22 @@
                                 if (amount === 1) {
                                     var rate = result.item1;
                                     var baseCost = self.toCurrencyDue / rate;
-                                    var fee = baseCost * 0.005;
-                                    internal(baseCost + fee);
+                                    // instead of hardcoding this, we cna figure it out from the api through a recursive calculation check
+                                    // var fee = baseCost * 0.005;
+                                    // internal(baseCost + fee);
+                                    internal(baseCost);
+                                    return;
                                 } else {
                                     var estimatedAmount = result.item1;
                                     if (estimatedAmount < self.toCurrencyDue) {
                                         self.calculatedAmount = 0;
+                                        var newAmount = ((self.toCurrencyDue / estimatedAmount) * 1) * amount;
+                                        internal(newAmount);
                                     } else {
                                         self.calculatedAmount = amount;
                                     }
-
                                     self.isLoading = false;
                                 }
-                            },
-                            complete: function () {
                             }
                         });
                 }

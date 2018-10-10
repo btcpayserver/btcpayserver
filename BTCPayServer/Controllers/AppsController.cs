@@ -40,6 +40,7 @@ namespace BTCPayServer.Controllers
 
         [TempData]
         public string StatusMessage { get; set; }
+        public string CreatedAppId { get; set; }
 
         public async Task<IActionResult> ListApps()
         {
@@ -104,7 +105,7 @@ namespace BTCPayServer.Controllers
                 StatusMessage = "Error: You are not owner of this store";
                 return RedirectToAction(nameof(ListApps));
             }
-            var id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(32));
+            var id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(20));
             using (var ctx = _ContextFactory.CreateContext())
             {
                 var appData = new AppData() { Id = id };
@@ -115,7 +116,7 @@ namespace BTCPayServer.Controllers
                 await ctx.SaveChangesAsync();
             }
             StatusMessage = "App successfully created";
-
+            CreatedAppId = id;
             if (appType == AppType.PointOfSale)
                 return RedirectToAction(nameof(UpdatePointOfSale), new { appId = id });
             return RedirectToAction(nameof(ListApps));
@@ -136,21 +137,9 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        private async Task<AppData> GetOwnedApp(string appId, AppType? type = null)
+        private Task<AppData> GetOwnedApp(string appId, AppType? type = null)
         {
-            var userId = GetUserId();
-            using (var ctx = _ContextFactory.CreateContext())
-            {
-                var app = await ctx.UserStore
-                                .Where(us => us.ApplicationUserId == userId && us.Role == StoreRoles.Owner)
-                                .SelectMany(us => us.StoreData.Apps.Where(a => a.Id == appId))
-                   .FirstOrDefaultAsync();
-                if (app == null)
-                    return null;
-                if (type != null && type.Value.ToString() != app.AppType)
-                    return null;
-                return app;
-            }
+            return _AppsHelper.GetAppDataIfOwner(GetUserId(), appId, type);
         }
 
         private async Task<StoreData[]> GetOwnedStores()

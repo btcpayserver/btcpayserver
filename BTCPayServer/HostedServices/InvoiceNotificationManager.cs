@@ -77,9 +77,18 @@ namespace BTCPayServer.HostedServices
 
             if (!String.IsNullOrEmpty(invoice.NotificationEmail))
             {
-                var emailBody = NBitcoin.JsonConverters.Serializer.ToString(invoice);
+                // just extracting most important data for email body, merchant should query API back for full invoice based on Invoice.Id
+                var ipn = new
+                {
+                    invoice.Id,
+                    invoice.Status,
+                    invoice.StoreId
+                };
+                // TODO: Consider adding info on ItemDesc and payment info (amount)
+
+                var emailBody = NBitcoin.JsonConverters.Serializer.ToString(ipn);
                 await _EmailSender.SendEmailAsync(
-                    invoice.NotificationEmail, "BtcPayServer Invoice", emailBody);
+                    invoice.NotificationEmail, $"BtcPayServer Invoice Notification - ${invoice.StoreId}", emailBody);
             }
 
             try

@@ -105,7 +105,7 @@ namespace BTCPayServer.Hosting
                 return true;
 
             if (
-                path.Equals("/tokens", StringComparison.Ordinal) && 
+                path.Equals("/tokens", StringComparison.Ordinal) &&
                 ( httpContext.Request.Method == "GET" || httpContext.Request.Method == "POST"))
                 return true;
 
@@ -140,13 +140,9 @@ namespace BTCPayServer.Hosting
                 if (reverseProxyScheme != null && _Options.ExternalUrl.Scheme != reverseProxyScheme)
                 {
                     if (reverseProxyScheme == "http" && _Options.ExternalUrl.Scheme == "https")
-                        Logs.PayServer.LogWarning($"BTCPay ExternalUrl setting expected to use scheme '{_Options.ExternalUrl.Scheme}' externally, but the reverse proxy uses scheme '{reverseProxyScheme}'");
-                    httpContext.Request.Scheme = reverseProxyScheme;
+                        Logs.PayServer.LogWarning($"BTCPay ExternalUrl setting expected to use scheme '{_Options.ExternalUrl.Scheme}' externally, but the reverse proxy uses scheme '{reverseProxyScheme}' (X-Forwarded-Port), forcing ExternalUrl");
                 }
-                else
-                {
-                    httpContext.Request.Scheme = _Options.ExternalUrl.Scheme;
-                }
+                httpContext.Request.Scheme = _Options.ExternalUrl.Scheme;
                 if (_Options.ExternalUrl.IsDefaultPort)
                     httpContext.Request.Host = new HostString(_Options.ExternalUrl.Host);
                 else

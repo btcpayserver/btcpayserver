@@ -57,7 +57,7 @@ namespace BTCPayServer.Controllers
                 MonitoringDate = invoice.MonitoringExpiration,
                 OrderId = invoice.OrderId,
                 BuyerInformation = invoice.BuyerInformation,
-                Fiat = FormatCurrency((decimal)dto.Price, dto.Currency, _CurrencyNameTable),
+                Fiat = _CurrencyNameTable.DisplayFormatCurrency((decimal)dto.Price, dto.Currency),
                 NotificationEmail = invoice.NotificationEmail,
                 NotificationUrl = invoice.NotificationURL,
                 RedirectUrl = invoice.RedirectURL,
@@ -308,7 +308,7 @@ namespace BTCPayServer.Controllers
         private string GetDisplayName(PaymentMethodId paymentMethodId, BTCPayNetwork network)
         {
             return paymentMethodId.PaymentType == PaymentTypes.BTCLike ?
-                network.DisplayName : network.DisplayName + " (via Lightning)";
+                network.DisplayName : network.DisplayName + " (Lightning)";
         }
 
         private string GetImage(PaymentMethodId paymentMethodId, BTCPayNetwork network)
@@ -324,39 +324,12 @@ namespace BTCPayServer.Controllers
             if (cryptoCode == productInformation.Currency)
                 return null;
 
-            return FormatCurrency(productInformation.Price, productInformation.Currency, _CurrencyNameTable);
+            return _CurrencyNameTable.DisplayFormatCurrency(productInformation.Price, productInformation.Currency);
         }
         private string ExchangeRate(PaymentMethod paymentMethod)
         {
             string currency = paymentMethod.ParentEntity.ProductInformation.Currency;
-            return FormatCurrency(paymentMethod.Rate, currency, _CurrencyNameTable);
-        }
-
-        public static string FormatCurrency(decimal price, string currency, CurrencyNameTable currencies)
-        {
-            var provider = currencies.GetNumberFormatInfo(currency, true);
-            var currencyData = currencies.GetCurrencyData(currency, true);
-            var divisibility = currencyData.Divisibility;
-            while (true)
-            {
-                var rounded = decimal.Round(price, divisibility, MidpointRounding.AwayFromZero);
-                if ((Math.Abs(rounded - price) / price) < 0.001m)
-                {
-                    price = rounded;
-                    break;
-                }
-                divisibility++;
-            }
-            if (divisibility != provider.CurrencyDecimalDigits)
-            {
-                provider = (NumberFormatInfo)provider.Clone();
-                provider.CurrencyDecimalDigits = divisibility;
-            }
-
-            if (currencyData.Crypto)
-                return price.ToString("C", provider);
-            else
-                return price.ToString("C", provider) + $" ({currency})";
+            return _CurrencyNameTable.DisplayFormatCurrency(paymentMethod.Rate, currency);
         }
 
         [HttpGet]
@@ -569,7 +542,7 @@ namespace BTCPayServer.Controllers
                 Invoices = await ListInvoicesProcess(searchTerm, 0, int.MaxValue)
             };
 
-            return Content(model.Process(), "application/"+ format);
+            return Content(model.Process(), "application/" + format);
         }
 
         [HttpPost]

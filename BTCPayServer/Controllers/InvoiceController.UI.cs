@@ -441,7 +441,7 @@ namespace BTCPayServer.Controllers
                 StatusMessage = StatusMessage
             };
 
-            var list = await listInvoicesProcess(searchTerm, skip, count);
+            var list = await ListInvoicesProcess(searchTerm, skip, count);
             foreach (var invoice in list)
             {
                 model.Invoices.Add(new InvoiceModel()
@@ -458,7 +458,7 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
-        private async Task<InvoiceEntity[]> listInvoicesProcess(string searchTerm = null, int skip = 0, int count = 50)
+        private async Task<InvoiceEntity[]> ListInvoicesProcess(string searchTerm = null, int skip = 0, int count = 50)
         {
             var filterString = new SearchString(searchTerm);
             var list = await _InvoiceRepository.GetInvoices(new InvoiceQuery()
@@ -566,7 +566,7 @@ namespace BTCPayServer.Controllers
             var model = new ExportInvoicesModel
             {
                 Format = format,
-                List = await listInvoicesProcess(searchTerm, 0, int.MaxValue)
+                Invoices = await ListInvoicesProcess(searchTerm, 0, int.MaxValue)
             };
 
             return Content(model.Process(), "application/"+ format);

@@ -44,6 +44,7 @@ using BTCPayServer.Lightning;
 
 namespace BTCPayServer.Tests
 {
+    
     public class UnitTest1
     {
         public UnitTest1(ITestOutputHelper helper)

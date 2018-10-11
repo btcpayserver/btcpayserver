@@ -46,7 +46,6 @@ namespace BTCPayServer.Controllers
         #region Authorization code, implicit and implicit flows
         // Note: to support interactive flows like the code flow,
         // you must provide your own authorization endpoint action:
-
         [HttpGet("~/connect/authorize")]
         public async Task<IActionResult> Authorize(OpenIdConnectRequest request)
         {

@@ -32,17 +32,19 @@ namespace BTCPayServer.Controllers
     [Route("wallets")]
     [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
     [AutoValidateAntiforgeryToken]
-    public class WalletsController : Controller
+    public partial class WalletsController : Controller
     {
-        private StoreRepository _Repo;
-        private BTCPayNetworkProvider _NetworkProvider;
+        public StoreRepository Repository { get; }
+        public BTCPayNetworkProvider NetworkProvider { get; }
+        public ExplorerClientProvider ExplorerClientProvider { get; }
+
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IOptions<MvcJsonOptions> _mvcJsonOptions;
         private readonly NBXplorerDashboard _dashboard;
-        private readonly ExplorerClientProvider _explorerProvider;
+
         private readonly IFeeProviderFactory _feeRateProvider;
         private readonly BTCPayWalletProvider _walletProvider;
-        RateFetcher _RateProvider;
+        public RateFetcher RateFetcher { get; }
         CurrencyNameTable _currencyTable;
         public WalletsController(StoreRepository repo,
                                  CurrencyNameTable currencyTable,
@@ -56,13 +58,13 @@ namespace BTCPayServer.Controllers
                                  BTCPayWalletProvider walletProvider)
         {
             _currencyTable = currencyTable;
-            _Repo = repo;
-            _RateProvider = rateProvider;
-            _NetworkProvider = networkProvider;
+            Repository = repo;
+            RateFetcher = rateProvider;
+            NetworkProvider = networkProvider;
             _userManager = userManager;
             _mvcJsonOptions = mvcJsonOptions;
             _dashboard = dashboard;
-            _explorerProvider = explorerProvider;
+            ExplorerClientProvider = explorerProvider;
             _feeRateProvider = feeRateProvider;
             _walletProvider = walletProvider;
         }
@@ -70,10 +72,10 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> ListWallets()
         {
             var wallets = new ListWalletsViewModel();
-            var stores = await _Repo.GetStoresByUserId(GetUserId());
+            var stores = await Repository.GetStoresByUserId(GetUserId());
 
             var onChainWallets = stores
-                                .SelectMany(s => s.GetSupportedPaymentMethods(_NetworkProvider)
+                                .SelectMany(s => s.GetSupportedPaymentMethods(NetworkProvider)
                                               .OfType<DerivationStrategy>()
                                               .Select(d => ((Wallet: _walletProvider.GetWallet(d.Network),
                                                             DerivationStrategy: d.DerivationStrategyBase,
@@ -111,7 +113,7 @@ namespace BTCPayServer.Controllers
             [ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId)
         {
-            var store = await _Repo.FindStore(walletId.StoreId, GetUserId());
+            var store = await Repository.FindStore(walletId.StoreId, GetUserId());
             DerivationStrategy paymentMethod = GetPaymentMethod(walletId, store);
             if (paymentMethod == null)
                 return NotFound();
@@ -120,7 +122,7 @@ namespace BTCPayServer.Controllers
             var transactions = await wallet.FetchTransactions(paymentMethod.DerivationStrategyBase);
 
             var model = new ListTransactionsViewModel();
-            foreach(var tx in transactions.UnconfirmedTransactions.Transactions.Concat(transactions.ConfirmedTransactions.Transactions))
+            foreach (var tx in transactions.UnconfirmedTransactions.Transactions.Concat(transactions.ConfirmedTransactions.Transactions))
             {
                 var vm = new ListTransactionsViewModel.TransactionViewModel();
                 model.Transactions.Add(vm);
@@ -139,29 +141,33 @@ namespace BTCPayServer.Controllers
         [Route("{walletId}/send")]
         public async Task<IActionResult> WalletSend(
             [ModelBinder(typeof(WalletIdModelBinder))]
-            WalletId walletId)
+            WalletId walletId, string defaultDestination = null, string defaultAmount = null)
         {
             if (walletId?.StoreId == null)
                 return NotFound();
-            var store = await _Repo.FindStore(walletId.StoreId, GetUserId());
+            var store = await Repository.FindStore(walletId.StoreId, GetUserId());
             DerivationStrategy paymentMethod = GetPaymentMethod(walletId, store);
             if (paymentMethod == null)
                 return NotFound();
 
             var storeData = store.GetStoreBlob();
-            var rateRules = store.GetStoreBlob().GetRateRules(_NetworkProvider);
+            var rateRules = store.GetStoreBlob().GetRateRules(NetworkProvider);
             rateRules.Spread = 0.0m;
             var currencyPair = new Rating.CurrencyPair(paymentMethod.PaymentId.CryptoCode, GetCurrencyCode(storeData.DefaultLang) ?? "USD");
-            WalletModel model = new WalletModel();
-            model.ServerUrl = GetLedgerWebsocketUrl(this.HttpContext, walletId.CryptoCode, paymentMethod.DerivationStrategyBase);
-            model.CryptoCurrency = walletId.CryptoCode;
+            WalletModel model = new WalletModel()
+            {
+                DefaultAddress = defaultDestination,
+                DefaultAmount = defaultAmount,
+                ServerUrl = GetLedgerWebsocketUrl(this.HttpContext, walletId.CryptoCode, paymentMethod.DerivationStrategyBase),
+                CryptoCurrency = walletId.CryptoCode
+            };
 
             using (CancellationTokenSource cts = new CancellationTokenSource())
             {
                 try
                 {
                     cts.CancelAfter(TimeSpan.FromSeconds(5));
-                    var result = await _RateProvider.FetchRate(currencyPair, rateRules).WithCancellation(cts.Token);
+                    var result = await RateFetcher.FetchRate(currencyPair, rateRules).WithCancellation(cts.Token);
                     if (result.BidAsk != null)
                     {
                         model.Rate = result.BidAsk.Center;
@@ -173,7 +179,7 @@ namespace BTCPayServer.Controllers
                         model.RateError = $"{result.EvaluatedRule} ({string.Join(", ", result.Errors.OfType<object>().ToArray())})";
                     }
                 }
-                catch(Exception ex) { model.RateError = ex.Message; }
+                catch (Exception ex) { model.RateError = ex.Message; }
             }
             return View(model);
         }
@@ -187,7 +193,7 @@ namespace BTCPayServer.Controllers
                 var ri = new RegionInfo(defaultLang);
                 return ri.ISOCurrencySymbol;
             }
-            catch(ArgumentException) { }
+            catch (ArgumentException) { }
             return null;
         }
 
@@ -197,7 +203,7 @@ namespace BTCPayServer.Controllers
                 return null;
 
             var paymentMethod = store
-                            .GetSupportedPaymentMethods(_NetworkProvider)
+                            .GetSupportedPaymentMethods(NetworkProvider)
                             .OfType<DerivationStrategy>()
                             .FirstOrDefault(p => p.PaymentId.PaymentType == Payments.PaymentTypes.BTCLike && p.PaymentId.CryptoCode == walletId.CryptoCode);
             return paymentMethod;
@@ -257,7 +263,7 @@ namespace BTCPayServer.Controllers
                     BTCPayNetwork network = null;
                     if (cryptoCode != null)
                     {
-                        network = _NetworkProvider.GetNetwork(cryptoCode);
+                        network = NetworkProvider.GetNetwork(cryptoCode);
                         if (network == null)
                             throw new FormatException("Invalid value for crypto code");
                     }
@@ -403,7 +409,7 @@ namespace BTCPayServer.Controllers
                         if (!strategy.Segwit)
                         {
                             var parentHashes = usedCoins.Select(c => c.Outpoint.Hash).ToHashSet();
-                            var explorer = _explorerProvider.GetExplorerClient(network);
+                            var explorer = ExplorerClientProvider.GetExplorerClient(network);
                             var getTransactionAsyncs = parentHashes.Select(h => (Op: explorer.GetTransactionAsync(h), Hash: h)).ToList();
                             foreach (var getTransactionAsync in getTransactionAsyncs)
                             {

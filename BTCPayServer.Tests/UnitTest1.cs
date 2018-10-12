@@ -332,7 +332,7 @@ namespace BTCPayServer.Tests
                 (0.1m, "$0.10 (USD)"),
             })
             {
-                var actual = InvoiceController.FormatCurrency(test.Item1, "USD", new CurrencyNameTable());
+                var actual = new CurrencyNameTable().DisplayFormatCurrency(test.Item1, "USD");
                 Assert.Equal(test.Item2, actual);
             }
         }
@@ -1359,6 +1359,7 @@ namespace BTCPayServer.Tests
                 Assert.Single(appList.Apps);
                 Assert.Empty(appList2.Apps);
                 Assert.Equal("test", appList.Apps[0].AppName);
+                Assert.Equal(apps.CreatedAppId, appList.Apps[0].Id);
                 Assert.True(appList.Apps[0].IsOwner);
                 Assert.Equal(user.StoreId, appList.Apps[0].StoreId);
                 Assert.IsType<NotFoundResult>(apps2.DeleteApp(appList.Apps[0].Id).Result);

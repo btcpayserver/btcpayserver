@@ -99,9 +99,17 @@ namespace BTCPayServer.Controllers
                 vm.Confirmation = false;
                 return View(vm);
             }
+            var storeBlob = store.GetStoreBlob();
+            var wasExcluded = storeBlob.GetExcludedPaymentMethods().Match(paymentMethodId);
+            var willBeExcluded = !vm.Enabled;
 
-            var showAddress = (vm.Confirmation && !string.IsNullOrWhiteSpace(vm.HintAddress)) || // Testing hint address
-                              (!vm.Confirmation && strategy != null && exisingStrategy != strategy.DerivationStrategyBase.ToString());  // Checking addresses after setting xpub
+            var showAddress = // Show addresses if:
+                              // - If the user is testing the hint address in confirmation screen
+                              (vm.Confirmation && !string.IsNullOrWhiteSpace(vm.HintAddress)) ||
+                              // - The user is setting a new derivation scheme
+                              (!vm.Confirmation && strategy != null && exisingStrategy != strategy.DerivationStrategyBase.ToString()) ||
+                              // - The user is clicking on continue without changing anything   
+                              (!vm.Confirmation && willBeExcluded == wasExcluded);  
 
             if (!showAddress)
             {
@@ -110,9 +118,7 @@ namespace BTCPayServer.Controllers
                     if (strategy != null)
                         await wallet.TrackAsync(strategy.DerivationStrategyBase);
                     store.SetSupportedPaymentMethod(paymentMethodId, strategy);
-
-                    var storeBlob = store.GetStoreBlob();
-                    storeBlob.SetExcluded(paymentMethodId, !vm.Enabled);
+                    storeBlob.SetExcluded(paymentMethodId, willBeExcluded);
                     store.SetStoreBlob(storeBlob);
                 }
                 catch

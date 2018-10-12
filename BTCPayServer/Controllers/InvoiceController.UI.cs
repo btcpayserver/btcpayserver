@@ -530,21 +530,6 @@ namespace BTCPayServer.Controllers
             }
         }
 
-
-        [HttpGet]
-        [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
-        [BitpayAPIConstraint(false)]
-        public async Task<IActionResult> Export(string format, string searchTerm = null)
-        {
-            var model = new ExportInvoicesModel
-            {
-                Format = format,
-                Invoices = await ListInvoicesProcess(searchTerm, 0, int.MaxValue)
-            };
-
-            return Content(model.Process(), "application/" + format);
-        }
-
         [HttpPost]
         [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
         [BitpayAPIConstraint(false)]

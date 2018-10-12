@@ -32,10 +32,27 @@
                         If you want all confirmed and complete invoices, you can duplicate a filter <code>status:confirmed status:complete</code>.
                     </p>
                 </div>
+            </div>
+        </div>
+
+        <div class="row no-gutter" style="margin-bottom: 5px;">
+            <div class="col-lg-4">
+                <a asp-action="CreateInvoice" class="btn btn-primary" role="button"><span class="fa fa-plus"></span> Create a new invoice</a>
+
+                <a class="btn btn-primary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Export
+                </a>
+
+                <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                    <a asp-action="Export" asp-route-format="json" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item" target="_blank">JSON</a>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
                 <div class="form-group">
-                    <form asp-action="SearchInvoice" method="post">
+                    <form asp-action="SearchInvoice" method="post" style="float:right;">
                         <div class="input-group">
-                            <input asp-for="SearchTerm" class="form-control" />
+                            <input asp-for="SearchTerm" class="form-control" style="width:300px;" />
                             <span class="input-group-btn">
                                 <button type="submit" class="btn btn-primary" title="Search invoice">
                                     <span class="fa fa-search"></span> Search
@@ -50,7 +67,6 @@
         </div>
 
         <div class="row">
-            <a asp-action="CreateInvoice" class="btn btn-primary" role="button"><span class="fa fa-plus"></span> Create a new invoice</a>
             <table class="table table-sm table-responsive-md">
                 <thead>
                     <tr>
@@ -63,12 +79,12 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach(var invoice in Model.Invoices)
+                    @foreach (var invoice in Model.Invoices)
                     {
                         <tr>
                             <td>@invoice.Date.ToTimeAgo()</td>
                             <td>
-                                @if(invoice.RedirectUrl != string.Empty)
+                                @if (invoice.RedirectUrl != string.Empty)
                                 {
                                     <a href="@invoice.RedirectUrl">@invoice.OrderId</a>
                                 }
@@ -78,7 +94,7 @@
                                 }
                             </td>
                             <td>@invoice.InvoiceId</td>
-                            @if(invoice.Status == "paid")
+                            @if (invoice.Status == "paid")
                             {
                                 <td>
                                     <div class="btn-group">
@@ -97,7 +113,7 @@
                             }
                             <td style="text-align:right">@invoice.AmountCurrency</td>
                             <td style="text-align:right">
-                                @if(invoice.ShowCheckout)
+                                @if (invoice.ShowCheckout)
                                 {
                                     <a asp-action="Checkout" asp-route-invoiceId="@invoice.InvoiceId">Checkout</a> <span>-</span>
                                 }<a asp-action="Invoice" asp-route-invoiceId="@invoice.InvoiceId">Details</a>
@@ -107,7 +123,7 @@
                 </tbody>
             </table>
             <span>
-                @if(Model.Skip != 0)
+                @if (Model.Skip != 0)
                 {
                     <a href="@Url.Action("ListInvoices", new
                         {

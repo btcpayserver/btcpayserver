@@ -141,7 +141,7 @@ $(document).ready(function () {
         progressStart(srvModel.maxTimeSeconds); // Progress bar
 
         if (srvModel.requiresRefundEmail && !validateEmail(srvModel.customerEmail))
-            emailForm(); // Email form Display
+            showEmailForm();
         else
             hideEmailForm();
     }
@@ -157,7 +157,7 @@ $(document).ready(function () {
     }
     // Email Form
     // Setup Email mode
-    function emailForm() {
+    function showEmailForm() {
         $(".modal-dialog").addClass("enter-purchaser-email");
 
         $("#emailAddressForm .action-button").click(function () {

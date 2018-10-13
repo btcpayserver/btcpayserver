@@ -1,7 +1,9 @@
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Models;
 using BTCPayServer.Payments.Changelly;
+using Changelly.ResponseModel;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Controllers
@@ -18,14 +20,14 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("currencies")]
-        public async Task<IActionResult> GetCurrencyList(string storeId, bool enabledOnly = true)
+        public async Task<IActionResult> GetCurrencyList(string storeId)
         {
             if (!TryGetChangellyClient(storeId, out var actionResult, out var client))
             {
                 return actionResult;
             }
 
-            var result = client.GetCurrenciesFull();
+            var result = _changellyClientProvider.GetCurrenciesFull(client);
             if (result.Success)
             {
                 return Ok(result);
@@ -47,7 +49,7 @@ namespace BTCPayServer.Controllers
             double? currentAmount = null;
             var callCounter = 0;
 
-            var response1 = client.GetExchangeAmount(fromCurrency, toCurrency, 1);
+            var response1 = _changellyClientProvider.GetExchangeAmount(client,fromCurrency, toCurrency, 1);
             if (!response1.Success) return BadRequest(response1);
             currentAmount = response1.amount;
 
@@ -64,7 +66,7 @@ namespace BTCPayServer.Controllers
                     return actionResult;
                 }
 
-                var response2 = client.GetExchangeAmount(fromCurrency, toCurrency, currentAmount.Value);
+                var response2 = _changellyClientProvider.GetExchangeAmount(client,fromCurrency, toCurrency, currentAmount.Value);
                 callCounter++;
                 if (!response2.Success) return BadRequest(response2);
                 if (response2.amount < toCurrencyAmount)

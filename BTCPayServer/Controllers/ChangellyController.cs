@@ -1,25 +1,19 @@
-using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Models;
 using BTCPayServer.Payments.Changelly;
-using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Mvc;
-using NicolasDorier.RateLimits;
 
 namespace BTCPayServer.Controllers
 {
     [Route("[controller]/{storeId}")]
     public class ChangellyController : Controller
     {
-        private readonly BTCPayNetworkProvider _networkProvider;
-        private readonly StoreRepository _storeRepo;
+        private readonly ChangellyClientProvider _changellyClientProvider;
 
-        public ChangellyController(
-            BTCPayNetworkProvider networkProvider,
-            StoreRepository storeRepo)
+        public ChangellyController(ChangellyClientProvider changellyClientProvider)
         {
-            _networkProvider = networkProvider;
-            _storeRepo = storeRepo;
+            _changellyClientProvider = changellyClientProvider;
         }
 
         [HttpGet]
@@ -41,22 +35,48 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
-        [Route("getExchangeAmount")]
-        public async Task<IActionResult> GetExchangeAmount(string storeId, string fromCurrency, string toCurrency,
-            double amount)
+        [Route("calculate")]
+        public IActionResult CalculateAmount(string storeId, string fromCurrency, string toCurrency,
+            double toCurrencyAmount)
         {
             if (!TryGetChangellyClient(storeId, out var actionResult, out var client))
             {
                 return actionResult;
             }
 
-            var result = client.GetExchangeAmount(fromCurrency, toCurrency, amount);
-            if (result.Success)
-            {
-                return Ok(result);
-            }
+            double? currentAmount = null;
+            var callCounter = 0;
 
-            return BadRequest(result);
+            var response1 = client.GetExchangeAmount(fromCurrency, toCurrency, 1);
+            if (!response1.Success) return BadRequest(response1);
+            currentAmount = response1.amount;
+
+            while (true)
+            {
+                if (callCounter > 10)
+                {
+                    BadRequest();
+                }
+                
+                //Client needs to be reset between same calls for some reason
+                if (!TryGetChangellyClient(storeId, out actionResult, out client))
+                {
+                    return actionResult;
+                }
+
+                var response2 = client.GetExchangeAmount(fromCurrency, toCurrency, currentAmount.Value);
+                callCounter++;
+                if (!response2.Success) return BadRequest(response2);
+                if (response2.amount < toCurrencyAmount)
+                {
+                    var newCurrentAmount = ((toCurrencyAmount / response2.amount) * 1) * currentAmount.Value;
+                    currentAmount = newCurrentAmount;
+                }
+                else
+                {
+                    return Ok(currentAmount.Value);
+                }
+            }
         }
 
         private bool TryGetChangellyClient(string storeId, out IActionResult actionResult,
@@ -66,33 +86,15 @@ namespace BTCPayServer.Controllers
             actionResult = null;
             storeId = storeId ?? HttpContext.GetStoreData()?.Id;
 
-            var store = HttpContext.GetStoreData();
-            if (store == null || store.Id != storeId)
-                store = _storeRepo.FindStore(storeId).Result;
-            if (store == null)
+            if (!_changellyClientProvider.TryGetChangellyClient(storeId, out var error, out changelly))
             {
-                actionResult = NotFound(new BitpayErrorsModel() {Error = "Store not found"});
+                actionResult = BadRequest(new BitpayErrorModel()
+                {
+                    Error = error
+                });
                 return false;
             }
 
-            var blob = store.GetStoreBlob();
-            if (blob.IsExcluded(ChangellySupportedPaymentMethod.ChangellySupportedPaymentMethodId))
-            {
-                actionResult = BadRequest(new BitpayErrorsModel() {Error = "Changelly not enabled for this store"});
-            }
-
-            var paymentMethod = (ChangellySupportedPaymentMethod)store.GetSupportedPaymentMethods(_networkProvider)
-                .SingleOrDefault(method =>
-                    method.PaymentId == ChangellySupportedPaymentMethod.ChangellySupportedPaymentMethodId);
-
-            if (paymentMethod == null || !paymentMethod.IsConfigured())
-            {
-                actionResult = BadRequest(new BitpayErrorsModel() {Error = "Changelly not configured for this store"});
-                return false;
-            }
-
-            changelly = new Changelly.Changelly(paymentMethod.ApiKey, paymentMethod.ApiSecret,
-                paymentMethod.ApiUrl);
             return true;
         }
     }

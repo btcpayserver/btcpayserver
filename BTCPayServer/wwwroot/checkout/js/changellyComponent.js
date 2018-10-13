@@ -76,44 +76,26 @@
                     });
             },
             calculateAmount: function () {
-                var self = this;
-                internal(1);
+                this.isLoading = true;
+                $.ajax(
+                    {
+                        url: this.getUrl() + "/calculate",
+                        dataType: "json",
+                        data: {
+                            fromCurrency: this.selectedFromCurrency,
+                            toCurrency: this.toCurrency,
+                            toCurrencyAmount: this.toCurrencyDue
+                        },
+                        context: this,
+                        success: function (result) {
+                            this.calculatedAmount = result;
+                        },
+                        complete: function () {
+                            this.isLoading = false;
+                        }
+                    });
 
-                function internal(amount) {
-                    self.isLoading = true;
-                    $.ajax(
-                        {
-                            url: self.getUrl() + "/getExchangeAmount",
-                            dataType: "json",
-                            data: {
-                                fromCurrency: self.selectedFromCurrency,
-                                toCurrency: self.toCurrency,
-                                amount: amount
-                            },
-                            context: this,
-                            success: function (result) {
-                                if (amount === 1) {
-                                    var rate = result.item1;
-                                    var baseCost = self.toCurrencyDue / rate;
-                                    // instead of hardcoding this, we cna figure it out from the api through a recursive calculation check
-                                    // var fee = baseCost * 0.005;
-                                    // internal(baseCost + fee);
-                                    internal(baseCost);
-                                    return;
-                                } else {
-                                    var estimatedAmount = result.item1;
-                                    if (estimatedAmount < self.toCurrencyDue) {
-                                        self.calculatedAmount = 0;
-                                        var newAmount = ((self.toCurrencyDue / estimatedAmount) * 1) * amount;
-                                        internal(newAmount);
-                                    } else {
-                                        self.calculatedAmount = amount;
-                                    }
-                                    self.isLoading = false;
-                                }
-                            }
-                        });
-                }
+
             },
             onCurrencyChange: function (value) {
                 this.selectedFromCurrency = value;

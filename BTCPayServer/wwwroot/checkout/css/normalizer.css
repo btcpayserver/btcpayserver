@@ -9411,6 +9411,9 @@ strong {
         margin: 0px;
         font-size: 12px;
         width: 50%;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
     }
 
         .btnGroupLnd button:hover {

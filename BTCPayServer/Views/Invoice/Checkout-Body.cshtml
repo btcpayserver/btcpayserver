@@ -190,8 +190,14 @@
     <div class="bp-view payment scan" id="scan">
         <div class="wrapBtnGroup" v-bind:class="{ invisible: lndModel === null }">
             <div class="btnGroupLnd">
-                <button onclick="lndToggleBolt11()" v-bind:class="{ active: lndModel != null && lndModel.toggle === 0 }">{{$t("BOLT 11 Invoice")}}</button>
-                <button onclick="lndToggleNode()" v-bind:class="{ active: lndModel != null && lndModel.toggle === 1 }">{{$t("Node Info")}}</button>
+                <button onclick="lndToggleBolt11()" v-bind:class="{ active: lndModel != null && lndModel.toggle === 0 }"
+                        v-bind:title="$t('BOLT 11 Invoice')">
+                    {{$t("BOLT 11 Invoice")}}
+                </button>
+                <button onclick="lndToggleNode()" v-bind:class="{ active: lndModel != null && lndModel.toggle === 1 }"
+                        v-bind:title="$t('Node Info')">
+                    {{$t("Node Info")}}
+                </button>
             </div>
         </div>
         <div class="payment__scan">

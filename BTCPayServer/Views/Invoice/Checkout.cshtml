@@ -70,7 +70,7 @@
                             {{$t("nested.lang")}} >>
                         *@
                         <select class="cmblang reverse invisible" onchange="changeLanguage($(this).val())">
-                            @foreach(var lang in langService.GetLanguages())
+                            @foreach (var lang in langService.GetLanguages())
                             {
                                 <option value="@lang.Code">@lang.DisplayName</option>
                             }
@@ -117,10 +117,14 @@
                 'pt': { translation: locales_pt },
                 'pt-BR': { translation: locales_pt_br },
                 'nl': { translation: locales_nl },
+                'np': { translation: locales_np },
                 'cs-CZ': { translation: locales_cs },
                 'is-IS': { translation: locales_is },
-                'hr-HR': { translation: locales_hr }
-                'it-IT': { translation: locales_it }
+                'hr-HR': { translation: locales_hr },
+                'it-IT': { translation: locales_it },
+                'hr-HR': { translation: locales_hr },
+                'ru-RU': { translation: locales_ru },
+                'zh-SP': { translation: locales_zh_sp }
             },
         });
 
@@ -152,6 +156,8 @@
             },
             data: {
                 srvModel: srvModel,
+                lndModel: null,
+                scanDisplayQr: "",
                 expiringSoon: false
             }
         });

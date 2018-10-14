@@ -210,14 +210,14 @@ namespace BTCPayServer.Security
                 var path = httpContext.Request.Path.Value;
                 if (
                     bitpayAuth &&
-                    path == "/invoices" &&
+                    (path == "/invoices" || path == "/invoices/") &&
                   httpContext.Request.Method == "POST" &&
                   isJson)
                     return true;
 
                 if (
                     bitpayAuth &&
-                    path == "/invoices" &&
+                    (path == "/invoices" || path == "/invoices/") &&
                   httpContext.Request.Method == "GET")
                     return true;
 

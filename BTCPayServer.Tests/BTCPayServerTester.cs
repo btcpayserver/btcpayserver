@@ -31,6 +31,7 @@ using System.Security.Claims;
 using System.Security.Principal;
 using System.Text;
 using System.Threading;
+using AspNet.Security.OpenIdConnect.Primitives;
 using Xunit;
 
 namespace BTCPayServer.Tests
@@ -206,7 +207,7 @@ namespace BTCPayServer.Tests
             context.Request.Protocol = "http";
             if (userId != null)
             {
-                context.User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, userId) }, Policies.CookieAuthentication));
+                context.User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(OpenIdConnectConstants.Claims.Subject, userId) }, Policies.CookieAuthentication));
             }
             if (storeId != null)
             {

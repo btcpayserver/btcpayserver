@@ -57,7 +57,8 @@ namespace BTCPayServer.Controllers
                 MonitoringDate = invoice.MonitoringExpiration,
                 OrderId = invoice.OrderId,
                 BuyerInformation = invoice.BuyerInformation,
-                Fiat = FormatCurrency((decimal)dto.Price, dto.Currency, _CurrencyNameTable),
+                Fiat = _CurrencyNameTable.DisplayFormatCurrency((decimal)dto.Price, dto.Currency),
+                NotificationEmail = invoice.NotificationEmail,
                 NotificationUrl = invoice.NotificationURL,
                 RedirectUrl = invoice.RedirectURL,
                 ProductInformation = invoice.ProductInformation,
@@ -228,7 +229,7 @@ namespace BTCPayServer.Controllers
                 if (!isDefaultCrypto)
                     return null;
                 var paymentMethodTemp = invoice.GetPaymentMethods(_NetworkProvider)
-                                               .Where(c=> paymentMethodId.CryptoCode == c.GetId().CryptoCode)
+                                               .Where(c => paymentMethodId.CryptoCode == c.GetId().CryptoCode)
                                                .FirstOrDefault();
                 if (paymentMethodTemp == null)
                     paymentMethodTemp = invoice.GetPaymentMethods(_NetworkProvider).First();
@@ -307,7 +308,7 @@ namespace BTCPayServer.Controllers
         private string GetDisplayName(PaymentMethodId paymentMethodId, BTCPayNetwork network)
         {
             return paymentMethodId.PaymentType == PaymentTypes.BTCLike ?
-                network.DisplayName : network.DisplayName + " (via Lightning)";
+                network.DisplayName : network.DisplayName + " (Lightning)";
         }
 
         private string GetImage(PaymentMethodId paymentMethodId, BTCPayNetwork network)
@@ -323,39 +324,12 @@ namespace BTCPayServer.Controllers
             if (cryptoCode == productInformation.Currency)
                 return null;
 
-            return FormatCurrency(productInformation.Price, productInformation.Currency, _CurrencyNameTable);
+            return _CurrencyNameTable.DisplayFormatCurrency(productInformation.Price, productInformation.Currency);
         }
         private string ExchangeRate(PaymentMethod paymentMethod)
         {
             string currency = paymentMethod.ParentEntity.ProductInformation.Currency;
-            return FormatCurrency(paymentMethod.Rate, currency, _CurrencyNameTable);
-        }
-
-        public static string FormatCurrency(decimal price, string currency, CurrencyNameTable currencies)
-        {
-            var provider = currencies.GetNumberFormatInfo(currency, true);
-            var currencyData = currencies.GetCurrencyData(currency, true);
-            var divisibility = currencyData.Divisibility;
-            while (true)
-            {
-                var rounded = decimal.Round(price, divisibility, MidpointRounding.AwayFromZero);
-                if ((Math.Abs(rounded - price) / price) < 0.001m)
-                {
-                    price = rounded;
-                    break;
-                }
-                divisibility++;
-            }
-            if (divisibility != provider.CurrencyDecimalDigits)
-            {
-                provider = (NumberFormatInfo)provider.Clone();
-                provider.CurrencyDecimalDigits = divisibility;
-            }
-
-            if (currencyData.Crypto)
-                return price.ToString("C", provider);
-            else
-                return price.ToString("C", provider) + $" ({currency})";
+            return _CurrencyNameTable.DisplayFormatCurrency(paymentMethod.Rate, currency);
         }
 
         [HttpGet]
@@ -432,23 +406,17 @@ namespace BTCPayServer.Controllers
         [BitpayAPIConstraint(false)]
         public async Task<IActionResult> ListInvoices(string searchTerm = null, int skip = 0, int count = 50)
         {
-            var model = new InvoicesModel();
-            var filterString = new SearchString(searchTerm);
-            foreach (var invoice in await _InvoiceRepository.GetInvoices(new InvoiceQuery()
+            var model = new InvoicesModel
             {
-                TextSearch = filterString.TextSearch,
-                Count = count,
+                SearchTerm = searchTerm,
                 Skip = skip,
-                UserId = GetUserId(),
-                Unusual = !filterString.Filters.ContainsKey("unusual") ? null
-                          : !bool.TryParse(filterString.Filters["unusual"].First(), out var r) ? (bool?)null
-                          : r,
-                Status = filterString.Filters.ContainsKey("status") ? filterString.Filters["status"].ToArray() : null,
-                ExceptionStatus = filterString.Filters.ContainsKey("exceptionstatus") ? filterString.Filters["exceptionstatus"].ToArray() : null,
-                StoreId = filterString.Filters.ContainsKey("storeid") ? filterString.Filters["storeid"].ToArray() : null
-            }))
+                Count = count,
+                StatusMessage = StatusMessage
+            };
+
+            var list = await ListInvoicesProcess(searchTerm, skip, count);
+            foreach (var invoice in list)
             {
-                model.SearchTerm = searchTerm;
                 model.Invoices.Add(new InvoiceModel()
                 {
                     Status = invoice.Status + (invoice.ExceptionStatus == null ? string.Empty : $" ({invoice.ExceptionStatus})"),
@@ -460,10 +428,27 @@ namespace BTCPayServer.Controllers
                     AmountCurrency = $"{invoice.ProductInformation.Price.ToString(CultureInfo.InvariantCulture)} {invoice.ProductInformation.Currency}"
                 });
             }
-            model.Skip = skip;
-            model.Count = count;
-            model.StatusMessage = StatusMessage;
             return View(model);
+        }
+
+        private async Task<InvoiceEntity[]> ListInvoicesProcess(string searchTerm = null, int skip = 0, int count = 50)
+        {
+            var filterString = new SearchString(searchTerm);
+            var list = await _InvoiceRepository.GetInvoices(new InvoiceQuery()
+            {
+                TextSearch = filterString.TextSearch,
+                Count = count,
+                Skip = skip,
+                UserId = GetUserId(),
+                Unusual = !filterString.Filters.ContainsKey("unusual") ? null
+                          : !bool.TryParse(filterString.Filters["unusual"].First(), out var r) ? (bool?)null
+                          : r,
+                Status = filterString.Filters.ContainsKey("status") ? filterString.Filters["status"].ToArray() : null,
+                ExceptionStatus = filterString.Filters.ContainsKey("exceptionstatus") ? filterString.Filters["exceptionstatus"].ToArray() : null,
+                StoreId = filterString.Filters.ContainsKey("storeid") ? filterString.Filters["storeid"].ToArray() : null
+            });
+
+            return list;
         }
 
         [HttpGet]
@@ -528,6 +513,7 @@ namespace BTCPayServer.Controllers
                     PosData = model.PosData,
                     OrderId = model.OrderId,
                     //RedirectURL = redirect + "redirect",
+                    NotificationEmail = model.NotificationEmail,
                     NotificationURL = model.NotificationUrl,
                     ItemDesc = model.ItemDesc,
                     FullNotifications = true,

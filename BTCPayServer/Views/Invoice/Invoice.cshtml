@@ -88,6 +88,10 @@
                         <td>@Model.Fiat</td>
                     </tr>
                     <tr>
+                        <th>Notification Email</th>
+                        <td>@Model.NotificationEmail</td>
+                    </tr>
+                    <tr>
                         <th>Notification Url</th>
                         <td>@Model.NotificationUrl</td>
                     </tr>
@@ -167,14 +171,14 @@
                             <th class="text-right">Rate</th>
                             <th class="text-right">Paid</th>
                             <th class="text-right">Due</th>
-                            @if(Model.StatusException == "paidOver")
+                            @if (Model.StatusException == "paidOver")
                             {
                                 <th class="text-right">Overpaid</th>
                             }
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach(var payment in Model.CryptoPayments)
+                        @foreach (var payment in Model.CryptoPayments)
                         {
                             <tr>
                                 <td>@payment.PaymentMethod</td>
@@ -182,7 +186,7 @@
                                 <td class="text-right">@payment.Rate</td>
                                 <td class="text-right">@payment.Paid</td>
                                 <td class="text-right">@payment.Due</td>
-                                @if(Model.StatusException == "paidOver")
+                                @if (Model.StatusException == "paidOver")
                                 {
                                     <td class="text-right">@payment.Overpaid</td>
                                 }
@@ -192,7 +196,7 @@
                 </table>
             </div>
         </div>
-        @if(Model.OnChainPayments.Count > 0)
+        @if (Model.OnChainPayments.Count > 0)
         {
             <div class="row">
                 <div class="col-md-12">
@@ -207,7 +211,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach(var payment in Model.OnChainPayments)
+                            @foreach (var payment in Model.OnChainPayments)
                             {
                                 var replaced = payment.Replaced ? "class='linethrough'" : "";
                                 <tr @replaced>
@@ -226,7 +230,7 @@
                 </div>
             </div>
         }
-        @if(Model.OffChainPayments.Count > 0)
+        @if (Model.OffChainPayments.Count > 0)
         {
             <div class="row">
                 <div class="col-md-12">
@@ -239,7 +243,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach(var payment in Model.OffChainPayments)
+                            @foreach (var payment in Model.OffChainPayments)
                             {
                                 <tr>
                                     <td>@payment.Crypto</td>
@@ -262,7 +266,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach(var address in Model.Addresses)
+                        @foreach (var address in Model.Addresses)
                         {
                             var current = address.Current ? "font-weight-bold" : "";
                             <tr>
@@ -286,7 +290,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach(var evt in Model.Events)
+                        @foreach (var evt in Model.Events)
                         {
                             <tr>
                                 <td>@evt.Timestamp.ToBrowserDate()</td>

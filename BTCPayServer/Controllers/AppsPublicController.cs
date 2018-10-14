@@ -181,5 +181,22 @@ namespace BTCPayServer.Controllers
         {
             return _Currencies.GetCurrencyData(currency, useFallback);
         }
+        public async Task<AppData> GetAppDataIfOwner(string userId, string appId, AppType? type = null)
+        {
+            if (userId == null || appId == null)
+                return null;
+            using (var ctx = _ContextFactory.CreateContext())
+            {
+                var app = await ctx.UserStore
+                                .Where(us => us.ApplicationUserId == userId && us.Role == StoreRoles.Owner)
+                                .SelectMany(us => us.StoreData.Apps.Where(a => a.Id == appId))
+                   .FirstOrDefaultAsync();
+                if (app == null)
+                    return null;
+                if (type != null && type.Value.ToString() != app.AppType)
+                    return null;
+                return app;
+            }
+        }
     }
 }

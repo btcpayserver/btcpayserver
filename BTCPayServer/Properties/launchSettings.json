@@ -2,6 +2,7 @@
   "profiles": {
     "Docker-Regtest": {
       "commandName": "Project",
+      "commandLineArgs": "--debuglog debug.log",
       "launchBrowser": true,
       "environmentVariables": {
         "BTCPAY_NETWORK": "regtest",

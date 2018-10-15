@@ -32,25 +32,23 @@ namespace BTCPayServer.Payments.Changelly
             }
 
             var blob = store.GetStoreBlob();
-            if (blob.IsExcluded(ChangellySupportedPaymentMethod.ChangellySupportedPaymentMethodId))
-            {
-                error = "Changelly not enabled for this store";
-                return false;
-            }
+            var changellySettings = blob.ChangellySettings;
 
-            var paymentMethod = (ChangellySupportedPaymentMethod)store
-                .GetSupportedPaymentMethods(_btcPayNetworkProvider)
-                .SingleOrDefault(method =>
-                    method.PaymentId == ChangellySupportedPaymentMethod.ChangellySupportedPaymentMethodId);
-
-            if (paymentMethod == null || !paymentMethod.IsConfigured())
+            
+            if (changellySettings == null || !changellySettings.IsConfigured())
             {
                 error = "Changelly not configured for this store";
                 return false;
             }
 
-            changelly = new global::Changelly.Changelly(paymentMethod.ApiKey, paymentMethod.ApiSecret,
-                paymentMethod.ApiUrl);
+            if (!changellySettings.Enabled)
+            {
+                error = "Changelly not enabled for this store";
+                return false;
+            }
+
+            changelly = new global::Changelly.Changelly(changellySettings.ApiKey, changellySettings.ApiSecret,
+                changellySettings.ApiUrl);
             error = null;
             return true;
         }

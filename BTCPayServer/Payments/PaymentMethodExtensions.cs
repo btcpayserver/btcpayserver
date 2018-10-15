@@ -10,7 +10,7 @@ namespace BTCPayServer.Payments
 {
     public class PaymentMethodExtensions
     {
-        public static ISupportedPaymentMethod Deserialize(PaymentMethodId paymentMethodId, JToken value, BTCPayNetwork network = null)
+        public static ISupportedPaymentMethod Deserialize(PaymentMethodId paymentMethodId, JToken value, BTCPayNetwork network)
         {
             // Legacy
             if (paymentMethodId.PaymentType == PaymentTypes.BTCLike)
@@ -21,13 +21,6 @@ namespace BTCPayServer.Payments
             else if (paymentMethodId.PaymentType == PaymentTypes.LightningLike)
             {
                 return JsonConvert.DeserializeObject<Payments.Lightning.LightningSupportedPaymentMethod>(value.ToString());
-            }else if (paymentMethodId.PaymentType == PaymentTypes.ThirdParty)
-            {
-                switch (paymentMethodId.CryptoCode)
-                {
-                        case "Changelly":
-                            return JsonConvert.DeserializeObject<ChangellySupportedPaymentMethod>(value.ToString());
-                }
             }
             throw new NotSupportedException();
         }

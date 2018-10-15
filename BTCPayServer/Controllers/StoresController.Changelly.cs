@@ -24,25 +24,15 @@ namespace BTCPayServer.Controllers
 
         private void SetExistingValues(StoreData store, UpdateChangellySettingsViewModel vm)
         {
-            var existing = GetExistingThirdPartySupportedPaymentMethod(store);
-            if (existing != null)
-            {
-                vm.ApiKey = existing.ApiKey;
-                vm.ApiSecret = existing.ApiSecret;
-                vm.ApiUrl = existing.ApiUrl;
-                vm.ChangellyMerchantId = existing.ChangellyMerchantId;
-            }
 
-            vm.Enabled = !store.GetStoreBlob()
-                .IsExcluded(ChangellySupportedPaymentMethod.ChangellySupportedPaymentMethodId);
-        }
+            var existing = store.GetStoreBlob().ChangellySettings;
+            if (existing == null) return;
+            vm.ApiKey = existing.ApiKey;
+            vm.ApiSecret = existing.ApiSecret;
+            vm.ApiUrl = existing.ApiUrl;
+            vm.ChangellyMerchantId = existing.ChangellyMerchantId;
+            vm.Enabled = existing.Enabled;
 
-        private ChangellySupportedPaymentMethod GetExistingThirdPartySupportedPaymentMethod(StoreData store)
-        {
-            var existing = store.GetSupportedPaymentMethods(_NetworkProvider)
-                .OfType<ChangellySupportedPaymentMethod>()
-                .FirstOrDefault(d => d.PaymentId == ChangellySupportedPaymentMethod.ChangellySupportedPaymentMethodId);
-            return existing;
         }
 
         [HttpPost]
@@ -61,20 +51,21 @@ namespace BTCPayServer.Controllers
                 }
             }
 
-            var paymentMethod = new ChangellySupportedPaymentMethod();
-            paymentMethod.ApiKey = vm.ApiKey;
-            paymentMethod.ApiSecret = vm.ApiSecret;
-            paymentMethod.ApiUrl = vm.ApiUrl;
-            paymentMethod.ChangellyMerchantId = vm.ChangellyMerchantId;
+            var changellySettings = new ChangellySettings()
+            {
+                ApiKey = vm.ApiKey,
+                ApiSecret = vm.ApiSecret,
+                ApiUrl = vm.ApiUrl,
+                ChangellyMerchantId = vm.ChangellyMerchantId,
+                Enabled = vm.Enabled
+            };
+            
             switch (command)
             {
                 case "save":
                     var storeBlob = store.GetStoreBlob();
-                    storeBlob.SetExcluded(ChangellySupportedPaymentMethod.ChangellySupportedPaymentMethodId,
-                        !vm.Enabled);
+                    storeBlob.ChangellySettings = changellySettings;
                     store.SetStoreBlob(storeBlob);
-                    store.SetSupportedPaymentMethod(ChangellySupportedPaymentMethod.ChangellySupportedPaymentMethodId,
-                        paymentMethod);
                     await _Repo.UpdateStore(store);
                     StatusMessage = "Changelly settings modified";
                     return RedirectToAction(nameof(UpdateStore), new {
@@ -82,8 +73,8 @@ namespace BTCPayServer.Controllers
                 case "test":
                     try
                     {
-                        var client = new Changelly.Changelly(paymentMethod.ApiKey, paymentMethod.ApiSecret,
-                            paymentMethod.ApiUrl);
+                        var client = new Changelly.Changelly(changellySettings.ApiKey, changellySettings.ApiSecret,
+                            changellySettings.ApiUrl);
                         var result = client.GetCurrenciesFull();
                         vm.StatusMessage = !result.Success
                             ? $"Error: {result.Error}"

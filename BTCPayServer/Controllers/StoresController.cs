@@ -319,7 +319,6 @@ namespace BTCPayServer.Controllers
             vm.SetLanguages(_LangService, storeBlob.DefaultLang);
             vm.LightningMaxValue = storeBlob.LightningMaxValue?.ToString() ?? "";
             vm.OnChainMinValue = storeBlob.OnChainMinValue?.ToString() ?? "";
-            vm.AllowCoinConversion = storeBlob.AllowCoinConversion;
             vm.RequiresRefundEmail = storeBlob.RequiresRefundEmail;
             vm.CustomCSS = storeBlob.CustomCSS?.AbsoluteUri;
             vm.CustomLogo = storeBlob.CustomLogo?.AbsoluteUri;
@@ -363,7 +362,6 @@ namespace BTCPayServer.Controllers
                 return View(model);
             }
             blob.DefaultLang = model.DefaultLang;
-            blob.AllowCoinConversion = model.AllowCoinConversion;
             blob.RequiresRefundEmail = model.RequiresRefundEmail;
             blob.LightningMaxValue = lightningMaxValue;
             blob.OnChainMinValue = onchainMinValue;
@@ -448,12 +446,14 @@ namespace BTCPayServer.Controllers
                     Enabled = !excludeFilters.Match(paymentId)
                 });
             }
-            
+
+
+            var changellyEnabled = storeBlob.ChangellySettings != null && storeBlob.ChangellySettings.Enabled;
             vm.ThirdPartyPaymentMethods.Add(new StoreViewModel.ThirdPartyPaymentMethod()
             {
-                Enabled = !excludeFilters.Match(ChangellySupportedPaymentMethod.ChangellySupportedPaymentMethodId),
+                Enabled = changellyEnabled,
                 Action = nameof(UpdateChangellySettings),
-                Provider = ChangellySupportedPaymentMethod.ChangellySupportedPaymentMethodId.CryptoCode
+                Provider = "Changelly"
             });
         }
 

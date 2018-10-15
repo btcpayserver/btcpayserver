@@ -17,6 +17,7 @@ using BTCPayServer.JsonConverters;
 using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Services;
 using System.Security.Claims;
+using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Security;
 using BTCPayServer.Rating;
 
@@ -84,9 +85,6 @@ namespace BTCPayServer.Data
                         if (strat.Value.Type == JTokenType.Null)
                             continue;
                         yield return PaymentMethodExtensions.Deserialize(paymentMethodId, strat.Value, network);
-                    }else if (paymentMethodId.PaymentType == PaymentTypes.ThirdParty)
-                    {
-                        yield return PaymentMethodExtensions.Deserialize(paymentMethodId, strat.Value);
                     }
                 }
             }
@@ -264,11 +262,6 @@ namespace BTCPayServer.Data
         {
             get; set;
         }
-        public bool AllowCoinConversion
-        {
-            get; set;
-        }
-
         public bool RequiresRefundEmail { get; set; }
 
         public string DefaultLang { get; set; }
@@ -310,6 +303,8 @@ namespace BTCPayServer.Data
         public string RateScript { get; set; }
 
         public bool AnyoneCanInvoice { get; set; }
+        
+        public ChangellySettings ChangellySettings { get; set; }
 
 
         string _LightningDescriptionTemplate;

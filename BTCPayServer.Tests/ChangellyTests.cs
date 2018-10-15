@@ -33,9 +33,8 @@ namespace BTCPayServer.Tests
                 var controller = tester.PayTester.GetController<StoresController>(user.UserId, user.StoreId);
 
 
-                var defaultPaymentMethods = controller.StoreData.GetSupportedPaymentMethods(tester.NetworkProvider);
-                Assert.False(defaultPaymentMethods.Any(method =>
-                    method.PaymentId == ChangellySupportedPaymentMethod.ChangellySupportedPaymentMethodId));
+                var storeBlob = controller.StoreData.GetStoreBlob();
+                Assert.Null(storeBlob.ChangellySettings);
 
                 var updateModel = new UpdateChangellySettingsViewModel()
                 {
@@ -49,16 +48,15 @@ namespace BTCPayServer.Tests
                     await controller.UpdateChangellySettings(user.StoreId, updateModel, "save")).ActionName);
 
                 var store = await tester.PayTester.StoreRepository.FindStore(user.StoreId);
-                var changellyPaymentMethod = store.GetSupportedPaymentMethods(tester.NetworkProvider)
-                    .SingleOrDefault(method =>
-                        method.PaymentId == ChangellySupportedPaymentMethod.ChangellySupportedPaymentMethodId);
-                Assert.NotNull(changellyPaymentMethod);
-                Assert.IsType<ChangellySupportedPaymentMethod>(changellyPaymentMethod);
-                Assert.Equal(((ChangellySupportedPaymentMethod)changellyPaymentMethod).ApiKey, updateModel.ApiKey);
-                Assert.Equal(((ChangellySupportedPaymentMethod)changellyPaymentMethod).ApiSecret,
+                storeBlob = controller.StoreData.GetStoreBlob();
+                Assert.NotNull(storeBlob.ChangellySettings);
+                Assert.NotNull(storeBlob.ChangellySettings);
+                Assert.IsType<ChangellySettings>(storeBlob.ChangellySettings);
+                Assert.Equal(storeBlob.ChangellySettings.ApiKey, updateModel.ApiKey);
+                Assert.Equal(storeBlob.ChangellySettings.ApiSecret,
                     updateModel.ApiSecret);
-                Assert.Equal(((ChangellySupportedPaymentMethod)changellyPaymentMethod).ApiUrl, updateModel.ApiUrl);
-                Assert.Equal(((ChangellySupportedPaymentMethod)changellyPaymentMethod).ChangellyMerchantId,
+                Assert.Equal(storeBlob.ChangellySettings.ApiUrl, updateModel.ApiUrl);
+                Assert.Equal(storeBlob.ChangellySettings.ChangellyMerchantId,
                     updateModel.ChangellyMerchantId);
             }
         }
@@ -87,8 +85,7 @@ namespace BTCPayServer.Tests
 
                 var store = await tester.PayTester.StoreRepository.FindStore(user.StoreId);
 
-                Assert.False(store.GetStoreBlob().GetExcludedPaymentMethods()
-                    .Match(ChangellySupportedPaymentMethod.ChangellySupportedPaymentMethodId));
+                Assert.False(store.GetStoreBlob().ChangellySettings.Enabled);
 
                 updateModel.Enabled = false;
 
@@ -97,8 +94,7 @@ namespace BTCPayServer.Tests
 
                 store = await tester.PayTester.StoreRepository.FindStore(user.StoreId);
 
-                Assert.True(store.GetStoreBlob().GetExcludedPaymentMethods()
-                    .Match(ChangellySupportedPaymentMethod.ChangellySupportedPaymentMethodId));
+                Assert.True(store.GetStoreBlob().ChangellySettings.Enabled);
             }
         }
 

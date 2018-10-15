@@ -85,7 +85,7 @@ namespace BTCPayServer.Tests
 
                 var store = await tester.PayTester.StoreRepository.FindStore(user.StoreId);
 
-                Assert.False(store.GetStoreBlob().ChangellySettings.Enabled);
+                Assert.True(store.GetStoreBlob().ChangellySettings.Enabled);
 
                 updateModel.Enabled = false;
 
@@ -94,7 +94,7 @@ namespace BTCPayServer.Tests
 
                 store = await tester.PayTester.StoreRepository.FindStore(user.StoreId);
 
-                Assert.True(store.GetStoreBlob().ChangellySettings.Enabled);
+                Assert.False(store.GetStoreBlob().ChangellySettings.Enabled);
             }
         }
 

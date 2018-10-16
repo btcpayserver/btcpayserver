@@ -77,7 +77,7 @@ namespace BTCPayServer.Rating
                     if (CurrencyPair.TryParse(id.Identifier.ValueText, out var currencyPair))
                     {
                         expression = expression.WithTriviaFrom(expression);
-                        ExpressionsByPair.Add(currencyPair, (expression, id));
+                        ExpressionsByPair.TryAdd(currencyPair, (expression, id));
                     }
                 }
                 base.VisitAssignmentExpression(node);

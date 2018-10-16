@@ -51,7 +51,7 @@ namespace BTCPayServer.Controllers
                 Currency = model.Currency,
                 ItemDesc = model.CheckoutDesc,
                 OrderId = model.OrderId,
-                BuyerEmail = model.NotifyEmail,
+                NotificationEmail = model.NotifyEmail,
                 NotificationURL = model.ServerIpn,
                 RedirectURL = model.BrowserRedirect,
                 FullNotifications = true

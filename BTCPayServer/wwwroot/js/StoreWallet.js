@@ -15,7 +15,12 @@ $(function () {
     var recommendedFees = "";
     var recommendedBalance = "";
     var cryptoCode = $("#cryptoCode").val();
-
+    if (srvModel.defaultAddress !== null) {
+        $("#destination-textbox").val(srvModel.defaultAddress);
+    }
+    if (srvModel.defaultAmount !== null) {
+        $("#amount-textbox").val(srvModel.defaultAmount);
+    }
     function WriteAlert(type, message) {
         $("#walletAlert").removeClass("alert-danger");
         $("#walletAlert").removeClass("alert-warning");
@@ -31,9 +36,9 @@ $(function () {
         $("#" + prefix + "-error").css("display", "none");
         $("#" + prefix + "-success").css("display", "none");
 
-        $("#" + prefix+"-" + type).css("display", "block");
+        $("#" + prefix + "-" + type).css("display", "block");
 
-        $("." + prefix +"-label").text(message);
+        $("." + prefix + "-label").text(message);
     }
 
     $("#sendform").on("submit", function (elem) {
@@ -61,7 +66,7 @@ $(function () {
         confirmButton.prop("disabled", true);
         confirmButton.addClass("disabled");
 
-        bridge.sendCommand('sendtoaddress', args, 60 * 5 /* timeout */)
+        bridge.sendCommand('sendtoaddress', args, 60 * 10 /* timeout */)
             .catch(function (reason) {
                 WriteAlert("danger", reason);
                 confirmButton.prop("disabled", false);
@@ -133,9 +138,8 @@ $(function () {
             }
             else {
                 bridge.sendCommand('test', null, 5)
-                    .catch(function (reason)
-                    {
-                        if (reason.message === "Sign failed")
+                    .catch(function (reason) {
+                        if (reason.name === "TransportError")
                             reason = "Are you running the ledger app with version equals or above 1.2.4?";
                         Write('hw', 'error', reason);
                     })

@@ -332,7 +332,7 @@ namespace BTCPayServer.Tests
                 (0.1m, "$0.10 (USD)"),
             })
             {
-                var actual = InvoiceController.FormatCurrency(test.Item1, "USD", new CurrencyNameTable());
+                var actual = new CurrencyNameTable().DisplayFormatCurrency(test.Item1, "USD");
                 Assert.Equal(test.Item2, actual);
             }
         }
@@ -641,6 +641,13 @@ namespace BTCPayServer.Tests
                 Assert.NotNull(GetCurrencyPairRateResult);
                 Assert.NotNull(GetCurrencyPairRateResult.Data);
                 Assert.Equal("LTC", GetCurrencyPairRateResult.Data.Code);
+
+                // Should be OK because the request is signed, so we can know the store
+                var rates = acc.BitPay.GetRates();
+                HttpClient client = new HttpClient();
+                // Unauthentified requests should also be ok
+                var response = client.GetAsync($"http://127.0.0.1:{tester.PayTester.Port}/api/rates?storeId={acc.StoreId}").GetAwaiter().GetResult();
+                response.EnsureSuccessStatusCode();
             }
         }
 
@@ -1359,6 +1366,7 @@ namespace BTCPayServer.Tests
                 Assert.Single(appList.Apps);
                 Assert.Empty(appList2.Apps);
                 Assert.Equal("test", appList.Apps[0].AppName);
+                Assert.Equal(apps.CreatedAppId, appList.Apps[0].Id);
                 Assert.True(appList.Apps[0].IsOwner);
                 Assert.Equal(user.StoreId, appList.Apps[0].StoreId);
                 Assert.IsType<NotFoundResult>(apps2.DeleteApp(appList.Apps[0].Id).Result);

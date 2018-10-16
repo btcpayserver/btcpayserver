@@ -72,6 +72,11 @@ function onDataCallback(jsonData) {
     }
 
     // restoring qr code view only when currency is switched
+    if (jsonData.paymentMethodId === srvModel.paymentMethodId &&
+        checkoutCtrl.scanDisplayQr === "") {
+        checkoutCtrl.scanDisplayQr = jsonData.invoiceBitcoinUrlQR;
+    }
+
     if (jsonData.paymentMethodId === srvModel.paymentMethodId) {
         $(".payment__currencies").show();
         $(".payment__spinner").hide();

@@ -10,23 +10,32 @@ using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Rating;
 using Newtonsoft.Json;
+using Microsoft.AspNetCore.Authorization;
+using BTCPayServer.Authentication;
 
 namespace BTCPayServer.Controllers
 {
+    [Authorize(AuthenticationSchemes = Security.Policies.BitpayAuthentication)]
+    [AllowAnonymous]
     public class RateController : Controller
     {
         RateFetcher _RateProviderFactory;
         BTCPayNetworkProvider _NetworkProvider;
         CurrencyNameTable _CurrencyNameTable;
         StoreRepository _StoreRepo;
+
+        public TokenRepository TokenRepository { get; }
+
         public RateController(
             RateFetcher rateProviderFactory,
             BTCPayNetworkProvider networkProvider,
+            TokenRepository tokenRepository,
             StoreRepository storeRepo,
             CurrencyNameTable currencyNameTable)
         {
             _RateProviderFactory = rateProviderFactory ?? throw new ArgumentNullException(nameof(rateProviderFactory));
             _NetworkProvider = networkProvider;
+            TokenRepository = tokenRepository;
             _StoreRepo = storeRepo;
             _CurrencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
         }
@@ -36,7 +45,7 @@ namespace BTCPayServer.Controllers
         [BitpayAPIConstraint]
         public async Task<IActionResult> GetBaseCurrencyRates(string baseCurrency, string storeId)
         {
-            storeId = storeId ?? this.HttpContext.GetStoreData()?.Id;
+            storeId = await GetStoreId(storeId);
             var store = this.HttpContext.GetStoreData();
             if (store == null || store.Id != storeId)
                 store = await _StoreRepo.FindStore(storeId);
@@ -66,7 +75,7 @@ namespace BTCPayServer.Controllers
         [BitpayAPIConstraint]
         public async Task<IActionResult> GetCurrencyPairRate(string baseCurrency, string currency, string storeId)
         {
-            storeId = storeId ?? this.HttpContext.GetStoreData()?.Id;
+            storeId = await GetStoreId(storeId);
             var result = await GetRates2($"{baseCurrency}_{currency}", storeId);
             var rates = (result as JsonResult)?.Value as Rate[];
             if (rates == null)
@@ -79,7 +88,7 @@ namespace BTCPayServer.Controllers
         [BitpayAPIConstraint]
         public async Task<IActionResult> GetRates(string currencyPairs, string storeId)
         {
-            storeId = storeId ?? this.HttpContext.GetStoreData()?.Id;
+            storeId = await GetStoreId(storeId);
             var result = await GetRates2(currencyPairs, storeId);
             var rates = (result as JsonResult)?.Value as Rate[];
             if (rates == null)
@@ -87,11 +96,29 @@ namespace BTCPayServer.Controllers
             return Json(new DataWrapper<Rate[]>(rates));
         }
 
+        private async Task<string> GetStoreId(string storeId)
+        {
+            if (storeId != null && this.HttpContext.GetStoreData()?.Id == storeId)
+                return storeId;
+            if(storeId == null)
+            {
+                var tokens = await this.TokenRepository.GetTokens(this.User.GetSIN());
+                storeId = tokens.Select(s => s.StoreId).Where(s => s != null).FirstOrDefault();
+            }
+            if (storeId == null)
+                return null;
+            var store = await _StoreRepo.FindStore(storeId);
+            if (store == null)
+                return null;
+            this.HttpContext.SetStoreData(store);
+            return storeId;
+        }
 
         [Route("api/rates")]
         [HttpGet]
         public async Task<IActionResult> GetRates2(string currencyPairs, string storeId)
         {
+            storeId = await GetStoreId(storeId);
             if (storeId == null)
             {
                 var result = Json(new BitpayErrorsModel() { Error = "You need to specify storeId (in your store settings)" });

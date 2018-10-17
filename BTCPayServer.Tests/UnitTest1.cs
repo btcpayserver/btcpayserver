@@ -641,6 +641,13 @@ namespace BTCPayServer.Tests
                 Assert.NotNull(GetCurrencyPairRateResult);
                 Assert.NotNull(GetCurrencyPairRateResult.Data);
                 Assert.Equal("LTC", GetCurrencyPairRateResult.Data.Code);
+
+                // Should be OK because the request is signed, so we can know the store
+                var rates = acc.BitPay.GetRates();
+                HttpClient client = new HttpClient();
+                // Unauthentified requests should also be ok
+                var response = client.GetAsync($"http://127.0.0.1:{tester.PayTester.Port}/api/rates?storeId={acc.StoreId}").GetAwaiter().GetResult();
+                response.EnsureSuccessStatusCode();
             }
         }
 

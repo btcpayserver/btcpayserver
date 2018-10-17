@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
-		<Version>1.0.2.111</Version>
+		<Version>1.0.2.113</Version>
     <NoWarn>NU1701,CA1816,CA1308,CA1810,CA2208</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
@@ -54,6 +54,9 @@
     <PackageReference Include="NicolasDorier.RateLimits" Version="1.0.0.3" />
     <PackageReference Include="NicolasDorier.StandardConfiguration" Version="1.0.0.18" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.1.0" />
+    <PackageReference Include="Serilog" Version="2.7.1" />
+    <PackageReference Include="Serilog.AspNetCore" Version="2.1.1" />
+    <PackageReference Include="Serilog.Sinks.File" Version="4.0.0" />
     <PackageReference Include="SSH.NET" Version="2016.1.0" />
     <PackageReference Include="System.Xml.XmlSerializer" Version="4.3.0" />
     <PackageReference Include="Text.Analyzers" Version="2.6.0" />
@@ -61,7 +64,7 @@
 
 	<ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.4" />
-		<PackageReference Include="YamlDotNet" Version="4.3.1" />
+		<PackageReference Include="YamlDotNet" Version="5.2.1" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -251,6 +251,11 @@ namespace BTCPayServer.Controllers
                 ? storeBlob.ChangellySettings
                 : null;
 
+            var changellyAmountDue = changelly!= null? 
+                (accounting.Due.ToDecimal(MoneyUnit.BTC) * 
+                 (changelly.AmountMarkupPercentage> 0? 
+                     (changelly.AmountMarkupPercentage/100): 1)) : (decimal?) null;
+
             var model = new PaymentModel()
             {
                 CryptoCode = network.CryptoCode,
@@ -292,6 +297,7 @@ namespace BTCPayServer.Controllers
                 IsMultiCurrency = invoice.GetPayments().Select(p => p.GetPaymentMethodId()).Concat(new[] { paymentMethod.GetId() }).Distinct().Count() > 1,
                 ChangellyEnabled = changelly != null,
                 ChangellyMerchantId = changelly?.ChangellyMerchantId,
+                ChangellyAmountDue = changellyAmountDue,
                 StoreId = store.Id,
                 AvailableCryptos = invoice.GetPaymentMethods(_NetworkProvider)
                                           .Where(i => i.Network != null)

@@ -23,5 +23,11 @@ namespace BTCPayServer.Models.StoreViewModels
         public bool Enabled { get; set; } = true;
         
         public string StatusMessage { get; set; }
+        
+        [Display(Name = "Percentage to multiply amount requested at Changelly to avoid underpaid situations due to Changelly not guaranteeing rates. ")]
+        public decimal AmountMarkupPercentage { get; set; } = new decimal(2);
+        
+        
+
     }
 }

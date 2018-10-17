@@ -7,6 +7,7 @@ namespace BTCPayServer.Payments.Changelly
         public string ApiUrl { get; set; }
         public bool Enabled { get; set; }
         public string ChangellyMerchantId { get; set; }
+        public decimal AmountMarkupPercentage { get; set; }
 
         public bool IsConfigured()
         {

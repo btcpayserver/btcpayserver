@@ -59,5 +59,6 @@ namespace BTCPayServer.Models.InvoicingModels
         public string StoreId { get; set; }
         public string PeerInfo { get; set; }
         public string ChangellyMerchantId { get; set; }
+        public decimal? ChangellyAmountDue { get; set; }
     }
 }

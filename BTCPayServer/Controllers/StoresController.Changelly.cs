@@ -32,6 +32,7 @@ namespace BTCPayServer.Controllers
             vm.ApiUrl = existing.ApiUrl;
             vm.ChangellyMerchantId = existing.ChangellyMerchantId;
             vm.Enabled = existing.Enabled;
+            vm.AmountMarkupPercentage = existing.AmountMarkupPercentage;
 
         }
 
@@ -57,7 +58,8 @@ namespace BTCPayServer.Controllers
                 ApiSecret = vm.ApiSecret,
                 ApiUrl = vm.ApiUrl,
                 ChangellyMerchantId = vm.ChangellyMerchantId,
-                Enabled = vm.Enabled
+                Enabled = vm.Enabled,
+                AmountMarkupPercentage = vm.AmountMarkupPercentage
             };
             
             switch (command)

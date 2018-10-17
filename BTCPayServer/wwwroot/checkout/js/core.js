@@ -82,10 +82,6 @@ function onDataCallback(jsonData) {
         $(".payment__spinner").hide();
     }
 
-    if (checkoutCtrl.scanDisplayQr === "") {
-        checkoutCtrl.scanDisplayQr = jsonData.invoiceBitcoinUrlQR;
-    }
-
     if (jsonData.isLightning && checkoutCtrl.lndModel === null) {
         var lndModel = {
             toggle: 0

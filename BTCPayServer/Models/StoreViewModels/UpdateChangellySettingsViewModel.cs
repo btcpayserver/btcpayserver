@@ -24,6 +24,8 @@ namespace BTCPayServer.Models.StoreViewModels
         
         public string StatusMessage { get; set; }
         
+        [Required]
+        [Range(0, 100)]
         [Display(Name = "Percentage to multiply amount requested at Changelly to avoid underpaid situations due to Changelly not guaranteeing rates. ")]
         public decimal AmountMarkupPercentage { get; set; } = new decimal(2);
         

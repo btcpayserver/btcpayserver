@@ -251,10 +251,10 @@ namespace BTCPayServer.Controllers
                 ? storeBlob.ChangellySettings
                 : null;
 
+            
             var changellyAmountDue = changelly!= null? 
                 (accounting.Due.ToDecimal(MoneyUnit.BTC) * 
-                 (changelly.AmountMarkupPercentage> 0? 
-                     (changelly.AmountMarkupPercentage/100): 1)) : (decimal?) null;
+                     (1+(changelly.AmountMarkupPercentage/100))) : (decimal?) null;
 
             var model = new PaymentModel()
             {

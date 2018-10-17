@@ -63,7 +63,7 @@
 
 	<ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.4" />
-		<PackageReference Include="YamlDotNet" Version="4.3.1" />
+		<PackageReference Include="YamlDotNet" Version="5.2.1" />
 	</ItemGroup>
 
 	<ItemGroup>

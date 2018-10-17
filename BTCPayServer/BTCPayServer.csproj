@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
-		<Version>1.0.2.112</Version>
+		<Version>1.0.2.113</Version>
     <NoWarn>NU1701,CA1816,CA1308,CA1810,CA2208</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
@@ -69,7 +69,7 @@
 
 	<ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.4" />
-		<PackageReference Include="YamlDotNet" Version="4.3.1" />
+		<PackageReference Include="YamlDotNet" Version="5.2.1" />
 	</ItemGroup>
 
 	<ItemGroup>

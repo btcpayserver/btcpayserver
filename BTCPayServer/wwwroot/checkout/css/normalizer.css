@@ -11481,3 +11481,18 @@ low-fee-timeline {
     width: 50px;
     height: 50px;
 }
+
+.changelly-component .retry-button {
+    border-radius: 5px;
+    border: 1px solid #a9a9a9;
+    background: #fff;
+    color: #000;
+    height:30px;
+    width:100px;
+    
+}
+.changelly-component .retry-button :hover{
+    border-color: #7f7f7f;
+}
+
+

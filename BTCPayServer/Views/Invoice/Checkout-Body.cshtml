@@ -296,10 +296,10 @@
                             <a  v-on:click="openDialog($event)" :href="url" class="changelly-component-button">
                                 <img src="https://changelly.com/pay_button.png" alt="Changelly" v-show="url"/>
                             </a>
-                            <button v-if="calculateError" v-on:click="retry('calculateAmount')">
+                            <button class="retry-button" v-if="calculateError" v-on:click="retry('calculateAmount')">
                                 {{$t("ConversionTab_CalculateAmount_Error")}}
                             </button>
-                            <button v-if="currenciesError" v-on:click="retry('loadCurrencies')">
+                            <button class="retry-button" v-if="currenciesError" v-on:click="retry('loadCurrencies')">
                                 {{$t("ConversionTab_LoadCurrencies_Error")}}
                             </button>
                             <div v-show="isLoading" class="general__spinner">

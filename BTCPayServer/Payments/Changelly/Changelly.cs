@@ -51,7 +51,7 @@ namespace BTCPayServer.Payments.Changelly
 
                 var request = new HttpRequestMessage(HttpMethod.Post, "");
                 request.Headers.Add("sign", sign);
-
+                request.Content = new StringContent(message, Encoding.UTF8, "application/json");
 
                 var result = await _httpClient.SendAsync(request);
 
@@ -68,7 +68,8 @@ namespace BTCPayServer.Payments.Changelly
             }
         }
 
-        public virtual async Task<(IEnumerable<CurrencyFull> Currencies, bool Success, string Error)> GetCurrenciesFull()
+        public virtual async Task<(IEnumerable<CurrencyFull> Currencies, bool Success, string Error)>
+            GetCurrenciesFull()
         {
             try
             {
@@ -80,8 +81,7 @@ namespace BTCPayServer.Payments.Changelly
 			    }";
 
                 var result = await PostToApi<IEnumerable<CurrencyFull>>(message);
-                return !result.Success ? (null, false, result.Error) :
-                    (result.Result.Result, true, "");
+                return !result.Success ? (null, false, result.Error) : (result.Result.Result, true, "");
             }
             catch (Exception Ex)
             {
@@ -89,9 +89,9 @@ namespace BTCPayServer.Payments.Changelly
             }
         }
 
-        public virtual async Task<(double Amount, bool Success, string Error)> GetExchangeAmount(string fromCurrency,
+        public virtual async Task<(decimal Amount, bool Success, string Error)> GetExchangeAmount(string fromCurrency,
             string toCurrency,
-            double amount)
+            decimal amount)
         {
             try
             {
@@ -99,9 +99,8 @@ namespace BTCPayServer.Payments.Changelly
                     "{\"id\": \"test\",\"jsonrpc\": \"2.0\",\"method\": \"getExchangeAmount\",\"params\":{\"from\": \"" +
                     fromCurrency + "\",\"to\": \"" + toCurrency + "\",\"amount\": \"" + amount + "\"}}";
 
-                var result = await PostToApi<double>(message);
-                return !result.Success ? (0, false, result.Error) :
-                    (result.Result.Result, true, "");
+                var result = await PostToApi<string>(message);
+                return !result.Success ? (0, false, result.Error) : (Convert.ToDecimal(result.Result.Result), true, "");
             }
             catch (Exception Ex)
             {

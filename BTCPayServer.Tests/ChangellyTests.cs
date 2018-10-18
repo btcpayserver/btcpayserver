@@ -242,16 +242,16 @@ namespace BTCPayServer.Tests
                     switch (mockChangelly.GetExchangeAmountCallCount)
                     {
                         case 1:
-                            return (0.5, true, null);
+                            return (0.5m, true, null);
                             break;
                         default:
-                            return (1.01, true, null);
+                            return (1.01m, true, null);
                             break;
                     }
                 };
 
                 Assert.IsType<double>(Assert
-                    .IsType<OkObjectResult>(changellyController.CalculateAmount(user.StoreId, "A", "B", 1.0)).Value);
+                    .IsType<OkObjectResult>(changellyController.CalculateAmount(user.StoreId, "A", "B", 1.0m)).Value);
                 Assert.True(mockChangelly.GetExchangeAmountCallCount > 1);
             }
         }
@@ -264,7 +264,7 @@ namespace BTCPayServer.Tests
 
         public delegate TResult ParamsFunc<T1, T2, T3, TResult>(T1 arg1, T2 arg2, T3 arg3);
 
-        public ParamsFunc<string, string, double, (double amount, bool Success, string Error)> GetExchangeAmountResult
+        public ParamsFunc<string, string, decimal, (decimal amount, bool Success, string Error)> GetExchangeAmountResult
         {
             get;
             set;
@@ -283,7 +283,7 @@ namespace BTCPayServer.Tests
             return GetCurrenciesFullResult;
         }
 
-        public override async Task<(double Amount, bool Success, string Error)> GetExchangeAmount(string fromCurrency, string toCurrency, double amount)
+        public override async Task<(decimal Amount, bool Success, string Error)> GetExchangeAmount(string fromCurrency, string toCurrency, decimal amount)
         {
             GetExchangeAmountCallCount++;
             return GetExchangeAmountResult.Invoke(fromCurrency, toCurrency, amount);

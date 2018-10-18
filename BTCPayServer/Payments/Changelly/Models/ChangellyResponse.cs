@@ -8,7 +8,7 @@ namespace BTCPayServer.Payments.Changelly.Models
         [JsonProperty("jsonrpc")]
         public string JsonRPC { get; set; }
         [JsonProperty("id")]
-        public int Id { get; set; }
+        public object Id { get; set; }
         [JsonProperty("result")]
         public T Result { get; set; }
         [JsonProperty("error")]

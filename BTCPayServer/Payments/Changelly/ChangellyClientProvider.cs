@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using BTCPayServer.Payments.Changelly.Models;
 using BTCPayServer.Services.Stores;
 using Changelly.ResponseModel;
 
@@ -19,7 +21,7 @@ namespace BTCPayServer.Payments.Changelly
 
 
         public virtual bool TryGetChangellyClient(string storeId, out string error,
-            out global::Changelly.Changelly changelly)
+            out Changelly changelly)
         {
             changelly = null;
 
@@ -47,22 +49,22 @@ namespace BTCPayServer.Payments.Changelly
                 return false;
             }
 
-            changelly = new global::Changelly.Changelly(changellySettings.ApiKey, changellySettings.ApiSecret,
+            changelly = new Changelly(changellySettings.ApiKey, changellySettings.ApiSecret,
                 changellySettings.ApiUrl);
             error = null;
             return true;
         }
         
-        public virtual (IList<CurrencyFull> currency, bool Success, string Error) GetCurrenciesFull(global::Changelly.Changelly client)
+        public virtual async Task<(IList<CurrencyFull> currency, bool Success, string Error)> GetCurrenciesFull(Changelly client)
         {
-            return client.GetCurrenciesFull();
+            return await client.GetCurrenciesFull();
         }
 
-        public virtual (double amount, bool Success, string Error) GetExchangeAmount(global::Changelly.Changelly client,  string fromCurrency, string toCurrency,
+        public virtual async Task<(double amount, bool Success, string Error)> GetExchangeAmount(Changelly client,  string fromCurrency, string toCurrency,
             double amount)
         {
 
-            return client.GetExchangeAmount(fromCurrency, toCurrency, amount);
+            return await client.GetExchangeAmount(fromCurrency, toCurrency, amount);
         }
     }
 }

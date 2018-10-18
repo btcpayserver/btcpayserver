@@ -35,7 +35,6 @@
   <ItemGroup>
     <PackageReference Include="BTCPayServer.Lightning.All" Version="1.1.0.1" />
     <PackageReference Include="BuildBundlerMinifier" Version="2.7.385" />
-    <PackageReference Include="Changelly" Version="1.1.0" />
     <PackageReference Include="DigitalRuby.ExchangeSharp" Version="0.5.3" />
     <PackageReference Include="Hangfire" Version="1.6.19" />
     <PackageReference Include="Hangfire.MemoryStorage" Version="1.5.2" />

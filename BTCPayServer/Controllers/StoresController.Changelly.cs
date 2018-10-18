@@ -75,11 +75,11 @@ namespace BTCPayServer.Controllers
                 case "test":
                     try
                     {
-                        var client = new Changelly.Changelly(changellySettings.ApiKey, changellySettings.ApiSecret,
+                        var client = new Changelly(changellySettings.ApiKey, changellySettings.ApiSecret,
                             changellySettings.ApiUrl);
-                        var result = client.GetCurrenciesFull();
-                        vm.StatusMessage = !result.Success
-                            ? $"Error: {result.Error}"
+                        var result = await client.GetCurrenciesFull();
+                        vm.StatusMessage = !result.Item2
+                            ? $"Error: {result.Item3}"
                             : "Test Successful";
                         return View(vm);
                     }

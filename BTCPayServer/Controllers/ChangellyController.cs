@@ -3,7 +3,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Models;
 using BTCPayServer.Payments.Changelly;
-using Changelly.ResponseModel;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Controllers
@@ -27,8 +26,8 @@ namespace BTCPayServer.Controllers
                 return actionResult;
             }
 
-            var result = _changellyClientProvider.GetCurrenciesFull(client);
-            if (result.Success)
+            var result = await _changellyClientProvider.GetCurrenciesFull(client);
+            if (result.Item2)
             {
                 return Ok(result);
             }
@@ -38,7 +37,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("calculate")]
-        public IActionResult CalculateAmount(string storeId, string fromCurrency, string toCurrency,
+        public async Task<IActionResult> CalculateAmount(string storeId, string fromCurrency, string toCurrency,
             double toCurrencyAmount)
         {
             if (!TryGetChangellyClient(storeId, out var actionResult, out var client))
@@ -49,8 +48,8 @@ namespace BTCPayServer.Controllers
             double? currentAmount = null;
             var callCounter = 0;
 
-            var response1 = _changellyClientProvider.GetExchangeAmount(client,fromCurrency, toCurrency, 1);
-            if (!response1.Success) return BadRequest(response1);
+            var response1 = await _changellyClientProvider.GetExchangeAmount(client,fromCurrency, toCurrency, 1);
+            if (!response1.Item2) return BadRequest(response1);
             currentAmount = response1.amount;
 
             while (true)
@@ -60,15 +59,15 @@ namespace BTCPayServer.Controllers
                     BadRequest();
                 }
                 
-                //Client needs to be reset between same calls for some reason
-                if (!TryGetChangellyClient(storeId, out actionResult, out client))
-                {
-                    return actionResult;
-                }
+//                //Client needs to be reset between same calls for some reason
+//                if (!TryGetChangellyClient(storeId, out actionResult, out client))
+//                {
+//                    return actionResult;
+//                }
 
-                var response2 = _changellyClientProvider.GetExchangeAmount(client,fromCurrency, toCurrency, currentAmount.Value);
+                var response2 =await _changellyClientProvider.GetExchangeAmount(client,fromCurrency, toCurrency, currentAmount.Value);
                 callCounter++;
-                if (!response2.Success) return BadRequest(response2);
+                if (!response2.Item2) return BadRequest(response2);
                 if (response2.amount < toCurrencyAmount)
                 {
                     var newCurrentAmount = ((toCurrencyAmount / response2.amount) * 1) * currentAmount.Value;
@@ -82,7 +81,7 @@ namespace BTCPayServer.Controllers
         }
 
         private bool TryGetChangellyClient(string storeId, out IActionResult actionResult,
-            out Changelly.Changelly changelly)
+            out Changelly changelly)
         {
             changelly = null;
             actionResult = null;

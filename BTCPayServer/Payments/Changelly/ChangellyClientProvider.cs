@@ -1,28 +1,41 @@
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using BTCPayServer.Payments.Changelly.Models;
 using BTCPayServer.Services.Stores;
-using Changelly.ResponseModel;
+using NBitcoin;
 
 namespace BTCPayServer.Payments.Changelly
 {
     public class ChangellyClientProvider
     {
         private readonly StoreRepository _storeRepository;
-        private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
 
+        private readonly ConcurrentDictionary<string, Changelly> _clientCache =
+            new ConcurrentDictionary<string, Changelly>();
 
-        public ChangellyClientProvider(StoreRepository storeRepository, BTCPayNetworkProvider btcPayNetworkProvider)
+        public ChangellyClientProvider(StoreRepository storeRepository)
         {
             _storeRepository = storeRepository;
-            _btcPayNetworkProvider = btcPayNetworkProvider;
+        }
+
+        public void InvalidateClient(string storeId)
+        {
+            if (_clientCache.ContainsKey(storeId))
+            {
+                _clientCache.Remove(storeId, out var value);
+            }
         }
 
 
         public virtual bool TryGetChangellyClient(string storeId, out string error,
             out Changelly changelly)
         {
+            if (_clientCache.ContainsKey(storeId))
+            {
+                changelly = _clientCache[storeId];
+                error = null;
+                return true;
+            }
+
             changelly = null;
 
 
@@ -36,7 +49,7 @@ namespace BTCPayServer.Payments.Changelly
             var blob = store.GetStoreBlob();
             var changellySettings = blob.ChangellySettings;
 
-            
+
             if (changellySettings == null || !changellySettings.IsConfigured())
             {
                 error = "Changelly not configured for this store";
@@ -51,20 +64,9 @@ namespace BTCPayServer.Payments.Changelly
 
             changelly = new Changelly(changellySettings.ApiKey, changellySettings.ApiSecret,
                 changellySettings.ApiUrl);
+            _clientCache.AddOrReplace(storeId, changelly);
             error = null;
             return true;
-        }
-        
-        public virtual async Task<(IList<CurrencyFull> currency, bool Success, string Error)> GetCurrenciesFull(Changelly client)
-        {
-            return await client.GetCurrenciesFull();
-        }
-
-        public virtual async Task<(double amount, bool Success, string Error)> GetExchangeAmount(Changelly client,  string fromCurrency, string toCurrency,
-            double amount)
-        {
-
-            return await client.GetExchangeAmount(fromCurrency, toCurrency, amount);
         }
     }
 }

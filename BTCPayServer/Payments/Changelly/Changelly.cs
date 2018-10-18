@@ -41,13 +41,13 @@ namespace BTCPayServer.Payments.Changelly
             return hex.ToString();
         }
 
-        private async Task<(string result, bool, string)> PostToApi(string message)
+        private async Task<(ChangellyResponse<T> Result, bool Success, string Error)> PostToApi<T>(string message)
         {
             try
             {
-                HMACSHA512 hmac = new HMACSHA512(Encoding.UTF8.GetBytes(_apisecret));
-                byte[] hashmessage = hmac.ComputeHash(Encoding.UTF8.GetBytes(message));
-                string sign = ToHexString(hashmessage);
+                var hmac = new HMACSHA512(Encoding.UTF8.GetBytes(_apisecret));
+                var hashMessage = hmac.ComputeHash(Encoding.UTF8.GetBytes(message));
+                var sign = ToHexString(hashMessage);
 
                 var request = new HttpRequestMessage(HttpMethod.Post, "");
                 request.Headers.Add("sign", sign);
@@ -55,22 +55,20 @@ namespace BTCPayServer.Payments.Changelly
 
                 var result = await _httpClient.SendAsync(request);
 
-                if (result.IsSuccessStatusCode)
-                {
-                    var content =
-                        await result.Content.ReadAsStringAsync();
-                    return (content, true, "");
-                }
-
-                return ("", false, result.ReasonPhrase);
+                if (!result.IsSuccessStatusCode)
+                    return (null, false, result.ReasonPhrase);
+                var content =
+                    await result.Content.ReadAsStringAsync();
+                return (
+                    JObject.Parse(content).ToObject<ChangellyResponse<T>>(), true, "");
             }
             catch (Exception Ex)
             {
-                return ("", false, Ex.Message);
+                return (null, false, Ex.Message);
             }
         }
 
-        public async Task<(IList<CurrencyFull> currencyFulls, bool, string)> GetCurrenciesFull()
+        public virtual async Task<(IEnumerable<CurrencyFull> Currencies, bool Success, string Error)> GetCurrenciesFull()
         {
             try
             {
@@ -81,24 +79,9 @@ namespace BTCPayServer.Payments.Changelly
 		            ""params"": []
 			    }";
 
-                List<CurrencyFull> currencyFulls = new List<CurrencyFull>();
-                var result = await PostToApi(message);
-                if (!result.Item2)
-                {
-                    return (null, false, result.Item3);
-                }
-
-                var response = JsonConvert.DeserializeObject<Response>(result.result);
-
-                if (response.Error != null) return (null, false, response.Error.Message);
-                var array = JArray.Parse(response.Result.ToString());
-                foreach (var item in array)
-                {
-                    currencyFulls.Add(item.ToObject<CurrencyFull>());
-                }
-
-                return (currencyFulls, true, "");
-
+                var result = await PostToApi<IEnumerable<CurrencyFull>>(message);
+                return !result.Success ? (null, false, result.Error) :
+                    (result.Result.Result, true, "");
             }
             catch (Exception Ex)
             {
@@ -106,7 +89,8 @@ namespace BTCPayServer.Payments.Changelly
             }
         }
 
-        public async Task<(double, bool, string)> GetExchangeAmount(string fromCurrency, string toCurrency,
+        public virtual async Task<(double Amount, bool Success, string Error)> GetExchangeAmount(string fromCurrency,
+            string toCurrency,
             double amount)
         {
             try
@@ -115,16 +99,9 @@ namespace BTCPayServer.Payments.Changelly
                     "{\"id\": \"test\",\"jsonrpc\": \"2.0\",\"method\": \"getExchangeAmount\",\"params\":{\"from\": \"" +
                     fromCurrency + "\",\"to\": \"" + toCurrency + "\",\"amount\": \"" + amount + "\"}}";
 
-                var result = await PostToApi(message);
-                if (!result.Item2)
-                {
-                    return (0, false, result.Item3);
-                }
-
-                var response = JsonConvert.DeserializeObject<ExchangeResponse>(result.result);
-                return response.Error == null
-                    ? (Convert.ToDouble(response.Result), true, "")
-                    : (0, false, response.Error.Message);
+                var result = await PostToApi<double>(message);
+                return !result.Success ? (0, false, result.Error) :
+                    (result.Result.Result, true, "");
             }
             catch (Exception Ex)
             {

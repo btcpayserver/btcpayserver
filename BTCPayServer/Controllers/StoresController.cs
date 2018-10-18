@@ -49,6 +49,7 @@ namespace BTCPayServer.Controllers
             ExplorerClientProvider explorerProvider,
             IFeeProviderFactory feeRateProvider,
             LanguageService langService,
+            ChangellyClientProvider changellyClientProvider,
             IHostingEnvironment env)
         {
             _RateFactory = rateFactory;
@@ -56,6 +57,7 @@ namespace BTCPayServer.Controllers
             _TokenRepository = tokenRepo;
             _UserManager = userManager;
             _LangService = langService;
+            _changellyClientProvider = changellyClientProvider;
             _TokenController = tokenController;
             _WalletProvider = walletProvider;
             _Env = env;
@@ -78,6 +80,7 @@ namespace BTCPayServer.Controllers
         TokenRepository _TokenRepository;
         UserManager<ApplicationUser> _UserManager;
         private LanguageService _LangService;
+        private readonly ChangellyClientProvider _changellyClientProvider;
         IHostingEnvironment _Env;
 
         [TempData]

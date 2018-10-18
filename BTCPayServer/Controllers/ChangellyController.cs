@@ -26,7 +26,7 @@ namespace BTCPayServer.Controllers
                 return actionResult;
             }
 
-            var result = await _changellyClientProvider.GetCurrenciesFull(client);
+            var result = await client.GetCurrenciesFull();
             if (result.Item2)
             {
                 return Ok(result);
@@ -48,9 +48,9 @@ namespace BTCPayServer.Controllers
             double? currentAmount = null;
             var callCounter = 0;
 
-            var response1 = await _changellyClientProvider.GetExchangeAmount(client,fromCurrency, toCurrency, 1);
+            var response1 = await client.GetExchangeAmount(fromCurrency, toCurrency, 1);
             if (!response1.Item2) return BadRequest(response1);
-            currentAmount = response1.amount;
+            currentAmount = response1.Amount;
 
             while (true)
             {
@@ -59,18 +59,12 @@ namespace BTCPayServer.Controllers
                     BadRequest();
                 }
                 
-//                //Client needs to be reset between same calls for some reason
-//                if (!TryGetChangellyClient(storeId, out actionResult, out client))
-//                {
-//                    return actionResult;
-//                }
-
-                var response2 =await _changellyClientProvider.GetExchangeAmount(client,fromCurrency, toCurrency, currentAmount.Value);
+                var response2 =await client.GetExchangeAmount(fromCurrency, toCurrency, currentAmount.Value);
                 callCounter++;
                 if (!response2.Item2) return BadRequest(response2);
-                if (response2.amount < toCurrencyAmount)
+                if (response2.Amount < toCurrencyAmount)
                 {
-                    var newCurrentAmount = ((toCurrencyAmount / response2.amount) * 1) * currentAmount.Value;
+                    var newCurrentAmount = ((toCurrencyAmount / response2.Amount) * 1) * currentAmount.Value;
                     currentAmount = newCurrentAmount;
                 }
                 else

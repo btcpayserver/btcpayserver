@@ -70,6 +70,7 @@ namespace BTCPayServer.Controllers
                     store.SetStoreBlob(storeBlob);
                     await _Repo.UpdateStore(store);
                     StatusMessage = "Changelly settings modified";
+                    _changellyClientProvider.InvalidateClient(storeId);
                     return RedirectToAction(nameof(UpdateStore), new {
                         storeId});
                 case "test":

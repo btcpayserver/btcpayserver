@@ -32,6 +32,9 @@ function changeCurrency(currency) {
 }
 
 function onDataCallback(jsonData) {
+    // extender properties used 
+    jsonData.shapeshiftUrl = "https://shapeshift.io/shifty.html?destination=" + jsonData.btcAddress + "&output=" + jsonData.paymentMethodId + "&amount=" + jsonData.btcDue;
+    //
 
     var newStatus = jsonData.status;
 

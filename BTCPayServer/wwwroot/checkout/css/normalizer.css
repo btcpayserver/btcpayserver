@@ -9390,7 +9390,7 @@ strong {
     background-color: #fff;
     color: #000;
     font-size: 0px;
-    width: 100%;
+    width:100%;
 }
 
     .btnGroupLnd button:first-child {
@@ -10995,15 +10995,6 @@ bp-spinner {
         opacity: .85;
     }
 
-.general__spinner > bp-spinner > svg {
-    margin: auto 0px 0px auto;
-    height: 32px;
-    width: 32px;
-    fill: gray;
-    animation: spin 0.55s linear infinite;
-    opacity: .85;
-}
-
 bp-refund-address.ng-valid .bitcoin-logo {
     opacity: 1;
     margin-left: 0;
@@ -11468,16 +11459,3 @@ low-fee-timeline {
         opacity: 1;
         transition: opacity 1s ease;
     }
-
-.changelly-component {
-    position: relative;
-}
-
-.changelly-component-dropdown-holder {
-    height: 32px;
-    margin-bottom: 10px;
-}
-.changelly-component .general__spinner bp-spinner {
-    width: 50px;
-    height: 50px;
-}

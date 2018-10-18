@@ -168,43 +168,6 @@
                     Available placeholders are: {StoreName}, {ItemDescription} and {OrderId}
                 </p>
             </div>
-            
-             <div class="form-group">
-                <div class="form-group">
-                    <h5>Third party Payment methods</h5>
-                </div>
-                <div class="form-group">
-                    <table class="table table-sm table-responsive-md">
-                        <thead>
-                            <tr>
-                                <th>Provider</th>
-                                <th style="text-align:center;">Enabled</th>
-                                <th style="text-align:right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        @foreach(var scheme in Model.ThirdPartyPaymentMethods)
-                        {
-                            <tr>
-                                <td>@scheme.Provider</td>
-                                <td style="text-align:center;">
-                                    @if(scheme.Enabled)
-                                    {
-                                        <span class="fa fa-check"></span>
-                                    }
-                                    else
-                                    {
-                                        <span class="fa fa-times"></span>
-                                    }
-                                </td>
-                                <td style="text-align:right"><a asp-action="@scheme.Action" >Modify</a></td>
-                            </tr>
-                        }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            
             @if(Model.CanDelete)
             {
                 <div class="form-group">

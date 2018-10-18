@@ -53,53 +53,49 @@
     </center>
     <![endif]-->
 
-<invoice>
-    <div class="no-bounce" id="checkoutCtrl" v-cloak>
-        <div class="modal page">
-            <div class="modal-dialog open opened enter-purchaser-email" role="document">
-                <div class="modal-content long">
-                    <div class="content">
-                        <div class="invoice">
-                            <partial name="Checkout-Body" />
+    <invoice>
+        <div class="no-bounce" id="checkoutCtrl" v-cloak>
+            <div class="modal page">
+                <div class="modal-dialog open opened enter-purchaser-email" role="document">
+                    <div class="modal-content long">
+                        <div class="content">
+                            <div class="invoice">
+                                <partial name="Checkout-Body" />
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div style="margin-top: 10px; text-align: center;">
-                    @* Not working because of nsSeparator: false, keySeparator: false,
+                    <div style="margin-top: 10px; text-align: center;">
+                        @* Not working because of nsSeparator: false, keySeparator: false,
                             {{$t("nested.lang")}} >>
                         *@
-                    <select class="cmblang reverse invisible" onchange="changeLanguage($(this).val())">
-                        @foreach (var lang in langService.GetLanguages())
-                        {
-                            <option value="@lang.Code">@lang.DisplayName</option>
-                        }
-                    </select>
-                    <script>
-                        $(function() {
-                            var storeDefaultLang = '@Model.DefaultLang';
-                            if (urlParams.lang) {
-                                $(".cmblang").val(urlParams.lang);
-                            } else if (storeDefaultLang) {
-                                $(".cmblang").val(storeDefaultLang);
+                        <select class="cmblang reverse invisible" onchange="changeLanguage($(this).val())">
+                            @foreach (var lang in langService.GetLanguages())
+                            {
+                                <option value="@lang.Code">@lang.DisplayName</option>
                             }
+                        </select>
+                        <script>
+                            $(function () {
+                                var storeDefaultLang = '@Model.DefaultLang';
+                                if (urlParams.lang) {
+                                    $(".cmblang").val(urlParams.lang);
+                                } else if (storeDefaultLang) {
+                                    $(".cmblang").val(storeDefaultLang);
+                                }
 
-                            // REVIEW: don't use initDropdown method but rather directly initialize select whenever you are using it
-                            initDropdown(".cmblang");
-                        });
-
-                        function initDropdown(selector) {
-                            return $(selector).prettyDropdown({
-                                classic: false,
-                                height: 32,
-                                reverse: true,
-                                hoverIntent: 5000
+                                $('select').prettyDropdown({
+                                    classic: false,
+                                    height: 32,
+                                    reverse: true,
+                                    hoverIntent: 5000
+                                });
                             });
-                        }
-                    </script>
-                </div>
-                <div style="margin-top: 10px; text-align: center;" class="form-text small text-muted">
-                    <span>Powered by <a target="_blank" href="https://github.com/btcpayserver/btcpayserver">BTCPay Server</a></span>
+                        </script>
+                    </div>
+                    <div style="margin-top: 10px; text-align: center;" class="form-text small text-muted">
+                        <span>Powered by <a target="_blank" href="https://github.com/btcpayserver/btcpayserver">BTCPay Server</a></span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -131,40 +127,39 @@
             },
         });
 
-    function changeLanguage(lang) {
-        i18next.changeLanguage(lang);
-    }
+        function changeLanguage(lang) {
+            i18next.changeLanguage(lang);
+        }
 
-    if (urlParams.lang) {
-        changeLanguage(urlParams.lang);
-    } else if (storeDefaultLang) {
-        changeLanguage(storeDefaultLang);
-    }
+        if (urlParams.lang) {
+            changeLanguage(urlParams.lang);
+        }
+        else if (storeDefaultLang) {
+            changeLanguage(storeDefaultLang);
+        }
 
-    const i18n = new VueI18next(i18next);
+        const i18n = new VueI18next(i18next);
 
-    // TODO: Move all logic from core.js to Vue controller
-    Vue.config.ignoredElements = [
-        'line-items',
-        'low-fee-timeline',
-        // Ignoring custom HTML5 elements, eg: bp-spinner
-        /^bp-/
-    ];
-    
-    var checkoutCtrl = new Vue({
-        i18n: i18n,
-        el: '#checkoutCtrl',
-        components: {
-            qrcode: VueQr,
-            changelly: ChangellyComponent
-        },
-        data: {
+        // TODO: Move all logic from core.js to Vue controller
+        Vue.config.ignoredElements = [
+            'line-items',
+            'low-fee-timeline',
+            // Ignoring custom HTML5 elements, eg: bp-spinner
+            /^bp-/
+        ];
+        var checkoutCtrl = new Vue({
+            i18n: i18n,
+            el: '#checkoutCtrl',
+            components: {
+                qrcode: VueQr
+            },
+            data: {
                 srvModel: srvModel,
                 lndModel: null,
                 scanDisplayQr: "",
                 expiringSoon: false
-        }
-    });
-</script>
+            }
+        });
+    </script>
 </body>
 </html>

@@ -148,7 +148,7 @@
         <div class="payment-tabs__tab" id="copy-tab">
             <span>{{$t("Copy")}}</span>
         </div>
-        @if (Model.ChangellyEnabled)
+        @if (Model.AllowCoinConversion)
         {
             <div class="payment-tabs__tab" id="altcoins-tab">
                 <span>{{$t("Conversion")}}</span>
@@ -253,7 +253,7 @@
             </div>
         </nav>
     </div>
-    @if (Model.ChangellyEnabled)
+    @if (Model.AllowCoinConversion)
     {
         <div id="altcoins" class="bp-view payment manual-flow">
             <nav v-if="srvModel.isLightning">
@@ -271,32 +271,17 @@
                         {{$t("ConversionTab_BodyDesc", srvModel)}}
                     </span>
                 </div>
-                <center>             
-                    <changelly inline-template
-                               :merchant-id="srvModel.changellyMerchantId"
-                               :store-id="srvModel.storeId"
-                               :to-currency="srvModel.paymentMethodId"
-                               :to-currency-due="srvModel.changellyAmountDue"
-                               :to-currency-address="srvModel.btcAddress">
-                        <div class="changelly-component">
-                            <div class="changelly-component-dropdown-holder" v-show="prettyDropdownInstance">
-                                <select 
-                                        v-model="selectedFromCurrency"
-                                        :disabled="isLoading"
-                                        v-on:change="onCurrencyChange($event)"
-                                        ref="changellyCurrenciesDropdown">
-                                    <option value="">Select a currency to convert from</option>
-                                    <option v-for="currency of currencies" :value="currency.name">{{currency.fullName}}</option>
-                                </select>
-                            </div>
-                            <a  v-on:click="openDialog($event)" :href="url" class="changelly-component-button">
-                                <img src="https://changelly.com/pay_button.png" alt="Changelly" v-show="url"/>
-                            </a>
-                            <div v-show="isLoading" class="general__spinner">
-                                <partial name="Checkout-Spinner"/>
-                            </div>
-                        </div>
-                    </changelly>
+                <center>
+                    <script>function shapeshift_click(a, e) { e.preventDefault(); var link = a.href; var shapeshiftWindow = window.open(link, '1418115287605', 'width=700,height=500,toolbar=0,menubar=0,location=0,status=1,scrollbars=1,resizable=0,left=0,top=0'); shapeshiftWindow.focus(); return false; }</script>
+                    <a onclick="shapeshift_click(this, event);" v-bind:href="srvModel.shapeshiftUrl">
+                        <img src="https://shapeshift.io/images/shifty/xs_light_altcoins.png" class="ss-button">
+                    </a>
+
+                    @*Changelly doesn't have TO_AMOUNT support so we can't include it
+                            <script type="text/javascript">function open_widget(a, e) { e.preventDefault(); var link = a.href; var changellyWindow = window.open(link, 'Changelly', 'width=600,height=470,toolbar=0,menubar=0,location=0,status=1,scrollbars=1,resizable=0,left=0,top=0'); changellyWindow.focus(); return false; }</script>
+                        <a onclick="open_widget(this, event);" href="https://changelly.com/widget/v1?auth=email&from=DASH&to=BTC&address=&amount=1&merchant_id=&ref_id=">
+                            <img src="https://changelly.com/pay_button_pay_with.png" alt="Changelly" />
+                        </a>*@
                 </center>
             </nav>
         </div>

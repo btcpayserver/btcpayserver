@@ -1,8 +1,11 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Models;
 using BTCPayServer.Payments.Changelly;
+using BTCPayServer.Rating;
+using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -12,11 +15,19 @@ namespace BTCPayServer.Controllers
     public class ChangellyController : Controller
     {
         private readonly ChangellyClientProvider _changellyClientProvider;
+        private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly ILogger<ChangellyController> _logger;
+        private readonly RateFetcher _RateProviderFactory;
 
-        public ChangellyController(ChangellyClientProvider changellyClientProvider, ILogger<ChangellyController> logger)
+        public ChangellyController(ChangellyClientProvider changellyClientProvider,
+            BTCPayNetworkProvider btcPayNetworkProvider,
+            RateFetcher rateProviderFactory,
+            ILogger<ChangellyController> logger)
         {
+            _RateProviderFactory = rateProviderFactory ?? throw new ArgumentNullException(nameof(rateProviderFactory));
+
             _changellyClientProvider = changellyClientProvider;
+            _btcPayNetworkProvider = btcPayNetworkProvider;
             _logger = logger;
         }
 
@@ -46,6 +57,18 @@ namespace BTCPayServer.Controllers
             if (!TryGetChangellyClient(storeId, out var actionResult, out var client))
             {
                 return actionResult;
+            }
+
+
+            if (fromCurrency.Equals("usd", StringComparison.InvariantCultureIgnoreCase)
+                || fromCurrency.Equals("eur", StringComparison.InvariantCultureIgnoreCase))
+            {
+                var store = HttpContext.GetStoreData();
+                var rules = store.GetStoreBlob().GetRateRules(_btcPayNetworkProvider);
+                var rate = await _RateProviderFactory.FetchRate(new CurrencyPair(toCurrency, fromCurrency), rules);
+                if (rate.BidAsk == null) return BadRequest();
+                var flatRate = rate.BidAsk.Center;
+                return Ok(flatRate * toCurrencyAmount);
             }
 
             decimal? currentAmount = null;

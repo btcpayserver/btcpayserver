@@ -14,16 +14,14 @@ namespace BTCPayServer.Payments.Changelly
 {
     public class Changelly
     {
-        private readonly string _apikey;
         private readonly string _apisecret;
-        private readonly string _apiurl;
+        private readonly bool _showFiat;
         private readonly HttpClient _httpClient;
 
-        public Changelly(string apiKey, string apiSecret, string apiUrl)
+        public Changelly(string apiKey, string apiSecret, string apiUrl, bool showFiat = true)
         {
-            _apikey = apiKey;
             _apisecret = apiSecret;
-            _apiurl = apiUrl;
+            _showFiat = showFiat;
             _httpClient = new HttpClient();
             _httpClient.BaseAddress = new Uri(apiUrl);
             _httpClient.DefaultRequestHeaders.Add("api-key", apiKey);
@@ -81,7 +79,33 @@ namespace BTCPayServer.Payments.Changelly
 			    }";
 
                 var result = await PostToApi<IEnumerable<CurrencyFull>>(message);
-                return !result.Success ? (null, false, result.Error) : (result.Result.Result, true, "");
+                if (!result.Success)
+                    return (null, false, result.Error);
+                else
+                {
+                    var appendedResult = _showFiat
+                        ? result.Result.Result.Concat(new[]
+                        {
+                            new CurrencyFull()
+                            {
+                                Enable = true,
+                                Name = "EUR",
+                                FullName = "Euro",
+                                PayInConfirmations = 0,
+                                ImageLink = "https://changelly.com/api/coins/eur.png" 
+                            },
+                            new CurrencyFull()
+                            {
+                                Enable = true,
+                                Name = "USD",
+                                FullName = "US Dollar",
+                                PayInConfirmations = 0,
+                                ImageLink = "https://changelly.com/api/coins/usd.png" 
+                            }
+                        })
+                        : result.Result.Result;
+                    return (appendedResult, true, "");
+                }
             }
             catch (Exception Ex)
             {

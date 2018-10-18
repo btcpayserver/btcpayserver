@@ -63,7 +63,7 @@ namespace BTCPayServer.Payments.Changelly
             }
 
             changelly = new Changelly(changellySettings.ApiKey, changellySettings.ApiSecret,
-                changellySettings.ApiUrl);
+                changellySettings.ApiUrl, changellySettings.ShowFiat);
             _clientCache.AddOrReplace(storeId, changelly);
             error = null;
             return true;

@@ -7,7 +7,9 @@
                 isLoading: true,
                 calculatedAmount: 0,
                 selectedFromCurrency: "",
-                prettyDropdownInstance: null
+                prettyDropdownInstance: null,
+                calculateError: false,
+                currenciesError: false
             };
         },
         computed: {
@@ -46,6 +48,7 @@
             },
             loadCurrencies: function () {
                 this.isLoading = true;
+                this.currenciesError = false;
                 $.ajax(
                     {
                         context: this,
@@ -70,6 +73,9 @@
                                 });
                             }
                         },
+                        error: function(){
+                            this.currenciesError = true;
+                        },
                         complete: function () {
                             this.isLoading = false;
                         }
@@ -77,6 +83,7 @@
             },
             calculateAmount: function () {
                 this.isLoading = true;
+                this.calculateError = false;
                 $.ajax(
                     {
                         url: this.getUrl() + "/calculate",
@@ -90,15 +97,24 @@
                         success: function (result) {
                             this.calculatedAmount = result;
                         },
+                        error: function(){
+                            this.calculateError = true;
+                        },
                         complete: function () {
                             this.isLoading = false;
                         }
                     });
-
-
+            },
+            retry: function(type){
+                if(type=="loadCurrencies"){
+                    this.loadCurrencies();
+                }else if(type=="calculateAmount"){
+                    this.calculateAmount();
+                }
             },
             onCurrencyChange: function (value) {
                 this.selectedFromCurrency = value;
+                this.calculatedAmount = 0;
             },
             openDialog: function (e) {
                 if (e && e.preventDefault) {

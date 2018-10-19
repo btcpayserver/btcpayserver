@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -143,8 +144,18 @@ namespace BTCPayServer.Tests
                 Assert.Equal("UpdateStore", Assert.IsType<RedirectToActionResult>(
                     await storesController.UpdateChangellySettings(user.StoreId, updateModel, "save")).ActionName);
 
+                
+                var mockChangelly = new MockChangelly(new MockHttpClientFactory(), updateModel.ApiKey, updateModel.ApiSecret, updateModel.ApiUrl);
+                var mock = new MockChangellyClientProvider(mockChangelly, tester.PayTester.StoreRepository);
+                
+                mockChangelly.GetCurrenciesFullResult = new List<CurrencyFull>();
+                var factory = UnitTest1.CreateBTCPayRateFactory();
+                var fetcher = new RateFetcher(factory);
+
+                var changellyController2 = new ChangellyController(mock, tester.NetworkProvider, fetcher);
+                
                 Assert.IsNotType<BitpayErrorModel>(Assert
-                    .IsType<BadRequestObjectResult>(await changellyController.GetCurrencyList(user.StoreId))
+                    .IsType<BadRequestObjectResult>(await changellyController2.GetCurrencyList(user.StoreId))
                     .Value);
             }
         }
@@ -159,6 +170,7 @@ namespace BTCPayServer.Tests
                 var user = tester.NewAccount();
                 user.GrantAccess();
 
+                //save changelly settings
                 var updateModel = new UpdateChangellySettingsViewModel()
                 {
                     ApiSecret = "secret",
@@ -168,7 +180,7 @@ namespace BTCPayServer.Tests
                 };
                 var storesController = tester.PayTester.GetController<StoresController>(user.UserId, user.StoreId);
 
-
+                //confirm saved
                 Assert.Equal("UpdateStore", Assert.IsType<RedirectToActionResult>(
                     await storesController.UpdateChangellySettings(user.StoreId, updateModel, "save")).ActionName);
 
@@ -179,10 +191,10 @@ namespace BTCPayServer.Tests
                 var factory = UnitTest1.CreateBTCPayRateFactory();
                 var fetcher = new RateFetcher(factory);
 
-                var changellyController = new ChangellyController(mock, tester.NetworkProvider, fetcher,
-                    new Logger<ChangellyController>(new LoggerFactory()));
+                var changellyController = new ChangellyController(mock, tester.NetworkProvider, fetcher);
 
-                mockChangelly.GetCurrenciesFullResult = (new List<CurrencyFull>()
+                
+                mockChangelly.GetCurrenciesFullResult = new List<CurrencyFull>()
                 {
                     new CurrencyFull()
                     {
@@ -192,26 +204,12 @@ namespace BTCPayServer.Tests
                         FullName = "aa",
                         ImageLink = ""
                     }
-                }, true, "");
-                var result = ((IEnumerable<CurrencyFull> currency, bool Success, string Error))Assert
-                    .IsType<OkObjectResult>(await changellyController.GetCurrencyList(user.StoreId)).Value;
+                };
+                var result = Assert
+                    .IsType<OkObjectResult>(await changellyController.GetCurrencyList(user.StoreId))
+                    .Value as IEnumerable<CurrencyFull>;
                 Assert.Equal(1, mockChangelly.GetCurrenciesFullCallCount);
-                Assert.Equal(mockChangelly.GetCurrenciesFullResult.currency.Count, result.currency.Count());
 
-                mockChangelly.GetCurrenciesFullResult = (new List<CurrencyFull>()
-                {
-                    new CurrencyFull()
-                    {
-                        Name = "a",
-                        Enable = true,
-                        PayInConfirmations = 10,
-                        FullName = "aa",
-                        ImageLink = ""
-                    }
-                }, false, "");
-                Assert
-                    .IsType<BadRequestObjectResult>(await changellyController.GetCurrencyList(user.StoreId));
-                Assert.Equal(2, mockChangelly.GetCurrenciesFullCallCount);
             }
         }
 
@@ -243,8 +241,7 @@ namespace BTCPayServer.Tests
                 var factory = UnitTest1.CreateBTCPayRateFactory();
                 var fetcher = new RateFetcher(factory);
                 
-                var changellyController = new ChangellyController(mock,tester.NetworkProvider,fetcher,
-                new Logger<ChangellyController>(new LoggerFactory()));
+                var changellyController = new ChangellyController(mock,tester.NetworkProvider,fetcher);
 
                 mockChangelly.GetExchangeAmountResult = (from, to, amount) =>
                 {
@@ -254,10 +251,10 @@ namespace BTCPayServer.Tests
                     switch (mockChangelly.GetExchangeAmountCallCount)
                     {
                         case 1:
-                            return (0.5m, true, null);
+                            return 0.5m;
                             break;
                         default:
-                            return (1.01m, true, null);
+                            return 1.01m;
                             break;
                     }
                 };
@@ -279,9 +276,9 @@ namespace BTCPayServer.Tests
     
     public class MockChangelly : Changelly
     {
-        public (IList<CurrencyFull> currency, bool Success, string Error) GetCurrenciesFullResult { get; set; }
+        public IEnumerable<CurrencyFull> GetCurrenciesFullResult { get; set; }
 
-        public delegate TResult ParamsFunc<T1, T2, T3, TResult>(T1 arg1, T2 arg2, T3 arg3);
+        public delegate decimal ParamsFunc<T1, T2, T3, TResult>(T1 arg1, T2 arg2, T3 arg3);
 
         public ParamsFunc<string, string, decimal, (decimal amount, bool Success, string Error)> GetExchangeAmountResult
         {
@@ -296,14 +293,13 @@ namespace BTCPayServer.Tests
         {
         }
 
-        public override async Task<(IEnumerable<CurrencyFull> Currencies, bool Success, string Error)>
-            GetCurrenciesFull()
+        public override async Task<IEnumerable<CurrencyFull>> GetCurrenciesFull()
         {
             GetCurrenciesFullCallCount++;
             return GetCurrenciesFullResult;
         }
 
-        public override async Task<(decimal Amount, bool Success, string Error)> GetExchangeAmount(string fromCurrency,
+        public override async Task<decimal> GetExchangeAmount(string fromCurrency,
             string toCurrency, decimal amount)
         {
             GetExchangeAmountCallCount++;

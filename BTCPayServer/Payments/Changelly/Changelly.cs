@@ -66,11 +66,8 @@ namespace BTCPayServer.Payments.Changelly
             }
         }
 
-        public virtual async Task<(IEnumerable<CurrencyFull> Currencies, bool Success, string Error)>
-            GetCurrenciesFull()
+        public virtual async Task<IEnumerable<CurrencyFull>> GetCurrenciesFull()
         {
-            try
-            {
                 const string message = @"{
 		            ""jsonrpc"": ""2.0"",
 		            ""id"": 1,
@@ -80,55 +77,43 @@ namespace BTCPayServer.Payments.Changelly
 
                 var result = await PostToApi<IEnumerable<CurrencyFull>>(message);
                 if (!result.Success)
-                    return (null, false, result.Error);
-                else
-                {
-                    var appendedResult = _showFiat
-                        ? result.Result.Result.Concat(new[]
+                    throw new ChangellyException(result.Error);
+                var appendedResult = _showFiat
+                    ? result.Result.Result.Concat(new[]
+                    {
+                        new CurrencyFull()
                         {
-                            new CurrencyFull()
-                            {
-                                Enable = true,
-                                Name = "EUR",
-                                FullName = "Euro",
-                                PayInConfirmations = 0,
-                                ImageLink = "https://changelly.com/api/coins/eur.png" 
-                            },
-                            new CurrencyFull()
-                            {
-                                Enable = true,
-                                Name = "USD",
-                                FullName = "US Dollar",
-                                PayInConfirmations = 0,
-                                ImageLink = "https://changelly.com/api/coins/usd.png" 
-                            }
-                        })
-                        : result.Result.Result;
-                    return (appendedResult, true, "");
-                }
-            }
-            catch (Exception Ex)
-            {
-                return (null, false, Ex.Message);
-            }
+                            Enable = true,
+                            Name = "EUR",
+                            FullName = "Euro",
+                            PayInConfirmations = 0,
+                            ImageLink = "https://changelly.com/api/coins/eur.png"
+                        },
+                        new CurrencyFull()
+                        {
+                            Enable = true,
+                            Name = "USD",
+                            FullName = "US Dollar",
+                            PayInConfirmations = 0,
+                            ImageLink = "https://changelly.com/api/coins/usd.png"
+                        }
+                    })
+                    : result.Result.Result;
+            return appendedResult;
         }
 
-        public virtual async Task<(decimal Amount, bool Success, string Error)> GetExchangeAmount(string fromCurrency,
+        public virtual async Task<decimal> GetExchangeAmount(string fromCurrency,
             string toCurrency,
             decimal amount)
         {
-            try
-            {
                 var message =
                     $"{{\"id\": \"test\",\"jsonrpc\": \"2.0\",\"method\": \"getExchangeAmount\",\"params\":{{\"from\": \"{fromCurrency}\",\"to\": \"{toCurrency}\",\"amount\": \"{amount}\"}}}}";
 
                 var result = await PostToApi<string>(message);
-                return !result.Success ? (0, false, result.Error) : (Convert.ToDecimal(result.Result.Result), true, "");
-            }
-            catch (Exception Ex)
-            {
-                return (0, false, Ex.Message);
-            }
+                if (!result.Success)
+                    throw new ChangellyException(result.Error);
+
+            return Convert.ToDecimal(result.Result.Result);
         }
     }
 }

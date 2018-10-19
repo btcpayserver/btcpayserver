@@ -55,11 +55,11 @@
                         url: this.getUrl() + "/currencies",
                         dataType: "json",
                         success: function (result) {
-                            if (result.item2) {
-                                for (i = 0; i < result.item1.length; i++) {
-                                    if (result.item1[i].enabled &&
-                                        result.item1[i].name.toLowerCase() !== this.toCurrency.toLowerCase()) {
-                                        this.currencies.push(result.item1[i]);
+
+                                for (i = 0; i < result.length; i++) {
+                                    if (result[i].enabled &&
+                                        result[i].name.toLowerCase() !== this.toCurrency.toLowerCase()) {
+                                        this.currencies.push(result[i]);
                                     }
                                 }
                                 var self = this;
@@ -71,7 +71,7 @@
                                                 self.onCurrencyChange(self.$refs.changellyCurrenciesDropdown.value);
                                             });
                                 });
-                            }
+                            
                         },
                         error: function(){
                             this.currenciesError = true;

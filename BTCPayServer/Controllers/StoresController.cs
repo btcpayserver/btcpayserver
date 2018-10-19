@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Authentication;
 using BTCPayServer.Configuration;
@@ -50,7 +51,7 @@ namespace BTCPayServer.Controllers
             IFeeProviderFactory feeRateProvider,
             LanguageService langService,
             ChangellyClientProvider changellyClientProvider,
-            IHostingEnvironment env)
+            IHostingEnvironment env, IHttpClientFactory httpClientFactory)
         {
             _RateFactory = rateFactory;
             _Repo = repo;
@@ -61,6 +62,7 @@ namespace BTCPayServer.Controllers
             _TokenController = tokenController;
             _WalletProvider = walletProvider;
             _Env = env;
+            _httpClientFactory = httpClientFactory;
             _NetworkProvider = networkProvider;
             _ExplorerProvider = explorerProvider;
             _FeeRateProvider = feeRateProvider;
@@ -82,6 +84,7 @@ namespace BTCPayServer.Controllers
         private LanguageService _LangService;
         private readonly ChangellyClientProvider _changellyClientProvider;
         IHostingEnvironment _Env;
+        private IHttpClientFactory _httpClientFactory;
 
         [TempData]
         public string StatusMessage

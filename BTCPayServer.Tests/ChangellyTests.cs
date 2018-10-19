@@ -1,6 +1,6 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Controllers;
 using BTCPayServer.Models;
@@ -173,9 +173,8 @@ namespace BTCPayServer.Tests
                     await storesController.UpdateChangellySettings(user.StoreId, updateModel, "save")).ActionName);
 
 
-                var mockChangelly = new MockChangelly(updateModel.ApiKey, updateModel.ApiSecret, updateModel.ApiUrl);
-                var mock = new MockChangellyClientProvider(mockChangelly, tester.PayTester.StoreRepository,
-                    tester.NetworkProvider);
+                var mockChangelly = new MockChangelly(new MockHttpClientFactory(), updateModel.ApiKey, updateModel.ApiSecret, updateModel.ApiUrl);
+                var mock = new MockChangellyClientProvider(mockChangelly, tester.PayTester.StoreRepository);
                 
                 var factory = UnitTest1.CreateBTCPayRateFactory();
                 var fetcher = new RateFetcher(factory);
@@ -238,9 +237,8 @@ namespace BTCPayServer.Tests
                 Assert.Equal("UpdateStore", Assert.IsType<RedirectToActionResult>(
                     await storesController.UpdateChangellySettings(user.StoreId, updateModel, "save")).ActionName);
 
-                var mockChangelly = new MockChangelly(updateModel.ApiKey, updateModel.ApiSecret, updateModel.ApiUrl);
-                var mock = new MockChangellyClientProvider(mockChangelly, tester.PayTester.StoreRepository,
-                    tester.NetworkProvider);
+                var mockChangelly = new MockChangelly(new MockHttpClientFactory(),  updateModel.ApiKey, updateModel.ApiSecret, updateModel.ApiUrl);
+                var mock = new MockChangellyClientProvider(mockChangelly, tester.PayTester.StoreRepository);
                 
                 var factory = UnitTest1.CreateBTCPayRateFactory();
                 var fetcher = new RateFetcher(factory);
@@ -271,6 +269,14 @@ namespace BTCPayServer.Tests
         }
     }
 
+    public class MockHttpClientFactory : IHttpClientFactory
+    {
+        public HttpClient CreateClient(string name)
+        {
+            return  new HttpClient();
+        }
+    }
+    
     public class MockChangelly : Changelly
     {
         public (IList<CurrencyFull> currency, bool Success, string Error) GetCurrenciesFullResult { get; set; }
@@ -286,7 +292,7 @@ namespace BTCPayServer.Tests
         public int GetCurrenciesFullCallCount { get; set; } = 0;
         public int GetExchangeAmountCallCount { get; set; } = 0;
 
-        public MockChangelly(string apiKey, string apiSecret, string apiUrl) : base(apiKey, apiSecret, apiUrl)
+        public MockChangelly(IHttpClientFactory httpClientFactory,  string apiKey, string apiSecret, string apiUrl) : base(httpClientFactory, apiKey, apiSecret, apiUrl)
         {
         }
 
@@ -311,8 +317,7 @@ namespace BTCPayServer.Tests
 
         public MockChangellyClientProvider(
             MockChangelly mockChangelly,
-            StoreRepository storeRepository,
-            BTCPayNetworkProvider btcPayNetworkProvider) : base(storeRepository)
+            StoreRepository storeRepository) : base(storeRepository, new MockHttpClientFactory())
         {
             MockChangelly = mockChangelly;
         }

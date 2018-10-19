@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Net.Http;
 using BTCPayServer.Services.Stores;
 using NBitcoin;
 
@@ -8,13 +9,15 @@ namespace BTCPayServer.Payments.Changelly
     public class ChangellyClientProvider
     {
         private readonly StoreRepository _storeRepository;
+        private readonly IHttpClientFactory _httpClientFactory;
 
         private readonly ConcurrentDictionary<string, Changelly> _clientCache =
             new ConcurrentDictionary<string, Changelly>();
 
-        public ChangellyClientProvider(StoreRepository storeRepository)
+        public ChangellyClientProvider(StoreRepository storeRepository, IHttpClientFactory httpClientFactory)
         {
             _storeRepository = storeRepository;
+            _httpClientFactory = httpClientFactory;
         }
 
         public void InvalidateClient(string storeId)
@@ -62,7 +65,7 @@ namespace BTCPayServer.Payments.Changelly
                 return false;
             }
 
-            changelly = new Changelly(changellySettings.ApiKey, changellySettings.ApiSecret,
+            changelly = new Changelly(_httpClientFactory, changellySettings.ApiKey, changellySettings.ApiSecret,
                 changellySettings.ApiUrl, changellySettings.ShowFiat);
             _clientCache.AddOrReplace(storeId, changelly);
             error = null;

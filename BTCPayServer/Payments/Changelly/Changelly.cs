@@ -18,11 +18,11 @@ namespace BTCPayServer.Payments.Changelly
         private readonly bool _showFiat;
         private readonly HttpClient _httpClient;
 
-        public Changelly(string apiKey, string apiSecret, string apiUrl, bool showFiat = true)
+        public Changelly(IHttpClientFactory httpClientFactory,  string apiKey, string apiSecret, string apiUrl, bool showFiat = true)
         {
             _apisecret = apiSecret;
             _showFiat = showFiat;
-            _httpClient = new HttpClient();
+            _httpClient = httpClientFactory.CreateClient();
             _httpClient.BaseAddress = new Uri(apiUrl);
             _httpClient.DefaultRequestHeaders.Add("api-key", apiKey);
         }
@@ -120,8 +120,7 @@ namespace BTCPayServer.Payments.Changelly
             try
             {
                 var message =
-                    "{\"id\": \"test\",\"jsonrpc\": \"2.0\",\"method\": \"getExchangeAmount\",\"params\":{\"from\": \"" +
-                    fromCurrency + "\",\"to\": \"" + toCurrency + "\",\"amount\": \"" + amount + "\"}}";
+                    $"{{\"id\": \"test\",\"jsonrpc\": \"2.0\",\"method\": \"getExchangeAmount\",\"params\":{{\"from\": \"{fromCurrency}\",\"to\": \"{toCurrency}\",\"amount\": \"{amount}\"}}}}";
 
                 var result = await PostToApi<string>(message);
                 return !result.Success ? (0, false, result.Error) : (Convert.ToDecimal(result.Result.Result), true, "");

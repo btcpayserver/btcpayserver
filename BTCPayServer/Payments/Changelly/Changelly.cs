@@ -39,10 +39,8 @@ namespace BTCPayServer.Payments.Changelly
             return hex.ToString();
         }
 
-        private async Task<(ChangellyResponse<T> Result, bool Success, string Error)> PostToApi<T>(string message)
+        private async Task<ChangellyResponse<T>> PostToApi<T>(string message)
         {
-            try
-            {
                 var hmac = new HMACSHA512(Encoding.UTF8.GetBytes(_apisecret));
                 var hashMessage = hmac.ComputeHash(Encoding.UTF8.GetBytes(message));
                 var sign = ToHexString(hashMessage);
@@ -54,16 +52,11 @@ namespace BTCPayServer.Payments.Changelly
                 var result = await _httpClient.SendAsync(request);
 
                 if (!result.IsSuccessStatusCode)
-                    return (null, false, result.ReasonPhrase);
+                    throw new ChangellyException(result.ReasonPhrase);
                 var content =
                     await result.Content.ReadAsStringAsync();
-                return (
-                    JObject.Parse(content).ToObject<ChangellyResponse<T>>(), true, "");
-            }
-            catch (Exception Ex)
-            {
-                return (null, false, Ex.Message);
-            }
+                return JObject.Parse(content).ToObject<ChangellyResponse<T>>();
+            
         }
 
         public virtual async Task<IEnumerable<CurrencyFull>> GetCurrenciesFull()
@@ -76,10 +69,8 @@ namespace BTCPayServer.Payments.Changelly
 			    }";
 
                 var result = await PostToApi<IEnumerable<CurrencyFull>>(message);
-                if (!result.Success)
-                    throw new ChangellyException(result.Error);
                 var appendedResult = _showFiat
-                    ? result.Result.Result.Concat(new[]
+                    ? result.Result.Concat(new[]
                     {
                         new CurrencyFull()
                         {
@@ -98,7 +89,7 @@ namespace BTCPayServer.Payments.Changelly
                             ImageLink = "https://changelly.com/api/coins/usd.png"
                         }
                     })
-                    : result.Result.Result;
+                    : result.Result;
             return appendedResult;
         }
 
@@ -110,10 +101,8 @@ namespace BTCPayServer.Payments.Changelly
                     $"{{\"id\": \"test\",\"jsonrpc\": \"2.0\",\"method\": \"getExchangeAmount\",\"params\":{{\"from\": \"{fromCurrency}\",\"to\": \"{toCurrency}\",\"amount\": \"{amount}\"}}}}";
 
                 var result = await PostToApi<string>(message);
-                if (!result.Success)
-                    throw new ChangellyException(result.Error);
 
-            return Convert.ToDecimal(result.Result.Result);
+            return Convert.ToDecimal(result.Result);
         }
     }
 }

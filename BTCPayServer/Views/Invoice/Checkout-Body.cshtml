@@ -287,7 +287,7 @@
                                         ref="changellyCurrenciesDropdown">
                                     <option value="">Select a currency to convert from</option>
                                     <option v-for="currency of currencies" 
-                                            :data-prefix="'<img style=\'width:20px; margin-right: 5px; \' src=\''+currency.image+'\'/>'"
+                                            :data-prefix="'<img src=\''+currency.image+'\'/>'"
                                             :value="currency.name">
                                        {{currency.fullName}}
                                     </option>

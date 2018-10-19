@@ -118,12 +118,8 @@ namespace BTCPayServer.Tests
                     .IsType<BadRequestObjectResult>(await changellyController.GetCurrencyList(user.StoreId))
                     .Value);
 
-                var updateModel = new UpdateChangellySettingsViewModel()
+                var updateModel = new UpdateChangellySettingsViewModel
                 {
-                    ApiSecret = "secret",
-                    ApiKey = "key",
-                    ApiUrl = "http://gozo.com",
-                    ChangellyMerchantId = "aaa",
                     Enabled = false
                 };
                 var storesController = tester.PayTester.GetController<StoresController>(user.UserId, user.StoreId);
@@ -145,17 +141,9 @@ namespace BTCPayServer.Tests
                     await storesController.UpdateChangellySettings(user.StoreId, updateModel, "save")).ActionName);
 
                 
-                var mockChangelly = new MockChangelly(new MockHttpClientFactory(), updateModel.ApiKey, updateModel.ApiSecret, updateModel.ApiUrl);
-                var mock = new MockChangellyClientProvider(mockChangelly, tester.PayTester.StoreRepository);
-                
-                mockChangelly.GetCurrenciesFullResult = new List<CurrencyFull>();
-                var factory = UnitTest1.CreateBTCPayRateFactory();
-                var fetcher = new RateFetcher(factory);
 
-                var changellyController2 = new ChangellyController(mock, tester.NetworkProvider, fetcher);
-                
                 Assert.IsNotType<BitpayErrorModel>(Assert
-                    .IsType<BadRequestObjectResult>(await changellyController2.GetCurrencyList(user.StoreId))
+                    .IsType<OkObjectResult>(await changellyController.GetCurrencyList(user.StoreId))
                     .Value);
             }
         }

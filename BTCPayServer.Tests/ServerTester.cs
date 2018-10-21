@@ -61,6 +61,7 @@ namespace BTCPayServer.Tests
                 NBXplorerUri = ExplorerClient.Address,
                 LTCNBXplorerUri = LTCExplorerClient.Address,
                 Postgres = GetEnvironment("TESTS_POSTGRES", "User ID=postgres;Host=127.0.0.1;Port=39372;Database=btcpayserver"),
+                MySQL = GetEnvironment("TESTS_MYSQL", null),
                 IntegratedLightning = MerchantCharge.Client.Uri
             };
             PayTester.Port = int.Parse(GetEnvironment("TESTS_PORT", Utils.FreeTcpPort().ToString(CultureInfo.InvariantCulture)), CultureInfo.InvariantCulture);

@@ -75,17 +75,23 @@ namespace BTCPayServer.Hosting
             {
                 var opts = o.GetRequiredService<BTCPayServerOptions>();
                 ApplicationDbContextFactory dbContext = null;
-                if (opts.PostgresConnectionString == null)
+                if (String.IsNullOrEmpty(opts.PostgresConnectionString) == false)
+                {
+                    Logs.Configuration.LogInformation($"Postgres DB used ({opts.PostgresConnectionString})");
+                    dbContext = new ApplicationDbContextFactory(DatabaseType.Postgres, opts.PostgresConnectionString);
+                }
+                else if(String.IsNullOrEmpty(opts.MySQLConnectionString) == false)
+                {
+                    Logs.Configuration.LogInformation($"MySQL DB used ({opts.MySQLConnectionString})");
+                    dbContext = new ApplicationDbContextFactory(DatabaseType.MySQL, opts.MySQLConnectionString);
+                }
+                else
                 {
                     var connStr = "Data Source=" + Path.Combine(opts.DataDir, "sqllite.db");
                     Logs.Configuration.LogInformation($"SQLite DB used ({connStr})");
                     dbContext = new ApplicationDbContextFactory(DatabaseType.Sqlite, connStr);
                 }
-                else
-                {
-                    Logs.Configuration.LogInformation($"Postgres DB used ({opts.PostgresConnectionString})");
-                    dbContext = new ApplicationDbContextFactory(DatabaseType.Postgres, opts.PostgresConnectionString);
-                }
+                 
                 return dbContext;
             });
 

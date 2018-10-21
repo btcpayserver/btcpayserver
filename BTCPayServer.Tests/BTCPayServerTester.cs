@@ -57,6 +57,11 @@ namespace BTCPayServer.Tests
             set;
         }
 
+        public string MySQL
+        {
+            get; set;
+        }
+
         public string Postgres
         {
             get; set;
@@ -94,7 +99,9 @@ namespace BTCPayServer.Tests
 
             config.AppendLine($"btc.lightning={IntegratedLightning.AbsoluteUri}");
 
-            if (Postgres != null)
+            if (MySQL != null)
+                config.AppendLine($"mysql=" + MySQL);
+            else if (Postgres != null)
                 config.AppendLine($"postgres=" + Postgres);
             var confPath = Path.Combine(chainDirectory, "settings.config");
             File.WriteAllText(confPath, config.ToString());

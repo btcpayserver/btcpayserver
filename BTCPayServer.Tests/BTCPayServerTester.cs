@@ -35,6 +35,12 @@ using Xunit;
 
 namespace BTCPayServer.Tests
 {
+    public enum TestDatabases
+    {
+        Postgres,
+        MySQL,
+    }
+
     public class BTCPayServerTester : IDisposable
     {
         private string _Directory;
@@ -73,6 +79,10 @@ namespace BTCPayServer.Tests
             get; set;
         }
 
+        public TestDatabases TestDatabase
+        {
+            get; set;
+        }
 
         public bool MockRates { get; set; } = true;
 
@@ -99,9 +109,9 @@ namespace BTCPayServer.Tests
 
             config.AppendLine($"btc.lightning={IntegratedLightning.AbsoluteUri}");
 
-            if (MySQL != null)
+            if (TestDatabase == TestDatabases.MySQL && !String.IsNullOrEmpty(MySQL))
                 config.AppendLine($"mysql=" + MySQL);
-            else if (Postgres != null)
+            else if (!String.IsNullOrEmpty(Postgres))
                 config.AppendLine($"postgres=" + Postgres);
             var confPath = Path.Combine(chainDirectory, "settings.config");
             File.WriteAllText(confPath, config.ToString());

@@ -14,6 +14,7 @@ services:
       TESTS_LTCRPCCONNECTION: server=http://litecoind:43782;ceiwHEbqWI83:DwubwWsoo3
       TESTS_BTCNBXPLORERURL: http://nbxplorer:32838/
       TESTS_LTCNBXPLORERURL: http://nbxplorer:32838/
+      TESTS_DB: "Postgres"
       TESTS_POSTGRES: User ID=postgres;Host=postgres;Port=5432;Database=btcpayserver
       TESTS_MYSQL: User ID=root;Host=mysql;Port=3306;Database=btcpayserver
       TESTS_PORT: 80
@@ -210,7 +211,7 @@ services:
     expose:
       - "3306"
     ports:
-      - "33306:3306"
+      - "33036:3306"
     environment:
       - MYSQL_ALLOW_EMPTY_PASSWORD=yes
 

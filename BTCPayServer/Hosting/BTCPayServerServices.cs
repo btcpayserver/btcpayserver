@@ -75,12 +75,12 @@ namespace BTCPayServer.Hosting
             {
                 var opts = o.GetRequiredService<BTCPayServerOptions>();
                 ApplicationDbContextFactory dbContext = null;
-                if (String.IsNullOrEmpty(opts.PostgresConnectionString) == false)
+                if (!String.IsNullOrEmpty(opts.PostgresConnectionString))
                 {
                     Logs.Configuration.LogInformation($"Postgres DB used ({opts.PostgresConnectionString})");
                     dbContext = new ApplicationDbContextFactory(DatabaseType.Postgres, opts.PostgresConnectionString);
                 }
-                else if(String.IsNullOrEmpty(opts.MySQLConnectionString) == false)
+                else if(!String.IsNullOrEmpty(opts.MySQLConnectionString))
                 {
                     Logs.Configuration.LogInformation($"MySQL DB used ({opts.MySQLConnectionString})");
                     dbContext = new ApplicationDbContextFactory(DatabaseType.MySQL, opts.MySQLConnectionString);

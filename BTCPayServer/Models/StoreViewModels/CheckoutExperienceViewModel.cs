@@ -23,11 +23,6 @@ namespace BTCPayServer.Models.StoreViewModels
         public string DefaultCryptoCurrency { get; set; }
         [Display(Name = "Default language on checkout")]
         public string DefaultLang { get; set; }
-        [Display(Name = "Allow conversion through third party (Shapeshift, Changelly...)")]
-        public bool AllowCoinConversion
-        {
-            get; set;
-        }
         [Display(Name = "Do not propose lightning payment if value of the invoice is above...")]
         [MaxLength(20)]
         public string LightningMaxValue { get; set; }

@@ -10,6 +10,7 @@ using BTCPayServer.Events;
 using BTCPayServer.Filters;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
+using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Invoices;
@@ -213,7 +214,6 @@ namespace BTCPayServer.Controllers
                 paymentMethodIdStr = store.GetDefaultCrypto(_NetworkProvider);
                 isDefaultCrypto = true;
             }
-
             var paymentMethodId = PaymentMethodId.Parse(paymentMethodIdStr);
             var network = _NetworkProvider.GetNetwork(paymentMethodId.CryptoCode);
             if (network == null && isDefaultCrypto)
@@ -245,6 +245,18 @@ namespace BTCPayServer.Controllers
             var storeBlob = store.GetStoreBlob();
             var currency = invoice.ProductInformation.Currency;
             var accounting = paymentMethod.Calculate();
+
+            ChangellySettings changelly = (storeBlob.ChangellySettings != null && storeBlob.ChangellySettings.Enabled &&
+                                           storeBlob.ChangellySettings.IsConfigured())
+                ? storeBlob.ChangellySettings
+                : null;
+
+
+            var changellyAmountDue = changelly != null
+                ? (accounting.Due.ToDecimal(MoneyUnit.BTC) *
+                   (1m + (changelly.AmountMarkupPercentage / 100m)))
+                : (decimal?)null;
+
             var model = new PaymentModel()
             {
                 CryptoCode = network.CryptoCode,
@@ -284,7 +296,10 @@ namespace BTCPayServer.Controllers
                 Status = invoice.Status,
                 NetworkFee = paymentMethodDetails.GetTxFee(),
                 IsMultiCurrency = invoice.GetPayments().Select(p => p.GetPaymentMethodId()).Concat(new[] { paymentMethod.GetId() }).Distinct().Count() > 1,
-                AllowCoinConversion = storeBlob.AllowCoinConversion,
+                ChangellyEnabled = changelly != null,
+                ChangellyMerchantId = changelly?.ChangellyMerchantId,
+                ChangellyAmountDue = changellyAmountDue,
+                StoreId = store.Id,
                 AvailableCryptos = invoice.GetPaymentMethods(_NetworkProvider)
                                           .Where(i => i.Network != null)
                                           .Select(kv => new PaymentModel.AvailableCrypto()

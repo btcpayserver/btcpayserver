@@ -21,7 +21,13 @@ namespace BTCPayServer.Models.StoreViewModels
             public WalletId WalletId { get; set; }
             public bool Enabled { get; set; }
         }
-
+        
+        public class ThirdPartyPaymentMethod
+        {
+            public string Provider { get; set; }
+            public bool Enabled { get; set; }
+            public string Action { get; set; }
+        }
         public StoreViewModel()
         {
 
@@ -51,6 +57,9 @@ namespace BTCPayServer.Models.StoreViewModels
         public bool AnyoneCanCreateInvoice { get; set; }
 
         public List<StoreViewModel.DerivationScheme> DerivationSchemes { get; set; } = new List<StoreViewModel.DerivationScheme>();
+
+        public List<ThirdPartyPaymentMethod> ThirdPartyPaymentMethods { get; set; } =
+            new List<ThirdPartyPaymentMethod>();
 
         [Display(Name = "Invoice expires if the full amount has not been paid after ... minutes")]
         [Range(1, 60 * 24 * 24)]

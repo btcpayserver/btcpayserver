@@ -34,10 +34,11 @@ services:
 
   # The dev container is not actually used, it is just handy to run `docker-compose up dev` to start all services
   dev: 
-    image: nicolasdorier/docker-bitcoin:0.16.3
+    image: nicolasdorier/docker-bitcoin:0.17.0
     environment:
+      BITCOIN_NETWORK: regtest
       BITCOIN_EXTRA_ARGS: |
-        regtest=1
+        deprecatedrpc=signrawtransaction
         connect=bitcoind:39388
     links:
       - nbxplorer
@@ -49,10 +50,11 @@ services:
       - merchant_lnd
 
   devlnd: 
-    image: nicolasdorier/docker-bitcoin:0.16.3
+    image: nicolasdorier/docker-bitcoin:0.17.0
     environment:
+      BITCOIN_NETWORK: regtest
       BITCOIN_EXTRA_ARGS: |
-        regtest=1
+        deprecatedrpc=signrawtransaction
         connect=bitcoind:39388
     links:
       - nbxplorer
@@ -87,13 +89,13 @@ services:
       - litecoind
 
   bitcoind:
-    image: nicolasdorier/docker-bitcoin:0.16.3
+    image: nicolasdorier/docker-bitcoin:0.17.0
     environment:
+      BITCOIN_NETWORK: regtest
       BITCOIN_EXTRA_ARGS: |
+        deprecatedrpc=signrawtransaction
         rpcuser=ceiwHEbqWI83
         rpcpassword=DwubwWsoo3
-        regtest=1
-        server=1
         rpcport=43782
         port=39388
         whitelist=0.0.0.0/0
@@ -111,7 +113,7 @@ services:
       - "bitcoin_datadir:/data"
 
   customer_lightningd:
-    image: nicolasdorier/clightning:v0.6.1-dev
+    image: nicolasdorier/clightning:v0.6.1-1-dev
     environment: 
       EXPOSE_TCP: "true"
       LIGHTNINGD_OPT: |
@@ -154,7 +156,7 @@ services:
       - merchant_lightningd
 
   merchant_lightningd:
-    image: nicolasdorier/clightning:v0.6.1-dev
+    image: nicolasdorier/clightning:v0.6.1-1-dev
     environment: 
       EXPOSE_TCP: "true"
       LIGHTNINGD_OPT: |

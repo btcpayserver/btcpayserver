@@ -1598,7 +1598,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        private static RateProviderFactory CreateBTCPayRateFactory()
+        public  static RateProviderFactory CreateBTCPayRateFactory()
         {
             return new RateProviderFactory(CreateMemoryCache(), null, new CoinAverageSettings());
         }

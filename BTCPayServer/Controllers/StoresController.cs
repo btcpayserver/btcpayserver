@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Authentication;
 using BTCPayServer.Configuration;
@@ -9,6 +10,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Models.StoreViewModels;
+using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Rating;
 using BTCPayServer.Security;
 using BTCPayServer.Services;
@@ -48,16 +50,19 @@ namespace BTCPayServer.Controllers
             ExplorerClientProvider explorerProvider,
             IFeeProviderFactory feeRateProvider,
             LanguageService langService,
-            IHostingEnvironment env)
+            ChangellyClientProvider changellyClientProvider,
+            IHostingEnvironment env, IHttpClientFactory httpClientFactory)
         {
             _RateFactory = rateFactory;
             _Repo = repo;
             _TokenRepository = tokenRepo;
             _UserManager = userManager;
             _LangService = langService;
+            _changellyClientProvider = changellyClientProvider;
             _TokenController = tokenController;
             _WalletProvider = walletProvider;
             _Env = env;
+            _httpClientFactory = httpClientFactory;
             _NetworkProvider = networkProvider;
             _ExplorerProvider = explorerProvider;
             _FeeRateProvider = feeRateProvider;
@@ -77,7 +82,9 @@ namespace BTCPayServer.Controllers
         TokenRepository _TokenRepository;
         UserManager<ApplicationUser> _UserManager;
         private LanguageService _LangService;
+        private readonly ChangellyClientProvider _changellyClientProvider;
         IHostingEnvironment _Env;
+        private IHttpClientFactory _httpClientFactory;
 
         [TempData]
         public string StatusMessage
@@ -318,7 +325,6 @@ namespace BTCPayServer.Controllers
             vm.SetLanguages(_LangService, storeBlob.DefaultLang);
             vm.LightningMaxValue = storeBlob.LightningMaxValue?.ToString() ?? "";
             vm.OnChainMinValue = storeBlob.OnChainMinValue?.ToString() ?? "";
-            vm.AllowCoinConversion = storeBlob.AllowCoinConversion;
             vm.RequiresRefundEmail = storeBlob.RequiresRefundEmail;
             vm.CustomCSS = storeBlob.CustomCSS?.AbsoluteUri;
             vm.CustomLogo = storeBlob.CustomLogo?.AbsoluteUri;
@@ -362,7 +368,6 @@ namespace BTCPayServer.Controllers
                 return View(model);
             }
             blob.DefaultLang = model.DefaultLang;
-            blob.AllowCoinConversion = model.AllowCoinConversion;
             blob.RequiresRefundEmail = model.RequiresRefundEmail;
             blob.LightningMaxValue = lightningMaxValue;
             blob.OnChainMinValue = onchainMinValue;
@@ -447,6 +452,15 @@ namespace BTCPayServer.Controllers
                     Enabled = !excludeFilters.Match(paymentId)
                 });
             }
+
+
+            var changellyEnabled = storeBlob.ChangellySettings != null && storeBlob.ChangellySettings.Enabled;
+            vm.ThirdPartyPaymentMethods.Add(new StoreViewModel.ThirdPartyPaymentMethod()
+            {
+                Enabled = changellyEnabled,
+                Action = nameof(UpdateChangellySettings),
+                Provider = "Changelly"
+            });
         }
 
         [HttpPost]

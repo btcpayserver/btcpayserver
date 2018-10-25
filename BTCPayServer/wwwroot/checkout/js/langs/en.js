@@ -27,7 +27,8 @@ const locales_en = {
     // Conversion tab
     "ConversionTab_BodyTop": "You can pay {{btcDue}} {{cryptoCode}} using altcoins other than the ones merchant directly supports.",
     "ConversionTab_BodyDesc": "This service is provided by 3rd party. Please keep in mind that we have no control over how providers will forward your funds. Invoice will only be marked paid once funds are received on {{cryptoCode}} Blockchain.",
-    "Shapeshift_Button_Text": "Pay with Altcoins",
+    "ConversionTab_CalculateAmount_Error": "Retry",
+    "ConversionTab_LoadCurrencies_Error": "Retry",
     "ConversionTab_Lightning": "No conversion providers available for Lightning Network payments.",
     // Invoice expired
     "Invoice expiring soon...": "Invoice expiring soon...",

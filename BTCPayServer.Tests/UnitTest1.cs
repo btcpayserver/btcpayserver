@@ -41,6 +41,9 @@ using BTCPayServer.Validation;
 using ExchangeSharp;
 using System.Security.Cryptography.X509Certificates;
 using BTCPayServer.Lightning;
+using BTCPayServer.Models.WalletViewModels;
+using System.Security.Claims;
+using BTCPayServer.Security;
 
 namespace BTCPayServer.Tests
 {
@@ -566,6 +569,72 @@ namespace BTCPayServer.Tests
                 var store2 = acc.GetController<StoresController>();
                 store2.Pair(pairingCode.ToString(), store2.StoreData.Id).GetAwaiter().GetResult();
                 Assert.Contains(nameof(PairingResult.ReusedKey), store2.StatusMessage, StringComparison.CurrentCultureIgnoreCase);
+            }
+        }
+
+        [Fact]
+        public void CanRescanWallet()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.Start();
+                var acc = tester.NewAccount();
+                acc.GrantAccess();
+                acc.RegisterDerivationScheme("BTC");
+                var btcDerivationScheme = acc.DerivationScheme;
+                acc.RegisterDerivationScheme("LTC");
+                
+                var walletController = tester.PayTester.GetController<WalletsController>(acc.UserId);
+                WalletId walletId = new WalletId(acc.StoreId, "LTC");
+                var rescan = Assert.IsType<RescanWalletModel>(Assert.IsType<ViewResult>(walletController.WalletRescan(walletId).Result).Model);
+                Assert.False(rescan.Ok);
+                Assert.True(rescan.IsFullySync);
+                Assert.False(rescan.IsSupportedByCurrency);
+                Assert.False(rescan.IsServerAdmin);
+
+                walletId = new WalletId(acc.StoreId, "BTC");
+                var serverAdminClaim = new[] { new Claim(Policies.CanModifyServerSettings.Key, "true") };
+                walletController = tester.PayTester.GetController<WalletsController>(acc.UserId, additionalClaims: serverAdminClaim);
+                rescan = Assert.IsType<RescanWalletModel>(Assert.IsType<ViewResult>(walletController.WalletRescan(walletId).Result).Model);
+                Assert.True(rescan.Ok);
+                Assert.True(rescan.IsFullySync);
+                Assert.True(rescan.IsSupportedByCurrency);
+                Assert.True(rescan.IsServerAdmin);
+
+                rescan.GapLimit = 100;
+
+                // Sending a coin
+                var txId = tester.ExplorerNode.SendToAddress(btcDerivationScheme.Derive(new KeyPath("0/90")).ScriptPubKey, Money.Coins(1.0m));
+                tester.ExplorerNode.Generate(1);
+                var transactions = Assert.IsType<ListTransactionsViewModel>(Assert.IsType<ViewResult>(walletController.WalletTransactions(walletId).Result).Model);
+                Assert.Empty(transactions.Transactions);
+
+                Assert.IsType<RedirectToActionResult>(walletController.WalletRescan(walletId, rescan).Result);
+
+                while(true)
+                {
+                    rescan = Assert.IsType<RescanWalletModel>(Assert.IsType<ViewResult>(walletController.WalletRescan(walletId).Result).Model);
+                    if(rescan.Progress == null && rescan.LastSuccess != null)
+                    {
+                        if (rescan.LastSuccess.Found == 0)
+                            continue;
+                        // Scan over
+                        break;
+                    }
+                    else
+                    {
+                        Assert.Null(rescan.TimeOfScan);
+                        Assert.NotNull(rescan.RemainingTime);
+                        Assert.NotNull(rescan.Progress);
+                        Thread.Sleep(100);
+                    }
+                }
+                Assert.Null(rescan.PreviousError);
+                Assert.NotNull(rescan.TimeOfScan);
+                Assert.Equal(1, rescan.LastSuccess.Found);
+                transactions = Assert.IsType<ListTransactionsViewModel>(Assert.IsType<ViewResult>(walletController.WalletTransactions(walletId).Result).Model);
+                var tx = Assert.Single(transactions.Transactions);
+                Assert.Equal(tx.Id, txId.ToString());
             }
         }
 

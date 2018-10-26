@@ -240,10 +240,8 @@ namespace BTCPayServer.Tests
                     {
                         case 1:
                             return 0.5m;
-                            break;
                         default:
                             return 1.01m;
-                            break;
                     }
                 };
 
@@ -281,13 +279,17 @@ namespace BTCPayServer.Tests
         {
         }
 
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         public override async Task<IEnumerable<CurrencyFull>> GetCurrenciesFull()
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             GetCurrenciesFullCallCount++;
             return GetCurrenciesFullResult;
         }
 
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         public override async Task<decimal> GetExchangeAmount(string fromCurrency,
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
             string toCurrency, decimal amount)
         {
             GetExchangeAmountCallCount++;

@@ -438,17 +438,17 @@ namespace BTCPayServer.Controllers
         }
 
         [Route("server/services/lnd-grpc/{cryptoCode}/{index}")]
-        public IActionResult LNDGRPCServices(string cryptoCode, int index, uint? nonce)
+        public IActionResult LndGrpcServices(string cryptoCode, int index, uint? nonce)
         {
             if (!_dashBoard.IsFullySynched(cryptoCode, out var unusud))
             {
                 StatusMessage = $"Error: {cryptoCode} is not fully synched";
                 return RedirectToAction(nameof(Services));
             }
-            var external = GetExternalLNDConnectionString(cryptoCode, index);
+            var external = GetExternalLndConnectionString(cryptoCode, index);
             if (external == null)
                 return NotFound();
-            var model = new LNDGRPCServicesViewModel();
+            var model = new LndGrpcServicesViewModel();
 
             model.Host = $"{external.BaseUri.DnsSafeHost}:{external.BaseUri.Port}";
             model.SSL = external.BaseUri.Scheme == "https";
@@ -492,9 +492,9 @@ namespace BTCPayServer.Controllers
 
         [Route("server/services/lnd-grpc/{cryptoCode}/{index}")]
         [HttpPost]
-        public IActionResult LNDGRPCServicesPOST(string cryptoCode, int index)
+        public IActionResult LndGrpcServicesPost(string cryptoCode, int index)
         {
-            var external = GetExternalLNDConnectionString(cryptoCode, index);
+            var external = GetExternalLndConnectionString(cryptoCode, index);
             if (external == null)
                 return NotFound();
             LightningConfigurations confs = new LightningConfigurations();
@@ -512,10 +512,10 @@ namespace BTCPayServer.Controllers
             var nonce = RandomUtils.GetUInt32();
             var configKey = GetConfigKey("lnd-grpc", cryptoCode, index, nonce);
             _LnConfigProvider.KeepConfig(configKey, confs);
-            return RedirectToAction(nameof(LNDGRPCServices), new { cryptoCode = cryptoCode, nonce = nonce });
+            return RedirectToAction(nameof(LndGrpcServices), new { cryptoCode = cryptoCode, nonce = nonce });
         }
 
-        private LightningConnectionString GetExternalLNDConnectionString(string cryptoCode, int index)
+        private LightningConnectionString GetExternalLndConnectionString(string cryptoCode, int index)
         {
             var connectionString = _Options.ExternalServicesByCryptoCode.GetServices<ExternalLnd>(cryptoCode).Skip(index).Select(c => c.ConnectionString).FirstOrDefault();
             if (connectionString == null)
@@ -530,7 +530,7 @@ namespace BTCPayServer.Controllers
                 }
                 catch
                 {
-                    Logging.Logs.Configuration.LogWarning($"{cryptoCode}: The macaroon file path of the external LND grpc config was not found ({connectionString.MacaroonFilePath})");
+                    Logs.Configuration.LogWarning($"{cryptoCode}: The macaroon file path of the external LND grpc config was not found ({connectionString.MacaroonFilePath})");
                     return null;
                 }
             }
@@ -545,7 +545,7 @@ namespace BTCPayServer.Controllers
                 StatusMessage = $"Error: {cryptoCode} is not fully synched";
                 return RedirectToAction(nameof(Services));
             }
-            var external = GetExternalLNDConnectionString(cryptoCode, index);
+            var external = GetExternalLndConnectionString(cryptoCode, index);
             if (external == null)
                 return NotFound();
             var model = new LndRestServicesViewModel();

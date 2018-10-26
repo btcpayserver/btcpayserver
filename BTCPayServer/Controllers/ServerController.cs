@@ -550,7 +550,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             var model = new LndRestServicesViewModel();
 
-            model.Url = external.BaseUri.ToString();
+            model.BaseApiUrl = external.BaseUri.ToString();
             if (external.CertificateThumbprint != null)
                 model.CertificateThumbprint = Encoders.Hex.EncodeData(external.CertificateThumbprint);
             if (external.Macaroon != null)

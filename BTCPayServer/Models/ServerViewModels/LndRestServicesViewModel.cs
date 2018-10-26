@@ -7,7 +7,7 @@ namespace BTCPayServer.Models.ServerViewModels
 {
     public class LndRestServicesViewModel
     {
-        public string Url { get; set; }
+        public string BaseApiUrl { get; set; }
         public string Macaroon { get; set; }
         public string CertificateThumbprint { get; set; }
     }

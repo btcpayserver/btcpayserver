@@ -66,6 +66,7 @@ services:
 
   nbxplorer:
     image: nicolasdorier/nbxplorer:1.1.0.3
+    restart: unless-stopped
     ports:
       - "32838:32838"
     expose: 
@@ -114,6 +115,7 @@ services:
 
   customer_lightningd:
     image: nicolasdorier/clightning:v0.6.1-1-dev
+    restart: unless-stopped
     environment: 
       EXPOSE_TCP: "true"
       LIGHTNINGD_OPT: |
@@ -138,6 +140,7 @@ services:
 
   lightning-charged:
     image: shesek/lightning-charge:0.4.3
+    restart: unless-stopped
     environment:
       NETWORK: regtest
       API_TOKEN: foiewnccewuify
@@ -204,6 +207,7 @@ services:
 
   merchant_lnd:
     image: btcpayserver/lnd:0.5-beta
+    restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
       LND_ENVIRONMENT: "regtest"
@@ -230,6 +234,7 @@ services:
 
   customer_lnd:
     image: btcpayserver/lnd:0.5-beta
+    restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
       LND_ENVIRONMENT: "regtest"

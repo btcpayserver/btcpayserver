@@ -14,7 +14,9 @@ services:
       TESTS_LTCRPCCONNECTION: server=http://litecoind:43782;ceiwHEbqWI83:DwubwWsoo3
       TESTS_BTCNBXPLORERURL: http://nbxplorer:32838/
       TESTS_LTCNBXPLORERURL: http://nbxplorer:32838/
+      TESTS_DB: "Postgres"
       TESTS_POSTGRES: User ID=postgres;Host=postgres;Port=5432;Database=btcpayserver
+      TESTS_MYSQL: User ID=root;Host=mysql;Port=3306;Database=btcpayserver
       TESTS_PORT: 80
       TESTS_HOSTNAME: tests
       TEST_MERCHANTLIGHTNINGD: "type=clightning;server=/etc/merchant_lightningd_datadir/lightning-rpc"
@@ -43,6 +45,7 @@ services:
     links:
       - nbxplorer
       - postgres
+      - mysql
       - customer_lightningd
       - merchant_lightningd
       - lightning-charged
@@ -59,6 +62,7 @@ services:
     links:
       - nbxplorer
       - postgres
+      - mysql
       - customer_lnd
       - merchant_lnd
 
@@ -204,6 +208,15 @@ services:
       - "39372:5432"
     expose:
       - "5432"
+      
+  mysql:
+    image:  mysql:8.0.12
+    expose:
+      - "3306"
+    ports:
+      - "33036:3306"
+    environment:
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
 
   merchant_lnd:
     image: btcpayserver/lnd:0.5-beta

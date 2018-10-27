@@ -125,6 +125,7 @@ namespace BTCPayServer.Configuration
             Logs.Configuration.LogInformation("Supported chains: " + String.Join(',', supportedChains.ToArray()));
 
             PostgresConnectionString = conf.GetOrDefault<string>("postgres", null);
+            MySQLConnectionString = conf.GetOrDefault<string>("mysql", null);
             BundleJsCss = conf.GetOrDefault<bool>("bundlejscss", true);
             ExternalUrl = conf.GetOrDefault<Uri>("externalurl", null);
 
@@ -227,6 +228,11 @@ namespace BTCPayServer.Configuration
 
         public BTCPayNetworkProvider NetworkProvider { get; set; }
         public string PostgresConnectionString
+        {
+            get;
+            set;
+        }
+        public string MySQLConnectionString
         {
             get;
             set;

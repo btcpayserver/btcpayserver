@@ -15,6 +15,7 @@ using Renci.SshNet;
 using NBitcoin.DataEncoders;
 using BTCPayServer.SSH;
 using BTCPayServer.Lightning;
+using BTCPayServer.Configuration.External;
 
 namespace BTCPayServer.Configuration
 {
@@ -78,6 +79,7 @@ namespace BTCPayServer.Configuration
                 setting.ExplorerUri = conf.GetOrDefault<Uri>($"{net.CryptoCode}.explorer.url", net.NBXplorerNetwork.DefaultSettings.DefaultUrl);
                 setting.CookieFile = conf.GetOrDefault<string>($"{net.CryptoCode}.explorer.cookiefile", net.NBXplorerNetwork.DefaultSettings.DefaultCookieFile);
                 NBXplorerConnectionSettings.Add(setting);
+
                 {
                     var lightning = conf.GetOrDefault<string>($"{net.CryptoCode}.lightning", string.Empty);
                     if (lightning.Length != 0)
@@ -99,20 +101,25 @@ namespace BTCPayServer.Configuration
                     }
                 }
 
+                void externalLnd<T>(string code, string lndType)
                 {
-                    var lightning = conf.GetOrDefault<string>($"{net.CryptoCode}.external.lnd.grpc", string.Empty);
+                    var lightning = conf.GetOrDefault<string>(code, string.Empty);
                     if (lightning.Length != 0)
                     {
                         if (!LightningConnectionString.TryParse(lightning, false, out var connectionString, out var error))
                         {
-                            throw new ConfigException($"Invalid setting {net.CryptoCode}.external.lnd.grpc, " + Environment.NewLine +
-                                $"lnd server: 'type=lnd-grpc;server=https://lnd.example.com;macaroon=abf239...;certthumbprint=2abdf302...'" + Environment.NewLine +
-                                $"lnd server: 'type=lnd-grpc;server=https://lnd.example.com;macaroonfilepath=/root/.lnd/admin.macaroon;certthumbprint=2abdf302...'" + Environment.NewLine +
+                            throw new ConfigException($"Invalid setting {code}, " + Environment.NewLine +
+                                $"lnd server: 'type={lndType};server=https://lnd.example.com;macaroon=abf239...;certthumbprint=2abdf302...'" + Environment.NewLine +
+                                $"lnd server: 'type={lndType};server=https://lnd.example.com;macaroonfilepath=/root/.lnd/admin.macaroon;certthumbprint=2abdf302...'" + Environment.NewLine +
                                 error);
                         }
-                        ExternalServicesByCryptoCode.Add(net.CryptoCode, new ExternalLNDGRPC(connectionString));
+                        var instanceType = typeof(T);
+                        ExternalServicesByCryptoCode.Add(net.CryptoCode, (ExternalService)Activator.CreateInstance(instanceType, connectionString));
                     }
-                }
+                };
+
+                externalLnd<ExternalLndGrpc>($"{net.CryptoCode}.external.lnd.grpc", "lnd-grpc");
+                externalLnd<ExternalLndRest>($"{net.CryptoCode}.external.lnd.rest", "lnd-rest");
             }
 
             Logs.Configuration.LogInformation("Supported chains: " + String.Join(',', supportedChains.ToArray()));
@@ -127,12 +134,12 @@ namespace BTCPayServer.Configuration
                 int waitTime = 0;
                 while (!string.IsNullOrEmpty(sshSettings.KeyFile) && !File.Exists(sshSettings.KeyFile))
                 {
-                    if(waitTime++ < 5)
+                    if (waitTime++ < 5)
                         System.Threading.Thread.Sleep(1000);
                     else
                         throw new ConfigException($"sshkeyfile does not exist");
                 }
-                    
+
                 if (sshSettings.Port > ushort.MaxValue ||
                    sshSettings.Port < ushort.MinValue)
                     throw new ConfigException($"ssh port is invalid");
@@ -249,30 +256,5 @@ namespace BTCPayServer.Configuration
             builder.Path = RootPath;
             return builder.ToString();
         }
-    }
-
-    public class ExternalServices : MultiValueDictionary<string, ExternalService>
-    {
-        public IEnumerable<T> GetServices<T>(string cryptoCode) where T : ExternalService
-        {
-            if (!this.TryGetValue(cryptoCode.ToUpperInvariant(), out var services))
-                return Array.Empty<T>();
-            return services.OfType<T>();
-        }
-    }
-
-    public class ExternalService
-    {
-
-    }
-
-    public class ExternalLNDGRPC : ExternalService
-    {
-        public ExternalLNDGRPC(LightningConnectionString connectionString)
-        {
-            ConnectionString = connectionString;
-        }
-
-        public LightningConnectionString ConnectionString { get; set; }
     }
 }

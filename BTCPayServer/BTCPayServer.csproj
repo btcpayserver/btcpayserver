@@ -2,11 +2,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
-<<<<<<< HEAD
-		<Version>1.0.3.1</Version>
-=======
 		<Version>1.0.2.113</Version>
->>>>>>> parent of db614e7... Merge remote-tracking branch 'upstream/master' bump
     <NoWarn>NU1701,CA1816,CA1308,CA1810,CA2208</NoWarn>
   </PropertyGroup>
   <PropertyGroup>

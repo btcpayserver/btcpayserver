@@ -40,7 +40,13 @@ namespace BTCPayServer.Services.Invoices
         private CustomThreadPool _IndexerThread;
         public InvoiceRepository(ApplicationDbContextFactory contextFactory, string dbreezePath)
         {
-            _Engine = new DBreezeEngine(dbreezePath);
+            int retryCount = 0;
+            retry:
+            try
+            {
+                _Engine = new DBreezeEngine(dbreezePath);
+            }
+            catch when (retryCount++ < 5) { goto retry; }
             _IndexerThread = new CustomThreadPool(1, "Invoice Indexer");
             _ContextFactory = contextFactory;
         }

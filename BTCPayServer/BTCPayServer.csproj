@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
-		<Version>1.0.2.113</Version>
+		<Version>1.0.3.0</Version>
     <NoWarn>NU1701,CA1816,CA1308,CA1810,CA2208</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
@@ -50,15 +50,21 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.1.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.2" />
     <PackageReference Include="Microsoft.NetCore.Analyzers" Version="2.6.0" />
+<<<<<<< HEAD
     <PackageReference Include="NBitcoin" Version="4.1.1.48" />
     <PackageReference Include="NBitpayClient" Version="1.0.0.30" />
+=======
+    <PackageReference Include="NBitcoin" Version="4.1.1.66" />
+    <PackageReference Include="NBitpayClient" Version="1.0.0.30" />	  
+>>>>>>> upstream/master
     <PackageReference Include="DBreeze" Version="1.87.0" />
-    <PackageReference Include="NBXplorer.Client" Version="1.0.3" />
+    <PackageReference Include="NBXplorer.Client" Version="1.0.3.3" />
     <PackageReference Include="NicolasDorier.CommandLine" Version="1.0.0.2" />
     <PackageReference Include="NicolasDorier.CommandLine.Configuration" Version="1.0.0.3" />
     <PackageReference Include="NicolasDorier.RateLimits" Version="1.0.0.3" />
     <PackageReference Include="NicolasDorier.StandardConfiguration" Version="1.0.0.18" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.1.0" />
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="2.1.2" />
     <PackageReference Include="Serilog" Version="2.7.1" />
     <PackageReference Include="Serilog.AspNetCore" Version="2.1.1" />
     <PackageReference Include="Serilog.Sinks.File" Version="4.0.0" />
@@ -133,6 +139,9 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>
+    <Content Update="Views\Server\LndRestServices.cshtml">
+      <Pack>$(IncludeRazorContentInPack)</Pack>
+    </Content>
     <Content Update="Views\Server\SSHService.cshtml">
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>
@@ -145,7 +154,7 @@
 	  <Content Update="Views\Public\PayButtonHandle.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
-	  <Content Update="Views\Server\LNDGRPCServices.cshtml">
+	  <Content Update="Views\Server\LndGrpcServices.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
 	  <Content Update="Views\Server\Maintenance.cshtml">
@@ -155,6 +164,9 @@
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
 	  <Content Update="Views\Wallets\ListWallets.cshtml">
+	    <Pack>$(IncludeRazorContentInPack)</Pack>
+	  </Content>
+	  <Content Update="Views\Wallets\WalletRescan.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
 	  <Content Update="Views\Wallets\WalletTransactions.cshtml">

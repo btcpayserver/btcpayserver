@@ -88,8 +88,6 @@ namespace BTCPayServer.Controllers
                         vm.StatusMessage = $"Error: {ex.Message}";
                         return View(vm);
                     }
-
-                    break;
                 default:
                     return View(vm);
             }

@@ -24,7 +24,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBXplorer.DerivationStrategy;
-using NBXplorer.Models;
 using Newtonsoft.Json;
 using static BTCPayServer.Controllers.StoresController;
 
@@ -183,74 +182,6 @@ namespace BTCPayServer.Controllers
                 catch (Exception ex) { model.RateError = ex.Message; }
             }
             return View(model);
-        }
-
-        [HttpGet]
-        [Route("{walletId}/rescan")]
-        public async Task<IActionResult> WalletRescan(
-            [ModelBinder(typeof(WalletIdModelBinder))]
-            WalletId walletId)
-        {
-            if (walletId?.StoreId == null)
-                return NotFound();
-            var store = await Repository.FindStore(walletId.StoreId, GetUserId());
-            DerivationStrategy paymentMethod = GetPaymentMethod(walletId, store);
-            if (paymentMethod == null)
-                return NotFound();
-
-            var vm = new RescanWalletModel();
-            vm.IsFullySync = _dashboard.IsFullySynched();
-            vm.IsServerAdmin = User.Claims.Any(c => c.Type == Policies.CanModifyServerSettings.Key && c.Value == "true");
-            vm.IsSupportedByCurrency = _dashboard.Get(walletId.CryptoCode)?.Status?.BitcoinStatus?.Capabilities?.CanScanTxoutSet == true;
-            var explorer = ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode);
-            var scanProgress = await explorer.GetScanUTXOSetInformationAsync(paymentMethod.DerivationStrategyBase);
-            if(scanProgress != null)
-            {
-                vm.PreviousError = scanProgress.Error;
-                if (scanProgress.Status == ScanUTXOStatus.Queued || scanProgress.Status == ScanUTXOStatus.Pending)
-                {
-                    if (scanProgress.Progress == null)
-                    {
-                        vm.Progress = 0;
-                    }
-                    else
-                    {
-                        vm.Progress = scanProgress.Progress.OverallProgress;
-                        vm.RemainingTime = TimeSpan.FromSeconds(scanProgress.Progress.RemainingSeconds).PrettyPrint();
-                    }
-                }
-                if (scanProgress.Status == ScanUTXOStatus.Complete)
-                {
-                    vm.LastSuccess = scanProgress.Progress;
-                    vm.TimeOfScan = (scanProgress.Progress.CompletedAt.Value - scanProgress.Progress.StartedAt).PrettyPrint();
-                }
-            }
-            return View(vm);
-        }
-
-        [HttpPost]
-        [Route("{walletId}/rescan")]
-        [Authorize(Policy = Policies.CanModifyServerSettings.Key)]
-        public async Task<IActionResult> WalletRescan(
-            [ModelBinder(typeof(WalletIdModelBinder))]
-            WalletId walletId, RescanWalletModel vm)
-        {
-            if (walletId?.StoreId == null)
-                return NotFound();
-            var store = await Repository.FindStore(walletId.StoreId, GetUserId());
-            DerivationStrategy paymentMethod = GetPaymentMethod(walletId, store);
-            if (paymentMethod == null)
-                return NotFound();
-            var explorer = ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode);
-            try
-            {
-                await explorer.ScanUTXOSetAsync(paymentMethod.DerivationStrategyBase, vm.BatchSize, vm.GapLimit, vm.StartingIndex);
-            }
-            catch (NBXplorerException ex) when (ex.Error.Code == "scanutxoset-in-progress")
-            {
-
-            }
-            return RedirectToAction();
         }
 
         private string GetCurrencyCode(string defaultLang)
@@ -436,8 +367,9 @@ namespace BTCPayServer.Controllers
                             throw new HardwareWalletException($"This store is not configured to use this ledger");
                         }
 
-                        TransactionBuilder builder = network.NBitcoinNetwork.CreateTransactionBuilder();
+                        TransactionBuilder builder = new TransactionBuilder();
                         builder.StandardTransactionPolicy.MinRelayTxFee = summary.Status.BitcoinStatus.MinRelayTxFee;
+                        builder.SetConsensusFactory(network.NBitcoinNetwork);
                         builder.AddCoins(unspentCoins.Select(c => c.Coin).ToArray());
 
                         foreach (var element in send)
@@ -460,6 +392,7 @@ namespace BTCPayServer.Controllers
                             else
                                 builder.SendEstimatedFees(feeRateValue);
                         }
+                        builder.Shuffle();
                         var unsigned = builder.BuildTransaction(false);
 
                         var keypaths = new Dictionary<Script, KeyPath>();

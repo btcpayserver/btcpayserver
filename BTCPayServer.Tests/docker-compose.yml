@@ -14,9 +14,7 @@ services:
       TESTS_LTCRPCCONNECTION: server=http://litecoind:43782;ceiwHEbqWI83:DwubwWsoo3
       TESTS_BTCNBXPLORERURL: http://nbxplorer:32838/
       TESTS_LTCNBXPLORERURL: http://nbxplorer:32838/
-      TESTS_DB: "Postgres"
       TESTS_POSTGRES: User ID=postgres;Host=postgres;Port=5432;Database=btcpayserver
-      TESTS_MYSQL: User ID=root;Host=mysql;Port=3306;Database=btcpayserver
       TESTS_PORT: 80
       TESTS_HOSTNAME: tests
       TEST_MERCHANTLIGHTNINGD: "type=clightning;server=/etc/merchant_lightningd_datadir/lightning-rpc"
@@ -45,7 +43,6 @@ services:
     links:
       - nbxplorer
       - postgres
-      - mysql
       - customer_lightningd
       - merchant_lightningd
       - lightning-charged
@@ -62,15 +59,13 @@ services:
     links:
       - nbxplorer
       - postgres
-      - mysql
       - customer_lnd
       - merchant_lnd
 
 
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:1.1.0.4
-    restart: unless-stopped
+    image: nicolasdorier/nbxplorer:1.0.3.3
     ports:
       - "32838:32838"
     expose: 
@@ -119,7 +114,6 @@ services:
 
   customer_lightningd:
     image: nicolasdorier/clightning:v0.6.1-1-dev
-    restart: unless-stopped
     environment: 
       EXPOSE_TCP: "true"
       LIGHTNINGD_OPT: |
@@ -144,7 +138,6 @@ services:
 
   lightning-charged:
     image: shesek/lightning-charge:0.4.3
-    restart: unless-stopped
     environment:
       NETWORK: regtest
       API_TOKEN: foiewnccewuify
@@ -208,19 +201,9 @@ services:
       - "39372:5432"
     expose:
       - "5432"
-      
-  mysql:
-    image:  mysql:8.0.12
-    expose:
-      - "3306"
-    ports:
-      - "33036:3306"
-    environment:
-      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
 
   merchant_lnd:
     image: btcpayserver/lnd:0.5-beta
-    restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
       LND_ENVIRONMENT: "regtest"
@@ -247,7 +230,6 @@ services:
 
   customer_lnd:
     image: btcpayserver/lnd:0.5-beta
-    restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
       LND_ENVIRONMENT: "regtest"

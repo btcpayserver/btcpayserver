@@ -114,7 +114,7 @@ namespace BTCPayServer.Controllers
                     }
                     if(!System.IO.File.Exists(connectionString.MacaroonFilePath))
                     {
-                        ModelState.AddModelError(nameof(vm.ConnectionString), "The macaroonfilepath file does not exist");
+                        ModelState.AddModelError(nameof(vm.ConnectionString), "The macaroonfilepath file does exist");
                         return View(vm);
                     }
                     if(!System.IO.Path.IsPathRooted(connectionString.MacaroonFilePath))

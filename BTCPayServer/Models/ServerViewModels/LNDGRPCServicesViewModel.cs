@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace BTCPayServer.Models.ServerViewModels
 {
-    public class LndGrpcServicesViewModel
+    public class LNDGRPCServicesViewModel
     {
         public string Host { get; set; }
         public bool SSL { get; set; }

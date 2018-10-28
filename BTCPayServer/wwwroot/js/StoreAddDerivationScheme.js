@@ -1,14 +1,67 @@
 ﻿$(function () {
+
+
+    var classicDerivationInputElement = $("#DerivationScheme");
+    var smartDerivationInputElement = $("#ExtPubKey");
+    var smartDerivationTypeElement = $("#AddressType");
+    var smartDerivationInputContainer = $("#smart-derivation-input");
+    var classDerivationInputContainer = $(".classic-derivation-input");
+    var derivationInputMethodElement = $("#derivation-input-method");
+
+
+    function toggleClassicDerivationInput() {
+        classDerivationInputContainer.toggle();
+        smartDerivationInputContainer.toggle();
+    }
+
+    function setClassicDerivationInput() {
+        var newVal = smartDerivationInputElement.val();
+        var typeSuffix = smartDerivationTypeElement.find(":selected").data("suffix");
+        newVal += typeSuffix;
+        classicDerivationInputElement.val(newVal);
+    }
+
+    classicDerivationInputElement.on("input", function () {
+        var newValue = $(this).val();
+        var split = newValue.split("-");
+        smartDerivationInputElement.val(split[0]);
+        var suffix = "";
+        var typeValue = "";
+        if (split.length > 1) {
+            suffix = "-" + split[1];
+            typeValue = smartDerivationTypeElement.find("[data-suffix='" + suffix + "']").attr("value");
+        }
+
+        if (!typeValue) {
+            smartDerivationTypeElement.find("[data-suffix]").each(function (i, x) {
+                x = $(x);
+                if (!x.data("data-suffix")) {
+                    typeValue = x.val();
+                }
+            });
+        }
+        smartDerivationTypeElement.val(typeValue);
+    });
+
+    smartDerivationInputElement.on("input", setClassicDerivationInput);
+    smartDerivationTypeElement.on("input", setClassicDerivationInput);
+
+    derivationInputMethodElement.on("click", function (event) {
+        event.preventDefault();
+        toggleClassicDerivationInput();
+    });
+
     var ledgerDetected = false;
     var bridge = new ledgerwebsocket.LedgerWebSocketBridge(srvModel);
 
     var cryptoSelector = $("#CryptoCurrency");
+
     function GetSelectedCryptoCode() {
         return cryptoSelector.val();
     }
 
     function WriteAlert(type, message) {
-        
+
     }
 
     function Write(prefix, type, message) {
@@ -29,7 +82,9 @@
                 $("#DerivationScheme").val(result.extPubKey);
                 $("#DerivationSchemeFormat").val("BTCPay");
             })
-            .catch(function (reason) { Write('check', 'error', reason); });
+            .catch(function (reason) {
+                Write('check', 'error', reason);
+            });
         return false;
     });
 
@@ -38,7 +93,9 @@
             return false;
         var cryptoCode = GetSelectedCryptoCode();
         bridge.sendCommand("getxpub", "cryptoCode=" + cryptoCode)
-            .catch(function (reason) { Write('check', 'error', reason); })
+            .catch(function (reason) {
+                Write('check', 'error', reason);
+            })
             .then(function (result) {
                 if (!result)
                     return;

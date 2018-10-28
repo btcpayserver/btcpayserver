@@ -410,6 +410,7 @@ namespace BTCPayServer.Tests
                 Assert.IsType<ViewResult>(storeController.UpdateStore());
                 Assert.IsType<ViewResult>(storeController.AddLightningNode(user.StoreId, "BTC"));
 
+                tester.PayTester.WaitFullNodeAvailable("BTC");
                 var testResult = storeController.AddLightningNode(user.StoreId, new LightningNodeViewModel()
                 {
                     ConnectionString = "type=charge;server=" + tester.MerchantCharge.Client.Uri.AbsoluteUri,

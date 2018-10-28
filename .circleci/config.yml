@@ -21,6 +21,7 @@ jobs:
             dotnet test --filter Fast=Fast
             docker-compose up -d dev
             dotnet test --filter Reliable=Reliable
+            dotnet test --filter Unreliable=Unreliable
 workflows:
   version: 2
   build_and_test:

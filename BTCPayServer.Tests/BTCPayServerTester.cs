@@ -1,4 +1,5 @@
 ﻿using BTCPayServer.Configuration;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Hosting;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
@@ -254,6 +255,19 @@ namespace BTCPayServer.Tests
         {
             if (_Host != null)
                 _Host.Dispose();
+        }
+
+        public void WaitFullNodeAvailable(string cryptoCode)
+        {
+            using (var cts = new CancellationTokenSource(5000))
+            {
+                var dashboard = GetService<NBXplorerDashboard>();
+                while (!dashboard.IsFullySynched(cryptoCode, out var unused))
+                {
+                    Thread.Sleep(10);
+                    cts.Token.ThrowIfCancellationRequested();
+                }
+            }
         }
     }
 }

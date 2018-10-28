@@ -69,14 +69,12 @@
                     @* Not working because of nsSeparator: false, keySeparator: false,
                             {{$t("nested.lang")}} >>
                         *@
-                    <select class="cmblang reverse invisible" onchange="changeLanguage($(this).val())">
-                        @foreach (var lang in langService.GetLanguages())
-                        {
-                            <option value="@lang.Code" @(lang.Code == Model.DefaultLang? "selected": "")>@lang.DisplayName</option>
-                        }
-                    </select>
                     
-                    @Model.DefaultLang
+                    <select asp-for="DefaultLang"  
+                            class="cmblang reverse invisible"
+                            onchange="changeLanguage($(this).val())"
+                            asp-items="@langService.GetLanguages().Select((language) => new SelectListItem(language.DisplayName,language.Code, language.Code == Model.DefaultLang))"></select>
+                    
                     <script>
                         $(function() {
 

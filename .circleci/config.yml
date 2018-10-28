@@ -5,7 +5,6 @@ jobs:
       docker_layer_caching: true
     steps: 
       - checkout
-      - run: docker build .
   test:
     machine: true
     steps:
@@ -20,6 +19,8 @@ jobs:
             sudo apt-get install dotnet-sdk-2.1
             cd BTCPayServer.Tests
             dotnet test --filter Fast=Fast
+            docker-compose up -d
+            dotnet test --filter Reliable=Reliable
 workflows:
   version: 2
   build_and_test:

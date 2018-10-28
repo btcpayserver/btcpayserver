@@ -56,6 +56,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Fast", "Fast")]
         public void CanHandleUriValidation()
         {
             var attribute = new UriAttribute();
@@ -77,6 +78,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Fast", "Fast")]
         public void CanCalculateCryptoDue2()
         {
             var dummy = new Key().PubKey.GetAddress(Network.RegTest).ToString();
@@ -134,6 +136,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Fast", "Fast")]
         public void CanCalculateCryptoDue()
         {
             var entity = new InvoiceEntity();
@@ -258,6 +261,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Reliable", "Reliable")]
         public void CanAcceptInvoiceWithTolerance()
         {
             var entity = new InvoiceEntity();
@@ -285,6 +289,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Reliable", "Reliable")]
         public void CanAcceptInvoiceWithTolerance2()
         {
             using (var tester = ServerTester.Create())
@@ -325,6 +330,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Fast", "Fast")]
         public void RoundupCurrenciesCorrectly()
         {
             foreach (var test in new[]
@@ -341,6 +347,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Reliable", "Reliable")]
         public void CanPayUsingBIP70()
         {
             using (var tester = ServerTester.Create())
@@ -391,6 +398,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Unreliable", "Unreliable")]
         public void CanSetLightningServer()
         {
             using (var tester = ServerTester.Create())
@@ -427,18 +435,21 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Unreliable", "Unreliable")]
         public async Task CanSendLightningPaymentCLightning()
         {
             await ProcessLightningPayment(LightningConnectionType.CLightning);
         }
 
         [Fact]
+        [Trait("Unreliable", "Unreliable")]
         public async Task CanSendLightningPaymentCharge()
         {
             await ProcessLightningPayment(LightningConnectionType.Charge);
         }
 
         [Fact]
+        [Trait("Unreliable", "Unreliable")]
         public async Task CanSendLightningPaymentLnd()
         {
             await ProcessLightningPayment(LightningConnectionType.LndREST);
@@ -491,6 +502,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Reliable", "Reliable")]
         public void CanUseServerInitiatedPairingCode()
         {
             using (var tester = ServerTester.Create())
@@ -516,6 +528,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Reliable", "Reliable")]
         public void CanSendIPN()
         {
             using (var callbackServer = new CustomServer())
@@ -552,6 +565,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Reliable", "Reliable")]
         public void CantPairTwiceWithSamePubkey()
         {
             using (var tester = ServerTester.Create())
@@ -573,6 +587,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Reliable", "Reliable")]
         public void CanRescanWallet()
         {
             using (var tester = ServerTester.Create())
@@ -639,6 +654,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Reliable", "Reliable")]
         public void CanListInvoices()
         {
             using (var tester = ServerTester.Create())
@@ -680,6 +696,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Reliable", "Reliable")]
         public void CanGetRates()
         {
             using (var tester = ServerTester.Create())
@@ -727,6 +744,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Reliable", "Reliable")]
         public void CanRBFPayment()
         {
             using (var tester = ServerTester.Create())
@@ -783,6 +801,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Fast", "Fast")]
         public void CanParseFilter()
         {
             var filter = "storeid:abc status:abed blabhbalh ";
@@ -804,6 +823,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Fast", "Fast")]
         public void CanParseFingerprint()
         {
             Assert.True(SSH.SSHFingerprint.TryParse("4e343c6fc6cfbf9339c02d06a151e1dd", out var unused));
@@ -820,6 +840,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Reliable", "Reliable")]
         public void TestAccessBitpayAPI()
         {
             using (var tester = ServerTester.Create())
@@ -886,6 +907,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Reliable", "Reliable")]
         public void CanUseExchangeSpecificRate()
         {
             using (var tester = ServerTester.Create())
@@ -928,6 +950,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Reliable", "Reliable")]
         public void CanTweakRate()
         {
             using (var tester = ServerTester.Create())
@@ -972,6 +995,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Reliable", "Reliable")]
         public void CanHaveLTCOnlyStore()
         {
             using (var tester = ServerTester.Create())
@@ -1036,6 +1060,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Reliable", "Reliable")]
         public void CanModifyRates()
         {
             using (var tester = ServerTester.Create())
@@ -1096,6 +1121,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Reliable", "Reliable")]
         public void CanPayWithTwoCurrencies()
         {
             using (var tester = ServerTester.Create())
@@ -1207,6 +1233,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Fast", "Fast")]
         public void CanParseCurrencyValue()
         {
             Assert.True(CurrencyValue.TryParse("1.50USD", out var result));
@@ -1227,6 +1254,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Fast", "Fast")]
         public void CanParseDerivationScheme()
         {
             var parser = new DerivationSchemeParser(Network.TestNet);
@@ -1267,6 +1295,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Reliable", "Reliable")]
         public void CanDisablePaymentMethods()
         {
             using (var tester = ServerTester.Create())
@@ -1325,6 +1354,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Unreliable", "Unreliable")]
         public void CanSetPaymentMethodLimits()
         {
             using (var tester = ServerTester.Create())
@@ -1368,6 +1398,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Reliable", "Reliable")]
         public void CanUsePoSApp()
         {
             using (var tester = ServerTester.Create())
@@ -1412,6 +1443,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Reliable", "Reliable")]
         public void CanCreateAndDeleteApps()
         {
             using (var tester = ServerTester.Create())
@@ -1448,6 +1480,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Reliable", "Reliable")]
         public void InvoiceFlowThroughDifferentStatesCorrectly()
         {
             using (var tester = ServerTester.Create())
@@ -1604,6 +1637,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Reliable", "Reliable")]
         public void CheckQuadrigacxRateProvider()
         {
             var quadri = new QuadrigacxRateProvider();
@@ -1617,6 +1651,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Reliable", "Reliable")]
         public void CanQueryDirectProviders()
         {
             var factory = CreateBTCPayRateFactory();
@@ -1647,6 +1682,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Reliable", "Reliable")]
         public void CanGetRateCryptoCurrenciesByDefault()
         {
             var provider = new BTCPayNetworkProvider(NetworkType.Mainnet);
@@ -1700,6 +1736,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Fast", "Fast")]
         public void CheckRatesProvider()
         {
             var spy = new SpyRateProvider();

@@ -28,6 +28,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Reliable", "Reliable")]
         public async void CanSetChangellyPaymentMethod()
         {
             using (var tester = ServerTester.Create())
@@ -68,6 +69,7 @@ namespace BTCPayServer.Tests
 
 
         [Fact]
+        [Trait("Reliable", "Reliable")]
         public async void CanToggleChangellyPaymentMethod()
         {
             using (var tester = ServerTester.Create())
@@ -105,6 +107,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Reliable", "Reliable")]
         public async void CannotUseChangellyApiWithoutChangellyPaymentMethodSet()
         {
             using (var tester = ServerTester.Create())
@@ -160,6 +163,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Reliable", "Reliable")]
         public async void CanGetCurrencyListFromChangelly()
         {
             using (var tester = ServerTester.Create())
@@ -192,6 +196,7 @@ namespace BTCPayServer.Tests
 
 
         [Fact]
+        [Trait("Reliable", "Reliable")]
         public async void CanCalculateToAmountForChangelly()
         {
             using (var tester = ServerTester.Create())

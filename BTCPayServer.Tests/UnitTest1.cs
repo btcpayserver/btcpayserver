@@ -399,18 +399,18 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Unreliable", "Unreliable")]
-        public void CanSetLightningServer()
+        public async Task CanSetLightningServer()
         {
             using (var tester = ServerTester.Create())
             {
                 tester.Start();
+                await tester.EnsureChannelsSetup();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 var storeController = user.GetController<StoresController>();
                 Assert.IsType<ViewResult>(storeController.UpdateStore());
                 Assert.IsType<ViewResult>(storeController.AddLightningNode(user.StoreId, "BTC"));
 
-                tester.PayTester.WaitFullNodeAvailable("BTC");
                 var testResult = storeController.AddLightningNode(user.StoreId, new LightningNodeViewModel()
                 {
                     ConnectionString = "type=charge;server=" + tester.MerchantCharge.Client.Uri.AbsoluteUri,
@@ -464,12 +464,11 @@ namespace BTCPayServer.Tests
             using (var tester = ServerTester.Create())
             {
                 tester.Start();
+                await tester.EnsureChannelsSetup();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterLightningNode("BTC", type);
                 user.RegisterDerivationScheme("BTC");
-
-                await tester.EnsureConnectedToDestinations();
 
                 await CanSendLightningPaymentCore(tester, user);
 
@@ -1356,11 +1355,12 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Unreliable", "Unreliable")]
-        public void CanSetPaymentMethodLimits()
+        public async Task CanSetPaymentMethodLimits()
         {
             using (var tester = ServerTester.Create())
             {
                 tester.Start();
+                await tester.EnsureChannelsSetup();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");

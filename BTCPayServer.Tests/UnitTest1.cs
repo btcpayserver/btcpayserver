@@ -481,10 +481,6 @@ namespace BTCPayServer.Tests
 
         async Task CanSendLightningPaymentCore(ServerTester tester, TestAccount user)
         {
-            // TODO: If this parameter is less than 1 second we start having concurrency problems
-            await Task.Delay(TimeSpan.FromMilliseconds(1000));
-            //
-
             var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice()
             {
                 Price = 0.01m,
@@ -493,6 +489,7 @@ namespace BTCPayServer.Tests
                 OrderId = "orderId",
                 ItemDesc = "Some description"
             });
+            await Task.Delay(TimeSpan.FromMilliseconds(1000)); // Give time to listen the new invoices
             await tester.SendLightningPaymentAsync(invoice);
             await EventuallyAsync(async () =>
             {

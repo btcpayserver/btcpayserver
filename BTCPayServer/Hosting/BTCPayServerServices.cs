@@ -43,6 +43,7 @@ using BTCPayServer.Security;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using NBXplorer.DerivationStrategy;
 using NicolasDorier.RateLimits;
+using Npgsql;
 
 namespace BTCPayServer.Hosting
 {
@@ -200,7 +201,7 @@ namespace BTCPayServer.Hosting
 
         static void Retry(Action act)
         {
-            CancellationTokenSource cts = new CancellationTokenSource(10000);
+            CancellationTokenSource cts = new CancellationTokenSource(1000);
             while (true)
             {
                 try
@@ -208,7 +209,9 @@ namespace BTCPayServer.Hosting
                     act();
                     return;
                 }
-                catch when(!cts.IsCancellationRequested)
+                // Starting up
+                catch (PostgresException ex) when (ex.SqlState == "57P03") { Thread.Sleep(1000); }
+                catch when (!cts.IsCancellationRequested)
                 {
                     Thread.Sleep(100);
                 }

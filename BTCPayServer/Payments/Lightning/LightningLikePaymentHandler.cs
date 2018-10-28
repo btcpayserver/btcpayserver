@@ -90,10 +90,10 @@ namespace BTCPayServer.Payments.Lightning
                     throw new PaymentMethodUnavailableException($"No lightning node public address has been configured");
                 }
 
-                var blocksGap = Math.Abs(info.BlockHeight - summary.Status.ChainHeight);
+                var blocksGap = summary.Status.ChainHeight - info.BlockHeight;
                 if (blocksGap > 10)
                 {
-                    throw new PaymentMethodUnavailableException($"The lightning is not synched ({blocksGap} blocks)");
+                    throw new PaymentMethodUnavailableException($"The lightning node is not synched ({blocksGap} blocks left)");
                 }
 
                 return info.NodeInfo;

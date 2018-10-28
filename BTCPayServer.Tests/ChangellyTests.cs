@@ -28,6 +28,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Integration", "Integration")]
         public async void CanSetChangellyPaymentMethod()
         {
             using (var tester = ServerTester.Create())
@@ -68,6 +69,7 @@ namespace BTCPayServer.Tests
 
 
         [Fact]
+        [Trait("Integration", "Integration")]
         public async void CanToggleChangellyPaymentMethod()
         {
             using (var tester = ServerTester.Create())
@@ -83,6 +85,7 @@ namespace BTCPayServer.Tests
                     ApiKey = "key",
                     ApiUrl = "http://gozo.com",
                     ChangellyMerchantId = "aaa",
+                    Enabled = true
                 };
                 Assert.Equal("UpdateStore", Assert.IsType<RedirectToActionResult>(
                     await controller.UpdateChangellySettings(user.StoreId, updateModel, "save")).ActionName);
@@ -104,6 +107,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Integration", "Integration")]
         public async void CannotUseChangellyApiWithoutChangellyPaymentMethodSet()
         {
             using (var tester = ServerTester.Create())
@@ -120,10 +124,7 @@ namespace BTCPayServer.Tests
                     .IsType<BadRequestObjectResult>(await changellyController.GetCurrencyList(user.StoreId))
                     .Value);
 
-                var updateModel = new UpdateChangellySettingsViewModel
-                {
-                    Enabled = false
-                };
+                var updateModel = CreateDefaultChangellyParams(false);
                 var storesController = tester.PayTester.GetController<StoresController>(user.UserId, user.StoreId);
                 //set payment method but disabled
 
@@ -150,8 +151,19 @@ namespace BTCPayServer.Tests
             }
         }
 
+        UpdateChangellySettingsViewModel CreateDefaultChangellyParams(bool enabled)
+        {
+            return new UpdateChangellySettingsViewModel()
+            {
+                ApiKey = "6ed02cdf1b614d89a8c0ceb170eebb61",
+                ApiSecret = "8fbd66a2af5fd15a6b5f8ed0159c5842e32a18538521ffa145bd6c9e124d3483",
+                ChangellyMerchantId = "804298eb5753",
+                Enabled = enabled
+            };
+        }
 
         [Fact]
+        [Trait("Integration", "Integration")]
         public async void CanGetCurrencyListFromChangelly()
         {
             using (var tester = ServerTester.Create())
@@ -161,10 +173,7 @@ namespace BTCPayServer.Tests
                 user.GrantAccess();
 
                 //save changelly settings
-                var updateModel = new UpdateChangellySettingsViewModel()
-                {
-                    Enabled = true
-                };
+                var updateModel = CreateDefaultChangellyParams(true);
                 var storesController = tester.PayTester.GetController<StoresController>(user.UserId, user.StoreId);
 
                 //confirm saved
@@ -187,6 +196,7 @@ namespace BTCPayServer.Tests
 
 
         [Fact]
+        [Trait("Integration", "Integration")]
         public async void CanCalculateToAmountForChangelly()
         {
             using (var tester = ServerTester.Create())
@@ -195,10 +205,7 @@ namespace BTCPayServer.Tests
                 var user = tester.NewAccount();
                 user.GrantAccess();
 
-                var updateModel = new UpdateChangellySettingsViewModel()
-                {
-                    Enabled = true
-                };
+                var updateModel = CreateDefaultChangellyParams(true);
                 var storesController = tester.PayTester.GetController<StoresController>(user.UserId, user.StoreId);
 
                 Assert.Equal("UpdateStore", Assert.IsType<RedirectToActionResult>(

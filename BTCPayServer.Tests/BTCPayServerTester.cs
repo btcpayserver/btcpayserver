@@ -1,4 +1,5 @@
 ﻿using BTCPayServer.Configuration;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Hosting;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;

@@ -44,6 +44,7 @@ using BTCPayServer.Lightning;
 using BTCPayServer.Models.WalletViewModels;
 using System.Security.Claims;
 using BTCPayServer.Security;
+using NBXplorer.Models;
 
 namespace BTCPayServer.Tests
 {
@@ -760,6 +761,7 @@ namespace BTCPayServer.Tests
                 }, Facade.Merchant);
                 var payment1 = invoice.BtcDue + Money.Coins(0.0001m);
                 var payment2 = invoice.BtcDue;
+
                 var tx1 = new uint256(tester.ExplorerNode.SendCommand("sendtoaddress", new object[]
                 {
                     invoice.BitcoinAddress,
@@ -769,8 +771,10 @@ namespace BTCPayServer.Tests
                     false, //subtractfeefromamount
                     true, //replaceable
                 }).ResultString);
+                Logs.Tester.LogInformation($"Let's send a first payment of {payment1} for the {invoice.BtcDue} invoice ({tx1})");
                 var invoiceAddress = BitcoinAddress.Create(invoice.BitcoinAddress, user.SupportedNetwork.NBitcoinNetwork);
 
+                Logs.Tester.LogInformation($"The invoice should be paidOver");
                 Eventually(() =>
                 {
                     invoice = user.BitPay.GetInvoice(invoice.Id);
@@ -788,9 +792,17 @@ namespace BTCPayServer.Tests
                 var output = tx.Outputs.First(o => o.Value == payment1);
                 output.Value = payment2;
                 output.ScriptPubKey = invoiceAddress.ScriptPubKey;
-                var replaced = tester.ExplorerNode.SignRawTransaction(tx);
-                tester.ExplorerNode.SendRawTransaction(replaced);
-                var test = tester.ExplorerClient.GetUTXOs(user.DerivationScheme, null);
+
+                using(var cts = new CancellationTokenSource(10000))
+                using (var listener = tester.ExplorerClient.CreateNotificationSession())
+                {
+                    listener.ListenAllDerivationSchemes();
+                    var replaced = tester.ExplorerNode.SignRawTransaction(tx);
+                    var tx2 = tester.ExplorerNode.SendRawTransaction(replaced);
+                    Logs.Tester.LogInformation($"Let's RBF with a payment of {payment2} ({tx2}), waiting for NBXplorer to pick it up");
+                    Assert.Equal(tx2, ((NewTransactionEvent)listener.NextEvent(cts.Token)).TransactionData.TransactionHash);
+                }
+                Logs.Tester.LogInformation($"The invoice should now not be paidOver anymore");
                 Eventually(() =>
                 {
                     invoice = user.BitPay.GetInvoice(invoice.Id);

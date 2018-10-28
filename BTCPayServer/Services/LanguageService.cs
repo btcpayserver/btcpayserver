@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
@@ -25,9 +26,10 @@ namespace BTCPayServer.Services
     {
         private readonly Language[] _languages;
 
-        public LanguageService()
+        public LanguageService(IHostingEnvironment environment)
         {
-            var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "locales");
+            
+            var path = Path.Combine(environment.ContentRootPath, "wwwroot", "locales");
             var files = Directory.GetFiles(path, "*.json");
             var result = new List<Language>();
             foreach (var file in files)

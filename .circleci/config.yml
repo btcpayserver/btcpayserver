@@ -19,7 +19,7 @@ jobs:
             sudo apt-get install dotnet-sdk-2.1
             cd BTCPayServer.Tests
             dotnet test --filter Fast=Fast
-            docker-compose up -d
+            docker-compose up -d dev
             dotnet test --filter Reliable=Reliable
 workflows:
   version: 2

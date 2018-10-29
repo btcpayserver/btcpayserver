@@ -106,8 +106,6 @@ namespace BTCPayServer.Configuration
             builder.AppendLine("### Server settings ###");
             builder.AppendLine("#port=" + defaultSettings.DefaultPort);
             builder.AppendLine("#bind=127.0.0.1");
-            builder.AppendLine("#httpscertificatefilepath=devtest.pfx");
-            builder.AppendLine("#httpscertificatefilepassword=toto");
             builder.AppendLine();
             builder.AppendLine("### Database ###");
             builder.AppendLine("#postgres=User ID=root;Password=myPassword;Host=localhost;Port=5432;Database=myDataBase;");

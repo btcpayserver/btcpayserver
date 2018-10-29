@@ -15,7 +15,8 @@
             "ASPNETCORE_ENVIRONMENT": "Development",
             "BTCPAY_CHAINS": "btc,ltc",
             "BTCPAY_POSTGRES": "User ID=postgres;Host=127.0.0.1;Port=39372;Database=btcpayserver"
-        }
+        },
+      "applicationUrl": "http://127.0.0.1:14142/"
     }
   }
 }

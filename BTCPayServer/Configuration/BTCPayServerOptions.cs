@@ -28,11 +28,19 @@ namespace BTCPayServer.Configuration
 
     public class BTCPayServerOptions
     {
+        
+        
         public NetworkType NetworkType
         {
             get; set;
         }
         public string ConfigurationFile
+        {
+            get;
+            private set;
+        } 
+        
+        public string LogFile
         {
             get;
             private set;
@@ -174,6 +182,12 @@ namespace BTCPayServer.Configuration
             var old = conf.GetOrDefault<Uri>("internallightningnode", null);
             if (old != null)
                 throw new ConfigException($"internallightningnode should not be used anymore, use btclightning instead");
+            
+            LogFile = conf.GetOrDefault<string>("debuglog", null);
+            if (!string.IsNullOrEmpty(LogFile))
+            {
+                Logs.Configuration.LogInformation("LogFile: " + LogFile.ToString());
+            }
         }
 
         private SSHSettings ParseSSHConfiguration(IConfiguration conf)

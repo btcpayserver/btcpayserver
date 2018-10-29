@@ -37,6 +37,8 @@ namespace BTCPayServer.Configuration
                 }
             else if (typeof(T) == typeof(string))
                 return (T)(object)str;
+            else if (typeof(T) == typeof(IPAddress))
+                return (T)(object)IPAddress.Parse(str);
             else if (typeof(T) == typeof(IPEndPoint))
             {
                 var separator = str.LastIndexOf(":", StringComparison.InvariantCulture);

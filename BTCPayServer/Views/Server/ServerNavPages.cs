@@ -7,6 +7,6 @@ namespace BTCPayServer.Views.Server
 {
     public enum ServerNavPages
     {
-        Index, Users, Rates, Emails, Policies, Theme, Hangfire, Services, Maintenance
+        Index, Users, Rates, Emails, Policies, Theme, Hangfire, Services, Maintenance, Logs
     }
 }

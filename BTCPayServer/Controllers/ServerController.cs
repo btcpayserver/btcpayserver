@@ -17,6 +17,7 @@ using NBitcoin.DataEncoders;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -167,6 +168,8 @@ namespace BTCPayServer.Controllers
                 vm.DNSDomain = null;
             return View(vm);
         }
+        
+        
         [Route("server/maintenance")]
         [HttpPost]
         public async Task<IActionResult> Maintenance(MaintenanceViewModel vm, string command)
@@ -624,6 +627,54 @@ namespace BTCPayServer.Controllers
                 model.StatusMessage = "Email settings saved";
                 return View(model);
             }
+        }
+        
+        [Route("server/logs/{file?}")]
+        public IActionResult LogsView(string file = null)
+        {
+            var vm = new LogsViewModel();
+
+            if (string.IsNullOrEmpty(_Options.LogFile))
+            {
+                vm.StatusMessage = "File Logging Option not specified.";
+            }
+            else
+            {
+                var di = Directory.GetParent(_Options.LogFile);
+                if (di == null)
+                {
+                    vm.StatusMessage = "Could not load log files";
+                }
+
+                var x = Path.GetFileNameWithoutExtension(_Options.LogFile);
+                
+               var logFiles = di.GetFiles($"{x}*");
+                
+                vm.LogFiles = logFiles.OrderBy(info => info.LastWriteTime).ToList();;
+
+                if (!string.IsNullOrEmpty(file))
+                {
+                    using (FileStream stream = File.Open("path to file", FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    {
+                        using (StreamReader reader = new StreamReader(stream))
+                        {
+                            while (!reader.EndOfStream)
+                            {
+
+                            }
+                        }
+                    }
+                    
+                    using (var stream = new StreamReader(Path.Combine(di.FullName, file)))
+                    {
+                        vm.Log = stream.ReadToEnd();
+                    }
+                }
+            }
+            
+            
+            
+            return View("Logs",vm);
         }
     }
 }

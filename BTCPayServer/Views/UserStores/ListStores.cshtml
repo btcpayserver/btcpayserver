@@ -42,6 +42,7 @@
                                 }
                             </td>
                             <td style="text-align:right">
+                                <a asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchTerm="storeid:@store.Id">Invoices</a><span> - </span>
                                 @if (store.IsOwner)
                                 {
                                     <a asp-action="UpdateStore" asp-controller="Stores" asp-route-storeId="@store.Id">Settings</a><span> - </span>

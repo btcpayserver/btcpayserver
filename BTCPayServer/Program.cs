@@ -59,7 +59,7 @@ namespace BTCPayServer
                         if (string.IsNullOrEmpty(debugLogFile) != false) return;
                         Serilog.Log.Logger = new LoggerConfiguration()
                             .Enrich.FromLogContext()
-                            .MinimumLevel.Debug()
+                            .MinimumLevel.Is(BTCPayServerOptions.GetDebugLogLevel(conf))
                             .WriteTo.File(debugLogFile, rollingInterval: RollingInterval.Day, fileSizeLimitBytes: MAX_DEBUG_LOG_FILE_SIZE, rollOnFileSizeLimit: true, retainedFileCountLimit: 1)
                             .CreateLogger();
 

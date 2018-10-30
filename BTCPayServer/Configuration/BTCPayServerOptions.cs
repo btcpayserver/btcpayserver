@@ -28,8 +28,6 @@ namespace BTCPayServer.Configuration
 
     public class BTCPayServerOptions
     {
-        
-        
         public NetworkType NetworkType
         {
             get; set;

@@ -169,7 +169,6 @@ namespace BTCPayServer.Controllers
             return View(vm);
         }
         
-        
         [Route("server/maintenance")]
         [HttpPost]
         public async Task<IActionResult> Maintenance(MaintenanceViewModel vm, string command)

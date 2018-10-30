@@ -1,6 +1,8 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Threading.Tasks;
+using BTCPayServer.Data;
 using BTCPayServer.Services.Stores;
 using NBitcoin;
 
@@ -29,47 +31,40 @@ namespace BTCPayServer.Payments.Changelly
         }
 
 
-        public virtual bool TryGetChangellyClient(string storeId, out string error,
-            out Changelly changelly)
+        public virtual async Task<Changelly> TryGetChangellyClient(string storeId, StoreData storeData = null)
         {
             if (_clientCache.ContainsKey(storeId))
             {
-                changelly = _clientCache[storeId];
-                error = null;
-                return true;
+                return _clientCache[storeId];
             }
 
-            changelly = null;
-
-
-            var store = _storeRepository.FindStore(storeId).Result;
-            if (store == null)
+            if (storeData == null)
             {
-                error = "Store not found";
-                return false;
+                storeData = await _storeRepository.FindStore(storeId);
+                if (storeData == null)
+                {
+                    throw new ChangellyException("Store not found");
+                }
             }
 
-            var blob = store.GetStoreBlob();
+            var blob = storeData.GetStoreBlob();
             var changellySettings = blob.ChangellySettings;
 
 
             if (changellySettings == null || !changellySettings.IsConfigured())
             {
-                error = "Changelly not configured for this store";
-                return false;
+                throw new ChangellyException("Changelly not configured for this store");
             }
 
             if (!changellySettings.Enabled)
             {
-                error = "Changelly not enabled for this store";
-                return false;
+                throw new ChangellyException("Changelly not enabled for this store");
             }
 
-            changelly = new Changelly(_httpClientFactory, changellySettings.ApiKey, changellySettings.ApiSecret,
+            var changelly = new Changelly(_httpClientFactory, changellySettings.ApiKey, changellySettings.ApiSecret,
                 changellySettings.ApiUrl, changellySettings.ShowFiat);
             _clientCache.AddOrReplace(storeId, changelly);
-            error = null;
-            return true;
+            return changelly;
         }
     }
 }

@@ -53,6 +53,7 @@ using OpenIddict.Abstractions;
 using OpenIddict.Core;
 using OpenIddict.EntityFrameworkCore.Models;
 using NicolasDorier.RateLimits;
+using Npgsql;
 
 namespace BTCPayServer.Hosting
 {
@@ -88,16 +89,21 @@ namespace BTCPayServer.Hosting
             {
                 var opts = o.GetRequiredService<BTCPayServerOptions>();
                 ApplicationDbContextFactory dbContext = null;
-                if (opts.PostgresConnectionString == null)
+                if (!String.IsNullOrEmpty(opts.PostgresConnectionString))
+                {
+                    Logs.Configuration.LogInformation($"Postgres DB used ({opts.PostgresConnectionString})");
+                    dbContext = new ApplicationDbContextFactory(DatabaseType.Postgres, opts.PostgresConnectionString);
+                }
+                else if(!String.IsNullOrEmpty(opts.MySQLConnectionString))
+                {
+                    Logs.Configuration.LogInformation($"MySQL DB used ({opts.MySQLConnectionString})");
+                    dbContext = new ApplicationDbContextFactory(DatabaseType.MySQL, opts.MySQLConnectionString);
+                }
+                else
                 {
                     var connStr = "Data Source=" + Path.Combine(opts.DataDir, "sqllite.db");
                     Logs.Configuration.LogInformation($"SQLite DB used ({connStr})");
                     dbContext = new ApplicationDbContextFactory(DatabaseType.Sqlite, connStr);
-                }
-                else
-                {
-                    Logs.Configuration.LogInformation($"Postgres DB used ({opts.PostgresConnectionString})");
-                    dbContext = new ApplicationDbContextFactory(DatabaseType.Postgres, opts.PostgresConnectionString);
                 }
 
                 return dbContext;
@@ -227,7 +233,7 @@ namespace BTCPayServer.Hosting
                         }
 
                         if (context.Request.Headers.TryGetValue("Authorization", out var authHeader) &&
-                            authHeader.ToString().StartsWith("Bearer "))
+                            authHeader.ToString().StartsWith("Bearer ",StringComparison.InvariantCulture))
                         {
                             return JwtBearerDefaults.AuthenticationScheme;
                         }
@@ -251,7 +257,7 @@ namespace BTCPayServer.Hosting
 
         static void Retry(Action act)
         {
-            CancellationTokenSource cts = new CancellationTokenSource(10000);
+            CancellationTokenSource cts = new CancellationTokenSource(1000);
             while (true)
             {
                 try
@@ -259,6 +265,8 @@ namespace BTCPayServer.Hosting
                     act();
                     return;
                 }
+                // Starting up
+                catch (PostgresException ex) when (ex.SqlState == "57P03") { Thread.Sleep(1000); }
                 catch when (!cts.IsCancellationRequested)
                 {
                     Thread.Sleep(100);

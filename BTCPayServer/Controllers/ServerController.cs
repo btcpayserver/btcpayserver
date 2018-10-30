@@ -25,6 +25,7 @@ using System.Threading.Tasks;
 using Renci.SshNet;
 using BTCPayServer.Logging;
 using BTCPayServer.Lightning;
+using BTCPayServer.Configuration.External;
 
 namespace BTCPayServer.Controllers
 {
@@ -277,7 +278,7 @@ namespace BTCPayServer.Controllers
                     else
                     {
                         e.CanTrust = _Options.IsTrustedFingerprint(e.FingerPrint, e.HostKey);
-                        if(!e.CanTrust)
+                        if (!e.CanTrust)
                             Logs.Configuration.LogError($"SSH host fingerprint for {e.HostKeyName} is untrusted, start BTCPay with -sshtrustedfingerprints \"{Encoders.Hex.EncodeData(e.FingerPrint)}\"");
                     }
                 };
@@ -421,17 +422,15 @@ namespace BTCPayServer.Controllers
             var result = new ServicesViewModel();
             foreach (var cryptoCode in _Options.ExternalServicesByCryptoCode.Keys)
             {
+                int i = 0;
+                foreach (var grpcService in _Options.ExternalServicesByCryptoCode.GetServices<ExternalLnd>(cryptoCode))
                 {
-                    int i = 0;
-                    foreach (var grpcService in _Options.ExternalServicesByCryptoCode.GetServices<ExternalLNDGRPC>(cryptoCode))
+                    result.LNDServices.Add(new ServicesViewModel.LNDServiceViewModel()
                     {
-                        result.LNDServices.Add(new ServicesViewModel.LNDServiceViewModel()
-                        {
-                            Crypto = cryptoCode,
-                            Type = "gRPC",
-                            Index = i++,
-                        });
-                    }
+                        Crypto = cryptoCode,
+                        Type = grpcService.Type,
+                        Index = i++,
+                    });
                 }
             }
             result.HasSSH = _Options.SSHSettings != null;
@@ -439,17 +438,17 @@ namespace BTCPayServer.Controllers
         }
 
         [Route("server/services/lnd-grpc/{cryptoCode}/{index}")]
-        public IActionResult LNDGRPCServices(string cryptoCode, int index, uint? nonce)
+        public IActionResult LndGrpcServices(string cryptoCode, int index, uint? nonce)
         {
             if (!_dashBoard.IsFullySynched(cryptoCode, out var unusud))
             {
                 StatusMessage = $"Error: {cryptoCode} is not fully synched";
                 return RedirectToAction(nameof(Services));
             }
-            var external = GetExternalLNDConnectionString(cryptoCode, index);
+            var external = GetExternalLndConnectionString(cryptoCode, index);
             if (external == null)
                 return NotFound();
-            var model = new LNDGRPCServicesViewModel();
+            var model = new LndGrpcServicesViewModel();
 
             model.Host = $"{external.BaseUri.DnsSafeHost}:{external.BaseUri.Port}";
             model.SSL = external.BaseUri.Scheme == "https";
@@ -493,9 +492,9 @@ namespace BTCPayServer.Controllers
 
         [Route("server/services/lnd-grpc/{cryptoCode}/{index}")]
         [HttpPost]
-        public IActionResult LNDGRPCServicesPOST(string cryptoCode, int index)
+        public IActionResult LndGrpcServicesPost(string cryptoCode, int index)
         {
-            var external = GetExternalLNDConnectionString(cryptoCode, index);
+            var external = GetExternalLndConnectionString(cryptoCode, index);
             if (external == null)
                 return NotFound();
             LightningConfigurations confs = new LightningConfigurations();
@@ -513,12 +512,12 @@ namespace BTCPayServer.Controllers
             var nonce = RandomUtils.GetUInt32();
             var configKey = GetConfigKey("lnd-grpc", cryptoCode, index, nonce);
             _LnConfigProvider.KeepConfig(configKey, confs);
-            return RedirectToAction(nameof(LNDGRPCServices), new { cryptoCode = cryptoCode, nonce = nonce });
+            return RedirectToAction(nameof(LndGrpcServices), new { cryptoCode = cryptoCode, nonce = nonce });
         }
 
-        private LightningConnectionString GetExternalLNDConnectionString(string cryptoCode, int index)
+        private LightningConnectionString GetExternalLndConnectionString(string cryptoCode, int index)
         {
-            var connectionString = _Options.ExternalServicesByCryptoCode.GetServices<ExternalLNDGRPC>(cryptoCode).Skip(index).Select(c => c.ConnectionString).FirstOrDefault();
+            var connectionString = _Options.ExternalServicesByCryptoCode.GetServices<ExternalLnd>(cryptoCode).Skip(index).Select(c => c.ConnectionString).FirstOrDefault();
             if (connectionString == null)
                 return null;
             connectionString = connectionString.Clone();
@@ -531,11 +530,33 @@ namespace BTCPayServer.Controllers
                 }
                 catch
                 {
-                    Logging.Logs.Configuration.LogWarning($"{cryptoCode}: The macaroon file path of the external LND grpc config was not found ({connectionString.MacaroonFilePath})");
+                    Logs.Configuration.LogWarning($"{cryptoCode}: The macaroon file path of the external LND grpc config was not found ({connectionString.MacaroonFilePath})");
                     return null;
                 }
             }
             return connectionString;
+        }
+
+        [Route("server/services/lnd-rest/{cryptoCode}/{index}")]
+        public IActionResult LndRestServices(string cryptoCode, int index, uint? nonce)
+        {
+            if (!_dashBoard.IsFullySynched(cryptoCode, out var unusud))
+            {
+                StatusMessage = $"Error: {cryptoCode} is not fully synched";
+                return RedirectToAction(nameof(Services));
+            }
+            var external = GetExternalLndConnectionString(cryptoCode, index);
+            if (external == null)
+                return NotFound();
+            var model = new LndRestServicesViewModel();
+
+            model.BaseApiUrl = external.BaseUri.ToString();
+            if (external.CertificateThumbprint != null)
+                model.CertificateThumbprint = Encoders.Hex.EncodeData(external.CertificateThumbprint);
+            if (external.Macaroon != null)
+                model.Macaroon = Encoders.Hex.EncodeData(external.Macaroon);
+
+            return View(model);
         }
 
         [Route("server/services/ssh")]

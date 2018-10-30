@@ -77,13 +77,13 @@ namespace BTCPayServer.Tests
             }
         }
         [Fact]
-        public async void CanGetOpenIdConfiguration()
+        public void CanGetOpenIdConfiguration()
         {
             using (var tester = ServerTester.Create())
             {
                 tester.Start();
                 var url = new Uri(tester.PayTester.ServerUri, "/.well-known/openid-configuration");
-                using (WebClient wc = new WebClient())
+                using (var wc = new WebClient())
                 {
                     var json = wc.DownloadString(url);
                     Assert.NotNull(json);

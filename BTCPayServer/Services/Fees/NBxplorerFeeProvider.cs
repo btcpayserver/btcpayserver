@@ -39,8 +39,6 @@ namespace BTCPayServer.Services.Fees
         ExplorerClient _ExplorerClient;
         public async Task<FeeRate> GetFeeRateAsync()
         {
-            if (!_ExplorerClient.Network.SupportEstimatesSmartFee)
-                return _Factory.Fallback;
             try
             {
                 return (await _ExplorerClient.GetFeeRateAsync(_Factory.BlockTarget).ConfigureAwait(false)).FeeRate;

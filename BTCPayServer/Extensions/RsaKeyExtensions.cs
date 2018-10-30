@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Xml;
 
@@ -18,7 +19,7 @@ namespace NETCore.Encrypt.Extensions.Internal
             XmlDocument xmlDoc = new XmlDocument();
             xmlDoc.LoadXml(xmlString);
 
-            if (xmlDoc.DocumentElement.Name.Equals("RSAKeyValue"))
+            if (xmlDoc.DocumentElement.Name.Equals("RSAKeyValue", StringComparison.InvariantCulture))
             {
                 foreach (XmlNode node in xmlDoc.DocumentElement.ChildNodes)
                 {
@@ -79,7 +80,7 @@ namespace NETCore.Encrypt.Extensions.Internal
         {
             RSAParameters parameters = rsa.ExportParameters(includePrivateParameters);
 
-            return string.Format(
+            return string.Format(CultureInfo.InvariantCulture, 
                 "<RSAKeyValue><Modulus>{0}</Modulus><Exponent>{1}</Exponent><P>{2}</P><Q>{3}</Q><DP>{4}</DP><DQ>{5}</DQ><InverseQ>{6}</InverseQ><D>{7}</D></RSAKeyValue>",
                 parameters.Modulus != null ? Convert.ToBase64String(parameters.Modulus) : null,
                 parameters.Exponent != null ? Convert.ToBase64String(parameters.Exponent) : null,

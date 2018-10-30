@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Controllers;
+using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments.Changelly;
@@ -27,6 +28,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Integration", "Integration")]
         public async void CanSetChangellyPaymentMethod()
         {
             using (var tester = ServerTester.Create())
@@ -67,6 +69,7 @@ namespace BTCPayServer.Tests
 
 
         [Fact]
+        [Trait("Integration", "Integration")]
         public async void CanToggleChangellyPaymentMethod()
         {
             using (var tester = ServerTester.Create())
@@ -82,6 +85,7 @@ namespace BTCPayServer.Tests
                     ApiKey = "key",
                     ApiUrl = "http://gozo.com",
                     ChangellyMerchantId = "aaa",
+                    Enabled = true
                 };
                 Assert.Equal("UpdateStore", Assert.IsType<RedirectToActionResult>(
                     await controller.UpdateChangellySettings(user.StoreId, updateModel, "save")).ActionName);
@@ -103,6 +107,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Integration", "Integration")]
         public async void CannotUseChangellyApiWithoutChangellyPaymentMethodSet()
         {
             using (var tester = ServerTester.Create())
@@ -112,16 +117,14 @@ namespace BTCPayServer.Tests
                 user.GrantAccess();
                 var changellyController =
                     tester.PayTester.GetController<ChangellyController>(user.UserId, user.StoreId);
+                changellyController.IsTest = true;
 
                 //test non existing payment method
                 Assert.IsType<BitpayErrorModel>(Assert
                     .IsType<BadRequestObjectResult>(await changellyController.GetCurrencyList(user.StoreId))
                     .Value);
 
-                var updateModel = new UpdateChangellySettingsViewModel
-                {
-                    Enabled = false
-                };
+                var updateModel = CreateDefaultChangellyParams(false);
                 var storesController = tester.PayTester.GetController<StoresController>(user.UserId, user.StoreId);
                 //set payment method but disabled
 
@@ -140,7 +143,6 @@ namespace BTCPayServer.Tests
                 Assert.Equal("UpdateStore", Assert.IsType<RedirectToActionResult>(
                     await storesController.UpdateChangellySettings(user.StoreId, updateModel, "save")).ActionName);
 
-                
 
                 Assert.IsNotType<BitpayErrorModel>(Assert
                     .IsType<OkObjectResult>(await changellyController.GetCurrencyList(user.StoreId))
@@ -148,8 +150,19 @@ namespace BTCPayServer.Tests
             }
         }
 
+        UpdateChangellySettingsViewModel CreateDefaultChangellyParams(bool enabled)
+        {
+            return new UpdateChangellySettingsViewModel()
+            {
+                ApiKey = "6ed02cdf1b614d89a8c0ceb170eebb61",
+                ApiSecret = "8fbd66a2af5fd15a6b5f8ed0159c5842e32a18538521ffa145bd6c9e124d3483",
+                ChangellyMerchantId = "804298eb5753",
+                Enabled = enabled
+            };
+        }
 
         [Fact]
+        [Trait("Integration", "Integration")]
         public async void CanGetCurrencyListFromChangelly()
         {
             using (var tester = ServerTester.Create())
@@ -159,50 +172,30 @@ namespace BTCPayServer.Tests
                 user.GrantAccess();
 
                 //save changelly settings
-                var updateModel = new UpdateChangellySettingsViewModel()
-                {
-                    ApiSecret = "secret",
-                    ApiKey = "key",
-                    ApiUrl = "http://gozo.com",
-                    ChangellyMerchantId = "aaa"
-                };
+                var updateModel = CreateDefaultChangellyParams(true);
                 var storesController = tester.PayTester.GetController<StoresController>(user.UserId, user.StoreId);
 
                 //confirm saved
                 Assert.Equal("UpdateStore", Assert.IsType<RedirectToActionResult>(
                     await storesController.UpdateChangellySettings(user.StoreId, updateModel, "save")).ActionName);
 
-
-                var mockChangelly = new MockChangelly(new MockHttpClientFactory(), updateModel.ApiKey, updateModel.ApiSecret, updateModel.ApiUrl);
-                var mock = new MockChangellyClientProvider(mockChangelly, tester.PayTester.StoreRepository);
-                
                 var factory = UnitTest1.CreateBTCPayRateFactory();
                 var fetcher = new RateFetcher(factory);
-
-                var changellyController = new ChangellyController(mock, tester.NetworkProvider, fetcher);
-
-                
-                mockChangelly.GetCurrenciesFullResult = new List<CurrencyFull>()
-                {
-                    new CurrencyFull()
-                    {
-                        Name = "a",
-                        Enable = true,
-                        PayInConfirmations = 10,
-                        FullName = "aa",
-                        ImageLink = ""
-                    }
-                };
+                var httpClientFactory = new MockHttpClientFactory();
+                var changellyController = new ChangellyController(
+                    new ChangellyClientProvider(tester.PayTester.StoreRepository, httpClientFactory),
+                    tester.NetworkProvider, fetcher);
+                changellyController.IsTest = true;
                 var result = Assert
                     .IsType<OkObjectResult>(await changellyController.GetCurrencyList(user.StoreId))
                     .Value as IEnumerable<CurrencyFull>;
-                Assert.Equal(1, mockChangelly.GetCurrenciesFullCallCount);
-
+                Assert.True(result.Any());
             }
         }
 
 
         [Fact]
+        [Trait("Integration", "Integration")]
         public async void CanCalculateToAmountForChangelly()
         {
             using (var tester = ServerTester.Create())
@@ -211,46 +204,42 @@ namespace BTCPayServer.Tests
                 var user = tester.NewAccount();
                 user.GrantAccess();
 
-                var updateModel = new UpdateChangellySettingsViewModel()
-                {
-                    ApiSecret = "secret",
-                    ApiKey = "key",
-                    ApiUrl = "http://gozo.com",
-                    ChangellyMerchantId = "aaa"
-                };
+                var updateModel = CreateDefaultChangellyParams(true);
                 var storesController = tester.PayTester.GetController<StoresController>(user.UserId, user.StoreId);
 
                 Assert.Equal("UpdateStore", Assert.IsType<RedirectToActionResult>(
                     await storesController.UpdateChangellySettings(user.StoreId, updateModel, "save")).ActionName);
 
-                var mockChangelly = new MockChangelly(new MockHttpClientFactory(),  updateModel.ApiKey, updateModel.ApiSecret, updateModel.ApiUrl);
-                var mock = new MockChangellyClientProvider(mockChangelly, tester.PayTester.StoreRepository);
-                
                 var factory = UnitTest1.CreateBTCPayRateFactory();
                 var fetcher = new RateFetcher(factory);
-                
-                var changellyController = new ChangellyController(mock,tester.NetworkProvider,fetcher);
-
-                mockChangelly.GetExchangeAmountResult = (from, to, amount) =>
-                {
-                    Assert.Equal("A", from);
-                    Assert.Equal("B", to);
-
-                    switch (mockChangelly.GetExchangeAmountCallCount)
-                    {
-                        case 1:
-                            return 0.5m;
-                            break;
-                        default:
-                            return 1.01m;
-                            break;
-                    }
-                };
-
+                var httpClientFactory = new MockHttpClientFactory();
+                var changellyController = new ChangellyController(
+                    new ChangellyClientProvider(tester.PayTester.StoreRepository, httpClientFactory),
+                    tester.NetworkProvider, fetcher);
+                changellyController.IsTest = true;
                 Assert.IsType<decimal>(Assert
-                    .IsType<OkObjectResult>(await changellyController.CalculateAmount(user.StoreId, "A", "B", 1.0m)).Value);
-                Assert.True(mockChangelly.GetExchangeAmountCallCount > 1);
+                    .IsType<OkObjectResult>(await changellyController.CalculateAmount(user.StoreId, "ltc", "btc", 1.0m))
+                    .Value);
             }
+        }
+
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public void CanComputeBaseAmount()
+        {
+            Assert.Equal(1, ChangellyCalculationHelper.ComputeBaseAmount(1, 1));
+            Assert.Equal(0.5m, ChangellyCalculationHelper.ComputeBaseAmount(1, 0.5m));
+            Assert.Equal(2, ChangellyCalculationHelper.ComputeBaseAmount(0.5m, 1));
+            Assert.Equal(4m, ChangellyCalculationHelper.ComputeBaseAmount(1, 4));
+        }
+
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public void CanComputeCorrectAmount()
+        {
+            Assert.Equal(1, ChangellyCalculationHelper.ComputeCorrectAmount(0.5m, 1, 2));
+            Assert.Equal(0.25m, ChangellyCalculationHelper.ComputeCorrectAmount(0.5m, 1, 0.5m));
+            Assert.Equal(20, ChangellyCalculationHelper.ComputeCorrectAmount(10, 1, 2));
         }
     }
 
@@ -258,59 +247,7 @@ namespace BTCPayServer.Tests
     {
         public HttpClient CreateClient(string name)
         {
-            return  new HttpClient();
-        }
-    }
-    
-    public class MockChangelly : Changelly
-    {
-        public IEnumerable<CurrencyFull> GetCurrenciesFullResult { get; set; }
-
-        public delegate decimal ParamsFunc<T1, T2, T3, TResult>(T1 arg1, T2 arg2, T3 arg3);
-
-        public ParamsFunc<string, string, decimal, (decimal amount, bool Success, string Error)> GetExchangeAmountResult
-        {
-            get;
-            set;
-        }
-
-        public int GetCurrenciesFullCallCount { get; set; } = 0;
-        public int GetExchangeAmountCallCount { get; set; } = 0;
-
-        public MockChangelly(IHttpClientFactory httpClientFactory,  string apiKey, string apiSecret, string apiUrl) : base(httpClientFactory, apiKey, apiSecret, apiUrl)
-        {
-        }
-
-        public override async Task<IEnumerable<CurrencyFull>> GetCurrenciesFull()
-        {
-            GetCurrenciesFullCallCount++;
-            return GetCurrenciesFullResult;
-        }
-
-        public override async Task<decimal> GetExchangeAmount(string fromCurrency,
-            string toCurrency, decimal amount)
-        {
-            GetExchangeAmountCallCount++;
-            return GetExchangeAmountResult.Invoke(fromCurrency, toCurrency, amount);
-        }
-    }
-
-    public class MockChangellyClientProvider : ChangellyClientProvider
-    {
-        public MockChangelly MockChangelly;
-
-        public MockChangellyClientProvider(
-            MockChangelly mockChangelly,
-            StoreRepository storeRepository) : base(storeRepository, new MockHttpClientFactory())
-        {
-            MockChangelly = mockChangelly;
-        }
-
-        public override bool TryGetChangellyClient(string storeId, out string error, out Changelly changelly)
-        {
-            error = null;
-            changelly = MockChangelly;
-            return true;
+            return new HttpClient();
         }
     }
 }

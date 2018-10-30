@@ -47,7 +47,11 @@ namespace BTCPayServer.HostedServices
                    summary.Status != null && 
                    summary.Status.IsFullySynched;
         }
-
+        public NBXplorerSummary Get(string cryptoCode)
+        {
+            _Summaries.TryGetValue(cryptoCode, out var summary);
+            return summary;
+        }
         public IEnumerable<NBXplorerSummary> GetAll()
         {
             return _Summaries.Values;

@@ -630,20 +630,21 @@ namespace BTCPayServer.Controllers
         }
         
         [Route("server/logs/{file?}")]
-        public IActionResult LogsView(string file = null)
+        public async Task<IActionResult> LogsView(string file = null)
         {
             var vm = new LogsViewModel();
 
             if (string.IsNullOrEmpty(_Options.LogFile))
             {
-                vm.StatusMessage = "File Logging Option not specified.";
+                vm.StatusMessage = "Error: File Logging Option not specified.";
+                
             }
             else
             {
                 var di = Directory.GetParent(_Options.LogFile);
                 if (di == null)
                 {
-                    vm.StatusMessage = "Could not load log files";
+                    vm.StatusMessage = "Error: Could not load log files";
                 }
 
                 var x = Path.GetFileNameWithoutExtension(_Options.LogFile);
@@ -652,28 +653,22 @@ namespace BTCPayServer.Controllers
                 
                 vm.LogFiles = logFiles.OrderBy(info => info.LastWriteTime).ToList();;
 
-                if (!string.IsNullOrEmpty(file))
-                {
-                    using (FileStream stream = File.Open("path to file", FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                    {
-                        using (StreamReader reader = new StreamReader(stream))
-                        {
-                            while (!reader.EndOfStream)
-                            {
+                if (string.IsNullOrEmpty(file)) return View("Logs", vm);
+                vm.Log = "";
+                var path = Path.Combine(di.FullName, file);
 
-                            }
-                        }
-                    }
-                    
-                    using (var stream = new StreamReader(Path.Combine(di.FullName, file)))
+                using (var fileStream = new FileStream(
+                    path,
+                    FileMode.Open,
+                    FileAccess.Read,
+                    FileShare.ReadWrite))
+                {
+                    using (var reader = new StreamReader(fileStream))
                     {
-                        vm.Log = stream.ReadToEnd();
+                        vm.Log = await reader.ReadToEndAsync();
                     }
                 }
             }
-            
-            
-            
             return View("Logs",vm);
         }
     }

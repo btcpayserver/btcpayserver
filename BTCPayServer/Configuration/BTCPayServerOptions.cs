@@ -60,6 +60,11 @@ namespace BTCPayServer.Configuration
             set;
         } = new List<NBXplorerConnectionSetting>();
 
+        public static string GetDebugLog(IConfiguration configuration)
+        {
+            return configuration.GetValue<string>("debuglog", null);
+        }
+
         public void LoadArgs(IConfiguration conf)
         {
             NetworkType = DefaultConfiguration.GetNetworkType(conf);
@@ -180,11 +185,11 @@ namespace BTCPayServer.Configuration
             var old = conf.GetOrDefault<Uri>("internallightningnode", null);
             if (old != null)
                 throw new ConfigException($"internallightningnode should not be used anymore, use btclightning instead");
-            
-            LogFile = conf.GetOrDefault<string>("debuglog", null);
+
+            LogFile = GetDebugLog(conf);
             if (!string.IsNullOrEmpty(LogFile))
             {
-                Logs.Configuration.LogInformation("LogFile: " + LogFile.ToString());
+                Logs.Configuration.LogInformation("LogFile: " + LogFile);
             }
         }
 

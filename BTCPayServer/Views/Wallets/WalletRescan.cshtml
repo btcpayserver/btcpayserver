@@ -92,7 +92,7 @@ else
 {
     <div class="row">
         <div class="col-md-10">
-            <p>Scanning in progress, refresh the page to see the progress...</p>
+            <p>Scanning in progress, refresh the page to see the progress... (Estimated time: @Model.RemainingTime)</p>
             <div class="progress">
                 <div class="progress-bar" role="progressbar" aria-valuenow="@(Model.Progress.Value)"
                      aria-valuemin="0" aria-valuemax="100" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width:@(Model.Progress.Value)%;">

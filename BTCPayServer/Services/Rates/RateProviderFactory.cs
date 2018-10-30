@@ -102,9 +102,7 @@ namespace BTCPayServer.Services.Rates
             Providers.Add("bittrex", new ExchangeSharpRateProvider("bittrex", new ExchangeBittrexAPI(), true));
             Providers.Add("poloniex", new ExchangeSharpRateProvider("poloniex", new ExchangePoloniexAPI(), true));
             Providers.Add("hitbtc", new ExchangeSharpRateProvider("hitbtc", new ExchangeHitbtcAPI(), false));
-
-            // Cryptopia is often not available
-            //Providers.Add("cryptopia", new ExchangeSharpRateProvider("cryptopia", new ExchangeCryptopiaAPI(), false));
+            Providers.Add("cryptopia", new ExchangeSharpRateProvider("cryptopia", new ExchangeCryptopiaAPI(), false));
 
             // Handmade providers
             Providers.Add(QuadrigacxRateProvider.QuadrigacxName, new QuadrigacxRateProvider());

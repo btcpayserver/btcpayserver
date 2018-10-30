@@ -11,7 +11,7 @@ namespace BTCPayServer.Models.ServerViewModels
             get; set;
         }
 
-        public List<FileInfo> LogFiles { get; set; }
+        public List<FileInfo> LogFiles { get; set; } = new List<FileInfo>();
         public string Log { get; set; }
     }
 }

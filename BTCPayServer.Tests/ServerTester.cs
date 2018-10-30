@@ -82,7 +82,7 @@ namespace BTCPayServer.Tests
         /// Connect a customer LN node to the merchant LN node
         /// </summary>
         /// <returns></returns>
-        public Task EnsureConnectedToDestinations()
+        public Task EnsureChannelsSetup()
         {
             return BTCPayServer.Lightning.Tests.ConnectChannels.ConnectAll(ExplorerNode, GetLightningSenderClients(), GetLightningDestClients());
         }

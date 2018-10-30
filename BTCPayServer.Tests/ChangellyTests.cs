@@ -27,6 +27,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Integration", "Integration")]
         public async void CanSetChangellyPaymentMethod()
         {
             using (var tester = ServerTester.Create())
@@ -67,6 +68,7 @@ namespace BTCPayServer.Tests
 
 
         [Fact]
+        [Trait("Integration", "Integration")]
         public async void CanToggleChangellyPaymentMethod()
         {
             using (var tester = ServerTester.Create())
@@ -104,6 +106,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Integration", "Integration")]
         public async void CannotUseChangellyApiWithoutChangellyPaymentMethodSet()
         {
             using (var tester = ServerTester.Create())
@@ -113,6 +116,7 @@ namespace BTCPayServer.Tests
                 user.GrantAccess();
                 var changellyController =
                     tester.PayTester.GetController<ChangellyController>(user.UserId, user.StoreId);
+                changellyController.IsTest = true;
 
                 //test non existing payment method
                 Assert.IsType<BitpayErrorModel>(Assert
@@ -139,7 +143,6 @@ namespace BTCPayServer.Tests
                     await storesController.UpdateChangellySettings(user.StoreId, updateModel, "save")).ActionName);
 
 
-
                 Assert.IsNotType<BitpayErrorModel>(Assert
                     .IsType<OkObjectResult>(await changellyController.GetCurrencyList(user.StoreId))
                     .Value);
@@ -158,6 +161,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Integration", "Integration")]
         public async void CanGetCurrencyListFromChangelly()
         {
             using (var tester = ServerTester.Create())
@@ -174,37 +178,23 @@ namespace BTCPayServer.Tests
                 Assert.Equal("UpdateStore", Assert.IsType<RedirectToActionResult>(
                     await storesController.UpdateChangellySettings(user.StoreId, updateModel, "save")).ActionName);
 
-
-                var mockChangelly = new MockChangelly(new MockHttpClientFactory(), updateModel.ApiKey, updateModel.ApiSecret, updateModel.ApiUrl);
-                var mock = new MockChangellyClientProvider(mockChangelly, tester.PayTester.StoreRepository);
-
                 var factory = UnitTest1.CreateBTCPayRateFactory();
                 var fetcher = new RateFetcher(factory);
-
-                var changellyController = new ChangellyController(mock, tester.NetworkProvider, fetcher);
-
-
-                mockChangelly.GetCurrenciesFullResult = new List<CurrencyFull>()
-                {
-                    new CurrencyFull()
-                    {
-                        Name = "a",
-                        Enable = true,
-                        PayInConfirmations = 10,
-                        FullName = "aa",
-                        ImageLink = ""
-                    }
-                };
+                var httpClientFactory = new MockHttpClientFactory();
+                var changellyController = new ChangellyController(
+                    new ChangellyClientProvider(tester.PayTester.StoreRepository, httpClientFactory),
+                    tester.NetworkProvider, fetcher);
+                changellyController.IsTest = true;
                 var result = Assert
                     .IsType<OkObjectResult>(await changellyController.GetCurrencyList(user.StoreId))
                     .Value as IEnumerable<CurrencyFull>;
-                Assert.Equal(1, mockChangelly.GetCurrenciesFullCallCount);
-
+                Assert.True(result.Any());
             }
         }
 
 
         [Fact]
+        [Trait("Integration", "Integration")]
         public async void CanCalculateToAmountForChangelly()
         {
             using (var tester = ServerTester.Create())
@@ -224,29 +214,34 @@ namespace BTCPayServer.Tests
 
                 var factory = UnitTest1.CreateBTCPayRateFactory();
                 var fetcher = new RateFetcher(factory);
-
-                var changellyController = new ChangellyController(mock,tester.NetworkProvider,fetcher);
-
-                mockChangelly.GetExchangeAmountResult = (from, to, amount) =>
-                {
-                    Assert.Equal("A", from);
-                    Assert.Equal("B", to);
-
-                    switch (mockChangelly.GetExchangeAmountCallCount)
-                    {
-                        case 1:
-                            return 0.5m;
-                            break;
-                        default:
-                            return 1.01m;
-                            break;
-                    }
-                };
-
+                var httpClientFactory = new MockHttpClientFactory();
+                var changellyController = new ChangellyController(
+                    new ChangellyClientProvider(tester.PayTester.StoreRepository, httpClientFactory),
+                    tester.NetworkProvider, fetcher);
+                changellyController.IsTest = true;
                 Assert.IsType<decimal>(Assert
-                    .IsType<OkObjectResult>(await changellyController.CalculateAmount(user.StoreId, "A", "B", 1.0m)).Value);
-                Assert.True(mockChangelly.GetExchangeAmountCallCount > 1);
+                    .IsType<OkObjectResult>(await changellyController.CalculateAmount(user.StoreId, "ltc", "btc", 1.0m))
+                    .Value);
             }
+        }
+
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public void CanComputeBaseAmount()
+        {
+            Assert.Equal(1, ChangellyCalculationHelper.ComputeBaseAmount(1, 1));
+            Assert.Equal(0.5m, ChangellyCalculationHelper.ComputeBaseAmount(1, 0.5m));
+            Assert.Equal(2, ChangellyCalculationHelper.ComputeBaseAmount(0.5m, 1));
+            Assert.Equal(4m, ChangellyCalculationHelper.ComputeBaseAmount(1, 4));
+        }
+
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public void CanComputeCorrectAmount()
+        {
+            Assert.Equal(1, ChangellyCalculationHelper.ComputeCorrectAmount(0.5m, 1, 2));
+            Assert.Equal(0.25m, ChangellyCalculationHelper.ComputeCorrectAmount(0.5m, 1, 0.5m));
+            Assert.Equal(20, ChangellyCalculationHelper.ComputeCorrectAmount(10, 1, 2));
         }
     }
 
@@ -254,7 +249,7 @@ namespace BTCPayServer.Tests
     {
         public HttpClient CreateClient(string name)
         {
-            return  new HttpClient();
+            return new HttpClient();
         }
     }
 

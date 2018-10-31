@@ -1,0 +1,43 @@
+﻿@model WalletSendLedgerModel
+@{
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData["Title"] = "Manage wallet";
+    ViewData.SetActivePageAndTitle(WalletsNavPages.Send);
+}
+
+<h4>Sign the transaction with Ledger</h4>
+<div id="walletAlert" class="alert alert-danger alert-dismissible" style="display:none;" role="alert">
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+    <span id="alertMessage"></span>
+</div>
+<div class="row">
+    <div class="col-md-10">
+        <input type="hidden" asp-for="Destination" />
+        <input type="hidden" asp-for="Amount" />
+        <input type="hidden" asp-for="FeeSatoshiPerByte" />
+        <input type="hidden" asp-for="SubstractFees" />
+        <p>
+            You can send money received by this store to an address with the help of your Ledger Wallet. <br />
+            If you don't have a Ledger Wallet, use Electrum with your favorite hardware wallet to transfer crypto. <br />
+            If your Ledger wallet is not detected:
+        </p>
+        <ul>
+            <li>Make sure you are running the Ledger app with version superior or equal to 1.2.4</li>
+            <li>Use Google Chrome browser and open the coin app on your Ledger</li>
+        </ul>
+        <p id="hw-loading"><span class="fa fa-question-circle" style="color:orange"></span> <span>Detecting hardware wallet...</span></p>
+        <p id="hw-error" style="display:none;"><span class="fa fa-times-circle" style="color:red;"></span> <span class="hw-label">An error happened</span></p>
+        <p id="hw-success" style="display:none;"><span class="fa fa-check-circle" style="color:green;"></span> <span class="hw-label">Detecting hardware wallet...</span></p>
+
+        <p id="check-loading" style="display:none;"><span class="fa fa-question-circle" style="color:orange"></span> <span class="check-label">Detecting hardware wallet...</span></p>
+        <p id="check-error" style="display:none;"><span class="fa fa-times-circle" style="color:red;"></span> <span class="check-label">An error happened</span></p>
+        <p id="check-success" style="display:none;"><span class="fa fa-check-circle" style="color:green;"></span> <span class="check-label">Detecting hardware wallet...</span></p>
+    </div>
+</div>
+
+
+@section Scripts
+{
+    <script src="~/js/ledgerwebsocket.js" type="text/javascript" defer="defer"></script>
+    <script src="~/js/WalletSendLedger.js" type="text/javascript" defer="defer"></script>
+}

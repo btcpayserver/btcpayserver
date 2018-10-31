@@ -23,6 +23,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 
@@ -51,6 +52,7 @@ namespace BTCPayServer.Controllers
             IFeeProviderFactory feeRateProvider,
             LanguageService langService,
             ChangellyClientProvider changellyClientProvider,
+            IOptions<MvcJsonOptions> mvcJsonOptions,
             IHostingEnvironment env, IHttpClientFactory httpClientFactory)
         {
             _RateFactory = rateFactory;
@@ -59,6 +61,7 @@ namespace BTCPayServer.Controllers
             _UserManager = userManager;
             _LangService = langService;
             _changellyClientProvider = changellyClientProvider;
+            MvcJsonOptions = mvcJsonOptions;
             _TokenController = tokenController;
             _WalletProvider = walletProvider;
             _Env = env;
@@ -673,6 +676,7 @@ namespace BTCPayServer.Controllers
         }
 
         public string GeneratedPairingCode { get; set; }
+        public IOptions<MvcJsonOptions> MvcJsonOptions { get; }
 
         [HttpGet]
         [Route("/api-tokens")]

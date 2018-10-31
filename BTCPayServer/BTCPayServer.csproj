@@ -166,6 +166,9 @@
 	  <Content Update="Views\Wallets\WalletRescan.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
+	  <Content Update="Views\Wallets\WalletSendLedger.cshtml">
+	    <Pack>$(IncludeRazorContentInPack)</Pack>
+	  </Content>
 	  <Content Update="Views\Wallets\WalletTransactions.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>

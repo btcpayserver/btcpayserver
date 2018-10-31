@@ -570,6 +570,45 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
+        [HttpGet]
+        [Route("{storeId}/tokens/{tokenId}/revoke")]
+        public async Task<IActionResult> RevokeToken(string tokenId)
+        {
+            var token = await _TokenRepository.GetToken(tokenId);
+            if (token == null || token.StoreId != StoreData.Id)
+                return NotFound();
+            return View("Confirm", new ConfirmModel()
+            {
+                Action = "Revoke the token",
+                Title = "Revoke the token",
+                Description = $"The access token with the label \"{token.Label}\" will be revoked, do you wish to continue?",
+                ButtonClass = "btn-danger"
+            });
+        }
+        [HttpPost]
+        [Route("{storeId}/tokens/{tokenId}/revoke")]
+        public async Task<IActionResult> RevokeTokenConfirm(string tokenId)
+        {
+            var token = await _TokenRepository.GetToken(tokenId);
+            if (token == null ||
+                token.StoreId != StoreData.Id ||
+               !await _TokenRepository.DeleteToken(tokenId))
+                StatusMessage = "Failure to revoke this token";
+            else
+                StatusMessage = "Token revoked";
+            return RedirectToAction(nameof(ListTokens));
+        }
+
+        [HttpGet]
+        [Route("{storeId}/tokens/{tokenId}")]
+        public async Task<IActionResult> ShowToken(string tokenId)
+        {
+            var token = await _TokenRepository.GetToken(tokenId);
+            if (token == null || token.StoreId != StoreData.Id)
+                return NotFound();
+            return View(token);
+        }
+
         [HttpPost]
         [Route("/api-tokens")]
         [Route("{storeId}/Tokens/Create")]
@@ -669,21 +708,6 @@ namespace BTCPayServer.Controllers
                 }
             }
             return View(model);
-        }
-
-
-        [HttpPost]
-        [Route("{storeId}/Tokens/Delete")]
-        public async Task<IActionResult> DeleteToken(string tokenId)
-        {
-            var token = await _TokenRepository.GetToken(tokenId);
-            if (token == null ||
-                token.StoreId != StoreData.Id ||
-               !await _TokenRepository.DeleteToken(tokenId))
-                StatusMessage = "Failure to revoke this token";
-            else
-                StatusMessage = "Token revoked";
-            return RedirectToAction(nameof(ListTokens));
         }
 
         [HttpPost]

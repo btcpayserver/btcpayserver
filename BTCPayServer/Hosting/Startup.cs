@@ -120,11 +120,7 @@ namespace BTCPayServer.Hosting
             });
 
             // If the HTTPS certificate path is not set this logic will NOT be used and the default Kestrel binding logic will be.
-            var networkType = DefaultConfiguration.GetNetworkType(Configuration);
-            var defaultSettings = BTCPayDefaultSettings.GetDefaultSettings(networkType);
-            var btcPaySettings = Configuration.Get<BTCPayServerOptions>();
-
-            string httpsCertificateFilePath = btcPaySettings.HttpsCertificateFilePath;
+            string httpsCertificateFilePath = Configuration.GetOrDefault<string>("HttpsCertificateFilePath", null);
 
             if (!String.IsNullOrEmpty(httpsCertificateFilePath))
             {
@@ -142,7 +138,7 @@ namespace BTCPayServer.Hosting
                     Logs.Configuration.LogInformation($"Https certificate file path {httpsCertificateFilePath}.");
                     kestrel.Listen(bindAddress, bindPort, l =>
                     {
-                        l.UseHttps(httpsCertificateFilePath, btcPaySettings.HttpsCertificateFilePassword);
+                        l.UseHttps(httpsCertificateFilePath, Configuration.GetOrDefault<string>("HttpsCertificateFilePassword", null));
                     });
                 });
             }

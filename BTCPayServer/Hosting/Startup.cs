@@ -119,29 +119,30 @@ namespace BTCPayServer.Hosting
                 });
             });
 
-            // Require that all the required options for a HTTPS certificate be set in the config file.
-            // If the HTTPS options can't be used don't use this mechanism and instead allow the defautl Kestrel bindings to occur.
+            // If the HTTPS certificate path is not set this logic will NOT be used and the default Kestrel binding logic will be.
             var networkType = DefaultConfiguration.GetNetworkType(Configuration);
             var defaultSettings = BTCPayDefaultSettings.GetDefaultSettings(networkType);
             var btcPaySettings = Configuration.Get<BTCPayServerOptions>();
-            var bindAddress = Configuration.GetOrDefault<IPAddress>("bind", IPAddress.None);
-            int bindPort = Configuration.GetOrDefault<int>("port", 0);
+
             string httpsCertificateFilePath = btcPaySettings.HttpsCertificateFilePath;
 
-            if (bindAddress != IPAddress.None && bindPort != 0 && !String.IsNullOrEmpty(httpsCertificateFilePath))
+            if (!String.IsNullOrEmpty(httpsCertificateFilePath))
             {
+                var bindAddress = Configuration.GetOrDefault<IPAddress>("bind", IPAddress.Any);
+                int bindPort = Configuration.GetOrDefault<int>("port", 443);
+
                 services.Configure<KestrelServerOptions>(kestrel =>
                 {
-                    if (!File.Exists(btcPaySettings.HttpsCertificateFilePath))
+                    if (!File.Exists(httpsCertificateFilePath))
                     {
                         // Note that by design this is a fatal error condition that will cause the process to exit.
-                        throw new ConfigException($"The https certificate file could not be found at {btcPaySettings.HttpsCertificateFilePath}.");
+                        throw new ConfigException($"The https certificate file could not be found at {httpsCertificateFilePath}.");
                     }
 
-                    Logs.Configuration.LogInformation($"Https certificate file path {btcPaySettings.HttpsCertificateFilePath}.");
+                    Logs.Configuration.LogInformation($"Https certificate file path {httpsCertificateFilePath}.");
                     kestrel.Listen(bindAddress, bindPort, l =>
                     {
-                        l.UseHttps(btcPaySettings.HttpsCertificateFilePath, btcPaySettings.HttpsCertificateFilePassword);
+                        l.UseHttps(httpsCertificateFilePath, btcPaySettings.HttpsCertificateFilePassword);
                     });
                 });
             }

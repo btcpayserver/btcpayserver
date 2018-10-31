@@ -795,6 +795,7 @@ namespace BTCPayServer.Tests
                 {
                     listener.ListenAllDerivationSchemes();
                     var replaced = tester.ExplorerNode.SignRawTransaction(tx);
+                    Thread.Sleep(1000); // Make sure the replacement has a different timestamp
                     var tx2 = tester.ExplorerNode.SendRawTransaction(replaced);
                     Logs.Tester.LogInformation($"Let's RBF with a payment of {payment2} ({tx2}), waiting for NBXplorer to pick it up");
                     Assert.Equal(tx2, ((NewTransactionEvent)listener.NextEvent(cts.Token)).TransactionData.TransactionHash);

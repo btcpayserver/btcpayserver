@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Hangfire;
 using Hangfire.MemoryStorage;
-using Hangfire.PostgreSql;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Migrations;
 using JetBrains.Annotations;

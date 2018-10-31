@@ -104,7 +104,7 @@ namespace BTCPayServer.Services.Rates
             Providers.Add("hitbtc", new ExchangeSharpRateProvider("hitbtc", new ExchangeHitbtcAPI(), false));
 
             // Cryptopia is often not available
-            //Providers.Add("cryptopia", new ExchangeSharpRateProvider("cryptopia", new ExchangeCryptopiaAPI(), false));
+            Providers.Add("cryptopia", new ExchangeSharpRateProvider("cryptopia", new ExchangeCryptopiaAPI(), false));
 
             // Handmade providers
             Providers.Add(QuadrigacxRateProvider.QuadrigacxName, new QuadrigacxRateProvider());
@@ -120,6 +120,8 @@ namespace BTCPayServer.Services.Rates
 
             foreach (var provider in Providers.ToArray())
             {
+                if (provider.Key == "cryptopia") // Shitty exchange, rate often unavailable, it spams the logs
+                    continue;
                 var prov = new BackgroundFetcherRateProvider(Providers[provider.Key]);
                 if(provider.Key == CoinAverageRateProvider.CoinAverageName)
                 {

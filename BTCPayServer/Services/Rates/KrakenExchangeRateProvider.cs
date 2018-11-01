@@ -62,7 +62,7 @@ namespace BTCPayServer.Services.Rates
                         {
                             var p2 = symbol.Substring(4);
                             p2 = p2 == "XBT" ? "BTC" : p2;
-                            global = $"{symbol.Substring(0, 4)}_{p2}";
+                            global = $"{p2}_{symbol.Substring(0, 4)}";
                         }
                         else
                         {

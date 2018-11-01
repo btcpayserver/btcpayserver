@@ -119,14 +119,29 @@ namespace BTCPayServer.Hosting
                 });
             });
 
-            // Needed to debug U2F for ledger support
-            //services.Configure<KestrelServerOptions>(kestrel =>
-            //{
-            //    kestrel.Listen(IPAddress.Loopback, 5012, l =>
-            //    {
-            //        l.UseHttps("devtest.pfx", "toto");
-            //    });
-            //});
+            // If the HTTPS certificate path is not set this logic will NOT be used and the default Kestrel binding logic will be.
+            string httpsCertificateFilePath = Configuration.GetOrDefault<string>("HttpsCertificateFilePath", null);
+
+            if (!String.IsNullOrEmpty(httpsCertificateFilePath))
+            {
+                var bindAddress = Configuration.GetOrDefault<IPAddress>("bind", IPAddress.Any);
+                int bindPort = Configuration.GetOrDefault<int>("port", 443);
+
+                services.Configure<KestrelServerOptions>(kestrel =>
+                {
+                    if (!File.Exists(httpsCertificateFilePath))
+                    {
+                        // Note that by design this is a fatal error condition that will cause the process to exit.
+                        throw new ConfigException($"The https certificate file could not be found at {httpsCertificateFilePath}.");
+                    }
+
+                    Logs.Configuration.LogInformation($"Https certificate file path {httpsCertificateFilePath}.");
+                    kestrel.Listen(bindAddress, bindPort, l =>
+                    {
+                        l.UseHttps(httpsCertificateFilePath, Configuration.GetOrDefault<string>("HttpsCertificateFilePassword", null));
+                    });
+                });
+            }
         }
 
         public void Configure(

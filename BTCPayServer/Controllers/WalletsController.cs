@@ -24,6 +24,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBXplorer.DerivationStrategy;
+using NBXplorer.Models;
 using Newtonsoft.Json;
 using static BTCPayServer.Controllers.StoresController;
 
@@ -515,9 +516,8 @@ namespace BTCPayServer.Controllers
                             throw new HardwareWalletException($"This store is not configured to use this ledger");
                         }
 
-                        TransactionBuilder builder = new TransactionBuilder();
+                        TransactionBuilder builder = network.NBitcoinNetwork.CreateTransactionBuilder();
                         builder.StandardTransactionPolicy.MinRelayTxFee = summary.Status.BitcoinStatus.MinRelayTxFee;
-                        builder.SetConsensusFactory(network.NBitcoinNetwork);
                         builder.AddCoins(unspentCoins.Select(c => c.Coin).ToArray());
 
                         foreach (var element in send)
@@ -540,7 +540,6 @@ namespace BTCPayServer.Controllers
                             else
                                 builder.SendEstimatedFees(feeRateValue);
                         }
-                        builder.Shuffle();
                         var unsigned = builder.BuildTransaction(false);
 
                         var keypaths = new Dictionary<Script, KeyPath>();

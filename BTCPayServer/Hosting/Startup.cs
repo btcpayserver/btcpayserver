@@ -57,19 +57,22 @@ namespace BTCPayServer.Hosting
                 return context.GetHttpContext().User.IsInRole(_Role);
             }
         }
-        public Startup(IConfiguration conf, IHostingEnvironment env)
+        public Startup(IConfiguration conf, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
             Configuration = conf;
             _Env = env;
+            LoggerFactory = loggerFactory;
         }
         IHostingEnvironment _Env;
         public IConfiguration Configuration
         {
             get; set;
         }
+        public ILoggerFactory LoggerFactory { get; }
 
         public void ConfigureServices(IServiceCollection services)
         {
+            Logs.Configure(LoggerFactory);
             services.ConfigureBTCPayServer(Configuration);
             services.AddMemoryCache();
             services.AddIdentity<ApplicationUser, IdentityRole>()
@@ -121,24 +124,37 @@ namespace BTCPayServer.Hosting
 
             // If the HTTPS certificate path is not set this logic will NOT be used and the default Kestrel binding logic will be.
             string httpsCertificateFilePath = Configuration.GetOrDefault<string>("HttpsCertificateFilePath", null);
-
-            if (!String.IsNullOrEmpty(httpsCertificateFilePath))
+            bool useDefaultCertificate = Configuration.GetOrDefault<bool>("HttpsUseDefaultCertificate", false);
+            bool hasCertPath = !String.IsNullOrEmpty(httpsCertificateFilePath);
+            if (hasCertPath || useDefaultCertificate)
             {
                 var bindAddress = Configuration.GetOrDefault<IPAddress>("bind", IPAddress.Any);
                 int bindPort = Configuration.GetOrDefault<int>("port", 443);
 
                 services.Configure<KestrelServerOptions>(kestrel =>
                 {
-                    if (!File.Exists(httpsCertificateFilePath))
+                    if (hasCertPath && !File.Exists(httpsCertificateFilePath))
                     {
                         // Note that by design this is a fatal error condition that will cause the process to exit.
                         throw new ConfigException($"The https certificate file could not be found at {httpsCertificateFilePath}.");
                     }
+                    if(hasCertPath && useDefaultCertificate)
+                    {
+                        throw new ConfigException($"Conflicting settings: if HttpsUseDefaultCertificate is true, HttpsCertificateFilePath should not be used");
+                    }
 
-                    Logs.Configuration.LogInformation($"Https certificate file path {httpsCertificateFilePath}.");
                     kestrel.Listen(bindAddress, bindPort, l =>
                     {
-                        l.UseHttps(httpsCertificateFilePath, Configuration.GetOrDefault<string>("HttpsCertificateFilePassword", null));
+                        if (hasCertPath)
+                        {
+                            Logs.Configuration.LogInformation($"Using HTTPS with the certificate located in {httpsCertificateFilePath}.");
+                            l.UseHttps(httpsCertificateFilePath, Configuration.GetOrDefault<string>("HttpsCertificateFilePassword", null));
+                        }
+                        else
+                        {
+                            Logs.Configuration.LogInformation($"Using HTTPS with the default certificate");
+                            l.UseHttps();
+                        }
                     });
                 });
             }
@@ -151,7 +167,6 @@ namespace BTCPayServer.Hosting
             BTCPayServerOptions options,
             ILoggerFactory loggerFactory)
         {
-            Logs.Configure(loggerFactory);
             Logs.Configuration.LogInformation($"Root Path: {options.RootPath}");
             if (options.RootPath.Equals("/", StringComparison.OrdinalIgnoreCase))
             {

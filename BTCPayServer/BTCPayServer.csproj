@@ -182,10 +182,4 @@
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
 	</ItemGroup>
-
-	<ItemGroup>
-	  <None Update="devtest.pfx">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
-	</ItemGroup>
 </Project>

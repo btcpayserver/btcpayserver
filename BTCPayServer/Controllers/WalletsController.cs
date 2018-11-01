@@ -256,6 +256,7 @@ namespace BTCPayServer.Controllers
         {
             try
             {
+                destination = destination?.Trim();
                 return new IDestination[] { BitcoinAddress.Create(destination, network) };
             }
             catch

@@ -63,7 +63,7 @@ You can also read the [BTCPay Merchants Guide](https://www.reddit.com/r/Bitcoin/
 
 While the documentation advises to use docker-compose, you may want to build BTCPay yourself.
 
-First install .NET Core SDK v2.1.4 (with patch version >= 402) as specified by [Microsoft website](https://www.microsoft.com/net/download/dotnet-core/2.1).
+First install .NET Core SDK v2.1.4 (with patch version >= 403) as specified by [Microsoft website](https://www.microsoft.com/net/download/dotnet-core/2.1).
 
 On Powershell:
 ```
@@ -88,6 +88,25 @@ On linux:
 ```
 ./run.sh --help
 ```
+
+## How to debug
+
+If you want to debug, use Visual Studio Code or Visual studio 2017.
+
+You need to run the development time docker-compose as described [in the test guide](BTCPayServer.Tests/README.md).
+
+You can then run the debugger by using the Launch Profile `Docker-Regtest` on either Visual Studio Code or Visual studio 2017.
+
+If you need to debug ledger wallet interaction, install the development time certificate with:
+
+```bash
+# Install development time certificate in the trust store
+dotnet dev-certs https --trust
+```
+
+Then use the `Docker-Regtest-https` debug profile.
+
+
 
 ## Other dependencies
 

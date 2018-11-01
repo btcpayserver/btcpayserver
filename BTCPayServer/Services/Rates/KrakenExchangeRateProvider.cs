@@ -57,7 +57,17 @@ namespace BTCPayServer.Services.Rates
                 {
                     try
                     {
-                        var global = _Helper.ExchangeSymbolToGlobalSymbol(symbol);
+                        string global = null;
+                        if(symbol.StartsWith("DASH", StringComparison.OrdinalIgnoreCase))
+                        {
+                            var p2 = symbol.Substring(4);
+                            p2 = p2 == "XBT" ? "BTC" : p2;
+                            global = $"{symbol.Substring(0, 4)}_{p2}";
+                        }
+                        else
+                        {
+                            global = _Helper.ExchangeSymbolToGlobalSymbol(symbol);
+                        }
                         if (CurrencyPair.TryParse(global, out var pair))
                             result.Add(new ExchangeRate("kraken", pair.Inverse(), new BidAsk(ticker.Bid, ticker.Ask)));
                         else

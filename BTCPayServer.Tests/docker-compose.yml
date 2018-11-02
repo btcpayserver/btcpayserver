@@ -114,7 +114,8 @@ services:
       - "bitcoin_datadir:/data"
 
   customer_lightningd:
-    image: nicolasdorier/clightning:v0.6.1-1-dev
+    image: nicolasdorier/clightning:v0.6.2-3-dev
+    restart: unless-stopped
     environment:
       EXPOSE_TCP: "true"
       LIGHTNINGD_OPT: |
@@ -157,7 +158,7 @@ services:
       - merchant_lightningd
 
   merchant_lightningd:
-    image: nicolasdorier/clightning:v0.6.1-1-dev
+    image: nicolasdorier/clightning:v0.6.2-3-dev
     environment:
       EXPOSE_TCP: "true"
       LIGHTNINGD_OPT: |
@@ -204,7 +205,8 @@ services:
       - "5432"
 
   merchant_lnd:
-    image: btcpayserver/lnd:0.5-beta
+    image: btcpayserver/lnd:0.5-beta-2
+    restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
       LND_ENVIRONMENT: "regtest"
@@ -230,7 +232,8 @@ services:
       - bitcoind
 
   customer_lnd:
-    image: btcpayserver/lnd:0.5-beta
+    image: btcpayserver/lnd:0.5-beta-2
+    restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
       LND_ENVIRONMENT: "regtest"

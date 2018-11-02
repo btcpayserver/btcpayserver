@@ -118,7 +118,7 @@ services:
       - "bitcoin_datadir:/data"
 
   customer_lightningd:
-    image: nicolasdorier/clightning:v0.6.1-1-dev
+    image: nicolasdorier/clightning:v0.6.2-2-dev
     restart: unless-stopped
     environment: 
       EXPOSE_TCP: "true"
@@ -163,7 +163,7 @@ services:
       - merchant_lightningd
 
   merchant_lightningd:
-    image: nicolasdorier/clightning:v0.6.1-1-dev
+    image: nicolasdorier/clightning:v0.6.2-2-dev
     environment: 
       EXPOSE_TCP: "true"
       LIGHTNINGD_OPT: |
@@ -219,7 +219,7 @@ services:
       - MYSQL_ALLOW_EMPTY_PASSWORD=yes
 
   merchant_lnd:
-    image: btcpayserver/lnd:0.5-beta
+    image: btcpayserver/lnd:0.5-beta-2
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
@@ -246,7 +246,7 @@ services:
       - bitcoind
 
   customer_lnd:
-    image: btcpayserver/lnd:0.5-beta
+    image: btcpayserver/lnd:0.5-beta-2
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"

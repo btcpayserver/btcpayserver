@@ -18,9 +18,8 @@
             <thead>
                 <tr>
                     <th>Label</th>
-                    <th>SIN</th>
                     <th>Facade</th>
-                    <th>Actions</th>
+                    <th class="text-right">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -28,13 +27,9 @@
                 {
                     <tr>
                         <td>@token.Label</td>
-                        <td>@token.SIN</td>
                         <td>@token.Facade</td>
-                        <td>
-                            <form asp-action="DeleteToken" method="post">
-                                <input type="hidden" name="tokenId" value="@token.Id">
-                                <button type="submit" class="btn btn-danger" role="button">Revoke</button>
-                            </form>
+                        <td class="text-right">
+                            <a asp-action="ShowToken" asp-route-tokenId="@token.Id">See information</a> - <a asp-action="RevokeToken" asp-route-tokenId="@token.Id">Revoke</a>
                         </td>
                     </tr>
                 }

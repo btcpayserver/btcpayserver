@@ -26,14 +26,14 @@ services:
       - "80"
     links:
       - dev
-    extra_hosts: 
+    extra_hosts:
       - "tests:127.0.0.1"
     volumes:
       - "customer_lightningd_datadir:/etc/customer_lightningd_datadir"
       - "merchant_lightningd_datadir:/etc/merchant_lightningd_datadir"
 
   # The dev container is not actually used, it is just handy to run `docker-compose up dev` to start all services
-  dev: 
+  dev:
     image: nicolasdorier/docker-bitcoin:0.17.0
     environment:
       BITCOIN_NETWORK: regtest
@@ -49,7 +49,7 @@ services:
       - customer_lnd
       - merchant_lnd
 
-  devlnd: 
+  devlnd:
     image: nicolasdorier/docker-bitcoin:0.17.0
     environment:
       BITCOIN_NETWORK: regtest
@@ -65,10 +65,11 @@ services:
 
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:1.0.3.3
+    image: nicolasdorier/nbxplorer:1.1.0.9
+    restart: unless-stopped
     ports:
       - "32838:32838"
-    expose: 
+    expose:
       - "32838"
     environment:
       NBXPLORER_NETWORK: regtest
@@ -101,7 +102,7 @@ services:
         whitelist=0.0.0.0/0
         zmqpubrawblock=tcp://0.0.0.0:28332
         zmqpubrawtx=tcp://0.0.0.0:28333
-    ports: 
+    ports:
       - "43782:43782"
       - "28332:28332"
     expose:
@@ -113,8 +114,9 @@ services:
       - "bitcoin_datadir:/data"
 
   customer_lightningd:
-    image: nicolasdorier/clightning:v0.6.1-1-dev
-    environment: 
+    image: nicolasdorier/clightning:v0.6.2-3-dev
+    restart: unless-stopped
+    environment:
       EXPOSE_TCP: "true"
       LIGHTNINGD_OPT: |
         bitcoin-datadir=/etc/bitcoin
@@ -156,8 +158,8 @@ services:
       - merchant_lightningd
 
   merchant_lightningd:
-    image: nicolasdorier/clightning:v0.6.1-1-dev
-    environment: 
+    image: nicolasdorier/clightning:v0.6.2-3-dev
+    environment:
       EXPOSE_TCP: "true"
       LIGHTNINGD_OPT: |
         bitcoin-datadir=/etc/bitcoin
@@ -189,7 +191,7 @@ services:
         rpcport=43782
         port=39388
         whitelist=0.0.0.0/0
-    ports: 
+    ports:
       - "43783:43782"
     expose:
       - "43782" # RPC
@@ -203,7 +205,8 @@ services:
       - "5432"
 
   merchant_lnd:
-    image: btcpayserver/lnd:0.5-beta
+    image: btcpayserver/lnd:0.5-beta-2
+    restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
       LND_ENVIRONMENT: "regtest"
@@ -229,7 +232,8 @@ services:
       - bitcoind
 
   customer_lnd:
-    image: btcpayserver/lnd:0.5-beta
+    image: btcpayserver/lnd:0.5-beta-2
+    restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
       LND_ENVIRONMENT: "regtest"

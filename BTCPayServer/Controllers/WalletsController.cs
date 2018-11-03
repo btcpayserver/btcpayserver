@@ -24,6 +24,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBXplorer.DerivationStrategy;
+using NBXplorer.Models;
 using Newtonsoft.Json;
 using static BTCPayServer.Controllers.StoresController;
 
@@ -45,6 +46,9 @@ namespace BTCPayServer.Controllers
         private readonly IFeeProviderFactory _feeRateProvider;
         private readonly BTCPayWalletProvider _walletProvider;
         public RateFetcher RateFetcher { get; }
+        [TempData]
+        public string StatusMessage { get; set; }
+
         CurrencyNameTable _currencyTable;
         public WalletsController(StoreRepository repo,
                                  CurrencyNameTable currencyTable,
@@ -149,18 +153,27 @@ namespace BTCPayServer.Controllers
             DerivationStrategy paymentMethod = GetPaymentMethod(walletId, store);
             if (paymentMethod == null)
                 return NotFound();
-
+            var network = this.NetworkProvider.GetNetwork(walletId?.CryptoCode);
+            if (network == null)
+                return NotFound();
             var storeData = store.GetStoreBlob();
             var rateRules = store.GetStoreBlob().GetRateRules(NetworkProvider);
             rateRules.Spread = 0.0m;
             var currencyPair = new Rating.CurrencyPair(paymentMethod.PaymentId.CryptoCode, GetCurrencyCode(storeData.DefaultLang) ?? "USD");
-            WalletModel model = new WalletModel()
+            WalletSendModel model = new WalletSendModel()
             {
-                DefaultAddress = defaultDestination,
-                DefaultAmount = defaultAmount,
-                ServerUrl = GetLedgerWebsocketUrl(this.HttpContext, walletId.CryptoCode, paymentMethod.DerivationStrategyBase),
-                CryptoCurrency = walletId.CryptoCode
+                Destination = defaultDestination,
+                CryptoCode = walletId.CryptoCode
             };
+            if (double.TryParse(defaultAmount, out var amount))
+                model.Amount = (decimal)amount;
+
+            var feeProvider = _feeRateProvider.CreateFeeProvider(network);
+            var recommendedFees = feeProvider.GetFeeRateAsync();
+            var balance = _walletProvider.GetWallet(network).GetBalance(paymentMethod.DerivationStrategyBase);
+            model.CurrentBalance = (await balance).ToDecimal(MoneyUnit.BTC);
+            model.RecommendedSatoshiPerByte = (int)(await recommendedFees).GetFee(1).Satoshi;
+            model.FeeSatoshiPerByte = model.RecommendedSatoshiPerByte;
 
             using (CancellationTokenSource cts = new CancellationTokenSource())
             {
@@ -182,6 +195,142 @@ namespace BTCPayServer.Controllers
                 catch (Exception ex) { model.RateError = ex.Message; }
             }
             return View(model);
+        }
+
+        [HttpPost]
+        [Route("{walletId}/send")]
+        public async Task<IActionResult> WalletSend(
+            [ModelBinder(typeof(WalletIdModelBinder))]
+            WalletId walletId, WalletSendModel vm)
+        {
+            if (walletId?.StoreId == null)
+                return NotFound();
+            var store = await Repository.FindStore(walletId.StoreId, GetUserId());
+            if (store == null)
+                return NotFound();
+            var network = this.NetworkProvider.GetNetwork(walletId?.CryptoCode);
+            if (network == null)
+                return NotFound();
+            var destination = ParseDestination(vm.Destination, network.NBitcoinNetwork);
+            if (destination == null)
+                ModelState.AddModelError(nameof(vm.Destination), "Invalid address");
+
+            if (vm.Amount.HasValue)
+            {
+                if (vm.CurrentBalance == vm.Amount.Value && !vm.SubstractFees)
+                    ModelState.AddModelError(nameof(vm.Amount), "You are sending all your balance to the same destination, you should substract the fees");
+                if (vm.CurrentBalance < vm.Amount.Value)
+                    ModelState.AddModelError(nameof(vm.Amount), "You are sending more than what you own");
+            }
+            if (!ModelState.IsValid)
+                return View(vm);
+
+            return RedirectToAction(nameof(WalletSendLedger), new WalletSendLedgerModel()
+            {
+                Destination = vm.Destination,
+                Amount = vm.Amount.Value,
+                SubstractFees = vm.SubstractFees,
+                FeeSatoshiPerByte = vm.FeeSatoshiPerByte
+            });
+        }
+
+        [HttpGet]
+        [Route("{walletId}/send/ledger")]
+        public async Task<IActionResult> WalletSendLedger(
+            [ModelBinder(typeof(WalletIdModelBinder))]
+            WalletId walletId, WalletSendLedgerModel vm)
+        {
+            if (walletId?.StoreId == null)
+                return NotFound();
+            var store = await Repository.FindStore(walletId.StoreId, GetUserId());
+            DerivationStrategy paymentMethod = GetPaymentMethod(walletId, store);
+            if (paymentMethod == null)
+                return NotFound();
+            var network = this.NetworkProvider.GetNetwork(walletId?.CryptoCode);
+            if (network == null)
+                return NotFound();
+            return View(vm);
+        }
+
+        private IDestination[] ParseDestination(string destination, Network network)
+        {
+            try
+            {
+                destination = destination?.Trim();
+                return new IDestination[] { BitcoinAddress.Create(destination, network) };
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        [HttpGet]
+        [Route("{walletId}/rescan")]
+        public async Task<IActionResult> WalletRescan(
+            [ModelBinder(typeof(WalletIdModelBinder))]
+            WalletId walletId)
+        {
+            if (walletId?.StoreId == null)
+                return NotFound();
+            var store = await Repository.FindStore(walletId.StoreId, GetUserId());
+            DerivationStrategy paymentMethod = GetPaymentMethod(walletId, store);
+            if (paymentMethod == null)
+                return NotFound();
+
+            var vm = new RescanWalletModel();
+            vm.IsFullySync = _dashboard.IsFullySynched();
+            vm.IsServerAdmin = User.Claims.Any(c => c.Type == Policies.CanModifyServerSettings.Key && c.Value == "true");
+            vm.IsSupportedByCurrency = _dashboard.Get(walletId.CryptoCode)?.Status?.BitcoinStatus?.Capabilities?.CanScanTxoutSet == true;
+            var explorer = ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode);
+            var scanProgress = await explorer.GetScanUTXOSetInformationAsync(paymentMethod.DerivationStrategyBase);
+            if (scanProgress != null)
+            {
+                vm.PreviousError = scanProgress.Error;
+                if (scanProgress.Status == ScanUTXOStatus.Queued || scanProgress.Status == ScanUTXOStatus.Pending)
+                {
+                    if (scanProgress.Progress == null)
+                    {
+                        vm.Progress = 0;
+                    }
+                    else
+                    {
+                        vm.Progress = scanProgress.Progress.OverallProgress;
+                        vm.RemainingTime = TimeSpan.FromSeconds(scanProgress.Progress.RemainingSeconds).PrettyPrint();
+                    }
+                }
+                if (scanProgress.Status == ScanUTXOStatus.Complete)
+                {
+                    vm.LastSuccess = scanProgress.Progress;
+                    vm.TimeOfScan = (scanProgress.Progress.CompletedAt.Value - scanProgress.Progress.StartedAt).PrettyPrint();
+                }
+            }
+            return View(vm);
+        }
+
+        [HttpPost]
+        [Route("{walletId}/rescan")]
+        [Authorize(Policy = Policies.CanModifyServerSettings.Key)]
+        public async Task<IActionResult> WalletRescan(
+            [ModelBinder(typeof(WalletIdModelBinder))]
+            WalletId walletId, RescanWalletModel vm)
+        {
+            if (walletId?.StoreId == null)
+                return NotFound();
+            var store = await Repository.FindStore(walletId.StoreId, GetUserId());
+            DerivationStrategy paymentMethod = GetPaymentMethod(walletId, store);
+            if (paymentMethod == null)
+                return NotFound();
+            var explorer = ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode);
+            try
+            {
+                await explorer.ScanUTXOSetAsync(paymentMethod.DerivationStrategyBase, vm.BatchSize, vm.GapLimit, vm.StartingIndex);
+            }
+            catch (NBXplorerException ex) when (ex.Error.Code == "scanutxoset-in-progress")
+            {
+
+            }
+            return RedirectToAction();
         }
 
         private string GetCurrencyCode(string defaultLang)
@@ -229,20 +378,25 @@ namespace BTCPayServer.Controllers
             return _userManager.GetUserId(User);
         }
 
-        public static string GetLedgerWebsocketUrl(HttpContext httpContext, string cryptoCode, DerivationStrategyBase derivationStrategy)
+        [HttpGet]
+        [Route("{walletId}/send/ledger/success")]
+        public IActionResult WalletSendLedgerSuccess(
+            [ModelBinder(typeof(WalletIdModelBinder))]
+            WalletId walletId,
+            string txid)
         {
-            return $"{httpContext.Request.GetAbsoluteRoot().WithTrailingSlash()}ws/ledger/{cryptoCode}/{derivationStrategy?.ToString() ?? string.Empty}";
+            StatusMessage = $"Transaction broadcasted ({txid})";
+            return RedirectToAction(nameof(this.WalletTransactions), new { walletId = walletId.ToString() });
         }
 
         [HttpGet]
-        [Route("/ws/ledger/{cryptoCode}/{derivationScheme?}")]
+        [Route("{walletId}/send/ledger/ws")]
         public async Task<IActionResult> LedgerConnection(
+            [ModelBinder(typeof(WalletIdModelBinder))]
+            WalletId walletId,
             string command,
             // getinfo
-            string cryptoCode = null,
             // getxpub
-            [ModelBinder(typeof(ModelBinders.DerivationSchemeModelBinder))]
-            DerivationStrategyBase derivationScheme = null,
             int account = 0,
             // sendtoaddress
             string destination = null, string amount = null, string feeRate = null, string substractFees = null
@@ -250,6 +404,11 @@ namespace BTCPayServer.Controllers
         {
             if (!HttpContext.WebSockets.IsWebSocketRequest)
                 return NotFound();
+
+            var cryptoCode = walletId.CryptoCode;
+            var storeBlob = (await Repository.FindStore(walletId.StoreId, GetUserId()));
+            var derivationScheme = GetPaymentMethod(walletId, storeBlob).DerivationStrategyBase;
+
             var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
 
             using (var normalOperationTimeout = new CancellationTokenSource())
@@ -313,15 +472,6 @@ namespace BTCPayServer.Controllers
                         }
                         catch { throw new FormatException("Invalid value for subtract fees"); }
                     }
-                    if (command == "test")
-                    {
-                        result = await hw.Test(normalOperationTimeout.Token);
-                    }
-                    if (command == "getxpub")
-                    {
-                        var getxpubResult = await hw.GetExtPubKey(network, account, normalOperationTimeout.Token);
-                        result = getxpubResult;
-                    }
                     if (command == "getinfo")
                     {
                         var strategy = GetDirectDerivationStrategy(derivationScheme);
@@ -329,13 +479,12 @@ namespace BTCPayServer.Controllers
                         {
                             throw new Exception($"This store is not configured to use this ledger");
                         }
-
-                        var feeProvider = _feeRateProvider.CreateFeeProvider(network);
-                        var recommendedFees = feeProvider.GetFeeRateAsync();
-                        var balance = _walletProvider.GetWallet(network).GetBalance(derivationScheme);
-                        result = new GetInfoResult() { Balance = (double)(await balance).ToDecimal(MoneyUnit.BTC), RecommendedSatoshiPerByte = (int)(await recommendedFees).GetFee(1).Satoshi };
+                        result = new GetInfoResult();
                     }
-
+                    if (command == "test")
+                    {
+                        result = await hw.Test(normalOperationTimeout.Token);
+                    }
                     if (command == "sendtoaddress")
                     {
                         if (!_dashboard.IsFullySynched(network.CryptoCode, out var summary))
@@ -367,9 +516,8 @@ namespace BTCPayServer.Controllers
                             throw new HardwareWalletException($"This store is not configured to use this ledger");
                         }
 
-                        TransactionBuilder builder = new TransactionBuilder();
+                        TransactionBuilder builder = network.NBitcoinNetwork.CreateTransactionBuilder();
                         builder.StandardTransactionPolicy.MinRelayTxFee = summary.Status.BitcoinStatus.MinRelayTxFee;
-                        builder.SetConsensusFactory(network.NBitcoinNetwork);
                         builder.AddCoins(unspentCoins.Select(c => c.Coin).ToArray());
 
                         foreach (var element in send)
@@ -392,7 +540,6 @@ namespace BTCPayServer.Controllers
                             else
                                 builder.SendEstimatedFees(feeRateValue);
                         }
-                        builder.Shuffle();
                         var unsigned = builder.BuildTransaction(false);
 
                         var keypaths = new Dictionary<Script, KeyPath>();
@@ -482,8 +629,6 @@ namespace BTCPayServer.Controllers
 
     public class GetInfoResult
     {
-        public int RecommendedSatoshiPerByte { get; set; }
-        public double Balance { get; set; }
     }
 
     public class SendToAddressResult

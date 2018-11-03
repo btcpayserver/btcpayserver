@@ -29,11 +29,7 @@ If you want to stop, and remove all existing data
 docker-compose down --v
 ```
 
-You can run the tests inside a container by running
-
-```
-docker-compose run --rm tests
-```
+You can run tests on `MySql` database instead of `Postgres` by setting environnement variable `TESTS_DB` equals to `MySql`.
 
 ## How to manually test payments
 
@@ -51,7 +47,7 @@ If you are using Powershell:
 
 ### Using the test litecoin-cli
 
-Same as bitcoin-cli, but with `.\docker-litecoin-cli.ps1` and `.\docker-litecoin-cli.sh` instead. 
+Same as bitcoin-cli, but with `.\docker-litecoin-cli.ps1` and `.\docker-litecoin-cli.sh` instead.
 
 ### Using the test lightning-cli
 

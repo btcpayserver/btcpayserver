@@ -11,6 +11,7 @@ namespace BTCPayServer.Tests
     public class RateRulesTest
     {
         [Fact]
+        [Trait("Fast", "Fast")]
         public void SecondDuplicatedRuleIsIgnored()
         {
             StringBuilder builder = new StringBuilder();
@@ -24,6 +25,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        [Trait("Fast", "Fast")]
         public void CanParseRateRules()
         {
             // Check happy path

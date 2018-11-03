@@ -43,6 +43,7 @@ Thanks to the apps built on top of it, you can use BTCPay to receive donations o
 In addition to Bitcoin, BTCPay supports the following cryptocurrencies:
 
 * BGold
+* Bitcore
 * Dash
 * Dogecoin
 * Feathercoin

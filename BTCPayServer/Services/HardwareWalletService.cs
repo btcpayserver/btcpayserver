@@ -80,6 +80,7 @@ namespace BTCPayServer.Services
                 throw new ArgumentNullException(nameof(ledgerWallet));
             _Transport = new WebSocketTransport(ledgerWallet);
             _Ledger = new LedgerClient(_Transport);
+            _Ledger.MaxAPDUSize = 90;
         }
 
         public async Task<LedgerTestResult> Test(CancellationToken cancellation)

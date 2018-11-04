@@ -32,6 +32,7 @@ using System.Globalization;
 using BTCPayServer.Services;
 using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using NBXplorer.DerivationStrategy;
 
 namespace BTCPayServer
 {
@@ -126,6 +127,19 @@ namespace BTCPayServer
                 resp.Headers.Remove(name);
             else
                 resp.Headers[name] = value;
+        }
+
+        public static bool IsSegwit(this DerivationStrategyBase derivationStrategyBase)
+        {
+            if (IsSegwitCore(derivationStrategyBase))
+                return true;
+            return (derivationStrategyBase is P2SHDerivationStrategy p2shStrat && IsSegwitCore(p2shStrat.Inner));
+        }
+
+        private static bool IsSegwitCore(DerivationStrategyBase derivationStrategyBase)
+        {
+            return (derivationStrategyBase is P2WSHDerivationStrategy) ||
+                            (derivationStrategyBase is DirectDerivationStrategy direct) && direct.Segwit;
         }
 
         public static string GetAbsoluteRoot(this HttpRequest request)

@@ -280,6 +280,9 @@ namespace BTCPayServer.Controllers
 
             var vm = new RescanWalletModel();
             vm.IsFullySync = _dashboard.IsFullySynched();
+            // We need to ensure it is segwit, 
+            // because hardware wallet support need the parent transactions to sign, which NBXplorer don't have. (Nor does a pruned node)
+            vm.IsSegwit = paymentMethod.DerivationStrategyBase.IsSegwit();
             vm.IsServerAdmin = User.Claims.Any(c => c.Type == Policies.CanModifyServerSettings.Key && c.Value == "true");
             vm.IsSupportedByCurrency = _dashboard.Get(walletId.CryptoCode)?.Status?.BitcoinStatus?.Capabilities?.CanScanTxoutSet == true;
             var explorer = ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode);

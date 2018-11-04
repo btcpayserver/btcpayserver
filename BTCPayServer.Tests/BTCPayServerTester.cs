@@ -1,4 +1,5 @@
 ﻿using BTCPayServer.Configuration;
+using System.Linq;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Hosting;
 using BTCPayServer.Payments;
@@ -139,6 +140,11 @@ namespace BTCPayServer.Tests
             _Host.Start();
             InvoiceRepository = (InvoiceRepository)_Host.Services.GetService(typeof(InvoiceRepository));
             StoreRepository = (StoreRepository)_Host.Services.GetService(typeof(StoreRepository));
+            var dashBoard = (NBXplorerDashboard)_Host.Services.GetService(typeof(NBXplorerDashboard));
+            while(!dashBoard.IsFullySynched())
+            {
+                Thread.Sleep(10);
+            }
 
             if (MockRates)
             {

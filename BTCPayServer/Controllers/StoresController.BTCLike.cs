@@ -34,11 +34,64 @@ namespace BTCPayServer.Controllers
             }
 
             DerivationSchemeViewModel vm = new DerivationSchemeViewModel();
-            vm.ServerUrl = WalletsController.GetLedgerWebsocketUrl(this.HttpContext, cryptoCode, null);
             vm.CryptoCode = cryptoCode;
             vm.RootKeyPath = network.GetRootKeyPath();
             SetExistingValues(store, vm);
             return View(vm);
+        }
+
+        [HttpGet]
+        [Route("{storeId}/derivations/{cryptoCode}/ledger/ws")]
+        public async Task<IActionResult> AddDerivationSchemeLedger(
+            string storeId,
+            string cryptoCode,
+            string command,
+            int account = 0)
+        {
+            if (!HttpContext.WebSockets.IsWebSocketRequest)
+                return NotFound();
+
+            var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+            var hw = new HardwareWalletService(webSocket);
+            object result = null;
+            var network = _NetworkProvider.GetNetwork(cryptoCode);
+
+            using (var normalOperationTimeout = new CancellationTokenSource())
+            {
+                normalOperationTimeout.CancelAfter(TimeSpan.FromMinutes(30));
+                try
+                {
+                    if (command == "test")
+                    {
+                        result = await hw.Test(normalOperationTimeout.Token);
+                    }
+                    if (command == "getxpub")
+                    {
+                        var getxpubResult = await hw.GetExtPubKey(network, account, normalOperationTimeout.Token);
+                        result = getxpubResult;
+                    }
+                }
+                catch (OperationCanceledException)
+                { result = new LedgerTestResult() { Success = false, Error = "Timeout" }; }
+                catch (Exception ex)
+                { result = new LedgerTestResult() { Success = false, Error = ex.Message }; }
+                finally { hw.Dispose(); }
+                try
+                {
+                    if (result != null)
+                    {
+                        UTF8Encoding UTF8NOBOM = new UTF8Encoding(false);
+                        var bytes = UTF8NOBOM.GetBytes(JsonConvert.SerializeObject(result, MvcJsonOptions.Value.SerializerSettings));
+                        await webSocket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, new CancellationTokenSource(2000).Token);
+                    }
+                }
+                catch { }
+                finally
+                {
+                    await webSocket.CloseSocket();
+                }
+            }
+            return new EmptyResult();
         }
 
         private void SetExistingValues(StoreData store, DerivationSchemeViewModel vm)
@@ -60,7 +113,6 @@ namespace BTCPayServer.Controllers
         [Route("{storeId}/derivations/{cryptoCode}")]
         public async Task<IActionResult> AddDerivationScheme(string storeId, DerivationSchemeViewModel vm, string cryptoCode)
         {
-            vm.ServerUrl = WalletsController.GetLedgerWebsocketUrl(this.HttpContext, cryptoCode, null);
             vm.CryptoCode = cryptoCode;
             var store = HttpContext.GetStoreData();
             if (store == null)
@@ -109,7 +161,7 @@ namespace BTCPayServer.Controllers
                               // - The user is setting a new derivation scheme
                               (!vm.Confirmation && strategy != null && exisingStrategy != strategy.DerivationStrategyBase.ToString()) ||
                               // - The user is clicking on continue without changing anything   
-                              (!vm.Confirmation && willBeExcluded == wasExcluded);  
+                              (!vm.Confirmation && willBeExcluded == wasExcluded);
 
             if (!showAddress)
             {

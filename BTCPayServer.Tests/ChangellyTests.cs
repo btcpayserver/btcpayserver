@@ -118,7 +118,7 @@ namespace BTCPayServer.Tests
                 var changellyController =
                     tester.PayTester.GetController<ChangellyController>(user.UserId, user.StoreId);
                 changellyController.IsTest = true;
-                
+
                 //test non existing payment method
                 Assert.IsType<BitpayErrorModel>(Assert
                     .IsType<BadRequestObjectResult>(await changellyController.GetCurrencyList(user.StoreId))
@@ -143,7 +143,6 @@ namespace BTCPayServer.Tests
                 Assert.Equal("UpdateStore", Assert.IsType<RedirectToActionResult>(
                     await storesController.UpdateChangellySettings(user.StoreId, updateModel, "save")).ActionName);
 
-                
 
                 Assert.IsNotType<BitpayErrorModel>(Assert
                     .IsType<OkObjectResult>(await changellyController.GetCurrencyList(user.StoreId))
@@ -179,18 +178,18 @@ namespace BTCPayServer.Tests
                 //confirm saved
                 Assert.Equal("UpdateStore", Assert.IsType<RedirectToActionResult>(
                     await storesController.UpdateChangellySettings(user.StoreId, updateModel, "save")).ActionName);
-                
+
                 var factory = UnitTest1.CreateBTCPayRateFactory();
                 var fetcher = new RateFetcher(factory);
                 var httpClientFactory = new MockHttpClientFactory();
                 var changellyController = new ChangellyController(
-                    new ChangellyClientProvider(tester.PayTester.StoreRepository,httpClientFactory), tester.NetworkProvider, fetcher);
+                    new ChangellyClientProvider(tester.PayTester.StoreRepository, httpClientFactory),
+                    tester.NetworkProvider, fetcher);
                 changellyController.IsTest = true;
                 var result = Assert
                     .IsType<OkObjectResult>(await changellyController.GetCurrencyList(user.StoreId))
                     .Value as IEnumerable<CurrencyFull>;
                 Assert.True(result.Any());
-
             }
         }
 
@@ -215,12 +214,32 @@ namespace BTCPayServer.Tests
                 var fetcher = new RateFetcher(factory);
                 var httpClientFactory = new MockHttpClientFactory();
                 var changellyController = new ChangellyController(
-                    new ChangellyClientProvider(tester.PayTester.StoreRepository,httpClientFactory), tester.NetworkProvider, fetcher);
+                    new ChangellyClientProvider(tester.PayTester.StoreRepository, httpClientFactory),
+                    tester.NetworkProvider, fetcher);
                 changellyController.IsTest = true;
                 Assert.IsType<decimal>(Assert
-                    .IsType<OkObjectResult>(await changellyController.CalculateAmount(user.StoreId, "ltc", "btc", 1.0m)).Value);
-
+                    .IsType<OkObjectResult>(await changellyController.CalculateAmount(user.StoreId, "ltc", "btc", 1.0m))
+                    .Value);
             }
+        }
+
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public void CanComputeBaseAmount()
+        {
+            Assert.Equal(1, ChangellyCalculationHelper.ComputeBaseAmount(1, 1));
+            Assert.Equal(0.5m, ChangellyCalculationHelper.ComputeBaseAmount(1, 0.5m));
+            Assert.Equal(2, ChangellyCalculationHelper.ComputeBaseAmount(0.5m, 1));
+            Assert.Equal(4m, ChangellyCalculationHelper.ComputeBaseAmount(1, 4));
+        }
+
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public void CanComputeCorrectAmount()
+        {
+            Assert.Equal(1, ChangellyCalculationHelper.ComputeCorrectAmount(0.5m, 1, 2));
+            Assert.Equal(0.25m, ChangellyCalculationHelper.ComputeCorrectAmount(0.5m, 1, 0.5m));
+            Assert.Equal(20, ChangellyCalculationHelper.ComputeCorrectAmount(10, 1, 2));
         }
     }
 
@@ -228,7 +247,7 @@ namespace BTCPayServer.Tests
     {
         public HttpClient CreateClient(string name)
         {
-            return  new HttpClient();
+            return new HttpClient();
         }
     }
 }

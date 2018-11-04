@@ -44,6 +44,7 @@ using BTCPayServer.Lightning;
 using BTCPayServer.Models.WalletViewModels;
 using System.Security.Claims;
 using BTCPayServer.Security;
+using NBXplorer.Models;
 
 namespace BTCPayServer.Tests
 {
@@ -480,10 +481,6 @@ namespace BTCPayServer.Tests
 
         async Task CanSendLightningPaymentCore(ServerTester tester, TestAccount user)
         {
-            // TODO: If this parameter is less than 1 second we start having concurrency problems
-            await Task.Delay(TimeSpan.FromMilliseconds(1000));
-            //
-
             var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice()
             {
                 Price = 0.01m,
@@ -492,6 +489,7 @@ namespace BTCPayServer.Tests
                 OrderId = "orderId",
                 ItemDesc = "Some description"
             });
+            await Task.Delay(TimeSpan.FromMilliseconds(1000)); // Give time to listen the new invoices
             await tester.SendLightningPaymentAsync(invoice);
             await EventuallyAsync(async () =>
             {
@@ -595,15 +593,16 @@ namespace BTCPayServer.Tests
                 tester.Start();
                 var acc = tester.NewAccount();
                 acc.GrantAccess();
-                acc.RegisterDerivationScheme("BTC");
+                acc.RegisterDerivationScheme("BTC", true);
                 var btcDerivationScheme = acc.DerivationScheme;
-                acc.RegisterDerivationScheme("LTC");
-                
+                acc.RegisterDerivationScheme("LTC", true);
+
                 var walletController = tester.PayTester.GetController<WalletsController>(acc.UserId);
                 WalletId walletId = new WalletId(acc.StoreId, "LTC");
                 var rescan = Assert.IsType<RescanWalletModel>(Assert.IsType<ViewResult>(walletController.WalletRescan(walletId).Result).Model);
                 Assert.False(rescan.Ok);
                 Assert.True(rescan.IsFullySync);
+                Assert.True(rescan.IsSegwit);
                 Assert.False(rescan.IsSupportedByCurrency);
                 Assert.False(rescan.IsServerAdmin);
 
@@ -626,10 +625,10 @@ namespace BTCPayServer.Tests
 
                 Assert.IsType<RedirectToActionResult>(walletController.WalletRescan(walletId, rescan).Result);
 
-                while(true)
+                while (true)
                 {
                     rescan = Assert.IsType<RescanWalletModel>(Assert.IsType<ViewResult>(walletController.WalletRescan(walletId).Result).Model);
-                    if(rescan.Progress == null && rescan.LastSuccess != null)
+                    if (rescan.Progress == null && rescan.LastSuccess != null)
                     {
                         if (rescan.LastSuccess.Found == 0)
                             continue;
@@ -760,6 +759,7 @@ namespace BTCPayServer.Tests
                 }, Facade.Merchant);
                 var payment1 = invoice.BtcDue + Money.Coins(0.0001m);
                 var payment2 = invoice.BtcDue;
+
                 var tx1 = new uint256(tester.ExplorerNode.SendCommand("sendtoaddress", new object[]
                 {
                     invoice.BitcoinAddress,
@@ -769,8 +769,10 @@ namespace BTCPayServer.Tests
                     false, //subtractfeefromamount
                     true, //replaceable
                 }).ResultString);
+                Logs.Tester.LogInformation($"Let's send a first payment of {payment1} for the {invoice.BtcDue} invoice ({tx1})");
                 var invoiceAddress = BitcoinAddress.Create(invoice.BitcoinAddress, user.SupportedNetwork.NBitcoinNetwork);
 
+                Logs.Tester.LogInformation($"The invoice should be paidOver");
                 Eventually(() =>
                 {
                     invoice = user.BitPay.GetInvoice(invoice.Id);
@@ -788,9 +790,18 @@ namespace BTCPayServer.Tests
                 var output = tx.Outputs.First(o => o.Value == payment1);
                 output.Value = payment2;
                 output.ScriptPubKey = invoiceAddress.ScriptPubKey;
-                var replaced = tester.ExplorerNode.SignRawTransaction(tx);
-                tester.ExplorerNode.SendRawTransaction(replaced);
-                var test = tester.ExplorerClient.GetUTXOs(user.DerivationScheme, null);
+
+                using (var cts = new CancellationTokenSource(10000))
+                using (var listener = tester.ExplorerClient.CreateNotificationSession())
+                {
+                    listener.ListenAllDerivationSchemes();
+                    var replaced = tester.ExplorerNode.SignRawTransaction(tx);
+                    Thread.Sleep(1000); // Make sure the replacement has a different timestamp
+                    var tx2 = tester.ExplorerNode.SendRawTransaction(replaced);
+                    Logs.Tester.LogInformation($"Let's RBF with a payment of {payment2} ({tx2}), waiting for NBXplorer to pick it up");
+                    Assert.Equal(tx2, ((NewTransactionEvent)listener.NextEvent(cts.Token)).TransactionData.TransactionHash);
+                }
+                Logs.Tester.LogInformation($"The invoice should now not be paidOver anymore");
                 Eventually(() =>
                 {
                     invoice = user.BitPay.GetInvoice(invoice.Id);
@@ -1503,7 +1514,7 @@ namespace BTCPayServer.Tests
                 var ctx = tester.PayTester.GetService<ApplicationDbContextFactory>().CreateContext();
                 Assert.Equal(0, invoice.CryptoInfo[0].TxCount);
                 Assert.True(invoice.MinerFees.ContainsKey("BTC"));
-                Assert.Equal(100m, invoice.MinerFees["BTC"].SatoshiPerBytes);
+                Assert.Contains(invoice.MinerFees["BTC"].SatoshiPerBytes, new[] { 100.0m, 20.0m });
                 Eventually(() =>
                 {
                     var textSearchResult = tester.PayTester.InvoiceRepository.GetInvoices(new InvoiceQuery()
@@ -1615,7 +1626,7 @@ namespace BTCPayServer.Tests
                 }, Facade.Merchant);
                 invoiceAddress = BitcoinAddress.Create(invoice.BitcoinAddress, cashCow.Network);
 
-                cashCow.SendToAddress(invoiceAddress, invoice.BtcDue + Money.Coins(1));
+                var txId = cashCow.SendToAddress(invoiceAddress, invoice.BtcDue + Money.Coins(1));
 
                 Eventually(() =>
                 {
@@ -1623,6 +1634,13 @@ namespace BTCPayServer.Tests
                     Assert.Equal("paid", localInvoice.Status);
                     Assert.Equal(Money.Zero, localInvoice.BtcDue);
                     Assert.Equal("paidOver", (string)((JValue)localInvoice.ExceptionStatus).Value);
+
+                    var textSearchResult = tester.PayTester.InvoiceRepository.GetInvoices(new InvoiceQuery()
+                    {
+                        StoreId = new[] { user.StoreId },
+                        TextSearch = txId.ToString()
+                    }).GetAwaiter().GetResult();
+                    Assert.Single(textSearchResult);
                 });
 
                 cashCow.Generate(1);
@@ -1699,11 +1717,12 @@ namespace BTCPayServer.Tests
             foreach (var value in result)
             {
                 var rateResult = value.Value.GetAwaiter().GetResult();
-                Assert.NotNull(rateResult.BidAsk);
+                Logs.Tester.LogInformation($"Testing {value.Key.ToString()}");
+                Assert.True(rateResult.BidAsk != null, $"Impossible to get the rate {rateResult.EvaluatedRule}");
             }
         }
 
-        public  static RateProviderFactory CreateBTCPayRateFactory()
+        public static RateProviderFactory CreateBTCPayRateFactory()
         {
             return new RateProviderFactory(CreateMemoryCache(), null, new CoinAverageSettings());
         }

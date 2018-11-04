@@ -61,8 +61,8 @@ namespace BTCPayServer.Controllers
                 }
                 
                 var callCounter = 0;
-                var response1 = await client.GetExchangeAmount(fromCurrency, toCurrency, 1);
-                var currentAmount = response1;
+                var baseRate = await client.GetExchangeAmount(fromCurrency, toCurrency, 1);
+                var currentAmount = ChangellyCalculationHelper.ComputeBaseAmount(baseRate, toCurrencyAmount);
                 while (true)
                 {
                     if (callCounter > 10)
@@ -70,13 +70,13 @@ namespace BTCPayServer.Controllers
                         BadRequest();
                     }
 
-                    var response2 = await client.GetExchangeAmount(fromCurrency, toCurrency, currentAmount);
+                    var computedAmount = await client.GetExchangeAmount(fromCurrency, toCurrency, currentAmount);
                     callCounter++;
-                    if (response2 < toCurrencyAmount)
+                    if (computedAmount < toCurrencyAmount)
                     {
-                        var newCurrentAmount = ((toCurrencyAmount / response2) * 1m) * currentAmount;
-
-                        currentAmount = newCurrentAmount;
+                        currentAmount =
+                            ChangellyCalculationHelper.ComputeCorrectAmount(currentAmount, computedAmount,
+                                toCurrencyAmount);
                     }
                     else
                     {
@@ -114,4 +114,6 @@ namespace BTCPayServer.Controllers
 
         public bool IsTest { get; set; } = false;
     }
+    
+    
 }

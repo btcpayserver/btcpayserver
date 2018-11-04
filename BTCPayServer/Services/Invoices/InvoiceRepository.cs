@@ -295,6 +295,8 @@ namespace BTCPayServer.Services.Invoices
         {
             using (var tx = _Engine.GetTransaction())
             {
+                var terms = searchTerms.Split(null);
+                searchTerms = string.Join(' ', terms.Select(t => t.Length > 50 ? t.Substring(0, 50) : t).ToArray());
                 return tx.TextSearch("InvoiceSearch").Block(searchTerms)
                     .GetDocumentIDs()
                     .Select(id => Encoders.Base58.EncodeData(id))

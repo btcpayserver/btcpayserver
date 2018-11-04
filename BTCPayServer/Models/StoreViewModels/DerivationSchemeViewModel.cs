@@ -29,7 +29,6 @@ namespace BTCPayServer.Models.StoreViewModels
         public bool Confirmation { get; set; }
         public bool Enabled { get; set; } = true;
 
-        public string ServerUrl { get; set; }
         public string StatusMessage { get; internal set; }
         public KeyPath RootKeyPath { get; set; }
     }

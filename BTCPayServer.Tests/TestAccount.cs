@@ -73,16 +73,16 @@ namespace BTCPayServer.Tests
 
         public BTCPayNetwork SupportedNetwork { get; set; }
 
-        public WalletId RegisterDerivationScheme(string crytoCode)
+        public WalletId RegisterDerivationScheme(string crytoCode, bool segwit = false)
         {
-            return RegisterDerivationSchemeAsync(crytoCode).GetAwaiter().GetResult();
+            return RegisterDerivationSchemeAsync(crytoCode, segwit).GetAwaiter().GetResult();
         }
-        public async Task<WalletId> RegisterDerivationSchemeAsync(string cryptoCode)
+        public async Task<WalletId> RegisterDerivationSchemeAsync(string cryptoCode, bool segwit = false)
         {
             SupportedNetwork = parent.NetworkProvider.GetNetwork(cryptoCode);
             var store = parent.PayTester.GetController<StoresController>(UserId, StoreId);
             ExtKey = new ExtKey().GetWif(SupportedNetwork.NBitcoinNetwork);
-            DerivationScheme = new DerivationStrategyFactory(SupportedNetwork.NBitcoinNetwork).Parse(ExtKey.Neuter().ToString() + "-[legacy]");
+            DerivationScheme = new DerivationStrategyFactory(SupportedNetwork.NBitcoinNetwork).Parse(ExtKey.Neuter().ToString() + (segwit ? "" : "-[legacy]"));
             var vm = (StoreViewModel)((ViewResult)store.UpdateStore()).Model;
             vm.SpeedPolicy = SpeedPolicy.MediumSpeed;
             await store.UpdateStore(vm);

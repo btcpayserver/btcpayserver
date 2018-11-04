@@ -149,8 +149,7 @@ namespace BTCPayServer.Payments.Bitcoin
                                 foreach (var output in evt.Outputs)
                                 {
                                     foreach (var txCoin in evt.TransactionData.Transaction.Outputs.AsCoins()
-                                                                                .Where(o => o.ScriptPubKey == output.ScriptPubKey)
-                                                                                .Select(o => output.Redeem == null ? o : o.ToScriptCoin(output.Redeem)))
+                                                                                .Where(o => o.ScriptPubKey == output.ScriptPubKey))
                                     {
                                         var invoice = await _InvoiceRepository.GetInvoiceFromScriptPubKey(output.ScriptPubKey, network.CryptoCode);
                                         if (invoice != null)

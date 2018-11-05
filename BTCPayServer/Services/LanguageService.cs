@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.AspNetCore.Hosting.Internal;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -28,8 +29,13 @@ namespace BTCPayServer.Services
 
         public LanguageService(IHostingEnvironment environment)
         {
-            
-            var path = Path.Combine(environment.ContentRootPath, "wwwroot", "locales");
+            var path = (environment as HostingEnvironment)?.WebRootPath;
+            if (string.IsNullOrEmpty(path))
+            {
+                //test environment
+                path = Path.Combine(TryGetSolutionDirectoryInfo().FullName,"BTCPayServer", "wwwroot");
+            }
+            path = Path.Combine(path, "locales");
             var files = Directory.GetFiles(path, "*.json");
             var result = new List<Language>();
             foreach (var file in files)
@@ -44,6 +50,16 @@ namespace BTCPayServer.Services
             _languages = result.ToArray();
         }
 
+        private static DirectoryInfo TryGetSolutionDirectoryInfo(string currentPath = null)
+        {
+            var directory = new DirectoryInfo(
+                currentPath ?? Directory.GetCurrentDirectory());
+            while (directory != null && !directory.GetFiles("*.sln").Any())
+            {
+                directory = directory.Parent;
+            }
+            return directory;
+        }
         public Language[] GetLanguages()
         {
             return _languages;

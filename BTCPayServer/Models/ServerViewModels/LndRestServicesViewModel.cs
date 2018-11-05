@@ -5,13 +5,10 @@ using System.Threading.Tasks;
 
 namespace BTCPayServer.Models.ServerViewModels
 {
-    public class LndGrpcServicesViewModel
+    public class LndRestServicesViewModel
     {
-        public string Host { get; set; }
-        public bool SSL { get; set; }
+        public string BaseApiUrl { get; set; }
         public string Macaroon { get; set; }
         public string CertificateThumbprint { get; set; }
-        public string QRCode { get; set; }
-        public string QRCodeLink { get; set; }
     }
 }

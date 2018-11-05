@@ -1,0 +1,41 @@
+﻿@model LndRestServicesViewModel
+@{
+    ViewData.SetActivePageAndTitle(ServerNavPages.Services);
+}
+
+
+<h4>LND REST</h4>
+<partial name="_StatusMessage" for="@TempData["StatusMessage"]" />
+<div class="row">
+    <div class="col-md-6">
+        <div asp-validation-summary="All" class="text-danger"></div>
+    </div>
+</div>
+
+<div class="row">
+
+    <div class="col-md-8">
+        <div class="form-group">
+            <p>BTCPay exposes LND Rest services for outside consumption. See connection information below</p>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="BaseApiUrl">Base API Url</label>
+            <input asp-for="BaseApiUrl" readonly class="form-control" />
+        </div>
+        @if (Model.Macaroon != null)
+        {
+            <div class="form-group">
+                <label asp-for="Macaroon"></label>
+                <input asp-for="Macaroon" readonly class="form-control" />
+            </div>
+        }
+        @if (Model.CertificateThumbprint != null)
+        {
+            <div class="form-group">
+                <label asp-for="CertificateThumbprint"></label>
+                <input asp-for="CertificateThumbprint" readonly class="form-control" />
+            </div>
+        }
+    </div>
+</div>

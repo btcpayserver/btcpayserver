@@ -641,8 +641,8 @@ namespace BTCPayServer.Controllers
             if (string.IsNullOrEmpty(_Options.LogFile))
             {
                 vm.StatusMessage = "Error: File Logging Option not specified. " +
-                                   "You need to set <i>debuglog</i> and optionally " +
-                                   "<i>debugloglevel</i>in the configuration or through runtime arguments";
+                                   "You need to set debuglog and optionally " +
+                                   "debugloglevel in the configuration or through runtime arguments";
             }
             else
             {

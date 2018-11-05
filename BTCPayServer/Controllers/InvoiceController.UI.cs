@@ -174,7 +174,8 @@ namespace BTCPayServer.Controllers
         [AcceptMediaTypeConstraint("application/bitcoin-paymentrequest", false)]
         [XFrameOptionsAttribute(null)]
         [ReferrerPolicyAttribute("origin")]
-        public async Task<IActionResult> Checkout(string invoiceId, string id = null, string paymentMethodId = null)
+        public async Task<IActionResult> Checkout(string invoiceId, string id = null, string paymentMethodId = null,
+            [FromQuery]string view = null)
         {
             //Keep compatibility with Bitpay
             invoiceId = invoiceId ?? id;
@@ -185,6 +186,8 @@ namespace BTCPayServer.Controllers
             if (model == null)
                 return NotFound();
 
+            if (view == "modal")
+                model.IsModal = true;
 
             _CSP.Add(new ConsentSecurityPolicy("script-src", "'unsafe-eval'")); // Needed by Vue
             if (!string.IsNullOrEmpty(model.CustomCSSLink) &&

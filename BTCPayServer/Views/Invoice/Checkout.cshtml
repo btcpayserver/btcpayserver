@@ -27,10 +27,19 @@
         <link href="@Model.CustomCSSLink" rel="stylesheet" />
     }
 
-    <style type="text/css">
-    </style>
+    @if (Model.IsModal)
+    {
+        <style type="text/css">
+            body {
+                background: rgba(55, 58, 60, 0.4);
+            }
+            .close-icon {
+                display: flex;
+            }
+        </style>
+    }
 </head>
-<body style="background: #E4E4E4">
+<body>
     <noscript>
         <center style="padding: 2em">
             <h2>Javascript is currently disabled in your browser.</h2>

@@ -423,16 +423,6 @@ namespace BTCPayServer.Services.Invoices
 
 #pragma warning restore CS0618
                 dto.CryptoInfo.Add(cryptoInfo);
-                dto.Buyer = new JObject();
-                dto.Buyer.Add(new JProperty("name", BuyerInformation.BuyerName));
-                dto.Buyer.Add(new JProperty("address1", BuyerInformation.BuyerAddress1));
-                dto.Buyer.Add(new JProperty("address2", BuyerInformation.BuyerAddress2));
-                dto.Buyer.Add(new JProperty("locality", BuyerInformation.BuyerCity));
-                dto.Buyer.Add(new JProperty("region", BuyerInformation.BuyerState));
-                dto.Buyer.Add(new JProperty("postalCode", BuyerInformation.BuyerZip));
-                dto.Buyer.Add(new JProperty("country", BuyerInformation.BuyerCountry));
-                dto.Buyer.Add(new JProperty("phone", BuyerInformation.BuyerPhone));
-                dto.Buyer.Add(new JProperty("email", BuyerInformation.BuyerEmail ?? RefundMail));
                 dto.PaymentCodes.Add(paymentId.ToString(), cryptoInfo.PaymentUrls);
                 dto.PaymentSubtotals.Add(paymentId.ToString(), subtotalPrice.Satoshi);
                 dto.PaymentTotals.Add(paymentId.ToString(), accounting.TotalDue.Satoshi);
@@ -447,7 +437,16 @@ namespace BTCPayServer.Services.Invoices
             //dto.AmountPaid dto.MinerFees & dto.TransactionCurrency are not supported by btcpayserver as we have multi currency payment support per invoice
 
             Populate(ProductInformation, dto);
-            Populate(BuyerInformation, dto);
+            dto.Buyer = new JObject();
+            dto.Buyer.Add(new JProperty("name", BuyerInformation.BuyerName));
+            dto.Buyer.Add(new JProperty("address1", BuyerInformation.BuyerAddress1));
+            dto.Buyer.Add(new JProperty("address2", BuyerInformation.BuyerAddress2));
+            dto.Buyer.Add(new JProperty("locality", BuyerInformation.BuyerCity));
+            dto.Buyer.Add(new JProperty("region", BuyerInformation.BuyerState));
+            dto.Buyer.Add(new JProperty("postalCode", BuyerInformation.BuyerZip));
+            dto.Buyer.Add(new JProperty("country", BuyerInformation.BuyerCountry));
+            dto.Buyer.Add(new JProperty("phone", BuyerInformation.BuyerPhone));
+            dto.Buyer.Add(new JProperty("email", string.IsNullOrWhiteSpace(BuyerInformation.BuyerEmail) ? RefundMail : BuyerInformation.BuyerEmail));
 
             dto.Token = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16)); //No idea what it is useful for
             dto.Guid = Guid.NewGuid().ToString();

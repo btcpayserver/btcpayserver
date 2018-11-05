@@ -135,6 +135,7 @@ namespace BTCPayServer.Controllers
                 vm.Timestamp = tx.Timestamp;
                 vm.Positive = tx.BalanceChange >= Money.Zero;
                 vm.Balance = tx.BalanceChange.ToString();
+                vm.IsConfirmed = tx.Confirmations != 0;
             }
             model.Transactions = model.Transactions.OrderByDescending(t => t.Timestamp).ToList();
             return View(model);

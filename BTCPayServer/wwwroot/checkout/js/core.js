@@ -132,7 +132,7 @@ $(document).ready(function () {
             hideEmailForm();
     }
 
-    $(".close-icon").on("click", function () {
+    $(".close-action").on("click", function () {
         $("invoice").fadeOut(300, function () {
             window.parent.postMessage("close", "*");
         });

@@ -586,6 +586,23 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Integration", "Integration")]
+        public void CanSolveTheDogesRatesOnKraken()
+        {
+            var provider = new BTCPayNetworkProvider(NetworkType.Mainnet);
+            var factory = CreateBTCPayRateFactory();
+            var fetcher = new RateFetcher(factory);
+
+            Assert.True(RateRules.TryParse("X_X=kraken(X_BTC) * kraken(BTC_X)", out var rule));
+            foreach(var pair in new[] { "DOGE_USD", "DOGE_CAD", "DASH_CAD", "DASH_USD", "DASH_EUR" })
+            {
+                var result = fetcher.FetchRate(CurrencyPair.Parse(pair), rule).GetAwaiter().GetResult();
+                Assert.NotNull(result.BidAsk);
+                Assert.Empty(result.Errors);
+            }
+        }
+
+        [Fact]
+        [Trait("Integration", "Integration")]
         public void CanRescanWallet()
         {
             using (var tester = ServerTester.Create())

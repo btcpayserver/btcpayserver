@@ -10359,7 +10359,7 @@ All mobile class names should be prefixed by m- */
 }
 
 .paid:not(.paid-over) .status-icon {
-    padding-top: 54px;
+    padding-top: 45px;
 }
 
 .paid:not(.paid-over) .button-wrapper {

@@ -1,4 +1,4 @@
-﻿using BTCPayServer.Validations;
+﻿using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;

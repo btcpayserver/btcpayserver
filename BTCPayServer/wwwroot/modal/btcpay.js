@@ -25,6 +25,14 @@
     iframe.style.zIndex = '1000';
 
     var origin = 'http://slack.btcpayserver.org join us there, and initialize this with your origin url through setApiUrlPrefix';
+    // urlPrefix should be site root without trailing slash
+    function setApiUrlPrefix(urlPrefix) {
+        origin = stripTrailingSlashes(urlPrefix);
+    }
+    function stripTrailingSlashes(site) {
+        return site.replace(/\/+$/, "");
+    } 
+
     var onModalWillEnterMethod = function () { };
     var onModalWillLeaveMethod = function () { };
 
@@ -75,15 +83,11 @@
 
     function showInvoice(invoiceId, params) {
         window.document.body.appendChild(iframe);
-        var invoiceUrl = origin + '/invoice?id=' + invoiceId + '&v=2&view=modal';
+        var invoiceUrl = origin + '/invoice?id=' + invoiceId + '&view=modal';
         if (params && params.animateEntrance === false) {
             invoiceUrl += '&animateEntrance=false';
         }
         iframe.src = invoiceUrl;
-    }
-
-    function setApiUrlPrefix(urlPrefix) {
-        origin = urlPrefix;
     }
 
     function setButtonListeners() {

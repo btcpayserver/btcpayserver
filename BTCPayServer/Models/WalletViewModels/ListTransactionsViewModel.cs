@@ -10,6 +10,7 @@ namespace BTCPayServer.Models.WalletViewModels
         public class TransactionViewModel
         {
             public DateTimeOffset Timestamp { get; set; }
+            public bool IsConfirmed { get; set; }
             public string Id { get; set; }
             public string Link { get; set; }
             public bool Positive { get; set; }

@@ -1,6 +1,16 @@
 ﻿$(function () {
     var ledgerDetected = false;
-    var bridge = new ledgerwebsocket.LedgerWebSocketBridge(srvModel);
+
+    var loc = window.location, new_uri;
+    if (loc.protocol === "https:") {
+        new_uri = "wss:";
+    } else {
+        new_uri = "ws:";
+    }
+    new_uri += "//" + loc.host;
+    new_uri += loc.pathname + "/ledger/ws";
+
+    var bridge = new ledgerwebsocket.LedgerWebSocketBridge(new_uri);
 
     var cryptoSelector = $("#CryptoCurrency");
     function GetSelectedCryptoCode() {

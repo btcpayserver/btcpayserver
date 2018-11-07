@@ -23,6 +23,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 
@@ -51,6 +52,7 @@ namespace BTCPayServer.Controllers
             IFeeProviderFactory feeRateProvider,
             LanguageService langService,
             ChangellyClientProvider changellyClientProvider,
+            IOptions<MvcJsonOptions> mvcJsonOptions,
             IHostingEnvironment env, IHttpClientFactory httpClientFactory)
         {
             _RateFactory = rateFactory;
@@ -59,6 +61,7 @@ namespace BTCPayServer.Controllers
             _UserManager = userManager;
             _LangService = langService;
             _changellyClientProvider = changellyClientProvider;
+            MvcJsonOptions = mvcJsonOptions;
             _TokenController = tokenController;
             _WalletProvider = walletProvider;
             _Env = env;
@@ -570,6 +573,45 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
+        [HttpGet]
+        [Route("{storeId}/tokens/{tokenId}/revoke")]
+        public async Task<IActionResult> RevokeToken(string tokenId)
+        {
+            var token = await _TokenRepository.GetToken(tokenId);
+            if (token == null || token.StoreId != StoreData.Id)
+                return NotFound();
+            return View("Confirm", new ConfirmModel()
+            {
+                Action = "Revoke the token",
+                Title = "Revoke the token",
+                Description = $"The access token with the label \"{token.Label}\" will be revoked, do you wish to continue?",
+                ButtonClass = "btn-danger"
+            });
+        }
+        [HttpPost]
+        [Route("{storeId}/tokens/{tokenId}/revoke")]
+        public async Task<IActionResult> RevokeTokenConfirm(string tokenId)
+        {
+            var token = await _TokenRepository.GetToken(tokenId);
+            if (token == null ||
+                token.StoreId != StoreData.Id ||
+               !await _TokenRepository.DeleteToken(tokenId))
+                StatusMessage = "Failure to revoke this token";
+            else
+                StatusMessage = "Token revoked";
+            return RedirectToAction(nameof(ListTokens));
+        }
+
+        [HttpGet]
+        [Route("{storeId}/tokens/{tokenId}")]
+        public async Task<IActionResult> ShowToken(string tokenId)
+        {
+            var token = await _TokenRepository.GetToken(tokenId);
+            if (token == null || token.StoreId != StoreData.Id)
+                return NotFound();
+            return View(token);
+        }
+
         [HttpPost]
         [Route("/api-tokens")]
         [Route("{storeId}/Tokens/Create")]
@@ -634,6 +676,7 @@ namespace BTCPayServer.Controllers
         }
 
         public string GeneratedPairingCode { get; set; }
+        public IOptions<MvcJsonOptions> MvcJsonOptions { get; }
 
         [HttpGet]
         [Route("/api-tokens")]
@@ -669,21 +712,6 @@ namespace BTCPayServer.Controllers
                 }
             }
             return View(model);
-        }
-
-
-        [HttpPost]
-        [Route("{storeId}/Tokens/Delete")]
-        public async Task<IActionResult> DeleteToken(string tokenId)
-        {
-            var token = await _TokenRepository.GetToken(tokenId);
-            if (token == null ||
-                token.StoreId != StoreData.Id ||
-               !await _TokenRepository.DeleteToken(tokenId))
-                StatusMessage = "Failure to revoke this token";
-            else
-                StatusMessage = "Token revoked";
-            return RedirectToAction(nameof(ListTokens));
         }
 
         [HttpPost]

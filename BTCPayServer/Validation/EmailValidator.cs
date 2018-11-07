@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace BTCPayServer.Validations
+namespace BTCPayServer.Validation
 {
     public class EmailValidator
     {

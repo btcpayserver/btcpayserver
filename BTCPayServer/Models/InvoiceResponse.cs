@@ -247,6 +247,8 @@ namespace BTCPayServer.Models
         public Dictionary<string, string> Addresses { get; set; }
         [JsonProperty("paymentCodes")]
         public Dictionary<string, NBitpayClient.InvoicePaymentUrls> PaymentCodes { get; set; }
+        [JsonProperty("buyer")]
+        public JObject Buyer { get; set; }
     }
     public class Flags
     {

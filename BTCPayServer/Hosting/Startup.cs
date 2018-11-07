@@ -83,23 +83,24 @@ namespace BTCPayServer.Hosting
                     options.EnableAuthorizationEndpoint("/connect/authorize");
                     options.EnableAuthorizationEndpoint("/connect/logout");
 
-                    // Allow client applications to use the grant_type=password flow.
+                    // Allow client applications various flows
+                    // with the exception of Client Credentials flow as we cannot identify
+                    // a user through that grant type
+                    options.AllowImplicitFlow();
+                    options.AllowRefreshTokenFlow();
                     options.AllowPasswordFlow();
                     options.AllowAuthorizationCodeFlow();
                     // During development, you can disable the HTTPS requirement.
                     options.DisableHttpsRequirement();
 
-                    // Accept token requests that don't specify a client_id.
+                    // Accept token requests that don't specify a client_id. 
                     options.AcceptAnonymousClients();
                     options.DisableScopeValidation();
 
                     options.UseJsonWebTokens();
 
                     options.ConfigureSigningKey(Configuration);
-
                 });
-
-
 
             services.AddBTCPayServer(Configuration);
             services.AddMvc(o =>

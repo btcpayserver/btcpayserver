@@ -55,18 +55,15 @@ namespace BTCPayServer
                         l.AddProvider(new CustomConsoleLogProvider(processor));
 
                         // Use Serilog for debug log file.
-                        string debugLogFile = conf.GetOrDefault<string>("debuglog", null);
-                        if (String.IsNullOrEmpty(debugLogFile) == false)
-                        {
-                            Serilog.Log.Logger = new LoggerConfiguration()
+                        var debugLogFile = BTCPayServerOptions.GetDebugLog(conf);
+                        if (string.IsNullOrEmpty(debugLogFile) != false) return;
+                        Serilog.Log.Logger = new LoggerConfiguration()
                             .Enrich.FromLogContext()
-                            .MinimumLevel.Debug()
+                            .MinimumLevel.Is(BTCPayServerOptions.GetDebugLogLevel(conf))
                             .WriteTo.File(debugLogFile, rollingInterval: RollingInterval.Day, fileSizeLimitBytes: MAX_DEBUG_LOG_FILE_SIZE, rollOnFileSizeLimit: true, retainedFileCountLimit: 1)
                             .CreateLogger();
 
-                            l.AddSerilog(Serilog.Log.Logger);
-                            logger.LogDebug($"Debug log file configured for {debugLogFile}.");
-                        }                           
+                        l.AddSerilog(Serilog.Log.Logger);
                     })
                     .UseStartup<Startup>()
                     .Build();

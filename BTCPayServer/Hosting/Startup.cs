@@ -13,12 +13,14 @@ using Microsoft.Extensions.Configuration;
 using Hangfire.AspNetCore;
 using BTCPayServer.Configuration;
 using System.IO;
+using System.Net;
 using Hangfire.Dashboard;
 using Hangfire.Annotations;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Security.Cryptography;
 using AspNet.Security.OpenIdConnect.Primitives;
 using BTCPayServer.Security;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.IdentityModel.Tokens;
 using NETCore.Encrypt.Extensions.Internal;
 

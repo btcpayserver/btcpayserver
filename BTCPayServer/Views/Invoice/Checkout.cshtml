@@ -27,10 +27,20 @@
         <link href="@Model.CustomCSSLink" rel="stylesheet" />
     }
 
-    <style type="text/css">
-    </style>
+    @if (Model.IsModal)
+    {
+        <style type="text/css">
+            body {
+                background: rgba(55, 58, 60, 0.4);
+            }
+
+            .close-icon {
+                display: flex;
+            }
+        </style>
+    }
 </head>
-<body style="background: #E4E4E4">
+<body>
     <noscript>
         <center style="padding: 2em">
             <h2>Javascript is currently disabled in your browser.</h2>
@@ -53,20 +63,20 @@
     </center>
     <![endif]-->
 
-<invoice>
-    <div class="no-bounce" id="checkoutCtrl" v-cloak>
-        <div class="modal page">
-            <div class="modal-dialog open opened enter-purchaser-email" role="document">
-                <div class="modal-content long">
-                    <div class="content">
-                        <div class="invoice">
-                            <partial name="Checkout-Body" />
+    <invoice>
+        <div class="no-bounce" id="checkoutCtrl" v-cloak>
+            <div class="modal page">
+                <div class="modal-dialog open opened enter-purchaser-email" role="document">
+                    <div class="modal-content long">
+                        <div class="content">
+                            <div class="invoice">
+                                <partial name="Checkout-Body" />
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div style="margin-top: 10px; text-align: center;">
-                    @* Not working because of nsSeparator: false, keySeparator: false,
+                    <div style="margin-top: 10px; text-align: center;">
+                        @* Not working because of nsSeparator: false, keySeparator: false,
                             {{$t("nested.lang")}} >>
                         *@
                     
@@ -90,10 +100,11 @@
                                 hoverIntent: 5000
                             });
                         }
-                    </script>
-                </div>
-                <div style="margin-top: 10px; text-align: center;" class="form-text small text-muted">
-                    <span>Powered by <a target="_blank" href="https://github.com/btcpayserver/btcpayserver">BTCPay Server</a></span>
+                        </script>
+                    </div>
+                    <div style="margin-top: 10px; text-align: center;" class="form-text small text-muted">
+                        <span>Powered by <a target="_blank" href="https://github.com/btcpayserver/btcpayserver">BTCPay Server</a></span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -133,7 +144,7 @@
         // Ignoring custom HTML5 elements, eg: bp-spinner
         /^bp-/
     ];
-    
+
     var checkoutCtrl = new Vue({
         i18n: i18n,
         el: '#checkoutCtrl',
@@ -142,12 +153,13 @@
             changelly: ChangellyComponent
         },
         data: {
-                srvModel: srvModel,
-                lndModel: null,
-                scanDisplayQr: "",
-                expiringSoon: false
+            srvModel: srvModel,
+            lndModel: null,
+            scanDisplayQr: "",
+            expiringSoon: false,
+            isModal: '@(Model.IsModal ? "true" : "false")'
         }
     });
-</script>
+    </script>
 </body>
 </html>

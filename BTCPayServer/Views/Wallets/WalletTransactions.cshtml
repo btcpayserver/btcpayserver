@@ -15,6 +15,10 @@
             max-width: 400px;
         }
     }
+
+    .unconf {
+        opacity: 0.5;
+    }
 </style>
 
 <div class="row">
@@ -41,8 +45,8 @@
             <tbody>
                 @foreach (var transaction in Model.Transactions)
                 {
-                    <tr>
-                        <td>@transaction.Timestamp.ToBrowserDate()</td>
+                    <tr class="@(transaction.IsConfirmed ? "" : "unconf")">
+                        <td>@transaction.Timestamp.ToTimeAgo()</td>
                         <td class="smMaxWidth text-truncate">
                             <a href="@transaction.Link" target="_blank">
                                 @transaction.Id

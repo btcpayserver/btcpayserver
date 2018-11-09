@@ -157,10 +157,7 @@
     }
         
     function isLanguageAvailable(languageCode) {
-        if (availableLanguages.indexOf(languageCode) < 0) {
-            return false;
-        }
-        return true;
+        return availableLanguages.indexOf(languageCode) >= 0;
     }
     
     const i18n = new VueI18next(i18next);

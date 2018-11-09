@@ -666,17 +666,23 @@ namespace BTCPayServer.Controllers
                 if (string.IsNullOrEmpty(file)) return View("Logs", vm);
                 vm.Log = "";
                 var path = Path.Combine(di.FullName, file);
-
-                using (var fileStream = new FileStream(
-                    path,
-                    FileMode.Open,
-                    FileAccess.Read,
-                    FileShare.ReadWrite))
+                try
                 {
-                    using (var reader = new StreamReader(fileStream))
+                    using (var fileStream = new FileStream(
+                        path,
+                        FileMode.Open,
+                        FileAccess.Read,
+                        FileShare.ReadWrite))
                     {
-                        vm.Log = await reader.ReadToEndAsync();
+                        using (var reader = new StreamReader(fileStream))
+                        {
+                            vm.Log = await reader.ReadToEndAsync();
+                        }
                     }
+                }
+                catch
+                {
+                    return NotFound();
                 }
             }
 

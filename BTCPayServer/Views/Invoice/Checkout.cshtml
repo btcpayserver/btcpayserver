@@ -1,5 +1,7 @@
 ﻿@addTagHelper *, Meziantou.AspNetCore.BundleTagHelpers
 @inject BTCPayServer.Services.LanguageService langService
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Linq
 @model PaymentModel
 @{
     Layout = null;
@@ -80,14 +82,13 @@
                             {{$t("nested.lang")}} >>
                         *@
                     
-                    <select asp-for="DefaultLang"  
-                            class="cmblang reverse invisible"
+                        <select asp-for="DefaultLang"  
+                                class="cmblang reverse invisible"
                             onchange="changeLanguage($(this).val())"
-                            asp-items="@langService.GetLanguages().Select((language) => new SelectListItem(language.DisplayName,language.Code, language.Code == Model.DefaultLang))"></select>
+                            asp-items="@langService.GetLanguages().Select((language) => new SelectListItem(language.DisplayName,language.Code, false))"></select>
                     
                     <script>
                         $(function() {
-
                             // REVIEW: don't use initDropdown method but rather directly initialize select whenever you are using it
                             initDropdown(".cmblang");
                         });
@@ -100,7 +101,7 @@
                                 hoverIntent: 5000
                             });
                         }
-                        </script>
+                    </script>
                     </div>
                     <div style="margin-top: 10px; text-align: center;" class="form-text small text-muted">
                         <span>Powered by <a target="_blank" href="https://github.com/btcpayserver/btcpayserver">BTCPay Server</a></span>
@@ -109,32 +110,51 @@
             </div>
         </div>
     </invoice>
-    <script type="text/javascript">
-        var storeDefaultLang = '@Model.DefaultLang';
-        // initialization
-        i18next
-            .use(window.i18nextXHRBackend)
-            .init({
-                backend: {
-                    loadPath: '/locales/{{lng}}.json',
-                },
-                lng: storeDefaultLang,
-                fallbackLng: 'en',
-                nsSeparator: false,
-                keySeparator: false
-            });
-
-    function changeLanguage(lang) {
-        i18next.changeLanguage(lang);
+<script type="text/javascript">
+    var availableLanguages = @Html.Raw(Json.Serialize(
+                                     langService
+                                         .GetLanguages()
+                                         .Select((language) => language.Code)));;
+    var storeDefaultLang = "@Model.DefaultLang";
+    var fallbackLanguage = "en";
+    var languageDropdownElement = $("#DefaultLang");
+    var startingLanguage = computeStartingLanguage();
+    
+   
+    // initialization
+    i18next
+        .use(window.i18nextXHRBackend)
+        .init({
+            backend: {
+                loadPath: '/locales/{{lng}}.json'
+            },
+            lng: startingLanguage,
+            fallbackLng: fallbackLanguage,
+            nsSeparator: false,
+            keySeparator: false
+        });
+    
+    function computeStartingLanguage() {
+        if (urlParams.lang && isLanguageAvailable(urlParams.lang)) {
+            return urlParams.lang;
+        }
+        else if (isLanguageAvailable(storeDefaultLang)) {
+            return storeDefaultLang;
+        } else {
+            return fallbackLanguage;
+        }
     }
 
-    if (urlParams.lang) {
-        changeLanguage(urlParams.lang);
-    } 
-//    else if (storeDefaultLang) {
-//        changeLanguage(storeDefaultLang);
-//    }
-
+    function changeLanguage(lang) {
+       if (isLanguageAvailable(lang)) {
+           i18next.changeLanguage(lang);
+       }
+    }
+        
+    function isLanguageAvailable(languageCode) {
+        return availableLanguages.indexOf(languageCode) >= 0;
+    }
+    
     const i18n = new VueI18next(i18next);
 
     // TODO: Move all logic from core.js to Vue controller
@@ -160,6 +180,6 @@
             isModal: '@(Model.IsModal ? "true" : "false")'
         }
     });
-    </script>
+</script>
 </body>
 </html>

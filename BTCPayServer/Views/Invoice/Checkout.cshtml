@@ -79,20 +79,14 @@
                         @* Not working because of nsSeparator: false, keySeparator: false,
                             {{$t("nested.lang")}} >>
                         *@
-                        <select class="cmblang reverse invisible" onchange="changeLanguage($(this).val())">
-                            @foreach (var lang in langService.GetLanguages())
-                            {
-                                <option value="@lang.Code">@lang.DisplayName</option>
-                            }
-                        </select>
-                        <script>
+                    
+                    <select asp-for="DefaultLang"  
+                            class="cmblang reverse invisible"
+                            onchange="changeLanguage($(this).val())"
+                            asp-items="@langService.GetLanguages().Select((language) => new SelectListItem(language.DisplayName,language.Code, language.Code == Model.DefaultLang))"></select>
+                    
+                    <script>
                         $(function() {
-                            var storeDefaultLang = '@Model.DefaultLang';
-                            if (urlParams.lang) {
-                                $(".cmblang").val(urlParams.lang);
-                            } else if (storeDefaultLang) {
-                                $(".cmblang").val(storeDefaultLang);
-                            }
 
                             // REVIEW: don't use initDropdown method but rather directly initialize select whenever you are using it
                             initDropdown(".cmblang");
@@ -118,32 +112,17 @@
     <script type="text/javascript">
         var storeDefaultLang = '@Model.DefaultLang';
         // initialization
-        i18next.init({
-            lng: storeDefaultLang,
-            fallbackLng: 'en-US',
-            nsSeparator: false,
-            keySeparator: false,
-            resources: {
-                'en-US': { translation: locales_en },
-                'de-DE': { translation: locales_de },
-                'es-ES': { translation: locales_es },
-                'ja-JP': { translation: locales_ja },
-                'fr-FR': { translation: locales_fr },
-                'pt': { translation: locales_pt },
-                'pt-BR': { translation: locales_pt_br },
-                'nl': { translation: locales_nl },
-                'np': { translation: locales_np },
-                'cs-CZ': { translation: locales_cs },
-                'is-IS': { translation: locales_is },
-                'it-IT': { translation: locales_it },
-                'hr-HR': { translation: locales_hr },
-                'kk-KZ': { translation: locales_kk },
-                'ru-RU': { translation: locales_ru },
-                'uk-UA': { translation: locales_uk },
-                'vi-VN': { translation: locales_vi },
-                'zh-SP': { translation: locales_zh_sp }
-            },
-        });
+        i18next
+            .use(window.i18nextXHRBackend)
+            .init({
+                backend: {
+                    loadPath: '/locales/{{lng}}.json',
+                },
+                lng: storeDefaultLang,
+                fallbackLng: 'en',
+                nsSeparator: false,
+                keySeparator: false
+            });
 
     function changeLanguage(lang) {
         i18next.changeLanguage(lang);
@@ -151,9 +130,10 @@
 
     if (urlParams.lang) {
         changeLanguage(urlParams.lang);
-    } else if (storeDefaultLang) {
-        changeLanguage(storeDefaultLang);
-    }
+    } 
+//    else if (storeDefaultLang) {
+//        changeLanguage(storeDefaultLang);
+//    }
 
     const i18n = new VueI18next(i18next);
 

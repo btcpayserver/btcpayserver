@@ -288,7 +288,7 @@
                                         :disabled="isLoading"
                                         v-on:change="onCurrencyChange($event)"
                                         ref="changellyCurrenciesDropdown">
-                                    <option value="">Select a currency to convert from</option>
+                                    <option value="">{{$t("ConversionTab_CurrencyList_Select_Option")}}</option>
                                     <option v-for="currency of currencies" 
                                             :data-prefix="'<img src=\''+currency.image+'\'/>'"
                                             :value="currency.name">

@@ -111,11 +111,10 @@
         </div>
     </invoice>
 <script type="text/javascript">
-    var availableLanguages = @Html.Raw(
-                                 JArray.FromObject(
+    var availableLanguages = @Html.Raw(Json.Serialize(
                                      langService
                                          .GetLanguages()
-                                         .Select((language) => language.Code)).ToString(Formatting.None));;
+                                         .Select((language) => language.Code)));;
     var storeDefaultLang = "@Model.DefaultLang";
     var fallbackLanguage = "en";
     var languageDropdownElement = $("#DefaultLang");

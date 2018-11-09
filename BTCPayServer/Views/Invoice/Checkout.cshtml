@@ -87,21 +87,23 @@
                             onchange="changeLanguage($(this).val())"
                             asp-items="@langService.GetLanguages().Select((language) => new SelectListItem(language.DisplayName,language.Code, false))"></select>
                     
-                    <script>
-                        $(function() {
-                            // REVIEW: don't use initDropdown method but rather directly initialize select whenever you are using it
-                            initDropdown(".cmblang");
-                        });
-
-                        function initDropdown(selector) {
-                            return $(selector).prettyDropdown({
-                                classic: false,
-                                height: 32,
-                                reverse: true,
-                                hoverIntent: 5000
+                        <script>
+                            var languageSelectorPrettyDropdown;
+                            $(function() {
+                                // REVIEW: don't use initDropdown method but rather directly initialize select whenever you are using it
+                                $("#DefaultLang").val(startingLanguage);
+                                languageSelectorPrettyDropdown = initDropdown("#DefaultLang");
                             });
-                        }
-                    </script>
+
+                            function initDropdown(selector) {
+                                return $(selector).prettyDropdown({
+                                    classic: false,
+                                    height: 32,
+                                    reverse: true,
+                                    hoverIntent: 5000
+                                });
+                            }
+                        </script>
                     </div>
                     <div style="margin-top: 10px; text-align: center;" class="form-text small text-muted">
                         <span>Powered by <a target="_blank" href="https://github.com/btcpayserver/btcpayserver">BTCPay Server</a></span>
@@ -117,11 +119,8 @@
                                          .Select((language) => language.Code)));;
     var storeDefaultLang = "@Model.DefaultLang";
     var fallbackLanguage = "en";
-    var languageDropdownElement = $("#DefaultLang");
-    var startingLanguage = computeStartingLanguage();
-    
-   
-    // initialization
+    startingLanguage = computeStartingLanguage();
+      // initialization
     i18next
         .use(window.i18nextXHRBackend)
         .init({
@@ -146,9 +145,9 @@
     }
 
     function changeLanguage(lang) {
-       if (isLanguageAvailable(lang)) {
-           i18next.changeLanguage(lang);
-       }
+        if (isLanguageAvailable(lang)) {
+            i18next.changeLanguage(lang);
+        }
     }
         
     function isLanguageAvailable(languageCode) {

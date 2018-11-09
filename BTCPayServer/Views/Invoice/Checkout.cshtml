@@ -138,11 +138,12 @@
     function computeStartingLanguage() {
         if (urlParams.lang && isLanguageAvailable(urlParams.lang)) {
             return urlParams.lang;
-        }else if (navigator &&
-            navigator.language &&
-            isLanguageAvailable(navigator.language)) {
-            return navigator.language;
         }
+//        else if (navigator &&
+//            navigator.language &&
+//            isLanguageAvailable(navigator.language)) {
+//            return navigator.language;
+//        }
         else if (isLanguageAvailable(storeDefaultLang)) {
             return storeDefaultLang;
         } else {

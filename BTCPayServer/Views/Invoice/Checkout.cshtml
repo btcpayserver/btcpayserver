@@ -84,7 +84,6 @@
                     
                         <select asp-for="DefaultLang"  
                                 class="cmblang reverse invisible"
-                                style="width:200px"
                             onchange="changeLanguage($(this).val())"
                             asp-items="@langService.GetLanguages().Select((language) => new SelectListItem(language.DisplayName,language.Code, false))"></select>
                     

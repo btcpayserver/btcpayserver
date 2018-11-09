@@ -22,7 +22,7 @@
     iframe.style.left = 0;
     iframe.style.height = '100%';
     iframe.style.width = '100%';
-    iframe.style.zIndex = '1000';
+    iframe.style.zIndex = '2000';
 
     var origin = 'http://slack.btcpayserver.org join us there, and initialize this with your origin url through setApiUrlPrefix';
     // urlPrefix should be site root without trailing slash

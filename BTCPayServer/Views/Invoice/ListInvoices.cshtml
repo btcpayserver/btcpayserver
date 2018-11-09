@@ -1,6 +1,15 @@
 ﻿@model InvoicesModel
 @{
     ViewData["Title"] = "Invoices";
+    var rootUrl = Context.Request.GetAbsoluteRoot();
+}
+
+@section HeadScripts {
+    <script src="~/modal/btcpay.js"></script>
+    <script type="text/javascript">
+        btcpay.setApiUrlPrefix("@rootUrl");
+    </script>
+
 }
 
 <section>
@@ -107,8 +116,13 @@
                             <td style="text-align:right">
                                 @if (invoice.ShowCheckout)
                                 {
-                                    <a asp-action="Checkout" asp-route-invoiceId="@invoice.InvoiceId">Checkout</a> <span>-</span>
-                                }<a asp-action="Invoice" asp-route-invoiceId="@invoice.InvoiceId">Details</a>
+                                    <span>
+                                        <a asp-action="Checkout" asp-route-invoiceId="@invoice.InvoiceId">Checkout</a>
+                                        <a href="javascript:btcpay.showInvoice('@invoice.InvoiceId')">[^]</a>
+                                        -
+                                    </span>
+                                }
+                                <a asp-action="Invoice" asp-route-invoiceId="@invoice.InvoiceId">Details</a>
                             </td>
                         </tr>
                     }

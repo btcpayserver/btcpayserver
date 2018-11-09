@@ -11495,4 +11495,12 @@ low-fee-timeline {
 }
 
 
-
+#prettydropdown-DefaultLang{
+    min-width:200px;
+}
+#prettydropdown-DefaultLang ul{
+    width:100%;
+}
+#prettydropdown-DefaultLang ul li{
+    width:100% !important;
+}

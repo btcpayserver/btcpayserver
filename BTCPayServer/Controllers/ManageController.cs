@@ -443,7 +443,7 @@ namespace BTCPayServer.Controllers
 
             if (!is2faTokenValid)
             {
-                ModelState.AddModelError("model.Code", "Verification code is invalid.");
+                ModelState.AddModelError(nameof(model.Code), "Verification code is invalid.");
                 return View(model);
             }
 

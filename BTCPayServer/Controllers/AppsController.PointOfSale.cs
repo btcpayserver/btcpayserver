@@ -20,7 +20,9 @@ namespace BTCPayServer.Controllers
                 Template =
                     "tea:\n" +
                     "  price: 0.02\n" +
-                    "  title: Green Tea # title is optional, defaults to the keys\n\n" +
+                    "  title: Green Tea # title is optional, defaults to the keys\n" +
+                    "  description: Lovely, fresh and tender, Meng Ding Gan Lu is grown in the lush Meng Ding Mountains of the southwestern province of Sichuan # description is optional, defalts to none\n" +
+                    "  image: https://cdn.pixabay.com/photo/2015/03/26/11/03/green-tea-692339__480.jpg # image is optional, defaults to none\n\n" +
                     "coffee:\n" +
                     "  price: 1\n\n" +
                     "bamba:\n" +

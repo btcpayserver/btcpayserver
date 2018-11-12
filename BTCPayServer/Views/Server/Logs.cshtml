@@ -19,7 +19,7 @@
             {
                 <a asp-action="LogsView" asp-route-offset="@(Model.LogFileOffset - 5)"><<</a>
             }
-            Showing @Model.LogFileOffset - (@Model.LogFileOffset+@Model.LogFiles.Count) of @Model.LogFileCount
+            Showing @Model.LogFileOffset - (@(Model.LogFileOffset+Model.LogFiles.Count)) of @Model.LogFileCount
             @if ((Model.LogFileOffset+ Model.LogFiles.Count) < Model.LogFileCount)
             {
                 <a asp-action="LogsView" asp-route-offset="@(Model.LogFileOffset + Model.LogFiles.Count)">>></a>

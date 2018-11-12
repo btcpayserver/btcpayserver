@@ -1,7 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting.Internal;
+using Microsoft.Extensions.Hosting;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 
 namespace BTCPayServer.Services
 {
@@ -12,34 +16,53 @@ namespace BTCPayServer.Services
             DisplayName = displayName;
             Code = code;
         }
+
+        [JsonProperty("code")]
         public string Code { get; set; }
+        [JsonProperty("currentLanguage")]
         public string DisplayName { get; set; }
     }
+
     public class LanguageService
     {
+        private readonly Language[] _languages;
+
+        public LanguageService(IHostingEnvironment environment)
+        {
+            var path = (environment as HostingEnvironment)?.WebRootPath;
+            if (string.IsNullOrEmpty(path))
+            {
+                //test environment
+                path = Path.Combine(TryGetSolutionDirectoryInfo().FullName,"BTCPayServer", "wwwroot");
+            }
+            path = Path.Combine(path, "locales");
+            var files = Directory.GetFiles(path, "*.json");
+            var result = new List<Language>();
+            foreach (var file in files)
+            {
+                using (var stream = new StreamReader(file))
+                {
+                    var json = stream.ReadToEnd();
+                    result.Add(JObject.Parse(json).ToObject<Language>());
+                }
+            }
+
+            _languages = result.ToArray();
+        }
+
+        private static DirectoryInfo TryGetSolutionDirectoryInfo(string currentPath = null)
+        {
+            var directory = new DirectoryInfo(
+                currentPath ?? Directory.GetCurrentDirectory());
+            while (directory != null && !directory.GetFiles("*.sln").Any())
+            {
+                directory = directory.Parent;
+            }
+            return directory;
+        }
         public Language[] GetLanguages()
         {
-            return new[]
-            {
-                new Language("en-US", "English"),
-                new Language("de-DE", "Deutsch"),
-                new Language("ja-JP", "日本語"),
-                new Language("fr-FR", "Français"),
-                new Language("es-ES", "Spanish"),
-                new Language("pt-PT", "Portuguese"),
-                new Language("pt-BR", "Portuguese (Brazil)"),
-                new Language("nl-NL", "Dutch"),
-                new Language("np-NP", "नेपाली"),
-                new Language("cs-CZ", "Česky"),
-                new Language("is-IS", "Íslenska"),
-                new Language("hr-HR", "Croatian"),
-                new Language("it-IT", "Italiano"),
-                new Language("kk-KZ", "Қазақша"),
-                new Language("ru-RU", "русский"),
-                new Language("uk-UA", "Українська"),
-                new Language("vi-VN", "Tiếng Việt"),
-                new Language("zh-SP", "中文（简体）"),
-            };
+            return _languages;
         }
     }
 }

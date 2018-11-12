@@ -42,6 +42,19 @@ namespace BTCPayServer.Services.Rates
         string[] _Symbols = Array.Empty<string>();
         DateTimeOffset? _LastSymbolUpdate = null;
 
+
+        Dictionary<string, string> _TickerMapping = new Dictionary<string, string>()
+        {
+            { "XXDG", "DOGE" },
+            { "XXBT", "BTC" },
+            { "XBT", "BTC" },
+            { "DASH", "DASH" },
+            { "ZUSD", "USD" },
+            { "ZEUR", "EUR" },
+            { "ZJPY", "JPY" },
+            { "ZCAD", "CAD" },
+        };
+
         public async Task<ExchangeRates> GetRatesAsync()
         {
             var result = new ExchangeRates();
@@ -58,11 +71,14 @@ namespace BTCPayServer.Services.Rates
                     try
                     {
                         string global = null;
-                        if(symbol.StartsWith("DASH", StringComparison.OrdinalIgnoreCase))
+                        var mapped1 = _TickerMapping.Where(t => symbol.StartsWith(t.Key, StringComparison.OrdinalIgnoreCase))
+                                                   .Select(t => new { KrakenTicker = t.Key, PayTicker = t.Value }).SingleOrDefault();
+                        if (mapped1 != null)
                         {
-                            var p2 = symbol.Substring(4);
-                            p2 = p2 == "XBT" ? "BTC" : p2;
-                            global = $"{p2}_{symbol.Substring(0, 4)}";
+                            var p2 = symbol.Substring(mapped1.KrakenTicker.Length);
+                            if (_TickerMapping.TryGetValue(p2, out var mapped2))
+                                p2 = mapped2;
+                            global = $"{p2}_{mapped1.PayTicker}";
                         }
                         else
                         {

@@ -1,0 +1,40 @@
+﻿@model BTCPayServer.Models.ServerViewModels.LogsViewModel
+@{
+    ViewData.SetActivePageAndTitle(ServerNavPages.Logs);
+}
+
+<h4>@ViewData["Title"]</h4>
+<partial name="_StatusMessage" for="StatusMessage"/>
+
+<div class="row">
+    <ul>
+        @foreach (var file in Model.LogFiles)
+        {
+            <li>
+                <a asp-action="LogsView" asp-route-file="@file.Name">@file.Name</a>
+            </li>
+        }
+        <li>
+            @if (Model.LogFileOffset > 0)
+            {
+                <a asp-action="LogsView" asp-route-offset="@(Model.LogFileOffset - 5)"><<</a>
+            }
+            Showing @Model.LogFileOffset - (@(Model.LogFileOffset+Model.LogFiles.Count)) of @Model.LogFileCount
+            @if ((Model.LogFileOffset+ Model.LogFiles.Count) < Model.LogFileCount)
+            {
+                <a asp-action="LogsView" asp-route-offset="@(Model.LogFileOffset + Model.LogFiles.Count)">>></a>
+            }
+        </li>
+    </ul>
+    @if (!string.IsNullOrEmpty(Model.Log))
+    {
+        <pre>
+@Model.Log
+</pre>
+    }
+
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

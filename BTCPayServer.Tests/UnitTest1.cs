@@ -43,8 +43,10 @@ using System.Security.Cryptography.X509Certificates;
 using BTCPayServer.Lightning;
 using BTCPayServer.Models.WalletViewModels;
 using System.Security.Claims;
+using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Security;
 using NBXplorer.Models;
+using RatesViewModel = BTCPayServer.Models.StoreViewModels.RatesViewModel;
 
 namespace BTCPayServer.Tests
 {
@@ -581,6 +583,23 @@ namespace BTCPayServer.Tests
                 var store2 = acc.GetController<StoresController>();
                 store2.Pair(pairingCode.ToString(), store2.StoreData.Id).GetAwaiter().GetResult();
                 Assert.Contains(nameof(PairingResult.ReusedKey), store2.StatusMessage, StringComparison.CurrentCultureIgnoreCase);
+            }
+        }
+
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public void CanSolveTheDogesRatesOnKraken()
+        {
+            var provider = new BTCPayNetworkProvider(NetworkType.Mainnet);
+            var factory = CreateBTCPayRateFactory();
+            var fetcher = new RateFetcher(factory);
+
+            Assert.True(RateRules.TryParse("X_X=kraken(X_BTC) * kraken(BTC_X)", out var rule));
+            foreach(var pair in new[] { "DOGE_USD", "DOGE_CAD", "DASH_CAD", "DASH_USD", "DASH_EUR" })
+            {
+                var result = fetcher.FetchRate(CurrencyPair.Parse(pair), rule).GetAwaiter().GetResult();
+                Assert.NotNull(result.BidAsk);
+                Assert.Empty(result.Errors);
             }
         }
 
@@ -1755,6 +1774,22 @@ namespace BTCPayServer.Tests
             }
         }
 
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public async Task CheckLogsRoute()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.Start();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                user.RegisterDerivationScheme("BTC");
+                
+                var serverController = user.GetController<ServerController>();
+                var vm = Assert.IsType<LogsViewModel>(Assert.IsType<ViewResult>(await serverController.LogsView()).Model);
+            }
+        } 
+       
         [Fact]
         [Trait("Fast", "Fast")]
         public void CheckRatesProvider()

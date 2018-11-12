@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
 
-namespace BTCPayServer.Validations
+namespace BTCPayServer.Validation
 {
     public class PubKeyValidatorAttribute : ValidationAttribute
     {

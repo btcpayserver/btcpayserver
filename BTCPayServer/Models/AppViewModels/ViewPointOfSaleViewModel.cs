@@ -14,7 +14,9 @@ namespace BTCPayServer.Models.AppViewModels
                 public string Formatted { get; set; }
                 public decimal Value { get; set; }
             }
+            public string Description { get; set; }
             public string Id { get; set; }
+            public string Image { get; set; }
             public ItemPrice Price { get; set; }
             public string Title { get; set; }
         }

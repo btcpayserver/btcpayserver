@@ -6,17 +6,12 @@ jobs:
     steps: 
       - checkout
   test:
-    machine: true
+    docker:
+      - image: microsoft/dotnet:2.1.403-sdk-alpine3.7
     steps:
       - checkout
       - run:
           command: |
-            lsb_release -a
-            wget -q https://packages.microsoft.com/config/ubuntu/14.04/packages-microsoft-prod.deb
-            sudo dpkg -i packages-microsoft-prod.deb
-            sudo apt-get install apt-transport-https
-            sudo apt-get update
-            sudo apt-get install dotnet-sdk-2.1
             dotnet --info
             dotnet build /p:TreatWarningsAsErrors=true
             cd BTCPayServer.Tests

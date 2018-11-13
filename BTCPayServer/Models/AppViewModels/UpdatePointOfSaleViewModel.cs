@@ -14,7 +14,6 @@ namespace BTCPayServer.Models.AppViewModels
         [Required]
         [MaxLength(5)]
         public string Currency { get; set; }
-        [Required]
         [MaxLength(5000)]
         public string Template { get; set; }
 

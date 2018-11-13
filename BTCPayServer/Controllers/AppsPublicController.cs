@@ -142,6 +142,8 @@ namespace BTCPayServer.Controllers
 
         public ViewPointOfSaleViewModel.Item[] Parse(string template, string currency)
         {
+            if (string.IsNullOrWhiteSpace(template))
+                return Array.Empty<ViewPointOfSaleViewModel.Item>();
             var input = new StringReader(template);
             YamlStream stream = new YamlStream();
             stream.Load(input);

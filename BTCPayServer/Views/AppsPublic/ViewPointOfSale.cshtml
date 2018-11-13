@@ -17,13 +17,13 @@
 </head>
 <body class="h-100">
     <div class="container d-flex h-100">
-        <div class="justify-content-center align-self-center text-center mx-auto" style="margin: auto;">
-            <h1 class="mb-4 mt-3">@Model.Title</h1>
+        <div class="justify-content-center align-self-center text-center mx-auto px-2 py-3 w-100" style="margin: auto;">
+            <h1 class="mb-4">@Model.Title</h1>
             <form method="post" asp-antiforgery="false">
                 <div class="row">
                     @for (int i = 0; i < Model.Items.Length; i++)
                     {
-                        var className = (Model.Items.Length - i) > (Model.Items.Length % 4) ? "col-sm-6 col-lg-3" : "col align-self-center";
+                        var className = (Model.Items.Length - i) > (Model.Items.Length % 4) ? "col-sm-6 col-lg-3" : "col-sm align-self-start";
                         var item = Model.Items[i];
                         var image = item.Image;
                         var description = item.Description;
@@ -49,17 +49,15 @@
             @if (Model.ShowCustomAmount)
             {
                 <div class="row mt-4">
-                    <div class="col-sm-3">&nbsp;</div>
-                    <div class="col-sm-6">
+                    <div class="col-md-6 offset-md-3 px-2">
                         <form method="post" asp-antiforgery="false" data-buy>
-                            <div class="input-group mb-3">
+                            <div class="input-group mb-5">
                                 <input class="form-control" type="number" min="0" step="@Model.Step" name="amount" placeholder="amount"><div class="input-group-append">
                                     <button class="btn btn-primary" type="submit">Pay</button>
                                 </div>
                             </div>
                         </form>
                     </div>
-                    <div class="col-sm-3">&nbsp;</div>
                 </div>
             }
         </div>

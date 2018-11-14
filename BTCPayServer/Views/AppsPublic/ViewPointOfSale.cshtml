@@ -39,7 +39,22 @@
                                     {
                                         <p class="card-text">@description</p>
                                     }
-                                    <button type="submit" name="choiceKey" class="btn btn-primary" value="@item.Id">Buy for @item.Price.Formatted</button>
+                                    @if (item.Custom)
+                                    {
+                                        <form method="post" asp-antiforgery="false" data-buy>
+                                            <div class="input-group">
+                                                <input class="form-control" type="number" min="@item.Price.Value" step="@Model.Step" name="amount"
+                                                       value="@item.Price.Value" placeholder="Amount in @Model.Currency">
+                                                <div class="input-group-append">
+                                                    <button class="btn btn-primary" type="submit">Pay</button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <button type="submit" name="choiceKey" class="btn btn-primary" value="@item.Id">Buy for @item.Price.Formatted</button>
+                                    }
                                 </div>
                             </div>
                         </div>
@@ -56,9 +71,8 @@
                                 <p class="card-text">Create invoice to pay custom amount</p>
                                 <form method="post" asp-antiforgery="false" data-buy>
                                     <div class="input-group">
-                                        <input class="form-control" type="number" min="0" step="@Model.Step" name="amount" placeholder="Amount in @Model.Currency"><div class="input-group-append">
-                                            <button class="btn btn-primary" type="submit">Pay</button>
-                                        </div>
+                                        <input class="form-control" type="number" min="0" step="@Model.Step" name="amount" placeholder="Amount in @Model.Currency">
+                                        <div class="input-group-append"><button class="btn btn-primary" type="submit">Pay</button></div>
                                     </div>
                                 </form>
                             </div>

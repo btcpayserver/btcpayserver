@@ -45,6 +45,7 @@ namespace BTCPayServer.Controllers
                 Title = settings.Title,
                 Step = step.ToString(CultureInfo.InvariantCulture),
                 ShowCustomAmount = settings.ShowCustomAmount,
+                Currency = settings.Currency,
                 Items = _AppsHelper.Parse(settings.Template, settings.Currency)
             });
         }

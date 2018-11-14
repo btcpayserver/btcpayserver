@@ -29,13 +29,13 @@
                         var description = item.Description;
                         <div class="@className my-3 px-2">
                             <div class="card">
-                                @if (image != null && image != String.Empty)
+                                @if (!String.IsNullOrWhiteSpace(image))
                                 {
                                     <img class="card-img-top" src="@image" alt="Card image cap">
                                 }
                                 <div class="card-body">
                                     <h5 class="card-title">@item.Title</h5>
-                                    @if (description != null && description != String.Empty)
+                                    @if (!String.IsNullOrWhiteSpace(description))
                                     {
                                         <p class="card-text">@description</p>
                                     }
@@ -48,15 +48,21 @@
             </form>
             @if (Model.ShowCustomAmount)
             {
-                <div class="row mt-4">
-                    <div class="col-md-6 offset-md-3 px-2">
-                        <form method="post" asp-antiforgery="false" data-buy>
-                            <div class="input-group mb-5">
-                                <input class="form-control" type="number" min="0" step="@Model.Step" name="amount" placeholder="amount"><div class="input-group-append">
-                                    <button class="btn btn-primary" type="submit">Pay</button>
-                                </div>
+                <div class="row mt-2 mb-4">
+                    <div class="col-lg-4 offset-lg-4 col-md-6 offset-md-3 px-2">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Custom Amount</h5>
+                                <p class="card-text">Create invoice to pay custom amount</p>
+                                <form method="post" asp-antiforgery="false" data-buy>
+                                    <div class="input-group">
+                                        <input class="form-control" type="number" min="0" step="@Model.Step" name="amount" placeholder="Amount in @Model.Currency"><div class="input-group-append">
+                                            <button class="btn btn-primary" type="submit">Pay</button>
+                                        </div>
+                                    </div>
+                                </form>
                             </div>
-                        </form>
+                        </div>
                     </div>
                 </div>
             }

@@ -160,7 +160,7 @@ namespace BTCPayServer.Controllers
                     Description = c.GetDetailString("description"),
                     Id = c.Key,
                     Image = c.GetDetailString("image"),
-                    Title = c.GetDetailString("title"),
+                    Title = c.GetDetailString("title") ?? c.Key,
                     Price = c.GetDetail("price")
                              .Select(cc => new ViewPointOfSaleViewModel.Item.ItemPrice()
                              {

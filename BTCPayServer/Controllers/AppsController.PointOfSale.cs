@@ -15,7 +15,7 @@ namespace BTCPayServer.Controllers
         {
             public PointOfSaleSettings()
             {
-                Title = "My awesome Point of Sale";
+                Title = "Tea shop";
                 Currency = "USD";
                 Template =
                     "green tea:\n" +

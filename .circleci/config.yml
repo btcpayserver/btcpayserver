@@ -17,7 +17,7 @@ jobs:
 
             docker run --rm --privileged multiarch/qemu-user-static:register --reset
 
-            docker build --pull -t dotnetapp -f Dockerfile.debian-arm32-selfcontained .
+            docker build --pull -t dotnetapp -f Dockerfile.bionic-arm32 .
 workflows:
   version: 2
   build_and_test:

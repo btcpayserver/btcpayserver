@@ -14,7 +14,8 @@ jobs:
       - run: sudo docker build --pull -t BtcPayServerArm32 -f Dockerfile.bionic-arm32 .   
   test:
     machine: true
-    steps:   
+    steps:
+      - checkout   
 workflows:
   version: 2
   build_and_test:

@@ -11,13 +11,11 @@ jobs:
       - run:
           command: |
             lsb_release -a
-
-            sudo apt update
-            sudo apt install -y qemu qemu-user-static qemu-user binfmt-support
-
-            sudo docker run --rm --privileged multiarch/qemu-user-static:register --reset
-
-            sudo docker build --pull -t dotnetapp -f Dockerfile.bionic-arm32 .
+            sudo su
+            apt update
+            apt install -y qemu qemu-user-static qemu-user binfmt-support
+            docker run --rm --privileged multiarch/qemu-user-static:register --reset
+            docker build --pull -t dotnetapp -f Dockerfile.bionic-arm32 .
 workflows:
   version: 2
   build_and_test:

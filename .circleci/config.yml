@@ -1,8 +1,7 @@
 version: 2
 jobs:
   build:
-    machine: 
-      enabled: true
+    machine: true
     steps: 
       - checkout
   test:

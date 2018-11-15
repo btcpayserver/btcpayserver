@@ -1,4 +1,4 @@
-FROM microsoft/dotnet:2.1-sdk AS builder
+FROM microsoft/dotnet:2.1-sdk-bionic-arm32v7 AS builder
 RUN dotnet --info
 WORKDIR /source
 COPY BTCPayServer/BTCPayServer.csproj BTCPayServer.csproj

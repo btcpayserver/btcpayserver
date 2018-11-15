@@ -17,8 +17,8 @@ ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT false
 ENV LC_ALL en_US.UTF-8
 ENV LANG en_US.UTF-8
 
+RUN mkdir -p /app/datadir
 WORKDIR /app
-RUN mkdir /datadir
 ENV BTCPAY_DATADIR=/datadir
 VOLUME /datadir
 

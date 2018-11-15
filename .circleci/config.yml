@@ -15,7 +15,7 @@ jobs:
             sudo apt update
             sudo apt install -y qemu qemu-user-static qemu-user binfmt-support
             sudo docker run --rm --privileged multiarch/qemu-user-static:register --reset
-      - run: sudo docker build --pull -t BtcPayServerArm32 -f Dockerfile.bionic-arm32 .    
+      - run: sudo docker build --pull -t btcpayserverarm32 -f Dockerfile.bionic-arm32 .
 workflows:
   version: 2
   build_and_test:

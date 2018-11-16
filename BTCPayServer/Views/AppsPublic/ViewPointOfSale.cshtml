@@ -19,44 +19,70 @@
     <div class="container d-flex h-100">
         <div class="justify-content-center align-self-center text-center mx-auto px-2 py-3 w-100" style="margin: auto;">
             <h1 class="mb-4">@Model.Title</h1>
-            <form method="post" asp-antiforgery="false">
-                <div class="row">
-                    @for (int i = 0; i < Model.Items.Length; i++)
-                    {
-                        var className = (Model.Items.Length - i) > (Model.Items.Length % 4) ? "col-sm-6 col-lg-3" : "col-sm align-self-start";
-                        var item = Model.Items[i];
-                        var image = item.Image;
-                        var description = item.Description;
-                        <div class="@className my-3 px-2">
-                            <div class="card">
-                                @if (image != null && image != String.Empty)
+            <div class="row">
+                @for (int i = 0; i < Model.Items.Length; i++)
+                {
+                    var className = (Model.Items.Length - i) > (Model.Items.Length % 4) ? "col-sm-6 col-lg-3" : "col-md align-self-start";
+                    var item = Model.Items[i];
+                    var image = item.Image;
+                    var description = item.Description;
+                    <div class="@className my-3 px-2">
+                        <div class="card">
+                            @if (!String.IsNullOrWhiteSpace(image))
+                            {
+                                <img class="card-img-top" src="@image" alt="Card image cap">
+                            }
+                            <div class="card-body">
+                                <h5 class="card-title">@item.Title</h5>
+                                @if (!String.IsNullOrWhiteSpace(description))
                                 {
-                                    <img class="card-img-top" src="@image" alt="Card image cap">
+                                    <p class="card-text">@description</p>
                                 }
-                                <div class="card-body">
-                                    <h5 class="card-title">@item.Title</h5>
-                                    @if (description != null && description != String.Empty)
-                                    {
-                                        <p class="card-text">@description</p>
-                                    }
-                                    <button type="submit" name="choiceKey" class="btn btn-primary" value="@item.Id">Buy for @item.Price.Formatted</button>
-                                </div>
+                                @if (item.Custom)
+                                {
+                                    <form method="post" asp-antiforgery="false" data-buy>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text">@Model.CurrencySymbol</span>
+                                            </div>
+                                            <input class="form-control" type="number" min="@item.Price.Value" step="@Model.Step" name="amount"
+                                                   value="@item.Price.Value" placeholder="Amount">
+                                            <div class="input-group-append">
+                                                <button class="btn btn-primary" type="submit">Pay</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <form method="post" asp-antiforgery="false">
+                                        <button type="submit" name="choiceKey" class="btn btn-primary" value="@item.Id">Buy for @item.Price.Formatted</button>
+                                    </form>
+                                }
                             </div>
                         </div>
-                    }
-                </div>
-            </form>
+                    </div>
+                }
+            </div>
             @if (Model.ShowCustomAmount)
             {
-                <div class="row mt-4">
-                    <div class="col-md-6 offset-md-3 px-2">
-                        <form method="post" asp-antiforgery="false" data-buy>
-                            <div class="input-group mb-5">
-                                <input class="form-control" type="number" min="0" step="@Model.Step" name="amount" placeholder="amount"><div class="input-group-append">
-                                    <button class="btn btn-primary" type="submit">Pay</button>
-                                </div>
+                <div class="row mt-2 mb-4">
+                    <div class="col-lg-4 offset-lg-4 col-md-6 offset-md-3 px-2">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Custom Amount</h5>
+                                <p class="card-text">Create invoice to pay custom amount</p>
+                                <form method="post" asp-antiforgery="false" data-buy>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">@Model.CurrencySymbol</span>
+                                        </div>
+                                        <input class="form-control" type="number" min="0" step="@Model.Step" name="amount" placeholder="Amount">
+                                        <div class="input-group-append"><button class="btn btn-primary" type="submit">Pay</button></div>
+                                    </div>
+                                </form>
                             </div>
-                        </form>
+                        </div>
                     </div>
                 </div>
             }

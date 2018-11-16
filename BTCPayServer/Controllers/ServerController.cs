@@ -17,6 +17,7 @@ using NBitcoin.DataEncoders;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -167,6 +168,7 @@ namespace BTCPayServer.Controllers
                 vm.DNSDomain = null;
             return View(vm);
         }
+        
         [Route("server/maintenance")]
         [HttpPost]
         public async Task<IActionResult> Maintenance(MaintenanceViewModel vm, string command)
@@ -624,6 +626,67 @@ namespace BTCPayServer.Controllers
                 model.StatusMessage = "Email settings saved";
                 return View(model);
             }
+        }
+
+        [Route("server/logs/{file?}")]
+        public async Task<IActionResult> LogsView(string file = null, int offset = 0)
+        {
+            if (offset < 0)
+            {
+                offset = 0;
+            }
+
+            var vm = new LogsViewModel();
+
+            if (string.IsNullOrEmpty(_Options.LogFile))
+            {
+                vm.StatusMessage = "Error: File Logging Option not specified. " +
+                                   "You need to set debuglog and optionally " +
+                                   "debugloglevel in the configuration or through runtime arguments";
+            }
+            else
+            {
+                var di = Directory.GetParent(_Options.LogFile);
+                if (di == null)
+                {
+                    vm.StatusMessage = "Error: Could not load log files";
+                }
+
+                var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(_Options.LogFile);
+                var fileExtension = Path.GetExtension(_Options.LogFile) ?? string.Empty;
+                var logFiles = di.GetFiles($"{fileNameWithoutExtension}*{fileExtension}");
+                vm.LogFileCount = logFiles.Length;
+                vm.LogFiles = logFiles
+                    .OrderBy(info => info.LastWriteTime)
+                    .Skip(offset)
+                    .Take(5)
+                    .ToList();
+                vm.LogFileOffset = offset;
+
+                if (string.IsNullOrEmpty(file)) return View("Logs", vm);
+                vm.Log = "";
+                var path = Path.Combine(di.FullName, file);
+                try
+                {
+                    using (var fileStream = new FileStream(
+                        path,
+                        FileMode.Open,
+                        FileAccess.Read,
+                        FileShare.ReadWrite))
+                    {
+                        using (var reader = new StreamReader(fileStream))
+                        {
+                            vm.Log = await reader.ReadToEndAsync();
+                        }
+                    }
+                }
+                catch
+                {
+                    return NotFound();
+                }
+            }
+
+            return View("Logs", vm);
         }
     }
 }

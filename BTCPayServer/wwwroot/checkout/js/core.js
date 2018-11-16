@@ -32,7 +32,6 @@ function changeCurrency(currency) {
 }
 
 function onDataCallback(jsonData) {
-
     var newStatus = jsonData.status;
 
     if (newStatus === "complete" ||
@@ -123,20 +122,6 @@ $(document).ready(function () {
     // initialize
     onDataCallback(srvModel);
 
-    /* TAF
-    
-    - Version mobile
-    
-    - Réparer le décallage par timer
-    
-    - Preparer les variables de l'API
-    
-    - Gestion des differents evenements en fonction du status de l'invoice
-    
-    - sécuriser les CDN
-    
-    */
-
     // check if the Document expired
     if (srvModel.expirationSeconds > 0) {
         progressStart(srvModel.maxTimeSeconds); // Progress bar
@@ -147,7 +132,19 @@ $(document).ready(function () {
             hideEmailForm();
     }
 
+    $(".close-action").on("click", function () {
+        $("invoice").fadeOut(300, function () {
+            window.parent.postMessage("close", "*");
+        });
+    });
 
+    window.parent.postMessage("loaded", "*");
+    jQuery("invoice").fadeOut(0);
+    jQuery("invoice").fadeIn(300);
+
+    // eof initialize
+
+    // FUNCTIONS
     function hideEmailForm() {
         $("#emailAddressView").removeClass("active");
         $("placeholder-refundEmail").html(srvModel.customerEmail);

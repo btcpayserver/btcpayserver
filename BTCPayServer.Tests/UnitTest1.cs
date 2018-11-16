@@ -43,8 +43,10 @@ using System.Security.Cryptography.X509Certificates;
 using BTCPayServer.Lightning;
 using BTCPayServer.Models.WalletViewModels;
 using System.Security.Claims;
+using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Security;
 using NBXplorer.Models;
+using RatesViewModel = BTCPayServer.Models.StoreViewModels.RatesViewModel;
 
 namespace BTCPayServer.Tests
 {
@@ -1773,6 +1775,22 @@ namespace BTCPayServer.Tests
             }
         }
 
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public async Task CheckLogsRoute()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.Start();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                user.RegisterDerivationScheme("BTC");
+                
+                var serverController = user.GetController<ServerController>();
+                var vm = Assert.IsType<LogsViewModel>(Assert.IsType<ViewResult>(await serverController.LogsView()).Model);
+            }
+        } 
+       
         [Fact]
         [Trait("Fast", "Fast")]
         public void CheckRatesProvider()

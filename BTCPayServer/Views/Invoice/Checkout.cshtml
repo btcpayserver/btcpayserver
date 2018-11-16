@@ -1,5 +1,7 @@
 ﻿@addTagHelper *, Meziantou.AspNetCore.BundleTagHelpers
 @inject BTCPayServer.Services.LanguageService langService
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Linq
 @model PaymentModel
 @{
     Layout = null;
@@ -27,10 +29,20 @@
         <link href="@Model.CustomCSSLink" rel="stylesheet" />
     }
 
-    <style type="text/css">
-    </style>
+    @if (Model.IsModal)
+    {
+        <style type="text/css">
+            body {
+                background: rgba(55, 58, 60, 0.4);
+            }
+
+            .close-icon {
+                display: flex;
+            }
+        </style>
+    }
 </head>
-<body style="background: #E4E4E4">
+<body>
     <noscript>
         <center style="padding: 2em">
             <h2>Javascript is currently disabled in your browser.</h2>
@@ -53,97 +65,95 @@
     </center>
     <![endif]-->
 
-<invoice>
-    <div class="no-bounce" id="checkoutCtrl" v-cloak>
-        <div class="modal page">
-            <div class="modal-dialog open opened enter-purchaser-email" role="document">
-                <div class="modal-content long">
-                    <div class="content">
-                        <div class="invoice">
-                            <partial name="Checkout-Body" />
+    <invoice>
+        <div class="no-bounce" id="checkoutCtrl" v-cloak>
+            <div class="modal page">
+                <div class="modal-dialog open opened enter-purchaser-email" role="document">
+                    <div class="modal-content long">
+                        <div class="content">
+                            <div class="invoice">
+                                <partial name="Checkout-Body" />
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div style="margin-top: 10px; text-align: center;">
-                    @* Not working because of nsSeparator: false, keySeparator: false,
+                    <div style="margin-top: 10px; text-align: center;">
+                        @* Not working because of nsSeparator: false, keySeparator: false,
                             {{$t("nested.lang")}} >>
                         *@
-                    <select class="cmblang reverse invisible" onchange="changeLanguage($(this).val())">
-                        @foreach (var lang in langService.GetLanguages())
-                        {
-                            <option value="@lang.Code">@lang.DisplayName</option>
-                        }
-                    </select>
-                    <script>
-                        $(function() {
-                            var storeDefaultLang = '@Model.DefaultLang';
-                            if (urlParams.lang) {
-                                $(".cmblang").val(urlParams.lang);
-                            } else if (storeDefaultLang) {
-                                $(".cmblang").val(storeDefaultLang);
-                            }
-
-                            // REVIEW: don't use initDropdown method but rather directly initialize select whenever you are using it
-                            initDropdown(".cmblang");
-                        });
-
-                        function initDropdown(selector) {
-                            return $(selector).prettyDropdown({
-                                classic: false,
-                                height: 32,
-                                reverse: true,
-                                hoverIntent: 5000
+                    
+                        <select asp-for="DefaultLang"  
+                                class="cmblang reverse invisible"
+                            onchange="changeLanguage($(this).val())"
+                            asp-items="@langService.GetLanguages().Select((language) => new SelectListItem(language.DisplayName,language.Code, false))"></select>
+                    
+                        <script>
+                            var languageSelectorPrettyDropdown;
+                            $(function() {
+                                // REVIEW: don't use initDropdown method but rather directly initialize select whenever you are using it
+                                $("#DefaultLang").val(startingLanguage);
+                                languageSelectorPrettyDropdown = initDropdown("#DefaultLang");
                             });
-                        }
-                    </script>
-                </div>
-                <div style="margin-top: 10px; text-align: center;" class="form-text small text-muted">
-                    <span>Powered by <a target="_blank" href="https://github.com/btcpayserver/btcpayserver">BTCPay Server</a></span>
+
+                            function initDropdown(selector) {
+                                return $(selector).prettyDropdown({
+                                    classic: false,
+                                    height: 32,
+                                    reverse: true,
+                                    hoverIntent: 5000
+                                });
+                            }
+                        </script>
+                    </div>
+                    <div style="margin-top: 10px; text-align: center;" class="form-text small text-muted">
+                        <span>Powered by <a target="_blank" href="https://github.com/btcpayserver/btcpayserver">BTCPay Server</a></span>
+                    </div>
                 </div>
             </div>
         </div>
     </invoice>
-    <script type="text/javascript">
-        var storeDefaultLang = '@Model.DefaultLang';
-        // initialization
-        i18next.init({
-            lng: storeDefaultLang,
-            fallbackLng: 'en-US',
-            nsSeparator: false,
-            keySeparator: false,
-            resources: {
-                'en-US': { translation: locales_en },
-                'de-DE': { translation: locales_de },
-                'es-ES': { translation: locales_es },
-                'ja-JP': { translation: locales_ja },
-                'fr-FR': { translation: locales_fr },
-                'pt': { translation: locales_pt },
-                'pt-BR': { translation: locales_pt_br },
-                'nl': { translation: locales_nl },
-                'np': { translation: locales_np },
-                'cs-CZ': { translation: locales_cs },
-                'is-IS': { translation: locales_is },
-                'it-IT': { translation: locales_it },
-                'hr-HR': { translation: locales_hr },
-                'kk-KZ': { translation: locales_kk },
-                'ru-RU': { translation: locales_ru },
-                'uk-UA': { translation: locales_uk },
-                'vi-VN': { translation: locales_vi },
-                'zh-SP': { translation: locales_zh_sp }
+<script type="text/javascript">
+    var availableLanguages = @Html.Raw(Json.Serialize(
+                                     langService
+                                         .GetLanguages()
+                                         .Select((language) => language.Code)));;
+    var storeDefaultLang = "@Model.DefaultLang";
+    var fallbackLanguage = "en";
+    startingLanguage = computeStartingLanguage();
+      // initialization
+    i18next
+        .use(window.i18nextXHRBackend)
+        .init({
+            backend: {
+                loadPath: '/locales/{{lng}}.json'
             },
+            lng: startingLanguage,
+            fallbackLng: fallbackLanguage,
+            nsSeparator: false,
+            keySeparator: false
         });
+    
+    function computeStartingLanguage() {
+        if (urlParams.lang && isLanguageAvailable(urlParams.lang)) {
+            return urlParams.lang;
+        }
+        else if (isLanguageAvailable(storeDefaultLang)) {
+            return storeDefaultLang;
+        } else {
+            return fallbackLanguage;
+        }
+    }
 
     function changeLanguage(lang) {
-        i18next.changeLanguage(lang);
+        if (isLanguageAvailable(lang)) {
+            i18next.changeLanguage(lang);
+        }
     }
-
-    if (urlParams.lang) {
-        changeLanguage(urlParams.lang);
-    } else if (storeDefaultLang) {
-        changeLanguage(storeDefaultLang);
+        
+    function isLanguageAvailable(languageCode) {
+        return availableLanguages.indexOf(languageCode) >= 0;
     }
-
+    
     const i18n = new VueI18next(i18next);
 
     // TODO: Move all logic from core.js to Vue controller
@@ -153,7 +163,7 @@
         // Ignoring custom HTML5 elements, eg: bp-spinner
         /^bp-/
     ];
-    
+
     var checkoutCtrl = new Vue({
         i18n: i18n,
         el: '#checkoutCtrl',
@@ -162,10 +172,11 @@
             changelly: ChangellyComponent
         },
         data: {
-                srvModel: srvModel,
-                lndModel: null,
-                scanDisplayQr: "",
-                expiringSoon: false
+            srvModel: srvModel,
+            lndModel: null,
+            scanDisplayQr: "",
+            expiringSoon: false,
+            isModal: '@(Model.IsModal ? "true" : "false")'
         }
     });
 </script>

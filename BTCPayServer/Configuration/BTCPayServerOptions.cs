@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using BTCPayServer.SSH;
 using BTCPayServer.Lightning;
 using BTCPayServer.Configuration.External;
+using Serilog.Events;
 
 namespace BTCPayServer.Configuration
 {
@@ -30,6 +31,12 @@ namespace BTCPayServer.Configuration
         {
             get;
             private set;
+        } 
+        
+        public string LogFile
+        {
+            get;
+            private set;
         }
         public string DataDir
         {
@@ -47,6 +54,16 @@ namespace BTCPayServer.Configuration
             get;
             set;
         } = new List<NBXplorerConnectionSetting>();
+
+        public static string GetDebugLog(IConfiguration configuration)
+        {
+            return configuration.GetValue<string>("debuglog", null);
+        }
+        public static LogEventLevel GetDebugLogLevel(IConfiguration configuration)
+        {
+            var raw = configuration.GetValue("debugloglevel", nameof(LogEventLevel.Debug));
+            return  (LogEventLevel)Enum.Parse(typeof(LogEventLevel), raw, true);
+        }
 
         public void LoadArgs(IConfiguration conf)
         {
@@ -167,6 +184,13 @@ namespace BTCPayServer.Configuration
             var old = conf.GetOrDefault<Uri>("internallightningnode", null);
             if (old != null)
                 throw new ConfigException($"internallightningnode should not be used anymore, use btclightning instead");
+
+            LogFile = GetDebugLog(conf);
+            if (!string.IsNullOrEmpty(LogFile))
+            {
+                Logs.Configuration.LogInformation("LogFile: " + LogFile);
+                Logs.Configuration.LogInformation("Log Level: " + GetDebugLogLevel(conf));
+            }
         }
 
         private SSHSettings ParseSSHConfiguration(IConfiguration conf)

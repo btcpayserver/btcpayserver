@@ -6,10 +6,6 @@ html {
     -webkit-text-size-adjust: 100%;
 }
 
-body {
-    margin: 0;
-}
-
 article,
 aside,
 details,
@@ -333,8 +329,9 @@ body {
     font-family: "Roboto", "Helvetica", sans-serif;
     font-size: 1rem;
     line-height: 1.5;
-    color: #373a3c;
     background-color: #fff;
+    margin: 0;
+    background: #E4E4E4;
 }
 
 [tabindex="-1"]:focus {
@@ -1296,10 +1293,6 @@ html {
     -webkit-text-size-adjust: 100%;
 }
 
-body {
-    margin: 0;
-}
-
 article,
 aside,
 details,
@@ -1617,14 +1610,6 @@ html {
     font-size: 16px;
     -ms-overflow-style: scrollbar;
     -webkit-tap-highlight-color: transparent;
-}
-
-body {
-    font-family: "Roboto", "Helvetica", sans-serif;
-    font-size: 1rem;
-    line-height: 1.5;
-    color: #373a3c;
-    background-color: #fff;
 }
 
 [tabindex="-1"]:focus {
@@ -9084,11 +9069,12 @@ strong {
 
 .close-icon {
     flex-grow: 1;
-    display: flex;
+    display: none;
     justify-content: flex-end;
     padding: 13px;
     transition: opacity 250ms ease;
     opacity: 1;
+    cursor: pointer;
 }
 
     .close-icon img {
@@ -10373,7 +10359,7 @@ All mobile class names should be prefixed by m- */
 }
 
 .paid:not(.paid-over) .status-icon {
-    padding-top: 54px;
+    padding-top: 45px;
 }
 
 .paid:not(.paid-over) .button-wrapper {
@@ -11509,4 +11495,12 @@ low-fee-timeline {
 }
 
 
-
+#prettydropdown-DefaultLang{
+    min-width:200px;
+}
+#prettydropdown-DefaultLang ul{
+    width:100%;
+}
+#prettydropdown-DefaultLang ul li{
+    width:100% !important;
+}

@@ -46,6 +46,7 @@
             "wwwroot/vendor/vuejs/vue.min.js",
             "wwwroot/vendor/vuejs/vue-qrcode.js",
             "wwwroot/vendor/i18next/i18next.js",
+            "wwwroot/vendor/i18next/i18nextXHRBackend.js",
             "wwwroot/vendor/i18next/vue-i18next.js",
             "wwwroot/vendor/jquery-prettydropdowns/jquery.prettydropdowns.js",
             "wwwroot/vendor/vex/js/vex.combined.min.js",

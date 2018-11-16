@@ -1,5 +1,5 @@
 {
-  "NOTICE_WARN": "THIS CODE HAS BEEN AUTOMATICALLY GENERATE FROM TRANSIFEX, IF YOU WISH TO ADD A NEW LANGUAGE COME ON THE SLACK http://slack.btcpayserver.org TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/",
+  "NOTICE_WARN": "THIS CODE HAS BEEN AUTOMATICALLY GENERATED FROM TRANSIFEX, IF YOU WISH TO HELP TRANSLATION COME ON THE SLACK http://slack.btcpayserver.org TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/",
   "code": "it-IT",
   "currentLanguage": "Italiano",
   "lang": "Lingua",
@@ -31,7 +31,7 @@
   "Invoice expiring soon...": "Fattura in scadenza a breve...",
   "Invoice expired": "Fattura scaduta",
   "What happened?": "Cosa è successo?",
-  "InvoiceExpired_Body_1": "Questa fattura è scaduta. Una fattura è valida solo per {{maxTime minuti}} minuti.   \nPuoi tornare a {{store name}} se desideri inviare nuovamente il pagamento.",
+  "InvoiceExpired_Body_1": "Questa fattura è scaduta. Una fattura è valida solo per {{maxTime minuti}} minuti. \nPuoi tornare a {{store name}} se desideri inviare nuovamente il pagamento.",
   "InvoiceExpired_Body_2": "Se hai provato a inviare un pagamento, non è ancora stato accettato dalla rete. Non abbiamo ancora ricevuto i tuoi fondi.",
   "InvoiceExpired_Body_3": "Se la transazione non viene accettata dalla rete, i fondi saranno nuovamente spendibili nel tuo portafoglio. A seconda del portafoglio, potrebbero essere necessarie 48-72 ore.",
   "Invoice ID": "Numero della Fattura",

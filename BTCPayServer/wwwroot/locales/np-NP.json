@@ -1,5 +1,5 @@
 {
-  "NOTICE_WARN": "THIS CODE HAS BEEN AUTOMATICALLY GENERATE FROM TRANSIFEX, IF YOU WISH TO ADD A NEW LANGUAGE COME ON THE SLACK http://slack.btcpayserver.org TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/",
+  "NOTICE_WARN": "THIS CODE HAS BEEN AUTOMATICALLY GENERATED FROM TRANSIFEX, IF YOU WISH TO HELP TRANSLATION COME ON THE SLACK http://slack.btcpayserver.org TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/",
   "code": "np-NP",
   "currentLanguage": "नेपाली",
   "lang": "भाषा",
@@ -31,7 +31,7 @@
   "Invoice expiring soon...": "चलानीको म्याद सकियो",
   "Invoice expired": "इनभ्वाइस समाप्त भयो",
   "What happened?": "के भयो",
-  "InvoiceExpired_Body_1": "यो चलानी समाप्त भएको छ। इनभ्वाइस {{maxTimeMinutes}} मिनेटको लागि मात्र वैध छ।  \nतपाइँ आफ्नो भुक्तानी पुन: पेश गर्न चाहानुहुन्छ यदि तपाइँ {{ storeName }} भुक्तानी पठाउन प्रयास गर्नुभयो भने।",
+  "InvoiceExpired_Body_1": "यो चलानी समाप्त भएको छ। इनभ्वाइस {{maxTimeMinutes}} मिनेटको लागि मात्र वैध छ। \nतपाइँ आफ्नो भुक्तानी पुन: पेश गर्न चाहानुहुन्छ यदि तपाइँ {{ storeName }} भुक्तानी पठाउन प्रयास गर्नुभयो भने।",
   "InvoiceExpired_Body_2": "भने यो अझै नेटवर्कद्वारा स्वीकार गरिएको छैन। हामीले अझै सम्म तपाईंको रकम प्राप्त गरेका छैनौ।",
   "InvoiceExpired_Body_3": "यदि लेनदेन नेटवर्क द्वारा स्वीकार गरेन भने, रकम तपाईंको वालेटमा फेरि खर्चयोग्य हुनेछ। तपाईंको वालेटको आधारमा, यो 48-72 घण्टा लाग्न सक्छ",
   "Invoice ID": "चलानी आईडी",

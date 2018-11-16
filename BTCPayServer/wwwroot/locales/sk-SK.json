@@ -1,5 +1,5 @@
 {
-  "NOTICE_WARN": "THIS CODE HAS BEEN AUTOMATICALLY GENERATE FROM TRANSIFEX, IF YOU WISH TO ADD A NEW LANGUAGE COME ON THE SLACK http://slack.btcpayserver.org TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/",
+  "NOTICE_WARN": "THIS CODE HAS BEEN AUTOMATICALLY GENERATED FROM TRANSIFEX, IF YOU WISH TO HELP TRANSLATION COME ON THE SLACK http://slack.btcpayserver.org TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/",
   "code": "sk-SK",
   "currentLanguage": "Slovenčina",
   "lang": "Jazyk",
@@ -31,7 +31,7 @@
   "Invoice expiring soon...": "Faktúra čoskoro vyprší...",
   "Invoice expired": "Platnosť faktúry uplynula",
   "What happened?": "Čo sa stalo?",
-  "InvoiceExpired_Body_1": "Platnosť tejto faktúry vypršala. Faktúra platí iba {{maxTimeMinutes}} minút. Môžete sa vrátiť na {{storeName}}, ak chcete platbu znova odoslať.",
+  "InvoiceExpired_Body_1": "Platnosť tejto faktúry vypršala. Faktúra platí iba {{maxTimeMinutes}} minút. \nMôžete sa vrátiť na {{storeName}}, ak chcete platbu znova odoslať.",
   "InvoiceExpired_Body_2": "Ak ste sa pokúsili odoslať platbu, sieť ju ešte neprijala. Zatia+l sme nedostali Vaše finančné prostriedky.",
   "InvoiceExpired_Body_3": "Ak transakcia nie je sieťou prijatá, finančné prostriedky sa budú dať znova použiť vo Vašej peňaženke. V závislosti od peňaženky to môže trvať 48-72 hodín.",
   "Invoice ID": "ID faktúry",

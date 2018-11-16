@@ -47,7 +47,9 @@ namespace BTCPayServer.Controllers
                 Step = step.ToString(CultureInfo.InvariantCulture),
                 ShowCustomAmount = settings.ShowCustomAmount,
                 CurrencySymbol = currency.Symbol,
-                Items = _AppsHelper.Parse(settings.Template, settings.Currency)
+                Items = _AppsHelper.Parse(settings.Template, settings.Currency),
+                ButtonText = settings.ButtonText,
+                CustomButtonText = settings.CustomButtonText
             });
         }
 

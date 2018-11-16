@@ -49,7 +49,7 @@
                                             <input class="form-control" type="number" min="@item.Price.Value" step="@Model.Step" name="amount"
                                                    value="@item.Price.Value" placeholder="Amount">
                                             <div class="input-group-append">
-                                                <button class="btn btn-primary" type="submit">Pay</button>
+                                                <button class="btn btn-primary" type="submit">@Model.CustomButtonText</button>
                                             </div>
                                         </div>
                                     </form>
@@ -57,7 +57,8 @@
                                 else
                                 {
                                     <form method="post" asp-antiforgery="false">
-                                        <button type="submit" name="choiceKey" class="btn btn-primary" value="@item.Id">Buy for @item.Price.Formatted</button>
+                                        <button type="submit" name="choiceKey" class="btn btn-primary" value="@item.Id">
+                                            @String.Format(Model.ButtonText, @item.Price.Formatted)</button>
                                     </form>
                                 }
                             </div>
@@ -79,7 +80,7 @@
                                             <span class="input-group-text">@Model.CurrencySymbol</span>
                                         </div>
                                         <input class="form-control" type="number" min="0" step="@Model.Step" name="amount" placeholder="Amount">
-                                        <div class="input-group-append"><button class="btn btn-primary" type="submit">Pay</button></div>
+                                        <div class="input-group-append"><button class="btn btn-primary" type="submit">@Model.CustomButtonText</button></div>
                                     </div>
                                 </form>
                             </div>

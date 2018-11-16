@@ -329,7 +329,7 @@
                     </div>
                 </div>
                 <div class="success-message">{{$t("This invoice has been paid")}}</div>
-                <a class="action-button" :href="srvModel.merchantRefLink" v-show="srvModel.merchantRefLink && !isModal">
+                <a class="action-button" :href="srvModel.merchantRefLink" v-show="!isModal">
                     <span>{{$t("Return to StoreName", srvModel)}}</span>
                 </a>
                 <button class="action-button close-action" v-show="isModal">
@@ -376,7 +376,7 @@
                     {{srvModel.orderId}}
                 </div>
             </div>
-            <a class="action-button" :href="srvModel.merchantRefLink" v-show="srvModel.merchantRefLink && !isModal">
+            <a class="action-button" :href="srvModel.merchantRefLink" v-show="!isModal">
                 <span>{{$t("Return to StoreName", srvModel)}}</span>
             </a>
             <button class="action-button close-action" v-show="isModal">

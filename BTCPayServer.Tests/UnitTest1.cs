@@ -1322,6 +1322,10 @@ namespace BTCPayServer.Tests
 
             result = parser.Parse(tpub);
             Assert.Equal($"{tpub}-[p2sh]", result.ToString());
+
+            parser = new DerivationSchemeParser(Network.RegTest);
+            var parsed = parser.Parse("xpub6DG1rMYXiQtCc6CfdLFD9CtxqhzzRh7j6Sq6EdE9abgYy3cfDRrniLLv2AdwqHL1exiLnnKR5XXcaoiiexf3Y9R6J6rxkJtqJHzNzMW9QMZ-[p2sh]");
+            Assert.Equal("tpubDDdeNbNDRgqestPX5XEJM8ELAq6eR5cne5RPbBHHvWSSiLHNHehsrn1kGCijMnHFSsFFQMqHcdMfGzDL3pWHRasPMhcGRqZ4tFankQ3i4ok-[p2sh]", parsed.ToString());
         }
 
         [Fact]

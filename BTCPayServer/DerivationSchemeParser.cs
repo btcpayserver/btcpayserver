@@ -63,10 +63,14 @@ namespace BTCPayServer
             electrumMapping.Add(p2wpkh, Array.Empty<string>());
 
             var parts = str.Split('-');
+            bool hasLabel = false;
             for (int i = 0; i < parts.Length; i++)
             {
                 if (IsLabel(parts[i]))
                 {
+                    if (!hasLabel)
+                        hintedLabels.Clear();
+                    hasLabel = true;
                     hintedLabels.Add(parts[i].Substring(1, parts[i].Length - 2).ToLowerInvariant());
                     continue;
                 }

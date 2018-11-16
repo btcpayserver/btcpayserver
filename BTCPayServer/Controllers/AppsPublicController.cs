@@ -97,6 +97,7 @@ namespace BTCPayServer.Controllers
             store.AdditionalClaims.Add(new Claim(Policies.CanCreateInvoice.Key, store.Id));
             var invoice = await _InvoiceController.CreateInvoiceCore(new NBitpayClient.Invoice()
             {
+                ItemCode = choiceKey ?? string.Empty,
                 ItemDesc = title,
                 Currency = settings.Currency,
                 Price = price,

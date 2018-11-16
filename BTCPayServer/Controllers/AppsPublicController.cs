@@ -85,6 +85,8 @@ namespace BTCPayServer.Controllers
                     return NotFound();
                 title = choice.Title;
                 price = choice.Price.Value;
+                if (amount > price)
+                    price = amount;
             }
             else
             {

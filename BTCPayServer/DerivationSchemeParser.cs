@@ -69,7 +69,11 @@ namespace BTCPayServer
                 if (IsLabel(parts[i]))
                 {
                     if (!hasLabel)
+                    {
                         hintedLabels.Clear();
+                        if (!Network.Consensus.SupportSegwit)
+                            hintedLabels.Add("legacy");
+                    }
                     hasLabel = true;
                     hintedLabels.Add(parts[i].Substring(1, parts[i].Length - 2).ToLowerInvariant());
                     continue;

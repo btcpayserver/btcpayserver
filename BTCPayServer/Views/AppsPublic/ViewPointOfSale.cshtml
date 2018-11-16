@@ -14,6 +14,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link href="@this.Context.Request.GetAbsoluteUri(themeManager.BootstrapUri)" rel="stylesheet" />
+    @if (Model.CustomCSSLink != null)
+    {
+        <link href="@Model.CustomCSSLink" rel="stylesheet" />
+    }
 </head>
 <body class="h-100">
     <div class="container d-flex h-100">

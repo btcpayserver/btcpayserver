@@ -30,5 +30,7 @@ namespace BTCPayServer.Models.AppViewModels
 
         public string ButtonText { get; set; }
         public string CustomButtonText { get; set; }
+
+        public string CustomCSSLink { get; set; }
     }
 }

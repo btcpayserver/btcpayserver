@@ -30,5 +30,8 @@ namespace BTCPayServer.Models.AppViewModels
         [Required]
         [MaxLength(30)]
         public string CustomButtonText { get; set; }
+
+        [MaxLength(500)]
+        public string CustomCSSLink { get; set; }
     }
 }

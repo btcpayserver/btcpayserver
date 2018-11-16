@@ -59,6 +59,8 @@ namespace BTCPayServer.Controllers
             public string ButtonText { get; set; } = BUTTON_TEXT_DEF;
             public const string CUSTOM_BUTTON_TEXT_DEF = "Pay";
             public string CustomButtonText { get; set; } = CUSTOM_BUTTON_TEXT_DEF;
+
+            public string CustomCSSLink { get; set; }
         }
 
         [HttpGet]
@@ -76,7 +78,8 @@ namespace BTCPayServer.Controllers
                 Currency = settings.Currency,
                 Template = settings.Template,
                 ButtonText = settings.ButtonText ?? PointOfSaleSettings.BUTTON_TEXT_DEF,
-                CustomButtonText = settings.CustomButtonText ?? PointOfSaleSettings.CUSTOM_BUTTON_TEXT_DEF
+                CustomButtonText = settings.CustomButtonText ?? PointOfSaleSettings.CUSTOM_BUTTON_TEXT_DEF,
+                CustomCSSLink = settings.CustomCSSLink
             };
             if (HttpContext?.Request != null)
             {
@@ -143,7 +146,8 @@ namespace BTCPayServer.Controllers
                 Currency = vm.Currency.ToUpperInvariant(),
                 Template = vm.Template,
                 ButtonText = vm.ButtonText,
-                CustomButtonText = vm.CustomButtonText
+                CustomButtonText = vm.CustomButtonText,
+                CustomCSSLink = vm.CustomCSSLink
             });
             await UpdateAppSettings(app);
             StatusMessage = "App updated";

@@ -49,7 +49,8 @@ namespace BTCPayServer.Controllers
                 CurrencySymbol = currency.Symbol,
                 Items = _AppsHelper.Parse(settings.Template, settings.Currency),
                 ButtonText = settings.ButtonText,
-                CustomButtonText = settings.CustomButtonText
+                CustomButtonText = settings.CustomButtonText,
+                CustomCSSLink = settings.CustomCSSLink
             });
         }
 

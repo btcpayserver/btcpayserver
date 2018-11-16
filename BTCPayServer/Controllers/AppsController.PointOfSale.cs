@@ -41,13 +41,15 @@ namespace BTCPayServer.Controllers
                     "herbal tea:\n" +
                     "  price: 1.8\n" +
                     "  title: Herbal Tea\n" +
-                    "  description: Chamomile tea is made from the flower heads of the chamomile plant. The medicinal use of chamomile dates back to the ancient Egyptians, Romans and Greeks.\n" +
-                    "  image: https://cdn.pixabay.com/photo/2015/07/02/20/57/chamomile-829538__480.jpg\n\n" +
+                    "  description: Chamomile tea is made from the flower heads of the chamomile plant. The medicinal use of chamomile dates back to the ancient Egyptians, Romans and Greeks. Pay us what you want!\n" +
+                    "  image: https://cdn.pixabay.com/photo/2015/07/02/20/57/chamomile-829538__480.jpg\n" +
+                    "  custom: true\n\n" +
                     "fruit tea:\n" +
                     "  price: 1.5\n" +
                     "  title: Fruit Tea\n" +
-                    "  description: The Tibetan Himalayas, the land is majestic and beautiful—a spiritual place where, despite the perilous environment, many journey seeking enlightenment.\n" +
-                    "  image: https://cdn.pixabay.com/photo/2016/09/16/11/24/darts-1673812__480.jpg";
+                    "  description: The Tibetan Himalayas, the land is majestic and beautiful—a spiritual place where, despite the perilous environment, many journey seeking enlightenment. Pay us what you want!\n" +
+                    "  image: https://cdn.pixabay.com/photo/2016/09/16/11/24/darts-1673812__480.jpg\n" +
+                    "  custom: true";
                 ShowCustomAmount = true;
             }
             public string Title { get; set; }

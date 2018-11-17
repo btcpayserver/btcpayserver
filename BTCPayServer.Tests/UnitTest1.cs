@@ -1460,12 +1460,18 @@ namespace BTCPayServer.Tests
                 var vmpos = Assert.IsType<UpdatePointOfSaleViewModel>(Assert.IsType<ViewResult>(apps.UpdatePointOfSale(appId).Result).Model);
                 vmpos.Title = "hello";
                 vmpos.Currency = "CAD";
-                vmpos.Template =
-                    "apple:\n" +
-                    "  price: 5.0\n" +
-                    "  title: good apple\n" +
-                    "orange:\n" +
-                    "  price: 10.0\n";
+                vmpos.ButtonText = "{0} Purchase";
+                vmpos.CustomButtonText = "Nicolas Sexy Hair";
+                vmpos.Template = @"
+apple:
+    price: 5.0
+    title: good apple
+orange:
+    price: 10.0
+donation:
+    price: 1.02
+    custom: true
+";
                 Assert.IsType<RedirectToActionResult>(apps.UpdatePointOfSale(appId, vmpos).Result);
                 vmpos = Assert.IsType<UpdatePointOfSaleViewModel>(Assert.IsType<ViewResult>(apps.UpdatePointOfSale(appId).Result).Model);
                 Assert.Equal("hello", vmpos.Title);
@@ -1473,16 +1479,29 @@ namespace BTCPayServer.Tests
                 var publicApps = user.GetController<AppsPublicController>();
                 var vmview = Assert.IsType<ViewPointOfSaleViewModel>(Assert.IsType<ViewResult>(publicApps.ViewPointOfSale(appId).Result).Model);
                 Assert.Equal("hello", vmview.Title);
-                Assert.Equal(2, vmview.Items.Length);
+                Assert.Equal(3, vmview.Items.Length);
                 Assert.Equal("good apple", vmview.Items[0].Title);
                 Assert.Equal("orange", vmview.Items[1].Title);
                 Assert.Equal(10.0m, vmview.Items[1].Price.Value);
                 Assert.Equal("$5.00", vmview.Items[0].Price.Formatted);
+                Assert.Equal("{0} Purchase", vmview.ButtonText);
+                Assert.Equal("Nicolas Sexy Hair", vmview.CustomButtonText);
                 Assert.IsType<RedirectResult>(publicApps.ViewPointOfSale(appId, 0, null, null, null, null, "orange").Result);
-                var invoice = user.BitPay.GetInvoices().First();
-                Assert.Equal(10.00m, invoice.Price);
-                Assert.Equal("CAD", invoice.Currency);
-                Assert.Equal("orange", invoice.ItemDesc);
+
+                //
+                var invoices = user.BitPay.GetInvoices();
+                var orangeInvoice = invoices.First();
+                Assert.Equal(10.00m, orangeInvoice.Price);
+                Assert.Equal("CAD", orangeInvoice.Currency);
+                Assert.Equal("orange", orangeInvoice.ItemDesc);
+
+                // testing custom amount
+                Assert.IsType<RedirectResult>(publicApps.ViewPointOfSale(appId, 5, null, null, null, null, "donation").Result);
+                invoices = user.BitPay.GetInvoices();
+                var donationInvoice = invoices.First(); // expected behavior is that new invoice should now be first
+                Assert.Equal(5m, donationInvoice.Price);
+                Assert.Equal("CAD", donationInvoice.Currency);
+                Assert.Equal("donation", donationInvoice.ItemDesc);
             }
         }
 

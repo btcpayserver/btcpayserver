@@ -34,6 +34,22 @@
                         <input asp-for="ShowCustomAmount" type="checkbox" class="form-check" />
                     </div>
                     <div class="form-group">
+                        <label asp-for="ButtonText" class="control-label"></label>*
+                        <input asp-for="ButtonText" class="form-control" />
+                        <span asp-validation-for="ButtonText" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="CustomButtonText" class="control-label"></label>*
+                        <input asp-for="CustomButtonText" class="form-control" />
+                        <span asp-validation-for="CustomButtonText" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="CustomCSSLink" class="control-label"></label>
+                        <a href="https://docs.btcpayserver.org/development/theme#bootstrap-themes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                        <input asp-for="CustomCSSLink" class="form-control" />
+                        <span asp-validation-for="CustomCSSLink" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
                         <label asp-for="Template" class="control-label"></label>*
                         <textarea asp-for="Template" rows="20" cols="40" class="form-control"></textarea>
                         <span asp-validation-for="Template" class="text-danger"></span>
@@ -41,12 +57,12 @@
                     <div class="form-group">
                         <h5>Host button externally</h5>
                         <p>You can host point of sale buttons in an external website with the following code.</p>
-                        @if(Model.Example1 != null)
+                        @if (Model.Example1 != null)
                         {
                             <span>For anything with a custom amount</span>
                             <pre><code class="html">@Model.Example1</code></pre>
                         }
-                        @if(Model.Example2 != null)
+                        @if (Model.Example2 != null)
                         {
                             <span>For a specific item of your template</span>
                             <pre><code class="html">@Model.Example2</code></pre>
@@ -63,7 +79,7 @@
                         </p>
                     </div>
                     <div class="form-group">
-                        <input type="submit" class="btn btn-primary" />
+                        <input type="submit" class="btn btn-primary" value="Save Settings" />
                     </div>
                 </form>
                 <a asp-action="ListApps">Back to the app list</a>

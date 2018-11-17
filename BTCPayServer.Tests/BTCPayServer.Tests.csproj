@@ -6,6 +6,7 @@
     <IsPackable>false</IsPackable>
     <NoWarn>NU1701,CA1816,CA1308,CA1810,CA2208</NoWarn>
     <LangVersion>7.2</LangVersion>
+    <UserSecretsId>AB0AC1DD-9D26-485B-9416-56A33F268117</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

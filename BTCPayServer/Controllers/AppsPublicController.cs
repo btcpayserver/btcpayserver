@@ -47,7 +47,10 @@ namespace BTCPayServer.Controllers
                 Step = step.ToString(CultureInfo.InvariantCulture),
                 ShowCustomAmount = settings.ShowCustomAmount,
                 CurrencySymbol = currency.Symbol,
-                Items = _AppsHelper.Parse(settings.Template, settings.Currency)
+                Items = _AppsHelper.Parse(settings.Template, settings.Currency),
+                ButtonText = settings.ButtonText,
+                CustomButtonText = settings.CustomButtonText,
+                CustomCSSLink = settings.CustomCSSLink
             });
         }
 
@@ -85,6 +88,8 @@ namespace BTCPayServer.Controllers
                     return NotFound();
                 title = choice.Title;
                 price = choice.Price.Value;
+                if (amount > price)
+                    price = amount;
             }
             else
             {
@@ -97,6 +102,7 @@ namespace BTCPayServer.Controllers
             store.AdditionalClaims.Add(new Claim(Policies.CanCreateInvoice.Key, store.Id));
             var invoice = await _InvoiceController.CreateInvoiceCore(new NBitpayClient.Invoice()
             {
+                ItemCode = choiceKey ?? string.Empty,
                 ItemDesc = title,
                 Currency = settings.Currency,
                 Price = price,

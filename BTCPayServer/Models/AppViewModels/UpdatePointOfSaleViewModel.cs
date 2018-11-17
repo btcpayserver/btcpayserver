@@ -23,5 +23,18 @@ namespace BTCPayServer.Models.AppViewModels
         public string Example2 { get; internal set; }
         public string ExampleCallback { get; internal set; }
         public string InvoiceUrl { get; internal set; }
+
+        [Required]
+        [MaxLength(30)]
+        [Display(Name = "Text to display on each buttons for items with a specific price")]
+        public string ButtonText { get; set; }
+        [Required]
+        [MaxLength(30)]
+        [Display(Name = "Text to display on buttons next to the input allowing the user to enter a custom amount")]
+        public string CustomButtonText { get; set; }
+
+        [MaxLength(500)]
+        [Display(Name = "Custom bootstrap CSS file")]
+        public string CustomCSSLink { get; set; }
     }
 }

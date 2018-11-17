@@ -27,5 +27,10 @@ namespace BTCPayServer.Models.AppViewModels
         public string Title { get; set; }
         public Item[] Items { get; set; }
         public string CurrencySymbol { get; set; }
+
+        public string ButtonText { get; set; }
+        public string CustomButtonText { get; set; }
+
+        public string CustomCSSLink { get; set; }
     }
 }

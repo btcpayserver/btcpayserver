@@ -41,19 +41,28 @@ namespace BTCPayServer.Controllers
                     "herbal tea:\n" +
                     "  price: 1.8\n" +
                     "  title: Herbal Tea\n" +
-                    "  description: Chamomile tea is made from the flower heads of the chamomile plant. The medicinal use of chamomile dates back to the ancient Egyptians, Romans and Greeks.\n" +
-                    "  image: https://cdn.pixabay.com/photo/2015/07/02/20/57/chamomile-829538__480.jpg\n\n" +
+                    "  description: Chamomile tea is made from the flower heads of the chamomile plant. The medicinal use of chamomile dates back to the ancient Egyptians, Romans and Greeks. Pay us what you want!\n" +
+                    "  image: https://cdn.pixabay.com/photo/2015/07/02/20/57/chamomile-829538__480.jpg\n" +
+                    "  custom: true\n\n" +
                     "fruit tea:\n" +
                     "  price: 1.5\n" +
                     "  title: Fruit Tea\n" +
-                    "  description: The Tibetan Himalayas, the land is majestic and beautiful—a spiritual place where, despite the perilous environment, many journey seeking enlightenment.\n" +
-                    "  image: https://cdn.pixabay.com/photo/2016/09/16/11/24/darts-1673812__480.jpg";
+                    "  description: The Tibetan Himalayas, the land is majestic and beautiful—a spiritual place where, despite the perilous environment, many journey seeking enlightenment. Pay us what you want!\n" +
+                    "  image: https://cdn.pixabay.com/photo/2016/09/16/11/24/darts-1673812__480.jpg\n" +
+                    "  custom: true";
                 ShowCustomAmount = true;
             }
             public string Title { get; set; }
             public string Currency { get; set; }
             public string Template { get; set; }
             public bool ShowCustomAmount { get; set; }
+
+            public const string BUTTON_TEXT_DEF = "Buy for {0}";
+            public string ButtonText { get; set; } = BUTTON_TEXT_DEF;
+            public const string CUSTOM_BUTTON_TEXT_DEF = "Pay";
+            public string CustomButtonText { get; set; } = CUSTOM_BUTTON_TEXT_DEF;
+
+            public string CustomCSSLink { get; set; }
         }
 
         [HttpGet]
@@ -69,7 +78,10 @@ namespace BTCPayServer.Controllers
                 Title = settings.Title,
                 ShowCustomAmount = settings.ShowCustomAmount,
                 Currency = settings.Currency,
-                Template = settings.Template
+                Template = settings.Template,
+                ButtonText = settings.ButtonText ?? PointOfSaleSettings.BUTTON_TEXT_DEF,
+                CustomButtonText = settings.CustomButtonText ?? PointOfSaleSettings.CUSTOM_BUTTON_TEXT_DEF,
+                CustomCSSLink = settings.CustomCSSLink
             };
             if (HttpContext?.Request != null)
             {
@@ -134,7 +146,10 @@ namespace BTCPayServer.Controllers
                 Title = vm.Title,
                 ShowCustomAmount = vm.ShowCustomAmount,
                 Currency = vm.Currency.ToUpperInvariant(),
-                Template = vm.Template
+                Template = vm.Template,
+                ButtonText = vm.ButtonText,
+                CustomButtonText = vm.CustomButtonText,
+                CustomCSSLink = vm.CustomCSSLink
             });
             await UpdateAppSettings(app);
             StatusMessage = "App updated";

@@ -1,4 +1,4 @@
-FROM microsoft/dotnet:2.1.403-sdk-alpine3.7 AS builder
+FROM microsoft/dotnet:2.1.500-sdk-alpine3.7 AS builder
 WORKDIR /source
 COPY BTCPayServer/BTCPayServer.csproj BTCPayServer.csproj
 # Cache some dependencies
@@ -6,7 +6,7 @@ RUN dotnet restore
 COPY BTCPayServer/. .
 RUN dotnet publish --output /app/ --configuration Release
 
-FROM microsoft/dotnet:2.1.5-aspnetcore-runtime-alpine3.7
+FROM microsoft/dotnet:2.1.6-aspnetcore-runtime-alpine3.7
 
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT false
 RUN apk add --no-cache icu-libs

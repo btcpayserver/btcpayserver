@@ -14,6 +14,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link href="@this.Context.Request.GetAbsoluteUri(themeManager.BootstrapUri)" rel="stylesheet" />
+    @if (Model.CustomCSSLink != null)
+    {
+        <link href="@Model.CustomCSSLink" rel="stylesheet" />
+    }
 </head>
 <body class="h-100">
     <div class="container d-flex h-100">
@@ -41,6 +45,7 @@
                                 @if (item.Custom)
                                 {
                                     <form method="post" asp-antiforgery="false" data-buy>
+                                        <input type="hidden" name="choicekey" value="@item.Id" />
                                         <div class="input-group">
                                             <div class="input-group-prepend">
                                                 <span class="input-group-text">@Model.CurrencySymbol</span>
@@ -48,7 +53,7 @@
                                             <input class="form-control" type="number" min="@item.Price.Value" step="@Model.Step" name="amount"
                                                    value="@item.Price.Value" placeholder="Amount">
                                             <div class="input-group-append">
-                                                <button class="btn btn-primary" type="submit">Pay</button>
+                                                <button class="btn btn-primary" type="submit">@Model.CustomButtonText</button>
                                             </div>
                                         </div>
                                     </form>
@@ -56,7 +61,8 @@
                                 else
                                 {
                                     <form method="post" asp-antiforgery="false">
-                                        <button type="submit" name="choiceKey" class="btn btn-primary" value="@item.Id">Buy for @item.Price.Formatted</button>
+                                        <button type="submit" name="choiceKey" class="btn btn-primary" value="@item.Id">
+                                            @String.Format(Model.ButtonText, @item.Price.Formatted)</button>
                                     </form>
                                 }
                             </div>
@@ -78,7 +84,7 @@
                                             <span class="input-group-text">@Model.CurrencySymbol</span>
                                         </div>
                                         <input class="form-control" type="number" min="0" step="@Model.Step" name="amount" placeholder="Amount">
-                                        <div class="input-group-append"><button class="btn btn-primary" type="submit">Pay</button></div>
+                                        <div class="input-group-append"><button class="btn btn-primary" type="submit">@Model.CustomButtonText</button></div>
                                     </div>
                                 </form>
                             </div>

@@ -163,6 +163,7 @@ namespace BTCPayServer.Controllers
                               // - The user is clicking on continue without changing anything   
                               (!vm.Confirmation && willBeExcluded == wasExcluded);
 
+            showAddress = showAddress && strategy != null;
             if (!showAddress)
             {
                 try

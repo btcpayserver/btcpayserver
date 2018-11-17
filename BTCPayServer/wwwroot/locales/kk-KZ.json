@@ -1,5 +1,5 @@
 {
-  "NOTICE_WARN": "THIS CODE HAS BEEN AUTOMATICALLY GENERATE FROM TRANSIFEX, IF YOU WISH TO ADD A NEW LANGUAGE COME ON THE SLACK http://slack.btcpayserver.org TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/",
+  "NOTICE_WARN": "THIS CODE HAS BEEN AUTOMATICALLY GENERATED FROM TRANSIFEX, IF YOU WISH TO HELP TRANSLATION COME ON THE SLACK http://slack.btcpayserver.org TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/",
   "code": "kk-KZ",
   "currentLanguage": "Қазақша",
   "lang": "Тіл",
@@ -31,7 +31,7 @@
   "Invoice expiring soon...": "Шот-фактура жақын арада аяқталады…",
   "Invoice expired": "Шот-фактураның мерзімі аяқталды",
   "What happened?": "Не жағдай болды?",
-  "InvoiceExpired_Body_1": "Бұл шот-фактураның мерзімі аяқталды. Шот-фактура {{maxTimeMinutes}} минуттарға жарамды.  \nТөлеміңізді қайтадан жібергіңіз келсе {{storeName}} ға оралуға болады.",
+  "InvoiceExpired_Body_1": "Бұл шот-фактураның мерзімі аяқталды. Шот-фактура {{maxTimeMinutes}} минуттарға жарамды. \nТөлеміңізді қайтадан жібергіңіз келсе {{storeName}} ға оралуға болады.",
   "InvoiceExpired_Body_2": "Егер сіз төлемді жіберуге тырыссқан болсаңыз, ол әлі желімен қабылданған жоқ. Біз сіздің қаражатыңызды әлі алған жоқпыз.",
   "InvoiceExpired_Body_3": "Егер транзакция желі арқылы қабылданбаса, қаражат әмияныңызға қайтадан қайтарылады. Бұл сіздің әмияныңызға байланысты 48-72 сағат алуы мүмкін.",
   "Invoice ID": "Шот анықтамасы",

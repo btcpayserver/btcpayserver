@@ -44,14 +44,15 @@
                         <span asp-validation-for="CustomButtonText" class="text-danger"></span>
                     </div>
                     <div class="form-group">
+                        <label asp-for="CustomCSSLink" class="control-label"></label>
+                        <a href="https://docs.btcpayserver.org/development/theme#bootstrap-themes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                        <input asp-for="CustomCSSLink" class="form-control" />
+                        <span asp-validation-for="CustomCSSLink" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
                         <label asp-for="Template" class="control-label"></label>*
                         <textarea asp-for="Template" rows="20" cols="40" class="form-control"></textarea>
                         <span asp-validation-for="Template" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="CustomCSSLink" class="control-label"></label>
-                        <input asp-for="CustomCSSLink" class="form-control" />
-                        <span asp-validation-for="CustomCSSLink" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <h5>Host button externally</h5>

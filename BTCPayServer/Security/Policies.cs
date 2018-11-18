@@ -31,10 +31,14 @@ namespace BTCPayServer.Security
         {
             public const string Key = "btcpay.store.canmodifystoresettings";
         }
-
+        public class CanModifyClientSettings
+        {
+            public const string Key = "btcpay.store.canmodifyclientsettings";
+        }
         public class CanCreateInvoice
         {
             public const string Key = "btcpay.store.cancreateinvoice";
         }
+        
     }
 }

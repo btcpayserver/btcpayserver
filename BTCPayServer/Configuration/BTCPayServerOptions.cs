@@ -54,6 +54,8 @@ namespace BTCPayServer.Configuration
             get;
             set;
         } = new List<NBXplorerConnectionSetting>();
+        
+        
 
         public static string GetDebugLog(IConfiguration configuration)
         {

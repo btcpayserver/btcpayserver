@@ -93,10 +93,8 @@ namespace BTCPayServer.Hosting
                     // During development, you can disable the HTTPS requirement.
                     options.DisableHttpsRequirement();
 
-                    // Accept token requests that don't specify a client_id. 
-                    options.AcceptAnonymousClients();
-                    options.DisableScopeValidation();
-
+                    options.ConfigureClientRequirements(Configuration);
+                    
                     options.UseJsonWebTokens();
 
                     options.ConfigureSigningKey(Configuration);

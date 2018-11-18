@@ -1,0 +1,396 @@
+@page "{id?}"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Mvc.RazorPages
+@using OpenIddict.Abstractions
+@using OpenIddict.Core
+@using OpenIddict.EntityFrameworkCore.Models
+@model EditClient
+
+<script type="text/javascript">
+    $(function() {
+        $(".btn-redirect-uris-add").on("click",
+            function() {
+                $("<li class='list-group-item '>" +
+                        "<div class='input-group'> " +
+                        "<input class='form-control ' " +
+                        "type='text' name='Client.RedirectUris' " +
+                        "placeholder='Allowed Redirect Url' /> " +
+                        "<div class='input-group-append'> " +
+                        "<button class='btn btn-danger btn-redirect-uris-remove' role='button' type='button'>" +
+                        "<span class='fa fa-times'></span>" +
+                        "</button>" +
+                        "</div>" +
+                        "</div>" +
+                        "</li>")
+                    .insertBefore($(this).parent("li")).find("button").on("click", onRemoveLiButtonClicked);
+
+            });
+        $(".btn-post-logout-redirect-uris-add").on("click",
+            function() {
+                $("<li class='list-group-item '>" +
+                        "<div class='input-group'> " +
+                        "<input class='form-control ' " +
+                        "type='text' name='Client.PostLogoutRedirectUris' " +
+                        "placeholder='Allowed Post Logout Redirect Url' /> " +
+                        "<div class='input-group-append'> " +
+                        "<button class='btn btn-danger btn-redirect-uris-remove' role='button' type='button'>" +
+                        "<span class='fa fa-times'></span>" +
+                        "</button>" +
+                        "</div>" +
+                        "</div>" +
+                        "</li>")
+                    .insertBefore($(this).parent("li")).find("button").on("click", onRemoveLiButtonClicked);
+
+            });
+        $(".btn-redirect-uris-remove").on("click", onRemoveLiButtonClicked);
+        
+       function onRemoveLiButtonClicked() {
+           
+           $(this).parents("li").remove();
+       }
+    })
+</script>
+
+
+<partial name="_StatusMessage" for="StatusMessage" />
+<section class="client-edit-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                <partial name="_StatusMessage" for="StatusMessage" />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                <h2 class="section-heading">
+                    @if (string.IsNullOrEmpty(Model.Id))
+                    {
+                        @Html.Raw("Create")
+                    }
+                    else
+                    {
+                        @Html.Raw("Edit")
+                    }
+                    Client
+                </h2>
+                <hr class="primary">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <form method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <div class="form-group">
+                        <label asp-for="Client.DisplayName" class="control-label"></label>*
+                        <input asp-for="Client.DisplayName" class="form-control"/>
+                        <span asp-validation-for="Client.DisplayName" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Client.ClientId" class="control-label"></label>*
+                        <input asp-for="Client.ClientId" class="form-control"/>
+                        <span asp-validation-for="Client.ClientId" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Client.ClientSecret" class="control-label"></label>*
+                        <input asp-for="Client.ClientSecret" class="form-control"/>
+
+                        <span asp-validation-for="Client.ClientSecret" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Client.Type" class="control-label"></label>*
+                        <select asp-for="Client.Type" class="form-control">
+                            <option value="@OpenIddictConstants.ClientTypes.Public">@nameof(OpenIddictConstants.ClientTypes.Public)</option>
+                            <option value="@OpenIddictConstants.ClientTypes.Confidential">@nameof(OpenIddictConstants.ClientTypes.Confidential)</option>
+                            <option value="@OpenIddictConstants.ClientTypes.Hybrid">@nameof(OpenIddictConstants.ClientTypes.Hybrid)</option>
+                        </select>
+                        <span asp-validation-for="Client.Type" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Client.ConsentType" class="control-label"></label>*
+                        <select asp-for="Client.ConsentType" class="form-control">
+                            <option value="@OpenIddictConstants.ConsentTypes.Implicit">@nameof(OpenIddictConstants.ConsentTypes.Implicit)</option>
+                            <option value="@OpenIddictConstants.ConsentTypes.Explicit">@nameof(OpenIddictConstants.ConsentTypes.Explicit)</option>
+                            <option value="@OpenIddictConstants.ConsentTypes.External">@nameof(OpenIddictConstants.ConsentTypes.External)</option>
+                        </select>
+                        <span asp-validation-for="Client.ConsentType" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+
+                        <label asp-for="Client.RedirectUris" class="control-label"></label>*
+                        <ul class="list-group">
+                            @foreach (var redirecturi in Model.Client.RedirectUris)
+                            {
+                                <li class="list-group-item">
+                                    <div class="input-group">
+                                        <input asp-for="Client.RedirectUris" class="form-control" value="@redirecturi" placeholder="Allowed Redirect Url"/>
+                                        <div class="input-group-append">
+                                            <button class="btn btn-danger btn-redirect-uris-remove" role="button" type="button">
+                                                <span class="fa fa-times"></span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </li>
+                            }
+                            <li class="list-group-item">
+                                <button class="btn btn-primary btn-redirect-uris-add" role="button" type="button">
+                                    <span class="fa fa-plus"></span> Add Redirect Uri
+                                </button>
+                            </li>
+                        </ul>
+                        <span asp-validation-for="Client.RedirectUris" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Client.PostLogoutRedirectUris" class="control-label"></label>*
+                        <ul class="list-group">
+                            @foreach (var redirecturi in Model.Client.PostLogoutRedirectUris)
+                            {
+                                <li class="list-group-item">
+                                    <div class="input-group">
+                                        <input asp-for="Client.PostLogoutRedirectUris" class="form-control" value="@redirecturi" placeholder="Allowed Post Logout Redirect Url"/>
+                                        <div class="input-group-append">
+                                            <button class="btn btn-danger btn-redirect-uris-remove" role="button" type="button">
+                                                <span class="fa fa-times"></span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </li>
+                            }
+                            <li class="list-group-item">
+                                <button class="btn btn-primary btn-post-logout-redirect-uris-add" role="button" type="button">
+                                    <span class="fa fa-plus"></span> Add Post Logout Redirect Uri
+                                </button>
+                            </li>
+                        </ul>
+
+                        <span asp-validation-for="Client.PostLogoutRedirectUris" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Client.Permissions" class="control-label"></label>
+                        <select multiple asp-for="Client.Permissions" asp-items="Model.Permissions" class="form-control" style="height: 300px"></select>
+
+                        <span asp-validation-for="Client.Permissions" class="text-danger"></span>
+                    </div>
+
+
+                    <div class="form-group">
+                        <input type="submit" class="btn btn-primary"/>
+                    </div>
+                </form>
+                <a asp-page="./Index">Back to List</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+@functions{
+
+
+    [Authorize]
+    public class EditClient : PageModel
+    {
+        private readonly OpenIddictApplicationManager<OpenIddictApplication> _applicationManager;
+
+        [BindProperty]
+        public OpenIddictApplicationDescriptor Client { get; set; }
+
+        public List<SelectListItem> Permissions = new List<SelectListItem>();
+
+        [BindProperty(SupportsGet = true)]
+        public string Id { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public string StatusMessage { get; set; }
+
+        public EditClient(OpenIddictApplicationManager<OpenIddictApplication> applicationManager)
+        {
+            _applicationManager = applicationManager;
+            PopulatePermissions();
+        }
+
+        public async Task<IActionResult> OnGetAsync()
+        {
+            Client = new OpenIddictApplicationDescriptor();
+            if (string.IsNullOrEmpty(Id)) return Page();
+            var application = await _applicationManager.FindByClientIdAsync(Id);
+
+            if (application != null)
+            {
+                await _applicationManager.PopulateAsync(Client, application);
+            }
+            return Page();
+        }
+
+        public async Task<IActionResult> OnPostAsync()
+        {
+            if (!ModelState.IsValid)
+            {
+                return Page();
+            }
+            try
+            {
+                Client.RedirectUris.Remove(null);
+                Client.PostLogoutRedirectUris.Remove(null);
+                var application = new OpenIddictApplication();
+                await _applicationManager.PopulateAsync(application, Client);
+                var validation = await _applicationManager.ValidateAsync(application);
+                if (validation.Any())
+                {
+                    foreach (var validationResult in validation)
+                    {
+                        ModelState.AddModelError("", validationResult.ErrorMessage);
+                    }
+                    return Page();
+                }
+                if (!string.IsNullOrEmpty(Id))
+                {
+                    await _applicationManager.UpdateAsync(application);
+
+                    StatusMessage = "Client saved successfully";
+
+                    return Page();
+                }
+                await _applicationManager.CreateAsync(application);
+                return RedirectToPage("./Edit", new {Id = application.ClientId, StatusMessage = "Client Created successfully"});
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError("", e.Message);
+                return Page();
+            }
+        }
+
+
+        private void PopulatePermissions()
+        {
+            var grantTypeGroup = new SelectListGroup
+            {
+                Name = "Grant Types"
+            };
+            var endpointsGroup = new SelectListGroup
+            {
+                Name = "Endpoints"
+            };
+            var scopesGroup = new SelectListGroup
+            {
+                Name = "Scopes"
+            };
+
+            Permissions = new List<SelectListItem>()
+            {
+                new SelectListItem()
+                {
+                    Value = OpenIddictConstants.Permissions.GrantTypes.Implicit,
+                    Text = nameof(OpenIddictConstants.Permissions.GrantTypes.Implicit),
+                    Group = grantTypeGroup
+                },
+                new SelectListItem()
+                {
+                    Value = OpenIddictConstants.Permissions.GrantTypes.Password,
+                    Text = nameof(OpenIddictConstants.Permissions.GrantTypes.Password),
+                    Group = grantTypeGroup
+                },
+                new SelectListItem()
+                {
+                    Value = OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode,
+                    Text = nameof(OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode),
+                    Group = grantTypeGroup
+                },
+                new SelectListItem()
+                {
+                    Value = OpenIddictConstants.Permissions.GrantTypes.ClientCredentials,
+                    Text = nameof(OpenIddictConstants.Permissions.GrantTypes.ClientCredentials),
+                    Group = grantTypeGroup
+                },
+                new SelectListItem()
+                {
+                    Value = OpenIddictConstants.Permissions.GrantTypes.RefreshToken,
+                    Text = nameof(OpenIddictConstants.Permissions.GrantTypes.RefreshToken),
+                    Group = grantTypeGroup
+                },
+                new SelectListItem()
+                {
+                    Value = OpenIddictConstants.Permissions.GrantTypes.Implicit,
+                    Text = nameof(OpenIddictConstants.Permissions.GrantTypes.Implicit),
+                    Group = grantTypeGroup
+                },
+                new SelectListItem()
+                {
+                    Value = OpenIddictConstants.Permissions.Endpoints.Authorization,
+                    Text = nameof(OpenIddictConstants.Permissions.Endpoints.Authorization),
+                    Group = endpointsGroup
+                },
+                new SelectListItem()
+                {
+                    Value = OpenIddictConstants.Permissions.Endpoints.Introspection,
+                    Text = nameof(OpenIddictConstants.Permissions.Endpoints.Introspection),
+                    Group = endpointsGroup
+                },
+                new SelectListItem()
+                {
+                    Value = OpenIddictConstants.Permissions.Endpoints.Logout,
+                    Text = nameof(OpenIddictConstants.Permissions.Endpoints.Logout),
+                    Group = endpointsGroup
+                },
+                new SelectListItem()
+                {
+                    Value = OpenIddictConstants.Permissions.Endpoints.Revocation,
+                    Text = nameof(OpenIddictConstants.Permissions.Endpoints.Revocation),
+                    Group = endpointsGroup
+                },
+                new SelectListItem()
+                {
+                    Value = OpenIddictConstants.Permissions.Endpoints.Token,
+                    Text = nameof(OpenIddictConstants.Permissions.Endpoints.Token),
+                    Group = endpointsGroup
+                },
+                new SelectListItem()
+                {
+                    Value = OpenIddictConstants.Permissions.Scopes.Address,
+                    Text = nameof(OpenIddictConstants.Permissions.Scopes.Address),
+                    Group = scopesGroup
+                },
+                new SelectListItem()
+                {
+                    Value = OpenIddictConstants.Permissions.Scopes.Email,
+                    Text = nameof(OpenIddictConstants.Permissions.Scopes.Email),
+                    Group = scopesGroup
+                },
+                new SelectListItem()
+                {
+                    Value = OpenIddictConstants.Permissions.Scopes.Phone,
+                    Text = nameof(OpenIddictConstants.Permissions.Scopes.Phone),
+                    Group = scopesGroup
+                },
+                new SelectListItem()
+                {
+                    Value = OpenIddictConstants.Permissions.Scopes.Profile,
+                    Text = nameof(OpenIddictConstants.Permissions.Scopes.Profile),
+                    Group = scopesGroup
+                },
+                new SelectListItem()
+                {
+                    Value = OpenIddictConstants.Permissions.Scopes.Roles,
+                    Text = nameof(OpenIddictConstants.Permissions.Scopes.Roles),
+                    Group = scopesGroup
+                },
+                new SelectListItem()
+                {
+                    Value = OpenIddictConstants.Permissions.Scopes.OfflineAccess,
+                    Text = nameof(OpenIddictConstants.Permissions.Scopes.OfflineAccess),
+                    Group = scopesGroup
+                },
+                new SelectListItem()
+                {
+                    Value = OpenIddictConstants.Permissions.Scopes.OpenId,
+                    Text = nameof(OpenIddictConstants.Permissions.Scopes.OpenId),
+                    Group = scopesGroup
+                }
+            };
+        }
+    }
+
+}

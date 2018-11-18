@@ -1,0 +1,95 @@
+@page
+@using System.Collections.Immutable
+@using Microsoft.AspNetCore.Authorization
+@using OpenIddict.Abstractions
+@using OpenIddict.Core
+@using OpenIddict.EntityFrameworkCore.Models
+@using PageModel = Microsoft.AspNetCore.Mvc.RazorPages.PageModel
+@model ClientsList
+
+<section>
+    <div class="container">
+
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                <partial name="_StatusMessage" for="@Model.StatusMessage"/>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                <h2 class="section-heading">Open Id Clients</h2>
+                <hr class="primary">
+                <p>Create and manage Open Id Clients to connect to btcpayserver's apis.</p>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-1">
+                <div asp-validation-summary="All" class="text-danger"></div>
+            </div>
+        </div>
+
+        <a asp-page="./Edit" class="btn btn-primary" role="button"><span class="fa fa-plus"></span> Create a new client</a>
+
+        <div class="row">
+            <div class="col-md-12">
+                <table class="table table-sm table-responsive-md">
+                    <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Client id</th>
+                        <th class="text-right">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var client in Model.Clients)
+                    {
+                        <tr>
+                            <td>@client.DisplayName</td>
+                            <td>@client.ClientId</td>
+                            <td class="text-right">
+                                <a asp-page="./Edit" asp-route-id="@client.ClientId">View</a><span> - </span>
+                                <a asp-page="./Delete" asp-route-id="@client.ClientId">Delete</a>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Clients.Any())
+                    {
+                        <tr>
+                            <td colspan="3">No Clients</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+@functions{
+    [Authorize]
+    public class ClientsList : PageModel
+    {
+        private readonly OpenIddictApplicationManager<OpenIddictApplication> _applicationManager;
+        [BindProperty(SupportsGet = true)]
+        public string StatusMessage { get; set; }
+        
+
+        public ImmutableArray<OpenIddictApplication> Clients { get; internal set; }
+
+        public ClientsList(OpenIddictApplicationManager<OpenIddictApplication> applicationManager)
+        {
+            _applicationManager = applicationManager;
+        }
+
+        public async Task<IActionResult> OnGetAsync()
+        {
+            Clients = await _applicationManager.ListAsync();
+
+            return Page();
+        }
+    }
+
+}

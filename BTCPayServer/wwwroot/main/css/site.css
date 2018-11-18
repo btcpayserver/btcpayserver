@@ -14,3 +14,8 @@
     width: 100%;
     overflow: hidden;
 }
+
+button.btn.btn-link {
+    padding: 0;
+    vertical-align: initial;
+}

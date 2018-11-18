@@ -248,6 +248,7 @@ namespace BTCPayServer.Controllers
             var ticket = new AuthenticationTicket(principal, properties,
                 OpenIddictServerDefaults.AuthenticationScheme);
 
+            
             if (!request.IsAuthorizationCodeGrantType())
             {
                 // Set the list of scopes granted to the client application.

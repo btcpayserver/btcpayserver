@@ -32,7 +32,7 @@
                     <div class="form-group">
                         <label asp-for="Token.CreationDate" class="control-label"></label>
                         <input asp-for="Token.CreationDate" readonly class="form-control"/>
-                    </div>  
+                    </div>
                     <div class="form-group">
                         <label asp-for="Token.Type" class="control-label"></label>
                         <input asp-for="Token.Type" readonly class="form-control"/>
@@ -57,11 +57,12 @@
         private readonly OpenIddictTokenManager<OpenIddictToken> _tokenManager;
 
         public OpenIddictToken Token { get; set; }
+
         [BindProperty(SupportsGet = true)]
         public string Id { get; set; }
 
 
-        public RevokeToken( OpenIddictTokenManager<OpenIddictToken> tokenManager )
+        public RevokeToken(OpenIddictTokenManager<OpenIddictToken> tokenManager)
         {
             _tokenManager = tokenManager;
         }

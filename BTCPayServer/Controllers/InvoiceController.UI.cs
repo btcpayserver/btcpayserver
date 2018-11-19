@@ -53,7 +53,7 @@ namespace BTCPayServer.Controllers
                     
                 }
             }
-            catch (Exception e)
+            catch
             {
                 result.Add(string.Empty, posData);
             }

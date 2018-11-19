@@ -1,0 +1,94 @@
+@page "{id}"
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Mvc.RazorPages
+@using OpenIddict.Abstractions
+@using OpenIddict.Core
+@using OpenIddict.EntityFrameworkCore.Models
+@model RevokeToken
+
+
+<section>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                <h2 class="section-heading">Revoke Token</h2>
+                <hr class="primary">
+                <h3>Are you sure you want to revoke this token for client @Model.Token.Application.DisplayName?</h3>
+
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+
+                <form method="post">
+                    <div class="form-group">
+                        <label asp-for="Token.Application.ClientId" class="control-label"></label>
+                        <input asp-for="Token.Application.ClientId" readonly class="form-control"/>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Token.Status" class="control-label"></label>
+                        <input asp-for="Token.Status" readonly class="form-control"/>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Token.CreationDate" class="control-label"></label>
+                        <input asp-for="Token.CreationDate" readonly class="form-control"/>
+                    </div>  
+                    <div class="form-group">
+                        <label asp-for="Token.Type" class="control-label"></label>
+                        <input asp-for="Token.Type" readonly class="form-control"/>
+                    </div>
+
+                    <div class="form-group">
+                        <input type="submit" value="Delete" class="btn btn-danger"/>
+
+                        <a asp-page="Index" class="btn btn-default">Back to List</a>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+@functions{
+
+    public class RevokeToken : PageModel
+    {
+        private readonly OpenIddictTokenManager<OpenIddictToken> _tokenManager;
+
+        public OpenIddictToken Token { get; set; }
+        [BindProperty(SupportsGet = true)]
+        public string Id { get; set; }
+
+
+        public RevokeToken( OpenIddictTokenManager<OpenIddictToken> tokenManager )
+        {
+            _tokenManager = tokenManager;
+        }
+
+        public async Task<IActionResult> OnGetAsync()
+        {
+            Token = await _tokenManager.FindByIdAsync(Id);
+            if (Token == null)
+            {
+                return NotFound();
+            }
+            return Page();
+        }
+
+        public async Task<IActionResult> OnPostAsync()
+        {
+            try
+            {
+                Token = await _tokenManager.FindByIdAsync(Id);
+                await _tokenManager.RevokeAsync(Token);
+                return RedirectToPage("Tokens", new {StatusMessage = $"Token revoked successfully"});
+            }
+            catch (Exception e)
+            {
+                return Page();
+            }
+        }
+    }
+
+}

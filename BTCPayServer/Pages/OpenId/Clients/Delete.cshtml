@@ -59,7 +59,7 @@
 
         public async Task<IActionResult> OnGetAsync(string id)
         {
-            Model = await _applicationManager.FindByClientIdAsync(id);
+            Model = await _applicationManager.FindByIdAsync(id);
             if (Model == null)
             {
                 return NotFound();
@@ -71,7 +71,7 @@
         {
             try
             {
-                var app = await _applicationManager.FindByClientIdAsync(Model.ClientId);
+                var app = await _applicationManager.FindByIdAsync(Model.Id);
                 await _applicationManager.DeleteAsync(app);
                 return RedirectToPage("Index", new {StatusMessage = $"{Model.DisplayName}({Model.ClientId}) deleted successfully"});
             }

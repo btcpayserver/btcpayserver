@@ -1,5 +1,6 @@
 @page "{id?}"
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Internal
 @using Microsoft.AspNetCore.Mvc.RazorPages
 @using OpenIddict.Abstractions
 @using OpenIddict.Core
@@ -43,21 +44,49 @@
 
             });
         $(".btn-redirect-uris-remove").on("click", onRemoveLiButtonClicked);
-        
-       function onRemoveLiButtonClicked() {
-           
-           $(this).parents("li").remove();
-       }
+
+        $(".select-client-type").on("change",
+            function() {
+                switch ($(this).val()) {
+                case "@OpenIddictConstants.ClientTypes.Public":
+                    $("#Client_ClientId").hide();
+                case "@OpenIddictConstants.ClientTypes.Hybrid":
+                case "@OpenIddictConstants.ClientTypes.Confidential":
+                    $("#Client_ClientId").show();
+                default:
+                }
+            });
+
+        function onRemoveLiButtonClicked() {
+            $(this).parents("li").remove();
+        }
+
+        $(".cb-permissions").on("change",
+            function() {
+                debugger;
+                var key = $(this).data("key");
+                var checked = $(this).is(":checked");
+
+                var option = $("#Client_Permissions").find("option[value='" + key + "']");
+                if (checked) {
+                    option.prop("selected");
+                } else {
+
+                    option.removeProp("selected");
+                }
+            });
+        $("#Client_Permissions").hide();
+        $("#permissions-ui-js").show();
     })
 </script>
 
 
-<partial name="_StatusMessage" for="StatusMessage" />
+<partial name="_StatusMessage" for="StatusMessage"/>
 <section class="client-edit-section">
     <div class="container">
         <div class="row">
             <div class="col-lg-12 text-center">
-                <partial name="_StatusMessage" for="StatusMessage" />
+                <partial name="_StatusMessage" for="StatusMessage"/>
             </div>
         </div>
 
@@ -70,7 +99,7 @@
                     }
                     else
                     {
-                        @Html.Raw("Edit")
+                        @Html.Raw("View")
                     }
                     Client
                 </h2>
@@ -88,90 +117,145 @@
                     </div>
                     <div class="form-group">
                         <label asp-for="Client.ClientId" class="control-label"></label>*
-                        <input asp-for="Client.ClientId" class="form-control"/>
+                        <input asp-for="Client.ClientId" readonly class="form-control"/>
                         <span asp-validation-for="Client.ClientId" class="text-danger"></span>
                     </div>
 
                     <div class="form-group">
                         <label asp-for="Client.ClientSecret" class="control-label"></label>*
-                        <input asp-for="Client.ClientSecret" class="form-control"/>
+                        <input asp-for="Client.ClientSecret" readonly class="form-control"/>
 
                         <span asp-validation-for="Client.ClientSecret" class="text-danger"></span>
                     </div>
-
-                    <div class="form-group">
-                        <label asp-for="Client.Type" class="control-label"></label>*
-                        <select asp-for="Client.Type" class="form-control">
-                            <option value="@OpenIddictConstants.ClientTypes.Public">@nameof(OpenIddictConstants.ClientTypes.Public)</option>
-                            <option value="@OpenIddictConstants.ClientTypes.Confidential">@nameof(OpenIddictConstants.ClientTypes.Confidential)</option>
-                            <option value="@OpenIddictConstants.ClientTypes.Hybrid">@nameof(OpenIddictConstants.ClientTypes.Hybrid)</option>
-                        </select>
-                        <span asp-validation-for="Client.Type" class="text-danger"></span>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Client.Type" class="control-label"></label>
+                                <select asp-for="Client.Type" disabled class="form-control select-client-type">
+                                    <option value="@OpenIddictConstants.ClientTypes.Public">@nameof(OpenIddictConstants.ClientTypes.Public)</option>
+                                    <option value="@OpenIddictConstants.ClientTypes.Confidential">@nameof(OpenIddictConstants.ClientTypes.Confidential)</option>
+                                    <option value="@OpenIddictConstants.ClientTypes.Hybrid">@nameof(OpenIddictConstants.ClientTypes.Hybrid)</option>
+                                </select>
+                                <span asp-validation-for="Client.Type" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Client.ConsentType" class="control-label"></label>
+                                <select asp-for="Client.ConsentType" disabled class="form-control">
+                                    <option value="@OpenIddictConstants.ConsentTypes.Implicit" selected>@nameof(OpenIddictConstants.ConsentTypes.Implicit)</option>
+                                    <option value="@OpenIddictConstants.ConsentTypes.Explicit" disabled>@nameof(OpenIddictConstants.ConsentTypes.Explicit)</option>
+                                    <option value="@OpenIddictConstants.ConsentTypes.External" disabled>@nameof(OpenIddictConstants.ConsentTypes.External)</option>
+                                </select>
+                                <span asp-validation-for="Client.ConsentType" class="text-danger"></span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label asp-for="Client.ConsentType" class="control-label"></label>*
-                        <select asp-for="Client.ConsentType" class="form-control">
-                            <option value="@OpenIddictConstants.ConsentTypes.Implicit">@nameof(OpenIddictConstants.ConsentTypes.Implicit)</option>
-                            <option value="@OpenIddictConstants.ConsentTypes.Explicit">@nameof(OpenIddictConstants.ConsentTypes.Explicit)</option>
-                            <option value="@OpenIddictConstants.ConsentTypes.External">@nameof(OpenIddictConstants.ConsentTypes.External)</option>
-                        </select>
-                        <span asp-validation-for="Client.ConsentType" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
 
-                        <label asp-for="Client.RedirectUris" class="control-label"></label>*
-                        <ul class="list-group">
-                            @foreach (var redirecturi in Model.Client.RedirectUris)
-                            {
-                                <li class="list-group-item">
-                                    <div class="input-group">
-                                        <input asp-for="Client.RedirectUris" class="form-control" value="@redirecturi" placeholder="Allowed Redirect Url"/>
-                                        <div class="input-group-append">
-                                            <button class="btn btn-danger btn-redirect-uris-remove" role="button" type="button">
-                                                <span class="fa fa-times"></span>
-                                            </button>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+
+                                <label asp-for="Client.RedirectUris" class="control-label"></label>*
+                                <ul class="list-group">
+                                    @foreach (var redirecturi in Model.Client.RedirectUris)
+                                    {
+                                        <li class="list-group-item">
+                                            <div class="input-group">
+                                                <input asp-for="Client.RedirectUris" class="form-control" value="@redirecturi" placeholder="Allowed Redirect Url"/>
+                                                <div class="input-group-append">
+                                                    <button class="btn btn-danger btn-redirect-uris-remove" role="button" type="button">
+                                                        <span class="fa fa-times"></span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    }
+                                    <li class="list-group-item">
+                                        <div class="input-group">
+                                            <input name="Client.RedirectUris" class="form-control" placeholder="Allowed Redirect Url"/>
+                                            <div class="input-group-append">
+                                                <button class="btn btn-danger btn-redirect-uris-remove" role="button" type="button">
+                                                    <span class="fa fa-times"></span>
+                                                </button>
+                                            </div>
                                         </div>
-                                    </div>
-                                </li>
-                            }
-                            <li class="list-group-item">
-                                <button class="btn btn-primary btn-redirect-uris-add" role="button" type="button">
-                                    <span class="fa fa-plus"></span> Add Redirect Uri
-                                </button>
-                            </li>
-                        </ul>
-                        <span asp-validation-for="Client.RedirectUris" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="Client.PostLogoutRedirectUris" class="control-label"></label>*
-                        <ul class="list-group">
-                            @foreach (var redirecturi in Model.Client.PostLogoutRedirectUris)
-                            {
-                                <li class="list-group-item">
-                                    <div class="input-group">
-                                        <input asp-for="Client.PostLogoutRedirectUris" class="form-control" value="@redirecturi" placeholder="Allowed Post Logout Redirect Url"/>
-                                        <div class="input-group-append">
-                                            <button class="btn btn-danger btn-redirect-uris-remove" role="button" type="button">
-                                                <span class="fa fa-times"></span>
-                                            </button>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <button class="btn btn-primary btn-redirect-uris-add" role="button" type="button">
+                                            <span class="fa fa-plus"></span> Add Redirect Uri
+                                        </button>
+                                    </li>
+                                </ul>
+                                <span asp-validation-for="Client.RedirectUris" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Client.PostLogoutRedirectUris" class="control-label"></label>*
+                                <ul class="list-group">
+                                    @foreach (var redirecturi in Model.Client.PostLogoutRedirectUris)
+                                    {
+                                        <li class="list-group-item">
+                                            <div class="input-group">
+                                                <input asp-for="Client.PostLogoutRedirectUris" class="form-control" value="@redirecturi" placeholder="Allowed Post Logout Redirect Url"/>
+                                                <div class="input-group-append">
+                                                    <button class="btn btn-danger btn-redirect-uris-remove" role="button" type="button">
+                                                        <span class="fa fa-times"></span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    }
+                                    <li class="list-group-item">
+                                        <div class="input-group">
+                                            <input name="Client.PostLogoutRedirectUris" class="form-control" placeholder="Allowed Post Logout Redirect Url"/>
+                                            <div class="input-group-append">
+                                                <button class="btn btn-danger btn-redirect-uris-remove" role="button" type="button">
+                                                    <span class="fa fa-times"></span>
+                                                </button>
+                                            </div>
                                         </div>
-                                    </div>
-                                </li>
-                            }
-                            <li class="list-group-item">
-                                <button class="btn btn-primary btn-post-logout-redirect-uris-add" role="button" type="button">
-                                    <span class="fa fa-plus"></span> Add Post Logout Redirect Uri
-                                </button>
-                            </li>
-                        </ul>
+                                    </li>
 
-                        <span asp-validation-for="Client.PostLogoutRedirectUris" class="text-danger"></span>
+                                    <li class="list-group-item">
+                                        <button class="btn btn-primary btn-post-logout-redirect-uris-add" role="button" type="button">
+                                            <span class="fa fa-plus"></span> Add Post Logout Redirect Uri
+                                        </button>
+                                    </li>
+                                </ul>
+
+                                <span asp-validation-for="Client.PostLogoutRedirectUris" class="text-danger"></span>
+                            </div>
+                        </div>
                     </div>
-
                     <div class="form-group">
                         <label asp-for="Client.Permissions" class="control-label"></label>
                         <select multiple asp-for="Client.Permissions" asp-items="Model.Permissions" class="form-control" style="height: 300px"></select>
 
+                        <div style="display: none" id="permissions-ui-js">
+                            <ul  class="list-group">
+                                @foreach (var x in Model.Permissions.GroupBy(item => item.Group))
+                                {
+                                    <li  class="list-group-item"><h3>@x.Key.Name</h3></li>
+                                                                            
+                                                                            
+                                   foreach (var y in x)
+                                    {
+                                        <li  class="list-group-item">
+                                            <div class="form-check">
+                                                <input class="form-check-input cb-permissions" type="checkbox" asp-for="@y.Selected" data-key="@y.Value" >
+                                                <label class="form-check-label" asp-for="@y" >
+                                                    @y.Text
+                                                </label>
+                                            </div>
+                                        </li>
+                                    }
+                                }
+                            </ul>
+                            
+                        </div>
                         <span asp-validation-for="Client.Permissions" class="text-danger"></span>
                     </div>
 
@@ -215,14 +299,126 @@
         {
             Client = new OpenIddictApplicationDescriptor();
             if (string.IsNullOrEmpty(Id)) return Page();
-            var application = await _applicationManager.FindByClientIdAsync(Id);
+            var application = await _applicationManager.FindByIdAsync(Id);
 
-            if (application != null)
+            if (application == null)
             {
-                await _applicationManager.PopulateAsync(Client, application);
+                return NotFound();
             }
+            await _applicationManager.PopulateAsync(Client, application);
             return Page();
         }
+
+
+        private async Task<OpenIddictApplication> ValidateApplication()
+        {
+            if (string.IsNullOrEmpty(Id))
+            {
+                Client.ClientId = Guid.NewGuid().ToString();
+            }
+
+    //Sanitize list inputs
+            Client.RedirectUris.Remove(null);
+            Client.PostLogoutRedirectUris.Remove(null);
+            Client.ConsentType = OpenIddictConstants.ConsentTypes.Implicit;
+            var application = new OpenIddictApplication();
+            await _applicationManager.PopulateAsync(application, Client);
+
+            var permissions = (await _applicationManager.GetPermissionsAsync(application)).ToList();
+
+            ComputeClientType(permissions, application);
+
+            if (application.Type == OpenIddictConstants.ClientTypes.Public)
+            {
+                application.ClientSecret = null;
+            }
+            else if (string.IsNullOrEmpty(application.ClientSecret))
+            {
+                application.ClientSecret = Guid.NewGuid().ToString();
+            }
+            await ValidateUrlArray("Client.RedirectUris", await _applicationManager.GetRedirectUrisAsync(application));
+
+            await ValidateUrlArray("Client.PostLogoutRedirectUris", await _applicationManager.GetPostLogoutRedirectUrisAsync(application));
+
+
+            if (permissions.Contains(OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode))
+            {
+                if (!permissions.Contains(OpenIddictConstants.Permissions.Endpoints.Authorization))
+                {
+                    permissions.Add(OpenIddictConstants.Permissions.Endpoints.Authorization);
+                }
+                if (!permissions.Contains(OpenIddictConstants.Permissions.Endpoints.Token))
+                {
+                    permissions.Add(OpenIddictConstants.Permissions.Endpoints.Token);
+                }
+            }
+
+            if (permissions.Contains(OpenIddictConstants.Permissions.GrantTypes.Implicit))
+            {
+                if (!permissions.Contains(OpenIddictConstants.Permissions.Endpoints.Authorization))
+                {
+                    permissions.Add(OpenIddictConstants.Permissions.Endpoints.Authorization);
+                }
+                if (!permissions.Contains(OpenIddictConstants.Permissions.Endpoints.Token))
+                {
+                    permissions.Add(OpenIddictConstants.Permissions.Endpoints.Token);
+                }
+            }
+            if (permissions.Contains(OpenIddictConstants.Permissions.GrantTypes.ClientCredentials))
+            {
+                if (!permissions.Contains(OpenIddictConstants.Permissions.Endpoints.Token))
+                {
+                    permissions.Add(OpenIddictConstants.Permissions.Endpoints.Token);
+                }
+            }
+            if (permissions.Contains(OpenIddictConstants.Permissions.GrantTypes.RefreshToken))
+            {
+                if (!permissions.Contains(OpenIddictConstants.Permissions.Endpoints.Token))
+                {
+                    permissions.Add(OpenIddictConstants.Permissions.Endpoints.Token);
+                }
+                if (!permissions.Contains(OpenIddictConstants.Scopes.OfflineAccess))
+                {
+                    permissions.Add(OpenIddictConstants.Scopes.OfflineAccess);
+                }
+            }
+            else
+            {
+                permissions.Remove(OpenIddictConstants.Scopes.OfflineAccess);
+            }
+            if (permissions.Contains(OpenIddictConstants.Permissions.GrantTypes.Password))
+            {
+                if (!permissions.Contains(OpenIddictConstants.Permissions.Endpoints.Token))
+                {
+                    permissions.Add(OpenIddictConstants.Permissions.Endpoints.Token);
+                }
+            }
+            await _applicationManager.PopulateAsync(Client, application);
+            return application;
+        }
+
+        private void ComputeClientType(List<string> permissions, OpenIddictApplication application)
+        {
+            var privateMethods = false;
+            var publicMethods = false;
+            if (permissions.Contains(OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode) ||
+                permissions.Contains(OpenIddictConstants.Permissions.GrantTypes.ClientCredentials))
+            {
+                privateMethods = true;
+            }
+
+            if (permissions.Contains(OpenIddictConstants.Permissions.GrantTypes.Implicit) ||
+                permissions.Contains(OpenIddictConstants.Permissions.GrantTypes.RefreshToken) ||
+                permissions.Contains(OpenIddictConstants.Permissions.GrantTypes.Password))
+            {
+                publicMethods = true;
+            }
+
+            application.Type = publicMethods && privateMethods ? OpenIddictConstants.ClientTypes.Hybrid :
+                publicMethods && !privateMethods ? OpenIddictConstants.ClientTypes.Public :
+                    OpenIddictConstants.ClientTypes.Confidential;
+        }
+
 
         public async Task<IActionResult> OnPostAsync()
         {
@@ -232,19 +428,13 @@
             }
             try
             {
-                Client.RedirectUris.Remove(null);
-                Client.PostLogoutRedirectUris.Remove(null);
-                var application = new OpenIddictApplication();
-                await _applicationManager.PopulateAsync(application, Client);
-                var validation = await _applicationManager.ValidateAsync(application);
-                if (validation.Any())
+                var application = await ValidateApplication();
+                if (ModelState.ErrorCount > 0)
                 {
-                    foreach (var validationResult in validation)
-                    {
-                        ModelState.AddModelError("", validationResult.ErrorMessage);
-                    }
+                    await _applicationManager.PopulateAsync(Client, application);
                     return Page();
                 }
+
                 if (!string.IsNullOrEmpty(Id))
                 {
                     await _applicationManager.UpdateAsync(application);
@@ -254,7 +444,9 @@
                     return Page();
                 }
                 await _applicationManager.CreateAsync(application);
-                return RedirectToPage("./Edit", new {Id = application.ClientId, StatusMessage = "Client Created successfully"});
+
+                await _applicationManager.PopulateAsync(Client, application);
+                return RedirectToPage("./Edit", new {Id = application.Id, StatusMessage = "Client Created successfully"});
             }
             catch (Exception e)
             {
@@ -263,6 +455,34 @@
             }
         }
 
+
+        private async Task ValidateUrlArray(string key, IEnumerable<string> uris)
+        {
+            var errors = new List<string>();
+
+            foreach (var uri in uris)
+            {
+                if (string.IsNullOrEmpty(uri) && !errors.Contains("Callback URLs cannot be null or empty."))
+                {
+                    errors.Add("Callback URLs cannot be null or empty.");
+                    continue;
+                }
+                if (!Uri.TryCreate(uri, UriKind.Absolute, out var result) || !result.IsWellFormedOriginalString())
+                {
+                    if (!errors.Contains("Callback URLs must be valid absolute URLs."))
+                    {
+                        errors.Add("Callback URLs must be valid absolute URLs.");
+                    }
+                    continue;
+                }
+                if (!string.IsNullOrEmpty(result.Fragment) && !errors.Contains("Callback URLs cannot contain a fragment."))
+                {
+                    errors.Add("Callback URLs cannot contain a fragment.");
+                }
+            }
+
+            errors.ForEach(s => ModelState.AddModelError(key, s));
+        }
 
         private void PopulatePermissions()
         {
@@ -379,14 +599,14 @@
                 },
                 new SelectListItem()
                 {
-                    Value = OpenIddictConstants.Permissions.Scopes.OfflineAccess,
-                    Text = nameof(OpenIddictConstants.Permissions.Scopes.OfflineAccess),
+                    Value = OpenIddictConstants.Scopes.OfflineAccess,
+                    Text = nameof(OpenIddictConstants.Scopes.OfflineAccess),
                     Group = scopesGroup
                 },
                 new SelectListItem()
                 {
-                    Value = OpenIddictConstants.Permissions.Scopes.OpenId,
-                    Text = nameof(OpenIddictConstants.Permissions.Scopes.OpenId),
+                    Value = OpenIddictConstants.Scopes.OpenId,
+                    Text = nameof(OpenIddictConstants.Scopes.OpenId),
                     Group = scopesGroup
                 }
             };

@@ -22,6 +22,7 @@ namespace BTCPayServer.Models.AppViewModels
             public bool Custom { get; set; }
         }
 
+        public bool EnableShoppingCart { get; set; }
         public bool ShowCustomAmount { get; set; }
         public string Step { get; set; }
         public string Title { get; set; }
@@ -30,6 +31,7 @@ namespace BTCPayServer.Models.AppViewModels
 
         public string ButtonText { get; set; }
         public string CustomButtonText { get; set; }
+        public string CustomTipText { get; set; }
 
         public string CustomCSSLink { get; set; }
     }

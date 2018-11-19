@@ -52,5 +52,14 @@
             "wwwroot/vendor/vex/js/vex.combined.min.js",
             "wwwroot/checkout/**/*.js"
         ]
+    },
+    {
+        "outputFileName": "wwwroot/bundles/cart-bundle.min.js",
+        "inputFiles": [
+            "wwwroot/vendor/jquery/jquery.js",
+            "wwwroot/vendor/bootstrap4/js/bootstrap.js",
+            "wwwroot/cart/js/cart.js",
+            "wwwroot/cart/js/cart.jquery.js"
+        ]
     }
 ]

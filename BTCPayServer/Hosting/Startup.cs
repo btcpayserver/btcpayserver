@@ -19,6 +19,7 @@ using Hangfire.Annotations;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Security.Cryptography;
 using AspNet.Security.OpenIdConnect.Primitives;
+using BTCPayServer.Authentication.OpenId;
 using BTCPayServer.Security;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.IdentityModel.Tokens;
@@ -87,6 +88,7 @@ namespace BTCPayServer.Hosting
                     // with the exception of Client Credentials flow as we cannot identify
                     // a user through that grant type
                     options.AllowImplicitFlow();
+                    options.AllowClientCredentialsFlow();
                     options.AllowRefreshTokenFlow();
                     options.AllowPasswordFlow();
                     options.AllowAuthorizationCodeFlow();
@@ -97,6 +99,10 @@ namespace BTCPayServer.Hosting
                     
                     options.UseJsonWebTokens();
 
+                    options.AddEventHandler<PasswordGrantTypeEventHandler>();
+                    options.AddEventHandler<AuthorizationCode_RefreshTokenGrantTypeEventHandler>();
+                    options.AddEventHandler<ClientCredentialsGrantTypeEventHandler>();
+                    
                     options.ConfigureSigningKey(Configuration);
                 });
 

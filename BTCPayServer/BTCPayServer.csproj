@@ -55,8 +55,8 @@
     <PackageReference Include="NicolasDorier.RateLimits" Version="1.0.0.3" />
     <PackageReference Include="NicolasDorier.StandardConfiguration" Version="1.0.0.18" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.1.0" />
-    <PackageReference Include="OpenIddict" Version="2.0.0-rc3-final" />
-    <PackageReference Include="OpenIddict.EntityFrameworkCore" Version="2.0.0-rc3-final" />
+    <PackageReference Include="OpenIddict" Version="2.0.0" />
+    <PackageReference Include="OpenIddict.EntityFrameworkCore" Version="2.0.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.1.2" />
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="2.1.2" />
     <PackageReference Include="Serilog" Version="2.7.1" />
@@ -190,5 +190,11 @@
 	  <Content Update="Views\Wallets\_ViewStart.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <_ContentIncludedByDefault Remove="Pages\OpenId\Tokens\Delete.cshtml" />
+	  <_ContentIncludedByDefault Remove="Pages\OpenId\Tokens\Edit.cshtml" />
+	  <_ContentIncludedByDefault Remove="Pages\OpenId\Tokens\Index.cshtml" />
 	</ItemGroup>
 </Project>

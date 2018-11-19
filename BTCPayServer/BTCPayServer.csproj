@@ -8,12 +8,6 @@
   <PropertyGroup>
     <LangVersion>7.3</LangVersion>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <LangVersion>Latest</LangVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <LangVersion>Latest</LangVersion>
-  </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Build\dockerfiles\**" />
     <Compile Remove="wwwroot\bundles\jqueryvalidate\**" />

@@ -1,5 +1,6 @@
 @page "{id}"
 @using System.ComponentModel.DataAnnotations
+@using BTCPayServer.Authentication.OpenId.Models
 @using Microsoft.AspNetCore.Mvc.RazorPages
 @using OpenIddict.Abstractions
 @using OpenIddict.Core
@@ -51,15 +52,15 @@
 
     public class RemoveClient : PageModel
     {
-        private readonly OpenIddictApplicationManager<OpenIddictApplication> _applicationManager;
+        private readonly OpenIddictApplicationManager<BTCPayOpenIdClient> _applicationManager;
         [BindProperty(SupportsGet = true)]
         public string StatusMessage { get; set; }
         [BindProperty]
-        public OpenIddictApplication Model { get; set; }
+        public BTCPayOpenIdClient Model { get; set; }
         [BindProperty(SupportsGet = true)]
         public string Id { get; set; }
 
-        public RemoveClient(OpenIddictApplicationManager<OpenIddictApplication> applicationManager)
+        public RemoveClient(OpenIddictApplicationManager<BTCPayOpenIdClient> applicationManager)
         {
             _applicationManager = applicationManager;
         }

@@ -68,6 +68,7 @@ namespace BTCPayServer.Hosting
             services.AddOpenIddict()
                 .AddCore(options =>
                 {
+                    
                     // Configure OpenIddict to use the Entity Framework Core stores and entities.
                     options.UseEntityFrameworkCore()
                         .UseDbContext<ApplicationDbContext>();

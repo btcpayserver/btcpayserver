@@ -40,6 +40,7 @@ using BTCPayServer.Logging;
 using BTCPayServer.HostedServices;
 using Meziantou.AspNetCore.BundleTagHelpers;
 using System.Security.Claims;
+using BTCPayServer.Authentication.OpenId.Models;
 using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Security;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -65,7 +66,7 @@ namespace BTCPayServer.Hosting
             {
                 var factory = provider.GetRequiredService<ApplicationDbContextFactory>();
                 factory.ConfigureBuilder(o);
-                o.UseOpenIddict();
+                o.UseOpenIddict<BTCPayOpenIdClient, BTCPayOpenIdAuthorization, OpenIddictScope<string>, BTCPayOpenIdToken, string>();
             });
             services.AddHttpClient();
             services.TryAddSingleton<SettingsRepository>();

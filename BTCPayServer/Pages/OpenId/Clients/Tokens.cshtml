@@ -1,5 +1,6 @@
 @page "{id}/Tokens/{authorizationId?}"
 @using System.Collections.Immutable
+@using BTCPayServer.Authentication.OpenId.Models
 @using Microsoft.AspNetCore.Authorization
 @using OpenIddict.Abstractions
 @using OpenIddict.Core
@@ -75,8 +76,8 @@
     [Authorize]
     public class TokenList : PageModel
     {
-        private readonly OpenIddictTokenManager<OpenIddictToken> _tokenManager;
-        private readonly OpenIddictApplicationManager<OpenIddictApplication> _applicationManager;
+        private readonly OpenIddictTokenManager<BTCPayOpenIdToken> _tokenManager;
+        private readonly OpenIddictApplicationManager<BTCPayOpenIdClient> _applicationManager;
 
         [BindProperty(SupportsGet = true)]
         public string StatusMessage { get; set; }
@@ -86,10 +87,10 @@
         [BindProperty(SupportsGet = true)]
         public string AuthorizationId { get; set; }
 
-        public ImmutableArray<OpenIddictToken> Tokens { get; internal set; }
-        public OpenIddictApplication Application { get; internal set; }
+        public ImmutableArray<BTCPayOpenIdToken> Tokens { get; internal set; }
+        public BTCPayOpenIdClient Application { get; internal set; }
 
-        public TokenList(OpenIddictTokenManager<OpenIddictToken> tokenManager, OpenIddictApplicationManager<OpenIddictApplication> applicationManager)
+        public TokenList(OpenIddictTokenManager<BTCPayOpenIdToken> tokenManager, OpenIddictApplicationManager<BTCPayOpenIdClient> applicationManager)
         {
             _tokenManager = tokenManager;
             _applicationManager = applicationManager;
@@ -99,6 +100,7 @@
         {
             
             Application = await _applicationManager.FindByIdAsync(Id);
+            
             if (string.IsNullOrEmpty(AuthorizationId))
             {
                 Tokens = await _tokenManager.FindByApplicationIdAsync(Id);

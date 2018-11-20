@@ -1,5 +1,6 @@
 @page "{id}"
 @using System.ComponentModel.DataAnnotations
+@using BTCPayServer.Authentication.OpenId.Models
 @using Microsoft.AspNetCore.Mvc.RazorPages
 @using OpenIddict.Abstractions
 @using OpenIddict.Core
@@ -59,17 +60,17 @@
 
     public class RevokeToken : PageModel
     {
-        private readonly OpenIddictTokenManager<OpenIddictToken> _tokenManager;
+        private readonly OpenIddictTokenManager<BTCPayOpenIdToken> _tokenManager;
         [BindProperty(SupportsGet = true)]
         public string StatusMessage { get; set; }
         
-        public OpenIddictToken Token { get; set; }
+        public BTCPayOpenIdToken Token { get; set; }
 
         [BindProperty(SupportsGet = true)]
         public string Id { get; set; }
 
 
-        public RevokeToken(OpenIddictTokenManager<OpenIddictToken> tokenManager)
+        public RevokeToken(OpenIddictTokenManager<BTCPayOpenIdToken> tokenManager)
         {
             _tokenManager = tokenManager;
         }

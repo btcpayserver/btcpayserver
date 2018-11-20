@@ -1,5 +1,6 @@
 @page
 @using System.Collections.Immutable
+@using BTCPayServer.Authentication.OpenId.Models
 @using Microsoft.AspNetCore.Authorization
 @using OpenIddict.Abstractions
 @using OpenIddict.Core
@@ -71,24 +72,29 @@
 
 
 @functions{
+
     [Authorize]
     public class ClientsList : PageModel
     {
-        private readonly OpenIddictApplicationManager<OpenIddictApplication> _applicationManager;
+        private readonly OpenIddictApplicationManager<BTCPayOpenIdClient> _applicationManager;
+        private readonly UserManager<ApplicationUser> _userManager;
+
         [BindProperty(SupportsGet = true)]
         public string StatusMessage { get; set; }
-        
 
-        public ImmutableArray<OpenIddictApplication> Clients { get; internal set; }
 
-        public ClientsList(OpenIddictApplicationManager<OpenIddictApplication> applicationManager)
+        public ImmutableArray<BTCPayOpenIdClient> Clients { get; internal set; }
+
+        public ClientsList(OpenIddictApplicationManager<BTCPayOpenIdClient> applicationManager, UserManager<ApplicationUser> userManager)
         {
             _applicationManager = applicationManager;
+            _userManager = userManager;
         }
 
         public async Task<IActionResult> OnGetAsync()
         {
-            Clients = await _applicationManager.ListAsync();
+            var userId = _userManager.GetUserId(User);
+            Clients = await _applicationManager.ListAsync(clients => clients.Where(client => client.ApplicationUserId == userId));
 
             return Page();
         }

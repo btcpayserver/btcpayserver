@@ -1,5 +1,6 @@
 @page "{id}/Authorizations"
 @using System.Collections.Immutable
+@using BTCPayServer.Authentication.OpenId.Models
 @using Microsoft.AspNetCore.Authorization
 @using OpenIddict.Abstractions
 @using OpenIddict.Core
@@ -73,8 +74,8 @@
     [Authorize]
     public class AuthorizationList : PageModel
     {
-        private readonly OpenIddictAuthorizationManager<OpenIddictAuthorization> _authorizationManager;
-        private readonly OpenIddictApplicationManager<OpenIddictApplication> _applicationManager;
+        private readonly OpenIddictAuthorizationManager<BTCPayOpenIdAuthorization> _authorizationManager;
+        private readonly OpenIddictApplicationManager<BTCPayOpenIdClient> _applicationManager;
 
         [BindProperty(SupportsGet = true)]
         public string StatusMessage { get; set; }
@@ -82,10 +83,11 @@
         [BindProperty(SupportsGet = true)]
         public string Id { get; set; }
 
-        public ImmutableArray<OpenIddictAuthorization> Authorizations { get; internal set; }
-        public OpenIddictApplication Application { get; internal set; }
+        public ImmutableArray<BTCPayOpenIdAuthorization> Authorizations { get; internal set; }
+        public BTCPayOpenIdClient Application { get; internal set; }
 
-        public AuthorizationList(OpenIddictAuthorizationManager<OpenIddictAuthorization> authorizationManager, OpenIddictApplicationManager<OpenIddictApplication> applicationManager)
+        public AuthorizationList(OpenIddictAuthorizationManager<BTCPayOpenIdAuthorization> authorizationManager,
+            OpenIddictApplicationManager<BTCPayOpenIdClient> applicationManager)
         {
             _authorizationManager = authorizationManager;
             _applicationManager = applicationManager;

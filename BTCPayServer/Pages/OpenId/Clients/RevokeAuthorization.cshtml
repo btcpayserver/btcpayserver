@@ -1,5 +1,6 @@
 @page "{id}"
 @using System.ComponentModel.DataAnnotations
+@using BTCPayServer.Authentication.OpenId.Models
 @using Microsoft.AspNetCore.Mvc.RazorPages
 @using OpenIddict.Abstractions
 @using OpenIddict.Core
@@ -55,17 +56,17 @@
 
     public class RevokeAuthorization : PageModel
     {
-        private readonly OpenIddictAuthorizationManager<OpenIddictAuthorization> _authorizationManager;
+        private readonly OpenIddictAuthorizationManager<BTCPayOpenIdAuthorization> _authorizationManager;
         [BindProperty(SupportsGet = true)]
         public string StatusMessage { get; set; }
         
-        public OpenIddictAuthorization Authorization { get; set; }
+        public BTCPayOpenIdAuthorization Authorization { get; set; }
 
         [BindProperty(SupportsGet = true)]
         public string Id { get; set; }
 
 
-        public RevokeAuthorization(OpenIddictAuthorizationManager<OpenIddictAuthorization> authorizationManager)
+        public RevokeAuthorization(OpenIddictAuthorizationManager<BTCPayOpenIdAuthorization> authorizationManager)
         {
             _authorizationManager = authorizationManager;
         }

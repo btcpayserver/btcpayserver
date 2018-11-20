@@ -1,4 +1,4 @@
-@page "{id}/Tokens"
+@page "{id}/Tokens/{authorizationId?}"
 @using System.Collections.Immutable
 @using Microsoft.AspNetCore.Authorization
 @using OpenIddict.Abstractions
@@ -52,7 +52,7 @@
                             <td>@token.CreationDate</td>
                             <td>@token.ExpirationDate</td>
                             <td class="text-right">
-                                <a asp-page="./Revoke" asp-route-id="@token.Id">Revoke</a>
+                                <a asp-page="./RevokeToken" asp-route-id="@token.Id">Revoke</a>
                             </td>
                         </tr>
                     }
@@ -83,6 +83,8 @@
 
         [BindProperty(SupportsGet = true)]
         public string Id { get; set; }
+        [BindProperty(SupportsGet = true)]
+        public string AuthorizationId { get; set; }
 
         public ImmutableArray<OpenIddictToken> Tokens { get; internal set; }
         public OpenIddictApplication Application { get; internal set; }
@@ -95,8 +97,17 @@
 
         public async Task<IActionResult> OnGetAsync()
         {
+            
             Application = await _applicationManager.FindByIdAsync(Id);
-            Tokens = await _tokenManager.FindByApplicationIdAsync(Id);
+            if (string.IsNullOrEmpty(AuthorizationId))
+            {
+                Tokens = await _tokenManager.FindByApplicationIdAsync(Id);
+            }
+            else
+            {
+                Tokens = await _tokenManager.FindByAuthorizationIdAsync(AuthorizationId);
+            }
+            
             return Page();
         }
     }

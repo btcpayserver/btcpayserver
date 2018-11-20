@@ -22,6 +22,7 @@ using AspNet.Security.OpenIdConnect.Primitives;
 using BTCPayServer.Authentication.OpenId;
 using BTCPayServer.Security;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.IdentityModel.Tokens;
 using NETCore.Encrypt.Extensions.Internal;
 
@@ -102,7 +103,9 @@ namespace BTCPayServer.Hosting
                     options.AddEventHandler<PasswordGrantTypeEventHandler>();
                     options.AddEventHandler<AuthorizationCode_RefreshTokenGrantTypeEventHandler>();
                     options.AddEventHandler<ClientCredentialsGrantTypeEventHandler>();
-                    
+                    options.AddEventHandler<AuthorizationEventHandler>();
+                    options.AddEventHandler<LogoutEventHandler>();
+                   
                     options.ConfigureSigningKey(Configuration);
                 });
 

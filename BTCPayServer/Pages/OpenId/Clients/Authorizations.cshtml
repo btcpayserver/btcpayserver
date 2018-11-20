@@ -1,11 +1,11 @@
-@page
+@page "{id}/Authorizations"
 @using System.Collections.Immutable
 @using Microsoft.AspNetCore.Authorization
 @using OpenIddict.Abstractions
 @using OpenIddict.Core
 @using OpenIddict.EntityFrameworkCore.Models
 @using PageModel = Microsoft.AspNetCore.Mvc.RazorPages.PageModel
-@model ClientsList
+@model AuthorizationList
 
 <section>
     <div class="container">
@@ -18,9 +18,8 @@
 
         <div class="row">
             <div class="col-lg-12 text-center">
-                <h2 class="section-heading">Open Id Clients</h2>
+                <h2 class="section-heading">@Model.Application.DisplayName Authorizations</h2>
                 <hr class="primary">
-                <p>Create and manage Open Id Clients to connect to btcpayserver's apis.</p>
             </div>
         </div>
 
@@ -30,36 +29,35 @@
             </div>
         </div>
 
-        <a asp-page="./Edit" class="btn btn-primary" role="button"><span class="fa fa-plus"></span> Create a new client</a>
-
         <div class="row">
             <div class="col-md-12">
                 <table class="table table-sm table-responsive-md">
                     <thead>
                     <tr>
-                        <th>Name</th>
-                        <th>Client id</th>
+                        <th>Subject</th>
+                        <th>Status</th>
+                        <th>Type</th>
                         <th class="text-right">Actions</th>
                     </tr>
                     </thead>
                     <tbody>
-                    @foreach (var client in Model.Clients)
+                    @foreach (var authorization in Model.Authorizations)
                     {
                         <tr>
-                            <td>@client.DisplayName</td>
-                            <td>@client.ClientId</td>
+                            <td>@authorization.Subject</td>
+                            <td>@authorization.Status</td>
+                            <td>@authorization.Type</td>
                             <td class="text-right">
-                                <a asp-page="./Edit" asp-route-id="@client.Id">View</a><span> - </span>
-                                <a asp-page="./Tokens" asp-route-id="@client.Id">Tokens</a><span> - </span>
-                                <a asp-page="./Authorizations" asp-route-id="@client.Id">Authorizations</a><span> - </span>
-                                <a asp-page="./Delete" asp-route-id="@client.Id">Delete</a>
+                                
+                                <a asp-page="./Tokens" asp-route-id="@Model.Id" asp-route-authorizationId="@authorization.Id" >Revoke</a>
+                                <a asp-page="./RevokeAuthorization" asp-route-id="@authorization.Id">Revoke</a>
                             </td>
                         </tr>
                     }
-                    @if (!Model.Clients.Any())
+                    @if (!Model.Authorizations.Any())
                     {
                         <tr>
-                            <td colspan="3">No Clients</td>
+                            <td colspan="6">No Authorizations</td>
                         </tr>
                     }
                     </tbody>
@@ -71,25 +69,32 @@
 
 
 @functions{
+
     [Authorize]
-    public class ClientsList : PageModel
+    public class AuthorizationList : PageModel
     {
+        private readonly OpenIddictAuthorizationManager<OpenIddictAuthorization> _authorizationManager;
         private readonly OpenIddictApplicationManager<OpenIddictApplication> _applicationManager;
+
         [BindProperty(SupportsGet = true)]
         public string StatusMessage { get; set; }
-        
 
-        public ImmutableArray<OpenIddictApplication> Clients { get; internal set; }
+        [BindProperty(SupportsGet = true)]
+        public string Id { get; set; }
 
-        public ClientsList(OpenIddictApplicationManager<OpenIddictApplication> applicationManager)
+        public ImmutableArray<OpenIddictAuthorization> Authorizations { get; internal set; }
+        public OpenIddictApplication Application { get; internal set; }
+
+        public AuthorizationList(OpenIddictAuthorizationManager<OpenIddictAuthorization> authorizationManager, OpenIddictApplicationManager<OpenIddictApplication> applicationManager)
         {
+            _authorizationManager = authorizationManager;
             _applicationManager = applicationManager;
         }
 
         public async Task<IActionResult> OnGetAsync()
         {
-            Clients = await _applicationManager.ListAsync();
-
+            Application = await _applicationManager.FindByIdAsync(Id);
+            Authorizations = await _authorizationManager.FindByApplicationIdAsync(Id);
             return Page();
         }
     }

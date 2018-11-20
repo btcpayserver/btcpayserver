@@ -21,6 +21,25 @@ namespace BTCPayServer.Configuration
         public string CookieFile { get; internal set; }
     }
 
+    public class OpenIdOptions
+    {
+        public OpenIdOptions(IConfiguration configuration)
+        {
+            EnforceClients = configuration.GetOpenIdEnforceClients();
+            EnforceEndpoints = configuration.GetOpenIdEnforceEndpoints();
+            EnforceScopes = configuration.GetOpenIdEnforceScopes();
+            EnforceGrantTypes = configuration.GetOpenIdEnforceGrantTypes();
+        }
+
+        public bool EnforceGrantTypes { get;  }
+
+        public bool EnforceEndpoints { get;  }
+
+        public bool EnforceScopes { get; }
+
+        public bool EnforceClients { get;  }
+    }
+
     public class BTCPayServerOptions
     {
         public NetworkType NetworkType
@@ -49,6 +68,8 @@ namespace BTCPayServer.Configuration
             set;
         }
 
+        public OpenIdOptions OpenIdOptions { get; private set; }
+        
         public List<NBXplorerConnectionSetting> NBXplorerConnectionSettings
         {
             get;
@@ -193,6 +214,7 @@ namespace BTCPayServer.Configuration
                 Logs.Configuration.LogInformation("LogFile: " + LogFile);
                 Logs.Configuration.LogInformation("Log Level: " + GetDebugLogLevel(conf));
             }
+            OpenIdOptions = new OpenIdOptions(conf);
         }
 
         private SSHSettings ParseSSHConfiguration(IConfiguration conf)

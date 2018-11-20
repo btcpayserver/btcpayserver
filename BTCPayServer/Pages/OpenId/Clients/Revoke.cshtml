@@ -11,6 +11,11 @@
     <div class="container">
         <div class="row">
             <div class="col-lg-12 text-center">
+                <partial name="_StatusMessage" for="@Model.StatusMessage"/>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12 text-center">
                 <h2 class="section-heading">Revoke Token</h2>
                 <hr class="primary">
                 <h3>Are you sure you want to revoke this token for client @Model.Token.Application.DisplayName?</h3>
@@ -55,7 +60,9 @@
     public class RevokeToken : PageModel
     {
         private readonly OpenIddictTokenManager<OpenIddictToken> _tokenManager;
-
+        [BindProperty(SupportsGet = true)]
+        public string StatusMessage { get; set; }
+        
         public OpenIddictToken Token { get; set; }
 
         [BindProperty(SupportsGet = true)]
@@ -87,6 +94,7 @@
             }
             catch (Exception e)
             {
+                StatusMessage = e.Message;
                 return Page();
             }
         }

@@ -49,7 +49,7 @@
     <PackageReference Include="NBitcoin" Version="4.1.1.71" />
     <PackageReference Include="NBitpayClient" Version="1.0.0.30" />	  
     <PackageReference Include="DBreeze" Version="1.92.0" />
-    <PackageReference Include="NBXplorer.Client" Version="1.0.3.11" />
+    <PackageReference Include="NBXplorer.Client" Version="2.0.0" />
     <PackageReference Include="NicolasDorier.CommandLine" Version="1.0.0.2" />
     <PackageReference Include="NicolasDorier.CommandLine.Configuration" Version="1.0.0.3" />
     <PackageReference Include="NicolasDorier.RateLimits" Version="1.0.0.3" />

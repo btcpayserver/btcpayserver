@@ -811,7 +811,7 @@ namespace BTCPayServer.Tests
                 output.ScriptPubKey = invoiceAddress.ScriptPubKey;
 
                 using (var cts = new CancellationTokenSource(10000))
-                using (var listener = tester.ExplorerClient.CreateNotificationSession())
+                using (var listener = tester.ExplorerClient.CreateWebsocketNotificationSession())
                 {
                     listener.ListenAllDerivationSchemes();
                     var replaced = tester.ExplorerNode.SignRawTransaction(tx);

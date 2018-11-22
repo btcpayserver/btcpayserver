@@ -73,6 +73,12 @@ jobs:
             sudo docker manifest annotate rockstardev/btcpayserver:latest rockstardev/btcpayserver:latest-amd64 --os linux --arch amd64
             sudo docker manifest annotate rockstardev/btcpayserver:latest rockstardev/btcpayserver:latest-arm32v7 --os linux --arch arm --variant v7
             sudo docker manifest push rockstardev/btcpayserver:latest -p
+            #
+            LATEST_TAG=${CIRCLE_TAG:1} #trim v from tag
+            sudo docker manifest create --amend rockstardev/btcpayserver:$LATEST_TAG rockstardev/btcpayserver:$LATEST_TAG-amd64 rockstardev/btcpayserver:$LATEST_TAG-arm32v7
+            sudo docker manifest annotate rockstardev/btcpayserver:$LATEST_TAG rockstardev/btcpayserver:$LATEST_TAG-amd64 --os linux --arch amd64
+            sudo docker manifest annotate rockstardev/btcpayserver:$LATEST_TAG rockstardev/btcpayserver:$LATEST_TAG-arm32v7 --os linux --arch arm --variant v7
+            sudo docker manifest push rockstardev/btcpayserver:$LATEST_TAG -p
 
 workflows:
   version: 2

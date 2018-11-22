@@ -83,8 +83,6 @@ workflows:
   publish:
     jobs:
       - publish_docker_linuxamd64:
-          requires:
-            - test
           filters:
             # ignore any commit on any branch by default
             branches:
@@ -93,8 +91,6 @@ workflows:
             tags:
               only: /v[1-9]+(\.[0-9]+)*/
       - publish_docker_linuxarm:
-          requires:
-            - test
           filters:
             branches:
               ignore: /.*/

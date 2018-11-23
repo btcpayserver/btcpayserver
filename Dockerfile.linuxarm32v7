@@ -1,0 +1,26 @@
+FROM microsoft/dotnet:2.1-sdk AS builder
+RUN dotnet --info
+WORKDIR /source
+COPY BTCPayServer/BTCPayServer.csproj BTCPayServer.csproj
+# Cache some dependencies
+RUN dotnet restore -r linux-arm
+
+COPY BTCPayServer/. .
+RUN dotnet publish -c Release -r linux-arm -o /app/ /p:ShowLinkerSizeComparison=true
+
+
+## runtime
+FROM microsoft/dotnet:2.1-aspnetcore-runtime-bionic-arm32v7 AS runtime
+
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT false
+
+ENV LC_ALL en_US.UTF-8
+ENV LANG en_US.UTF-8
+
+WORKDIR /datadir
+WORKDIR /app
+ENV BTCPAY_DATADIR=/datadir
+VOLUME /datadir
+
+COPY --from=builder "/app" .
+ENTRYPOINT ["dotnet", "BTCPayServer.dll"]

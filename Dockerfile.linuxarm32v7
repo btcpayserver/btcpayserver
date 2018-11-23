@@ -1,19 +1,13 @@
-## This is a manifest image, will pull the image with the same arch as the host
+# This is a manifest image, will pull the image with the same arch as the builder machine
 FROM microsoft/dotnet:2.1.500-sdk AS builder
-RUN dotnet --info
 WORKDIR /source
 COPY BTCPayServer/BTCPayServer.csproj BTCPayServer.csproj
-# Cache some dependencies
-RUN dotnet restore -r linux-arm
-
+RUN dotnet restore
 COPY BTCPayServer/. .
-RUN dotnet publish -c Release -r linux-arm -o /app/ /p:ShowLinkerSizeComparison=true
+RUN dotnet publish --output /app/ --configuration Release
 
-
-## We force the host to use an ARM image. This is fine also on x64 as long as the builder does not call any program
-FROM microsoft/dotnet:2.1.6-aspnetcore-runtime-stretch-slim-arm32v7 AS runtime
-
-ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT false
+# Force the builder machine to take make an arm runtime image. This is fine as long as the builder does not run any program
+FROM microsoft/dotnet:2.1.6-aspnetcore-runtime-stretch-slim-arm32v7
 
 ENV LC_ALL en_US.UTF-8
 ENV LANG en_US.UTF-8

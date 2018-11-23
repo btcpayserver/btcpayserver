@@ -112,7 +112,7 @@ namespace BTCPayServer.Controllers
                 RedirectURL = redirectUrl,
                 FullNotifications = true
             }, store, HttpContext.Request.GetAbsoluteRoot());
-            return Redirect(invoice.Data.Url);
+            return RedirectToAction(nameof(InvoiceController.Checkout), "Invoice", new { invoiceId = invoice.Data.Id });
         }
     }
 

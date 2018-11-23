@@ -1464,13 +1464,13 @@ namespace BTCPayServer.Tests
                 vmpos.CustomButtonText = "Nicolas Sexy Hair";
                 vmpos.Template = @"
 apple:
-    price: 5.0
-    title: good apple
+price: 5.0
+title: good apple
 orange:
-    price: 10.0
+price: 10.0
 donation:
-    price: 1.02
-    custom: true
+price: 1.02
+custom: true
 ";
                 Assert.IsType<RedirectToActionResult>(apps.UpdatePointOfSale(appId, vmpos).Result);
                 vmpos = Assert.IsType<UpdatePointOfSaleViewModel>(Assert.IsType<ViewResult>(apps.UpdatePointOfSale(appId).Result).Model);
@@ -1486,7 +1486,7 @@ donation:
                 Assert.Equal("$5.00", vmview.Items[0].Price.Formatted);
                 Assert.Equal("{0} Purchase", vmview.ButtonText);
                 Assert.Equal("Nicolas Sexy Hair", vmview.CustomButtonText);
-                Assert.IsType<RedirectResult>(publicApps.ViewPointOfSale(appId, 0, null, null, null, null, "orange").Result);
+                Assert.IsType<RedirectToActionResult>(publicApps.ViewPointOfSale(appId, 0, null, null, null, null, "orange").Result);
 
                 //
                 var invoices = user.BitPay.GetInvoices();
@@ -1496,10 +1496,11 @@ donation:
                 Assert.Equal("orange", orangeInvoice.ItemDesc);
 
                 // testing custom amount
-                Assert.IsType<RedirectResult>(publicApps.ViewPointOfSale(appId, 5, null, null, null, null, "donation").Result);
+                var action = Assert.IsType<RedirectToActionResult>(publicApps.ViewPointOfSale(appId, 5, null, null, null, null, "donation").Result);
+                Assert.Equal(nameof(InvoiceController.Checkout), action.ActionName);
                 invoices = user.BitPay.GetInvoices();
-                var donationInvoice = invoices.First(); // expected behavior is that new invoice should now be first
-                Assert.Equal(5m, donationInvoice.Price);
+                var donationInvoice = invoices.Single(i => i.Price == 5m);
+                Assert.NotNull(donationInvoice);
                 Assert.Equal("CAD", donationInvoice.Currency);
                 Assert.Equal("donation", donationInvoice.ItemDesc);
             }

@@ -1,12 +1,10 @@
-@page "{id}/Authorizations"
+@page 
 @using System.Collections.Immutable
 @using BTCPayServer.Authentication.OpenId.Models
 @using Microsoft.AspNetCore.Authorization
-@using OpenIddict.Abstractions
 @using OpenIddict.Core
-@using OpenIddict.EntityFrameworkCore.Models
 @using PageModel = Microsoft.AspNetCore.Mvc.RazorPages.PageModel
-@model AuthorizationList
+@model TokenList
 
 <section>
     <div class="container">
@@ -19,7 +17,7 @@
 
         <div class="row">
             <div class="col-lg-12 text-center">
-                <h2 class="section-heading">@Model.Application.DisplayName Authorizations</h2>
+                <h2 class="section-heading">@Model.Application.DisplayName Tokens</h2>
                 <hr class="primary">
             </div>
         </div>
@@ -38,27 +36,29 @@
                         <th>Subject</th>
                         <th>Status</th>
                         <th>Type</th>
+                        <th>CreationDate</th>
+                        <th>ExpirationDate</th>
                         <th class="text-right">Actions</th>
                     </tr>
                     </thead>
                     <tbody>
-                    @foreach (var authorization in Model.Authorizations)
+                    @foreach (var token in Model.Tokens)
                     {
                         <tr>
-                            <td>@authorization.Subject</td>
-                            <td>@authorization.Status</td>
-                            <td>@authorization.Type</td>
+                            <td>@token.Subject</td>
+                            <td>@token.Status</td>
+                            <td>@token.Type</td>
+                            <td>@token.CreationDate</td>
+                            <td>@token.ExpirationDate</td>
                             <td class="text-right">
-                                
-                                <a asp-page="./Tokens" asp-route-id="@Model.Id" asp-route-authorizationId="@authorization.Id" >Revoke</a>
-                                <a asp-page="./RevokeAuthorization" asp-route-id="@authorization.Id">Revoke</a>
+                                <a asp-page="./Delete" asp-route-id="@token.Id">Revoke</a>
                             </td>
                         </tr>
                     }
-                    @if (!Model.Authorizations.Any())
+                    @if (!Model.Tokens.Any())
                     {
                         <tr>
-                            <td colspan="6">No Authorizations</td>
+                            <td colspan="6">No Tokens</td>
                         </tr>
                     }
                     </tbody>
@@ -72,9 +72,9 @@
 @functions{
 
     [Authorize]
-    public class AuthorizationList : PageModel
+    public class TokenList : PageModel
     {
-        private readonly OpenIddictAuthorizationManager<BTCPayOpenIdAuthorization> _authorizationManager;
+        private readonly OpenIddictTokenManager<BTCPayOpenIdToken> _tokenManager;
         private readonly OpenIddictApplicationManager<BTCPayOpenIdClient> _applicationManager;
 
         [BindProperty(SupportsGet = true)]
@@ -82,21 +82,32 @@
 
         [BindProperty(SupportsGet = true)]
         public string Id { get; set; }
+        [BindProperty(SupportsGet = true)]
+        public string AuthorizationId { get; set; }
 
-        public ImmutableArray<BTCPayOpenIdAuthorization> Authorizations { get; internal set; }
+        public ImmutableArray<BTCPayOpenIdToken> Tokens { get; internal set; }
         public BTCPayOpenIdClient Application { get; internal set; }
 
-        public AuthorizationList(OpenIddictAuthorizationManager<BTCPayOpenIdAuthorization> authorizationManager,
-            OpenIddictApplicationManager<BTCPayOpenIdClient> applicationManager)
+        public TokenList(OpenIddictTokenManager<BTCPayOpenIdToken> tokenManager, OpenIddictApplicationManager<BTCPayOpenIdClient> applicationManager)
         {
-            _authorizationManager = authorizationManager;
+            _tokenManager = tokenManager;
             _applicationManager = applicationManager;
         }
 
         public async Task<IActionResult> OnGetAsync()
         {
+            
             Application = await _applicationManager.FindByIdAsync(Id);
-            Authorizations = await _authorizationManager.FindByApplicationIdAsync(Id);
+            
+            if (string.IsNullOrEmpty(AuthorizationId))
+            {
+                Tokens = await _tokenManager.FindByApplicationIdAsync(Id);
+            }
+            else
+            {
+                Tokens = await _tokenManager.FindByAuthorizationIdAsync(AuthorizationId);
+            }
+            
             return Page();
         }
     }

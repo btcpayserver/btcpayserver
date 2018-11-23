@@ -196,5 +196,7 @@
 	  <_ContentIncludedByDefault Remove="Pages\OpenId\Tokens\Delete.cshtml" />
 	  <_ContentIncludedByDefault Remove="Pages\OpenId\Tokens\Edit.cshtml" />
 	  <_ContentIncludedByDefault Remove="Pages\OpenId\Tokens\Index.cshtml" />
+	  <_ContentIncludedByDefault Remove="Pages\OpenId\Clients\Tokens\Delete.cshtml" />
+	  <_ContentIncludedByDefault Remove="Pages\OpenId\Clients\Tokens\Index.cshtml" />
 	</ItemGroup>
 </Project>

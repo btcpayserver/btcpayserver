@@ -1,4 +1,5 @@
-FROM microsoft/dotnet:2.1.500-sdk-bionic-arm32v7 AS builder
+## This is a manifest image, will pull the image with the same arch as the host
+FROM microsoft/dotnet:2.1.500-sdk AS builder
 RUN dotnet --info
 WORKDIR /source
 COPY BTCPayServer/BTCPayServer.csproj BTCPayServer.csproj

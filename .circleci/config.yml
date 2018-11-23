@@ -38,7 +38,6 @@ jobs:
             sudo docker build --pull -t $DOCKERHUB_REPO:$LATEST_TAG-amd64 -f Dockerfile.linuxamd64 .
             sudo docker login --username=$DOCKERHUB_USER --password=$DOCKERHUB_PASS
             sudo docker push $DOCKERHUB_REPO:$LATEST_TAG-amd64
-            sudo docker push $DOCKERHUB_REPO:latest-amd64
 
   publish_docker_linuxarm:
     machine:
@@ -53,7 +52,6 @@ jobs:
             sudo docker build --pull -t $DOCKERHUB_REPO:$LATEST_TAG-arm32v7 -f Dockerfile.linuxarm32v7 .
             sudo docker login --username=$DOCKERHUB_USER --password=$DOCKERHUB_PASS
             sudo docker push $DOCKERHUB_REPO:$LATEST_TAG-arm32v7
-            sudo docker push $DOCKERHUB_REPO:latest-arm32v7
 
   publish_docker_multiarch:
     machine:

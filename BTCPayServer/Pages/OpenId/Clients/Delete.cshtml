@@ -50,22 +50,28 @@
     public class RemoveClient : PageModel
     {
         private readonly OpenIddictApplicationManager<BTCPayOpenIdClient> _applicationManager;
+        private readonly UserManager<ApplicationUser> _userManager;
+
         [BindProperty(SupportsGet = true)]
         public string StatusMessage { get; set; }
+
         [BindProperty]
         public BTCPayOpenIdClient Model { get; set; }
+
         [BindProperty(SupportsGet = true)]
         public string Id { get; set; }
 
-        public RemoveClient(OpenIddictApplicationManager<BTCPayOpenIdClient> applicationManager)
+        public RemoveClient(OpenIddictApplicationManager<BTCPayOpenIdClient> applicationManager,
+            UserManager<ApplicationUser> userManager)
         {
             _applicationManager = applicationManager;
+            _userManager = userManager;
         }
 
         public async Task<IActionResult> OnGetAsync()
         {
             Model = await _applicationManager.FindByIdAsync(Id);
-            if (Model == null)
+            if (Model == null || Model.ApplicationUserId != _userManager.GetUserId(User))
             {
                 return NotFound();
             }
@@ -76,13 +82,16 @@
         {
             try
             {
-                var app = await _applicationManager.FindByIdAsync(Id);
-                await _applicationManager.DeleteAsync(app);
+                Model = await _applicationManager.FindByIdAsync(Id);
+                if (Model == null || Model.ApplicationUserId != _userManager.GetUserId(User))
+                {
+                    return NotFound();
+                }
+                await _applicationManager.DeleteAsync(Model);
                 return RedirectToPage("Index", new {StatusMessage = $"{Model.DisplayName}({Model.ClientId}) deleted successfully"});
             }
             catch (Exception e)
             {
-                
                 StatusMessage = e.Message;
                 return Page();
             }

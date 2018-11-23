@@ -47,8 +47,8 @@
                             <td>@authorization.Status</td>
                             <td>@authorization.Type</td>
                             <td class="text-right">
-                                
-                                <a asp-page="../Tokens" asp-route-id="@Model.Id" asp-route-authorizationId="@authorization.Id" >Tokens</a>
+
+                                <a asp-page="../Tokens" asp-route-id="@Model.Id" asp-route-authorizationId="@authorization.Id">Tokens</a>
                                 <a asp-page="./Delete" asp-route-id="@authorization.Id">Revoke</a>
                             </td>
                         </tr>
@@ -74,6 +74,7 @@
     {
         private readonly OpenIddictAuthorizationManager<BTCPayOpenIdAuthorization> _authorizationManager;
         private readonly OpenIddictApplicationManager<BTCPayOpenIdClient> _applicationManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         [BindProperty(SupportsGet = true)]
         public string StatusMessage { get; set; }
@@ -85,15 +86,21 @@
         public BTCPayOpenIdClient Application { get; internal set; }
 
         public AuthorizationList(OpenIddictAuthorizationManager<BTCPayOpenIdAuthorization> authorizationManager,
-            OpenIddictApplicationManager<BTCPayOpenIdClient> applicationManager)
+            OpenIddictApplicationManager<BTCPayOpenIdClient> applicationManager,
+            UserManager<ApplicationUser> userManager)
         {
             _authorizationManager = authorizationManager;
             _applicationManager = applicationManager;
+            _userManager = userManager;
         }
 
         public async Task<IActionResult> OnGetAsync()
         {
             Application = await _applicationManager.FindByIdAsync(Id);
+            if (Application == null || Application.ApplicationUserId != _userManager.GetUserId(User))
+            {
+                return NotFound();
+            }
             Authorizations = await _authorizationManager.FindByApplicationIdAsync(Id);
             return Page();
         }

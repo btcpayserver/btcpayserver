@@ -1,4 +1,4 @@
-@page 
+@page
 @using System.Collections.Immutable
 @using BTCPayServer.Authentication.OpenId.Models
 @using Microsoft.AspNetCore.Authorization
@@ -75,6 +75,8 @@
     public class TokenList : PageModel
     {
         private readonly OpenIddictTokenManager<BTCPayOpenIdToken> _tokenManager;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly OpenIddictAuthorizationManager<BTCPayOpenIdAuthorization> _authorizationManager;
         private readonly OpenIddictApplicationManager<BTCPayOpenIdClient> _applicationManager;
 
         [BindProperty(SupportsGet = true)]
@@ -82,22 +84,30 @@
 
         [BindProperty(SupportsGet = true)]
         public string Id { get; set; }
+
         [BindProperty(SupportsGet = true)]
         public string AuthorizationId { get; set; }
 
-        public ImmutableArray<BTCPayOpenIdToken> Tokens { get; internal set; }
-        public BTCPayOpenIdClient Application { get; internal set; }
+        public ImmutableArray<BTCPayOpenIdToken> Tokens { get; private set; }
+        public BTCPayOpenIdClient Application { get; private set; }
 
-        public TokenList(OpenIddictTokenManager<BTCPayOpenIdToken> tokenManager, OpenIddictApplicationManager<BTCPayOpenIdClient> applicationManager)
+        public TokenList(OpenIddictTokenManager<BTCPayOpenIdToken> tokenManager,
+            UserManager<ApplicationUser> userManager,
+            OpenIddictAuthorizationManager<BTCPayOpenIdAuthorization> authorizationManager,
+            OpenIddictApplicationManager<BTCPayOpenIdClient> applicationManager)
         {
             _tokenManager = tokenManager;
+            _userManager = userManager;
+            _authorizationManager = authorizationManager;
             _applicationManager = applicationManager;
         }
 
         public async Task<IActionResult> OnGetAsync()
         {
-            
-            Application = await _applicationManager.FindByIdAsync(Id);
+            if (!await PopulateApplication())
+            {
+                return NotFound();
+            }
             
             if (string.IsNullOrEmpty(AuthorizationId))
             {
@@ -107,8 +117,25 @@
             {
                 Tokens = await _tokenManager.FindByAuthorizationIdAsync(AuthorizationId);
             }
+
             
             return Page();
+        }
+
+        private async Task<bool> PopulateApplication()
+        {
+            var userId = _userManager.GetUserId(User);
+            if (string.IsNullOrEmpty(Id))
+            {
+                var authorization = await _authorizationManager.FindByIdAsync(AuthorizationId);
+                Application = authorization.Application;
+            }
+            else if (string.IsNullOrEmpty(AuthorizationId))
+            {
+                Application = await _applicationManager.FindByIdAsync(Id);
+            }
+
+            return Application != null && Application.ApplicationUserId == userId;
         }
     }
 

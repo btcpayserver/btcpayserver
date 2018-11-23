@@ -54,24 +54,29 @@
     public class RevokeAuthorization : PageModel
     {
         private readonly OpenIddictAuthorizationManager<BTCPayOpenIdAuthorization> _authorizationManager;
+        private readonly UserManager<ApplicationUser> _userManager;
+
         [BindProperty(SupportsGet = true)]
         public string StatusMessage { get; set; }
-        
+
         public BTCPayOpenIdAuthorization Authorization { get; set; }
 
         [BindProperty(SupportsGet = true)]
         public string Id { get; set; }
 
 
-        public RevokeAuthorization(OpenIddictAuthorizationManager<BTCPayOpenIdAuthorization> authorizationManager)
+        public RevokeAuthorization(
+            OpenIddictAuthorizationManager<BTCPayOpenIdAuthorization> authorizationManager,
+            UserManager<ApplicationUser> userManager)
         {
             _authorizationManager = authorizationManager;
+            _userManager = userManager;
         }
 
         public async Task<IActionResult> OnGetAsync()
         {
             Authorization = await _authorizationManager.FindByIdAsync(Id);
-            if (Authorization == null)
+            if (Authorization == null || Authorization.Application.ApplicationUserId != _userManager.GetUserId(User))
             {
                 return NotFound();
             }
@@ -83,8 +88,12 @@
             try
             {
                 Authorization = await _authorizationManager.FindByIdAsync(Id);
+                if (Authorization == null || Authorization.Application.ApplicationUserId != _userManager.GetUserId(User))
+                {
+                    return NotFound();
+                }
                 await _authorizationManager.RevokeAsync(Authorization);
-                return RedirectToPage("Authorizations", new {StatusMessage = $"Authorization revoked successfully"});
+                return RedirectToPage("Index", new {StatusMessage = $"Authorization revoked successfully"});
             }
             catch (Exception e)
             {

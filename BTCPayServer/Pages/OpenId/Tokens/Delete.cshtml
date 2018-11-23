@@ -58,6 +58,8 @@
     public class RevokeToken : PageModel
     {
         private readonly OpenIddictTokenManager<BTCPayOpenIdToken> _tokenManager;
+        private readonly UserManager<ApplicationUser> _userManager;
+
         [BindProperty(SupportsGet = true)]
         public string StatusMessage { get; set; }
         
@@ -67,15 +69,19 @@
         public string Id { get; set; }
 
 
-        public RevokeToken(OpenIddictTokenManager<BTCPayOpenIdToken> tokenManager)
+        public RevokeToken(
+            OpenIddictTokenManager<BTCPayOpenIdToken> tokenManager, 
+            UserManager<ApplicationUser> userManager )
         {
             _tokenManager = tokenManager;
+            _userManager = userManager;
         }
 
         public async Task<IActionResult> OnGetAsync()
         {
             Token = await _tokenManager.FindByIdAsync(Id);
-            if (Token == null)
+            
+            if (Token == null || Token.Application.ApplicationUserId != _userManager.GetUserId(User))
             {
                 return NotFound();
             }
@@ -87,6 +93,10 @@
             try
             {
                 Token = await _tokenManager.FindByIdAsync(Id);
+                if (Token == null || Token.Application.ApplicationUserId != _userManager.GetUserId(User))
+                {
+                    return NotFound();
+                }
                 await _tokenManager.RevokeAsync(Token);
                 return RedirectToPage("Tokens", new {StatusMessage = $"Token revoked successfully"});
             }

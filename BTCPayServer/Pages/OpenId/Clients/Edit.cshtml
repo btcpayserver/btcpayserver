@@ -118,6 +118,9 @@
             Client
         </h2>
         <hr class="primary">
+        <a asp-page="../Tokens/Index" asp-route-id="@Model.Id">Tokens</a><span> - </span>
+        <a asp-page="../Authorizations/Index" asp-route-id="@Model.Id">Authorizations</a><span> - </span>
+        <a asp-page="./Delete" asp-route-id="@Model.Id">Delete</a>
     </div>
 </div>
 <div class="row">

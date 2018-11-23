@@ -49,41 +49,9 @@ namespace BTCPayServer.Authentication.OpenId
 
             var user = await _userManager.FindByIdAsync(application.ApplicationUserId);
             
-            
-            
             notification.Context.Validate(await CreateTicketAsync(request,user));
             // Don't allow other handlers to process the event.
             return OpenIddictServerEventState.Handled;
         }
-        //In case we do not want to associate client credentials with a user
-//        private AuthenticationTicket CreateTicket(OpenIdConnectRequest request,BTCPayOpenIdClient application)
-//        {
-//            // Create a new ClaimsIdentity containing the claims that
-//            // will be used to create an id_token, a token or a code.
-//            var identity = new ClaimsIdentity(
-//                OpenIddictServerDefaults.AuthenticationScheme,
-//                OpenIdConnectConstants.Claims.Name,
-//                OpenIdConnectConstants.Claims.Role);
-//
-//            // Use the client_id as the subject identifier.
-//            identity.AddClaim(OpenIdConnectConstants.Claims.Subject, application.ClientId,
-//                OpenIdConnectConstants.Destinations.AccessToken,
-//                OpenIdConnectConstants.Destinations.IdentityToken);
-//
-//            identity.AddClaim(OpenIdConnectConstants.Claims.Name, application.DisplayName,
-//                OpenIdConnectConstants.Destinations.AccessToken,
-//                OpenIdConnectConstants.Destinations.IdentityToken);
-//
-//            // Create a new authentication ticket holding the user identity.
-//            var ticket = new AuthenticationTicket(
-//                new ClaimsPrincipal(identity),
-//                new AuthenticationProperties(),
-//                OpenIddictServerDefaults.AuthenticationScheme);
-//
-//            
-//            ticket.SetScopes(request.GetScopes());
-//
-//            return ticket;
-//        }
     }
 }

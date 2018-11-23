@@ -597,7 +597,7 @@ namespace BTCPayServer.Migrations
             modelBuilder.Entity("BTCPayServer.Authentication.OpenId.Models.BTCPayOpenIdClient", b =>
                 {
                     b.HasOne("BTCPayServer.Models.ApplicationUser", "ApplicationUser")
-                        .WithMany()
+                        .WithMany("OpenIdClients")
                         .HasForeignKey("ApplicationUserId");
                 });
 

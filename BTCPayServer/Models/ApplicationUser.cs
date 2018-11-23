@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Authentication.OpenId.Models;
 using Microsoft.AspNetCore.Identity;
 using BTCPayServer.Data;
 
@@ -20,5 +21,7 @@ namespace BTCPayServer.Models
         {
             get; set;
         }
+        
+        public List<BTCPayOpenIdClient> OpenIdClients { get; set; }
     }
 }

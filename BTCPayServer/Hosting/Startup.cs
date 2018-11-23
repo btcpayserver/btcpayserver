@@ -20,11 +20,13 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Security.Cryptography;
 using AspNet.Security.OpenIdConnect.Primitives;
 using BTCPayServer.Authentication.OpenId;
+using BTCPayServer.Authentication.OpenId.Models;
 using BTCPayServer.Security;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.IdentityModel.Tokens;
 using NETCore.Encrypt.Extensions.Internal;
+using OpenIddict.EntityFrameworkCore.Models;
 
 namespace BTCPayServer.Hosting
 {
@@ -71,7 +73,9 @@ namespace BTCPayServer.Hosting
                     
                     // Configure OpenIddict to use the Entity Framework Core stores and entities.
                     options.UseEntityFrameworkCore()
-                        .UseDbContext<ApplicationDbContext>();
+                        .UseDbContext<ApplicationDbContext>()
+                        .ReplaceDefaultEntities<BTCPayOpenIdClient, BTCPayOpenIdAuthorization, OpenIddictScope<string>,
+                            BTCPayOpenIdToken, string>();
                 })
 
                 .AddServer(options =>

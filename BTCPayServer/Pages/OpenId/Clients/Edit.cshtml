@@ -2,6 +2,7 @@
 @using System.ComponentModel.DataAnnotations
 @using BTCPayServer.Authentication.OpenId.Models
 @using BTCPayServer.Configuration
+@using BTCPayServer.Data
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Mvc.RazorPages
 @using Newtonsoft.Json
@@ -298,7 +299,7 @@
                 </div>
                 <span asp-validation-for="Client.Permissions" class="text-danger"></span>
             </div>
-
+            <input type="hidden" asp-for="Client.ApplicationUserId"/>
 
             <div class="form-group">
                 <input type="submit" class="btn btn-primary"/>
@@ -324,6 +325,8 @@
 
         [Display(Name = "Whitelisted urls to redirect to after logging out from interactive flows")]
         public ISet<Uri> PostLogoutRedirectUris { get; } = (ISet<Uri>) new HashSet<Uri>();
+
+        public string ApplicationUserId { get; set; }
     }
 
     [Authorize]
@@ -372,11 +375,12 @@
                 return NotFound();
             }
             await _applicationManager.PopulateAsync(Client, application);
+            Client.ApplicationUserId = application.ApplicationUserId;
             return Page();
         }
 
 
-        private async Task<BTCPayOpenIdClient> ValidateApplication()
+        private async Task<BTCPayOpenIdClient> ValidateAndSanitizeApplication()
         {
     //            if (!_options.OpenIdOptions.EnforceGrantTypes && 
     //                !Client.Permissions.Any(s => s.StartsWith(OpenIddictConstants.Permissions.Prefixes.GrantType)))
@@ -398,27 +402,29 @@
     //                Client.Permissions.Add(OpenIddictConstants.Permissions.Endpoints.Revocation);
     //            }
 
-
+            var application = new BTCPayOpenIdClient();
             if (string.IsNullOrEmpty(Id))
             {
                 Client.ClientId = Guid.NewGuid().ToString();
+
+                application.ApplicationUserId = Client.ApplicationUserId;
+            }
+            else
+            {
+                application = await _applicationManager.FindByIdAsync(Id);
             }
 
     //Sanitize list inputs
             Client.RedirectUris.Remove(null);
             Client.PostLogoutRedirectUris.Remove(null);
             Client.ConsentType = OpenIddictConstants.ConsentTypes.Implicit;
-            var application = new BTCPayOpenIdClient();
-            await _applicationManager.PopulateAsync(application, Client);
 
+            await _applicationManager.PopulateAsync(application, Client);
             var permissions = (await _applicationManager.GetPermissionsAsync(application)).ToList();
 
             ComputeClientType(permissions, application);
 
-            if (application.Type == OpenIddictConstants.ClientTypes.Public)
-            {
-                application.ClientSecret = null;
-            }
+            application.ClientSecret = null;
             await ValidateUrlArray("Client.RedirectUris", await _applicationManager.GetRedirectUrisAsync(application));
 
             await ValidateUrlArray("Client.PostLogoutRedirectUris", await _applicationManager.GetPostLogoutRedirectUrisAsync(application));
@@ -486,6 +492,7 @@
 
             application.Permissions = new JArray(permissions).ToString(Formatting.None);
             await _applicationManager.PopulateAsync(Client, application);
+
             return application;
         }
 
@@ -520,7 +527,7 @@
             }
             try
             {
-                var application = await ValidateApplication();
+                var application = await ValidateAndSanitizeApplication();
                 if (ModelState.ErrorCount > 0)
                 {
                     await _applicationManager.PopulateAsync(Client, application);
@@ -530,11 +537,28 @@
                 if (!string.IsNullOrEmpty(Id))
                 {
                     var userId = _userManager.GetUserId(User);
-                    if (application == null || application.ApplicationUserId != userId || application.Id != Id || (await _applicationManager.FindByIdAsync(application.Id)).ApplicationUserId != userId)
+
+                    if (application.ApplicationUserId != userId)
                     {
                         return NotFound();
                     }
 
+    //HACK: There is a bug where the validator in openiddict  does not allow you to update. So we will delete and recreate
+
+                    Client.ResetSecret = true;
+                    await _applicationManager.DeleteAsync(application);
+                    var secretworkaround = Client.ResetSecret &&
+                                           application.Type != OpenIddictConstants.ClientTypes.Public ?
+                        Guid.NewGuid().ToString() : null;
+
+
+                    await _applicationManager.CreateAsync(application, secretworkaround);
+
+                    StatusMessage = $"Client saved successfully. {(!string.IsNullOrEmpty(secretworkaround) ? $"Client Secret is {secretworkaround}" : "")}";
+                    Id = application.Id;
+                    return Page();
+
+    //ENDHACK
 
                     var secret = Client.ResetSecret &&
                                  application.Type != OpenIddictConstants.ClientTypes.Public ?

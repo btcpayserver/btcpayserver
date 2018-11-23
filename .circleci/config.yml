@@ -35,7 +35,7 @@ jobs:
           command: |
             LATEST_TAG=${CIRCLE_TAG:1} #trim v from tag
             #
-            sudo docker build --pull -t $DOCKERHUB_REPO:$LATEST_TAG-amd64 -t $DOCKERHUB_REPO:latest-amd64 -f Dockerfile.linuxamd64 .
+            sudo docker build --pull -t $DOCKERHUB_REPO:$LATEST_TAG-amd64 -f Dockerfile.linuxamd64 .
             sudo docker login --username=$DOCKERHUB_USER --password=$DOCKERHUB_PASS
             sudo docker push $DOCKERHUB_REPO:$LATEST_TAG-amd64
             sudo docker push $DOCKERHUB_REPO:latest-amd64
@@ -52,7 +52,7 @@ jobs:
             sudo docker run --rm --privileged multiarch/qemu-user-static:register --reset
             LATEST_TAG=${CIRCLE_TAG:1} #trim v from tag
             #
-            sudo docker build --pull -t $DOCKERHUB_REPO:$LATEST_TAG-arm32v7 -t $DOCKERHUB_REPO:latest-arm32v7 -f Dockerfile.linuxarm32v7 .
+            sudo docker build --pull -t $DOCKERHUB_REPO:$LATEST_TAG-arm32v7 -f Dockerfile.linuxarm32v7 .
             sudo docker login --username=$DOCKERHUB_USER --password=$DOCKERHUB_PASS
             sudo docker push $DOCKERHUB_REPO:$LATEST_TAG-arm32v7
             sudo docker push $DOCKERHUB_REPO:latest-arm32v7

@@ -47,8 +47,6 @@ jobs:
       - checkout  
       - run:
           command: |
-            sudo apt update
-            sudo apt install -y qemu qemu-user-static qemu-user binfmt-support
             sudo docker run --rm --privileged multiarch/qemu-user-static:register --reset
             LATEST_TAG=${CIRCLE_TAG:1} #trim v from tag
             #

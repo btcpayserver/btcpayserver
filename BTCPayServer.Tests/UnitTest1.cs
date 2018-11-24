@@ -1465,13 +1465,13 @@ namespace BTCPayServer.Tests
                 vmpos.CustomButtonText = "Nicolas Sexy Hair";
                 vmpos.Template = @"
 apple:
-price: 5.0
-title: good apple
+  price: 5.0
+  title: good apple
 orange:
-price: 10.0
+  price: 10.0
 donation:
-price: 1.02
-custom: true
+  price: 1.02
+  custom: true
 ";
                 Assert.IsType<RedirectToActionResult>(apps.UpdatePointOfSale(appId, vmpos).Result);
                 vmpos = Assert.IsType<UpdatePointOfSaleViewModel>(Assert.IsType<ViewResult>(apps.UpdatePointOfSale(appId).Result).Model);

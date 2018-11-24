@@ -7,6 +7,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTCPayServer", "BTCPayServe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTCPayServer.Tests", "BTCPayServer.Tests\BTCPayServer.Tests.csproj", "{B373F439-6E75-4A94-985D-10A0C7C500D0}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Misc", "Misc", "{29290EC7-00E6-4C4B-96D9-4D7E9611DF28}"
+	ProjectSection(SolutionItems) = preProject
+		.circleci\config.yml = .circleci\config.yml
+		Dockerfile.linuxamd64 = Dockerfile.linuxamd64
+		Dockerfile.linuxarm32v7 = Dockerfile.linuxarm32v7
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

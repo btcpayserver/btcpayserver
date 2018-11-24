@@ -122,7 +122,7 @@ namespace BTCPayServer.Services.Wallets
                     UTXOChanges result = null;
                     try
                     {
-                        result = await _Client.GetUTXOsAsync(strategy, null, false, cancellation).ConfigureAwait(false);
+                        result = await _Client.GetUTXOsAsync(strategy, cancellation).ConfigureAwait(false);
                     }
                     catch
                     {
@@ -153,7 +153,7 @@ namespace BTCPayServer.Services.Wallets
 
         public Task<GetTransactionsResponse> FetchTransactions(DerivationStrategyBase derivationStrategyBase)
         {
-            return _Client.GetTransactionsAsync(derivationStrategyBase, null, false);
+            return _Client.GetTransactionsAsync(derivationStrategyBase);
         }
 
         public Task<BroadcastResult[]> BroadcastTransactionsAsync(List<Transaction> transactions)

@@ -789,7 +789,8 @@ namespace BTCPayServer.Controllers
                     StatusMessage = "Server initiated pairing code: " + pairingCode;
                 return RedirectToAction(nameof(ListTokens), new
                 {
-                    storeId = store.Id
+                    storeId = store.Id,
+                    pairingCode = pairingCode
                 });
             }
             else

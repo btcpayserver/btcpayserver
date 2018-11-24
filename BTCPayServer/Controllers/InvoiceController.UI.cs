@@ -26,40 +26,6 @@ namespace BTCPayServer.Controllers
 {
     public partial class InvoiceController
     {
-        private Dictionary<string, string> ParsePosData(string posData)
-        {
-            var result = new Dictionary<string,string>();
-            if (string.IsNullOrEmpty(posData))
-            {
-                return result;
-            }
-            
-            try
-            {
-                
-                var jObject =JObject.Parse(posData);
-                foreach (var item in jObject)
-                {
-                    
-                    switch (item.Value.Type)
-                    {
-                        case JTokenType.Array:
-                            result.Add(item.Key, string.Join(',', item.Value.AsEnumerable()));
-                            break;
-                        default:
-                            result.Add(item.Key, item.Value.ToString());
-                            break;
-                    }
-                    
-                }
-            }
-            catch
-            {
-                result.Add(string.Empty, posData);
-            }
-            return result;
-        }
-
         [HttpGet]
         [Route("invoices/{invoiceId}")]
         public async Task<IActionResult> Invoice(string invoiceId)
@@ -98,7 +64,7 @@ namespace BTCPayServer.Controllers
                 ProductInformation = invoice.ProductInformation,
                 StatusException = invoice.ExceptionStatus,
                 Events = invoice.Events,
-                PosData = ParsePosData(dto.PosData)
+                PosData = PosDataParser.ParsePosData(dto.PosData)
             };
 
             foreach (var data in invoice.GetPaymentMethods(null))
@@ -620,5 +586,43 @@ namespace BTCPayServer.Controllers
         {
             return _UserManager.GetUserId(User);
         }
+
+        public class PosDataParser
+        {
+            public static Dictionary<string, string> ParsePosData(string posData)
+            {
+                var result = new Dictionary<string,string>();
+                if (string.IsNullOrEmpty(posData))
+                {
+                    return result;
+                }
+            
+                try
+                {
+                
+                    var jObject =JObject.Parse(posData);
+                    foreach (var item in jObject)
+                    {
+                    
+                        switch (item.Value.Type)
+                        {
+                            case JTokenType.Array:
+                                result.Add(item.Key, string.Join(',', item.Value.AsEnumerable()));
+                                break;
+                            default:
+                                result.Add(item.Key, item.Value.ToString());
+                                break;
+                        }
+                    
+                    }
+                }
+                catch
+                {
+                    result.Add(string.Empty, posData);
+                }
+                return result;
+            }
+        }
+        
     }
 }

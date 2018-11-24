@@ -82,6 +82,27 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Fast", "Fast")]
+        public void PosDataParser_ParsesCorrectly()
+        {
+            PosDataParser(null, new Dictionary<string, string>());
+            PosDataParser("", new Dictionary<string, string>());
+            PosDataParser("{}", new Dictionary<string, string>());
+            PosDataParser("non-json-content", new Dictionary<string, string>(){ {string.Empty, "non-json-content"}});
+            PosDataParser("[1,2,3]", new Dictionary<string, string>(){ {string.Empty, "[1,2,3]"}});
+            PosDataParser("{ \"key\": \"value\"}", new Dictionary<string, string>(){ {"key", "value"}});
+            PosDataParser("{ \"key\": true}", new Dictionary<string, string>(){ {"key", "True"}});
+            PosDataParser("{ \"key\": \"value\", \"key2\": [\"value\", \"value2\"]}", 
+                new Dictionary<string, string>(){ {"key", "value"}, {"key2", "value,value2"}});
+            PosDataParser("{ invalidjson file here}", new Dictionary<string, string>(){ {String.Empty, "{ invalidjson file here}"}});
+        }
+
+        private void PosDataParser(string input, Dictionary<string, string> expectedOutput)
+        {
+            Assert.Equal(expectedOutput, InvoiceController.PosDataParser.ParsePosData(input));
+        }
+
+        [Fact]
+        [Trait("Fast", "Fast")]
         public void CanCalculateCryptoDue2()
         {
             var dummy = new Key().PubKey.GetAddress(Network.RegTest).ToString();

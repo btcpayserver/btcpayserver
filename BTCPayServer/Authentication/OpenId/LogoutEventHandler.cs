@@ -25,6 +25,7 @@ namespace BTCPayServer.Authentication.OpenId
             // Returning a SignOutResult will ask OpenIddict to redirect the user agent
             // to the post_logout_redirect_uri specified by the client application.
             await notification.Context.HttpContext.SignOutAsync(OpenIddictServerDefaults.AuthenticationScheme);
+            notification.Context.HandleResponse();
             return OpenIddictServerEventState.Handled;
         }
     }

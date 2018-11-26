@@ -36,10 +36,12 @@ namespace BTCPayServer.Authentication.OpenId
                     
                     // Ask OpenIddict to return a login_required error to the client application.
                     await notification.Context.HttpContext.ForbidAsync(OpenIddictServerDefaults.AuthenticationScheme, properties);
+                    notification.Context.HandleResponse();
                     return OpenIddictServerEventState.Handled;
                 }
 
                 await notification.Context.HttpContext.ChallengeAsync(OpenIddictServerDefaults.AuthenticationScheme);
+                notification.Context.HandleResponse();
                 return OpenIddictServerEventState.Handled;
             }
 

@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Hosting;
+﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Builder;
 using System;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,6 +26,7 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.IdentityModel.Tokens;
 using NETCore.Encrypt.Extensions.Internal;
+using OpenIddict.Abstractions;
 using OpenIddict.EntityFrameworkCore.Models;
 
 namespace BTCPayServer.Hosting
@@ -111,6 +112,14 @@ namespace BTCPayServer.Hosting
                     options.AddEventHandler<AuthorizationEventHandler>();
                     options.AddEventHandler<LogoutEventHandler>();
                    
+                    options.RegisterScopes(
+                        OpenIdConnectConstants.Scopes.OpenId,
+                        OpenIdConnectConstants.Scopes.OfflineAccess,
+                        OpenIdConnectConstants.Scopes.Email,
+                        OpenIdConnectConstants.Scopes.Profile,
+                        OpenIddictConstants.Scopes.Roles);
+
+                    
                     options.ConfigureSigningKey(Configuration);
                 });
 

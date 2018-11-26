@@ -65,7 +65,6 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.5" />
   </ItemGroup>
 
 	<ItemGroup>
@@ -134,6 +133,9 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>
+    <Content Update="Views\Server\LndRestServices.cshtml">
+      <Pack>$(IncludeRazorContentInPack)</Pack>
+    </Content>
     <Content Update="Views\Server\SSHService.cshtml">
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>
@@ -149,7 +151,7 @@
 	  <Content Update="Views\Public\PayButtonHandle.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
-	  <Content Update="Views\Server\LNDGRPCServices.cshtml">
+	  <Content Update="Views\Server\LndGrpcServices.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
 	  <Content Update="Views\Server\Maintenance.cshtml">

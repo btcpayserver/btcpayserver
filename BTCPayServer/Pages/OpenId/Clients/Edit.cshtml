@@ -88,10 +88,6 @@
             });
         $("#Client_Permissions").hide();
         $("#permissions-ui-js").show();
-        $(".toggle-advanced-mode").show().on("click",
-            function() {
-                $(".advanced-mode").toggle();
-            });
     })
 </script>
 
@@ -114,14 +110,26 @@
             }
             else
             {
-                @Html.Raw("View")
+                @Html.Raw("Edit")
             }
             Client
         </h2>
         <hr class="primary">
-        <a asp-page="../Tokens/Index" asp-route-id="@Model.Id">Tokens</a><span> - </span>
-        <a asp-page="../Authorizations/Index" asp-route-id="@Model.Id">Authorizations</a><span> - </span>
-        <a asp-page="./Delete" asp-route-id="@Model.Id">Delete</a>
+
+        @if (!string.IsNullOrEmpty(Model.Id))
+        {
+            <a asp-page="../Tokens/Index" asp-route-id="@Model.Id">Tokens</a>
+            <span> - </span>
+            <a asp-page="../Authorizations/Index" asp-route-id="@Model.Id">Authorizations</a>
+            <span> - </span>
+            <a asp-page="./Simple" asp-route-id="@Model.Id">Simple View</a>
+            <span> - </span>
+            <a asp-page="./Delete" asp-route-id="@Model.Id">Delete</a>
+        }
+        else
+        {
+            <a asp-page="./Simple">Advanced View</a>
+        }
     </div>
 </div>
 <div class="row">
@@ -163,33 +171,31 @@
                     <span asp-validation-for="Client.ClientSecret" class="text-danger"></span>
                 </div>
             }
-            @if (Model.ShowClientType)
-            {
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label asp-for="Client.Type" class="control-label"></label>
-                            <select asp-for="Client.Type" disabled class="form-control select-client-type">
-                                <option value="@OpenIddictConstants.ClientTypes.Public">@nameof(OpenIddictConstants.ClientTypes.Public)</option>
-                                <option value="@OpenIddictConstants.ClientTypes.Confidential">@nameof(OpenIddictConstants.ClientTypes.Confidential)</option>
-                                <option value="@OpenIddictConstants.ClientTypes.Hybrid">@nameof(OpenIddictConstants.ClientTypes.Hybrid)</option>
-                            </select>
-                            <span asp-validation-for="Client.Type" class="text-danger"></span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label asp-for="Client.ConsentType" class="control-label"></label>
-                            <select asp-for="Client.ConsentType" disabled class="form-control">
-                                <option value="@OpenIddictConstants.ConsentTypes.Implicit" selected>@nameof(OpenIddictConstants.ConsentTypes.Implicit)</option>
-                                <option value="@OpenIddictConstants.ConsentTypes.Explicit" disabled>@nameof(OpenIddictConstants.ConsentTypes.Explicit)</option>
-                                <option value="@OpenIddictConstants.ConsentTypes.External" disabled>@nameof(OpenIddictConstants.ConsentTypes.External)</option>
-                            </select>
-                            <span asp-validation-for="Client.ConsentType" class="text-danger"></span>
-                        </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="Client.Type" class="control-label"></label>
+                        <select asp-for="Client.Type" class="form-control select-client-type">
+                            <option value="@OpenIddictConstants.ClientTypes.Public">@nameof(OpenIddictConstants.ClientTypes.Public)</option>
+                            <option value="@OpenIddictConstants.ClientTypes.Confidential">@nameof(OpenIddictConstants.ClientTypes.Confidential)</option>
+                            <option value="@OpenIddictConstants.ClientTypes.Hybrid">@nameof(OpenIddictConstants.ClientTypes.Hybrid)</option>
+                        </select>
+                        <span asp-validation-for="Client.Type" class="text-danger"></span>
                     </div>
                 </div>
-            }
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="Client.ConsentType" class="control-label"></label>
+                        <select asp-for="Client.ConsentType" disabled class="form-control">
+                            <option value="@OpenIddictConstants.ConsentTypes.Implicit" selected>@nameof(OpenIddictConstants.ConsentTypes.Implicit)</option>
+                            <option value="@OpenIddictConstants.ConsentTypes.Explicit" disabled>@nameof(OpenIddictConstants.ConsentTypes.Explicit)</option>
+                            <option value="@OpenIddictConstants.ConsentTypes.External" disabled>@nameof(OpenIddictConstants.ConsentTypes.External)</option>
+                        </select>
+                        <span asp-validation-for="Client.ConsentType" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
 
             <div class="row">
                 <div class="col-md-6">
@@ -268,40 +274,37 @@
                     </div>
                 </div>
             </div>
-            <button type="button" class="toggle-advanced-mode btn btn-link mb-2" style="display: none">Advanced Mode</button>
-            <div class="form-group advanced-mode" style="display: none">
-                <label asp-for="Client.Permissions" class="control-label"></label>
-                <select multiple asp-for="Client.Permissions" asp-items="Model.Permissions" class="form-control" style="height: 300px"></select>
+            <label asp-for="Client.Permissions" class="control-label"></label>
+            <select multiple asp-for="Client.Permissions" asp-items="Model.Permissions" class="form-control" style="height: 300px"></select>
 
-                <div style="display: none" id="permissions-ui-js">
-                    <ul class="list-group">
-                        @foreach (var x in Model.Permissions.GroupBy(item => item.Group))
+            <div style="display: none" id="permissions-ui-js">
+                <ul class="list-group">
+                    @foreach (var x in Model.Permissions.GroupBy(item => item.Group))
+                    {
+                        <li class="list-group-item">
+                            <h3>@x.Key.Name</h3>
+                        </li>
+
+
+                        foreach (var y in x)
                         {
                             <li class="list-group-item">
-                                <h3>@x.Key.Name</h3>
+                                <div class="form-check">
+                                    <input class="form-check-input cb-permissions" type="checkbox" ) data-key="@y.Value">
+                                    <label class="form-check-label" asp-for="@y">
+                                        @y.Text
+                                    </label>
+                                </div>
                             </li>
-
-
-                            foreach (var y in x)
-                            {
-                                <li class="list-group-item">
-                                    <div class="form-check">
-                                        <input class="form-check-input cb-permissions" type="checkbox" ) data-key="@y.Value">
-                                        <label class="form-check-label" asp-for="@y">
-                                            @y.Text
-                                        </label>
-                                    </div>
-                                </li>
-                            }
                         }
-                    </ul>
-
-                </div>
-                <span asp-validation-for="Client.Permissions" class="text-danger"></span>
+                    }
+                </ul>
             </div>
+            <span asp-validation-for="Client.Permissions" class="text-danger"></span>
+
             <input type="hidden" asp-for="Client.ApplicationUserId"/>
 
-            <div class="form-group">
+            <div class="form-group mt-4">
                 <input type="submit" class="btn btn-primary"/>
             </div>
         </form>
@@ -334,12 +337,7 @@
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly OpenIddictApplicationManager<BTCPayOpenIdClient> _applicationManager;
-        private readonly BTCPayServerOptions _options;
-
-        public bool ShowClientType
-        {
-            get { return _options.OpenIdOptions.EnforceGrantTypes; }
-        }
+        private readonly ApplicationDbContext _dbContext;
 
         [BindProperty]
         public EditClientModel Client { get; set; }
@@ -354,12 +352,12 @@
 
         public EditClient(
             UserManager<ApplicationUser> userManager,
-            OpenIddictApplicationManager<BTCPayOpenIdClient> applicationManager,
-            BTCPayServerOptions options)
+            OpenIddictApplicationManager<BTCPayOpenIdClient> applicationManager, 
+            ApplicationDbContext dbContext)
         {
             _userManager = userManager;
             _applicationManager = applicationManager;
-            _options = options;
+            _dbContext = dbContext;
             PopulatePermissions();
         }
 
@@ -382,26 +380,6 @@
 
         private async Task<BTCPayOpenIdClient> ValidateAndSanitizeApplication()
         {
-    //            if (!_options.OpenIdOptions.EnforceGrantTypes && 
-    //                !Client.Permissions.Any(s => s.StartsWith(OpenIddictConstants.Permissions.Prefixes.GrantType)))
-    //            {
-    //                Client.Permissions.Add(OpenIddictConstants.Permissions.GrantTypes.Password);
-    //                Client.Permissions.Add(OpenIddictConstants.Permissions.GrantTypes.Implicit);
-    //                Client.Permissions.Add(OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode);
-    //                Client.Permissions.Add(OpenIddictConstants.Permissions.GrantTypes.ClientCredentials);
-    //                Client.Permissions.Add(OpenIddictConstants.Permissions.GrantTypes.RefreshToken);
-    //            }
-    //
-    //            if (!_options.OpenIdOptions.EnforceGrantTypes &&
-    //                !Client.Permissions.Any(s => s.StartsWith(OpenIddictConstants.Permissions.Prefixes.Endpoint)))
-    //            {
-    //                Client.Permissions.Add(OpenIddictConstants.Permissions.Endpoints.Token);
-    //                Client.Permissions.Add(OpenIddictConstants.Permissions.Endpoints.Authorization);
-    //                Client.Permissions.Add(OpenIddictConstants.Permissions.Endpoints.Introspection);
-    //                Client.Permissions.Add(OpenIddictConstants.Permissions.Endpoints.Logout);
-    //                Client.Permissions.Add(OpenIddictConstants.Permissions.Endpoints.Revocation);
-    //            }
-
             var application = new BTCPayOpenIdClient();
             if (string.IsNullOrEmpty(Id))
             {
@@ -422,102 +400,16 @@
             await _applicationManager.PopulateAsync(application, Client);
             var permissions = (await _applicationManager.GetPermissionsAsync(application)).ToList();
 
-            ComputeClientType(permissions, application);
-
             application.ClientSecret = null;
             await ValidateUrlArray("Client.RedirectUris", await _applicationManager.GetRedirectUrisAsync(application));
 
             await ValidateUrlArray("Client.PostLogoutRedirectUris", await _applicationManager.GetPostLogoutRedirectUrisAsync(application));
-
-
-            if (permissions.Contains(OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode))
-            {
-                if (!permissions.Contains(OpenIddictConstants.Permissions.Endpoints.Authorization))
-                {
-                    permissions.Add(OpenIddictConstants.Permissions.Endpoints.Authorization);
-                }
-                if (!permissions.Contains(OpenIddictConstants.Permissions.Endpoints.Token))
-                {
-                    permissions.Add(OpenIddictConstants.Permissions.Endpoints.Token);
-                }
-            }
-
-            if (permissions.Contains(OpenIddictConstants.Permissions.GrantTypes.Implicit))
-            {
-                if (!permissions.Contains(OpenIddictConstants.Permissions.Endpoints.Authorization))
-                {
-                    permissions.Add(OpenIddictConstants.Permissions.Endpoints.Authorization);
-                }
-                if (!permissions.Contains(OpenIddictConstants.Permissions.Endpoints.Token))
-                {
-                    permissions.Add(OpenIddictConstants.Permissions.Endpoints.Token);
-                }
-            }
-            if (permissions.Contains(OpenIddictConstants.Permissions.GrantTypes.ClientCredentials))
-            {
-                if (!permissions.Contains(OpenIddictConstants.Permissions.Endpoints.Token))
-                {
-                    permissions.Add(OpenIddictConstants.Permissions.Endpoints.Token);
-                }
-                var userid = _userManager.GetUserId(User);
-                var userScope = $"{OpenIddictConstants.Permissions.Prefixes.Scope}user:{userid}";
-                permissions.Add(userScope);
-            }
-            if (permissions.Contains(OpenIddictConstants.Permissions.GrantTypes.RefreshToken))
-            {
-                if (!permissions.Contains(OpenIddictConstants.Permissions.Endpoints.Token))
-                {
-                    permissions.Add(OpenIddictConstants.Permissions.Endpoints.Token);
-                }
-                if (!permissions.Contains(OpenIddictConstants.Scopes.OfflineAccess))
-                {
-                    permissions.Add(OpenIddictConstants.Scopes.OfflineAccess);
-                }
-            }
-            else
-            {
-                permissions.Remove(OpenIddictConstants.Scopes.OfflineAccess);
-            }
-            if (permissions.Contains(OpenIddictConstants.Permissions.GrantTypes.Password))
-            {
-                if (!permissions.Contains(OpenIddictConstants.Permissions.Endpoints.Token))
-                {
-                    permissions.Add(OpenIddictConstants.Permissions.Endpoints.Token);
-                }
-            }
-            if (!permissions.Contains(OpenIddictConstants.Scopes.OpenId))
-            {
-                permissions.Add(OpenIddictConstants.Scopes.OpenId);
-            }
 
             application.Permissions = new JArray(permissions).ToString(Formatting.None);
             await _applicationManager.PopulateAsync(Client, application);
 
             return application;
         }
-
-        private void ComputeClientType(List<string> permissions, BTCPayOpenIdClient application)
-        {
-            var privateMethods = false;
-            var publicMethods = false;
-            if (permissions.Contains(OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode) ||
-                permissions.Contains(OpenIddictConstants.Permissions.GrantTypes.ClientCredentials))
-            {
-                privateMethods = true;
-            }
-
-            if (permissions.Contains(OpenIddictConstants.Permissions.GrantTypes.Implicit) ||
-                permissions.Contains(OpenIddictConstants.Permissions.GrantTypes.RefreshToken) ||
-                permissions.Contains(OpenIddictConstants.Permissions.GrantTypes.Password))
-            {
-                publicMethods = true;
-            }
-
-            application.Type = publicMethods && privateMethods ? OpenIddictConstants.ClientTypes.Hybrid :
-                publicMethods && !privateMethods ? OpenIddictConstants.ClientTypes.Public :
-                    OpenIddictConstants.ClientTypes.Confidential;
-        }
-
 
         public async Task<IActionResult> OnPostAsync()
         {
@@ -545,27 +437,31 @@
 
     //HACK: There is a bug where the validator in openiddict  does not allow you to update. So we will delete and recreate
 
-                    Client.ResetSecret = true;
-                    await _applicationManager.DeleteAsync(application);
-                    var secretworkaround = Client.ResetSecret &&
-                                           application.Type != OpenIddictConstants.ClientTypes.Public ?
-                        Guid.NewGuid().ToString() : null;
+                    using (var x = await _dbContext.Database.BeginTransactionAsync())
+                    {
+                        try
+                        {
+
+                            Client.ResetSecret = true;
+                            await _applicationManager.DeleteAsync(application);
+                            var secretworkaround = Client.ResetSecret &&
+                                                   application.Type != OpenIddictConstants.ClientTypes.Public ?
+                                Guid.NewGuid().ToString() : null;
+
+                            application.Id = null;
+                            await _applicationManager.CreateAsync(application, secretworkaround);
+                            x.Commit();
+                            return RedirectToPage("./Edit", new {Id = application.Id, StatusMessage = $"Client saved successfully. {(!string.IsNullOrEmpty(secretworkaround) ? $"Client Secret is {secretworkaround}" : "")}"});
+
+                        }
+                        catch (Exception e)
+                        {
+                            x.Rollback();
+                            ModelState.AddModelError(string.Empty, e.Message);
+                        }
+                    }
 
 
-                    await _applicationManager.CreateAsync(application, secretworkaround);
-
-                    StatusMessage = $"Client saved successfully. {(!string.IsNullOrEmpty(secretworkaround) ? $"Client Secret is {secretworkaround}" : "")}";
-                    Id = application.Id;
-                    return Page();
-
-    //ENDHACK
-
-                    var secret = Client.ResetSecret &&
-                                 application.Type != OpenIddictConstants.ClientTypes.Public ?
-                        Guid.NewGuid().ToString() : null;
-                    await _applicationManager.UpdateAsync(application, secret);
-
-                    StatusMessage = $"Client saved successfully. {(!string.IsNullOrEmpty(secret) ? $"Client Secret is {secret}" : "")}";
 
                     return Page();
                 }

@@ -32,7 +32,7 @@
                     }
                     else
                     {
-                        @Html.Raw("View")
+                        @Html.Raw("Edit")
                     }
                     Client
                 </h2>
@@ -44,7 +44,13 @@
                     <span> - </span>
                     <a asp-page="../Authorizations/Index" asp-route-id="@Model.Id">Authorizations</a>
                     <span> - </span>
+                    <a asp-page="./Edit" asp-route-id="@Model.Id">Advanced View</a>
+                    <span> - </span>
                     <a asp-page="./Delete" asp-route-id="@Model.Id">Delete</a>
+                }
+                else
+                {
+                    <a asp-page="./Edit" asp-route-id="@Model.Id">Advanced View</a>
                 }
             </div>
         </div>
@@ -58,9 +64,33 @@
                         <input asp-for="Client.Name" class="form-control"/>
                         <span asp-validation-for="Client.Name" class="text-danger"></span>
                     </div>
+                    @if (!string.IsNullOrEmpty(Model.Id))
+                    {
+                        <div class="form-group">
+                            <label asp-for="Client.ClientId" class="control-label"></label>
+                            <input asp-for="Client.ClientId" readonly class="form-control"/>
+                            <span asp-validation-for="Client.ClientId" class="text-danger"></span>
+                        </div>
+                        if (Model.Client.ClientType != OpenIddictConstants.ClientTypes.Public)
+                        {
+                            <div class="form-group">
+                                <label class="control-label">Client Secret</label>
+                                <input value="Client Secrets are hashed and cannot be displayed after being generated" readonly class="form-control"/>
+                                <div class="form-check">
+
+                                    <input asp-for="Client.ResetSecret" readonly class="form-check-input"/>
+                                    <label asp-for="Client.ResetSecret"></label>
+                                </div>
+                                <span asp-validation-for="Client.ResetSecret" class="text-danger"></span>
+                            </div>
+                        }
+                    }
+
                     <ul class="list-group">
                         <li class="list-group-item">
                             <label asp-for="Client.ClientType" class="control-label"></label>*
+                            
+                            <span asp-validation-for="Client.ClientType" class="text-danger"></span>
                         </li>
 
                         <li class="list-group-item">
@@ -69,7 +99,7 @@
                                 <label class="form-check-label">
                                     @OpenIddictConstants.ClientTypes.Public
                                 </label>
-                                <p>
+                                <p class="pt-1 mb-0">
                                     A client that does not need client secrets. This is for when integrating with an SPA or an environment where users would be able to access the client secret
                                 </p>
                             </div>
@@ -81,7 +111,7 @@
                                 <label class="form-check-label">
                                     @OpenIddictConstants.ClientTypes.Confidential
                                 </label>
-                                <p>
+                                <p class="pt-1 mb-0">
                                     A client that requires that you send the client secret. For when integrating with codebases where you can safely store the client secret
                                 </p>
 
@@ -94,66 +124,65 @@
                                 <label class="form-check-label">
                                     @OpenIddictConstants.ClientTypes.Hybrid
                                 </label>
-                                <p>
-                                    Behaves exactly like a Confidential client but is able to retrieve an access token from the the authorization endpoints.(This allows creating \"hybrid\" applications that have a JS frontend using the access token directly and a server-side backend retrieving another access token using the authorization code.)
+                                <p class="pt-1 mb-0">
+                                    Behaves exactly like a Confidential client but is able to retrieve an access token from the the authorization endpoints. <br/>This allows creating "hybrid" applications that have a JS frontend using the access token directly and a server-side backend retrieving another access token using the authorization code.
                                 </p>
                             </div>
                         </li>
 
-                        <li class="list-group-item">
-                            <span asp-validation-for="Client.ClientType" class="text-danger"></span>
-                        </li>
                     </ul>
-                    <ul class="list-group">
-                        <li class="list-group-item">
-                            Allowed Grant Types
-                        </li>
+                    @if (Model.OpenIdOptions.EnforceGrantTypes)
+                    {
+                        <ul class="list-group mt-4">
+                            <li class="list-group-item">
+                                Allowed Grant Types
+                            </li>
 
-                        <li class="list-group-item">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" asp-for="Client.PasswordGrantType">
-                                <label class="form-check-label" asp-for="Client.PasswordGrantType"></label>
+                            <li class="list-group-item">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" asp-for="Client.PasswordGrantType">
+                                    <label class="form-check-label" asp-for="Client.PasswordGrantType"></label>
 
-                                <span asp-validation-for="Client.PasswordGrantType" class="text-danger"></span>
-                                <p>Allow authentication through your email and password</p>
-                            </div>
-                        </li>
+                                    <span asp-validation-for="Client.PasswordGrantType" class="text-danger"></span>
+                                    <p>Allow authentication through your email and password</p>
+                                </div>
+                            </li>
 
-                        <li class="list-group-item">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" asp-for="Client.ClientCredentialsGrantType">
-                                <label class="form-check-label" asp-for="Client.ClientCredentialsGrantType"></label>
+                            <li class="list-group-item">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" asp-for="Client.ClientCredentialsGrantType">
+                                    <label class="form-check-label" asp-for="Client.ClientCredentialsGrantType"></label>
 
-                                <span asp-validation-for="Client.ClientCredentialsGrantType" class="text-danger"></span>
-                                <p>Allow authentication through your client id and client secret. Note: requires your app to be <b>confidential</b> </p>
-                            </div>
-                        </li>
+                                    <span asp-validation-for="Client.ClientCredentialsGrantType" class="text-danger"></span>
+                                    <p>Allow authentication through your client id and client secret. Note: requires your app to be <b>confidential</b> </p>
+                                </div>
+                            </li>
 
-                        <li class="list-group-item">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" asp-for="Client.ImplicitGrantType">
-                                <label class="form-check-label" asp-for="Client.ImplicitGrantType"></label>
+                            <li class="list-group-item">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" asp-for="Client.ImplicitGrantType">
+                                    <label class="form-check-label" asp-for="Client.ImplicitGrantType"></label>
 
-                                <span asp-validation-for="Client.ImplicitGrantType" class="text-danger"></span>
-                                <p>Allow authentication by redirecting your user to our login screen which then redirects to the specified redirect uri with an access token. Recommended for Single Page Applications</p>
-                            </div>
-                        </li>
+                                    <span asp-validation-for="Client.ImplicitGrantType" class="text-danger"></span>
+                                    <p>Allow authentication by redirecting your user to our login screen which then redirects to the specified redirect uri with an access token. Recommended for Single Page Applications</p>
+                                </div>
+                            </li>
 
-                        <li class="list-group-item">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" asp-for="Client.AuthorizationGrantType">
-                                <label class="form-check-label" asp-for="Client.AuthorizationGrantType"></label>
+                            <li class="list-group-item">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" asp-for="Client.AuthorizationGrantType">
+                                    <label class="form-check-label" asp-for="Client.AuthorizationGrantType"></label>
 
-                                <span asp-validation-for="Client.AuthorizationGrantType" class="text-danger"></span>
-                                <p>
-                                    Similar to the Implicit Flow but is meant for server-side web applications.
-                                    Allow authentication by redirecting your user to our login screen which then redirects to the specified redirect uri with an authorization code taht the backend can exchange for an access token.
-                                </p>
-                            </div>
-                        </li>
-                    </ul>
-
-                    <div class="form-group">
+                                    <span asp-validation-for="Client.AuthorizationGrantType" class="text-danger"></span>
+                                    <p>
+                                        Similar to the Implicit Flow but is meant for server-side web applications.
+                                        Allow authentication by redirecting your user to our login screen which then redirects to the specified redirect uri with an authorization code taht the backend can exchange for an access token.
+                                    </p>
+                                </div>
+                            </li>
+                        </ul>
+                    }
+                    <div class="form-group mt-4">
                         <input type="submit" class="btn btn-primary"/>
                     </div>
                 </form>
@@ -170,6 +199,7 @@
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ApplicationDbContext _dbContext;
+        private readonly BTCPayServerOptions _options;
         private readonly OpenIddictApplicationManager<BTCPayOpenIdClient> _applicationManager;
 
         [BindProperty(SupportsGet = true)]
@@ -181,14 +211,18 @@
         [BindProperty]
         public SimpleBtcPayClient Client { get; set; }
 
+        public OpenIdOptions OpenIdOptions => 
+            _options.OpenIdOptions;
 
         public EditClientSimple(
             UserManager<ApplicationUser> userManager,
             ApplicationDbContext dbContext,
+            BTCPayServerOptions options,
             OpenIddictApplicationManager<BTCPayOpenIdClient> applicationManager)
         {
             _userManager = userManager;
             _dbContext = dbContext;
+            _options = options;
             _applicationManager = applicationManager;
         }
 
@@ -225,38 +259,116 @@
                 }
                 await _applicationManager.PopulateAsync(descriptor, app);
             }
-            if (Client.ValidateAndPopulate(ModelState, descriptor))
+
+            var permissions = new List<string>();
+    //always add refresh token grant type
+            permissions.Add(OpenIddictConstants.Permissions.GrantTypes.RefreshToken);
+            if (Client.AuthorizationGrantType)
             {
-                var app = new BTCPayOpenIdClient();
-                await _applicationManager.PopulateAsync(app, descriptor);
-
-                using (var x = await _dbContext.Database.BeginTransactionAsync())
+                permissions.Add(OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode);
+            }
+            if (Client.ImplicitGrantType)
+            {
+                permissions.Add(OpenIddictConstants.Permissions.GrantTypes.Implicit);
+                if (Client.ClientType != OpenIddictConstants.ClientTypes.Public)
                 {
-                    try
-                    {
-                        if (!string.IsNullOrEmpty(Id))
-                        {
-                            await _applicationManager.DeleteAsync(await _applicationManager.FindByIdAsync(Id));
-                        }
-
-                        app.ApplicationUserId = userId;
-                        await _applicationManager.CreateAsync(app);
-
-
-                        x.Commit();
-                        return RedirectToPage("Simple", new
-                        {
-                            Id = app.Id,
-                            StatusMessage = "Client Created"
-                        });
-                    }
-                    catch (Exception e)
-                    {
-                        x.Rollback();
-                        ModelState.AddModelError(string.Empty, e.Message);
-                    }
+                    ModelState.AddModelError($"{nameof(Client)}.{nameof(Client.ClientType)}", "Implicit cannot be used with a confidential/hybrid client.");
                 }
             }
+            if (Client.PasswordGrantType)
+            {
+                permissions.Add(OpenIddictConstants.Permissions.GrantTypes.Password);
+            }
+            if (Client.ClientCredentialsGrantType)
+            {
+                permissions.Add(OpenIddictConstants.Permissions.GrantTypes.ClientCredentials);
+                if (Client.ClientType == OpenIddictConstants.ClientTypes.Public)
+                {
+                    ModelState.AddModelError($"{nameof(Client)}.{nameof(Client.ClientType)}", "Client Credentials cannot be used with a public client.");
+                }
+            }
+
+            var redirectUrisRaw = (Client.AllowedRedirectUrls ?? "").Split(new[] {"\r\n", "\r", "\n"},
+                StringSplitOptions.None).Select(s => s.Trim());
+            var redirectUris = new List<Uri>();
+            foreach (var redirectUri in redirectUrisRaw)
+            {
+                if (string.IsNullOrEmpty(redirectUri))
+                {
+                    continue;
+                }
+                if (!Uri.TryCreate(redirectUri, UriKind.Absolute, out var result) || !result.IsWellFormedOriginalString())
+                {
+                    ModelState.AddModelError($"{nameof(Client)}.{nameof(Client.AllowedRedirectUrls)}", "Callback URLs must be valid absolute URLs.");
+                    break;
+                }
+                redirectUris.Add(result);
+            }
+
+            var logoutRedirectUrisRaw = (Client.AllowedLogoutRedirectUrls ?? "").Split(new[] {"\r\n", "\r", "\n"},
+                StringSplitOptions.None).Select(s => s.Trim());
+
+            var logoutRedirectUris = new List<Uri>();
+            foreach (var redirectUri in logoutRedirectUrisRaw)
+            {
+                if (string.IsNullOrEmpty(redirectUri))
+                {
+                    continue;
+                }
+                if (!Uri.TryCreate(redirectUri, UriKind.Absolute, out var result) || !result.IsWellFormedOriginalString())
+                {
+                    ModelState.AddModelError($"{nameof(Client)}.{nameof(Client.AllowedRedirectUrls)}", "Callback URLs must be valid absolute URLs.");
+                    break;
+                }
+                logoutRedirectUris.Add(result);
+            }
+
+            if (ModelState.ErrorCount > 0)
+            {
+                return Page();
+            }
+
+            descriptor.RedirectUris.Clear();
+            descriptor.RedirectUris.UnionWith(redirectUris);
+            descriptor.PostLogoutRedirectUris.Clear();
+            descriptor.RedirectUris.UnionWith(logoutRedirectUris);
+
+            descriptor.Type = Client.ClientType;
+
+            descriptor.Permissions.Clear();
+            descriptor.Permissions.UnionWith(permissions);
+
+
+            var openIdClient = new BTCPayOpenIdClient();
+            await _applicationManager.PopulateAsync(openIdClient, descriptor);
+
+            using (var x = await _dbContext.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    if (!string.IsNullOrEmpty(Id))
+                    {
+                        await _applicationManager.DeleteAsync(await _applicationManager.FindByIdAsync(Id));
+                    }
+
+                    openIdClient.ApplicationUserId = userId;
+                    await _applicationManager.CreateAsync(openIdClient);
+
+
+                    x.Commit();
+                    return RedirectToPage("Simple", new
+                    {
+                        Id = openIdClient.Id,
+                        StatusMessage = "Client Created"
+                    });
+                }
+                catch (Exception e)
+                {
+                    x.Rollback();
+                    ModelState.AddModelError(string.Empty, e.Message);
+                }
+            }
+
             return Page();
         }
     }
@@ -275,7 +387,7 @@
             OpenIddictConstants.ClientTypes.Confidential,
             OpenIddictConstants.ClientTypes.Hybrid
         })]
-        [Display(Name = "The type of client. ")]
+        [Display(Name = "Client Type")]
         public string ClientType { get; set; }
 
         [Display(Name = "Allowed Urls to redirect to after logging in. Each line represents an allowed url")]
@@ -297,6 +409,9 @@
         [Display(Name = "Authorization Code Flow")]
         public bool AuthorizationGrantType { get; set; }
 
+        [Display(Name = "Reset Client Secret")]
+        public bool ResetSecret { get; set; }
+
         public SimpleBtcPayClient()
         {
         }
@@ -305,22 +420,13 @@
         {
             Name = client.DisplayName;
             ClientId = client.ClientId;
+            ClientType = client.Type;
             AllowedRedirectUrls = string.Join(Environment.NewLine, client.RedirectUris);
             AllowedLogoutRedirectUrls = string.Join(Environment.NewLine, client.PostLogoutRedirectUris);
             PasswordGrantType = client.Permissions.Contains(OpenIddictConstants.Permissions.GrantTypes.Password);
             ImplicitGrantType = client.Permissions.Contains(OpenIddictConstants.Permissions.GrantTypes.Implicit);
             AuthorizationGrantType = client.Permissions.Contains(OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode);
             ClientCredentialsGrantType = client.Permissions.Contains(OpenIddictConstants.Permissions.GrantTypes.ClientCredentials);
-        }
- 
-        public bool ValidateAndPopulate(ModelStateDictionary modelState, OpenIddictApplication client)
-        {
-            client.Permissions = new HashSet<string>()
-            {
-                
-            };
-            
-            return false;
         }
     }
 

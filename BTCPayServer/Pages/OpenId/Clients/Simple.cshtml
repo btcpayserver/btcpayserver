@@ -89,7 +89,7 @@
                     <ul class="list-group">
                         <li class="list-group-item">
                             <label asp-for="Client.ClientType" class="control-label"></label>*
-                            
+
                             <span asp-validation-for="Client.ClientType" class="text-danger"></span>
                         </li>
 
@@ -131,9 +131,25 @@
                         </li>
 
                     </ul>
+                    <div class="row mt-2">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Client.AllowedRedirectUrls" class="control-label"></label>
+                                <textarea asp-for="Client.AllowedRedirectUrls" class="form-control" ></textarea>
+                                <span asp-validation-for="Client.AllowedRedirectUrls" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Client.AllowedLogoutRedirectUrls" class="control-label"></label>
+                                <textarea asp-for="Client.AllowedLogoutRedirectUrls" class="form-control" ></textarea>
+                                <span asp-validation-for="Client.AllowedLogoutRedirectUrls" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
                     @if (Model.OpenIdOptions.EnforceGrantTypes)
                     {
-                        <ul class="list-group mt-4">
+                        <ul class="list-group mt-2">
                             <li class="list-group-item">
                                 Allowed Grant Types
                             </li>
@@ -211,7 +227,7 @@
         [BindProperty]
         public SimpleBtcPayClient Client { get; set; }
 
-        public OpenIdOptions OpenIdOptions => 
+        public OpenIdOptions OpenIdOptions =>
             _options.OpenIdOptions;
 
         public EditClientSimple(
@@ -262,29 +278,32 @@
 
             var permissions = new List<string>();
     //always add refresh token grant type
-            permissions.Add(OpenIddictConstants.Permissions.GrantTypes.RefreshToken);
-            if (Client.AuthorizationGrantType)
+            if (_options.OpenIdOptions.EnforceGrantTypes)
             {
-                permissions.Add(OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode);
-            }
-            if (Client.ImplicitGrantType)
-            {
-                permissions.Add(OpenIddictConstants.Permissions.GrantTypes.Implicit);
-                if (Client.ClientType != OpenIddictConstants.ClientTypes.Public)
+                permissions.Add(OpenIddictConstants.Permissions.GrantTypes.RefreshToken);
+                if (Client.AuthorizationGrantType)
                 {
-                    ModelState.AddModelError($"{nameof(Client)}.{nameof(Client.ClientType)}", "Implicit cannot be used with a confidential/hybrid client.");
+                    permissions.Add(OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode);
                 }
-            }
-            if (Client.PasswordGrantType)
-            {
-                permissions.Add(OpenIddictConstants.Permissions.GrantTypes.Password);
-            }
-            if (Client.ClientCredentialsGrantType)
-            {
-                permissions.Add(OpenIddictConstants.Permissions.GrantTypes.ClientCredentials);
-                if (Client.ClientType == OpenIddictConstants.ClientTypes.Public)
+                if (Client.ImplicitGrantType)
                 {
-                    ModelState.AddModelError($"{nameof(Client)}.{nameof(Client.ClientType)}", "Client Credentials cannot be used with a public client.");
+                    permissions.Add(OpenIddictConstants.Permissions.GrantTypes.Implicit);
+                    if (Client.ClientType != OpenIddictConstants.ClientTypes.Public)
+                    {
+                        ModelState.AddModelError($"{nameof(Client)}.{nameof(Client.ClientType)}", "Implicit cannot be used with a confidential/hybrid client.");
+                    }
+                }
+                if (Client.PasswordGrantType)
+                {
+                    permissions.Add(OpenIddictConstants.Permissions.GrantTypes.Password);
+                }
+                if (Client.ClientCredentialsGrantType)
+                {
+                    permissions.Add(OpenIddictConstants.Permissions.GrantTypes.ClientCredentials);
+                    if (Client.ClientType == OpenIddictConstants.ClientTypes.Public)
+                    {
+                        ModelState.AddModelError($"{nameof(Client)}.{nameof(Client.ClientType)}", "Client Credentials cannot be used with a public client.");
+                    }
                 }
             }
 
@@ -317,7 +336,7 @@
                 }
                 if (!Uri.TryCreate(redirectUri, UriKind.Absolute, out var result) || !result.IsWellFormedOriginalString())
                 {
-                    ModelState.AddModelError($"{nameof(Client)}.{nameof(Client.AllowedRedirectUrls)}", "Callback URLs must be valid absolute URLs.");
+                    ModelState.AddModelError($"{nameof(Client)}.{nameof(Client.AllowedLogoutRedirectUrls)}", "Callback URLs must be valid absolute URLs.");
                     break;
                 }
                 logoutRedirectUris.Add(result);
@@ -327,12 +346,13 @@
             {
                 return Page();
             }
+            
 
             descriptor.RedirectUris.Clear();
             descriptor.RedirectUris.UnionWith(redirectUris);
             descriptor.PostLogoutRedirectUris.Clear();
-            descriptor.RedirectUris.UnionWith(logoutRedirectUris);
-
+            descriptor.PostLogoutRedirectUris.UnionWith(logoutRedirectUris);
+            descriptor.DisplayName = Client.Name;
             descriptor.Type = Client.ClientType;
 
             descriptor.Permissions.Clear();
@@ -350,16 +370,28 @@
                     {
                         await _applicationManager.DeleteAsync(await _applicationManager.FindByIdAsync(Id));
                     }
+                    else
+                    {
+                        openIdClient.ClientId = Guid.NewGuid().ToString();
+                    }
+                    openIdClient.ClientSecret = null;
+                    Client.ResetSecret = openIdClient.Type != OpenIddictConstants.ClientTypes.Public;
 
+                    string secret = null;
+                    if (Client.ResetSecret)
+                    {
+                        secret = Guid.NewGuid().ToString();
+                    }
+                    
                     openIdClient.ApplicationUserId = userId;
-                    await _applicationManager.CreateAsync(openIdClient);
+                    await _applicationManager.CreateAsync(openIdClient, secret);
 
 
                     x.Commit();
                     return RedirectToPage("Simple", new
                     {
                         Id = openIdClient.Id,
-                        StatusMessage = "Client Created"
+                        StatusMessage = $"Client Saved{(!string.IsNullOrEmpty(secret) ? $"Client Secret is {secret}" : "")}"
                     });
                 }
                 catch (Exception e)

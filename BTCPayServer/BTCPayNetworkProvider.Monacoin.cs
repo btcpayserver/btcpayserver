@@ -24,7 +24,7 @@ namespace BTCPayServer
                 DefaultRateRules = new[] 
                 {
                                 "MONA_X = MONA_BTC * BTC_X",
-                                "MONA_BTC = zaif(MONA_BTC)"
+                                "MONA_BTC = bittrex(MONA_BTC)"
                 },
                 CryptoImagePath = "imlegacy/monacoin.png",
                 LightningImagePath = "imlegacy/mona-lightning.svg",

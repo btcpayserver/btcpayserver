@@ -45,11 +45,13 @@ namespace BTCPayServer.Controllers
             {
                 Title = settings.Title,
                 Step = step.ToString(CultureInfo.InvariantCulture),
+                EnableShoppingCart = settings.EnableShoppingCart,
                 ShowCustomAmount = settings.ShowCustomAmount,
                 CurrencySymbol = currency.Symbol,
                 Items = _AppsHelper.Parse(settings.Template, settings.Currency),
                 ButtonText = settings.ButtonText,
                 CustomButtonText = settings.CustomButtonText,
+                CustomTipText = settings.CustomTipText,
                 CustomCSSLink = settings.CustomCSSLink
             });
         }
@@ -74,6 +76,10 @@ namespace BTCPayServer.Controllers
             if (app == null)
                 return NotFound();
             var settings = app.GetSettings<PointOfSaleSettings>();
+            if (string.IsNullOrEmpty(choiceKey) && !settings.EnableShoppingCart)
+            {
+                return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
+            }
             if (string.IsNullOrEmpty(choiceKey) && !settings.ShowCustomAmount)
             {
                 return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });

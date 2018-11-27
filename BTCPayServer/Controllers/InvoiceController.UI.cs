@@ -14,13 +14,13 @@ using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using NBitcoin;
 using NBitpayClient;
 using NBXplorer;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Controllers
 {
@@ -41,7 +41,6 @@ namespace BTCPayServer.Controllers
 
             var dto = invoice.EntityToDTO(_NetworkProvider);
             var store = await _StoreRepository.FindStore(invoice.StoreId);
-
             InvoiceDetailsModel model = new InvoiceDetailsModel()
             {
                 StoreName = store.StoreName,
@@ -64,7 +63,8 @@ namespace BTCPayServer.Controllers
                 RedirectUrl = invoice.RedirectURL,
                 ProductInformation = invoice.ProductInformation,
                 StatusException = invoice.ExceptionStatus,
-                Events = invoice.Events
+                Events = invoice.Events,
+                PosData = PosDataParser.ParsePosData(dto.PosData)
             };
 
             foreach (var data in invoice.GetPaymentMethods(null))
@@ -586,5 +586,43 @@ namespace BTCPayServer.Controllers
         {
             return _UserManager.GetUserId(User);
         }
+
+        public class PosDataParser
+        {
+            public static Dictionary<string, string> ParsePosData(string posData)
+            {
+                var result = new Dictionary<string,string>();
+                if (string.IsNullOrEmpty(posData))
+                {
+                    return result;
+                }
+            
+                try
+                {
+                
+                    var jObject =JObject.Parse(posData);
+                    foreach (var item in jObject)
+                    {
+                    
+                        switch (item.Value.Type)
+                        {
+                            case JTokenType.Array:
+                                result.Add(item.Key, string.Join(',', item.Value.AsEnumerable()));
+                                break;
+                            default:
+                                result.Add(item.Key, item.Value.ToString());
+                                break;
+                        }
+                    
+                    }
+                }
+                catch
+                {
+                    result.Add(string.Empty, posData);
+                }
+                return result;
+            }
+        }
+        
     }
 }

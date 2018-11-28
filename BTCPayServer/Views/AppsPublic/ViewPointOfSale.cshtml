@@ -1,4 +1,5 @@
-﻿@inject BTCPayServer.HostedServices.CssThemeManager themeManager
+﻿@addTagHelper *, Meziantou.AspNetCore.BundleTagHelpers
+@inject BTCPayServer.HostedServices.CssThemeManager themeManager
 
 @model BTCPayServer.Models.AppViewModels.ViewPointOfSaleViewModel
 @{
@@ -18,11 +19,59 @@
     {
         <link href="@Model.CustomCSSLink" rel="stylesheet" />
     }
+    <link href="~/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" />
+
+    @if (Model.EnableShoppingCart) 
+    {
+        <script type="text/javascript">
+        var srvModel = @Html.Raw(Json.Serialize(Model));
+        </script>
+        <bundle name="wwwroot/bundles/cart-bundle.min.js" />
+    }
 </head>
 <body class="h-100">
+    @if (Model.EnableShoppingCart) 
+    {
+    <div id="cartModal" class="modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Shopping cart</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <table id="js-cart-list" class="table mt-2 mb-3">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th colspan="2">Product</th>
+                            <th class="text-right" width="80">Quantity</th>
+                            <th class="text-right" width="25%">Price</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <form method="post" asp-antiforgery="false" data-buy>
+                    <input id="js-cart-amount" class="form-control" type="hidden" name="amount">
+                    <button id="js-cart-pay" class="btn btn-primary" type="submit"><b>@Model.CustomButtonText</b></button>
+                </form>
+            </div>
+            </div>
+        </div>
+    </div>
+    }
+
     <div class="container d-flex h-100">
         <div class="justify-content-center align-self-center text-center mx-auto px-2 py-3 w-100" style="margin: auto;">
             <h1 class="mb-4">@Model.Title</h1>
+            @if (Model.EnableShoppingCart) 
+            {
+                <a id="js-cart" class="btn btn-warning text-white text-right" href="#" data-toggle="modal" data-target="#cartModal"><i class="fa fa-shopping-basket"></i>&nbsp; <span class="badge badge-light badge-pill"><span id="js-cart-items">0</span></span></a>
+            }
             <div class="row">
                 @for (int i = 0; i < Model.Items.Length; i++)
                 {
@@ -31,7 +80,7 @@
                     var image = item.Image;
                     var description = item.Description;
                     <div class="@className my-3 px-2">
-                        <div class="card">
+                        <div class="card" data-id="@i">
                             @if (!String.IsNullOrWhiteSpace(image))
                             {
                                 <img class="card-img-top" src="@image" alt="Card image cap">
@@ -42,7 +91,7 @@
                                 {
                                     <p class="card-text">@description</p>
                                 }
-                                @if (item.Custom)
+                                @if (item.Custom && !Model.EnableShoppingCart)
                                 {
                                     <form method="post" asp-antiforgery="false" data-buy>
                                         <input type="hidden" name="choicekey" value="@item.Id" />
@@ -61,7 +110,7 @@
                                 else
                                 {
                                     <form method="post" asp-antiforgery="false">
-                                        <button type="submit" name="choiceKey" class="btn btn-primary" value="@item.Id">
+                                        <button type="submit" name="choiceKey" class="js-add-cart btn btn-primary" value="@item.Id">
                                             @String.Format(Model.ButtonText, @item.Price.Formatted)</button>
                                     </form>
                                 }
@@ -94,7 +143,5 @@
             }
         </div>
     </div>
-    <script src="~/vendor/jquery/jquery.js"></script>
-    <script src="~/vendor/bootstrap4/js/bootstrap.js"></script>
 </body>
 </html>

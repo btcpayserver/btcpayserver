@@ -42,128 +42,177 @@
             </div>
         </div>
 
+    <div class="row">
+        <div class="col-md-6">
+            <h3>Information</h3>
+            <table class="table table-sm table-responsive-md">
+                <tr>
+                    <th>Store</th>
+                    <td><a href="@Model.StoreLink">@Model.StoreName</a></td>
+                </tr>
+                <tr>
+                    <th>Id</th>
+                    <td>@Model.Id</td>
+                </tr>
+                <tr>
+                    <th>Created date</th>
+                    <td>@Model.CreatedDate.ToBrowserDate()</td>
+                </tr>
+                <tr>
+                    <th>Expiration date</th>
+                    <td>@Model.ExpirationDate.ToBrowserDate()</td>
+                </tr>
+                <tr>
+                    <th>Monitoring date</th>
+                    <td>@Model.MonitoringDate.ToBrowserDate()</td>
+                </tr>
+                <tr>
+                    <th>Transaction speed</th>
+                    <td>@Model.TransactionSpeed</td>
+                </tr>
+                <tr>
+                    <th>Status</th>
+                    <td>@Model.Status</td>
+                </tr>
+                <tr>
+                    <th>Status Exception</th>
+                    <td>@Model.StatusException</td>
+                </tr>
+                <tr>
+                    <th>Refund email</th>
+                    <td><a href="mailto:@Model.RefundEmail">@Model.RefundEmail</a></td>
+                </tr>
+                <tr>
+                    <th>Order Id</th>
+                    <td>@Model.OrderId</td>
+                </tr>
+                <tr>
+                    <th>Total fiat due</th>
+                    <td>@Model.Fiat</td>
+                </tr>
+                <tr>
+                    <th>Notification Email</th>
+                    <td>@Model.NotificationEmail</td>
+                </tr>
+                <tr>
+                    <th>Notification Url</th>
+                    <td>@Model.NotificationUrl</td>
+                </tr>
+                <tr>
+                    <th>Redirect Url</th>
+                    <td><a href="@Model.RedirectUrl">@Model.RedirectUrl</a></td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="col-md-6">
+            <h3>Buyer information</h3>
+            <table class="table table-sm table-responsive-md">
+                <tr>
+                    <th>Name</th>
+                    <td>@Model.BuyerInformation.BuyerName</td>
+                </tr>
+                <tr>
+                    <th>Email</th>
+                    <td><a href="mailto:@Model.BuyerInformation.BuyerEmail">@Model.BuyerInformation.BuyerEmail</a></td>
+                </tr>
+                <tr>
+                    <th>Phone</th>
+                    <td>@Model.BuyerInformation.BuyerPhone</td>
+                </tr>
+                <tr>
+                    <th>Address 1</th>
+                    <td>@Model.BuyerInformation.BuyerAddress1</td>
+                </tr>
+                <tr>
+                    <th>Address 2</th>
+                    <td>@Model.BuyerInformation.BuyerAddress2</td>
+                </tr>
+                <tr>
+                    <th>City</th>
+                    <td>@Model.BuyerInformation.BuyerCity</td>
+                </tr>
+                <tr>
+                    <th>State</th>
+                    <td>@Model.BuyerInformation.BuyerState</td>
+                </tr>
+                <tr>
+                    <th>Country</th>
+                    <td>@Model.BuyerInformation.BuyerCountry</td>
+                </tr>
+                <tr>
+                    <th>Zip</th>
+                    <td>@Model.BuyerInformation.BuyerZip</td>
+                </tr>
+            </table>
+
+            <h3>Product information</h3>
+            <table class="table table-sm table-responsive-md">
+                <tr>
+                    <th>Item code</th>
+                    <td>@Model.ProductInformation.ItemCode</td>
+                </tr>
+                <tr>
+                    <th>Item Description</th>
+                    <td>@Model.ProductInformation.ItemDesc</td>
+                </tr>
+                <tr>
+                    <th>Price</th>
+                    <td>@Model.ProductInformation.Price @Model.ProductInformation.Currency</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
         <div class="row">
             <div class="col-md-6">
-                <h3>Information</h3>
+                <h3>Pos Data</h3>
                 <table class="table table-sm table-responsive-md">
-                    <tr>
-                        <th>Store</th>
-                        <td><a href="@Model.StoreLink">@Model.StoreName</a></td>
-                    </tr>
-                    <tr>
-                        <th>Id</th>
-                        <td>@Model.Id</td>
-                    </tr>
-                    <tr>
-                        <th>Created date</th>
-                        <td>@Model.CreatedDate.ToBrowserDate()</td>
-                    </tr>
-                    <tr>
-                        <th>Expiration date</th>
-                        <td>@Model.ExpirationDate.ToBrowserDate()</td>
-                    </tr>
-                    <tr>
-                        <th>Monitoring date</th>
-                        <td>@Model.MonitoringDate.ToBrowserDate()</td>
-                    </tr>
-                    <tr>
-                        <th>Transaction speed</th>
-                        <td>@Model.TransactionSpeed</td>
-                    </tr>
-                    <tr>
-                        <th>Status</th>
-                        <td>@Model.Status</td>
-                    </tr>
-                    <tr>
-                        <th>Status Exception</th>
-                        <td>@Model.StatusException</td>
-                    </tr>
-                    <tr>
-                        <th>Refund email</th>
-                        <td><a href="mailto:@Model.RefundEmail">@Model.RefundEmail</a></td>
-                    </tr>
-                    <tr>
-                        <th>Order Id</th>
-                        <td>@Model.OrderId</td>
-                    </tr>
-                    <tr>
-                        <th>Total fiat due</th>
-                        <td>@Model.Fiat</td>
-                    </tr>
-                    <tr>
-                        <th>Notification Email</th>
-                        <td>@Model.NotificationEmail</td>
-                    </tr>
-                    <tr>
-                        <th>Notification Url</th>
-                        <td>@Model.NotificationUrl</td>
-                    </tr>
-                    <tr>
-                        <th>Redirect Url</th>
-                        <td><a href="@Model.RedirectUrl">@Model.RedirectUrl</a></td>
-                    </tr>
+                    @foreach (var posDataItem in Model.PosData)
+                    {
+                        <tr>
+                            @if (!string.IsNullOrEmpty(posDataItem.Key))
+                            {
+                               
+                                <th>@posDataItem.Key</th>
+                                <td>@posDataItem.Value</td>
+                            }
+                            else
+                            {
+                               
+                                <td colspan="2">@posDataItem.Value</td>
+                            }
+                        </tr>
+                    }
+                
                 </table>
+
             </div>
-
+            
             <div class="col-md-6">
-                <h3>Buyer information</h3>
+                <h3>Addresses</h3>
                 <table class="table table-sm table-responsive-md">
+                    <thead class="thead-inverse">
                     <tr>
-                        <th>Name</th>
-                        <td>@Model.BuyerInformation.BuyerName</td>
+                        <th class="firstCol">Payment method</th>
+                        <th>Address</th>
                     </tr>
-                    <tr>
-                        <th>Email</th>
-                        <td><a href="mailto:@Model.BuyerInformation.BuyerEmail">@Model.BuyerInformation.BuyerEmail</a></td>
-                    </tr>
-                    <tr>
-                        <th>Phone</th>
-                        <td>@Model.BuyerInformation.BuyerPhone</td>
-                    </tr>
-                    <tr>
-                        <th>Address 1</th>
-                        <td>@Model.BuyerInformation.BuyerAddress1</td>
-                    </tr>
-                    <tr>
-                        <th>Address 2</th>
-                        <td>@Model.BuyerInformation.BuyerAddress2</td>
-                    </tr>
-                    <tr>
-                        <th>City</th>
-                        <td>@Model.BuyerInformation.BuyerCity</td>
-                    </tr>
-                    <tr>
-                        <th>State</th>
-                        <td>@Model.BuyerInformation.BuyerState</td>
-                    </tr>
-                    <tr>
-                        <th>Country</th>
-                        <td>@Model.BuyerInformation.BuyerCountry</td>
-                    </tr>
-                    <tr>
-                        <th>Zip</th>
-                        <td>@Model.BuyerInformation.BuyerZip</td>
-                    </tr>
-                </table>
-
-                <h3>Product information</h3>
-                <table class="table table-sm table-responsive-md">
-                    <tr>
-                        <th>Item code</th>
-                        <td>@Model.ProductInformation.ItemCode</td>
-                    </tr>
-                    <tr>
-                        <th>Item Description</th>
-                        <td>@Model.ProductInformation.ItemDesc</td>
-                    </tr>
-                    <tr>
-                        <th>Price</th>
-                        <td>@Model.ProductInformation.Price @Model.ProductInformation.Currency</td>
-                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var address in Model.Addresses)
+                    {
+                        var current = address.Current ? "font-weight-bold" : "";
+                        <tr>
+                            <td>@address.PaymentMethod</td>
+                            <td class="smMaxWidth text-truncate @current">@address.Destination</td>
+                        </tr>
+                    }
+                    </tbody>
                 </table>
             </div>
         </div>
-        <div class="row">
+    
+    <div class="row">
             <div class="col-md-12">
                 <h3>Paid summary</h3>
                 <table class="table table-sm table-responsive-md">
@@ -258,29 +307,6 @@
                 </div>
             </div>
         }
-        <div class="row">
-            <div class="col-md-12">
-                <h3>Addresses</h3>
-                <table class="table table-sm table-responsive-md">
-                    <thead class="thead-inverse">
-                        <tr>
-                            <th class="firstCol">Payment method</th>
-                            <th>Address</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var address in Model.Addresses)
-                        {
-                            var current = address.Current ? "font-weight-bold" : "";
-                            <tr>
-                                <td>@address.PaymentMethod</td>
-                                <td class="smMaxWidth text-truncate @current">@address.Destination</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
 
         <div class="row">
             <div class="col-md-12">

@@ -43,6 +43,7 @@ using System.Security.Cryptography.X509Certificates;
 using BTCPayServer.Lightning;
 using BTCPayServer.Models.WalletViewModels;
 using System.Security.Claims;
+using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Security;
 using NBXplorer.Models;
@@ -79,7 +80,7 @@ namespace BTCPayServer.Tests
             Assert.False(attribute.IsValid("http://"));
             Assert.False(attribute.IsValid("httpdsadsa.com"));
         }
-
+        
         [Fact]
         [Trait("Fast", "Fast")]
         public void CanCalculateCryptoDue2()
@@ -1462,6 +1463,7 @@ namespace BTCPayServer.Tests
                 vmpos.Currency = "CAD";
                 vmpos.ButtonText = "{0} Purchase";
                 vmpos.CustomButtonText = "Nicolas Sexy Hair";
+                vmpos.CustomTipText = "Wanna tip?";
                 vmpos.Template = @"
 apple:
   price: 5.0
@@ -1486,6 +1488,7 @@ donation:
                 Assert.Equal("$5.00", vmview.Items[0].Price.Formatted);
                 Assert.Equal("{0} Purchase", vmview.ButtonText);
                 Assert.Equal("Nicolas Sexy Hair", vmview.CustomButtonText);
+                Assert.Equal("Wanna tip?", vmview.CustomTipText);
                 Assert.IsType<RedirectToActionResult>(publicApps.ViewPointOfSale(appId, 0, null, null, null, null, "orange").Result);
 
                 //
@@ -1505,6 +1508,81 @@ donation:
                 Assert.Equal("donation", donationInvoice.ItemDesc);
             }
         }
+        
+        [Fact]
+        [Trait("Fast", "Fast")]
+        public void PosDataParser_ParsesCorrectly()
+        {
+            var testCases =
+                new List<(string input, Dictionary<string, string> expectedOutput)>()
+                {
+                    { (null, new Dictionary<string, string>())},
+                    {("", new Dictionary<string, string>())},
+                    {("{}", new Dictionary<string, string>())},
+                    {("non-json-content", new Dictionary<string, string>(){ {string.Empty, "non-json-content"}})},
+                    {("[1,2,3]", new Dictionary<string, string>(){ {string.Empty, "[1,2,3]"}})},
+                    {("{ \"key\": \"value\"}", new Dictionary<string, string>(){ {"key", "value"}})},
+                    {("{ \"key\": true}", new Dictionary<string, string>(){ {"key", "True"}})},
+                    {("{ \"key\": \"value\", \"key2\": [\"value\", \"value2\"]}",
+                        new Dictionary<string, string>(){ {"key", "value"}, {"key2", "value,value2"}})},
+                    {("{ invalidjson file here}", new Dictionary<string, string>(){ {String.Empty, "{ invalidjson file here}"}})}
+                };
+            
+            testCases.ForEach(tuple =>
+            {
+                Assert.Equal(tuple.expectedOutput, InvoiceController.PosDataParser.ParsePosData(tuple.input));
+            });
+        }
+        
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public async Task PosDataParser_ParsesCorrectly_Slower()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.Start();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                user.RegisterDerivationScheme("BTC");
+                
+                var controller = tester.PayTester.GetController<InvoiceController>(null);
+
+                var testCases =
+                    new List<(string input, Dictionary<string, string> expectedOutput)>()
+                    {
+                        { (null, new Dictionary<string, string>())},
+                        {("", new Dictionary<string, string>())},
+                        {("{}", new Dictionary<string, string>())},
+                        {("non-json-content", new Dictionary<string, string>(){ {string.Empty, "non-json-content"}})},
+                        {("[1,2,3]", new Dictionary<string, string>(){ {string.Empty, "[1,2,3]"}})},
+                        {("{ \"key\": \"value\"}", new Dictionary<string, string>(){ {"key", "value"}})},
+                        {("{ \"key\": true}", new Dictionary<string, string>(){ {"key", "True"}})},
+                        {("{ \"key\": \"value\", \"key2\": [\"value\", \"value2\"]}",
+                        new Dictionary<string, string>(){ {"key", "value"}, {"key2", "value,value2"}})},
+                        {("{ invalidjson file here}", new Dictionary<string, string>(){ {String.Empty, "{ invalidjson file here}"}})}
+                    };
+
+                var tasks = new List<Task>();
+                foreach (var valueTuple in testCases)
+                {
+                    tasks.Add(user.BitPay.CreateInvoiceAsync(new Invoice(1, "BTC")
+                    {
+                        PosData = valueTuple.input
+                    }).ContinueWith(async task =>
+                    {
+                        var result = await controller.Invoice(task.Result.Id);
+                        var viewModel =
+                            Assert.IsType<InvoiceDetailsModel>(
+                                Assert.IsType<ViewResult>(result).Model);
+                        Assert.Equal(valueTuple.expectedOutput, viewModel.PosData);
+                    }));
+                }
+
+                await Task.WhenAll(tasks);
+            }
+        }
+
+       
 
         [Fact]
         [Trait("Integration", "Integration")]

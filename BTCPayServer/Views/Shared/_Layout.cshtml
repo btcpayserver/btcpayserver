@@ -11,12 +11,21 @@
 <html lang="en">
 
 <head>
+    <link rel="canonical" href="https://btcpayjungle.com">
+    <meta name="name" content="BTCPayJungle - Hosting The Future Today">
+    <meta name="url" content="https://btcpayjungle.com/">
+    <meta content="~/btcpaylogo2junglelab.png" property="og:image">
+    <meta name="logo" content="~/btcpaylogo2junglelab.png">
+    <meta name="logo" content="~/btcpaylogo2junglelab.png">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="">
+    <meta name="description" content="BTCPay Jungle Server, Accept Bitcoin Litecoin Lightning Charged Network & Alt Coins Payments From Your Customers, Trust Is Minimized, No Waiting Days For A Payment To Clear, No Service Fee Charge, Blockchain Payments, Get Started Today">
+    <meta name="author" content="junglelab.io">
+    <meta name="name" content="BTCPayJungle">
+    <meta name="url" content="https://btcpayjungle.com">
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
 
-    <title>BTCPay Server</title>
+    <title>BTCPayJungle - Hosting The Future Today</title>
 
     @* CSS *@
     <link href="@this.Context.Request.GetAbsoluteUri(themeManager.BootstrapUri)" rel="stylesheet" />
@@ -45,8 +54,8 @@
     <nav class='navbar navbar-expand-lg navbar-light fixed-top @additionalStyle' id="mainNav">
         <div class="container">
             <a class="navbar-brand js-scroll-trigger" href="~/">
-                <img src="~/img/logo.png" height="45">
-                @if (env.NetworkType != NBitcoin.NetworkType.Mainnet)
+            <img src="~/img/logo.svg" alt=“BTCPayJungle” height="45” width="239">
+            @if(env.NetworkType != NBitcoin.NetworkType.Mainnet)
                 {
                     <span class="badge badge-warning" style="font-size:10px;">@env.NetworkType.ToString()</span>
                 }

@@ -291,5 +291,11 @@ __pycache__/
 # Bundling JS/CSS
 BTCPayServer/wwwroot/bundles/*
 !BTCPayServer/wwwroot/bundles/.gitignore
-
-.vscode
+BTCPayServer/wwwroot/img/logo.png
+BTCPayServer/wwwroot/img/logo.png
+BTCPayServer/Views/Home/Home.cshtml
+BTCPayServer/wwwroot/img/logo master.png
+BTCPayServer/wwwroot/img/logo.png
+.DS_Store
+.DS_Store
+.DS_Store

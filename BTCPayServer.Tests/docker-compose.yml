@@ -14,9 +14,7 @@ services:
       TESTS_LTCRPCCONNECTION: server=http://litecoind:43782;ceiwHEbqWI83:DwubwWsoo3
       TESTS_BTCNBXPLORERURL: http://nbxplorer:32838/
       TESTS_LTCNBXPLORERURL: http://nbxplorer:32838/
-      TESTS_DB: "Postgres"
       TESTS_POSTGRES: User ID=postgres;Host=postgres;Port=5432;Database=btcpayserver
-      TESTS_MYSQL: User ID=root;Host=mysql;Port=3306;Database=btcpayserver
       TESTS_PORT: 80
       TESTS_HOSTNAME: tests
       TEST_MERCHANTLIGHTNINGD: "type=clightning;server=/etc/merchant_lightningd_datadir/lightning-rpc"
@@ -28,14 +26,14 @@ services:
       - "80"
     links:
       - dev
-    extra_hosts: 
+    extra_hosts:
       - "tests:127.0.0.1"
     volumes:
       - "customer_lightningd_datadir:/etc/customer_lightningd_datadir"
       - "merchant_lightningd_datadir:/etc/merchant_lightningd_datadir"
 
   # The dev container is not actually used, it is just handy to run `docker-compose up dev` to start all services
-  dev: 
+  dev:
     image: nicolasdorier/docker-bitcoin:0.17.0
     environment:
       BITCOIN_NETWORK: regtest
@@ -45,14 +43,13 @@ services:
     links:
       - nbxplorer
       - postgres
-      - mysql
       - customer_lightningd
       - merchant_lightningd
       - lightning-charged
       - customer_lnd
       - merchant_lnd
 
-  devlnd: 
+  devlnd:
     image: nicolasdorier/docker-bitcoin:0.17.0
     environment:
       BITCOIN_NETWORK: regtest
@@ -62,7 +59,6 @@ services:
     links:
       - nbxplorer
       - postgres
-      - mysql
       - customer_lnd
       - merchant_lnd
 
@@ -73,7 +69,7 @@ services:
     restart: unless-stopped
     ports:
       - "32838:32838"
-    expose: 
+    expose:
       - "32838"
     environment:
       NBXPLORER_NETWORK: regtest
@@ -106,7 +102,7 @@ services:
         whitelist=0.0.0.0/0
         zmqpubrawblock=tcp://0.0.0.0:28332
         zmqpubrawtx=tcp://0.0.0.0:28333
-    ports: 
+    ports:
       - "43782:43782"
       - "28332:28332"
     expose:
@@ -121,7 +117,7 @@ services:
     image: nicolasdorier/clightning:v0.6.2-3-dev
     stop_signal: SIGKILL
     restart: unless-stopped
-    environment: 
+    environment:
       EXPOSE_TCP: "true"
       LIGHTNINGD_OPT: |
         bitcoin-datadir=/etc/bitcoin
@@ -145,7 +141,6 @@ services:
 
   lightning-charged:
     image: shesek/lightning-charge:0.4.3
-    restart: unless-stopped
     environment:
       NETWORK: regtest
       API_TOKEN: foiewnccewuify
@@ -166,7 +161,7 @@ services:
   merchant_lightningd:
     image: nicolasdorier/clightning:v0.6.2-3-dev
     stop_signal: SIGKILL
-    environment: 
+    environment:
       EXPOSE_TCP: "true"
       LIGHTNINGD_OPT: |
         bitcoin-datadir=/etc/bitcoin
@@ -198,7 +193,7 @@ services:
         rpcport=43782
         port=39388
         whitelist=0.0.0.0/0
-    ports: 
+    ports:
       - "43783:43782"
     expose:
       - "43782" # RPC
@@ -210,15 +205,6 @@ services:
       - "39372:5432"
     expose:
       - "5432"
-      
-  mysql:
-    image:  mysql:8.0.12
-    expose:
-      - "3306"
-    ports:
-      - "33036:3306"
-    environment:
-      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
 
   merchant_lnd:
     image: btcpayserver/lnd:0.5-beta-2

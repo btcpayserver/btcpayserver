@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -34,7 +33,7 @@ namespace BTCPayServer.Payments.Changelly
             var hex = new StringBuilder(array.Length * 2);
             foreach (var b in array)
             {
-                hex.AppendFormat(CultureInfo.InvariantCulture, "{0:x2}", b);
+                hex.AppendFormat("{0:x2}", b);
             }
 
             return hex.ToString();
@@ -103,7 +102,7 @@ namespace BTCPayServer.Payments.Changelly
 
                 var result = await PostToApi<string>(message);
 
-            return Convert.ToDecimal(result.Result, CultureInfo.InvariantCulture);
+            return Convert.ToDecimal(result.Result);
         }
     }
 }

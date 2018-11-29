@@ -4,7 +4,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Controllers;
-using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments.Changelly;
@@ -210,6 +209,9 @@ namespace BTCPayServer.Tests
                 Assert.Equal("UpdateStore", Assert.IsType<RedirectToActionResult>(
                     await storesController.UpdateChangellySettings(user.StoreId, updateModel, "save")).ActionName);
 
+                var mockChangelly = new MockChangelly(new MockHttpClientFactory(),  updateModel.ApiKey, updateModel.ApiSecret, updateModel.ApiUrl);
+                var mock = new MockChangellyClientProvider(mockChangelly, tester.PayTester.StoreRepository);
+
                 var factory = UnitTest1.CreateBTCPayRateFactory();
                 var fetcher = new RateFetcher(factory);
                 var httpClientFactory = new MockHttpClientFactory();
@@ -248,6 +250,58 @@ namespace BTCPayServer.Tests
         public HttpClient CreateClient(string name)
         {
             return new HttpClient();
+        }
+    }
+
+    public class MockChangelly : Changelly
+    {
+        public IEnumerable<CurrencyFull> GetCurrenciesFullResult { get; set; }
+
+        public delegate decimal ParamsFunc<T1, T2, T3, TResult>(T1 arg1, T2 arg2, T3 arg3);
+
+        public ParamsFunc<string, string, decimal, (decimal amount, bool Success, string Error)> GetExchangeAmountResult
+        {
+            get;
+            set;
+        }
+
+        public int GetCurrenciesFullCallCount { get; set; } = 0;
+        public int GetExchangeAmountCallCount { get; set; } = 0;
+
+        public MockChangelly(IHttpClientFactory httpClientFactory,  string apiKey, string apiSecret, string apiUrl) : base(httpClientFactory, apiKey, apiSecret, apiUrl)
+        {
+        }
+
+        public override async Task<IEnumerable<CurrencyFull>> GetCurrenciesFull()
+        {
+            GetCurrenciesFullCallCount++;
+            return GetCurrenciesFullResult;
+        }
+
+        public override async Task<decimal> GetExchangeAmount(string fromCurrency,
+            string toCurrency, decimal amount)
+        {
+            GetExchangeAmountCallCount++;
+            return GetExchangeAmountResult.Invoke(fromCurrency, toCurrency, amount);
+        }
+    }
+
+    public class MockChangellyClientProvider : ChangellyClientProvider
+    {
+        public MockChangelly MockChangelly;
+
+        public MockChangellyClientProvider(
+            MockChangelly mockChangelly,
+            StoreRepository storeRepository) : base(storeRepository, new MockHttpClientFactory())
+        {
+            MockChangelly = mockChangelly;
+        }
+
+        public override bool TryGetChangellyClient(string storeId, out string error, out Changelly changelly)
+        {
+            error = null;
+            changelly = MockChangelly;
+            return true;
         }
     }
 }

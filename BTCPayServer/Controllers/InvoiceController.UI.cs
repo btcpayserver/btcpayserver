@@ -57,7 +57,7 @@ namespace BTCPayServer.Controllers
                 MonitoringDate = invoice.MonitoringExpiration,
                 OrderId = invoice.OrderId,
                 BuyerInformation = invoice.BuyerInformation,
-                Fiat = _CurrencyNameTable.DisplayFormatCurrency((decimal)dto.Price, dto.Currency),
+                Fiat = _CurrencyNameTable.DisplayFormatCurrency(dto.Price, dto.Currency),
                 NotificationEmail = invoice.NotificationEmail,
                 NotificationUrl = invoice.NotificationURL,
                 RedirectUrl = invoice.RedirectURL,
@@ -74,9 +74,9 @@ namespace BTCPayServer.Controllers
                 var paymentMethodId = data.GetId();
                 var cryptoPayment = new InvoiceDetailsModel.CryptoPayment();
                 cryptoPayment.PaymentMethod = ToString(paymentMethodId);
-                cryptoPayment.Due = accounting.Due.ToString() + $" {paymentMethodId.CryptoCode}";
-                cryptoPayment.Paid = accounting.CryptoPaid.ToString() + $" {paymentMethodId.CryptoCode}";
-                cryptoPayment.Overpaid = (accounting.DueUncapped > Money.Zero ? Money.Zero : -accounting.DueUncapped).ToString() + $" {paymentMethodId.CryptoCode}";
+                cryptoPayment.Due = $"{accounting.Due} {paymentMethodId.CryptoCode}";
+                cryptoPayment.Paid = $"{accounting.CryptoPaid} {paymentMethodId.CryptoCode}";
+                cryptoPayment.Overpaid = $"{accounting.OverpaidHelper} {paymentMethodId.CryptoCode}";
 
                 var onchainMethod = data.GetPaymentMethodDetails() as Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod;
                 if (onchainMethod != null)
@@ -468,6 +468,20 @@ namespace BTCPayServer.Controllers
 
             return list;
         }
+
+        [HttpGet]
+        [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
+        [BitpayAPIConstraint(false)]
+        public async Task<IActionResult> Export(string format, string searchTerm = null)
+        {
+            var model = new ExportInvoicesModel();
+
+            var invoices = await ListInvoicesProcess(searchTerm, 0, int.MaxValue);
+            var res = model.Process(invoices, format);
+            return Content(res, "application/" + format);
+        }
+
+
 
         [HttpGet]
         [Route("invoices/create")]

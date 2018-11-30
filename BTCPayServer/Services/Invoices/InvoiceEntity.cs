@@ -533,20 +533,21 @@ namespace BTCPayServer.Services.Invoices
 
     public class PaymentMethodAccounting
     {
-        /// <summary>
-        /// Total amount of this invoice
-        /// </summary>
+        /// <summary>Total amount of this invoice</summary>
         public Money TotalDue { get; set; }
 
-        /// <summary>
-        /// Amount of crypto remaining to pay this invoice
-        /// </summary>
+        /// <summary>Amount of crypto remaining to pay this invoice</summary>
         public Money Due { get; set; }
 
-        /// <summary>
-        /// Same as Due, can be negative
-        /// </summary>
+        /// <summary>Same as Due, can be negative</summary>
         public Money DueUncapped { get; set; }
+
+        /// <summary>If DueUncapped is negative, that means user overpaid invoice</summary>
+        public Money OverpaidHelper
+        {
+            get { return DueUncapped > Money.Zero ? Money.Zero : -DueUncapped; }
+        }
+
         /// <summary>
         /// Total amount of the invoice paid after conversion to this crypto currency
         /// </summary>

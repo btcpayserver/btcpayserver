@@ -6,19 +6,11 @@ using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services.Invoices;
 using Newtonsoft.Json;
 
-namespace BTCPayServer.Models.InvoicingModels
+namespace BTCPayServer.Services.Invoices.Export
 {
-    public class ExportInvoicesModel
+    public class InvoiceExport
     {
         public string Process(InvoiceEntity[] invoices, string fileFormat)
-        {
-            if (String.Equals(fileFormat, "json", StringComparison.OrdinalIgnoreCase))
-                return processJson(invoices);
-            else
-                throw new Exception("Export format not supported");
-        }
-
-        private string processJson(InvoiceEntity[] invoices)
         {
             var csvInvoices = new List<ExportInvoiceHolder>();
             foreach (var i in invoices)
@@ -26,10 +18,28 @@ namespace BTCPayServer.Models.InvoicingModels
                 csvInvoices.AddRange(convertFromDb(i));
             }
 
+            if (String.Equals(fileFormat, "json", StringComparison.OrdinalIgnoreCase))
+                return processJson(csvInvoices);
+            else if (String.Equals(fileFormat, "csv", StringComparison.OrdinalIgnoreCase))
+                return processCsv(csvInvoices);
+            else
+                throw new Exception("Export format not supported");
+        }
+
+        private string processJson(List<ExportInvoiceHolder> invoices)
+        {
             var serializerSett = new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore };
-            var json = JsonConvert.SerializeObject(csvInvoices, Formatting.Indented, serializerSett);
+            var json = JsonConvert.SerializeObject(invoices, Formatting.Indented, serializerSett);
 
             return json;
+        }
+
+        private string processCsv(List<ExportInvoiceHolder> invoices)
+        {
+            var serializer = new CsvSerializer<ExportInvoiceHolder>();
+            var csv = serializer.Serialize(invoices);
+
+            return csv;
         }
 
         private IEnumerable<ExportInvoiceHolder> convertFromDb(InvoiceEntity invoice)
@@ -43,14 +53,15 @@ namespace BTCPayServer.Models.InvoicingModels
 
                 var pmethod = invoice.GetPaymentMethod(payment.GetPaymentMethodId(), null);
                 var accounting = pmethod.Calculate();
-                var onchainDetails = pmethod.GetPaymentMethodDetails() as BitcoinLikeOnChainPaymentMethod;
+                var details = pmethod.GetPaymentMethodDetails();
 
                 var target = new ExportInvoiceHolder
                 {
                     PaymentId = pdata.GetPaymentId(),
                     CryptoCode = cryptoCode,
                     ConversionRate = pmethod.Rate,
-                    Address = onchainDetails?.DepositAddress,
+                    PaymentType =  details.GetPaymentType().ToString(),
+                    Destination = details.GetPaymentDestination(),
                     PaymentDue = $"{accounting.MinimumTotalDue} {cryptoCode}",
                     PaymentPaid = $"{accounting.CryptoPaid} {cryptoCode}",
                     PaymentOverpaid = $"{accounting.OverpaidHelper} {cryptoCode}",
@@ -78,7 +89,8 @@ namespace BTCPayServer.Models.InvoicingModels
         public string PaymentId { get; set; }
         public string CryptoCode { get; set; }
         public decimal ConversionRate { get; set; }
-        public string Address { get; set; }
+        public string PaymentType { get; set; }
+        public string Destination { get; set; }
         public string PaymentDue { get; set; }
         public string PaymentPaid { get; set; }
         public string PaymentOverpaid { get; set; }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Net.Mime;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,6 +15,7 @@ using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Invoices.Export;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -474,10 +476,18 @@ namespace BTCPayServer.Controllers
         [BitpayAPIConstraint(false)]
         public async Task<IActionResult> Export(string format, string searchTerm = null)
         {
-            var model = new ExportInvoicesModel();
+            var model = new InvoiceExport();
 
             var invoices = await ListInvoicesProcess(searchTerm, 0, int.MaxValue);
             var res = model.Process(invoices, format);
+
+            var cd = new ContentDisposition
+            {
+                FileName = $"btcpay-export-{DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")}.{format}",
+                Inline = true
+            };
+            Response.Headers.Add("Content-Disposition", cd.ToString());
+            Response.Headers.Add("X-Content-Type-Options", "nosniff");
             return Content(res, "application/" + format);
         }
 

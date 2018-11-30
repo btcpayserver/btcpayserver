@@ -76,11 +76,7 @@ namespace BTCPayServer.Controllers
             if (app == null)
                 return NotFound();
             var settings = app.GetSettings<PointOfSaleSettings>();
-            if (string.IsNullOrEmpty(choiceKey) && !settings.EnableShoppingCart)
-            {
-                return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
-            }
-            if (string.IsNullOrEmpty(choiceKey) && !settings.ShowCustomAmount)
+            if (string.IsNullOrEmpty(choiceKey) && !settings.ShowCustomAmount && !settings.EnableShoppingCart)
             {
                 return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
             }
@@ -99,7 +95,7 @@ namespace BTCPayServer.Controllers
             }
             else
             {
-                if (!settings.ShowCustomAmount)
+                if (!settings.ShowCustomAmount && !settings.EnableShoppingCart)
                     return NotFound();
                 price = amount;
                 title = settings.Title;

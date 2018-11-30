@@ -163,17 +163,17 @@ Cart.prototype.listItems = function() {
             list.push($(tableTemplate));
         }
 
-        tableTemplate = '<tr><td colspan="4"><div class="row"><div class="col-sm-8 py-2">' + customTipText + '</div><div class="col-sm-4">' +
+        tableTemplate = '<tr><td colspan="4"><div class="row"><div class="col-sm-7 py-2">' + customTipText + '</div><div class="col-sm-5">' +
     '<div class="input-group">' + 
         '<div class="input-group-prepend">' +
-            '<span class="input-group-text">' + currencySymbol + '</span>' +
+            '<span class="input-group-text">' + (currencySymbol != 'null' ? currencySymbol : '<i class="fa fa-money"></i>') + '</span>' +
         '</div>' +
-        '<input class="js-cart-tip form-control" type="number" min="0" step="' + step + '" name="tip" placeholder="Amount">' +
+        '<input class="js-cart-tip form-control" type="number" min="0" step="' + step + '" value="' + (this.tip || '') + '" name="tip" placeholder="Amount">' +
     '</div>' +
     '</div></div></td></tr>';
         list.push($(tableTemplate));
 
-        tableTemplate = '<tr class="bg-light h4"><td colspan="2">Total</td><td colspan="2" align="right"><span id="js-cart-total">' + this.formatCurrency(this.getTotal()) + '</span></td></tr>';
+        tableTemplate = '<tr class="bg-light h4"><td colspan="1">Total</td><td colspan="3" align="right"><span id="js-cart-total">' + this.formatCurrency(this.getTotal()) + '</span></td></tr>';
         list.push($(tableTemplate));
 
         // Add the list to DOM
@@ -239,16 +239,34 @@ Cart.prototype.emptyList = function() {
     $table.html('<tr><td colspan="4">The cart is empty.</td></tr>');
 }
 
-/* Get the currency symbol from an existing amount and use it with the new amount*/
+/* Get the currency symbol from an existing amount and use it with the new amount */
 Cart.prototype.formatCurrency = function(amount, example) {
-    var regex = /([0-9.]+)/gm;
+    var regex = /[0-9 .,]/gm,
+        curSign = '',
+        amt = '',
+        sep = '';
 
-    // Get the first item's formated price
+    // Get the first item's format
     if (typeof example == 'undefined' && typeof srvModel != 'undefined') {
         example = srvModel.items[0].price.formatted;
     }
 
-    return example.replace(regex, amount.toFixed(2));
+    // Have the currency sign on a proper side (e.g. left for usd, right for eur)
+    curSign = example.replace(regex, ' ').replace(/\s\s+/g, 'n');
+    amt = curSign.replace('n', amount.toFixed(2));
+
+    if (example.indexOf('.') === -1) {
+        // Separate decimal by comma for EUR and other currencies
+        amt = amt.replace('.', ',');
+        sep = ' ';
+    } else {
+        sep = ',';
+    }
+
+    // Add thousands separator
+    amt = amt.replace(/\B(?=(\d{3})+(?!\d))/g, sep);
+
+    return amt;
 }
 
 Cart.prototype.toCents = function(num) {
@@ -279,4 +297,5 @@ Cart.prototype.destroy = function() {
     this.content = [];
     this.items = 0;
     this.totalAmount = 0;
+    this.tip = 0;
 }

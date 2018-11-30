@@ -23,11 +23,9 @@ namespace BTCPayServer.Services.Invoices.Export
         public string NewlineReplacement { get; set; } = ((char)0x254).ToString(CultureInfo.InvariantCulture);
 
         public char Separator { get; set; } = ',';
-        public string Replacement { get; set; } = ((char)0x255).ToString(CultureInfo.InvariantCulture);
 
 		public string RowNumberColumnTitle { get; set; } = "RowNumber";
         public bool UseLineNumbers { get; set; } = false;
-        public bool UseTextQualifier { get; set; } = false;
         public bool UseEofLiteral { get; set; } = false;
 
         /// <summary>
@@ -83,13 +81,10 @@ namespace BTCPayServer.Services.Invoices.Export
 					var raw = p.GetValue(item);
 					var value = raw == null ? "" :
 						raw.ToString()
-						.Replace(Separator.ToString(CultureInfo.InvariantCulture), Replacement, StringComparison.OrdinalIgnoreCase)
+                        .Replace("\"", "``", StringComparison.OrdinalIgnoreCase)
 						.Replace(Environment.NewLine, NewlineReplacement, StringComparison.OrdinalIgnoreCase);
 
-					if (UseTextQualifier)
-					{
-						value = String.Format(CultureInfo.InvariantCulture, "\"{0}\"", value);
-					}
+					value = String.Format(CultureInfo.InvariantCulture, "\"{0}\"", value);
 
 					values.Add(value);
 				}

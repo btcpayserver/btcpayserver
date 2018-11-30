@@ -1669,7 +1669,7 @@ donation:
                     Currency = "USD",
                     PosData = "posData",
                     OrderId = "orderId",
-                    ItemDesc = "Some description",
+                    ItemDesc = "Some \", description",
                     FullNotifications = true
                 }, Facade.Merchant);
 
@@ -1683,9 +1683,9 @@ donation:
                     var exportResultPaid = user.GetController<InvoiceController>().Export("csv").GetAwaiter().GetResult();
                     var paidresult = Assert.IsType<ContentResult>(exportResultPaid);
                     Assert.Equal("application/csv", paidresult.ContentType);
-                    Assert.Contains("BTC,5000.0,BTCLike,", paidresult.Content);
-                    Assert.Contains($",0.10020000 BTC,0.10009990 BTC,0.00000000 BTC,{invoice.Id},", paidresult.Content);
-                    Assert.Contains(",new,,Some description,500.0,USD", paidresult.Content);
+                    Assert.Contains("\"BTC\",\"5000.0\",\"BTCLike\",", paidresult.Content);
+                    Assert.Contains($",\"0.10020000 BTC\",\"0.10009990 BTC\",\"0.00000000 BTC\",\"{invoice.Id}\",", paidresult.Content);
+                    Assert.Contains(",\"new\",\"\",\"Some ``, description\",\"500.0\",\"USD\"", paidresult.Content);
                 });
 
                 /* 

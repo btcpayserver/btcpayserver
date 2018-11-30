@@ -168,12 +168,12 @@ Cart.prototype.listItems = function() {
         '<div class="input-group-prepend">' +
             '<span class="input-group-text">' + (currencySymbol != 'null' ? currencySymbol : '<i class="fa fa-money"></i>') + '</span>' +
         '</div>' +
-        '<input class="js-cart-tip form-control" type="number" min="0" step="' + step + '" value="' + (this.tip || '') + '" name="tip" placeholder="Amount">' +
+        '<input class="js-cart-tip form-control" type="number" min="0" step="' + step + '" value="' + this.escape(this.tip || '') + '" name="tip" placeholder="Amount">' +
     '</div>' +
     '</div></div></td></tr>';
         list.push($(tableTemplate));
 
-        tableTemplate = '<tr class="bg-light h4"><td colspan="1">Total</td><td colspan="3" align="right"><span id="js-cart-total">' + this.formatCurrency(this.getTotal()) + '</span></td></tr>';
+        tableTemplate = '<tr class="bg-light h4"><td colspan="1">Total</td><td colspan="3" align="right"><span id="js-cart-total">' + this.escape(this.formatCurrency(this.getTotal())) + '</span></td></tr>';
         list.push($(tableTemplate));
 
         // Add the list to DOM

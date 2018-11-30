@@ -48,6 +48,10 @@ namespace BTCPayServer.Services.Invoices.Export
             // in this first version we are only exporting invoices that were paid
             foreach (var payment in invoice.GetPayments())
             {
+                // not accounted payments are payments which got double spent like RBfed
+                if (!payment.Accounted)
+                    continue;
+
                 var cryptoCode = payment.GetPaymentMethodId().CryptoCode;
                 var pdata = payment.GetCryptoPaymentData();
 
@@ -57,15 +61,18 @@ namespace BTCPayServer.Services.Invoices.Export
 
                 var target = new ExportInvoiceHolder
                 {
+                    ReceivedDate = payment.ReceivedTime.UtcDateTime,
                     PaymentId = pdata.GetPaymentId(),
                     CryptoCode = cryptoCode,
                     ConversionRate = pmethod.Rate,
-                    PaymentType =  details.GetPaymentType().ToString(),
+                    PaymentType =  details.GetPaymentType() == Payments.PaymentTypes.BTCLike ? "OnChain" : "OffChain",
                     Destination = details.GetPaymentDestination(),
                     PaymentDue = $"{accounting.MinimumTotalDue} {cryptoCode}",
                     PaymentPaid = $"{accounting.CryptoPaid} {cryptoCode}",
                     PaymentOverpaid = $"{accounting.OverpaidHelper} {cryptoCode}",
 
+                    OrderId = invoice.OrderId,
+                    StoreId = invoice.StoreId,
                     InvoiceId = invoice.Id,
                     CreatedDate = invoice.InvoiceTime.UtcDateTime,
                     ExpirationDate = invoice.ExpirationTime.UtcDateTime,
@@ -80,12 +87,17 @@ namespace BTCPayServer.Services.Invoices.Export
                 exportList.Add(target);
             }
 
+            exportList = exportList.OrderBy(a => a.ReceivedDate).ToList();
+
             return exportList;
         }
     }
 
     public class ExportInvoiceHolder
     {
+        public DateTime ReceivedDate { get; set; }
+        public string StoreId { get; set; }
+
         public string PaymentId { get; set; }
         public string CryptoCode { get; set; }
         public decimal ConversionRate { get; set; }
@@ -96,6 +108,7 @@ namespace BTCPayServer.Services.Invoices.Export
         public string PaymentOverpaid { get; set; }
 
         public string InvoiceId { get; set; }
+        public string OrderId { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime ExpirationDate { get; set; }
         public DateTime MonitoringDate { get; set; }

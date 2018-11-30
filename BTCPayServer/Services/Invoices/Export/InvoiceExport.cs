@@ -65,7 +65,7 @@ namespace BTCPayServer.Services.Invoices.Export
                     PaymentId = pdata.GetPaymentId(),
                     CryptoCode = cryptoCode,
                     ConversionRate = pmethod.Rate,
-                    PaymentType =  details.GetPaymentType() == Payments.PaymentTypes.BTCLike ? "OnChain" : "OffChain",
+                    PaymentType = details.GetPaymentType() == Payments.PaymentTypes.BTCLike ? "OnChain" : "OffChain",
                     Destination = details.GetPaymentDestination(),
                     PaymentDue = $"{accounting.MinimumTotalDue} {cryptoCode}",
                     PaymentPaid = $"{accounting.CryptoPaid} {cryptoCode}",
@@ -97,25 +97,25 @@ namespace BTCPayServer.Services.Invoices.Export
     {
         public DateTime ReceivedDate { get; set; }
         public string StoreId { get; set; }
-
-        public string PaymentId { get; set; }
-        public string CryptoCode { get; set; }
-        public decimal ConversionRate { get; set; }
-        public string PaymentType { get; set; }
-        public string Destination { get; set; }
-        public string PaymentDue { get; set; }
-        public string PaymentPaid { get; set; }
-        public string PaymentOverpaid { get; set; }
-
-        public string InvoiceId { get; set; }
         public string OrderId { get; set; }
+        public string InvoiceId { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime ExpirationDate { get; set; }
         public DateTime MonitoringDate { get; set; }
-        public string Status { get; set; }
-        public string ItemCode { get; set; }
-        public string ItemDesc { get; set; }
+
+        public string PaymentId { get; set; }
+        public string CryptoCode { get; set; }
+        public string Destination { get; set; }
+        public string PaymentType { get; set; }
+        public string PaymentDue { get; set; }
+        public string PaymentPaid { get; set; }
+        public string PaymentOverpaid { get; set; }
+        public decimal ConversionRate { get; set; }
+
         public decimal FiatPrice { get; set; }
         public string FiatCurrency { get; set; }
+        public string ItemCode { get; set; }
+        public string ItemDesc { get; set; }
+        public string Status { get; set; }
     }
 }

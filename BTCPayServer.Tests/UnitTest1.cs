@@ -1599,7 +1599,7 @@ donation:
                     Currency = "USD",
                     PosData = "posData",
                     OrderId = "orderId",
-                    ItemDesc = "Some description",
+                    ItemDesc = "Some \", description",
                     FullNotifications = true
                 }, Facade.Merchant);
 
@@ -1619,7 +1619,7 @@ donation:
                     var jsonResultPaid = user.GetController<InvoiceController>().Export("json").GetAwaiter().GetResult();
                     var paidresult = Assert.IsType<ContentResult>(jsonResultPaid);
                     Assert.Equal("application/json", paidresult.ContentType);
-                    Assert.Contains("\"ItemDesc\": \"Some description\"", paidresult.Content);
+                    Assert.Contains("\"ItemDesc\": \"Some \\\", description\"", paidresult.Content);
                     Assert.Contains("\"FiatPrice\": 500.0", paidresult.Content);
                     Assert.Contains("\"ConversionRate\": 5000.0", paidresult.Content);
                     Assert.Contains("\"PaymentDue\": \"0.10020000 BTC\"", paidresult.Content);
@@ -1627,27 +1627,30 @@ donation:
                 });
 
                 /*
-                [
-                  {
-                    "PaymentId": "f6298c80250ba91cdcf6747ae592871c96cbb50128df3e93cc26f5fdb4e4445c - 0",
-                    "CryptoCode": "BTC",
-                    "ConversionRate": 5000.0,
-                    "PaymentType": "BTCLike",
-                    "Destination": "mj8CG5EF7tA2RwvJ1bfXzdGoCEVvyWUFm7",
-                    "PaymentDue": "0.10020000 BTC",
-                    "PaymentPaid": "0.10009990 BTC",
-                    "PaymentOverpaid": "0.00000000 BTC",
-                    "InvoiceId": "D5AmAAsDBrSoPFMso96RyP",
-                    "CreatedDate": "2018-11-30T08:23:32Z",
-                    "ExpirationDate": "2018-11-30T08:38:32Z",
-                    "MonitoringDate": "2018-11-30T09:38:32Z",
-                    "Status": "new",
-                    "ItemCode": null,
-                    "ItemDesc": "Some description",
-                    "FiatPrice": 500.0,
-                    "FiatCurrency": "USD"
-                  }
-                ]
+[
+  {
+    "ReceivedDate": "2018-11-30T10:27:13Z",
+    "StoreId": "FKaSZrXLJ2tcLfCyeiYYfmZp1UM5nZ1LDecQqbwBRuHi",
+    "OrderId": "orderId",
+    "InvoiceId": "4XUkgPMaTBzwJGV9P84kPC",
+    "CreatedDate": "2018-11-30T10:27:06Z",
+    "ExpirationDate": "2018-11-30T10:42:06Z",
+    "MonitoringDate": "2018-11-30T11:42:06Z",
+    "PaymentId": "6e5755c3357b20fd66f5fc478778d81371eab341e7112ab66ed6122c0ec0d9e5-1",
+    "CryptoCode": "BTC",
+    "Destination": "mhhSEQuoM993o6vwnBeufJ4TaWov2ZUsPQ",
+    "PaymentType": "OnChain",
+    "PaymentDue": "0.10020000 BTC",
+    "PaymentPaid": "0.10009990 BTC",
+    "PaymentOverpaid": "0.00000000 BTC",
+    "ConversionRate": 5000.0,
+    "FiatPrice": 500.0,
+    "FiatCurrency": "USD",
+    "ItemCode": null,
+    "ItemDesc": "Some \", description",
+    "Status": "new"
+  }
+]
                 */
             }
         }
@@ -1683,14 +1686,14 @@ donation:
                     var exportResultPaid = user.GetController<InvoiceController>().Export("csv").GetAwaiter().GetResult();
                     var paidresult = Assert.IsType<ContentResult>(exportResultPaid);
                     Assert.Equal("application/csv", paidresult.ContentType);
-                    Assert.Contains("\"BTC\",\"5000.0\",\"BTCLike\",", paidresult.Content);
-                    Assert.Contains($",\"0.10020000 BTC\",\"0.10009990 BTC\",\"0.00000000 BTC\",\"{invoice.Id}\",", paidresult.Content);
-                    Assert.Contains(",\"new\",\"\",\"Some ``, description\",\"500.0\",\"USD\"", paidresult.Content);
+                    Assert.Contains($",\"orderId\",\"{invoice.Id}\",", paidresult.Content);
+                    Assert.Contains($",\"OnChain\",\"0.10020000 BTC\",\"0.10009990 BTC\",\"0.00000000 BTC\",\"5000.0\",\"500.0\"", paidresult.Content);
+                    Assert.Contains($",\"USD\",\"\",\"Some ``, description\",\"new\"", paidresult.Content);
                 });
 
                 /* 
-PaymentId,CryptoCode,ConversionRate,PaymentType,Destination,PaymentDue,PaymentPaid,PaymentOverpaid,InvoiceId,CreatedDate,ExpirationDate,MonitoringDate,Status,ItemCode,ItemDesc,FiatPrice,FiatCurrency
-                60f2fa93169734978e42142ff83518e9d1c2493ac19ca3cbadaf5ce6d673df5b-0,BTC,5000.0,BTCLike,mgQELrS6iQCUSBTkoAuB7zs92eLndnRQWc,0.10020000 BTC,0.10009990 BTC,0.00000000 BTC,9adSxs7dBzn9bGxHUy5vTk,11/30/2018 8:31:15 AM,11/30/2018 8:46:15 AM,11/30/2018 9:46:15 AM,new,,Some description,500.0,USD
+ReceivedDate,StoreId,OrderId,InvoiceId,CreatedDate,ExpirationDate,MonitoringDate,PaymentId,CryptoCode,Destination,PaymentType,PaymentDue,PaymentPaid,PaymentOverpaid,ConversionRate,FiatPrice,FiatCurrency,ItemCode,ItemDesc,Status
+"11/30/2018 10:28:42 AM","7AagXzWdWhLLR3Zar25YLiw2uHAJDzVT4oXGKC9bBCis","orderId","GxtJsWbgxxAXXoCurqyeK6","11/30/2018 10:28:40 AM","11/30/2018 10:43:40 AM","11/30/2018 11:43:40 AM","ec0341537f565d213bc64caa352fbbf9e0deb31cab1f91bccf89db0dd1604457-0","BTC","mqWghCp9RVw8fNgQMLjawyKStxpGfWBk1L","OnChain","0.10020000 BTC","0.10009990 BTC","0.00000000 BTC","5000.0","500.0","USD","","Some ``, description","new"
                 */
             }
         }

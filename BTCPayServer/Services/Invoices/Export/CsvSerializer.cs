@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -13,17 +14,16 @@ namespace BTCPayServer.Services.Invoices.Export
     /// <summary>
     /// Serialize and Deserialize Lists of any object type to CSV.
     /// </summary>
-#pragma warning disable CA1305 // Specify IFormatProvider
     public class CsvSerializer<T> where T : class, new()
 	{
 		private List<PropertyInfo> _properties;
 
         public bool IgnoreEmptyLines { get; set; } = true;
         public bool IgnoreReferenceTypesExceptString { get; set; } = true;
-        public string NewlineReplacement { get; set; } = ((char)0x254).ToString();
+        public string NewlineReplacement { get; set; } = ((char)0x254).ToString(CultureInfo.InvariantCulture);
 
         public char Separator { get; set; } = ',';
-        public string Replacement { get; set; } = ((char)0x255).ToString();
+        public string Replacement { get; set; } = ((char)0x255).ToString(CultureInfo.InvariantCulture);
 
 		public string RowNumberColumnTitle { get; set; } = "RowNumber";
         public bool UseLineNumbers { get; set; } = false;
@@ -75,7 +75,7 @@ namespace BTCPayServer.Services.Invoices.Export
 
 				if (UseLineNumbers)
 				{
-					values.Add(row++.ToString());
+					values.Add(row++.ToString(CultureInfo.InvariantCulture));
 				}
 
 				foreach (var p in _properties)
@@ -83,17 +83,17 @@ namespace BTCPayServer.Services.Invoices.Export
 					var raw = p.GetValue(item);
 					var value = raw == null ? "" :
 						raw.ToString()
-						.Replace(Separator.ToString(), Replacement)
-						.Replace(Environment.NewLine, NewlineReplacement);
+						.Replace(Separator.ToString(CultureInfo.InvariantCulture), Replacement, StringComparison.OrdinalIgnoreCase)
+						.Replace(Environment.NewLine, NewlineReplacement, StringComparison.OrdinalIgnoreCase);
 
 					if (UseTextQualifier)
 					{
-						value = string.Format("\"{0}\"", value);
+						value = String.Format(CultureInfo.InvariantCulture, "\"{0}\"", value);
 					}
 
 					values.Add(value);
 				}
-				sb.AppendLine(string.Join(Separator.ToString(), values.ToArray()));
+				sb.AppendLine(String.Join(Separator.ToString(CultureInfo.InvariantCulture), values.ToArray()));
 			}
 
 			if (UseEofLiteral)
@@ -102,12 +102,12 @@ namespace BTCPayServer.Services.Invoices.Export
 
 				if (UseLineNumbers)
 				{
-					values.Add(row++.ToString());
+					values.Add(row++.ToString(CultureInfo.InvariantCulture));
 				}
 
 				values.Add("EOF");
 
-				sb.AppendLine(string.Join(Separator.ToString(), values.ToArray()));
+				sb.AppendLine(string.Join(Separator.ToString(CultureInfo.InvariantCulture), values.ToArray()));
 			}
 
             return sb.ToString();
@@ -126,10 +126,9 @@ namespace BTCPayServer.Services.Invoices.Export
 				header = new string[] { RowNumberColumnTitle }.Union(header);
 			}
 
-			return string.Join(Separator.ToString(), header.ToArray());
+			return string.Join(Separator.ToString(CultureInfo.InvariantCulture), header.ToArray());
 		}
     }
-#pragma warning restore CA1305 // Specify IFormatProvider
 
     public class CsvIgnoreAttribute : Attribute { }
 

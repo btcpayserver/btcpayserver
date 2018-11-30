@@ -483,7 +483,7 @@ namespace BTCPayServer.Controllers
 
             var cd = new ContentDisposition
             {
-                FileName = $"btcpay-export-{DateTime.UtcNow.ToString("yyyyMMdd-HHmmss")}.{format}",
+                FileName = $"btcpay-export-{DateTime.UtcNow.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture)}.{format}",
                 Inline = true
             };
             Response.Headers.Add("Content-Disposition", cd.ToString());

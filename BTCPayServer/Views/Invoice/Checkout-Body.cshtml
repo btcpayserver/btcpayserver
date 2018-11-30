@@ -296,8 +296,8 @@
                                     </option>
                                 </select>
                             </div>
-                            <a  v-on:click="openDialog($event)" :href="url" class="changelly-component-button">
-                                <img src="https://changelly.com/pay_button.png" alt="Changelly" v-show="url"/>
+                            <a  v-on:click="openDialog($event)" :href="url" class="btn btn-primary retry-button changelly-component-button"  v-show="url">
+                               Pay with Changelly
                             </a>
                             <button class="retry-button" v-if="calculateError" v-on:click="retry('calculateAmount')">
                                 {{$t("ConversionTab_CalculateAmount_Error")}}

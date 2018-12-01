@@ -47,6 +47,7 @@ namespace BTCPayServer.Controllers
                 Step = step.ToString(CultureInfo.InvariantCulture),
                 EnableShoppingCart = settings.EnableShoppingCart,
                 ShowCustomAmount = settings.ShowCustomAmount,
+                CurrencyCode = currency.Code,
                 CurrencySymbol = currency.Symbol,
                 Items = _AppsHelper.Parse(settings.Template, settings.Currency),
                 ButtonText = settings.ButtonText,

@@ -27,6 +27,7 @@ namespace BTCPayServer.Models.AppViewModels
         public string Step { get; set; }
         public string Title { get; set; }
         public Item[] Items { get; set; }
+        public string CurrencyCode { get; set; }
         public string CurrencySymbol { get; set; }
 
         public string ButtonText { get; set; }

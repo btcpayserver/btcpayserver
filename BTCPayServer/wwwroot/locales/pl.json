@@ -33,7 +33,7 @@
   "What happened?": "Co się stało?",
   "InvoiceExpired_Body_1": "Płatność wygasła. Płatność jest prawidłowa przez {{maxTimeMinutes}} minut. Jeśli chcesz wysłaść płatność ponownie wróć do {{storeName}}.",
   "InvoiceExpired_Body_2": "Jeżeli próbowałeś wysłać płatność to nie została ona zaakcepowana przez sieć. Nie otrzymaliśmy jeszcze twoich funduszy.",
-  "InvoiceExpired_Body_3": "Jeżeli transakcja nie jest akceptowana przez sieć, fundusze będą ponownie wydawalne w twoim portfelu. W zależności od typu twojego portfela może to zająć 48-72 godzin.",
+  "InvoiceExpired_Body_3": "",
   "Invoice ID": "Płatność ID",
   "Order ID": "Zamówienie ID",
   "Return to StoreName": "Wróć do {{storeName}}",

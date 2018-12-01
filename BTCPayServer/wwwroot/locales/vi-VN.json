@@ -33,7 +33,7 @@
   "What happened?": "Đã xảy ra chuyện gì?",
   "InvoiceExpired_Body_1": "Hóa đơn này đã quá hạn. Một hóa đơn chỉ có giá trị trong {{maxTimeMinutes}} phút.  \nNếu muốn đệ trình việc thanh toán một lần nữa, bạn có thể quay lại {{storeName}}.",
   "InvoiceExpired_Body_2": "Nếu bạn vừa định gửi thanh toán, thì hệ thống vẫn chưa chấp nhận thanh toán của bạn. Chúng tôi vẫn chưa nhận được tiền của bạn.",
-  "InvoiceExpired_Body_3": "Nếu giao dịch không được hệ thống chấp nhận, các khoản tiền của bạn sẽ được phân bổ trở lại ví của bạn để bạn tiêu dùng. Tuỳ thuộc vào ví của bạn, việc này có thể mất 48-72 giờ.",
+  "InvoiceExpired_Body_3": "",
   "Invoice ID": "Số Hóa đơn",
   "Order ID": "Số Đơn hàng",
   "Return to StoreName": "Quay lại {{storeName}}",

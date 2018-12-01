@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
-		<Version>1.0.3.21</Version>
+		<Version>1.0.3.22</Version>
     <NoWarn>NU1701,CA1816,CA1308,CA1810,CA2208</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
@@ -46,10 +46,10 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NBitcoin" Version="4.1.1.71" />
+    <PackageReference Include="NBitcoin" Version="4.1.1.72" />
     <PackageReference Include="NBitpayClient" Version="1.0.0.30" />	  
     <PackageReference Include="DBreeze" Version="1.92.0" />
-    <PackageReference Include="NBXplorer.Client" Version="2.0.0" />
+    <PackageReference Include="NBXplorer.Client" Version="2.0.0.1" />
     <PackageReference Include="NicolasDorier.CommandLine" Version="1.0.0.2" />
     <PackageReference Include="NicolasDorier.CommandLine.Configuration" Version="1.0.0.3" />
     <PackageReference Include="NicolasDorier.RateLimits" Version="1.0.0.3" />

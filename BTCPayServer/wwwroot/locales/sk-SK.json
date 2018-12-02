@@ -33,7 +33,7 @@
   "What happened?": "Čo sa stalo?",
   "InvoiceExpired_Body_1": "Platnosť tejto faktúry vypršala. Faktúra platí iba {{maxTimeMinutes}} minút. \nMôžete sa vrátiť na {{storeName}}, ak chcete platbu znova odoslať.",
   "InvoiceExpired_Body_2": "Ak ste sa pokúsili odoslať platbu, sieť ju ešte neprijala. Zatia+l sme nedostali Vaše finančné prostriedky.",
-  "InvoiceExpired_Body_3": "Ak transakcia nie je sieťou prijatá, finančné prostriedky sa budú dať znova použiť vo Vašej peňaženke. V závislosti od peňaženky to môže trvať 48-72 hodín.",
+  "InvoiceExpired_Body_3": "",
   "Invoice ID": "ID faktúry",
   "Order ID": "ID objednávky",
   "Return to StoreName": "Vrátiť sa na {{storeName}}",

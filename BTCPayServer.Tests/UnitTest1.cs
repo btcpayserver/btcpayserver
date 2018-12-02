@@ -80,7 +80,7 @@ namespace BTCPayServer.Tests
             Assert.False(attribute.IsValid("http://"));
             Assert.False(attribute.IsValid("httpdsadsa.com"));
         }
-        
+
         [Fact]
         [Trait("Fast", "Fast")]
         public void CanCalculateCryptoDue2()
@@ -596,7 +596,7 @@ namespace BTCPayServer.Tests
             var fetcher = new RateFetcher(factory);
 
             Assert.True(RateRules.TryParse("X_X=kraken(X_BTC) * kraken(BTC_X)", out var rule));
-            foreach(var pair in new[] { "DOGE_USD", "DOGE_CAD", "DASH_CAD", "DASH_USD", "DASH_EUR" })
+            foreach (var pair in new[] { "DOGE_USD", "DOGE_CAD", "DASH_CAD", "DASH_USD", "DASH_EUR" })
             {
                 var result = fetcher.FetchRate(CurrencyPair.Parse(pair), rule).GetAwaiter().GetResult();
                 Assert.NotNull(result.BidAsk);
@@ -1508,7 +1508,7 @@ donation:
                 Assert.Equal("donation", donationInvoice.ItemDesc);
             }
         }
-        
+
         [Fact]
         [Trait("Fast", "Fast")]
         public void PosDataParser_ParsesCorrectly()
@@ -1527,13 +1527,13 @@ donation:
                         new Dictionary<string, string>(){ {"key", "value"}, {"key2", "value,value2"}})},
                     {("{ invalidjson file here}", new Dictionary<string, string>(){ {String.Empty, "{ invalidjson file here}"}})}
                 };
-            
+
             testCases.ForEach(tuple =>
             {
                 Assert.Equal(tuple.expectedOutput, InvoiceController.PosDataParser.ParsePosData(tuple.input));
             });
         }
-        
+
         [Fact]
         [Trait("Integration", "Integration")]
         public async Task PosDataParser_ParsesCorrectly_Slower()
@@ -1544,7 +1544,7 @@ donation:
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
-                
+
                 var controller = tester.PayTester.GetController<InvoiceController>(null);
 
                 var testCases =
@@ -1582,7 +1582,123 @@ donation:
             }
         }
 
-       
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public void CanExportInvoicesJson()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.Start();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                user.RegisterDerivationScheme("BTC");
+
+                var invoice = user.BitPay.CreateInvoice(new Invoice()
+                {
+                    Price = 500,
+                    Currency = "USD",
+                    PosData = "posData",
+                    OrderId = "orderId",
+                    ItemDesc = "Some \", description",
+                    FullNotifications = true
+                }, Facade.Merchant);
+
+                // ensure 0 invoices exported because there are no payments yet
+                var jsonResult = user.GetController<InvoiceController>().Export("json").GetAwaiter().GetResult();
+                var result = Assert.IsType<ContentResult>(jsonResult);
+                Assert.Equal("application/json", result.ContentType);
+                Assert.Equal("[]", result.Content);
+
+                var cashCow = tester.ExplorerNode;
+                var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, cashCow.Network);
+                var firstPayment = invoice.CryptoInfo[0].TotalDue - Money.Satoshis(10);
+                cashCow.SendToAddress(invoiceAddress, firstPayment);
+
+                Eventually(() =>
+                {
+                    var jsonResultPaid = user.GetController<InvoiceController>().Export("json").GetAwaiter().GetResult();
+                    var paidresult = Assert.IsType<ContentResult>(jsonResultPaid);
+                    Assert.Equal("application/json", paidresult.ContentType);
+                    Assert.Contains("\"ItemDesc\": \"Some \\\", description\"", paidresult.Content);
+                    Assert.Contains("\"FiatPrice\": 500.0", paidresult.Content);
+                    Assert.Contains("\"ConversionRate\": 5000.0", paidresult.Content);
+                    Assert.Contains("\"PaymentDue\": \"0.10020000 BTC\"", paidresult.Content);
+                    Assert.Contains($"\"InvoiceId\": \"{invoice.Id}\",", paidresult.Content);
+                });
+
+                /*
+[
+  {
+    "ReceivedDate": "2018-11-30T10:27:13Z",
+    "StoreId": "FKaSZrXLJ2tcLfCyeiYYfmZp1UM5nZ1LDecQqbwBRuHi",
+    "OrderId": "orderId",
+    "InvoiceId": "4XUkgPMaTBzwJGV9P84kPC",
+    "CreatedDate": "2018-11-30T10:27:06Z",
+    "ExpirationDate": "2018-11-30T10:42:06Z",
+    "MonitoringDate": "2018-11-30T11:42:06Z",
+    "PaymentId": "6e5755c3357b20fd66f5fc478778d81371eab341e7112ab66ed6122c0ec0d9e5-1",
+    "CryptoCode": "BTC",
+    "Destination": "mhhSEQuoM993o6vwnBeufJ4TaWov2ZUsPQ",
+    "PaymentType": "OnChain",
+    "PaymentDue": "0.10020000 BTC",
+    "PaymentPaid": "0.10009990 BTC",
+    "PaymentOverpaid": "0.00000000 BTC",
+    "ConversionRate": 5000.0,
+    "FiatPrice": 500.0,
+    "FiatCurrency": "USD",
+    "ItemCode": null,
+    "ItemDesc": "Some \", description",
+    "Status": "new"
+  }
+]
+                */
+            }
+        }
+
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public void CanExportInvoicesCsv()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.Start();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                user.RegisterDerivationScheme("BTC");
+
+                var invoice = user.BitPay.CreateInvoice(new Invoice()
+                {
+                    Price = 500,
+                    Currency = "USD",
+                    PosData = "posData",
+                    OrderId = "orderId",
+                    ItemDesc = "Some \", description",
+                    FullNotifications = true
+                }, Facade.Merchant);
+
+                var cashCow = tester.ExplorerNode;
+                var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, cashCow.Network);
+                var firstPayment = invoice.CryptoInfo[0].TotalDue - Money.Satoshis(10);
+                cashCow.SendToAddress(invoiceAddress, firstPayment);
+
+                Eventually(() =>
+                {
+                    var exportResultPaid = user.GetController<InvoiceController>().Export("csv").GetAwaiter().GetResult();
+                    var paidresult = Assert.IsType<ContentResult>(exportResultPaid);
+                    Assert.Equal("application/csv", paidresult.ContentType);
+                    Assert.Contains($",\"orderId\",\"{invoice.Id}\",", paidresult.Content);
+                    Assert.Contains($",\"OnChain\",\"0.10020000 BTC\",\"0.10009990 BTC\",\"0.00000000 BTC\",\"5000.0\",\"500.0\"", paidresult.Content);
+                    Assert.Contains($",\"USD\",\"\",\"Some ``, description\",\"new\"", paidresult.Content);
+                });
+
+                /* 
+ReceivedDate,StoreId,OrderId,InvoiceId,CreatedDate,ExpirationDate,MonitoringDate,PaymentId,CryptoCode,Destination,PaymentType,PaymentDue,PaymentPaid,PaymentOverpaid,ConversionRate,FiatPrice,FiatCurrency,ItemCode,ItemDesc,Status
+"11/30/2018 10:28:42 AM","7AagXzWdWhLLR3Zar25YLiw2uHAJDzVT4oXGKC9bBCis","orderId","GxtJsWbgxxAXXoCurqyeK6","11/30/2018 10:28:40 AM","11/30/2018 10:43:40 AM","11/30/2018 11:43:40 AM","ec0341537f565d213bc64caa352fbbf9e0deb31cab1f91bccf89db0dd1604457-0","BTC","mqWghCp9RVw8fNgQMLjawyKStxpGfWBk1L","OnChain","0.10020000 BTC","0.10009990 BTC","0.00000000 BTC","5000.0","500.0","USD","","Some ``, description","new"
+                */
+            }
+        }
+
+
 
         [Fact]
         [Trait("Integration", "Integration")]
@@ -1895,12 +2011,12 @@ donation:
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
-                
+
                 var serverController = user.GetController<ServerController>();
                 var vm = Assert.IsType<LogsViewModel>(Assert.IsType<ViewResult>(await serverController.LogsView()).Model);
             }
-        } 
-       
+        }
+
         [Fact]
         [Trait("Fast", "Fast")]
         public void CheckRatesProvider()

@@ -33,7 +33,7 @@
   "What happened?": "¿Qué sucedió?",
   "InvoiceExpired_Body_1": "Esta factura ha expirado. Una factura solo es válida por {{maxTimeMinutes}} minutos. \nPuedes regresar a {{storeName}} si deseas volver a enviar tu pago.",
   "InvoiceExpired_Body_2": "Si intentaste enviar un pago, aún no ha sido aceptado por la red de Bitcoin. Todavía no hemos recibido tus fondos.",
-  "InvoiceExpired_Body_3": "Si la transacción no es aceptada por la red de Bitcoin, los fondos se podrán gastar nuevamente en tu billetera. Dependiendo de tu billetera, esto puede tomar 48-72 horas.",
+  "InvoiceExpired_Body_3": "",
   "Invoice ID": "ID de la factura",
   "Order ID": "ID del pedido",
   "Return to StoreName": "Regresar a {{storeName}}",

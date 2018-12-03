@@ -133,6 +133,9 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>
+    <Content Update="Views\Home\BitpayTranslator.cshtml">
+      <Pack>$(IncludeRazorContentInPack)</Pack>
+    </Content>
     <Content Update="Views\Server\LndRestServices.cshtml">
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>

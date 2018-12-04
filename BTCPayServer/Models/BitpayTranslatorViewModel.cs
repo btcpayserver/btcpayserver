@@ -12,5 +12,6 @@ namespace BTCPayServer.Models
         public string BitpayLink { get; set; }
         public string Address { get; set; }
         public string Amount { get; set; }
+        public string BitcoinUri { get; set; }
     }
 }

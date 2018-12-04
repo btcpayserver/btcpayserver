@@ -10,6 +10,7 @@ using NBitcoin.Payment;
 using System.Net.Http;
 using Newtonsoft.Json.Linq;
 using NBitcoin;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Controllers
 {
@@ -49,7 +50,7 @@ namespace BTCPayServer.Controllers
             try
             {
                 BitcoinUrlBuilder urlBuilder = new BitcoinUrlBuilder(vm.BitpayLink);
-                if(!urlBuilder.PaymentRequestUrl.DnsSafeHost.EndsWith("bitpay.com", StringComparison.OrdinalIgnoreCase))
+                if (!urlBuilder.PaymentRequestUrl.DnsSafeHost.EndsWith("bitpay.com", StringComparison.OrdinalIgnoreCase))
                 {
                     throw new Exception("This tool only work with bitpay");
                 }
@@ -60,9 +61,19 @@ namespace BTCPayServer.Controllers
                 var result = await client.SendAsync(request);
                 // {"network":"main","currency":"BTC","requiredFeeRate":29.834,"outputs":[{"amount":255900,"address":"1PgPo5d4swD6pKfCgoXtoW61zqTfX9H7tj"}],"time":"2018-12-03T14:39:47.162Z","expires":"2018-12-03T14:54:47.162Z","memo":"Payment request for BitPay invoice HHfG8cprRMzZG6MErCqbjv for merchant VULTR Holdings LLC","paymentUrl":"https://bitpay.com/i/HHfG8cprRMzZG6MErCqbjv","paymentId":"HHfG8cprRMzZG6MErCqbjv"}
                 var str = await result.Content.ReadAsStringAsync();
-                var jobj = JObject.Parse(str);
-                vm.Address = ((JArray)jobj["outputs"])[0]["address"].Value<string>();
-                vm.Amount = Money.Satoshis(((JArray)jobj["outputs"])[0]["amount"].Value<long>()).ToString();
+                try
+                {
+                    var jobj = JObject.Parse(str);
+                    vm.Address = ((JArray)jobj["outputs"])[0]["address"].Value<string>();
+                    var amount = Money.Satoshis(((JArray)jobj["outputs"])[0]["amount"].Value<long>());
+                    vm.Amount = amount.ToString();
+                    vm.BitcoinUri = $"bitcoin:{vm.Address}?amount={amount.ToString()}";
+                }
+                catch (JsonReaderException)
+                {
+                    ModelState.AddModelError(nameof(vm.BitpayLink), $"Invalid or expired bitpay invoice");
+                    return View(vm);
+                }
             }
             catch (Exception ex)
             {

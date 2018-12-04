@@ -9,6 +9,13 @@
                     <div class="alert alert-success alert-dismissible" role="alert">
                         <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                         <p>You need to pay <b>@Model.Amount</b> to <b>@Model.Address</b></p>
+                        <div id="qrCode"></div>
+                        <div id="qrCodeData" data-url="@Html.Raw(Model.BitcoinUri)" style="margin-bottom:20px;"></div>
+                        <p>
+                            <a class="btn btn-primary" href="@Model.BitcoinUri">
+                                <span>Open in wallet</span>
+                            </a>
+                        </p>
                     </div>
                 </div>
             </div>
@@ -36,5 +43,19 @@
             </div>
             <div class="col-lg-4 text-center">&nbsp;</div>
         </div>
-        </div>
+    </div>
 </section>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <script type="text/javascript" src="~/js/qrcode.min.js"></script>
+    <script type="text/javascript">
+        new QRCode(document.getElementById("qrCode"),
+            {
+                text: "@Html.Raw(Model.BitcoinUri)",
+                width: 150,
+                height: 150
+            });
+        $("#qrCode > img").css({ "margin": "auto" });
+    </script>
+}

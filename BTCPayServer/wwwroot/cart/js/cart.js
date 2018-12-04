@@ -245,215 +245,48 @@ Cart.prototype.formatCurrency = function(amount, currency, symbol) {
         thousandsSep = '',
         decimalSep = ''
         prefix = '',
-        postfix = '',
-        currencyName = currency.toLowerCase();
+        postfix = '';
 
-    // Currency symbols
-    switch (currencyName) {
-        case 'usd':
-        case 'aud':
-        case 'cad':
-        case 'clp':
-        case 'mxn':
-        case 'nzd':
-        case 'sgd':
-            prefix = '$';
-            break;
-        case 'eur':
-            postfix = ' €';
-            break;
-        case 'chf':
-            prefix = 'CHF ';
-            break;
-        case 'gbp':
-            prefix = '£';
-            break;
-        case 'jpy':
-        case 'cny':
-            prefix = '¥';
-            break;
-        case 'hkd':
-            prefix = 'HK$';
-            break;
-        case 'ars':
-        case 'cop':
-            prefix = '$ ';
-            break;
-        case 'brl':
-            prefix = 'R$ ';
-            break;
-        case 'bdt':
-            postfix = '৳';
-            break;
-        case 'czk':
-            postfix = ' Kč';
-            break;
-        case 'dkk':
-            postfix = ' kr.';
-            break;
-        case 'huf':
-            postfix = ' Ft';
-            break;
-        case 'hrk':
-            postfix = ' HRK';
-            break;
-        case 'ils':
-            postfix = ' ₪';
-            break;
-        case 'inr':
-            prefix = '₹ ';
-            break;
-        case 'isk':
-            postfix = ' ISK';
-            break;
-        case 'kzt':
-            postfix = ' ₸';
-            break;
-        case 'myr':
-            prefix = 'RM';
-            break;
-        case 'ngn':
-            prefix = '₦';
-            break;
-        case 'nok':
-            prefix = 'kr ';
-            break;
-        case 'php':
-            prefix = '₱';
-            break;
-        case 'pen':
-            prefix = 'S/';
-            break;
-        case 'pln':
-            postfix = ' zł';
-            break;
-        case 'ron':
-            postfix = ' RON';
-            break;
-        case 'rub':
-            postifx = ' ₽';
-            break;
-        case 'sek':
-            postfix = ' kr';
-            break;
-        case 'aed':
-            prefix = 'د.إ. ‏';
-            break;
-        case 'egp':
-            prefix = 'ج.م.‏';
-            break;
-        case 'irr':
-            prefix = 'ریال';
-            break;
-        case 'pkr':
-            prefix = ' ر';
-            break;
-        case 'sar':
-            prefix = 'ر.س.‏';
-            break;
-        case 'try':
-            prefix = '₺';
-            break;
-        case 'uah':
-            postfix = ' ₴';
-            break;
-        case 'vnd':
-            postfix = ' ₫';
-            break;
-        case 'zar':
-            prefix = 'R';
-            break;
-
-        default:
-            prefix = symbol || currency;
+    if (srvModel.currencyInfo.prefixed) {
+        prefix = srvModel.currencyInfo.currencySymbol;
     }
-    
-    // Currency separators
-    switch (currencyName) {
-        case 'eur':
-        case 'czk':
-        case 'huf':
-        case 'kzt':
-        case 'nok':
-        case 'pln':
-        case 'rub':
-        case 'sek':
-        case 'uah':
-        case 'zar':
-            thousandsSep = ' ';
-            decimalSep = ',';
-            break;
-
-        case 'chf':
-            thousandsSep = '’';
-            decimalSep = '.';
-            break;
-
-        case 'cop':
-        case 'clp':
-        case 'idr':
-        case 'isk':
-        case 'vnd':
-            thousandsSep = '.';
-            break;
-
-        case 'jpy':
-            thousandsSep = ',';
-            break;
-        
-        case 'ars':
-        case 'brl':
-        case 'dkk':
-        case 'hrk':
-        case 'ron':
-        case 'try':
-            thousandsSep = '.';
-            decimalSep = ',';
-            break;
-
-        case 'irr':
-        case 'pkr':
-            thousandsSep = '٬';
-            break;
-
-        case 'egp':
-        case 'sar':
-            thousandsSep = '٬';
-            decimalSep = '٫';
-            break;
-
-        default:
-            thousandsSep = ',';
-            decimalSep = '.';
+    else {
+        postfix = srvModel.currencyInfo.currencySymbol;
     }
+    thousandsSep = srvModel.currencyInfo.thousandSeparator;
+    decimalSep = srvModel.currencyInfo.decimalSeparator;
+    amt = amount.toFixed(srvModel.currencyInfo.divisibility);
 
-    if (decimalSep !== '') {
-        // Replace decimal separator
-        amt = amount.toFixed(2).replace(/.(\d{2})$/g, decimalSep + '\$1');
-    } else {
-        // No decimal separator
-        amt = amount.toString();
-    }
     // Add currency sign and thousands separator
-    amt = prefix + amt.replace(/\B(?=(\d{3})+(?!\d))/g, thousandsSep) + postfix;
+    var splittedAmount = amt.split('.');
+    amt = (splittedAmount[0] + '.').replace(/(\d)(?=(\d{3})+\.)/g, '$1' + thousandsSep);
+    amt = amt.substr(0, amt.length - 1);
+    if(splittedAmount.length == 2)
+        amt = amt + '.' + splittedAmount[1];
+    if (srvModel.currencyInfo.divisibility !== 0) {
+        amt[amt.length - srvModel.currencyInfo.divisibility - 1] = decimalSep;
+    }
+    amt = prefix + amt + postfix;
 
     return amt;
 }
 
 Cart.prototype.toCents = function(num) {
-    return num * 100;
+    return num * Math.pow(10, srvModel.currencyInfo.divisibility);
 }
 
 Cart.prototype.fromCents = function(num) {
-    return num / 100;
+    return num / Math.pow(10, srvModel.currencyInfo.divisibility);
 }
 
+Cart.prototype.getStorageKey = function () { return ('cart' + srvModel.appId + srvModel.currencyCode); }
+
 Cart.prototype.saveLocalStorage = function() {
-    localStorage.setItem('cart', JSON.stringify(this.content));
+    localStorage.setItem(this.getStorageKey(), JSON.stringify(this.content));
 }
 
 Cart.prototype.loadLocalStorage = function() {
-    this.content = $.parseJSON(localStorage.getItem('cart')) || [];
+    this.content = $.parseJSON(localStorage.getItem(this.getStorageKey())) || [];
 
     // Get number of cart items
     for (var key in this.content) {
@@ -464,7 +297,7 @@ Cart.prototype.loadLocalStorage = function() {
 }
 
 Cart.prototype.destroy = function() {
-    localStorage.removeItem('cart');
+    localStorage.removeItem(this.getStorageKey());
     this.content = [];
     this.items = 0;
     this.totalAmount = 0;

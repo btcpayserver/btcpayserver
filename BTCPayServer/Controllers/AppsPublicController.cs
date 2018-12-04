@@ -41,6 +41,7 @@ namespace BTCPayServer.Controllers
             var currency = _AppsHelper.GetCurrencyData(settings.Currency, false);
             double step = currency == null ? 1 : Math.Pow(10, -(currency.Divisibility));
 
+            var numberFormatInfo = _AppsHelper.Currencies.GetNumberFormatInfo(currency.Code) ?? _AppsHelper.Currencies.GetNumberFormatInfo("USD");
             return View(new ViewPointOfSaleViewModel()
             {
                 Title = settings.Title,
@@ -49,6 +50,14 @@ namespace BTCPayServer.Controllers
                 ShowCustomAmount = settings.ShowCustomAmount,
                 CurrencyCode = currency.Code,
                 CurrencySymbol = currency.Symbol,
+                CurrencyInfo = new ViewPointOfSaleViewModel.CurrencyInfoData()
+                {
+                    CurrencySymbol = string.IsNullOrEmpty(currency.Symbol) ? currency.Code : currency.Symbol,
+                    Divisibility = currency.Divisibility,
+                    DecimalSeparator = numberFormatInfo.CurrencyDecimalSeparator,
+                    ThousandSeparator = numberFormatInfo.NumberGroupSeparator,
+                    Prefixed = new[] { 0, 2 }.Contains(numberFormatInfo.CurrencyPositivePattern)
+                },
                 Items = _AppsHelper.Parse(settings.Template, settings.Currency),
                 ButtonText = settings.ButtonText,
                 CustomButtonText = settings.CustomButtonText,
@@ -124,7 +133,7 @@ namespace BTCPayServer.Controllers
     {
         ApplicationDbContextFactory _ContextFactory;
         CurrencyNameTable _Currencies;
-
+        public CurrencyNameTable Currencies => _Currencies;
         public AppsHelper(ApplicationDbContextFactory contextFactory, CurrencyNameTable currencies)
         {
             _ContextFactory = contextFactory;

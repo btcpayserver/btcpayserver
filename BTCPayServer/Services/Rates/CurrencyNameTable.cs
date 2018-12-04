@@ -61,7 +61,15 @@ namespace BTCPayServer.Services.Rates
             currencyInfo.CurrencySymbol = currency;
             return currencyInfo;
         }
-
+        public NumberFormatInfo GetNumberFormatInfo(string currency)
+        {
+            var curr = GetCurrencyProvider(currency);
+            if (curr is CultureInfo cu)
+                return cu.NumberFormat;
+            if (curr is NumberFormatInfo ni)
+                return ni;
+            return null;
+        }
         public IFormatProvider GetCurrencyProvider(string currency)
         {
             lock (_CurrencyProviders)

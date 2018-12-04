@@ -22,6 +22,17 @@ namespace BTCPayServer.Models.AppViewModels
             public bool Custom { get; set; }
         }
 
+        public class CurrencyInfoData
+        {
+            public bool Prefixed { get; set; }
+            public string CurrencySymbol { get; set; }
+            public string ThousandSeparator { get; set; }
+            public string DecimalSeparator { get; set; }
+            public int Divisibility { get; internal set; }
+        }
+
+        public CurrencyInfoData CurrencyInfo { get; set; }
+
         public bool EnableShoppingCart { get; set; }
         public bool ShowCustomAmount { get; set; }
         public string Step { get; set; }
@@ -29,7 +40,7 @@ namespace BTCPayServer.Models.AppViewModels
         public Item[] Items { get; set; }
         public string CurrencyCode { get; set; }
         public string CurrencySymbol { get; set; }
-
+        public string AppId { get; set; }
         public string ButtonText { get; set; }
         public string CustomButtonText { get; set; }
         public string CustomTipText { get; set; }

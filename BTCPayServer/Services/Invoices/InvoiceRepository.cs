@@ -340,7 +340,7 @@ namespace BTCPayServer.Services.Invoices
                 await context.SaveChangesAsync().ConfigureAwait(false);
             }
         }
-        public async Task<InvoiceEntity> GetInvoice(string storeId, string id, bool inludeAddressData = false)
+        public async Task<InvoiceEntity> GetInvoice(string id, bool inludeAddressData = false)
         {
             using (var context = _ContextFactory.CreateContext())
             {
@@ -352,9 +352,6 @@ namespace BTCPayServer.Services.Invoices
                 if (inludeAddressData)
                     query = query.Include(o => o.HistoricalAddressInvoices).Include(o => o.AddressInvoices);
                 query = query.Where(i => i.Id == id);
-
-                if (storeId != null)
-                    query = query.Where(i => i.StoreDataId == storeId);
 
                 var invoice = await query.FirstOrDefaultAsync().ConfigureAwait(false);
                 if (invoice == null)

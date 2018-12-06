@@ -208,7 +208,7 @@ namespace BTCPayServer.HostedServices
 
         private async Task Wait(string invoiceId)
         {
-            var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
+            var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
             try
             {
                 var delay = invoice.ExpirationTime - DateTimeOffset.UtcNow;
@@ -283,7 +283,7 @@ namespace BTCPayServer.HostedServices
                         loopCount++;
                         try
                         {
-                            var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId, true);
+                            var invoice = await _InvoiceRepository.GetInvoice(invoiceId, true);
                             if (invoice == null)
                                 break;
                             var updateContext = new UpdateInvoiceContext(invoice);

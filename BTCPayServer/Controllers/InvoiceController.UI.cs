@@ -30,11 +30,13 @@ namespace BTCPayServer.Controllers
     {
         [HttpGet]
         [Route("invoices/{invoiceId}")]
+        [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
         public async Task<IActionResult> Invoice(string invoiceId)
         {
             var invoice = (await _InvoiceRepository.GetInvoices(new InvoiceQuery()
             {
                 InvoiceId = invoiceId,
+                UserId = GetUserId(),
                 IncludeAddresses = true,
                 IncludeEvents = true
             })).FirstOrDefault();
@@ -209,7 +211,7 @@ namespace BTCPayServer.Controllers
 
         private async Task<PaymentModel> GetInvoiceModel(string invoiceId, string paymentMethodIdStr)
         {
-            var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
+            var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
             if (invoice == null)
                 return null;
             var store = await _StoreRepository.FindStore(invoice.StoreId);
@@ -369,7 +371,7 @@ namespace BTCPayServer.Controllers
         {
             if (!HttpContext.WebSockets.IsWebSocketRequest)
                 return NotFound();
-            var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
+            var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
             if (invoice == null || invoice.Status == "complete" || invoice.Status == "invalid" || invoice.Status == "expired")
                 return NotFound();
             var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
@@ -591,7 +593,11 @@ namespace BTCPayServer.Controllers
         [BitpayAPIConstraint(false)]
         public async Task<IActionResult> InvalidatePaidInvoice(string invoiceId)
         {
-            var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
+            var invoice = (await _InvoiceRepository.GetInvoices(new InvoiceQuery()
+            {
+                InvoiceId = invoiceId,
+                UserId = GetUserId()
+            })).FirstOrDefault();
             if (invoice == null)
                 return NotFound();
             await _InvoiceRepository.UpdatePaidInvoiceToInvalid(invoiceId);

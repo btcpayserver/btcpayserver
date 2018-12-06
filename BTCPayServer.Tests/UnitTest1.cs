@@ -352,57 +352,6 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Integration", "Integration")]
-        public void CanPayUsingBIP70()
-        {
-            using (var tester = ServerTester.Create())
-            {
-                tester.Start();
-                var user = tester.NewAccount();
-                user.GrantAccess();
-                user.RegisterDerivationScheme("BTC");
-                Assert.True(user.BitPay.TestAccess(Facade.Merchant));
-                var invoice = user.BitPay.CreateInvoice(new Invoice()
-                {
-                    Buyer = new Buyer() { email = "test@fwf.com" },
-                    Price = 5000.0m,
-                    Currency = "USD",
-                    PosData = "posData",
-                    OrderId = "orderId",
-                    //RedirectURL = redirect + "redirect",
-                    //NotificationURL = CallbackUri + "/notification",
-                    ItemDesc = "Some description",
-                    FullNotifications = true
-                }, Facade.Merchant);
-
-                Assert.False(invoice.Refundable);
-
-                var url = new BitcoinUrlBuilder(invoice.PaymentUrls.BIP72);
-                var request = url.GetPaymentRequest();
-                var payment = request.CreatePayment();
-
-                Transaction tx = new Transaction();
-                tx.Outputs.AddRange(request.Details.Outputs.Select(o => new TxOut(o.Amount, o.Script)));
-                var cashCow = tester.ExplorerNode;
-                tx = cashCow.FundRawTransaction(tx).Transaction;
-                tx = cashCow.SignRawTransaction(tx);
-
-                payment.Transactions.Add(tx);
-
-                payment.RefundTo.Add(new PaymentOutput(Money.Coins(1.0m), new Key().ScriptPubKey));
-                var ack = payment.SubmitPayment();
-                Assert.NotNull(ack);
-
-                Eventually(() =>
-                {
-                    var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
-                    Assert.Equal("paid", localInvoice.Status);
-                    Assert.True(localInvoice.Refundable);
-                });
-            }
-        }
-
-        [Fact]
-        [Trait("Integration", "Integration")]
         public async Task CanSetLightningServer()
         {
             using (var tester = ServerTester.Create())
@@ -1801,7 +1750,7 @@ ReceivedDate,StoreId,OrderId,InvoiceId,CreatedDate,ExpirationDate,MonitoringDate
                 Assert.True(IsMapped(invoice, ctx));
                 cashCow.SendToAddress(invoiceAddress, firstPayment);
 
-                var invoiceEntity = repo.GetInvoice(null, invoice.Id, true).GetAwaiter().GetResult();
+                var invoiceEntity = repo.GetInvoice(invoice.Id, true).GetAwaiter().GetResult();
                 Assert.Single(invoiceEntity.HistoricalAddresses);
                 Assert.Null(invoiceEntity.HistoricalAddresses[0].UnAssigned);
 
@@ -1819,7 +1768,7 @@ ReceivedDate,StoreId,OrderId,InvoiceId,CreatedDate,ExpirationDate,MonitoringDate
                     Assert.True(IsMapped(invoice, ctx));
                     Assert.True(IsMapped(localInvoice, ctx));
 
-                    invoiceEntity = repo.GetInvoice(null, invoice.Id, true).GetAwaiter().GetResult();
+                    invoiceEntity = repo.GetInvoice(invoice.Id, true).GetAwaiter().GetResult();
                     var historical1 = invoiceEntity.HistoricalAddresses.FirstOrDefault(h => h.GetAddress() == invoice.BitcoinAddress);
                     Assert.NotNull(historical1.UnAssigned);
                     var historical2 = invoiceEntity.HistoricalAddresses.FirstOrDefault(h => h.GetAddress() == localInvoice.BitcoinAddress);

@@ -33,7 +33,7 @@
   "What happened?": "Šta se desilo?",
   "InvoiceExpired_Body_1": "Ovaj račun je istekao. Račun važi samo {{maxTimeMinutes}} minuta. \nMožete se vratiti na {{storeName}} ukoliko želite da ponovo inicirate plaćanje.",
   "InvoiceExpired_Body_2": "Ako ste pokušali da pošaljete uplatu, još uvek nije prihvaćena na mreži. Nismo još zaprimili Vašu uplatu.",
-  "InvoiceExpired_Body_3": "",
+  "InvoiceExpired_Body_3": "Ukoliko vašu uplatu primimo kasnije, procesuiraćemo vašu narudžbinu ili ćemo vas kontaktirati za povraćaj novca...",
   "Invoice ID": "Broj računa",
   "Order ID": "Broj narudžbine",
   "Return to StoreName": "Vrati se na {{storeName}}",

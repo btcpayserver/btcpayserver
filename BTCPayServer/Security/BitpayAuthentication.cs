@@ -65,18 +65,14 @@ namespace BTCPayServer.Security
                     {
                         var result = await CheckBitId(Context.Request.HttpContext, bitpayAuth.Signature, bitpayAuth.Id, claims);
                         storeId = result.StoreId;
-                        failedAuth = !result.SuccessAuth;
                         successAuth = result.SuccessAuth;
+                        failedAuth = !successAuth;
                     }
                     else if (!string.IsNullOrEmpty(bitpayAuth.Authorization))
                     {
                         storeId = await CheckLegacyAPIKey(Context.Request.HttpContext, bitpayAuth.Authorization);
-                        if (storeId == null)
-                        {
-                            Logs.PayServer.LogDebug("API key check failed");
-                            failedAuth = true;
-                        }
                         successAuth = storeId != null;
+                        failedAuth = !successAuth;
                     }
 
                     if (failedAuth)

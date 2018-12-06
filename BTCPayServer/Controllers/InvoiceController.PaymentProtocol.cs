@@ -21,7 +21,7 @@ namespace BTCPayServer.Controllers
         {
             if (cryptoCode == null)
                 cryptoCode = "BTC";
-            var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
+            var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
             var network = _NetworkProvider.GetNetwork(cryptoCode);
             var paymentMethodId = new PaymentMethodId(cryptoCode, Payments.PaymentTypes.BTCLike);
             if (invoice == null || invoice.IsExpired() || network == null || !invoice.Support(paymentMethodId))
@@ -66,7 +66,7 @@ namespace BTCPayServer.Controllers
         [MediaTypeConstraint("application/bitcoin-payment")]
         public async Task<IActionResult> PostPayment(string invoiceId, string cryptoCode = null)
         {
-            var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
+            var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
             if (cryptoCode == null)
                 cryptoCode = "BTC";
             var network = _NetworkProvider.GetNetwork(cryptoCode);

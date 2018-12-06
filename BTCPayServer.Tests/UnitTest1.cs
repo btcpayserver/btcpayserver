@@ -1801,7 +1801,7 @@ ReceivedDate,StoreId,OrderId,InvoiceId,CreatedDate,ExpirationDate,MonitoringDate
                 Assert.True(IsMapped(invoice, ctx));
                 cashCow.SendToAddress(invoiceAddress, firstPayment);
 
-                var invoiceEntity = repo.GetInvoice(null, invoice.Id, true).GetAwaiter().GetResult();
+                var invoiceEntity = repo.GetInvoice(invoice.Id, true).GetAwaiter().GetResult();
                 Assert.Single(invoiceEntity.HistoricalAddresses);
                 Assert.Null(invoiceEntity.HistoricalAddresses[0].UnAssigned);
 
@@ -1819,7 +1819,7 @@ ReceivedDate,StoreId,OrderId,InvoiceId,CreatedDate,ExpirationDate,MonitoringDate
                     Assert.True(IsMapped(invoice, ctx));
                     Assert.True(IsMapped(localInvoice, ctx));
 
-                    invoiceEntity = repo.GetInvoice(null, invoice.Id, true).GetAwaiter().GetResult();
+                    invoiceEntity = repo.GetInvoice(invoice.Id, true).GetAwaiter().GetResult();
                     var historical1 = invoiceEntity.HistoricalAddresses.FirstOrDefault(h => h.GetAddress() == invoice.BitcoinAddress);
                     Assert.NotNull(historical1.UnAssigned);
                     var historical2 = invoiceEntity.HistoricalAddresses.FirstOrDefault(h => h.GetAddress() == localInvoice.BitcoinAddress);

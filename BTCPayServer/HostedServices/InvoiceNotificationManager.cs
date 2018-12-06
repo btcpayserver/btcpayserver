@@ -330,7 +330,7 @@ namespace BTCPayServer.HostedServices
         {
             leases.Add(_EventAggregator.Subscribe<InvoiceEvent>(async e =>
             {
-                var invoice = await _InvoiceRepository.GetInvoice(null, e.Invoice.Id);
+                var invoice = await _InvoiceRepository.GetInvoice(e.Invoice.Id);
                 if (invoice == null)
                     return;
                 List<Task> tasks = new List<Task>();

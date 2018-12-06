@@ -40,16 +40,18 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("invoices/{id}")]
-        [AllowAnonymous]
-        public async Task<DataWrapper<InvoiceResponse>> GetInvoice(string id, string token)
+        public async Task<DataWrapper<InvoiceResponse>> GetInvoice(string id)
         {
-            var invoice = await _InvoiceRepository.GetInvoice(null, id);
+            var invoice = (await _InvoiceRepository.GetInvoices(new InvoiceQuery()
+            {
+                InvoiceId = id,
+                StoreId = new[] { HttpContext.GetStoreData().Id }
+            })).FirstOrDefault();
             if (invoice == null)
                 throw new BitpayHttpException(404, "Object not found");
             var resp = invoice.EntityToDTO(_NetworkProvider);
             return new DataWrapper<InvoiceResponse>(resp);
         }
-
         [HttpGet]
         [Route("invoices")]
         public async Task<DataWrapper<InvoiceResponse[]>> GetInvoices(

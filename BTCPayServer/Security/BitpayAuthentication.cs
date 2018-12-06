@@ -148,6 +148,10 @@ namespace BTCPayServer.Security
                             storeId = bitToken.StoreId;
                         }
                     }
+                    else
+                    {
+                        return (storeId, false);
+                    }
                 }
                 catch (FormatException) { }
                 return (storeId, true);

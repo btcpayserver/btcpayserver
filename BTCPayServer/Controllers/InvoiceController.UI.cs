@@ -593,7 +593,11 @@ namespace BTCPayServer.Controllers
         [BitpayAPIConstraint(false)]
         public async Task<IActionResult> InvalidatePaidInvoice(string invoiceId)
         {
-            var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
+            var invoice = (await _InvoiceRepository.GetInvoices(new InvoiceQuery()
+            {
+                InvoiceId = invoiceId,
+                UserId = GetUserId()
+            })).FirstOrDefault();
             if (invoice == null)
                 return NotFound();
             await _InvoiceRepository.UpdatePaidInvoiceToInvalid(invoiceId);

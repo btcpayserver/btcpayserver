@@ -395,9 +395,6 @@ namespace BTCPayServer.Services.Invoices
                     var cryptoSuffix = cryptoInfo.CryptoCode == "BTC" ? "" : "/" + cryptoInfo.CryptoCode;
                     cryptoInfo.PaymentUrls = new NBitpayClient.InvoicePaymentUrls()
                     {
-                        BIP72 = $"{scheme}:{cryptoInfo.Address}?amount={cryptoInfo.Due}&r={ServerUrl.WithTrailingSlash() + ($"i/{Id}{cryptoSuffix}")}",
-                        BIP72b = $"{scheme}:?r={ServerUrl.WithTrailingSlash() + ($"i/{Id}{cryptoSuffix}")}",
-                        BIP73 = ServerUrl.WithTrailingSlash() + ($"i/{Id}{cryptoSuffix}"),
                         BIP21 = $"{scheme}:{cryptoInfo.Address}?amount={cryptoInfo.Due}",
                     };
                 }

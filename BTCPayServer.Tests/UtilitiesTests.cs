@@ -58,6 +58,11 @@ namespace BTCPayServer.Tests
                 jobj["code"] = langCode;
                 if ((string)jobj["currentLanguage"] == "English" && !isSourceLang)
                     return; // Not translated
+                if (jobj.ContainsKey("enabled") && jobj.GetValue("enabled").ToString()
+                        .Equals("false", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return;
+                }
                 jobj.AddFirst(new JProperty("NOTICE_WARN", "THIS CODE HAS BEEN AUTOMATICALLY GENERATED FROM TRANSIFEX, IF YOU WISH TO HELP TRANSLATION COME ON THE SLACK http://slack.btcpayserver.org TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/"));
                 if (isSourceLang)
                 {

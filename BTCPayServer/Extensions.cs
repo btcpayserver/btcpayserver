@@ -168,6 +168,15 @@ namespace BTCPayServer
                         request.Path.ToUriComponent());
         }
 
+        public static string GetRelativePath(this HttpRequest request, string path)
+        {
+            if (path.Length > 0 && path[0] != '/')
+                path = $"/{path}";
+            return string.Concat(
+                        request.PathBase.ToUriComponent(),
+                        path);
+        }
+
         public static string GetAbsoluteUri(this HttpRequest request, string redirectUrl)
         {
             bool isRelative =

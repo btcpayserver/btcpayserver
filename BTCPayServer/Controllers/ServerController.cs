@@ -435,7 +435,22 @@ namespace BTCPayServer.Controllers
                     });
                 }
             }
-            result.HasSSH = _Options.SSHSettings != null;
+            foreach(var externalService in _Options.ExternalServices)
+            {
+                result.ExternalServices.Add(new ServicesViewModel.ExternalService()
+                {
+                    Name = externalService.Key,
+                    Link = this.Request.GetRelativePath(externalService.Value)
+                });
+            }
+            if(_Options.SSHSettings != null)
+            {
+                result.ExternalServices.Add(new ServicesViewModel.ExternalService()
+                {
+                    Name = "SSH",
+                    Link = this.Url.Action(nameof(SSHService))
+                });
+            }
             return View(result);
         }
 

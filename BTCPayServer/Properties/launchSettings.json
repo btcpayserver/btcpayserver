@@ -32,7 +32,8 @@
                 "BTCPAY_BTCEXPLORERURL": "http://127.0.0.1:32838/",
                 "ASPNETCORE_ENVIRONMENT": "Development",
                 "BTCPAY_CHAINS": "btc,ltc",
-                "BTCPAY_POSTGRES": "User ID=postgres;Host=127.0.0.1;Port=39372;Database=btcpayserver"
+                "BTCPAY_POSTGRES": "User ID=postgres;Host=127.0.0.1;Port=39372;Database=btcpayserver",
+                "BTCPAY_EXTERNALSERVICES": "totoservice:totolink;"
             },
             "applicationUrl": "https://localhost:14142/"
         }

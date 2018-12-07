@@ -4,7 +4,7 @@
 }
 
 
-<h4>LND GRPC</h4>
+<h4>LND @Model.ConnectionType</h4>
 <partial name="_StatusMessage" for="@TempData["StatusMessage"]" />
 <div class="row">
     <div class="col-md-6">
@@ -17,14 +17,14 @@
     <div class="col-md-8">
         <div class="form-group">
             <p>
-                <span>BTCPay exposes gRPC services for outside consumption, you will find connection information here.<br /></span>
+                <span>BTCPay exposes LND's @Model.ConnectionType service for outside consumption, you will find connection information here.<br /></span>
             </p>
         </div>
 
         <div class="form-group">
             <h5>QR Code connection</h5>
             <p>
-                <span>You can use this QR Code to connect your Zap wallet to your LND instance.<br /></span>
+                <span>You can use this QR Code to connect external software to your LND instance.<br /></span>
                 <span>This QR Code is only valid for 10 minutes</span>
             </p>
         </div>
@@ -61,22 +61,32 @@
                 <p>Alternatively, you can see the settings by clicking <a href="#details" data-toggle="collapse">here</a></p>
             </div>
             <div id="details" class="collapse">
-                <div class="form-group">
-                    <label asp-for="Host"></label>
-                    <input asp-for="Host" readonly class="form-control" />
-                </div>
-                <div class="form-group">
-                    <label asp-for="SSL"></label>
-                    <input asp-for="SSL" disabled type="checkbox" class="form-check-inline" />
-                </div>
-                @if(Model.Macaroon != null)
+                @if (Model.Uri == null)
+                {
+                    <div class="form-group">
+                        <label asp-for="Host"></label>
+                        <input asp-for="Host" readonly class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="SSL"></label>
+                        <input asp-for="SSL" disabled type="checkbox" class="form-check-inline" />
+                    </div>
+                }
+                else
+                {
+                    <div class="form-group">
+                        <label asp-for="Uri"></label>
+                        <input asp-for="Uri" readonly class="form-control" />
+                    </div>
+                }
+                @if (Model.Macaroon != null)
                 {
                     <div class="form-group">
                         <label asp-for="Macaroon"></label>
                         <input asp-for="Macaroon" readonly class="form-control" />
                     </div>
                 }
-                @if(Model.CertificateThumbprint != null)
+                @if (Model.CertificateThumbprint != null)
                 {
                     <div class="form-group">
                         <label asp-for="CertificateThumbprint"></label>

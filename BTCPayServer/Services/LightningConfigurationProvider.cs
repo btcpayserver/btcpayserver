@@ -39,7 +39,7 @@ namespace BTCPayServer.Services
 
     public class LightningConfigurations
     {
-        public List<LightningConfiguration> Configurations { get; set; } = new List<LightningConfiguration>();
+        public List<object> Configurations { get; set; } = new List<object>();
     }
     public class LightningConfiguration
     {
@@ -51,5 +51,14 @@ namespace BTCPayServer.Services
         public bool SSL { get; set; }
         public string CertificateThumbprint { get; set; }
         public string Macaroon { get; set; }
+    }
+    public class LNDRestConfiguration
+    {
+        public string ChainType { get; set; }
+        public string Type { get; set; }
+        public string CryptoCode { get; set; }
+        public string Uri { get; set; }
+        public string Macaroon { get; set; }
+        public string CertificateThumbprint { get; set; }
     }
 }

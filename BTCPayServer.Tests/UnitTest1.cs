@@ -48,6 +48,7 @@ using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Security;
 using NBXplorer.Models;
 using RatesViewModel = BTCPayServer.Models.StoreViewModels.RatesViewModel;
+using NBitpayClient.Extensions;
 
 namespace BTCPayServer.Tests
 {
@@ -883,6 +884,17 @@ namespace BTCPayServer.Tests
                 var result = client.SendAsync(message).GetAwaiter().GetResult();
                 result.EnsureSuccessStatusCode();
                 /////////////////////
+                
+                // Have error 403 with bad signature
+                client = new HttpClient();
+                HttpRequestMessage mess = new HttpRequestMessage(HttpMethod.Get, tester.PayTester.ServerUri.AbsoluteUri + "tokens");
+                mess.Content = new StringContent(string.Empty, Encoding.UTF8, "application/json");
+                mess.Headers.Add("x-signature", "3045022100caa123193afc22ef93d9c6b358debce6897c09dd9869fe6fe029c9cb43623fac022000b90c65c50ba8bbbc6ebee8878abe5659e17b9f2e1b27d95eda4423da5608fe");
+                mess.Headers.Add("x-identity", "04b4d82095947262dd70f94c0a0e005ec3916e3f5f2181c176b8b22a52db22a8c436c4703f43a9e8884104854a11e1eb30df8fdf116e283807a1f1b8fe4c182b99");
+                mess.Method = HttpMethod.Get;
+                result = client.SendAsync(mess).GetAwaiter().GetResult();
+                Assert.Equal(System.Net.HttpStatusCode.Unauthorized, result.StatusCode);
+                //
             }
         }
 

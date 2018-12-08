@@ -435,12 +435,27 @@ namespace BTCPayServer.Controllers
                     });
                 }
             }
-            result.HasSSH = _Options.SSHSettings != null;
+            foreach(var externalService in _Options.ExternalServices)
+            {
+                result.ExternalServices.Add(new ServicesViewModel.ExternalService()
+                {
+                    Name = externalService.Key,
+                    Link = this.Request.GetRelativePath(externalService.Value)
+                });
+            }
+            if(_Options.SSHSettings != null)
+            {
+                result.ExternalServices.Add(new ServicesViewModel.ExternalService()
+                {
+                    Name = "SSH",
+                    Link = this.Url.Action(nameof(SSHService))
+                });
+            }
             return View(result);
         }
 
-        [Route("server/services/lnd-grpc/{cryptoCode}/{index}")]
-        public IActionResult LndGrpcServices(string cryptoCode, int index, uint? nonce)
+        [Route("server/services/lnd/{cryptoCode}/{index}")]
+        public IActionResult LndServices(string cryptoCode, int index, uint? nonce)
         {
             if (!_dashBoard.IsFullySynched(cryptoCode, out var unusud))
             {
@@ -451,9 +466,18 @@ namespace BTCPayServer.Controllers
             if (external == null)
                 return NotFound();
             var model = new LndGrpcServicesViewModel();
+            if (external.ConnectionType == LightningConnectionType.LndGRPC)
+            {
+                model.Host = $"{external.BaseUri.DnsSafeHost}:{external.BaseUri.Port}";
+                model.SSL = external.BaseUri.Scheme == "https";
+                model.ConnectionType = "GRPC";
+            }
+            else if(external.ConnectionType == LightningConnectionType.LndREST)
+            {
+                model.Uri = external.BaseUri.AbsoluteUri;
+                model.ConnectionType = "REST";
+            }
 
-            model.Host = $"{external.BaseUri.DnsSafeHost}:{external.BaseUri.Port}";
-            model.SSL = external.BaseUri.Scheme == "https";
             if (external.CertificateThumbprint != null)
             {
                 model.CertificateThumbprint = Encoders.Hex.EncodeData(external.CertificateThumbprint);
@@ -465,7 +489,7 @@ namespace BTCPayServer.Controllers
 
             if (nonce != null)
             {
-                var configKey = GetConfigKey("lnd-grpc", cryptoCode, index, nonce.Value);
+                var configKey = GetConfigKey("lnd", cryptoCode, index, nonce.Value);
                 var lnConfig = _LnConfigProvider.GetConfig(configKey);
                 if (lnConfig != null)
                 {
@@ -492,29 +516,42 @@ namespace BTCPayServer.Controllers
             return Json(conf);
         }
 
-        [Route("server/services/lnd-grpc/{cryptoCode}/{index}")]
+        [Route("server/services/lnd/{cryptoCode}/{index}")]
         [HttpPost]
-        public IActionResult LndGrpcServicesPost(string cryptoCode, int index)
+        public IActionResult LndServicesPost(string cryptoCode, int index)
         {
             var external = GetExternalLndConnectionString(cryptoCode, index);
             if (external == null)
                 return NotFound();
             LightningConfigurations confs = new LightningConfigurations();
-            LightningConfiguration conf = new LightningConfiguration();
-            conf.Type = "grpc";
-            conf.ChainType = _Options.NetworkType.ToString();
-            conf.CryptoCode = cryptoCode;
-            conf.Host = external.BaseUri.DnsSafeHost;
-            conf.Port = external.BaseUri.Port;
-            conf.SSL = external.BaseUri.Scheme == "https";
-            conf.Macaroon = external.Macaroon == null ? null : Encoders.Hex.EncodeData(external.Macaroon);
-            conf.CertificateThumbprint = external.CertificateThumbprint == null ? null : Encoders.Hex.EncodeData(external.CertificateThumbprint);
-            confs.Configurations.Add(conf);
-
+            if (external.ConnectionType == LightningConnectionType.LndGRPC)
+            {
+                LightningConfiguration conf = new LightningConfiguration();
+                conf.Type = "grpc";
+                conf.ChainType = _Options.NetworkType.ToString();
+                conf.CryptoCode = cryptoCode;
+                conf.Host = external.BaseUri.DnsSafeHost;
+                conf.Port = external.BaseUri.Port;
+                conf.SSL = external.BaseUri.Scheme == "https";
+                conf.Macaroon = external.Macaroon == null ? null : Encoders.Hex.EncodeData(external.Macaroon);
+                conf.CertificateThumbprint = external.CertificateThumbprint == null ? null : Encoders.Hex.EncodeData(external.CertificateThumbprint);
+                confs.Configurations.Add(conf);
+            }
+            else if (external.ConnectionType == LightningConnectionType.LndREST)
+            {
+                var restconf = new LNDRestConfiguration();
+                restconf.Type = "lnd-rest";
+                restconf.ChainType = _Options.NetworkType.ToString();
+                restconf.CryptoCode = cryptoCode;
+                restconf.Uri = external.BaseUri.AbsoluteUri;
+                restconf.Macaroon = external.Macaroon == null ? null : Encoders.Hex.EncodeData(external.Macaroon);
+                restconf.CertificateThumbprint = external.CertificateThumbprint == null ? null : Encoders.Hex.EncodeData(external.CertificateThumbprint);
+                confs.Configurations.Add(restconf);
+            }
             var nonce = RandomUtils.GetUInt32();
-            var configKey = GetConfigKey("lnd-grpc", cryptoCode, index, nonce);
+            var configKey = GetConfigKey("lnd", cryptoCode, index, nonce);
             _LnConfigProvider.KeepConfig(configKey, confs);
-            return RedirectToAction(nameof(LndGrpcServices), new { cryptoCode = cryptoCode, nonce = nonce });
+            return RedirectToAction(nameof(LndServices), new { cryptoCode = cryptoCode, nonce = nonce });
         }
 
         private LightningConnectionString GetExternalLndConnectionString(string cryptoCode, int index)
@@ -537,28 +574,6 @@ namespace BTCPayServer.Controllers
                 }
             }
             return connectionString;
-        }
-
-        [Route("server/services/lnd-rest/{cryptoCode}/{index}")]
-        public IActionResult LndRestServices(string cryptoCode, int index, uint? nonce)
-        {
-            if (!_dashBoard.IsFullySynched(cryptoCode, out var unusud))
-            {
-                StatusMessage = $"Error: {cryptoCode} is not fully synched";
-                return RedirectToAction(nameof(Services));
-            }
-            var external = GetExternalLndConnectionString(cryptoCode, index);
-            if (external == null)
-                return NotFound();
-            var model = new LndRestServicesViewModel();
-
-            model.BaseApiUrl = external.BaseUri.ToString();
-            if (external.CertificateThumbprint != null)
-                model.CertificateThumbprint = Encoders.Hex.EncodeData(external.CertificateThumbprint);
-            if (external.Macaroon != null)
-                model.Macaroon = Encoders.Hex.EncodeData(external.Macaroon);
-
-            return View(model);
         }
 
         [Route("server/services/ssh")]

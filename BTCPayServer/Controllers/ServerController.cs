@@ -587,7 +587,7 @@ namespace BTCPayServer.Controllers
                 }
                 catch
                 {
-                    Logs.Configuration.LogWarning($"{cryptoCode}: The restrictedmacaroon file path of the external LND grpc config was not found ({connectionString.RestrictedMacaroonFilePathMacaroonFilePath})");
+                    Logs.Configuration.LogWarning($"{cryptoCode}: The restrictedmacaroon file path of the external LND grpc config was not found ({connectionString.RestrictedMacaroonFilePath})");
                 }
                 connectionString.RestrictedMacaroonFilePath = null;
             }

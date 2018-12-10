@@ -126,7 +126,9 @@ namespace BTCPayServer.Services.Invoices
                     Created = invoice.InvoiceTime,
                     Blob = ToBytes(invoice, null),
                     OrderId = invoice.OrderId,
-                    Status = invoice.Status,
+#pragma warning disable CS0618 // Type or member is obsolete
+                    Status = invoice.StatusString,
+#pragma warning restore CS0618 // Type or member is obsolete
                     ItemCode = invoice.ProductInformation.ItemCode,
                     CustomerEmail = invoice.RefundMail
                 });
@@ -316,15 +318,15 @@ namespace BTCPayServer.Services.Invoices
             });
         }
 
-        public async Task UpdateInvoiceStatus(string invoiceId, string status, string exceptionStatus)
+        public async Task UpdateInvoiceStatus(string invoiceId, InvoiceState invoiceState)
         {
             using (var context = _ContextFactory.CreateContext())
             {
                 var invoiceData = await context.FindAsync<Data.InvoiceData>(invoiceId).ConfigureAwait(false);
                 if (invoiceData == null)
                     return;
-                invoiceData.Status = status;
-                invoiceData.ExceptionStatus = exceptionStatus;
+                invoiceData.Status = InvoiceState.ToString(invoiceState.Status);
+                invoiceData.ExceptionStatus = InvoiceState.ToString(invoiceState.ExceptionStatus);
                 await context.SaveChangesAsync().ConfigureAwait(false);
             }
         }
@@ -385,8 +387,9 @@ namespace BTCPayServer.Services.Invoices
                 return paymentEntity;
             }).ToList();
 #pragma warning restore CS0618
-            entity.ExceptionStatus = invoice.ExceptionStatus;
-            entity.Status = invoice.Status;
+            var state = invoice.GetInvoiceState();
+            entity.ExceptionStatus = state.ExceptionStatus;
+            entity.Status = state.Status;
             entity.RefundMail = invoice.CustomerEmail;
             entity.Refundable = invoice.RefundAddresses.Count != 0;
             if (invoice.HistoricalAddressInvoices != null)

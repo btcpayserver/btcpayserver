@@ -55,6 +55,10 @@
                     <td>@Model.Id</td>
                 </tr>
                 <tr>
+                    <th>State</th>
+                    <td>@Model.State</td>
+                </tr>
+                <tr>
                     <th>Created date</th>
                     <td>@Model.CreatedDate.ToBrowserDate()</td>
                 </tr>
@@ -69,14 +73,6 @@
                 <tr>
                     <th>Transaction speed</th>
                     <td>@Model.TransactionSpeed</td>
-                </tr>
-                <tr>
-                    <th>Status</th>
-                    <td>@Model.Status</td>
-                </tr>
-                <tr>
-                    <th>Status Exception</th>
-                    <td>@Model.StatusException</td>
                 </tr>
                 <tr>
                     <th>Refund email</th>
@@ -221,7 +217,7 @@
                             <th class="text-right">Rate</th>
                             <th class="text-right">Paid</th>
                             <th class="text-right">Due</th>
-                            @if (Model.StatusException == "paidOver")
+                            @if (Model.StatusException == InvoiceExceptionStatus.PaidOver)
                             {
                                 <th class="text-right">Overpaid</th>
                             }
@@ -236,7 +232,7 @@
                                 <td class="text-right">@payment.Rate</td>
                                 <td class="text-right">@payment.Paid</td>
                                 <td class="text-right">@payment.Due</td>
-                                @if (Model.StatusException == "paidOver")
+                                @if (Model.StatusException == InvoiceExceptionStatus.PaidOver)
                                 {
                                     <td class="text-right">@payment.Overpaid</td>
                                 }

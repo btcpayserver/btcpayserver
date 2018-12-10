@@ -345,6 +345,7 @@ namespace BTCPayServer.HostedServices
                        e.Name == "invoice_paidInFull" ||
                        e.Name == "invoice_failedToConfirm" ||
                        e.Name == "invoice_markedInvalid" ||
+                       e.Name == "invoice_markedComplete" ||
                        e.Name == "invoice_failedToConfirm" ||
                        e.Name == "invoice_completed" ||
                        e.Name == "invoice_expiredPaidPartial"

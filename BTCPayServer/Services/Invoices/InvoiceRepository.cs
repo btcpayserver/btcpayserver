@@ -334,9 +334,22 @@ namespace BTCPayServer.Services.Invoices
             using (var context = _ContextFactory.CreateContext())
             {
                 var invoiceData = await context.FindAsync<Data.InvoiceData>(invoiceId).ConfigureAwait(false);
-                if (invoiceData?.Status != "paid")
+                if (invoiceData == null || !invoiceData.GetInvoiceState().CanMarkInvalid())
                     return;
                 invoiceData.Status = "invalid";
+                invoiceData.ExceptionStatus = "marked";
+                await context.SaveChangesAsync().ConfigureAwait(false);
+            }
+        }
+        public async Task UpdatePaidInvoiceToComplete(string invoiceId)
+        {
+            using (var context = _ContextFactory.CreateContext())
+            {
+                var invoiceData = await context.FindAsync<Data.InvoiceData>(invoiceId).ConfigureAwait(false);
+                if (invoiceData == null || !invoiceData.GetInvoiceState().CanMarkComplete())
+                    return;
+                invoiceData.Status = "complete";
+                invoiceData.ExceptionStatus = "marked";
                 await context.SaveChangesAsync().ConfigureAwait(false);
             }
         }

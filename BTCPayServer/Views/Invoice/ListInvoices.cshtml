@@ -99,23 +99,7 @@
                                 }
                             </td>
                             <td>@invoice.InvoiceId</td>
-                            @if (invoice.Status == "paid")
-                            {
-                                <td>
-                                    <div class="btn-group">
-                                        <a class="dropdown-toggle dropdown-toggle-split" style="cursor: pointer;" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            @invoice.Status <span class="sr-only">Toggle Dropdown</span>
-                                        </a>
-                                        <div class="dropdown-menu pull-right">
-                                            <button class="dropdown-item small" data-toggle="modal" data-target="#myModal" onclick="$('#invoiceId').val('@invoice.InvoiceId')">Make Invalid</button>
-                                        </div>
-                                    </div>
-                                </td>
-                            }
-                            else
-                            {
-                                <td>@invoice.Status</td>
-                            }
+                            <td>@invoice.Status</td>
                             <td style="text-align:right">@invoice.AmountCurrency</td>
                             <td style="text-align:right">
                                 @if (invoice.ShowCheckout)
@@ -123,8 +107,31 @@
                                     <span>
                                         <a asp-action="Checkout" asp-route-invoiceId="@invoice.InvoiceId">Checkout</a>
                                         <a href="javascript:btcpay.showInvoice('@invoice.InvoiceId')">[^]</a>
-                                        -
+                                        @if (!invoice.CanMarkStatus)
+                                        {
+                                            <span>-</span>
+                                        }
                                     </span>
+                                }
+                                @if (invoice.CanMarkStatus)
+                                {
+                                    <a class="dropdown-toggle dropdown-toggle-split" href="#" style="cursor: pointer;" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        Change status <span class="sr-only">Toggle Dropdown</span>
+                                    </a>
+                                    <div class="dropdown-menu pull-right">
+                                        @if (invoice.CanMarkInvalid)
+                                        {
+                                            <form method="get" asp-action="ChangeInvoiceState" asp-route-invoiceId="@invoice.InvoiceId" asp-route-newState="invalid">
+                                                <button class="dropdown-item small">Mark as invalid <span class="fa fa-times"></span></button>
+                                            </form>
+                                        }
+                                        @if (invoice.CanMarkComplete)
+                                        {
+                                            <form method="get" asp-action="ChangeInvoiceState" asp-route-invoiceId="@invoice.InvoiceId" asp-route-newState="complete">
+                                                <button class="dropdown-item small">Mark as complete <span class="fa fa-check-circle"></span></button>
+                                            </form>
+                                        }
+                                    </div>
                                 }
                                 <a asp-action="Invoice" asp-route-invoiceId="@invoice.InvoiceId">Details</a>
                             </td>
@@ -153,28 +160,3 @@
 
     </div>
 </section>
-
-<!-- Modal -->
-<div id="myModal" class="modal fade" role="dialog">
-    <form method="post" action="/invoices/invalidatepaid">
-        <input id="invoiceId" name="invoiceId" type="hidden" />
-        <div class="modal-dialog">
-
-            <!-- Modal content-->
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h4 class="modal-title">Set Invoice status to Invalid</h4>
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <p>Are you sure you want to invalidate this transaction? This action is NOT undoable!</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-danger">Yes, make invoice Invalid</button>
-                    <button type="button" class="btn btn-primary" data-dismiss="modal">Cancel</button>
-                </div>
-            </div>
-
-        </div>
-    </form>
-</div>

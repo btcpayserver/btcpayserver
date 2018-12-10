@@ -526,6 +526,42 @@ namespace BTCPayServer.Services.Invoices
             }
 #pragma warning restore CS0618
         }
+
+        public InvoiceState GetInvoiceState()
+        {
+            return new InvoiceState() { Status = Status, ExceptionStatus = ExceptionStatus };
+        }
+    }
+
+    public class InvoiceState
+    {
+        public string Status { get; set; }
+        public string ExceptionStatus { get; set; }
+        public bool CanMarkComplete()
+        {
+            return (Status == "paid") ||
+#pragma warning disable CA1305 // Specify IFormatProvider
+                   ((Status == "new" || Status == "expired") && ExceptionStatus?.ToString() == "paidPartial") ||
+                   ((Status == "new" || Status == "expired") && ExceptionStatus?.ToString() == "paidLate") ||
+                   (Status != "complete" && ExceptionStatus?.ToString() == "marked") ||
+                   (Status == "invalid");
+#pragma warning restore CA1305 // Specify IFormatProvider
+        }
+
+        public bool CanMarkInvalid()
+        {
+            return (Status == "paid") ||
+                   (Status == "new") ||
+#pragma warning disable CA1305 // Specify IFormatProvider
+                   ((Status == "new" || Status == "expired") && ExceptionStatus?.ToString() == "paidPartial") ||
+                   ((Status == "new" || Status == "expired") && ExceptionStatus?.ToString() == "paidLate") ||
+                   (Status != "invalid" && ExceptionStatus?.ToString() == "marked");
+#pragma warning restore CA1305 // Specify IFormatProvider;
+        }
+        public override string ToString()
+        {
+            return Status + (ExceptionStatus == null ? string.Empty : $" ({ExceptionStatus})");
+        }
     }
 
     public class PaymentMethodAccounting

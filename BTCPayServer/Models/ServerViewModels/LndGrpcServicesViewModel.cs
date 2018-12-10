@@ -11,6 +11,7 @@ namespace BTCPayServer.Models.ServerViewModels
         public string Host { get; set; }
         public bool SSL { get; set; }
         public string Macaroon { get; set; }
+        public string RestrictedMacaroon { get; set; }
         public string CertificateThumbprint { get; set; }
         public string QRCode { get; set; }
         public string QRCodeLink { get; set; }

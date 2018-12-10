@@ -51,6 +51,7 @@ namespace BTCPayServer.Services
         public bool SSL { get; set; }
         public string CertificateThumbprint { get; set; }
         public string Macaroon { get; set; }
+        public string RestrictedMacaroon { get; set; }
     }
     public class LNDRestConfiguration
     {
@@ -60,5 +61,6 @@ namespace BTCPayServer.Services
         public string Uri { get; set; }
         public string Macaroon { get; set; }
         public string CertificateThumbprint { get; set; }
+        public string RestrictedMacaroon { get; set; }
     }
 }

@@ -86,6 +86,13 @@
                         <input asp-for="Macaroon" readonly class="form-control" />
                     </div>
                 }
+                @if (Model.RestrictedMacaroon != null)
+                {
+                    <div class="form-group">
+                        <label asp-for="RestrictedMacaroon"></label>
+                        <input asp-for="RestrictedMacaroon" readonly class="form-control" />
+                    </div>
+                }
                 @if (Model.CertificateThumbprint != null)
                 {
                     <div class="form-group">

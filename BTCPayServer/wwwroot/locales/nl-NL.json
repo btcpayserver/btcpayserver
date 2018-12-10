@@ -33,7 +33,7 @@
   "What happened?": "Wat gebeurde er?",
   "InvoiceExpired_Body_1": "De factuur is vervallen. Een factuur is alleen geldig voor {{maxTimeMinutes}} minuten. \nJe kan terug komen naar {{storeName}} als je de betaling opnieuw wilt proberen",
   "InvoiceExpired_Body_2": "Als je een betaling uitvoerde, dan werd dit nog niet bevestigd door het netwerk. We hebben je fondsen nog niet ontvangen.",
-  "InvoiceExpired_Body_3": "Als de transactie niet geaccepteerd werd door het netwerk, zullen je fondsen terug in wallet verschijnen. Afhankelijk van je wallet, kan dit 48 to 72 uren duren.",
+  "InvoiceExpired_Body_3": "",
   "Invoice ID": "Factuurnummer",
   "Order ID": "Bestllingsnummer",
   "Return to StoreName": "Terug naar {{storeName}}",

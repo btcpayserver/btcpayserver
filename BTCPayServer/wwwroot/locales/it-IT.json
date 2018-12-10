@@ -33,7 +33,7 @@
   "What happened?": "Cosa è successo?",
   "InvoiceExpired_Body_1": "Questa fattura è scaduta. Una fattura è valida solo per {{maxTime minuti}} minuti. \nPuoi tornare a {{store name}} se desideri inviare nuovamente il pagamento.",
   "InvoiceExpired_Body_2": "Se hai provato a inviare un pagamento, non è ancora stato accettato dalla rete. Non abbiamo ancora ricevuto i tuoi fondi.",
-  "InvoiceExpired_Body_3": "Se la transazione non viene accettata dalla rete, i fondi saranno nuovamente spendibili nel tuo portafoglio. A seconda del portafoglio, potrebbero essere necessarie 48-72 ore.",
+  "InvoiceExpired_Body_3": "",
   "Invoice ID": "Numero della Fattura",
   "Order ID": "Numero dell'Ordine",
   "Return to StoreName": "Ritorna a {{storeName}}",

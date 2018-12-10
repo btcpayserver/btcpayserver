@@ -20,22 +20,32 @@
     function WriteAlert(type, message) {
         
     }
-
+    function showFeedback(id) {
+        $("#ledger-loading").css("display", id === "ledger-loading" ? "block" : "none");
+        $("#no-ledger-info").css("display", id === "no-ledger-info" ? "block" : "none");
+        $("#ledger-validate").css("display", id === "ledger-validate" ? "block" : "none");
+        $("#ledger-info").css("display", id === "ledger-info" ? "block" : "none");
+    }
     function Write(prefix, type, message) {
         if (type === "error") {
-            $("#no-ledger-info").css("display", "block");
-            $("#ledger-in   fo").css("display", "none");
+            showFeedback("no-ledger-info");
         }
     }
 
     $(".ledger-info-recommended").on("click", function (elem) {
         elem.preventDefault();
+
+        showFeedback("ledger-validate");
+
         var account = elem.currentTarget.getAttribute("data-ledgeraccount");
         var cryptoCode = GetSelectedCryptoCode();
         bridge.sendCommand("getxpub", "cryptoCode=" + cryptoCode + "&account=" + account)
             .then(function (result) {
                 if (cryptoCode !== GetSelectedCryptoCode())
                     return;
+
+                showFeedback("ledger-info");
+
                 $("#DerivationScheme").val(result.extPubKey);
                 $("#DerivationSchemeFormat").val("BTCPay");
             })
@@ -60,8 +70,7 @@
                 }
                 else {
                     Write('check', 'success', 'This store is configured to use your ledger');
-                    $("#no-ledger-info").css("display", "none");
-                    $("#ledger-info").css("display", "block");
+                    showFeedback("ledger-info");
                 }
             });
     };

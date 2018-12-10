@@ -7,6 +7,24 @@
 <h4>@ViewData["Title"]</h4>
 <partial name="_StatusMessage" for="StatusMessage" />
 
+<div class="alert alert-warning alert-dismissible" role="alert">
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+    <p>
+        <span>Before you proceed, please understand that Lightning Network is still in the experimental stage. Do not put the money you can't afford to lose. There is a high risk of you losing the money.</span>
+    </p>
+    <p>
+        Take time to familiarize yourself with the risk. There's no backup for LND or c-lightning keys in BTCPay. Your keys are in a hot-wallet. This means :
+    </p>
+    <ul>
+        <li>Most of BTCPay Server deployments run on a pruned node, which, while working, is not officially supported by lightning network implementations.</li>
+        <li>If you erase your BTCPay Server virtual machine - you lose all the funds.</li>
+        <li>If your server gets hacked - a hacker can take all of your funds by accessing your keys.</li>
+        <li>If there is a bug in a lightning network implementation - you might lose all the funds.</li>
+        <li>You approve being #reckless and being the sole responsible party for your loss.</li>
+        <li>You approve to keep on your lightning node only what you can afford to lose.</li>
+    </ul>
+</div>
+
 <div class="row">
     <div class="col-md-10">
         <form method="post">
@@ -54,7 +72,7 @@
                 <label asp-for="ConnectionString"></label>
                 <input id="lightningurl" asp-for="ConnectionString" class="form-control" />
                 <span asp-validation-for="ConnectionString" class="text-danger"></span>
-                @if(Model.InternalLightningNode != null)
+                @if (Model.InternalLightningNode != null)
                 {
                     <p class="form-text text-muted">
                         You can use the internal lightning node by <a href="#" onclick="$('#lightningurl').val('@Model.InternalLightningNode'); return false;">clicking here</a>

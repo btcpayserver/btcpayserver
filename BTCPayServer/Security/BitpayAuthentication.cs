@@ -57,43 +57,37 @@ namespace BTCPayServer.Security
                     List<Claim> claims = new List<Claim>();
                     var bitpayAuth = Context.Request.HttpContext.GetBitpayAuth();
                     string storeId = null;
-                    // Careful, those are not the opposite. failedAuth says if a the tentative failed.
-                    // successAuth, ensure that at least one succeed.
-                    var failedAuth = false;
-                    var successAuth = false;
+
+                    bool? success = null;
                     if (!string.IsNullOrEmpty(bitpayAuth.Signature) && !string.IsNullOrEmpty(bitpayAuth.Id))
                     {
                         var result = await CheckBitId(Context.Request.HttpContext, bitpayAuth.Signature, bitpayAuth.Id, claims);
                         storeId = result.StoreId;
-                        failedAuth = !result.SuccessAuth;
-                        successAuth = result.SuccessAuth;
+                        success = result.SuccessAuth;
                     }
                     else if (!string.IsNullOrEmpty(bitpayAuth.Authorization))
                     {
                         storeId = await CheckLegacyAPIKey(Context.Request.HttpContext, bitpayAuth.Authorization);
-                        if (storeId == null)
-                        {
-                            Logs.PayServer.LogDebug("API key check failed");
-                            failedAuth = true;
-                        }
-                        successAuth = storeId != null;
+                        success = storeId != null;
                     }
 
-                    if (failedAuth)
+                    if (success.HasValue)
                     {
-                        return AuthenticateResult.Fail("Invalid credentials");
-                    }
-
-                    if (successAuth)
-                    {
-                        if (storeId != null)
+                        if (success.Value)
                         {
-                            claims.Add(new Claim(Policies.CanCreateInvoice.Key, storeId));
-                            var store = await _StoreRepository.FindStore(storeId);
-                            store.AdditionalClaims.AddRange(claims);
-                            Context.Request.HttpContext.SetStoreData(store);
+                            if (storeId != null)
+                            {
+                                claims.Add(new Claim(Policies.CanCreateInvoice.Key, storeId));
+                                var store = await _StoreRepository.FindStore(storeId);
+                                store.AdditionalClaims.AddRange(claims);
+                                Context.Request.HttpContext.SetStoreData(store);
+                            }
+                            return AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(new ClaimsIdentity(claims, Policies.BitpayAuthentication)), Policies.BitpayAuthentication));
                         }
-                        return AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(new ClaimsIdentity(claims, Policies.BitpayAuthentication)), Policies.BitpayAuthentication));
+                        else
+                        {
+                            return AuthenticateResult.Fail("Invalid credentials");
+                        }
                     }
                 }
                 return AuthenticateResult.NoResult();
@@ -147,6 +141,10 @@ namespace BTCPayServer.Security
                             }
                             storeId = bitToken.StoreId;
                         }
+                    }
+                    else
+                    {
+                        return (storeId, false);
                     }
                 }
                 catch (FormatException) { }

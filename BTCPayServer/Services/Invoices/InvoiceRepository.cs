@@ -334,13 +334,26 @@ namespace BTCPayServer.Services.Invoices
             using (var context = _ContextFactory.CreateContext())
             {
                 var invoiceData = await context.FindAsync<Data.InvoiceData>(invoiceId).ConfigureAwait(false);
-                if (invoiceData?.Status != "paid")
+                if (invoiceData == null || !invoiceData.GetInvoiceState().CanMarkInvalid())
                     return;
                 invoiceData.Status = "invalid";
+                invoiceData.ExceptionStatus = "marked";
                 await context.SaveChangesAsync().ConfigureAwait(false);
             }
         }
-        public async Task<InvoiceEntity> GetInvoice(string storeId, string id, bool inludeAddressData = false)
+        public async Task UpdatePaidInvoiceToComplete(string invoiceId)
+        {
+            using (var context = _ContextFactory.CreateContext())
+            {
+                var invoiceData = await context.FindAsync<Data.InvoiceData>(invoiceId).ConfigureAwait(false);
+                if (invoiceData == null || !invoiceData.GetInvoiceState().CanMarkComplete())
+                    return;
+                invoiceData.Status = "complete";
+                invoiceData.ExceptionStatus = "marked";
+                await context.SaveChangesAsync().ConfigureAwait(false);
+            }
+        }
+        public async Task<InvoiceEntity> GetInvoice(string id, bool inludeAddressData = false)
         {
             using (var context = _ContextFactory.CreateContext())
             {
@@ -352,9 +365,6 @@ namespace BTCPayServer.Services.Invoices
                 if (inludeAddressData)
                     query = query.Include(o => o.HistoricalAddressInvoices).Include(o => o.AddressInvoices);
                 query = query.Where(i => i.Id == id);
-
-                if (storeId != null)
-                    query = query.Where(i => i.StoreDataId == storeId);
 
                 var invoice = await query.FirstOrDefaultAsync().ConfigureAwait(false);
                 if (invoice == null)

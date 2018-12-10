@@ -33,7 +33,7 @@
   "What happened?": "O que aconteceu?",
   "InvoiceExpired_Body_1": "Esta fatura expirou. Uma fatura é válida durante {{maxTimeMinutes}} minutos.  \nPode voltar para {{storeName}} se quiser enviar o seu pagamento novamente.",
   "InvoiceExpired_Body_2": "Se tentou enviar um pagamento, ele ainda não foi aceite pela rede Bitcoin. Nós ainda não recebemos o valor enviado.",
-  "InvoiceExpired_Body_3": "Se a transação não for aceite pela rede Bitcoin, o valor voltará para sua carteira. Dependendo da sua carteira, isto pode demorar entre 48 e 72 horas.",
+  "InvoiceExpired_Body_3": "",
   "Invoice ID": "Nº da Fatura",
   "Order ID": "Nº da Encomenda",
   "Return to StoreName": "Voltar para {{storeName}}",

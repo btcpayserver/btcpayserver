@@ -1,5 +1,5 @@
 {
-  "NOTICE_WARN": "THIS CODE HAS BEEN AUTOMATICALLY GENERATE FROM TRANSIFEX, IF YOU WISH TO ADD A NEW LANGUAGE COME ON THE SLACK http://slack.btcpayserver.org TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/",
+  "NOTICE_WARN": "THIS CODE HAS BEEN AUTOMATICALLY GENERATED FROM TRANSIFEX, IF YOU WISH TO HELP TRANSLATION COME ON THE SLACK http://slack.btcpayserver.org TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/",
   "code": "en",
   "currentLanguage": "English",
   "lang": "Language",
@@ -33,7 +33,7 @@
   "What happened?": "What happened?",
   "InvoiceExpired_Body_1": "This invoice has expired. An invoice is only valid for {{maxTimeMinutes}} minutes.  \nYou can return to {{storeName}} if you would like to submit your payment again.",
   "InvoiceExpired_Body_2": "If you tried to send a payment, it has not yet been accepted by the network. We have not yet received your funds.",
-  "InvoiceExpired_Body_3": "If the transaction is not accepted by the network, the funds will be spendable again in your wallet. Depending on your wallet, this may take 48-72 hours.",
+  "InvoiceExpired_Body_3": "If we receive it at a later point, we will either process your order or contact you to make refund arrangements...",
   "Invoice ID": "Invoice ID",
   "Order ID": "Order ID",
   "Return to StoreName": "Return to {{storeName}}",

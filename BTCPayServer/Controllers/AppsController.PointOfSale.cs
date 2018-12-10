@@ -50,17 +50,21 @@ namespace BTCPayServer.Controllers
                     "  description: The Tibetan Himalayas, the land is majestic and beautiful—a spiritual place where, despite the perilous environment, many journey seeking enlightenment. Pay us what you want!\n" +
                     "  image: https://cdn.pixabay.com/photo/2016/09/16/11/24/darts-1673812__480.jpg\n" +
                     "  custom: true";
+                EnableShoppingCart = false;
                 ShowCustomAmount = true;
             }
             public string Title { get; set; }
             public string Currency { get; set; }
             public string Template { get; set; }
+            public bool EnableShoppingCart { get; set; }
             public bool ShowCustomAmount { get; set; }
 
             public const string BUTTON_TEXT_DEF = "Buy for {0}";
             public string ButtonText { get; set; } = BUTTON_TEXT_DEF;
             public const string CUSTOM_BUTTON_TEXT_DEF = "Pay";
             public string CustomButtonText { get; set; } = CUSTOM_BUTTON_TEXT_DEF;
+            public const string CUSTOM_TIP_TEXT_DEF = "Do you want to leave a tip?";
+            public string CustomTipText { get; set; } = CUSTOM_TIP_TEXT_DEF;
 
             public string CustomCSSLink { get; set; }
         }
@@ -76,11 +80,13 @@ namespace BTCPayServer.Controllers
             var vm = new UpdatePointOfSaleViewModel()
             {
                 Title = settings.Title,
+                EnableShoppingCart = settings.EnableShoppingCart,
                 ShowCustomAmount = settings.ShowCustomAmount,
                 Currency = settings.Currency,
                 Template = settings.Template,
                 ButtonText = settings.ButtonText ?? PointOfSaleSettings.BUTTON_TEXT_DEF,
                 CustomButtonText = settings.CustomButtonText ?? PointOfSaleSettings.CUSTOM_BUTTON_TEXT_DEF,
+                CustomTipText = settings.CustomTipText ?? PointOfSaleSettings.CUSTOM_TIP_TEXT_DEF,
                 CustomCSSLink = settings.CustomCSSLink
             };
             if (HttpContext?.Request != null)
@@ -144,11 +150,13 @@ namespace BTCPayServer.Controllers
             app.SetSettings(new PointOfSaleSettings()
             {
                 Title = vm.Title,
+                EnableShoppingCart = vm.EnableShoppingCart,
                 ShowCustomAmount = vm.ShowCustomAmount,
                 Currency = vm.Currency.ToUpperInvariant(),
                 Template = vm.Template,
                 ButtonText = vm.ButtonText,
                 CustomButtonText = vm.CustomButtonText,
+                CustomTipText = vm.CustomTipText,
                 CustomCSSLink = vm.CustomCSSLink
             });
             await UpdateAppSettings(app);

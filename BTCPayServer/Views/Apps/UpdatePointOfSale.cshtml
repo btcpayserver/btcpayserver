@@ -30,6 +30,10 @@
                         <span asp-validation-for="Currency" class="text-danger"></span>
                     </div>
                     <div class="form-group">
+                        <label asp-for="EnableShoppingCart"></label>
+                        <input asp-for="EnableShoppingCart" type="checkbox" class="form-check" />
+                    </div>
+                    <div class="form-group">
                         <label asp-for="ShowCustomAmount"></label>
                         <input asp-for="ShowCustomAmount" type="checkbox" class="form-check" />
                     </div>
@@ -42,6 +46,11 @@
                         <label asp-for="CustomButtonText" class="control-label"></label>*
                         <input asp-for="CustomButtonText" class="form-control" />
                         <span asp-validation-for="CustomButtonText" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="CustomTipText" class="control-label"></label>*
+                        <input asp-for="CustomTipText" class="form-control" />
+                        <span asp-validation-for="CustomTipText" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label asp-for="CustomCSSLink" class="control-label"></label>

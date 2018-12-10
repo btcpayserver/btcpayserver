@@ -395,9 +395,6 @@ namespace BTCPayServer.Services.Invoices
                     var cryptoSuffix = cryptoInfo.CryptoCode == "BTC" ? "" : "/" + cryptoInfo.CryptoCode;
                     cryptoInfo.PaymentUrls = new NBitpayClient.InvoicePaymentUrls()
                     {
-                        BIP72 = $"{scheme}:{cryptoInfo.Address}?amount={cryptoInfo.Due}&r={ServerUrl.WithTrailingSlash() + ($"i/{Id}{cryptoSuffix}")}",
-                        BIP72b = $"{scheme}:?r={ServerUrl.WithTrailingSlash() + ($"i/{Id}{cryptoSuffix}")}",
-                        BIP73 = ServerUrl.WithTrailingSlash() + ($"i/{Id}{cryptoSuffix}"),
                         BIP21 = $"{scheme}:{cryptoInfo.Address}?amount={cryptoInfo.Due}",
                     };
                 }
@@ -529,24 +526,61 @@ namespace BTCPayServer.Services.Invoices
             }
 #pragma warning restore CS0618
         }
+
+        public InvoiceState GetInvoiceState()
+        {
+            return new InvoiceState() { Status = Status, ExceptionStatus = ExceptionStatus };
+        }
+    }
+
+    public class InvoiceState
+    {
+        public string Status { get; set; }
+        public string ExceptionStatus { get; set; }
+        public bool CanMarkComplete()
+        {
+            return (Status == "paid") ||
+#pragma warning disable CA1305 // Specify IFormatProvider
+                   ((Status == "new" || Status == "expired") && ExceptionStatus?.ToString() == "paidPartial") ||
+                   ((Status == "new" || Status == "expired") && ExceptionStatus?.ToString() == "paidLate") ||
+                   (Status != "complete" && ExceptionStatus?.ToString() == "marked") ||
+                   (Status == "invalid");
+#pragma warning restore CA1305 // Specify IFormatProvider
+        }
+
+        public bool CanMarkInvalid()
+        {
+            return (Status == "paid") ||
+                   (Status == "new") ||
+#pragma warning disable CA1305 // Specify IFormatProvider
+                   ((Status == "new" || Status == "expired") && ExceptionStatus?.ToString() == "paidPartial") ||
+                   ((Status == "new" || Status == "expired") && ExceptionStatus?.ToString() == "paidLate") ||
+                   (Status != "invalid" && ExceptionStatus?.ToString() == "marked");
+#pragma warning restore CA1305 // Specify IFormatProvider;
+        }
+        public override string ToString()
+        {
+            return Status + (ExceptionStatus == null ? string.Empty : $" ({ExceptionStatus})");
+        }
     }
 
     public class PaymentMethodAccounting
     {
-        /// <summary>
-        /// Total amount of this invoice
-        /// </summary>
+        /// <summary>Total amount of this invoice</summary>
         public Money TotalDue { get; set; }
 
-        /// <summary>
-        /// Amount of crypto remaining to pay this invoice
-        /// </summary>
+        /// <summary>Amount of crypto remaining to pay this invoice</summary>
         public Money Due { get; set; }
 
-        /// <summary>
-        /// Same as Due, can be negative
-        /// </summary>
+        /// <summary>Same as Due, can be negative</summary>
         public Money DueUncapped { get; set; }
+
+        /// <summary>If DueUncapped is negative, that means user overpaid invoice</summary>
+        public Money OverpaidHelper
+        {
+            get { return DueUncapped > Money.Zero ? Money.Zero : -DueUncapped; }
+        }
+
         /// <summary>
         /// Total amount of the invoice paid after conversion to this crypto currency
         /// </summary>

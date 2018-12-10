@@ -1,0 +1,61 @@
+﻿@model BitpayTranslatorViewModel
+
+<section>
+    <div class="container">
+        @if (Model.Address != null)
+        {
+            <div class="row">
+                <div class="col-lg-12 text-center">
+                    <div class="alert alert-success alert-dismissible" role="alert">
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <p>You need to pay <b>@Model.Amount</b> to <b>@Model.Address</b></p>
+                        <div id="qrCode"></div>
+                        <div id="qrCodeData" data-url="@Html.Raw(Model.BitcoinUri)" style="margin-bottom:20px;"></div>
+                        <p>
+                            <a class="btn btn-primary" href="@Model.BitcoinUri">
+                                <span>Open in wallet</span>
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        }
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                <h2 class="section-heading">The Bitpay Translator</h2>
+                <hr class="primary">
+                <p>Bitpay is using deprecated standard in their invoices which multiple wallet do not support, use this transform their invoices to regular address/amount.</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-4 text-center">&nbsp;</div>
+            <div class="col-lg-4 text-center">
+                <form method="post">
+                    <div class="form-group">
+                        <label asp-for="BitpayLink" class="control-label"></label>*
+                        <input asp-for="BitpayLink" class="form-control" />
+                        <span asp-validation-for="BitpayLink" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-secondary" title="Continue">Translate to address</button>
+                    </div>
+                </form>
+            </div>
+            <div class="col-lg-4 text-center">&nbsp;</div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <script type="text/javascript" src="~/js/qrcode.min.js"></script>
+    <script type="text/javascript">
+        new QRCode(document.getElementById("qrCode"),
+            {
+                text: "@Html.Raw(Model.BitcoinUri)",
+                width: 150,
+                height: 150
+            });
+        $("#qrCode > img").css({ "margin": "auto" });
+    </script>
+}

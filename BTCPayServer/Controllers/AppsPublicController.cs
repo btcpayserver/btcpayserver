@@ -6,6 +6,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
+using BTCPayServer.Filters;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
@@ -32,6 +33,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("/apps/{appId}/pos")]
+        [XFrameOptionsAttribute(null)]
         public async Task<IActionResult> ViewPointOfSale(string appId)
         {
             var app = await _AppsHelper.GetApp(appId, AppType.PointOfSale);

@@ -61,14 +61,14 @@ namespace BTCPayServer.HostedServices
         private async Task UpdateInvoice(UpdateInvoiceContext context)
         {
             var invoice = context.Invoice;
-            if (invoice.Status == "new" && invoice.ExpirationTime < DateTimeOffset.UtcNow)
+            if (invoice.Status == InvoiceStatus.New && invoice.ExpirationTime < DateTimeOffset.UtcNow)
             {
                 context.MarkDirty();
                 await _InvoiceRepository.UnaffectAddress(invoice.Id);
 
                 context.Events.Add(new InvoiceEvent(invoice.EntityToDTO(_NetworkProvider), 1004, "invoice_expired"));
-                invoice.Status = "expired";
-                if(invoice.ExceptionStatus == "paidPartial")
+                invoice.Status = InvoiceStatus.Expired;
+                if(invoice.ExceptionStatus == InvoiceExceptionStatus.PaidPartial)
                     context.Events.Add(new InvoiceEvent(invoice.EntityToDTO(_NetworkProvider), 2000, "invoice_expiredPaidPartial"));
             }
 
@@ -78,57 +78,57 @@ namespace BTCPayServer.HostedServices
             if (paymentMethod == null)
                 return;
             var network = _NetworkProvider.GetNetwork(paymentMethod.GetId().CryptoCode);
-            if (invoice.Status == "new" || invoice.Status == "expired")
+            if (invoice.Status == InvoiceStatus.New || invoice.Status == InvoiceStatus.Expired)
             {
                 if (accounting.Paid >= accounting.MinimumTotalDue)
                 {
-                    if (invoice.Status == "new")
+                    if (invoice.Status == InvoiceStatus.New)
                     {
                         context.Events.Add(new InvoiceEvent(invoice.EntityToDTO(_NetworkProvider), 1003, "invoice_paidInFull"));
-                        invoice.Status = "paid";
-                        invoice.ExceptionStatus = accounting.Paid > accounting.TotalDue ? "paidOver" : null;
+                        invoice.Status = InvoiceStatus.Paid;
+                        invoice.ExceptionStatus = accounting.Paid > accounting.TotalDue ? InvoiceExceptionStatus.PaidOver : InvoiceExceptionStatus.None;
                         await _InvoiceRepository.UnaffectAddress(invoice.Id);
                         context.MarkDirty();
                     }
-                    else if (invoice.Status == "expired" && invoice.ExceptionStatus != "paidLate")
+                    else if (invoice.Status == InvoiceStatus.Expired && invoice.ExceptionStatus != InvoiceExceptionStatus.PaidLate)
                     {
-                        invoice.ExceptionStatus = "paidLate";
+                        invoice.ExceptionStatus = InvoiceExceptionStatus.PaidLate;
                         context.Events.Add(new InvoiceEvent(invoice.EntityToDTO(_NetworkProvider), 1009, "invoice_paidAfterExpiration"));
                         context.MarkDirty();
                     }
                 }
 
-                if (accounting.Paid < accounting.MinimumTotalDue && invoice.GetPayments().Count != 0 && invoice.ExceptionStatus != "paidPartial")
+                if (accounting.Paid < accounting.MinimumTotalDue && invoice.GetPayments().Count != 0 && invoice.ExceptionStatus != InvoiceExceptionStatus.PaidPartial)
                 {
-                        invoice.ExceptionStatus = "paidPartial";
+                        invoice.ExceptionStatus = InvoiceExceptionStatus.PaidPartial;
                         context.MarkDirty();
                 }
             }
 
             // Just make sure RBF did not cancelled a payment
-            if (invoice.Status == "paid")
+            if (invoice.Status == InvoiceStatus.Paid)
             {
-                if (accounting.MinimumTotalDue <= accounting.Paid && accounting.Paid <= accounting.TotalDue && invoice.ExceptionStatus == "paidOver")
+                if (accounting.MinimumTotalDue <= accounting.Paid && accounting.Paid <= accounting.TotalDue && invoice.ExceptionStatus == InvoiceExceptionStatus.PaidOver)
                 {
-                    invoice.ExceptionStatus = null;
+                    invoice.ExceptionStatus = InvoiceExceptionStatus.None;
                     context.MarkDirty();
                 }
 
-                if (accounting.Paid > accounting.TotalDue && invoice.ExceptionStatus != "paidOver")
+                if (accounting.Paid > accounting.TotalDue && invoice.ExceptionStatus != InvoiceExceptionStatus.PaidOver)
                 {
-                    invoice.ExceptionStatus = "paidOver";
+                    invoice.ExceptionStatus = InvoiceExceptionStatus.PaidOver;
                     context.MarkDirty();
                 }
 
                 if (accounting.Paid < accounting.MinimumTotalDue)
                 {
-                    invoice.Status = "new";
-                    invoice.ExceptionStatus = accounting.Paid == Money.Zero ? null : "paidPartial";
+                    invoice.Status = InvoiceStatus.New;
+                    invoice.ExceptionStatus = accounting.Paid == Money.Zero ? InvoiceExceptionStatus.None : InvoiceExceptionStatus.PaidPartial;
                     context.MarkDirty();
                 }
             }
 
-            if (invoice.Status == "paid")
+            if (invoice.Status == InvoiceStatus.Paid)
             {
                 var confirmedAccounting = paymentMethod.Calculate(p => p.GetCryptoPaymentData().PaymentConfirmed(p, invoice.SpeedPolicy, network));
 
@@ -140,25 +140,25 @@ namespace BTCPayServer.HostedServices
                 {
                     await _InvoiceRepository.UnaffectAddress(invoice.Id);
                     context.Events.Add(new InvoiceEvent(invoice.EntityToDTO(_NetworkProvider), 1013, "invoice_failedToConfirm"));
-                    invoice.Status = "invalid";
+                    invoice.Status = InvoiceStatus.Invalid;
                     context.MarkDirty();
                 }
                 else if (confirmedAccounting.Paid >= accounting.MinimumTotalDue)
                 {
                     await _InvoiceRepository.UnaffectAddress(invoice.Id);
                     context.Events.Add(new InvoiceEvent(invoice.EntityToDTO(_NetworkProvider), 1005, "invoice_confirmed"));
-                    invoice.Status = "confirmed";
+                    invoice.Status = InvoiceStatus.Confirmed;
                     context.MarkDirty();
                 }
             }
 
-            if (invoice.Status == "confirmed")
+            if (invoice.Status == InvoiceStatus.Confirmed)
             {
                 var completedAccounting = paymentMethod.Calculate(p => p.GetCryptoPaymentData().PaymentCompleted(p, network));
                 if (completedAccounting.Paid >= accounting.MinimumTotalDue)
                 {
                     context.Events.Add(new InvoiceEvent(invoice.EntityToDTO(_NetworkProvider), 1006, "invoice_completed"));
-                    invoice.Status = "complete";
+                    invoice.Status = InvoiceStatus.Complete;
                     context.MarkDirty();
                 }
             }
@@ -290,7 +290,7 @@ namespace BTCPayServer.HostedServices
                             await UpdateInvoice(updateContext);
                             if (updateContext.Dirty)
                             {
-                                await _InvoiceRepository.UpdateInvoiceStatus(invoice.Id, invoice.Status, invoice.ExceptionStatus);
+                                await _InvoiceRepository.UpdateInvoiceStatus(invoice.Id, invoice.GetInvoiceState());
                                 updateContext.Events.Insert(0, new InvoiceDataChangedEvent(invoice));
                             }
 
@@ -299,8 +299,8 @@ namespace BTCPayServer.HostedServices
                                 _EventAggregator.Publish(evt, evt.GetType());
                             }
 
-                            if (invoice.Status == "complete" ||
-                               ((invoice.Status == "invalid" || invoice.Status == "expired") && invoice.MonitoringExpiration < DateTimeOffset.UtcNow))
+                            if (invoice.Status == InvoiceStatus.Complete ||
+                               ((invoice.Status == InvoiceStatus.Invalid || invoice.Status == InvoiceStatus.Expired) && invoice.MonitoringExpiration < DateTimeOffset.UtcNow))
                             {
                                 if (await _InvoiceRepository.RemovePendingInvoice(invoice.Id))
                                     _EventAggregator.Publish(new InvoiceStopWatchedEvent(invoice.Id));

@@ -226,15 +226,23 @@ namespace BTCPayServer.Services.Invoices
 #pragma warning restore CS0618
         }
 
-        public string Status
+        [JsonIgnore]
+        public InvoiceStatus Status
         {
             get;
             set;
         }
-        public string ExceptionStatus
+        [JsonProperty(PropertyName = "status")]
+        [Obsolete("Use Status instead")]
+        public string StatusString => InvoiceState.ToString(Status);
+        [JsonIgnore]
+        public InvoiceExceptionStatus ExceptionStatus
         {
             get; set;
         }
+        [JsonProperty(PropertyName = "exceptionStatus")]
+        [Obsolete("Use ExceptionStatus instead")]
+        public string ExceptionStatusString => InvoiceState.ToString(ExceptionStatus);
 
         [Obsolete("Use GetPayments instead")]
         public List<PaymentEntity> Payments
@@ -341,7 +349,10 @@ namespace BTCPayServer.Services.Invoices
                 CurrentTime = DateTimeOffset.UtcNow,
                 InvoiceTime = InvoiceTime,
                 ExpirationTime = ExpirationTime,
-                Status = Status,
+#pragma warning disable CS0618 // Type or member is obsolete
+                Status = StatusString,
+                ExceptionStatus = ExceptionStatus == InvoiceExceptionStatus.None ? new JValue(false) : new JValue(ExceptionStatusString),
+#pragma warning restore CS0618 // Type or member is obsolete
                 Currency = ProductInformation.Currency,
                 Flags = new Flags() { Refundable = Refundable },
                 PaymentSubtotals = new Dictionary<string, long>(),
@@ -447,7 +458,6 @@ namespace BTCPayServer.Services.Invoices
 
             dto.Token = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16)); //No idea what it is useful for
             dto.Guid = Guid.NewGuid().ToString();
-            dto.ExceptionStatus = ExceptionStatus == null ? new JValue(false) : new JValue(ExceptionStatus);
             return dto;
         }
 
@@ -529,38 +539,104 @@ namespace BTCPayServer.Services.Invoices
 
         public InvoiceState GetInvoiceState()
         {
-            return new InvoiceState() { Status = Status, ExceptionStatus = ExceptionStatus };
+            return new InvoiceState(Status, ExceptionStatus);
         }
     }
 
+    public enum InvoiceStatus
+    {
+        New,
+        Paid,
+        Expired,
+        Invalid,
+        Complete,
+        Confirmed
+    }
+    public enum InvoiceExceptionStatus
+    {
+        None,
+        PaidLate,
+        PaidPartial,
+        Marked,
+        Invalid,
+        PaidOver
+    }
     public class InvoiceState
     {
-        public string Status { get; set; }
-        public string ExceptionStatus { get; set; }
+        static Dictionary<string, InvoiceStatus> _StringToInvoiceStatus;
+        static Dictionary<InvoiceStatus, string> _InvoiceStatusToString;
+
+        static Dictionary<string, InvoiceExceptionStatus> _StringToExceptionStatus;
+        static Dictionary<InvoiceExceptionStatus, string> _ExceptionStatusToString;
+
+        static InvoiceState()
+        {
+            _StringToInvoiceStatus = new Dictionary<string, InvoiceStatus>();
+            _StringToInvoiceStatus.Add("paid", InvoiceStatus.Paid);
+            _StringToInvoiceStatus.Add("expired", InvoiceStatus.Expired);
+            _StringToInvoiceStatus.Add("invalid", InvoiceStatus.Invalid);
+            _StringToInvoiceStatus.Add("complete", InvoiceStatus.Complete);
+            _StringToInvoiceStatus.Add("new", InvoiceStatus.New);
+            _StringToInvoiceStatus.Add("confirmed", InvoiceStatus.Confirmed);
+            _InvoiceStatusToString = _StringToInvoiceStatus.ToDictionary(kv => kv.Value, kv => kv.Key);
+
+            _StringToExceptionStatus = new Dictionary<string, InvoiceExceptionStatus>();
+            _StringToExceptionStatus.Add(string.Empty, InvoiceExceptionStatus.None);
+            _StringToExceptionStatus.Add("paidPartial", InvoiceExceptionStatus.PaidPartial);
+            _StringToExceptionStatus.Add("paidLate", InvoiceExceptionStatus.PaidLate);
+            _StringToExceptionStatus.Add("paidOver", InvoiceExceptionStatus.PaidOver);
+            _StringToExceptionStatus.Add("marked", InvoiceExceptionStatus.Marked);
+            _ExceptionStatusToString = _StringToExceptionStatus.ToDictionary(kv => kv.Value, kv => kv.Key);
+            _StringToExceptionStatus.Add("false", InvoiceExceptionStatus.None);
+        }
+        public InvoiceState(string status, string exceptionStatus)
+        {
+            Status = _StringToInvoiceStatus[status];
+            ExceptionStatus = _StringToExceptionStatus[exceptionStatus ?? string.Empty];
+        }
+        public InvoiceState(InvoiceStatus status, InvoiceExceptionStatus exceptionStatus)
+        {
+            Status = status;
+            ExceptionStatus = exceptionStatus;
+        }
+
+        public InvoiceStatus Status { get; }
+        public InvoiceExceptionStatus ExceptionStatus { get; }
+
+        public static string ToString(InvoiceStatus status)
+        {
+            return _InvoiceStatusToString[status];
+        }
+
+        public static string ToString(InvoiceExceptionStatus exceptionStatus)
+        {
+            return _ExceptionStatusToString[exceptionStatus];
+        }
+
         public bool CanMarkComplete()
         {
-            return (Status == "paid") ||
+            return (Status == InvoiceStatus.Paid) ||
 #pragma warning disable CA1305 // Specify IFormatProvider
-                   ((Status == "new" || Status == "expired") && ExceptionStatus?.ToString() == "paidPartial") ||
-                   ((Status == "new" || Status == "expired") && ExceptionStatus?.ToString() == "paidLate") ||
-                   (Status != "complete" && ExceptionStatus?.ToString() == "marked") ||
-                   (Status == "invalid");
+                   ((Status == InvoiceStatus.New || Status == InvoiceStatus.Expired) && ExceptionStatus == InvoiceExceptionStatus.PaidPartial) ||
+                   ((Status == InvoiceStatus.New || Status == InvoiceStatus.Expired) && ExceptionStatus == InvoiceExceptionStatus.PaidLate) ||
+                   (Status != InvoiceStatus.Complete && ExceptionStatus == InvoiceExceptionStatus.Marked) ||
+                   (Status == InvoiceStatus.Invalid);
 #pragma warning restore CA1305 // Specify IFormatProvider
         }
 
         public bool CanMarkInvalid()
         {
-            return (Status == "paid") ||
-                   (Status == "new") ||
+            return (Status == InvoiceStatus.Paid) ||
+                   (Status == InvoiceStatus.New) ||
 #pragma warning disable CA1305 // Specify IFormatProvider
-                   ((Status == "new" || Status == "expired") && ExceptionStatus?.ToString() == "paidPartial") ||
-                   ((Status == "new" || Status == "expired") && ExceptionStatus?.ToString() == "paidLate") ||
-                   (Status != "invalid" && ExceptionStatus?.ToString() == "marked");
+                   ((Status == InvoiceStatus.New || Status == InvoiceStatus.Expired) && ExceptionStatus == InvoiceExceptionStatus.PaidPartial) ||
+                   ((Status == InvoiceStatus.New || Status == InvoiceStatus.Expired) && ExceptionStatus == InvoiceExceptionStatus.PaidLate) ||
+                   (Status != InvoiceStatus.Invalid && ExceptionStatus == InvoiceExceptionStatus.Marked);
 #pragma warning restore CA1305 // Specify IFormatProvider;
         }
         public override string ToString()
         {
-            return Status + (ExceptionStatus == null ? string.Empty : $" ({ExceptionStatus})");
+            return ToString(Status) + (ExceptionStatus == InvoiceExceptionStatus.None ? string.Empty : $" ({ToString(ExceptionStatus)})");
         }
     }
 

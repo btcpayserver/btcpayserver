@@ -51,7 +51,7 @@ namespace BTCPayServer.Controllers
                 StoreName = store.StoreName,
                 StoreLink = Url.Action(nameof(StoresController.UpdateStore), "Stores", new { storeId = store.Id }),
                 Id = invoice.Id,
-                Status = invoice.Status,
+                State = invoice.GetInvoiceState().ToString(),
                 TransactionSpeed = invoice.SpeedPolicy == SpeedPolicy.HighSpeed ? "high" :
                                    invoice.SpeedPolicy == SpeedPolicy.MediumSpeed ? "medium" :
                                    invoice.SpeedPolicy == SpeedPolicy.LowMediumSpeed ? "low-medium" :
@@ -301,7 +301,9 @@ namespace BTCPayServer.Controllers
                                     throw new NotSupportedException(),
                 TxCount = accounting.TxRequired,
                 BtcPaid = accounting.Paid.ToString(),
-                Status = invoice.Status,
+#pragma warning disable CS0618 // Type or member is obsolete
+                Status = invoice.StatusString,
+#pragma warning restore CS0618 // Type or member is obsolete
                 NetworkFee = paymentMethodDetails.GetTxFee(),
                 IsMultiCurrency = invoice.GetPayments().Select(p => p.GetPaymentMethodId()).Concat(new[] { paymentMethod.GetId() }).Distinct().Count() > 1,
                 ChangellyEnabled = changelly != null,
@@ -373,7 +375,7 @@ namespace BTCPayServer.Controllers
             if (!HttpContext.WebSockets.IsWebSocketRequest)
                 return NotFound();
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
-            if (invoice == null || invoice.Status == "complete" || invoice.Status == "invalid" || invoice.Status == "expired")
+            if (invoice == null || invoice.Status == InvoiceStatus.Complete || invoice.Status ==  InvoiceStatus.Invalid || invoice.Status == InvoiceStatus.Expired)
                 return NotFound();
             var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
             CompositeDisposable leases = new CompositeDisposable();
@@ -444,7 +446,7 @@ namespace BTCPayServer.Controllers
                 model.Invoices.Add(new InvoiceModel()
                 {
                     Status = state.ToString(),
-                    ShowCheckout = invoice.Status == "new",
+                    ShowCheckout = invoice.Status == InvoiceStatus.New,
                     Date = invoice.InvoiceTime,
                     InvoiceId = invoice.Id,
                     OrderId = invoice.OrderId ?? string.Empty,

@@ -77,7 +77,9 @@ namespace BTCPayServer.Services.Invoices.Export
                     CreatedDate = invoice.InvoiceTime.UtcDateTime,
                     ExpirationDate = invoice.ExpirationTime.UtcDateTime,
                     MonitoringDate = invoice.MonitoringExpiration.UtcDateTime,
-                    Status = invoice.Status,
+#pragma warning disable CS0618 // Type or member is obsolete
+                    Status = invoice.StatusString,
+#pragma warning restore CS0618 // Type or member is obsolete
                     ItemCode = invoice.ProductInformation?.ItemCode,
                     ItemDesc = invoice.ProductInformation?.ItemDesc,
                     FiatPrice = invoice.ProductInformation?.Price ?? 0,

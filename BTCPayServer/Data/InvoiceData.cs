@@ -84,7 +84,7 @@ namespace BTCPayServer.Data
 
         public Services.Invoices.InvoiceState GetInvoiceState()
         {
-            return new Services.Invoices.InvoiceState() { Status = Status, ExceptionStatus = ExceptionStatus };
+            return new Services.Invoices.InvoiceState(Status, ExceptionStatus);
         }
     }
 }

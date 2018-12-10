@@ -99,7 +99,7 @@ namespace BTCPayServer.Controllers
             if (!Uri.IsWellFormedUriString(entity.RedirectURL, UriKind.Absolute))
                 entity.RedirectURL = null;
 
-            entity.Status = "new";
+            entity.Status = InvoiceStatus.New;
             entity.SpeedPolicy = ParseSpeedPolicy(invoice.TransactionSpeed, store.SpeedPolicy);
 
             HashSet<CurrencyPair> currencyPairsToFetch = new HashSet<CurrencyPair>();

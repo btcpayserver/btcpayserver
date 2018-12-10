@@ -31,31 +31,63 @@ namespace BTCPayServer.Controllers
     {
         [HttpGet]
         [Route("invoices/{invoiceId}")]
+        [MediaTypeConstraint("application/json")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetPublicInvoice(string invoiceId)
+        {
+            var result = await GetInvoiceResult(invoiceId);
+            if (result == null)
+            {
+                return NotFound();
+            }
+
+            //strip any potentially unwanted merchant info
+            result.NotificationEmail = null;
+            result.NotificationUrl = null;
+
+            return Json(result);
+            
+            return Json(result);
+        }
+        
+        [HttpGet]
+        [Route("invoices/{invoiceId}")]
         [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
         public async Task<IActionResult> Invoice(string invoiceId)
+        {
+            var result = await GetInvoiceResult(invoiceId, GetUserId());
+            if (result == null)
+            {
+                return NotFound();
+            }
+
+            return View(result);
+        }
+
+        private async Task<InvoiceDetailsModel > GetInvoiceResult(string invoiceId, string userId = null)
         {
             var invoice = (await _InvoiceRepository.GetInvoices(new InvoiceQuery()
             {
                 InvoiceId = invoiceId,
-                UserId = GetUserId(),
+                UserId = userId,
                 IncludeAddresses = true,
                 IncludeEvents = true
             })).FirstOrDefault();
             if (invoice == null)
-                return NotFound();
+                return null;
 
             var dto = invoice.EntityToDTO(_NetworkProvider);
             var store = await _StoreRepository.FindStore(invoice.StoreId);
-            InvoiceDetailsModel model = new InvoiceDetailsModel()
+            var model = new InvoiceDetailsModel()
             {
                 StoreName = store.StoreName,
-                StoreLink = Url.Action(nameof(StoresController.UpdateStore), "Stores", new { storeId = store.Id }),
+                StoreLink = Url.Action(nameof(StoresController.UpdateStore), "Stores", new {storeId = store.Id}),
                 Id = invoice.Id,
                 State = invoice.GetInvoiceState().ToString(),
                 TransactionSpeed = invoice.SpeedPolicy == SpeedPolicy.HighSpeed ? "high" :
-                                   invoice.SpeedPolicy == SpeedPolicy.MediumSpeed ? "medium" :
-                                   invoice.SpeedPolicy == SpeedPolicy.LowMediumSpeed ? "low-medium" :
-                                   "low",
+                    invoice.SpeedPolicy == SpeedPolicy.MediumSpeed ? "medium" :
+                    invoice.SpeedPolicy == SpeedPolicy.LowMediumSpeed ? "low-medium" :
+                    "low",
                 RefundEmail = invoice.RefundMail,
                 CreatedDate = invoice.InvoiceTime,
                 ExpirationDate = invoice.ExpirationTime,
@@ -88,6 +120,7 @@ namespace BTCPayServer.Controllers
                 {
                     cryptoPayment.Address = onchainMethod.DepositAddress;
                 }
+
                 cryptoPayment.Rate = ExchangeRate(data);
                 cryptoPayment.PaymentUrl = cryptoInfo.PaymentUrls.BIP21;
                 model.CryptoPayments.Add(cryptoPayment);
@@ -103,21 +136,27 @@ namespace BTCPayServer.Controllers
                     {
                         var m = new InvoiceDetailsModel.Payment();
                         m.Crypto = payment.GetPaymentMethodId().CryptoCode;
-                        m.DepositAddress = onChainPaymentData.Output.ScriptPubKey.GetDestinationAddress(paymentNetwork.NBitcoinNetwork);
+                        m.DepositAddress =
+                            onChainPaymentData.Output.ScriptPubKey.GetDestinationAddress(paymentNetwork.NBitcoinNetwork);
 
                         int confirmationCount = 0;
                         if ((onChainPaymentData.ConfirmationCount < paymentNetwork.MaxTrackedConfirmation && payment.Accounted)
-                             && (onChainPaymentData.Legacy || invoice.MonitoringExpiration < DateTimeOffset.UtcNow)) // The confirmation count in the paymentData is not up to date
+                            && (onChainPaymentData.Legacy || invoice.MonitoringExpiration < DateTimeOffset.UtcNow)
+                        ) // The confirmation count in the paymentData is not up to date
                         {
-                            confirmationCount = (await ((ExplorerClientProvider)_ServiceProvider.GetService(typeof(ExplorerClientProvider))).GetExplorerClient(payment.GetCryptoCode())?.GetTransactionAsync(onChainPaymentData.Outpoint.Hash))?.Confirmations ?? 0;
+                            confirmationCount =
+                                (await ((ExplorerClientProvider) _ServiceProvider.GetService(typeof(ExplorerClientProvider)))
+                                    .GetExplorerClient(payment.GetCryptoCode())
+                                    ?.GetTransactionAsync(onChainPaymentData.Outpoint.Hash))?.Confirmations ?? 0;
                             onChainPaymentData.ConfirmationCount = confirmationCount;
                             payment.SetCryptoPaymentData(onChainPaymentData);
-                            await _InvoiceRepository.UpdatePayments(new List<PaymentEntity> { payment });
+                            await _InvoiceRepository.UpdatePayments(new List<PaymentEntity> {payment});
                         }
                         else
                         {
                             confirmationCount = onChainPaymentData.ConfirmationCount;
                         }
+
                         if (confirmationCount >= paymentNetwork.MaxTrackedConfirmation)
                         {
                             m.Confirmations = "At least " + (paymentNetwork.MaxTrackedConfirmation);
@@ -129,13 +168,14 @@ namespace BTCPayServer.Controllers
 
                         m.TransactionId = onChainPaymentData.Outpoint.Hash.ToString();
                         m.ReceivedTime = payment.ReceivedTime;
-                        m.TransactionLink = string.Format(CultureInfo.InvariantCulture, paymentNetwork.BlockExplorerLink, m.TransactionId);
+                        m.TransactionLink = string.Format(CultureInfo.InvariantCulture, paymentNetwork.BlockExplorerLink,
+                            m.TransactionId);
                         m.Replaced = !payment.Accounted;
                         return m;
                     }
                     else
                     {
-                        var lightningPaymentData = (Payments.Lightning.LightningLikePaymentData)paymentData;
+                        var lightningPaymentData = (Payments.Lightning.LightningLikePaymentData) paymentData;
                         return new InvoiceDetailsModel.OffChainPayment()
                         {
                             Crypto = paymentNetwork.CryptoCode,
@@ -151,10 +191,12 @@ namespace BTCPayServer.Controllers
                 PaymentMethod = ToString(h.GetPaymentMethodId()),
                 Current = !h.UnAssigned.HasValue
             }).ToArray();
-            model.OnChainPayments = onChainPayments.Select(p => p.GetAwaiter().GetResult()).OfType<InvoiceDetailsModel.Payment>().ToList();
-            model.OffChainPayments = onChainPayments.Select(p => p.GetAwaiter().GetResult()).OfType<InvoiceDetailsModel.OffChainPayment>().ToList();
+            model.OnChainPayments = onChainPayments.Select(p => p.GetAwaiter().GetResult())
+                .OfType<InvoiceDetailsModel.Payment>().ToList();
+            model.OffChainPayments = onChainPayments.Select(p => p.GetAwaiter().GetResult())
+                .OfType<InvoiceDetailsModel.OffChainPayment>().ToList();
             model.StatusMessage = StatusMessage;
-            return View(model);
+            return model;
         }
 
         private string ToString(PaymentMethodId paymentMethodId)

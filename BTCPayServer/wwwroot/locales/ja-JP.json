@@ -33,7 +33,7 @@
   "What happened?": "え！？ナニコレ！？",
   "InvoiceExpired_Body_1": "当件のお支払いの有効期限が過ぎてしまいました。最大 {{maxTimeMinutes}} 分以内に支払うことが義務付けられています。 \nまだお支払いのご希望の場合 {{storeName}} に一旦戻っていただき、もう一度お支払いの手続きを最初からやり直してみてください。",
   "InvoiceExpired_Body_2": "送金手続きを完了したつもりでも、ネットワークにて取り込まれて処理されるまでは決済となりません。現時点ではまだ着金しておりません。",
-  "InvoiceExpired_Body_3": "ネットワークにて取り込まれなかった送金はいずれ送金元のウォレットに戻りますが、ウォレットソフトによっては２〜３日かかる場合もございますのでご了承ください。",
+  "InvoiceExpired_Body_3": "",
   "Invoice ID": "お支払い ID",
   "Order ID": "ご注文 ID",
   "Return to StoreName": "{{storeName}} に戻る",

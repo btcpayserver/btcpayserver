@@ -73,7 +73,7 @@ namespace BTCPayServer.Payments.Lightning
         {
             if (Listening(invoiceId))
                 return;
-            var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
+            var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
             foreach (var paymentMethod in invoice.GetPaymentMethods(_NetworkProvider)
                                                           .Where(c => c.GetId().PaymentType == PaymentTypes.LightningLike))
             {
@@ -194,7 +194,7 @@ namespace BTCPayServer.Payments.Lightning
             }, network.CryptoCode, accounted: true);
             if (payment != null)
             {
-                var invoice = await _InvoiceRepository.GetInvoice(null, listenedInvoice.InvoiceId);
+                var invoice = await _InvoiceRepository.GetInvoice(listenedInvoice.InvoiceId);
                 if (invoice != null)
                     _Aggregator.Publish(new InvoiceEvent(invoice.EntityToDTO(_NetworkProvider), 1002, "invoice_receivedPayment"));
             }

@@ -330,7 +330,7 @@ namespace BTCPayServer.HostedServices
         {
             leases.Add(_EventAggregator.Subscribe<InvoiceEvent>(async e =>
             {
-                var invoice = await _InvoiceRepository.GetInvoice(null, e.Invoice.Id);
+                var invoice = await _InvoiceRepository.GetInvoice(e.Invoice.Id);
                 if (invoice == null)
                     return;
                 List<Task> tasks = new List<Task>();
@@ -345,6 +345,7 @@ namespace BTCPayServer.HostedServices
                        e.Name == "invoice_paidInFull" ||
                        e.Name == "invoice_failedToConfirm" ||
                        e.Name == "invoice_markedInvalid" ||
+                       e.Name == "invoice_markedComplete" ||
                        e.Name == "invoice_failedToConfirm" ||
                        e.Name == "invoice_completed" ||
                        e.Name == "invoice_expiredPaidPartial"

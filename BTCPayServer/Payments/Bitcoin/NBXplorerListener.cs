@@ -205,7 +205,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
         async Task<InvoiceEntity> UpdatePaymentStates(BTCPayWallet wallet, string invoiceId)
         {
-            var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId, false);
+            var invoice = await _InvoiceRepository.GetInvoice(invoiceId, false);
             if (invoice == null)
                 return null;
             List<PaymentEntity> updatedPaymentEntities = new List<PaymentEntity>();
@@ -315,7 +315,7 @@ namespace BTCPayServer.Payments.Bitcoin
             var invoices = await _InvoiceRepository.GetPendingInvoices();
             foreach (var invoiceId in invoices)
             {
-                var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId, true);
+                var invoice = await _InvoiceRepository.GetInvoice(invoiceId, true);
                 if (invoice == null)
                     continue;
                 var alreadyAccounted = GetAllBitcoinPaymentData(invoice).Select(p => p.Outpoint).ToHashSet();

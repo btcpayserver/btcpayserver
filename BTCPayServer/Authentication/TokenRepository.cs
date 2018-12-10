@@ -242,6 +242,8 @@ namespace BTCPayServer.Authentication
             using (var ctx = _Factory.CreateContext())
             {
                 var token = await ctx.PairedSINData.FindAsync(tokenId);
+                if (token == null)
+                    return null;
                 return CreateTokenEntity(token);
             }
         }

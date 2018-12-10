@@ -6,6 +6,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
+using BTCPayServer.Filters;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
@@ -32,6 +33,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("/apps/{appId}/pos")]
+        [XFrameOptionsAttribute(null)]
         public async Task<IActionResult> ViewPointOfSale(string appId)
         {
             var app = await _AppsHelper.GetApp(appId, AppType.PointOfSale);
@@ -41,15 +43,27 @@ namespace BTCPayServer.Controllers
             var currency = _AppsHelper.GetCurrencyData(settings.Currency, false);
             double step = currency == null ? 1 : Math.Pow(10, -(currency.Divisibility));
 
+            var numberFormatInfo = _AppsHelper.Currencies.GetNumberFormatInfo(currency.Code) ?? _AppsHelper.Currencies.GetNumberFormatInfo("USD");
             return View(new ViewPointOfSaleViewModel()
             {
                 Title = settings.Title,
                 Step = step.ToString(CultureInfo.InvariantCulture),
+                EnableShoppingCart = settings.EnableShoppingCart,
                 ShowCustomAmount = settings.ShowCustomAmount,
+                CurrencyCode = currency.Code,
                 CurrencySymbol = currency.Symbol,
+                CurrencyInfo = new ViewPointOfSaleViewModel.CurrencyInfoData()
+                {
+                    CurrencySymbol = string.IsNullOrEmpty(currency.Symbol) ? currency.Code : currency.Symbol,
+                    Divisibility = currency.Divisibility,
+                    DecimalSeparator = numberFormatInfo.CurrencyDecimalSeparator,
+                    ThousandSeparator = numberFormatInfo.NumberGroupSeparator,
+                    Prefixed = new[] { 0, 2 }.Contains(numberFormatInfo.CurrencyPositivePattern)
+                },
                 Items = _AppsHelper.Parse(settings.Template, settings.Currency),
                 ButtonText = settings.ButtonText,
                 CustomButtonText = settings.CustomButtonText,
+                CustomTipText = settings.CustomTipText,
                 CustomCSSLink = settings.CustomCSSLink
             });
         }
@@ -74,7 +88,7 @@ namespace BTCPayServer.Controllers
             if (app == null)
                 return NotFound();
             var settings = app.GetSettings<PointOfSaleSettings>();
-            if (string.IsNullOrEmpty(choiceKey) && !settings.ShowCustomAmount)
+            if (string.IsNullOrEmpty(choiceKey) && !settings.ShowCustomAmount && !settings.EnableShoppingCart)
             {
                 return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
             }
@@ -93,7 +107,7 @@ namespace BTCPayServer.Controllers
             }
             else
             {
-                if (!settings.ShowCustomAmount)
+                if (!settings.ShowCustomAmount && !settings.EnableShoppingCart)
                     return NotFound();
                 price = amount;
                 title = settings.Title;
@@ -121,7 +135,7 @@ namespace BTCPayServer.Controllers
     {
         ApplicationDbContextFactory _ContextFactory;
         CurrencyNameTable _Currencies;
-
+        public CurrencyNameTable Currencies => _Currencies;
         public AppsHelper(ApplicationDbContextFactory contextFactory, CurrencyNameTable currencies)
         {
             _ContextFactory = contextFactory;

@@ -28,18 +28,23 @@ namespace BTCPayServer.Tests
             // 2. Run "dotnet user-secrets set TransifexAPIToken <youapitoken>"
             var client = new TransifexClient(GetTransifexAPIToken());
             var json = await client.GetTransifexAsync("https://api.transifex.com/organizations/btcpayserver/projects/btcpayserver/resources/enjson/");
-            var langs = ((JObject)json["stats"]).Properties().Select(n => n.Name).ToArray();
+            var langs = new[] { "en" }.Concat(((JObject)json["stats"]).Properties().Select(n => n.Name)).ToArray();
 
             var langsDir = Path.Combine(Services.LanguageService.TryGetSolutionDirectoryInfo().FullName, "BTCPayServer", "wwwroot", "locales");
 
+            JObject sourceLang = null;
             Task.WaitAll(langs.Select(async l =>
             {
+                bool isSourceLang = l == "en";
                 if (l == "no")
                     return;
                 var j = await client.GetTransifexAsync($"https://www.transifex.com/api/2/project/btcpayserver/resource/enjson/translation/{l}/");
+                if(!isSourceLang)
+                {
+                    while (sourceLang == null)
+                        await Task.Delay(10);
+                }
                 var content = j["content"].Value<string>();
-                if (l == "en_US")
-                    l = "en";
                 if (l == "ne_NP")
                     l = "np_NP";
                 if (l == "zh_CN")
@@ -51,9 +56,20 @@ namespace BTCPayServer.Tests
                 var langFile = Path.Combine(langsDir, langCode + ".json");
                 var jobj = JObject.Parse(content);
                 jobj["code"] = langCode;
-                if ((string)jobj["currentLanguage"] == "English")
-                    return;
+                if ((string)jobj["currentLanguage"] == "English" && !isSourceLang)
+                    return; // Not translated
                 jobj.AddFirst(new JProperty("NOTICE_WARN", "THIS CODE HAS BEEN AUTOMATICALLY GENERATED FROM TRANSIFEX, IF YOU WISH TO HELP TRANSLATION COME ON THE SLACK http://slack.btcpayserver.org TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/"));
+                if (isSourceLang)
+                {
+                    sourceLang = jobj;
+                }
+                else
+                {
+                    if(jobj["InvoiceExpired_Body_3"].Value<string>() == sourceLang["InvoiceExpired_Body_3"].Value<string>())
+                    {
+                        jobj["InvoiceExpired_Body_3"] = string.Empty;
+                    }
+                }
                 content = jobj.ToString(Newtonsoft.Json.Formatting.Indented);
                 File.WriteAllText(Path.Combine(langsDir, langFile), content);
             }).ToArray());

@@ -134,6 +134,18 @@ namespace BTCPayServer.Configuration
 
             Logs.Configuration.LogInformation("Supported chains: " + String.Join(',', supportedChains.ToArray()));
 
+            var services = conf.GetOrDefault<string>("externalservices", null);
+            if(services != null)
+            {
+                foreach(var service in services.Split(new[] { ';', ',' })
+                                                .Select(p => p.Split(':'))
+                                                .Where(p => p.Length == 2)
+                                                .Select(p => (Name: p[0], Link: p[1])))
+                {
+                    ExternalServices.AddOrReplace(service.Name, service.Link);
+                }
+            }
+
             PostgresConnectionString = conf.GetOrDefault<string>("postgres", null);
             MySQLConnectionString = conf.GetOrDefault<string>("mysql", null);
             BundleJsCss = conf.GetOrDefault<bool>("bundlejscss", true);
@@ -241,6 +253,8 @@ namespace BTCPayServer.Configuration
 
         public string RootPath { get; set; }
         public Dictionary<string, LightningConnectionString> InternalLightningByCryptoCode { get; set; } = new Dictionary<string, LightningConnectionString>();
+        public Dictionary<string, string> ExternalServices { get; set; } = new Dictionary<string, string>();
+
         public ExternalServices ExternalServicesByCryptoCode { get; set; } = new ExternalServices();
 
         public BTCPayNetworkProvider NetworkProvider { get; set; }

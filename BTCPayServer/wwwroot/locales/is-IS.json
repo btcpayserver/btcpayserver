@@ -33,7 +33,7 @@
   "What happened?": "Hvað gerðist?",
   "InvoiceExpired_Body_1": "Þessi reikningur er útrunnin. Reikningurinn er aðeins gildur í {{maxTimeMinutes}} mínútur. \nÞú getur farið aftur á {{storeName}} ef þú vilt reyna aftur.",
   "InvoiceExpired_Body_2": "Ef þú reyndir að senda greiðslu, þá hefur hún ekki verið samþykkt.",
-  "InvoiceExpired_Body_3": "Ef viðskiptin eru ekki samþykkt af netinu verða fjármunirnir aðgengilegar aftur í veskinu þínu. Það fer eftir veskinu þínu og getur tekið 48-72 klukkustundir.",
+  "InvoiceExpired_Body_3": "",
   "Invoice ID": "Innheimtu ID",
   "Order ID": "Pöntun ID",
   "Return to StoreName": "Fara aftur á {{storeName}}",

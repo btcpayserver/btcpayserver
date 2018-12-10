@@ -33,7 +33,7 @@
   "What happened?": "Što se dogodilo",
   "InvoiceExpired_Body_1": "Račun je istekao i nije više valjan. Račun vrijedi samo {{maxTimeMinutes}} minuta. \nMožete se vratiti na {{storeName}}, gdje možete ponovo inicirati plaćanje.",
   "InvoiceExpired_Body_2": "Ako ste pokušali poslati uplatu, ista nije registrirana na Blockchainu. Nismo još zaprimili Vašu uplatu.",
-  "InvoiceExpired_Body_3": "Ako poslana sredstva na budu potvrđena na Blockchainu, sredstva će biti ponovo dostupna u Vašem novčaniku.",
+  "InvoiceExpired_Body_3": "",
   "Invoice ID": "Broj računa",
   "Order ID": "Broj narudžbe",
   "Return to StoreName": "Vrati se na {{storeName}}",

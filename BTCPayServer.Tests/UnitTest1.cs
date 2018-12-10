@@ -48,6 +48,7 @@ using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Security;
 using NBXplorer.Models;
 using RatesViewModel = BTCPayServer.Models.StoreViewModels.RatesViewModel;
+using NBitpayClient.Extensions;
 
 namespace BTCPayServer.Tests
 {
@@ -347,57 +348,6 @@ namespace BTCPayServer.Tests
             {
                 var actual = new CurrencyNameTable().DisplayFormatCurrency(test.Item1, "USD");
                 Assert.Equal(test.Item2, actual);
-            }
-        }
-
-        [Fact]
-        [Trait("Integration", "Integration")]
-        public void CanPayUsingBIP70()
-        {
-            using (var tester = ServerTester.Create())
-            {
-                tester.Start();
-                var user = tester.NewAccount();
-                user.GrantAccess();
-                user.RegisterDerivationScheme("BTC");
-                Assert.True(user.BitPay.TestAccess(Facade.Merchant));
-                var invoice = user.BitPay.CreateInvoice(new Invoice()
-                {
-                    Buyer = new Buyer() { email = "test@fwf.com" },
-                    Price = 5000.0m,
-                    Currency = "USD",
-                    PosData = "posData",
-                    OrderId = "orderId",
-                    //RedirectURL = redirect + "redirect",
-                    //NotificationURL = CallbackUri + "/notification",
-                    ItemDesc = "Some description",
-                    FullNotifications = true
-                }, Facade.Merchant);
-
-                Assert.False(invoice.Refundable);
-
-                var url = new BitcoinUrlBuilder(invoice.PaymentUrls.BIP72);
-                var request = url.GetPaymentRequest();
-                var payment = request.CreatePayment();
-
-                Transaction tx = new Transaction();
-                tx.Outputs.AddRange(request.Details.Outputs.Select(o => new TxOut(o.Amount, o.Script)));
-                var cashCow = tester.ExplorerNode;
-                tx = cashCow.FundRawTransaction(tx).Transaction;
-                tx = cashCow.SignRawTransaction(tx);
-
-                payment.Transactions.Add(tx);
-
-                payment.RefundTo.Add(new PaymentOutput(Money.Coins(1.0m), new Key().ScriptPubKey));
-                var ack = payment.SubmitPayment();
-                Assert.NotNull(ack);
-
-                Eventually(() =>
-                {
-                    var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
-                    Assert.Equal("paid", localInvoice.Status);
-                    Assert.True(localInvoice.Refundable);
-                });
             }
         }
 
@@ -934,6 +884,17 @@ namespace BTCPayServer.Tests
                 var result = client.SendAsync(message).GetAwaiter().GetResult();
                 result.EnsureSuccessStatusCode();
                 /////////////////////
+                
+                // Have error 403 with bad signature
+                client = new HttpClient();
+                HttpRequestMessage mess = new HttpRequestMessage(HttpMethod.Get, tester.PayTester.ServerUri.AbsoluteUri + "tokens");
+                mess.Content = new StringContent(string.Empty, Encoding.UTF8, "application/json");
+                mess.Headers.Add("x-signature", "3045022100caa123193afc22ef93d9c6b358debce6897c09dd9869fe6fe029c9cb43623fac022000b90c65c50ba8bbbc6ebee8878abe5659e17b9f2e1b27d95eda4423da5608fe");
+                mess.Headers.Add("x-identity", "04b4d82095947262dd70f94c0a0e005ec3916e3f5f2181c176b8b22a52db22a8c436c4703f43a9e8884104854a11e1eb30df8fdf116e283807a1f1b8fe4c182b99");
+                mess.Method = HttpMethod.Get;
+                result = client.SendAsync(mess).GetAwaiter().GetResult();
+                Assert.Equal(System.Net.HttpStatusCode.Unauthorized, result.StatusCode);
+                //
             }
         }
 
@@ -1801,7 +1762,7 @@ ReceivedDate,StoreId,OrderId,InvoiceId,CreatedDate,ExpirationDate,MonitoringDate
                 Assert.True(IsMapped(invoice, ctx));
                 cashCow.SendToAddress(invoiceAddress, firstPayment);
 
-                var invoiceEntity = repo.GetInvoice(null, invoice.Id, true).GetAwaiter().GetResult();
+                var invoiceEntity = repo.GetInvoice(invoice.Id, true).GetAwaiter().GetResult();
                 Assert.Single(invoiceEntity.HistoricalAddresses);
                 Assert.Null(invoiceEntity.HistoricalAddresses[0].UnAssigned);
 
@@ -1819,7 +1780,7 @@ ReceivedDate,StoreId,OrderId,InvoiceId,CreatedDate,ExpirationDate,MonitoringDate
                     Assert.True(IsMapped(invoice, ctx));
                     Assert.True(IsMapped(localInvoice, ctx));
 
-                    invoiceEntity = repo.GetInvoice(null, invoice.Id, true).GetAwaiter().GetResult();
+                    invoiceEntity = repo.GetInvoice(invoice.Id, true).GetAwaiter().GetResult();
                     var historical1 = invoiceEntity.HistoricalAddresses.FirstOrDefault(h => h.GetAddress() == invoice.BitcoinAddress);
                     Assert.NotNull(historical1.UnAssigned);
                     var historical2 = invoiceEntity.HistoricalAddresses.FirstOrDefault(h => h.GetAddress() == localInvoice.BitcoinAddress);

@@ -81,5 +81,10 @@ namespace BTCPayServer.Data
             get; set;
         }
         public List<PendingInvoiceData> PendingInvoices { get; set; }
+
+        public Services.Invoices.InvoiceState GetInvoiceState()
+        {
+            return new Services.Invoices.InvoiceState() { Status = Status, ExceptionStatus = ExceptionStatus };
+        }
     }
 }

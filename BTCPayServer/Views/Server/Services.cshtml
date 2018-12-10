@@ -15,8 +15,9 @@
 <div class="row">
 
     <div class="col-md-8">
+        <h4>Crypto services</h4>
         <div class="form-group">
-            <span>You can get access here to LND (gRPC, Rest) or SSH services exposed by your server</span>
+            <span>You can get access here to LND (gRPC, Rest) services exposed by your server</span>
         </div>
 
         <div class="form-group">
@@ -37,22 +38,12 @@
                             <td style="text-align:right">
                                 @if (lnd.Type == BTCPayServer.Configuration.External.LndTypes.gRPC)
                                 {
-                                    <a asp-action="LNDGRPCServices" asp-route-cryptoCode="@lnd.Crypto" asp-route-index="@lnd.Index">See information</a>
+                                    <a asp-action="LNDServices" asp-route-cryptoCode="@lnd.Crypto" asp-route-index="@lnd.Index">See information</a>
                                 }
                                 else if (lnd.Type == BTCPayServer.Configuration.External.LndTypes.Rest)
                                 {
-                                    <a asp-action="LndRestServices" asp-route-cryptoCode="@lnd.Crypto" asp-route-index="@lnd.Index">See information</a>
+                                    <a asp-action="LNDServices" asp-route-cryptoCode="@lnd.Crypto" asp-route-index="@lnd.Index">See information</a>
                                 }
-                            </td>
-                        </tr>
-                    }
-                    @if (Model.HasSSH)
-                    {
-                        <tr>
-                            <td>None</td>
-                            <td>SSH</td>
-                            <td style="text-align:right">
-                                <a asp-action="SSHService">See information</a>
                             </td>
                         </tr>
                     }
@@ -61,6 +52,39 @@
         </div>
     </div>
 </div>
+
+@if (Model.ExternalServices.Count != 0)
+{
+<div class="row">
+    <div class="col-md-8">
+        <h4>Other services</h4>
+        <div class="form-group">
+            <span>Other external services</span>
+        </div>
+        <div class="form-group">
+            <table class="table table-sm table-responsive-md">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th style="text-align:right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in Model.ExternalServices)
+                    {
+                        <tr>
+                            <td>@s.Name</td>
+                            <td style="text-align:right">
+                                <a href="@s.Link" target="_blank">See information</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+}
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")

@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Filters;
+using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Changelly;
@@ -30,11 +31,13 @@ namespace BTCPayServer.Controllers
     {
         [HttpGet]
         [Route("invoices/{invoiceId}")]
+        [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
         public async Task<IActionResult> Invoice(string invoiceId)
         {
             var invoice = (await _InvoiceRepository.GetInvoices(new InvoiceQuery()
             {
                 InvoiceId = invoiceId,
+                UserId = GetUserId(),
                 IncludeAddresses = true,
                 IncludeEvents = true
             })).FirstOrDefault();
@@ -209,7 +212,7 @@ namespace BTCPayServer.Controllers
 
         private async Task<PaymentModel> GetInvoiceModel(string invoiceId, string paymentMethodIdStr)
         {
-            var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
+            var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
             if (invoice == null)
                 return null;
             var store = await _StoreRepository.FindStore(invoice.StoreId);
@@ -369,7 +372,7 @@ namespace BTCPayServer.Controllers
         {
             if (!HttpContext.WebSockets.IsWebSocketRequest)
                 return NotFound();
-            var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
+            var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
             if (invoice == null || invoice.Status == "complete" || invoice.Status == "invalid" || invoice.Status == "expired")
                 return NotFound();
             var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
@@ -437,15 +440,18 @@ namespace BTCPayServer.Controllers
             var list = await ListInvoicesProcess(searchTerm, skip, count);
             foreach (var invoice in list)
             {
+                var state = invoice.GetInvoiceState();
                 model.Invoices.Add(new InvoiceModel()
                 {
-                    Status = invoice.Status + (invoice.ExceptionStatus == null ? string.Empty : $" ({invoice.ExceptionStatus})"),
+                    Status = state.ToString(),
                     ShowCheckout = invoice.Status == "new",
                     Date = invoice.InvoiceTime,
                     InvoiceId = invoice.Id,
                     OrderId = invoice.OrderId ?? string.Empty,
                     RedirectUrl = invoice.RedirectURL ?? string.Empty,
-                    AmountCurrency = $"{invoice.ProductInformation.Price.ToString(CultureInfo.InvariantCulture)} {invoice.ProductInformation.Currency}"
+                    AmountCurrency = $"{invoice.ProductInformation.Price.ToString(CultureInfo.InvariantCulture)} {invoice.ProductInformation.Currency}",
+                    CanMarkInvalid = state.CanMarkInvalid(),
+                    CanMarkComplete = state.CanMarkComplete()
                 });
             }
             return View(model);
@@ -585,17 +591,60 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        [HttpPost]
-        [Route("invoices/invalidatepaid")]
+        [HttpGet]
+        [Route("invoices/{invoiceId}/changestate/{newState}")]
         [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
         [BitpayAPIConstraint(false)]
-        public async Task<IActionResult> InvalidatePaidInvoice(string invoiceId)
+        public IActionResult ChangeInvoiceState(string invoiceId, string newState)
         {
-            var invoice = await _InvoiceRepository.GetInvoice(null, invoiceId);
+            if (newState == "invalid")
+            {
+                return View("Confirm", new ConfirmModel()
+                {
+                    Action = "Make invoice invalid",
+                    Title = "Change invoice state",
+                    Description = $"You will transition the state of this invoice to \"invalid\", do you want to continue?",
+                });
+            }
+            else if (newState == "complete")
+            {
+                return View("Confirm", new ConfirmModel()
+                {
+                    Action = "Make invoice complete",
+                    Title = "Change invoice state",
+                    Description = $"You will transition the state of this invoice to \"complete\", do you want to continue?",
+                    ButtonClass = "btn-primary"
+                });
+            }
+            else
+                return NotFound();
+        }
+
+        [HttpPost]
+        [Route("invoices/{invoiceId}/changestate/{newState}")]
+        [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
+        [BitpayAPIConstraint(false)]
+        public async Task<IActionResult> ChangeInvoiceStateConfirm(string invoiceId, string newState)
+        {
+            var invoice = (await _InvoiceRepository.GetInvoices(new InvoiceQuery()
+            {
+                InvoiceId = invoiceId,
+                UserId = GetUserId()
+            })).FirstOrDefault();
             if (invoice == null)
                 return NotFound();
-            await _InvoiceRepository.UpdatePaidInvoiceToInvalid(invoiceId);
-            _EventAggregator.Publish(new InvoiceEvent(invoice.EntityToDTO(_NetworkProvider), 1008, "invoice_markedInvalid"));
+            if (newState == "invalid")
+            {
+                await _InvoiceRepository.UpdatePaidInvoiceToInvalid(invoiceId);
+                _EventAggregator.Publish(new InvoiceEvent(invoice.EntityToDTO(_NetworkProvider), 1008, "invoice_markedInvalid"));
+                StatusMessage = "Invoice marked invalid";
+            }
+            else if(newState == "complete")
+            {
+                await _InvoiceRepository.UpdatePaidInvoiceToComplete(invoiceId);
+                _EventAggregator.Publish(new InvoiceEvent(invoice.EntityToDTO(_NetworkProvider), 2008, "invoice_markedComplete"));
+                StatusMessage = "Invoice marked complete";
+            }
             return RedirectToAction(nameof(ListInvoices));
         }
 

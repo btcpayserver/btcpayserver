@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CoinSwitch</title>
+
+    <!--<script>-->
+    <!--//Initialize the CS object with your Merchant Id-->
+    <!--var payment = new Coinswitch('yadoshi');-->
+
+    <!--//When the library is available on the page, execute your code-->
+    <!--payment.on('Exchange:Ready', function() {-->
+
+    <!--// Add the "To Currency" and "To Currency Address"-->
+    <!--var config = {-->
+    <!--to_currency: 'btc',-->
+    <!--to_currency_address:'1CQ7ZdKeGWyCHF819MPB5vN4qYLjtKBpGE',-->
+    <!--to_amount: 1-->
+    <!--};-->
+
+    <!--// Open the payment wizard.-->
+    <!--payment.open(config);-->
+
+    <!--// Event: When the conversion request is created by the user.-->
+    <!--payment.on("Exchange:Initiated", function(orderId) {-->
+    <!--console.log("Exchange:Initiated CallbackFn", orderId);-->
+    <!--});-->
+
+    <!--// Event: When the conversion request is completed.-->
+    <!--payment.on("Exchange:Complete", function() {-->
+    <!--console.log("Exchange:Complete CallbackFn");-->
+    <!--})-->
+    <!--});-->
+    <!--</script>-->
+
+    <script>
+        window.onload = function () {
+            var qs = (function (a) {
+                if (a == "") return {};
+                var b = {};
+                for (var i = 0; i < a.length; ++i) {
+                    var p = a[i].split('=', 2);
+                    if (p.length == 1)
+                        b[p[0]] = "";
+                    else
+                        b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
+                }
+                return b;
+            })(window.location.search.substr(1).split('&'));
+
+            var merchantId = qs["merchant_id"];
+            var toCurrencyDue = qs["toCurrencyDue"];
+            var toCurrencyAddress = qs["toCurrencyAddress"];
+            var toCurrency = qs["toCurrency"];
+
+            var url = "https://coinswitch.co/widget?widget_id=c0f2b60c&to=" + toCurrency + "&amount=" + toCurrencyDue + "&to_address=" + toCurrencyAddress;
+            document.getElementById("widget").src = url;
+        }
+    </script>
+</head>
+<body>
+<iframe id="widget" style="left:0; top:0; width: 100%; height:100%; position: absolute;"
+        frameborder="0" scrolling="auto" style="overflow-y: hidden;border: 1px solid #ff7f50;border-top: none;">Can't
+    load widget
+</iframe>
+
+</body>
+</html>

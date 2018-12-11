@@ -18,6 +18,7 @@ using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Services;
 using System.Security.Claims;
 using BTCPayServer.Payments.Changelly;
+using BTCPayServer.Payments.CoinSwitch;
 using BTCPayServer.Security;
 using BTCPayServer.Rating;
 
@@ -305,6 +306,7 @@ namespace BTCPayServer.Data
         public bool AnyoneCanInvoice { get; set; }
         
         public ChangellySettings ChangellySettings { get; set; }
+        public CoinSwitchSettings CoinSwitchSettings { get; set; }
 
 
         string _LightningDescriptionTemplate;

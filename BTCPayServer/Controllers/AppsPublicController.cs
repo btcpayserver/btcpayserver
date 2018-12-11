@@ -67,6 +67,27 @@ namespace BTCPayServer.Controllers
                 CustomCSSLink = settings.CustomCSSLink
             });
         }
+        
+        
+        [HttpGet]
+        [Route("/apps/{appId}/crowdfund")]
+        [XFrameOptionsAttribute(null)]
+        public async Task<IActionResult> ViewCrowdfund(string appId)
+        {
+            var app = await _AppsHelper.GetApp(appId, AppType.Crowdfund);
+            if (app == null)
+                return NotFound();
+            var settings = app.GetSettings<CrowdfundSettings>();
+            var currency = _AppsHelper.GetCurrencyData(settings.TargetCurrency, false);
+            double step = currency == null ? 1 : Math.Pow(10, -(currency.Divisibility));
+
+            var numberFormatInfo = _AppsHelper.Currencies.GetNumberFormatInfo(currency.Code) ?? _AppsHelper.Currencies.GetNumberFormatInfo("USD");
+            return View(new ViewCrowdfundViewModel()
+            {
+                Title = settings.Title,
+                CustomCSSLink = settings.CustomCSSLink
+            });
+        }
 
         [HttpPost]
         [Route("/apps/{appId}/pos")]

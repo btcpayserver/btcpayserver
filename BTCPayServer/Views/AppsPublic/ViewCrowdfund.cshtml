@@ -1,0 +1,28 @@
+﻿@addTagHelper *, Meziantou.AspNetCore.BundleTagHelpers
+@inject BTCPayServer.HostedServices.CssThemeManager themeManager
+
+@model BTCPayServer.Models.AppViewModels.ViewCrowdfundViewModel
+@{
+    ViewData["Title"] = Model.Title;
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html class="h-100">
+<head>
+    <title>@Model.Title</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link href="@this.Context.Request.GetAbsoluteUri(themeManager.BootstrapUri)" rel="stylesheet" />
+    @if (Model.CustomCSSLink != null)
+    {
+        <link href="@Model.CustomCSSLink" rel="stylesheet" />
+    }
+    <link href="~/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" />
+
+</head>
+<body class="h-100">
+    
+</body>
+</html>

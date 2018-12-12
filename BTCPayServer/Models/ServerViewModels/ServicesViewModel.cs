@@ -11,8 +11,9 @@ namespace BTCPayServer.Models.ServerViewModels
         public class LNDServiceViewModel
         {
             public string Crypto { get; set; }
-            public LndTypes Type { get; set; }
+            public string Type { get; set; }
             public int Index { get; set; }
+            public string Action { get; internal set; }
         }
 
         public class ExternalService

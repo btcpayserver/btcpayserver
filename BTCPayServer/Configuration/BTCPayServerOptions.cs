@@ -137,6 +137,17 @@ namespace BTCPayServer.Configuration
 
                 externalLnd<ExternalLndGrpc>($"{net.CryptoCode}.external.lnd.grpc", "lnd-grpc");
                 externalLnd<ExternalLndRest>($"{net.CryptoCode}.external.lnd.rest", "lnd-rest");
+
+                var spark = conf.GetOrDefault<string>($"{net.CryptoCode}.external.spark", string.Empty);
+                if(spark.Length != 0)
+                {
+                    if (!SparkConnectionString.TryParse(spark, out var connectionString))
+                    {
+                        throw new ConfigException($"Invalid setting {net.CryptoCode}.external.spark, " + Environment.NewLine +
+                            $"Valid example: 'server=https://btcpay.example.com/spark/btc/;cookiefile=/etc/clightning_bitcoin_spark/.cookie'");
+                    }
+                    ExternalServicesByCryptoCode.Add(net.CryptoCode, new ExternalSpark(connectionString));
+                }
             }
 
             Logs.Configuration.LogInformation("Supported chains: " + String.Join(',', supportedChains.ToArray()));

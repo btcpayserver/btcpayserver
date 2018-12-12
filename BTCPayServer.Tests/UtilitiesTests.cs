@@ -36,8 +36,6 @@ namespace BTCPayServer.Tests
             Task.WaitAll(langs.Select(async l =>
             {
                 bool isSourceLang = l == "en";
-                if (l == "no")
-                    return;
                 var j = await client.GetTransifexAsync($"https://www.transifex.com/api/2/project/btcpayserver/resource/enjson/translation/{l}/");
                 if(!isSourceLang)
                 {
@@ -56,8 +54,12 @@ namespace BTCPayServer.Tests
                 var langFile = Path.Combine(langsDir, langCode + ".json");
                 var jobj = JObject.Parse(content);
                 jobj["code"] = langCode;
+
                 if ((string)jobj["currentLanguage"] == "English" && !isSourceLang)
                     return; // Not translated
+                if ((string)jobj["currentLanguage"] == "disable")
+                    return; // Not translated
+
                 jobj.AddFirst(new JProperty("NOTICE_WARN", "THIS CODE HAS BEEN AUTOMATICALLY GENERATED FROM TRANSIFEX, IF YOU WISH TO HELP TRANSLATION COME ON THE SLACK http://slack.btcpayserver.org TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/"));
                 if (isSourceLang)
                 {

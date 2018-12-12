@@ -487,7 +487,10 @@ namespace BTCPayServer.Controllers
                 var cookie = System.IO.File.ReadAllText(spark.CookeFile).Split(':');
                 if (cookie.Length >= 3)
                 {
-                    return Redirect($"{spark.Server.AbsoluteUri}?access-key={cookie[2]}");
+                    var client = HttpClientFactory.CreateClient();
+                    var response = await client.GetAsync($"{spark.Server.AbsoluteUri}?access-key={cookie[2]}");
+                    HttpContext.Response.SetHeader("Set-Cookie", response.Headers.GetValues("Set-Cookie").First());
+                    return Redirect($"{spark.Server.AbsoluteUri}");
                 }
             }
             catch(Exception ex)

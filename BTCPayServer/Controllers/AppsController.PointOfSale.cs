@@ -65,6 +65,9 @@ namespace BTCPayServer.Controllers
             public string CustomButtonText { get; set; } = CUSTOM_BUTTON_TEXT_DEF;
             public const string CUSTOM_TIP_TEXT_DEF = "Do you want to leave a tip?";
             public string CustomTipText { get; set; } = CUSTOM_TIP_TEXT_DEF;
+            public const string CUSTOM_TIP_PERCENTAGES = "15,18,20";
+            public string CustomTipPercentages { get; set; } = CUSTOM_TIP_PERCENTAGES;
+
 
             public string CustomCSSLink { get; set; }
         }
@@ -87,6 +90,7 @@ namespace BTCPayServer.Controllers
                 ButtonText = settings.ButtonText ?? PointOfSaleSettings.BUTTON_TEXT_DEF,
                 CustomButtonText = settings.CustomButtonText ?? PointOfSaleSettings.CUSTOM_BUTTON_TEXT_DEF,
                 CustomTipText = settings.CustomTipText ?? PointOfSaleSettings.CUSTOM_TIP_TEXT_DEF,
+                CustomTipPercentages = settings.CustomTipPercentages,
                 CustomCSSLink = settings.CustomCSSLink
             };
             if (HttpContext?.Request != null)
@@ -157,6 +161,7 @@ namespace BTCPayServer.Controllers
                 ButtonText = vm.ButtonText,
                 CustomButtonText = vm.CustomButtonText,
                 CustomTipText = vm.CustomTipText,
+                CustomTipPercentages = vm.CustomTipPercentages,
                 CustomCSSLink = vm.CustomCSSLink
             });
             await UpdateAppSettings(app);

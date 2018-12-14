@@ -470,7 +470,7 @@ namespace BTCPayServer.Controllers
         }
 
         [Route("server/services/spark/{cryptoCode}/{index}")]
-        public async Task<IActionResult> SparkServices(string cryptoCode, int index)
+        public async Task<IActionResult> SparkServices(string cryptoCode, int index, bool showQR = false)
         {
             if (!_dashBoard.IsFullySynched(cryptoCode, out var unusud))
             {
@@ -482,15 +482,17 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
+
+            SparkServicesViewModel vm = new SparkServicesViewModel();
+            vm.ShowQR = showQR;
             try
             {
-                var cookie = System.IO.File.ReadAllText(spark.CookeFile).Split(':');
+                var cookie = (spark.CookeFile == "fake"
+                            ? "fake:fake:fake" // If we are testing, it should not crash
+                            : await System.IO.File.ReadAllTextAsync(spark.CookeFile)).Split(':');
                 if (cookie.Length >= 3)
                 {
-                    var client = HttpClientFactory.CreateClient();
-                    var response = await client.GetAsync($"{spark.Server.AbsoluteUri}?access-key={cookie[2]}");
-                    HttpContext.Response.SetHeader("Set-Cookie", response.Headers.GetValues("Set-Cookie").First());
-                    return Redirect($"{spark.Server.AbsoluteUri}");
+                    vm.SparkLink = $"{spark.Server.AbsoluteUri}?access-key={cookie[2]}";
                 }
             }
             catch(Exception ex)
@@ -498,7 +500,7 @@ namespace BTCPayServer.Controllers
                 StatusMessage = $"Error: {ex.Message}";
                 return RedirectToAction(nameof(Services));
             }
-            return NotFound();
+            return View(vm);
         }
 
         [Route("server/services/lnd/{cryptoCode}/{index}")]

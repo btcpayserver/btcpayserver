@@ -136,6 +136,9 @@
     <Content Update="Views\Home\BitpayTranslator.cshtml">
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>
+    <Content Update="Views\Server\SparkServices.cshtml">
+      <Pack>$(IncludeRazorContentInPack)</Pack>
+    </Content>
     <Content Update="Views\Server\SSHService.cshtml">
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>

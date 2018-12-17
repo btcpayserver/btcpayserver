@@ -1477,6 +1477,7 @@ donation:
                     (Code: "BTC", ExpectedSymbol: "BTC", ExpectedDecimalSeparator: ".", ExpectedDivisibility: 8, ExpectedThousandSeparator: ",", ExpectedPrefixed: false, ExpectedSymbolSpace: true),
                 })
                 {
+                    Logs.Tester.LogInformation($"Testing for {test.Code}");
                     vmpos = Assert.IsType<UpdatePointOfSaleViewModel>(Assert.IsType<ViewResult>(apps.UpdatePointOfSale(appId).Result).Model);
                     vmpos.Title = "hello";
                     vmpos.Currency = test.Item1;

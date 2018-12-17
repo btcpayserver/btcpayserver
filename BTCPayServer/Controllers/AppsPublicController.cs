@@ -66,7 +66,8 @@ namespace BTCPayServer.Controllers
                 CustomButtonText = settings.CustomButtonText,
                 CustomTipText = settings.CustomTipText,
                 CustomTipPercentages = settings.CustomTipPercentages,
-                CustomCSSLink = settings.CustomCSSLink
+                CustomCSSLink = settings.CustomCSSLink,
+                AppId = appId
             });
         }
 

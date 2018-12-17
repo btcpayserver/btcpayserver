@@ -28,7 +28,8 @@ namespace BTCPayServer.Models.AppViewModels
             public string CurrencySymbol { get; set; }
             public string ThousandSeparator { get; set; }
             public string DecimalSeparator { get; set; }
-            public int Divisibility { get; internal set; }
+            public int Divisibility { get; set; }
+            public bool SymbolSpace { get; set; }
         }
 
         public CurrencyInfoData CurrencyInfo { get; set; }

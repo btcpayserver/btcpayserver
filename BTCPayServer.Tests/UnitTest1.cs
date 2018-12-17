@@ -1,4 +1,4 @@
-using BTCPayServer.Tests.Logging;
+﻿using BTCPayServer.Tests.Logging;
 using System.Linq;
 using NBitcoin;
 using NBitcoin.DataEncoders;
@@ -340,13 +340,14 @@ namespace BTCPayServer.Tests
         {
             foreach (var test in new[]
             {
-                (0.0005m, "$0.0005 (USD)"),
-                (0.001m, "$0.001 (USD)"),
-                (0.01m, "$0.01 (USD)"),
-                (0.1m, "$0.10 (USD)"),
+                (0.0005m, "$0.0005 (USD)", "USD"),
+                (0.001m, "$0.001 (USD)", "USD"),
+                (0.01m, "$0.01 (USD)", "USD"),
+                (0.1m, "$0.10 (USD)", "USD"),
+                (1000.0001m, "₹ 1,000.00 (INR)", "INR")
             })
             {
-                var actual = new CurrencyNameTable().DisplayFormatCurrency(test.Item1, "USD");
+                var actual = new CurrencyNameTable().DisplayFormatCurrency(test.Item1, test.Item3);
                 Assert.Equal(test.Item2, actual);
             }
         }
@@ -1467,6 +1468,43 @@ donation:
                 Assert.NotNull(donationInvoice);
                 Assert.Equal("CAD", donationInvoice.Currency);
                 Assert.Equal("donation", donationInvoice.ItemDesc);
+
+                foreach(var test in new[]
+                {
+                    (Code: "EUR", ExpectedSymbol: "€", ExpectedDecimalSeparator: ",", ExpectedDivisibility: 2, ExpectedThousandSeparator: "\xa0", ExpectedPrefixed: false, ExpectedSymbolSpace: true),
+                    (Code: "INR", ExpectedSymbol: "₹", ExpectedDecimalSeparator: ".", ExpectedDivisibility: 2, ExpectedThousandSeparator: ",", ExpectedPrefixed: true, ExpectedSymbolSpace: true),
+                    (Code: "JPY", ExpectedSymbol: "¥", ExpectedDecimalSeparator: ".", ExpectedDivisibility: 0, ExpectedThousandSeparator: ",", ExpectedPrefixed: true, ExpectedSymbolSpace: false),
+                    (Code: "BTC", ExpectedSymbol: "BTC", ExpectedDecimalSeparator: ".", ExpectedDivisibility: 8, ExpectedThousandSeparator: ",", ExpectedPrefixed: false, ExpectedSymbolSpace: true),
+                })
+                {
+                    vmpos = Assert.IsType<UpdatePointOfSaleViewModel>(Assert.IsType<ViewResult>(apps.UpdatePointOfSale(appId).Result).Model);
+                    vmpos.Title = "hello";
+                    vmpos.Currency = test.Item1;
+                    vmpos.ButtonText = "{0} Purchase";
+                    vmpos.CustomButtonText = "Nicolas Sexy Hair";
+                    vmpos.CustomTipText = "Wanna tip?";
+                    vmpos.Template = @"
+apple:
+  price: 1000.0
+  title: good apple
+orange:
+  price: 10.0
+donation:
+  price: 1.02
+  custom: true
+";
+                    Assert.IsType<RedirectToActionResult>(apps.UpdatePointOfSale(appId, vmpos).Result);
+                    publicApps = user.GetController<AppsPublicController>();
+                    vmview = Assert.IsType<ViewPointOfSaleViewModel>(Assert.IsType<ViewResult>(publicApps.ViewPointOfSale(appId).Result).Model);
+                    Assert.Equal(test.Code, vmview.CurrencyCode);
+                    Assert.Equal(test.ExpectedSymbol, vmview.CurrencySymbol);
+                    Assert.Equal(test.ExpectedSymbol, vmview.CurrencyInfo.CurrencySymbol);
+                    Assert.Equal(test.ExpectedDecimalSeparator, vmview.CurrencyInfo.DecimalSeparator);
+                    Assert.Equal(test.ExpectedThousandSeparator, vmview.CurrencyInfo.ThousandSeparator);
+                    Assert.Equal(test.ExpectedPrefixed, vmview.CurrencyInfo.Prefixed);
+                    Assert.Equal(test.ExpectedDivisibility, vmview.CurrencyInfo.Divisibility);
+                    Assert.Equal(test.ExpectedSymbolSpace, vmview.CurrencyInfo.SymbolSpace);
+                }
             }
         }
 

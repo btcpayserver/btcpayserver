@@ -40,11 +40,11 @@
 <script id="template-cart-item" type="text/template">
 <tr data-id="{id}">
     {image}
-    <td class="align-middle pr-0 pl-2" width="100%"><b>{title}</b></td>
+    <td class="align-middle pr-0 pl-2"><b>{title}</b></td>
     <td class="align-middle px-0" align="right">
         <a class="js-cart-item-remove btn btn-link" href="#"><i class="fa fa-trash text-muted"></i></a>
     </td>
-    <td class="align-middle pr-0" align="right">
+    <td class="align-middle px-0" align="right">
         <div class="input-group">
             <div class="input-group-prepend">
                 <a class="js-cart-item-minus btn btn-link px-2" href="#"><i class="fa fa-minus-circle fa-fw text-danger"></i></a>
@@ -55,12 +55,12 @@
             </div>
         </div>
     </td>
-    <td class="align-middle text-nowrap" align="right">{price}</td>
+    <td class="align-middle" align="right">{price}</td>
 </tr>
 </script>
 
 <script id="template-cart-item-image" type="text/template">
-<td class="align-middle pr-0" width="50"><img src="{image}" width="50"></td>
+<td class="align-middle pr-0" width="1%"><img src="{image}" width="50"></td>
 </script>
 
 <script id="template-cart-custom-amount" type="text/template">
@@ -257,12 +257,12 @@
                     <a class="js-cart-destroy btn btn-sm bg-white text-danger pull-right" href="#" style="display: none;">Empty cart <i class="fa fa-trash fa-fw fa-lg"></i></a>
                 </div>
 
-                <table id="js-cart-list" class="table bg-light mt-0 mb-0">
+                <table id="js-cart-list" class="table table-responsive bg-light mt-0 mb-0">
                     <thead class="thead-dark">
                         <tr>
-                            <th colspan="3" width="75%">Product</th>
-                            <th class="text-center"><div style="width: 100px">Quantity</div></th>
-                            <th class="text-right" width="25%">Price</th>
+                        <th colspan="3" width="55%">Product</th>
+                            <th class="text-center" width="20%"><div style="width: 84px">Quantity</div></th>
+                            <th class="text-right" width="25%"><div style="min-width: 50px">Price</div></th>
                         </tr>
                     </thead>
                     <tbody></tbody>

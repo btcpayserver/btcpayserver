@@ -80,7 +80,7 @@ namespace BTCPayServer.Services.Invoices.Export
                     InvoiceExpirationDate = invoice.ExpirationTime.UtcDateTime,
                     InvoiceMonitoringDate = invoice.MonitoringExpiration.UtcDateTime,
 #pragma warning disable CS0618 // Type or member is obsolete
-                    InvoiceFullStatus = invoice.Status.ToString(),
+                    InvoiceFullStatus = invoice.GetInvoiceState().ToString(),
                     InvoiceStatus = invoice.StatusString,
                     InvoiceExceptionStatus = invoice.ExceptionStatusString,
 #pragma warning restore CS0618 // Type or member is obsolete

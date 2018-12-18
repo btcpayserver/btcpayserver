@@ -138,9 +138,9 @@ namespace BTCPayServer.Services.Rates
             }
 
             if (currencyData.Crypto)
-                return value.ToString("C", provider).Trim();
+                return value.ToString("C", provider);
             else
-                return (value.ToString("C", provider) + $" ({currency})").Trim();
+                return value.ToString("C", provider) + $" ({currency})";
         }
 
         Dictionary<string, CurrencyData> _Currencies;

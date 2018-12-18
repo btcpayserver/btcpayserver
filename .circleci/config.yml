@@ -14,7 +14,6 @@ jobs:
       - run:
           command: |
             cd BTCPayServer.Tests
-            docker-compose down --v
             docker-compose build
             docker-compose run tests
 

@@ -27,6 +27,7 @@ namespace BTCPayServer.Controllers
             if (existing == null) return;
             vm.MerchantId = existing.MerchantId;
             vm.Enabled = existing.Enabled;
+            vm.Mode = existing.Mode;
         }
 
         [HttpPost]
@@ -48,7 +49,8 @@ namespace BTCPayServer.Controllers
             var coinSwitchSettings = new CoinSwitchSettings()
             {
                 MerchantId =  vm.MerchantId,
-                Enabled = vm.Enabled
+                Enabled = vm.Enabled,
+                Mode = vm.Mode
             };
             
             switch (command)

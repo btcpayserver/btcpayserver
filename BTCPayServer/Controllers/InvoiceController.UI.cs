@@ -317,6 +317,7 @@ namespace BTCPayServer.Controllers
                 ChangellyAmountDue = changellyAmountDue,
                 CoinSwitchEnabled = coinswitch != null,
                 CoinSwitchMerchantId = coinswitch?.MerchantId,
+                CoinSwitchMode = coinswitch?.Mode,
                 StoreId = store.Id,
                 AvailableCryptos = invoice.GetPaymentMethods(_NetworkProvider)
                                           .Where(i => i.Network != null)

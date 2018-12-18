@@ -292,12 +292,15 @@
                     {
                         <coinswitch inline-template
                                     v-if="!srvModel.changellyEnabled || selectedThirdPartyProcessor === 'coinswitch'"
+                                    :mode="srvModel.coinSwitchMode"
                                     :merchant-id="srvModel.changellyMerchantId"
                                     :to-currency="srvModel.paymentMethodId"
                                     :to-currency-due="srvModel.btcDue"
                                     :autoload="selectedThirdPartyProcessor === 'coinswitch'"
                                     :to-currency-address="srvModel.btcAddress">
-                            <a  v-on:click="openDialog($event)" :href="url" class="action-button"  v-show="url">
+                            <iframe v-if="mode === 'inline'" :url="url" v-show="url">a</iframe>
+                            <a v-else-if="mode === 'popup'" 
+                               v-on:click="openDialog($event)" :href="url" class="action-button" v-show="url">
                                 {{$t("Pay with CoinSwitch")}}
                             </a>
                         </coinswitch>
@@ -307,7 +310,8 @@
                     
                         <changelly inline-template
                                    v-if="!srvModel.coinSwitchEnabled || selectedThirdPartyProcessor === 'changelly'"
-                                   :merchant-id="srvModel.changellyMerchantId"
+                                   :merchant-id="srvModel.
+"
                                    :store-id="srvModel.storeId"
                                    :to-currency="srvModel.paymentMethodId"
                                    :to-currency-due="srvModel.changellyAmountDue"

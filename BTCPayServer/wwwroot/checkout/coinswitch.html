@@ -33,8 +33,11 @@
     <!--});-->
     <!--</script>-->
 
+    <script id="cs_js" async src="https://files.coinswitch.co/public/js/cs_switch.js"></script>
     <script>
-        window.onload = function () {
+        var script = document.querySelector('#cs_js');
+        // window.onload = function () {
+        script.addEventListener('load', function () {
             var qs = (function (a) {
                 if (a == "") return {};
                 var b = {};
@@ -48,21 +51,38 @@
                 return b;
             })(window.location.search.substr(1).split('&'));
 
+            debugger;
             var merchantId = qs["merchant_id"];
             var toCurrencyDue = qs["toCurrencyDue"];
             var toCurrencyAddress = qs["toCurrencyAddress"];
             var toCurrency = qs["toCurrency"];
 
-            var url = "https://coinswitch.co/widget?widget_id=c0f2b60c&to=" + toCurrency + "&amount=" + toCurrencyDue + "&to_address=" + toCurrencyAddress;
-            document.getElementById("widget").src = url;
-        }
+            var payment = new Coinswitch(merchantId);
+            var config = {
+                to_currency: toCurrency,
+                to_currency_address: toCurrencyAddress,
+                to_amount: toCurrencyDue
+            };
+            waitForCoinSwitch();
+
+            function waitForCoinSwitch(){
+                if(typeof payment.open !== "function"){
+                    setTimeout(waitForCoinSwitch, 1000);
+                    return;
+                }
+                payment.open(config);
+                payment.on("Exchange:Complete", function () {
+                    window.close();
+                });
+                payment.on("Exchange:Closed", function () {
+                    window.close();
+                })
+            }
+        });
+        // }
     </script>
 </head>
 <body>
-<iframe id="widget" style="left:0; top:0; width: 100%; height:100%; position: absolute;"
-        frameborder="0" scrolling="auto" style="overflow-y: hidden;border: 1px solid #ff7f50;border-top: none;">Can't
-    load widget
-</iframe>
-
+sdasd
 </body>
 </html>

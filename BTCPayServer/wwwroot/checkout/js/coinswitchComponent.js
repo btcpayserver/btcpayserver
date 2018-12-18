@@ -1,6 +1,6 @@
 ﻿var CoinSwitchComponent =
     {
-        props: ["toCurrency", "toCurrencyDue", "toCurrencyAddress", "merchantId", "autoload"],
+        props: ["toCurrency", "toCurrencyDue", "toCurrencyAddress", "merchantId", "autoload", "mode"],
         data: function () {
         },
         computed: {
@@ -31,8 +31,8 @@
             }
         },
         mounted: function () {
-            if(this.autoload){
+            if(this.autoload && this.mode === 'popup'){
                 this.openDialog();
             }
-        },
+        }
     };

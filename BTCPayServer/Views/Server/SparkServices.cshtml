@@ -1,0 +1,79 @@
+﻿@model SparkServicesViewModel
+@{
+    ViewData.SetActivePageAndTitle(ServerNavPages.Services);
+}
+
+
+<h4>Spark service</h4>
+<partial name="_StatusMessage" for="@TempData["StatusMessage"]" />
+
+@if (Model.ShowQR)
+{
+    <div class="alert alert-warning alert-dismissible" role="alert">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <div>
+            <span><b>CONFIDENTIAL:</b> This QR Code is confidential, close this window as soon as you don't need it anymore.<br /></span>
+            <span>A malicious actor with access to this QR Code could steal the funds on your lightning wallet.</span>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <div asp-validation-summary="All" class="text-danger"></div>
+    </div>
+</div>
+
+<div class="row">
+
+    <div class="col-md-8">
+        <div class="form-group">
+            <h5>Browser connection</h5>
+            <p>
+                <span>You can go to spark from your browser by <a href="@Model.SparkLink" target="_blank">clicking here</a><br /></span>
+            </p>
+        </div>
+
+        <div class="form-group">
+            <h5>QR Code connection</h5>
+            <p>
+                <span>You can use QR Code to connect to your clightning from your mobile.<br /></span>
+            </p>
+        </div>
+        <div class="form-group">
+            @if (!Model.ShowQR)
+            {
+                <div class="form-group">
+                    <form method="get">
+                        <input type="hidden" asp-for="ShowQR" value="true" />
+                        <button type="submit" class="btn btn-primary">Show Confidential QR Code</button>
+                    </form>
+                </div>
+            }
+            else
+            {
+                <div class="form-group">
+                    <div id="qrCode"></div>
+                    <div id="qrCodeData" data-url="@Html.Raw(Model.SparkLink)"></div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+
+    @if (Model.ShowQR)
+    {
+        <script type="text/javascript" src="~/js/qrcode.min.js"></script>
+        <script type="text/javascript">
+        new QRCode(document.getElementById("qrCode"),
+            {
+                text: "@Html.Raw(Model.SparkLink)",
+                width: 150,
+                height: 150
+            });
+        </script>
+    }
+}

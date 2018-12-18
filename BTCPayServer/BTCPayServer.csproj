@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
-		<Version>1.0.3.28</Version>
+		<Version>1.0.3.31</Version>
     <NoWarn>NU1701,CA1816,CA1308,CA1810,CA2208</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
@@ -134,6 +134,9 @@
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>
     <Content Update="Views\Home\BitpayTranslator.cshtml">
+      <Pack>$(IncludeRazorContentInPack)</Pack>
+    </Content>
+    <Content Update="Views\Server\SparkServices.cshtml">
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>
     <Content Update="Views\Server\SSHService.cshtml">

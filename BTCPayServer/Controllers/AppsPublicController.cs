@@ -40,25 +40,26 @@ namespace BTCPayServer.Controllers
             if (app == null)
                 return NotFound();
             var settings = app.GetSettings<PointOfSaleSettings>();
-            var currency = _AppsHelper.GetCurrencyData(settings.Currency, false);
-            double step = currency == null ? 1 : Math.Pow(10, -(currency.Divisibility));
 
-            var numberFormatInfo = _AppsHelper.Currencies.GetNumberFormatInfo(currency.Code) ?? _AppsHelper.Currencies.GetNumberFormatInfo("USD");
+            var numberFormatInfo = _AppsHelper.Currencies.GetNumberFormatInfo(settings.Currency) ?? _AppsHelper.Currencies.GetNumberFormatInfo("USD");
+            double step = Math.Pow(10, -(numberFormatInfo.CurrencyDecimalDigits));
+
             return View(new ViewPointOfSaleViewModel()
             {
                 Title = settings.Title,
                 Step = step.ToString(CultureInfo.InvariantCulture),
                 EnableShoppingCart = settings.EnableShoppingCart,
                 ShowCustomAmount = settings.ShowCustomAmount,
-                CurrencyCode = currency.Code,
-                CurrencySymbol = currency.Symbol,
+                CurrencyCode = settings.Currency,
+                CurrencySymbol = numberFormatInfo.CurrencySymbol,
                 CurrencyInfo = new ViewPointOfSaleViewModel.CurrencyInfoData()
                 {
-                    CurrencySymbol = string.IsNullOrEmpty(currency.Symbol) ? currency.Code : currency.Symbol,
-                    Divisibility = currency.Divisibility,
+                    CurrencySymbol = string.IsNullOrEmpty(numberFormatInfo.CurrencySymbol) ? settings.Currency : numberFormatInfo.CurrencySymbol,
+                    Divisibility = numberFormatInfo.CurrencyDecimalDigits,
                     DecimalSeparator = numberFormatInfo.CurrencyDecimalSeparator,
                     ThousandSeparator = numberFormatInfo.NumberGroupSeparator,
-                    Prefixed = new[] { 0, 2 }.Contains(numberFormatInfo.CurrencyPositivePattern)
+                    Prefixed = new[] { 0, 2 }.Contains(numberFormatInfo.CurrencyPositivePattern),
+                    SymbolSpace = new[] { 2, 3 }.Contains(numberFormatInfo.CurrencyPositivePattern)
                 },
                 Items = _AppsHelper.Parse(settings.Template, settings.Currency),
                 ButtonText = settings.ButtonText,

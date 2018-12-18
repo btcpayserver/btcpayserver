@@ -249,9 +249,15 @@ Cart.prototype.formatCurrency = function(amount, currency, symbol) {
 
     if (srvModel.currencyInfo.prefixed) {
         prefix = srvModel.currencyInfo.currencySymbol;
+        if (srvModel.currencyInfo.symbolSpace) {
+            prefix = prefix + ' ';
+        }
     }
     else {
         postfix = srvModel.currencyInfo.currencySymbol;
+        if (srvModel.currencyInfo.symbolSpace) {
+            postfix = ' ' + postfix;
+        }
     }
     thousandsSep = srvModel.currencyInfo.thousandSeparator;
     decimalSep = srvModel.currencyInfo.decimalSeparator;

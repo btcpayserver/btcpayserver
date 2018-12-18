@@ -19,10 +19,10 @@ services:
       TESTS_MYSQL: User ID=root;Host=mysql;Port=3306;Database=btcpayserver
       TESTS_PORT: 80
       TESTS_HOSTNAME: tests
-      TEST_MERCHANTLIGHTNINGD: "type=clightning;server=/etc/merchant_lightningd_datadir/lightning-rpc"
-      TEST_CUSTOMERLIGHTNINGD: "type=clightning;server=/etc/customer_lightningd_datadir/lightning-rpc"
-      TEST_MERCHANTCHARGE: "type=charge;server=https://lightning-charged:9112/;api-token=foiewnccewuify;allowinsecure=true"
-      TEST_MERCHANTLND: "type=lnd-rest;server=https://lnd:lnd@127.0.0.1:53280/;allowinsecure=true"
+      TEST_MERCHANTLIGHTNINGD: "type=clightning;server=unix://etc/merchant_lightningd_datadir/lightning-rpc"
+      TEST_CUSTOMERLIGHTNINGD: "type=clightning;server=unix://etc/customer_lightningd_datadir/lightning-rpc"
+      TEST_MERCHANTCHARGE: "type=charge;server=http://lightning-charged:9112/;api-token=foiewnccewuify"
+      TEST_MERCHANTLND: "https://lnd:lnd@merchant_lnd:8080/"
       TESTS_INCONTAINER: "true"
     expose:
       - "80"
@@ -36,7 +36,7 @@ services:
 
   # The dev container is not actually used, it is just handy to run `docker-compose up dev` to start all services
   dev: 
-    image: nicolasdorier/docker-bitcoin:0.17.0
+    image: btcpayserver/bitcoin:0.17.0
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_EXTRA_ARGS: |
@@ -53,7 +53,7 @@ services:
       - merchant_lnd
 
   devlnd: 
-    image: nicolasdorier/docker-bitcoin:0.17.0
+    image: btcpayserver/bitcoin:0.17.0
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_EXTRA_ARGS: |
@@ -94,7 +94,7 @@ services:
       - litecoind
 
   bitcoind:
-    image: nicolasdorier/docker-bitcoin:0.17.0
+    image: btcpayserver/bitcoin:0.17.0
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_EXTRA_ARGS: |
@@ -118,7 +118,7 @@ services:
       - "bitcoin_datadir:/data"
 
   customer_lightningd:
-    image: nicolasdorier/clightning:v0.6.2-3-dev
+    image: btcpayserver/lightning:v0.6.2-dev
     stop_signal: SIGKILL
     restart: unless-stopped
     environment: 
@@ -164,7 +164,7 @@ services:
       - merchant_lightningd
 
   merchant_lightningd:
-    image: nicolasdorier/clightning:v0.6.2-3-dev
+    image: btcpayserver/lightning:v0.6.2-dev
     stop_signal: SIGKILL
     environment: 
       EXPOSE_TCP: "true"
@@ -188,7 +188,7 @@ services:
       - bitcoind
 
   litecoind:
-    image: nicolasdorier/docker-litecoin:0.15.1
+    image: nicolasdorier/docker-litecoin:0.16.3
     environment:
       BITCOIN_EXTRA_ARGS: |
         rpcuser=ceiwHEbqWI83

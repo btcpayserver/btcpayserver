@@ -293,12 +293,12 @@
                         <coinswitch inline-template
                                     v-if="!srvModel.changellyEnabled || selectedThirdPartyProcessor === 'coinswitch'"
                                     :mode="srvModel.coinSwitchMode"
-                                    :merchant-id="srvModel.changellyMerchantId"
+                                    :merchant-id="srvModel.coinSwitchMerchantId"
                                     :to-currency="srvModel.paymentMethodId"
                                     :to-currency-due="srvModel.btcDue"
                                     :autoload="selectedThirdPartyProcessor === 'coinswitch'"
                                     :to-currency-address="srvModel.btcAddress">
-                            <iframe v-if="mode === 'inline'" :url="url" v-show="url">a</iframe>
+                            <iframe v-if="mode === 'inline'" :url="url" v-show="url"></iframe>
                             <a v-else-if="mode === 'popup'" 
                                v-on:click="openDialog($event)" :href="url" class="action-button" v-show="url">
                                 {{$t("Pay with CoinSwitch")}}
@@ -321,7 +321,7 @@
                                     <select 
                                         v-model="selectedFromCurrency"
                                         :disabled="isLoading"
-                                        v-on:change="onCurrencyChange($event)"payment__details__instruction__open-wallet__btn
+                                        v-on:change="onCurrencyChange($event)"
                                         ref="changellyCurrenciesDropdown">
                                         <option value="">{{$t("ConversionTab_CurrencyList_Select_Option")}}</option>
                                         <option v-for="currency of currencies" 

@@ -3,40 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>CoinSwitch</title>
-
-    <!--<script>-->
-    <!--//Initialize the CS object with your Merchant Id-->
-    <!--var payment = new Coinswitch('yadoshi');-->
-
-    <!--//When the library is available on the page, execute your code-->
-    <!--payment.on('Exchange:Ready', function() {-->
-
-    <!--// Add the "To Currency" and "To Currency Address"-->
-    <!--var config = {-->
-    <!--to_currency: 'btc',-->
-    <!--to_currency_address:'1CQ7ZdKeGWyCHF819MPB5vN4qYLjtKBpGE',-->
-    <!--to_amount: 1-->
-    <!--};-->
-
-    <!--// Open the payment wizard.-->
-    <!--payment.open(config);-->
-
-    <!--// Event: When the conversion request is created by the user.-->
-    <!--payment.on("Exchange:Initiated", function(orderId) {-->
-    <!--console.log("Exchange:Initiated CallbackFn", orderId);-->
-    <!--});-->
-
-    <!--// Event: When the conversion request is completed.-->
-    <!--payment.on("Exchange:Complete", function() {-->
-    <!--console.log("Exchange:Complete CallbackFn");-->
-    <!--})-->
-    <!--});-->
-    <!--</script>-->
-
-    <script id="cs_js" async src="https://files.coinswitch.co/public/js/cs_switch.js"></script>
     <script>
-        var script = document.querySelector('#cs_js');
-        // window.onload = function () {
+        var script = document.createElement('script'),
+            head = document.head || document.getElementsByTagName('head')[0];
+        script.src = window.location.protocol + '//files.coinswitch.co/public/js/cs_switch.js';
+        head.insertBefore(script, head.firstChild);
         script.addEventListener('load', function () {
             var qs = (function (a) {
                 if (a == "") return {};
@@ -51,7 +22,6 @@
                 return b;
             })(window.location.search.substr(1).split('&'));
 
-            debugger;
             var merchantId = qs["merchant_id"];
             var toCurrencyDue = qs["toCurrencyDue"];
             var toCurrencyAddress = qs["toCurrencyAddress"];
@@ -65,8 +35,8 @@
             };
             waitForCoinSwitch();
 
-            function waitForCoinSwitch(){
-                if(typeof payment.open !== "function"){
+            function waitForCoinSwitch() {
+                if (typeof payment.open !== "function") {
                     setTimeout(waitForCoinSwitch, 1000);
                     return;
                 }
@@ -79,10 +49,38 @@
                 })
             }
         });
-        // }
     </script>
+    <style>
+        #CoinSwitchPayment .cs-pay {
+            width: 100%;
+            height: 100%;
+        }
+
+        #CoinSwitchPayment .cs-pay__main {
+            width: 100%;
+            height: 100%;
+            padding-bottom: 20px;
+        }
+
+        #CoinSwitchPayment .cs-pay__dismiss-row {
+            display: none;
+        }
+
+        #CoinSwitchPayment .cs-pay__footer {
+            position: absolute;
+            left: 0;
+            bottom: 0px;
+            width: 100%;
+            height: 20px;
+
+            z-index: 10001;
+        }
+
+        #CoinSwitchPayment .cs-pay__powered-text {
+            color: black;
+        }
+    </style>
 </head>
 <body>
-sdasd
 </body>
 </html>

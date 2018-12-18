@@ -54,7 +54,7 @@ namespace BTCPayServer.Controllers
                 CurrencySymbol = numberFormatInfo.CurrencySymbol,
                 CurrencyInfo = new ViewPointOfSaleViewModel.CurrencyInfoData()
                 {
-                    CurrencySymbol = string.IsNullOrEmpty(numberFormatInfo.CurrencySymbol) ? settings.Currency : numberFormatInfo.CurrencySymbol,
+                    CurrencySymbol = (string.IsNullOrEmpty(numberFormatInfo.CurrencySymbol) ? settings.Currency : numberFormatInfo.CurrencySymbol).Trim(),
                     Divisibility = numberFormatInfo.CurrencyDecimalDigits,
                     DecimalSeparator = numberFormatInfo.CurrencyDecimalSeparator,
                     ThousandSeparator = numberFormatInfo.NumberGroupSeparator,

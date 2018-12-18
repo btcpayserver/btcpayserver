@@ -17,6 +17,6 @@ namespace BTCPayServer.Services
 
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         [Display(Name = "Disable registration")]
-        public bool LockSubscription { get; set; }
+        public bool LockSubscription { get; set; } = true;
     }
 }

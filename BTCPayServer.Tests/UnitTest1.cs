@@ -344,6 +344,7 @@ namespace BTCPayServer.Tests
                 (0.001m, "$0.001 (USD)", "USD"),
                 (0.01m, "$0.01 (USD)", "USD"),
                 (0.1m, "$0.10 (USD)", "USD"),
+                (0.1m, "0,10 € (EUR)", "EUR"),
                 (1000.0001m, "₹ 1,000.00 (INR)", "INR")
             })
             {

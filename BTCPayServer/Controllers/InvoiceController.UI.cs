@@ -103,7 +103,7 @@ namespace BTCPayServer.Controllers
                     {
                         var m = new InvoiceDetailsModel.Payment();
                         m.Crypto = payment.GetPaymentMethodId().CryptoCode;
-                        m.DepositAddress = onChainPaymentData.Output.ScriptPubKey.GetDestinationAddress(paymentNetwork.NBitcoinNetwork);
+                        m.DepositAddress = onChainPaymentData.GetDestination(paymentNetwork);
 
                         int confirmationCount = 0;
                         if ((onChainPaymentData.ConfirmationCount < paymentNetwork.MaxTrackedConfirmation && payment.Accounted)
@@ -484,7 +484,7 @@ namespace BTCPayServer.Controllers
         [BitpayAPIConstraint(false)]
         public async Task<IActionResult> Export(string format, string searchTerm = null)
         {
-            var model = new InvoiceExport();
+            var model = new InvoiceExport(_NetworkProvider);
 
             var invoices = await ListInvoicesProcess(searchTerm, 0, int.MaxValue);
             var res = model.Process(invoices, format);

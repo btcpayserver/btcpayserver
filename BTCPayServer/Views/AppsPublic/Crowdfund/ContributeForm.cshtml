@@ -1,0 +1,8 @@
+@model BTCPayServer.Models.AppViewModels.ContributeToCrowdfund
+
+
+<form method="post" action="contribute">
+    <input asp-for="Email" type="email"/>
+    <input asp-for="Amount" type="number" step="any" />
+    <button type="submit">Contribute</button>
+</form>

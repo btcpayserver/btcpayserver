@@ -61,5 +61,13 @@
             "wwwroot/cart/js/cart.js",
             "wwwroot/cart/js/cart.jquery.js"
         ]
+    },
+    {
+        "outputFileName": "wwwroot/bundles/crowdfund-bundle.min.js",
+        "inputFiles": [
+            "wwwroot/vendor/jquery/jquery.js",
+            "wwwroot/vendor/bootstrap4/js/bootstrap.js",
+            "wwwroot/modal/btcpay.js"
+        ]
     }
 ]

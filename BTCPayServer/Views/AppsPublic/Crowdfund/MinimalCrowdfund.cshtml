@@ -1,0 +1,19 @@
+@model  BTCPayServer.Models.AppViewModels.ViewCrowdfundViewModel
+<div class="container d-flex h-100">
+
+    <div class="row">
+        <div class="col-lg-12 text-center">
+            <partial name="_StatusMessage" for="@Model.StatusMessage"/>
+        </div>
+    </div>
+
+    <header>
+        <h1>@Model.Title</h1>
+    </header>
+    <main>
+        @Model.Description
+        <partial name="ContributeForm"/>
+    </main>
+    <footer></footer>
+    <pre> @Html.Raw(Model)</pre>
+</div>

@@ -15,10 +15,8 @@ namespace BTCPayServer.Models.AppViewModels
         [Required]
         public bool Enabled { get; set; }
         
-        
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
-        
         
         [Required]
         [MaxLength(5)]

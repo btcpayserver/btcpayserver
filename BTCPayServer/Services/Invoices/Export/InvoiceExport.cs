@@ -78,7 +78,9 @@ namespace BTCPayServer.Services.Invoices.Export
                     ExpirationDate = invoice.ExpirationTime.UtcDateTime,
                     MonitoringDate = invoice.MonitoringExpiration.UtcDateTime,
 #pragma warning disable CS0618 // Type or member is obsolete
+                    FullStatus = invoice.Status.ToString(),
                     Status = invoice.StatusString,
+                    ExceptionStatus = invoice.ExceptionStatusString,
 #pragma warning restore CS0618 // Type or member is obsolete
                     ItemCode = invoice.ProductInformation?.ItemCode,
                     ItemDesc = invoice.ProductInformation?.ItemDesc,
@@ -118,6 +120,8 @@ namespace BTCPayServer.Services.Invoices.Export
         public string FiatCurrency { get; set; }
         public string ItemCode { get; set; }
         public string ItemDesc { get; set; }
+        public string FullStatus { get; set; }
         public string Status { get; set; }
+        public string ExceptionStatus { get; set; }
     }
 }

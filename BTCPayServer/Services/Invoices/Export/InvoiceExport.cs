@@ -67,9 +67,9 @@ namespace BTCPayServer.Services.Invoices.Export
                     ConversionRate = pmethod.Rate,
                     PaymentType = details.GetPaymentType() == Payments.PaymentTypes.BTCLike ? "OnChain" : "OffChain",
                     Destination = details.GetPaymentDestination(),
-                    PaymentDue = $"{accounting.MinimumTotalDue} {cryptoCode}",
-                    PaymentPaid = $"{accounting.CryptoPaid} {cryptoCode}",
-                    PaymentOverpaid = $"{accounting.OverpaidHelper} {cryptoCode}",
+                    PaymentDue = $"{accounting.MinimumTotalDue}",
+                    PaymentPaid = $"{accounting.CryptoPaid}",
+                    PaymentOverpaid = $"{accounting.OverpaidHelper}",
 
                     OrderId = invoice.OrderId,
                     StoreId = invoice.StoreId,

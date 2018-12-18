@@ -1598,13 +1598,15 @@ donation:
 
                 var invoice = user.BitPay.CreateInvoice(new Invoice()
                 {
-                    Price = 500,
+                    Price = 10,
                     Currency = "USD",
                     PosData = "posData",
                     OrderId = "orderId",
                     ItemDesc = "Some \", description",
                     FullNotifications = true
                 }, Facade.Merchant);
+
+                var networkFee = Money.Satoshis(10000);
 
                 // ensure 0 invoices exported because there are no payments yet
                 var jsonResult = user.GetController<InvoiceController>().Export("json").GetAwaiter().GetResult();
@@ -1614,18 +1616,41 @@ donation:
 
                 var cashCow = tester.ExplorerNode;
                 var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, cashCow.Network);
-                var firstPayment = invoice.CryptoInfo[0].TotalDue - Money.Satoshis(10);
+                // 
+                var firstPayment = invoice.CryptoInfo[0].TotalDue - 3*networkFee;
                 cashCow.SendToAddress(invoiceAddress, firstPayment);
+                Thread.Sleep(1000); // prevent race conditions, ordering payments
+                // look if you can reduce thread sleep, this was min value for me
+
+                // should reduce invoice due by 0 USD because payment = network fee
+                cashCow.SendToAddress(invoiceAddress, networkFee);
+                Thread.Sleep(1000);
+
+                // pay remaining amount
+                cashCow.SendToAddress(invoiceAddress, 4*networkFee);
+                Thread.Sleep(1000);
 
                 Eventually(() =>
                 {
                     var jsonResultPaid = user.GetController<InvoiceController>().Export("json").GetAwaiter().GetResult();
                     var paidresult = Assert.IsType<ContentResult>(jsonResultPaid);
                     Assert.Equal("application/json", paidresult.ContentType);
-                    Assert.Contains("\"InvoiceItemDesc\": \"Some \\\", description\"", paidresult.Content);
-                    Assert.Contains("\"InvoicePrice\": 500.0", paidresult.Content);
-                    Assert.Contains("\"ConversionRate\": 5000.0", paidresult.Content);
-                    Assert.Contains($"\"InvoiceId\": \"{invoice.Id}\",", paidresult.Content);
+
+                    var parsedJson = JsonConvert.DeserializeObject<object[]>(paidresult.Content);
+                    Assert.Equal(3, parsedJson.Length);
+
+                    var pay1str = parsedJson[0].ToString();
+                    Assert.Contains("\"InvoiceItemDesc\": \"Some \\\", description\"", pay1str);
+                    Assert.Contains("\"InvoiceDue\": 1.5", pay1str);
+                    Assert.Contains("\"InvoicePrice\": 10.0", pay1str);
+                    Assert.Contains("\"ConversionRate\": 5000.0", pay1str);
+                    Assert.Contains($"\"InvoiceId\": \"{invoice.Id}\",", pay1str);
+
+                    var pay2str = parsedJson[1].ToString();
+                    Assert.Contains("\"InvoiceDue\": 1.5", pay2str);
+
+                    var pay3str = parsedJson[2].ToString();
+                    Assert.Contains("\"InvoiceDue\": 0", pay3str);
                 });
 
                 /*

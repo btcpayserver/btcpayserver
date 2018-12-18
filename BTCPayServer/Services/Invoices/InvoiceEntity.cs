@@ -681,7 +681,7 @@ namespace BTCPayServer.Services.Invoices
         /// </summary>
         public Money NetworkFee { get; set; }
         /// <summary>
-        /// Minimum required to be paid in order to accept invocie as paid
+        /// Minimum required to be paid in order to accept invoice as paid
         /// </summary>
         public Money MinimumTotalDue { get; set; }
     }

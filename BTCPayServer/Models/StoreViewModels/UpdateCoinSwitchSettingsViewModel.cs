@@ -10,7 +10,7 @@ namespace BTCPayServer.Models.StoreViewModels
         public string MerchantId { get; set; }
         public bool Enabled { get; set; }
 
-        [Display(Name = "Mode, Choose how to show CoinSwitch")]
+        [Display(Name = "Integration Mode")]
         public string Mode { get; set; } = "popup";
 
         public List<SelectListItem> Modes { get; } = new List<SelectListItem>

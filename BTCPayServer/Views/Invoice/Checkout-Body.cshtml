@@ -310,8 +310,7 @@
                     
                         <changelly inline-template
                                    v-if="!srvModel.coinSwitchEnabled || selectedThirdPartyProcessor === 'changelly'"
-                                   :merchant-id="srvModel.
-"
+                                   :merchant-id="srvModel.changellyMerchantId"
                                    :store-id="srvModel.storeId"
                                    :to-currency="srvModel.paymentMethodId"
                                    :to-currency-due="srvModel.changellyAmountDue"

@@ -1652,33 +1652,6 @@ donation:
                     var pay3str = parsedJson[2].ToString();
                     Assert.Contains("\"InvoiceDue\": 0", pay3str);
                 });
-
-                /*
-[
-  {
-    "ReceivedDate": "2018-11-30T10:27:13Z",
-    "StoreId": "FKaSZrXLJ2tcLfCyeiYYfmZp1UM5nZ1LDecQqbwBRuHi",
-    "OrderId": "orderId",
-    "InvoiceId": "4XUkgPMaTBzwJGV9P84kPC",
-    "CreatedDate": "2018-11-30T10:27:06Z",
-    "ExpirationDate": "2018-11-30T10:42:06Z",
-    "MonitoringDate": "2018-11-30T11:42:06Z",
-    "PaymentId": "6e5755c3357b20fd66f5fc478778d81371eab341e7112ab66ed6122c0ec0d9e5-1",
-    "CryptoCode": "BTC",
-    "Destination": "mhhSEQuoM993o6vwnBeufJ4TaWov2ZUsPQ",
-    "PaymentType": "OnChain",
-    "PaymentDue": "0.10020000 BTC",
-    "PaymentPaid": "0.10009990 BTC",
-    "PaymentOverpaid": "0.00000000 BTC",
-    "ConversionRate": 5000.0,
-    "FiatPrice": 500.0,
-    "FiatCurrency": "USD",
-    "ItemCode": null,
-    "ItemDesc": "Some \", description",
-    "Status": "new"
-  }
-]
-                */
             }
         }
 
@@ -1714,8 +1687,8 @@ donation:
                     var paidresult = Assert.IsType<ContentResult>(exportResultPaid);
                     Assert.Equal("application/csv", paidresult.ContentType);
                     Assert.Contains($",\"orderId\",\"{invoice.Id}\",", paidresult.Content);
-                    Assert.Contains($",\"OnChain\",\"0.1000999\",\"BTC\",\"5000.0\",\"500.0\"", paidresult.Content);
-                    Assert.Contains($",\"USD\",\"\",\"Some ``, description\",\"new (paidPartial)\"", paidresult.Content);
+                    Assert.Contains($",\"OnChain\",\"BTC\",\"0.1000999\",\"0.0001\",\"5000.0\"", paidresult.Content);
+                    Assert.Contains($",\"USD\",\"0.00050000\",\"500.0\",\"\",\"Some ``, description\",\"new (paidPartial)\"", paidresult.Content);
                 });
             }
         }

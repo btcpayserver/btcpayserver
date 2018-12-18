@@ -124,9 +124,9 @@ namespace BTCPayServer.Services.Invoices.Export
         public string Destination { get; set; }
         public string PaymentType { get; set; }
         public string CryptoCode { get; set; }
-        public decimal ConversionRate { get; set; }
         public string Paid { get; set; }
         public string NetworkFee { get; set; }
+        public decimal ConversionRate { get; set; }
 
         public string InvoiceCurrency { get; set; }
         public decimal InvoiceDue { get; set; }

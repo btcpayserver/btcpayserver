@@ -5,7 +5,7 @@
 @{
     ViewData["Title"] = Model.Title;
     Layout = null;
-    String[] tipPercentages = Model.CustomTipPercentages != null ? Model.CustomTipPercentages.Split(',') : null;
+    int[] CustomTipPercentages = Model.CustomTipPercentages;
 }
 
 <!DOCTYPE html>
@@ -124,14 +124,12 @@
             </div>
         </div>
         <div class="row mb-1">
-            @if (tipPercentages != null && tipPercentages.Length > 0) {
-                @for (int i = 0; i < tipPercentages.Length; i++) {
-                    int percentage;
-                    @if(int.TryParse(tipPercentages[i], out percentage)) {
-                        <div class="col">
-                            <a class="js-cart-tip-btn btn btn-light btn-block border mb-2" href="#" data-tip="@percentage">@percentage%</a>
-                        </div>
-                    }
+            @if (CustomTipPercentages != null && CustomTipPercentages.Length > 0) {
+                @for (int i = 0; i < CustomTipPercentages.Length; i++) {
+                    var percentage = CustomTipPercentages[i];
+                    <div class="col">
+                        <a class="js-cart-tip-btn btn btn-light btn-block border mb-2" href="#" data-tip="@percentage">@percentage%</a>
+                    </div>
                 }
             }
         </div>

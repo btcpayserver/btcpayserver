@@ -1,5 +1,6 @@
 ﻿@using System.Collections.Generic
 @using System.Linq
+@using BTCPayServer.Security
 @using Microsoft.AspNetCore.Http
 @using Microsoft.AspNetCore.Http.Authentication
 @model LoginViewModel
@@ -59,7 +60,7 @@
                     <h4>Use another service to log in.</h4>
                     <hr />
                     @{
-                        var loginProviders = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Where(scheme => scheme.Name !="dynamic").ToList();
+                        var loginProviders = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Where(scheme => scheme.Name != Policies.Dynamic ).ToList();
                         if(loginProviders.Count == 0)
                         {
                             <div>

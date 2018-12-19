@@ -211,8 +211,8 @@ namespace BTCPayServer.Hosting
             var externalUrl = configuration.GetExternalUri();
             services.AddAuthentication(options =>
                 {
-                    options.DefaultAuthenticateScheme = "dynamic";
-                    options.DefaultChallengeScheme = "dynamic";
+                    options.DefaultAuthenticateScheme =  Policies.Dynamic;
+                    options.DefaultChallengeScheme =  Policies.Dynamic;
                 })
                 .AddJwtBearer(options =>
                 {
@@ -224,7 +224,7 @@ namespace BTCPayServer.Hosting
                 })
                 .AddCookie()
                 .AddBitpayAuthentication()
-                .AddPolicyScheme("dynamic", "Bearer, Cookie or BitPay Auth", options =>
+                .AddPolicyScheme(Policies.Dynamic, "Bearer, Cookie or BitPay Auth", options =>
                 {
                     options.ForwardDefaultSelector = context =>
                     {

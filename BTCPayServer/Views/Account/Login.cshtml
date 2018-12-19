@@ -59,7 +59,7 @@
                     <h4>Use another service to log in.</h4>
                     <hr />
                     @{
-                        var loginProviders = (await SignInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+                        var loginProviders = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Where(scheme => scheme.Name !="dynamic").ToList();
                         if(loginProviders.Count == 0)
                         {
                             <div>

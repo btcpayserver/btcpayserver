@@ -7,24 +7,16 @@ jobs:
       - checkout
 
   test:
-    machine: true
+    machine:
+        docker_layer_caching: true
     steps:
       - checkout
       - run:
           command: |
-            echo "117.18.232.200 api.nuget.org" | sudo tee -a /etc/hosts
-            lsb_release -a
-            wget -q https://packages.microsoft.com/config/ubuntu/14.04/packages-microsoft-prod.deb
-            sudo dpkg -i packages-microsoft-prod.deb
-            sudo apt-get install apt-transport-https
-            sudo apt-get update
-            sudo apt-get install dotnet-sdk-2.1
-            dotnet --info
-            dotnet build /p:TreatWarningsAsErrors=true
             cd BTCPayServer.Tests
-            dotnet test --filter Fast=Fast
-            docker-compose up -d dev
-            dotnet test --filter Integration=Integration
+            docker-compose down --v
+            docker-compose build
+            docker-compose run tests
 
   # publish jobs require $DOCKERHUB_REPO, $DOCKERHUB_USER, $DOCKERHUB_PASS defined
   publish_docker_linuxamd64:
@@ -36,7 +28,7 @@ jobs:
           command: |
             LATEST_TAG=${CIRCLE_TAG:1} #trim v from tag
             #
-            sudo docker build --add-host "api.nuget.org:117.18.232.200" --pull -t $DOCKERHUB_REPO:$LATEST_TAG-amd64 -f Dockerfile.linuxamd64 .
+            sudo docker build --pull -t $DOCKERHUB_REPO:$LATEST_TAG-amd64 -f Dockerfile.linuxamd64 .
             sudo docker login --username=$DOCKERHUB_USER --password=$DOCKERHUB_PASS
             sudo docker push $DOCKERHUB_REPO:$LATEST_TAG-amd64
 
@@ -50,7 +42,7 @@ jobs:
             sudo docker run --rm --privileged multiarch/qemu-user-static:register --reset
             LATEST_TAG=${CIRCLE_TAG:1} #trim v from tag
             #
-            sudo docker build --add-host "api.nuget.org:117.18.232.200" --pull -t $DOCKERHUB_REPO:$LATEST_TAG-arm32v7 -f Dockerfile.linuxarm32v7 .
+            sudo docker build --pull -t $DOCKERHUB_REPO:$LATEST_TAG-arm32v7 -f Dockerfile.linuxarm32v7 .
             sudo docker login --username=$DOCKERHUB_USER --password=$DOCKERHUB_PASS
             sudo docker push $DOCKERHUB_REPO:$LATEST_TAG-arm32v7
 

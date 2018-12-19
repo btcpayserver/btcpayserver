@@ -46,6 +46,7 @@ namespace BTCPayServer.Controllers
             RateFetcher rateProviderFactory,
             SettingsRepository settingsRepository,
             NBXplorerDashboard dashBoard,
+            IHttpClientFactory httpClientFactory,
             LightningConfigurationProvider lnConfigProvider,
             Services.Stores.StoreRepository storeRepository)
         {
@@ -53,6 +54,7 @@ namespace BTCPayServer.Controllers
             _UserManager = userManager;
             _SettingsRepository = settingsRepository;
             _dashBoard = dashBoard;
+            HttpClientFactory = httpClientFactory;
             _RateProviderFactory = rateProviderFactory;
             _StoreRepository = storeRepository;
             _LnConfigProvider = lnConfigProvider;
@@ -395,6 +397,7 @@ namespace BTCPayServer.Controllers
         {
             get; set;
         }
+        public IHttpClientFactory HttpClientFactory { get; }
 
         [Route("server/emails")]
         public async Task<IActionResult> Emails()
@@ -431,6 +434,18 @@ namespace BTCPayServer.Controllers
                     {
                         Crypto = cryptoCode,
                         Type = grpcService.Type,
+                        Action = nameof(LndServices),
+                        Index = i++,
+                    });
+                }
+                i = 0;
+                foreach (var sparkService in _Options.ExternalServicesByCryptoCode.GetServices<ExternalSpark>(cryptoCode))
+                {
+                    result.LNDServices.Add(new ServicesViewModel.LNDServiceViewModel()
+                    {
+                        Crypto = cryptoCode,
+                        Type = "Spark server",
+                        Action = nameof(SparkServices),
                         Index = i++,
                     });
                 }
@@ -452,6 +467,40 @@ namespace BTCPayServer.Controllers
                 });
             }
             return View(result);
+        }
+
+        [Route("server/services/spark/{cryptoCode}/{index}")]
+        public async Task<IActionResult> SparkServices(string cryptoCode, int index, bool showQR = false)
+        {
+            if (!_dashBoard.IsFullySynched(cryptoCode, out var unusud))
+            {
+                StatusMessage = $"Error: {cryptoCode} is not fully synched";
+                return RedirectToAction(nameof(Services));
+            }
+            var spark = _Options.ExternalServicesByCryptoCode.GetServices<ExternalSpark>(cryptoCode).Skip(index).Select(c => c.ConnectionString).FirstOrDefault();
+            if(spark == null)
+            {
+                return NotFound();
+            }
+
+            SparkServicesViewModel vm = new SparkServicesViewModel();
+            vm.ShowQR = showQR;
+            try
+            {
+                var cookie = (spark.CookeFile == "fake"
+                            ? "fake:fake:fake" // If we are testing, it should not crash
+                            : await System.IO.File.ReadAllTextAsync(spark.CookeFile)).Split(':');
+                if (cookie.Length >= 3)
+                {
+                    vm.SparkLink = $"{spark.Server.AbsoluteUri}?access-key={cookie[2]}";
+                }
+            }
+            catch(Exception ex)
+            {
+                StatusMessage = $"Error: {ex.Message}";
+                return RedirectToAction(nameof(Services));
+            }
+            return View(vm);
         }
 
         [Route("server/services/lnd/{cryptoCode}/{index}")]

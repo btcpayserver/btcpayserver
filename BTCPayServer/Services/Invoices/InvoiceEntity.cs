@@ -982,5 +982,6 @@ namespace BTCPayServer.Services.Invoices
         bool PaymentConfirmed(PaymentEntity entity, SpeedPolicy speedPolicy, BTCPayNetwork network);
 
         PaymentTypes GetPaymentType();
+        string GetDestination(BTCPayNetwork network);
     }
 }

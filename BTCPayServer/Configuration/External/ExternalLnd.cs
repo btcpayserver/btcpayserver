@@ -8,28 +8,23 @@ namespace BTCPayServer.Configuration.External
 {
     public abstract class ExternalLnd : ExternalService
     {
-        public ExternalLnd(LightningConnectionString connectionString, LndTypes type)
+        public ExternalLnd(LightningConnectionString connectionString, string type)
         {
             ConnectionString = connectionString;
             Type = type;
         }
 
-        public LndTypes Type { get; set; }
+        public string Type { get; set; }
         public LightningConnectionString ConnectionString { get; set; }
-    }
-
-    public enum LndTypes
-    {
-        gRPC, Rest
     }
 
     public class ExternalLndGrpc : ExternalLnd
     {
-        public ExternalLndGrpc(LightningConnectionString connectionString) : base(connectionString, LndTypes.gRPC) { }
+        public ExternalLndGrpc(LightningConnectionString connectionString) : base(connectionString, "lnd-grpc") { }
     }
 
     public class ExternalLndRest : ExternalLnd
     {
-        public ExternalLndRest(LightningConnectionString connectionString) : base(connectionString, LndTypes.Rest) { }
+        public ExternalLndRest(LightningConnectionString connectionString) : base(connectionString, "lnd-rest") { }
     }
 }

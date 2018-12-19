@@ -1,4 +1,4 @@
-using BTCPayServer.Tests.Logging;
+﻿using BTCPayServer.Tests.Logging;
 using System.Linq;
 using NBitcoin;
 using NBitcoin.DataEncoders;
@@ -340,13 +340,17 @@ namespace BTCPayServer.Tests
         {
             foreach (var test in new[]
             {
-                (0.0005m, "$0.0005 (USD)"),
-                (0.001m, "$0.001 (USD)"),
-                (0.01m, "$0.01 (USD)"),
-                (0.1m, "$0.10 (USD)"),
+                (0.0005m, "$0.0005 (USD)", "USD"),
+                (0.001m, "$0.001 (USD)", "USD"),
+                (0.01m, "$0.01 (USD)", "USD"),
+                (0.1m, "$0.10 (USD)", "USD"),
+                (0.1m, "0,10 € (EUR)", "EUR"),
+                (1000m, "¥1,000 (JPY)", "JPY"),
+                (1000.0001m, "₹ 1,000.00 (INR)", "INR")
             })
             {
-                var actual = new CurrencyNameTable().DisplayFormatCurrency(test.Item1, "USD");
+                var actual = new CurrencyNameTable().DisplayFormatCurrency(test.Item1, test.Item3);                
+                actual = actual.Replace("￥", "¥"); // Hack so JPY test pass on linux as well
                 Assert.Equal(test.Item2, actual);
             }
         }
@@ -884,7 +888,7 @@ namespace BTCPayServer.Tests
                 var result = client.SendAsync(message).GetAwaiter().GetResult();
                 result.EnsureSuccessStatusCode();
                 /////////////////////
-                
+
                 // Have error 403 with bad signature
                 client = new HttpClient();
                 HttpRequestMessage mess = new HttpRequestMessage(HttpMethod.Get, tester.PayTester.ServerUri.AbsoluteUri + "tokens");
@@ -1467,6 +1471,44 @@ donation:
                 Assert.NotNull(donationInvoice);
                 Assert.Equal("CAD", donationInvoice.Currency);
                 Assert.Equal("donation", donationInvoice.ItemDesc);
+
+                foreach (var test in new[]
+                {
+                    (Code: "EUR", ExpectedSymbol: "€", ExpectedDecimalSeparator: ",", ExpectedDivisibility: 2, ExpectedThousandSeparator: "\xa0", ExpectedPrefixed: false, ExpectedSymbolSpace: true),
+                    (Code: "INR", ExpectedSymbol: "₹", ExpectedDecimalSeparator: ".", ExpectedDivisibility: 2, ExpectedThousandSeparator: ",", ExpectedPrefixed: true, ExpectedSymbolSpace: true),
+                    (Code: "JPY", ExpectedSymbol: "¥", ExpectedDecimalSeparator: ".", ExpectedDivisibility: 0, ExpectedThousandSeparator: ",", ExpectedPrefixed: true, ExpectedSymbolSpace: false),
+                    (Code: "BTC", ExpectedSymbol: "BTC", ExpectedDecimalSeparator: ".", ExpectedDivisibility: 8, ExpectedThousandSeparator: ",", ExpectedPrefixed: false, ExpectedSymbolSpace: true),
+                })
+                {
+                    Logs.Tester.LogInformation($"Testing for {test.Code}");
+                    vmpos = Assert.IsType<UpdatePointOfSaleViewModel>(Assert.IsType<ViewResult>(apps.UpdatePointOfSale(appId).Result).Model);
+                    vmpos.Title = "hello";
+                    vmpos.Currency = test.Item1;
+                    vmpos.ButtonText = "{0} Purchase";
+                    vmpos.CustomButtonText = "Nicolas Sexy Hair";
+                    vmpos.CustomTipText = "Wanna tip?";
+                    vmpos.Template = @"
+apple:
+  price: 1000.0
+  title: good apple
+orange:
+  price: 10.0
+donation:
+  price: 1.02
+  custom: true
+";
+                    Assert.IsType<RedirectToActionResult>(apps.UpdatePointOfSale(appId, vmpos).Result);
+                    publicApps = user.GetController<AppsPublicController>();
+                    vmview = Assert.IsType<ViewPointOfSaleViewModel>(Assert.IsType<ViewResult>(publicApps.ViewPointOfSale(appId).Result).Model);
+                    Assert.Equal(test.Code, vmview.CurrencyCode);
+                    Assert.Equal(test.ExpectedSymbol, vmview.CurrencySymbol.Replace("￥", "¥")); // Hack so JPY test pass on linux as well);
+                    Assert.Equal(test.ExpectedSymbol, vmview.CurrencyInfo.CurrencySymbol.Replace("￥", "¥")); // Hack so JPY test pass on linux as well);
+                    Assert.Equal(test.ExpectedDecimalSeparator, vmview.CurrencyInfo.DecimalSeparator);
+                    Assert.Equal(test.ExpectedThousandSeparator, vmview.CurrencyInfo.ThousandSeparator);
+                    Assert.Equal(test.ExpectedPrefixed, vmview.CurrencyInfo.Prefixed);
+                    Assert.Equal(test.ExpectedDivisibility, vmview.CurrencyInfo.Divisibility);
+                    Assert.Equal(test.ExpectedSymbolSpace, vmview.CurrencyInfo.SymbolSpace);
+                }
             }
         }
 
@@ -1580,10 +1622,9 @@ donation:
                     var jsonResultPaid = user.GetController<InvoiceController>().Export("json").GetAwaiter().GetResult();
                     var paidresult = Assert.IsType<ContentResult>(jsonResultPaid);
                     Assert.Equal("application/json", paidresult.ContentType);
-                    Assert.Contains("\"ItemDesc\": \"Some \\\", description\"", paidresult.Content);
-                    Assert.Contains("\"FiatPrice\": 500.0", paidresult.Content);
+                    Assert.Contains("\"InvoiceItemDesc\": \"Some \\\", description\"", paidresult.Content);
+                    Assert.Contains("\"InvoicePrice\": 500.0", paidresult.Content);
                     Assert.Contains("\"ConversionRate\": 5000.0", paidresult.Content);
-                    Assert.Contains("\"PaymentDue\": \"0.10020000 BTC\"", paidresult.Content);
                     Assert.Contains($"\"InvoiceId\": \"{invoice.Id}\",", paidresult.Content);
                 });
 
@@ -1648,14 +1689,9 @@ donation:
                     var paidresult = Assert.IsType<ContentResult>(exportResultPaid);
                     Assert.Equal("application/csv", paidresult.ContentType);
                     Assert.Contains($",\"orderId\",\"{invoice.Id}\",", paidresult.Content);
-                    Assert.Contains($",\"OnChain\",\"0.10020000 BTC\",\"0.10009990 BTC\",\"0.00000000 BTC\",\"5000.0\",\"500.0\"", paidresult.Content);
-                    Assert.Contains($",\"USD\",\"\",\"Some ``, description\",\"new\"", paidresult.Content);
+                    Assert.Contains($",\"OnChain\",\"0.1000999\",\"BTC\",\"5000.0\",\"500.0\"", paidresult.Content);
+                    Assert.Contains($",\"USD\",\"\",\"Some ``, description\",\"new (paidPartial)\"", paidresult.Content);
                 });
-
-                /* 
-ReceivedDate,StoreId,OrderId,InvoiceId,CreatedDate,ExpirationDate,MonitoringDate,PaymentId,CryptoCode,Destination,PaymentType,PaymentDue,PaymentPaid,PaymentOverpaid,ConversionRate,FiatPrice,FiatCurrency,ItemCode,ItemDesc,Status
-"11/30/2018 10:28:42 AM","7AagXzWdWhLLR3Zar25YLiw2uHAJDzVT4oXGKC9bBCis","orderId","GxtJsWbgxxAXXoCurqyeK6","11/30/2018 10:28:40 AM","11/30/2018 10:43:40 AM","11/30/2018 11:43:40 AM","ec0341537f565d213bc64caa352fbbf9e0deb31cab1f91bccf89db0dd1604457-0","BTC","mqWghCp9RVw8fNgQMLjawyKStxpGfWBk1L","OnChain","0.10020000 BTC","0.10009990 BTC","0.00000000 BTC","5000.0","500.0","USD","","Some ``, description","new"
-                */
             }
         }
 

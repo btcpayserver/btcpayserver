@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Payments.Bitcoin;
@@ -10,6 +11,12 @@ namespace BTCPayServer.Services.Invoices.Export
 {
     public class InvoiceExport
     {
+        public BTCPayNetworkProvider Networks { get; }
+
+        public InvoiceExport(BTCPayNetworkProvider networks)
+        {
+            Networks = networks;
+        }
         public string Process(InvoiceEntity[] invoices, string fileFormat)
         {
             var csvInvoices = new List<ExportInvoiceHolder>();
@@ -55,9 +62,7 @@ namespace BTCPayServer.Services.Invoices.Export
                 var cryptoCode = payment.GetPaymentMethodId().CryptoCode;
                 var pdata = payment.GetCryptoPaymentData();
 
-                var pmethod = invoice.GetPaymentMethod(payment.GetPaymentMethodId(), null);
-                var accounting = pmethod.Calculate();
-                var details = pmethod.GetPaymentMethodDetails();
+                var pmethod = invoice.GetPaymentMethod(payment.GetPaymentMethodId(), Networks);
 
                 var target = new ExportInvoiceHolder
                 {
@@ -65,25 +70,24 @@ namespace BTCPayServer.Services.Invoices.Export
                     PaymentId = pdata.GetPaymentId(),
                     CryptoCode = cryptoCode,
                     ConversionRate = pmethod.Rate,
-                    PaymentType = details.GetPaymentType() == Payments.PaymentTypes.BTCLike ? "OnChain" : "OffChain",
-                    Destination = details.GetPaymentDestination(),
-                    PaymentDue = $"{accounting.MinimumTotalDue} {cryptoCode}",
-                    PaymentPaid = $"{accounting.CryptoPaid} {cryptoCode}",
-                    PaymentOverpaid = $"{accounting.OverpaidHelper} {cryptoCode}",
-
+                    PaymentType = payment.GetPaymentMethodId().PaymentType == Payments.PaymentTypes.BTCLike ? "OnChain" : "OffChain",
+                    Destination = payment.GetCryptoPaymentData().GetDestination(Networks.GetNetwork(cryptoCode)),
+                    Paid = pdata.GetValue().ToString(CultureInfo.InvariantCulture),
                     OrderId = invoice.OrderId,
                     StoreId = invoice.StoreId,
                     InvoiceId = invoice.Id,
-                    CreatedDate = invoice.InvoiceTime.UtcDateTime,
-                    ExpirationDate = invoice.ExpirationTime.UtcDateTime,
-                    MonitoringDate = invoice.MonitoringExpiration.UtcDateTime,
+                    InvoiceCreatedDate = invoice.InvoiceTime.UtcDateTime,
+                    InvoiceExpirationDate = invoice.ExpirationTime.UtcDateTime,
+                    InvoiceMonitoringDate = invoice.MonitoringExpiration.UtcDateTime,
 #pragma warning disable CS0618 // Type or member is obsolete
-                    Status = invoice.StatusString,
+                    InvoiceFullStatus = invoice.GetInvoiceState().ToString(),
+                    InvoiceStatus = invoice.StatusString,
+                    InvoiceExceptionStatus = invoice.ExceptionStatusString,
 #pragma warning restore CS0618 // Type or member is obsolete
-                    ItemCode = invoice.ProductInformation?.ItemCode,
-                    ItemDesc = invoice.ProductInformation?.ItemDesc,
-                    FiatPrice = invoice.ProductInformation?.Price ?? 0,
-                    FiatCurrency = invoice.ProductInformation?.Currency,
+                    InvoiceItemCode = invoice.ProductInformation.ItemCode,
+                    InvoiceItemDesc = invoice.ProductInformation.ItemDesc,
+                    InvoicePrice = invoice.ProductInformation.Price,
+                    InvoiceCurrency = invoice.ProductInformation.Currency,
                 };
 
                 exportList.Add(target);
@@ -101,23 +105,23 @@ namespace BTCPayServer.Services.Invoices.Export
         public string StoreId { get; set; }
         public string OrderId { get; set; }
         public string InvoiceId { get; set; }
-        public DateTime CreatedDate { get; set; }
-        public DateTime ExpirationDate { get; set; }
-        public DateTime MonitoringDate { get; set; }
+        public DateTime InvoiceCreatedDate { get; set; }
+        public DateTime InvoiceExpirationDate { get; set; }
+        public DateTime InvoiceMonitoringDate { get; set; }
 
         public string PaymentId { get; set; }
-        public string CryptoCode { get; set; }
         public string Destination { get; set; }
         public string PaymentType { get; set; }
-        public string PaymentDue { get; set; }
-        public string PaymentPaid { get; set; }
-        public string PaymentOverpaid { get; set; }
+        public string Paid { get; set; }
+        public string CryptoCode { get; set; }
         public decimal ConversionRate { get; set; }
 
-        public decimal FiatPrice { get; set; }
-        public string FiatCurrency { get; set; }
-        public string ItemCode { get; set; }
-        public string ItemDesc { get; set; }
-        public string Status { get; set; }
+        public decimal InvoicePrice { get; set; }
+        public string InvoiceCurrency { get; set; }
+        public string InvoiceItemCode { get; set; }
+        public string InvoiceItemDesc { get; set; }
+        public string InvoiceFullStatus { get; set; }
+        public string InvoiceStatus { get; set; }
+        public string InvoiceExceptionStatus { get; set; }
     }
 }

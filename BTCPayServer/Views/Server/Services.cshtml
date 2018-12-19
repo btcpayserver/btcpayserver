@@ -34,16 +34,9 @@
                     {
                         <tr>
                             <td>@lnd.Crypto</td>
-                            <td>LND @lnd.Type.ToString()</td>
+                            <td>@lnd.Type</td>
                             <td style="text-align:right">
-                                @if (lnd.Type == BTCPayServer.Configuration.External.LndTypes.gRPC)
-                                {
-                                    <a asp-action="LNDServices" asp-route-cryptoCode="@lnd.Crypto" asp-route-index="@lnd.Index">See information</a>
-                                }
-                                else if (lnd.Type == BTCPayServer.Configuration.External.LndTypes.Rest)
-                                {
-                                    <a asp-action="LNDServices" asp-route-cryptoCode="@lnd.Crypto" asp-route-index="@lnd.Index">See information</a>
-                                }
+                                <a asp-action="@lnd.Action" asp-route-cryptoCode="@lnd.Crypto" asp-route-index="@lnd.Index">See information</a>
                             </td>
                         </tr>
                     }

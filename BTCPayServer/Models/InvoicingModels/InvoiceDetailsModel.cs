@@ -81,11 +81,11 @@ namespace BTCPayServer.Models.InvoicingModels
             public string BOLT11 { get; set; }
         }
 
-        public string Status
+        public string State
         {
             get; set;
         }
-        public string StatusException { get; set; }
+        public InvoiceExceptionStatus StatusException { get; set; }
         public DateTimeOffset CreatedDate
         {
             get; set;

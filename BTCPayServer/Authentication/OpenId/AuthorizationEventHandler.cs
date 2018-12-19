@@ -2,7 +2,9 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using AspNet.Security.OpenIdConnect.Primitives;
 using BTCPayServer.Models;
+using BTCPayServer.Security;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using OpenIddict.Abstractions;
@@ -21,7 +23,9 @@ namespace BTCPayServer.Authentication.OpenId
             {
                 return OpenIddictServerEventState.Unhandled;
             }
-            if (!notification.Context.HttpContext.User.Identity.IsAuthenticated)
+
+            var auth = await notification.Context.HttpContext.AuthenticateAsync();
+            if (!auth.Succeeded)
             {
                 // If the client application request promptless authentication,
                 // return an error indicating that the user is not logged in.
@@ -35,18 +39,18 @@ namespace BTCPayServer.Authentication.OpenId
 
                     
                     // Ask OpenIddict to return a login_required error to the client application.
-                    await notification.Context.HttpContext.ForbidAsync(OpenIddictServerDefaults.AuthenticationScheme, properties);
+                    await notification.Context.HttpContext.ForbidAsync(properties);
                     notification.Context.HandleResponse();
                     return OpenIddictServerEventState.Handled;
                 }
 
-                await notification.Context.HttpContext.ChallengeAsync(OpenIddictServerDefaults.AuthenticationScheme);
+                await notification.Context.HttpContext.ChallengeAsync();
                 notification.Context.HandleResponse();
                 return OpenIddictServerEventState.Handled;
             }
 
             // Retrieve the profile of the logged in user.
-            var user = await _userManager.GetUserAsync(notification.Context.HttpContext.User);
+            var user = await _userManager.GetUserAsync(auth.Principal);
             if (user == null)
             {
                 notification.Context.Reject(
@@ -57,21 +61,13 @@ namespace BTCPayServer.Authentication.OpenId
          
             }
 
-            
-            if(!string.IsNullOrEmpty(notification.Context.HttpContext.Request.Form["submit.Accept"]))
-            {
-                // Create a new authentication ticket.
-                var ticket = await CreateTicketAsync(notification.Context.Request, user);
+            // Create a new authentication ticket.
+            var ticket = await CreateTicketAsync(notification.Context.Request, user);
 
-                // Returning a SignInResult will ask OpenIddict to issue the appropriate access/identity tokens.
-                notification.Context.Validate(ticket);
-                return OpenIddictServerEventState.Handled;
-            }
-            else
-            {
-                await notification.Context.HttpContext.ForbidAsync(OpenIddictServerDefaults.AuthenticationScheme);
-                return OpenIddictServerEventState.Handled;
-            }
+            // Returning a SignInResult will ask OpenIddict to issue the appropriate access/identity tokens.
+            notification.Context.Validate(ticket);
+            return OpenIddictServerEventState.Handled; 
+           
            
         }
 

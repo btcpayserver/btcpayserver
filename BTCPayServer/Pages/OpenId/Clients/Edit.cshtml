@@ -230,11 +230,10 @@
 
         public async Task<IActionResult> OnGetAsync()
         {
-            var userId = _userManager.GetUserId(User);
             if (!string.IsNullOrEmpty(Id))
             {
                 var app = await _applicationManager.FindByIdAsync(Id);
-                if (app.ApplicationUserId != userId)
+                if (app.ApplicationUserId != UserId)
                 {
                     return NotFound();
                 }
@@ -254,10 +253,7 @@
             {
                 return await CreateAsync();
             }
-            else
-            {
-                return await UpdateAsync();
-            }
+            return await UpdateAsync();
         }
 
         private async Task<IActionResult> CreateAsync()
@@ -287,7 +283,7 @@
             });
         }
 
-        public async Task<IActionResult> UpdateAsync()
+        private async Task<IActionResult> UpdateAsync()
         {
             var app = await _applicationManager.FindByIdAsync(Id);
             var originalType = app.Type;

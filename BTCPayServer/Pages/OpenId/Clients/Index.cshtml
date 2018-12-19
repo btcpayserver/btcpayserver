@@ -31,7 +31,7 @@
             </div>
         </div>
 
-        <a asp-page="./Simple" class="btn btn-primary" role="button"><span class="fa fa-plus"></span> Create a new client</a>
+        <a asp-page="./Edit" class="btn btn-primary" role="button"><span class="fa fa-plus"></span> Create a new client</a>
 
         <div class="row">
             <div class="col-md-12">
@@ -52,7 +52,7 @@
                             <td>@client.ClientId</td>
                             <td>@client.Type</td>
                             <td class="text-right">
-                                <a asp-page="./Simple" asp-route-id="@client.Id">View</a><span> - </span>
+                                <a asp-page="./Edit" asp-route-id="@client.Id">View</a><span> - </span>
                                 <a asp-page="../Tokens/Index" asp-route-id="@client.Id">Tokens</a><span> - </span>
                                 <a asp-page="../Authorizations/Index" asp-route-id="@client.Id">Authorizations</a><span> - </span>
                                 <a asp-page="./Delete" asp-route-id="@client.Id">Delete</a>

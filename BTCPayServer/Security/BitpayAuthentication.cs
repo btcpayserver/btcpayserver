@@ -243,14 +243,4 @@ namespace BTCPayServer.Security
             builder.AddScheme<BitpayAuthOptions, BitpayAuthHandler>(Policies.BitpayAuthentication, bitpayAuth);
         }
     }
-
-    public static class BitpayAuthenticationExtensions
-    {
-        public static AuthenticationBuilder AddBitpayAuthentication(this AuthenticationBuilder builder,
-            Action<BitpayAuthentication.BitpayAuthOptions> bitpayAuth = null)
-        {
-            BitpayAuthentication.AddAuthentication(builder,bitpayAuth);
-            return builder;
-        }
-    }
 }

@@ -536,10 +536,6 @@ namespace BTCPayServer.Controllers
             {
                 model.Macaroon = Encoders.Hex.EncodeData(external.Macaroon);
             }
-            if (external.RestrictedMacaroon != null)
-            {
-                model.RestrictedMacaroon = Encoders.Hex.EncodeData(external.RestrictedMacaroon);
-            }
 
             if (nonce != null)
             {
@@ -588,7 +584,6 @@ namespace BTCPayServer.Controllers
                 conf.Port = external.BaseUri.Port;
                 conf.SSL = external.BaseUri.Scheme == "https";
                 conf.Macaroon = external.Macaroon == null ? null : Encoders.Hex.EncodeData(external.Macaroon);
-                conf.RestrictedMacaroon = external.RestrictedMacaroon == null ? null : Encoders.Hex.EncodeData(external.RestrictedMacaroon);
                 conf.CertificateThumbprint = external.CertificateThumbprint == null ? null : Encoders.Hex.EncodeData(external.CertificateThumbprint);
                 confs.Configurations.Add(conf);
             }
@@ -600,7 +595,6 @@ namespace BTCPayServer.Controllers
                 restconf.CryptoCode = cryptoCode;
                 restconf.Uri = external.BaseUri.AbsoluteUri;
                 restconf.Macaroon = external.Macaroon == null ? null : Encoders.Hex.EncodeData(external.Macaroon);
-                restconf.RestrictedMacaroon = external.RestrictedMacaroon == null ? null : Encoders.Hex.EncodeData(external.RestrictedMacaroon);
                 restconf.CertificateThumbprint = external.CertificateThumbprint == null ? null : Encoders.Hex.EncodeData(external.CertificateThumbprint);
                 confs.Configurations.Add(restconf);
             }
@@ -628,18 +622,6 @@ namespace BTCPayServer.Controllers
                     Logs.Configuration.LogWarning($"{cryptoCode}: The macaroon file path of the external LND grpc config was not found ({connectionString.MacaroonFilePath})");
                     return null;
                 }
-            }
-            if (connectionString.RestrictedMacaroonFilePath != null)
-            {
-                try
-                {
-                    connectionString.RestrictedMacaroon = System.IO.File.ReadAllBytes(connectionString.RestrictedMacaroonFilePath);
-                }
-                catch
-                {
-                    Logs.Configuration.LogWarning($"{cryptoCode}: The restrictedmacaroon file path of the external LND grpc config was not found ({connectionString.RestrictedMacaroonFilePath})");
-                }
-                connectionString.RestrictedMacaroonFilePath = null;
             }
             return connectionString;
         }

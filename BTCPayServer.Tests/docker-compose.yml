@@ -98,7 +98,7 @@ services:
     restart: unless-stopped
     image: btcpayserver/bitcoin:0.17.0
     environment:
-      BITCOIN_NETWORK:regtest
+      BITCOIN_NETWORK: regtest
       BITCOIN_EXTRA_ARGS: |-
         rpcuser=ceiwHEbqWI83
         rpcpassword=DwubwWsoo3

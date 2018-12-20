@@ -62,9 +62,6 @@ namespace BTCPayServer.Services
     }
     public class LNDRestConfiguration : LNDConfiguration
     {
-        public string ChainType { get; set; }
-        public string Type { get; set; }
-        public string CryptoCode { get; set; }
         public string Uri { get; set; }
     }
 }

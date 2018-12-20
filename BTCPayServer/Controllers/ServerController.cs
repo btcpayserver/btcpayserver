@@ -520,6 +520,7 @@ namespace BTCPayServer.Controllers
                 model.Host = $"{external.BaseUri.DnsSafeHost}:{external.BaseUri.Port}";
                 model.SSL = external.BaseUri.Scheme == "https";
                 model.ConnectionType = "GRPC";
+                model.GRPCSSLCipherSuites = "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256";
             }
             else if(external.ConnectionType == LightningConnectionType.LndREST)
             {

@@ -13,6 +13,8 @@ namespace BTCPayServer.Models.ServerViewModels
         public string Macaroon { get; set; }
         public string RestrictedMacaroon { get; set; }
         public string CertificateThumbprint { get; set; }
+        [Display(Name = "GRPC SSL Cipher suite (GRPC_SSL_CIPHER_SUITES)")]
+        public string GRPCSSLCipherSuites { get; set; }
         public string QRCode { get; set; }
         public string QRCodeLink { get; set; }
         [Display(Name = "REST Uri")]

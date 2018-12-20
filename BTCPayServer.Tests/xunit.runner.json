@@ -1,3 +1,4 @@
 {
-    "parallelizeTestCollections": false
+    "parallelizeTestCollections": false,
+    "longRunningTestSeconds": 60
 }

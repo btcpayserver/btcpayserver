@@ -1,0 +1,60 @@
+﻿@model ChargeServiceViewModel
+@{
+    ViewData.SetActivePageAndTitle(ServerNavPages.Services);
+}
+
+
+<h4>Lightning charge service</h4>
+<partial name="_StatusMessage" for="@TempData["StatusMessage"]" />
+
+<div class="row">
+    <div class="col-md-6">
+        <div asp-validation-summary="All" class="text-danger"></div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="form-group">
+            <p>
+                <span>Lightning charge is a simple API for invoicing on lightning network, you can use it with several plugins:</span>
+                <ul>
+                    <li><a href="https://github.com/ElementsProject/woocommerce-gateway-lightning" target="_blank">WooCommerce Lightning Gateway</a>: A comprehensive e-commerce application that integrates with stock-management and order-tracking systems</li>
+                    <li><a href="https://github.com/ElementsProject/nanopos" target="_blank">Nanopos</a>: A simple point-of-sale system for fixed-price goods</li>
+                    <li><a href="https://github.com/ElementsProject/filebazaar" target="_blank">FileBazaar</a>: A system for selling files such as documents, images, and videos</li>
+                    <li><a href="https://github.com/ElementsProject/wordpress-lightning-publisher" target="_blank">Lightning Publisher for WordPress</a>: A patronage model for unlocking WordPress blog entries</li>
+                    <li><a href="https://github.com/ElementsProject/paypercall" target="_blank">Paypercall</a>: A programmer’s toolkit for Lightning that enables micropayments for individual API calls</li>
+                    <li><a href="https://github.com/ElementsProject/ifpaytt" target="_blank">Ifpaytt</a>: An extension of paypercall that allows web developers using IFTTT to request payments for service usage</li>
+                    <li><a href="https://github.com/ElementsProject/lightning-jukebox" target="_blank">Lightning Jukebox</a>: A fun demo that reimagines a classic technology for the Lightning Network</li>
+                    <li><a href="https://github.com/ElementsProject/nanotip" target="_blank">Nanotip</a>: The simple tip jar, rebuilt to issue Lightning Network invoices</li>
+                </ul>
+            </p>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-8">
+        <h4>Credentials</h4>
+        @if (Model.Uri != null)
+        {
+            <div class="form-group">
+                <label asp-for="Uri"></label>
+                <input asp-for="Uri" readonly class="form-control" />
+            </div>
+        }
+        @if (Model.APIToken != null)
+        {
+            <div class="form-group">
+                <label asp-for="APIToken"></label>
+                <input asp-for="APIToken" readonly class="form-control" />
+            </div>
+        }
+        @if (Model.AuthenticatedUri != null)
+        {
+            <div class="form-group">
+                <label asp-for="AuthenticatedUri"></label>
+                <input asp-for="AuthenticatedUri" readonly class="form-control" />
+            </div>
+        }
+    </div>
+</div>

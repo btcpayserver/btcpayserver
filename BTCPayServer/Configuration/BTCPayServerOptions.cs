@@ -37,8 +37,8 @@ namespace BTCPayServer.Configuration
         {
             get;
             private set;
-        } 
-        
+        }
+
         public string LogFile
         {
             get;
@@ -68,7 +68,7 @@ namespace BTCPayServer.Configuration
         public static LogEventLevel GetDebugLogLevel(IConfiguration configuration)
         {
             var raw = configuration.GetValue("debugloglevel", nameof(LogEventLevel.Debug));
-            return  (LogEventLevel)Enum.Parse(typeof(LogEventLevel), raw, true);
+            return (LogEventLevel)Enum.Parse(typeof(LogEventLevel), raw, true);
         }
 
         public void LoadArgs(IConfiguration conf)
@@ -139,7 +139,7 @@ namespace BTCPayServer.Configuration
                 externalLnd<ExternalLndRest>($"{net.CryptoCode}.external.lnd.rest", "lnd-rest");
 
                 var spark = conf.GetOrDefault<string>($"{net.CryptoCode}.external.spark", string.Empty);
-                if(spark.Length != 0)
+                if (spark.Length != 0)
                 {
                     if (!SparkConnectionString.TryParse(spark, out var connectionString))
                     {
@@ -148,14 +148,30 @@ namespace BTCPayServer.Configuration
                     }
                     ExternalServicesByCryptoCode.Add(net.CryptoCode, new ExternalSpark(connectionString));
                 }
+
+                var charge = conf.GetOrDefault<string>($"{net.CryptoCode}.external.charge", string.Empty);
+                if (charge.Length != 0)
+                {
+                    if (!LightningConnectionString.TryParse(charge, false, out var chargeConnectionString, out var chargeError))
+                        LightningConnectionString.TryParse("type=charge;" + charge, false, out chargeConnectionString, out chargeError);
+
+                    if(chargeConnectionString == null || chargeConnectionString.ConnectionType != LightningConnectionType.Charge)
+                    {
+                        throw new ConfigException($"Invalid setting {net.CryptoCode}.external.charge, " + Environment.NewLine +
+                                $"lightning charge server: 'type=charge;server=https://charge.example.com;api-token=2abdf302...'" + Environment.NewLine +
+                                $"lightning charge server: 'type=charge;server=https://charge.example.com;cookiefilepath=/root/.charge/.cookie'" + Environment.NewLine +
+                                chargeError ?? string.Empty);
+                    }
+                    ExternalServicesByCryptoCode.Add(net.CryptoCode, new ExternalCharge(chargeConnectionString));
+                }
             }
 
             Logs.Configuration.LogInformation("Supported chains: " + String.Join(',', supportedChains.ToArray()));
 
             var services = conf.GetOrDefault<string>("externalservices", null);
-            if(services != null)
+            if (services != null)
             {
-                foreach(var service in services.Split(new[] { ';', ',' })
+                foreach (var service in services.Split(new[] { ';', ',' })
                                                 .Select(p => p.Split(':'))
                                                 .Where(p => p.Length == 2)
                                                 .Select(p => (Name: p[0], Link: p[1])))

@@ -156,7 +156,8 @@ namespace BTCPayServer.Payments.Lightning
                     if (notification.Id == listenedInvoice.PaymentMethodDetails.InvoiceId &&
                        notification.BOLT11 == listenedInvoice.PaymentMethodDetails.BOLT11)
                     {
-                        if (notification.Status == LightningInvoiceStatus.Paid && notification.PaidAt.HasValue)
+                        if (notification.Status == LightningInvoiceStatus.Paid && 
+                            notification.PaidAt.HasValue && notification.Amount != null)
                         {
                             await AddPayment(network, notification, listenedInvoice);
                             if (DoneListening(listenedInvoice))

@@ -449,6 +449,16 @@ namespace BTCPayServer.Controllers
                         Index = i++,
                     });
                 }
+                foreach (var chargeService in _Options.ExternalServicesByCryptoCode.GetServices<ExternalCharge>(cryptoCode))
+                {
+                    result.LNDServices.Add(new ServicesViewModel.LNDServiceViewModel()
+                    {
+                        Crypto = cryptoCode,
+                        Type = "Lightning charge server",
+                        Action = nameof(LightningChargeServices),
+                        Index = i++,
+                    });
+                }
             }
             foreach(var externalService in _Options.ExternalServices)
             {
@@ -469,6 +479,45 @@ namespace BTCPayServer.Controllers
             return View(result);
         }
 
+        [Route("server/services/lightning-charge/{cryptoCode}/{index}")]
+        public async Task<IActionResult> LightningChargeServices(string cryptoCode, int index, bool showQR = false)
+        {
+            if (!_dashBoard.IsFullySynched(cryptoCode, out var unusud))
+            {
+                StatusMessage = $"Error: {cryptoCode} is not fully synched";
+                return RedirectToAction(nameof(Services));
+            }
+            var lightningCharge = _Options.ExternalServicesByCryptoCode.GetServices<ExternalCharge>(cryptoCode).Select(c => c.ConnectionString).FirstOrDefault();
+            if (lightningCharge == null)
+            {
+                return NotFound();
+            }
+
+            ChargeServiceViewModel vm = new ChargeServiceViewModel();
+            vm.Uri = lightningCharge.ToUri(false).AbsoluteUri;
+            vm.APIToken = lightningCharge.Password;
+            try
+            {
+                if (string.IsNullOrEmpty(vm.APIToken) && lightningCharge.CookieFilePath != null)
+                {
+                    if (lightningCharge.CookieFilePath != "fake")
+                        vm.APIToken = await System.IO.File.ReadAllTextAsync(lightningCharge.CookieFilePath);
+                    else
+                        vm.APIToken = "fake";
+                }
+                var builder = new UriBuilder(lightningCharge.ToUri(false));
+                builder.UserName = "api-token";
+                builder.Password = vm.APIToken;
+                vm.AuthenticatedUri = builder.ToString();
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Error: {ex.Message}";
+                return RedirectToAction(nameof(Services));
+            }
+            return View(vm);
+        }
+
         [Route("server/services/spark/{cryptoCode}/{index}")]
         public async Task<IActionResult> SparkServices(string cryptoCode, int index, bool showQR = false)
         {
@@ -477,7 +526,7 @@ namespace BTCPayServer.Controllers
                 StatusMessage = $"Error: {cryptoCode} is not fully synched";
                 return RedirectToAction(nameof(Services));
             }
-            var spark = _Options.ExternalServicesByCryptoCode.GetServices<ExternalSpark>(cryptoCode).Skip(index).Select(c => c.ConnectionString).FirstOrDefault();
+            var spark = _Options.ExternalServicesByCryptoCode.GetServices<ExternalSpark>(cryptoCode).Select(c => c.ConnectionString).FirstOrDefault();
             if(spark == null)
             {
                 return NotFound();

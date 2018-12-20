@@ -504,7 +504,7 @@ namespace BTCPayServer.Controllers
         }
 
         [Route("server/services/lnd/{cryptoCode}/{index}")]
-        public IActionResult LndServices(string cryptoCode, int index, uint? nonce)
+        public async Task<IActionResult> LndServices(string cryptoCode, int index, uint? nonce)
         {
             if (!_dashBoard.IsFullySynched(cryptoCode, out var unusud))
             {
@@ -536,6 +536,10 @@ namespace BTCPayServer.Controllers
             {
                 model.Macaroon = Encoders.Hex.EncodeData(external.Macaroon);
             }
+            var macaroons = external.MacaroonDirectoryPath == null ? null : await Macaroons.GetFromDirectoryAsync(external.MacaroonDirectoryPath);
+            model.AdminMacaroon = macaroons?.AdminMacaroon?.Hex;
+            model.InvoiceMacaroon = macaroons?.InvoiceMacaroon?.Hex;
+            model.ReadonlyMacaroon = macaroons?.ReadonlyMacaroon?.Hex;
 
             if (nonce != null)
             {
@@ -568,36 +572,40 @@ namespace BTCPayServer.Controllers
 
         [Route("server/services/lnd/{cryptoCode}/{index}")]
         [HttpPost]
-        public IActionResult LndServicesPost(string cryptoCode, int index)
+        public async Task<IActionResult> LndServicesPost(string cryptoCode, int index)
         {
             var external = GetExternalLndConnectionString(cryptoCode, index);
             if (external == null)
                 return NotFound();
             LightningConfigurations confs = new LightningConfigurations();
+            var macaroons = external.MacaroonDirectoryPath == null ? null : await Macaroons.GetFromDirectoryAsync(external.MacaroonDirectoryPath);
             if (external.ConnectionType == LightningConnectionType.LndGRPC)
             {
-                LightningConfiguration conf = new LightningConfiguration();
-                conf.Type = "grpc";
-                conf.ChainType = _Options.NetworkType.ToString();
-                conf.CryptoCode = cryptoCode;
-                conf.Host = external.BaseUri.DnsSafeHost;
-                conf.Port = external.BaseUri.Port;
-                conf.SSL = external.BaseUri.Scheme == "https";
-                conf.Macaroon = external.Macaroon == null ? null : Encoders.Hex.EncodeData(external.Macaroon);
-                conf.CertificateThumbprint = external.CertificateThumbprint == null ? null : Encoders.Hex.EncodeData(external.CertificateThumbprint);
-                confs.Configurations.Add(conf);
+                LightningConfiguration grpcConf = new LightningConfiguration();
+                grpcConf.Type = "grpc";
+                grpcConf.Host = external.BaseUri.DnsSafeHost;
+                grpcConf.Port = external.BaseUri.Port;
+                grpcConf.SSL = external.BaseUri.Scheme == "https";
+                confs.Configurations.Add(grpcConf);
             }
             else if (external.ConnectionType == LightningConnectionType.LndREST)
             {
                 var restconf = new LNDRestConfiguration();
                 restconf.Type = "lnd-rest";
-                restconf.ChainType = _Options.NetworkType.ToString();
-                restconf.CryptoCode = cryptoCode;
                 restconf.Uri = external.BaseUri.AbsoluteUri;
-                restconf.Macaroon = external.Macaroon == null ? null : Encoders.Hex.EncodeData(external.Macaroon);
-                restconf.CertificateThumbprint = external.CertificateThumbprint == null ? null : Encoders.Hex.EncodeData(external.CertificateThumbprint);
                 confs.Configurations.Add(restconf);
             }
+            else
+                throw new NotSupportedException(external.ConnectionType.ToString());
+            var commonConf = (LNDConfiguration)confs.Configurations[confs.Configurations.Count - 1];
+            commonConf.ChainType = _Options.NetworkType.ToString();
+            commonConf.CryptoCode = cryptoCode;
+            commonConf.Macaroon = external.Macaroon == null ? null : Encoders.Hex.EncodeData(external.Macaroon);
+            commonConf.CertificateThumbprint = external.CertificateThumbprint == null ? null : Encoders.Hex.EncodeData(external.CertificateThumbprint);
+            commonConf.AdminMacaroon = macaroons?.AdminMacaroon?.Hex;
+            commonConf.ReadonlyMacaroon = macaroons?.ReadonlyMacaroon?.Hex;
+            commonConf.InvoiceMacaroon = macaroons?.InvoiceMacaroon?.Hex;
+
             var nonce = RandomUtils.GetUInt32();
             var configKey = GetConfigKey("lnd", cryptoCode, index, nonce);
             _LnConfigProvider.KeepConfig(configKey, confs);

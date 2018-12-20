@@ -11,7 +11,9 @@ namespace BTCPayServer.Models.ServerViewModels
         public string Host { get; set; }
         public bool SSL { get; set; }
         public string Macaroon { get; set; }
-        public string RestrictedMacaroon { get; set; }
+        public string AdminMacaroon { get; set; }
+        public string ReadonlyMacaroon { get; set; }
+        public string InvoiceMacaroon { get; set; }
         public string CertificateThumbprint { get; set; }
         [Display(Name = "GRPC SSL Cipher suite (GRPC_SSL_CIPHER_SUITES)")]
         public string GRPCSSLCipherSuites { get; set; }

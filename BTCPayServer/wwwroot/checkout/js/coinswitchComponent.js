@@ -7,7 +7,7 @@
             };
         },
         computed: {
-            showInlineIFrame: function(){
+            showInlineIFrame: function () {
                 return this.url && this.opened;
             },
             url: function () {
@@ -29,10 +29,10 @@
                     e.preventDefault();
                 }
 
-                if(this.mode === 'inline'){
+                if (this.mode === 'inline') {
                     this.opened = true;
-                    
-                }else if(this.mode ==="popup"){
+
+                } else if (this.mode === "popup") {
                     var coinSwitchWindow = window.open(
                         this.url,
                         'CoinSwitch',
@@ -41,16 +41,16 @@
                     coinSwitchWindow.focus();
                 }
             },
-            closeDialog(){
-                if(this.mode === 'inline'){
+            closeDialog: function () {
+                if (this.mode === 'inline') {
                     this.opened = false;
                 }
             },
-            onLoadIframe(event){
+            onLoadIframe: function (event) {
                 $("#prettydropdown-DefaultLang").hide();
                 var c = this.closeDialog.bind(this);
-                event.currentTarget.contentWindow.addEventListener("message", function(evt){
-                    if(evt && evt.data == "popup-closed"){
+                event.currentTarget.contentWindow.addEventListener("message", function (evt) {
+                    if (evt && evt.data == "popup-closed") {
                         c();
 
                         $("#prettydropdown-DefaultLang").show();
@@ -59,7 +59,7 @@
             }
         },
         mounted: function () {
-            if(this.autoload){
+            if (this.autoload) {
                 this.openDialog();
             }
         }

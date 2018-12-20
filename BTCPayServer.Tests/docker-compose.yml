@@ -107,6 +107,7 @@ services:
         whitelist=0.0.0.0/0
         zmqpubrawblock=tcp://0.0.0.0:28332
         zmqpubrawtx=tcp://0.0.0.0:28333
+        deprecatedrpc=signrawtransaction
     ports: 
       - "43782:43782"
     expose:

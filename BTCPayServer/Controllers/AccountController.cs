@@ -242,7 +242,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> Register(string returnUrl = null, bool logon = true)
         {
             var policies = await _SettingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
-            if (policies.LockSubscription && _userManager.Users.Count() > 0 && !User.IsInRole(Roles.ServerAdmin))
+            if (policies.LockSubscription && !User.IsInRole(Roles.ServerAdmin))
                 return RedirectToAction(nameof(HomeController.Index), "Home");
             ViewData["ReturnUrl"] = returnUrl;
             ViewData["Logon"] = logon.ToString(CultureInfo.InvariantCulture).ToLowerInvariant();
@@ -257,7 +257,7 @@ namespace BTCPayServer.Controllers
             ViewData["ReturnUrl"] = returnUrl;
             ViewData["Logon"] = logon.ToString(CultureInfo.InvariantCulture).ToLowerInvariant();
             var policies = await _SettingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
-            if (policies.LockSubscription && _userManager.Users.Count() > 0 && !User.IsInRole(Roles.ServerAdmin))
+            if (policies.LockSubscription && !User.IsInRole(Roles.ServerAdmin))
                 return RedirectToAction(nameof(HomeController.Index), "Home");
             if (ModelState.IsValid)
             {
@@ -271,6 +271,10 @@ namespace BTCPayServer.Controllers
                     {
                         await _RoleManager.CreateAsync(new IdentityRole(Roles.ServerAdmin));
                         await _userManager.AddToRoleAsync(user, Roles.ServerAdmin);
+
+                        // Once the admin user has been created lock subsequent user registrations until explicitly enabled.
+                        policies.LockSubscription = true;
+                        await _SettingsRepository.UpdateSetting(policies);
                     }
 
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);

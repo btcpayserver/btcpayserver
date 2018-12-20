@@ -74,7 +74,7 @@
                         </li>}
                     else
                     {
-                        @if (themeManager.ShowRegister || UserManager.Users.Count() == 0)
+                        @if (themeManager.ShowRegister)
                         {
                             <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Register" class="nav-link js-scroll-trigger">Register</a></li>
                         }

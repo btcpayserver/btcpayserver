@@ -26,7 +26,7 @@ namespace BTCPayServer.Controllers
             Macaroons macaroons = new Macaroons();
             if (!Directory.Exists(directoryPath))
                 return macaroons;
-            foreach(var file in Directory.GetFiles("*.macaroon"))
+            foreach(var file in Directory.GetFiles(directoryPath, "*.macaroon"))
             {
                 try
                 {

@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>CoinSwitch</title>
     <script>
-        debugger;
         var script = document.createElement('script'),
             head = document.head || document.getElementsByTagName('head')[0];
         script.src = window.location.protocol + '//files.coinswitch.co/public/js/cs_switch.js';
@@ -27,12 +26,14 @@
             var toCurrencyDue = qs["toCurrencyDue"];
             var toCurrencyAddress = qs["toCurrencyAddress"];
             var toCurrency = qs["toCurrency"];
-
+            var mode = qs["mode"];
+            document.body.classList.add(mode);
+            
             var payment = new Coinswitch(merchantId);
             var config = {
-                to_currency: toCurrency,
+                to_currency: toCurrency.toLowerCase(),
                 to_currency_address: toCurrencyAddress,
-                to_amount: toCurrencyDue
+                to_amount: parseFloat(toCurrencyDue)
             };
             waitForCoinSwitch();
 
@@ -47,39 +48,27 @@
                 });
                 payment.on("Exchange:Closed", function () {
                     window.close();
+                    window.postMessage("popup-closed", "*");
                 })
             }
         });
     </script>
     <style>
-        #CoinSwitchPayment .cs-pay {
+        body.popup #CoinSwitchPayment .cs-pay {
             width: 100%;
             height: 100%;
         }
-
-        #CoinSwitchPayment .cs-pay__main {
+        
+        body.popup #CoinSwitchPayment .cs-pay__main {
             width: 100%;
-            height: 100%;
+            min-height: 90vh;
             padding-bottom: 20px;
         }
 
-        #CoinSwitchPayment .cs-pay__dismiss-row {
+        body.popup #CoinSwitchPayment .cs-pay__dismiss-row {
             display: none;
         }
-
-        #CoinSwitchPayment .cs-pay__footer {
-            position: absolute;
-            left: 0;
-            bottom: 0px;
-            width: 100%;
-            height: 20px;
-
-            z-index: 10001;
-        }
-
-        #CoinSwitchPayment .cs-pay__powered-text {
-            color: black;
-        }
+        
     </style>
 </head>
 <body>

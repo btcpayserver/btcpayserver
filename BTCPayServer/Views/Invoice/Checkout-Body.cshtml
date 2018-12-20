@@ -298,11 +298,20 @@
                                     :to-currency-due="srvModel.btcDue"
                                     :autoload="selectedThirdPartyProcessor === 'coinswitch'"
                                     :to-currency-address="srvModel.btcAddress">
-                            <iframe v-if="mode === 'inline'" :url="url" v-show="url"></iframe>
-                            <a v-else-if="mode === 'popup'" 
-                               v-on:click="openDialog($event)" :href="url" class="action-button" v-show="url">
+                            <div>
+                            <a v-on:click="openDialog($event)" :href="url" class="action-button" v-show="url && !opened">
                                 {{$t("Pay with CoinSwitch")}}
                             </a>
+                            
+                                <iframe  
+                                    v-if="showInlineIFrame"
+                                    v-on:load="onLoadIframe"
+                                style="height: 100%; position: fixed; top: 0; width: 100%; left: 0;"
+                                sandbox="allow-scripts allow-forms allow-popups allow-same-origin"
+                                :src="url"></iframe>
+
+                            </div>
+
                         </coinswitch>
                     }
                     

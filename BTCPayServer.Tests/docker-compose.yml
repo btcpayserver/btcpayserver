@@ -93,12 +93,13 @@ services:
       - bitcoind
       - litecoind
 
+
   bitcoind:
+    restart: unless-stopped
     image: btcpayserver/bitcoin:0.17.0
     environment:
       BITCOIN_NETWORK: regtest
-      BITCOIN_EXTRA_ARGS: |
-        deprecatedrpc=signrawtransaction
+      BITCOIN_EXTRA_ARGS: |-
         rpcuser=ceiwHEbqWI83
         rpcpassword=DwubwWsoo3
         rpcport=43782
@@ -106,9 +107,9 @@ services:
         whitelist=0.0.0.0/0
         zmqpubrawblock=tcp://0.0.0.0:28332
         zmqpubrawtx=tcp://0.0.0.0:28333
+        deprecatedrpc=signrawtransaction
     ports: 
       - "43782:43782"
-      - "28332:28332"
     expose:
       - "43782" # RPC
       - "39388" # P2P
@@ -188,13 +189,13 @@ services:
       - bitcoind
 
   litecoind:
+    restart: unless-stopped
     image: nicolasdorier/docker-litecoin:0.16.3
     environment:
-      BITCOIN_EXTRA_ARGS: |
+      BITCOIN_EXTRA_ARGS: |-
         rpcuser=ceiwHEbqWI83
         rpcpassword=DwubwWsoo3
         regtest=1
-        server=1
         rpcport=43782
         port=39388
         whitelist=0.0.0.0/0
@@ -221,13 +222,16 @@ services:
       - MYSQL_ALLOW_EMPTY_PASSWORD=yes
 
   merchant_lnd:
-    image: btcpayserver/lnd:0.5-beta-2
+    image: btcpayserver/lnd:v0.5.1-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
       LND_ENVIRONMENT: "regtest"
+      LND_EXPLORERURL: "http://nbxplorer:32838/"
       LND_EXTRA_ARGS: |
         restlisten=0.0.0.0:8080
+        rpclisten=127.0.0.1:10008
+        rpclisten=0.0.0.0:10009
         bitcoin.node=bitcoind
         bitcoind.rpchost=bitcoind:43782
         bitcoind.zmqpubrawblock=tcp://bitcoind:28332
@@ -248,13 +252,16 @@ services:
       - bitcoind
 
   customer_lnd:
-    image: btcpayserver/lnd:0.5-beta-2
+    image: btcpayserver/lnd:v0.5.1-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
       LND_ENVIRONMENT: "regtest"
+      LND_EXPLORERURL: "http://nbxplorer:32838/"
       LND_EXTRA_ARGS: |
         restlisten=0.0.0.0:8080
+        rpclisten=127.0.0.1:10008
+        rpclisten=0.0.0.0:10009
         bitcoin.node=bitcoind
         bitcoind.rpchost=bitcoind:43782
         bitcoind.zmqpubrawblock=tcp://bitcoind:28332

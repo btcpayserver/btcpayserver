@@ -86,12 +86,33 @@
                         <input asp-for="Macaroon" readonly class="form-control" />
                     </div>
                 }
-                @if (Model.RestrictedMacaroon != null)
+                @if (Model.AdminMacaroon != null)
                 {
-                    @*<div class="form-group">
-                        <label asp-for="RestrictedMacaroon"></label>
-                        <input asp-for="RestrictedMacaroon" readonly class="form-control" />
-                    </div>*@
+                    <div class="form-group">
+                        <label asp-for="AdminMacaroon"></label>
+                        <input asp-for="AdminMacaroon" readonly class="form-control" />
+                    </div>
+                }
+                @if (Model.InvoiceMacaroon != null)
+                {
+                    <div class="form-group">
+                        <label asp-for="InvoiceMacaroon"></label>
+                        <input asp-for="InvoiceMacaroon" readonly class="form-control" />
+                    </div>
+                }
+                @if (Model.ReadonlyMacaroon != null)
+                {
+                    <div class="form-group">
+                        <label asp-for="ReadonlyMacaroon"></label>
+                        <input asp-for="ReadonlyMacaroon" readonly class="form-control" />
+                    </div>
+                }
+                @if (Model.GRPCSSLCipherSuites != null)
+                {
+                    <div class="form-group">
+                        <label asp-for="GRPCSSLCipherSuites"></label>
+                        <input asp-for="GRPCSSLCipherSuites" readonly class="form-control" />
+                    </div>
                 }
                 @if (Model.CertificateThumbprint != null)
                 {

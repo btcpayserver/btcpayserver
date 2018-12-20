@@ -78,7 +78,11 @@ Cart.prototype.getTotalProducts = function() {
 
     // Always calculate the total amount based on the cart content
     for (var key in this.content) {
-        if (this.content.hasOwnProperty(key) && typeof this.content[key] != 'undefined') {
+        if (
+            this.content.hasOwnProperty(key) && 
+            typeof this.content[key] != 'undefined' && 
+            !this.content[key].disabled
+        ) {
             var price = this.toCents(this.content[key].price.value);
             amount += (this.content[key].count * price);
         }
@@ -126,42 +130,80 @@ Cart.prototype.addItem = function(item) {
 }
 
 Cart.prototype.incrementItem = function(id) {
-    // Increment the existing item count
+    var self = this;
+    this.items = 0; // Calculate total # of items from scratch just to make sure
+
     this.content.filter(function(obj){
+        // Increment the item count
         if (obj.id === id){
             obj.count++;
+            delete(obj.disabled);
+        }
+
+        // Increment the total # of items
+        self.items += obj.count;
+    });
+
+    this.updateAll();
+}
+
+// Disable cart item so it doesn't count towards total amount
+Cart.prototype.disableItem = function(id) {
+    var self = this;
+
+    this.content.filter(function(obj){
+        if (obj.id === id){
+            obj.disabled = true;
+            self.items -= obj.count;
         }
     });
 
-    this.items++;
+    this.updateAll();
+}
+
+// Enable cart item so it counts towards total amount
+Cart.prototype.enableItem = function(id) {
+    var self = this;
+
+    this.content.filter(function(obj){
+        if (obj.id === id){
+            delete(obj.disabled);
+            self.items += obj.count;
+        }
+    });
+
     this.updateAll();
 }
 
 Cart.prototype.decrementItem = function(id) {
     var self = this;
+    this.items = 0; // Calculate total # of items from scratch just to make sure
 
-    // Decrement the existing item count
     this.content.filter(function(obj, index, arr){
+        // Decrement the item count
         if (obj.id === id)
         {
             obj.count--;
+            delete(obj.disabled);
 
             // It's the last item with the same ID, remove it
-            if (obj.count === 0) {
+            if (obj.count <= 0) {
                 self.removeItem(id, index, arr);
             }
         }
+
+        // Decrement the total # of items
+        self.items += obj.count;
     });
 
-    this.items--;
     this.updateAll();
 }
 
 Cart.prototype.removeItemAll = function(id) {
     var self = this;
-
+    
     // Remove by item
-    if (id) {
+    if (typeof id != 'undefined') {
         this.content.filter(function(obj, index, arr){
             if (obj.id === id)
             {
@@ -174,8 +216,8 @@ Cart.prototype.removeItemAll = function(id) {
         });
     } else { // Remove all
         this.$list.find('tbody').empty();
-        self.content = [];
-        self.items = 0;
+        this.content = [];
+        this.items = 0;
     }
 
     this.emptyCartToggle();
@@ -247,6 +289,23 @@ Cart.prototype.updateTip = function(amount) {
 // Update hidden total amount value to be sent to the checkout page
 Cart.prototype.updateAmount = function() {
     $('#js-cart-amount').val(this.getTotal(true));
+}
+
+Cart.prototype.resetDiscount = function() {
+    this.setDiscount(0);
+    this.updateDiscount(0);
+    $('.js-cart-discount').val('');
+}
+
+Cart.prototype.resetTip = function() {
+    this.setTip(0);
+    this.updateTip(0);
+    $('.js-cart-tip').val('');
+}
+
+Cart.prototype.resetCustomAmount = function() {
+    this.setCustomAmount(0);
+    $('.js-cart-custom-amount').val('');
 }
 
 // Escape html characters
@@ -335,32 +394,51 @@ Cart.prototype.listItems = function() {
         $('.js-cart-item-count').off().on('input', function(event){
             var _this = this,
                 id = $(this).closest('tr').data('id'),
-                count = parseInt($(this).val()),
-                prevCount = parseInt($(this).data('prev')),
-                increased = count > prevCount;
+                qty = parseInt($(this).val()),
+                isQty = !isNaN(qty),
+                prevQty = parseInt($(this).data('prev')),
+                qtyDiff = Math.abs(qty - prevQty),
+                qtyIncreased = qty > prevQty;
             
-            // User hasn't inputed any number so stop here
-            if (isNaN(count)) {
-                return false;
+            if (isQty) {
+                $(this).data('prev', qty);
+                self.resetTip();
+            } else {
+                // User hasn't inputed any quantity
+                qty = null;
             }
 
-            $(this).data('prev', count);
+            // Quantity was increased
+            if (qtyIncreased) {
+                var item = self.content.filter(function(obj){
+                    return obj.id === id;
+                });
 
-            var item = self.content.filter(function(obj){
-                return obj.id === id
-            });
-            
-            // Must be in the loop because user may change the count manually by more than 1
-            for (var i = 0; i < Math.abs(count - prevCount); i++) {
-                if (increased) {
+                // Quantity may have been increased by more than one
+                for (var i = 0; i < qtyDiff; i++) {
                     self.addItem({
                         id: id,
                         title: item.title,
                         price: item.price,
                         image: typeof item.image != 'underfined' ? item.image : null
                     });
+                }
+            } else if (!qtyIncreased) { // Quantity decreased
+                // No quantity set (e.g. empty string)
+                if (!isQty) {
+                    // Disable the item so it doesn't count towards total amount
+                    self.disableItem(id);
                 } else {
-                    self.decrementItem(id);
+                     // Quantity vas decreased
+                    if (qtyDiff > 0) {
+                        // Quantity may have been decreased by more than one
+                        for (var i = 0; i < qtyDiff; i++) {
+                            self.decrementItem(id);
+                        }
+                    } else {
+                        // Quantity hasn't changed, enable the item so it counts towards the total amount
+                        self.enableItem(id);
+                    }
                 }
             }
         });
@@ -369,6 +447,7 @@ Cart.prototype.listItems = function() {
         $('.js-cart-item-remove').off().on('click', function(event){
             event.preventDefault();
 
+            self.resetTip();
             self.removeItemAll($(this).closest('tr').data('id'));
         });
 
@@ -376,9 +455,12 @@ Cart.prototype.listItems = function() {
         $('.js-cart-item-plus').off().on('click', function(event){
             event.preventDefault();
 
-            var $val = $(this).parents('.input-group').find('.js-cart-item-count');
+            var $val = $(this).parents('.input-group').find('.js-cart-item-count'),
+                val = parseInt($val.val() || $val.data('prev')) + 1;
             
-            $val.val(parseInt($val.val()) + 1);
+            $val.val(val);
+            $val.data('prev', val);
+            self.resetTip();
             self.incrementItem($(this).closest('tr').data('id'));
         });
 
@@ -388,12 +470,15 @@ Cart.prototype.listItems = function() {
 
             var $val = $(this).parents('.input-group').find('.js-cart-item-count'),
                 id = $(this).closest('tr').data('id'),
-                val = parseInt($val.val());
+                val = parseInt($val.val() || $val.data('prev')) - 1;
 
-            if (val === 1) {
+            self.resetTip();
+
+            if (val === 0) {
                 self.removeItemAll(id);
             } else {
-                $val.val(val - 1);
+                $val.val(val);
+                $val.data('prev', val);
                 self.decrementItem(id);
             }
         });
@@ -500,6 +585,9 @@ Cart.prototype.loadLocalStorage = function() {
     for (var key in this.content) {
         if (this.content.hasOwnProperty(key) && typeof this.content[key] != 'undefined' && this.content[key] != null) {
             this.items += this.content[key].count;
+
+            // Delete the disabled flag if any
+            delete(this.content[key].disabled);
         }
     }
 
@@ -509,25 +597,21 @@ Cart.prototype.loadLocalStorage = function() {
 }
 
 Cart.prototype.destroy = function(keepAmount) {
-    this.setTip(0);
-    this.setDiscount(0);
-    this.setCustomAmount(0);
+    this.resetDiscount();
+    this.resetTip();
+    this.resetCustomAmount();
+
     // When form is sent
     if (keepAmount) {
         this.content = [];
         this.items = 0;
     } else {
-        this.updateDiscount(0);
-        this.updateTip(0);
-
         this.removeItemAll();
-        $('.js-cart-discount').val('');
-        $('.js-cart-tip').val('');
-        $('.js-cart-custom-amount').val('');
     }
 
     localStorage.removeItem(this.getStorageKey('cart'));
 }
+
 
 /*
 * jQuery helpers
@@ -542,12 +626,14 @@ $.fn.inputAmount = function(obj, type) {
                 obj.updateDiscount();
                 obj.updateSummaryProducts();
                 obj.updateTotal();
+                obj.resetTip();
                 break;
             case 'discount':
                 obj.setDiscount(val);
                 obj.updateDiscount();
                 obj.updateSummaryProducts();
                 obj.updateTotal();
+                obj.resetTip();
                 break;
             case 'tip':
                 obj.setTip(val);
@@ -567,26 +653,16 @@ $.fn.removeAmount = function(obj, type) {
     
         switch (type) {
             case 'customAmount':
-                obj.setCustomAmount(0);
+                obj.resetCustomAmount();
                 obj.updateSummaryProducts();
-                $('.js-cart-custom-amount').val('');
                 break;
             case 'discount':
-                obj.setDiscount(0);
-                obj.updateDiscount(0);
+                obj.resetDiscount();
                 obj.updateSummaryProducts();
-                $('.js-cart-discount').val('');
-                break;
-            case 'tip':
-                obj.setTip(0);
-                obj.updateTip(0);
-                $('.js-cart-tip').val('');
-                break;
-        
-            default:
                 break;
         }
 
+        obj.resetTip();
         obj.updateTotal();
         obj.updateSummaryTotal();
         obj.emptyCartToggle();  

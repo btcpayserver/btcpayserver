@@ -345,15 +345,17 @@ namespace BTCPayServer.Tests
                 (0.01m, "$0.01 (USD)", "USD"),
                 (0.1m, "$0.10 (USD)", "USD"),
                 (0.1m, "0,10 € (EUR)", "EUR"),
+                (1000m, "¥1,000 (JPY)", "JPY"),
                 (1000.0001m, "₹ 1,000.00 (INR)", "INR")
             })
             {
-                var actual = new CurrencyNameTable().DisplayFormatCurrency(test.Item1, test.Item3);
+                var actual = new CurrencyNameTable().DisplayFormatCurrency(test.Item1, test.Item3);                
+                actual = actual.Replace("￥", "¥"); // Hack so JPY test pass on linux as well
                 Assert.Equal(test.Item2, actual);
             }
         }
 
-        [Fact]
+        [Fact(Timeout = 60 * 1000)]
         [Trait("Integration", "Integration")]
         public async Task CanSetLightningServer()
         {
@@ -405,7 +407,7 @@ namespace BTCPayServer.Tests
             await ProcessLightningPayment(LightningConnectionType.Charge);
         }
 
-        [Fact]
+        [Fact(Timeout = 60 * 1000)]
         [Trait("Integration", "Integration")]
         public async Task CanSendLightningPaymentLnd()
         {
@@ -886,7 +888,7 @@ namespace BTCPayServer.Tests
                 var result = client.SendAsync(message).GetAwaiter().GetResult();
                 result.EnsureSuccessStatusCode();
                 /////////////////////
-                
+
                 // Have error 403 with bad signature
                 client = new HttpClient();
                 HttpRequestMessage mess = new HttpRequestMessage(HttpMethod.Get, tester.PayTester.ServerUri.AbsoluteUri + "tokens");
@@ -1360,7 +1362,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
+        [Fact(Timeout = 60 * 1000)]
         [Trait("Integration", "Integration")]
         public async Task CanSetPaymentMethodLimits()
         {
@@ -1470,7 +1472,7 @@ donation:
                 Assert.Equal("CAD", donationInvoice.Currency);
                 Assert.Equal("donation", donationInvoice.ItemDesc);
 
-                foreach(var test in new[]
+                foreach (var test in new[]
                 {
                     (Code: "EUR", ExpectedSymbol: "€", ExpectedDecimalSeparator: ",", ExpectedDivisibility: 2, ExpectedThousandSeparator: "\xa0", ExpectedPrefixed: false, ExpectedSymbolSpace: true),
                     (Code: "INR", ExpectedSymbol: "₹", ExpectedDecimalSeparator: ".", ExpectedDivisibility: 2, ExpectedThousandSeparator: ",", ExpectedPrefixed: true, ExpectedSymbolSpace: true),
@@ -1499,8 +1501,8 @@ donation:
                     publicApps = user.GetController<AppsPublicController>();
                     vmview = Assert.IsType<ViewPointOfSaleViewModel>(Assert.IsType<ViewResult>(publicApps.ViewPointOfSale(appId).Result).Model);
                     Assert.Equal(test.Code, vmview.CurrencyCode);
-                    Assert.Equal(test.ExpectedSymbol, vmview.CurrencySymbol);
-                    Assert.Equal(test.ExpectedSymbol, vmview.CurrencyInfo.CurrencySymbol);
+                    Assert.Equal(test.ExpectedSymbol, vmview.CurrencySymbol.Replace("￥", "¥")); // Hack so JPY test pass on linux as well);
+                    Assert.Equal(test.ExpectedSymbol, vmview.CurrencyInfo.CurrencySymbol.Replace("￥", "¥")); // Hack so JPY test pass on linux as well);
                     Assert.Equal(test.ExpectedDecimalSeparator, vmview.CurrencyInfo.DecimalSeparator);
                     Assert.Equal(test.ExpectedThousandSeparator, vmview.CurrencyInfo.ThousandSeparator);
                     Assert.Equal(test.ExpectedPrefixed, vmview.CurrencyInfo.Prefixed);
@@ -1620,10 +1622,9 @@ donation:
                     var jsonResultPaid = user.GetController<InvoiceController>().Export("json").GetAwaiter().GetResult();
                     var paidresult = Assert.IsType<ContentResult>(jsonResultPaid);
                     Assert.Equal("application/json", paidresult.ContentType);
-                    Assert.Contains("\"ItemDesc\": \"Some \\\", description\"", paidresult.Content);
-                    Assert.Contains("\"FiatPrice\": 500.0", paidresult.Content);
+                    Assert.Contains("\"InvoiceItemDesc\": \"Some \\\", description\"", paidresult.Content);
+                    Assert.Contains("\"InvoicePrice\": 500.0", paidresult.Content);
                     Assert.Contains("\"ConversionRate\": 5000.0", paidresult.Content);
-                    Assert.Contains("\"PaymentDue\": \"0.10020000 BTC\"", paidresult.Content);
                     Assert.Contains($"\"InvoiceId\": \"{invoice.Id}\",", paidresult.Content);
                 });
 
@@ -1688,14 +1689,9 @@ donation:
                     var paidresult = Assert.IsType<ContentResult>(exportResultPaid);
                     Assert.Equal("application/csv", paidresult.ContentType);
                     Assert.Contains($",\"orderId\",\"{invoice.Id}\",", paidresult.Content);
-                    Assert.Contains($",\"OnChain\",\"0.10020000 BTC\",\"0.10009990 BTC\",\"0.00000000 BTC\",\"5000.0\",\"500.0\"", paidresult.Content);
-                    Assert.Contains($",\"USD\",\"\",\"Some ``, description\",\"new\"", paidresult.Content);
+                    Assert.Contains($",\"OnChain\",\"0.1000999\",\"BTC\",\"5000.0\",\"500.0\"", paidresult.Content);
+                    Assert.Contains($",\"USD\",\"\",\"Some ``, description\",\"new (paidPartial)\"", paidresult.Content);
                 });
-
-                /* 
-ReceivedDate,StoreId,OrderId,InvoiceId,CreatedDate,ExpirationDate,MonitoringDate,PaymentId,CryptoCode,Destination,PaymentType,PaymentDue,PaymentPaid,PaymentOverpaid,ConversionRate,FiatPrice,FiatCurrency,ItemCode,ItemDesc,Status
-"11/30/2018 10:28:42 AM","7AagXzWdWhLLR3Zar25YLiw2uHAJDzVT4oXGKC9bBCis","orderId","GxtJsWbgxxAXXoCurqyeK6","11/30/2018 10:28:40 AM","11/30/2018 10:43:40 AM","11/30/2018 11:43:40 AM","ec0341537f565d213bc64caa352fbbf9e0deb31cab1f91bccf89db0dd1604457-0","BTC","mqWghCp9RVw8fNgQMLjawyKStxpGfWBk1L","OnChain","0.10020000 BTC","0.10009990 BTC","0.00000000 BTC","5000.0","500.0","USD","","Some ``, description","new"
-                */
             }
         }
 

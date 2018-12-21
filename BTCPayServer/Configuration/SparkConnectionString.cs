@@ -31,6 +31,7 @@ namespace BTCPayServer.Configuration
                         resultTemp.Server = new Uri(kv[1], UriKind.Absolute);
                         break;
                     case "cookiefile":
+                    case "cookiefilepath":
                         if (resultTemp.CookeFile != null)
                             return false;
                         resultTemp.CookeFile = kv[1];

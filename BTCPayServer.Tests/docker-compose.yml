@@ -19,10 +19,10 @@ services:
       TESTS_MYSQL: User ID=root;Host=mysql;Port=3306;Database=btcpayserver
       TESTS_PORT: 80
       TESTS_HOSTNAME: tests
-      TEST_MERCHANTLIGHTNINGD: "type=clightning;server=/etc/merchant_lightningd_datadir/lightning-rpc"
-      TEST_CUSTOMERLIGHTNINGD: "type=clightning;server=/etc/customer_lightningd_datadir/lightning-rpc"
-      TEST_MERCHANTCHARGE: "type=charge;server=https://lightning-charged:9112/;api-token=foiewnccewuify;allowinsecure=true"
-      TEST_MERCHANTLND: "type=lnd-rest;server=https://lnd:lnd@127.0.0.1:53280/;allowinsecure=true"
+      TEST_MERCHANTLIGHTNINGD: "type=clightning;server=unix://etc/merchant_lightningd_datadir/lightning-rpc"
+      TEST_CUSTOMERLIGHTNINGD: "type=clightning;server=unix://etc/customer_lightningd_datadir/lightning-rpc"
+      TEST_MERCHANTCHARGE: "type=charge;server=http://lightning-charged:9112/;api-token=foiewnccewuify"
+      TEST_MERCHANTLND: "https://lnd:lnd@merchant_lnd:8080/"
       TESTS_INCONTAINER: "true"
     expose:
       - "80"
@@ -36,7 +36,7 @@ services:
 
   # The dev container is not actually used, it is just handy to run `docker-compose up dev` to start all services
   dev: 
-    image: nicolasdorier/docker-bitcoin:0.17.0
+    image: btcpayserver/bitcoin:0.17.0
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_EXTRA_ARGS: |
@@ -53,7 +53,7 @@ services:
       - merchant_lnd
 
   devlnd: 
-    image: nicolasdorier/docker-bitcoin:0.17.0
+    image: btcpayserver/bitcoin:0.17.0
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_EXTRA_ARGS: |
@@ -93,12 +93,13 @@ services:
       - bitcoind
       - litecoind
 
+
   bitcoind:
-    image: nicolasdorier/docker-bitcoin:0.17.0
+    restart: unless-stopped
+    image: btcpayserver/bitcoin:0.17.0
     environment:
       BITCOIN_NETWORK: regtest
-      BITCOIN_EXTRA_ARGS: |
-        deprecatedrpc=signrawtransaction
+      BITCOIN_EXTRA_ARGS: |-
         rpcuser=ceiwHEbqWI83
         rpcpassword=DwubwWsoo3
         rpcport=43782
@@ -106,9 +107,9 @@ services:
         whitelist=0.0.0.0/0
         zmqpubrawblock=tcp://0.0.0.0:28332
         zmqpubrawtx=tcp://0.0.0.0:28333
+        deprecatedrpc=signrawtransaction
     ports: 
       - "43782:43782"
-      - "28332:28332"
     expose:
       - "43782" # RPC
       - "39388" # P2P
@@ -118,7 +119,7 @@ services:
       - "bitcoin_datadir:/data"
 
   customer_lightningd:
-    image: nicolasdorier/clightning:v0.6.2-3-dev
+    image: btcpayserver/lightning:v0.6.2-dev
     stop_signal: SIGKILL
     restart: unless-stopped
     environment: 
@@ -144,7 +145,7 @@ services:
       - bitcoind
 
   lightning-charged:
-    image: shesek/lightning-charge:0.4.3
+    image: shesek/lightning-charge:0.4.6-standalone
     restart: unless-stopped
     environment:
       NETWORK: regtest
@@ -164,7 +165,7 @@ services:
       - merchant_lightningd
 
   merchant_lightningd:
-    image: nicolasdorier/clightning:v0.6.2-3-dev
+    image: btcpayserver/lightning:v0.6.2-dev
     stop_signal: SIGKILL
     environment: 
       EXPOSE_TCP: "true"
@@ -188,13 +189,13 @@ services:
       - bitcoind
 
   litecoind:
-    image: nicolasdorier/docker-litecoin:0.15.1
+    restart: unless-stopped
+    image: nicolasdorier/docker-litecoin:0.16.3
     environment:
-      BITCOIN_EXTRA_ARGS: |
+      BITCOIN_EXTRA_ARGS: |-
         rpcuser=ceiwHEbqWI83
         rpcpassword=DwubwWsoo3
         regtest=1
-        server=1
         rpcport=43782
         port=39388
         whitelist=0.0.0.0/0
@@ -221,13 +222,16 @@ services:
       - MYSQL_ALLOW_EMPTY_PASSWORD=yes
 
   merchant_lnd:
-    image: btcpayserver/lnd:0.5-beta-2
+    image: btcpayserver/lnd:v0.5.1-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
       LND_ENVIRONMENT: "regtest"
+      LND_EXPLORERURL: "http://nbxplorer:32838/"
       LND_EXTRA_ARGS: |
         restlisten=0.0.0.0:8080
+        rpclisten=127.0.0.1:10008
+        rpclisten=0.0.0.0:10009
         bitcoin.node=bitcoind
         bitcoind.rpchost=bitcoind:43782
         bitcoind.zmqpubrawblock=tcp://bitcoind:28332
@@ -248,13 +252,16 @@ services:
       - bitcoind
 
   customer_lnd:
-    image: btcpayserver/lnd:0.5-beta-2
+    image: btcpayserver/lnd:v0.5.1-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
       LND_ENVIRONMENT: "regtest"
+      LND_EXPLORERURL: "http://nbxplorer:32838/"
       LND_EXTRA_ARGS: |
         restlisten=0.0.0.0:8080
+        rpclisten=127.0.0.1:10008
+        rpclisten=0.0.0.0:10009
         bitcoin.node=bitcoind
         bitcoind.rpchost=bitcoind:43782
         bitcoind.zmqpubrawblock=tcp://bitcoind:28332

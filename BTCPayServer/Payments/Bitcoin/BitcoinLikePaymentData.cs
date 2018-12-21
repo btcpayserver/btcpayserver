@@ -78,5 +78,15 @@ namespace BTCPayServer.Payments.Bitcoin
             }
             return false;
         }
+
+        public BitcoinAddress GetDestination(BTCPayNetwork network)
+        {
+            return Output.ScriptPubKey.GetDestinationAddress(network.NBitcoinNetwork);
+        }
+
+        string CryptoPaymentData.GetDestination(BTCPayNetwork network)
+        {
+            return GetDestination(network).ToString();
+        }
     }
 }

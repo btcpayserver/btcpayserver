@@ -16,6 +16,12 @@ namespace BTCPayServer.Payments.Lightning
         [JsonConverter(typeof(LightMoneyJsonConverter))]
         public LightMoney Amount { get; set; }
         public string BOLT11 { get; set; }
+
+        public string GetDestination(BTCPayNetwork network)
+        {
+            return GetPaymentId();
+        }
+
         public string GetPaymentId()
         {
             return BOLT11;

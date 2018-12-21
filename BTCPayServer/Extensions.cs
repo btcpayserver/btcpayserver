@@ -177,6 +177,23 @@ namespace BTCPayServer
                         path);
         }
 
+        /// <summary>
+        /// Returns path if path is absolute, or the relative path to this website root
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public static string GetRelativePathOrAbsolute(this HttpRequest request, string path)
+        {
+            if (Uri.TryCreate(path, UriKind.Absolute, out var unused))
+                return path;
+            if (path.Length > 0 && path[0] != '/')
+                path = $"/{path}";
+            return string.Concat(
+                        request.PathBase.ToUriComponent(),
+                        path);
+        }
+
         public static string GetAbsoluteUri(this HttpRequest request, string redirectUrl)
         {
             bool isRelative =

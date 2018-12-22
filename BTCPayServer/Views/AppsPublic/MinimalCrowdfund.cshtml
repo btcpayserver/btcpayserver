@@ -1,11 +1,11 @@
 @using BTCPayServer.Models.AppViewModels
 @model  BTCPayServer.Models.AppViewModels.ViewCrowdfundViewModel
-<div class="container h-100 ">
+<div class="container p-0">
 
 
-    <div class="row align-items-center h-100">
+    <div class="row h-100 w-100 py-sm-0 py-md-4 mx-0">
 
-        <div class="mx-auto card col-lg-8 col-sm-12 col-md-9 p-0">
+        <div class="card w-100 p-0 mx-0">
             <partial name="_StatusMessage" for="@Model.StatusMessage"/>
             @if (!string.IsNullOrEmpty(Model.MainImageUrl))
             {

@@ -11,6 +11,7 @@ namespace BTCPayServer.Models.AppViewModels
         public string Title { get; set; }
         public string Description { get; set; }
         public string MainImageUrl { get; set; }
+        public string EmbeddedCSS { get; set; }
         public string CustomCSSLink { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }

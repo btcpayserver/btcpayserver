@@ -254,6 +254,7 @@ namespace BTCPayServer.Controllers
                 Description = settings.Description,
                 CustomCSSLink = settings.CustomCSSLink,
                 MainImageUrl = settings.MainImageUrl,
+                EmbeddedCSS = settings.EmbeddedCSS,
                 StoreId = appData.StoreDataId,
                 AppId = appData.Id,
                 StartDate = settings.StartDate, 

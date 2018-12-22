@@ -20,10 +20,18 @@
     }
     <link href="~/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet"/>
     <bundle name="wwwroot/bundles/crowdfund-bundle.min.js"></bundle>
+ 
+        @if (!string.IsNullOrEmpty(Model.EmbeddedCSS))
+        {
+            <style>
+            @Html.Raw(Model.EmbeddedCSS);
+            </style>
+        }
     <script>
         var srvModel = @Json.Serialize(Model);
-
     </script>
+    
+    
 </head>
 <body class="h-100">
 <partial name="MinimalCrowdfund" model="@Model"/>

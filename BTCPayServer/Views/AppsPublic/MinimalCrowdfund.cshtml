@@ -1,6 +1,6 @@
 @using BTCPayServer.Models.AppViewModels
 @model  BTCPayServer.Models.AppViewModels.ViewCrowdfundViewModel
-<div class="container h-100">
+<div class="container h-100 ">
 
 
     <div class="row align-items-center h-100">
@@ -24,7 +24,7 @@
             }
             <div class="card-body">
                 <div class="card-title row">
-                    <div class="col-9">
+                    <div class="col-md-9 col-sm-12">
 
                         <h1 >
                             @Model.Title
@@ -43,7 +43,7 @@
                         </h1>
 
                     </div>
-                    <ul class="list-group list-group-flush col-3">
+                    <ul class="list-group list-group-flush col-md-3 col-sm-12">
                         <li class="list-group-item">@(Model.EndDate.HasValue? $"Ends {Model.EndDate.Value:dddd, dd MMMM yyyy HH:mm}" : "No specific end date")</li>
                         <li class="list-group-item">@(Model.TargetAmount.HasValue? $"{Model.TargetAmount:G29} {Model.TargetCurrency.ToUpperInvariant()} Goal" : 
                                                           "No specific target goal")</li>

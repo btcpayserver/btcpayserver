@@ -25,6 +25,7 @@ namespace BTCPayServer.Controllers
             public string MainImageUrl { get; set; }
             public string NotificationUrl { get; set; }
             public string Tagline { get; set; }
+            public string EmbeddedCSS { get; set; }
         }
         
         
@@ -45,6 +46,7 @@ namespace BTCPayServer.Controllers
                 TargetCurrency = settings.TargetCurrency,
                 Description = settings.Description,
                 MainImageUrl = settings.MainImageUrl,
+                EmbeddedCSS = settings.EmbeddedCSS,
                 EndDate = settings.EndDate,
                 TargetAmount = settings.TargetAmount,
                 CustomCSSLink = settings.CustomCSSLink,
@@ -75,6 +77,7 @@ namespace BTCPayServer.Controllers
                 TargetAmount = vm.TargetAmount,
                 CustomCSSLink = vm.CustomCSSLink,
                 MainImageUrl = vm.MainImageUrl,
+                EmbeddedCSS = vm.EmbeddedCSS,
                 NotificationUrl = vm.NotificationUrl,
                 Tagline = vm.Tagline
             });

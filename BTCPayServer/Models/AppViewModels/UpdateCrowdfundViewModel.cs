@@ -38,5 +38,6 @@ namespace BTCPayServer.Models.AppViewModels
         public string CustomCSSLink { get; set; }
 
         public string Tagline { get; set; }
+        public string EmbeddedCSS { get; set; }
     }
 }

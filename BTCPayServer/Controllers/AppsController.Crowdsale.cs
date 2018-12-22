@@ -22,6 +22,9 @@ namespace BTCPayServer.Controllers
         
             public bool EnforceTargetAmount { get; set; }
             public string CustomCSSLink { get; set; }
+            public string MainImageUrl { get; set; }
+            public string NotificationUrl { get; set; }
+            public string Tagline { get; set; }
         }
         
         
@@ -41,9 +44,12 @@ namespace BTCPayServer.Controllers
                 StartDate = settings.StartDate,
                 TargetCurrency = settings.TargetCurrency,
                 Description = settings.Description,
+                MainImageUrl = settings.MainImageUrl,
                 EndDate = settings.EndDate,
                 TargetAmount = settings.TargetAmount,
-                CustomCSSLink = settings.CustomCSSLink
+                CustomCSSLink = settings.CustomCSSLink,
+                NotificationUrl = settings.NotificationUrl,
+                Tagline = settings.Tagline
             };
             return View(vm);
         }
@@ -62,12 +68,15 @@ namespace BTCPayServer.Controllers
                 Title = vm.Title,
                 Enabled = vm.Enabled,
                 EnforceTargetAmount = vm.EnforceTargetAmount,
-                StartDate = vm.StartDate,
+                StartDate = vm.StartDate?.ToUniversalTime(),
                 TargetCurrency = vm.TargetCurrency,
                 Description = vm.Description,
-                EndDate = vm.EndDate,
+                EndDate = vm.EndDate?.ToUniversalTime(),
                 TargetAmount = vm.TargetAmount,
-                CustomCSSLink = vm.CustomCSSLink
+                CustomCSSLink = vm.CustomCSSLink,
+                MainImageUrl = vm.MainImageUrl,
+                NotificationUrl = vm.NotificationUrl,
+                Tagline = vm.Tagline
             });
             await UpdateAppSettings(app);
             StatusMessage = "App updated";

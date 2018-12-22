@@ -23,6 +23,11 @@
                         <label asp-for="Title" class="control-label"></label>*
                         <input asp-for="Title" class="form-control" />
                         <span asp-validation-for="Title" class="text-danger"></span>
+                    </div> 
+                    <div class="form-group">
+                        <label asp-for="Tagline" class="control-label"></label>*
+                        <input asp-for="Tagline" class="form-control" />
+                        <span asp-validation-for="Tagline" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label asp-for="Description" class="control-label"></label>*
@@ -35,14 +40,27 @@
                         <a href="https://docs.btcpayserver.org/development/theme#bootstrap-themes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
                         <input asp-for="CustomCSSLink" class="form-control" />
                         <span asp-validation-for="CustomCSSLink" class="text-danger"></span>
+                    </div>                    
+                    <div class="form-group">
+                        <label asp-for="MainImageUrl" class="control-label"></label>
+                       <input asp-for="MainImageUrl" class="form-control" />
+                        <span asp-validation-for="MainImageUrl" class="text-danger"></span>
+                    </div> 
+                    <div class="form-group">
+                        <label asp-for="NotificationUrl" class="control-label"></label>
+                       <input asp-for="NotificationUrl" class="form-control" />
+                        <span asp-validation-for="NotificationUrl" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label asp-for="Enabled"></label>
                         <input asp-for="Enabled" type="checkbox" class="form-check"/>
+                        <span asp-validation-for="Enabled" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label asp-for="EnforceTargetAmount"></label>
                         <input asp-for="EnforceTargetAmount" type="checkbox" class="form-check"/>
+                        
+                        <span asp-validation-for="EnforceTargetAmount" class="text-danger"></span>
                     </div>   
                     
                     <div class="form-group">

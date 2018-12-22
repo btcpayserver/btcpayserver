@@ -86,37 +86,46 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         [Route("/apps/{appId}/crowdfund")]
         [XFrameOptionsAttribute(null)]
-        public async Task<IActionResult> ViewCrowdfund(string appId)
+        public async Task<IActionResult> ViewCrowdfund(string appId, string statusMessage)
+        
         {
-            var app = await _AppsHelper.GetApp(appId, AppType.Crowdfund);
+            var app = await _AppsHelper.GetApp(appId, AppType.Crowdfund, true);
             if (app == null)
                 return NotFound();
             var settings = app.GetSettings<CrowdfundSettings>();
             var currency = _AppsHelper.GetCurrencyData(settings.TargetCurrency, false);
             
-            return View(CrowdfundHelper.GetInfo(app, _invoiceRepository, _rateFetcher, _btcPayNetworkProvider ));
+            return View(await CrowdfundHelper.GetInfo(app, _invoiceRepository, _rateFetcher, _btcPayNetworkProvider, statusMessage ));
         }
-        
+
         [HttpPost]
-        [Route("/apps/{appId}/crowdfund/contribute")]
+        [Route("/apps/{appId}/crowdfund")]
         [XFrameOptionsAttribute(null)]
         [IgnoreAntiforgeryToken]
         [EnableCors(CorsPolicies.All)]
-        public async Task<IActionResult> ContributeToCrowdfund(string appId,[FromBody]ContributeToCrowdfund request, [FromQuery]bool redirectToCheckout)
+        public async Task<IActionResult> ContributeToCrowdfund(string appId, ContributeToCrowdfund request)
         {
-            var app = await _AppsHelper.GetApp(appId, AppType.Crowdfund);
+            var app = await _AppsHelper.GetApp(appId, AppType.Crowdfund, true);
             if (app == null)
                 return NotFound();
             var settings = app.GetSettings<CrowdfundSettings>();
-            var currency = _AppsHelper.GetCurrencyData(settings.TargetCurrency, false);
             var store = await _AppsHelper.GetStore(app);
+
+            store.AdditionalClaims.Add(new Claim(Policies.CanCreateInvoice.Key, store.Id));
             var invoice = await _InvoiceController.CreateInvoiceCore(new Invoice()
             {
-
+                OrderId = appId,
+                Currency = settings.TargetCurrency,
+                BuyerEmail = request.Email,
+                Price = request.Amount,
+                NotificationURL = settings.NotificationUrl,
+                FullNotifications = true,
+                ExtendedNotifications = true,
             }, store, HttpContext.Request.GetAbsoluteRoot());
-            if (redirectToCheckout)
+            if (request.RedirectToCheckout)
             {
-                return RedirectToAction(nameof(InvoiceController.Checkout), "Invoice", new { invoiceId = invoice.Data.Id });
+                return RedirectToAction(nameof(InvoiceController.Checkout), "Invoice",
+                    new {invoiceId = invoice.Data.Id});
             }
             else
             {
@@ -208,9 +217,10 @@ namespace BTCPayServer.Controllers
             var finalTasks = new List<Task>();
             foreach (var rateTask in ratesTask)
             {
-                finalTasks.Add(rateTask.Value.ContinueWith(task =>
+                finalTasks.Add(Task.Run(async () =>
                 {
-                    var rate = task.Result.BidAsk?.Bid;
+                    var tResult = await rateTask.Value;
+                    var rate = tResult.BidAsk?.Bid;
                     if (rate == null) return;
                     var currencyGroup = groupingByCurrency.Single(entities => entities.Key == rateTask.Key.Left);
                     result += currencyGroup.Sum(entity => entity.ProductInformation.Price / rate.Value);
@@ -224,7 +234,7 @@ namespace BTCPayServer.Controllers
         }
         
         public static async Task<ViewCrowdfundViewModel> GetInfo(AppData appData, InvoiceRepository invoiceRepository,
-            RateFetcher rateFetcher, BTCPayNetworkProvider btcPayNetworkProvider)
+            RateFetcher rateFetcher, BTCPayNetworkProvider btcPayNetworkProvider, string statusMessage= null)
         {
             var settings = appData.GetSettings<CrowdfundSettings>();
             var invoices = await GetPaidInvoicesForApp(appData, invoiceRepository);
@@ -233,15 +243,17 @@ namespace BTCPayServer.Controllers
                 invoices, 
                 settings.TargetCurrency, rateFetcher, rateRules);
             var paidInvoices = invoices.Length;
-            var active =  (settings.StartDate == null || DateTime.UtcNow >= settings.StartDate) &&
-                          (settings.EndDate == null || DateTime.UtcNow <= settings.EndDate) &&
-                          (!settings.EnforceTargetAmount || settings.TargetAmount > currentAmount)
+            var active = (settings.StartDate == null || DateTime.UtcNow >= settings.StartDate) &&
+                         (settings.EndDate == null || DateTime.UtcNow <= settings.EndDate) &&
+                         (!settings.EnforceTargetAmount || settings.TargetAmount > currentAmount);
 
             return new ViewCrowdfundViewModel()
             {
                 Title = settings.Title,
+                Tagline = settings.Tagline,
                 Description = settings.Description,
                 CustomCSSLink = settings.CustomCSSLink,
+                MainImageUrl = settings.MainImageUrl,
                 StoreId = appData.StoreDataId,
                 AppId = appData.Id,
                 StartDate = settings.StartDate, 
@@ -249,11 +261,16 @@ namespace BTCPayServer.Controllers
                 TargetAmount = settings.TargetAmount,
                 TargetCurrency = settings.TargetCurrency,
                 EnforceTargetAmount = settings.EnforceTargetAmount,
+                StatusMessage = statusMessage,
                 Info = new ViewCrowdfundViewModel.CrowdfundInfo()
                 {
                     TotalContributors = paidInvoices,
                     CurrentAmount = currentAmount,
-                    Active = active
+                    Active = active,
+                    DaysLeft = settings.EndDate.HasValue? (settings.EndDate - DateTime.UtcNow).Value.Days: (int?) null,
+                    DaysLeftToStart = settings.StartDate.HasValue? (settings.StartDate - DateTime.UtcNow).Value.Days: (int?) null,
+                    ShowProgress =active && settings.TargetAmount.HasValue,
+                    ProgressPercentage =   currentAmount/ settings.TargetAmount * 100
                 }
             };
         }
@@ -281,14 +298,19 @@ namespace BTCPayServer.Controllers
 
         }
 
-        public async Task<AppData> GetApp(string appId, AppType appType)
+        public async Task<AppData> GetApp(string appId, AppType appType, bool includeStore = false)
         {
             using (var ctx = _ContextFactory.CreateContext())
             {
-                return await ctx.Apps
-                                .Where(us => us.Id == appId &&
-                                             us.AppType == appType.ToString())
-                                .FirstOrDefaultAsync();
+                var query = ctx.Apps
+                    .Where(us => us.Id == appId &&
+                                 us.AppType == appType.ToString());
+
+                if (includeStore)
+                {
+                    query = query.Include(data => data.StoreData);
+                }
+                return await query.FirstOrDefaultAsync();
             }
         }
 

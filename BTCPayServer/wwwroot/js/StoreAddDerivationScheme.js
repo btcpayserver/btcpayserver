@@ -53,28 +53,6 @@
         return false;
     });
 
-    var updateInfo = function () {
-        if (!ledgerDetected)
-            return false;
-        var cryptoCode = GetSelectedCryptoCode();
-        bridge.sendCommand("getxpub", "cryptoCode=" + cryptoCode)
-            .catch(function (reason) { Write('check', 'error', reason); })
-            .then(function (result) {
-                if (!result)
-                    return;
-                if (cryptoCode !== GetSelectedCryptoCode())
-                    return;
-                if (result.error) {
-                    Write('check', 'error', result.error);
-                    return;
-                }
-                else {
-                    Write('check', 'success', 'This store is configured to use your ledger');
-                    showFeedback("ledger-info");
-                }
-            });
-    };
-
     bridge.isSupported()
         .then(function (supported) {
             if (!supported) {
@@ -95,7 +73,7 @@
                         } else {
                             Write('hw', 'success', 'Ledger detected');
                             ledgerDetected = true;
-                            updateInfo();
+                            showFeedback("ledger-info");
                         }
                     });
             }

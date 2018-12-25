@@ -41,52 +41,36 @@
     var updateInfo = function () {
         if (!ledgerDetected)
             return false;
-        $(".crypto-info").css("display", "none");
-        bridge.sendCommand("getinfo", "cryptoCode=" + cryptoCode)
-            .catch(function (reason) { Write('check', 'error', reason); })
+        $(".crypto-info").css("display", "block");
+        var args = "";
+        args += "cryptoCode=" + cryptoCode;
+        args += "&destination=" + destination;
+        args += "&amount=" + amount;
+        args += "&feeRate=" + fee;
+        args += "&substractFees=" + substractFee;
+
+        WriteAlert("warning", 'Please validate the transaction on your ledger');
+
+        var confirmButton = $("#confirm-button");
+        confirmButton.prop("disabled", true);
+        confirmButton.addClass("disabled");
+
+        bridge.sendCommand('sendtoaddress', args, 60 * 10 /* timeout */)
+            .catch(function (reason) {
+                WriteAlert("danger", reason);
+                confirmButton.prop("disabled", false);
+                confirmButton.removeClass("disabled");
+            })
             .then(function (result) {
                 if (!result)
                     return;
+                confirmButton.prop("disabled", false);
+                confirmButton.removeClass("disabled");
                 if (result.error) {
-                    Write('check', 'error', result.error);
-                    return;
-                }
-                else {
-                    Write('check', 'success', 'This store is configured to use your ledger');
-                    $(".crypto-info").css("display", "block");
-
-
-                    var args = "";
-                    args += "cryptoCode=" + cryptoCode;
-                    args += "&destination=" + destination;
-                    args += "&amount=" + amount;
-                    args += "&feeRate=" + fee;
-                    args += "&substractFees=" + substractFee;
-
-                    WriteAlert("warning", 'Please validate the transaction on your ledger');
-
-                    var confirmButton = $("#confirm-button");
-                    confirmButton.prop("disabled", true);
-                    confirmButton.addClass("disabled");
-
-                    bridge.sendCommand('sendtoaddress', args, 60 * 10 /* timeout */)
-                        .catch(function (reason) {
-                            WriteAlert("danger", reason);
-                            confirmButton.prop("disabled", false);
-                            confirmButton.removeClass("disabled");
-                        })
-                        .then(function (result) {
-                            if (!result)
-                                return;
-                            confirmButton.prop("disabled", false);
-                            confirmButton.removeClass("disabled");
-                            if (result.error) {
-                                WriteAlert("danger", result.error);
-                            } else {
-                                WriteAlert("success", 'Transaction broadcasted (' + result.transactionId + ')');
-                                window.location.replace(successCallback + "?txid=" + result.transactionId);
-                            }
-                        });
+                    WriteAlert("danger", result.error);
+                } else {
+                    WriteAlert("success", 'Transaction broadcasted (' + result.transactionId + ')');
+                    window.location.replace(successCallback + "?txid=" + result.transactionId);
                 }
             });
     };

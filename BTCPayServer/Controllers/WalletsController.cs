@@ -476,15 +476,6 @@ namespace BTCPayServer.Controllers
                         }
                         catch { throw new FormatException("Invalid value for subtract fees"); }
                     }
-                    if (command == "getinfo")
-                    {
-                        var strategy = GetDirectDerivationStrategy(derivationScheme);
-                        if (strategy == null || await hw.GetKeyPath(network, strategy, normalOperationTimeout.Token) == null)
-                        {
-                            throw new Exception($"This store is not configured to use this ledger");
-                        }
-                        result = new GetInfoResult();
-                    }
                     if (command == "test")
                     {
                         result = await hw.Test(normalOperationTimeout.Token);

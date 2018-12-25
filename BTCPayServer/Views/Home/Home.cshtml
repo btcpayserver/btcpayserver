@@ -50,9 +50,6 @@
                 <p class="lead">
                     BTCPay Jungle is a free hosted merchant payment processor & non-custodial invoicing system, All payments go directly to your wallet, which increases the privacy and security. Your private keys are never uploaded to the server. There is no address re-use since each invoice generates a new address deriving from your xpubkey.
                     We care 100% about all users privacy, and maintain all the software updates.
-                    <br />
-                    The decentralized nature of the Bitcoin network allows for a highly resilient value transfer infrastructure, and this allows merchants to save money, This is because there are little to no fees for transferring Bitcoins from one person to another. Unlike other payment methods, Bitcoin payments cannot be reversed, so once you are paid you can ship! No waiting days for a payment to clear. You can also choose BTCPay Server as a self-hosted solution on your own server.
-                    <br />
                     “Your keys, your Bitcoin. Not your keys, not your Bitcoin”.
                     <br />
                     <a href="https://docs.btcpayserver.org">BTCPay Documentation</a>
@@ -217,22 +214,24 @@
         <img src="~/img/307px-Bitcoin_logo.png" height="50" />
         <br />
         <br />
-        <form method="POST" action="https://btcpayjungle.com/api/v1/invoices">
-            <input type="hidden" name="storeId" value="EDEE4hbCKwc7sp7uXGuhEx4phrGKxjk6mnUd7sCVbgN9" />
-            <input type="hidden" name="price" value="10" />
-            <input type="hidden" name="currency" value="EUR" />
-            <input type="hidden" name="checkoutDesc" value="donation" />
-            <input type="hidden" name="browserRedirect" value="https://btcpayjungle.com" />
-            <input type="hidden" name="notifyEmail" value="support@btcpayjungle.com" />
-            <input type="image" src="https://btcpayjungle.com/img/paybutton/pay.png" name="submit" style="width:146px" alt="Pay with BtcPay, Self-Hosted Bitcoin Payment Processor">
-        </form>
         <h2>Donation to this address</h2>
         <hr class="primary">
         <p><img src="~/img/donation.png"></p>
         <p>Bitcoin : 3BUfqbBdJ6QhGhGsfxYaFKYuVQL19Beddx</p>
         <div>
             <p>
-                BTCPayJungle maintains operating costs through user donations. <a href="https://btcpayjungle.com/apps/3BB7MDrDx89CAnkQVupshZrpbMWY/pos">Support BTCPayJungle by donating Bitcoin</a>
+                BTCPayJungle maintains operating costs through user donations.
+                <br />
+                <a href="https://btcpayjungle.com/apps/3BB7MDrDx89CAnkQVupshZrpbMWY/pos">Support BTCPayJungle by donating Bitcoin</a>
+                <form method="POST" action="https://btcpayjungle.com/api/v1/invoices">
+                    <input type="hidden" name="storeId" value="EDEE4hbCKwc7sp7uXGuhEx4phrGKxjk6mnUd7sCVbgN9" />
+                    <input type="hidden" name="price" value="10" />
+                    <input type="hidden" name="currency" value="EUR" />
+                    <input type="hidden" name="checkoutDesc" value="donation" />
+                    <input type="hidden" name="browserRedirect" value="https://btcpayjungle.com" />
+                    <input type="hidden" name="notifyEmail" value="support@btcpayjungle.com" />
+                    <input type="image" src="https://btcpayjungle.com/img/paybutton/pay.png" name="submit" style="width:146px" alt="Pay with BtcPay, Self-Hosted Bitcoin Payment Processor">
+                </form>
             </p>
         </div>
     </div>

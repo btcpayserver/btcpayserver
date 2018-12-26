@@ -1598,13 +1598,15 @@ donation:
 
                 var invoice = user.BitPay.CreateInvoice(new Invoice()
                 {
-                    Price = 500,
+                    Price = 10,
                     Currency = "USD",
                     PosData = "posData",
                     OrderId = "orderId",
                     ItemDesc = "Some \", description",
                     FullNotifications = true
                 }, Facade.Merchant);
+
+                var networkFee = Money.Satoshis(10000);
 
                 // ensure 0 invoices exported because there are no payments yet
                 var jsonResult = user.GetController<InvoiceController>().Export("json").GetAwaiter().GetResult();
@@ -1614,46 +1616,42 @@ donation:
 
                 var cashCow = tester.ExplorerNode;
                 var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, cashCow.Network);
-                var firstPayment = invoice.CryptoInfo[0].TotalDue - Money.Satoshis(10);
+                // 
+                var firstPayment = invoice.CryptoInfo[0].TotalDue - 3*networkFee;
                 cashCow.SendToAddress(invoiceAddress, firstPayment);
+                Thread.Sleep(1000); // prevent race conditions, ordering payments
+                // look if you can reduce thread sleep, this was min value for me
+
+                // should reduce invoice due by 0 USD because payment = network fee
+                cashCow.SendToAddress(invoiceAddress, networkFee);
+                Thread.Sleep(1000);
+
+                // pay remaining amount
+                cashCow.SendToAddress(invoiceAddress, 4*networkFee);
+                Thread.Sleep(1000);
 
                 Eventually(() =>
                 {
                     var jsonResultPaid = user.GetController<InvoiceController>().Export("json").GetAwaiter().GetResult();
                     var paidresult = Assert.IsType<ContentResult>(jsonResultPaid);
                     Assert.Equal("application/json", paidresult.ContentType);
-                    Assert.Contains("\"InvoiceItemDesc\": \"Some \\\", description\"", paidresult.Content);
-                    Assert.Contains("\"InvoicePrice\": 500.0", paidresult.Content);
-                    Assert.Contains("\"ConversionRate\": 5000.0", paidresult.Content);
-                    Assert.Contains($"\"InvoiceId\": \"{invoice.Id}\",", paidresult.Content);
-                });
 
-                /*
-[
-  {
-    "ReceivedDate": "2018-11-30T10:27:13Z",
-    "StoreId": "FKaSZrXLJ2tcLfCyeiYYfmZp1UM5nZ1LDecQqbwBRuHi",
-    "OrderId": "orderId",
-    "InvoiceId": "4XUkgPMaTBzwJGV9P84kPC",
-    "CreatedDate": "2018-11-30T10:27:06Z",
-    "ExpirationDate": "2018-11-30T10:42:06Z",
-    "MonitoringDate": "2018-11-30T11:42:06Z",
-    "PaymentId": "6e5755c3357b20fd66f5fc478778d81371eab341e7112ab66ed6122c0ec0d9e5-1",
-    "CryptoCode": "BTC",
-    "Destination": "mhhSEQuoM993o6vwnBeufJ4TaWov2ZUsPQ",
-    "PaymentType": "OnChain",
-    "PaymentDue": "0.10020000 BTC",
-    "PaymentPaid": "0.10009990 BTC",
-    "PaymentOverpaid": "0.00000000 BTC",
-    "ConversionRate": 5000.0,
-    "FiatPrice": 500.0,
-    "FiatCurrency": "USD",
-    "ItemCode": null,
-    "ItemDesc": "Some \", description",
-    "Status": "new"
-  }
-]
-                */
+                    var parsedJson = JsonConvert.DeserializeObject<object[]>(paidresult.Content);
+                    Assert.Equal(3, parsedJson.Length);
+
+                    var pay1str = parsedJson[0].ToString();
+                    Assert.Contains("\"InvoiceItemDesc\": \"Some \\\", description\"", pay1str);
+                    Assert.Contains("\"InvoiceDue\": 1.5", pay1str);
+                    Assert.Contains("\"InvoicePrice\": 10.0", pay1str);
+                    Assert.Contains("\"ConversionRate\": 5000.0", pay1str);
+                    Assert.Contains($"\"InvoiceId\": \"{invoice.Id}\",", pay1str);
+
+                    var pay2str = parsedJson[1].ToString();
+                    Assert.Contains("\"InvoiceDue\": 1.5", pay2str);
+
+                    var pay3str = parsedJson[2].ToString();
+                    Assert.Contains("\"InvoiceDue\": 0", pay3str);
+                });
             }
         }
 
@@ -1689,8 +1687,8 @@ donation:
                     var paidresult = Assert.IsType<ContentResult>(exportResultPaid);
                     Assert.Equal("application/csv", paidresult.ContentType);
                     Assert.Contains($",\"orderId\",\"{invoice.Id}\",", paidresult.Content);
-                    Assert.Contains($",\"OnChain\",\"0.1000999\",\"BTC\",\"5000.0\",\"500.0\"", paidresult.Content);
-                    Assert.Contains($",\"USD\",\"\",\"Some ``, description\",\"new (paidPartial)\"", paidresult.Content);
+                    Assert.Contains($",\"OnChain\",\"BTC\",\"0.1000999\",\"0.0001\",\"5000.0\"", paidresult.Content);
+                    Assert.Contains($",\"USD\",\"0.00050000\",\"500.0\",\"\",\"Some ``, description\",\"new (paidPartial)\"", paidresult.Content);
                 });
             }
         }

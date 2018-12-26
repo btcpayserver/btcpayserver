@@ -52,6 +52,8 @@ namespace BTCPayServer.Services.Invoices.Export
         private IEnumerable<ExportInvoiceHolder> convertFromDb(InvoiceEntity invoice)
         {
             var exportList = new List<ExportInvoiceHolder>();
+
+            var invoiceDue = invoice.ProductInformation.Price;
             // in this first version we are only exporting invoices that were paid
             foreach (var payment in invoice.GetPayments())
             {
@@ -64,6 +66,9 @@ namespace BTCPayServer.Services.Invoices.Export
 
                 var pmethod = invoice.GetPaymentMethod(payment.GetPaymentMethodId(), Networks);
 
+                var paidAfterNetworkFees = pdata.GetValue() - pmethod.TxFee.ToDecimal(NBitcoin.MoneyUnit.BTC);
+                invoiceDue -=  paidAfterNetworkFees * pmethod.Rate;
+
                 var target = new ExportInvoiceHolder
                 {
                     ReceivedDate = payment.ReceivedTime.UtcDateTime,
@@ -73,6 +78,12 @@ namespace BTCPayServer.Services.Invoices.Export
                     PaymentType = payment.GetPaymentMethodId().PaymentType == Payments.PaymentTypes.BTCLike ? "OnChain" : "OffChain",
                     Destination = payment.GetCryptoPaymentData().GetDestination(Networks.GetNetwork(cryptoCode)),
                     Paid = pdata.GetValue().ToString(CultureInfo.InvariantCulture),
+                    // Adding NetworkFee because Paid doesn't take into account network fees
+                    // so if fee is 10000 satoshis, customer can essentially send infinite number of tx
+                    // and merchant effectivelly would receive 0 BTC, invoice won't be paid
+                    // while looking just at export you could sum Paid and assume merchant "received payments"
+                    NetworkFee = pmethod.TxFee.ToDecimal(NBitcoin.MoneyUnit.BTC).ToString(CultureInfo.InvariantCulture),
+                    InvoiceDue = invoiceDue,
                     OrderId = invoice.OrderId,
                     StoreId = invoice.StoreId,
                     InvoiceId = invoice.Id,
@@ -112,12 +123,14 @@ namespace BTCPayServer.Services.Invoices.Export
         public string PaymentId { get; set; }
         public string Destination { get; set; }
         public string PaymentType { get; set; }
-        public string Paid { get; set; }
         public string CryptoCode { get; set; }
+        public string Paid { get; set; }
+        public string NetworkFee { get; set; }
         public decimal ConversionRate { get; set; }
 
-        public decimal InvoicePrice { get; set; }
         public string InvoiceCurrency { get; set; }
+        public decimal InvoiceDue { get; set; }
+        public decimal InvoicePrice { get; set; }
         public string InvoiceItemCode { get; set; }
         public string InvoiceItemDesc { get; set; }
         public string InvoiceFullStatus { get; set; }

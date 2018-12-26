@@ -41,7 +41,7 @@ namespace BTCPayServer.Services.Invoices
         public InvoiceRepository(ApplicationDbContextFactory contextFactory, string dbreezePath)
         {
             int retryCount = 0;
-            retry:
+retry:
             try
             {
                 _Engine = new DBreezeEngine(dbreezePath);
@@ -385,7 +385,8 @@ namespace BTCPayServer.Services.Invoices
                 var paymentEntity = ToObject<PaymentEntity>(p.Blob, null);
                 paymentEntity.Accounted = p.Accounted;
                 return paymentEntity;
-            }).ToList();
+            })
+            .OrderBy(a => a.ReceivedTime).ToList();
 #pragma warning restore CS0618
             var state = invoice.GetInvoiceState();
             entity.ExceptionStatus = state.ExceptionStatus;

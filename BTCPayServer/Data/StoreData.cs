@@ -372,11 +372,11 @@ namespace BTCPayServer.Data
             if (keyPath == null)
                 WalletKeyPathRoots.Remove(paymentMethodId.ToString());
             else
-                WalletKeyPathRoots.AddOrReplace(paymentMethodId.ToString(), keyPath.ToString());
+                WalletKeyPathRoots.AddOrReplace(paymentMethodId.ToString().ToLowerInvariant(), keyPath.ToString());
         }
         public KeyPath GetWalletKeyPathRoot(PaymentMethodId paymentMethodId)
         {
-            if (WalletKeyPathRoots.TryGetValue(paymentMethodId.ToString(), out var k))
+            if (WalletKeyPathRoots.TryGetValue(paymentMethodId.ToString().ToLowerInvariant(), out var k))
                 return KeyPath.Parse(k);
             return null;
         }

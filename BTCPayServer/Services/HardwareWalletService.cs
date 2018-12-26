@@ -128,7 +128,13 @@ namespace BTCPayServer.Services
             }
         }
 
-        public async Task<KeyPath> GetKeyPath(BTCPayNetwork network, DirectDerivationStrategy directStrategy, CancellationToken cancellation)
+        public async Task<bool> CanSign(BTCPayNetwork network, DirectDerivationStrategy strategy, KeyPath keyPath, CancellationToken cancellation)
+        {
+            var hwKey = await GetExtPubKey(Ledger, network, keyPath, true, cancellation);
+            return hwKey.ExtPubKey.PubKey == strategy.Root.PubKey;
+        }
+
+        public async Task<KeyPath> FindKeyPath(BTCPayNetwork network, DirectDerivationStrategy directStrategy, CancellationToken cancellation)
         {
             List<KeyPath> derivations = new List<KeyPath>();
             if (network.NBitcoinNetwork.Consensus.SupportSegwit)
@@ -163,7 +169,17 @@ namespace BTCPayServer.Services
                                                      KeyPath changeKeyPath,
                                                      CancellationToken cancellationToken)
         {
-            return await Ledger.SignTransactionAsync(signatureRequests, unsigned, changeKeyPath, cancellationToken);
+            try
+            {
+                var signedTransaction = await Ledger.SignTransactionAsync(signatureRequests, unsigned, changeKeyPath, cancellationToken);
+                if (signedTransaction == null)
+                    throw new Exception("The ledger failed to sign the transaction");
+                return signedTransaction;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("The ledger failed to sign the transaction", ex);
+            }
         }
 
         public void Dispose()

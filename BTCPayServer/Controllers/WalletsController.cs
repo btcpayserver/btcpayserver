@@ -410,8 +410,8 @@ namespace BTCPayServer.Controllers
                 return NotFound();
 
             var cryptoCode = walletId.CryptoCode;
-            var storeBlob = (await Repository.FindStore(walletId.StoreId, GetUserId()));
-            var derivationScheme = GetPaymentMethod(walletId, storeBlob).DerivationStrategyBase;
+            var storeData = (await Repository.FindStore(walletId.StoreId, GetUserId()));
+            var derivationScheme = GetPaymentMethod(walletId, storeData).DerivationStrategyBase;
 
             var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
 
@@ -505,10 +505,24 @@ namespace BTCPayServer.Controllers
                                 throw new ArgumentOutOfRangeException(nameof(element.amount), "The amount should be above zero");
                         }
 
-                        var foundKeyPath = await hw.GetKeyPath(network, strategy, normalOperationTimeout.Token);
+                        var storeBlob = storeData.GetStoreBlob();
+                        var paymentId = new Payments.PaymentMethodId(cryptoCode, Payments.PaymentTypes.BTCLike);
+                        var foundKeyPath = storeBlob.GetWalletKeyPathRoot(paymentId);
                         if (foundKeyPath == null)
                         {
-                            throw new HardwareWalletException($"This store is not configured to use this ledger");
+                            foundKeyPath = await hw.FindKeyPath(network, strategy, normalOperationTimeout.Token);
+                            if (foundKeyPath == null)
+                                throw new HardwareWalletException($"This store is not configured to use this ledger");
+                            storeBlob.SetWalletKeyPathRoot(paymentId, foundKeyPath);
+                            storeData.SetStoreBlob(storeBlob);
+                            await Repository.UpdateStore(storeData);
+                        }
+                        else
+                        {
+                            if(!await hw.CanSign(network, strategy, foundKeyPath, normalOperationTimeout.Token))
+                            {
+                                throw new HardwareWalletException($"This store is not configured to use this ledger");
+                            }
                         }
 
                         TransactionBuilder builder = network.NBitcoinNetwork.CreateTransactionBuilder();

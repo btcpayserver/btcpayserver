@@ -1429,6 +1429,7 @@ namespace BTCPayServer.Tests
                 vmpos.ButtonText = "{0} Purchase";
                 vmpos.CustomButtonText = "Nicolas Sexy Hair";
                 vmpos.CustomTipText = "Wanna tip?";
+                vmpos.CustomTipPercentages = "15,18,20";
                 vmpos.Template = @"
 apple:
   price: 5.0
@@ -1454,6 +1455,7 @@ donation:
                 Assert.Equal("{0} Purchase", vmview.ButtonText);
                 Assert.Equal("Nicolas Sexy Hair", vmview.CustomButtonText);
                 Assert.Equal("Wanna tip?", vmview.CustomTipText);
+                Assert.Equal("15,18,20", string.Join(',', vmview.CustomTipPercentages));
                 Assert.IsType<RedirectToActionResult>(publicApps.ViewPointOfSale(appId, 0, null, null, null, null, "orange").Result);
 
                 //

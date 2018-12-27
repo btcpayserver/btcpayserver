@@ -65,8 +65,8 @@ namespace BTCPayServer.Services.Invoices.Export
                 var pdata = payment.GetCryptoPaymentData();
 
                 var pmethod = invoice.GetPaymentMethod(payment.GetPaymentMethodId(), Networks);
-
-                var paidAfterNetworkFees = pdata.GetValue() - pmethod.TxFee.ToDecimal(NBitcoin.MoneyUnit.BTC);
+                var paymentFee = pmethod.GetPaymentMethodDetails().GetTxFee();
+                var paidAfterNetworkFees = pdata.GetValue() - paymentFee;
                 invoiceDue -=  paidAfterNetworkFees * pmethod.Rate;
 
                 var target = new ExportInvoiceHolder
@@ -78,11 +78,12 @@ namespace BTCPayServer.Services.Invoices.Export
                     PaymentType = payment.GetPaymentMethodId().PaymentType == Payments.PaymentTypes.BTCLike ? "OnChain" : "OffChain",
                     Destination = payment.GetCryptoPaymentData().GetDestination(Networks.GetNetwork(cryptoCode)),
                     Paid = pdata.GetValue().ToString(CultureInfo.InvariantCulture),
+                    PaidCurrency = (pdata.GetValue() * pmethod.Rate).ToString(CultureInfo.InvariantCulture),
                     // Adding NetworkFee because Paid doesn't take into account network fees
                     // so if fee is 10000 satoshis, customer can essentially send infinite number of tx
                     // and merchant effectivelly would receive 0 BTC, invoice won't be paid
                     // while looking just at export you could sum Paid and assume merchant "received payments"
-                    NetworkFee = pmethod.TxFee.ToDecimal(NBitcoin.MoneyUnit.BTC).ToString(CultureInfo.InvariantCulture),
+                    NetworkFee = paymentFee.ToString(CultureInfo.InvariantCulture),
                     InvoiceDue = invoiceDue,
                     OrderId = invoice.OrderId,
                     StoreId = invoice.StoreId,
@@ -127,7 +128,7 @@ namespace BTCPayServer.Services.Invoices.Export
         public string Paid { get; set; }
         public string NetworkFee { get; set; }
         public decimal ConversionRate { get; set; }
-
+        public string PaidCurrency { get; set; }
         public string InvoiceCurrency { get; set; }
         public decimal InvoiceDue { get; set; }
         public decimal InvoicePrice { get; set; }

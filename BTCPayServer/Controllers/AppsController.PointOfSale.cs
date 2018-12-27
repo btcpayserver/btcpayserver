@@ -1,5 +1,8 @@
-﻿using System.Text;
+﻿using System;
+using System.Linq;
+using System.Text;
 using System.Text.Encodings.Web;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Models.AppViewModels;
@@ -65,6 +68,9 @@ namespace BTCPayServer.Controllers
             public string CustomButtonText { get; set; } = CUSTOM_BUTTON_TEXT_DEF;
             public const string CUSTOM_TIP_TEXT_DEF = "Do you want to leave a tip?";
             public string CustomTipText { get; set; } = CUSTOM_TIP_TEXT_DEF;
+            public static readonly int[] CUSTOM_TIP_PERCENTAGES_DEF = new int[] { 15, 18, 20 };
+            public int[] CustomTipPercentages { get; set; } = CUSTOM_TIP_PERCENTAGES_DEF;
+
 
             public string CustomCSSLink { get; set; }
         }
@@ -87,6 +93,7 @@ namespace BTCPayServer.Controllers
                 ButtonText = settings.ButtonText ?? PointOfSaleSettings.BUTTON_TEXT_DEF,
                 CustomButtonText = settings.CustomButtonText ?? PointOfSaleSettings.CUSTOM_BUTTON_TEXT_DEF,
                 CustomTipText = settings.CustomTipText ?? PointOfSaleSettings.CUSTOM_TIP_TEXT_DEF,
+                CustomTipPercentages = settings.CustomTipPercentages != null ? string.Join(",", settings.CustomTipPercentages) : string.Join(",", PointOfSaleSettings.CUSTOM_TIP_PERCENTAGES_DEF),
                 CustomCSSLink = settings.CustomCSSLink
             };
             if (HttpContext?.Request != null)
@@ -157,6 +164,7 @@ namespace BTCPayServer.Controllers
                 ButtonText = vm.ButtonText,
                 CustomButtonText = vm.CustomButtonText,
                 CustomTipText = vm.CustomTipText,
+                CustomTipPercentages = ListSplit(vm.CustomTipPercentages),
                 CustomCSSLink = vm.CustomCSSLink
             });
             await UpdateAppSettings(app);
@@ -172,6 +180,22 @@ namespace BTCPayServer.Controllers
                 ctx.Entry<AppData>(app).State = EntityState.Modified;
                 ctx.Entry<AppData>(app).Property(a => a.Settings).IsModified = true;
                 await ctx.SaveChangesAsync();
+            }
+        }
+
+        private int[] ListSplit(string list, string separator = ",")
+        {
+            if (string.IsNullOrEmpty(list))
+            {
+                return Array.Empty<int>();
+            } 
+            else 
+            {
+                // Remove all characters except numeric and comma
+                Regex charsToDestroy = new Regex(@"[^\d|\" + separator + "]");
+                list = charsToDestroy.Replace(list, "");
+
+                return list.Split(separator, System.StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToArray();
             }
         }
     }

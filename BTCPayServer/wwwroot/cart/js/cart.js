@@ -192,7 +192,6 @@ Cart.prototype.decrementItem = function(id) {
             }
         }
 
-        // Decrement the total # of items
         self.items += obj.count;
     });
 
@@ -201,23 +200,24 @@ Cart.prototype.decrementItem = function(id) {
 
 Cart.prototype.removeItemAll = function(id) {
     var self = this;
+    this.items = 0;
     
     // Remove by item
     if (typeof id != 'undefined') {
         this.content.filter(function(obj, index, arr){
-            if (obj.id === id)
-            {
+            if (obj.id === id) {
                 self.removeItem(id, index, arr);
     
                 for (var i = 0; i < obj.count; i++) {
                     self.items--;
                 }
             }
+
+            self.items += obj.count;
         });
     } else { // Remove all
         this.$list.find('tbody').empty();
         this.content = [];
-        this.items = 0;
     }
 
     this.emptyCartToggle();
@@ -402,11 +402,12 @@ Cart.prototype.listItems = function() {
             
             if (isQty) {
                 $(this).data('prev', qty);
-                self.resetTip();
             } else {
                 // User hasn't inputed any quantity
                 qty = null;
             }
+
+            self.resetTip();
 
             // Quantity was increased
             if (qtyIncreased) {

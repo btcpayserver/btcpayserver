@@ -42,7 +42,7 @@ namespace BTCPayServer.Payments.Lightning
         {
             leases.Add(_Aggregator.Subscribe<Events.InvoiceEvent>(async inv =>
             {
-                if (inv.Name == "invoice_created")
+                if (inv.Name == InvoiceEvent.Created)
                 {
                     await EnsureListening(inv.Invoice.Id, false);
                 }

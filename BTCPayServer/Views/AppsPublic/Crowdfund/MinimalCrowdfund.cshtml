@@ -1,6 +1,6 @@
 @using BTCPayServer.Models.AppViewModels
 @model  BTCPayServer.Models.AppViewModels.ViewCrowdfundViewModel
-<div class="container p-0">
+<div class="container p-0"  >
 
 
     <div class="row h-100 w-100 py-sm-0 py-md-4 mx-0">
@@ -87,7 +87,7 @@
                 {
                     <hr/>
                     <h3>Contribute</h3>
-                    <partial name="ContributeForm" model="@(new ContributeToCrowdfund()
+                    <partial name="Crowdfund/ContributeForm" model="@(new ContributeToCrowdfund()
                                                             {
                                                                 RedirectToCheckout = true,
                                                                 ViewCrowdfundViewModel = Model

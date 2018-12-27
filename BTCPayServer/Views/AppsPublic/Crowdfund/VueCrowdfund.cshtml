@@ -1,0 +1,76 @@
+<div class="container p-0" id="app" v-cloak>
+    <div class="row h-100 w-100 py-sm-0 py-md-4 mx-0">
+        <div class="card w-100 p-0 mx-0">
+            <img class="card-img-top" :src="srvModel.mainImageUrl" v-if="srvModel.mainImageUrl">
+            <div class="progress rounded-0 striped" style="min-height: 30px" v-if="srvModel.info.showProgres">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" :aria-valuenow="srvModel.info.progressPercentage" aria-valuemin="0" aria-valuemax="100">
+                    <template v-if="srvModel.info.progressPercentage > 0">
+                        {{srvModel.info.progressPercentage}} %
+                    </template>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="card-title row">
+                    <div class="col-md-9 col-sm-12">
+
+                        <h1 >
+                            {{srvModel.title}}
+                            <h2 class="text-muted" v-if="srvModel.tagline">{{srvModel.tagline}}</h2>
+                            <small v-if="srvModel.info.daysLeftToStart && srvModel.info.daysLeftToStart > 0">
+                                {{ srvModel.info.daysLeftToStart }} days left to start
+                            </small>
+                        </h1>
+
+                    </div>
+                    <ul class="list-group list-group-flush col-md-3 col-sm-12">
+                        <li class="list-group-item">
+                            <template v-if="srvModel.endDate">Ends {{srvModel.endDate}}</template>
+                            <template v-else>No specific end date</template>
+                        </li>
+                        <li class="list-group-item">
+                            <template v-if="srvModel.targetAmount">{{srvModel.targetAmount}} {{srvModel.targetCurrency}} Goal</template>
+                            <template v-else>No specific target goal</template>
+
+                        </li>
+                        <li class="list-group-item">
+                            <template v-if="srvModel.enforceTargetAmount">Hardcap Goal</template>
+                            <template v-else>Softcap Goal</template>
+                        </li>
+                    </ul>
+
+                </div>
+                <div class="card-deck mb-4" v-if="srvModel.info.active">
+                    <div class="card shadow">
+                        <div class="card-body">
+                            <h5 class="card-title text-center">{{srvModel.info.totalContributors}}</h5>
+                            <h6 class="card-text text-center"> Contributors</h6>
+                        </div>
+                    </div>
+                    <div class="card shadow">
+                        <div class="card-body">
+                            <h5 class="card-title text-center">{{srvModel.info.currentAmount}} {{srvModel.info.targetCurrency}}</h5>
+                            <h6 class="card-text text-center"> Raised</h6>
+                        </div>
+                    </div>
+
+                    <div class="card shadow" v-if="srvModel.info.daysLeft && srvModel.info.daysLeft  >0">
+                        <div class="card-body">
+                            <h5 class="card-title text-center">{{srvModel.info.daysLeft}}</h5>
+                            <h6 class="card-text text-center">Days left</h6>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="card-text" v-html="srvModel.description"></div>
+                <template v-if="srvModel.info.active"></template>
+                <hr/>
+                <h3>Contribute</h3>
+
+
+            </div>
+        </div>
+
+
+    </div>
+</div>

@@ -18,21 +18,35 @@
     {
         <link href="@Model.CustomCSSLink" rel="stylesheet"/>
     }
-    <link href="~/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet"/>
-    <bundle name="wwwroot/bundles/crowdfund-bundle.min.js"></bundle>
- 
-        @if (!string.IsNullOrEmpty(Model.EmbeddedCSS))
-        {
-            <style>
-            @Html.Raw(Model.EmbeddedCSS);
+    @if (!Context.Request.Query.ContainsKey("simple"))
+    {
+        <script type="text/javascript">
+            var srvModel = @Html.Raw(Json.Serialize(Model));
+        </script>
+        <bundle name="wwwroot/bundles/crowdfund-bundle.min.js"></bundle>
+        <bundle name="wwwroot/bundles/crowdfund-bundle.min.css"></bundle>
+    }
+    @if (!string.IsNullOrEmpty(Model.EmbeddedCSS))
+    {
+        <style>
+            @Html.Raw(Model.EmbeddedCSS); 
             </style>
-        }
-    <script type="text/javascript">
-        var srvModel = @Html.Raw(Json.Serialize(Model));
-    </script>
-    
+    }
+
 </head>
-<body class="h-100">
-<partial name="MinimalCrowdfund" model="@Model"/>
+<body>
+@if (Context.Request.Query.ContainsKey("simple"))
+{
+    @await Html.PartialAsync("Crowdfund/MinimalCrowdfund", Model)
+}
+else
+{
+    <noscript>
+        @await Html.PartialAsync("Crowdfund/MinimalCrowdfund", Model)
+    </noscript>
+    
+    @await Html.PartialAsync("Crowdfund/VueCrowdfund", Model)
+}
+
 </body>
 </html>

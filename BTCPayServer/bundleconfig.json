@@ -53,6 +53,7 @@
             "wwwroot/checkout/**/*.js"
         ]
     },
+    
     {
         "outputFileName": "wwwroot/bundles/cart-bundle.min.js",
         "inputFiles": [
@@ -65,9 +66,21 @@
     {
         "outputFileName": "wwwroot/bundles/crowdfund-bundle.min.js",
         "inputFiles": [
-            "wwwroot/vendor/jquery/jquery.js",
-            "wwwroot/vendor/bootstrap4/js/bootstrap.js",
-            "wwwroot/modal/btcpay.js"
+            "wwwroot/vendor/vuejs/vue.min.js",
+            "wwwroot/vendor/babel-polyfill/polyfill.min.js",
+            "wwwroot/vendor/bootstrap-vue/bootstrap-vue.js",
+            "wwwroot/vendor/signalr/signalr.js",
+            "wwwroot/vendor/moment/moment.js",
+            "wwwroot/modal/btcpay.js",
+            "wwwroot/crowdfund/**/*.js"
+        ]
+    },
+    {
+        "outputFileName": "wwwroot/bundles/crowdfund-bundle.min.css",
+        "inputFiles": [
+            "wwwroot/vendor/font-awesome/css/font-awesome.min.css",
+            "wwwroot/vendor/bootstrap-vue/bootstrap-vue.css",
+            "wwwroot/crowdfund/**/*.css"
         ]
     }
 ]

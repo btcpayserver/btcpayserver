@@ -1,41 +1,41 @@
 
 var hubListener = function(){
-
-    var statuses = {
-        DISCONNECTED: "disconnected",
-        CONNECTED: "connected",
-        CONNECTING: "connecting"
-    };
-    var status = "disconnected";
-    
-    
-    var connection = new signalR.HubConnectionBuilder().withUrl("/crowdfundHub").build();
+   
+    var connection = new signalR.HubConnectionBuilder().withUrl("/apps/crowdfund/hub").build();
 
     connection.onclose(function(){
-        this.status = statuses.DISCONNECTED;
+        eventAggregator.$emit("connection-lost");
         console.error("Connection was closed. Attempting reconnect in 2s");
         setTimeout(connect, 2000);
     });
 
-    
+    connection.on("InvoiceCreated", function(invoiceId){
+        eventAggregator.$emit("invoice-created", invoiceId);
+    });
     
     function connect(){
-        status = statuses.CONNECTING;
+
+        eventAggregator.$emit("connection-pending");
         connection
             .start()
             .then(function(){
-                this.status = statuses.CONNECTED;
+                connection.invoke("ListenToCrowdfundApp", srvModel.appId);
+                
             })
             .catch(function (err) {
-                this.status = statuses.DISCONNECTED;
+                eventAggregator.$emit("connection-failed");
                 console.error("Could not connect to backend. Retrying in 2s", err );
                 setTimeout(connect, 2000);
             });
     }
+
+
+    eventAggregator.$on("contribute", function(model){
+        connection.invoke("CreateInvoice", model);
+    });
+    
     
     return {
-        statuses: statuses,
-        status: status,
         connect: connect
     };
 }();

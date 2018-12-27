@@ -1,4 +1,5 @@
 var app = null;
+var eventAggregator = new Vue();
 window.onload = function (ev) {
     
 

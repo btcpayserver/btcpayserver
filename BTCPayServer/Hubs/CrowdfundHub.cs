@@ -14,17 +14,18 @@ using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Primitives;
 
 namespace BTCPayServer.Hubs
 {
     public class CrowdfundHub: Hub
     {
-        private readonly AppsPublicController _AppsPublicController;
+        private readonly IServiceProvider _ServiceProvider;
 
-        public CrowdfundHub(AppsPublicController appsPublicController)
+        public CrowdfundHub(IServiceProvider serviceProvider)
         {
-            _AppsPublicController = appsPublicController;
+            _ServiceProvider = serviceProvider;
         }
         public async Task ListenToCrowdfundApp(string appId)
         {
@@ -42,11 +43,16 @@ namespace BTCPayServer.Hubs
             
         }
 
-        public async Task<string> CreateInvoice(ContributeToCrowdfund model)
+        public async Task CreateInvoice(ContributeToCrowdfund model)
         {
-            model.RedirectToCheckout = false;
-            var result = await _AppsPublicController.ContributeToCrowdfund(Context.Items["app"].ToString(), model);
-            return (result as OkObjectResult)?.Value.ToString();
+            using (var scope = _ServiceProvider.CreateScope())
+            {
+               var controller =  scope.ServiceProvider.GetService<AppsPublicController>();
+               model.RedirectToCheckout = false;
+               var result = await controller.ContributeToCrowdfund(Context.Items["app"].ToString(), model);
+               await Clients.Caller.SendCoreAsync("InvoiceCreated", new[] {(result as OkObjectResult)?.Value.ToString()});
+            }
+            
         }
 
         public async Task PaymentReceived()

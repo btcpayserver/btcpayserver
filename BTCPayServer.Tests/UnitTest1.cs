@@ -1455,7 +1455,7 @@ donation:
                 Assert.Equal("{0} Purchase", vmview.ButtonText);
                 Assert.Equal("Nicolas Sexy Hair", vmview.CustomButtonText);
                 Assert.Equal("Wanna tip?", vmview.CustomTipText);
-                Assert.Equal("15,18,20", vmview.CustomTipPercentages);
+                Assert.Equal("15,18,20", string.Join(',', vmview.CustomTipPercentages));
                 Assert.IsType<RedirectToActionResult>(publicApps.ViewPointOfSale(appId, 0, null, null, null, null, "orange").Result);
 
                 //

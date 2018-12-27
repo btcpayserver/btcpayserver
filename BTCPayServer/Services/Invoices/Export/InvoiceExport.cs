@@ -78,6 +78,7 @@ namespace BTCPayServer.Services.Invoices.Export
                     PaymentType = payment.GetPaymentMethodId().PaymentType == Payments.PaymentTypes.BTCLike ? "OnChain" : "OffChain",
                     Destination = payment.GetCryptoPaymentData().GetDestination(Networks.GetNetwork(cryptoCode)),
                     Paid = pdata.GetValue().ToString(CultureInfo.InvariantCulture),
+                    PaidCurrency = (pdata.GetValue() * pmethod.Rate).ToString(CultureInfo.InvariantCulture),
                     // Adding NetworkFee because Paid doesn't take into account network fees
                     // so if fee is 10000 satoshis, customer can essentially send infinite number of tx
                     // and merchant effectivelly would receive 0 BTC, invoice won't be paid
@@ -127,7 +128,7 @@ namespace BTCPayServer.Services.Invoices.Export
         public string Paid { get; set; }
         public string NetworkFee { get; set; }
         public decimal ConversionRate { get; set; }
-
+        public string PaidCurrency { get; set; }
         public string InvoiceCurrency { get; set; }
         public decimal InvoiceDue { get; set; }
         public decimal InvoicePrice { get; set; }

@@ -8,9 +8,14 @@ var hubListener = function(){
         console.error("Connection was closed. Attempting reconnect in 2s");
         setTimeout(connect, 2000);
     });
-
+    connection.on("PaymentReceived", function(amount){
+        eventAggregator.$emit("payment-received", amount);
+    });
     connection.on("InvoiceCreated", function(invoiceId){
         eventAggregator.$emit("invoice-created", invoiceId);
+    });
+    connection.on("InfoUpdated", function(model){
+        eventAggregator.$emit("info-updated", model);
     });
     
     function connect(){

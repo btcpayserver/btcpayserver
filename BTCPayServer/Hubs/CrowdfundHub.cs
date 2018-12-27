@@ -38,10 +38,6 @@ namespace BTCPayServer.Hubs
             await Groups.AddToGroupAsync(Context.ConnectionId, appId);
         }
 
-        public async Task PushUpdatedCrowdfundInfo()
-        {
-            
-        }
 
         public async Task CreateInvoice(ContributeToCrowdfund model)
         {
@@ -52,11 +48,6 @@ namespace BTCPayServer.Hubs
                var result = await controller.ContributeToCrowdfund(Context.Items["app"].ToString(), model);
                await Clients.Caller.SendCoreAsync("InvoiceCreated", new[] {(result as OkObjectResult)?.Value.ToString()});
             }
-            
-        }
-
-        public async Task PaymentReceived()
-        {
             
         }
     }
@@ -134,7 +125,7 @@ namespace BTCPayServer.Hubs
             var appId = invoiceEvent.Invoice.OrderId.Replace(CrowdfundInvoiceOrderIdPrefix, "", StringComparison.InvariantCultureIgnoreCase);
             if (invoiceEvent.Name == InvoiceEvent.ReceivedPayment)
             {
-                _HubContext.Clients.Group(appId).SendCoreAsync(nameof(CrowdfundHub.PaymentReceived), new object[]{ invoiceEvent.Invoice.AmountPaid } );
+                _HubContext.Clients.Group(appId).SendCoreAsync("PaymentReceived", new object[]{ invoiceEvent.Invoice.AmountPaid } );
             }
         }
         

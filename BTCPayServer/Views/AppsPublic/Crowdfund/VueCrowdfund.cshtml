@@ -23,8 +23,14 @@
 
                     </div>
                     <ul class="list-group list-group-flush col-md-3 col-sm-12">
+                        <li class="list-group-item"  v-if="startDate">
+                            <template>{{started}} {{ended}}</template>
+                        </li>
+                        <li class="list-group-item" v-if="startDate">
+                            <template>Starts {{startDate}}</template>
+                        </li>
                         <li class="list-group-item">
-                            <template v-if="srvModel.endDate">Ends {{srvModel.endDate}}</template>
+                            <template v-if="endDate">Ends {{endDate}}</template>
                             <template v-else>No specific end date</template>
                         </li>
                         <li class="list-group-item">
@@ -55,8 +61,7 @@
 
                     <div class="card shadow" v-if="srvModel.info.daysLeft && srvModel.info.daysLeft  >0">
                         <div class="card-body">
-                            <h5 class="card-title text-center">{{srvModel.info.daysLeft}}</h5>
-                            <h6 class="card-text text-center">Days left</h6>
+                            <h5 class="card-title text-center">Ends {{endDateRelativeTime}}</h5>
                         </div>
                     </div>
                 </div>

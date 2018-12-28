@@ -28,12 +28,16 @@
             var toCurrency = qs["toCurrency"];
             var mode = qs["mode"];
             document.body.classList.add(mode);
-            
+            var orderId = null;
             var payment = new Coinswitch(merchantId);
+            if(window.localStorage){
+                orderId=  window.localStorage.getItem(toCurrencyAddress);
+            }
             var config = {
                 to_currency: toCurrency.toLowerCase(),
                 to_currency_address: toCurrencyAddress,
-                to_amount: parseFloat(toCurrencyDue)
+                to_amount: parseFloat(toCurrencyDue),
+                state: orderId
             };
             waitForCoinSwitch();
 
@@ -44,7 +48,16 @@
                 }
                 payment.open(config);
                 payment.on("Exchange:Complete", function () {
+                    if(window.localStorage){
+                        window.localStorage.removeItem(toCurrencyAddress);
+                    }
                     window.close();
+                });
+
+                payment.on("Exchange:Initiated", function(orderId) {
+                    if(window.localStorage){
+                        window.localStorage.setItem(toCurrencyAddress,orderId);
+                    }
                 });
                 payment.on("Exchange:Closed", function () {
                     window.close();

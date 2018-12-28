@@ -8,6 +8,11 @@ namespace BTCPayServer.Controllers
 {
     public partial class AppsController
     {
+        public class CrowdfundAppUpdated
+        {
+            public string AppId { get; set; }
+        }
+        
         public class CrowdfundSettings
         {
             public string Title { get; set; }
@@ -51,7 +56,7 @@ namespace BTCPayServer.Controllers
                 TargetAmount = settings.TargetAmount,
                 CustomCSSLink = settings.CustomCSSLink,
                 NotificationUrl = settings.NotificationUrl,
-                Tagline = settings.Tagline
+                Tagline = settings.Tagline,
             };
             return View(vm);
         }
@@ -70,10 +75,10 @@ namespace BTCPayServer.Controllers
                 Title = vm.Title,
                 Enabled = vm.Enabled,
                 EnforceTargetAmount = vm.EnforceTargetAmount,
-                StartDate = vm.StartDate?.ToUniversalTime(),
+                StartDate = vm.StartDate,
                 TargetCurrency = vm.TargetCurrency,
                 Description = vm.Description,
-                EndDate = vm.EndDate?.ToUniversalTime(),
+                EndDate = vm.EndDate,
                 TargetAmount = vm.TargetAmount,
                 CustomCSSLink = vm.CustomCSSLink,
                 MainImageUrl = vm.MainImageUrl,
@@ -82,6 +87,10 @@ namespace BTCPayServer.Controllers
                 Tagline = vm.Tagline
             });
             await UpdateAppSettings(app);
+            _EventAggregator.Publish(new CrowdfundAppUpdated()
+            {
+                AppId = appId
+            });
             StatusMessage = "App updated";
             return RedirectToAction(nameof(ListApps));
         }

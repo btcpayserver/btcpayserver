@@ -33,6 +33,8 @@ namespace BTCPayServer.Models.AppViewModels
             public decimal? ProgressPercentage { get; set; }
             public int? DaysLeft{ get; set; }
             public int? DaysLeftToStart{ get; set; }
+            public decimal CurrentPendingAmount { get; set; }
+            public decimal? PendingProgressPercentage { get; set; }
         }
         
     }

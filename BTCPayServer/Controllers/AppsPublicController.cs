@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Hubs;
+using BTCPayServer.Models;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Rating;
 using BTCPayServer.Security;
@@ -16,6 +17,7 @@ using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NBitpayClient;
@@ -28,16 +30,18 @@ namespace BTCPayServer.Controllers
     {
         public AppsPublicController(AppsHelper appsHelper, 
             InvoiceController invoiceController, 
-            CrowdfundHubStreamer crowdfundHubStreamer)
+            CrowdfundHubStreamer crowdfundHubStreamer, UserManager<ApplicationUser> userManager)
         {
             _AppsHelper = appsHelper;
             _InvoiceController = invoiceController;
             _CrowdfundHubStreamer = crowdfundHubStreamer;
+            _UserManager = userManager;
         }
 
         private AppsHelper _AppsHelper;
         private InvoiceController _InvoiceController;
         private readonly CrowdfundHubStreamer _CrowdfundHubStreamer;
+        private readonly UserManager<ApplicationUser> _UserManager;
 
         [HttpGet]
         [Route("/apps/{appId}/pos")]
@@ -86,8 +90,10 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> ViewCrowdfund(string appId, string statusMessage)
         
         {
-            var app = await _AppsHelper.GetApp(appId, AppType.Crowdfund, true);
-            if (app == null)
+            var app = await _AppsHelper.GetApp(appId, AppType.Crowdfund, true); 
+            if (app == null || 
+                (!app.GetSettings<CrowdfundSettings>().Enabled &&
+                 _AppsHelper.GetAppDataIfOwner(GetUserId(), appId, AppType.Crowdfund) == null))
                 return NotFound();
             
             return View(await _CrowdfundHubStreamer.GetCrowdfundInfo(appId));
@@ -101,7 +107,9 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> ContributeToCrowdfund(string appId, ContributeToCrowdfund request)
         {
             var app = await _AppsHelper.GetApp(appId, AppType.Crowdfund, true);
-            if (app == null)
+            if (app == null || 
+                (!app.GetSettings<CrowdfundSettings>().Enabled &&
+                 _AppsHelper.GetAppDataIfOwner(GetUserId(), appId, AppType.Crowdfund) == null))
                 return NotFound();
             var settings = app.GetSettings<CrowdfundSettings>();
             var store = await _AppsHelper.GetStore(app);
@@ -190,6 +198,12 @@ namespace BTCPayServer.Controllers
                 FullNotifications = true
             }, store, HttpContext.Request.GetAbsoluteRoot());
             return RedirectToAction(nameof(InvoiceController.Checkout), "Invoice", new { invoiceId = invoice.Data.Id });
+        }
+        
+        
+        private string GetUserId()
+        {
+            return _UserManager.GetUserId(User);
         }
     }
 
@@ -310,5 +324,6 @@ namespace BTCPayServer.Controllers
                 return app;
             }
         }
+        
     }
 }

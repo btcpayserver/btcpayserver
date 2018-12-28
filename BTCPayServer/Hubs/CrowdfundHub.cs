@@ -96,7 +96,7 @@ namespace BTCPayServer.Hubs
                 var token = new CancellationTokenSource();
                 _CacheTokens.Add(key, token);
                 entry.AddExpirationToken(new CancellationChangeToken(token.Token));
-                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(20);
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(5);
 
                 var app = await _AppsHelper.GetApp(appId, AppType.Crowdfund, true);
                 var result = await GetInfo(app, _InvoiceRepository, _RateFetcher,
@@ -110,6 +110,10 @@ namespace BTCPayServer.Hubs
         {
             
             _EventAggregator.Subscribe<InvoiceEvent>(Subscription);
+            _EventAggregator.Subscribe<AppsController.CrowdfundAppUpdated>(updated =>
+            {
+                InvalidateCacheForApp(updated.AppId);
+            });
         }
 
         private string GetCacheKey(string appId)
@@ -127,16 +131,21 @@ namespace BTCPayServer.Hubs
             switch (invoiceEvent.Name)
             {
                 case InvoiceEvent.ReceivedPayment:
-                    _HubContext.Clients.Group(appId).SendCoreAsync("PaymentReceived", new object[]{ invoiceEvent.Invoice.AmountPaid } );
+                    _HubContext.Clients.Group(appId).SendCoreAsync("PaymentReceived", new object[]{ invoiceEvent.Invoice.CryptoInfo.First().Paid } );
                     break;
                 case InvoiceEvent.Completed:
-                    if (_CacheTokens.ContainsKey(appId))
-                    {
-                        _CacheTokens[appId].Cancel();
-                    }
-                    _HubContext.Clients.Group(appId).SendCoreAsync("InfoUpdated", new object[]{} );
+                    InvalidateCacheForApp(appId);
                     break;
             }
+        }
+
+        private void InvalidateCacheForApp(string appId)
+        {
+            if (_CacheTokens.ContainsKey(appId))
+            {
+                _CacheTokens[appId].Cancel();
+            }
+            _HubContext.Clients.Group(appId).SendCoreAsync("InfoUpdated", new object[]{} );
         }
         
         private static async Task<decimal> GetCurrentContributionAmount(InvoiceEntity[] invoices, string primaryCurrency,
@@ -170,19 +179,25 @@ namespace BTCPayServer.Hubs
             return result;
 
         }
-        
-        public static async Task<ViewCrowdfundViewModel> GetInfo(AppData appData, InvoiceRepository invoiceRepository,
+
+        private static async Task<ViewCrowdfundViewModel> GetInfo(AppData appData, InvoiceRepository invoiceRepository,
             RateFetcher rateFetcher, BTCPayNetworkProvider btcPayNetworkProvider, string statusMessage= null)
         {
             var settings = appData.GetSettings<AppsController.CrowdfundSettings>();
-            var invoices = await GetPaidInvoicesForApp(appData, invoiceRepository);
+            var invoices = await GetInvoicesForApp(appData, invoiceRepository);
+          
+            
             var rateRules = appData.StoreData.GetStoreBlob().GetRateRules(btcPayNetworkProvider);
             var currentAmount = await GetCurrentContributionAmount(
-                invoices, 
+                invoices.Where(entity => entity.Status == InvoiceStatus.Complete).ToArray(),
                 settings.TargetCurrency, rateFetcher, rateRules);
-            var paidInvoices = invoices.Length;
-            var active = (settings.StartDate == null || DateTime.UtcNow >= settings.StartDate) &&
-                         (settings.EndDate == null || DateTime.UtcNow <= settings.EndDate) &&
+            var currentPendingAmount =  await GetCurrentContributionAmount(
+                invoices.Where(entity => entity.Status != InvoiceStatus.Complete).ToArray(),
+                settings.TargetCurrency, rateFetcher, rateRules);
+            
+            
+            var active = (settings.StartDate == null || DateTime.Now >= settings.StartDate) &&
+                         (settings.EndDate == null || DateTime.Now <= settings.EndDate) &&
                          (!settings.EnforceTargetAmount || settings.TargetAmount > currentAmount);
 
             return new ViewCrowdfundViewModel()
@@ -203,23 +218,29 @@ namespace BTCPayServer.Hubs
                 StatusMessage = statusMessage,
                 Info = new ViewCrowdfundViewModel.CrowdfundInfo()
                 {
-                    TotalContributors = paidInvoices,
+                    TotalContributors = invoices.Length,
+                    CurrentPendingAmount = currentPendingAmount,
                     CurrentAmount = currentAmount,
                     Active = active,
                     DaysLeft = settings.EndDate.HasValue? (settings.EndDate - DateTime.UtcNow).Value.Days: (int?) null,
                     DaysLeftToStart = settings.StartDate.HasValue? (settings.StartDate - DateTime.UtcNow).Value.Days: (int?) null,
-                    ShowProgress =active && settings.TargetAmount.HasValue,
-                    ProgressPercentage =   currentAmount/ settings.TargetAmount * 100
+                    ShowProgress = settings.TargetAmount.HasValue,
+                    ProgressPercentage =   (currentAmount/ settings.TargetAmount) * 100,
+                    PendingProgressPercentage =  ( currentPendingAmount/ settings.TargetAmount) * 100
                 }
             };
         }
 
-        private static async Task<InvoiceEntity[]> GetPaidInvoicesForApp(AppData appData, InvoiceRepository invoiceRepository)
+        private static async Task<InvoiceEntity[]> GetInvoicesForApp(AppData appData, InvoiceRepository invoiceRepository)
         {
             return await  invoiceRepository.GetInvoices(new InvoiceQuery()
             {
-                OrderId = appData.Id,
-                Status = new string[]{ InvoiceState.ToString(InvoiceStatus.Complete)}
+                OrderId = $"{CrowdfundInvoiceOrderIdPrefix}{appData.Id}",
+                Status = new string[]{
+                    InvoiceState.ToString(InvoiceStatus.New),
+                    InvoiceState.ToString(InvoiceStatus.Paid), 
+                    InvoiceState.ToString(InvoiceStatus.Confirmed), 
+                    InvoiceState.ToString(InvoiceStatus.Complete)}
             });
         }
         

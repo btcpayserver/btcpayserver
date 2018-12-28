@@ -9,6 +9,9 @@ namespace BTCPayServer.Models.AppViewModels
         [MaxLength(30)]
         public string Title { get; set; }
         
+        [MaxLength(50)]
+        public string Tagline { get; set; }
+        
         [Required]
         public string Description { get; set; }
         public string MainImageUrl { get; set; }
@@ -16,7 +19,7 @@ namespace BTCPayServer.Models.AppViewModels
         public string NotificationUrl { get; set; }
         
         [Required]
-        public bool Enabled { get; set; }
+        public bool Enabled { get; set; } = false;
         
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
@@ -37,7 +40,6 @@ namespace BTCPayServer.Models.AppViewModels
         [Display(Name = "Custom bootstrap CSS file")]
         public string CustomCSSLink { get; set; }
 
-        public string Tagline { get; set; }
         public string EmbeddedCSS { get; set; }
     }
 }

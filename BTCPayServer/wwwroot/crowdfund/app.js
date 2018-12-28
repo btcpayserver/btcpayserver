@@ -1,6 +1,7 @@
 var app = null;
 var eventAggregator = new Vue();
 window.onload = function (ev) {
+    Vue.use(Toasted);
     app = new Vue({
         el: '#app',
         data: function(){
@@ -13,10 +14,15 @@ window.onload = function (ev) {
                 endDateRelativeTime: "",
                 started: false,
                 ended: false,
-                contributionForm: { email: "", amount: 0}
+                contributeModalOpen: false,
+                thankYouModalOpen: false
             }
         },
-        computed: {},
+        computed: {
+            targetCurrency: function(){
+                return this.srvModel.targetCurrency.toUpperCase();
+            }
+        },
         methods: {
             updateComputed: function () {
                 if (this.srvModel.endDate) {
@@ -25,7 +31,7 @@ window.onload = function (ev) {
                     this.endDateRelativeTime = endDateM.fromNow();
                     this.ended = endDateM.isBefore(moment());
                 }else{
-                    this.ended = true;
+                    this.ended = false;
                 }
 
                 if (this.srvModel.startDate) {
@@ -38,22 +44,27 @@ window.onload = function (ev) {
                 }
                 setTimeout(this.updateComputed, 1000);
             },
-            onContributeFormSubmit: function(e){
-                if(e){
-                    e.preventDefault();
-                }
-                eventAggregator.$emit("contribute", this.contributionForm);                
+            submitModalContribute: function(e){
+                debugger;
+                this.$refs.modalContribute.onContributeFormSubmit(e);
             }
         },
         mounted: function () {
             hubListener.connect();
+            var self = this;
             eventAggregator.$on("invoice-created", function (invoiceId) {
                 btcpay.setApiUrlPrefix(window.location.origin);
                 btcpay.showInvoice(invoiceId);
                 btcpay.showFrame();
-            }); 
+
+                self.contributeModalOpen = false;
+            });
+            btcpay.onModalWillLeave = function(){
+                self.thankYouModalOpen = true;
+            };
             eventAggregator.$on("payment-received", function (amount) {
                 console.warn("AAAAAA", amount);
+                Vue.toasted.show('New payment of ' + amount+ " BTC registered");
             });
             eventAggregator.$on("info-updated", function (model) {
                 this.srvModel = model;

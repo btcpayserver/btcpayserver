@@ -24,17 +24,20 @@ namespace BTCPayServer.Controllers
         public AppsController(
             UserManager<ApplicationUser> userManager,
             ApplicationDbContextFactory contextFactory,
+            EventAggregator eventAggregator,
             BTCPayNetworkProvider networkProvider,
             AppsHelper appsHelper)
         {
             _UserManager = userManager;
             _ContextFactory = contextFactory;
+            _EventAggregator = eventAggregator;
             _NetworkProvider = networkProvider;
             _AppsHelper = appsHelper;
         }
 
         private UserManager<ApplicationUser> _UserManager;
         private ApplicationDbContextFactory _ContextFactory;
+        private readonly EventAggregator _EventAggregator;
         private BTCPayNetworkProvider _NetworkProvider;
         private AppsHelper _AppsHelper;
 

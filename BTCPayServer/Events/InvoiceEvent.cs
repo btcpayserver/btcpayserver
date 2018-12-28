@@ -31,6 +31,8 @@ namespace BTCPayServer.Events
         public int EventCode { get; set; }
         public string Name { get; set; }
 
+        public PaymentEntity Payment { get; set; }
+
         public override string ToString()
         {
             return $"Invoice {Invoice.Id} new event: {Name} ({EventCode})";

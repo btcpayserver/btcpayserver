@@ -7,6 +7,7 @@ using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Models.AppViewModels;
+using BTCPayServer.Payments;
 using BTCPayServer.Rating;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
@@ -96,8 +97,8 @@ namespace BTCPayServer.Hubs
                 var token = new CancellationTokenSource();
                 _CacheTokens.Add(key, token);
                 entry.AddExpirationToken(new CancellationChangeToken(token.Token));
-                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(5);
-
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1);
+                
                 var app = await _AppsHelper.GetApp(appId, AppType.Crowdfund, true);
                 var result = await GetInfo(app, _InvoiceRepository, _RateFetcher,
                     _BtcPayNetworkProvider);
@@ -131,7 +132,16 @@ namespace BTCPayServer.Hubs
             switch (invoiceEvent.Name)
             {
                 case InvoiceEvent.ReceivedPayment:
-                    _HubContext.Clients.Group(appId).SendCoreAsync("PaymentReceived", new object[]{ invoiceEvent.Invoice.CryptoInfo.First().Paid } );
+                    
+                    _HubContext.Clients.Group(appId).SendCoreAsync("PaymentReceived", new object[]
+                    {
+                        invoiceEvent.Payment.GetCryptoPaymentData().GetValue(), 
+                        invoiceEvent.Payment.GetCryptoCode(), 
+                        Enum.GetName(typeof(PaymentTypes), 
+                            invoiceEvent.Payment.GetPaymentMethodId().PaymentType)
+                    } );
+                    
+                    InvalidateCacheForApp(appId);
                     break;
                 case InvoiceEvent.Completed:
                     InvalidateCacheForApp(appId);
@@ -145,7 +155,7 @@ namespace BTCPayServer.Hubs
             {
                 _CacheTokens[appId].Cancel();
             }
-            _HubContext.Clients.Group(appId).SendCoreAsync("InfoUpdated", new object[]{} );
+            _HubContext.Clients.Group(appId).SendCoreAsync("InfoUpdated", Array.Empty<object>() );
         }
         
         private static async Task<decimal> GetCurrentContributionAmount(InvoiceEntity[] invoices, string primaryCurrency,

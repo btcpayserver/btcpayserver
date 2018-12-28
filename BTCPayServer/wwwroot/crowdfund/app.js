@@ -1,6 +1,20 @@
 var app = null;
 var eventAggregator = new Vue();
-window.onload = function (ev) {
+
+function addLoadEvent(func) {
+    var oldonload = window.onload;
+    if (typeof window.onload != 'function') {
+        window.onload = func;
+    } else {
+        window.onload = function() {
+            if (oldonload) {
+                oldonload();
+            }
+            func();
+        }
+    }
+}
+addLoadEvent(function (ev) {
     Vue.use(Toasted);
     app = new Vue({
         el: '#app',
@@ -62,9 +76,12 @@ window.onload = function (ev) {
             btcpay.onModalWillLeave = function(){
                 self.thankYouModalOpen = true;
             };
-            eventAggregator.$on("payment-received", function (amount) {
+            eventAggregator.$on("payment-received", function (amount, cryptoCode, type) {
                 console.warn("AAAAAA", amount);
-                Vue.toasted.show('New payment of ' + amount+ " BTC registered");
+                var onChain = type.toLowerCase() === "btclike";
+                playRandomQuakeSound();
+                fireworks();
+                Vue.toasted.show('New payment of ' + amount+ " "+ cryptoCode + " " + onChain? "On Chain": "LN ");
             });
             eventAggregator.$on("info-updated", function (model) {
                 this.srvModel = model;
@@ -81,5 +98,5 @@ window.onload = function (ev) {
             this.updateComputed();
         }
     });
-};
+});
 

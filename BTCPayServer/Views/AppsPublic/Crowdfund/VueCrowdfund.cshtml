@@ -2,99 +2,107 @@
     <div class="row h-100 w-100 py-sm-0 py-md-4 mx-0">
         <div class="card w-100 p-0 mx-0">
             <img class="card-img-top" :src="srvModel.mainImageUrl" v-if="srvModel.mainImageUrl">
+            <div class="d-flex justify-content-between px-2">
+                <h1>
+                    {{srvModel.title}}
+                    <span class="h6 text-muted" v-if="!started && srvModel.startDate">
+                        Starts {{startDateRelativeTime}}
+                    </span>
+                    <span class="h6 text-muted" v-else-if="started && !ended && srvModel.endDate">
+                        Ends {{endDateRelativeTime}}
+                    </span>
+                    <span class="h6 text-muted" v-else-if="started && !ended && srvModel.endDate">
+                        Currently Active!
+                    </span>
 
+                </h1>
+
+                <span v-if="srvModel.targetAmount" class="mt-3">
+                    <span class="h5">{{srvModel.targetAmount}} {{targetCurrency}}</span>
+
+                    <span v-if="srvModel.enforceTargetAmount">Hardcap Goal <a href="#" v-b-tooltip title="No contributions allowed after the goal has been reached<"> ?</a></span>
+                    <span v-else>Softcap Goal <a href="#" v-b-tooltip title="Contributions allowed even after goal is reached"> ?</a> </span>
+                </span>
+
+
+            </div>
+            <div class="progress w-100 rounded-0 " v-if="srvModel.info.showProgress">
+                <div class="progress-bar" role="progressbar"
+                     :aria-valuenow="srvModel.info.progressPercentage"
+                     v-bind:style="{ width: srvModel.info.progressPercentage + '%' }"
+                     aria-valuemin="0"
+                     aria-valuemax="100">
+                    <template v-if="srvModel.info.progressPercentage > 0">
+                        {{srvModel.info.progressPercentage}}% Funded
+                    </template>
+                </div>
+                <div class="progress-bar bg-warning" role="progressbar"
+                     :aria-valuenow="srvModel.info.pendingProgressPercentage"
+                     v-bind:style="{ width: srvModel.info.pendingProgressPercentage + '%' }"
+                     aria-valuemin="0"
+                     aria-valuemax="100">
+                    <template v-if="srvModel.info.pendingProgressPercentage > 0">
+                        {{srvModel.info.pendingProgressPercentage}}% Pending
+                    </template>
+                </div>
+            </div>
             <div class="card-body">
+
+                <ul class="nav nav-fill py-2">
+                    <li class="nav-item">
+                        <h5>{{srvModel.info.currentAmount + srvModel.info.currentPendingAmount }} {{targetCurrency}} </h5>
+                        <h5 class="text-muted">Raised</h5>
+                    </li>
+                    <li class="nav-item">
+                        <h5>{{srvModel.info.progressPercentage + srvModel.info.pendingProgressPercentage }}%</h5>
+                        <h5 class="text-muted">Of Goal</h5>
+                    </li>
+                    <li class="nav-item">
+                        <h5>
+                            {{srvModel.info.totalContributors}}
+                        </h5>
+                        <h5 class="text-muted">Contributors</h5>
+                    </li>
+                    <li class="nav-item">
+                        <div class="mx-auto">
+                            <ul style="list-style-type: none">
+                                <li v-if="startDate">
+                                    <template v-if="started">
+                                        Started {{startDate}}
+                                    </template>
+                                    <template v-else-if="!started">
+                                        Starts {{startDate}}
+                                    </template>
+                                </li>
+                                <li v-if="endDate">
+                                    <template v-if="!ended">
+                                        Ends {{endDate}}
+                                    </template>
+                                    <template v-else-if="ended">
+                                        Ended {{endDate}}
+                                    </template>
+                                </li>
+                                <li class="list-group-item" v-else-if="!endDate">
+                                    No specific end date
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                </ul>
                 <div class="card-title">
-                    <div class="row" >
+
+                    <div class="row">
                         <div class="col-sm-12 col-md-9 col-lg-10">
-                        <span class="h1" >
-                            {{srvModel.title}}
-                            <span class="h6 text-muted" v-if="!started && srvModel.startDate">
-                                Starts {{startDateRelativeTime}}
-                            </span>
-                            <span class="h6 " v-else-if="started && !ended && srvModel.endDate">
-                                Ends {{endDateRelativeTime}}
-                            </span>
-                            <span class="h6 text-muted" v-else-if="started && !ended && srvModel.endDate">
-                                Currently Active!
-                            </span>
-                            
-                        </span>
-                        
+
+
                             <h2 class="text-muted" v-if="srvModel.tagline">{{srvModel.tagline}}</h2>
-                            </div>
+                        </div>
                         <div class="col-sm-12 col-md-3 col-lg-2">
-                        <button v-if="srvModel.info.active" class="btn btn-lg btn-primary" v-on:click="contributeModalOpen = true">Contribute</button>
-                   
+                            <button v-if="srvModel.info.active" class="btn btn-lg btn-primary" v-on:click="contributeModalOpen = true">Contribute</button>
 
+
+                        </div>
                     </div>
-                    </div>
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item  border-0">
-                            <div class="d-flex justify-content-between">
-                                <div>
-                                    <span class="h5">{{srvModel.info.currentAmount + srvModel.info.currentPendingAmount }} {{targetCurrency}} </span>
-                                    <span>raised by {{srvModel.info.totalContributors}} contributors </span>
-                                </div>
-                            </div>
-
-                            <div class="progress w-100" v-if="srvModel.info.showProgress">
-                                <div class="progress-bar" role="progressbar"
-                                     :aria-valuenow="srvModel.info.progressPercentage"
-                                     v-bind:style="{ width: srvModel.info.progressPercentage + '%' }"
-                                     aria-valuemin="0"
-                                     aria-valuemax="100">
-                                    <template v-if="srvModel.info.progressPercentage > 0">
-                                        {{srvModel.info.progressPercentage}}% Funded
-                                    </template>
-                                </div>
-                                <div class="progress-bar bg-warning" role="progressbar"
-                                     :aria-valuenow="srvModel.info.pendingProgressPercentage"
-                                     v-bind:style="{ width: srvModel.info.pendingProgressPercentage + '%' }"
-                                     aria-valuemin="0"
-                                     aria-valuemax="100">
-                                    <template v-if="srvModel.info.pendingProgressPercentage > 0">
-                                        {{srvModel.info.pendingProgressPercentage}}% Pending
-                                    </template>
-                                </div>
-                            </div>
-                        
-                        </li>
-                        <li class="list-group-item">
-                            <span v-if="srvModel.targetAmount" class="h5">{{srvModel.targetAmount}} {{targetCurrency}}</span>
-
-                            <span  v-if="srvModel.enforceTargetAmount">Hardcap Goal <small>- No contributions allowed after the goal has been reached</small></span>
-                            <span  v-else>Softcap Goal <small>- Contributions allowed after goal is reached</small></span>
-
-
-
-                        </li>
-                        <li class="list-group-item">
-                            <template v-if="startDate">
-                                <template v-if="started">
-                                    Started {{startDate}}
-                                </template>
-                                <template v-else-if="!started">
-                                    Starts {{startDate}}
-                                </template>
-                                &
-                            </template>
-                            <template class="list-group-item" v-if="endDate">
-                                <template v-if="!ended">
-                                    Ends {{endDate}}
-                                </template>
-                                <template v-else-if="ended">
-                                    Ended {{endDate}}
-                                </template>
-                            </template>
-                            <template class="list-group-item" v-else-if="!endDate">
-                                No specific end date
-                            </template>
-                        </li>
-
-
-                    </ul>
-
                 </div>
                 <hr/>
                 <div class="row">
@@ -109,11 +117,9 @@
 
             </div>
         </div>
-
-
     </div>
     <b-modal title="Contribute" v-model="contributeModalOpen" v-on:ok="submitModalContribute" :hide-header-close="true">
-        
+
         <contribute :target-currency="srvModel.targetCurrency" :active="srvModel.info.active" ref="modalContribute" :in-modal="true"></contribute>
         <template slot="modal-ok">
             Submit
@@ -122,5 +128,5 @@
     <b-modal title="Thank You!" v-model="thankYouModalOpen" :ok-only="true">
         Thank you for your contribution.
     </b-modal>
-    
+
 </div>

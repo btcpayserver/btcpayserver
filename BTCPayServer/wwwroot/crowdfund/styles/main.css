@@ -1,2 +1,8 @@
 [v-cloak] > * { display:none }
 [v-cloak]::before { content: "loading…" }
+
+canvas#fireworks{
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+}

@@ -72,6 +72,7 @@
             "wwwroot/vendor/bootstrap-vue/bootstrap-vue.js",
             "wwwroot/vendor/signalr/signalr.js",
             "wwwroot/vendor/moment/moment.js",
+            "wwwroot/vendor/animejs/anime.js",
             "wwwroot/modal/btcpay.js",
             "wwwroot/crowdfund/**/*.js"
         ]

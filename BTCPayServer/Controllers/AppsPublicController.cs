@@ -116,7 +116,7 @@ namespace BTCPayServer.Controllers
                 NotificationURL = settings.NotificationUrl,
                 FullNotifications = true,
                 ExtendedNotifications = true,
-                RedirectURL = HttpContext.Request.GetAbsoluteRoot(),
+                RedirectURL = HttpContext.Request.GetAbsoluteRoot()+ "/apps/{appId}/crowdfund",
                 
             }, store, HttpContext.Request.GetAbsoluteRoot());
             if (request.RedirectToCheckout)

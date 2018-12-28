@@ -12,7 +12,8 @@ window.onload = function (ev) {
                 startDateRelativeTime: "",
                 endDateRelativeTime: "",
                 started: false,
-                ended: false                
+                ended: false,
+                contributionForm: { email: "", amount: 0}
             }
         },
         computed: {},
@@ -29,19 +30,30 @@ window.onload = function (ev) {
 
                 if (this.srvModel.startDate) {
                     var startDateM = moment(this.srvModel.startDate);
-                    this.startDate = moment(startDateM).format('MMMM Do YYYY');
-                    this.startDateRelativeTime = moment(startDateM).fromNow();
+                    this.startDate = startDateM.format('MMMM Do YYYY');
+                    this.startDateRelativeTime = startDateM.fromNow();
                     this.started = startDateM.isBefore(moment());
                 }else{
                     this.started = true;
                 }
                 setTimeout(this.updateComputed, 1000);
+            },
+            onContributeFormSubmit: function(e){
+                if(e){
+                    e.preventDefault();
+                }
+                eventAggregator.$emit("contribute", this.contributionForm);                
             }
         },
         mounted: function () {
             hubListener.connect();
             eventAggregator.$on("invoice-created", function (invoiceId) {
+                btcpay.setApiUrlPrefix(window.location.origin);
                 btcpay.showInvoice(invoiceId);
+                btcpay.showFrame();
+            }); 
+            eventAggregator.$on("payment-received", function (amount) {
+                console.warn("AAAAAA", amount);
             });
             eventAggregator.$on("info-updated", function (model) {
                 this.srvModel = model;

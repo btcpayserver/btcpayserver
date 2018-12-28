@@ -45,6 +45,7 @@ namespace BTCPayServer.Hubs
             {
                var controller =  scope.ServiceProvider.GetService<AppsPublicController>();
                model.RedirectToCheckout = false;
+               controller.ControllerContext.HttpContext = Context.GetHttpContext();
                var result = await controller.ContributeToCrowdfund(Context.Items["app"].ToString(), model);
                await Clients.Caller.SendCoreAsync("InvoiceCreated", new[] {(result as OkObjectResult)?.Value.ToString()});
             }
@@ -123,9 +124,18 @@ namespace BTCPayServer.Hubs
                 return;
             }
             var appId = invoiceEvent.Invoice.OrderId.Replace(CrowdfundInvoiceOrderIdPrefix, "", StringComparison.InvariantCultureIgnoreCase);
-            if (invoiceEvent.Name == InvoiceEvent.ReceivedPayment)
+            switch (invoiceEvent.Name)
             {
-                _HubContext.Clients.Group(appId).SendCoreAsync("PaymentReceived", new object[]{ invoiceEvent.Invoice.AmountPaid } );
+                case InvoiceEvent.ReceivedPayment:
+                    _HubContext.Clients.Group(appId).SendCoreAsync("PaymentReceived", new object[]{ invoiceEvent.Invoice.AmountPaid } );
+                    break;
+                case InvoiceEvent.Completed:
+                    if (_CacheTokens.ContainsKey(appId))
+                    {
+                        _CacheTokens[appId].Cancel();
+                    }
+                    _HubContext.Clients.Group(appId).SendCoreAsync("InfoUpdated", new object[]{} );
+                    break;
             }
         }
         

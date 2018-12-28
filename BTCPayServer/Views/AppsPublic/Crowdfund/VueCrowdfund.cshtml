@@ -20,7 +20,7 @@
                 <span v-if="srvModel.targetAmount" class="mt-3">
                     <span class="h5">{{srvModel.targetAmount}} {{targetCurrency}}</span>
 
-                    <span v-if="srvModel.enforceTargetAmount">Hardcap Goal <a href="#" v-b-tooltip title="No contributions allowed after the goal has been reached<"> ?</a></span>
+                    <span v-if="srvModel.enforceTargetAmount">Hardcap Goal <a href="#" v-b-tooltip title="No contributions allowed after the goal has been reached"> ?</a></span>
                     <span v-else>Softcap Goal <a href="#" v-b-tooltip title="Contributions allowed even after goal is reached"> ?</a> </span>
                 </span>
 
@@ -31,19 +31,15 @@
                      :aria-valuenow="srvModel.info.progressPercentage"
                      v-bind:style="{ width: srvModel.info.progressPercentage + '%' }"
                      aria-valuemin="0"
+                     v-b-tooltip :title="srvModel.info.progressPercentage + '% Confirmed Contributions'"
                      aria-valuemax="100">
-                    <template v-if="srvModel.info.progressPercentage > 0">
-                        {{srvModel.info.progressPercentage}}% Funded
-                    </template>
                 </div>
                 <div class="progress-bar bg-warning" role="progressbar"
                      :aria-valuenow="srvModel.info.pendingProgressPercentage"
                      v-bind:style="{ width: srvModel.info.pendingProgressPercentage + '%' }"
+                     v-b-tooltip :title="srvModel.info.pendingProgressPercentage + '% Pending Contributions'"
                      aria-valuemin="0"
                      aria-valuemax="100">
-                    <template v-if="srvModel.info.pendingProgressPercentage > 0">
-                        {{srvModel.info.pendingProgressPercentage}}% Pending
-                    </template>
                 </div>
             </div>
             <div class="card-body">

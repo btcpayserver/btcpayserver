@@ -77,11 +77,24 @@ addLoadEvent(function (ev) {
                 self.thankYouModalOpen = true;
             };
             eventAggregator.$on("payment-received", function (amount, cryptoCode, type) {
-                console.warn("AAAAAA", amount);
+                console.warn("AAAAAA", arguments);
                 var onChain = type.toLowerCase() === "btclike";
                 playRandomQuakeSound();
                 fireworks();
-                Vue.toasted.show('New payment of ' + amount+ " "+ cryptoCode + " " + onChain? "On Chain": "LN ");
+                if(onChain){
+                    Vue.toasted.show('New payment of ' + amount+ " "+ cryptoCode + " " + (onChain? "On Chain": "LN "), {
+                        iconPack: "fontawesome",
+                        icon: "plus",
+                        duration: 10000
+                    } );
+                }else{
+                    Vue.toasted.show('New payment of ' + amount+ " "+ cryptoCode + " " + (onChain? "On Chain": "LN "), {
+                        iconPack: "fontawesome",
+                        icon: "bolt",
+                        duration: 10000
+                    } );
+                }
+                
             });
             eventAggregator.$on("info-updated", function (model) {
                 this.srvModel = model;

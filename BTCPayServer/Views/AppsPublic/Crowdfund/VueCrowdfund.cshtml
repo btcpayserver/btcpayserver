@@ -2,24 +2,11 @@
     <div class="row h-100 w-100 py-sm-0 py-md-4 mx-0">
         <div class="card w-100 p-0 mx-0">
             <img class="card-img-top" :src="srvModel.mainImageUrl" v-if="srvModel.mainImageUrl">
-            <div class="progress rounded-0" style="min-height: 30px" v-if="srvModel.info.showProgress">
-                <div class="progress-bar p" role="progressbar" :aria-valuenow="srvModel.info.progressPercentage" aria-valuemin="0" aria-valuemax="100">
-                    <template v-if="srvModel.info.progressPercentage > 0">
-                        {{srvModel.info.progressPercentage}} % Funded
-                    </template>
-                </div>
-                <div class="progress-bar bg-warning" role="progressbar" :aria-valuenow="srvModel.info.progressPercentage" aria-valuemin="0" aria-valuemax="100">
-                    <template v-if="srvModel.info.progressPercentage > 0">
-                        {{srvModel.info.pendingProgressPercentage}} % Pending
-                    </template>
-                </div>
-
-            </div>
 
             <div class="card-body">
-                <div class="card-title row">
-                    <div class="col-md-6 col-sm-12">
-
+                <div class="card-title">
+                    <div class="row" >
+                        <div class="col-sm-12 col-md-9 col-lg-10">
                         <span class="h1" >
                             {{srvModel.title}}
                             <span class="h6 text-muted" v-if="!started && srvModel.startDate">
@@ -34,12 +21,15 @@
                             
                         </span>
                         
-                        <h2 class="text-muted" v-if="srvModel.tagline">{{srvModel.tagline}}</h2>
-                        <button v-if="srvModel.info.active" class="btn btn-lg btn-primary w-100" v-on:click="contributeModalOpen = true">Contribute</button>
+                            <h2 class="text-muted" v-if="srvModel.tagline">{{srvModel.tagline}}</h2>
+                            </div>
+                        <div class="col-sm-12 col-md-3 col-lg-2">
+                        <button v-if="srvModel.info.active" class="btn btn-lg btn-primary" v-on:click="contributeModalOpen = true">Contribute</button>
                    
 
                     </div>
-                    <ul class="list-group list-group-flush col-md-6 col-sm-12">
+                    </div>
+                    <ul class="list-group list-group-flush">
                         <li class="list-group-item  border-0">
                             <div class="d-flex justify-content-between">
                                 <div>

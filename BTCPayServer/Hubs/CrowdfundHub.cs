@@ -22,11 +22,11 @@ namespace BTCPayServer.Hubs
 {
     public class CrowdfundHub: Hub
     {
-        private readonly IServiceProvider _ServiceProvider;
+        private readonly AppsPublicController _AppsPublicController;
 
-        public CrowdfundHub(IServiceProvider serviceProvider)
+        public CrowdfundHub(AppsPublicController appsPublicController)
         {
-            _ServiceProvider = serviceProvider;
+            _AppsPublicController = appsPublicController;
         }
         public async Task ListenToCrowdfundApp(string appId)
         {
@@ -42,16 +42,12 @@ namespace BTCPayServer.Hubs
 
         public async Task CreateInvoice(ContributeToCrowdfund model)
         {
-            using (var scope = _ServiceProvider.CreateScope())
-            {
-               var controller =  scope.ServiceProvider.GetService<AppsPublicController>();
                model.RedirectToCheckout = false;
-               controller.ControllerContext.HttpContext = Context.GetHttpContext();
-               var result = await controller.ContributeToCrowdfund(Context.Items["app"].ToString(), model);
+               _AppsPublicController.ControllerContext.HttpContext = Context.GetHttpContext();
+               var result = await _AppsPublicController.ContributeToCrowdfund(Context.Items["app"].ToString(), model);
                await Clients.Caller.SendCoreAsync("InvoiceCreated", new[] {(result as OkObjectResult)?.Value.ToString()});
-            }
-            
         }
+
     }
 
     public class CrowdfundHubStreamer
@@ -155,7 +151,12 @@ namespace BTCPayServer.Hubs
             {
                 _CacheTokens[appId].Cancel();
             }
-            _HubContext.Clients.Group(appId).SendCoreAsync("InfoUpdated", Array.Empty<object>() );
+
+            GetCrowdfundInfo(appId).ContinueWith(task =>
+            {
+                _HubContext.Clients.Group(appId).SendCoreAsync("InfoUpdated", new object[]{ task.Result} );
+            }, TaskScheduler.Default);
+            
         }
         
         private static async Task<decimal> GetCurrentContributionAmount(InvoiceEntity[] invoices, string primaryCurrency,

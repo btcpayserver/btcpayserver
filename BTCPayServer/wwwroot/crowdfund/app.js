@@ -77,7 +77,6 @@ addLoadEvent(function (ev) {
                 self.thankYouModalOpen = true;
             };
             eventAggregator.$on("payment-received", function (amount, cryptoCode, type) {
-                console.warn("AAAAAA", arguments);
                 var onChain = type.toLowerCase() === "btclike";
                 playRandomQuakeSound();
                 fireworks();
@@ -97,16 +96,17 @@ addLoadEvent(function (ev) {
                 
             });
             eventAggregator.$on("info-updated", function (model) {
-                this.srvModel = model;
+                console.warn("UPDATED", self.srvModel, arguments);
+                self.srvModel = model;
             });
             eventAggregator.$on("connection-pending", function () {
-                this.connectionStatus = "pending";
+                self.connectionStatus = "pending";
             });
             eventAggregator.$on("connection-failed", function () {
-                this.connectionStatus = "failed";
+                self.connectionStatus = "failed";
             });
             eventAggregator.$on("connection-lost", function () {
-                this.connectionStatus = "connection lost";
+                self.connectionStatus = "connection lost";
             });
             this.updateComputed();
         }

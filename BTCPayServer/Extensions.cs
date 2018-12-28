@@ -168,8 +168,34 @@ namespace BTCPayServer
                         request.Path.ToUriComponent());
         }
 
+        /// <summary>
+        /// If 'toto' and RootPath is 'rootpath' returns '/rootpath/toto'
+        /// If 'toto' and RootPath is empty returns '/toto'
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="path"></param>
+        /// <returns></returns>
         public static string GetRelativePath(this HttpRequest request, string path)
         {
+            if (path.Length > 0 && path[0] != '/')
+                path = $"/{path}";
+            return string.Concat(
+                        request.PathBase.ToUriComponent(),
+                        path);
+        }
+
+        /// <summary>
+        /// If 'https://example.com/toto' returns 'https://example.com/toto'
+        /// If 'toto' and RootPath is 'rootpath' returns '/rootpath/toto'
+        /// If 'toto' and RootPath is empty returns '/toto'
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public static string GetRelativePathOrAbsolute(this HttpRequest request, string path)
+        {
+            if (Uri.TryCreate(path, UriKind.Absolute, out var unused))
+                return path;
             if (path.Length > 0 && path[0] != '/')
                 path = $"/{path}";
             return string.Concat(

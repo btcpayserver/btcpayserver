@@ -368,6 +368,23 @@ namespace BTCPayServer.Data
 
         [Obsolete("Use GetExcludedPaymentMethods instead")]
         public string[] ExcludedPaymentMethods { get; set; }
+#pragma warning disable CS0618 // Type or member is obsolete
+        public void SetWalletKeyPathRoot(PaymentMethodId paymentMethodId, KeyPath keyPath)
+        {
+            if (keyPath == null)
+                WalletKeyPathRoots.Remove(paymentMethodId.ToString());
+            else
+                WalletKeyPathRoots.AddOrReplace(paymentMethodId.ToString().ToLowerInvariant(), keyPath.ToString());
+        }
+        public KeyPath GetWalletKeyPathRoot(PaymentMethodId paymentMethodId)
+        {
+            if (WalletKeyPathRoots.TryGetValue(paymentMethodId.ToString().ToLowerInvariant(), out var k))
+                return KeyPath.Parse(k);
+            return null;
+        }
+#pragma warning restore CS0618 // Type or member is obsolete
+        [Obsolete("Use SetWalletKeyPathRoot/GetWalletKeyPathRoot instead")]
+        public Dictionary<string, string> WalletKeyPathRoots { get; set; } = new Dictionary<string, string>();
 
         public IPaymentFilter GetExcludedPaymentMethods()
         {

@@ -145,7 +145,7 @@ services:
       - bitcoind
 
   lightning-charged:
-    image: shesek/lightning-charge:0.4.3
+    image: shesek/lightning-charge:0.4.6-standalone
     restart: unless-stopped
     environment:
       NETWORK: regtest

@@ -5,13 +5,13 @@
             <div class="d-flex justify-content-between px-2">
                 <h1>
                     {{srvModel.title}}
-                    <span class="h6 text-muted" v-if="!started && srvModel.startDate">
+                    <span class="h6 text-muted" v-if="!started && srvModel.startDate" v-b-tooltip :title="startDate">
                         Starts {{startDateRelativeTime}}
                     </span>
-                    <span class="h6 text-muted" v-else-if="started && !ended && srvModel.endDate">
+                    <span class="h6 text-muted" v-else-if="started && !ended && srvModel.endDate"  v-b-tooltip :title="endDate">
                         Ends {{endDateRelativeTime}}
                     </span>
-                    <span class="h6 text-muted" v-else-if="started && !ended && srvModel.endDate">
+                    <span class="h6 text-muted" v-else-if="started && !ended && srvModel.endDate"  v-b-tooltip title="No set end date">
                         Currently Active!
                     </span>
 
@@ -20,8 +20,8 @@
                 <span v-if="srvModel.targetAmount" class="mt-3">
                     <span class="h5">{{srvModel.targetAmount}} {{targetCurrency}}</span>
 
-                    <span v-if="srvModel.enforceTargetAmount">Hardcap Goal <a href="#" v-b-tooltip title="No contributions allowed after the goal has been reached"> ?</a></span>
-                    <span v-else>Softcap Goal <a href="#" v-b-tooltip title="Contributions allowed even after goal is reached"> ?</a> </span>
+                    <span v-if="srvModel.enforceTargetAmount">Hardcap Goal <span class="fa fa-question-circle" v-b-tooltip title="No contributions allowed after the goal has been reached"></span></span>
+                    <span v-else>Softcap Goal <span class="fa fa-question-circle" v-b-tooltip title="Contributions allowed even after goal is reached"></span> </span>
                 </span>
 
 

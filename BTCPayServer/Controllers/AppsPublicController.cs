@@ -113,18 +113,40 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             var settings = app.GetSettings<CrowdfundSettings>();
             var store = await _AppsHelper.GetStore(app);
-
+            string title = null;
+            var price = 0.0m;
+            if (!string.IsNullOrEmpty(request.ChoiceKey))
+            {
+                var choices = _AppsHelper.Parse(settings.PerksTemplate, settings.TargetCurrency);
+                var choice = choices.FirstOrDefault(c => c.Id == request.ChoiceKey);
+                if (choice == null)
+                    return NotFound();
+                title = choice.Title;
+                price = choice.Price.Value;
+                if (request.Amount > price)
+                    price = request.Amount;
+            }
+            else
+            {
+                price = request.Amount;
+                title = settings.Title;
+            }
+            
+            
             store.AdditionalClaims.Add(new Claim(Policies.CanCreateInvoice.Key, store.Id));
             var invoice = await _InvoiceController.CreateInvoiceCore(new Invoice()
             {
                 OrderId = $"{CrowdfundHubStreamer.CrowdfundInvoiceOrderIdPrefix}{appId}",
                 Currency = settings.TargetCurrency,
+                ItemCode = request.ChoiceKey ?? string.Empty,
+                ItemDesc = title,
                 BuyerEmail = request.Email,
-                Price = request.Amount,
+                Price = price,
                 NotificationURL = settings.NotificationUrl,
                 FullNotifications = true,
                 ExtendedNotifications = true,
-                RedirectURL = HttpContext.Request.GetAbsoluteRoot()+ "/apps/{appId}/crowdfund",
+                RedirectURL = request.RedirectUrl,
+                
                 
             }, store, HttpContext.Request.GetAbsoluteRoot());
             if (request.RedirectToCheckout)
@@ -195,7 +217,7 @@ namespace BTCPayServer.Controllers
                 OrderId = orderId,
                 NotificationURL = notificationUrl,
                 RedirectURL = redirectUrl,
-                FullNotifications = true
+                FullNotifications = true,
             }, store, HttpContext.Request.GetAbsoluteRoot());
             return RedirectToAction(nameof(InvoiceController.Checkout), "Invoice", new { invoiceId = invoice.Data.Id });
         }

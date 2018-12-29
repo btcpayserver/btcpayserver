@@ -170,7 +170,7 @@ var resizeCanvas = function() {
     window.addEventListener("resize", resizeCanvas);
     // addClickListeners();
     
-    handleInactiveUser();
+    // handleInactiveUser();
 })();
 
 function handleInactiveUser() {

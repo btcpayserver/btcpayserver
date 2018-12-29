@@ -120,9 +120,17 @@ namespace BTCPayServer.Controllers
             }
             StatusMessage = "App successfully created";
             CreatedAppId = id;
-            if (appType == AppType.PointOfSale)
-                return RedirectToAction(nameof(UpdatePointOfSale), new { appId = id });
-            return RedirectToAction(nameof(ListApps));
+
+            switch (appType)
+            {
+                case AppType.PointOfSale:
+                    return RedirectToAction(nameof(UpdatePointOfSale), new { appId = id });
+                case AppType.Crowdfund:
+                    return RedirectToAction(nameof(UpdateCrowdfund), new { appId = id });
+                default:
+                    return RedirectToAction(nameof(ListApps));
+            }
+                
         }
 
         [HttpGet]

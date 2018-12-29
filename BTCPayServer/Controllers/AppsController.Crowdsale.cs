@@ -31,6 +31,7 @@ namespace BTCPayServer.Controllers
             public string NotificationUrl { get; set; }
             public string Tagline { get; set; }
             public string EmbeddedCSS { get; set; }
+            public string PerksTemplate { get; set; }
         }
         
         
@@ -57,16 +58,31 @@ namespace BTCPayServer.Controllers
                 CustomCSSLink = settings.CustomCSSLink,
                 NotificationUrl = settings.NotificationUrl,
                 Tagline = settings.Tagline,
+                PerksTemplate = settings.PerksTemplate
             };
             return View(vm);
         }
         [HttpPost]
         [Route("{appId}/settings/crowdfund")]
-        public async Task<IActionResult> UpdatePointOfSale(string appId, UpdateCrowdfundViewModel vm)
+        public async Task<IActionResult> UpdateCrowdfund(string appId, UpdateCrowdfundViewModel vm)
         {
             if (_AppsHelper.GetCurrencyData(vm.TargetCurrency, false) == null)
                 ModelState.AddModelError(nameof(vm.TargetCurrency), "Invalid currency");
           
+            try
+            {
+                _AppsHelper.Parse(vm.PerksTemplate, vm.TargetCurrency);
+            }
+            catch
+            {
+                ModelState.AddModelError(nameof(vm.PerksTemplate), "Invalid template");
+            }
+            if (!ModelState.IsValid)
+            {
+                return View(vm);
+            }
+            
+            
             var app = await GetOwnedApp(appId, AppType.Crowdfund);
             if (app == null)
                 return NotFound();
@@ -84,7 +100,8 @@ namespace BTCPayServer.Controllers
                 MainImageUrl = vm.MainImageUrl,
                 EmbeddedCSS = vm.EmbeddedCSS,
                 NotificationUrl = vm.NotificationUrl,
-                Tagline = vm.Tagline
+                Tagline = vm.Tagline,
+                PerksTemplate = vm.PerksTemplate
             });
             await UpdateAppSettings(app);
             _EventAggregator.Publish(new CrowdfundAppUpdated()

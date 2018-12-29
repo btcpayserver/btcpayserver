@@ -96,8 +96,7 @@ namespace BTCPayServer.Hubs
                 entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1);
                 
                 var app = await _AppsHelper.GetApp(appId, AppType.Crowdfund, true);
-                var result = await GetInfo(app, _InvoiceRepository, _RateFetcher,
-                    _BtcPayNetworkProvider);
+                var result = await GetInfo(app);
                 entry.SetValue(result);
                 return result;
             });
@@ -191,26 +190,27 @@ namespace BTCPayServer.Hubs
 
         }
 
-        private static async Task<ViewCrowdfundViewModel> GetInfo(AppData appData, InvoiceRepository invoiceRepository,
-            RateFetcher rateFetcher, BTCPayNetworkProvider btcPayNetworkProvider, string statusMessage= null)
+        private async Task<ViewCrowdfundViewModel> GetInfo(AppData appData, string statusMessage= null)
         {
             var settings = appData.GetSettings<AppsController.CrowdfundSettings>();
-            var invoices = await GetInvoicesForApp(appData, invoiceRepository);
+            var invoices = await GetInvoicesForApp(appData, _InvoiceRepository);
           
             
-            var rateRules = appData.StoreData.GetStoreBlob().GetRateRules(btcPayNetworkProvider);
+            var rateRules = appData.StoreData.GetStoreBlob().GetRateRules(_BtcPayNetworkProvider);
             var currentAmount = await GetCurrentContributionAmount(
                 invoices.Where(entity => entity.Status == InvoiceStatus.Complete).ToArray(),
-                settings.TargetCurrency, rateFetcher, rateRules);
+                settings.TargetCurrency, _RateFetcher, rateRules);
             var currentPendingAmount =  await GetCurrentContributionAmount(
                 invoices.Where(entity => entity.Status != InvoiceStatus.Complete).ToArray(),
-                settings.TargetCurrency, rateFetcher, rateRules);
+                settings.TargetCurrency, _RateFetcher, rateRules);
             
             
             var active = (settings.StartDate == null || DateTime.Now >= settings.StartDate) &&
                          (settings.EndDate == null || DateTime.Now <= settings.EndDate) &&
                          (!settings.EnforceTargetAmount || settings.TargetAmount > currentAmount);
 
+            
+            
             return new ViewCrowdfundViewModel()
             {
                 Title = settings.Title,
@@ -227,6 +227,7 @@ namespace BTCPayServer.Hubs
                 TargetCurrency = settings.TargetCurrency,
                 EnforceTargetAmount = settings.EnforceTargetAmount,
                 StatusMessage = statusMessage,
+                Perks = _AppsHelper.Parse(settings.PerksTemplate, settings.TargetCurrency),
                 Info = new ViewCrowdfundViewModel.CrowdfundInfo()
                 {
                     TotalContributors = invoices.Length,

@@ -36,6 +36,9 @@ namespace BTCPayServer.Models.AppViewModels
         [Display(Name = "Do not allow additional contributions after target has been reached")]
         public bool EnforceTargetAmount { get; set; }
 
+        [Display(Name = "Contribution Perks Template")]
+        public string PerksTemplate { get; set; }
+        
         [MaxLength(500)]
         [Display(Name = "Custom bootstrap CSS file")]
         public string CustomCSSLink { get; set; }

@@ -22,6 +22,7 @@ namespace BTCPayServer.Models.AppViewModels
 
         public CrowdfundInfo Info { get; set; }
         public string Tagline { get; set; }
+        public ViewPointOfSaleViewModel.Item[] Perks { get; set; }
 
 
         public class CrowdfundInfo
@@ -46,6 +47,8 @@ namespace BTCPayServer.Models.AppViewModels
         public ViewCrowdfundViewModel ViewCrowdfundViewModel { get; set; }
         [Required] public decimal Amount { get; set; }
         public string Email { get; set; }
-        public bool RedirectToCheckout { get; set; } 
+        public string ChoiceKey { get; set; }
+        public bool RedirectToCheckout { get; set; }
+        public string RedirectUrl { get; set; }
     }
 }

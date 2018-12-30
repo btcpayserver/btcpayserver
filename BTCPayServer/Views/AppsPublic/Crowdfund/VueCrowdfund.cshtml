@@ -110,7 +110,7 @@
                                     :active="srvModel.info.active"
                                     :in-modal="false"
                                     :perks="srvModel.perks">
-                           
+
                         </contribute>
                     </div>
                 </div>
@@ -119,50 +119,72 @@
             </div>
         </div>
     </div>
-    <b-modal title="Contribute" v-model="contributeModalOpen" v-on:ok="submitModalContribute" :hide-header-close="true">
+    <b-modal title="Contribute" v-model="contributeModalOpen" size="lg" ok-only="true" ok-title="Close" ref="modalContribute">
 
-        <contribute v-if="contributeModalOpen" 
-                    :target-currency="srvModel.targetCurrency" 
-                    :active="srvModel.info.active" 
-                    ref="modalContribute" 
+        <contribute v-if="contributeModalOpen"
+                    :target-currency="srvModel.targetCurrency"
+                    :active="srvModel.info.active"
                     :perks="srvModel.perks"
                     :in-modal="true">
         </contribute>
-        <template slot="modal-ok">
-            Submit
-        </template>
-    </b-modal>
-    <b-modal title="Thank You!" v-model="thankYouModalOpen" :ok-only="true">
-        Thank you for your contribution.
     </b-modal>
 
 </div>
 
 <script type="text/x-template" id="perks-template">
-{{perks}}
+<div >
+    <perk :perk="{title: 'Donate Custom Amount', price: { value: 0}}" :target-currency="targetCurrency" :active="active" 
+        :in-modal="inModal">
+    </perk>
+    <perk v-for="(perk, index) in perks" :perk="perk" :target-currency="targetCurrency" :active="active" 
+        :in-modal="inModal">
+    </perk>
+</div>
 </script>
+
+<script type="text/x-template" id="perk-template"> 
+<div class="card mb-4 perk"  v-bind:class="{ 'expanded': expanded, 'unexpanded': !expanded }" v-on:click="expanded = true">
+    <div class="perk-zoom text-white" v-if="!expanded"> ZZZ</div>
+    <form v-on:submit='onContributeFormSubmit'>
+        <input type="hidden" :value="perk.id" id="choiceKey"/> 
+        <img v-if="perk.image && perk.image != 'null' "  class="card-img-top" :src="perk.image" />
+        <div class="card-body">
+            <h5 class="card-title" >{{perk.title? perk.title : perk.id}}</h5>
+            <p  class="card-text" v-if="perk.description" v-html="perk.description"></p>
+            <div class="input-group" style="max-width: 500px;" v-if="expanded">
+                <input 
+                    :disabled="!active"
+                    class="form-control" 
+                    type="number" 
+                    v-model="amount"
+                    :min="perk.price.value"  
+                    step="any"  
+                    placeholder="Contribution Amount"
+                    required >
+                <div class="input-group-append">                    
+                    <span class='input-group-text'>{{targetCurrency}}</span>
+                    <button 
+                        class="btn btn-primary" 
+                        :disabled="!active" 
+                        type="submit">
+                        Contribute
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div> 
+</script>
+
 
 <script type="text/x-template" id="contribute-template">
   <div>
     <h3 v-if="!inModal">Contribute</h3>
-    <form v-on:submit='onContributeFormSubmit'>
-        <perks-display >
-        </perks-display>
-        <div class='form-group'>
-            <label >Email</label>
-            <input type='email' class='form-control' v-model='email' placeholder='Email'/>
-        </div>
-        <div class='form-group'>
-            <label >Contribution Amount</label>
-            <div class='input-group mb-3'>
-                <input type='number' step='any' class='form-control' v-model='amount' placeholder='Contribution Amount'/>
-                <div class='input-group-append'>
-                    <span class='input-group-text'>{{targetCurrency}}</span>
-                </div>
-            </div>
-        </div>
-        <button v-if="!inModal" type='submit' class='btn btn-primary' :disabled='!active'>Contribute</button>
-    </form>
+    <perks 
+        :perks="perks" 
+        :in-modal="inModal"
+        :target-currency="targetCurrency" 
+        :active="active">
+     </perks>
   </div>
 </script>
-

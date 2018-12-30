@@ -28,8 +28,7 @@ addLoadEvent(function (ev) {
                 endDateRelativeTime: "",
                 started: false,
                 ended: false,
-                contributeModalOpen: false,
-                thankYouModalOpen: false
+                contributeModalOpen: false
             }
         },
         computed: {
@@ -73,9 +72,6 @@ addLoadEvent(function (ev) {
 
                 self.contributeModalOpen = false;
             });
-            btcpay.onModalWillLeave = function(){
-                self.thankYouModalOpen = true;
-            };
             eventAggregator.$on("payment-received", function (amount, cryptoCode, type) {
                 var onChain = type.toLowerCase() === "btclike";
                 playRandomQuakeSound();

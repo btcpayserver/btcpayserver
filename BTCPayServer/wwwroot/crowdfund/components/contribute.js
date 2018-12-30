@@ -1,11 +1,20 @@
 Vue.component('contribute', {
     props: ["targetCurrency", "active", "perks", "inModal"],
-    template: "#contribute-template",
+    template: "#contribute-template"
+});
+
+Vue.component('perks', {
+    props: ["perks", "targetCurrency", "active", "inModal"],
+    template: "#perks-template"
+});
+
+Vue.component('perk', {
+    props: ["perk", "targetCurrency", "active", "inModal"],
+    template: "#perk-template",
     data: function () {
         return {
-            email: "",
-            amount: 0,
-            choiceKey: ""
+            amount: null,
+            expanded: false
         }
     },
     methods: {
@@ -16,20 +25,11 @@ Vue.component('contribute', {
             if(!this.active){
                 return;
             }
-            eventAggregator.$emit("contribute", {email: this.email, amount: this.amount, choiceKey: this.choiceKey});
-        }
-    }
-});
-
-Vue.component('perks-display', {
-    props: ["perks"],
-    template: "#perks-template",
-    data: function () {
-        return {
+            eventAggregator.$emit("contribute", {amount: this.amount, choiceKey: this.choiceKey});
         }
     },
-    methods: {
-        
+    mounted: function(){
+        this.amount = this.perk.price.value;
     }
 });
 

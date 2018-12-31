@@ -88,38 +88,61 @@
                 <div class="card-title">
 
                     <div class="row">
-                        <div class="col-sm-12 col-md-9 col-lg-10">
+                        <div class="col-sm-12 col-md-8 col-lg-9">
 
 
                             <h2 class="text-muted" v-if="srvModel.tagline">{{srvModel.tagline}}</h2>
                         </div>
-                        <div class="col-sm-12 col-md-3 col-lg-2">
-                            <button v-if="srvModel.info.active" class="btn btn-lg btn-primary w-100" v-on:click="contributeModalOpen = true">Contribute</button>
+                        <div class="col-sm-12 col-md-4 col-lg-3">
+                            <button v-if="srvModel.info.active" class="btn btn-lg btn-primary w-100 font-weight-bold" v-on:click="contributeModalOpen = true">Contribute</button>
 
 
                         </div>
                     </div>
                 </div>
-                <hr/>
-                <div class="row">
-                    <div class="col-md-8 col-sm-12">
-                        <div class="card-text" v-html="srvModel.description"></div>
+                <template v-if="srvModel.disqusEnabled">
+                    <b-tabs>
+                        <b-tab title="Details"active>
+                            <div class="row">
+                                <div class="col-md-8 col-sm-12">
+                                    <div class="card-text" v-html="srvModel.description"></div>
+                                </div>
+                                <div class="col-md-4 col-sm-12">
+                                    <contribute :target-currency="srvModel.targetCurrency"
+                                                :active="srvModel.info.active"
+                                                :in-modal="false"
+                                                :perks="srvModel.perks">
+    
+                                    </contribute>
+                                </div>
+                            </div>
+                        </b-tab>
+                        <b-tab title="Discussion" >
+                            <div id="disqus_thread"></div>
+                        </b-tab>
+                    </b-tabs>
+                    
+                </template>
+                <template v-else>
+                    <hr/>
+                    <div class="row">
+                        <div class="col-md-8 col-sm-12">
+                            <div class="card-text" v-html="srvModel.description"></div>
+                        </div>
+                        <div class="col-md-4 col-sm-12">
+                            <contribute :target-currency="srvModel.targetCurrency"
+                                        :active="srvModel.info.active"
+                                        :in-modal="false"
+                                        :perks="srvModel.perks">
+    
+                            </contribute>
+                        </div>
                     </div>
-                    <div class="col-md-4 col-sm-12">
-                        <contribute :target-currency="srvModel.targetCurrency"
-                                    :active="srvModel.info.active"
-                                    :in-modal="false"
-                                    :perks="srvModel.perks">
-
-                        </contribute>
-                    </div>
-                </div>
-
-
+                </template>
             </div>
         </div>
     </div>
-    <b-modal title="Contribute" v-model="contributeModalOpen" size="lg" ok-only="true" ok-title="Close" ref="modalContribute">
+    <b-modal title="Contribute" v-model="contributeModalOpen" size="lg" ok-only="true" ok-variant="secondary" ok-title="Close" ref="modalContribute">
 
         <contribute v-if="contributeModalOpen"
                     :target-currency="srvModel.targetCurrency"
@@ -133,7 +156,7 @@
 
 <script type="text/x-template" id="perks-template">
 <div >
-    <perk :perk="{title: 'Donate Custom Amount', price: { value: 0}}" :target-currency="targetCurrency" :active="active" 
+    <perk :perk="{title: 'Donate Custom Amount', price: { value: null}, custom: true}" :target-currency="targetCurrency" :active="active" 
         :in-modal="inModal">
     </perk>
     <perk v-for="(perk, index) in perks" :perk="perk" :target-currency="targetCurrency" :active="active" 
@@ -144,16 +167,34 @@
 
 <script type="text/x-template" id="perk-template"> 
 <div class="card mb-4 perk"  v-bind:class="{ 'expanded': expanded, 'unexpanded': !expanded }" v-on:click="expanded = true">
-    <div class="perk-zoom text-white" v-if="!expanded"> ZZZ</div>
+    <div class="perk-zoom " v-if="!expanded">
+        <div class="perk-zoom-bg bg-primary"> </div>
+        <div class="perk-zoom-text w-100 text-center text-white font-weight-bold">
+            Select this contribution perk
+        </div>
+    </div>
     <form v-on:submit='onContributeFormSubmit'>
         <input type="hidden" :value="perk.id" id="choiceKey"/> 
         <img v-if="perk.image && perk.image != 'null' "  class="card-img-top" :src="perk.image" />
         <div class="card-body">
-            <h5 class="card-title" >{{perk.title? perk.title : perk.id}}</h5>
+            <div class="card-title d-flex justify-content-between" >
+                <span class="h5">{{perk.title? perk.title : perk.id}} </span>
+                <span class="text-muted" > 
+                    <template v-if="perk.price.value">{{perk.price.value}} 
+                        {{targetCurrency}} 
+                        <template v-if="perk.custom">or more</template>
+                    </template>
+                    <template v-else-if="!perk.price.value && perk.custom">
+                        Any amount
+                    </template>
+                </span>
+            </div>
             <p  class="card-text" v-if="perk.description" v-html="perk.description"></p>
+            
             <div class="input-group" style="max-width: 500px;" v-if="expanded">
                 <input 
                     :disabled="!active"
+                    :readonly="!perk.custom"
                     class="form-control" 
                     type="number" 
                     v-model="amount"
@@ -167,7 +208,7 @@
                         class="btn btn-primary" 
                         :disabled="!active" 
                         type="submit">
-                        Contribute
+                        Continue
                     </button>
                 </div>
             </div>

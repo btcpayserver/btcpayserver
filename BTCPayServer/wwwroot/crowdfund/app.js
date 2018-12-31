@@ -74,8 +74,12 @@ addLoadEvent(function (ev) {
             });
             eventAggregator.$on("payment-received", function (amount, cryptoCode, type) {
                 var onChain = type.toLowerCase() === "btclike";
-                playRandomQuakeSound();
-                fireworks();
+                if(this.srvModel.soundsEnabled) {
+                    playRandomQuakeSound();
+                }
+                if(this.srvModel.animationsEnabled) {
+                    fireworks();
+                }
                 if(onChain){
                     Vue.toasted.show('New payment of ' + amount+ " "+ cryptoCode + " " + (onChain? "On Chain": "LN "), {
                         iconPack: "fontawesome",
@@ -90,7 +94,33 @@ addLoadEvent(function (ev) {
                     } );
                 }
                 
+                
             });
+            if(srvModel.disqusEnabled){
+                window.disqus_config = function () {
+                    // Replace PAGE_URL with your page's canonical URL variable
+                    this.page.url = window.location.href;
+
+                    // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+                    this.page.identifier = self.srvModel.appId;
+                };
+
+                (function() {  // REQUIRED CONFIGURATION VARIABLE: EDIT THE SHORTNAME BELOW
+                    var d = document, s = d.createElement('script');
+
+                    // IMPORTANT: Replace EXAMPLE with your forum shortname!
+                    s.src = "https://"+self.srvModel.disqusShortname+".disqus.com/embed.js";
+                    s.async= true;
+                    s.setAttribute('data-timestamp', +new Date());
+                    (d.head || d.body).appendChild(s);
+                    
+                    var s2 = d.createElement('script');
+                    s2.src="//"+self.srvModel.disqusShortname+".disqus.com/count.js";
+                    s2.async= true;
+                    s.setAttribute('data-timestamp', +new Date());
+                    (d.head || d.body).appendChild(s);
+                })();
+            }
             eventAggregator.$on("info-updated", function (model) {
                 console.warn("UPDATED", self.srvModel, arguments);
                 self.srvModel = model;

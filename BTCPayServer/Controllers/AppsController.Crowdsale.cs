@@ -32,6 +32,11 @@ namespace BTCPayServer.Controllers
             public string Tagline { get; set; }
             public string EmbeddedCSS { get; set; }
             public string PerksTemplate { get; set; }
+            public bool DisqusEnabled { get; set; }
+            public bool SoundsEnabled { get; set; }
+            public string DisqusShortname { get; set; }
+            public bool AnimationsEnabled { get; set; }
+            public string DisqusAPIKey { get; set; }
         }
         
         
@@ -58,7 +63,12 @@ namespace BTCPayServer.Controllers
                 CustomCSSLink = settings.CustomCSSLink,
                 NotificationUrl = settings.NotificationUrl,
                 Tagline = settings.Tagline,
-                PerksTemplate = settings.PerksTemplate
+                PerksTemplate = settings.PerksTemplate,
+                DisqusEnabled = settings.DisqusEnabled,
+                SoundsEnabled = settings.SoundsEnabled,
+                DisqusShortname = settings.DisqusShortname,
+                AnimationsEnabled = settings.AnimationsEnabled,
+                DisqusAPIKey = settings.DisqusAPIKey,
             };
             return View(vm);
         }
@@ -101,7 +111,12 @@ namespace BTCPayServer.Controllers
                 EmbeddedCSS = vm.EmbeddedCSS,
                 NotificationUrl = vm.NotificationUrl,
                 Tagline = vm.Tagline,
-                PerksTemplate = vm.PerksTemplate
+                PerksTemplate = vm.PerksTemplate,
+                DisqusEnabled = vm.DisqusEnabled,
+                SoundsEnabled = vm.SoundsEnabled,
+                DisqusShortname = vm.DisqusShortname,
+                AnimationsEnabled = vm.AnimationsEnabled,
+                DisqusAPIKey = vm.DisqusAPIKey,
             });
             await UpdateAppSettings(app);
             _EventAggregator.Publish(new CrowdfundAppUpdated()

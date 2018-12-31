@@ -26,11 +26,18 @@ Vue.component('perk', {
                 return;
             }
             eventAggregator.$emit("contribute", {amount: this.amount, choiceKey: this.choiceKey});
+        },
+        expand: function(){
+            this.expanded = true;   
         }
+        
+        
     },
     mounted: function(){
         this.amount = this.perk.price.value;
+        
     }
 });
+
 
 

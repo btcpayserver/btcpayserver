@@ -228,6 +228,11 @@ namespace BTCPayServer.Hubs
                 EnforceTargetAmount = settings.EnforceTargetAmount,
                 StatusMessage = statusMessage,
                 Perks = _AppsHelper.Parse(settings.PerksTemplate, settings.TargetCurrency),
+                DisqusEnabled = settings.DisqusEnabled,
+                SoundsEnabled = settings.SoundsEnabled,
+                DisqusShortname = settings.DisqusShortname,
+                AnimationsEnabled = settings.AnimationsEnabled,
+                DisqusAPIKey = settings.DisqusAPIKey,
                 Info = new ViewCrowdfundViewModel.CrowdfundInfo()
                 {
                     TotalContributors = invoices.Length,

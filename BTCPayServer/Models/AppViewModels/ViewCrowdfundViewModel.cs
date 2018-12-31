@@ -23,6 +23,11 @@ namespace BTCPayServer.Models.AppViewModels
         public CrowdfundInfo Info { get; set; }
         public string Tagline { get; set; }
         public ViewPointOfSaleViewModel.Item[] Perks { get; set; }
+        public bool DisqusEnabled { get; set; }
+        public bool SoundsEnabled { get; set; }
+        public string DisqusShortname { get; set; }
+        public bool AnimationsEnabled { get; set; }
+        public string DisqusAPIKey { get; set; }
 
 
         public class CrowdfundInfo

@@ -122,6 +122,31 @@
                         <span asp-validation-for="Enabled" class="text-danger"></span>
                     </div>
                     <div class="form-group">
+                        <label asp-for="SoundsEnabled"></label>
+                        <input asp-for="SoundsEnabled" type="checkbox" class="form-check"/>
+                        <span asp-validation-for="SoundsEnabled" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="AnimationsEnabled"></label>
+                        <input asp-for="AnimationsEnabled" type="checkbox" class="form-check"/>
+                        <span asp-validation-for="AnimationsEnabled" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="DisqusEnabled"></label>
+                        <input asp-for="DisqusEnabled" type="checkbox" class="form-check"/>
+                        <span asp-validation-for="DisqusEnabled" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="DisqusShortname" class="control-label"></label>
+                        <input asp-for="DisqusShortname" class="form-control" />
+                        <span asp-validation-for="DisqusShortname" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="DisqusAPIKey" class="control-label"></label>
+                        <input asp-for="DisqusAPIKey" class="form-control" />
+                        <span asp-validation-for="DisqusAPIKey" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
                         <input type="submit" class="btn btn-primary" value="Save Settings" />
                     </div>
                 </form>

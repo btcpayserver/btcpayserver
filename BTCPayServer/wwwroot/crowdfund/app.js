@@ -85,6 +85,8 @@ addLoadEvent(function (ev) {
         mounted: function () {
             hubListener.connect();
             var self = this;
+            this.sound = this.srvModel.soundsEnabled;
+            this.animation = this.srvModel.animationsEnabled;
             eventAggregator.$on("invoice-created", function (invoiceId) {
                 btcpay.setApiUrlPrefix(window.location.origin);
                 btcpay.showInvoice(invoiceId);
@@ -94,10 +96,10 @@ addLoadEvent(function (ev) {
             });
             eventAggregator.$on("payment-received", function (amount, cryptoCode, type) {
                 var onChain = type.toLowerCase() === "btclike";
-                if(this.srvModel.soundsEnabled) {
+                if(self.sound) {
                     playRandomQuakeSound();
                 }
-                if(this.srvModel.animationsEnabled) {
+                if(self.animation) {
                     fireworks();
                 }
                 if(onChain){

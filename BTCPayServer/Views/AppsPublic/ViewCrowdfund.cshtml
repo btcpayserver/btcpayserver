@@ -44,8 +44,11 @@ else
     <noscript>
         @await Html.PartialAsync("Crowdfund/MinimalCrowdfund", Model)
     </noscript>
-    
-    <canvas id="fireworks"></canvas>
+
+    if (Model.AnimationsEnabled)
+    {
+        <canvas id="fireworks"></canvas>
+    }
     @await Html.PartialAsync("Crowdfund/VueCrowdfund", Model)
 }
 

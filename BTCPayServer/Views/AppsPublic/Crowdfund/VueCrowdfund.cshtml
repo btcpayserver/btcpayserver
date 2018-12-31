@@ -45,40 +45,40 @@
            
             <div class="card-body">
 
-                 <div class="row py-2 text-center">
-                                                <div class="col-sm border-right">
-                                                    <h5>{{srvModel.info.currentAmount + srvModel.info.currentPendingAmount }} {{targetCurrency}} </h5>
-                                                    <h5 class="text-muted">Raised</h5>
-                                                </div>
-                                                <div  class="col-sm  border-right">
-                                                    <h5>{{srvModel.info.progressPercentage + srvModel.info.pendingProgressPercentage }}%</h5>
-                                                    <h5 class="text-muted">Of Goal</h5>
-                                                </div>
-                                                <div  class="col-sm  border-right">
-                                                    <h5>
-                                                        {{srvModel.info.totalContributors}}
-                                                    </h5>
-                                                    <h5 class="text-muted">Contributors</h5>
-                                                </div> 
-                                                <div  class="col-sm" v-if="endDiff">
-                                                    <h5>
-                                                        {{endDiff}}
-                                                    </h5>
-                                                    <h5 class="text-muted">Left</h5>
-                                                </div>
-                                                <div  class="col-sm" v-if="startDiff">
-                                                    <h5>
-                                                        {{startDiff}}
-                                                    </h5>
-                                                    <h5 class="text-muted">Left to start</h5>
-                                                </div>
-                                                <div  class="col-sm" v-if="ended">
-                                                    <h5>
-                                                        Campaign
-                                                    </h5>
-                                                    <h5 >not active</h5>
-                                                </div>
-                                            </div>
+                <div class="row py-2 text-center">
+                    <div class="col-sm border-right">
+                        <h5>{{srvModel.info.currentAmount + srvModel.info.currentPendingAmount }} {{targetCurrency}} </h5>
+                        <h5 class="text-muted">Raised</h5>
+                    </div>
+                    <div  class="col-sm  border-right">
+                        <h5>{{srvModel.info.progressPercentage + srvModel.info.pendingProgressPercentage }}%</h5>
+                        <h5 class="text-muted">Of Goal</h5>
+                    </div>
+                    <div  class="col-sm  border-right">
+                        <h5>
+                            {{srvModel.info.totalContributors}}
+                        </h5>
+                        <h5 class="text-muted">Contributors</h5>
+                    </div> 
+                    <div  class="col-sm" v-if="endDiff">
+                        <h5>
+                            {{endDiff}}
+                        </h5>
+                        <h5 class="text-muted">Left</h5>
+                    </div>
+                    <div  class="col-sm" v-if="startDiff">
+                        <h5>
+                            {{startDiff}}
+                        </h5>
+                        <h5 class="text-muted">Left to start</h5>
+                    </div>
+                    <div  class="col-sm" v-if="ended">
+                        <h5>
+                            Campaign
+                        </h5>
+                        <h5 >not active</h5>
+                    </div>
+                </div>
                 <div class="card-title">
 
                     <div class="row">
@@ -133,6 +133,21 @@
                         </div>
                     </div>
                 </template>
+            </div>
+            <div class="card-footer text-muted d-flex" v-if="srvModel.animationsEnabled || srvModel.soundsEnabled">
+              
+                <div class="form-check mx-1"  v-if="srvModel.animationsEnabled || animation">
+                    <input class="form-check-input" type="checkbox" id="cbAnime" v-model="animation">
+                    <label class="form-check-label" for="cbAnime">
+                        Animations
+                    </label>
+                </div>
+                <div class="form-check mx-1"  v-if="srvModel.soundsEnabled|| sound">
+                        <input class="form-check-input" type="checkbox"  id="cbSounds" v-model="sound">
+                        <label class="form-check-label" for="cbSounds">
+                            Sounds
+                        </label>
+                    </div>
             </div>
         </div>
     </div>

@@ -36,7 +36,6 @@ namespace BTCPayServer.Controllers
             public bool SoundsEnabled { get; set; }
             public string DisqusShortname { get; set; }
             public bool AnimationsEnabled { get; set; }
-            public string DisqusAPIKey { get; set; }
         }
         
         
@@ -68,7 +67,6 @@ namespace BTCPayServer.Controllers
                 SoundsEnabled = settings.SoundsEnabled,
                 DisqusShortname = settings.DisqusShortname,
                 AnimationsEnabled = settings.AnimationsEnabled,
-                DisqusAPIKey = settings.DisqusAPIKey,
             };
             return View(vm);
         }
@@ -116,7 +114,6 @@ namespace BTCPayServer.Controllers
                 SoundsEnabled = vm.SoundsEnabled,
                 DisqusShortname = vm.DisqusShortname,
                 AnimationsEnabled = vm.AnimationsEnabled,
-                DisqusAPIKey = vm.DisqusAPIKey,
             });
             await UpdateAppSettings(app);
             _EventAggregator.Publish(new CrowdfundAppUpdated()

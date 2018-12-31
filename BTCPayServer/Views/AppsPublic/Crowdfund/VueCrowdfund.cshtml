@@ -42,49 +42,43 @@
                      aria-valuemax="100">
                 </div>
             </div>
+           
             <div class="card-body">
 
-                <ul class="nav nav-fill py-2">
-                    <li class="nav-item">
-                        <h5>{{srvModel.info.currentAmount + srvModel.info.currentPendingAmount }} {{targetCurrency}} </h5>
-                        <h5 class="text-muted">Raised</h5>
-                    </li>
-                    <li class="nav-item">
-                        <h5>{{srvModel.info.progressPercentage + srvModel.info.pendingProgressPercentage }}%</h5>
-                        <h5 class="text-muted">Of Goal</h5>
-                    </li>
-                    <li class="nav-item">
-                        <h5>
-                            {{srvModel.info.totalContributors}}
-                        </h5>
-                        <h5 class="text-muted">Contributors</h5>
-                    </li>
-                    <li class="nav-item">
-                        <div class="mx-auto">
-                            <ul style="list-style-type: none">
-                                <li v-if="startDate">
-                                    <template v-if="started">
-                                        Started {{startDate}}
-                                    </template>
-                                    <template v-else-if="!started">
-                                        Starts {{startDate}}
-                                    </template>
-                                </li>
-                                <li v-if="endDate">
-                                    <template v-if="!ended">
-                                        Ends {{endDate}}
-                                    </template>
-                                    <template v-else-if="ended">
-                                        Ended {{endDate}}
-                                    </template>
-                                </li>
-                                <li class="list-group-item" v-else-if="!endDate">
-                                    No specific end date
-                                </li>
-                            </ul>
-                        </div>
-                    </li>
-                </ul>
+                 <div class="row py-2 text-center">
+                                                <div class="col-sm border-right">
+                                                    <h5>{{srvModel.info.currentAmount + srvModel.info.currentPendingAmount }} {{targetCurrency}} </h5>
+                                                    <h5 class="text-muted">Raised</h5>
+                                                </div>
+                                                <div  class="col-sm  border-right">
+                                                    <h5>{{srvModel.info.progressPercentage + srvModel.info.pendingProgressPercentage }}%</h5>
+                                                    <h5 class="text-muted">Of Goal</h5>
+                                                </div>
+                                                <div  class="col-sm  border-right">
+                                                    <h5>
+                                                        {{srvModel.info.totalContributors}}
+                                                    </h5>
+                                                    <h5 class="text-muted">Contributors</h5>
+                                                </div> 
+                                                <div  class="col-sm" v-if="endDiff">
+                                                    <h5>
+                                                        {{endDiff}}
+                                                    </h5>
+                                                    <h5 class="text-muted">Left</h5>
+                                                </div>
+                                                <div  class="col-sm" v-if="startDiff">
+                                                    <h5>
+                                                        {{startDiff}}
+                                                    </h5>
+                                                    <h5 class="text-muted">Left to start</h5>
+                                                </div>
+                                                <div  class="col-sm" v-if="ended">
+                                                    <h5>
+                                                        Campaign
+                                                    </h5>
+                                                    <h5 >not active</h5>
+                                                </div>
+                                            </div>
                 <div class="card-title">
 
                     <div class="row">
@@ -94,7 +88,7 @@
                             <h2 class="text-muted" v-if="srvModel.tagline">{{srvModel.tagline}}</h2>
                         </div>
                         <div class="col-sm-12 col-md-4 col-lg-3">
-                            <button v-if="srvModel.info.active" class="btn btn-lg btn-primary w-100 font-weight-bold" v-on:click="contributeModalOpen = true">Contribute</button>
+                            <button v-if="active" class="btn btn-lg btn-primary w-100 font-weight-bold" v-on:click="contributeModalOpen = true">Contribute</button>
 
 
                         </div>
@@ -109,7 +103,7 @@
                                 </div>
                                 <div class="col-md-4 col-sm-12">
                                     <contribute :target-currency="srvModel.targetCurrency"
-                                                :active="srvModel.info.active"
+                                                :active="active"
                                                 :in-modal="false"
                                                 :perks="srvModel.perks">
     
@@ -131,7 +125,7 @@
                         </div>
                         <div class="col-md-4 col-sm-12">
                             <contribute :target-currency="srvModel.targetCurrency"
-                                        :active="srvModel.info.active"
+                                        :active="active"
                                         :in-modal="false"
                                         :perks="srvModel.perks">
     
@@ -146,7 +140,7 @@
 
         <contribute v-if="contributeModalOpen"
                     :target-currency="srvModel.targetCurrency"
-                    :active="srvModel.info.active"
+                    :active="active"
                     :perks="srvModel.perks"
                     :in-modal="true">
         </contribute>
@@ -166,8 +160,8 @@
 </script>
 
 <script type="text/x-template" id="perk-template"> 
-<div class="card mb-4 perk"  v-bind:class="{ 'expanded': expanded, 'unexpanded': !expanded }" v-on:click="expanded = true">
-    <div class="perk-zoom " v-if="!expanded">
+<div class="card mb-4 perk"  v-bind:class="{ 'expanded': expanded, 'unexpanded': !expanded }" v-on:click="expand">
+    <div class="perk-zoom " v-if="!expanded && active">
         <div class="perk-zoom-bg bg-primary"> </div>
         <div class="perk-zoom-text w-100 text-center text-white font-weight-bold">
             Select this contribution perk
@@ -191,7 +185,7 @@
             </div>
             <p  class="card-text" v-if="perk.description" v-html="perk.description"></p>
             
-            <div class="input-group" style="max-width: 500px;" v-if="expanded">
+            <div class="input-group" style="max-width: 500px;" v-if="expanded" :id="'perk-form'+ perk.id">
                 <input 
                     :disabled="!active"
                     :readonly="!perk.custom"

@@ -27,7 +27,6 @@ namespace BTCPayServer.Models.AppViewModels
         public bool SoundsEnabled { get; set; }
         public string DisqusShortname { get; set; }
         public bool AnimationsEnabled { get; set; }
-        public string DisqusAPIKey { get; set; }
 
 
         public class CrowdfundInfo

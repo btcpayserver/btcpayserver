@@ -37,8 +37,6 @@ namespace BTCPayServer.Models.AppViewModels
         
         [Display(Name = "Disqus Shortname")]
         public string DisqusShortname { get; set; }
-        [Display(Name = "Disqus Api Key")]
-        public string DisqusAPIKey { get; set; }
         
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }

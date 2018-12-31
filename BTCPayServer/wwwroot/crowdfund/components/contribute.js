@@ -28,7 +28,9 @@ Vue.component('perk', {
             eventAggregator.$emit("contribute", {amount: this.amount, choiceKey: this.choiceKey});
         },
         expand: function(){
-            this.expanded = true;   
+            if(this.active){
+                this.expanded = true;
+            }
         }
         
         

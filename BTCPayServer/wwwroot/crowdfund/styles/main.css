@@ -27,6 +27,7 @@ canvas#fireworks{
     position: absolute;
 }
 .perk:hover .perk-zoom{
+    cursor: pointer;
     opacity:1;
     display: block;
     position: absolute;

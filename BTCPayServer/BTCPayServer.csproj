@@ -125,7 +125,6 @@
 	<ItemGroup>
 	  <Folder Include="Build\" />
 	  <Folder Include="Views\AppsPublic\Crowdfund\Templates" />
-	  <Folder Include="wwwroot\vendor\animejs" />
 	  <Folder Include="wwwroot\vendor\clipboard.js\" />
 	  <Folder Include="wwwroot\vendor\highlightjs\" />
 	</ItemGroup>

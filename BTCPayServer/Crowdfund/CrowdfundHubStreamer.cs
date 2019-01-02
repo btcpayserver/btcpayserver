@@ -28,8 +28,6 @@ namespace BTCPayServer.Hubs
         private readonly RateFetcher _RateFetcher;
         private readonly BTCPayNetworkProvider _BtcPayNetworkProvider;
         private readonly InvoiceRepository _InvoiceRepository;
-
-        private Dictionary<string, CancellationTokenSource> _CacheTokens = new Dictionary<string, CancellationTokenSource>();
         public CrowdfundHubStreamer(EventAggregator eventAggregator, 
             IHubContext<CrowdfundHub> hubContext, 
             IMemoryCache memoryCache,
@@ -50,20 +48,12 @@ namespace BTCPayServer.Hubs
 
         public Task<ViewCrowdfundViewModel> GetCrowdfundInfo(string appId)
         {
-            var key = GetCacheKey(appId);
-            return _MemoryCache.GetOrCreateAsync(key, async entry =>
-            {
-                if (_CacheTokens.ContainsKey(key))
-                {
-                    _CacheTokens.Remove(key);
-                }               
+            return _MemoryCache.GetOrCreateAsync(GetCacheKey(appId), async entry =>
+            {           
                 var app = await _AppsHelper.GetApp(appId, AppType.Crowdfund, true);
                 var result = await GetInfo(app);
                 entry.SetValue(result);
                 
-                var token = new CancellationTokenSource();
-                _CacheTokens.Add(key, token);
-                entry.AddExpirationToken(new CancellationChangeToken(token.Token));
                 TimeSpan? expire = null;
 
                 if (result.StartDate.HasValue && result.StartDate < DateTime.Now)
@@ -87,7 +77,7 @@ namespace BTCPayServer.Hubs
         private void SubscribeToEvents()
         {
             
-            _EventAggregator.Subscribe<InvoiceEvent>(Subscription);
+            _EventAggregator.Subscribe<InvoiceEvent>(OnInvoiceEvent);
             _EventAggregator.Subscribe<AppsController.CrowdfundAppUpdated>(updated =>
             {
                 InvalidateCacheForApp(updated.AppId);
@@ -99,7 +89,7 @@ namespace BTCPayServer.Hubs
             return $"{CrowdfundInvoiceOrderIdPrefix}:{appId}";
         }
 
-        private void Subscription(InvoiceEvent invoiceEvent)
+        private void OnInvoiceEvent(InvoiceEvent invoiceEvent)
         {
             if (!invoiceEvent.Invoice.OrderId.StartsWith(CrowdfundInvoiceOrderIdPrefix, StringComparison.InvariantCultureIgnoreCase))
             {
@@ -128,10 +118,7 @@ namespace BTCPayServer.Hubs
 
         private void InvalidateCacheForApp(string appId)
         {
-            if (_CacheTokens.ContainsKey(appId))
-            {
-                _CacheTokens[appId].Cancel();
-            }
+            _MemoryCache.Remove(GetCacheKey(appId));
 
             GetCrowdfundInfo(appId).ContinueWith(task =>
             {
@@ -210,8 +197,8 @@ namespace BTCPayServer.Hubs
                 EmbeddedCSS = settings.EmbeddedCSS,
                 StoreId = appData.StoreDataId,
                 AppId = appData.Id,
-                StartDate = settings.StartDate, 
-                EndDate = settings.EndDate,
+                StartDate = settings.StartDate?.ToUniversalTime(), 
+                EndDate = settings.EndDate?.ToUniversalTime(),
                 TargetAmount = settings.TargetAmount,
                 TargetCurrency = settings.TargetCurrency,
                 EnforceTargetAmount = settings.EnforceTargetAmount,

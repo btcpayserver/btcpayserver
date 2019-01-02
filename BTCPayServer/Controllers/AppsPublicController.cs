@@ -107,14 +107,32 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> ContributeToCrowdfund(string appId, ContributeToCrowdfund request)
         {
             var app = await _AppsHelper.GetApp(appId, AppType.Crowdfund, true);
-            if (app == null || 
-                (!app.GetSettings<CrowdfundSettings>().Enabled &&
-                 _AppsHelper.GetAppDataIfOwner(GetUserId(), appId, AppType.Crowdfund) == null))
+            
+            if (app == null)
                 return NotFound();
             var settings = app.GetSettings<CrowdfundSettings>();
+            var isAdmin = false;
+            if (!settings.Enabled)
+            {
+                isAdmin = await _AppsHelper.GetAppDataIfOwner(GetUserId(), appId, AppType.Crowdfund) == null;
+                if(!isAdmin)
+                    return NotFound();
+            }
+
+            var info = await _CrowdfundHubStreamer.GetCrowdfundInfo(appId);
+            
+            if(!isAdmin && 
+               ((settings.StartDate.HasValue && DateTime.Now  < settings.StartDate) || 
+                (settings.EndDate.HasValue && DateTime.Now  > settings.EndDate) || 
+                (settings.EnforceTargetAmount && (info.Info.PendingProgressPercentage.GetValueOrDefault(0) + info.Info.ProgressPercentage.GetValueOrDefault(0)) >= 100)))
+            {
+                return NotFound();
+                
+            }
+
             var store = await _AppsHelper.GetStore(app);
-            string title = null;
-            var price = 0.0m;
+            var title =  settings.Title;
+            var price = request.Amount;
             if (!string.IsNullOrEmpty(request.ChoiceKey))
             {
                 var choices = _AppsHelper.Parse(settings.PerksTemplate, settings.TargetCurrency);
@@ -126,12 +144,6 @@ namespace BTCPayServer.Controllers
                 if (request.Amount > price)
                     price = request.Amount;
             }
-            else
-            {
-                price = request.Amount;
-                title = settings.Title;
-            }
-            
             
             store.AdditionalClaims.Add(new Claim(Policies.CanCreateInvoice.Key, store.Id));
             var invoice = await _InvoiceController.CreateInvoiceCore(new Invoice()

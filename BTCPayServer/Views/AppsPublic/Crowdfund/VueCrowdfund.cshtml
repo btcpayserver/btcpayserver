@@ -197,8 +197,8 @@
 </script>
 
 <script type="text/x-template" id="perk-template"> 
-<div class="card mb-4 perk"  v-bind:class="{ 'expanded': expanded, 'unexpanded': !expanded }" v-on:click="expand">
-    <div class="perk-zoom " v-if="!expanded && active">
+<div class="card mb-4 perk"  v-bind:class="{ 'expanded': expanded, 'unexpanded': !expanded }" v-on:click="expand" :id="perk.id">
+    <div class="perk-zoom " v-if="canExpand">
         <div class="perk-zoom-bg bg-primary"> </div>
         <div class="perk-zoom-text w-100 text-center text-white font-weight-bold">
             Select this contribution perk
@@ -218,6 +218,7 @@
                     <template v-else-if="!perk.price.value && perk.custom">
                         Any amount
                     </template>
+                    
                 </span>
             </div>
             <p  class="card-text" v-if="perk.description" v-html="perk.description"></p>

@@ -36,6 +36,11 @@ addLoadEvent(function (ev) {
                 expanded: false
             }
         },
+        computed: {
+            canExpand: function(){
+                return !this.expanded && this.active && (this.perk.price.value || this.perk.custom)
+            }
+        },
         methods: {
             onContributeFormSubmit: function (e) {
                 if (e) {
@@ -47,7 +52,7 @@ addLoadEvent(function (ev) {
                 eventAggregator.$emit("contribute", {amount: this.amount, choiceKey: this.choiceKey});
             },
             expand: function(){
-                if(this.active){
+                if(this.canExpand){
                     this.expanded = true;
                 }
             }

@@ -131,12 +131,12 @@ namespace BTCPayServer.Hubs
             RateFetcher rateFetcher, RateRules rateRules)
         {
             decimal result = 0;
-            
-            var groupingByCurrency = invoices.GroupBy(entity => entity.ProductInformation.Currency);
+
+            var stats = GetCurrentContributionAmountStats(invoices);
 
             var ratesTask = rateFetcher.FetchRates(
-                groupingByCurrency
-                    .Select((entities) => new CurrencyPair(entities.Key, primaryCurrency))
+                stats.Keys
+                    .Select((x) => new CurrencyPair(PaymentMethodId.Parse(x).CryptoCode, primaryCurrency))
                     .ToHashSet(), 
                 rateRules);
 
@@ -148,8 +148,8 @@ namespace BTCPayServer.Hubs
                     var tResult = await rateTask.Value;
                     var rate = tResult.BidAsk?.Bid;
                     if (rate == null) return;
-                    var currencyGroup = groupingByCurrency.Single(entities => entities.Key == rateTask.Key.Left);
-                    result += currencyGroup.Sum(entity => entity.ProductInformation.Price / rate.Value);
+                    var currencyGroup = stats[rateTask.Key.Left];
+                    result += currencyGroup / rate.Value;
                 }));
             }
 

@@ -82,7 +82,8 @@ addLoadEvent(function (ev) {
                 startDiff: "",
                 active: true,
                 animation: true, 
-                sound: true
+                sound: true,
+                lastUpdated:""
                 
             }
         },
@@ -160,6 +161,7 @@ addLoadEvent(function (ev) {
                     var mDiffS =  moment(this.srvModel.startDate).diff(moment(), "seconds");
                     this.startDiff =  mDiffD > 0? mDiffD + " Days" : mDiffH> 0? mDiffH + " Hours" : mDiffM> 0? mDiffM+ " Minutes" : mDiffS> 0? mDiffS + " Seconds": "";
                 }
+                this.lastUpdated = moment(this.srvModel.info.lastUpdated).calendar();
                 this.active = this.started && !this.ended;
                 setTimeout(this.updateComputed, 1000);
             },

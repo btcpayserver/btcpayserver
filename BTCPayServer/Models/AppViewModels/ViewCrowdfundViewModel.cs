@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Threading.Tasks;
 
 namespace BTCPayServer.Models.AppViewModels
 {
@@ -32,20 +34,16 @@ namespace BTCPayServer.Models.AppViewModels
         public class CrowdfundInfo
         {
             public int TotalContributors { get; set; }
-            public decimal CurrentAmount { get; set; }
-            public bool Active { get; set; }
-            public bool ShowProgress { get; set; }
-            public decimal? ProgressPercentage { get; set; }
-            public int? DaysLeft{ get; set; }
-            public int? DaysLeftToStart{ get; set; }
             public decimal CurrentPendingAmount { get; set; }
+            public decimal CurrentAmount { get; set; }
+            public decimal? ProgressPercentage { get; set; }
             public decimal? PendingProgressPercentage { get; set; }
             public DateTime LastUpdated { get; set; }
+            public Dictionary<string, decimal> PaymentStats { get; set; }
+            public Dictionary<string, decimal> PendingPaymentStats { get; set; }
         }
         
     }
-    
-    
 
     public class ContributeToCrowdfund
     {

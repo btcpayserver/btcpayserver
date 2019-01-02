@@ -65,7 +65,7 @@
     },
 
     {
-        "outputFileName": "wwwroot/bundles/crowdfund.min.js",
+        "outputFileName": "wwwroot/bundles/crowdfund-bundle-1.min.js",
         "inputFiles": [
             "wwwroot/vendor/vuejs/vue.min.js",
             "wwwroot/vendor/babel-polyfill/polyfill.min.js",
@@ -79,9 +79,8 @@
     },
     
     {
-        "outputFileName": "wwwroot/bundles/crowdfund-bundle.min.js",
+        "outputFileName": "wwwroot/bundles/crowdfund-bundle-2.min.js",
         "inputFiles": [
-            "wwwroot/bundles/crowdfund.min.js",
             "wwwroot/vendor/moment/moment.js"
         ],
         "minify": {

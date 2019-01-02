@@ -26,7 +26,7 @@
 
 
             </div>
-            <div class="progress w-100 rounded-0 " v-if="srvModel.info.showProgress">
+            <div class="progress w-100 rounded-0 " v-if="srvModel.targetAmount">
                 <div class="progress-bar" role="progressbar"
                      :aria-valuenow="srvModel.info.progressPercentage"
                      v-bind:style="{ width: srvModel.info.progressPercentage + '%' }"
@@ -44,9 +44,10 @@
             </div>
            
             <div class="card-body">
+                
 
                 <div class="row py-2 text-center">
-                    <div class="col-sm border-right">
+                    <div class="col-sm border-right" id="raised-amount">
                         <h5>{{srvModel.info.currentAmount + srvModel.info.currentPendingAmount }} {{targetCurrency}} </h5>
                         <h5 class="text-muted">Raised</h5>
                     </div>
@@ -72,13 +73,34 @@
                         </h5>
                         <h5 class="text-muted">Left to start</h5>
                     </div>
-                    <div  class="col-sm" v-if="ended">
+                    <div  class="col-sm" v-if="ended" id="inactive-campaign">
                         <h5>
                             Campaign
                         </h5>
                         <h5 >not active</h5>
+                        
+                        <b-tooltip target="inactive-campaign" >
+                            <ul class="p-0">
+                                <li v-if="startDate" style="list-style-type: none">
+                                    {{started? "Started" : "Starts"}} {{startDate}}
+                                </li>
+                                <li v-if="endDate" style="list-style-type: none">
+                                    {{ended? "Ended" : "End"}} {{endDate}}
+                                </li>
+                            </ul>
+                        </b-tooltip>
                     </div>
                 </div>
+                
+                <b-tooltip target="raised-amount" >
+                    <ul class="p-0">
+                        <li v-for="stat of paymentStats" style="list-style-type: none">
+                            {{stat.label}} {{stat.value}}
+                        </li>
+                    </ul>
+                </b-tooltip>
+                
+               
                 <div class="card-title">
 
                     <div class="row">
@@ -165,7 +187,7 @@
 
 <script type="text/x-template" id="perks-template">
 <div >
-    <perk :perk="{title: 'Donate Custom Amount', price: { value: null}, custom: true}" :target-currency="targetCurrency" :active="active" 
+    <perk v-if="!perks || perks.length ===0" :perk="{title: 'Donate Custom Amount', price: { value: null}, custom: true}" :target-currency="targetCurrency" :active="active" 
         :in-modal="inModal">
     </perk>
     <perk v-for="(perk, index) in perks" :perk="perk" :target-currency="targetCurrency" :active="active" 

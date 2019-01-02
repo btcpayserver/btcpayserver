@@ -75,13 +75,50 @@ addLoadEvent(function (ev) {
                 contributeModalOpen: false,
                 endDiff: "",
                 startDiff: "",
-                active: true
+                active: true,
+                animation: true, 
+                sound: true
                 
             }
         },
         computed: {
             targetCurrency: function(){
                 return this.srvModel.targetCurrency.toUpperCase();
+            },
+            paymentStats: function(){
+                var result= [];
+                
+                var combinedStats = {};
+                
+                
+                var keys = Object.keys(this.srvModel.info.paymentStats);
+
+                for (var i = 0; i < keys.length; i++) {
+                    if(combinedStats[keys[i]]){
+                        combinedStats[keys[i]] +=this.srvModel.info.paymentStats[keys[i]];
+                    }else{
+                        combinedStats[keys[i]] =this.srvModel.info.paymentStats[keys[i]];
+                    }
+                }
+
+                keys = Object.keys(this.srvModel.info.pendingPaymentStats);
+                
+                for (var i = 0; i < keys.length; i++) {
+                    if(combinedStats[keys[i]]){
+                        combinedStats[keys[i]] +=this.srvModel.info.pendingPaymentStats[keys[i]];
+                    }else{
+                        combinedStats[keys[i]] =this.srvModel.info.pendingPaymentStats[keys[i]];
+                    }
+                }
+
+                keys = Object.keys(combinedStats);
+
+                for (var i = 0; i < keys.length; i++) {
+                    var newItem = {key:keys[i], value: combinedStats[keys[i]], label: keys[i].replace("_","")};
+                    result.push(newItem);
+                    
+                }
+                return result;
             }
         },
         methods: {

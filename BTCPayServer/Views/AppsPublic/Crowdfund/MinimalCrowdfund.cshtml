@@ -1,101 +1,101 @@
-@using BTCPayServer.Models.AppViewModels
-@model  BTCPayServer.Models.AppViewModels.ViewCrowdfundViewModel
-<div class="container p-0"  >
-
-
-    <div class="row h-100 w-100 py-sm-0 py-md-4 mx-0">
-
-        <div class="card w-100 p-0 mx-0">
-            <partial name="_StatusMessage" for="@Model.StatusMessage"/>
-            @if (!string.IsNullOrEmpty(Model.MainImageUrl))
-            {
-                <img class="card-img-top" src="@Model.MainImageUrl" alt="Card image cap">
-            }
-            @if (Model.Info.ShowProgress)
-            {
-                <div class="progress rounded-0 striped" style="min-height: 30px">
-                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="@Model.Info.ProgressPercentage" aria-valuemin="0" aria-valuemax="100">
-                        @if (Model.Info.ProgressPercentage.Value > 0)
-                        {
-                            @(Model.Info.ProgressPercentage + "%")
-                        }
-                    </div>
-                </div>
-            }
-            <div class="card-body">
-                <div class="card-title row">
-                    <div class="col-md-9 col-sm-12">
-
-                        <h1 >
-                            @Model.Title
-                            @if (!string.IsNullOrEmpty(Model.Tagline))
-                            {
-                                <h2 class="text-muted">@Model.Tagline</h2>
-                            }
-
-                            @if (Model.Info.DaysLeftToStart.HasValue && Model.Info.DaysLeftToStart > 0)
-                            {
-                                <small>
-                                    @($"{Model.Info.DaysLeftToStart} day{(Model.Info.DaysLeftToStart.Value > 1 ? "s" : "")} left to start")
-
-                                </small>
-                            }
-                        </h1>
-
-                    </div>
-                    <ul class="list-group list-group-flush col-md-3 col-sm-12">
-                        <li class="list-group-item">@(Model.EndDate.HasValue? $"Ends {Model.EndDate.Value:dddd, dd MMMM yyyy HH:mm}" : "No specific end date")</li>
-                        <li class="list-group-item">@(Model.TargetAmount.HasValue? $"{Model.TargetAmount:G29} {Model.TargetCurrency.ToUpperInvariant()} Goal" : 
-                                                          "No specific target goal")</li>
-                        <li class="list-group-item">@(Model.EnforceTargetAmount? $"Hardcap Goal" : "Softcap Goal")</li>
-                    </ul>
-
-                </div>
-                @if (Model.Info.Active)
-                {
-                    <div class="card-deck mb-4  ">
-                        <div class="card shadow">
-                            <div class="card-body">
-                                <h5 class="card-title text-center">@Model.Info.TotalContributors</h5>
-                                <h6 class="card-text text-center"> Contributors</h6>
-                            </div>
-                        </div>
-                        <div class="card shadow">
-                            <div class="card-body">
-                                <h5 class="card-title text-center">@Model.Info.CurrentAmount @Model.TargetCurrency.ToUpperInvariant()</h5>
-                                <h6 class="card-text text-center"> Raised</h6>
-                            </div>
-                        </div>
-
-                        @if (Model.Info.DaysLeft.HasValue && Model.Info.DaysLeft > 0)
-                        {
-                            <div class="card shadow">
-                                <div class="card-body">
-                                    <h5 class="card-title text-center">@Model.Info.DaysLeft</h5>
-                                    <h6 class="card-text text-center">Day@(Model.Info.DaysLeft.Value > 1 ? "s" : "") left</h6>
-                                </div>
-                            </div>
-                        }
-
-
-                    </div>
-                }
-
-
-                <div class="card-text"> @Html.Raw(Model.Description)</div>
-                @if (Model.Info.Active)
-                {
-                    <hr/>
-                    <h3>Contribute</h3>
-                    <partial name="Crowdfund/ContributeForm" model="@(new ContributeToCrowdfund()
-                                                            {
-                                                                RedirectToCheckout = true,
-                                                                ViewCrowdfundViewModel = Model
-                                                            })"/>
-                }
-            </div>
-        </div>
-
-
-    </div>
-</div>
+@* @using BTCPayServer.Models.AppViewModels *@
+@* @model  BTCPayServer.Models.AppViewModels.ViewCrowdfundViewModel *@
+@* <div class="container p-0"  > *@
+@* *@
+@* *@
+@*     <div class="row h-100 w-100 py-sm-0 py-md-4 mx-0"> *@
+@* *@
+@*         <div class="card w-100 p-0 mx-0"> *@
+@*             <partial name="_StatusMessage" for="@Model.StatusMessage"/> *@
+@*             @if (!string.IsNullOrEmpty(Model.MainImageUrl)) *@
+@*             { *@
+@*                 <img class="card-img-top" src="@Model.MainImageUrl" alt="Card image cap"> *@
+@*             } *@
+@*             @if (Model.Info.ShowProgress) *@
+@*             { *@
+@*                 <div class="progress rounded-0 striped" style="min-height: 30px"> *@
+@*                     <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="@Model.Info.ProgressPercentage" aria-valuemin="0" aria-valuemax="100"> *@
+@*                         @if (Model.Info.ProgressPercentage.Value > 0) *@
+@*                         { *@
+@*                             @(Model.Info.ProgressPercentage + "%") *@
+@*                         } *@
+@*                     </div> *@
+@*                 </div> *@
+@*             } *@
+@*             <div class="card-body"> *@
+@*                 <div class="card-title row"> *@
+@*                     <div class="col-md-9 col-sm-12"> *@
+@* *@
+@*                         <h1 > *@
+@*                             @Model.Title *@
+@*                             @if (!string.IsNullOrEmpty(Model.Tagline)) *@
+@*                             { *@
+@*                                 <h2 class="text-muted">@Model.Tagline</h2> *@
+@*                             } *@
+@* *@
+@*                             @if (Model.Info.DaysLeftToStart.HasValue && Model.Info.DaysLeftToStart > 0) *@
+@*                             { *@
+@*                                 <small> *@
+@*                                     @($"{Model.Info.DaysLeftToStart} day{(Model.Info.DaysLeftToStart.Value > 1 ? "s" : "")} left to start") *@
+@* *@
+@*                                 </small> *@
+@*                             } *@
+@*                         </h1> *@
+@* *@
+@*                     </div> *@
+@*                     <ul class="list-group list-group-flush col-md-3 col-sm-12"> *@
+@*                         <li class="list-group-item">@(Model.EndDate.HasValue? $"Ends {Model.EndDate.Value:dddd, dd MMMM yyyy HH:mm}" : "No specific end date")</li> *@
+@*                         <li class="list-group-item">@(Model.TargetAmount.HasValue? $"{Model.TargetAmount:G29} {Model.TargetCurrency.ToUpperInvariant()} Goal" :  *@
+@*                                                           "No specific target goal")</li> *@
+@*                         <li class="list-group-item">@(Model.EnforceTargetAmount? $"Hardcap Goal" : "Softcap Goal")</li> *@
+@*                     </ul> *@
+@* *@
+@*                 </div> *@
+@*                 @if (Model.Info.Active) *@
+@*                 { *@
+@*                     <div class="card-deck mb-4  "> *@
+@*                         <div class="card shadow"> *@
+@*                             <div class="card-body"> *@
+@*                                 <h5 class="card-title text-center">@Model.Info.TotalContributors</h5> *@
+@*                                 <h6 class="card-text text-center"> Contributors</h6> *@
+@*                             </div> *@
+@*                         </div> *@
+@*                         <div class="card shadow"> *@
+@*                             <div class="card-body"> *@
+@*                                 <h5 class="card-title text-center">@Model.Info.CurrentAmount @Model.TargetCurrency.ToUpperInvariant()</h5> *@
+@*                                 <h6 class="card-text text-center"> Raised</h6> *@
+@*                             </div> *@
+@*                         </div> *@
+@* *@
+@*                         @if (Model.Info.DaysLeft.HasValue && Model.Info.DaysLeft > 0) *@
+@*                         { *@
+@*                             <div class="card shadow"> *@
+@*                                 <div class="card-body"> *@
+@*                                     <h5 class="card-title text-center">@Model.Info.DaysLeft</h5> *@
+@*                                     <h6 class="card-text text-center">Day@(Model.Info.DaysLeft.Value > 1 ? "s" : "") left</h6> *@
+@*                                 </div> *@
+@*                             </div> *@
+@*                         } *@
+@* *@
+@* *@
+@*                     </div> *@
+@*                 } *@
+@* *@
+@* *@
+@*                 <div class="card-text"> @Html.Raw(Model.Description)</div> *@
+@*                 @if (Model.Info.Active) *@
+@*                 { *@
+@*                     <hr/> *@
+@*                     <h3>Contribute</h3> *@
+@*                     <partial name="Crowdfund/ContributeForm" model="@(new ContributeToCrowdfund() *@
+@*                                                             { *@
+@*                                                                 RedirectToCheckout = true, *@
+@*                                                                 ViewCrowdfundViewModel = Model *@
+@*                                                             })"/> *@
+@*                 } *@
+@*             </div> *@
+@*         </div> *@
+@* *@
+@* *@
+@*     </div> *@
+@* </div> *@

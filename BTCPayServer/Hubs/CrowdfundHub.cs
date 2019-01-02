@@ -232,7 +232,6 @@ namespace BTCPayServer.Hubs
                 SoundsEnabled = settings.SoundsEnabled,
                 DisqusShortname = settings.DisqusShortname,
                 AnimationsEnabled = settings.AnimationsEnabled,
-                DisqusAPIKey = settings.DisqusAPIKey,
                 Info = new ViewCrowdfundViewModel.CrowdfundInfo()
                 {
                     TotalContributors = invoices.Length,

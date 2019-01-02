@@ -1,101 +1,240 @@
-@* @using BTCPayServer.Models.AppViewModels *@
-@* @model  BTCPayServer.Models.AppViewModels.ViewCrowdfundViewModel *@
-@* <div class="container p-0"  > *@
-@* *@
-@* *@
-@*     <div class="row h-100 w-100 py-sm-0 py-md-4 mx-0"> *@
-@* *@
-@*         <div class="card w-100 p-0 mx-0"> *@
-@*             <partial name="_StatusMessage" for="@Model.StatusMessage"/> *@
-@*             @if (!string.IsNullOrEmpty(Model.MainImageUrl)) *@
-@*             { *@
-@*                 <img class="card-img-top" src="@Model.MainImageUrl" alt="Card image cap"> *@
-@*             } *@
-@*             @if (Model.Info.ShowProgress) *@
-@*             { *@
-@*                 <div class="progress rounded-0 striped" style="min-height: 30px"> *@
-@*                     <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="@Model.Info.ProgressPercentage" aria-valuemin="0" aria-valuemax="100"> *@
-@*                         @if (Model.Info.ProgressPercentage.Value > 0) *@
-@*                         { *@
-@*                             @(Model.Info.ProgressPercentage + "%") *@
-@*                         } *@
-@*                     </div> *@
-@*                 </div> *@
-@*             } *@
-@*             <div class="card-body"> *@
-@*                 <div class="card-title row"> *@
-@*                     <div class="col-md-9 col-sm-12"> *@
-@* *@
-@*                         <h1 > *@
-@*                             @Model.Title *@
-@*                             @if (!string.IsNullOrEmpty(Model.Tagline)) *@
-@*                             { *@
-@*                                 <h2 class="text-muted">@Model.Tagline</h2> *@
-@*                             } *@
-@* *@
-@*                             @if (Model.Info.DaysLeftToStart.HasValue && Model.Info.DaysLeftToStart > 0) *@
-@*                             { *@
-@*                                 <small> *@
-@*                                     @($"{Model.Info.DaysLeftToStart} day{(Model.Info.DaysLeftToStart.Value > 1 ? "s" : "")} left to start") *@
-@* *@
-@*                                 </small> *@
-@*                             } *@
-@*                         </h1> *@
-@* *@
-@*                     </div> *@
-@*                     <ul class="list-group list-group-flush col-md-3 col-sm-12"> *@
-@*                         <li class="list-group-item">@(Model.EndDate.HasValue? $"Ends {Model.EndDate.Value:dddd, dd MMMM yyyy HH:mm}" : "No specific end date")</li> *@
-@*                         <li class="list-group-item">@(Model.TargetAmount.HasValue? $"{Model.TargetAmount:G29} {Model.TargetCurrency.ToUpperInvariant()} Goal" :  *@
-@*                                                           "No specific target goal")</li> *@
-@*                         <li class="list-group-item">@(Model.EnforceTargetAmount? $"Hardcap Goal" : "Softcap Goal")</li> *@
-@*                     </ul> *@
-@* *@
-@*                 </div> *@
-@*                 @if (Model.Info.Active) *@
-@*                 { *@
-@*                     <div class="card-deck mb-4  "> *@
-@*                         <div class="card shadow"> *@
-@*                             <div class="card-body"> *@
-@*                                 <h5 class="card-title text-center">@Model.Info.TotalContributors</h5> *@
-@*                                 <h6 class="card-text text-center"> Contributors</h6> *@
-@*                             </div> *@
-@*                         </div> *@
-@*                         <div class="card shadow"> *@
-@*                             <div class="card-body"> *@
-@*                                 <h5 class="card-title text-center">@Model.Info.CurrentAmount @Model.TargetCurrency.ToUpperInvariant()</h5> *@
-@*                                 <h6 class="card-text text-center"> Raised</h6> *@
-@*                             </div> *@
-@*                         </div> *@
-@* *@
-@*                         @if (Model.Info.DaysLeft.HasValue && Model.Info.DaysLeft > 0) *@
-@*                         { *@
-@*                             <div class="card shadow"> *@
-@*                                 <div class="card-body"> *@
-@*                                     <h5 class="card-title text-center">@Model.Info.DaysLeft</h5> *@
-@*                                     <h6 class="card-text text-center">Day@(Model.Info.DaysLeft.Value > 1 ? "s" : "") left</h6> *@
-@*                                 </div> *@
-@*                             </div> *@
-@*                         } *@
-@* *@
-@* *@
-@*                     </div> *@
-@*                 } *@
-@* *@
-@* *@
-@*                 <div class="card-text"> @Html.Raw(Model.Description)</div> *@
-@*                 @if (Model.Info.Active) *@
-@*                 { *@
-@*                     <hr/> *@
-@*                     <h3>Contribute</h3> *@
-@*                     <partial name="Crowdfund/ContributeForm" model="@(new ContributeToCrowdfund() *@
-@*                                                             { *@
-@*                                                                 RedirectToCheckout = true, *@
-@*                                                                 ViewCrowdfundViewModel = Model *@
-@*                                                             })"/> *@
-@*                 } *@
-@*             </div> *@
-@*         </div> *@
-@* *@
-@* *@
-@*     </div> *@
-@* </div> *@
+@using BTCPayServer.Models.AppViewModels
+@using Microsoft.CodeAnalysis.CSharp.Syntax
+@model  BTCPayServer.Models.AppViewModels.ViewCrowdfundViewModel
+
+@functions{
+
+    public bool Started()
+    {
+        return !Model.StartDate.HasValue || DateTime.Now.ToUniversalTime() > Model.StartDate;
+    }
+
+    public bool Ended()
+    {
+        return !Model.EndDate.HasValue || DateTime.Now.ToUniversalTime() > Model.EndDate;
+    }
+
+}
+
+<div class="container p-0">
+    <div class="row h-100 w-100 py-sm-0 py-md-4 mx-0">
+        <div class="card w-100 p-0 mx-0">
+            @if (!string.IsNullOrEmpty(Model.MainImageUrl))
+            {
+                <img class="card-img-top" src="@Model.MainImageUrl"/>
+            }
+            <div class="d-flex justify-content-between px-2">
+                <h1>
+                    @Model.Title
+                    @if (!Started() && Model.StartDate.HasValue)
+                    {
+                        <span class="h6 text-muted" >
+                            Starts @Model.StartDate.Value.Subtract(DateTime.Now.ToUniversalTime())
+                        </span>
+                    }
+                    else if (Started() && !Ended() && Model.EndDate.HasValue)
+                    {
+                        <span class="h6 text-muted" >
+                            Ends @Model.EndDate.Value.Subtract(DateTime.Now.ToUniversalTime())
+                        </span>
+                    }
+                    else if (Started() && !Ended() && !Model.EndDate.HasValue)
+                    {
+                        <span class="h6 text-muted" :title="startDate"  title="No set end date">
+                            Currently Active!
+                        </span>
+                    }
+
+                </h1>
+                @if (Model.TargetAmount.HasValue)
+                {
+                    <span class="mt-3">
+                        <span class="h5">@Model.TargetAmount @Model.TargetCurrency</span>
+                        @if (Model.EnforceTargetAmount)
+                        {
+                            <span v-if="srvModel.enforceTargetAmount">Hardcap Goal <span class="fa fa-question-circle" v-b-tooltip title="No contributions allowed after the goal has been reached"></span></span>                           
+                        }
+                        else
+                        {
+                            <span v-else>Softcap Goal <span class="fa fa-question-circle" v-b-tooltip title="Contributions allowed even after goal is reached"></span> </span>
+                        }
+                    </span>
+                }
+
+            </div>
+            
+            @if (Model.TargetAmount.HasValue)
+            {
+                <div class="progress w-100 rounded-0 " >
+                    <div class="progress-bar" role="progressbar"
+                         style="width:@(Model.Info.ProgressPercentage + "%")"
+                         aria-valuemax="100">
+                    </div>
+                    <div class="progress-bar bg-warning" role="progressbar"
+                         style="width:@(Model.Info.PendingProgressPercentage + "%")"
+                         aria-valuemin="0"
+                         aria-valuemax="100">
+                    </div>
+                </div>
+            }
+
+            <div class="card-body">
+
+
+                <div class="row py-2 text-center">
+                    <div class="col-sm border-right" id="raised-amount">
+                        <h5>@(Model.Info.CurrentAmount + Model.Info.CurrentPendingAmount) @Model.TargetCurrency </h5>
+                        <h5 class="text-muted">Raised</h5>
+                    </div>
+                    <div class="col-sm  border-right">
+                        <h5>@(Model.Info.PendingProgressPercentage.GetValueOrDefault(0) + Model.Info.ProgressPercentage.GetValueOrDefault(0))%</h5>
+                        <h5 class="text-muted">Of Goal</h5>
+                    </div>
+                    <div class="col-sm  border-right">
+                        <h5>
+                            @Model.Info.TotalContributors
+                        </h5>
+                        <h5 class="text-muted">Contributors</h5>
+                    </div>
+                    @if (Started() && !Ended())
+                    {
+                        <div class="col-sm" v-if="endDiff">
+                            <h5>
+                                @TimeZoneInfo.ConvertTimeFromUtc(Model.EndDate.Value, TimeZoneInfo.Local)
+
+                            </h5>
+                            <h5 class="text-muted">Ends</h5>
+                        </div>
+                    } else if (!Started())
+                    {
+                        <div class="col-sm" v-if="startDiff">
+                            <h5>
+                                @TimeZoneInfo.ConvertTimeFromUtc(Model.StartDate.Value, TimeZoneInfo.Local)
+                            </h5>
+                            <h5 class="text-muted">Starts</h5>
+                        </div>
+                    }else if (Ended())
+                    {
+                    
+                        <div class="col-sm" v-if="ended" id="inactive-campaign">
+                            <h5>
+                                Campaign
+                            </h5>
+                            <h5 >not active</h5>
+
+                        
+                        </div>
+                    }
+                </div>
+
+
+                <div class="card-title">
+
+                    <div class="row">
+                        <div class="col-sm-12 ">
+                            <h2 class="text-muted" >@Model.Tagline</h2>
+                        </div>
+                    </div>
+                </div>
+               
+                    <hr/>
+                    <div class="row">
+                        <div class="col-md-8 col-sm-12">
+                            <div class="card-text">@Html.Raw(Model.Description)</div>
+                        </div>
+                        <div class="col-md-4 col-sm-12">
+                            <partial 
+                                name="Crowdfund/ContributeForm"
+                                model="@(new ContributeToCrowdfund()
+                                              {
+                                                  ViewCrowdfundViewModel = Model,
+                                                  RedirectToCheckout = true,
+                                                  
+                                              })"></partial>
+                        </div>
+                    </div>
+            </div>
+            <div class="card-footer text-muted d-flex" v-if="srvModel.animationsEnabled || srvModel.soundsEnabled">
+
+                <div class="align-self-end pr-4">Updated @Model.Info.LastUpdated</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/x-template" id="perks-template">
+<div >
+    <perk v-if="!perks || perks.length ===0" :perk="{title: 'Donate Custom Amount', price: { value: null}, custom: true}" :target-currency="targetCurrency" :active="active" 
+        :in-modal="inModal">
+    </perk>
+    <perk v-for="(perk, index) in perks" :perk="perk" :target-currency="targetCurrency" :active="active" 
+        :in-modal="inModal">
+    </perk>
+</div>
+</script>
+
+<script type="text/x-template" id="perk-template"> 
+<div class="card mb-4 perk"  v-bind:class="{ 'expanded': expanded, 'unexpanded': !expanded }" v-on:click="expand" :id="perk.id">
+    <div class="perk-zoom " v-if="canExpand">
+        <div class="perk-zoom-bg bg-primary"> </div>
+        <div class="perk-zoom-text w-100 text-center text-white font-weight-bold">
+            Select this contribution perk
+        </div>
+    </div>
+    <form v-on:submit='onContributeFormSubmit'>
+        <input type="hidden" :value="perk.id" id="choiceKey"/> 
+        <img v-if="perk.image && perk.image != 'null' "  class="card-img-top" :src="perk.image" />
+        <div class="card-body">
+            <div class="card-title d-flex justify-content-between" >
+                <span class="h5">{{perk.title? perk.title : perk.id}} </span>
+                <span class="text-muted" > 
+                    <template v-if="perk.price.value">{{perk.price.value}} 
+                        {{targetCurrency}} 
+                        <template v-if="perk.custom">or more</template>
+                    </template>
+                    <template v-else-if="!perk.price.value && perk.custom">
+                        Any amount
+                    </template>
+                    
+                </span>
+            </div>
+            <p  class="card-text" v-if="perk.description" v-html="perk.description"></p>
+            
+            <div class="input-group" style="max-width: 500px;" v-if="expanded" :id="'perk-form'+ perk.id">
+                <input 
+                    :disabled="!active"
+                    :readonly="!perk.custom"
+                    class="form-control" 
+                    type="number" 
+                    v-model="amount"
+                    :min="perk.price.value"  
+                    step="any"  
+                    placeholder="Contribution Amount"
+                    required >
+                <div class="input-group-append">                    
+                    <span class='input-group-text'>{{targetCurrency}}</span>
+                    <button 
+                        class="btn btn-primary" 
+                        :disabled="!active" 
+                        type="submit">
+                        Continue
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div> 
+</script>
+
+
+<script type="text/x-template" id="contribute-template">
+  <div>
+    <h3 v-if="!inModal">Contribute</h3>
+    <perks 
+        :perks="perks" 
+        :in-modal="inModal"
+        :target-currency="targetCurrency" 
+        :active="active">
+     </perks>
+  </div>
+</script>

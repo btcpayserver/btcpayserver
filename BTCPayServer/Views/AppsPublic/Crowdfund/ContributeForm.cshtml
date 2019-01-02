@@ -1,8 +1,60 @@
 @model BTCPayServer.Models.AppViewModels.ContributeToCrowdfund
 
+@functions{
 
+    public bool Started()
+    {
+        return !Model.ViewCrowdfundViewModel.StartDate.HasValue || DateTime.Now.ToUniversalTime() > Model.ViewCrowdfundViewModel.StartDate;
+    }
+
+    public bool Ended()
+    {
+        return !Model.ViewCrowdfundViewModel.EndDate.HasValue || DateTime.Now.ToUniversalTime() > Model.ViewCrowdfundViewModel.EndDate;
+    }
+
+}
 <form method="post">
-    
+    @foreach (var item in Model.ViewCrowdfundViewModel.Perks)
+    {
+        <div class="card mb-4 perk expanded" id="@item.Id">
+
+        @if (!string.IsNullOrEmpty(item.Image))
+        {
+            <img   class="card-img-top" src="@item.Image" />
+        }
+        <div class="card-body">
+            <div class="card-title d-flex justify-content-between" >
+                <label class="h5">
+                    
+                    @if (Started() && !Ended() && (item.Price.Value > 0 || item.Custom))
+                    {
+
+                        <input type="radio" asp-for="ChoiceKey" value="@item.Id"/>
+                    }
+                    @(string.IsNullOrEmpty(item.Title) ? item.Id : item.Title)
+                </label>
+                <span class="text-muted">
+                    @if (item.Price.Value > 0)
+                    {
+                        @item.Price.Value
+                        if (item.Custom)
+                        {
+                            Html.Raw("or more");
+                        }
+                    }else if (item.Custom)
+                    {
+                        Html.Raw("Any amount");
+                    }
+
+                </span>
+            </div>
+            <p  class="card-text" >@Html.Raw(item.Description)</p>
+
+        </div>
+</div> 
+    }
+    @if (Started() && !Ended())
+    {
     <div class="form-group">
         <label asp-for="Email"></label>
         <input asp-for="Email" type="email" class="form-control"/>
@@ -19,5 +71,9 @@
         <span asp-validation-for="Amount" class="text-danger"></span>
     </div>   
     <input type="hidden" asp-for="RedirectToCheckout"/>
-    <button type="submit" class="btn btn-primary">Contribute</button>
+   
+     
+        <button type="submit" class="btn btn-primary" >Contribute</button>
+           
+    }
 </form>

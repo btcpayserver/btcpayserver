@@ -11,7 +11,7 @@
                     <span class="h6 text-muted" v-else-if="started && !ended && srvModel.endDate" v-b-tooltip :title="endDate">
                         Ends {{endDateRelativeTime}}
                     </span>
-                    <span class="h6 text-muted" v-else-if="started && !ended && srvModel.endDate" v-b-tooltip title="No set end date">
+                    <span class="h6 text-muted" v-else-if="started && !ended && !srvModel.endDate" v-b-tooltip title="No set end date">
                         Currently Active!
                     </span>
 

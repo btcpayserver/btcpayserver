@@ -22,6 +22,9 @@ namespace BTCPayServer.Hubs
 {
     public class CrowdfundHub: Hub
     {
+        public const string InvoiceCreated = "InvoiceCreated";
+        public const string PaymentReceived = "PaymentReceived";
+        public const string InfoUpdated = "InfoUpdated";
         private readonly AppsPublicController _AppsPublicController;
 
         public CrowdfundHub(AppsPublicController appsPublicController)
@@ -45,7 +48,7 @@ namespace BTCPayServer.Hubs
                model.RedirectToCheckout = false;
                _AppsPublicController.ControllerContext.HttpContext = Context.GetHttpContext();
                var result = await _AppsPublicController.ContributeToCrowdfund(Context.Items["app"].ToString(), model);
-               await Clients.Caller.SendCoreAsync("InvoiceCreated", new[] {(result as OkObjectResult)?.Value.ToString()});
+               await Clients.Caller.SendCoreAsync(InvoiceCreated, new[] {(result as OkObjectResult)?.Value.ToString()});
         }
 
     }
@@ -88,16 +91,30 @@ namespace BTCPayServer.Hubs
                 if (_CacheTokens.ContainsKey(key))
                 {
                     _CacheTokens.Remove(key);
-                }
-
-                var token = new CancellationTokenSource();
-                _CacheTokens.Add(key, token);
-                entry.AddExpirationToken(new CancellationChangeToken(token.Token));
-                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1);
-                
+                }               
                 var app = await _AppsHelper.GetApp(appId, AppType.Crowdfund, true);
                 var result = await GetInfo(app);
                 entry.SetValue(result);
+                
+                var token = new CancellationTokenSource();
+                _CacheTokens.Add(key, token);
+                entry.AddExpirationToken(new CancellationChangeToken(token.Token));
+                TimeSpan? expire = null;
+
+                if (result.StartDate.HasValue && result.StartDate < DateTime.Now)
+                {
+                    expire = result.StartDate.Value.Subtract(DateTime.Now);
+                }
+               else if (result.EndDate.HasValue && result.EndDate > DateTime.Now)
+                {
+                    expire = result.EndDate.Value.Subtract(DateTime.Now);
+                }
+                if(!expire.HasValue || expire?.TotalMinutes > 5)
+                {
+                    expire = TimeSpan.FromMinutes(5);
+                }
+
+                entry.AbsoluteExpirationRelativeToNow = expire;
                 return result;
             });
         }
@@ -128,7 +145,7 @@ namespace BTCPayServer.Hubs
             {
                 case InvoiceEvent.ReceivedPayment:
                     
-                    _HubContext.Clients.Group(appId).SendCoreAsync("PaymentReceived", new object[]
+                    _HubContext.Clients.Group(appId).SendCoreAsync(CrowdfundHub.PaymentReceived, new object[]
                     {
                         invoiceEvent.Payment.GetCryptoPaymentData().GetValue(), 
                         invoiceEvent.Payment.GetCryptoCode(), 
@@ -153,7 +170,7 @@ namespace BTCPayServer.Hubs
 
             GetCrowdfundInfo(appId).ContinueWith(task =>
             {
-                _HubContext.Clients.Group(appId).SendCoreAsync("InfoUpdated", new object[]{ task.Result} );
+                _HubContext.Clients.Group(appId).SendCoreAsync(CrowdfundHub.InfoUpdated, new object[]{ task.Result} );
             }, TaskScheduler.Default);
             
         }
@@ -242,7 +259,8 @@ namespace BTCPayServer.Hubs
                     DaysLeftToStart = settings.StartDate.HasValue? (settings.StartDate - DateTime.UtcNow).Value.Days: (int?) null,
                     ShowProgress = settings.TargetAmount.HasValue,
                     ProgressPercentage =   (currentAmount/ settings.TargetAmount) * 100,
-                    PendingProgressPercentage =  ( currentPendingAmount/ settings.TargetAmount) * 100
+                    PendingProgressPercentage =  ( currentPendingAmount/ settings.TargetAmount) * 100,
+                    LastUpdated = DateTime.Now
                 }
             };
         }

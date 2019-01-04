@@ -200,8 +200,6 @@ namespace BTCPayServer.Controllers
                 paymentMethod.SetId(supportedPaymentMethod.PaymentId);
                 paymentMethod.Rate = rate.BidAsk.Bid;
                 var paymentDetails = await handler.CreatePaymentMethodDetails(supportedPaymentMethod, paymentMethod, store, network, preparePayment);
-                if (storeBlob.NetworkFeeDisabled)
-                    paymentDetails.SetNoNetworkFee();
                 paymentMethod.SetPaymentMethodDetails(paymentDetails);
 
                 Func<Money, Money, bool> compare = null;

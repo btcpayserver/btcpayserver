@@ -59,11 +59,37 @@ namespace BTCPayServer.HostedServices
                     settings.ConvertMultiplierToSpread = true;
                     await _Settings.UpdateSetting(settings);
                 }
+                if (!settings.ConvertNetworkFeeProperty)
+                {
+                    await ConvertNetworkFeeProperty();
+                    settings.ConvertNetworkFeeProperty = true;
+                    await _Settings.UpdateSetting(settings);
+                }
             }
             catch (Exception ex)
             {
                 Logs.PayServer.LogError(ex, "Error on the MigratorHostedService");
                 throw;
+            }
+        }
+
+        private async Task ConvertNetworkFeeProperty()
+        {
+            using (var ctx = _DBContextFactory.CreateContext())
+            {
+                foreach (var store in await ctx.Stores.ToArrayAsync())
+                {
+                    var blob = store.GetStoreBlob();
+#pragma warning disable CS0618 // Type or member is obsolete
+                    if (blob.NetworkFeeDisabled != null)
+                    {
+                        blob.NetworkFeeMode = blob.NetworkFeeDisabled.Value ? NetworkFeeMode.Never : NetworkFeeMode.Always;
+                        blob.NetworkFeeDisabled = null;
+                        store.SetStoreBlob(blob);
+                    }
+#pragma warning restore CS0618 // Type or member is obsolete
+                }
+                await ctx.SaveChangesAsync();
             }
         }
 

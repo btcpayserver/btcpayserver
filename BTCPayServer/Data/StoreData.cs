@@ -249,6 +249,12 @@ namespace BTCPayServer.Data
         }
     }
 
+    public enum NetworkFeeMode
+    {
+        MultiplePaymentsOnly,
+        Always,
+        Never
+    }
     public class StoreBlob
     {
         public StoreBlob()
@@ -258,10 +264,21 @@ namespace BTCPayServer.Data
             PaymentTolerance = 0;
             RequiresRefundEmail = true;
         }
-        public bool NetworkFeeDisabled
+
+        [Obsolete("Use NetworkFeeMode instead")]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public bool? NetworkFeeDisabled
         {
             get; set;
         }
+
+        [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
+        public NetworkFeeMode NetworkFeeMode
+        {
+            get;
+            set;
+        }
+
         public bool RequiresRefundEmail { get; set; }
 
         public string DefaultLang { get; set; }

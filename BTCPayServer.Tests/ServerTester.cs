@@ -22,6 +22,7 @@ using BTCPayServer.Tests.Lnd;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Lightning.CLightning;
 using BTCPayServer.Lightning;
+using BTCPayServer.Services;
 
 namespace BTCPayServer.Tests
 {
@@ -152,6 +153,7 @@ namespace BTCPayServer.Tests
         {
             get; set;
         }
+
         public List<string> Stores { get; internal set; } = new List<string>();
 
         public void Dispose()

@@ -22,7 +22,6 @@ namespace BTCPayServer.Payments
         /// </summary>
         /// <returns></returns>
         decimal GetNetworkFee();
-        void SetNoNetworkFee();
         /// <summary>
         /// Change the payment destination (internal plumbing)
         /// </summary>

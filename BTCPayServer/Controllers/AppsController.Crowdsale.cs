@@ -93,6 +93,12 @@ namespace BTCPayServer.Controllers
             {
                 ModelState.AddModelError(nameof(vm.PerksTemplate), "Invalid template");
             }
+
+            if (Enum.Parse<CrowdfundResetEvery>(vm.ResetEvery) != CrowdfundResetEvery.Never && !vm.StartDate.HasValue)
+            {
+                ModelState.AddModelError(nameof(vm.StartDate), "A start date is needed when the goal resets every X amount of time.");
+            }
+            
             if (!ModelState.IsValid)
             {
                 return View(vm);

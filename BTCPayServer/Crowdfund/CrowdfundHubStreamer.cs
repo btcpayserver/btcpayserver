@@ -212,7 +212,7 @@ namespace BTCPayServer.Hubs
             
 
 
-            var invoices = await GetInvoicesForApp(appData, lastResetDate);
+            var invoices = await GetInvoicesForApp(settings.UseAllStoreInvoices? null : appData.Id, lastResetDate);
             var completeInvoices = invoices.Where(entity => entity.Status == InvoiceStatus.Complete).ToArray();
             var pendingInvoices = invoices.Where(entity => entity.Status != InvoiceStatus.Complete).ToArray();
             
@@ -268,11 +268,11 @@ namespace BTCPayServer.Hubs
             };
         }
 
-        private async Task<InvoiceEntity[]> GetInvoicesForApp(AppData appData, DateTime? startDate = null)
+        private async Task<InvoiceEntity[]> GetInvoicesForApp(string appId, DateTime? startDate = null)
         {
             return await  _InvoiceRepository.GetInvoices(new InvoiceQuery()
             {
-                OrderId = $"{CrowdfundInvoiceOrderIdPrefix}{appData.Id}",
+                OrderId = appId == null? null :$"{CrowdfundInvoiceOrderIdPrefix}{appId}",
                 Status = new string[]{
                     InvoiceState.ToString(InvoiceStatus.New),
                     InvoiceState.ToString(InvoiceStatus.Paid), 

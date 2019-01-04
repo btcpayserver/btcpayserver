@@ -12,12 +12,14 @@ namespace BTCPayServer.Models.AppViewModels
         [MaxLength(50)] public string Tagline { get; set; }
 
         [Required] public string Description { get; set; }
+        
+        [Display(Name = "Featured Image")]
         public string MainImageUrl { get; set; }
 
         public string NotificationUrl { get; set; }
 
         [Required]
-        [Display(Name = "Enabled, Allow crowdfund to be publicly visible( still visible to you)")]
+        [Display(Name = "Allow crowdfund to be publicly visible( still visible to you)")]
         public bool Enabled { get; set; } = false;
 
         [Required]
@@ -39,7 +41,7 @@ namespace BTCPayServer.Models.AppViewModels
 
         [Required]
         [MaxLength(5)]
-        [Display(Name = "The primary currency used for targets and stats")]
+        [Display(Name = "The primary currency used for targets and stats. (e.g. BTC, LTC, USD, etc.)")]
         public string TargetCurrency { get; set; } = "BTC";
 
         [Display(Name = "Set a Target amount ")]
@@ -63,10 +65,13 @@ namespace BTCPayServer.Models.AppViewModels
         [Display(Name = "Custom bootstrap CSS file")]
         public string CustomCSSLink { get; set; }
 
+        [Display(Name = "Custom CSS Code")]
         public string EmbeddedCSS { get; set; }
 
         [Display(Name = "Base the contributed goal amount on the invoice amount and not actual payments")]
-        public bool UseInvoiceAmount { get; set; } = true;
+        public bool UseInvoiceAmount { get; set; } = true;        
+        [Display(Name = "Count all invoices created on the store as part of the crowdfunding goal")]
+        public bool UseAllStoreInvoices { get; set; } = false;
     }
 
     public enum CrowdfundResetEvery

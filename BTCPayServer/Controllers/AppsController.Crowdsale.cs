@@ -39,6 +39,7 @@ namespace BTCPayServer.Controllers
             public bool UseInvoiceAmount { get; set; }
             public int ResetEveryAmount { get; set; }
             public CrowdfundResetEvery ResetEvery { get; set; }
+            public bool UseAllStoreInvoices { get; set; }
         }
         
         
@@ -73,6 +74,7 @@ namespace BTCPayServer.Controllers
                 UseInvoiceAmount = settings.UseInvoiceAmount,
                 ResetEveryAmount = settings.ResetEveryAmount,
                 ResetEvery = Enum.GetName(typeof(CrowdfundResetEvery), settings.ResetEvery),
+                UseAllStoreInvoices = settings.UseAllStoreInvoices
             };
             return View(vm);
         }
@@ -122,7 +124,8 @@ namespace BTCPayServer.Controllers
                 AnimationsEnabled = vm.AnimationsEnabled,
                 ResetEveryAmount = vm.ResetEveryAmount,
                 ResetEvery = Enum.Parse<CrowdfundResetEvery>(vm.ResetEvery),
-                UseInvoiceAmount = vm.UseInvoiceAmount
+                UseInvoiceAmount = vm.UseInvoiceAmount,
+                UseAllStoreInvoices = vm.UseAllStoreInvoices
             });
             await UpdateAppSettings(app);
             _EventAggregator.Publish(new CrowdfundAppUpdated()

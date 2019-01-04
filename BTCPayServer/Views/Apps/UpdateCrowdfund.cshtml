@@ -71,7 +71,7 @@
                     </div> 
                     <div class="form-group">
                         <label asp-for="StartDate" class="control-label"></label>*
-                        <input asp-for="StartDate" class="form-control" />
+                        <input asp-for="StartDate" class="form-control datetime " />
                         <span asp-validation-for="StartDate" class="text-danger"></span>
                     </div>
                     <div class="form-group">
@@ -90,13 +90,13 @@
                     
                     <div class="form-group">
                         <label asp-for="EndDate" class="control-label"></label>*
-                        <input asp-for="EndDate" class="form-control" />
+                        <input asp-for="EndDate" class="form-control datetime" />
                         <span asp-validation-for="EndDate" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label class="control-label">Contribution Perks</label>
                         <div class="mb-3">
-                            <a class="js-product-add btn btn-secondary" href="#" data-toggle="modal" data-target="#product-modal"><i class="fa fa-plus fa-fw"></i> Add Product</a>
+                            <a class="js-product-add btn btn-secondary" href="#" data-toggle="modal" data-target="#product-modal"><i class="fa fa-plus fa-fw"></i> Add Perk</a>
                         </div>
                         <div class="js-products bg-light row p-3">
                         </div>
@@ -141,6 +141,11 @@
                         <span asp-validation-for="UseInvoiceAmount" class="text-danger"></span>
                     </div>
                     <div class="form-group">
+                        <label asp-for="UseAllStoreInvoices"></label>
+                        <input asp-for="UseAllStoreInvoices" type="checkbox" class="form-check"/>
+                        <span asp-validation-for="UseAllStoreInvoices" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
                         <label asp-for="SoundsEnabled"></label>
                         <input asp-for="SoundsEnabled" type="checkbox" class="form-check"/>
                         <span asp-validation-for="SoundsEnabled" class="text-danger"></span>
@@ -175,10 +180,15 @@
     <script src="~/vendor/highlightjs/highlight.min.js"></script>
     <script src="~/vendor/richtext/jquery.richtext.min.js"></script>
     <link rel="stylesheet" href="~/vendor/richtext/richtext.min.css">
+    <script src="~/vendor/flatpickr/flatpickr.js"></script>
+    <link rel="stylesheet" href="~/vendor/flatpickr/flatpickr.min.css">
     <script>
         hljs.initHighlightingOnLoad();
         $(document).ready(function() {
             $(".richtext").richText();
+            $(".datetime").flatpickr({
+                enableTime: true
+            });
         });
     </script>
 

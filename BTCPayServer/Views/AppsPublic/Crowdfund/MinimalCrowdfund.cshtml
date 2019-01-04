@@ -50,6 +50,10 @@
                 {
                     <span class="mt-3">
                         <span class="h5">@Model.TargetAmount @Model.TargetCurrency</span>
+                        @if (Model.ResetEveryAmount > 0 && Model.ResetEvery != nameof(CrowdfundResetEvery.Never))
+                        {
+                            <span> Dynamic</span>
+                        }
                         @if (Model.EnforceTargetAmount)
                         {
                             <span v-if="srvModel.enforceTargetAmount">Hardcap Goal <span class="fa fa-question-circle" v-b-tooltip title="No contributions allowed after the goal has been reached"></span></span>                           

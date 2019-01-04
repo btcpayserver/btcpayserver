@@ -122,12 +122,14 @@ namespace BTCPayServer.Controllers
             var info = await _CrowdfundHubStreamer.GetCrowdfundInfo(appId);
             
             if(!isAdmin && 
+               
                ((settings.StartDate.HasValue && DateTime.Now  < settings.StartDate) || 
                 (settings.EndDate.HasValue && DateTime.Now  > settings.EndDate) || 
-                (settings.EnforceTargetAmount && (info.Info.PendingProgressPercentage.GetValueOrDefault(0) + info.Info.ProgressPercentage.GetValueOrDefault(0)) >= 100)))
+                (settings.EnforceTargetAmount && 
+                    (info.Info.PendingProgressPercentage.GetValueOrDefault(0) + 
+                     info.Info.ProgressPercentage.GetValueOrDefault(0)) >= 100)))
             {
                 return NotFound();
-                
             }
 
             var store = await _AppsHelper.GetStore(app);

@@ -29,6 +29,8 @@ namespace BTCPayServer.Models.AppViewModels
         public bool SoundsEnabled { get; set; }
         public string DisqusShortname { get; set; }
         public bool AnimationsEnabled { get; set; }
+        public int ResetEveryAmount { get; set; }
+        public string ResetEvery { get; set; }
 
 
         public class CrowdfundInfo
@@ -41,6 +43,8 @@ namespace BTCPayServer.Models.AppViewModels
             public DateTime LastUpdated { get; set; }
             public Dictionary<string, decimal> PaymentStats { get; set; }
             public Dictionary<string, decimal> PendingPaymentStats { get; set; }
+            public DateTime? LastResetDate { get; set; }
+            public DateTime? NextResetDate { get; set; }
         }
         
     }

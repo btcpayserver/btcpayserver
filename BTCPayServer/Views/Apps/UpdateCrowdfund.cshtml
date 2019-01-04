@@ -75,6 +75,20 @@
                         <span asp-validation-for="StartDate" class="text-danger"></span>
                     </div>
                     <div class="form-group">
+                        <label asp-for="ResetEvery" class="control-label"></label>
+                        <div class="input-group">
+                            
+                            <input type="number" asp-for="ResetEveryAmount" min="1" placeholder="Amount" class="form-control">
+                            <select class="custom-select" asp-for="ResetEvery">
+                                @foreach (var opt in Model.ResetEveryValues)
+                                {
+                                    <option value="@opt">@opt</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
                         <label asp-for="EndDate" class="control-label"></label>*
                         <input asp-for="EndDate" class="form-control" />
                         <span asp-validation-for="EndDate" class="text-danger"></span>

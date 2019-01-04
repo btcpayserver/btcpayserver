@@ -12,6 +12,7 @@ namespace BTCPayServer.Hubs
         public const string InvoiceCreated = "InvoiceCreated";
         public const string PaymentReceived = "PaymentReceived";
         public const string InfoUpdated = "InfoUpdated";
+        public const string InvoiceError = "InvoiceError";
         private readonly AppsPublicController _AppsPublicController;
 
         public CrowdfundHub(AppsPublicController appsPublicController)
@@ -35,7 +36,19 @@ namespace BTCPayServer.Hubs
                model.RedirectToCheckout = false;
                _AppsPublicController.ControllerContext.HttpContext = Context.GetHttpContext();
                var result = await _AppsPublicController.ContributeToCrowdfund(Context.Items["app"].ToString(), model);
-               await Clients.Caller.SendCoreAsync(InvoiceCreated, new[] {(result as OkObjectResult)?.Value.ToString()});
+               switch (result)
+               {
+                   case OkObjectResult okObjectResult:
+                       await Clients.Caller.SendCoreAsync(InvoiceCreated, new[] {okObjectResult.Value.ToString()});
+                       break;
+                   case ObjectResult objectResult:
+                       await Clients.Caller.SendCoreAsync(InvoiceError, new[] {objectResult.Value});
+                       break;
+                   default:
+                       await Clients.Caller.SendCoreAsync(InvoiceError, System.Array.Empty<object>());
+                       break;
+               }
+               
         }
 
     }

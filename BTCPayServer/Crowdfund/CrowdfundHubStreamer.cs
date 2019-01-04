@@ -45,7 +45,7 @@ namespace BTCPayServer.Hubs
             _InvoiceRepository = invoiceRepository;
             SubscribeToEvents();
         }
-
+        
         public Task<ViewCrowdfundViewModel> GetCrowdfundInfo(string appId)
         {
             return _MemoryCache.GetOrCreateAsync(GetCacheKey(appId), async entry =>
@@ -178,8 +178,41 @@ namespace BTCPayServer.Hubs
         private async Task<ViewCrowdfundViewModel> GetInfo(AppData appData, string statusMessage= null)
         {
             var settings = appData.GetSettings<AppsController.CrowdfundSettings>();
-            var invoices = await GetInvoicesForApp(appData, _InvoiceRepository);
 
+            var resetEvery = settings.StartDate.HasValue? settings.ResetEvery : CrowdfundResetEvery.Never;
+            DateTime? lastResetDate = null;
+            DateTime? nextResetDate = null;
+            if (resetEvery != CrowdfundResetEvery.Never)
+            {
+                lastResetDate = settings.StartDate.Value;
+                
+                nextResetDate = lastResetDate.Value;
+                while (DateTime.Now >= nextResetDate)
+                {
+                    lastResetDate = nextResetDate;
+                    switch (resetEvery)
+                    {
+                        case CrowdfundResetEvery.Hour:
+                            nextResetDate = lastResetDate.Value.AddHours(settings.ResetEveryAmount);
+                            break;
+                        case CrowdfundResetEvery.Day:
+                            nextResetDate = lastResetDate.Value.AddDays(settings.ResetEveryAmount);
+                            break;
+                        case CrowdfundResetEvery.Month:
+
+                            nextResetDate = lastResetDate.Value.AddMonths(settings.ResetEveryAmount);
+                            break;
+                        case CrowdfundResetEvery.Year:
+                            nextResetDate = lastResetDate.Value.AddYears(settings.ResetEveryAmount);
+                            break;
+                    }
+                }
+            }
+            
+            
+
+
+            var invoices = await GetInvoicesForApp(appData, lastResetDate);
             var completeInvoices = invoices.Where(entity => entity.Status == InvoiceStatus.Complete).ToArray();
             var pendingInvoices = invoices.Where(entity => entity.Status != InvoiceStatus.Complete).ToArray();
             
@@ -190,7 +223,7 @@ namespace BTCPayServer.Hubs
             
             var currentAmount = await GetCurrentContributionAmount(
                 paymentStats,
-                settings.TargetCurrency, _RateFetcher, rateRules);
+                settings.TargetCurrency, _RateFetcher, rateRules); 
             var currentPendingAmount =  await GetCurrentContributionAmount(
                 pendingPaymentStats,
                 settings.TargetCurrency, _RateFetcher, rateRules);
@@ -217,6 +250,8 @@ namespace BTCPayServer.Hubs
                 SoundsEnabled = settings.SoundsEnabled,
                 DisqusShortname = settings.DisqusShortname,
                 AnimationsEnabled = settings.AnimationsEnabled,
+                ResetEveryAmount = settings.ResetEveryAmount,
+                ResetEvery = Enum.GetName(typeof(CrowdfundResetEvery),settings.ResetEvery),
                 Info = new ViewCrowdfundViewModel.CrowdfundInfo()
                 {
                     TotalContributors = invoices.Length,
@@ -226,21 +261,24 @@ namespace BTCPayServer.Hubs
                     PendingProgressPercentage =  ( currentPendingAmount/ settings.TargetAmount) * 100,
                     LastUpdated = DateTime.Now,
                     PaymentStats = paymentStats,
-                    PendingPaymentStats = pendingPaymentStats
+                    PendingPaymentStats = pendingPaymentStats,
+                    LastResetDate = lastResetDate,
+                    NextResetDate = nextResetDate
                 }
             };
         }
 
-        private static async Task<InvoiceEntity[]> GetInvoicesForApp(AppData appData, InvoiceRepository invoiceRepository)
+        private async Task<InvoiceEntity[]> GetInvoicesForApp(AppData appData, DateTime? startDate = null)
         {
-            return await  invoiceRepository.GetInvoices(new InvoiceQuery()
+            return await  _InvoiceRepository.GetInvoices(new InvoiceQuery()
             {
                 OrderId = $"{CrowdfundInvoiceOrderIdPrefix}{appData.Id}",
                 Status = new string[]{
                     InvoiceState.ToString(InvoiceStatus.New),
                     InvoiceState.ToString(InvoiceStatus.Paid), 
                     InvoiceState.ToString(InvoiceStatus.Confirmed), 
-                    InvoiceState.ToString(InvoiceStatus.Complete)}
+                    InvoiceState.ToString(InvoiceStatus.Complete)},
+                StartDate = startDate
             });
         }
         

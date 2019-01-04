@@ -37,6 +37,8 @@ namespace BTCPayServer.Controllers
             public string DisqusShortname { get; set; }
             public bool AnimationsEnabled { get; set; }
             public bool UseInvoiceAmount { get; set; }
+            public int ResetEveryAmount { get; set; }
+            public CrowdfundResetEvery ResetEvery { get; set; }
         }
         
         
@@ -68,7 +70,9 @@ namespace BTCPayServer.Controllers
                 SoundsEnabled = settings.SoundsEnabled,
                 DisqusShortname = settings.DisqusShortname,
                 AnimationsEnabled = settings.AnimationsEnabled,
-                UseInvoiceAmount = settings.UseInvoiceAmount
+                UseInvoiceAmount = settings.UseInvoiceAmount,
+                ResetEveryAmount = settings.ResetEveryAmount,
+                ResetEvery = Enum.GetName(typeof(CrowdfundResetEvery), settings.ResetEvery),
             };
             return View(vm);
         }
@@ -116,7 +120,8 @@ namespace BTCPayServer.Controllers
                 SoundsEnabled = vm.SoundsEnabled,
                 DisqusShortname = vm.DisqusShortname,
                 AnimationsEnabled = vm.AnimationsEnabled,
-                
+                ResetEveryAmount = vm.ResetEveryAmount,
+                ResetEvery = Enum.Parse<CrowdfundResetEvery>(vm.ResetEvery),
                 UseInvoiceAmount = vm.UseInvoiceAmount
             });
             await UpdateAppSettings(app);

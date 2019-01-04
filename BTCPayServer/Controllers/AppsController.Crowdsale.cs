@@ -17,7 +17,7 @@ namespace BTCPayServer.Controllers
         {
             public string Title { get; set; }
             public string Description { get; set; }
-            public bool Enabled { get; set; }
+            public bool Enabled { get; set; } = false;
         
             public DateTime? StartDate { get; set; }
             public DateTime? EndDate { get; set; }
@@ -32,14 +32,14 @@ namespace BTCPayServer.Controllers
             public string Tagline { get; set; }
             public string EmbeddedCSS { get; set; }
             public string PerksTemplate { get; set; }
-            public bool DisqusEnabled { get; set; }
-            public bool SoundsEnabled { get; set; }
+            public bool DisqusEnabled { get; set; }= false;
+            public bool SoundsEnabled { get; set; }= true;
             public string DisqusShortname { get; set; }
-            public bool AnimationsEnabled { get; set; }
-            public bool UseInvoiceAmount { get; set; }
-            public int ResetEveryAmount { get; set; }
-            public CrowdfundResetEvery ResetEvery { get; set; }
-            public bool UseAllStoreInvoices { get; set; }
+            public bool AnimationsEnabled { get; set; } = true;
+            public bool UseInvoiceAmount { get; set; } = true;
+            public int ResetEveryAmount { get; set; } = 1;
+            public CrowdfundResetEvery ResetEvery { get; set; } = CrowdfundResetEvery.Never;
+            public bool UseAllStoreInvoices { get; set; } = false;
         }
         
         

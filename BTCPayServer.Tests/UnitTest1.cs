@@ -2078,7 +2078,7 @@ donation:
             return ctx.AddressInvoices.FirstOrDefault(i => i.InvoiceDataId == invoice.Id && i.GetAddress() == h) != null;
         }
 
-        private void Eventually(Action act)
+        public static void Eventually(Action act)
         {
             CancellationTokenSource cts = new CancellationTokenSource(20000);
             while (true)

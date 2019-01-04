@@ -146,6 +146,12 @@ namespace BTCPayServer.Controllers
                 if (request.Amount > price)
                     price = request.Amount;
             }
+
+            if (settings.EnforceTargetAmount && info.TargetAmount.HasValue && price >
+                (info.TargetAmount - (info.Info.CurrentAmount + info.Info.CurrentPendingAmount)))
+            {
+                return NotFound();
+            }
             
             store.AdditionalClaims.Add(new Claim(Policies.CanCreateInvoice.Key, store.Id));
             var invoice = await _InvoiceController.CreateInvoiceCore(new Invoice()

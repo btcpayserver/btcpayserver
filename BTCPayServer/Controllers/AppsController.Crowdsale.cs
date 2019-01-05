@@ -74,7 +74,8 @@ namespace BTCPayServer.Controllers
                 UseInvoiceAmount = settings.UseInvoiceAmount,
                 ResetEveryAmount = settings.ResetEveryAmount,
                 ResetEvery = Enum.GetName(typeof(CrowdfundResetEvery), settings.ResetEvery),
-                UseAllStoreInvoices = settings.UseAllStoreInvoices
+                UseAllStoreInvoices = settings.UseAllStoreInvoices,
+                AppId = appId
             };
             return View(vm);
         }

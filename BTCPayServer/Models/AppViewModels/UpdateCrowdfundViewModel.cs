@@ -72,6 +72,8 @@ namespace BTCPayServer.Models.AppViewModels
         public bool UseInvoiceAmount { get; set; } = true;        
         [Display(Name = "Count all invoices created on the store as part of the crowdfunding goal")]
         public bool UseAllStoreInvoices { get; set; } = false;
+
+        public string AppId { get; set; }
     }
 
     public enum CrowdfundResetEvery

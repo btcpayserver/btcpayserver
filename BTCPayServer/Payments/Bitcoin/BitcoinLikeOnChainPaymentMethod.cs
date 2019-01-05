@@ -20,14 +20,14 @@ namespace BTCPayServer.Payments.Bitcoin
             return DepositAddress;
         }
 
-        public decimal GetTxFee()
+        public decimal GetNetworkFee()
         {
-            return TxFee.ToDecimal(MoneyUnit.BTC);
+            return NetworkFee.ToDecimal(MoneyUnit.BTC);
         }
 
-        public void SetNoTxFee()
+        public void SetNoNetworkFee()
         {
-            TxFee = Money.Zero;
+            NetworkFee = Money.Zero;
         }
 
 
@@ -40,7 +40,7 @@ namespace BTCPayServer.Payments.Bitcoin
         [JsonIgnore]
         public FeeRate FeeRate { get; set; }
         [JsonIgnore]
-        public Money TxFee { get; set; }
+        public Money NetworkFee { get; set; }
         [JsonIgnore]
         public String DepositAddress { get; set; }
         public BitcoinAddress GetDepositAddress(Network network)

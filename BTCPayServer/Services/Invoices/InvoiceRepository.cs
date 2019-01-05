@@ -379,11 +379,24 @@ retry:
         private InvoiceEntity ToEntity(Data.InvoiceData invoice)
         {
             var entity = ToObject<InvoiceEntity>(invoice.Blob, null);
+            PaymentMethodDictionary paymentMethods = null;
 #pragma warning disable CS0618
             entity.Payments = invoice.Payments.Select(p =>
             {
                 var paymentEntity = ToObject<PaymentEntity>(p.Blob, null);
                 paymentEntity.Accounted = p.Accounted;
+
+                // PaymentEntity on version 0 does not have their own fee, because it was assumed that the payment method have fixed fee.
+                // We want to hide this legacy detail in InvoiceRepository, so we fetch the fee from the PaymentMethod and assign it to the PaymentEntity.
+                if (paymentEntity.Version == 0)
+                {
+                    if (paymentMethods == null)
+                        paymentMethods = entity.GetPaymentMethods(null);
+                    var paymentMethodDetails = paymentMethods.TryGet(paymentEntity.GetPaymentMethodId())?.GetPaymentMethodDetails();
+                    if (paymentMethodDetails != null) // == null should never happen, but we never know.
+                        paymentEntity.NetworkFee = paymentMethodDetails.GetNetworkFee();
+                }
+
                 return paymentEntity;
             })
             .OrderBy(a => a.ReceivedTime).ToList();
@@ -551,13 +564,20 @@ retry:
         {
             using (var context = _ContextFactory.CreateContext())
             {
+                var invoice = context.Invoices.Find(invoiceId);
+                if (invoice == null)
+                    return null;
                 PaymentEntity entity = new PaymentEntity
                 {
+                    Version = 1,
 #pragma warning disable CS0618
                     CryptoCode = cryptoCode,
 #pragma warning restore CS0618
                     ReceivedTime = date.UtcDateTime,
-                    Accounted = accounted
+                    Accounted = accounted,
+                    NetworkFee = ToObject<InvoiceEntity>(invoice.Blob, null)
+                                .GetPaymentMethod(new PaymentMethodId(cryptoCode, paymentData.GetPaymentType()), null)
+                                .GetPaymentMethodDetails().GetNetworkFee()
                 };
                 entity.SetCryptoPaymentData(paymentData);
 

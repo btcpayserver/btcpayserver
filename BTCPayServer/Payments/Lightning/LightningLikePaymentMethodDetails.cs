@@ -21,12 +21,12 @@ namespace BTCPayServer.Payments.Lightning
             return PaymentTypes.LightningLike;
         }
 
-        public decimal GetTxFee()
+        public decimal GetNetworkFee()
         {
             return 0.0m;
         }
 
-        public void SetNoTxFee()
+        public void SetNoNetworkFee()
         {
         }
 

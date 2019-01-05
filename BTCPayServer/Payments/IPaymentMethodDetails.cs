@@ -21,8 +21,8 @@ namespace BTCPayServer.Payments
         /// Returns what a merchant would need to pay to cashout this payment
         /// </summary>
         /// <returns></returns>
-        decimal GetTxFee();
-        void SetNoTxFee();
+        decimal GetNetworkFee();
+        void SetNoNetworkFee();
         /// <summary>
         /// Change the payment destination (internal plumbing)
         /// </summary>

@@ -49,7 +49,7 @@ namespace BTCPayServer.Payments.Bitcoin
             var prepare = (Prepare)preparePaymentObject;
             Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod onchainMethod = new Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod();
             onchainMethod.FeeRate = await prepare.GetFeeRate;
-            onchainMethod.TxFee = onchainMethod.FeeRate.GetFee(100); // assume price for 100 bytes
+            onchainMethod.NetworkFee = onchainMethod.FeeRate.GetFee(100); // assume price for 100 bytes
             onchainMethod.DepositAddress = (await prepare.ReserveAddress).ToString();
             return onchainMethod;
         }

@@ -473,7 +473,9 @@ namespace BTCPayServer.Controllers
                           : r,
                 Status = filterString.Filters.ContainsKey("status") ? filterString.Filters["status"].ToArray() : null,
                 ExceptionStatus = filterString.Filters.ContainsKey("exceptionstatus") ? filterString.Filters["exceptionstatus"].ToArray() : null,
-                StoreId = filterString.Filters.ContainsKey("storeid") ? filterString.Filters["storeid"].ToArray() : null
+                StoreId = filterString.Filters.ContainsKey("storeid") ? filterString.Filters["storeid"].ToArray() : null,
+                ItemCode = filterString.Filters.ContainsKey("itemcode") ? filterString.Filters["itemcode"].ToArray() : null,
+                OrderId = filterString.Filters.ContainsKey("orderid") ? filterString.Filters["orderid"].ToArray() : null
             });
 
             return list;

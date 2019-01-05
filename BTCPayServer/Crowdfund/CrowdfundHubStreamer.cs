@@ -272,7 +272,7 @@ namespace BTCPayServer.Hubs
         {
             return await  _InvoiceRepository.GetInvoices(new InvoiceQuery()
             {
-                OrderId = appId == null? null :$"{CrowdfundInvoiceOrderIdPrefix}{appId}",
+                OrderId = appId == null? null : new []{$"{CrowdfundInvoiceOrderIdPrefix}{appId}"},
                 Status = new string[]{
                     InvoiceState.ToString(InvoiceStatus.New),
                     InvoiceState.ToString(InvoiceStatus.Paid), 
@@ -281,7 +281,5 @@ namespace BTCPayServer.Hubs
                 StartDate = startDate
             });
         }
-        
-        
     }
 }

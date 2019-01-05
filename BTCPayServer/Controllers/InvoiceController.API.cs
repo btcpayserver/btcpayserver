@@ -66,17 +66,17 @@ namespace BTCPayServer.Controllers
         {
             if (dateEnd != null)
                 dateEnd = dateEnd.Value + TimeSpan.FromDays(1); //Should include the end day
-            
+
             var query = new InvoiceQuery()
             {
                 Count = limit,
                 Skip = offset,
                 EndDate = dateEnd,
                 StartDate = dateStart,
-                OrderId = orderId,
-                ItemCode = itemCode,
-                Status = status == null ? null : new[] { status },
-                StoreId = new[] { this.HttpContext.GetStoreData().Id }
+                OrderId = orderId == null ? null : new[] {orderId},
+                ItemCode = itemCode == null ? null : new[] {itemCode},
+                Status = status == null ? null : new[] {status},
+                StoreId = new[] {this.HttpContext.GetStoreData().Id}
             };
 
             var entities = (await _InvoiceRepository.GetInvoices(query))

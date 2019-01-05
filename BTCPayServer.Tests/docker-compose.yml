@@ -2,7 +2,7 @@ version: "3"
 
 # Run `docker-compose up dev` for bootstrapping your development environment
 # Doing so will expose NBXplorer, Bitcoind RPC and postgres port to the host so that tests can Run,
-# The Visual Studio launch setting `Docker-testnet` is configured to use this environment.
+# The Visual Studio launch setting `Docker-regtest` is configured to use this environment.
 services:
 
   tests:
@@ -76,7 +76,7 @@ services:
     expose: 
       - "32838"
     environment:
-      NBXPLORER_NETWORK: testnet
+      NBXPLORER_NETWORK: regtest
       NBXPLORER_CHAINS: "btc,ltc"
       NBXPLORER_BTCRPCURL: http://bitcoind:43782/
       NBXPLORER_BTCNODEENDPOINT: bitcoind:39388
@@ -98,7 +98,7 @@ services:
     restart: unless-stopped
     image: btcpayserver/bitcoin:0.17.0
     environment:
-      BITCOIN_NETWORK: testnet
+      BITCOIN_NETWORK: regtest
       BITCOIN_EXTRA_ARGS: |-
         rpcuser=ceiwHEbqWI83
         rpcpassword=DwubwWsoo3
@@ -127,7 +127,7 @@ services:
       LIGHTNINGD_OPT: |
         bitcoin-datadir=/etc/bitcoin
         bitcoin-rpcconnect=bitcoind
-        network=testnet
+        network=regtest
         bind-addr=0.0.0.0
         announce-addr=customer_lightningd
         log-level=debug
@@ -148,7 +148,7 @@ services:
     image: shesek/lightning-charge:0.4.6-standalone
     restart: unless-stopped
     environment:
-      NETWORK: testnet
+      NETWORK: regtest
       API_TOKEN: foiewnccewuify
       BITCOIND_RPCCONNECT: bitcoind
     volumes:
@@ -174,7 +174,7 @@ services:
         bitcoin-rpcconnect=bitcoind
         bind-addr=0.0.0.0
         announce-addr=merchant_lightningd
-        network=testnet
+        network=regtest
         log-level=debug
         dev-broadcast-interval=1000
     ports:
@@ -195,7 +195,7 @@ services:
       BITCOIN_EXTRA_ARGS: |-
         rpcuser=ceiwHEbqWI83
         rpcpassword=DwubwWsoo3
-        testnet=1
+        regtest=1
         rpcport=43782
         port=39388
         whitelist=0.0.0.0/0
@@ -226,7 +226,7 @@ services:
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
-      LND_ENVIRONMENT: "testnet"
+      LND_ENVIRONMENT: "regtest"
       LND_EXPLORERURL: "http://nbxplorer:32838/"
       LND_EXTRA_ARGS: |
         restlisten=0.0.0.0:8080
@@ -256,7 +256,7 @@ services:
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
-      LND_ENVIRONMENT: "testnet"
+      LND_ENVIRONMENT: "regtest"
       LND_EXPLORERURL: "http://nbxplorer:32838/"
       LND_EXTRA_ARGS: |
         restlisten=0.0.0.0:8080

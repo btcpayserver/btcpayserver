@@ -90,12 +90,16 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> ViewCrowdfund(string appId, string statusMessage)
         
         {
-            var app = await _AppsHelper.GetApp(appId, AppType.Crowdfund, true); 
-            if (app == null || 
-                (!app.GetSettings<CrowdfundSettings>().Enabled &&
-                 _AppsHelper.GetAppDataIfOwner(GetUserId(), appId, AppType.Crowdfund) == null))
-                return NotFound();
+            var app = await _AppsHelper.GetApp(appId, AppType.Crowdfund, true);
             
+            if (app == null)
+                return NotFound();
+            var settings = app.GetSettings<CrowdfundSettings>();
+            if (settings.Enabled) return View(await _CrowdfundHubStreamer.GetCrowdfundInfo(appId));
+            var isAdmin = await _AppsHelper.GetAppDataIfOwner(GetUserId(), appId, AppType.Crowdfund) != null;
+            if(!isAdmin)
+                return NotFound();
+
             return View(await _CrowdfundHubStreamer.GetCrowdfundInfo(appId));
         }
 
@@ -114,9 +118,9 @@ namespace BTCPayServer.Controllers
             var isAdmin = false;
             if (!settings.Enabled)
             {
-                isAdmin = await _AppsHelper.GetAppDataIfOwner(GetUserId(), appId, AppType.Crowdfund) == null;
+                isAdmin = await _AppsHelper.GetAppDataIfOwner(GetUserId(), appId, AppType.Crowdfund) != null;
                 if(!isAdmin)
-                    return NotFound();
+                    return NotFound("Crowdfund is not currently active");
             }
 
             var info = await _CrowdfundHubStreamer.GetCrowdfundInfo(appId);
@@ -129,7 +133,7 @@ namespace BTCPayServer.Controllers
                     (info.Info.PendingProgressPercentage.GetValueOrDefault(0) + 
                      info.Info.ProgressPercentage.GetValueOrDefault(0)) >= 100)))
             {
-                return NotFound();
+                return NotFound("Crowdfund is not currently active");
             }
 
             var store = await _AppsHelper.GetStore(app);
@@ -150,7 +154,7 @@ namespace BTCPayServer.Controllers
             if (settings.EnforceTargetAmount && info.TargetAmount.HasValue && price >
                 (info.TargetAmount - (info.Info.CurrentAmount + info.Info.CurrentPendingAmount)))
             {
-                return NotFound();
+                return NotFound("Contribution Amount is more than is currently allowed.");
             }
             
             store.AdditionalClaims.Add(new Claim(Policies.CanCreateInvoice.Key, store.Id));

@@ -93,14 +93,14 @@
                     </div>
                 </div>
                 
-                <b-tooltip target="raised-amount" >
+                <b-tooltip target="raised-amount" v-if="paymentStats && paymentStats.length > 0">
                     <ul class="p-0 text-uppercase">
                         <li v-for="stat of paymentStats" style="list-style-type: none">
                             {{stat.label}} {{stat.value}}
                         </li>
                     </ul>
                 </b-tooltip>      
-                <b-tooltip target="goal-raised" >
+                <b-tooltip target="goal-raised"  v-if="srvModel.resetEvery !== 'Never'">
                     Goal resets every {{srvModel.resetEveryAmount}} {{srvModel.resetEvery}} {{srvModel.resetEveryAmount>1?'s': ''}}
                 </b-tooltip>
                 

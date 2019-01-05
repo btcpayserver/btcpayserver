@@ -182,6 +182,26 @@ addLoadEvent(function (ev) {
 
                 self.contributeModalOpen = false;
             });
+            eventAggregator.$on("invoice-error", function(error){
+                var msg = "";
+                if(typeof error === "string"){
+                    msg = error;
+                }else if(!error){
+                    msg = "Unknown Error";
+                }else{
+                    msg = JSON.stringify(error);
+                }
+
+                Vue.toasted.show("Error creating invoice: " + msg, {
+                    iconPack: "fontawesome",
+                    icon: "exclamation-triangle",
+                    fullWidth: false,
+                    theme: "bubble",
+                    type: "error",
+                    position: "top-center",
+                    duration: 10000
+                } );
+            });
             eventAggregator.$on("payment-received", function (amount, cryptoCode, type) {
                 var onChain = type.toLowerCase() === "btclike";
                 if(self.sound) {

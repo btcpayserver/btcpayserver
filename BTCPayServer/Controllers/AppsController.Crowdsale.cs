@@ -11,6 +11,8 @@ namespace BTCPayServer.Controllers
         public class CrowdfundAppUpdated
         {
             public string AppId { get; set; }
+            public CrowdfundSettings Settings { get; set; }
+            public string StoreId { get; set; }
         }
         
         public class CrowdfundSettings
@@ -83,7 +85,7 @@ namespace BTCPayServer.Controllers
         [Route("{appId}/settings/crowdfund")]
         public async Task<IActionResult> UpdateCrowdfund(string appId, UpdateCrowdfundViewModel vm)
         {
-            if (_AppsHelper.GetCurrencyData(vm.TargetCurrency, false) == null)
+            if (!string.IsNullOrEmpty( vm.TargetCurrency) && _AppsHelper.GetCurrencyData(vm.TargetCurrency, false) == null)
                 ModelState.AddModelError(nameof(vm.TargetCurrency), "Invalid currency");
           
             try
@@ -109,7 +111,8 @@ namespace BTCPayServer.Controllers
             var app = await GetOwnedApp(appId, AppType.Crowdfund);
             if (app == null)
                 return NotFound();
-            app.SetSettings(new CrowdfundSettings()
+
+            var newSettings = new CrowdfundSettings()
             {
                 Title = vm.Title,
                 Enabled = vm.Enabled,
@@ -133,11 +136,15 @@ namespace BTCPayServer.Controllers
                 ResetEvery = Enum.Parse<CrowdfundResetEvery>(vm.ResetEvery),
                 UseInvoiceAmount = vm.UseInvoiceAmount,
                 UseAllStoreInvoices = vm.UseAllStoreInvoices
-            });
+            };
+            
+            app.SetSettings(newSettings);
             await UpdateAppSettings(app);
             _EventAggregator.Publish(new CrowdfundAppUpdated()
             {
-                AppId = appId
+                AppId = appId,
+                StoreId = app.StoreDataId,
+                Settings = newSettings
             });
             StatusMessage = "App updated";
             return RedirectToAction(nameof(ListApps));

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -15,6 +16,8 @@ using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Primitives;
+using NBitcoin;
+using YamlDotNet.Core;
 
 namespace BTCPayServer.Hubs
 {
@@ -28,6 +31,9 @@ namespace BTCPayServer.Hubs
         private readonly RateFetcher _RateFetcher;
         private readonly BTCPayNetworkProvider _BtcPayNetworkProvider;
         private readonly InvoiceRepository _InvoiceRepository;
+        private readonly ConcurrentDictionary<string,(string appId, bool useAllStoreInvoices,bool useInvoiceAmount)> _QuickAppInvoiceLookup = 
+            new ConcurrentDictionary<string, (string appId, bool useAllStoreInvoices, bool useInvoiceAmount)>();
+        
         public CrowdfundHubStreamer(EventAggregator eventAggregator, 
             IHubContext<CrowdfundHub> hubContext, 
             IMemoryCache memoryCache,
@@ -43,9 +49,36 @@ namespace BTCPayServer.Hubs
             _RateFetcher = rateFetcher;
             _BtcPayNetworkProvider = btcPayNetworkProvider;
             _InvoiceRepository = invoiceRepository;
+#pragma warning disable 4014
+            InitLookup();
+#pragma warning restore 4014
             SubscribeToEvents();
         }
-        
+
+        private async Task InitLookup()
+        {
+          var apps =  await _AppsHelper.GetAllApps(null, true);
+          apps = apps.Where(model => Enum.Parse<AppType>(model.AppType) == AppType.Crowdfund).ToArray();
+          var tasks = new List<Task>();
+          tasks.AddRange(apps.Select(app => Task.Run(async () =>
+          {
+              var fullApp = await _AppsHelper.GetApp(app.Id, AppType.Crowdfund, false);
+              var settings = fullApp.GetSettings<AppsController.CrowdfundSettings>();
+              UpdateLookup(app.Id, app.StoreId, settings);
+          })));
+          await Task.WhenAll(tasks);
+        }
+
+        private void UpdateLookup(string appId, string storeId, AppsController.CrowdfundSettings settings)
+        {
+            _QuickAppInvoiceLookup.AddOrReplace(storeId,
+                (
+                    appId: appId,
+                    useAllStoreInvoices: settings?.UseAllStoreInvoices ?? false,
+                    useInvoiceAmount: settings?.UseInvoiceAmount ?? false
+                ));
+        }
+
         public Task<ViewCrowdfundViewModel> GetCrowdfundInfo(string appId)
         {
             return _MemoryCache.GetOrCreateAsync(GetCacheKey(appId), async entry =>
@@ -80,6 +113,7 @@ namespace BTCPayServer.Hubs
             _EventAggregator.Subscribe<InvoiceEvent>(OnInvoiceEvent);
             _EventAggregator.Subscribe<AppsController.CrowdfundAppUpdated>(updated =>
             {
+                UpdateLookup(updated.AppId, updated.StoreId, updated.Settings);
                 InvalidateCacheForApp(updated.AppId);
             });
         }
@@ -95,12 +129,20 @@ namespace BTCPayServer.Hubs
             {
                 return;
             }
-            var appId = invoiceEvent.Invoice.OrderId.Replace(CrowdfundInvoiceOrderIdPrefix, "", StringComparison.InvariantCultureIgnoreCase);
+
+            if (!_QuickAppInvoiceLookup.TryGetValue(invoiceEvent.Invoice.StoreId, out var quickLookup) ||
+                (!quickLookup.useAllStoreInvoices && 
+                !invoiceEvent.Invoice.OrderId.Equals($"{CrowdfundInvoiceOrderIdPrefix}{quickLookup.appId}", StringComparison.InvariantCulture)
+                ))
+            {
+                return;
+            }
+            
             switch (invoiceEvent.Name)
             {
                 case InvoiceEvent.ReceivedPayment:
                     var data = invoiceEvent.Payment.GetCryptoPaymentData();
-                    _HubContext.Clients.Group(appId).SendCoreAsync(CrowdfundHub.PaymentReceived, new object[]
+                    _HubContext.Clients.Group(quickLookup.appId).SendCoreAsync(CrowdfundHub.PaymentReceived, new object[]
                     {
                         data.GetValue(), 
                         invoiceEvent.Payment.GetCryptoCode(), 
@@ -108,10 +150,16 @@ namespace BTCPayServer.Hubs
                             invoiceEvent.Payment.GetPaymentMethodId().PaymentType)
                     } );
                     
-                    InvalidateCacheForApp(appId);
+                    InvalidateCacheForApp(quickLookup.appId);
+                    break;
+                case InvoiceEvent.Created:
+                    if (quickLookup.useInvoiceAmount)
+                    {
+                        InvalidateCacheForApp(quickLookup.appId);
+                    }
                     break;
                 case InvoiceEvent.Completed:
-                    InvalidateCacheForApp(appId);
+                    InvalidateCacheForApp(quickLookup.appId);
                     break;
             }
         }
@@ -123,7 +171,7 @@ namespace BTCPayServer.Hubs
             GetCrowdfundInfo(appId).ContinueWith(task =>
             {
                 _HubContext.Clients.Group(appId).SendCoreAsync(CrowdfundHub.InfoUpdated, new object[]{ task.Result} );
-            }, TaskScheduler.Default);
+            }, TaskScheduler.Current);
             
         }
         

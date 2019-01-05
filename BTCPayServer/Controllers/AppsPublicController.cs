@@ -151,7 +151,7 @@ namespace BTCPayServer.Controllers
                     price = request.Amount;
             }
 
-            if (isAdmin || (settings.EnforceTargetAmount && info.TargetAmount.HasValue && price >
+            if (!isAdmin && (settings.EnforceTargetAmount && info.TargetAmount.HasValue && price >
                 (info.TargetAmount - (info.Info.CurrentAmount + info.Info.CurrentPendingAmount))))
             {
                 return NotFound("Contribution Amount is more than is currently allowed.");
@@ -264,6 +264,49 @@ namespace BTCPayServer.Controllers
             _Currencies = currencies;
 
         }
+        
+        public async Task<StoreData[]> GetOwnedStores(string userId)
+        {
+            using (var ctx = _ContextFactory.CreateContext())
+            {
+                return await ctx.UserStore
+                    .Where(us => us.ApplicationUserId == userId && us.Role == StoreRoles.Owner)
+                    .Select(u => u.StoreData)
+                    .ToArrayAsync();
+            }
+        }
+
+        public async Task<bool> DeleteApp(AppData appData)
+        {
+            using (var ctx = _ContextFactory.CreateContext())
+            {
+                ctx.Apps.Add(appData);
+                ctx.Entry<AppData>(appData).State = EntityState.Deleted;
+                return await ctx.SaveChangesAsync() == 1;
+            }
+        }
+
+        public async Task<ListAppsViewModel.ListAppViewModel[]> GetAllApps(string userId, bool allowNoUser = false)
+        {
+            using (var ctx = _ContextFactory.CreateContext())
+            {
+                return await ctx.UserStore
+                    .Where(us => (allowNoUser && string.IsNullOrEmpty(userId)  ) || us.ApplicationUserId == userId)
+                    .Join(ctx.Apps, us => us.StoreDataId, app => app.StoreDataId,
+                        (us, app) =>
+                            new ListAppsViewModel.ListAppViewModel()
+                            {
+                                IsOwner = us.Role == StoreRoles.Owner,
+                                StoreId = us.StoreDataId,
+                                StoreName = us.StoreData.StoreName,
+                                AppName = app.Name,
+                                AppType = app.AppType,
+                                Id = app.Id
+                            })
+                    .ToArrayAsync();
+            }
+        }
+
 
         public async Task<AppData> GetApp(string appId, AppType appType, bool includeStore = false)
         {

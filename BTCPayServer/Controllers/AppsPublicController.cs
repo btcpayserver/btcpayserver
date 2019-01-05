@@ -144,15 +144,15 @@ namespace BTCPayServer.Controllers
                 var choices = _AppsHelper.Parse(settings.PerksTemplate, settings.TargetCurrency);
                 var choice = choices.FirstOrDefault(c => c.Id == request.ChoiceKey);
                 if (choice == null)
-                    return NotFound();
+                    return NotFound("Incorrect option provided");
                 title = choice.Title;
                 price = choice.Price.Value;
                 if (request.Amount > price)
                     price = request.Amount;
             }
 
-            if (settings.EnforceTargetAmount && info.TargetAmount.HasValue && price >
-                (info.TargetAmount - (info.Info.CurrentAmount + info.Info.CurrentPendingAmount)))
+            if (isAdmin || (settings.EnforceTargetAmount && info.TargetAmount.HasValue && price >
+                (info.TargetAmount - (info.Info.CurrentAmount + info.Info.CurrentPendingAmount))))
             {
                 return NotFound("Contribution Amount is more than is currently allowed.");
             }

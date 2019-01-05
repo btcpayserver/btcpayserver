@@ -102,7 +102,7 @@ namespace BTCPayServer.Tests
                 var publicApps = user.GetController<AppsPublicController>();
 
 
-                Assert.IsType<NotFoundResult>(await anonAppPubsController.ContributeToCrowdfund(appId, new ContributeToCrowdfund()
+                Assert.IsType<NotFoundObjectResult>(await anonAppPubsController.ContributeToCrowdfund(appId, new ContributeToCrowdfund()
                 {
                     Amount = new decimal(0.01)
                 }));
@@ -110,7 +110,7 @@ namespace BTCPayServer.Tests
                 Assert.IsType<NotFoundResult>(await anonAppPubsController.ViewCrowdfund(appId, string.Empty));
                 
                 //Scenario 2: Not Enabled But Admin - Allowed
-                Assert.IsType<OkObjectResult>(await anonAppPubsController.ContributeToCrowdfund(appId, new ContributeToCrowdfund()
+                Assert.IsType<OkObjectResult>(await publicApps.ContributeToCrowdfund(appId, new ContributeToCrowdfund()
                 {
                     RedirectToCheckout = false,
                     Amount = new decimal(0.01)

@@ -24,17 +24,11 @@ namespace BTCPayServer.Payments.Bitcoin
         {
             return NetworkFee.ToDecimal(MoneyUnit.BTC);
         }
-
-        public void SetNoNetworkFee()
-        {
-            NetworkFee = Money.Zero;
-        }
-
-
         public void SetPaymentDestination(string newPaymentDestination)
         {
             DepositAddress = newPaymentDestination;
         }
+        public Data.NetworkFeeMode NetworkFeeMode { get; set; }
 
         // Those properties are JsonIgnore because their data is inside CryptoData class for legacy reason
         [JsonIgnore]

@@ -20,7 +20,7 @@ namespace BTCPayServer.Hubs
 {
     public class CrowdfundHubStreamer
     {
-        public const string CrowdfundInvoiceOrderIdPrefix = "crowdfund-app:";
+        public const string CrowdfundInvoiceOrderIdPrefix = "crowdfund-app_";
         private readonly EventAggregator _EventAggregator;
         private readonly IHubContext<CrowdfundHub> _HubContext;
         private readonly IMemoryCache _MemoryCache;

@@ -485,7 +485,7 @@ namespace BTCPayServer.Services.Invoices
 
         public PaymentMethodDictionary GetPaymentMethods(BTCPayNetworkProvider networkProvider)
         {
-            PaymentMethodDictionary rates = new PaymentMethodDictionary(networkProvider);
+            PaymentMethodDictionary paymentMethods = new PaymentMethodDictionary();
             var serializer = new Serializer(Dummy);
 #pragma warning disable CS0618
             if (PaymentMethod != null)
@@ -499,11 +499,11 @@ namespace BTCPayServer.Services.Invoices
                     r.ParentEntity = this;
                     r.Network = networkProvider?.GetNetwork(r.CryptoCode);
                     if (r.Network != null || networkProvider == null)
-                        rates.Add(r);
+                        paymentMethods.Add(r);
                 }
             }
 #pragma warning restore CS0618
-            return rates;
+            return paymentMethods;
         }
 
         Network Dummy = Network.Main;
@@ -517,8 +517,6 @@ namespace BTCPayServer.Services.Invoices
 
         public void SetPaymentMethods(PaymentMethodDictionary paymentMethods)
         {
-            if (paymentMethods.NetworkProvider != null)
-                throw new InvalidOperationException($"{nameof(paymentMethods)} should have NetworkProvider to null");
             var obj = new JObject();
             var serializer = new Serializer(Dummy);
 #pragma warning disable CS0618
@@ -731,7 +729,7 @@ namespace BTCPayServer.Services.Invoices
                 {
                     FeeRate = FeeRate,
                     DepositAddress = string.IsNullOrEmpty(DepositAddress) ? null : DepositAddress,
-                    TxFee = TxFee
+                    NetworkFee = NetworkFee
                 };
             }
             else
@@ -739,7 +737,7 @@ namespace BTCPayServer.Services.Invoices
                 var details = PaymentMethodExtensions.DeserializePaymentMethodDetails(GetId(), PaymentMethodDetails);
                 if (details is Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod btcLike)
                 {
-                    btcLike.TxFee = TxFee;
+                    btcLike.NetworkFee = NetworkFee;
                     btcLike.DepositAddress = string.IsNullOrEmpty(DepositAddress) ? null : DepositAddress;
                     btcLike.FeeRate = FeeRate;
                 }
@@ -761,7 +759,7 @@ namespace BTCPayServer.Services.Invoices
 
             if (paymentMethod is Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod bitcoinPaymentMethod)
             {
-                TxFee = bitcoinPaymentMethod.TxFee;
+                NetworkFee = bitcoinPaymentMethod.NetworkFee;
                 FeeRate = bitcoinPaymentMethod.FeeRate;
                 DepositAddress = bitcoinPaymentMethod.DepositAddress;
             }
@@ -777,7 +775,7 @@ namespace BTCPayServer.Services.Invoices
         public FeeRate FeeRate { get; set; }
         [JsonProperty(PropertyName = "txFee")]
         [Obsolete("Use ((BitcoinLikeOnChainPaymentMethod)GetPaymentMethod()).TxFee")]
-        public Money TxFee { get; set; }
+        public Money NetworkFee { get; set; }
         [JsonProperty(PropertyName = "depositAddress")]
         [Obsolete("Use ((BitcoinLikeOnChainPaymentMethod)GetPaymentMethod()).DepositAddress")]
         public string DepositAddress { get; set; }
@@ -801,7 +799,7 @@ namespace BTCPayServer.Services.Invoices
                 .OrderBy(p => p.ReceivedTime)
                 .Select(_ =>
                 {
-                    var txFee = _.GetValue(paymentMethods, GetId(), paymentMethods[_.GetPaymentMethodId()].GetTxFee());
+                    var txFee = _.GetValue(paymentMethods, GetId(), _.NetworkFee);
                     paid += _.GetValue(paymentMethods, GetId());
                     if (!paidEnough)
                     {
@@ -842,17 +840,18 @@ namespace BTCPayServer.Services.Invoices
             var method = GetPaymentMethodDetails();
             if (method == null)
                 return 0.0m;
-            return method.GetTxFee();
+            return method.GetNetworkFee();
         }
     }
 
     public class PaymentEntity
     {
+        public int Version { get; set; }
         public DateTimeOffset ReceivedTime
         {
             get; set;
         }
-
+        public decimal NetworkFee { get; set; }
         [Obsolete("Use ((BitcoinLikePaymentData)GetCryptoPaymentData()).Outpoint")]
         public OutPoint Outpoint
         {
@@ -889,7 +888,7 @@ namespace BTCPayServer.Services.Invoices
 #pragma warning disable CS0618
             if (string.IsNullOrEmpty(CryptoPaymentDataType))
             {
-                // In case this is a payment done before this update, consider it unconfirmed with RBF for safety
+                // For invoices created when CryptoPaymentDataType was not existing, we just consider that it is a RBFed payment for safety
                 var paymentData = new Payments.Bitcoin.BitcoinLikePaymentData();
                 paymentData.Outpoint = Outpoint;
                 paymentData.Output = Output;

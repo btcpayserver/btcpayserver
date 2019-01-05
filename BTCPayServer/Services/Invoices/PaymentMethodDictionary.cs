@@ -15,13 +15,6 @@ namespace BTCPayServer.Services.Invoices
 
         }
 
-        public PaymentMethodDictionary(BTCPayNetworkProvider networkProvider)
-        {
-            NetworkProvider = networkProvider;
-        }
-
-
-        public BTCPayNetworkProvider NetworkProvider { get; set; }
         public PaymentMethod this[PaymentMethodId index]
         {
             get

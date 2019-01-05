@@ -65,8 +65,7 @@ namespace BTCPayServer.Services.Invoices.Export
                 var pdata = payment.GetCryptoPaymentData();
 
                 var pmethod = invoice.GetPaymentMethod(payment.GetPaymentMethodId(), Networks);
-                var paymentFee = pmethod.GetPaymentMethodDetails().GetTxFee();
-                var paidAfterNetworkFees = pdata.GetValue() - paymentFee;
+                var paidAfterNetworkFees = pdata.GetValue() - payment.NetworkFee;
                 invoiceDue -=  paidAfterNetworkFees * pmethod.Rate;
 
                 var target = new ExportInvoiceHolder
@@ -83,7 +82,7 @@ namespace BTCPayServer.Services.Invoices.Export
                     // so if fee is 10000 satoshis, customer can essentially send infinite number of tx
                     // and merchant effectivelly would receive 0 BTC, invoice won't be paid
                     // while looking just at export you could sum Paid and assume merchant "received payments"
-                    NetworkFee = paymentFee.ToString(CultureInfo.InvariantCulture),
+                    NetworkFee = payment.NetworkFee.ToString(CultureInfo.InvariantCulture),
                     InvoiceDue = invoiceDue,
                     OrderId = invoice.OrderId,
                     StoreId = invoice.StoreId,

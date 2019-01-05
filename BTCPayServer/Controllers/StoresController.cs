@@ -406,7 +406,7 @@ namespace BTCPayServer.Controllers
             vm.Id = store.Id;
             vm.StoreName = store.StoreName;
             vm.StoreWebsite = store.StoreWebsite;
-            vm.NetworkFee = !storeBlob.NetworkFeeDisabled;
+            vm.NetworkFeeMode = storeBlob.NetworkFeeMode;
             vm.AnyoneCanCreateInvoice = storeBlob.AnyoneCanInvoice;
             vm.SpeedPolicy = store.SpeedPolicy;
             vm.CanDelete = _Repo.CanDeleteStores();
@@ -489,7 +489,7 @@ namespace BTCPayServer.Controllers
 
             var blob = StoreData.GetStoreBlob();
             blob.AnyoneCanInvoice = model.AnyoneCanCreateInvoice;
-            blob.NetworkFeeDisabled = !model.NetworkFee;
+            blob.NetworkFeeMode = model.NetworkFeeMode;
             blob.MonitoringExpiration = model.MonitoringExpiration;
             blob.InvoiceExpiration = model.InvoiceExpiration;
             blob.LightningDescriptionTemplate = model.LightningDescriptionTemplate ?? string.Empty;

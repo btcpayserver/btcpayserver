@@ -82,8 +82,8 @@ namespace BTCPayServer.Models.StoreViewModels
             get; set;
         }
 
-        [Display(Name = "Add network fee to invoice (vary with mining fees)")]
-        public bool NetworkFee
+        [Display(Name = "Add additional fee (network fee) to invoice...")]
+        public Data.NetworkFeeMode NetworkFeeMode
         {
             get; set;
         }

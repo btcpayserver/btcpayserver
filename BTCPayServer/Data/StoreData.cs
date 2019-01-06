@@ -21,6 +21,7 @@ using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Payments.CoinSwitch;
 using BTCPayServer.Security;
 using BTCPayServer.Rating;
+using BTCPayServer.Services.Mails;
 
 namespace BTCPayServer.Data
 {
@@ -402,6 +403,8 @@ namespace BTCPayServer.Data
 #pragma warning restore CS0618 // Type or member is obsolete
         [Obsolete("Use SetWalletKeyPathRoot/GetWalletKeyPathRoot instead")]
         public Dictionary<string, string> WalletKeyPathRoots { get; set; } = new Dictionary<string, string>();
+
+        public EmailSettings EmailSettings { get; set; }
 
         public IPaymentFilter GetExcludedPaymentMethods()
         {

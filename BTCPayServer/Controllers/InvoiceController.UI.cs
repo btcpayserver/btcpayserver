@@ -304,7 +304,7 @@ namespace BTCPayServer.Controllers
 #pragma warning disable CS0618 // Type or member is obsolete
                 Status = invoice.StatusString,
 #pragma warning restore CS0618 // Type or member is obsolete
-                NetworkFee = paymentMethodDetails.GetTxFee(),
+                NetworkFee = paymentMethodDetails.GetNetworkFee(),
                 IsMultiCurrency = invoice.GetPayments().Select(p => p.GetPaymentMethodId()).Concat(new[] { paymentMethod.GetId() }).Distinct().Count() > 1,
                 ChangellyEnabled = changelly != null,
                 ChangellyMerchantId = changelly?.ChangellyMerchantId,

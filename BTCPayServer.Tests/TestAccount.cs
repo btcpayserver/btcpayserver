@@ -17,6 +17,7 @@ using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Tests.Logging;
 using BTCPayServer.Lightning;
 using BTCPayServer.Lightning.CLightning;
+using BTCPayServer.Data;
 
 namespace BTCPayServer.Tests
 {
@@ -56,6 +57,21 @@ namespace BTCPayServer.Tests
         public void CreateStore()
         {
             CreateStoreAsync().GetAwaiter().GetResult();
+        }
+
+        public void SetNetworkFeeMode(NetworkFeeMode mode)
+        {
+            ModifyStore((store) =>
+            {
+                store.NetworkFeeMode = mode;
+            });
+        }
+        public void ModifyStore(Action<StoreViewModel> modify)
+        {
+            var storeController = GetController<StoresController>();
+            StoreViewModel store = (StoreViewModel)((ViewResult)storeController.UpdateStore()).Model;
+            modify(store);
+            storeController.UpdateStore(store).GetAwaiter().GetResult();
         }
 
         public T GetController<T>(bool setImplicitStore = true) where T : Controller

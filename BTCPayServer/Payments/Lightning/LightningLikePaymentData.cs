@@ -22,6 +22,8 @@ namespace BTCPayServer.Payments.Lightning
             return GetPaymentId();
         }
 
+        public decimal NetworkFee { get; set; }
+
         public string GetPaymentId()
         {
             return BOLT11;

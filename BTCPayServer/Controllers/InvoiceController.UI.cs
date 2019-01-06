@@ -638,13 +638,13 @@ namespace BTCPayServer.Controllers
             if (newState == "invalid")
             {
                 await _InvoiceRepository.UpdatePaidInvoiceToInvalid(invoiceId);
-                _EventAggregator.Publish(new InvoiceEvent(invoice.EntityToDTO(_NetworkProvider), 1008, "invoice_markedInvalid"));
+                _EventAggregator.Publish(new InvoiceEvent(invoice.EntityToDTO(_NetworkProvider), 1008, InvoiceEvent.MarkedInvalid));
                 StatusMessage = "Invoice marked invalid";
             }
             else if(newState == "complete")
             {
                 await _InvoiceRepository.UpdatePaidInvoiceToComplete(invoiceId);
-                _EventAggregator.Publish(new InvoiceEvent(invoice.EntityToDTO(_NetworkProvider), 2008, "invoice_markedComplete"));
+                _EventAggregator.Publish(new InvoiceEvent(invoice.EntityToDTO(_NetworkProvider), 2008, InvoiceEvent.MarkedCompleted));
                 StatusMessage = "Invoice marked complete";
             }
             return RedirectToAction(nameof(ListInvoices));

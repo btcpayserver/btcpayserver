@@ -5,6 +5,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -32,6 +33,7 @@ namespace BTCPayServer.Controllers
         StoreRepository storeRepository;
         RoleManager<IdentityRole> _RoleManager;
         SettingsRepository _SettingsRepository;
+        BTCPayServerEnvironment _btcPayServerEnvironment;
         ILogger _logger;
 
         public AccountController(
@@ -40,7 +42,8 @@ namespace BTCPayServer.Controllers
             StoreRepository storeRepository,
             SignInManager<ApplicationUser> signInManager,
             IEmailSender emailSender,
-            SettingsRepository settingsRepository)
+            SettingsRepository settingsRepository,
+            BTCPayServerEnvironment btcPayServerEnvironment)
         {
             this.storeRepository = storeRepository;
             _userManager = userManager;
@@ -48,6 +51,7 @@ namespace BTCPayServer.Controllers
             _emailSender = emailSender;
             _RoleManager = roleManager;
             _SettingsRepository = settingsRepository;
+            _btcPayServerEnvironment = btcPayServerEnvironment;
             _logger = Logs.PayServer;
         }
 
@@ -272,9 +276,12 @@ namespace BTCPayServer.Controllers
                         await _RoleManager.CreateAsync(new IdentityRole(Roles.ServerAdmin));
                         await _userManager.AddToRoleAsync(user, Roles.ServerAdmin);
 
-                        // Once the admin user has been created lock subsequent user registrations until explicitly enabled.
-                        policies.LockSubscription = true;
-                        await _SettingsRepository.UpdateSetting(policies);
+                        if(!_btcPayServerEnvironment.Environment.IsDevelopment())
+                        {
+                            // Once the admin user has been created lock subsequent user registrations until explicitly enabled except for dev builds as unit tests require multiple users.
+                            policies.LockSubscription = true;
+                            await _SettingsRepository.UpdateSetting(policies);
+                        }
                     }
 
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);

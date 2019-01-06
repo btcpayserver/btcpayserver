@@ -122,7 +122,7 @@ namespace BTCPayServer.Tests
             ServerUri = new Uri("http://" + HostName + ":" + Port + "/");
 
             Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
-            var conf = new DefaultConfiguration() { Logger = Logs.LogProvider.CreateLogger("Console") }.CreateConfiguration(new[] { "--datadir", _Directory, "--conf", confPath });
+            var conf = new DefaultConfiguration() { Logger = Logs.LogProvider.CreateLogger("Console") }.CreateConfiguration(new[] { "--datadir", _Directory, "--conf", confPath, "--disable-registration", "false" });
             _Host = new WebHostBuilder()
                     .UseConfiguration(conf)
                     .ConfigureServices(s =>

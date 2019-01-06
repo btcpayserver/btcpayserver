@@ -61,6 +61,12 @@ namespace BTCPayServer.Configuration
             set;
         } = new List<NBXplorerConnectionSetting>();
 
+        public bool DisableRegistration
+        {
+            get;
+            private set;
+        }
+
         public static string GetDebugLog(IConfiguration configuration)
         {
             return configuration.GetValue<string>("debuglog", null);
@@ -237,6 +243,8 @@ namespace BTCPayServer.Configuration
                 Logs.Configuration.LogInformation("LogFile: " + LogFile);
                 Logs.Configuration.LogInformation("Log Level: " + GetDebugLogLevel(conf));
             }
+
+            DisableRegistration = conf.GetOrDefault<bool>("disable-registration", true);
         }
 
         private SSHSettings ParseSSHConfiguration(IConfiguration conf)

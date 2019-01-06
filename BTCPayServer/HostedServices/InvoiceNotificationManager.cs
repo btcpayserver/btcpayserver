@@ -341,14 +341,14 @@ namespace BTCPayServer.HostedServices
                 // we need to use the status in the event and not in the invoice. The invoice might now be in another status.
                 if (invoice.FullNotifications)
                 {
-                    if (e.Name == "invoice_expired" ||
-                       e.Name == "invoice_paidInFull" ||
-                       e.Name == "invoice_failedToConfirm" ||
-                       e.Name == "invoice_markedInvalid" ||
-                       e.Name == "invoice_markedComplete" ||
-                       e.Name == "invoice_failedToConfirm" ||
-                       e.Name == "invoice_completed" ||
-                       e.Name == "invoice_expiredPaidPartial"
+                    if (e.Name == InvoiceEvent.Expired ||
+                       e.Name == InvoiceEvent.PaidInFull ||
+                       e.Name == InvoiceEvent.FailedToConfirm ||
+                       e.Name == InvoiceEvent.MarkedInvalid ||
+                       e.Name == InvoiceEvent.MarkedCompleted ||
+                       e.Name == InvoiceEvent.FailedToConfirm ||
+                       e.Name == InvoiceEvent.Completed ||
+                       e.Name == InvoiceEvent.ExpiredPaidPartial
                      )
                         tasks.Add(Notify(invoice));
                 }

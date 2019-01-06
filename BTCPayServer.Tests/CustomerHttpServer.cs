@@ -8,30 +8,27 @@ using Microsoft.AspNetCore.Builder;
 using System.Threading.Tasks;
 using System.Threading;
 using Microsoft.AspNetCore.Hosting.Server.Features;
+using System.Threading.Channels;
+using System.IO;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Tests
 {
     public class CustomServer : IDisposable
     {
-        TaskCompletionSource<bool> _Evt = null;
         IWebHost _Host = null;
         CancellationTokenSource _Closed = new CancellationTokenSource();
+        Channel<JObject> _Requests = Channel.CreateUnbounded<JObject>();
         public CustomServer()
-        {
+        { 
             var port = Utils.FreeTcpPort();
             _Host = new WebHostBuilder()
                 .Configure(app =>
                 {
                     app.Run(req =>
                     {
-                        while (_Act == null)
-                        {
-                            Thread.Sleep(10);
-                            _Closed.Token.ThrowIfCancellationRequested();
-                        }
-                        _Act(req);
-                        _Act = null;
-                        _Evt.TrySetResult(true);
+                        _Requests.Writer.WriteAsync(JsonConvert.DeserializeObject<JObject>(new StreamReader(req.Request.Body).ReadToEnd()), _Closed.Token);
                         req.Response.StatusCode = 200;
                         return Task.CompletedTask;
                     });
@@ -47,22 +44,24 @@ namespace BTCPayServer.Tests
             return new Uri(_Host.ServerFeatures.Get<IServerAddressesFeature>().Addresses.First());
         }
 
-        Action<HttpContext> _Act;
-        public void ProcessNextRequest(Action<HttpContext> act)
+        public async Task<JObject> GetNextRequest()
         {
-            var source = new TaskCompletionSource<bool>();
-            CancellationTokenSource cancellation = new CancellationTokenSource(20000);
-            cancellation.Token.Register(() => source.TrySetCanceled());
-            source = new TaskCompletionSource<bool>();
-            _Evt = source;
-            _Act = act;
-            try
+            using (CancellationTokenSource cancellation = new CancellationTokenSource(2000000))
             {
-                _Evt.Task.GetAwaiter().GetResult();
-            }
-            catch (TaskCanceledException)
-            {
-                throw new Xunit.Sdk.XunitException("Callback to the webserver was expected, check if the callback url is accessible from internet");
+                try
+                {
+                    JObject req = null;
+                    while(!await _Requests.Reader.WaitToReadAsync(cancellation.Token) || 
+                        !_Requests.Reader.TryRead(out req))
+                    {
+
+                    }
+                    return req;
+                }
+                catch (TaskCanceledException)
+                {
+                    throw new Xunit.Sdk.XunitException("Callback to the webserver was expected, check if the callback url is accessible from internet");
+                }
             }
         }
 

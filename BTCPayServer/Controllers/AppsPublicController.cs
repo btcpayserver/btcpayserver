@@ -115,10 +115,19 @@ namespace BTCPayServer.Controllers
             if (app == null)
                 return NotFound();
             var settings = app.GetSettings<CrowdfundSettings>();
-            var isAdmin = false;
+            
+            var hasEnoughSettingsToLoad = !string.IsNullOrEmpty(settings.TargetCurrency );
+            
+            var isAdmin = await _AppsHelper.GetAppDataIfOwner(GetUserId(), appId, AppType.Crowdfund) != null;
+            if (!hasEnoughSettingsToLoad)
+            {
+                if(!isAdmin)
+                    return NotFound();
+
+                return NotFound("A Target Currency must be set for this app in order to be loadable.");
+            }
             if (!settings.Enabled)
             {
-                isAdmin = await _AppsHelper.GetAppDataIfOwner(GetUserId(), appId, AppType.Crowdfund) != null;
                 if(!isAdmin)
                     return NotFound("Crowdfund is not currently active");
             }

@@ -73,8 +73,8 @@ namespace BTCPayServer.Controllers
                 Skip = offset,
                 EndDate = dateEnd,
                 StartDate = dateStart,
-                OrderId = orderId,
-                ItemCode = itemCode,
+                OrderId =  orderId == null ? null : new[] { orderId },
+                ItemCode =  itemCode == null ? null : new[] { itemCode },
                 Status = status == null ? null : new[] { status },
                 StoreId = new[] { this.HttpContext.GetStoreData().Id }
             };

@@ -41,7 +41,7 @@ namespace BTCPayServer.Services.Invoices
         public InvoiceRepository(ApplicationDbContextFactory contextFactory, string dbreezePath)
         {
             int retryCount = 0;
-            retry:
+retry:
             try
             {
                 _Engine = new DBreezeEngine(dbreezePath);
@@ -193,7 +193,7 @@ namespace BTCPayServer.Services.Invoices
             return paymentMethod.GetPaymentMethodDetails().GetPaymentDestination();
         }
 
-        public async Task<bool> NewAddress(string invoiceId, IPaymentMethodDetails paymentMethod, BTCPayNetwork network)
+        public async Task<bool> NewAddress(string invoiceId, Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod paymentMethod, BTCPayNetwork network)
         {
             using (var context = _ContextFactory.CreateContext())
             {
@@ -206,14 +206,13 @@ namespace BTCPayServer.Services.Invoices
                 if (currencyData == null)
                     return false;
 
-                var existingPaymentMethod = currencyData.GetPaymentMethodDetails();
+                var existingPaymentMethod = (Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod)currencyData.GetPaymentMethodDetails();
                 if (existingPaymentMethod.GetPaymentDestination() != null)
                 {
                     MarkUnassigned(invoiceId, invoiceEntity, context, currencyData.GetId());
                 }
 
                 existingPaymentMethod.SetPaymentDestination(paymentMethod.GetPaymentDestination());
-
                 currencyData.SetPaymentMethodDetails(existingPaymentMethod);
 #pragma warning disable CS0618
                 if (network.IsBTC)
@@ -379,13 +378,27 @@ namespace BTCPayServer.Services.Invoices
         private InvoiceEntity ToEntity(Data.InvoiceData invoice)
         {
             var entity = ToObject<InvoiceEntity>(invoice.Blob, null);
+            PaymentMethodDictionary paymentMethods = null;
 #pragma warning disable CS0618
             entity.Payments = invoice.Payments.Select(p =>
             {
                 var paymentEntity = ToObject<PaymentEntity>(p.Blob, null);
                 paymentEntity.Accounted = p.Accounted;
+
+                // PaymentEntity on version 0 does not have their own fee, because it was assumed that the payment method have fixed fee.
+                // We want to hide this legacy detail in InvoiceRepository, so we fetch the fee from the PaymentMethod and assign it to the PaymentEntity.
+                if (paymentEntity.Version == 0)
+                {
+                    if (paymentMethods == null)
+                        paymentMethods = entity.GetPaymentMethods(null);
+                    var paymentMethodDetails = paymentMethods.TryGet(paymentEntity.GetPaymentMethodId())?.GetPaymentMethodDetails();
+                    if (paymentMethodDetails != null) // == null should never happen, but we never know.
+                        paymentEntity.NetworkFee = paymentMethodDetails.GetNetworkFee();
+                }
+
                 return paymentEntity;
-            }).ToList();
+            })
+            .OrderBy(a => a.ReceivedTime).ToList();
 #pragma warning restore CS0618
             var state = invoice.GetInvoiceState();
             entity.ExceptionStatus = state.ExceptionStatus;
@@ -546,21 +559,37 @@ namespace BTCPayServer.Services.Invoices
         /// <param name="cryptoCode"></param>
         /// <param name="accounted"></param>
         /// <returns>The PaymentEntity or null if already added</returns>
-        public async Task<PaymentEntity> AddPayment(string invoiceId, DateTimeOffset date, CryptoPaymentData paymentData, string cryptoCode, bool accounted = false)
+        public async Task<PaymentEntity> AddPayment(string invoiceId, DateTimeOffset date, CryptoPaymentData paymentData, BTCPayNetwork network, bool accounted = false)
         {
             using (var context = _ContextFactory.CreateContext())
             {
+                var invoice = context.Invoices.Find(invoiceId);
+                if (invoice == null)
+                    return null;
+                InvoiceEntity invoiceEntity = ToObject<InvoiceEntity>(invoice.Blob, network.NBitcoinNetwork);
+                PaymentMethod paymentMethod = invoiceEntity.GetPaymentMethod(new PaymentMethodId(network.CryptoCode, paymentData.GetPaymentType()), null);
+                IPaymentMethodDetails paymentMethodDetails = paymentMethod.GetPaymentMethodDetails();
                 PaymentEntity entity = new PaymentEntity
                 {
+                    Version = 1,
 #pragma warning disable CS0618
-                    CryptoCode = cryptoCode,
+                    CryptoCode = network.CryptoCode,
 #pragma warning restore CS0618
                     ReceivedTime = date.UtcDateTime,
-                    Accounted = accounted
+                    Accounted = accounted,
+                    NetworkFee = paymentMethodDetails.GetNetworkFee()
                 };
                 entity.SetCryptoPaymentData(paymentData);
 
-
+                if (paymentMethodDetails is Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod bitcoinPaymentMethod &&
+                    bitcoinPaymentMethod.NetworkFeeMode == NetworkFeeMode.MultiplePaymentsOnly &&
+                    bitcoinPaymentMethod.NetworkFee == Money.Zero)
+                {
+                    bitcoinPaymentMethod.NetworkFee = bitcoinPaymentMethod.FeeRate.GetFee(100); // assume price for 100 bytes
+                    paymentMethod.SetPaymentMethodDetails(bitcoinPaymentMethod);
+                    invoiceEntity.SetPaymentMethod(paymentMethod);
+                    invoice.Blob = ToBytes(invoiceEntity, network.NBitcoinNetwork);
+                }
                 PaymentData data = new PaymentData
                 {
                     Id = paymentData.GetPaymentId(),

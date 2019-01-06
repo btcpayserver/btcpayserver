@@ -32,6 +32,7 @@ namespace BTCPayServer.Payments.Bitcoin
         public TxOut Output { get; set; }
         public int ConfirmationCount { get; set; }
         public bool RBF { get; set; }
+        public decimal NetworkFee { get; set; }
 
         /// <summary>
         /// This is set to true if the payment was created before CryptoPaymentData existed in BTCPayServer

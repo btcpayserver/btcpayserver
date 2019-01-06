@@ -200,8 +200,6 @@ namespace BTCPayServer.Controllers
                 paymentMethod.SetId(supportedPaymentMethod.PaymentId);
                 paymentMethod.Rate = rate.BidAsk.Bid;
                 var paymentDetails = await handler.CreatePaymentMethodDetails(supportedPaymentMethod, paymentMethod, store, network, preparePayment);
-                if (storeBlob.NetworkFeeDisabled)
-                    paymentDetails.SetNoTxFee();
                 paymentMethod.SetPaymentMethodDetails(paymentDetails);
 
                 Func<Money, Money, bool> compare = null;
@@ -241,7 +239,7 @@ namespace BTCPayServer.Controllers
 #pragma warning disable CS0618
                 if (paymentMethod.GetId().IsBTCOnChain)
                 {
-                    entity.TxFee = paymentMethod.TxFee;
+                    entity.TxFee = paymentMethod.NetworkFee;
                     entity.Rate = paymentMethod.Rate;
                     entity.DepositAddress = paymentMethod.DepositAddress;
                 }

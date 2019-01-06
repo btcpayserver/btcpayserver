@@ -17,6 +17,7 @@ using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Tests.Logging;
 using BTCPayServer.Lightning;
 using BTCPayServer.Lightning.CLightning;
+using BTCPayServer.Data;
 
 namespace BTCPayServer.Tests
 {
@@ -58,6 +59,21 @@ namespace BTCPayServer.Tests
             CreateStoreAsync().GetAwaiter().GetResult();
         }
 
+        public void SetNetworkFeeMode(NetworkFeeMode mode)
+        {
+            ModifyStore((store) =>
+            {
+                store.NetworkFeeMode = mode;
+            });
+        }
+        public void ModifyStore(Action<StoreViewModel> modify)
+        {
+            var storeController = GetController<StoresController>();
+            StoreViewModel store = (StoreViewModel)((ViewResult)storeController.UpdateStore()).Model;
+            modify(store);
+            storeController.UpdateStore(store).GetAwaiter().GetResult();
+        }
+
         public T GetController<T>(bool setImplicitStore = true) where T : Controller
         {
             return parent.PayTester.GetController<T>(UserId, setImplicitStore ? StoreId : null);
@@ -83,10 +99,6 @@ namespace BTCPayServer.Tests
             var store = parent.PayTester.GetController<StoresController>(UserId, StoreId);
             ExtKey = new ExtKey().GetWif(SupportedNetwork.NBitcoinNetwork);
             DerivationScheme = new DerivationStrategyFactory(SupportedNetwork.NBitcoinNetwork).Parse(ExtKey.Neuter().ToString() + (segwit ? "" : "-[legacy]"));
-            var vm = (StoreViewModel)((ViewResult)store.UpdateStore()).Model;
-            vm.SpeedPolicy = SpeedPolicy.MediumSpeed;
-            await store.UpdateStore(vm);
-
             await store.AddDerivationScheme(StoreId, new DerivationSchemeViewModel()
             {
                 DerivationScheme = DerivationScheme.ToString(),

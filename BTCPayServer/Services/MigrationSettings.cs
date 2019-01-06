@@ -10,5 +10,6 @@ namespace BTCPayServer.Services
         public bool UnreachableStoreCheck { get; set; }
         public bool DeprecatedLightningConnectionStringCheck { get; set; }
         public bool ConvertMultiplierToSpread { get; set; }
+        public bool ConvertNetworkFeeProperty { get; set; }
     }
 }

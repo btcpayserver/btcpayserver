@@ -43,9 +43,13 @@
                 <span asp-validation-for="StoreWebsite" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="NetworkFee"></label>
+                <label asp-for="NetworkFeeMode"></label>
                 <a href="https://docs.btcpayserver.org/faq-and-common-issues/faq-stores#add-network-fee-to-invoice-vary-with-mining-fees" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
-                <input asp-for="NetworkFee" type="checkbox" class="form-check" />
+                <select asp-for="NetworkFeeMode" class="form-control">
+                    <option value="MultiplePaymentsOnly">... only if the customer makes more than one payment for the invoice</option>
+                    <option value="Always">... on every payment</option>
+                    <option value="Never">Never add network fee</option>
+                </select>
             </div>
             <div class="form-group">
                 <label asp-for="AnyoneCanCreateInvoice"></label>

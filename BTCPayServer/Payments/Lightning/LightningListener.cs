@@ -192,7 +192,7 @@ namespace BTCPayServer.Payments.Lightning
             {
                 BOLT11 = notification.BOLT11,
                 Amount = notification.Amount
-            }, network.CryptoCode, accounted: true);
+            }, network, accounted: true);
             if (payment != null)
             {
                 var invoice = await _InvoiceRepository.GetInvoice(listenedInvoice.InvoiceId);

@@ -1,0 +1,128 @@
+.modal-content {
+    border-radius: 0.5rem;
+}
+.modal-header {
+    border-top-left-radius: 0.4rem;
+    border-top-right-radius: 0.4rem;
+}
+
+.card-img-top {
+    width: 100%;
+    max-height: 180px;
+    object-fit: cover;
+}
+
+.js-cart-added {
+    background-color: rgba(0, 0, 0, 0.7);
+    border-radius: 0.25rem;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: none;
+}
+.js-cart-added .fa {
+    height: 50px;
+    position: relative;
+    top: 50%;
+    margin-top: -25px;
+}
+
+.js-add-cart:hover {
+    cursor: pointer;
+}
+
+#js-cart-confirm {
+    border-radius: 0;
+}
+
+/* ---------------------------------------------------
+    SIDEBAR STYLE
+----------------------------------------------------- */
+
+.wrapper {
+    display: flex;
+    width: 100%;
+}
+
+#sidebar {
+    width: 400px;
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    z-index: 999;
+    background: #e1e6ea;
+    transition: all 0.3s;
+    -webkit-overflow-scrolling: touch;
+}
+#sidebar .js-cart {
+    display: none;
+}
+
+
+#sidebar.active {
+    margin-right: -400px;
+}
+
+/* ---------------------------------------------------
+    CONTENT STYLE
+----------------------------------------------------- */
+
+#content {
+    width: calc(100% - 400px);
+    min-height: 100vh;
+    transition: all 0.3s;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+#content.active {
+    width: 100%;
+}
+
+.bg-gray {
+    background-color: #aaa;
+}
+.text-black {
+    color: #000;
+}
+
+/* ---------------------------------------------------
+    MEDIAQUERIES
+----------------------------------------------------- */
+
+@media (max-width: 768px) {
+    #sidebar {
+        margin-right: -400px;
+    }
+    #sidebar .js-cart {
+        display: inline;
+    }
+    #sidebar.active {
+        margin-right: 0;
+    }
+    #content {
+        width: 100%;
+    }
+    #content.active {
+        width: calc(100% - 400px);
+    }
+    #sidebarCollapse span {
+        display: none;
+    }
+}
+
+@media (max-width: 575px) {
+    #sidebar {
+        width: 100%;
+        margin-right: -575px;
+    }
+    #content.active {
+        width: 100%;
+    }
+}

@@ -19,8 +19,8 @@
     <title>BTCPay Server</title>
 
     @* CSS *@
-    <link href="@this.Context.Request.GetAbsoluteUri(themeManager.BootstrapUri)" rel="stylesheet" />
-    <link href="@this.Context.Request.GetAbsoluteUri(themeManager.CreativeStartUri)" rel="stylesheet" />
+    <link href="@this.Context.Request.GetRelativePathOrAbsolute(themeManager.BootstrapUri)" rel="stylesheet" />
+    <link href="@this.Context.Request.GetRelativePathOrAbsolute(themeManager.CreativeStartUri)" rel="stylesheet" />
 
     <bundle name="wwwroot/bundles/main-bundle.min.css" />
 

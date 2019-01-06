@@ -467,7 +467,7 @@ retry:
                 {
                     var statusSet = queryObject.OrderId.ToHashSet();
                     query = query.Where(i => statusSet.Contains(i.OrderId));
-                } 
+                }
                 if (queryObject.ItemCode != null && queryObject.ItemCode.Length > 0)
                 {
                     var statusSet = queryObject.ItemCode.ToHashSet();

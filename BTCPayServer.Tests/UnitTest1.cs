@@ -486,7 +486,7 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Integration", "Integration")]
-        public void CanSendIPN()
+        public async Task CanSendIPN()
         {
             using (var callbackServer = new CustomServer())
             {
@@ -496,7 +496,7 @@ namespace BTCPayServer.Tests
                     var acc = tester.NewAccount();
                     acc.GrantAccess();
                     acc.RegisterDerivationScheme("BTC");
-                    acc.SetNetworkFeeMode(NetworkFeeMode.Always);
+                    acc.ModifyStore(s => s.SpeedPolicy = SpeedPolicy.LowSpeed);
                     var invoice = acc.BitPay.CreateInvoice(new Invoice()
                     {
                         Price = 5.0m,
@@ -509,13 +509,43 @@ namespace BTCPayServer.Tests
                         ExtendedNotifications = true
                     });
                     BitcoinUrlBuilder url = new BitcoinUrlBuilder(invoice.PaymentUrls.BIP21);
-                    tester.ExplorerNode.SendToAddress(url.Address, url.Amount);
-                    Thread.Sleep(5000);
-                    callbackServer.ProcessNextRequest((ctx) =>
+                    bool receivedPayment = false;
+                    bool paid = false;
+                    bool confirmed = false;
+                    bool completed = false;
+                    while (!completed || !confirmed)
                     {
-                        var ipn = new StreamReader(ctx.Request.Body).ReadToEnd();
-                        JsonConvert.DeserializeObject<InvoicePaymentNotification>(ipn); //can deserialize
-                    });
+                        var request = await callbackServer.GetNextRequest();
+                        if (request.ContainsKey("event"))
+                        {
+                            var evtName = request["event"]["name"].Value<string>();
+                            switch (evtName)
+                            {
+                                case "invoice_created":
+                                    tester.ExplorerNode.SendToAddress(url.Address, url.Amount);
+                                    break;
+                                case "invoice_receivedPayment":
+                                    receivedPayment = true;
+                                    break;
+                                case "invoice_paidInFull":
+                                    Assert.True(receivedPayment);
+                                    tester.ExplorerNode.Generate(6);
+                                    paid = true;
+                                    break;
+                                case "invoice_confirmed":
+                                    Assert.True(paid);
+                                    confirmed = true;
+                                    break;
+                                case "invoice_completed":
+                                    Assert.True(paid); //TODO: Fix, out of order event mean we can receive invoice_confirmed after invoice_complete
+                                    completed = true;
+                                    break;
+                                default:
+                                    Assert.False(true, $"{evtName} was not expected");
+                                    break;
+                            }
+                        }
+                    }
                     var invoice2 = acc.BitPay.GetInvoice(invoice.Id);
                     Assert.NotNull(invoice2);
                 }

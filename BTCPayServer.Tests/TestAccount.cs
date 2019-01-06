@@ -61,9 +61,16 @@ namespace BTCPayServer.Tests
 
         public void SetNetworkFeeMode(NetworkFeeMode mode)
         {
+            ModifyStore((store) =>
+            {
+                store.NetworkFeeMode = mode;
+            });
+        }
+        public void ModifyStore(Action<StoreViewModel> modify)
+        {
             var storeController = GetController<StoresController>();
             StoreViewModel store = (StoreViewModel)((ViewResult)storeController.UpdateStore()).Model;
-            store.NetworkFeeMode = mode;
+            modify(store);
             storeController.UpdateStore(store).GetAwaiter().GetResult();
         }
 

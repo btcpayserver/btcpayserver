@@ -463,11 +463,16 @@ retry:
                 if (queryObject.EndDate != null)
                     query = query.Where(i => i.Created <= queryObject.EndDate.Value);
 
-                if (queryObject.ItemCode != null)
-                    query = query.Where(i => i.ItemCode == queryObject.ItemCode);
-
-                if (queryObject.OrderId != null)
-                    query = query.Where(i => i.OrderId == queryObject.OrderId);
+                if (queryObject.OrderId != null && queryObject.OrderId.Length > 0)
+                {
+                    var statusSet = queryObject.OrderId.ToHashSet();
+                    query = query.Where(i => statusSet.Contains(i.OrderId));
+                }
+                if (queryObject.ItemCode != null && queryObject.ItemCode.Length > 0)
+                {
+                    var statusSet = queryObject.ItemCode.ToHashSet();
+                    query = query.Where(i => statusSet.Contains(i.ItemCode));
+                }
 
                 if (queryObject.Status != null && queryObject.Status.Length > 0)
                 {
@@ -694,12 +699,12 @@ retry:
             get; set;
         }
 
-        public string OrderId
+        public string[] OrderId
         {
             get; set;
         }
 
-        public string ItemCode
+        public string[] ItemCode
         {
             get; set;
         }

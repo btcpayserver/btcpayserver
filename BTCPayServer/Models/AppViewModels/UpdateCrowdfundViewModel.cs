@@ -69,11 +69,15 @@ namespace BTCPayServer.Models.AppViewModels
         public string EmbeddedCSS { get; set; }
 
         [Display(Name = "Base the contributed goal amount on the invoice amount and not actual payments")]
-        public bool UseInvoiceAmount { get; set; } = true;        
+        public bool UseInvoiceAmount { get; set; }       
         [Display(Name = "Count all invoices created on the store as part of the crowdfunding goal")]
-        public bool UseAllStoreInvoices { get; set; } = false;
+        public bool UseAllStoreInvoices { get; set; } 
 
         public string AppId { get; set; }
+        
+        public string Example1 { get; internal set; }
+        public string Example2 { get; internal set; }
+        public string ExampleCallback { get; internal set; }
     }
 
     public enum CrowdfundResetEvery

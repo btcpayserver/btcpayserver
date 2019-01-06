@@ -144,7 +144,7 @@
                     <hr/>
                     <div class="row">
                         <div class="col-md-8 col-sm-12">
-                            <div class="card-text">@Html.Raw(Model.Description)</div>
+                            <div class="card-text overflow-hidden">@Html.Raw(Model.Description)</div>
                         </div>
                         <div class="col-md-4 col-sm-12">
                             <partial 
@@ -165,80 +165,3 @@
         </div>
     </div>
 </div>
-
-<script type="text/x-template" id="perks-template">
-<div >
-    <perk v-if="!perks || perks.length ===0" :perk="{title: 'Donate Custom Amount', price: { value: null}, custom: true}" :target-currency="targetCurrency" :active="active" 
-        :in-modal="inModal">
-    </perk>
-    <perk v-for="(perk, index) in perks" :perk="perk" :target-currency="targetCurrency" :active="active" 
-        :in-modal="inModal">
-    </perk>
-</div>
-</script>
-
-<script type="text/x-template" id="perk-template"> 
-<div class="card mb-4 perk"  v-bind:class="{ 'expanded': expanded, 'unexpanded': !expanded }" v-on:click="expand" :id="perk.id">
-    <div class="perk-zoom " v-if="canExpand">
-        <div class="perk-zoom-bg bg-primary"> </div>
-        <div class="perk-zoom-text w-100 text-center text-white font-weight-bold">
-            Select this contribution perk
-        </div>
-    </div>
-    <form v-on:submit='onContributeFormSubmit'>
-        <input type="hidden" :value="perk.id" id="choiceKey"/> 
-        <img v-if="perk.image && perk.image != 'null' "  class="card-img-top" :src="perk.image" />
-        <div class="card-body">
-            <div class="card-title d-flex justify-content-between" >
-                <span class="h5">{{perk.title? perk.title : perk.id}} </span>
-                <span class="text-muted" > 
-                    <template v-if="perk.price.value">{{perk.price.value}} 
-                        {{targetCurrency}} 
-                        <template v-if="perk.custom">or more</template>
-                    </template>
-                    <template v-else-if="!perk.price.value && perk.custom">
-                        Any amount
-                    </template>
-                    
-                </span>
-            </div>
-            <p  class="card-text" v-if="perk.description" v-html="perk.description"></p>
-            
-            <div class="input-group" style="max-width: 500px;" v-if="expanded" :id="'perk-form'+ perk.id">
-                <input 
-                    :disabled="!active"
-                    :readonly="!perk.custom"
-                    class="form-control" 
-                    type="number" 
-                    v-model="amount"
-                    :min="perk.price.value"  
-                    step="any"  
-                    placeholder="Contribution Amount"
-                    required >
-                <div class="input-group-append">                    
-                    <span class='input-group-text'>{{targetCurrency}}</span>
-                    <button 
-                        class="btn btn-primary" 
-                        :disabled="!active" 
-                        type="submit">
-                        Continue
-                    </button>
-                </div>
-            </div>
-        </div>
-    </form>
-</div> 
-</script>
-
-
-<script type="text/x-template" id="contribute-template">
-  <div>
-    <h3 v-if="!inModal">Contribute</h3>
-    <perks 
-        :perks="perks" 
-        :in-modal="inModal"
-        :target-currency="targetCurrency" 
-        :active="active">
-     </perks>
-  </div>
-</script>

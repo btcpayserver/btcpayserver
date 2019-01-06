@@ -125,7 +125,7 @@
                         <b-tab title="Details"active>
                             <div class="row">
                                 <div class="col-md-8 col-sm-12">
-                                    <div class="card-text" v-html="srvModel.description"></div>
+                                    <div class="card-text overflow-hidden" v-html="srvModel.description"></div>
                                 </div>
                                 <div class="col-md-4 col-sm-12">
                                     <contribute :target-currency="srvModel.targetCurrency"
@@ -147,7 +147,7 @@
                     <hr/>
                     <div class="row">
                         <div class="col-md-8 col-sm-12">
-                            <div class="card-text" v-html="srvModel.description"></div>
+                            <div class="card-text overflow-hidden" v-html="srvModel.description"></div>
                         </div>
                         <div class="col-md-4 col-sm-12">
                             <contribute :target-currency="srvModel.targetCurrency"
@@ -226,7 +226,7 @@
                     
                 </span>
             </div>
-            <p  class="card-text" v-if="perk.description" v-html="perk.description"></p>
+            <p  class="card-text overflow-hidden" v-if="perk.description" v-html="perk.description"></p>
             
             <div class="input-group" style="max-width: 500px;" v-if="expanded" :id="'perk-form'+ perk.id">
                 <input 

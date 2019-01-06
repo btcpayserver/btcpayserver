@@ -1743,7 +1743,7 @@ donation:
                     var firstPayment = productPartDue - missingMoney;
                     cashCow.SendToAddress(invoiceAddress, Money.Coins(firstPayment));
 
-                    Eventually(() =>
+                    TestUtils.Eventually(() =>
                     {
                         invoice = user.BitPay.GetInvoice(invoice.Id);
                         // Check that for the second payment, network fee are included
@@ -1768,7 +1768,7 @@ donation:
                         }
                     });
                     cashCow.SendToAddress(invoiceAddress, due);
-                    Eventually(() =>
+                    TestUtils.Eventually(() =>
                     {
                         invoice = user.BitPay.GetInvoice(invoice.Id);
                         Assert.Equal("paid", invoice.Status);

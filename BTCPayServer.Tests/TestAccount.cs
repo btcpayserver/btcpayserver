@@ -99,10 +99,6 @@ namespace BTCPayServer.Tests
             var store = parent.PayTester.GetController<StoresController>(UserId, StoreId);
             ExtKey = new ExtKey().GetWif(SupportedNetwork.NBitcoinNetwork);
             DerivationScheme = new DerivationStrategyFactory(SupportedNetwork.NBitcoinNetwork).Parse(ExtKey.Neuter().ToString() + (segwit ? "" : "-[legacy]"));
-            var vm = (StoreViewModel)((ViewResult)store.UpdateStore()).Model;
-            vm.SpeedPolicy = SpeedPolicy.MediumSpeed;
-            await store.UpdateStore(vm);
-
             await store.AddDerivationScheme(StoreId, new DerivationSchemeViewModel()
             {
                 DerivationScheme = DerivationScheme.ToString(),

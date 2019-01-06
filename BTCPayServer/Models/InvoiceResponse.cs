@@ -40,6 +40,12 @@ namespace BTCPayServer.Models
     //{"facade":"pos/invoice","data":{,}}
     public class InvoiceResponse
     {
+        [JsonIgnore]
+        public string StoreId
+        {
+            get; set;
+        }
+        
         //"url":"https://test.bitpay.com/invoice?id=9saCHtp1zyPcNoi3rDdBu8"
         [JsonProperty("url")]
         public string Url

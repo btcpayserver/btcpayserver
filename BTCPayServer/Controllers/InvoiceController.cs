@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
+using BTCPayServer.Events;
 using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Payments;
@@ -159,7 +160,7 @@ namespace BTCPayServer.Controllers
             entity.PosData = invoice.PosData;
             entity = await _InvoiceRepository.CreateInvoiceAsync(store.Id, entity, logs, _NetworkProvider);
             await fetchingAll;
-            _EventAggregator.Publish(new Events.InvoiceEvent(entity.EntityToDTO(_NetworkProvider), 1001, "invoice_created"));
+            _EventAggregator.Publish(new Events.InvoiceEvent(entity.EntityToDTO(_NetworkProvider), 1001, InvoiceEvent.Created));
             var resp = entity.EntityToDTO(_NetworkProvider);
             return new DataWrapper<InvoiceResponse>(resp) { Facade = "pos/invoice" };
         }

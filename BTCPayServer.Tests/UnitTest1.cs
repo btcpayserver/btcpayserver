@@ -51,6 +51,7 @@ using RatesViewModel = BTCPayServer.Models.StoreViewModels.RatesViewModel;
 using NBitpayClient.Extensions;
 using BTCPayServer.Services;
 using System.Text.RegularExpressions;
+using BTCPayServer.Events;
 
 namespace BTCPayServer.Tests
 {
@@ -521,22 +522,22 @@ namespace BTCPayServer.Tests
                             var evtName = request["event"]["name"].Value<string>();
                             switch (evtName)
                             {
-                                case "invoice_created":
+                                case InvoiceEvent.Created:
                                     tester.ExplorerNode.SendToAddress(url.Address, url.Amount);
                                     break;
-                                case "invoice_receivedPayment":
+                                case InvoiceEvent.ReceivedPayment:
                                     receivedPayment = true;
                                     break;
-                                case "invoice_paidInFull":
+                                case InvoiceEvent.PaidInFull:
                                     Assert.True(receivedPayment);
                                     tester.ExplorerNode.Generate(6);
                                     paid = true;
                                     break;
-                                case "invoice_confirmed":
+                                case InvoiceEvent.Confirmed:
                                     Assert.True(paid);
                                     confirmed = true;
                                     break;
-                                case "invoice_completed":
+                                case InvoiceEvent.Completed:
                                     Assert.True(paid); //TODO: Fix, out of order event mean we can receive invoice_confirmed after invoice_complete
                                     completed = true;
                                     break;

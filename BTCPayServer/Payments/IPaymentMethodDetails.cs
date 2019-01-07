@@ -18,10 +18,10 @@ namespace BTCPayServer.Payments
         string GetPaymentDestination();
         PaymentTypes GetPaymentType();
         /// <summary>
-        /// Returns what a merchant would need to pay to cashout this payment
+        /// Returns fee that the merchant charge to the customer for the next payment
         /// </summary>
         /// <returns></returns>
-        decimal GetNetworkFee();
+        decimal GetNextNetworkFee();
         /// <summary>
         /// Change the payment destination (internal plumbing)
         /// </summary>

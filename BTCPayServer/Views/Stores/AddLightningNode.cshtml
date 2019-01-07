@@ -85,6 +85,15 @@
             </div>
             <button name="command" type="submit" value="save" class="btn btn-primary">Submit</button>
             <button name="command" type="submit" value="test" class="btn btn-secondary">Test connection</button>
+            <a 
+                class="btn btn-secondary"
+                asp-controller="PublicLightningNodeInfo" 
+               asp-action="ShowLightningNodeInfo" 
+               asp-route-cryptoCode="@Model.CryptoCode" 
+               asp-route-storeId="@Model.StoreId"
+               target="_blank">
+                Open Public Node Info Page
+            </a>
         </form>
     </div>
 </div>

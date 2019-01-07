@@ -54,6 +54,16 @@
         ]
     },
     {
+        "outputFileName": "wwwroot/bundles/lightning-node-info-bundle.min.js",
+        "inputFiles": [
+            "wwwroot/vendor/clipboard.js/clipboard.js",
+            "wwwroot/vendor/jquery/jquery.js",
+            "wwwroot/vendor/vuejs/vue.min.js",
+            "wwwroot/vendor/vuejs/vue-qrcode.js",
+            "wwwroot/vendor/vue-toasted/vue-toasted.min.js"
+        ]
+    },
+    {
         "outputFileName": "wwwroot/bundles/cart-bundle.min.js",
         "inputFiles": [
             "wwwroot/vendor/jquery/jquery.js",

@@ -27,7 +27,8 @@ namespace BTCPayServer.Controllers
             LightningNodeViewModel vm = new LightningNodeViewModel
             {
                 CryptoCode = cryptoCode,
-                InternalLightningNode = GetInternalLighningNode(cryptoCode)?.ToString()
+                InternalLightningNode = GetInternalLighningNode(cryptoCode)?.ToString(),
+                StoreId = storeId
             };
             SetExistingValues(store, vm);
             return View(vm);
@@ -154,7 +155,7 @@ namespace BTCPayServer.Controllers
                     var handler = (LightningLikePaymentHandler)_ServiceProvider.GetRequiredService<IPaymentMethodHandler<Payments.Lightning.LightningSupportedPaymentMethod>>();
                     try
                     {
-                        var info = await handler.Test(paymentMethod, network);
+                        var info = await handler.GetNodeInfo(paymentMethod, network);
                         if (!vm.SkipPortTest)
                         {
                             using (CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(20)))

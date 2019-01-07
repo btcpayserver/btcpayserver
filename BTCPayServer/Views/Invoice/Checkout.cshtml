@@ -170,14 +170,16 @@
         el: '#checkoutCtrl',
         components: {
             qrcode: VueQr,
-            changelly: ChangellyComponent
+            changelly: ChangellyComponent,
+            coinswitch: CoinSwitchComponent
         },
         data: {
             srvModel: srvModel,
             lndModel: null,
             scanDisplayQr: "",
             expiringSoon: false,
-            isModal: srvModel.isModal
+            isModal: srvModel.isModal,
+            selectedThirdPartyProcessor: ""
         }
     });
 </script>

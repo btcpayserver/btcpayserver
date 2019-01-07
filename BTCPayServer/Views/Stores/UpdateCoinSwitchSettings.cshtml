@@ -1,0 +1,42 @@
+﻿@using Microsoft.AspNetCore.Mvc.Rendering
+@model UpdateCoinSwitchSettingsViewModel
+@{
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData.SetActivePageAndTitle(StoreNavPages.Index, "Update Store CoinSwitch Settings");
+}
+
+<h4>@ViewData["Title"]</h4>
+<partial name="_StatusMessage" for="StatusMessage"/>
+
+<div class="row">
+    <div class="col-md-10">
+        <form method="post">
+            <p>
+                You can obtain a merchant id at 
+                <a href="https://coinswitch.co/switch/setup/btcpay" target="_blank">
+                    https://coinswitch.co/switch/setup/btcpay
+                </a>
+            </p>
+            <div class="form-group">
+                <label asp-for="MerchantId"></label>
+                <input asp-for="MerchantId" class="form-control"/>
+                <span asp-validation-for="MerchantId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Mode"></label>
+                <select asp-for="Mode" asp-items="Model.Modes" class="form-control" >
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label asp-for="Enabled"></label>
+                <input asp-for="Enabled" type="checkbox" class="form-check"/>
+            </div>
+            <button name="command" type="submit" value="save" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

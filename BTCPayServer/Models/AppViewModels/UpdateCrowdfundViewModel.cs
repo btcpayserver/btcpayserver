@@ -74,10 +74,6 @@ namespace BTCPayServer.Models.AppViewModels
         public bool UseAllStoreInvoices { get; set; } 
 
         public string AppId { get; set; }
-        
-        public string Example1 { get; internal set; }
-        public string Example2 { get; internal set; }
-        public string ExampleCallback { get; internal set; }
     }
 
     public enum CrowdfundResetEvery

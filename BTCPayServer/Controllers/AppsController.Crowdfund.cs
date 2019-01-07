@@ -81,38 +81,6 @@ namespace BTCPayServer.Controllers
                 UseAllStoreInvoices = settings.UseAllStoreInvoices,
                 AppId = appId
             };
-            
-                        if (HttpContext?.Request != null)
-            {
-                var appUrl = HttpContext.Request.GetAbsoluteRoot().WithTrailingSlash() + $"apps/{appId}/crowdfund";
-                var encoder = HtmlEncoder.Default;
-                    var  builder = new StringBuilder();
-                    builder.AppendLine($"<form method=\"POST\" action=\"{encoder.Encode(appUrl)}\">");
-                    builder.AppendLine($"  <input type=\"hidden\" name=\"amount\" value=\"100\" />");
-                    builder.AppendLine($"  <input type=\"hidden\" name=\"redirectToCheckout\" value=\"true\" />");
-                    builder.AppendLine($"  <input type=\"hidden\" name=\"email\" value=\"customer@example.com\" />");
-                    builder.AppendLine($"  <input type=\"hidden\" name=\"redirectUrl\" value=\"https://example.com/thanksyou\" />");
-                    builder.AppendLine($"  <button type=\"submit\">Contribute now</button>");
-                    builder.AppendLine($"</form>");
-                    vm.Example1 = builder.ToString();
-                
-                try
-                {
-                    var items = _AppsHelper.Parse(settings.PerksTemplate, settings.TargetCurrency);
-                    builder = new StringBuilder();
-                    builder.AppendLine($"<form method=\"POST\" action=\"{encoder.Encode(appUrl)}\">");
-                    builder.AppendLine($"  <input type=\"hidden\" name=\"redirectToCheckout\" value=\"true\" />");
-                    builder.AppendLine($"  <input type=\"hidden\" name=\"email\" value=\"customer@example.com\" />");
-                    builder.AppendLine($"  <input type=\"hidden\" name=\"redirectUrl\" value=\"https://example.com/thanksyou\" />");
-                    builder.AppendLine($"  <button type=\"submit\" name=\"choiceKey\" value=\"{items[0].Id}\">Buy now</button>");
-                    builder.AppendLine($"</form>");
-                    vm.Example2 = builder.ToString();
-                }
-                catch { }
-            }
-
-            vm.ExampleCallback = "{\n  \"id\":\"SkdsDghkdP3D3qkj7bLq3\",\n  \"url\":\"https://btcpay.example.com/invoice?id=SkdsDghkdP3D3qkj7bLq3\",\n  \"status\":\"paid\",\n  \"price\":10,\n  \"currency\":\"EUR\",\n  \"invoiceTime\":1520373130312,\n  \"expirationTime\":1520374030312,\n  \"currentTime\":1520373179327,\n  \"exceptionStatus\":false,\n  \"buyerFields\":{\n    \"buyerEmail\":\"customer@example.com\",\n    \"buyerNotify\":false\n  },\n  \"paymentSubtotals\": {\n    \"BTC\":114700\n  },\n  \"paymentTotals\": {\n    \"BTC\":118400\n  },\n  \"transactionCurrency\": \"BTC\",\n  \"amountPaid\": \"1025900\",\n  \"exchangeRates\": {\n    \"BTC\": {\n      \"EUR\": 8721.690715789999,\n      \"USD\": 10817.99\n    }\n  }\n}";
-            
             return View(vm);
         }
         [HttpPost]
@@ -124,7 +92,7 @@ namespace BTCPayServer.Controllers
           
             try
             {
-                _AppsHelper.Parse(vm.PerksTemplate, vm.TargetCurrency);
+                _AppsHelper.Parse(vm.PerksTemplate, vm.TargetCurrency).ToString();
             }
             catch
             {
@@ -158,7 +126,7 @@ namespace BTCPayServer.Controllers
                 EnforceTargetAmount = vm.EnforceTargetAmount,
                 StartDate = vm.StartDate,
                 TargetCurrency = vm.TargetCurrency,
-                Description = vm.Description,
+                Description = _AppsHelper.Sanitize( vm.Description),
                 EndDate = vm.EndDate,
                 TargetAmount = vm.TargetAmount,
                 CustomCSSLink = vm.CustomCSSLink,
@@ -186,7 +154,7 @@ namespace BTCPayServer.Controllers
                 Settings = newSettings
             });
             StatusMessage = "App updated";
-            return RedirectToAction(nameof(ListApps));
+            return RedirectToAction(nameof(UpdateCrowdfund), new {appId});
         }
     }
 }

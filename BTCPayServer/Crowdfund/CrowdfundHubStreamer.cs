@@ -21,7 +21,8 @@ using YamlDotNet.Core;
 
 namespace BTCPayServer.Hubs
 {
-    public class CrowdfundHubStreamer
+    public class 
+        CrowdfundHubStreamer
     {
         public const string CrowdfundInvoiceOrderIdPrefix = "crowdfund-app_";
         private readonly EventAggregator _EventAggregator;
@@ -125,13 +126,9 @@ namespace BTCPayServer.Hubs
 
         private void OnInvoiceEvent(InvoiceEvent invoiceEvent)
         {
-            if (!invoiceEvent.Invoice.OrderId.StartsWith(CrowdfundInvoiceOrderIdPrefix, StringComparison.InvariantCultureIgnoreCase))
-            {
-                return;
-            }
-
             if (!_QuickAppInvoiceLookup.TryGetValue(invoiceEvent.Invoice.StoreId, out var quickLookup) ||
                 (!quickLookup.useAllStoreInvoices && 
+                 !string.IsNullOrEmpty(invoiceEvent.Invoice.OrderId) &&
                 !invoiceEvent.Invoice.OrderId.Equals($"{CrowdfundInvoiceOrderIdPrefix}{quickLookup.appId}", StringComparison.InvariantCulture)
                 ))
             {
@@ -153,6 +150,8 @@ namespace BTCPayServer.Hubs
                     InvalidateCacheForApp(quickLookup.appId);
                     break;
                 case InvoiceEvent.Created:
+                case InvoiceEvent.MarkedInvalid:
+                case InvoiceEvent.MarkedCompleted:
                     if (quickLookup.useInvoiceAmount)
                     {
                         InvalidateCacheForApp(quickLookup.appId);
@@ -182,7 +181,7 @@ namespace BTCPayServer.Hubs
 
             var ratesTask = rateFetcher.FetchRates(
                 stats.Keys
-                    .Select((x) => new CurrencyPair(PaymentMethodId.Parse(x).CryptoCode, primaryCurrency))
+                    .Select((x) => new CurrencyPair( primaryCurrency, PaymentMethodId.Parse(x).CryptoCode))
                     .ToHashSet(), 
                 rateRules);
 
@@ -194,8 +193,8 @@ namespace BTCPayServer.Hubs
                     var tResult = await rateTask.Value;
                     var rate = tResult.BidAsk?.Bid;
                     if (rate == null) return;
-                    var currencyGroup = stats[rateTask.Key.Left];
-                    result += currencyGroup / rate.Value;
+                    var currencyGroup = stats[rateTask.Key.Right];
+                    result += (1m / rate.Value) * currencyGroup;
                 }));
             }
 
@@ -257,9 +256,6 @@ namespace BTCPayServer.Hubs
                 }
             }
             
-            
-
-
             var invoices = await GetInvoicesForApp(settings.UseAllStoreInvoices? null : appData.Id, lastResetDate);
             var completeInvoices = invoices.Where(entity => entity.Status == InvoiceStatus.Complete).ToArray();
             var pendingInvoices = invoices.Where(entity => entity.Status != InvoiceStatus.Complete).ToArray();

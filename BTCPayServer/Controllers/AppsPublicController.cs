@@ -15,6 +15,7 @@ using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
+using Ganss.XSS;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
@@ -95,8 +96,18 @@ namespace BTCPayServer.Controllers
             if (app == null)
                 return NotFound();
             var settings = app.GetSettings<CrowdfundSettings>();
-            if (settings.Enabled) return View(await _CrowdfundHubStreamer.GetCrowdfundInfo(appId));
+            
             var isAdmin = await _AppsHelper.GetAppDataIfOwner(GetUserId(), appId, AppType.Crowdfund) != null;
+            
+            var hasEnoughSettingsToLoad = !string.IsNullOrEmpty(settings.TargetCurrency );
+            if (!hasEnoughSettingsToLoad)
+            {
+                if(!isAdmin)
+                    return NotFound();
+
+                return NotFound("A Target Currency must be set for this app in order to be loadable.");
+            }
+            if (settings.Enabled) return View(await _CrowdfundHubStreamer.GetCrowdfundInfo(appId));
             if(!isAdmin)
                 return NotFound();
 
@@ -116,16 +127,9 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             var settings = app.GetSettings<CrowdfundSettings>();
             
-            var hasEnoughSettingsToLoad = !string.IsNullOrEmpty(settings.TargetCurrency );
-            
+           
             var isAdmin = await _AppsHelper.GetAppDataIfOwner(GetUserId(), appId, AppType.Crowdfund) != null;
-            if (!hasEnoughSettingsToLoad)
-            {
-                if(!isAdmin)
-                    return NotFound();
-
-                return NotFound("A Target Currency must be set for this app in order to be loadable.");
-            }
+ 
             if (!settings.Enabled)
             {
                 if(!isAdmin)
@@ -266,12 +270,32 @@ namespace BTCPayServer.Controllers
     {
         ApplicationDbContextFactory _ContextFactory;
         CurrencyNameTable _Currencies;
+        private HtmlSanitizer _HtmlSanitizer;
         public CurrencyNameTable Currencies => _Currencies;
         public AppsHelper(ApplicationDbContextFactory contextFactory, CurrencyNameTable currencies)
         {
             _ContextFactory = contextFactory;
             _Currencies = currencies;
+            ConfigureSanitizer();
+        }
+        
+        private void ConfigureSanitizer()
+        {
+            
+            _HtmlSanitizer = new HtmlSanitizer();
 
+            
+
+            _HtmlSanitizer.RemovingStyle += (sender, args) => { args.Cancel = true; };
+            _HtmlSanitizer.AllowedAttributes.Add("class");
+            _HtmlSanitizer.AllowedTags.Add("iframe");
+            _HtmlSanitizer.AllowedAttributes.Add("webkitallowfullscreen");
+            _HtmlSanitizer.AllowedAttributes.Add("allowfullscreen");
+        }
+
+        public string Sanitize(string raw)
+        {
+            return _HtmlSanitizer.Sanitize(raw);
         }
         
         public async Task<StoreData[]> GetOwnedStores(string userId)
@@ -356,10 +380,10 @@ namespace BTCPayServer.Controllers
                 .Where(kv => kv.Value != null)
                 .Select(c => new ViewPointOfSaleViewModel.Item()
                 {
-                    Description = c.GetDetailString("description"),
+                    Description = Sanitize(c.GetDetailString("description")),
                     Id = c.Key,
-                    Image = c.GetDetailString("image"),
-                    Title = c.GetDetailString("title") ?? c.Key,
+                    Image = Sanitize(c.GetDetailString("image")),
+                    Title = Sanitize(c.GetDetailString("title") ?? c.Key),
                     Price = c.GetDetail("price")
                              .Select(cc => new ViewPointOfSaleViewModel.Item.ItemPrice()
                              {
@@ -387,6 +411,7 @@ namespace BTCPayServer.Controllers
 
             public string GetDetailString(string field)
             {
+                
                 return GetDetail(field).FirstOrDefault()?.Value?.Value;
             }
         }

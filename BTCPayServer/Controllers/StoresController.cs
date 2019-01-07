@@ -464,6 +464,14 @@ namespace BTCPayServer.Controllers
                 Action = nameof(UpdateChangellySettings),
                 Provider = "Changelly"
             });
+            
+            var coinSwitchEnabled = storeBlob.CoinSwitchSettings != null && storeBlob.CoinSwitchSettings.Enabled;
+            vm.ThirdPartyPaymentMethods.Add(new StoreViewModel.ThirdPartyPaymentMethod()
+            {
+                Enabled = coinSwitchEnabled,
+                Action = nameof(UpdateCoinSwitchSettings),
+                Provider = "CoinSwitch"
+            });
         }
 
         [HttpPost]

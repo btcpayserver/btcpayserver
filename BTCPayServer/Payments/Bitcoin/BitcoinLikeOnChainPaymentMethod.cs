@@ -20,9 +20,9 @@ namespace BTCPayServer.Payments.Bitcoin
             return DepositAddress;
         }
 
-        public decimal GetNetworkFee()
+        public decimal GetNextNetworkFee()
         {
-            return NetworkFee.ToDecimal(MoneyUnit.BTC);
+            return NextNetworkFee.ToDecimal(MoneyUnit.BTC);
         }
         public void SetPaymentDestination(string newPaymentDestination)
         {
@@ -34,7 +34,7 @@ namespace BTCPayServer.Payments.Bitcoin
         [JsonIgnore]
         public FeeRate FeeRate { get; set; }
         [JsonIgnore]
-        public Money NetworkFee { get; set; }
+        public Money NextNetworkFee { get; set; }
         [JsonIgnore]
         public String DepositAddress { get; set; }
         public BitcoinAddress GetDepositAddress(Network network)

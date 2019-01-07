@@ -730,7 +730,7 @@ namespace BTCPayServer.Services.Invoices
                 {
                     FeeRate = FeeRate,
                     DepositAddress = string.IsNullOrEmpty(DepositAddress) ? null : DepositAddress,
-                    NetworkFee = NetworkFee
+                    NextNetworkFee = NextNetworkFee
                 };
             }
             else
@@ -738,7 +738,7 @@ namespace BTCPayServer.Services.Invoices
                 var details = PaymentMethodExtensions.DeserializePaymentMethodDetails(GetId(), PaymentMethodDetails);
                 if (details is Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod btcLike)
                 {
-                    btcLike.NetworkFee = NetworkFee;
+                    btcLike.NextNetworkFee = NextNetworkFee;
                     btcLike.DepositAddress = string.IsNullOrEmpty(DepositAddress) ? null : DepositAddress;
                     btcLike.FeeRate = FeeRate;
                 }
@@ -760,7 +760,7 @@ namespace BTCPayServer.Services.Invoices
 
             if (paymentMethod is Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod bitcoinPaymentMethod)
             {
-                NetworkFee = bitcoinPaymentMethod.NetworkFee;
+                NextNetworkFee = bitcoinPaymentMethod.NextNetworkFee;
                 FeeRate = bitcoinPaymentMethod.FeeRate;
                 DepositAddress = bitcoinPaymentMethod.DepositAddress;
             }
@@ -775,8 +775,8 @@ namespace BTCPayServer.Services.Invoices
         [Obsolete("Use ((BitcoinLikeOnChainPaymentMethod)GetPaymentMethod()).FeeRate")]
         public FeeRate FeeRate { get; set; }
         [JsonProperty(PropertyName = "txFee")]
-        [Obsolete("Use ((BitcoinLikeOnChainPaymentMethod)GetPaymentMethod()).TxFee")]
-        public Money NetworkFee { get; set; }
+        [Obsolete("Use ((BitcoinLikeOnChainPaymentMethod)GetPaymentMethod()).NextNetworkFee")]
+        public Money NextNetworkFee { get; set; }
         [JsonProperty(PropertyName = "depositAddress")]
         [Obsolete("Use ((BitcoinLikeOnChainPaymentMethod)GetPaymentMethod()).DepositAddress")]
         public string DepositAddress { get; set; }
@@ -841,7 +841,7 @@ namespace BTCPayServer.Services.Invoices
             var method = GetPaymentMethodDetails();
             if (method == null)
                 return 0.0m;
-            return method.GetNetworkFee();
+            return method.GetNextNetworkFee();
         }
     }
 

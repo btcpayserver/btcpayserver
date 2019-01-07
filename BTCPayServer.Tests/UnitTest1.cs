@@ -101,7 +101,7 @@ namespace BTCPayServer.Tests
                 Rate = 10513.44m,
             }.SetPaymentMethodDetails(new BTCPayServer.Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod()
             {
-                NetworkFee = Money.Coins(0.00000100m),
+                NextNetworkFee = Money.Coins(0.00000100m),
                 DepositAddress = dummy
             }));
             paymentMethods.Add(new PaymentMethod()
@@ -110,7 +110,7 @@ namespace BTCPayServer.Tests
                 Rate = 216.79m
             }.SetPaymentMethodDetails(new BTCPayServer.Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod()
             {
-                NetworkFee = Money.Coins(0.00010000m),
+                NextNetworkFee = Money.Coins(0.00010000m),
                 DepositAddress = dummy
             }));
             invoiceEntity.SetPaymentMethods(paymentMethods);
@@ -150,7 +150,7 @@ namespace BTCPayServer.Tests
             var entity = new InvoiceEntity();
 #pragma warning disable CS0618
             entity.Payments = new System.Collections.Generic.List<PaymentEntity>();
-            entity.SetPaymentMethod(new PaymentMethod() { CryptoCode = "BTC", Rate = 5000, NetworkFee = Money.Coins(0.1m) });
+            entity.SetPaymentMethod(new PaymentMethod() { CryptoCode = "BTC", Rate = 5000, NextNetworkFee = Money.Coins(0.1m) });
             entity.ProductInformation = new ProductInformation() { Price = 5000 };
 
             var paymentMethod = entity.GetPaymentMethods(null).TryGet("BTC", PaymentTypes.BTCLike);
@@ -190,13 +190,13 @@ namespace BTCPayServer.Tests
             {
                 CryptoCode = "BTC",
                 Rate = 1000,
-                NetworkFee = Money.Coins(0.1m)
+                NextNetworkFee = Money.Coins(0.1m)
             });
             paymentMethods.Add(new PaymentMethod()
             {
                 CryptoCode = "LTC",
                 Rate = 500,
-                NetworkFee = Money.Coins(0.01m)
+                NextNetworkFee = Money.Coins(0.01m)
             });
             entity.SetPaymentMethods(paymentMethods);
             entity.Payments = new List<PaymentEntity>();
@@ -275,7 +275,7 @@ namespace BTCPayServer.Tests
             var entity = new InvoiceEntity();
 #pragma warning disable CS0618
             entity.Payments = new List<PaymentEntity>();
-            entity.SetPaymentMethod(new PaymentMethod() { CryptoCode = "BTC", Rate = 5000, NetworkFee = Money.Coins(0.1m) });
+            entity.SetPaymentMethod(new PaymentMethod() { CryptoCode = "BTC", Rate = 5000, NextNetworkFee = Money.Coins(0.1m) });
             entity.ProductInformation = new ProductInformation() { Price = 5000 };
             entity.PaymentTolerance = 0;
 

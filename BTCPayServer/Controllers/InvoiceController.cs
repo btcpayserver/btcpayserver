@@ -240,7 +240,7 @@ namespace BTCPayServer.Controllers
 #pragma warning disable CS0618
                 if (paymentMethod.GetId().IsBTCOnChain)
                 {
-                    entity.TxFee = paymentMethod.NetworkFee;
+                    entity.TxFee = paymentMethod.NextNetworkFee;
                     entity.Rate = paymentMethod.Rate;
                     entity.DepositAddress = paymentMethod.DepositAddress;
                 }

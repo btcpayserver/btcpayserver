@@ -22,7 +22,7 @@ namespace BTCPayServer.Payments.Lightning
             return PaymentTypes.LightningLike;
         }
 
-        public decimal GetNetworkFee()
+        public decimal GetNextNetworkFee()
         {
             return 0.0m;
         }

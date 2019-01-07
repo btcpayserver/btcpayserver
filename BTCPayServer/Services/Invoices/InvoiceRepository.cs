@@ -393,7 +393,7 @@ retry:
                         paymentMethods = entity.GetPaymentMethods(null);
                     var paymentMethodDetails = paymentMethods.TryGet(paymentEntity.GetPaymentMethodId())?.GetPaymentMethodDetails();
                     if (paymentMethodDetails != null) // == null should never happen, but we never know.
-                        paymentEntity.NetworkFee = paymentMethodDetails.GetNetworkFee();
+                        paymentEntity.NetworkFee = paymentMethodDetails.GetNextNetworkFee();
                 }
 
                 return paymentEntity;
@@ -582,15 +582,15 @@ retry:
 #pragma warning restore CS0618
                     ReceivedTime = date.UtcDateTime,
                     Accounted = accounted,
-                    NetworkFee = paymentMethodDetails.GetNetworkFee()
+                    NetworkFee = paymentMethodDetails.GetNextNetworkFee()
                 };
                 entity.SetCryptoPaymentData(paymentData);
 
                 if (paymentMethodDetails is Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod bitcoinPaymentMethod &&
                     bitcoinPaymentMethod.NetworkFeeMode == NetworkFeeMode.MultiplePaymentsOnly &&
-                    bitcoinPaymentMethod.NetworkFee == Money.Zero)
+                    bitcoinPaymentMethod.NextNetworkFee == Money.Zero)
                 {
-                    bitcoinPaymentMethod.NetworkFee = bitcoinPaymentMethod.FeeRate.GetFee(100); // assume price for 100 bytes
+                    bitcoinPaymentMethod.NextNetworkFee = bitcoinPaymentMethod.FeeRate.GetFee(100); // assume price for 100 bytes
                     paymentMethod.SetPaymentMethodDetails(bitcoinPaymentMethod);
                     invoiceEntity.SetPaymentMethod(paymentMethod);
                     invoice.Blob = ToBytes(invoiceEntity, network.NBitcoinNetwork);

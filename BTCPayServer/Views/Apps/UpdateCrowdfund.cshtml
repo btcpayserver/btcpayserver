@@ -177,21 +177,9 @@
 </section>
 
 @section Scripts {
-    <link rel="stylesheet" href="~/vendor/highlightjs/default.min.css">
-    <script src="~/vendor/highlightjs/highlight.min.js"></script>
-    <script src="~/vendor/richtext/jquery.richtext.min.js"></script>
-    <link rel="stylesheet" href="~/vendor/richtext/richtext.min.css">
-    <script src="~/vendor/flatpickr/flatpickr.js"></script>
-    <link rel="stylesheet" href="~/vendor/flatpickr/flatpickr.min.css">
-    <script>
-        hljs.initHighlightingOnLoad();
-        $(document).ready(function() {
-            $(".richtext").richText();
-            $(".datetime").flatpickr({
-                enableTime: true
-            });
-        });
-    </script>
+
+    <bundle name="wwwroot/bundles/crowdfund-admin-bundle.min.js"></bundle>
+    <bundle name="wwwroot/bundles/crowdfund-admin-bundle.min.css"></bundle>
 
     <script id="template-product-item" type="text/template">
         <div class="col-sm-4 col-md-3 mb-3">
@@ -240,8 +228,5 @@
         </div>
     </div>
     </script>
-
-    <script src="~/products/js/products.js"></script>
-    <script src="~/products/js/products.jquery.js"></script>
 }
 

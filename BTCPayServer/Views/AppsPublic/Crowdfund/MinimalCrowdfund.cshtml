@@ -2,19 +2,6 @@
 @using Microsoft.CodeAnalysis.CSharp.Syntax
 @model  BTCPayServer.Models.AppViewModels.ViewCrowdfundViewModel
 
-@functions{
-
-    public bool Started()
-    {
-        return !Model.StartDate.HasValue || DateTime.Now.ToUniversalTime() > Model.StartDate;
-    }
-
-    public bool Ended()
-    {
-        return !Model.EndDate.HasValue || DateTime.Now.ToUniversalTime() > Model.EndDate;
-    }
-
-}
 
 <div class="container p-0">
     <div class="row h-100 w-100 py-sm-0 py-md-4 mx-0">
@@ -26,19 +13,19 @@
             <div class="d-flex justify-content-between px-2">
                 <h1>
                     @Model.Title
-                    @if (!Started() && Model.StartDate.HasValue)
+                    @if (!Model.Started && Model.StartDate.HasValue)
                     {
                         <span class="h6 text-muted" >
                             Starts @Model.StartDate.Value.Subtract(DateTime.Now.ToUniversalTime())
                         </span>
                     }
-                    else if (Started() && !Ended() && Model.EndDate.HasValue)
+                    else if (Model.Started && !Model.Ended && Model.EndDate.HasValue)
                     {
                         <span class="h6 text-muted" >
                             Ends @Model.EndDate.Value.Subtract(DateTime.Now.ToUniversalTime())
                         </span>
                     }
-                    else if (Started() && !Ended() && !Model.EndDate.HasValue)
+                    else if (Model.Started && !Model.Ended && !Model.EndDate.HasValue)
                     {
                         <span class="h6 text-muted" :title="startDate"  title="No set end date">
                             Currently Active!
@@ -100,7 +87,7 @@
                         </h5>
                         <h5 class="text-muted">Contributors</h5>
                     </div>
-                    @if (Started() && !Ended())
+                    @if (Model.Started && !Model.Ended)
                     {
                         <div class="col-sm" v-if="endDiff">
                             <h5>
@@ -109,7 +96,7 @@
                             </h5>
                             <h5 class="text-muted">Ends</h5>
                         </div>
-                    } else if (!Started())
+                    } else if (!Model.Started)
                     {
                         <div class="col-sm" v-if="startDiff">
                             <h5>
@@ -117,7 +104,7 @@
                             </h5>
                             <h5 class="text-muted">Starts</h5>
                         </div>
-                    }else if (Ended())
+                    }else if (Model.Ended)
                     {
                     
                         <div class="col-sm" v-if="ended" id="inactive-campaign">

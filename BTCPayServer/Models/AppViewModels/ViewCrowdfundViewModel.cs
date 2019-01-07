@@ -46,6 +46,10 @@ namespace BTCPayServer.Models.AppViewModels
             public DateTime? LastResetDate { get; set; }
             public DateTime? NextResetDate { get; set; }
         }
+
+        public bool Started => !StartDate.HasValue || DateTime.Now.ToUniversalTime() > StartDate;
+
+        public bool Ended => !EndDate.HasValue || DateTime.Now.ToUniversalTime() > EndDate;
         
     }
 

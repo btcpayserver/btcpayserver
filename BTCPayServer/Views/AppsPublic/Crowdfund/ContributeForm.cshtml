@@ -1,18 +1,5 @@
 @model BTCPayServer.Models.AppViewModels.ContributeToCrowdfund
 
-@functions{
-
-    public bool Started()
-    {
-        return !Model.ViewCrowdfundViewModel.StartDate.HasValue || DateTime.Now.ToUniversalTime() > Model.ViewCrowdfundViewModel.StartDate;
-    }
-
-    public bool Ended()
-    {
-        return !Model.ViewCrowdfundViewModel.EndDate.HasValue || DateTime.Now.ToUniversalTime() > Model.ViewCrowdfundViewModel.EndDate;
-    }
-
-}
 <form method="post">
     @foreach (var item in Model.ViewCrowdfundViewModel.Perks)
     {
@@ -26,7 +13,7 @@
             <div class="card-title d-flex justify-content-between" >
                 <label class="h5">
                     
-                    @if (Started() && !Ended() && (item.Price.Value > 0 || item.Custom))
+                    @if (Model.ViewCrowdfundViewModel.Started && !Model.ViewCrowdfundViewModel.Ended && (item.Price.Value > 0 || item.Custom))
                     {
 
                         <input type="radio" asp-for="ChoiceKey" value="@item.Id"/>
@@ -53,7 +40,7 @@
         </div>
 </div> 
     }
-    @if (Started() && !Ended())
+    @if (Model.ViewCrowdfundViewModel.Started && !Model.ViewCrowdfundViewModel.Ended)
     {
     <div class="form-group">
         <label asp-for="Email"></label>

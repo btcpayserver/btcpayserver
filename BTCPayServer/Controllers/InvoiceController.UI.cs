@@ -13,6 +13,7 @@ using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Changelly;
+using BTCPayServer.Payments.CoinSwitch;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Invoices;
@@ -258,6 +259,11 @@ namespace BTCPayServer.Controllers
                                            storeBlob.ChangellySettings.IsConfigured())
                 ? storeBlob.ChangellySettings
                 : null;
+            
+            CoinSwitchSettings coinswitch = (storeBlob.CoinSwitchSettings != null && storeBlob.CoinSwitchSettings.Enabled &&
+                                           storeBlob.CoinSwitchSettings.IsConfigured())
+                ? storeBlob.CoinSwitchSettings
+                : null;
 
 
             var changellyAmountDue = changelly != null
@@ -309,6 +315,9 @@ namespace BTCPayServer.Controllers
                 ChangellyEnabled = changelly != null,
                 ChangellyMerchantId = changelly?.ChangellyMerchantId,
                 ChangellyAmountDue = changellyAmountDue,
+                CoinSwitchEnabled = coinswitch != null,
+                CoinSwitchMerchantId = coinswitch?.MerchantId,
+                CoinSwitchMode = coinswitch?.Mode,
                 StoreId = store.Id,
                 AvailableCryptos = invoice.GetPaymentMethods(_NetworkProvider)
                                           .Where(i => i.Network != null)

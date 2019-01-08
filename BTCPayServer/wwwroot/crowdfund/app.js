@@ -127,7 +127,7 @@ addLoadEvent(function (ev) {
                 for (var i = 0; i < result.length; i++) {
                     var current = result[i];
                     if(current.label.endsWith("LightningLike")){
-                        current.label = current.label.substr(0,current.label.findIndex("LightningLike"));
+                        current.label = current.label.substr(0,current.label.indexOf("LightningLike"));
                         current.lightning = true;
                     }
                 }

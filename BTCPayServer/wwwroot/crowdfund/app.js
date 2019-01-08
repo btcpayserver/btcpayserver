@@ -49,7 +49,8 @@ addLoadEvent(function (ev) {
                 if(!this.active){
                     return;
                 }
-                eventAggregator.$emit("contribute", {amount: this.amount, choiceKey: this.choiceKey});
+                
+                eventAggregator.$emit("contribute", {amount: this.amount, choiceKey: this.perk.id});
             },
             expand: function(){
                 if(this.canExpand){
@@ -88,6 +89,12 @@ addLoadEvent(function (ev) {
             }
         },
         computed: {
+            raisedAmount: function(){
+               return parseFloat(this.srvModel.info.currentAmount + this.srvModel.info.currentPendingAmount ).toFixed(this.srvModel.currencyData.divisibility) ;
+            },
+            percentageRaisedAmount: function(){
+                return parseFloat(this.srvModel.info.progressPercentage + this.srvModel.info.pendingProgressPercentage ).toFixed(2);
+            },
             targetCurrency: function(){
                 return this.srvModel.targetCurrency.toUpperCase();
             },

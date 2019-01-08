@@ -318,6 +318,7 @@ namespace BTCPayServer.Hubs
                 ResetEveryAmount = settings.ResetEveryAmount,
                 PerkCount = perkCount,
                 ResetEvery = Enum.GetName(typeof(CrowdfundResetEvery),settings.ResetEvery),
+                CurrencyData = _AppsHelper.GetCurrencyData(settings.TargetCurrency, true),
                 Info = new ViewCrowdfundViewModel.CrowdfundInfo()
                 {
                     TotalContributors = invoices.Length,

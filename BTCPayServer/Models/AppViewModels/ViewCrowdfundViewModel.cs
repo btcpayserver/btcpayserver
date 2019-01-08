@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
+using BTCPayServer.Services.Rates;
 
 namespace BTCPayServer.Models.AppViewModels
 {
@@ -33,6 +34,8 @@ namespace BTCPayServer.Models.AppViewModels
         public string ResetEvery { get; set; }
 
         public Dictionary<string, int> PerkCount { get; set; }
+
+        public CurrencyData CurrencyData { get; set; }
         
         public class CrowdfundInfo
         {

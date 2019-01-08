@@ -49,11 +49,11 @@
 
                 <div class="row py-2 text-center">
                     <div class="col-sm border-right" id="raised-amount">
-                        <h5>{{srvModel.info.currentAmount + srvModel.info.currentPendingAmount }} {{targetCurrency}} </h5>
+                        <h5>{{ raisedAmount }} {{targetCurrency}} </h5>
                         <h5 class="text-muted">Raised</h5>
                     </div>
                     <div  class="col-sm  border-right" id="goal-raised">
-                        <h5>{{srvModel.info.progressPercentage + srvModel.info.pendingProgressPercentage }}%</h5>
+                        <h5>{{ percentageRaisedAmount }}%</h5>
                         <h5 class="text-muted">Of Goal</h5>
                     </div>
                     <div  class="col-sm  border-right">

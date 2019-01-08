@@ -125,12 +125,24 @@ addLoadEvent(function (ev) {
                     
                 }
                 for (var i = 0; i < result.length; i++) {
-                    if(result.label.endsWith("LIGHTNINGLIKE")){
-                        result.label = result.label.substr(0,result.label.findIndex("LIGHTNINGLIKE"));
-                        result.lightning = true;
+                    var current = result[i];
+                    if(current.label.endsWith("LightningLike")){
+                        current.label = current.label.substr(0,current.label.findIndex("LightningLike"));
+                        current.lightning = true;
                     }
                 }
                     
+                return result;
+            },
+            perks: function(){
+                var result = [];
+                for (var i = 0; i < this.srvModel.perks.length; i++) {
+                    var currentPerk = this.srvModel.perks[i];
+                    if(this.srvModel.perkCount.hasOwnProperty(currentPerk.id)){
+                        currentPerk.sold = this.srvModel.perkCount[currentPerk.id];
+                    }
+                    result.push(currentPerk);
+                }
                 return result;
             }
         },

@@ -287,6 +287,13 @@ namespace BTCPayServer.Hubs
                 settings.TargetCurrency, rateRules);
 
             
+            
+            
+            var perkCount = invoices
+                .Where(entity => !string.IsNullOrEmpty( entity.ProductInformation.ItemCode))
+                .GroupBy(entity => entity.ProductInformation.ItemCode)
+                .ToDictionary(entities => entities.Key, entities => entities.Count());
+            
             return new ViewCrowdfundViewModel()
             {
                 Title = settings.Title,
@@ -309,6 +316,7 @@ namespace BTCPayServer.Hubs
                 DisqusShortname = settings.DisqusShortname,
                 AnimationsEnabled = settings.AnimationsEnabled,
                 ResetEveryAmount = settings.ResetEveryAmount,
+                PerkCount = perkCount,
                 ResetEvery = Enum.GetName(typeof(CrowdfundResetEvery),settings.ResetEvery),
                 Info = new ViewCrowdfundViewModel.CrowdfundInfo()
                 {

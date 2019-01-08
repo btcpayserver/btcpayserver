@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -284,11 +285,41 @@ namespace BTCPayServer.Controllers
             
             _HtmlSanitizer = new HtmlSanitizer();
 
-            
 
+            _HtmlSanitizer.RemovingAtRule += (sender, args) =>
+            {
+                Debug.WriteLine("");
+                
+            };
+            _HtmlSanitizer.RemovingTag += (sender, args) =>
+            {
+                Debug.WriteLine("");
+                if (args.Tag.TagName.Equals("img", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    if (!args.Tag.ClassList.Contains("img-fluid"))
+                    {
+                        args.Tag.ClassList.Add("img-fluid");
+                    }
+
+                    args.Cancel = true;
+                }
+            };
+            
+            _HtmlSanitizer.RemovingAttribute += (sender, args) =>
+            {
+                if (args.Tag.TagName.Equals("img",StringComparison.InvariantCultureIgnoreCase) &&  
+                    args.Attribute.Name.Equals( "src", StringComparison.InvariantCultureIgnoreCase) && 
+                    args.Reason == RemoveReason.NotAllowedUrlValue)
+                {
+                    args.Cancel = true;
+                }
+                Debug.WriteLine("");
+                
+            };
             _HtmlSanitizer.RemovingStyle += (sender, args) => { args.Cancel = true; };
             _HtmlSanitizer.AllowedAttributes.Add("class");
             _HtmlSanitizer.AllowedTags.Add("iframe");
+            _HtmlSanitizer.AllowedTags.Remove("img");
             _HtmlSanitizer.AllowedAttributes.Add("webkitallowfullscreen");
             _HtmlSanitizer.AllowedAttributes.Add("allowfullscreen");
         }

@@ -43,11 +43,11 @@
                         }
                         @if (Model.EnforceTargetAmount)
                         {
-                            <span v-if="srvModel.enforceTargetAmount">Hardcap Goal <span class="fa fa-question-circle" v-b-tooltip title="No contributions allowed after the goal has been reached"></span></span>                           
+                            <span >Hardcap Goal <span class="fa fa-question-circle" ></span></span>                           
                         }
                         else
                         {
-                            <span v-else>Softcap Goal <span class="fa fa-question-circle" v-b-tooltip title="Contributions allowed even after goal is reached"></span> </span>
+                            <span >Softcap Goal <span class="fa fa-question-circle" ></span> </span>
                         }
                     </span>
                 }
@@ -89,7 +89,7 @@
                     </div>
                     @if (Model.Started && !Model.Ended)
                     {
-                        <div class="col-sm" v-if="endDiff">
+                        <div class="col-sm">
                             <h5>
                                 @TimeZoneInfo.ConvertTimeFromUtc(Model.EndDate.Value, TimeZoneInfo.Local)
 
@@ -98,7 +98,7 @@
                         </div>
                     } else if (!Model.Started)
                     {
-                        <div class="col-sm" v-if="startDiff">
+                        <div class="col-sm">
                             <h5>
                                 @TimeZoneInfo.ConvertTimeFromUtc(Model.StartDate.Value, TimeZoneInfo.Local)
                             </h5>
@@ -107,7 +107,7 @@
                     }else if (Model.Ended)
                     {
                     
-                        <div class="col-sm" v-if="ended" id="inactive-campaign">
+                        <div class="col-sm" id="inactive-campaign">
                             <h5>
                                 Campaign
                             </h5>
@@ -145,7 +145,7 @@
                         </div>
                     </div>
             </div>
-            <div class="card-footer text-muted d-flex" v-if="srvModel.animationsEnabled || srvModel.soundsEnabled">
+            <div class="card-footer text-muted d-flex" >
 
                 <div class="align-self-end pr-4">Updated @Model.Info.LastUpdated</div>
             </div>

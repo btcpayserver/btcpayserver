@@ -32,7 +32,8 @@ namespace BTCPayServer.Models.AppViewModels
         public int ResetEveryAmount { get; set; }
         public string ResetEvery { get; set; }
 
-
+        public Dictionary<string, int> PerkCount { get; set; }
+        
         public class CrowdfundInfo
         {
             public int TotalContributors { get; set; }
@@ -50,7 +51,7 @@ namespace BTCPayServer.Models.AppViewModels
         public bool Started => !StartDate.HasValue || DateTime.Now.ToUniversalTime() > StartDate;
 
         public bool Ended => !EndDate.HasValue || DateTime.Now.ToUniversalTime() > EndDate;
-        
+       
     }
 
     public class ContributeToCrowdfund

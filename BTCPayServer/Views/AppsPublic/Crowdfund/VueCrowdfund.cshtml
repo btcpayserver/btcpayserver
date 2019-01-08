@@ -132,7 +132,7 @@
                                     <contribute :target-currency="srvModel.targetCurrency"
                                                 :active="active"
                                                 :in-modal="false"
-                                                :perks="srvModel.perks">
+                                                :perks="perks">
     
                                     </contribute>
                                 </div>
@@ -154,7 +154,7 @@
                             <contribute :target-currency="srvModel.targetCurrency"
                                         :active="active"
                                         :in-modal="false"
-                                        :perks="srvModel.perks">
+                                        :perks="perks">
     
                             </contribute>
                         </div>
@@ -250,6 +250,9 @@
                     </button>
                 </div>
             </div>
+        </div>
+        <div class="card-footer text-right" v-if="perk.sold">
+            {{perk.sold}} Contributors
         </div>
     </form>
 </div> 

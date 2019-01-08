@@ -38,6 +38,12 @@
             <p  class="card-text overflow-hidden" >@Html.Raw(item.Description)</p>
 
         </div>
+        @if (Model.ViewCrowdfundViewModel.PerkCount.ContainsKey(item.Id))
+        {
+            <div class="card-footer text-right">
+                @Model.ViewCrowdfundViewModel.PerkCount[item.Id] Contributors
+            </div>
+        }
 </div> 
     }
     @if (Model.ViewCrowdfundViewModel.Started && !Model.ViewCrowdfundViewModel.Ended)

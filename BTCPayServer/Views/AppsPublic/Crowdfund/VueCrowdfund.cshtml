@@ -124,7 +124,7 @@
                 <template v-if="srvModel.disqusEnabled">
                     <b-tabs>
                         <b-tab title="Details"active>
-                            <div class="row">
+                            <div class="row ">
                                 <div class="col-md-8 col-sm-12">
                                     <div class="card-text overflow-hidden" v-html="srvModel.description"></div>
                                 </div>
@@ -139,14 +139,14 @@
                             </div>
                         </b-tab>
                         <b-tab title="Discussion" >
-                            <div id="disqus_thread"></div>
+                            <div id="disqus_thread" class=" mt-2"></div>
                         </b-tab>
                     </b-tabs>
                     
                 </template>
                 <template v-else>
                     <hr/>
-                    <div class="row">
+                    <div class="row mt-2">
                         <div class="col-md-8 col-sm-12">
                             <div class="card-text overflow-hidden" v-html="srvModel.description"></div>
                         </div>

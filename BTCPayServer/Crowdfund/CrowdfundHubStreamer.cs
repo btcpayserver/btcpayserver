@@ -15,6 +15,7 @@ using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using NBitcoin;
 using YamlDotNet.Core;
@@ -32,6 +33,8 @@ namespace BTCPayServer.Hubs
         private readonly RateFetcher _RateFetcher;
         private readonly BTCPayNetworkProvider _BtcPayNetworkProvider;
         private readonly InvoiceRepository _InvoiceRepository;
+        private readonly ILogger<CrowdfundHubStreamer> _Logger;
+
         private readonly ConcurrentDictionary<string,(string appId, bool useAllStoreInvoices,bool useInvoiceAmount)> _QuickAppInvoiceLookup = 
             new ConcurrentDictionary<string, (string appId, bool useAllStoreInvoices, bool useInvoiceAmount)>();
         
@@ -41,7 +44,8 @@ namespace BTCPayServer.Hubs
             AppsHelper appsHelper, 
             RateFetcher rateFetcher,
             BTCPayNetworkProvider btcPayNetworkProvider,
-            InvoiceRepository invoiceRepository)
+            InvoiceRepository invoiceRepository,
+            ILogger<CrowdfundHubStreamer> logger)
         {
             _EventAggregator = eventAggregator;
             _HubContext = hubContext;
@@ -50,6 +54,7 @@ namespace BTCPayServer.Hubs
             _RateFetcher = rateFetcher;
             _BtcPayNetworkProvider = btcPayNetworkProvider;
             _InvoiceRepository = invoiceRepository;
+            _Logger = logger;
 #pragma warning disable 4014
             InitLookup();
 #pragma warning restore 4014
@@ -84,6 +89,7 @@ namespace BTCPayServer.Hubs
         {
             return _MemoryCache.GetOrCreateAsync(GetCacheKey(appId), async entry =>
             {           
+                _Logger.LogInformation($"GetCrowdfundInfo {appId}");
                 var app = await _AppsHelper.GetApp(appId, AppType.Crowdfund, true);
                 var result = await GetInfo(app);
                 entry.SetValue(result);
@@ -165,6 +171,7 @@ namespace BTCPayServer.Hubs
 
         private void InvalidateCacheForApp(string appId)
         {
+            _Logger.LogInformation($"App {appId} cache invalidated");
             _MemoryCache.Remove(GetCacheKey(appId));
 
             GetCrowdfundInfo(appId).ContinueWith(task =>
@@ -174,14 +181,14 @@ namespace BTCPayServer.Hubs
             
         }
         
-        private static async Task<decimal> GetCurrentContributionAmount(Dictionary<string, decimal> stats, string primaryCurrency,
-            RateFetcher rateFetcher, RateRules rateRules)
+        private async Task<decimal> GetCurrentContributionAmount(Dictionary<string, decimal> stats, string primaryCurrency, RateRules rateRules)
         {
             decimal result = 0;
 
-            var ratesTask = rateFetcher.FetchRates(
+            var ratesTask = _RateFetcher .FetchRates(
                 stats.Keys
                     .Select((x) => new CurrencyPair( primaryCurrency, PaymentMethodId.Parse(x).CryptoCode))
+                    .Distinct()
                     .ToHashSet(), 
                 rateRules);
 
@@ -193,8 +200,15 @@ namespace BTCPayServer.Hubs
                     var tResult = await rateTask.Value;
                     var rate = tResult.BidAsk?.Bid;
                     if (rate == null) return;
-                    var currencyGroup = stats[rateTask.Key.Right];
-                    result += (1m / rate.Value) * currencyGroup;
+
+                    foreach (var stat in stats)
+                    {
+                        if (string.Equals(PaymentMethodId.Parse(stat.Key).CryptoCode, rateTask.Key.Right,
+                            StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            result += (1m / rate.Value) *  stat.Value;
+                        }
+                    }
                 }));
             }
 
@@ -267,10 +281,10 @@ namespace BTCPayServer.Hubs
             
             var currentAmount = await GetCurrentContributionAmount(
                 paymentStats,
-                settings.TargetCurrency, _RateFetcher, rateRules); 
+                settings.TargetCurrency, rateRules); 
             var currentPendingAmount =  await GetCurrentContributionAmount(
                 pendingPaymentStats,
-                settings.TargetCurrency, _RateFetcher, rateRules);
+                settings.TargetCurrency, rateRules);
 
             
             return new ViewCrowdfundViewModel()

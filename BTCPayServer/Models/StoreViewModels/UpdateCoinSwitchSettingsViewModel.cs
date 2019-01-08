@@ -11,7 +11,7 @@ namespace BTCPayServer.Models.StoreViewModels
         public bool Enabled { get; set; }
 
         [Display(Name = "Integration Mode")]
-        public string Mode { get; set; } = "popup";
+        public string Mode { get; set; } = "inline";
 
         public List<SelectListItem> Modes { get; } = new List<SelectListItem>
         {

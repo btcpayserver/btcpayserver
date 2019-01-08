@@ -1,6 +1,6 @@
 ﻿@{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePageAndTitle(StoreNavPages.PayButton, "Please confirm you want to allow anyone to create invoices in your store");
+    ViewData.SetActivePageAndTitle(StoreNavPages.PayButton, "Please confirm you want to allow outside world to create invoices in your store (via API).");
     ViewBag.MainTitle = "Pay Button";
 }
 
@@ -12,10 +12,10 @@
             <div class="form-group">
                 <p>
                     To start using Pay Buttons you need to explicitly turn on this feature.
-                    Once you do so, any source will be able to create an invoice on your instance store.
+                    Once you do so, any 3rd party entity will be able to create an invoice on your instance store (via API for example).
                 </p>
                 @Html.Hidden("EnableStore", true)
-                <button name="command" type="submit" value="save" class="btn btn-primary">Allow anyone to create invoices</button>
+                <button name="command" type="submit" value="save" class="btn btn-primary">Allow outside world to create invoices via API (POS app is preauthorised and does not need this enabled).</button>
             </div>
         </form>
     </div>

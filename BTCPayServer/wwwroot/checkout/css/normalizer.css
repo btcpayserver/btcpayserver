@@ -11504,3 +11504,15 @@ low-fee-timeline {
 #prettydropdown-DefaultLang ul li{
     width:100% !important;
 }
+
+[v-cloak] > * { display:none }
+[v-cloak]::before { content: "loading…" }
+
+
+.btn-link {
+    color: #329F80;
+}
+
+.btn-link:hover {
+    color: #24725B;
+}

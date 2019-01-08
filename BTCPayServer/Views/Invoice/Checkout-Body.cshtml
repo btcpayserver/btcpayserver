@@ -299,9 +299,16 @@
                                     :autoload="selectedThirdPartyProcessor === 'coinswitch'"
                                     :to-currency-address="srvModel.btcAddress">
                             <div>
-                            <a v-on:click="openDialog($event)" :href="url" class="action-button" v-show="url && !opened">
-                                {{$t("Pay with CoinSwitch")}}
-                            </a>
+                                <a v-on:click="openDialog($event)" :href="url" class="action-button" v-show="url && !opened">
+                                    {{$t("Pay with CoinSwitch")}}
+                                </a>
+                                
+                            @if (Model.ChangellyEnabled)
+                            {
+                                <button v-show="!opened" v-on:click="$parent.selectedThirdPartyProcessor = 'changelly'" class="btn-link mt-2">
+                                    {{$t("Pay with Changelly")}}
+                                </button>
+                            }
                             
                                 <iframe  
                                     v-if="showInlineIFrame"
@@ -342,6 +349,12 @@
                                 <a  v-on:click="openDialog($event)" :href="url" class="action-button"  v-show="url">
                                     {{$t("Pay with Changelly")}}
                                 </a>
+                                @if (Model.CoinSwitchEnabled)
+                                {
+                                    <button v-on:click="$parent.selectedThirdPartyProcessor = 'coinswitch'" class="btn-link mt-2">
+                                        {{$t("Pay with CoinSwitch")}}
+                                    </button>
+                                }
                                 <button class="retry-button" v-if="calculateError" v-on:click="retry('calculateAmount')">
                                     {{$t("ConversionTab_CalculateAmount_Error")}}
                                 </button>

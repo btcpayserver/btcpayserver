@@ -37,22 +37,20 @@
                     srvModel: srvModel
                 },
                 mounted: function() {
-                    setTimeout(function() {
-                            var copyInput = new Clipboard('.copy',
-                                {
-                                    target: function(trigger) {
-                                        Vue.toasted.show('Copied',
-                                            {
-                                                iconPack: "fontawesome",
-                                                icon: "copy",
-                                                duration: 5000
-                                            });
-                                        return trigger;
-                                    }
-                                });
-                        },
-                        500);
 
+                    this.$nextTick(function() {
+                        var copyInput = new Clipboard('.copy');
+
+                        copyInput.on("success",
+                            function(e) {
+                                Vue.toasted.show('Copied',
+                                    {
+                                        iconPack: "fontawesome",
+                                        icon: "copy",
+                                        duration: 5000
+                                    });
+                            });
+                    });
                 }
             });
 
@@ -127,8 +125,8 @@
                         <qrcode v-bind:val="srvModel.nodeInfo" v-bind:size="256" bg-color="#f5f5f7" fg-color="#000">
                         </qrcode>
                     </div>
-                    <div class="input-group copy" data-clipboard-target="#peer-info">
-                        <input type="text" class=" form-control " readonly="readonly" :value="srvModel.nodeInfo" id="peer-info"/>
+                    <div class="input-group copy" data-clipboard-target="#vue-peer-info">
+                        <input type="text" class=" form-control " readonly="readonly" :value="srvModel.nodeInfo" id="vue-peer-info"/>
                         <div class="input-group-append">
                             <span class="input-group-text fa fa-copy"> </span>
                         </div>

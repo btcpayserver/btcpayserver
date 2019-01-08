@@ -124,6 +124,13 @@ addLoadEvent(function (ev) {
                     result.push(newItem);
                     
                 }
+                for (var i = 0; i < result.length; i++) {
+                    if(result.label.endsWith("LIGHTNINGLIKE")){
+                        result.label = result.label.substr(0,result.label.findIndex("LIGHTNINGLIKE"));
+                        result.lightning = true;
+                    }
+                }
+                    
                 return result;
             }
         },

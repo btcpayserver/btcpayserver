@@ -1,6 +1,7 @@
 hljs.initHighlightingOnLoad();
 $(document).ready(function() {
-    $(".richtext").richText();
+
+    $(".richtext").summernote();
     $(".datetime").flatpickr({
         enableTime: true
     });

@@ -18,6 +18,7 @@ using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Services;
 using System.Security.Claims;
 using BTCPayServer.Payments.Changelly;
+using BTCPayServer.Payments.CoinSwitch;
 using BTCPayServer.Security;
 using BTCPayServer.Rating;
 
@@ -249,6 +250,12 @@ namespace BTCPayServer.Data
         }
     }
 
+    public enum NetworkFeeMode
+    {
+        MultiplePaymentsOnly,
+        Always,
+        Never
+    }
     public class StoreBlob
     {
         public StoreBlob()
@@ -258,10 +265,21 @@ namespace BTCPayServer.Data
             PaymentTolerance = 0;
             RequiresRefundEmail = true;
         }
-        public bool NetworkFeeDisabled
+
+        [Obsolete("Use NetworkFeeMode instead")]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public bool? NetworkFeeDisabled
         {
             get; set;
         }
+
+        [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
+        public NetworkFeeMode NetworkFeeMode
+        {
+            get;
+            set;
+        }
+
         public bool RequiresRefundEmail { get; set; }
 
         public string DefaultLang { get; set; }
@@ -305,6 +323,7 @@ namespace BTCPayServer.Data
         public bool AnyoneCanInvoice { get; set; }
         
         public ChangellySettings ChangellySettings { get; set; }
+        public CoinSwitchSettings CoinSwitchSettings { get; set; }
 
 
         string _LightningDescriptionTemplate;
@@ -366,6 +385,23 @@ namespace BTCPayServer.Data
 
         [Obsolete("Use GetExcludedPaymentMethods instead")]
         public string[] ExcludedPaymentMethods { get; set; }
+#pragma warning disable CS0618 // Type or member is obsolete
+        public void SetWalletKeyPathRoot(PaymentMethodId paymentMethodId, KeyPath keyPath)
+        {
+            if (keyPath == null)
+                WalletKeyPathRoots.Remove(paymentMethodId.ToString());
+            else
+                WalletKeyPathRoots.AddOrReplace(paymentMethodId.ToString().ToLowerInvariant(), keyPath.ToString());
+        }
+        public KeyPath GetWalletKeyPathRoot(PaymentMethodId paymentMethodId)
+        {
+            if (WalletKeyPathRoots.TryGetValue(paymentMethodId.ToString().ToLowerInvariant(), out var k))
+                return KeyPath.Parse(k);
+            return null;
+        }
+#pragma warning restore CS0618 // Type or member is obsolete
+        [Obsolete("Use SetWalletKeyPathRoot/GetWalletKeyPathRoot instead")]
+        public Dictionary<string, string> WalletKeyPathRoots { get; set; } = new Dictionary<string, string>();
 
         public IPaymentFilter GetExcludedPaymentMethods()
         {

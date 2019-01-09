@@ -48,8 +48,18 @@ namespace BTCPayServer.Payments.Bitcoin
                 throw new PaymentMethodUnavailableException($"Full node not available");
             var prepare = (Prepare)preparePaymentObject;
             Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod onchainMethod = new Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod();
+            onchainMethod.NetworkFeeMode = store.GetStoreBlob().NetworkFeeMode;
             onchainMethod.FeeRate = await prepare.GetFeeRate;
-            onchainMethod.TxFee = onchainMethod.FeeRate.GetFee(100); // assume price for 100 bytes
+            switch (onchainMethod.NetworkFeeMode)
+            {
+                case NetworkFeeMode.Always:
+                    onchainMethod.NextNetworkFee = onchainMethod.FeeRate.GetFee(100); // assume price for 100 bytes
+                    break;
+                case NetworkFeeMode.Never:
+                case NetworkFeeMode.MultiplePaymentsOnly:
+                    onchainMethod.NextNetworkFee = Money.Zero;
+                    break;
+            }
             onchainMethod.DepositAddress = (await prepare.ReserveAddress).ToString();
             return onchainMethod;
         }

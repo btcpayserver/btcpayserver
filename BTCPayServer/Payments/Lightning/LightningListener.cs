@@ -42,7 +42,7 @@ namespace BTCPayServer.Payments.Lightning
         {
             leases.Add(_Aggregator.Subscribe<Events.InvoiceEvent>(async inv =>
             {
-                if (inv.Name == "invoice_created")
+                if (inv.Name == InvoiceEvent.Created)
                 {
                     await EnsureListening(inv.Invoice.Id, false);
                 }
@@ -156,7 +156,8 @@ namespace BTCPayServer.Payments.Lightning
                     if (notification.Id == listenedInvoice.PaymentMethodDetails.InvoiceId &&
                        notification.BOLT11 == listenedInvoice.PaymentMethodDetails.BOLT11)
                     {
-                        if (notification.Status == LightningInvoiceStatus.Paid && notification.PaidAt.HasValue)
+                        if (notification.Status == LightningInvoiceStatus.Paid && 
+                            notification.PaidAt.HasValue && notification.Amount != null)
                         {
                             await AddPayment(network, notification, listenedInvoice);
                             if (DoneListening(listenedInvoice))
@@ -191,12 +192,12 @@ namespace BTCPayServer.Payments.Lightning
             {
                 BOLT11 = notification.BOLT11,
                 Amount = notification.Amount
-            }, network.CryptoCode, accounted: true);
+            }, network, accounted: true);
             if (payment != null)
             {
                 var invoice = await _InvoiceRepository.GetInvoice(listenedInvoice.InvoiceId);
                 if (invoice != null)
-                    _Aggregator.Publish(new InvoiceEvent(invoice.EntityToDTO(_NetworkProvider), 1002, "invoice_receivedPayment"));
+                    _Aggregator.Publish(new InvoiceEvent(invoice.EntityToDTO(_NetworkProvider), 1002, InvoiceEvent.ReceivedPayment){Payment = payment});
             }
         }
 

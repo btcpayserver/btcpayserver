@@ -26,7 +26,7 @@ namespace BTCPayServer
                                 "GRS_BTC = bittrex(GRS_BTC)"
                 },
                 CryptoImagePath = "imlegacy/groestlcoin.png",
-                LightningImagePath = "imlegacy/groestlcoin-lightning.png",
+                LightningImagePath = "imlegacy/groestlcoin-lightning.svg",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
                 CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("17'") : new KeyPath("1'")
             });

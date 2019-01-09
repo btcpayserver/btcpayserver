@@ -36,8 +36,11 @@ namespace BTCPayServer.Models.AppViewModels
         public string CustomButtonText { get; set; }
         [Required]
         [MaxLength(30)]
-        [Display(Name = "Do you want to leave a tip?")]
+        [Display(Name = "Text to display in the tip input")]
         public string CustomTipText { get; set; }
+        [MaxLength(30)]
+        [Display(Name = "Tip percentage amounts (comma separated)")]
+        public string CustomTipPercentages { get; set; }
 
         [MaxLength(500)]
         [Display(Name = "Custom bootstrap CSS file")]

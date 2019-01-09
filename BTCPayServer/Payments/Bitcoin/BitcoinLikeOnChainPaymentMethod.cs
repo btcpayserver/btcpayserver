@@ -20,27 +20,21 @@ namespace BTCPayServer.Payments.Bitcoin
             return DepositAddress;
         }
 
-        public decimal GetTxFee()
+        public decimal GetNextNetworkFee()
         {
-            return TxFee.ToDecimal(MoneyUnit.BTC);
+            return NextNetworkFee.ToDecimal(MoneyUnit.BTC);
         }
-
-        public void SetNoTxFee()
-        {
-            TxFee = Money.Zero;
-        }
-
-
         public void SetPaymentDestination(string newPaymentDestination)
         {
             DepositAddress = newPaymentDestination;
         }
+        public Data.NetworkFeeMode NetworkFeeMode { get; set; }
 
         // Those properties are JsonIgnore because their data is inside CryptoData class for legacy reason
         [JsonIgnore]
         public FeeRate FeeRate { get; set; }
         [JsonIgnore]
-        public Money TxFee { get; set; }
+        public Money NextNetworkFee { get; set; }
         [JsonIgnore]
         public String DepositAddress { get; set; }
         public BitcoinAddress GetDepositAddress(Network network)

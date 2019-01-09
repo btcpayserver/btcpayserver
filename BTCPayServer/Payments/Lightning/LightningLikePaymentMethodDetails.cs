@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using NBitcoin;
 
 namespace BTCPayServer.Payments.Lightning
 {
@@ -21,15 +22,10 @@ namespace BTCPayServer.Payments.Lightning
             return PaymentTypes.LightningLike;
         }
 
-        public decimal GetTxFee()
+        public decimal GetNextNetworkFee()
         {
             return 0.0m;
         }
-
-        public void SetNoTxFee()
-        {
-        }
-
         public void SetPaymentDestination(string newPaymentDestination)
         {
             BOLT11 = newPaymentDestination;

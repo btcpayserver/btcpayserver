@@ -24,6 +24,7 @@ namespace BTCPayServer.Models.StoreViewModels
         } = new List<(string KeyPath, string Address)>();
 
         public string CryptoCode { get; set; }
+        public string KeyPath { get; set; }
         [Display(Name = "Hint address")]
         public string HintAddress { get; set; }
         public bool Confirmation { get; set; }

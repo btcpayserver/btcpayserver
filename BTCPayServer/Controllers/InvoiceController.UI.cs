@@ -13,6 +13,7 @@ using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Changelly;
+using BTCPayServer.Payments.CoinSwitch;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Invoices;
@@ -258,6 +259,11 @@ namespace BTCPayServer.Controllers
                                            storeBlob.ChangellySettings.IsConfigured())
                 ? storeBlob.ChangellySettings
                 : null;
+            
+            CoinSwitchSettings coinswitch = (storeBlob.CoinSwitchSettings != null && storeBlob.CoinSwitchSettings.Enabled &&
+                                           storeBlob.CoinSwitchSettings.IsConfigured())
+                ? storeBlob.CoinSwitchSettings
+                : null;
 
 
             var changellyAmountDue = changelly != null
@@ -304,11 +310,14 @@ namespace BTCPayServer.Controllers
 #pragma warning disable CS0618 // Type or member is obsolete
                 Status = invoice.StatusString,
 #pragma warning restore CS0618 // Type or member is obsolete
-                NetworkFee = paymentMethodDetails.GetTxFee(),
+                NetworkFee = paymentMethodDetails.GetNextNetworkFee(),
                 IsMultiCurrency = invoice.GetPayments().Select(p => p.GetPaymentMethodId()).Concat(new[] { paymentMethod.GetId() }).Distinct().Count() > 1,
                 ChangellyEnabled = changelly != null,
                 ChangellyMerchantId = changelly?.ChangellyMerchantId,
                 ChangellyAmountDue = changellyAmountDue,
+                CoinSwitchEnabled = coinswitch != null,
+                CoinSwitchMerchantId = coinswitch?.MerchantId,
+                CoinSwitchMode = coinswitch?.Mode,
                 StoreId = store.Id,
                 AvailableCryptos = invoice.GetPaymentMethods(_NetworkProvider)
                                           .Where(i => i.Network != null)
@@ -484,7 +493,7 @@ namespace BTCPayServer.Controllers
         [BitpayAPIConstraint(false)]
         public async Task<IActionResult> Export(string format, string searchTerm = null)
         {
-            var model = new InvoiceExport(_NetworkProvider);
+            var model = new InvoiceExport(_NetworkProvider, _CurrencyNameTable);
 
             var invoices = await ListInvoicesProcess(searchTerm, 0, int.MaxValue);
             var res = model.Process(invoices, format);
@@ -638,13 +647,13 @@ namespace BTCPayServer.Controllers
             if (newState == "invalid")
             {
                 await _InvoiceRepository.UpdatePaidInvoiceToInvalid(invoiceId);
-                _EventAggregator.Publish(new InvoiceEvent(invoice.EntityToDTO(_NetworkProvider), 1008, "invoice_markedInvalid"));
+                _EventAggregator.Publish(new InvoiceEvent(invoice.EntityToDTO(_NetworkProvider), 1008, InvoiceEvent.MarkedInvalid));
                 StatusMessage = "Invoice marked invalid";
             }
             else if(newState == "complete")
             {
                 await _InvoiceRepository.UpdatePaidInvoiceToComplete(invoiceId);
-                _EventAggregator.Publish(new InvoiceEvent(invoice.EntityToDTO(_NetworkProvider), 2008, "invoice_markedComplete"));
+                _EventAggregator.Publish(new InvoiceEvent(invoice.EntityToDTO(_NetworkProvider), 2008, InvoiceEvent.MarkedCompleted));
                 StatusMessage = "Invoice marked complete";
             }
             return RedirectToAction(nameof(ListInvoices));

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CoinSwitch</title>
+    <script>
+        var script = document.createElement('script'),
+            head = document.head || document.getElementsByTagName('head')[0];
+        script.src = 'https://files.coinswitch.co/public/js/cs_switch.js';
+        head.insertBefore(script, head.firstChild);
+        script.addEventListener('load', function () {
+            var qs = (function (a) {
+                if (a == "") return {};
+                var b = {};
+                for (var i = 0; i < a.length; ++i) {
+                    var p = a[i].split('=', 2);
+                    if (p.length == 1)
+                        b[p[0]] = "";
+                    else
+                        b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
+                }
+                return b;
+            })(window.location.search.substr(1).split('&'));
+
+            var merchantId = qs["merchant_id"];
+            var toCurrencyDue = qs["toCurrencyDue"];
+            var toCurrencyAddress = qs["toCurrencyAddress"];
+            var toCurrency = qs["toCurrency"];
+            var mode = qs["mode"];
+            document.body.classList.add(mode);
+            var orderId = null;
+            var payment = new Coinswitch(merchantId);
+            if(window.localStorage){
+                orderId=  window.localStorage.getItem(toCurrencyAddress);
+            }
+            var config = {
+                to_currency: toCurrency.toLowerCase(),
+                to_currency_address: toCurrencyAddress,
+                to_amount: parseFloat(toCurrencyDue),
+                state: orderId
+            };
+            waitForCoinSwitch();
+
+            function waitForCoinSwitch() {
+                if (typeof payment.open !== "function") {
+                    setTimeout(waitForCoinSwitch, 1000);
+                    return;
+                }
+                payment.open(config);
+                payment.on("Exchange:Complete", function () {
+                    if(window.localStorage){
+                        window.localStorage.removeItem(toCurrencyAddress);
+                    }
+                    window.close();
+                });
+
+                payment.on("Exchange:Initiated", function(orderId) {
+                    if(window.localStorage){
+                        window.localStorage.setItem(toCurrencyAddress,orderId);
+                    }
+                });
+                payment.on("Exchange:Closed", function () {
+                    window.close();
+                    window.postMessage("popup-closed", "*");
+                })
+            }
+        });
+    </script>
+    <style>
+        body.popup #CoinSwitchPayment .cs-pay {
+            height: 100%;
+        }
+        
+        body.popup #CoinSwitchPayment .cs-pay__main {
+            width: 100%;
+            min-height: 90vh;
+            padding-bottom: 20px;
+        }
+
+        body.popup #CoinSwitchPayment .cs-pay__dismiss-row {
+            display: none;
+        }
+        
+    </style>
+</head>
+<body>
+</body>
+</html>

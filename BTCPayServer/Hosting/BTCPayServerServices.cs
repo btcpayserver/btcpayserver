@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Hosting;
 using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
@@ -42,6 +43,8 @@ using Meziantou.AspNetCore.BundleTagHelpers;
 using System.Security.Claims;
 using BTCPayServer.Authentication.OpenId.Models;
 using BTCPayServer.Payments.Changelly;
+using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Security;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -86,7 +89,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<TokenRepository>();
             services.TryAddSingleton<EventAggregator>();
             services.TryAddSingleton<CoinAverageSettings>();
-            services.TryAddSingleton<ApplicationDbContextFactory>(o =>
+            services.TryAddSingleton<ApplicationDbContextFactory>(o => 
             {
                 var opts = o.GetRequiredService<BTCPayServerOptions>();
                 ApplicationDbContextFactory dbContext = null;
@@ -106,11 +109,11 @@ namespace BTCPayServer.Hosting
                     Logs.Configuration.LogInformation($"SQLite DB used ({connStr})");
                     dbContext = new ApplicationDbContextFactory(DatabaseType.Sqlite, connStr);
                 }
-
+                 
                 return dbContext;
             });
 
-            services.TryAddSingleton<BTCPayNetworkProvider>(o =>
+            services.TryAddSingleton<BTCPayNetworkProvider>(o => 
             {
                 var opts = o.GetRequiredService<BTCPayServerOptions>();
                 return opts.NetworkProvider;
@@ -124,34 +127,28 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<StoreRepository>();
             services.TryAddSingleton<BTCPayWalletProvider>();
             services.TryAddSingleton<CurrencyNameTable>();
-            services.TryAddSingleton<IFeeProviderFactory>(o =>
-                new NBXplorerFeeProviderFactory(o.GetRequiredService<ExplorerClientProvider>())
-                {
-                    Fallback = new FeeRate(100, 1),
-                    BlockTarget = 20
-                });
+            services.TryAddSingleton<IFeeProviderFactory>(o => new NBXplorerFeeProviderFactory(o.GetRequiredService<ExplorerClientProvider>())
+            {
+                Fallback = new FeeRate(100, 1),
+                BlockTarget = 20
+            });
 
             services.AddSingleton<CssThemeManager>();
-            services.Configure<MvcOptions>((o) =>
-            {
+            services.Configure<MvcOptions>((o) => {
                 o.Filters.Add(new ContentSecurityPolicyCssThemeManager());
                 o.ModelMetadataDetailsProviders.Add(new SuppressChildValidationMetadataProvider(typeof(WalletId)));
-                o.ModelMetadataDetailsProviders.Add(
-                    new SuppressChildValidationMetadataProvider(typeof(DerivationStrategyBase)));
+                o.ModelMetadataDetailsProviders.Add(new SuppressChildValidationMetadataProvider(typeof(DerivationStrategyBase)));
             });
             services.AddSingleton<IHostedService, CssThemeManagerHostedService>();
             services.AddSingleton<IHostedService, MigratorHostedService>();
 
-            services
-                .AddSingleton<Payments.IPaymentMethodHandler<DerivationStrategy>,
-                    Payments.Bitcoin.BitcoinLikePaymentHandler>();
+            services.AddSingleton<Payments.IPaymentMethodHandler<DerivationStrategy>, Payments.Bitcoin.BitcoinLikePaymentHandler>();
             services.AddSingleton<IHostedService, Payments.Bitcoin.NBXplorerListener>();
 
             services.AddSingleton<IHostedService, HostedServices.CheckConfigurationHostedService>();
 
-            services
-                .AddSingleton<Payments.IPaymentMethodHandler<Payments.Lightning.LightningSupportedPaymentMethod>,
-                    Payments.Lightning.LightningLikePaymentHandler>();
+            services.AddSingleton<Payments.IPaymentMethodHandler<Payments.Lightning.LightningSupportedPaymentMethod>, Payments.Lightning.LightningLikePaymentHandler>();
+            services.AddSingleton<LightningLikePaymentHandler>();
             services.AddSingleton<IHostedService, Payments.Lightning.LightningListener>();
             
             services.AddSingleton<ChangellyClientProvider>();
@@ -249,11 +246,14 @@ namespace BTCPayServer.Hosting
             using (var scope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
             {
                 //Wait the DB is ready
-                Retry(() => { scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.Migrate(); });
+                Retry(() =>
+                {
+                    scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.Migrate();
+                });
             }
 
             app.UseMiddleware<BTCPayMiddleware>();
-            return app;
+            return app; 
         }
 
         static void Retry(Action act)
@@ -275,4 +275,6 @@ namespace BTCPayServer.Hosting
             }
         }
     }
+
+
 }

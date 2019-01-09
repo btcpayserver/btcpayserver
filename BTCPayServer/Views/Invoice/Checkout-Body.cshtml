@@ -151,7 +151,7 @@
         <div class="payment-tabs__tab" id="copy-tab">
             <span>{{$t("Copy")}}</span>
         </div>
-        @if (Model.ChangellyEnabled)
+        @if (Model.ChangellyEnabled || Model.CoinSwitchEnabled)
         {
             <div class="payment-tabs__tab" id="altcoins-tab">
                 <span>{{$t("Conversion")}}</span>
@@ -256,7 +256,7 @@
             </div>
         </nav>
     </div>
-    @if (Model.ChangellyEnabled)
+    @if (Model.ChangellyEnabled || Model.CoinSwitchEnabled)
     {
         <div id="altcoins" class="bp-view payment manual-flow">
             <nav v-if="srvModel.isLightning">
@@ -274,42 +274,99 @@
                         {{$t("ConversionTab_BodyDesc", srvModel)}}
                     </span>
                 </div>
-                <center>             
-                    <changelly inline-template
-                               :merchant-id="srvModel.changellyMerchantId"
-                               :store-id="srvModel.storeId"
-                               :to-currency="srvModel.paymentMethodId"
-                               :to-currency-due="srvModel.changellyAmountDue"
-                               :to-currency-address="srvModel.btcAddress">
-                        <div class="changelly-component">
-                            <div class="changelly-component-dropdown-holder" v-show="prettyDropdownInstance">
-                                <select 
+                <center>        
+                    
+                    @if (Model.CoinSwitchEnabled && Model.ChangellyEnabled)
+                    {
+                        <template v-if="!selectedThirdPartyProcessor">
+                            <button v-on:click="selectedThirdPartyProcessor = 'coinswitch'" class="action-button">
+                                {{$t("Pay with CoinSwitch")}}
+                            </button>
+                            <button v-on:click="selectedThirdPartyProcessor = 'changelly'" class="action-button">
+                                {{$t("Pay with Changelly")}}
+                            </button>
+                        </template>
+                    }
+                    
+                    @if (Model.CoinSwitchEnabled)
+                    {
+                        <coinswitch inline-template
+                                    v-if="!srvModel.changellyEnabled || selectedThirdPartyProcessor === 'coinswitch'"
+                                    :mode="srvModel.coinSwitchMode"
+                                    :merchant-id="srvModel.coinSwitchMerchantId"
+                                    :to-currency="srvModel.paymentMethodId"
+                                    :to-currency-due="srvModel.btcDue"
+                                    :autoload="selectedThirdPartyProcessor === 'coinswitch'"
+                                    :to-currency-address="srvModel.btcAddress">
+                            <div>
+                                <a v-on:click="openDialog($event)" :href="url" class="action-button" v-show="url && !opened">
+                                    {{$t("Pay with CoinSwitch")}}
+                                </a>
+                                
+                            @if (Model.ChangellyEnabled)
+                            {
+                                <button v-show="!opened" v-on:click="$parent.selectedThirdPartyProcessor = 'changelly'" class="btn-link mt-2">
+                                    {{$t("Pay with Changelly")}}
+                                </button>
+                            }
+                            
+                                <iframe  
+                                    v-if="showInlineIFrame"
+                                    v-on:load="onLoadIframe"
+                                style="height: 100%; position: fixed; top: 0; width: 100%; left: 0;"
+                                sandbox="allow-scripts allow-forms allow-popups allow-same-origin"
+                                :src="url"></iframe>
+
+                            </div>
+
+                        </coinswitch>
+                    }
+                    
+                    @if(Model.ChangellyEnabled){
+                    
+                        <changelly inline-template
+                                   v-if="!srvModel.coinSwitchEnabled || selectedThirdPartyProcessor === 'changelly'"
+                                   :merchant-id="srvModel.changellyMerchantId"
+                                   :store-id="srvModel.storeId"
+                                   :to-currency="srvModel.paymentMethodId"
+                                   :to-currency-due="srvModel.changellyAmountDue"
+                                   :to-currency-address="srvModel.btcAddress">
+                            <div class="changelly-component">
+                                <div class="changelly-component-dropdown-holder" v-show="prettyDropdownInstance">
+                                    <select 
                                         v-model="selectedFromCurrency"
                                         :disabled="isLoading"
                                         v-on:change="onCurrencyChange($event)"
                                         ref="changellyCurrenciesDropdown">
-                                    <option value="">{{$t("ConversionTab_CurrencyList_Select_Option")}}</option>
-                                    <option v-for="currency of currencies" 
-                                            :data-prefix="'<img src=\''+currency.image+'\'/>'"
-                                            :value="currency.name">
-                                       {{currency.fullName}}
-                                    </option>
-                                </select>
+                                        <option value="">{{$t("ConversionTab_CurrencyList_Select_Option")}}</option>
+                                        <option v-for="currency of currencies" 
+                                                :data-prefix="'<img src=\''+currency.image+'\'/>'"
+                                                :value="currency.name">
+                                            {{currency.fullName}}
+                                        </option>
+                                    </select>
+                                </div>
+                                <a  v-on:click="openDialog($event)" :href="url" class="action-button"  v-show="url">
+                                    {{$t("Pay with Changelly")}}
+                                </a>
+                                @if (Model.CoinSwitchEnabled)
+                                {
+                                    <button v-on:click="$parent.selectedThirdPartyProcessor = 'coinswitch'" class="btn-link mt-2">
+                                        {{$t("Pay with CoinSwitch")}}
+                                    </button>
+                                }
+                                <button class="retry-button" v-if="calculateError" v-on:click="retry('calculateAmount')">
+                                    {{$t("ConversionTab_CalculateAmount_Error")}}
+                                </button>
+                                <button class="retry-button" v-if="currenciesError" v-on:click="retry('loadCurrencies')">
+                                    {{$t("ConversionTab_LoadCurrencies_Error")}}
+                                </button>
+                                <div v-show="isLoading" class="general__spinner">
+                                    <partial name="Checkout-Spinner"/>
+                                </div>
                             </div>
-                            <a  v-on:click="openDialog($event)" :href="url" class="btn btn-primary retry-button changelly-component-button"  v-show="url">
-                               Pay with Changelly
-                            </a>
-                            <button class="retry-button" v-if="calculateError" v-on:click="retry('calculateAmount')">
-                                {{$t("ConversionTab_CalculateAmount_Error")}}
-                            </button>
-                            <button class="retry-button" v-if="currenciesError" v-on:click="retry('loadCurrencies')">
-                                {{$t("ConversionTab_LoadCurrencies_Error")}}
-                            </button>
-                            <div v-show="isLoading" class="general__spinner">
-                                <partial name="Checkout-Spinner"/>
-                            </div>
-                        </div>
-                    </changelly>
+                        </changelly>
+                    }
                 </center>
             </nav>
         </div>

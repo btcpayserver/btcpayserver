@@ -103,7 +103,7 @@ namespace BTCPayServer.Hosting
                     options.DisableHttpsRequirement();
 
                     options.ConfigureClientRequirements(Configuration);
-                    
+                    options.UseRollingTokens();
                     options.UseJsonWebTokens();
 
                     options.AddEventHandler<PasswordGrantTypeEventHandler>();

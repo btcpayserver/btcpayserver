@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Rates;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Services.Invoices.Export
@@ -12,10 +13,12 @@ namespace BTCPayServer.Services.Invoices.Export
     public class InvoiceExport
     {
         public BTCPayNetworkProvider Networks { get; }
+        public CurrencyNameTable Currencies { get; }
 
-        public InvoiceExport(BTCPayNetworkProvider networks)
+        public InvoiceExport(BTCPayNetworkProvider networks, CurrencyNameTable currencies)
         {
             Networks = networks;
+            Currencies = currencies;
         }
         public string Process(InvoiceEntity[] invoices, string fileFormat)
         {
@@ -52,6 +55,7 @@ namespace BTCPayServer.Services.Invoices.Export
         private IEnumerable<ExportInvoiceHolder> convertFromDb(InvoiceEntity invoice)
         {
             var exportList = new List<ExportInvoiceHolder>();
+            var currency = Currencies.GetNumberFormatInfo(invoice.ProductInformation.Currency, true);
 
             var invoiceDue = invoice.ProductInformation.Price;
             // in this first version we are only exporting invoices that were paid
@@ -60,7 +64,6 @@ namespace BTCPayServer.Services.Invoices.Export
                 // not accounted payments are payments which got double spent like RBfed
                 if (!payment.Accounted)
                     continue;
-
                 var cryptoCode = payment.GetPaymentMethodId().CryptoCode;
                 var pdata = payment.GetCryptoPaymentData();
 
@@ -77,13 +80,13 @@ namespace BTCPayServer.Services.Invoices.Export
                     PaymentType = payment.GetPaymentMethodId().PaymentType == Payments.PaymentTypes.BTCLike ? "OnChain" : "OffChain",
                     Destination = payment.GetCryptoPaymentData().GetDestination(Networks.GetNetwork(cryptoCode)),
                     Paid = pdata.GetValue().ToString(CultureInfo.InvariantCulture),
-                    PaidCurrency = (pdata.GetValue() * pmethod.Rate).ToString(CultureInfo.InvariantCulture),
+                    PaidCurrency = Math.Round(pdata.GetValue() * pmethod.Rate, currency.NumberDecimalDigits).ToString(CultureInfo.InvariantCulture),
                     // Adding NetworkFee because Paid doesn't take into account network fees
                     // so if fee is 10000 satoshis, customer can essentially send infinite number of tx
                     // and merchant effectivelly would receive 0 BTC, invoice won't be paid
                     // while looking just at export you could sum Paid and assume merchant "received payments"
                     NetworkFee = payment.NetworkFee.ToString(CultureInfo.InvariantCulture),
-                    InvoiceDue = invoiceDue,
+                    InvoiceDue = Math.Round(invoiceDue, currency.NumberDecimalDigits),
                     OrderId = invoice.OrderId,
                     StoreId = invoice.StoreId,
                     InvoiceId = invoice.Id,

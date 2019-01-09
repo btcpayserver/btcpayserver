@@ -493,7 +493,7 @@ namespace BTCPayServer.Controllers
         [BitpayAPIConstraint(false)]
         public async Task<IActionResult> Export(string format, string searchTerm = null)
         {
-            var model = new InvoiceExport(_NetworkProvider);
+            var model = new InvoiceExport(_NetworkProvider, _CurrencyNameTable);
 
             var invoices = await ListInvoicesProcess(searchTerm, 0, int.MaxValue);
             var res = model.Process(invoices, format);

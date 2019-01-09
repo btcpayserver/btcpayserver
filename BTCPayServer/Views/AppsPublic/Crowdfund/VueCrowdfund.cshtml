@@ -222,7 +222,7 @@
             <div class="card-title d-flex justify-content-between" >
                 <span class="h5">{{perk.title? perk.title : perk.id}} </span>
                 <span class="text-muted" > 
-                    <template v-if="perk.price.value">{{perk.price.value}} 
+                    <template v-if="perk.price.value">{{perk.price.value.noExponents()}} 
                         {{targetCurrency}} 
                         <template v-if="perk.custom">or more</template>
                     </template>
@@ -257,10 +257,7 @@
             </div>
         </div>
         <div class="card-footer d-flex justify-content-between" v-if="perk.sold">
-           <span >
-           <template v-if="displayPerksRanking">
-           #{{index+1}} Perk</span> 
-           </template>
+           <span ></span>
            <span x >{{perk.sold}} Contributor{{perk.sold > 1? "s": ""}}</span>
         </div>
     </form>

@@ -293,7 +293,19 @@ namespace BTCPayServer.Hubs
                 .Where(entity => !string.IsNullOrEmpty( entity.ProductInformation.ItemCode))
                 .GroupBy(entity => entity.ProductInformation.ItemCode)
                 .ToDictionary(entities => entities.Key, entities => entities.Count());
-            
+
+            var perks = _AppsHelper.Parse(settings.PerksTemplate, settings.TargetCurrency);
+            if (settings.SortPerksByPopularity)
+            {
+                var  ordered = perkCount.OrderByDescending(pair => pair.Value);
+                var newPerksOrder = ordered
+                    .Select(keyValuePair => perks.SingleOrDefault(item => item.Id == keyValuePair.Key))
+                    .Where(matchingPerk => matchingPerk != null)
+                    .ToList();
+                var remainingPerks = perks.Where(item => !newPerksOrder.Contains(item));
+                newPerksOrder.AddRange(remainingPerks);
+                perks = newPerksOrder.ToArray();
+            }    
             return new ViewCrowdfundViewModel()
             {
                 Title = settings.Title,
@@ -310,12 +322,13 @@ namespace BTCPayServer.Hubs
                 TargetCurrency = settings.TargetCurrency,
                 EnforceTargetAmount = settings.EnforceTargetAmount,
                 StatusMessage = statusMessage,
-                Perks = _AppsHelper.Parse(settings.PerksTemplate, settings.TargetCurrency),
+                Perks = perks,
                 DisqusEnabled = settings.DisqusEnabled,
                 SoundsEnabled = settings.SoundsEnabled,
                 DisqusShortname = settings.DisqusShortname,
                 AnimationsEnabled = settings.AnimationsEnabled,
                 ResetEveryAmount = settings.ResetEveryAmount,
+                DisplayPerksRanking = settings.DisplayPerksRanking,
                 PerkCount = perkCount,
                 ResetEvery = Enum.GetName(typeof(CrowdfundResetEvery),settings.ResetEvery),
                 CurrencyData = _AppsHelper.GetCurrencyData(settings.TargetCurrency, true),

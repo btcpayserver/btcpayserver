@@ -130,6 +130,7 @@
                                 </div>
                                 <div class="col-md-4 col-sm-12">
                                     <contribute :target-currency="srvModel.targetCurrency"
+                                                :display-perks-ranking="srvModel.displayPerksRanking"
                                                 :active="active"
                                                 :in-modal="false"
                                                 :perks="perks">
@@ -152,6 +153,7 @@
                         </div>
                         <div class="col-md-4 col-sm-12">
                             <contribute :target-currency="srvModel.targetCurrency"
+                                        :display-perks-ranking="srvModel.displayPerksRanking"
                                         :active="active"
                                         :in-modal="false"
                                         :perks="perks">
@@ -192,11 +194,11 @@
 </div>
 
 <script type="text/x-template" id="perks-template">
-<div >
+<div>
     <perk v-if="!perks || perks.length ===0" :perk="{title: 'Donate Custom Amount', price: { value: null}, custom: true}" :target-currency="targetCurrency" :active="active" 
         :in-modal="inModal">
     </perk>
-    <perk v-for="(perk, index) in perks" :perk="perk" :target-currency="targetCurrency" :active="active" 
+    <perk v-for="(perk, index) in perks" :perk="perk" :target-currency="targetCurrency" :active="active" :display-perks-ranking="displayPerksRanking" :index="index"
         :in-modal="inModal">
     </perk>
 </div>
@@ -204,6 +206,9 @@
 
 <script type="text/x-template" id="perk-template"> 
 <div class="card mb-4 perk"  v-bind:class="{ 'expanded': expanded, 'unexpanded': !expanded }" v-on:click="expand" :id="perk.id">
+<span v-if="displayPerksRanking && perk.sold " style="width: 33px;height: 33px;position: absolute;left: -15px;top: -15px;padding-top: 5px;" class="btn btn-sm rounded-circle" v-bind:class="{ 'btn-primary': index==0, 'btn-secondary': index!=0}">#{{index+1}}</span> 
+         
+
     <div class="perk-zoom " v-if="canExpand">
         <div class="perk-zoom-bg bg-primary"> </div>
         <div class="perk-zoom-text w-100 text-center text-white font-weight-bold">
@@ -251,8 +256,12 @@
                 </div>
             </div>
         </div>
-        <div class="card-footer text-right" v-if="perk.sold">
-            {{perk.sold}} Contributors
+        <div class="card-footer d-flex justify-content-between" v-if="perk.sold">
+           <span >
+           <template v-if="displayPerksRanking">
+           #{{index+1}} Perk</span> 
+           </template>
+           <span x >{{perk.sold}} Contributor{{perk.sold > 1? "s": ""}}</span>
         </div>
     </form>
 </div> 
@@ -261,10 +270,11 @@
 
 <script type="text/x-template" id="contribute-template">
   <div>
-    <h3 v-if="!inModal">Contribute</h3>
+    <h3 v-if="!inModal" class="mb-3">Contribute</h3>
     <perks 
         :perks="perks" 
         :in-modal="inModal"
+        :display-perks-ranking="displayPerksRanking"
         :target-currency="targetCurrency" 
         :active="active">
      </perks>

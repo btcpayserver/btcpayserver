@@ -43,7 +43,9 @@ namespace BTCPayServer.Controllers
             public bool UseInvoiceAmount { get; set; } = true;
             public int ResetEveryAmount { get; set; } = 1;
             public CrowdfundResetEvery ResetEvery { get; set; } = CrowdfundResetEvery.Never;
-            public bool UseAllStoreInvoices { get; set; } = false;
+            public bool UseAllStoreInvoices { get; set; }
+            public bool DisplayPerksRanking { get; set; }
+            public bool SortPerksByPopularity { get; set; }
         }
         
         
@@ -79,7 +81,9 @@ namespace BTCPayServer.Controllers
                 ResetEveryAmount = settings.ResetEveryAmount,
                 ResetEvery = Enum.GetName(typeof(CrowdfundResetEvery), settings.ResetEvery),
                 UseAllStoreInvoices = settings.UseAllStoreInvoices,
-                AppId = appId
+                AppId = appId,
+                DisplayPerksRanking = settings.DisplayPerksRanking,
+                SortPerksByPopularity = settings.SortPerksByPopularity
             };
             return View(vm);
         }
@@ -142,7 +146,9 @@ namespace BTCPayServer.Controllers
                 ResetEveryAmount = vm.ResetEveryAmount,
                 ResetEvery = Enum.Parse<CrowdfundResetEvery>(vm.ResetEvery),
                 UseInvoiceAmount = vm.UseInvoiceAmount,
-                UseAllStoreInvoices = vm.UseAllStoreInvoices
+                UseAllStoreInvoices = vm.UseAllStoreInvoices,
+                DisplayPerksRanking = vm.DisplayPerksRanking,
+                SortPerksByPopularity = vm.SortPerksByPopularity
             };
             
             app.SetSettings(newSettings);

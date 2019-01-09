@@ -74,6 +74,10 @@ namespace BTCPayServer.Models.AppViewModels
         public bool UseAllStoreInvoices { get; set; } 
 
         public string AppId { get; set; }
+        [Display(Name = "Sort contribution perks by popularity")]
+        public bool SortPerksByPopularity { get; set; }
+        [Display(Name = "Display contribution ranking")]
+        public bool DisplayPerksRanking { get; set; }
     }
 
     public enum CrowdfundResetEvery

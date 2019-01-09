@@ -18,17 +18,17 @@ addLoadEvent(function (ev) {
     Vue.use(Toasted);
 
     Vue.component('contribute', {
-        props: ["targetCurrency", "active", "perks", "inModal"],
+        props: ["targetCurrency", "active", "perks", "inModal", "displayPerksRanking"],
         template: "#contribute-template"
     });
 
     Vue.component('perks', {
-        props: ["perks", "targetCurrency", "active", "inModal"],
+        props: ["perks", "targetCurrency", "active", "inModal","displayPerksRanking"],
         template: "#perks-template"
     });
 
     Vue.component('perk', {
-        props: ["perk", "targetCurrency", "active", "inModal"],
+        props: ["perk", "targetCurrency", "active", "inModal", "displayPerksRanking", "index"],
         template: "#perk-template",
         data: function () {
             return {

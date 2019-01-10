@@ -19,7 +19,7 @@ namespace BTCPayServer.Models.AppViewModels
         public string NotificationUrl { get; set; }
 
         [Required]
-        [Display(Name = "Allow crowdfund to be publicly visible( still visible to you)")]
+        [Display(Name = "Allow crowdfund to be publicly visible (still visible to you)")]
         public bool Enabled { get; set; } = false;
 
         [Required]

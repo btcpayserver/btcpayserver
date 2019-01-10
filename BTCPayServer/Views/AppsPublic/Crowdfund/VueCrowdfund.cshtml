@@ -62,40 +62,65 @@
                         </h5>
                         <h5 class="text-muted">Contributors</h5>
                     </div> 
-                    <div  class="col-sm" v-if="endDiff">
+                    <div  class="col-sm" v-if="endDiff" id="campaign-dates-started">
                         <h5>
                             {{endDiff}}
                         </h5>
                         <h5 class="text-muted">Left</h5>
+                        <b-tooltip target="campaign-dates-started" >
+                            <ul class="p-0">
+                                <li v-if="startDate" class="list-unstyled">
+                                    {{started? "Started" : "Starts"}} {{startDate}}
+                                </li>
+                                <li v-if="endDate" class="list-unstyled">
+                                    {{ended? "Ended" : "Ends"}} {{endDate}}
+                                </li>
+                            </ul>
+                        </b-tooltip>
                     </div>
-                    <div  class="col-sm" v-if="startDiff">
+                    <div  class="col-sm" v-if="startDiff" id="campaign-dates-not-started">
                         <h5>
                             {{startDiff}}
                         </h5>
                         <h5 class="text-muted">Left to start</h5>
+                        
+                        <b-tooltip target="campaign-dates-ended" >
+                            <ul class="p-0">
+                                <li v-if="startDate" class="list-unstyled">
+                                    {{started? "Started" : "Starts"}} {{startDate}}
+                                </li>
+                                <li v-if="endDate" class="list-unstyled">
+                                    {{ended? "Ended" : "Ends"}} {{endDate}}
+                                </li>
+                            </ul>
+                        </b-tooltip>
                     </div>
-                    <div  class="col-sm" v-if="ended" id="inactive-campaign">
+                    <div  class="col-sm" v-if="ended" id="campaign-dates-ended">
                         <h5>
                             Campaign
                         </h5>
                         <h5 >not active</h5>
                         
-                        <b-tooltip target="inactive-campaign" >
+                        <b-tooltip target="campaign-dates-not-started" >
                             <ul class="p-0">
-                                <li v-if="startDate" style="list-style-type: none">
+                                <li v-if="startDate" class="list-unstyled">
                                     {{started? "Started" : "Starts"}} {{startDate}}
                                 </li>
-                                <li v-if="endDate" style="list-style-type: none">
-                                    {{ended? "Ended" : "End"}} {{endDate}}
+                                <li v-if="endDate" class="list-unstyled">
+                                    {{ended? "Ended" : "Ends"}} {{endDate}}
                                 </li>
                             </ul>
                         </b-tooltip>
+                        
+                       
+                        
+                     
                     </div>
                 </div>
                 
                 <b-tooltip target="raised-amount" v-if="paymentStats && paymentStats.length > 0">
                     <ul class="p-0 text-uppercase">
-                        <li v-for="stat of paymentStats" style="list-style-type: none">
+                        <li v-for="stat of paymentStats" class="list-unstyled">
                             
                             {{stat.label}} <span v-if="stat.lightning" class="fa fa-bolt"></span> {{stat.value}}
                         </li>
@@ -206,7 +231,7 @@
 
 <script type="text/x-template" id="perk-template"> 
 <div class="card mb-4 perk"  v-bind:class="{ 'expanded': expanded, 'unexpanded': !expanded }" v-on:click="expand" :id="perk.id">
-<span v-if="displayPerksRanking && perk.sold " style="width: 33px;height: 33px;position: absolute;left: -15px;top: -15px;padding-top: 5px;" class="btn btn-sm rounded-circle px-0" v-bind:class="{ 'btn-primary': index==0, 'btn-secondary': index!=0}">#{{index+1}}</span> 
+<span v-if="displayPerksRanking && perk.sold" class="btn btn-sm rounded-circle px-0 perk-badge" v-bind:class="{ 'btn-primary': index==0, 'btn-secondary': index!=0}">#{{index+1}}</span> 
          
 
     <div class="perk-zoom " v-if="canExpand">

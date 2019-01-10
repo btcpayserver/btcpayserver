@@ -112,6 +112,11 @@ namespace BTCPayServer.Controllers
             {
                 ModelState.AddModelError(nameof(vm.ResetEveryAmount), "You must reset the goal at a minimum of 1 ");
             }
+
+            if (vm.DisplayPerksRanking && !vm.SortPerksByPopularity)
+            {
+                ModelState.AddModelError(nameof(vm.DisplayPerksRanking), "You must sort by popularity in order to display ranking.");
+            }
             
             if (!ModelState.IsValid)
             {

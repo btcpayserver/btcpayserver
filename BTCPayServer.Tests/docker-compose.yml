@@ -2,7 +2,7 @@ version: "3"
 
 # Run `docker-compose up dev` for bootstrapping your development environment
 # Doing so will expose NBXplorer, Bitcoind RPC and postgres port to the host so that tests can Run,
-# The Visual Studio launch setting `Docker-Regtest` is configured to use this environment.
+# The Visual Studio launch setting `Docker-regtest` is configured to use this environment.
 services:
 
   tests:

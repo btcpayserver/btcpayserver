@@ -43,5 +43,7 @@
   "BOLT 11 Invoice": "BOLT 11 Шот-фактура",
   "Node Info": "Node анықтамасы",
   "txCount": "{{count}} Транзакция",
-  "txCount_plural": "{{count}} Транзакциялар"
+  "txCount_plural": "{{count}} Транзакциялар",
+  "Pay with CoinSwitch": "Pay with CoinSwitch",
+  "Pay with Changelly": "Pay with Changelly"
 }

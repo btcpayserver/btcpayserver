@@ -43,5 +43,7 @@
   "BOLT 11 Invoice": "BOLT 11 Reikningur",
   "Node Info": "Nótu upplýsingar",
   "txCount": "{{count}} reikningur",
-  "txCount_plural": "{{count}} reikningar"
+  "txCount_plural": "{{count}} reikningar",
+  "Pay with CoinSwitch": "Pay with CoinSwitch",
+  "Pay with Changelly": "Pay with Changelly"
 }

@@ -23,7 +23,7 @@
   "Address": "Dirección",
   "Copied": "Copiado",
   "ConversionTab_BodyTop": "Puedes pagar {{btcDue}} {{cryptoCode}} usando altcoins que este comercio no soporta directamente.",
-  "ConversionTab_BodyDesc": "Este servicio es provisto por terceros. Ten en cuenta que no tenemos control sobre cómo estos terceros envían los fondos. La factura solo se marcará como pagada una vez se reciban los fondos en la cadena de bloques de {{cryptoCode}} .",
+  "ConversionTab_BodyDesc": "Este servicio es provisto por terceros. Ten en cuenta que no tenemos control sobre cómo estos terceros re-enviarán tus fondos. La factura solo se marcará como pagada una vez se reciban los fondos en la cadena de bloques de {{cryptoCode}} .",
   "ConversionTab_CalculateAmount_Error": "Reintentar",
   "ConversionTab_LoadCurrencies_Error": "Reintentar",
   "ConversionTab_Lightning": "No hay proveedores de conversión disponibles para los pagos de Lightning Network.",
@@ -43,5 +43,7 @@
   "BOLT 11 Invoice": "Factura BOLT 11",
   "Node Info": "Información del nodo",
   "txCount": "{{count}} transacción",
-  "txCount_plural": "{{count}} transacciones"
+  "txCount_plural": "{{count}} transacciones",
+  "Pay with CoinSwitch": "Pagar con CoinSwitch",
+  "Pay with Changelly": "Pagar con Changelly"
 }

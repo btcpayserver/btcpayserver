@@ -1,0 +1,78 @@
+@using Microsoft.EntityFrameworkCore.Internal
+@model BTCPayServer.Models.AppViewModels.ContributeToCrowdfund
+
+<form method="post">
+    @foreach (var item in Model.ViewCrowdfundViewModel.Perks)
+    {
+        <div class="card mb-4 perk expanded" id="@item.Id">
+            @if (Model.ViewCrowdfundViewModel.DisplayPerksRanking && Model.ViewCrowdfundViewModel.PerkCount.ContainsKey(item.Id))
+            {
+                <span  class="btn btn-sm rounded-circle px-0 btn-primary perk-badge">#@(Model.ViewCrowdfundViewModel.Perks.IndexOf(item)+1)</span>
+            }
+            @if (!string.IsNullOrEmpty(item.Image))
+            {
+                <img class="card-img-top" src="@item.Image"/>
+            }
+            <div class="card-body">
+                <div class="card-title d-flex justify-content-between">
+                    <label class="h5">
+
+                        @if (Model.ViewCrowdfundViewModel.Started && !Model.ViewCrowdfundViewModel.Ended && (item.Price.Value > 0 || item.Custom))
+                        {
+
+                            <input type="radio" asp-for="ChoiceKey" value="@item.Id"/>
+                        }
+                        @(string.IsNullOrEmpty(item.Title) ? item.Id : item.Title)
+                    </label>
+                    <span class="text-muted">
+                        @if (item.Price.Value > 0)
+                        {
+                            @item.Price.Value
+                            if (item.Custom)
+                            {
+                                Html.Raw("or more");
+                            }
+                        }
+                        else if (item.Custom)
+                        {
+                            Html.Raw("Any amount");
+                        }
+
+                    </span>
+                </div>
+                <p class="card-text overflow-hidden">@Html.Raw(item.Description)</p>
+
+            </div>
+            @if (Model.ViewCrowdfundViewModel.PerkCount.ContainsKey(item.Id))
+            {
+                <div class="card-footer d-flex justify-content-between">
+                    <span></span>
+                    <span> @Model.ViewCrowdfundViewModel.PerkCount[item.Id] Contributors</span>
+                </div>
+            }
+        </div> 
+    }
+    @if (Model.ViewCrowdfundViewModel.Started && !Model.ViewCrowdfundViewModel.Ended)
+    {
+    <div class="form-group">
+        <label asp-for="Email"></label>
+        <input asp-for="Email" type="email" class="form-control"/>
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>   
+    <div class="form-group">
+        <label asp-for="Amount"></label>
+    <div class="input-group mb-3">
+        <input asp-for="Amount" type="number" step="any" class="form-control"/>
+        <div class="input-group-append">
+            <span class="input-group-text">@Model.ViewCrowdfundViewModel.TargetCurrency.ToUpperInvariant()</span>
+        </div>
+    </div>
+        <span asp-validation-for="Amount" class="text-danger"></span>
+    </div>   
+    <input type="hidden" asp-for="RedirectToCheckout"/>
+   
+     
+        <button type="submit" class="btn btn-primary" >Contribute</button>
+           
+    }
+</form>

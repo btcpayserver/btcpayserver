@@ -236,6 +236,7 @@ addLoadEvent(function (ev) {
                 if(self.animation) {
                     fireworks();
                 }
+                amount = parseFloat(amount).noExponents();
                 if(onChain){
                     Vue.toasted.show('New payment of ' + amount+ " "+ cryptoCode + " " + (onChain? "On Chain": "LN "), {
                         iconPack: "fontawesome",

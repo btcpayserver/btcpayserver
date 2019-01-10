@@ -32,13 +32,13 @@
                      :aria-valuenow="srvModel.info.progressPercentage"
                      v-bind:style="{ width: srvModel.info.progressPercentage + '%' }"
                      aria-valuemin="0"
-                     v-b-tooltip :title="parseFloat(srvModel.info.progressPercentage).toFixed(2) + '% confirmed contributions'"
+                     v-b-tooltip :title="parseFloat(srvModel.info.progressPercentage).toFixed(2) + '% contributions'"
                      aria-valuemax="100">
                 </div>
                 <div class="progress-bar bg-warning" role="progressbar"
                      :aria-valuenow="srvModel.info.pendingProgressPercentage"
                      v-bind:style="{ width: srvModel.info.pendingProgressPercentage + '%' }"
-                     v-b-tooltip :title="parseFloat(srvModel.info.pendingProgressPercentage).toFixed(2) + '% pending contributions'"
+                     v-b-tooltip :title="parseFloat(srvModel.info.pendingProgressPercentage).toFixed(2) + '% contributions pending confirmation'"
                      aria-valuemin="0"
                      aria-valuemax="100">
                 </div>

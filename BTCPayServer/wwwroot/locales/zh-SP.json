@@ -43,5 +43,7 @@
   "BOLT 11 Invoice": "BOLT 11 订单",
   "Node Info": "节点信息(Node Info)",
   "txCount": "{{count}}笔交易",
-  "txCount_plural": "{{count}}笔交易"
+  "txCount_plural": "{{count}}笔交易",
+  "Pay with CoinSwitch": "Pay with CoinSwitch",
+  "Pay with Changelly": "Pay with Changelly"
 }

@@ -1801,7 +1801,7 @@ donation:
 
                 var cashCow = tester.ExplorerNode;
                 var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, cashCow.Network);
-                var firstPayment = invoice.CryptoInfo[0].TotalDue - Money.Satoshis(10);
+                var firstPayment = invoice.CryptoInfo[0].TotalDue - Money.Coins(0.001m);
                 cashCow.SendToAddress(invoiceAddress, firstPayment);
 
                 Eventually(() =>
@@ -1810,8 +1810,8 @@ donation:
                     var paidresult = Assert.IsType<ContentResult>(exportResultPaid);
                     Assert.Equal("application/csv", paidresult.ContentType);
                     Assert.Contains($",\"orderId\",\"{invoice.Id}\",", paidresult.Content);
-                    Assert.Contains($",\"OnChain\",\"BTC\",\"0.1000999\",\"0.0001\",\"5000.0\"", paidresult.Content);
-                    Assert.Contains($",\"USD\",\"0.00050000\",\"500.0\",\"\",\"Some ``, description\",\"new (paidPartial)\"", paidresult.Content);
+                    Assert.Contains($",\"OnChain\",\"BTC\",\"0.0991\",\"0.0001\",\"5000.0\"", paidresult.Content);
+                    Assert.Contains($",\"USD\",\"5.00\",\"500.0\",\"\",\"Some ``, description\",\"new (paidPartial)\"", paidresult.Content);
                 });
             }
         }

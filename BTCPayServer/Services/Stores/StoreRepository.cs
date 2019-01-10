@@ -162,6 +162,8 @@ namespace BTCPayServer.Services.Stores
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("name should not be empty", nameof(name));
+            if (ownerId == null)
+                throw new ArgumentNullException(nameof(ownerId));
             using (var ctx = _ContextFactory.CreateContext())
             {
                 StoreData store = new StoreData

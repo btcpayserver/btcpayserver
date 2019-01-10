@@ -1,50 +1,56 @@
+@using Microsoft.EntityFrameworkCore.Internal
 @model BTCPayServer.Models.AppViewModels.ContributeToCrowdfund
 
 <form method="post">
     @foreach (var item in Model.ViewCrowdfundViewModel.Perks)
     {
         <div class="card mb-4 perk expanded" id="@item.Id">
+            @if (Model.ViewCrowdfundViewModel.DisplayPerksRanking && Model.ViewCrowdfundViewModel.PerkCount.ContainsKey(item.Id))
+            {
+                <span  class="btn btn-sm rounded-circle px-0 btn-primary perk-badge">#@(Model.ViewCrowdfundViewModel.Perks.IndexOf(item)+1)</span>
+            }
+            @if (!string.IsNullOrEmpty(item.Image))
+            {
+                <img class="card-img-top" src="@item.Image"/>
+            }
+            <div class="card-body">
+                <div class="card-title d-flex justify-content-between">
+                    <label class="h5">
 
-        @if (!string.IsNullOrEmpty(item.Image))
-        {
-            <img   class="card-img-top" src="@item.Image" />
-        }
-        <div class="card-body">
-            <div class="card-title d-flex justify-content-between" >
-                <label class="h5">
-                    
-                    @if (Model.ViewCrowdfundViewModel.Started && !Model.ViewCrowdfundViewModel.Ended && (item.Price.Value > 0 || item.Custom))
-                    {
-
-                        <input type="radio" asp-for="ChoiceKey" value="@item.Id"/>
-                    }
-                    @(string.IsNullOrEmpty(item.Title) ? item.Id : item.Title)
-                </label>
-                <span class="text-muted">
-                    @if (item.Price.Value > 0)
-                    {
-                        @item.Price.Value
-                        if (item.Custom)
+                        @if (Model.ViewCrowdfundViewModel.Started && !Model.ViewCrowdfundViewModel.Ended && (item.Price.Value > 0 || item.Custom))
                         {
-                            Html.Raw("or more");
+
+                            <input type="radio" asp-for="ChoiceKey" value="@item.Id"/>
                         }
-                    }else if (item.Custom)
-                    {
-                        Html.Raw("Any amount");
-                    }
+                        @(string.IsNullOrEmpty(item.Title) ? item.Id : item.Title)
+                    </label>
+                    <span class="text-muted">
+                        @if (item.Price.Value > 0)
+                        {
+                            @item.Price.Value
+                            if (item.Custom)
+                            {
+                                Html.Raw("or more");
+                            }
+                        }
+                        else if (item.Custom)
+                        {
+                            Html.Raw("Any amount");
+                        }
 
-                </span>
-            </div>
-            <p  class="card-text overflow-hidden" >@Html.Raw(item.Description)</p>
+                    </span>
+                </div>
+                <p class="card-text overflow-hidden">@Html.Raw(item.Description)</p>
 
-        </div>
-        @if (Model.ViewCrowdfundViewModel.PerkCount.ContainsKey(item.Id))
-        {
-            <div class="card-footer text-right">
-                @Model.ViewCrowdfundViewModel.PerkCount[item.Id] Contributors
             </div>
-        }
-</div> 
+            @if (Model.ViewCrowdfundViewModel.PerkCount.ContainsKey(item.Id))
+            {
+                <div class="card-footer d-flex justify-content-between">
+                    <span></span>
+                    <span> @Model.ViewCrowdfundViewModel.PerkCount[item.Id] Contributors</span>
+                </div>
+            }
+        </div> 
     }
     @if (Model.ViewCrowdfundViewModel.Started && !Model.ViewCrowdfundViewModel.Ended)
     {

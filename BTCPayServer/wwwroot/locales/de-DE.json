@@ -43,5 +43,7 @@
   "BOLT 11 Invoice": "BOLT 11 Rechnung",
   "Node Info": "Netzwerkknoten Info",
   "txCount": "{{count}} transaktion",
-  "txCount_plural": "{{count}} transaktionen"
+  "txCount_plural": "{{count}} transaktionen",
+  "Pay with CoinSwitch": "Pay with CoinSwitch",
+  "Pay with Changelly": "Pay with Changelly"
 }

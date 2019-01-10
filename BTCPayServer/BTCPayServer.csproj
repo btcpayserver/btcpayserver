@@ -38,6 +38,7 @@
     <PackageReference Include="DigitalRuby.ExchangeSharp" Version="0.5.3" />
     <PackageReference Include="Hangfire" Version="1.6.20" />
     <PackageReference Include="Hangfire.MemoryStorage" Version="1.5.2" />
+    <PackageReference Include="HtmlSanitizer" Version="4.0.199" />
     <PackageReference Include="LedgerWallet" Version="2.0.0.3" />
     <PackageReference Include="Meziantou.AspNetCore.BundleTagHelpers" Version="2.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.1.4" />
@@ -126,6 +127,7 @@
 	  <Folder Include="Build\" />
 	  <Folder Include="wwwroot\vendor\clipboard.js\" />
 	  <Folder Include="wwwroot\vendor\highlightjs\" />
+	  <Folder Include="wwwroot\vendor\summernote" />
 	</ItemGroup>
 
 	<ItemGroup>

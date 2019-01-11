@@ -344,6 +344,7 @@ namespace BTCPayServer.Services.Invoices
             InvoiceResponse dto = new InvoiceResponse
             {
                 Id = Id,
+                StoreId = StoreId,
                 OrderId = OrderId,
                 PosData = PosData,
                 CurrentTime = DateTimeOffset.UtcNow,

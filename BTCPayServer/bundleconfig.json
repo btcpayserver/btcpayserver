@@ -53,6 +53,7 @@
             "wwwroot/checkout/**/*.js"
         ]
     },
+    
     {
         "outputFileName": "wwwroot/bundles/lightning-node-info-bundle.min.js",
         "inputFiles": [
@@ -70,6 +71,58 @@
             "wwwroot/vendor/bootstrap4/js/bootstrap.js",
             "wwwroot/cart/js/cart.js",
             "wwwroot/cart/js/cart.jquery.js"
+        ]
+    },
+
+    {
+        "outputFileName": "wwwroot/bundles/crowdfund-bundle-1.min.js",
+        "inputFiles": [
+            "wwwroot/vendor/vuejs/vue.min.js",
+            "wwwroot/vendor/babel-polyfill/polyfill.min.js",
+            "wwwroot/vendor/vue-toasted/vue-toasted.min.js",
+            "wwwroot/vendor/bootstrap-vue/bootstrap-vue.js",
+            "wwwroot/vendor/signalr/signalr.js",
+            "wwwroot/vendor/animejs/anime.min.js",
+            "wwwroot/modal/btcpay.js",
+            "wwwroot/crowdfund/**/*.js"
+        ]
+    },
+    
+    {
+        "outputFileName": "wwwroot/bundles/crowdfund-bundle-2.min.js",
+        "inputFiles": [
+            "wwwroot/vendor/moment/moment.js"
+        ],
+        "minify": {
+            "enabled": false
+        }
+    },
+    {
+        "outputFileName": "wwwroot/bundles/crowdfund-admin-bundle.min.js",
+        "inputFiles": [
+            "wwwroot/vendor/highlightjs/highlight.min.js",
+            "wwwroot/vendor/summernote/summernote-bs4.js",
+            "wwwroot/vendor/flatpickr/flatpickr.js",
+            "wwwroot/crowdfund-admin/**/*.js",
+            "wwwroot/products/js/products.js",
+            "wwwroot/products/js/products.jquery.js"
+        ]
+    },
+    {
+        "outputFileName": "wwwroot/bundles/crowdfund-admin-bundle.min.css",
+        "inputFiles": [
+            "wwwroot/vendor/highlightjs/default.min.css",
+            "wwwroot/vendor/summernote/summernote-bs4.css",
+            "wwwroot/vendor/flatpickr/flatpickr.min.css",
+            "wwwroot/crowdfund-admin/**/*.js"
+        ]
+    },
+    {
+        "outputFileName": "wwwroot/bundles/crowdfund-bundle.min.css",
+        "inputFiles": [
+            "wwwroot/vendor/font-awesome/css/font-awesome.min.css",
+            "wwwroot/vendor/bootstrap-vue/bootstrap-vue.css",
+            "wwwroot/crowdfund/**/*.css"
         ]
     }
 ]

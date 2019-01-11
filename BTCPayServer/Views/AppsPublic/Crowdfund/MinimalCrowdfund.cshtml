@@ -1,0 +1,154 @@
+@using BTCPayServer.Models.AppViewModels
+@using Microsoft.CodeAnalysis.CSharp.Syntax
+@model  BTCPayServer.Models.AppViewModels.ViewCrowdfundViewModel
+
+
+<div class="container p-0">
+    <div class="row h-100 w-100 py-sm-0 py-md-4 mx-0">
+        <div class="card w-100 p-0 mx-0">
+            @if (!string.IsNullOrEmpty(Model.MainImageUrl))
+            {
+                <img class="card-img-top" src="@Model.MainImageUrl"/>
+            }
+            <div class="d-flex justify-content-between px-2">
+                <h1>
+                    @Model.Title
+                    @if (!Model.Started && Model.StartDate.HasValue)
+                    {
+                        <span class="h6 text-muted" >
+                            Starts @Model.StartDate.Value.Subtract(DateTime.Now.ToUniversalTime())
+                        </span>
+                    }
+                    else if (Model.Started && !Model.Ended && Model.EndDate.HasValue)
+                    {
+                        <span class="h6 text-muted" >
+                            Ends @Model.EndDate.Value.Subtract(DateTime.Now.ToUniversalTime())
+                        </span>
+                    }
+                    else if (Model.Started && !Model.Ended && !Model.EndDate.HasValue)
+                    {
+                        <span class="h6 text-muted" :title="startDate"  title="No set end date">
+                            Currently Active!
+                        </span>
+                    }
+
+                </h1>
+                @if (Model.TargetAmount.HasValue)
+                {
+                    <span class="mt-3">
+                        <span class="h5">@Model.TargetAmount @Model.TargetCurrency</span>
+                        @if (Model.ResetEveryAmount > 0 && Model.ResetEvery != nameof(CrowdfundResetEvery.Never))
+                        {
+                            <span> Dynamic</span>
+                        }
+                        @if (Model.EnforceTargetAmount)
+                        {
+                            <span >Hardcap Goal <span class="fa fa-question-circle" ></span></span>                           
+                        }
+                        else
+                        {
+                            <span >Softcap Goal <span class="fa fa-question-circle" ></span> </span>
+                        }
+                    </span>
+                }
+
+            </div>
+            
+            @if (Model.TargetAmount.HasValue)
+            {
+                <div class="progress w-100 rounded-0 " >
+                    <div class="progress-bar" role="progressbar"
+                         style="width:@(Model.Info.ProgressPercentage + "%")"
+                         aria-valuemax="100">
+                    </div>
+                    <div class="progress-bar bg-warning" role="progressbar"
+                         style="width:@(Model.Info.PendingProgressPercentage + "%")"
+                         aria-valuemin="0"
+                         aria-valuemax="100">
+                    </div>
+                </div>
+            }
+
+            <div class="card-body">
+
+
+                <div class="row py-2 text-center">
+                    <div class="col-sm border-right" id="raised-amount">
+                        <h5>@(Model.Info.CurrentAmount + Model.Info.CurrentPendingAmount) @Model.TargetCurrency </h5>
+                        <h5 class="text-muted">Raised</h5>
+                    </div>
+                    <div class="col-sm  border-right">
+                        <h5>@(Model.Info.PendingProgressPercentage.GetValueOrDefault(0) + Model.Info.ProgressPercentage.GetValueOrDefault(0))%</h5>
+                        <h5 class="text-muted">Of Goal</h5>
+                    </div>
+                    <div class="col-sm  text-right">
+                        <h5>
+                            @Model.Info.TotalContributors
+                        </h5>
+                        <h5 class="text-muted">Contributors</h5>
+                    </div>
+                    @if (Model.Started && !Model.Ended)
+                    {
+                        <div class="col-sm">
+                            <h5>
+                                @TimeZoneInfo.ConvertTimeFromUtc(Model.EndDate.Value, TimeZoneInfo.Local)
+
+                            </h5>
+                            <h5 class="text-muted">Ends</h5>
+                        </div>
+                    } else if (!Model.Started)
+                    {
+                        <div class="col-sm">
+                            <h5>
+                                @TimeZoneInfo.ConvertTimeFromUtc(Model.StartDate.Value, TimeZoneInfo.Local)
+                            </h5>
+                            <h5 class="text-muted">Starts</h5>
+                        </div>
+                    }else if (Model.Ended)
+                    {
+                    
+                        <div class="col-sm" id="inactive-campaign">
+                            <h5>
+                                Campaign
+                            </h5>
+                            <h5 >not active</h5>
+
+                        
+                        </div>
+                    }
+                </div>
+
+
+                <div class="card-title">
+
+                    <div class="row">
+                        <div class="col-sm-12 ">
+                            <h2 class="text-muted" >@Model.Tagline</h2>
+                        </div>
+                    </div>
+                </div>
+               
+                    <hr/>
+                    <div class="row">
+                        <div class="col-md-8 col-sm-12">
+                            <div class="card-text overflow-hidden">@Html.Raw(Model.Description)</div>
+                        </div>
+                        <div class="col-md-4 col-sm-12">
+                            <partial 
+                                name="Crowdfund/ContributeForm"
+                                model="@(new ContributeToCrowdfund()
+                                              {
+                                                  ViewCrowdfundViewModel = Model,
+                                                  RedirectToCheckout = true,
+                                                  
+                                              })"></partial>
+                        </div>
+                    </div>
+            </div>
+            <div class="card-footer text-muted d-flex" >
+
+                <div class="align-self-end pr-4">Updated @Model.Info.LastUpdated</div>
+            </div>
+        </div>
+    </div>
+</div>

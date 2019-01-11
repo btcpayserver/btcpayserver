@@ -29,7 +29,7 @@ Products.prototype.loadFromTemplate = function() {
             }
 
             if (productProperty.indexOf('price:') !== -1) {
-                price = parseFloat(productProperty.replace('price:', '').trim());
+                price = parseFloat(productProperty.replace('price:', '').trim()).noExponents();
             }
             if (productProperty.indexOf('title:') !== -1) {
                 title = productProperty.replace('title:', '').trim();
@@ -68,13 +68,13 @@ Products.prototype.saveTemplate = function() {
         var product = this.products[key],
             id = product.id,
             title = product.title,
-            price = product.price,
+            price = product.price? product.price : 0,
             image = product.image
             description = product.description,
             custom = product.custom;
 
         template += id + '\n' +
-        '  price: ' + price + '\n' +
+        '  price: ' + parseFloat(price).noExponents() + '\n' +
         '  title: ' + title + '\n';
 
         if (description) {
@@ -158,7 +158,7 @@ Products.prototype.itemContent = function(index) {
     var template = this.template($('#template-product-content'), {
         'id': product != null ? this.escape(product.id) : '',
         'index': isNaN(index) ? '' : this.escape(index),
-        'price': product != null ? this.escape(product.price) : '',
+        'price': product != null ? parseFloat(this.escape(product.price)).noExponents() : '',
         'title': product != null ? this.escape(product.title) : '',
         'description': product != null ? this.escape(product.description) : '',
         'image': product != null ? this.escape(product.image) : '',
@@ -184,3 +184,21 @@ Products.prototype.escape = function(input) {
         .replace(/>/g, '&gt;')
     ;
 }
+
+Number.prototype.noExponents= function(){
+    var data= String(this).split(/[eE]/);
+    if(data.length== 1) return data[0];
+
+    var  z= '', sign= this<0? '-':'',
+        str= data[0].replace('.', ''),
+        mag= Number(data[1])+ 1;
+
+    if(mag<0){
+        z= sign + '0.';
+        while(mag++) z += '0';
+        return z + str.replace(/^\-/,'');
+    }
+    mag -= str.length;
+    while(mag--) z += '0';
+    return str + z;
+};

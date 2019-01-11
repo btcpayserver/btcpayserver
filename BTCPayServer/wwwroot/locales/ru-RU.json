@@ -43,5 +43,7 @@
   "BOLT 11 Invoice": "счет BOLT 11",
   "Node Info": "Информация об устройстве",
   "txCount": "{{count}} Сделка",
-  "txCount_plural": "{{count}} операции"
+  "txCount_plural": "{{count}} операции",
+  "Pay with CoinSwitch": "Pay with CoinSwitch",
+  "Pay with Changelly": "Pay with Changelly"
 }

@@ -28,6 +28,10 @@ using Microsoft.IdentityModel.Tokens;
 using NETCore.Encrypt.Extensions.Internal;
 using OpenIddict.Abstractions;
 using OpenIddict.EntityFrameworkCore.Models;
+using System.Net;
+using BTCPayServer.Hubs;
+using Meziantou.AspNetCore.BundleTagHelpers;
+using BTCPayServer.Security;
 
 namespace BTCPayServer.Hosting
 {
@@ -124,6 +128,7 @@ namespace BTCPayServer.Hosting
                 });
 
             services.AddBTCPayServer(Configuration);
+            services.AddSignalR();
             services.AddMvc(o =>
             {
                 o.Filters.Add(new XFrameOptionsAttribute("DENY"));
@@ -249,6 +254,10 @@ namespace BTCPayServer.Hosting
             {
                 AppPath = options.GetRootUri(),
                 Authorization = new[] { new NeedRole(Roles.ServerAdmin) }
+            });
+            app.UseSignalR(route =>
+            {
+                route.MapHub<CrowdfundHub>("/apps/crowdfund/hub");
             });
             app.UseWebSockets();
             app.UseStatusCodePages();

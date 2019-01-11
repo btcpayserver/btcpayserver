@@ -43,5 +43,7 @@
   "BOLT 11 Invoice": "Fatura BOLT 11",
   "Node Info": "Informação de nó",
   "txCount": "{{count}} transação",
-  "txCount_plural": "{{count}} transações"
+  "txCount_plural": "{{count}} transações",
+  "Pay with CoinSwitch": "Pay with CoinSwitch",
+  "Pay with Changelly": "Pay with Changelly"
 }

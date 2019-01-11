@@ -52,4 +52,5 @@ canvas#fireworks {
     left: -15px;
     top: -15px;
     padding-top: 5px;
+    z-index: 1
 }

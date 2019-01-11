@@ -4,7 +4,7 @@
             <img class="card-img-top" :src="srvModel.mainImageUrl" v-if="srvModel.mainImageUrl">
             <div class="d-flex justify-content-between px-2">
                 <h1>
-                    {{srvModel.title}}
+                    {{srvModel.title}} {{loading}}
                     <span class="h6 text-muted" v-if="!started && srvModel.startDate" v-b-tooltip :title="startDate">
                         Starts {{startDateRelativeTime}}
                     </span>
@@ -157,6 +157,7 @@
                                     <contribute :target-currency="srvModel.targetCurrency"
                                                 :display-perks-ranking="srvModel.displayPerksRanking"
                                                 :active="active"
+                                                :loading="loading"
                                                 :in-modal="false"
                                                 :perks="perks">
     
@@ -178,6 +179,7 @@
                         </div>
                         <div class="col-md-4 col-sm-12">
                             <contribute :target-currency="srvModel.targetCurrency"
+                                        :loading="loading"
                                         :display-perks-ranking="srvModel.displayPerksRanking"
                                         :active="active"
                                         :in-modal="false"
@@ -207,11 +209,11 @@
         </div>
     </div>
     <b-modal title="Contribute" v-model="contributeModalOpen" size="lg" ok-only="true" ok-variant="secondary" ok-title="Close" ref="modalContribute">
-
         <contribute v-if="contributeModalOpen"
                     :target-currency="srvModel.targetCurrency"
                     :active="active"
                     :perks="srvModel.perks"
+                    :loading="loading"
                     :in-modal="true">
         </contribute>
     </b-modal>
@@ -220,10 +222,19 @@
 
 <script type="text/x-template" id="perks-template">
 <div>
-    <perk v-if="!perks || perks.length ===0" :perk="{title: 'Donate Custom Amount', price: { value: null}, custom: true}" :target-currency="targetCurrency" :active="active" 
+    <perk v-if="!perks || perks.length ===0" 
+        :perk="{title: 'Donate Custom Amount', price: { value: null}, custom: true}" 
+        :target-currency="targetCurrency" 
+        :active="active" 
+        :loading="loading"
         :in-modal="inModal">
     </perk>
-    <perk v-for="(perk, index) in perks" :perk="perk" :target-currency="targetCurrency" :active="active" :display-perks-ranking="displayPerksRanking" :index="index"
+    <perk v-for="(perk, index) in perks" :perk="perk" 
+        :target-currency="targetCurrency" 
+        :active="active" 
+        :display-perks-ranking="displayPerksRanking" 
+        :index="index"
+        :loading="loading"
         :in-modal="inModal">
     </perk>
 </div>
@@ -276,8 +287,12 @@
                     <span class='input-group-text'>{{targetCurrency}}</span>
                     <button 
                         class="btn btn-primary" 
-                        :disabled="!active" 
+                        v-bind:class="{ 'btn-disabled': loading}"
+                        :disabled="!active || loading" 
                         type="submit">
+                         <div v-if="loading"  class="spinner-grow spinner-grow-sm"   role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
                         Continue
                     </button>
                 </div>
@@ -297,6 +312,7 @@
     <h3 v-if="!inModal" class="mb-3">Contribute</h3>
     <perks 
         :perks="perks" 
+        :loading="loading"
         :in-modal="inModal"
         :display-perks-ranking="displayPerksRanking"
         :target-currency="targetCurrency" 

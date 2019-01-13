@@ -51,6 +51,7 @@ services:
       - lightning-charged
       - customer_lnd
       - merchant_lnd
+      - selenium
 
   devlnd: 
     image: btcpayserver/bitcoin:0.17.0
@@ -281,6 +282,13 @@ services:
       - "bitcoin_datadir:/deps/.bitcoin"
     links:
       - bitcoind
+
+  selenium:
+    image:  selenium/standalone-chrome
+    #environment:
+      #EXTRA_ARGS:
+        #headless=1
+        #window-size=1200x600
 
 volumes:
     bitcoin_datadir:

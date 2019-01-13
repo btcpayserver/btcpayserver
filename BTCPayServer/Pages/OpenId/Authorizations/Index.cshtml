@@ -2,6 +2,7 @@
 @using System.Collections.Immutable
 @using BTCPayServer.Authentication.OpenId.Models
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
 @using OpenIddict.Core
 @using PageModel = Microsoft.AspNetCore.Mvc.RazorPages.PageModel
 @model AuthorizationList
@@ -43,7 +44,7 @@
                     @foreach (var authorization in Model.Authorizations)
                     {
                         <tr>
-                            <td>@authorization.Subject</td>
+                            <td>@Model.UserSet[authorization.Subject]</td>
                             <td>@authorization.Status</td>
                             <td>@authorization.Type</td>
                             <td class="text-right">
@@ -83,6 +84,7 @@
         public string Id { get; set; }
 
         public ImmutableArray<BTCPayOpenIdAuthorization> Authorizations { get; internal set; }
+        public Dictionary< string, string> UserSet { get; internal set; }
         public BTCPayOpenIdClient Application { get; internal set; }
 
         public AuthorizationList(OpenIddictAuthorizationManager<BTCPayOpenIdAuthorization> authorizationManager,
@@ -102,6 +104,11 @@
                 return NotFound();
             }
             Authorizations = await _authorizationManager.FindByApplicationIdAsync(Id);
+            UserSet = await _userManager.Users
+                .Where(user => Authorizations.Any(authorization => authorization.Subject == user.Id))
+                .Distinct()
+                .ToDictionaryAsync(user => user.Id, user => user.UserName);
+            
             return Page();
         }
     }

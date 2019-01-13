@@ -2,6 +2,7 @@
 @using System.Collections.Immutable
 @using BTCPayServer.Authentication.OpenId.Models
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
 @using OpenIddict.Core
 @using PageModel = Microsoft.AspNetCore.Mvc.RazorPages.PageModel
 @model TokenList
@@ -45,11 +46,11 @@
                     @foreach (var token in Model.Tokens)
                     {
                         <tr>
-                            <td>@token.Subject</td>
+                            <td>@Model.UserSet[token.Subject]</td>
                             <td>@token.Status</td>
                             <td>@token.Type</td>
-                            <td>@token.CreationDate</td>
-                            <td>@token.ExpirationDate</td>
+                            <td>@token.CreationDate?.ToString("g")</td>
+                            <td>@token.ExpirationDate?.ToString("g")</td>
                             <td class="text-right">
                                 <a asp-page="./Delete" asp-route-id="@token.Id">Revoke</a>
                             </td>
@@ -91,6 +92,8 @@
         public ImmutableArray<BTCPayOpenIdToken> Tokens { get; private set; }
         public BTCPayOpenIdClient Application { get; private set; }
 
+        public Dictionary<string, string> UserSet { get; set; }
+        
         public TokenList(OpenIddictTokenManager<BTCPayOpenIdToken> tokenManager,
             UserManager<ApplicationUser> userManager,
             OpenIddictAuthorizationManager<BTCPayOpenIdAuthorization> authorizationManager,
@@ -117,10 +120,15 @@
             {
                 Tokens = await _tokenManager.FindByAuthorizationIdAsync(AuthorizationId);
             }
+            UserSet = await _userManager.Users
+                .Where(user => Tokens.Any(authorization => authorization.Subject == user.Id))
+                .Distinct()
+                .ToDictionaryAsync(user => user.Id, user => user.UserName);
 
             
             return Page();
         }
+
 
         private async Task<bool> PopulateApplication()
         {

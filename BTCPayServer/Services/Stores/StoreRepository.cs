@@ -94,6 +94,28 @@ namespace BTCPayServer.Services.Stores
             }
         }
 
+        public async Task<StoreData[]> GetAllStores()
+        {
+            using (var ctx = _ContextFactory.CreateContext())
+            {
+                //                return (await (from st in ctx.Stores
+                //                               from us in ctx.UserStore.Include(x => x.ApplicationUser).Where(x => st.Id == x.StoreDataId && x.ApplicationUserId == userId).DefaultIfEmpty()
+                //                               select new { Store = st, StoreUser = us }).ToArrayAsync())
+                //                             .Select(s =>
+                //                     {
+                //#pragma warning disable CS0612 // Type or member is obsolete
+                //                         s.Store.Role = s.StoreUser?.Role ?? Roles.ServerAdmin;
+                //                         s.Store.OwnerEmailAddress = s.StoreUser?.ApplicationUser?.Email;
+                //#pragma warning restore CS0612 // Type or member is obsolete
+                //                         return s.Store;
+                //                     }).ToArray();
+
+                return (await ctx.UserStore
+                    .Select(u => u.StoreData)
+                    .ToArrayAsync());
+            }
+        }
+
         public async Task<bool> AddStoreUser(string storeId, string userId, string role)
         {
             using (var ctx = _ContextFactory.CreateContext())

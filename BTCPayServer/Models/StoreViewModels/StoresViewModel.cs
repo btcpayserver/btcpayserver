@@ -13,6 +13,11 @@ namespace BTCPayServer.Models.StoreViewModels
             get; set;
         } = new List<StoreViewModel>();
 
+        public List<StoreViewModel> OtherStores
+        {
+            get; set;
+        } = new List<StoreViewModel>();
+
         public class StoreViewModel
         {
             public string Name
@@ -30,6 +35,11 @@ namespace BTCPayServer.Models.StoreViewModels
                 get; set;
             }
             public bool IsOwner
+            {
+                get;
+                set;
+            }
+            public string OwnerEmailAddress
             {
                 get;
                 set;

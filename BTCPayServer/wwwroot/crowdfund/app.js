@@ -50,20 +50,31 @@ addLoadEvent(function (ev) {
                     return;
                 }
                 
-                eventAggregator.$emit("contribute", {amount: this.amount, choiceKey: this.perk.id});
+                eventAggregator.$emit("contribute", {amount: parseFloat(this.amount), choiceKey: this.perk.id});
             },
             expand: function(){
                 if(this.canExpand){
                     this.expanded = true;
                 }
+            },
+            setAmount: function (amount) {
+                this.amount = (amount || 0).noExponents();
+                this.expanded = false;
             }
 
 
         },
-        mounted: function(){
-            this.amount = this.perk.price.value;
-
+        mounted: function () {
+            this.setAmount(this.perk.price.value);
+        },
+        watch: {
+            perk: function (newValue, oldValue) {
+                if (newValue.price.value != oldValue.price.value) {
+                    this.setAmount(newValue.price.value);
+                }
+            }
         }
+        
     });
     
     app = new Vue({

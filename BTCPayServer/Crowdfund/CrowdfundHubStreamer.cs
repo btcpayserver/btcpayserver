@@ -2,11 +2,11 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
+using BTCPayServer.Hubs;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Rating;
@@ -16,14 +16,11 @@ using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Primitives;
 using NBitcoin;
-using YamlDotNet.Core;
 
-namespace BTCPayServer.Hubs
+namespace BTCPayServer.Crowdfund
 {
-    public class 
-        CrowdfundHubStreamer
+    public class CrowdfundHubStreamer: IDisposable
     {
         public const string CrowdfundInvoiceOrderIdPrefix = "crowdfund-app_";
         private readonly EventAggregator _EventAggregator;
@@ -37,7 +34,9 @@ namespace BTCPayServer.Hubs
 
         private readonly ConcurrentDictionary<string,(string appId, bool useAllStoreInvoices,bool useInvoiceAmount)> _QuickAppInvoiceLookup = 
             new ConcurrentDictionary<string, (string appId, bool useAllStoreInvoices, bool useInvoiceAmount)>();
-        
+
+        private List<IEventAggregatorSubscription> _Subscriptions;
+
         public CrowdfundHubStreamer(EventAggregator eventAggregator, 
             IHubContext<CrowdfundHub> hubContext, 
             IMemoryCache memoryCache,
@@ -116,13 +115,15 @@ namespace BTCPayServer.Hubs
 
         private void SubscribeToEvents()
         {
-            
-            _EventAggregator.Subscribe<InvoiceEvent>(OnInvoiceEvent);
-            _EventAggregator.Subscribe<AppsController.CrowdfundAppUpdated>(updated =>
+            _Subscriptions = new List<IEventAggregatorSubscription>()
             {
-                UpdateLookup(updated.AppId, updated.StoreId, updated.Settings);
-                InvalidateCacheForApp(updated.AppId);
-            });
+                _EventAggregator.Subscribe<InvoiceEvent>(OnInvoiceEvent),
+                _EventAggregator.Subscribe<AppsController.CrowdfundAppUpdated>(updated =>
+                {
+                    UpdateLookup(updated.AppId, updated.StoreId, updated.Settings);
+                    InvalidateCacheForApp(updated.AppId);
+                })
+            };
         }
 
         private string GetCacheKey(string appId)
@@ -360,6 +361,11 @@ namespace BTCPayServer.Hubs
                     InvoiceState.ToString(InvoiceStatus.Complete)},
                 StartDate = startDate
             });
+        }
+
+        public void Dispose()
+        {
+            _Subscriptions.ForEach(subscription => subscription.Dispose());
         }
     }
 }

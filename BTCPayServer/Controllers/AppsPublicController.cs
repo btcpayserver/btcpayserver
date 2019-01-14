@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using BTCPayServer.Crowdfund;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Hubs;

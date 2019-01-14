@@ -229,7 +229,7 @@
         :loading="loading"
         :in-modal="inModal">
     </perk>
-    <perk v-for="(perk, index) in perks" :perk="perk" 
+    <perk v-for="(perk, index) in perks" :perk="perk" :key="perk.id" 
         :target-currency="targetCurrency" 
         :active="active" 
         :display-perks-ranking="displayPerksRanking" 

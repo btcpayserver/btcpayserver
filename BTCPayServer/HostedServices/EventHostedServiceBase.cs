@@ -60,7 +60,7 @@ namespace BTCPayServer.HostedServices
             _Subscriptions.Add(_EventAggregator.Subscribe<T>(e => _Events.Writer.TryWrite(e)));
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        public virtual Task StartAsync(CancellationToken cancellationToken)
         {
             _Subscriptions = new List<IEventAggregatorSubscription>();
             SubscibeToEvents();
@@ -70,7 +70,7 @@ namespace BTCPayServer.HostedServices
         }
         Task _ProcessingEvents = Task.CompletedTask;
 
-        public async Task StopAsync(CancellationToken cancellationToken)
+        public virtual async Task StopAsync(CancellationToken cancellationToken)
         {
             _Subscriptions?.ForEach(subscription => subscription.Dispose());
             _Cts?.Cancel();

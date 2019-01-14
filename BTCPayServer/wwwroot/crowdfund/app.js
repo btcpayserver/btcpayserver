@@ -203,10 +203,6 @@ addLoadEvent(function (ev) {
                 this.active = this.started && !this.ended;
                 setTimeout(this.updateComputed, 1000);
             },
-            submitModalContribute: function(e){
-                debugger;
-                this.$refs.modalContribute.onContributeFormSubmit(e);
-            },
             setLoading: function(val){
                 this.loading = val;
                 if(this.timeoutState){

@@ -104,7 +104,7 @@ namespace BTCPayServer.Services.Rates
             Providers.Add("hitbtc", new ExchangeSharpRateProvider("hitbtc", new ExchangeHitbtcAPI(), false));
 
             // Cryptopia is often not available
-            Providers.Add("cryptopia", new ExchangeSharpRateProvider("cryptopia", new ExchangeCryptopiaAPI(), false));
+            // Providers.Add("cryptopia", new ExchangeSharpRateProvider("cryptopia", new ExchangeCryptopiaAPI(), false));
 
             // Handmade providers
             Providers.Add(QuadrigacxRateProvider.QuadrigacxName, new QuadrigacxRateProvider());

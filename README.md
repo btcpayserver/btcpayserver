@@ -64,7 +64,7 @@ You can also read the [BTCPay Merchants Guide](https://www.reddit.com/r/Bitcoin/
 
 While the documentation advises to use docker-compose, you may want to build BTCPay yourself.
 
-First install .NET Core SDK v2.1.4 (with patch version >= 403) as specified by [Microsoft website](https://www.microsoft.com/net/download/dotnet-core/2.1).
+First install .NET Core SDK v2.1.6 as specified by [Microsoft website](https://www.microsoft.com/net/download/dotnet-core/2.1).
 
 On Powershell:
 ```

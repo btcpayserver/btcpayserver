@@ -1,41 +1,48 @@
 <div class="container p-0" id="app" v-cloak>
     <div class="row h-100 w-100 py-sm-0 py-md-4 mx-0">
         <div class="card w-100 p-0 mx-0">
-            <img class="card-img-top" :src="srvModel.mainImageUrl" v-if="srvModel.mainImageUrl">
-            <div class="d-flex justify-content-between px-2">
+            <img class="card-img-top" :src="srvModel.mainImageUrl" v-if="srvModel.mainImageUrl" id="crowdfund-main-image">
+            <div class="d-flex justify-content-between px-2" id="crowdfund-header-container">
                 <h1>
-                    {{srvModel.title}} {{loading}}
-                    <span class="h6 text-muted" v-if="!started && srvModel.startDate" v-b-tooltip :title="startDate">
+                    {{srvModel.title}} 
+                    <span class="h6 text-muted" v-if="!started && srvModel.startDate" v-b-tooltip :title="startDate" id="crowdfund-header-start-date">
                         Starts {{startDateRelativeTime}}
                     </span>
-                    <span class="h6 text-muted" v-else-if="started && !ended && srvModel.endDate" v-b-tooltip :title="endDate">
+                    <span class="h6 text-muted" v-else-if="started && !ended && srvModel.endDate" v-b-tooltip :title="endDate" id="crowdfund-header-end-date">
                         Ends {{endDateRelativeTime}}
                     </span>
-                    <span class="h6 text-muted" v-else-if="started && !ended && !srvModel.endDate" v-b-tooltip title="No set end date">
+                    <span class="h6 text-muted" v-else-if="started && !ended && !srvModel.endDate" v-b-tooltip title="No set end date" id="crowdfund-header-active">
                         Currently Active!
                     </span>
 
                 </h1>
 
-                <span v-if="srvModel.targetAmount" class="mt-3">
-                    <span class="h5">{{srvModel.targetAmount}} {{targetCurrency}}</span>
-                    <span v-if="srvModel.resetEvery !== 'Never'" v-b-tooltip 
+                <span v-if="srvModel.targetAmount" class="mt-3" id="crowdfund-header-target">
+                    <span class="h5" id="crowdfund-header-target-amount">{{srvModel.targetAmount}} {{targetCurrency}}</span>
+                    <span v-if="srvModel.resetEvery !== 'Never'" 
+                          id="crowdfund-header-target-dynamic"
+                          v-b-tooltip 
                           :title="'Goal resets every ' + srvModel.resetEveryAmount + ' ' + srvModel.resetEvery + ((srvModel.resetEveryAmount>1)?'s': '')"  >Dynamic </span>
-                    <span v-if="srvModel.enforceTargetAmount">Hardcap Goal <span class="fa fa-question-circle" v-b-tooltip title="No contributions allowed after the goal has been reached"></span></span>
-                    <span v-else>Softcap Goal <span class="fa fa-question-circle" v-b-tooltip title="Contributions allowed even after goal is reached"></span> </span>
+                    <span v-if="srvModel.enforceTargetAmount" 
+                          id="crowdfund-header-target-softcap">Hardcap Goal <span class="fa fa-question-circle" v-b-tooltip title="No contributions allowed after the goal has been reached"></span></span>
+                    <span v-else 
+                          id="crowdfund-header-target-hardcap">Softcap Goal <span class="fa fa-question-circle" v-b-tooltip title="Contributions allowed even after goal is reached"></span> </span>
                 </span>
 
 
             </div>
-            <div class="progress w-100 rounded-0 " v-if="srvModel.targetAmount">
+            <div class="progress w-100 rounded-0 " v-if="srvModel.targetAmount" 
+                 id="crowdfund-progress-bar">
                 <div class="progress-bar" role="progressbar"
                      :aria-valuenow="srvModel.info.progressPercentage"
                      v-bind:style="{ width: srvModel.info.progressPercentage + '%' }"
                      aria-valuemin="0"
+                     id="crowdfund-progress-bar-confirmed-bar"
                      v-b-tooltip :title="parseFloat(srvModel.info.progressPercentage).toFixed(2) + '% contributions'"
                      aria-valuemax="100">
                 </div>
                 <div class="progress-bar bg-warning" role="progressbar"
+                     id="crowdfund-progress-bar-pending-bar"
                      :aria-valuenow="srvModel.info.pendingProgressPercentage"
                      v-bind:style="{ width: srvModel.info.pendingProgressPercentage + '%' }"
                      v-b-tooltip :title="parseFloat(srvModel.info.pendingProgressPercentage).toFixed(2) + '% contributions pending confirmation'"
@@ -45,29 +52,27 @@
             </div>
            
             <div class="card-body">
-                
-
                 <div class="row py-2 text-center">
-                    <div class="col-sm border-right" id="raised-amount">
+                    <div class="col-sm border-right" id="crowdfund-body-raised-amount">
                         <h5>{{ raisedAmount }} {{targetCurrency}} </h5>
                         <h5 class="text-muted">Raised</h5>
                     </div>
-                    <div  class="col-sm  border-right" id="goal-raised">
+                    <div  class="col-sm  border-right" id="crowdfund-body-goal-raised">
                         <h5>{{ percentageRaisedAmount }}%</h5>
                         <h5 class="text-muted">Of Goal</h5>
                     </div>
-                    <div  class="col-sm  border-right">
+                    <div  class="col-sm  border-right" id="crowdfund-body-total-contributors">
                         <h5>
                             {{srvModel.info.totalContributors}}
                         </h5>
                         <h5 class="text-muted">Contributors</h5>
                     </div> 
-                    <div  class="col-sm" v-if="endDiff" id="campaign-dates-started">
+                    <div  class="col-sm" v-if="endDiff" id="crowdfund-body-campaign-dates-started">
                         <h5>
                             {{endDiff}}
                         </h5>
                         <h5 class="text-muted">Left</h5>
-                        <b-tooltip target="campaign-dates-started" >
+                        <b-tooltip target="crowdfund-body-campaign-dates-started" >
                             <ul class="p-0">
                                 <li v-if="startDate" class="list-unstyled">
                                     {{started? "Started" : "Starts"}} {{startDate}}
@@ -78,13 +83,13 @@
                             </ul>
                         </b-tooltip>
                     </div>
-                    <div  class="col-sm" v-if="startDiff" id="campaign-dates-not-started">
+                    <div  class="col-sm" v-if="startDiff" id="crowdfund-body-campaign-dates-not-started">
                         <h5>
                             {{startDiff}}
                         </h5>
                         <h5 class="text-muted">Left to start</h5>
                         
-                        <b-tooltip target="campaign-dates-ended" >
+                        <b-tooltip target="crowdfund-body-campaign-dates-not-started" >
                             <ul class="p-0">
                                 <li v-if="startDate" class="list-unstyled">
                                     {{started? "Started" : "Starts"}} {{startDate}}
@@ -95,13 +100,13 @@
                             </ul>
                         </b-tooltip>
                     </div>
-                    <div  class="col-sm" v-if="ended" id="campaign-dates-ended">
+                    <div  class="col-sm" v-if="ended" id="crowdfund-body-campaign-dates-not-active">
                         <h5>
                             Campaign
                         </h5>
                         <h5 >not active</h5>
                         
-                        <b-tooltip target="campaign-dates-not-started" >
+                        <b-tooltip target="crowdfund-body-campaign-dates-not-active" >
                             <ul class="p-0">
                                 <li v-if="startDate" class="list-unstyled">
                                     {{started? "Started" : "Starts"}} {{startDate}}
@@ -111,14 +116,10 @@
                                 </li>
                             </ul>
                         </b-tooltip>
-                        
-                       
-                        
-                     
                     </div>
                 </div>
                 
-                <b-tooltip target="raised-amount" v-if="paymentStats && paymentStats.length > 0">
+                <b-tooltip target="crowdfund-body-raised-amount" v-if="paymentStats && paymentStats.length > 0">
                     <ul class="p-0 text-uppercase">
                         <li v-for="stat of paymentStats" class="list-unstyled">
                             
@@ -126,23 +127,19 @@
                         </li>
                     </ul>
                 </b-tooltip>      
-                <b-tooltip target="goal-raised"  v-if="srvModel.resetEvery !== 'Never'">
+                <b-tooltip target="crowdfund-body-goal-raised"  v-if="srvModel.resetEvery !== 'Never'">
                     Goal resets every {{srvModel.resetEveryAmount}} {{srvModel.resetEvery}} {{srvModel.resetEveryAmount>1?'s': ''}}
                 </b-tooltip>
                 
                
-                <div class="card-title">
+                <div class="card-title" id="crowdfund-body-header">
 
                     <div class="row">
-                        <div class="col-sm-12 col-md-8 col-lg-9">
-
-
-                            <h2 class="text-muted" v-if="srvModel.tagline">{{srvModel.tagline}}</h2>
+                        <div class="col-sm-12 col-md-8 col-lg-9" id="crowdfund-body-header-tagline-container">
+                            <h2 class="text-muted" v-if="srvModel.tagline" id="crowdfund-body-header-tagline">{{srvModel.tagline}}</h2>
                         </div>
-                        <div class="col-sm-12 col-md-4 col-lg-3">
-                            <button v-if="active" class="btn btn-lg btn-primary w-100 font-weight-bold" v-on:click="contributeModalOpen = true">Contribute</button>
-
-
+                        <div class="col-sm-12 col-md-4 col-lg-3" id="crowdfund-body-header-cta-container">
+                            <button v-if="active" id="crowdfund-body-header-cta" class="btn btn-lg btn-primary w-100 font-weight-bold" v-on:click="contributeModalOpen = true">Contribute</button>
                         </div>
                     </div>
                 </div>
@@ -150,10 +147,10 @@
                     <b-tabs>
                         <b-tab title="Details"active>
                             <div class="row mt-2">
-                                <div class="col-md-8 col-sm-12">
-                                    <div class="card-text overflow-hidden" v-html="srvModel.description"></div>
+                                <div class="col-md-8 col-sm-12" id="crowdfund-body-description-container">
+                                    <div class="card-text overflow-hidden" v-html="srvModel.description" id="crowdfund-body-description"></div>
                                 </div>
-                                <div class="col-md-4 col-sm-12">
+                                <div class="col-md-4 col-sm-12" id="crowdfund-body-contribution-container">
                                     <contribute :target-currency="srvModel.targetCurrency"
                                                 :display-perks-ranking="srvModel.displayPerksRanking"
                                                 :active="active"
@@ -174,10 +171,10 @@
                 <template v-else>
                     <hr/>
                     <div class="row mt-2">
-                        <div class="col-md-8 col-sm-12">
-                            <div class="card-text overflow-hidden" v-html="srvModel.description"></div>
+                        <div class="col-md-8 col-sm-12" id="crowdfund-body-description-container">
+                            <div class="card-text overflow-hidden" v-html="srvModel.description" id="crowdfund-body-description"></div>
                         </div>
-                        <div class="col-md-4 col-sm-12">
+                        <div class="col-md-4 col-sm-12" id="crowdfund-body-contribution-container">
                             <contribute :target-currency="srvModel.targetCurrency"
                                         :loading="loading"
                                         :display-perks-ranking="srvModel.displayPerksRanking"
@@ -221,7 +218,7 @@
 </div>
 
 <script type="text/x-template" id="perks-template">
-<div>
+<div class="perks-container">
     <perk v-if="!perks || perks.length ===0" 
         :perk="{title: 'Donate Custom Amount', price: { value: null}, custom: true}" 
         :target-currency="targetCurrency" 

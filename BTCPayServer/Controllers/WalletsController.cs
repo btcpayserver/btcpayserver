@@ -146,7 +146,7 @@ namespace BTCPayServer.Controllers
         [Route("{walletId}/send")]
         public async Task<IActionResult> WalletSend(
             [ModelBinder(typeof(WalletIdModelBinder))]
-            WalletId walletId, string defaultDestination = null, string defaultAmount = null)
+            WalletId walletId, string defaultDestination = null, string defaultAmount = null, bool advancedMode = false)
         {
             if (walletId?.StoreId == null)
                 return NotFound();
@@ -195,6 +195,7 @@ namespace BTCPayServer.Controllers
                 }
                 catch (Exception ex) { model.RateError = ex.Message; }
             }
+            model.AdvancedMode = advancedMode;
             return View(model);
         }
 
@@ -202,7 +203,7 @@ namespace BTCPayServer.Controllers
         [Route("{walletId}/send")]
         public async Task<IActionResult> WalletSend(
             [ModelBinder(typeof(WalletIdModelBinder))]
-            WalletId walletId, WalletSendModel vm)
+            WalletId walletId, WalletSendModel vm, string command = null)
         {
             if (walletId?.StoreId == null)
                 return NotFound();
@@ -212,6 +213,14 @@ namespace BTCPayServer.Controllers
             var network = this.NetworkProvider.GetNetwork(walletId?.CryptoCode);
             if (network == null)
                 return NotFound();
+
+            if (command == "noob" || command == "expert")
+            {
+                ModelState.Clear();
+                vm.AdvancedMode = command == "expert";
+                return View(vm);
+            }
+
             var destination = ParseDestination(vm.Destination, network.NBitcoinNetwork);
             if (destination == null)
                 ModelState.AddModelError(nameof(vm.Destination), "Invalid address");
@@ -231,7 +240,8 @@ namespace BTCPayServer.Controllers
                 Destination = vm.Destination,
                 Amount = vm.Amount.Value,
                 SubstractFees = vm.SubstractFees,
-                FeeSatoshiPerByte = vm.FeeSatoshiPerByte
+                FeeSatoshiPerByte = vm.FeeSatoshiPerByte,
+                NoChange = vm.NoChange
             });
         }
 
@@ -403,6 +413,7 @@ namespace BTCPayServer.Controllers
             // getxpub
             int account = 0,
             // sendtoaddress
+            bool noChange = false,
             string destination = null, string amount = null, string feeRate = null, string substractFees = null
             )
         {
@@ -436,7 +447,7 @@ namespace BTCPayServer.Controllers
                     {
                         try
                         {
-                            destinationAddress = BitcoinAddress.Create(destination, network.NBitcoinNetwork);
+                            destinationAddress = BitcoinAddress.Create(destination.Trim(), network.NBitcoinNetwork);
                         }
                         catch { }
                         if (destinationAddress == null)
@@ -487,23 +498,15 @@ namespace BTCPayServer.Controllers
                         var strategy = GetDirectDerivationStrategy(derivationScheme);
                         var wallet = _walletProvider.GetWallet(network);
                         var change = wallet.GetChangeAddressAsync(derivationScheme);
-
-                        var unspentCoins = await wallet.GetUnspentCoins(derivationScheme);
-                        var changeAddress = await change;
-                        var send = new[] { (
-                        destination: destinationAddress as IDestination,
-                        amount: amountBTC,
-                        substractFees: subsctractFeesValue) };
-
-                        foreach (var element in send)
+                        var keypaths = new Dictionary<Script, KeyPath>();
+                        List<Coin> availableCoins = new List<Coin>();
+                        foreach (var c in await wallet.GetUnspentCoins(derivationScheme))
                         {
-                            if (element.destination == null)
-                                throw new ArgumentNullException(nameof(element.destination));
-                            if (element.amount == null)
-                                throw new ArgumentNullException(nameof(element.amount));
-                            if (element.amount <= Money.Zero)
-                                throw new ArgumentOutOfRangeException(nameof(element.amount), "The amount should be above zero");
+                            keypaths.TryAdd(c.Coin.ScriptPubKey, c.KeyPath);
+                            availableCoins.Add(c.Coin);
                         }
+
+                        var changeAddress = await change;
 
                         var storeBlob = storeData.GetStoreBlob();
                         var paymentId = new Payments.PaymentMethodId(cryptoCode, Payments.PaymentTypes.BTCLike);
@@ -520,10 +523,25 @@ namespace BTCPayServer.Controllers
                             storeData.SetStoreBlob(storeBlob);
                             await Repository.UpdateStore(storeData);
                         }
+retry:
+                        var send = new[] { (
+                        destination: destinationAddress as IDestination,
+                        amount: amountBTC,
+                        substractFees: subsctractFeesValue) };
+
+                        foreach (var element in send)
+                        {
+                            if (element.destination == null)
+                                throw new ArgumentNullException(nameof(element.destination));
+                            if (element.amount == null)
+                                throw new ArgumentNullException(nameof(element.amount));
+                            if (element.amount <= Money.Zero)
+                                throw new ArgumentOutOfRangeException(nameof(element.amount), "The amount should be above zero");
+                        }
 
                         TransactionBuilder builder = network.NBitcoinNetwork.CreateTransactionBuilder();
                         builder.StandardTransactionPolicy.MinRelayTxFee = summary.Status.BitcoinStatus.MinRelayTxFee;
-                        builder.AddCoins(unspentCoins.Select(c => c.Coin).ToArray());
+                        builder.AddCoins(availableCoins);
 
                         foreach (var element in send)
                         {
@@ -531,6 +549,7 @@ namespace BTCPayServer.Controllers
                             if (element.substractFees)
                                 builder.SubtractFees();
                         }
+
                         builder.SetChange(changeAddress.Item1);
 
                         if (network.MinFee == null)
@@ -547,13 +566,15 @@ namespace BTCPayServer.Controllers
                         }
                         var unsigned = builder.BuildTransaction(false);
 
-                        var keypaths = new Dictionary<Script, KeyPath>();
-                        foreach (var c in unspentCoins)
+                        var hasChange = unsigned.Outputs.Any(o => o.ScriptPubKey == changeAddress.Item1.ScriptPubKey);
+                        if (noChange && hasChange)
                         {
-                            keypaths.TryAdd(c.Coin.ScriptPubKey, c.KeyPath);
+                            availableCoins = builder.FindSpentCoins(unsigned).Cast<Coin>().ToList();
+                            amountBTC = builder.FindSpentCoins(unsigned).Select(c => c.TxOut.Value).Sum();
+                            subsctractFeesValue = true;
+                            goto retry;
                         }
 
-                        var hasChange = unsigned.Outputs.Count == 2;
                         var usedCoins = builder.FindSpentCoins(unsigned);
 
                         Dictionary<uint256, Transaction> parentTransactions = new Dictionary<uint256, Transaction>();

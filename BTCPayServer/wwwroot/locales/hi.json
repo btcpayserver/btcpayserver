@@ -43,5 +43,7 @@
   "BOLT 11 Invoice": "BOLT 11 चालान",
   "Node Info": "नोड जानकारी",
   "txCount": "लेनदेन",
-  "txCount_plural": "लेनदेनों"
+  "txCount_plural": "लेनदेनों",
+  "Pay with CoinSwitch": "Pay with CoinSwitch",
+  "Pay with Changelly": "Pay with Changelly"
 }

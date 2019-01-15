@@ -38,6 +38,8 @@ using BTCPayServer.Logging;
 using BTCPayServer.HostedServices;
 using Meziantou.AspNetCore.BundleTagHelpers;
 using System.Security.Claims;
+using BTCPayServer.Crowdfund;
+using BTCPayServer.Hubs;
 using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Security;
@@ -74,6 +76,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<TokenRepository>();
             services.TryAddSingleton<EventAggregator>();
             services.TryAddSingleton<CoinAverageSettings>();
+            services.TryAddSingleton<CrowdfundHubStreamer>();
             services.TryAddSingleton<ApplicationDbContextFactory>(o => 
             {
                 var opts = o.GetRequiredService<BTCPayServerOptions>();
@@ -158,6 +161,7 @@ namespace BTCPayServer.Hosting
             services.TryAddScoped<IHttpContextAccessor, HttpContextAccessor>();
             services.AddTransient<AccessTokenController>();
             services.AddTransient<InvoiceController>();
+            services.AddTransient<AppsPublicController>();
             // Add application services.
             services.AddTransient<IEmailSender, EmailSender>();
             // bundling

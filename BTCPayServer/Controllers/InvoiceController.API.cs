@@ -66,7 +66,7 @@ namespace BTCPayServer.Controllers
         {
             if (dateEnd != null)
                 dateEnd = dateEnd.Value + TimeSpan.FromDays(1); //Should include the end day
-            
+
             var query = new InvoiceQuery()
             {
                 Count = limit,

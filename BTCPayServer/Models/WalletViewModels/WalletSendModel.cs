@@ -28,6 +28,10 @@ namespace BTCPayServer.Models.WalletViewModels
         [Display(Name = "Fee rate (satoshi per byte)")]
         [Required]
         public int FeeSatoshiPerByte { get; set; }
+
+        [Display(Name = "Make sure no change UTXO is created")]
+        public bool NoChange { get; set; }
+        public bool AdvancedMode { get; set; }
         public decimal? Rate { get; set; }
         public int Divisibility { get; set; }
         public string Fiat { get; set; }

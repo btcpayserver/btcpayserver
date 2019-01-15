@@ -1,0 +1,244 @@
+﻿@using BTCPayServer.Crowdfund
+@using BTCPayServer.Hubs
+@addTagHelper *, Meziantou.AspNetCore.BundleTagHelpers
+@model UpdateCrowdfundViewModel
+@{
+    ViewData["Title"] = "Update Crowdfund";
+}
+<section>
+    <div class="modal" id="product-modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Contribution Perks Management</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="js-product-save btn btn-primary">Save Changes</button>
+            </div>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                <h2 class="section-heading">@ViewData["Title"]</h2>
+                <hr class="primary">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                <partial name="_StatusMessage" for="@TempData["TempDataProperty-StatusMessage"]" />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <form method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <div class="form-group">
+                        <label asp-for="Title" class="control-label"></label>*
+                        <input asp-for="Title" class="form-control" />
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div> 
+                    
+                    <div class="form-group">
+                        <label asp-for="Tagline" class="control-label"></label>
+                        <input asp-for="Tagline" class="form-control" />
+                        <span asp-validation-for="Tagline" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Description" class="control-label"></label>
+                        <textarea asp-for="Description" rows="20" cols="40" class="form-control richtext"></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="TargetCurrency" class="control-label"></label>
+                        <input asp-for="TargetCurrency" class="form-control" />
+                        <span asp-validation-for="TargetCurrency" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="TargetAmount" class="control-label"></label>
+                        <input asp-for="TargetAmount" class="form-control" />
+                        <span asp-validation-for="TargetAmount" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="StartDate" class="control-label"></label>
+                        <input asp-for="StartDate" class="form-control datetime " />
+                        <span asp-validation-for="StartDate" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="ResetEvery" class="control-label"></label>
+                        <div class="input-group">
+                            
+                            <input type="number" asp-for="ResetEveryAmount" placeholder="Amount" class="form-control">
+                            <select class="custom-select" asp-for="ResetEvery">
+                                @foreach (var opt in Model.ResetEveryValues)
+                                {
+                                    <option value="@opt">@opt</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label asp-for="EndDate" class="control-label"></label>
+                        <input asp-for="EndDate" class="form-control datetime" />
+                        <span asp-validation-for="EndDate" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label">Contribution Perks</label>
+                        <div class="mb-3">
+                            <a class="js-product-add btn btn-secondary" href="#" data-toggle="modal" data-target="#product-modal"><i class="fa fa-plus fa-fw"></i> Add Perk</a>
+                        </div>
+                        <div class="js-products bg-light row p-3">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="PerksTemplate" class="control-label"></label>
+                        <textarea asp-for="PerksTemplate" rows="10" cols="40" class="js-product-template form-control"></textarea>
+                        <span asp-validation-for="PerksTemplate" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="CustomCSSLink" class="control-label"></label>
+                        <a href="https://docs.btcpayserver.org/development/theme#bootstrap-themes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                        <input asp-for="CustomCSSLink" class="form-control" />
+                        <span asp-validation-for="CustomCSSLink" class="text-danger"></span>
+                    </div>                    
+                    <div class="form-group">
+                        <label asp-for="MainImageUrl" class="control-label"></label>
+                        <input asp-for="MainImageUrl" class="form-control" />
+                        <span asp-validation-for="MainImageUrl" class="text-danger"></span>
+                    </div>  
+                    <div class="form-group">
+                        <label asp-for="EmbeddedCSS" class="control-label"></label>
+                      
+                        <textarea asp-for="EmbeddedCSS" rows="10" cols="40" class="form-control"></textarea>
+                        <span asp-validation-for="EmbeddedCSS" class="text-danger"></span>
+                    </div> 
+                    <div class="form-group">
+                        <label asp-for="NotificationUrl" class="control-label"></label>
+                        <input asp-for="NotificationUrl" class="form-control" />
+                        <span asp-validation-for="NotificationUrl" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Enabled"></label>
+                        <input asp-for="Enabled" type="checkbox" class="form-check"/>
+                        <span asp-validation-for="Enabled" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="SortPerksByPopularity"></label>
+                        <input asp-for="SortPerksByPopularity" type="checkbox" class="form-check"/>
+                        <span asp-validation-for="SortPerksByPopularity" class="text-danger"></span>
+                    </div> 
+                    <div class="form-group">
+                        <label asp-for="DisplayPerksRanking"></label>
+                        <input asp-for="DisplayPerksRanking" type="checkbox" class="form-check"/>
+                        <span asp-validation-for="DisplayPerksRanking" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="EnforceTargetAmount"></label>
+                        <input asp-for="EnforceTargetAmount" type="checkbox" class="form-check"/>
+                        <span asp-validation-for="EnforceTargetAmount" class="text-danger"></span>
+                    </div> 
+                    <div class="form-group">
+                        <label asp-for="UseInvoiceAmount"></label>
+                        <input asp-for="UseInvoiceAmount" type="checkbox" class="form-check"/>
+                        <span asp-validation-for="UseInvoiceAmount" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="UseAllStoreInvoices"></label>
+                        <input asp-for="UseAllStoreInvoices" type="checkbox" class="form-check"/>
+                        <span asp-validation-for="UseAllStoreInvoices" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="SoundsEnabled"></label>
+                        <input asp-for="SoundsEnabled" type="checkbox" class="form-check"/>
+                        <span asp-validation-for="SoundsEnabled" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="AnimationsEnabled"></label>
+                        <input asp-for="AnimationsEnabled" type="checkbox" class="form-check"/>
+                        <span asp-validation-for="AnimationsEnabled" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="DisqusEnabled"></label>
+                        <input asp-for="DisqusEnabled" type="checkbox" class="form-check"/>
+                        <span asp-validation-for="DisqusEnabled" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="DisqusShortname" class="control-label"></label>
+                        <input asp-for="DisqusShortname" class="form-control" />
+                        <span asp-validation-for="DisqusShortname" class="text-danger"></span>
+                    </div>
+                <div class="form-group">
+                    <input type="submit" class="btn btn-primary" value="Save Settings" />
+                    <a class="btn btn-secondary" target="_blank" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@($"orderid:{CrowdfundHubStreamer.CrowdfundInvoiceOrderIdPrefix}{Model.AppId}")">Invoices generated by app</a>
+                    <a class="btn btn-secondary" target="_blank" asp-action="ViewCrowdfund" asp-controller="AppsPublic" asp-route-appId="@Model.AppId">View App</a>
+                    <a class="btn btn-secondary" target="_blank" asp-action="ListApps">Back to the app list</a>
+                </div>
+               
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+
+    <bundle name="wwwroot/bundles/crowdfund-admin-bundle.min.js"></bundle>
+    <bundle name="wwwroot/bundles/crowdfund-admin-bundle.min.css"></bundle>
+
+    <script id="template-product-item" type="text/template">
+        <div class="col-sm-4 col-md-3 mb-3">
+            <div class="card">
+                {image}
+                <div class="card-body">
+                    <h6 class="card-title">{title}</h6>
+                    <a href="#" class="js-product-edit btn btn-primary" data-toggle="modal" data-target="#product-modal">Edit</a>
+                    <a href="#" class="js-product-remove btn btn-danger"><i class="fa fa-trash"></i></a>
+                </div>
+            </div>
+        </div>
+    </script>
+
+    <script id="template-product-content" type="text/template">
+    <div class="mb-3">
+        <input class="js-product-id" type="hidden" name="id" value="{id}">
+        <input class="js-product-index" type="hidden" name="index" value="{index}">
+        <div class="form-row">
+            <div class="col-sm-6">
+                <label>Title</label>*
+                <input type="text" class="js-product-title form-control mb-2" value="{title}" autofocus />
+            </div>
+            <div class="col-sm-3">
+                <label>Price</label>*
+                <input type="number" step="any" class="js-product-price form-control mb-2" value="{price}" />
+            </div>
+            <div class="col-sm-3">
+                <label>Custom price</label>
+                <select class="js-product-custom form-control">
+                    {custom}
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="col">
+                <label>Image</label>
+                <input type="text" class="js-product-image form-control mb-2" value="{image}" />
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="col">
+                <label>Description</label>
+                <textarea rows="3" cols="40" class="js-product-description form-control mb-2">{description}</textarea>
+            </div>
+        </div>
+    </div>
+    </script>
+}
+

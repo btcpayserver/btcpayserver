@@ -43,5 +43,7 @@
   "BOLT 11 Invoice": "BOLT 11 Račun",
   "Node Info": "Informacije Node-a",
   "txCount": "{{count}} transakcija",
-  "txCount_plural": "{{count}} transakcije"
+  "txCount_plural": "{{count}} transakcije",
+  "Pay with CoinSwitch": "Pay with CoinSwitch",
+  "Pay with Changelly": "Pay with Changelly"
 }

@@ -43,5 +43,7 @@
   "BOLT 11 Invoice": "Hóa đơn BOLT 11",
   "Node Info": "Nút Thông tin",
   "txCount": "{{count}} giao dịch",
-  "txCount_plural": "{{count}} các giao dịch"
+  "txCount_plural": "{{count}} các giao dịch",
+  "Pay with CoinSwitch": "Pay with CoinSwitch",
+  "Pay with Changelly": "Pay with Changelly"
 }

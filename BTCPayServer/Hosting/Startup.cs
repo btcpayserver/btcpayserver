@@ -38,6 +38,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Mvc.Cors.Internal;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using System.Net;
+using BTCPayServer.Hubs;
 using Meziantou.AspNetCore.BundleTagHelpers;
 using BTCPayServer.Security;
 
@@ -78,7 +79,7 @@ namespace BTCPayServer.Hosting
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
-
+            services.AddSignalR();
             services.AddBTCPayServer();
             services.AddMvc(o =>
             {
@@ -197,6 +198,10 @@ namespace BTCPayServer.Hosting
             {
                 AppPath = options.GetRootUri(),
                 Authorization = new[] { new NeedRole(Roles.ServerAdmin) }
+            });
+            app.UseSignalR(route =>
+            {
+                route.MapHub<CrowdfundHub>("/apps/crowdfund/hub");
             });
             app.UseWebSockets();
             app.UseStatusCodePages();

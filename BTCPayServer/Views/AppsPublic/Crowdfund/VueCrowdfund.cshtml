@@ -1,0 +1,319 @@
+<div class="container p-0" id="app" v-cloak>
+    <div class="row h-100 w-100 py-sm-0 py-md-4 mx-0">
+        <div class="card w-100 p-0 mx-0">
+            <img class="card-img-top" :src="srvModel.mainImageUrl" v-if="srvModel.mainImageUrl" id="crowdfund-main-image">
+            <div class="d-flex justify-content-between px-2" id="crowdfund-header-container">
+                <h1>
+                    {{srvModel.title}} 
+                    <span class="h6 text-muted" v-if="!started && srvModel.startDate" v-b-tooltip :title="startDate" id="crowdfund-header-start-date">
+                        Starts {{startDateRelativeTime}}
+                    </span>
+                    <span class="h6 text-muted" v-else-if="started && !ended && srvModel.endDate" v-b-tooltip :title="endDate" id="crowdfund-header-end-date">
+                        Ends {{endDateRelativeTime}}
+                    </span>
+                    <span class="h6 text-muted" v-else-if="started && !ended && !srvModel.endDate" v-b-tooltip title="No set end date" id="crowdfund-header-active">
+                        Currently Active!
+                    </span>
+
+                </h1>
+
+                <span v-if="srvModel.targetAmount" class="mt-3" id="crowdfund-header-target">
+                    <span class="h5" id="crowdfund-header-target-amount">{{srvModel.targetAmount}} {{targetCurrency}}</span>
+                    <span v-if="srvModel.resetEvery !== 'Never'" 
+                          id="crowdfund-header-target-dynamic"
+                          v-b-tooltip 
+                          :title="'Goal resets every ' + srvModel.resetEveryAmount + ' ' + srvModel.resetEvery + ((srvModel.resetEveryAmount>1)?'s': '')"  >Dynamic </span>
+                    <span v-if="srvModel.enforceTargetAmount" 
+                          id="crowdfund-header-target-softcap">Hardcap Goal <span class="fa fa-question-circle" v-b-tooltip title="No contributions allowed after the goal has been reached"></span></span>
+                    <span v-else 
+                          id="crowdfund-header-target-hardcap">Softcap Goal <span class="fa fa-question-circle" v-b-tooltip title="Contributions allowed even after goal is reached"></span> </span>
+                </span>
+
+
+            </div>
+            <div class="progress w-100 rounded-0 " v-if="srvModel.targetAmount" 
+                 id="crowdfund-progress-bar">
+                <div class="progress-bar" role="progressbar"
+                     :aria-valuenow="srvModel.info.progressPercentage"
+                     v-bind:style="{ width: srvModel.info.progressPercentage + '%' }"
+                     aria-valuemin="0"
+                     id="crowdfund-progress-bar-confirmed-bar"
+                     v-b-tooltip :title="parseFloat(srvModel.info.progressPercentage).toFixed(2) + '% contributions'"
+                     aria-valuemax="100">
+                </div>
+                <div class="progress-bar bg-warning" role="progressbar"
+                     id="crowdfund-progress-bar-pending-bar"
+                     :aria-valuenow="srvModel.info.pendingProgressPercentage"
+                     v-bind:style="{ width: srvModel.info.pendingProgressPercentage + '%' }"
+                     v-b-tooltip :title="parseFloat(srvModel.info.pendingProgressPercentage).toFixed(2) + '% contributions pending confirmation'"
+                     aria-valuemin="0"
+                     aria-valuemax="100">
+                </div>
+            </div>
+           
+            <div class="card-body">
+                <div class="row py-2 text-center">
+                    <div class="col-sm border-right" id="crowdfund-body-raised-amount">
+                        <h5>{{ raisedAmount }} {{targetCurrency}} </h5>
+                        <h5 class="text-muted">Raised</h5>
+                    </div>
+                    <div  class="col-sm  border-right" id="crowdfund-body-goal-raised">
+                        <h5>{{ percentageRaisedAmount }}%</h5>
+                        <h5 class="text-muted">Of Goal</h5>
+                    </div>
+                    <div  class="col-sm  border-right" id="crowdfund-body-total-contributors">
+                        <h5>
+                            {{srvModel.info.totalContributors}}
+                        </h5>
+                        <h5 class="text-muted">Contributors</h5>
+                    </div> 
+                    <div  class="col-sm" v-if="endDiff" id="crowdfund-body-campaign-dates-started">
+                        <h5>
+                            {{endDiff}}
+                        </h5>
+                        <h5 class="text-muted">Left</h5>
+                        <b-tooltip target="crowdfund-body-campaign-dates-started" >
+                            <ul class="p-0">
+                                <li v-if="startDate" class="list-unstyled">
+                                    {{started? "Started" : "Starts"}} {{startDate}}
+                                </li>
+                                <li v-if="endDate" class="list-unstyled">
+                                    {{ended? "Ended" : "Ends"}} {{endDate}}
+                                </li>
+                            </ul>
+                        </b-tooltip>
+                    </div>
+                    <div  class="col-sm" v-if="startDiff" id="crowdfund-body-campaign-dates-not-started">
+                        <h5>
+                            {{startDiff}}
+                        </h5>
+                        <h5 class="text-muted">Left to start</h5>
+                        
+                        <b-tooltip target="crowdfund-body-campaign-dates-not-started" >
+                            <ul class="p-0">
+                                <li v-if="startDate" class="list-unstyled">
+                                    {{started? "Started" : "Starts"}} {{startDate}}
+                                </li>
+                                <li v-if="endDate" class="list-unstyled">
+                                    {{ended? "Ended" : "Ends"}} {{endDate}}
+                                </li>
+                            </ul>
+                        </b-tooltip>
+                    </div>
+                    <div  class="col-sm" v-if="ended" id="crowdfund-body-campaign-dates-not-active">
+                        <h5>
+                            Campaign
+                        </h5>
+                        <h5 >not active</h5>
+                        
+                        <b-tooltip target="crowdfund-body-campaign-dates-not-active" >
+                            <ul class="p-0">
+                                <li v-if="startDate" class="list-unstyled">
+                                    {{started? "Started" : "Starts"}} {{startDate}}
+                                </li>
+                                <li v-if="endDate" class="list-unstyled">
+                                    {{ended? "Ended" : "Ends"}} {{endDate}}
+                                </li>
+                            </ul>
+                        </b-tooltip>
+                    </div>
+                </div>
+                
+                <b-tooltip target="crowdfund-body-raised-amount" v-if="paymentStats && paymentStats.length > 0">
+                    <ul class="p-0 text-uppercase">
+                        <li v-for="stat of paymentStats" class="list-unstyled">
+                            
+                            {{stat.label}} <span v-if="stat.lightning" class="fa fa-bolt"></span> {{stat.value}}
+                        </li>
+                    </ul>
+                </b-tooltip>      
+                <b-tooltip target="crowdfund-body-goal-raised"  v-if="srvModel.resetEvery !== 'Never'">
+                    Goal resets every {{srvModel.resetEveryAmount}} {{srvModel.resetEvery}} {{srvModel.resetEveryAmount>1?'s': ''}}
+                </b-tooltip>
+                
+               
+                <div class="card-title" id="crowdfund-body-header">
+
+                    <div class="row">
+                        <div class="col-sm-12 col-md-8 col-lg-9" id="crowdfund-body-header-tagline-container">
+                            <h2 class="text-muted" v-if="srvModel.tagline" id="crowdfund-body-header-tagline">{{srvModel.tagline}}</h2>
+                        </div>
+                        <div class="col-sm-12 col-md-4 col-lg-3" id="crowdfund-body-header-cta-container">
+                            <button v-if="active" id="crowdfund-body-header-cta" class="btn btn-lg btn-primary w-100 font-weight-bold" v-on:click="contributeModalOpen = true">Contribute</button>
+                        </div>
+                    </div>
+                </div>
+                <template v-if="srvModel.disqusEnabled">
+                    <b-tabs>
+                        <b-tab title="Details"active>
+                            <div class="row mt-2">
+                                <div class="col-md-8 col-sm-12" id="crowdfund-body-description-container">
+                                    <div class="card-text overflow-hidden" v-html="srvModel.description" id="crowdfund-body-description"></div>
+                                </div>
+                                <div class="col-md-4 col-sm-12" id="crowdfund-body-contribution-container">
+                                    <contribute :target-currency="srvModel.targetCurrency"
+                                                :display-perks-ranking="srvModel.displayPerksRanking"
+                                                :active="active"
+                                                :loading="loading"
+                                                :in-modal="false"
+                                                :perks="perks">
+    
+                                    </contribute>
+                                </div>
+                            </div>
+                        </b-tab>
+                        <b-tab title="Discussion" >
+                            <div id="disqus_thread" class=" mt-2"></div>
+                        </b-tab>
+                    </b-tabs>
+                    
+                </template>
+                <template v-else>
+                    <hr/>
+                    <div class="row mt-2">
+                        <div class="col-md-8 col-sm-12" id="crowdfund-body-description-container">
+                            <div class="card-text overflow-hidden" v-html="srvModel.description" id="crowdfund-body-description"></div>
+                        </div>
+                        <div class="col-md-4 col-sm-12" id="crowdfund-body-contribution-container">
+                            <contribute :target-currency="srvModel.targetCurrency"
+                                        :loading="loading"
+                                        :display-perks-ranking="srvModel.displayPerksRanking"
+                                        :active="active"
+                                        :in-modal="false"
+                                        :perks="perks">
+    
+                            </contribute>
+                        </div>
+                    </div>
+                </template>
+            </div>
+            <div class="card-footer text-muted d-flex" v-if="srvModel.animationsEnabled || srvModel.soundsEnabled">
+              
+                <div class="align-self-end pr-4">Updated {{lastUpdated}}</div>
+                <div class="form-check mx-1"  v-if="srvModel.animationsEnabled || animation">
+                    <input class="form-check-input" type="checkbox" id="cbAnime" v-model="animation">
+                    <label class="form-check-label" for="cbAnime">
+                        Animations
+                    </label>
+                </div>
+                <div class="form-check mx-1"  v-if="srvModel.soundsEnabled|| sound">
+                    <input class="form-check-input" type="checkbox"  id="cbSounds" v-model="sound">
+                    <label class="form-check-label" for="cbSounds">
+                        Sounds
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+    <b-modal title="Contribute" v-model="contributeModalOpen" size="lg" ok-only="true" ok-variant="secondary" ok-title="Close" ref="modalContribute">
+        <contribute v-if="contributeModalOpen"
+                    :target-currency="srvModel.targetCurrency"
+                    :active="active"
+                    :perks="srvModel.perks"
+                    :loading="loading"
+                    :in-modal="true">
+        </contribute>
+    </b-modal>
+
+</div>
+
+<script type="text/x-template" id="perks-template">
+<div class="perks-container">
+    <perk v-if="!perks || perks.length ===0" 
+        :perk="{title: 'Donate Custom Amount', price: { value: null}, custom: true}" 
+        :target-currency="targetCurrency" 
+        :active="active" 
+        :loading="loading"
+        :in-modal="inModal">
+    </perk>
+    <perk v-for="(perk, index) in perks" :perk="perk" :key="perk.id" 
+        :target-currency="targetCurrency" 
+        :active="active" 
+        :display-perks-ranking="displayPerksRanking" 
+        :index="index"
+        :loading="loading"
+        :in-modal="inModal">
+    </perk>
+</div>
+</script>
+
+<script type="text/x-template" id="perk-template"> 
+<div class="card mb-4 perk"  v-bind:class="{ 'expanded': expanded, 'unexpanded': !expanded }" v-on:click="expand" :id="perk.id">
+<span v-if="displayPerksRanking && perk.sold" 
+    class="btn btn-sm rounded-circle px-0 perk-badge" 
+    v-bind:class="{ 'btn-primary': index==0, 'btn-secondary': index!=0}">#{{index+1}}</span> 
+         
+
+    <div class="perk-zoom " v-if="canExpand">
+        <div class="perk-zoom-bg bg-primary"> </div>
+        <div class="perk-zoom-text w-100 text-center text-white font-weight-bold">
+            Select this contribution perk
+        </div>
+    </div>
+    <form v-on:submit='onContributeFormSubmit'>
+        <input type="hidden" :value="perk.id" id="choiceKey"/> 
+        <img v-if="perk.image && perk.image != 'null' "  class="card-img-top" :src="perk.image" />
+        <div class="card-body">
+            <div class="card-title d-flex justify-content-between" >
+                <span class="h5">{{perk.title? perk.title : perk.id}} </span>
+                <span class="text-muted" > 
+                    <template v-if="perk.price.value">{{perk.price.value.noExponents()}} 
+                        {{targetCurrency}} 
+                        <template v-if="perk.custom">or more</template>
+                    </template>
+                    <template v-else-if="!perk.price.value && perk.custom">
+                        Any amount
+                    </template>
+                    
+                </span>
+            </div>
+            <p  class="card-text overflow-hidden" v-if="perk.description" v-html="perk.description"></p>
+            
+            <div class="input-group" style="max-width: 500px;" v-if="expanded" :id="'perk-form'+ perk.id">
+                <input 
+                    :disabled="!active"
+                    :readonly="!perk.custom"
+                    class="form-control" 
+                    type="number" 
+                    v-model="amount"
+                    :min="perk.price.value"  
+                    step="any"  
+                    placeholder="Contribution Amount"
+                    required >
+                <div class="input-group-append">                    
+                    <span class='input-group-text'>{{targetCurrency}}</span>
+                    <button 
+                        class="btn btn-primary" 
+                        v-bind:class="{ 'btn-disabled': loading}"
+                        :disabled="!active || loading" 
+                        type="submit">
+                         <div v-if="loading"  class="spinner-grow spinner-grow-sm"   role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                        Continue
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer d-flex justify-content-between" v-if="perk.sold">
+           <span ></span>
+           <span x >{{perk.sold}} Contributor{{perk.sold > 1? "s": ""}}</span>
+        </div>
+    </form>
+</div> 
+</script>
+
+
+<script type="text/x-template" id="contribute-template">
+  <div>
+    <h3 v-if="!inModal" class="mb-3">Contribute</h3>
+    <perks 
+        :perks="perks" 
+        :loading="loading"
+        :in-modal="inModal"
+        :display-perks-ranking="displayPerksRanking"
+        :target-currency="targetCurrency" 
+        :active="active">
+     </perks>
+  </div>
+</script>

@@ -71,7 +71,6 @@ namespace BTCPayServer.Controllers
             {
                 InvoiceTime = DateTimeOffset.UtcNow
             };
-
             var storeBlob = store.GetStoreBlob();
             Uri notificationUri = Uri.IsWellFormedUriString(invoice.NotificationURL, UriKind.Absolute) ? new Uri(invoice.NotificationURL, UriKind.Absolute) : null;
             if (notificationUri == null || (notificationUri.Scheme != "http" && notificationUri.Scheme != "https")) //TODO: Filer non routable addresses ?
@@ -95,7 +94,16 @@ namespace BTCPayServer.Controllers
                     throw new BitpayHttpException(400, "Invalid email");
                 entity.RefundMail = entity.BuyerInformation.BuyerEmail;
             }
+
+            var currencyInfo = _CurrencyNameTable.GetNumberFormatInfo(invoice.Currency, false);
+            if (currencyInfo != null)
+            {
+                invoice.Price = Math.Round(invoice.Price, currencyInfo.CurrencyDecimalDigits);
+            }
+            invoice.Price = Math.Max(0.0m, invoice.Price);
             entity.ProductInformation = Map<Invoice, ProductInformation>(invoice);
+
+
             entity.RedirectURL = invoice.RedirectURL ?? store.StoreWebsite;
             if (!Uri.IsWellFormedUriString(entity.RedirectURL, UriKind.Absolute))
                 entity.RedirectURL = null;

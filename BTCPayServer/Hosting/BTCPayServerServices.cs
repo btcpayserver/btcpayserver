@@ -38,6 +38,7 @@ using BTCPayServer.Logging;
 using BTCPayServer.HostedServices;
 using Meziantou.AspNetCore.BundleTagHelpers;
 using System.Security.Claims;
+using BTCPayServer.Crowdfund;
 using BTCPayServer.Hubs;
 using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Payments.Lightning;

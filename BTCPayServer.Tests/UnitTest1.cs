@@ -1858,6 +1858,50 @@ donation:
 
         [Fact]
         [Trait("Integration", "Integration")]
+        public void CanCreateStrangeInvoice()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.Start();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                user.RegisterDerivationScheme("BTC");
+                var invoice1 = user.BitPay.CreateInvoice(new Invoice()
+                {
+                    Price = 0.000000012m,
+                    Currency = "BTC",
+                    PosData = "posData",
+                    OrderId = "orderId",
+                    ItemDesc = "Some description",
+                    FullNotifications = true
+                }, Facade.Merchant);
+                var invoice2 = user.BitPay.CreateInvoice(new Invoice()
+                {
+                    Price = 0.000000019m,
+                    Currency = "BTC",
+                    PosData = "posData",
+                    OrderId = "orderId",
+                    ItemDesc = "Some description",
+                    FullNotifications = true
+                }, Facade.Merchant);
+                Assert.Equal(0.00000001m, invoice1.Price);
+                Assert.Equal(0.00000002m, invoice2.Price);
+
+                var invoice = user.BitPay.CreateInvoice(new Invoice()
+                {
+                    Price = -0.1m,
+                    Currency = "BTC",
+                    PosData = "posData",
+                    OrderId = "orderId",
+                    ItemDesc = "Some description",
+                    FullNotifications = true
+                }, Facade.Merchant);
+                Assert.Equal(0.0m, invoice.Price);
+            }
+        }
+
+        [Fact]
+        [Trait("Integration", "Integration")]
         public void InvoiceFlowThroughDifferentStatesCorrectly()
         {
             using (var tester = ServerTester.Create())

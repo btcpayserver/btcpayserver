@@ -47,7 +47,7 @@ namespace BTCPayServer.Payments.Lightning
                 }
                 catch (OperationCanceledException) when (cts.IsCancellationRequested)
                 {
-                    throw new PaymentMethodUnavailableException($"The lightning node did not replied in a timely maner");
+                    throw new PaymentMethodUnavailableException($"The lightning node did not reply in a timely maner");
                 }
                 catch (Exception ex)
                 {
@@ -78,7 +78,7 @@ namespace BTCPayServer.Payments.Lightning
                 }
                 catch (OperationCanceledException) when (cts.IsCancellationRequested)
                 {
-                    throw new PaymentMethodUnavailableException($"The lightning node did not replied in a timely manner");
+                    throw new PaymentMethodUnavailableException($"The lightning node did not reply in a timely manner");
                 }
                 catch (Exception ex)
                 {
@@ -115,7 +115,7 @@ namespace BTCPayServer.Payments.Lightning
                 }
 
                 if (address == null)
-                    throw new PaymentMethodUnavailableException($"DNS did not resolved {nodeInfo.Host}");
+                    throw new PaymentMethodUnavailableException($"DNS did not resolve {nodeInfo.Host}");
 
                 using (var tcp = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp))
                 {

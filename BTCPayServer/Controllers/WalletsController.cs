@@ -447,7 +447,7 @@ namespace BTCPayServer.Controllers
                     {
                         try
                         {
-                            destinationAddress = BitcoinAddress.Create(destination, network.NBitcoinNetwork);
+                            destinationAddress = BitcoinAddress.Create(destination.Trim(), network.NBitcoinNetwork);
                         }
                         catch { }
                         if (destinationAddress == null)

@@ -198,44 +198,6 @@ namespace BTCPayServer.Security
                 }
                 yield return token;
             }
-
-            private bool IsBitpayAPI(HttpContext httpContext, bool bitpayAuth)
-            {
-                if (!httpContext.Request.Path.HasValue)
-                    return false;
-
-                var isJson = (httpContext.Request.ContentType ?? string.Empty).StartsWith("application/json", StringComparison.OrdinalIgnoreCase);
-                var path = httpContext.Request.Path.Value;
-                if (
-                    bitpayAuth &&
-                    (path == "/invoices" || path == "/invoices/") &&
-                  httpContext.Request.Method == "POST" &&
-                  isJson)
-                    return true;
-
-                if (
-                    bitpayAuth &&
-                    (path == "/invoices" || path == "/invoices/") &&
-                  httpContext.Request.Method == "GET")
-                    return true;
-
-                if (
-                    path.StartsWith("/invoices/", StringComparison.OrdinalIgnoreCase) &&
-                    httpContext.Request.Method == "GET" &&
-                    (isJson || httpContext.Request.Query.ContainsKey("token")))
-                    return true;
-
-                if (path.Equals("/rates", StringComparison.OrdinalIgnoreCase) &&
-                    httpContext.Request.Method == "GET")
-                    return true;
-
-                if (
-                    path.Equals("/tokens", StringComparison.Ordinal) &&
-                    (httpContext.Request.Method == "GET" || httpContext.Request.Method == "POST"))
-                    return true;
-
-                return false;
-            }
         }
         internal static void AddAuthentication(IServiceCollection services, Action<BitpayAuthOptions> bitpayAuth = null)
         {

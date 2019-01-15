@@ -153,7 +153,7 @@ namespace BTCPayServer.Crowdfund
                         Enum.GetName(typeof(PaymentTypes), 
                             invoiceEvent.Payment.GetPaymentMethodId().PaymentType)
                     } );
-                    
+                    _Logger.LogInformation($"App {quickLookup.appId}: Received Payment");
                     InvalidateCacheForApp(quickLookup.appId);
                     break;
                 case InvoiceEvent.Created:

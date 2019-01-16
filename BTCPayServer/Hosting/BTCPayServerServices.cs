@@ -117,7 +117,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<CurrencyNameTable>();
             services.TryAddSingleton<IFeeProviderFactory>(o => new NBXplorerFeeProviderFactory(o.GetRequiredService<ExplorerClientProvider>())
             {
-                Fallback = new FeeRate(100, 1),
+                Fallback = new FeeRate(100L, 1),
                 BlockTarget = 20
             });
 

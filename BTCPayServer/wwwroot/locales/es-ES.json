@@ -26,7 +26,7 @@
   "ConversionTab_BodyDesc": "Este servicio es provisto por terceros. Ten en cuenta que no tenemos control sobre cómo estos terceros re-enviarán tus fondos. La factura solo se marcará como pagada una vez se reciban los fondos en la cadena de bloques de {{cryptoCode}} .",
   "ConversionTab_CalculateAmount_Error": "Reintentar",
   "ConversionTab_LoadCurrencies_Error": "Reintentar",
-  "ConversionTab_Lightning": "No hay proveedores de conversión disponibles para los pagos de Lightning Network.",
+  "ConversionTab_Lightning": "No hay proveedores de conversión disponibles para los pagos con Lightning Network.",
   "ConversionTab_CurrencyList_Select_Option": "Selecciona la moneda a convertir",
   "Invoice expiring soon...": "La factura expira pronto...",
   "Invoice expired": "La factura expiró",

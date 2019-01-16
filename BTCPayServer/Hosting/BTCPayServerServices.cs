@@ -145,6 +145,8 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService, InvoiceNotificationManager>();
             services.AddSingleton<IHostedService, InvoiceWatcher>();
             services.AddSingleton<IHostedService, RatesHostedService>();
+            services.AddSingleton<IHostedService, BackgroundJobSchedulerHostedService>();
+            services.AddSingleton<IBackgroundJobClient, BackgroundJobClient>();
             services.AddTransient<IConfigureOptions<MvcOptions>, BTCPayClaimsFilter>();
 
             services.TryAddSingleton<ExplorerClientProvider>();

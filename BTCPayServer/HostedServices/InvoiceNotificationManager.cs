@@ -1,10 +1,7 @@
-﻿using Hangfire;
-using Hangfire.Common;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Hangfire.Annotations;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -21,6 +18,7 @@ using NBXplorer;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Payments;
 using BTCPayServer.Services.Mails;
+using BTCPayServer.Services;
 
 namespace BTCPayServer.HostedServices
 {

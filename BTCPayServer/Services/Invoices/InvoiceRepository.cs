@@ -420,91 +420,108 @@ retry:
             return entity;
         }
 
+        private IQueryable<Data.InvoiceData> GetInvoiceQuery(ApplicationDbContext context, InvoiceQuery queryObject)
+        {
+            IQueryable<Data.InvoiceData> query = context.Invoices;
+
+            if (!string.IsNullOrEmpty(queryObject.InvoiceId))
+            {
+                query = query.Where(i => i.Id == queryObject.InvoiceId);
+            }
+
+            if (queryObject.StoreId != null && queryObject.StoreId.Length > 0)
+            {
+                var stores = queryObject.StoreId.ToHashSet();
+                query = query.Where(i => stores.Contains(i.StoreDataId));
+            }
+
+            if (queryObject.UserId != null)
+            {
+                query = query.Where(i => i.StoreData.UserStores.Any(u => u.ApplicationUserId == queryObject.UserId));
+            }
+
+            if (!string.IsNullOrEmpty(queryObject.TextSearch))
+            {
+                var ids = new HashSet<string>(SearchInvoice(queryObject.TextSearch));
+                if (ids.Count == 0)
+                {
+                    // Hacky way to return an empty query object. The nice way is much too elaborate:
+                    // https://stackoverflow.com/questions/33305495/how-to-return-empty-iqueryable-in-an-async-repository-method
+                    return query.Where(x => false); 
+                }
+                query = query.Where(i => ids.Contains(i.Id));
+            }
+
+            if (queryObject.StartDate != null)
+                query = query.Where(i => queryObject.StartDate.Value <= i.Created);
+
+            if (queryObject.EndDate != null)
+                query = query.Where(i => i.Created <= queryObject.EndDate.Value);
+
+            if (queryObject.OrderId != null && queryObject.OrderId.Length > 0)
+            {
+                var statusSet = queryObject.OrderId.ToHashSet();
+                query = query.Where(i => statusSet.Contains(i.OrderId));
+            }
+            if (queryObject.ItemCode != null && queryObject.ItemCode.Length > 0)
+            {
+                var statusSet = queryObject.ItemCode.ToHashSet();
+                query = query.Where(i => statusSet.Contains(i.ItemCode));
+            }
+
+            if (queryObject.Status != null && queryObject.Status.Length > 0)
+            {
+                var statusSet = queryObject.Status.ToHashSet();
+                query = query.Where(i => statusSet.Contains(i.Status));
+            }
+
+            if (queryObject.Unusual != null)
+            {
+                var unused = queryObject.Unusual.Value;
+                query = query.Where(i => unused == (i.Status == "invalid" || i.ExceptionStatus != null));
+            }
+
+            if (queryObject.ExceptionStatus != null && queryObject.ExceptionStatus.Length > 0)
+            {
+                var exceptionStatusSet = queryObject.ExceptionStatus.Select(s => NormalizeExceptionStatus(s)).ToHashSet();
+                query = query.Where(i => exceptionStatusSet.Contains(i.ExceptionStatus));
+            }
+
+            query = query.OrderByDescending(q => q.Created);
+
+            if (queryObject.Skip != null)
+                query = query.Skip(queryObject.Skip.Value);
+
+            if (queryObject.Count != null)
+                query = query.Take(queryObject.Count.Value);
+
+            return query;
+        }
+
+        public async Task<int> GetInvoicesTotal(InvoiceQuery queryObject)
+        {
+            using (var context = _ContextFactory.CreateContext())
+            {
+                var query = GetInvoiceQuery(context, queryObject);
+                return await query.CountAsync();
+            }
+        }
 
         public async Task<InvoiceEntity[]> GetInvoices(InvoiceQuery queryObject)
         {
             using (var context = _ContextFactory.CreateContext())
             {
-                IQueryable<Data.InvoiceData> query = context
-                    .Invoices
-                    .Include(o => o.Payments)
+                var query = GetInvoiceQuery(context, queryObject);
+                query = query.Include(o => o.Payments)
                     .Include(o => o.RefundAddresses);
                 if (queryObject.IncludeAddresses)
                     query = query.Include(o => o.HistoricalAddressInvoices).Include(o => o.AddressInvoices);
                 if (queryObject.IncludeEvents)
                     query = query.Include(o => o.Events);
-                if (!string.IsNullOrEmpty(queryObject.InvoiceId))
-                {
-                    query = query.Where(i => i.Id == queryObject.InvoiceId);
-                }
-
-                if (queryObject.StoreId != null && queryObject.StoreId.Length > 0)
-                {
-                    var stores = queryObject.StoreId.ToHashSet();
-                    query = query.Where(i => stores.Contains(i.StoreDataId));
-                }
-
-                if (queryObject.UserId != null)
-                {
-                    query = query.Where(i => i.StoreData.UserStores.Any(u => u.ApplicationUserId == queryObject.UserId));
-                }
-
-                if (!string.IsNullOrEmpty(queryObject.TextSearch))
-                {
-                    var ids = new HashSet<string>(SearchInvoice(queryObject.TextSearch));
-                    if (ids.Count == 0)
-                        return Array.Empty<InvoiceEntity>();
-                    query = query.Where(i => ids.Contains(i.Id));
-                }
-
-                if (queryObject.StartDate != null)
-                    query = query.Where(i => queryObject.StartDate.Value <= i.Created);
-
-                if (queryObject.EndDate != null)
-                    query = query.Where(i => i.Created <= queryObject.EndDate.Value);
-
-                if (queryObject.OrderId != null && queryObject.OrderId.Length > 0)
-                {
-                    var statusSet = queryObject.OrderId.ToHashSet();
-                    query = query.Where(i => statusSet.Contains(i.OrderId));
-                }
-                if (queryObject.ItemCode != null && queryObject.ItemCode.Length > 0)
-                {
-                    var statusSet = queryObject.ItemCode.ToHashSet();
-                    query = query.Where(i => statusSet.Contains(i.ItemCode));
-                }
-
-                if (queryObject.Status != null && queryObject.Status.Length > 0)
-                {
-                    var statusSet = queryObject.Status.ToHashSet();
-                    query = query.Where(i => statusSet.Contains(i.Status));
-                }
-
-                if (queryObject.Unusual != null)
-                {
-                    var unused = queryObject.Unusual.Value;
-                    query = query.Where(i => unused == (i.Status == "invalid" || i.ExceptionStatus != null));
-                }
-
-                if (queryObject.ExceptionStatus != null && queryObject.ExceptionStatus.Length > 0)
-                {
-                    var exceptionStatusSet = queryObject.ExceptionStatus.Select(s => NormalizeExceptionStatus(s)).ToHashSet();
-                    query = query.Where(i => exceptionStatusSet.Contains(i.ExceptionStatus));
-                }
-
-                query = query.OrderByDescending(q => q.Created);
-
-                if (queryObject.Skip != null)
-                    query = query.Skip(queryObject.Skip.Value);
-
-                if (queryObject.Count != null)
-                    query = query.Take(queryObject.Count.Value);
 
                 var data = await query.ToArrayAsync().ConfigureAwait(false);
-
                 return data.Select(ToEntity).ToArray();
             }
-
         }
 
         private string NormalizeExceptionStatus(string status)

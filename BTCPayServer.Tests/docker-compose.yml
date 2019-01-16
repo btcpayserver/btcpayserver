@@ -69,7 +69,7 @@ services:
 
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.0.0.2
+    image: nicolasdorier/nbxplorer:2.0.0.8
     restart: unless-stopped
     ports:
       - "32838:32838"

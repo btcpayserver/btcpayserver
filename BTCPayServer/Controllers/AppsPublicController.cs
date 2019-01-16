@@ -256,8 +256,7 @@ namespace BTCPayServer.Controllers
                 BuyerEmail = email,
                 OrderId = orderId,
                 NotificationURL = notificationUrl,
-                RedirectURL = redirectUrl,
-//                RedirectURL = redirectUrl  ?? Request.GetDisplayUrl(),
+                RedirectURL = redirectUrl  ?? Request.GetDisplayUrl(),
                 FullNotifications = true,
             }, store, HttpContext.Request.GetAbsoluteRoot());
             return RedirectToAction(nameof(InvoiceController.Checkout), "Invoice", new { invoiceId = invoice.Data.Id });

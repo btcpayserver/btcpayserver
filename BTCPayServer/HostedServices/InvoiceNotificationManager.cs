@@ -277,11 +277,6 @@ namespace BTCPayServer.HostedServices
 
         int MaxTry = 6;
 
-        private static string GetHttpJobId(InvoiceEntity invoice)
-        {
-            return $"{invoice.Id}-{invoice.Status}-HTTP";
-        }
-
         CompositeDisposable leases = new CompositeDisposable();
         public Task StartAsync(CancellationToken cancellationToken)
         {

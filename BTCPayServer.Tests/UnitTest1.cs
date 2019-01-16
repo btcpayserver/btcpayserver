@@ -1549,6 +1549,81 @@ donation:
             }
         }
 
+
+        [Fact]
+        [Trait("Fast", "Fast")]
+        public void CanScheduleBackgroundTasks()
+        {
+            BackgroundJobClient client = new BackgroundJobClient();
+            MockDelay mockDelay = new MockDelay();
+            client.Delay = mockDelay;
+            bool[] jobs = new bool[4];
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+            Logs.Tester.LogInformation("Start Job[0] in 5 sec");
+            client.Schedule(async () => { Logs.Tester.LogInformation("Job[0]"); jobs[0] = true; }, TimeSpan.FromSeconds(5.0));
+            Logs.Tester.LogInformation("Start Job[1] in 2 sec");
+            client.Schedule(async () => { Logs.Tester.LogInformation("Job[1]"); jobs[1] = true; }, TimeSpan.FromSeconds(2.0));
+            Logs.Tester.LogInformation("Start Job[2] fails in 6 sec");
+            client.Schedule(async () => { jobs[2] = true; throw new Exception("Job[2]"); }, TimeSpan.FromSeconds(6.0));
+            Logs.Tester.LogInformation("Start Job[3] starts in in 7 sec");
+            client.Schedule(async () => { Logs.Tester.LogInformation("Job[3]"); jobs[3] = true; }, TimeSpan.FromSeconds(7.0));
+
+            Assert.True(new[] { false, false, false, false }.SequenceEqual(jobs));
+            CancellationTokenSource cts = new CancellationTokenSource();
+            var processing = client.ProcessJobs(cts.Token);
+
+            Assert.Equal(4, client.GetExecutingCount());
+
+            var waitJobsFinish = client.WaitAllRunning(default);
+
+            mockDelay.Advance(TimeSpan.FromSeconds(2.0));
+            Assert.True(new[] { false, true, false, false }.SequenceEqual(jobs));
+
+            mockDelay.Advance(TimeSpan.FromSeconds(3.0));
+            Assert.True(new[] { true, true, false, false }.SequenceEqual(jobs));
+
+            mockDelay.Advance(TimeSpan.FromSeconds(1.0));
+            Assert.True(new[] { true, true, true, false }.SequenceEqual(jobs));
+            Assert.Equal(1, client.GetExecutingCount());
+
+            Assert.False(waitJobsFinish.Wait(100));
+            Assert.False(waitJobsFinish.IsCompletedSuccessfully);
+
+            mockDelay.Advance(TimeSpan.FromSeconds(1.0));
+            Assert.True(new[] { true, true, true, true }.SequenceEqual(jobs));
+
+            Assert.True(waitJobsFinish.Wait(100));
+            Assert.True(waitJobsFinish.IsCompletedSuccessfully);
+            Assert.True(!waitJobsFinish.IsFaulted);
+            Assert.Equal(0, client.GetExecutingCount());
+
+            bool jobExecuted = false;
+            Logs.Tester.LogInformation("This job will be cancelled");
+            client.Schedule(async () => { jobExecuted = true; }, TimeSpan.FromSeconds(1.0));
+            mockDelay.Advance(TimeSpan.FromSeconds(0.5));
+            Assert.False(jobExecuted);
+            Thread.Sleep(100);
+            Assert.Equal(1, client.GetExecutingCount());
+
+
+            waitJobsFinish = client.WaitAllRunning(default);
+            Assert.False(waitJobsFinish.Wait(100));
+            cts.Cancel();
+            Assert.True(waitJobsFinish.Wait(100));
+            Assert.True(waitJobsFinish.IsCompletedSuccessfully);
+            Assert.True(!waitJobsFinish.IsFaulted);
+            Assert.False(jobExecuted);
+
+            mockDelay.Advance(TimeSpan.FromSeconds(1.0));
+            Thread.Sleep(100); // Make sure it get cancelled
+
+            Assert.False(jobExecuted);
+            Assert.Equal(0, client.GetExecutingCount());
+            Assert.True(processing.IsCanceled);
+            Assert.True(client.WaitAllRunning(default).Wait(100));
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+        }
+
         [Fact]
         [Trait("Fast", "Fast")]
         public void PosDataParser_ParsesCorrectly()

@@ -7,15 +7,10 @@ using BTCPayServer.Models;
 using Microsoft.AspNetCore.Identity;
 using BTCPayServer.Data;
 using Microsoft.Extensions.Logging;
-using Hangfire;
 using BTCPayServer.Logging;
 using Microsoft.Extensions.Configuration;
-using Hangfire.AspNetCore;
 using BTCPayServer.Configuration;
 using System.IO;
-using System.Net;
-using Hangfire.Dashboard;
-using Hangfire.Annotations;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Security.Cryptography;
 using AspNet.Security.OpenIdConnect.Primitives;
@@ -37,18 +32,6 @@ namespace BTCPayServer.Hosting
 {
     public class Startup
     {
-        class NeedRole : IDashboardAuthorizationFilter
-        {
-            string _Role;
-            public NeedRole(string role)
-            {
-                _Role = role;
-            }
-            public bool Authorize([NotNull] DashboardContext context)
-            {
-                return context.GetHttpContext().User.IsInRole(_Role);
-            }
-        }
         public Startup(IConfiguration conf, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
             Configuration = conf;
@@ -164,13 +147,6 @@ namespace BTCPayServer.Hosting
                 options.ClaimsIdentity.UserIdClaimType = OpenIdConnectConstants.Claims.Subject;
                 options.ClaimsIdentity.RoleClaimType = OpenIdConnectConstants.Claims.Role;
             });
-
-            services.AddHangfire((o) =>
-            {
-                var scope = AspNetCoreJobActivator.Current.BeginScope(null);
-                var options = (ApplicationDbContextFactory)scope.Resolve(typeof(ApplicationDbContextFactory));
-                options.ConfigureHangfireBuilder(o);
-            });
             services.AddCors(o =>
             {
                 o.AddPolicy("BitpayAPI", b =>
@@ -249,12 +225,6 @@ namespace BTCPayServer.Hosting
             app.UsePayServer();
             app.UseStaticFiles();
             app.UseAuthentication();
-            app.UseHangfireServer();
-            app.UseHangfireDashboard("/hangfire", new DashboardOptions()
-            {
-                AppPath = options.GetRootUri(),
-                Authorization = new[] { new NeedRole(Roles.ServerAdmin) }
-            });
             app.UseSignalR(route =>
             {
                 route.MapHub<CrowdfundHub>("/apps/crowdfund/hub");

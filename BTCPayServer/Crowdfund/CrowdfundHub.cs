@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using BTCPayServer.Controllers;
 using BTCPayServer.Models.AppViewModels;
@@ -35,20 +36,30 @@ namespace BTCPayServer.Hubs
         {
                model.RedirectToCheckout = false;
                _AppsPublicController.ControllerContext.HttpContext = Context.GetHttpContext();
-               var result = await _AppsPublicController.ContributeToCrowdfund(Context.Items["app"].ToString(), model);
-               switch (result)
+               try
                {
-                   case OkObjectResult okObjectResult:
-                       await Clients.Caller.SendCoreAsync(InvoiceCreated, new[] {okObjectResult.Value.ToString()});
-                       break;
-                   case ObjectResult objectResult:
-                       await Clients.Caller.SendCoreAsync(InvoiceError, new[] {objectResult.Value});
-                       break;
-                   default:
-                       await Clients.Caller.SendCoreAsync(InvoiceError, System.Array.Empty<object>());
-                       break;
+
+                   var result =
+                       await _AppsPublicController.ContributeToCrowdfund(Context.Items["app"].ToString(), model);
+                   switch (result)
+                   {
+                       case OkObjectResult okObjectResult:
+                           await Clients.Caller.SendCoreAsync(InvoiceCreated, new[] {okObjectResult.Value.ToString()});
+                           break;
+                       case ObjectResult objectResult:
+                           await Clients.Caller.SendCoreAsync(InvoiceError, new[] {objectResult.Value});
+                           break;
+                       default:
+                           await Clients.Caller.SendCoreAsync(InvoiceError, System.Array.Empty<object>());
+                           break;
+                   }
                }
-               
+               catch (Exception)
+               {
+                   await Clients.Caller.SendCoreAsync(InvoiceError, System.Array.Empty<object>());
+
+               }
+
         }
 
     }

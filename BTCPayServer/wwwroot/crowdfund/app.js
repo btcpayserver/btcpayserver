@@ -18,17 +18,17 @@ addLoadEvent(function (ev) {
     Vue.use(Toasted);
 
     Vue.component('contribute', {
-        props: ["targetCurrency", "active", "perks", "inModal", "displayPerksRanking"],
+        props: ["targetCurrency", "active", "perks", "inModal", "displayPerksRanking", "loading"],
         template: "#contribute-template"
     });
 
     Vue.component('perks', {
-        props: ["perks", "targetCurrency", "active", "inModal","displayPerksRanking"],
+        props: ["perks", "targetCurrency", "active", "inModal","displayPerksRanking", "loading"],
         template: "#perks-template"
     });
 
     Vue.component('perk', {
-        props: ["perk", "targetCurrency", "active", "inModal", "displayPerksRanking", "index"],
+        props: ["perk", "targetCurrency", "active", "inModal", "displayPerksRanking", "index", "loading"],
         template: "#perk-template",
         data: function () {
             return {
@@ -46,24 +46,35 @@ addLoadEvent(function (ev) {
                 if (e) {
                     e.preventDefault();
                 }
-                if(!this.active){
+                if(!this.active || this.loading){
                     return;
                 }
                 
-                eventAggregator.$emit("contribute", {amount: this.amount, choiceKey: this.perk.id});
+                eventAggregator.$emit("contribute", {amount: parseFloat(this.amount), choiceKey: this.perk.id});
             },
             expand: function(){
                 if(this.canExpand){
                     this.expanded = true;
                 }
+            },
+            setAmount: function (amount) {
+                this.amount = (amount || 0).noExponents();
+                this.expanded = false;
             }
 
 
         },
-        mounted: function(){
-            this.amount = this.perk.price.value;
-
+        mounted: function () {
+            this.setAmount(this.perk.price.value);
+        },
+        watch: {
+            perk: function (newValue, oldValue) {
+                if (newValue.price.value != oldValue.price.value) {
+                    this.setAmount(newValue.price.value);
+                }
+            }
         }
+        
     });
     
     app = new Vue({
@@ -84,8 +95,9 @@ addLoadEvent(function (ev) {
                 active: true,
                 animation: true, 
                 sound: true,
-                lastUpdated:""
-                
+                lastUpdated:"",
+                loading: false,
+                timeoutState: 0
             }
         },
         computed: {
@@ -191,9 +203,11 @@ addLoadEvent(function (ev) {
                 this.active = this.started && !this.ended;
                 setTimeout(this.updateComputed, 1000);
             },
-            submitModalContribute: function(e){
-                debugger;
-                this.$refs.modalContribute.onContributeFormSubmit(e);
+            setLoading: function(val){
+                this.loading = val;
+                if(this.timeoutState){
+                    clearTimeout(this.timeoutState);
+                }
             }
         },
         mounted: function () {
@@ -207,8 +221,19 @@ addLoadEvent(function (ev) {
                 btcpay.showFrame();
 
                 self.contributeModalOpen = false;
+                self.setLoading(false);
+            });
+
+            eventAggregator.$on("contribute", function () {
+                self.setLoading(true);
+                
+                self.timeoutState = setTimeout(function(){
+                    self.setLoading(false);
+                },5000);
             });
             eventAggregator.$on("invoice-error", function(error){
+
+                self.setLoading(false);
                 var msg = "";
                 if(typeof error === "string"){
                     msg = error;

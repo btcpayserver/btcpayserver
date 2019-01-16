@@ -85,8 +85,9 @@ namespace BTCPayServer.HostedServices
                 // TODO: Consider adding info on ItemDesc and payment info (amount)
 
                 var emailBody = NBitcoin.JsonConverters.Serializer.ToString(ipn);
-                await _EmailSender.SendEmailAsync(
-                    invoice.NotificationEmail, $"BtcPayServer Invoice Notification - ${invoice.StoreId}", emailBody);
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                _EmailSender.SendEmailAsync(invoice.NotificationEmail, $"BtcPayServer Invoice Notification - ${invoice.StoreId}", emailBody);
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             }
 
             try

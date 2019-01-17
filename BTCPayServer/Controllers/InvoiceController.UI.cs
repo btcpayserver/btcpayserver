@@ -448,7 +448,7 @@ namespace BTCPayServer.Controllers
                 StatusMessage = StatusMessage
             };
             InvoiceQuery invoiceQuery = GetInvoiceQuery(searchTerm);
-            model.Total = await _InvoiceRepository.GetInvoicesTotal(invoiceQuery);
+            var counting = _InvoiceRepository.GetInvoicesTotal(invoiceQuery);
             invoiceQuery.Count = count;
             invoiceQuery.Skip = skip;
             var list = await _InvoiceRepository.GetInvoices(invoiceQuery);
@@ -468,6 +468,7 @@ namespace BTCPayServer.Controllers
                     CanMarkComplete = state.CanMarkComplete()
                 });
             }
+            model.Total = await counting;
             return View(model);
         }
 

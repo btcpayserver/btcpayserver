@@ -33,7 +33,7 @@
             <div class="form-group">
                 <label asp-for="Amount"></label>
                 <div class="input-group">
-                    <input asp-for="Amount" class="form-control" onkeyup='updateFiatValue();' />
+                    <input asp-for="Amount" asp-format="{0}" class="form-control" onkeyup='updateFiatValue();' />
                     <div class="input-group-prepend">
                         <span class="input-group-text text-muted" style="display:none;" id="fiatValue"></span>
                     </div>

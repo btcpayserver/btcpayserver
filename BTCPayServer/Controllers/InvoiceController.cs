@@ -155,7 +155,7 @@ namespace BTCPayServer.Controllers
             if (supported.Count == 0)
             {
                 StringBuilder errors = new StringBuilder();
-                errors.AppendLine("No payment method available for this store");
+                errors.AppendLine("Warning: No wallet has been linked to your BTCPay Store. See the following link for more information on how to connect your store and wallet. (https://docs.btcpayserver.org/btcpay-basics/gettingstarted#connecting-btcpay-store-to-your-wallet)");
                 foreach (var error in logs.ToList())
                 {
                     errors.AppendLine(error.ToString());

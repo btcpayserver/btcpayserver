@@ -15,6 +15,10 @@ namespace BTCPayServer.Models.InvoicingModels
         {
             get; set;
         }
+        public int Total
+        {
+            get; set;
+        }
         public string SearchTerm
         {
             get; set;

@@ -1609,7 +1609,7 @@ donation:
             waitJobsFinish = client.WaitAllRunning(default);
             Assert.False(waitJobsFinish.Wait(100));
             cts.Cancel();
-            Assert.True(waitJobsFinish.Wait(100));
+            Assert.True(waitJobsFinish.Wait(1000));
             Assert.True(waitJobsFinish.IsCompletedSuccessfully);
             Assert.True(!waitJobsFinish.IsFaulted);
             Assert.False(jobExecuted);

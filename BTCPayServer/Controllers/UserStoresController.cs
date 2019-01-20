@@ -83,7 +83,9 @@ namespace BTCPayServer.Controllers
             string userID = GetUserId();
 
             StoresViewModel result = new StoresViewModel();
-            var stores = await _Repo.GetStoresByUserId(userID);
+            //var stores = await _Repo.GetStoresByUserId(userID);
+            StoreRepository.StoreQuery storeQuery = new StoreRepository.StoreQuery { UserId = userID };
+            var stores = await _Repo.GetStores(storeQuery);
             for (int i = 0; i < stores.Length; i++)
             {
                 var store = stores[i];
@@ -94,24 +96,6 @@ namespace BTCPayServer.Controllers
                     WebSite = store.StoreWebsite,
                     IsOwner = store.HasClaim(Policies.CanModifyStoreSettings.Key)
                 });
-            }
-
-            if (User.IsInRole(Roles.ServerAdmin))
-            {
-                // Display the stores belong to other owners that are present on this server.
-                var otherStores = await _Repo.GetAllStores();
-
-                foreach(var otherStore in otherStores.Where(x => !stores.Any(y => y.Id == x.Id)))
-                {
-                    var store = otherStore;
-                    result.OtherStores.Add(new StoresViewModel.StoreViewModel()
-                    {
-                        Id = store.Id,
-                        Name = store.StoreName,
-                        WebSite = store.StoreWebsite,
-                        IsOwner = false
-                    });
-                }
             }
 
             return View(result);

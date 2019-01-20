@@ -76,7 +76,41 @@ namespace BTCPayServer.Services.Stores
             }
         }
 
-        public async Task<StoreData[]> GetStoresByUserId(string userId)
+        public async Task<int> GetStoresTotal(StoreQuery queryObject)
+        {
+            using (var ctx = _ContextFactory.CreateContext())
+            {
+                return await ctx.Stores.CountAsync();
+            }
+        }
+
+        public async Task<StoreData[]> GetStores(StoreQuery queryObject)
+        {
+            using (var context = _ContextFactory.CreateContext())
+            {
+                var query = GetStoreQuery(context, queryObject);
+
+                query = query.Include(o => o.UserStores);
+
+                var data = await query.ToArrayAsync().ConfigureAwait(false);
+                return data.Select(ToEntity).ToArray();
+            }
+        }
+
+        private StoreData ToEntity(Data.StoreData store)
+        {
+           
+            return store;
+        }
+
+        private IQueryable<Data.StoreData> GetStoreQuery(ApplicationDbContext context, StoreQuery queryObject)
+        {
+            IQueryable<Data.StoreData> query = context.Stores;
+
+            return query;
+        }
+
+         public async Task<StoreData[]> GetStoresByUserId(string userId)
         {
             using (var ctx = _ContextFactory.CreateContext())
             {
@@ -250,6 +284,29 @@ namespace BTCPayServer.Services.Stores
             using (var ctx = _ContextFactory.CreateContext())
             {
                 return ctx.Database.SupportDropForeignKey();
+            }
+        }
+
+        public class StoreQuery
+        {
+            public bool IsAdmin
+            {
+                get; set;
+            }
+
+            public string UserId
+            {
+                get; set;
+            }
+           
+            public int? Skip
+            {
+                get; set;
+            }
+
+            public int? Count
+            {
+                get; set;
             }
         }
     }

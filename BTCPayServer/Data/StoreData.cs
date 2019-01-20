@@ -159,12 +159,6 @@ namespace BTCPayServer.Data
         }
 
         [NotMapped]
-        public string OwnerEmailAddress
-        {
-            get; set;
-        }
-
-        [NotMapped]
         [Obsolete]
         public string Role
         {

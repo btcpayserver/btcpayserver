@@ -13,11 +13,6 @@ namespace BTCPayServer.Models.StoreViewModels
             get; set;
         } = new List<StoreViewModel>();
 
-        public List<StoreViewModel> OtherStores
-        {
-            get; set;
-        } = new List<StoreViewModel>();
-
         public class StoreViewModel
         {
             public string Name

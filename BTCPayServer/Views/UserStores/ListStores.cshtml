@@ -52,45 +52,5 @@
             </table>
         </div>
 
-        @if (Model.OtherStores.Count() > 0)
-        {
-            <div class="row">
-                <div class="col-lg-12 text-center">
-                    <h2 class="section-heading">Other Stores</h2>
-                    <hr class="primary">
-                    <p>Stores on your server belonging to other owners.</p>
-                </div>
-            </div>
-
-            <div class="row">
-                <table class="table table-sm table-responsive-md">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Website</th>
-                            <th style="text-align:right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var store in Model.OtherStores)
-                        {
-                            <tr>
-                                <td>@store.Name</td>
-                                <td>
-                                    @if (!string.IsNullOrEmpty(store.WebSite))
-                                    {
-                                        <a href="@store.WebSite">@store.WebSite</a>
-                                    }
-                                </td>
-                                <td style="text-align:right">
-                                    <a asp-action="DeleteStore" asp-route-storeId="@store.Id">Remove</a>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        }
-
     </div>
 </section>

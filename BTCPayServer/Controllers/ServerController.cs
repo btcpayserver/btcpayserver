@@ -333,7 +333,7 @@ namespace BTCPayServer.Controllers
             return null;
         }
 
-        private static bool IsAdmin(IList<string> roles)
+        public static bool IsAdmin(IList<string> roles)
         {
             return roles.Contains(Roles.ServerAdmin, StringComparer.Ordinal);
         }

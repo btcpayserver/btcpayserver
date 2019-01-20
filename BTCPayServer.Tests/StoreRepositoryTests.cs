@@ -2,6 +2,7 @@
 using System.IO;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
+using BTCPayServer.Security;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Builder;
@@ -13,6 +14,8 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Xunit;
 using Xunit.Abstractions;
+
+using static System.Linq.Enumerable;
 
 namespace BTCPayServer.Tests
 {
@@ -77,19 +80,13 @@ namespace BTCPayServer.Tests
             Logs.LogProvider = new XUnitLogProvider(helper);
         }
 
-        // Dispose gets called by the xunit test harness after every unit test. By deleteting the
-        // Sqlite database file after each test subsequent tests will always start from a known state.
         [Fact]
         public void Dispose()
         {
-            try
+            if (File.Exists(StoreRepositoryTestsStartup.SqliteFilename))
             {
-                if (File.Exists(StoreRepositoryTestsStartup.SqliteFilename))
-                {
-                    File.Delete(StoreRepositoryTestsStartup.SqliteFilename);
-                }
+                File.Delete(StoreRepositoryTestsStartup.SqliteFilename);
             }
-            catch { }
         }
 
         // Tests that the ASP.NET UserManager can be accessed.
@@ -137,6 +134,7 @@ namespace BTCPayServer.Tests
 
             using (IServiceScope scope = host.Services.CreateScope())
             {
+                await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.EnsureDeletedAsync();
                 await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.EnsureCreatedAsync();
 
                 IServiceProvider services = scope.ServiceProvider;
@@ -165,6 +163,7 @@ namespace BTCPayServer.Tests
 
             using (IServiceScope scope = host.Services.CreateScope())
             {
+                await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.EnsureDeletedAsync();
                 await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.EnsureCreatedAsync();
 
                 IServiceProvider services = scope.ServiceProvider;
@@ -186,6 +185,144 @@ namespace BTCPayServer.Tests
                 int storeCount = await storeRepository.GetStoresTotal(null);
 
                 Assert.Equal(1, storeCount);
+            }
+        }
+
+        // Tests that multiple stores can be added.
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public async void CanAddMultipleStores()
+        {
+            IWebHost host = new WebHostBuilder()
+                .UseStartup<StoreRepositoryTestsStartup>()
+                .Build();
+
+            using (IServiceScope scope = host.Services.CreateScope())
+            {
+                await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.EnsureDeletedAsync();
+                await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.EnsureCreatedAsync();
+
+                IServiceProvider services = scope.ServiceProvider;
+                UserManager<ApplicationUser> userManager = services.GetService<UserManager<ApplicationUser>>();
+                StoreRepository storeRepository = services.GetService<StoreRepository>();
+
+                // Create the user that will be the store owner.
+                string emailAddress = "test@btcpay.com";
+                var user = new ApplicationUser { UserName = "test", Email = emailAddress };
+                await userManager.CreateAsync(user, "password");
+
+                IdentityUser testUser = await userManager.FindByEmailAsync(emailAddress);
+
+                Assert.NotNull(testUser);
+
+                int storesToAdd = 13;
+
+                foreach (int i in Range(1, storesToAdd))
+                {
+                    StoreData store = await storeRepository.CreateStore(testUser.Id, $"Test Store {i}");
+                }
+
+                int storeCount = await storeRepository.GetStoresTotal(null);
+
+                Assert.Equal(storesToAdd, storeCount);
+            }
+        }
+
+        // Tests that the stores can be retrieved when filtering on the owner.
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public async void CanGetStoresForUser()
+        {
+            IWebHost host = new WebHostBuilder()
+                .UseStartup<StoreRepositoryTestsStartup>()
+                .Build();
+
+            using (IServiceScope scope = host.Services.CreateScope())
+            {
+                await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.EnsureDeletedAsync();
+                await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.EnsureCreatedAsync();
+
+                IServiceProvider services = scope.ServiceProvider;
+                UserManager<ApplicationUser> userManager = services.GetService<UserManager<ApplicationUser>>();
+                StoreRepository storeRepository = services.GetService<StoreRepository>();
+
+                // Create two users.
+                string emailAddress = "test@btcpay.com";
+                var user = new ApplicationUser { UserName = "test", Email = emailAddress };
+                await userManager.CreateAsync(user, "password");
+
+                string emailAddress2 = "test2@btcpay.com";
+                var user2 = new ApplicationUser { UserName = "test2", Email = emailAddress2 };
+                await userManager.CreateAsync(user2, "password");
+
+                ApplicationUser testUser = await userManager.FindByEmailAsync(emailAddress);
+                ApplicationUser testUser2 = await userManager.FindByEmailAsync(emailAddress2);
+
+                Assert.NotNull(testUser);
+                Assert.NotNull(testUser2);
+
+                // Create 2 stores, one for each user.
+                StoreData store = await storeRepository.CreateStore(testUser.Id, "Test Store");
+                string store2Name = "Test Store 2";
+                StoreData store2 = await storeRepository.CreateStore(testUser2.Id, store2Name);
+
+                StoreRepository.StoreQuery query = new StoreRepository.StoreQuery { UserId = testUser2.Id };
+                int userStoreCount = await storeRepository.GetStoresTotal(query);
+                var userStores = await storeRepository.GetStores(query);
+
+                Assert.Equal(1, userStoreCount);
+                Assert.Equal(store2Name, userStores.First().StoreName);
+            }
+        }
+
+        // Tests that ALL stores are retrieved when the user is the server admin.
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public async void CanGetStoresForAdmin()
+        {
+            IWebHost host = new WebHostBuilder()
+                .UseStartup<StoreRepositoryTestsStartup>()
+                .Build();
+
+            using (IServiceScope scope = host.Services.CreateScope())
+            {
+                await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.EnsureDeletedAsync();
+                await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.EnsureCreatedAsync();
+
+                IServiceProvider services = scope.ServiceProvider;
+                UserManager<ApplicationUser> userManager = services.GetService<UserManager<ApplicationUser>>();
+                StoreRepository storeRepository = services.GetService<StoreRepository>();
+
+                // Create two users.
+                string emailAddress = "test@btcpay.com";
+                var user = new ApplicationUser { UserName = "test", Email = emailAddress };
+                await userManager.CreateAsync(user, "password");
+
+                string emailAddress2 = "test2@btcpay.com";
+                var user2 = new ApplicationUser { UserName = "test2", Email = emailAddress2 };
+                await userManager.CreateAsync(user2, "password");
+
+                ApplicationUser testUser = await userManager.FindByEmailAsync(emailAddress);
+                ApplicationUser testUser2 = await userManager.FindByEmailAsync(emailAddress2);
+
+                Assert.NotNull(testUser);
+                Assert.NotNull(testUser2);
+
+                // Create 2 stores, one for each user.
+                string storeName = "Test Store";
+                StoreData store = await storeRepository.CreateStore(testUser.Id, storeName);
+                string store2Name = "Test Store 2";
+                StoreData store2 = await storeRepository.CreateStore(testUser2.Id, store2Name);
+
+                StoreRepository.StoreQuery query = new StoreRepository.StoreQuery { IsAdmin = true, UserId = testUser2.Id };
+                int userStoreCount = await storeRepository.GetStoresTotal(query);
+                var userStores = await storeRepository.GetStores(query);
+
+                Assert.Equal(2, userStoreCount);
+                Assert.Contains(storeName, userStores.Select(s => s.StoreName));
+                Assert.Contains(store2Name, userStores.Select(s => s.StoreName));
+                Assert.False(userStores.Where(s => s.StoreName == storeName).Single().HasClaim(Policies.CanModifyStoreSettings.Key));
+                Assert.True(userStores.Where(s => s.StoreName == store2Name).Single().HasClaim(Policies.CanModifyStoreSettings.Key));
             }
         }
     }

@@ -21,7 +21,29 @@
         </div>
 
         <div class="row">
-            <a asp-action="CreateStore" class="btn btn-primary" role="button"><span class="fa fa-plus"></span> Create a new store</a>
+            <div class="col-lg-6">
+                <a asp-action="CreateStore" class="btn btn-primary" role="button"><span class="fa fa-plus"></span> Create a new store</a>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="form-inline" style="float:right;">
+                    <form asp-action="ListStores" method="get">
+                        <div class="input-group">
+                            <label asp-for="ShowAll" class="form-check-label pr-2"></label>
+                            @Html.EditorFor(m => m.ShowAll)
+                            <span class="input-group-btn pl-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <span class="fa"></span> Apply
+                                </button>
+                            </span>
+                        </div>
+                        <input type="hidden" asp-for="Count" />
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
             <table class="table table-sm table-responsive-md">
                 <thead>
                     <tr>
@@ -43,13 +65,40 @@
                             </td>
                             <td style="text-align:right">
                                 <a asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchTerm="storeid:@store.Id">Invoices</a><span> - </span>
-                                <a asp-action="UpdateStore" asp-controller="Stores" asp-route-storeId="@store.Id">Settings</a><span> - </span>
+                                @if (store.IsOwner)
+                                {
+                                    <a asp-action="UpdateStore" asp-controller="Stores" asp-route-storeId="@store.Id">Settings</a><span> - </span>
+                                }
                                 <a asp-action="DeleteStore" asp-route-storeId="@store.Id">Remove</a>
                             </td>
                         </tr>
                     }
                 </tbody>
             </table>
+
+            <nav aria-label="...">
+                <ul class="pagination">
+                    <li class="page-item  @(Model.Skip == 0 ? "disabled" : null)">
+                        <a class="page-link" tabindex="-1" href="@Url.Action("ListStores", new
+                        {
+                            skip = Math.Max(0, Model.Skip - Model.Count),
+                            count = Model.Count,
+                            showall = Model.ShowAll
+                        })">Previous</a>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">@(Model.Skip + 1) to @(Model.Skip + Model.Stores.Count) of @Model.Total</span>
+                    </li>
+                    <li class="page-item @(Model.Total > (Model.Skip + Model.Stores.Count) ? null : "disabled")">
+                        <a class="page-link" href="@Url.Action("ListStores", new
+                        {
+                            skip = Model.Skip + Model.Count,
+                            count = Model.Count,
+                            showall = Model.ShowAll
+                        })">Next</a>
+                    </li>
+                </ul>
+            </nav>
         </div>
 
     </div>

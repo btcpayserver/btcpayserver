@@ -80,32 +80,52 @@ namespace BTCPayServer.Services.Stores
         {
             using (var ctx = _ContextFactory.CreateContext())
             {
-                return await ctx.Stores.CountAsync();
+                var query = GetStoreQuery(ctx, queryObject);
+
+                return await query.CountAsync();
             }
         }
 
         public async Task<StoreData[]> GetStores(StoreQuery queryObject)
         {
-            using (var context = _ContextFactory.CreateContext())
+            using (var ctx = _ContextFactory.CreateContext())
             {
-                var query = GetStoreQuery(context, queryObject);
+                var query = GetStoreQuery(ctx, queryObject);
 
                 query = query.Include(o => o.UserStores);
 
                 var data = await query.ToArrayAsync().ConfigureAwait(false);
-                return data.Select(ToEntity).ToArray();
+                return data.Select(s => ToEntity(s, queryObject?.UserId)).ToArray();
             }
         }
 
-        private StoreData ToEntity(Data.StoreData store)
+        private StoreData ToEntity(Data.StoreData store, string userId)
         {
-           
+#pragma warning disable CS0612 // Type or member is obsolete
+            store.Role = store.UserStores.Where(u => u.ApplicationUserId == userId).FirstOrDefault()?.Role;
+#pragma warning restore CS0612 // Type or member is obsolete
             return store;
         }
 
         private IQueryable<Data.StoreData> GetStoreQuery(ApplicationDbContext context, StoreQuery queryObject)
         {
             IQueryable<Data.StoreData> query = context.Stores;
+
+            if (queryObject != null)
+            {
+                if (queryObject.IsAdmin == false && !String.IsNullOrEmpty(queryObject.UserId))
+                {
+                    query = query.Where(s => s.UserStores.Any(u => u.ApplicationUserId == queryObject.UserId));
+                }
+
+                query = query.OrderBy(q => q.StoreName);
+
+                if (queryObject.Skip != null)
+                    query = query.Skip(queryObject.Skip.Value);
+
+                if (queryObject.Count != null)
+                    query = query.Take(queryObject.Count.Value);
+            }
 
             return query;
         }
@@ -128,27 +148,27 @@ namespace BTCPayServer.Services.Stores
             }
         }
 
-        public async Task<StoreData[]> GetAllStores()
-        {
-            using (var ctx = _ContextFactory.CreateContext())
-            {
-                //                return (await (from st in ctx.Stores
-                //                               from us in ctx.UserStore.Include(x => x.ApplicationUser).Where(x => st.Id == x.StoreDataId && x.ApplicationUserId == userId).DefaultIfEmpty()
-                //                               select new { Store = st, StoreUser = us }).ToArrayAsync())
-                //                             .Select(s =>
-                //                     {
-                //#pragma warning disable CS0612 // Type or member is obsolete
-                //                         s.Store.Role = s.StoreUser?.Role ?? Roles.ServerAdmin;
-                //                         s.Store.OwnerEmailAddress = s.StoreUser?.ApplicationUser?.Email;
-                //#pragma warning restore CS0612 // Type or member is obsolete
-                //                         return s.Store;
-                //                     }).ToArray();
+        //public async Task<StoreData[]> GetAllStores()
+        //{
+        //    using (var ctx = _ContextFactory.CreateContext())
+        //    {
+        //        //                return (await (from st in ctx.Stores
+        //        //                               from us in ctx.UserStore.Include(x => x.ApplicationUser).Where(x => st.Id == x.StoreDataId && x.ApplicationUserId == userId).DefaultIfEmpty()
+        //        //                               select new { Store = st, StoreUser = us }).ToArrayAsync())
+        //        //                             .Select(s =>
+        //        //                     {
+        //        //#pragma warning disable CS0612 // Type or member is obsolete
+        //        //                         s.Store.Role = s.StoreUser?.Role ?? Roles.ServerAdmin;
+        //        //                         s.Store.OwnerEmailAddress = s.StoreUser?.ApplicationUser?.Email;
+        //        //#pragma warning restore CS0612 // Type or member is obsolete
+        //        //                         return s.Store;
+        //        //                     }).ToArray();
 
-                return (await ctx.UserStore
-                    .Select(u => u.StoreData)
-                    .ToArrayAsync());
-            }
-        }
+        //        return (await ctx.UserStore
+        //            .Select(u => u.StoreData)
+        //            .ToArrayAsync());
+        //    }
+        //}
 
         public async Task<bool> AddStoreUser(string storeId, string userId, string role)
         {

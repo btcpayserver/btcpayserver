@@ -78,13 +78,25 @@ namespace BTCPayServer.Controllers
         public string StatusMessage { get; set; }
 
         [HttpGet]
-        public async Task<IActionResult> ListStores()
+        public async Task<IActionResult> ListStores(int skip = 0, int count = 50, bool? showAll = false)
         {
             string userID = GetUserId();
+            bool isAdmin = false;
 
-            StoresViewModel result = new StoresViewModel();
-            //var stores = await _Repo.GetStoresByUserId(userID);
-            StoreRepository.StoreQuery storeQuery = new StoreRepository.StoreQuery { UserId = userID };
+            if (showAll == true)
+            {
+                var user = await _UserManager.FindByIdAsync(userID);
+                if (user == null)
+                    return NotFound();
+                var roles = await _UserManager.GetRolesAsync(user);
+                isAdmin = ServerController.IsAdmin(roles);
+            }
+
+            StoresViewModel result = new StoresViewModel { Skip = skip, Count = count, ShowAll = showAll.Value };
+            StoreRepository.StoreQuery storeQuery = new StoreRepository.StoreQuery { UserId = userID, IsAdmin = isAdmin };
+            var counting = _Repo.GetStoresTotal(storeQuery);
+            storeQuery.Skip = skip;
+            storeQuery.Count = count;
             var stores = await _Repo.GetStores(storeQuery);
             for (int i = 0; i < stores.Length; i++)
             {
@@ -97,7 +109,7 @@ namespace BTCPayServer.Controllers
                     IsOwner = store.HasClaim(Policies.CanModifyStoreSettings.Key)
                 });
             }
-
+            result.Total = await counting;
             return View(result);
         }
 

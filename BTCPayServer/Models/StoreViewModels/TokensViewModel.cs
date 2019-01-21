@@ -72,5 +72,6 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "API Key")]
         public string ApiKey { get; set; }
         public string EncodedApiKey { get; set; }
+        public bool StoreNotConfigured { get; set; }
     }
 }

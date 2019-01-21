@@ -110,7 +110,7 @@ namespace BTCPayServer.Configuration
                         if (!LightningConnectionString.TryParse(lightning, true, out var connectionString, out var error))
                         {
                             throw new ConfigException($"Invalid setting {net.CryptoCode}.lightning, " + Environment.NewLine +
-                                $"If you have a lightning server use: 'type=clightning;server=/root/.lightning/lightning-rpc', " + Environment.NewLine +
+                                $"If you have a c-lightning server use: 'type=clightning;server=/root/.lightning/lightning-rpc', " + Environment.NewLine +
                                 $"If you have a lightning charge server: 'type=charge;server=https://charge.example.com;api-token=yourapitoken'" + Environment.NewLine +
                                 $"If you have a lnd server: 'type=lnd-rest;server=https://lnd:lnd@lnd.example.com;macaroon=abf239...;certthumbprint=2abdf302...'" + Environment.NewLine +
                                 $"              lnd server: 'type=lnd-rest;server=https://lnd:lnd@lnd.example.com;macaroonfilepath=/root/.lnd/admin.macaroon;certthumbprint=2abdf302...'" + Environment.NewLine +
@@ -118,7 +118,7 @@ namespace BTCPayServer.Configuration
                         }
                         if (connectionString.IsLegacy)
                         {
-                            Logs.Configuration.LogWarning($"Setting {net.CryptoCode}.lightning will work but use an deprecated format, please replace it by '{connectionString.ToString()}'");
+                            Logs.Configuration.LogWarning($"Setting {net.CryptoCode}.lightning is a deprecated format, it will work now, but please replace it for future versions with '{connectionString.ToString()}'");
                         }
                         InternalLightningByCryptoCode.Add(net.CryptoCode, connectionString);
                     }
@@ -235,7 +235,7 @@ namespace BTCPayServer.Configuration
                 RootPath = "/" + RootPath;
             var old = conf.GetOrDefault<Uri>("internallightningnode", null);
             if (old != null)
-                throw new ConfigException($"internallightningnode should not be used anymore, use btclightning instead");
+                throw new ConfigException($"internallightningnode is deprecated and should not be used anymore, use btclightning instead");
 
             LogFile = GetDebugLog(conf);
             if (!string.IsNullOrEmpty(LogFile))

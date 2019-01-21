@@ -14,6 +14,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Misc", "Misc", "{29290EC7-0
 		Dockerfile.linuxarm32v7 = Dockerfile.linuxarm32v7
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Clients", "Clients", "{0FD5C1EA-CB58-43FF-9547-BC3CA4C4CD21}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BTCPayServer.ClientCredentials.CSharp", "Clients\BTCPayServer.ClientCredentials.CSharp\BTCPayServer.ClientCredentials.CSharp.csproj", "{C35FE352-5D75-45FD-8CD4-CB75C81B51DC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BtcPayServer.Password.CSharp", "Clients\BtcPayServer.Password.CSharp\BtcPayServer.Password.CSharp.csproj", "{16048077-7217-4D79-BC01-90C1EC2E1BAA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BTCPayServer.AuthorizationCode.CSharp", "Clients\BTCPayServer.AuthorizationCode.CSharp\BTCPayServer.AuthorizationCode.CSharp.csproj", "{73A24615-8BB3-4A94-AEF6-AFD4872389EE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BTCPayServer.AuthorizationCode.CSharp.AspNetCore", "Clients\BTCPayServer.AuthorizationCode.CSharp.AspNetCore\BTCPayServer.AuthorizationCode.CSharp.AspNetCore.csproj", "{12FA6CC1-1857-4E09-81B7-8360045AAB13}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -48,11 +58,65 @@ Global
 		{B373F439-6E75-4A94-985D-10A0C7C500D0}.Release|x64.Build.0 = Release|Any CPU
 		{B373F439-6E75-4A94-985D-10A0C7C500D0}.Release|x86.ActiveCfg = Release|Any CPU
 		{B373F439-6E75-4A94-985D-10A0C7C500D0}.Release|x86.Build.0 = Release|Any CPU
+		{C35FE352-5D75-45FD-8CD4-CB75C81B51DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C35FE352-5D75-45FD-8CD4-CB75C81B51DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C35FE352-5D75-45FD-8CD4-CB75C81B51DC}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C35FE352-5D75-45FD-8CD4-CB75C81B51DC}.Debug|x64.Build.0 = Debug|Any CPU
+		{C35FE352-5D75-45FD-8CD4-CB75C81B51DC}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C35FE352-5D75-45FD-8CD4-CB75C81B51DC}.Debug|x86.Build.0 = Debug|Any CPU
+		{C35FE352-5D75-45FD-8CD4-CB75C81B51DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C35FE352-5D75-45FD-8CD4-CB75C81B51DC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C35FE352-5D75-45FD-8CD4-CB75C81B51DC}.Release|x64.ActiveCfg = Release|Any CPU
+		{C35FE352-5D75-45FD-8CD4-CB75C81B51DC}.Release|x64.Build.0 = Release|Any CPU
+		{C35FE352-5D75-45FD-8CD4-CB75C81B51DC}.Release|x86.ActiveCfg = Release|Any CPU
+		{C35FE352-5D75-45FD-8CD4-CB75C81B51DC}.Release|x86.Build.0 = Release|Any CPU
+		{16048077-7217-4D79-BC01-90C1EC2E1BAA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{16048077-7217-4D79-BC01-90C1EC2E1BAA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{16048077-7217-4D79-BC01-90C1EC2E1BAA}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{16048077-7217-4D79-BC01-90C1EC2E1BAA}.Debug|x64.Build.0 = Debug|Any CPU
+		{16048077-7217-4D79-BC01-90C1EC2E1BAA}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{16048077-7217-4D79-BC01-90C1EC2E1BAA}.Debug|x86.Build.0 = Debug|Any CPU
+		{16048077-7217-4D79-BC01-90C1EC2E1BAA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{16048077-7217-4D79-BC01-90C1EC2E1BAA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{16048077-7217-4D79-BC01-90C1EC2E1BAA}.Release|x64.ActiveCfg = Release|Any CPU
+		{16048077-7217-4D79-BC01-90C1EC2E1BAA}.Release|x64.Build.0 = Release|Any CPU
+		{16048077-7217-4D79-BC01-90C1EC2E1BAA}.Release|x86.ActiveCfg = Release|Any CPU
+		{16048077-7217-4D79-BC01-90C1EC2E1BAA}.Release|x86.Build.0 = Release|Any CPU
+		{73A24615-8BB3-4A94-AEF6-AFD4872389EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73A24615-8BB3-4A94-AEF6-AFD4872389EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73A24615-8BB3-4A94-AEF6-AFD4872389EE}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{73A24615-8BB3-4A94-AEF6-AFD4872389EE}.Debug|x64.Build.0 = Debug|Any CPU
+		{73A24615-8BB3-4A94-AEF6-AFD4872389EE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{73A24615-8BB3-4A94-AEF6-AFD4872389EE}.Debug|x86.Build.0 = Debug|Any CPU
+		{73A24615-8BB3-4A94-AEF6-AFD4872389EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73A24615-8BB3-4A94-AEF6-AFD4872389EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73A24615-8BB3-4A94-AEF6-AFD4872389EE}.Release|x64.ActiveCfg = Release|Any CPU
+		{73A24615-8BB3-4A94-AEF6-AFD4872389EE}.Release|x64.Build.0 = Release|Any CPU
+		{73A24615-8BB3-4A94-AEF6-AFD4872389EE}.Release|x86.ActiveCfg = Release|Any CPU
+		{73A24615-8BB3-4A94-AEF6-AFD4872389EE}.Release|x86.Build.0 = Release|Any CPU
+		{12FA6CC1-1857-4E09-81B7-8360045AAB13}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12FA6CC1-1857-4E09-81B7-8360045AAB13}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12FA6CC1-1857-4E09-81B7-8360045AAB13}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{12FA6CC1-1857-4E09-81B7-8360045AAB13}.Debug|x64.Build.0 = Debug|Any CPU
+		{12FA6CC1-1857-4E09-81B7-8360045AAB13}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{12FA6CC1-1857-4E09-81B7-8360045AAB13}.Debug|x86.Build.0 = Debug|Any CPU
+		{12FA6CC1-1857-4E09-81B7-8360045AAB13}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12FA6CC1-1857-4E09-81B7-8360045AAB13}.Release|Any CPU.Build.0 = Release|Any CPU
+		{12FA6CC1-1857-4E09-81B7-8360045AAB13}.Release|x64.ActiveCfg = Release|Any CPU
+		{12FA6CC1-1857-4E09-81B7-8360045AAB13}.Release|x64.Build.0 = Release|Any CPU
+		{12FA6CC1-1857-4E09-81B7-8360045AAB13}.Release|x86.ActiveCfg = Release|Any CPU
+		{12FA6CC1-1857-4E09-81B7-8360045AAB13}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {203A3162-BE45-4721-937D-6804E0E1AFF8}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{C35FE352-5D75-45FD-8CD4-CB75C81B51DC} = {0FD5C1EA-CB58-43FF-9547-BC3CA4C4CD21}
+		{16048077-7217-4D79-BC01-90C1EC2E1BAA} = {0FD5C1EA-CB58-43FF-9547-BC3CA4C4CD21}
+		{73A24615-8BB3-4A94-AEF6-AFD4872389EE} = {0FD5C1EA-CB58-43FF-9547-BC3CA4C4CD21}
+		{12FA6CC1-1857-4E09-81B7-8360045AAB13} = {0FD5C1EA-CB58-43FF-9547-BC3CA4C4CD21}
 	EndGlobalSection
 EndGlobal

@@ -106,7 +106,8 @@ namespace BTCPayServer.Controllers
                     Id = store.Id,
                     Name = store.StoreName,
                     WebSite = store.StoreWebsite,
-                    IsOwner = store.HasClaim(Policies.CanModifyStoreSettings.Key)
+                    IsOwner = store.HasClaim(Policies.CanModifyStoreSettings.Key),
+                    CanViewInvoices = store.HasClaim(Policies.CanViewInvoices.Key)
                 });
             }
             result.Total = await counting;

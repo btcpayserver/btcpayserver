@@ -55,6 +55,11 @@ namespace BTCPayServer.Models.StoreViewModels
                 get;
                 set;
             }
+            public bool CanViewInvoices
+            {
+                get;
+                set;
+            }
         }
     }
 }

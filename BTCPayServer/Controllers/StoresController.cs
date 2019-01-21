@@ -172,7 +172,7 @@ namespace BTCPayServer.Controllers
             return View("Confirm", new ConfirmModel()
             {
                 Title = $"Remove store user",
-                Description = $"Are you sure to remove access to remove access to {user.Email}?",
+                Description = $"Are you sure you want to remove store access for {user.Email}?",
                 Action = "Delete"
             });
         }

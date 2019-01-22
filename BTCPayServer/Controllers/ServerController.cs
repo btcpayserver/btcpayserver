@@ -371,9 +371,15 @@ namespace BTCPayServer.Controllers
             var user = userId == null ? null : await _UserManager.FindByIdAsync(userId);
             var roles = await _UserManager.GetRolesAsync(user);
             var isAdmin = IsAdmin(roles);
+            var admincount = 0;
             if (user == null)
                 return NotFound();
-            if (isAdmin == true)
+            foreach (var User in _UserManager.Users)
+            {
+                if (isAdmin == true)
+                    admincount += 1;
+            }
+            if (isAdmin == true && admincount < 2)
                 return View("Confirm", new ConfirmModel()
                 {
                     Title = "Delete user " + user.Email,

@@ -369,14 +369,24 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> DeleteUser(string userId)
         {
             var user = userId == null ? null : await _UserManager.FindByIdAsync(userId);
+            var roles = await _UserManager.GetRolesAsync(user);
+            var isAdmin = IsAdmin(roles);
             if (user == null)
                 return NotFound();
-            return View("Confirm", new ConfirmModel()
-            {
-                Title = "Delete user " + user.Email,
-                Description = "This user will be permanently deleted",
-                Action = "Delete"
-            });
+            if (isAdmin == true)
+                return View("Confirm", new ConfirmModel()
+                {
+                    Title = "Delete user " + user.Email,
+                    Description = "Are you sure you want to delete this Admin and delete all accounts, users and data associated with the server account?",
+                    Action = "Delete"
+                });
+            else
+                return View("Confirm", new ConfirmModel()
+                {
+                    Title = "Delete user " + user.Email,
+                    Description = "This user will be permanently deleted",
+                    Action = "Delete"
+                });
         }
 
         [Route("server/users/{userId}/delete")]

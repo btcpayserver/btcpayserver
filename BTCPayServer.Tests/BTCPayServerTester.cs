@@ -41,7 +41,7 @@ namespace BTCPayServer.Tests
     public enum TestDatabases
     {
         Postgres,
-        MySQL
+        MySQL,
     }
 
     public class BTCPayServerTester : IDisposable

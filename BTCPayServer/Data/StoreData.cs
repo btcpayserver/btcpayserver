@@ -177,11 +177,8 @@ namespace BTCPayServer.Data
             {
                 claims.Add(new Claim(Policies.CanModifyStoreSettings.Key, Id));
             }
-            if (role == StoreRoles.Owner || role == StoreRoles.Guest)
-            {
-                claims.Add(new Claim(Policies.CanViewInvoices.Key, Id));
-            }
-            if (role == StoreRoles.Owner || role == StoreRoles.Guest || GetStoreBlob().AnyoneCanInvoice)
+
+            if(role == StoreRoles.Owner || role == StoreRoles.Guest || GetStoreBlob().AnyoneCanInvoice)
             {
                 claims.Add(new Claim(Policies.CanCreateInvoice.Key, Id));
             }

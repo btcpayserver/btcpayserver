@@ -107,7 +107,9 @@ namespace BTCPayServer.Controllers
                     Name = store.StoreName,
                     WebSite = store.StoreWebsite,
                     IsOwner = store.HasClaim(Policies.CanModifyStoreSettings.Key),
-                    CanViewInvoices = store.HasClaim(Policies.CanViewInvoices.Key)
+#pragma warning disable CS0612 // Type or member is obsolete
+                    IsGuest = store.Role == StoreRoles.Guest
+#pragma warning restore CS0612 // Type or member is obsolete
                 });
             }
             result.Total = await counting;

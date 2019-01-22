@@ -36,10 +36,5 @@ namespace BTCPayServer.Security
         {
             public const string Key = "btcpay.store.cancreateinvoice";
         }
-
-        public class CanViewInvoices
-        {
-            public const string Key = "btcpay.store.canviewinvoices";
-        }
     }
 }

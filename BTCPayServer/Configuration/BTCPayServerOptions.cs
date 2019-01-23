@@ -177,10 +177,11 @@ namespace BTCPayServer.Configuration
             var services = conf.GetOrDefault<string>("externalservices", null);
             if (services != null)
             {
-                foreach (var service in services.Split(new[] { ';', ',' })
-                                                .Select(p => p.Split(':'))
-                                                .Where(p => p.Length == 2)
-                                                .Select(p => (Name: p[0], Link: p[1])))
+                foreach (var service in services.Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries)
+                                                .Select(p => (p, SeparatorIndex: p.IndexOf(':', StringComparison.OrdinalIgnoreCase)))
+                                                .Where(p => p.SeparatorIndex != -1)
+                                                .Select(p => (Name: p.p.Substring(0, p.SeparatorIndex), 
+                                                              Link: p.p.Substring(p.SeparatorIndex + 1))))
                 {
                     ExternalServices.AddOrReplace(service.Name, service.Link);
                 }

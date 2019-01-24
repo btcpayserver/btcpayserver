@@ -33,7 +33,7 @@
     <EmbeddedResource Include="Currencies.txt" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="BTCPayServer.Lightning.All" Version="1.1.0.4" />
+    <PackageReference Include="BTCPayServer.Lightning.All" Version="1.1.0.5" />
     <PackageReference Include="BuildBundlerMinifier" Version="2.7.385" />
     <PackageReference Include="DigitalRuby.ExchangeSharp" Version="0.5.3" />
     <PackageReference Include="HtmlSanitizer" Version="4.0.199" />
@@ -45,8 +45,8 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NBitcoin" Version="4.1.1.77" />
-    <PackageReference Include="NBitpayClient" Version="1.0.0.30" />	  
+    <PackageReference Include="NBitcoin" Version="4.1.1.78" />
+    <PackageReference Include="NBitpayClient" Version="1.0.0.31" />	  
     <PackageReference Include="DBreeze" Version="1.92.0" />
     <PackageReference Include="NBXplorer.Client" Version="2.0.0.3" />
     <PackageReference Include="NicolasDorier.CommandLine" Version="1.0.0.2" />

@@ -1988,6 +1988,7 @@ donation:
                 var invoice = user.BitPay.CreateInvoice(new Invoice()
                 {
                     Price = 5000.0m,
+                    TaxIncluded = 1000.0m,
                     Currency = "USD",
                     PosData = "posData",
                     OrderId = "orderId",
@@ -2017,6 +2018,8 @@ donation:
                 });
 
                 invoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
+                Assert.Equal(1000.0m, invoice.TaxIncluded);
+                Assert.Equal(5000.0m, invoice.Price);
                 Assert.Equal(Money.Coins(0), invoice.BtcPaid);
                 Assert.Equal("new", invoice.Status);
                 Assert.False((bool)((JValue)invoice.ExceptionStatus).Value);

@@ -99,8 +99,12 @@ namespace BTCPayServer.Controllers
             if (currencyInfo != null)
             {
                 invoice.Price = Math.Round(invoice.Price, currencyInfo.CurrencyDecimalDigits);
+                invoice.TaxIncluded = Math.Round(invoice.TaxIncluded, currencyInfo.CurrencyDecimalDigits);
             }
             invoice.Price = Math.Max(0.0m, invoice.Price);
+            invoice.TaxIncluded = Math.Max(0.0m, invoice.TaxIncluded);
+            invoice.TaxIncluded = Math.Min(invoice.TaxIncluded, invoice.Price);
+
             entity.ProductInformation = Map<Invoice, ProductInformation>(invoice);
 
 

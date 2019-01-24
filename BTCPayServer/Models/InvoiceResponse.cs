@@ -90,6 +90,12 @@ namespace BTCPayServer.Models
             get; set;
         }
 
+        [JsonProperty("taxIncluded", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public decimal TaxIncluded
+        {
+            get; set;
+        }
+
         //"currency":"USD"
         [JsonProperty("currency")]
         public string Currency

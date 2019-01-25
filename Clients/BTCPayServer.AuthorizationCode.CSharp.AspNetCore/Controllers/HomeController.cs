@@ -1,29 +1,47 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using BTCPayServer.AuthorizationCode.CSharp.AspNetCore.Models;
 
-namespace BTCPayServer.AuthorizationCode.CSharp.AspNetCore.Controllers
+namespace ClientApp.Controllers
 {
     public class HomeController : Controller
     {
-        public IActionResult Index()
+        private readonly HttpClient _client;
+
+        public HomeController(HttpClient client)
         {
-            return View();
+            _client = client;
         }
 
-        public IActionResult Privacy()
+        [HttpGet("~/")]
+        public ActionResult Index()
         {
-            return View();
+            return View("Home");
         }
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
+        [Authorize, HttpPost("~/")]
+        public async Task<ActionResult> Index(CancellationToken cancellationToken)
         {
-            return View(new ErrorViewModel {RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier});
+            var token = await HttpContext.GetTokenAsync(CookieAuthenticationDefaults.AuthenticationScheme, "access_token");
+            if (string.IsNullOrEmpty(token))
+            {
+                throw new InvalidOperationException("The access token cannot be found in the authentication ticket. " +
+                                                    "Make sure that SaveTokens is set to true in the OIDC options.");
+            }
+
+            var request = new HttpRequestMessage(HttpMethod.Get, "http://localhost:54540/api/message");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var response = await _client.SendAsync(request, cancellationToken);
+            response.EnsureSuccessStatusCode();
+
+            return View("Home", model: await response.Content.ReadAsStringAsync());
         }
     }
 }

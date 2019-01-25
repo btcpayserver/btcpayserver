@@ -24,6 +24,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BTCPayServer.AuthorizationC
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BTCPayServer.AuthorizationCode.CSharp.AspNetCore", "Clients\BTCPayServer.AuthorizationCode.CSharp.AspNetCore\BTCPayServer.AuthorizationCode.CSharp.AspNetCore.csproj", "{03FF0173-4247-4E34-BBA9-9F8F4CE9BE30}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BTCPayServer.OAuthIntrospection.CSharp.AspNetCore", "Clients\BTCPayServer.OAuthIntrospection.CSharp.AspNetCore\BTCPayServer.OAuthIntrospection.CSharp.AspNetCore.csproj", "{D098D6B0-9968-49B4-A1B7-71C8BB343E76}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -106,6 +108,18 @@ Global
 		{03FF0173-4247-4E34-BBA9-9F8F4CE9BE30}.Release|x64.Build.0 = Release|Any CPU
 		{03FF0173-4247-4E34-BBA9-9F8F4CE9BE30}.Release|x86.ActiveCfg = Release|Any CPU
 		{03FF0173-4247-4E34-BBA9-9F8F4CE9BE30}.Release|x86.Build.0 = Release|Any CPU
+		{D098D6B0-9968-49B4-A1B7-71C8BB343E76}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D098D6B0-9968-49B4-A1B7-71C8BB343E76}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D098D6B0-9968-49B4-A1B7-71C8BB343E76}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D098D6B0-9968-49B4-A1B7-71C8BB343E76}.Debug|x64.Build.0 = Debug|Any CPU
+		{D098D6B0-9968-49B4-A1B7-71C8BB343E76}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D098D6B0-9968-49B4-A1B7-71C8BB343E76}.Debug|x86.Build.0 = Debug|Any CPU
+		{D098D6B0-9968-49B4-A1B7-71C8BB343E76}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D098D6B0-9968-49B4-A1B7-71C8BB343E76}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D098D6B0-9968-49B4-A1B7-71C8BB343E76}.Release|x64.ActiveCfg = Release|Any CPU
+		{D098D6B0-9968-49B4-A1B7-71C8BB343E76}.Release|x64.Build.0 = Release|Any CPU
+		{D098D6B0-9968-49B4-A1B7-71C8BB343E76}.Release|x86.ActiveCfg = Release|Any CPU
+		{D098D6B0-9968-49B4-A1B7-71C8BB343E76}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -118,5 +132,6 @@ Global
 		{16048077-7217-4D79-BC01-90C1EC2E1BAA} = {0FD5C1EA-CB58-43FF-9547-BC3CA4C4CD21}
 		{73A24615-8BB3-4A94-AEF6-AFD4872389EE} = {0FD5C1EA-CB58-43FF-9547-BC3CA4C4CD21}
 		{03FF0173-4247-4E34-BBA9-9F8F4CE9BE30} = {0FD5C1EA-CB58-43FF-9547-BC3CA4C4CD21}
+		{D098D6B0-9968-49B4-A1B7-71C8BB343E76} = {0FD5C1EA-CB58-43FF-9547-BC3CA4C4CD21}
 	EndGlobalSection
 EndGlobal

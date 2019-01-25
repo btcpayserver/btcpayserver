@@ -1638,8 +1638,6 @@ donation:
                     {("[1,2,3]", new Dictionary<string, object>(){ {string.Empty, "[1,2,3]"}})},
                     {("{ \"key\": \"value\"}", new Dictionary<string, object>(){ {"key", "value"}})},
                     {("{ \"key\": true}", new Dictionary<string, object>(){ {"key", "True"}})},
-                    {("{ \"key\": \"value\", \"key2\": [\"value\", \"value2\"]}",
-                        new Dictionary<string, object>(){ {"key", "value"}, {"key2", "value,value2"}})},
                     {("{ invalidjson file here}", new Dictionary<string, object>(){ {String.Empty, "{ invalidjson file here}"}})}
                 };
 
@@ -1672,8 +1670,6 @@ donation:
                         {("[1,2,3]", new Dictionary<string, object>(){ {string.Empty, "[1,2,3]"}})},
                         {("{ \"key\": \"value\"}", new Dictionary<string, object>(){ {"key", "value"}})},
                         {("{ \"key\": true}", new Dictionary<string, object>(){ {"key", "True"}})},
-                        {("{ \"key\": \"value\", \"key2\": [\"value\", \"value2\"]}",
-                        new Dictionary<string, object>(){ {"key", "value"}, {"key2", "value,value2"}})},
                         {("{ invalidjson file here}", new Dictionary<string, object>(){ {String.Empty, "{ invalidjson file here}"}})}
                     };
 

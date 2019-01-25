@@ -181,14 +181,13 @@ namespace BTCPayServer.Controllers
                 OrderId = $"{CrowdfundHubStreamer.CrowdfundInvoiceOrderIdPrefix}{appId}",
                 Currency = settings.TargetCurrency,
                 ItemCode = request.ChoiceKey ?? string.Empty,
-                ItemDesc = title,
+                ItemDesc = choice?.Description,
                 BuyerEmail = request.Email,
                 Price = price,
                 NotificationURL = settings.NotificationUrl,
                 FullNotifications = true,
                 ExtendedNotifications = true,
                 RedirectURL = request.RedirectUrl ?? Request.GetDisplayUrl(),
-                PosData = choice == null? JObject.FromObject(choice).ToString() : null
                 
                 
             }, store, HttpContext.Request.GetAbsoluteRoot());
@@ -255,7 +254,7 @@ namespace BTCPayServer.Controllers
             var invoice = await _InvoiceController.CreateInvoiceCore(new NBitpayClient.Invoice()
             {
                 ItemCode = choiceKey ?? string.Empty,
-                ItemDesc = title,
+                ItemDesc = choice?.Description,
                 Currency = settings.Currency,
                 Price = price,
                 BuyerEmail = email,
@@ -263,9 +262,7 @@ namespace BTCPayServer.Controllers
                 NotificationURL = notificationUrl,
                 RedirectURL = redirectUrl  ?? Request.GetDisplayUrl(),
                 FullNotifications = true,
-                PosData = string.IsNullOrEmpty(posData)
-                    ? choice == null ? null : JObject.FromObject(choice).ToString()
-                    : posData
+                PosData = string.IsNullOrEmpty(posData) ? null : posData
             }, store, HttpContext.Request.GetAbsoluteRoot());
             return RedirectToAction(nameof(InvoiceController.Checkout), "Invoice", new { invoiceId = invoice.Data.Id });
         }

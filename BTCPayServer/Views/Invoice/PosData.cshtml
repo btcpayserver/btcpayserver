@@ -1,4 +1,4 @@
-@model Dictionary<string,object>
+@model Dictionary<string, object>
 
 <table class="table table-sm table-responsive-md">
     @foreach (var posDataItem in Model)
@@ -6,7 +6,6 @@
         <tr>
             @if (!string.IsNullOrEmpty(posDataItem.Key))
             {
-
                 <th>@posDataItem.Key</th>
                 <td>
                     @if (posDataItem.Value is string)
@@ -17,7 +16,7 @@
                     {
                         <partial name="PosData" model="@posDataItem.Value"/>
                     }
-                    
+
                 </td>
             }
             else
@@ -36,4 +35,3 @@
         </tr>
     }
 </table>
-

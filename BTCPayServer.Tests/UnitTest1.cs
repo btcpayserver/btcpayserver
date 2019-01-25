@@ -1498,7 +1498,7 @@ donation:
                 var orangeInvoice = invoices.First();
                 Assert.Equal(10.00m, orangeInvoice.Price);
                 Assert.Equal("CAD", orangeInvoice.Currency);
-                Assert.Equal("orange", orangeInvoice.ItemDesc);
+                Assert.Equal("orange", orangeInvoice.ItemCode);
 
                 // testing custom amount
                 var action = Assert.IsType<RedirectToActionResult>(publicApps.ViewPointOfSale(appId, 5, null, null, null, null, "donation").Result);
@@ -1507,7 +1507,7 @@ donation:
                 var donationInvoice = invoices.Single(i => i.Price == 5m);
                 Assert.NotNull(donationInvoice);
                 Assert.Equal("CAD", donationInvoice.Currency);
-                Assert.Equal("donation", donationInvoice.ItemDesc);
+                Assert.Equal("donation", donationInvoice.ItemCode);
 
                 foreach (var test in new[]
                 {

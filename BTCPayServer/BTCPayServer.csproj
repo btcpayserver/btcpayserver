@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
-		<Version>1.0.3.42</Version>
+		<Version>1.0.3.45</Version>
     <NoWarn>NU1701,CA1816,CA1308,CA1810,CA2208</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
@@ -33,11 +33,9 @@
     <EmbeddedResource Include="Currencies.txt" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="BTCPayServer.Lightning.All" Version="1.1.0.4" />
+    <PackageReference Include="BTCPayServer.Lightning.All" Version="1.1.0.5" />
     <PackageReference Include="BuildBundlerMinifier" Version="2.7.385" />
     <PackageReference Include="DigitalRuby.ExchangeSharp" Version="0.5.3" />
-    <PackageReference Include="Hangfire" Version="1.6.20" />
-    <PackageReference Include="Hangfire.MemoryStorage" Version="1.5.2" />
     <PackageReference Include="HtmlSanitizer" Version="4.0.199" />
     <PackageReference Include="LedgerWallet" Version="2.0.0.3" />
     <PackageReference Include="Meziantou.AspNetCore.BundleTagHelpers" Version="2.0.0" />
@@ -47,10 +45,10 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NBitcoin" Version="4.1.1.73" />
-    <PackageReference Include="NBitpayClient" Version="1.0.0.30" />	  
+    <PackageReference Include="NBitcoin" Version="4.1.1.78" />
+    <PackageReference Include="NBitpayClient" Version="1.0.0.31" />	  
     <PackageReference Include="DBreeze" Version="1.92.0" />
-    <PackageReference Include="NBXplorer.Client" Version="2.0.0.1" />
+    <PackageReference Include="NBXplorer.Client" Version="2.0.0.3" />
     <PackageReference Include="NicolasDorier.CommandLine" Version="1.0.0.2" />
     <PackageReference Include="NicolasDorier.CommandLine.Configuration" Version="1.0.0.3" />
     <PackageReference Include="NicolasDorier.RateLimits" Version="1.0.0.3" />

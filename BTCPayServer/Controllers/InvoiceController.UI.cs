@@ -447,8 +447,11 @@ namespace BTCPayServer.Controllers
                 Count = count,
                 StatusMessage = StatusMessage
             };
-
-            var list = await ListInvoicesProcess(searchTerm, skip, count);
+            InvoiceQuery invoiceQuery = GetInvoiceQuery(searchTerm);
+            var counting = _InvoiceRepository.GetInvoicesTotal(invoiceQuery);
+            invoiceQuery.Count = count;
+            invoiceQuery.Skip = skip;
+            var list = await _InvoiceRepository.GetInvoices(invoiceQuery);
             foreach (var invoice in list)
             {
                 var state = invoice.GetInvoiceState();
@@ -465,17 +468,16 @@ namespace BTCPayServer.Controllers
                     CanMarkComplete = state.CanMarkComplete()
                 });
             }
+            model.Total = await counting;
             return View(model);
         }
 
-        private async Task<InvoiceEntity[]> ListInvoicesProcess(string searchTerm = null, int skip = 0, int count = 50)
+        private InvoiceQuery GetInvoiceQuery(string searchTerm = null)
         {
             var filterString = new SearchString(searchTerm);
-            var list = await _InvoiceRepository.GetInvoices(new InvoiceQuery()
+            var invoiceQuery = new InvoiceQuery()
             {
                 TextSearch = filterString.TextSearch,
-                Count = count,
-                Skip = skip,
                 UserId = GetUserId(),
                 Unusual = !filterString.Filters.ContainsKey("unusual") ? null
                           : !bool.TryParse(filterString.Filters["unusual"].First(), out var r) ? (bool?)null
@@ -485,9 +487,8 @@ namespace BTCPayServer.Controllers
                 StoreId = filterString.Filters.ContainsKey("storeid") ? filterString.Filters["storeid"].ToArray() : null,
                 ItemCode = filterString.Filters.ContainsKey("itemcode") ? filterString.Filters["itemcode"].ToArray() : null,
                 OrderId = filterString.Filters.ContainsKey("orderid") ? filterString.Filters["orderid"].ToArray() : null
-            });
-
-            return list;
+            };
+            return invoiceQuery;
         }
 
         [HttpGet]
@@ -497,7 +498,10 @@ namespace BTCPayServer.Controllers
         {
             var model = new InvoiceExport(_NetworkProvider, _CurrencyNameTable);
 
-            var invoices = await ListInvoicesProcess(searchTerm, 0, int.MaxValue);
+            InvoiceQuery invoiceQuery = GetInvoiceQuery(searchTerm);
+            invoiceQuery.Count = int.MaxValue;
+            invoiceQuery.Skip = 0;
+            var invoices = await _InvoiceRepository.GetInvoices(invoiceQuery);
             var res = model.Process(invoices, format);
 
             var cd = new ContentDisposition

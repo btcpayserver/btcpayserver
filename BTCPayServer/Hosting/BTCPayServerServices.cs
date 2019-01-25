@@ -38,6 +38,7 @@ using BTCPayServer.Logging;
 using BTCPayServer.HostedServices;
 using Meziantou.AspNetCore.BundleTagHelpers;
 using System.Security.Claims;
+using BTCPayServer.Crowdfund;
 using BTCPayServer.Hubs;
 using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Payments.Lightning;
@@ -116,7 +117,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<CurrencyNameTable>();
             services.TryAddSingleton<IFeeProviderFactory>(o => new NBXplorerFeeProviderFactory(o.GetRequiredService<ExplorerClientProvider>())
             {
-                Fallback = new FeeRate(100, 1),
+                Fallback = new FeeRate(100L, 1),
                 BlockTarget = 20
             });
 
@@ -144,6 +145,8 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService, InvoiceNotificationManager>();
             services.AddSingleton<IHostedService, InvoiceWatcher>();
             services.AddSingleton<IHostedService, RatesHostedService>();
+            services.AddSingleton<IHostedService, BackgroundJobSchedulerHostedService>();
+            services.AddSingleton<IBackgroundJobClient, BackgroundJobClient>();
             services.AddTransient<IConfigureOptions<MvcOptions>, BTCPayClaimsFilter>();
 
             services.TryAddSingleton<ExplorerClientProvider>();
@@ -162,7 +165,7 @@ namespace BTCPayServer.Hosting
             services.AddTransient<InvoiceController>();
             services.AddTransient<AppsPublicController>();
             // Add application services.
-            services.AddTransient<IEmailSender, EmailSender>();
+            services.AddSingleton<EmailSenderFactory>();
             // bundling
 
             services.AddAuthorization(o => Policies.AddBTCPayPolicies(o));

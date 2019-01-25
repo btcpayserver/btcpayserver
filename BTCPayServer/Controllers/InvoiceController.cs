@@ -71,7 +71,6 @@ namespace BTCPayServer.Controllers
             {
                 InvoiceTime = DateTimeOffset.UtcNow
             };
-
             var storeBlob = store.GetStoreBlob();
             Uri notificationUri = Uri.IsWellFormedUriString(invoice.NotificationURL, UriKind.Absolute) ? new Uri(invoice.NotificationURL, UriKind.Absolute) : null;
             if (notificationUri == null || (notificationUri.Scheme != "http" && notificationUri.Scheme != "https")) //TODO: Filer non routable addresses ?
@@ -95,7 +94,20 @@ namespace BTCPayServer.Controllers
                     throw new BitpayHttpException(400, "Invalid email");
                 entity.RefundMail = entity.BuyerInformation.BuyerEmail;
             }
+
+            var currencyInfo = _CurrencyNameTable.GetNumberFormatInfo(invoice.Currency, false);
+            if (currencyInfo != null)
+            {
+                invoice.Price = Math.Round(invoice.Price, currencyInfo.CurrencyDecimalDigits);
+                invoice.TaxIncluded = Math.Round(invoice.TaxIncluded, currencyInfo.CurrencyDecimalDigits);
+            }
+            invoice.Price = Math.Max(0.0m, invoice.Price);
+            invoice.TaxIncluded = Math.Max(0.0m, invoice.TaxIncluded);
+            invoice.TaxIncluded = Math.Min(invoice.TaxIncluded, invoice.Price);
+
             entity.ProductInformation = Map<Invoice, ProductInformation>(invoice);
+
+
             entity.RedirectURL = invoice.RedirectURL ?? store.StoreWebsite;
             if (!Uri.IsWellFormedUriString(entity.RedirectURL, UriKind.Absolute))
                 entity.RedirectURL = null;
@@ -147,7 +159,7 @@ namespace BTCPayServer.Controllers
             if (supported.Count == 0)
             {
                 StringBuilder errors = new StringBuilder();
-                errors.AppendLine("No payment method available for this store");
+                errors.AppendLine("Warning: No wallet has been linked to your BTCPay Store. See the following link for more information on how to connect your store and wallet. (https://docs.btcpayserver.org/btcpay-basics/gettingstarted#connecting-btcpay-store-to-your-wallet)");
                 foreach (var error in logs.ToList())
                 {
                     errors.AppendLine(error.ToString());

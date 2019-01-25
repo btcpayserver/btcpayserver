@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Controllers;
+using BTCPayServer.Crowdfund;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Hubs;

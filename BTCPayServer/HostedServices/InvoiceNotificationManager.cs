@@ -1,10 +1,7 @@
-﻿using Hangfire;
-using Hangfire.Common;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Hangfire.Annotations;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -21,6 +18,7 @@ using NBXplorer;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Payments;
 using BTCPayServer.Services.Mails;
+using BTCPayServer.Services;
 
 namespace BTCPayServer.HostedServices
 {
@@ -44,16 +42,11 @@ namespace BTCPayServer.HostedServices
             public string Message { get; set; }
         }
 
-        public ILogger Logger
-        {
-            get; set;
-        }
-
         IBackgroundJobClient _JobClient;
         EventAggregator _EventAggregator;
         InvoiceRepository _InvoiceRepository;
         BTCPayNetworkProvider _NetworkProvider;
-        IEmailSender _EmailSender;
+        private readonly EmailSenderFactory _EmailSenderFactory;
 
         public InvoiceNotificationManager(
             IBackgroundJobClient jobClient,
@@ -61,17 +54,16 @@ namespace BTCPayServer.HostedServices
             InvoiceRepository invoiceRepository,
             BTCPayNetworkProvider networkProvider,
             ILogger<InvoiceNotificationManager> logger,
-            IEmailSender emailSender)
+            EmailSenderFactory emailSenderFactory)
         {
-            Logger = logger as ILogger ?? NullLogger.Instance;
             _JobClient = jobClient;
             _EventAggregator = eventAggregator;
             _InvoiceRepository = invoiceRepository;
             _NetworkProvider = networkProvider;
-            _EmailSender = emailSender;
+            _EmailSenderFactory = emailSenderFactory;
         }
 
-        async Task Notify(InvoiceEntity invoice, int? eventCode = null, string name = null)
+        void Notify(InvoiceEntity invoice, int? eventCode = null, string name = null)
         {
             CancellationTokenSource cts = new CancellationTokenSource(10000);
 
@@ -85,58 +77,31 @@ namespace BTCPayServer.HostedServices
                     invoice.StoreId
                 };
                 // TODO: Consider adding info on ItemDesc and payment info (amount)
-
+                
                 var emailBody = NBitcoin.JsonConverters.Serializer.ToString(ipn);
-                await _EmailSender.SendEmailAsync(
-                    invoice.NotificationEmail, $"BtcPayServer Invoice Notification - ${invoice.StoreId}", emailBody);
-            }
 
-            try
-            {
-                if (string.IsNullOrEmpty(invoice.NotificationURL))
-                    return;
-                _EventAggregator.Publish<InvoiceIPNEvent>(new InvoiceIPNEvent(invoice.Id, eventCode, name));
-                var response = await SendNotification(invoice, eventCode, name, cts.Token);
-                response.EnsureSuccessStatusCode();
+                _EmailSenderFactory.GetEmailSender(invoice.StoreId).SendEmail(
+                    invoice.NotificationEmail,
+                    $"BtcPayServer Invoice Notification - ${invoice.StoreId}",
+                    emailBody);
+
+            }
+            if (string.IsNullOrEmpty(invoice.NotificationURL))
                 return;
-            }
-            catch (OperationCanceledException) when (cts.IsCancellationRequested)
-            {
-                _EventAggregator.Publish<InvoiceIPNEvent>(new InvoiceIPNEvent(invoice.Id, eventCode, name)
-                {
-                    Error = "Timeout"
-                });
-            }
-            catch (Exception ex) // It fails, it is OK because we try with hangfire after
-            {
-                _EventAggregator.Publish<InvoiceIPNEvent>(new InvoiceIPNEvent(invoice.Id, eventCode, name)
-                {
-                    Error = ex.Message
-                });
-            }
             var invoiceStr = NBitcoin.JsonConverters.Serializer.ToString(new ScheduledJob() { TryCount = 0, Invoice = invoice, EventCode = eventCode, Message = name });
             if (!string.IsNullOrEmpty(invoice.NotificationURL))
                 _JobClient.Schedule(() => NotifyHttp(invoiceStr), TimeSpan.Zero);
         }
 
-        ConcurrentDictionary<string, string> _Executing = new ConcurrentDictionary<string, string>();
         public async Task NotifyHttp(string invoiceData)
         {
             var job = NBitcoin.JsonConverters.Serializer.ToObject<ScheduledJob>(invoiceData);
-            var jobId = GetHttpJobId(job.Invoice);
-
-            if (!_Executing.TryAdd(jobId, jobId))
-                return; //For some reason, Hangfire fire the job several time
-
-            Logger.LogInformation("Running " + jobId);
             bool reschedule = false;
             CancellationTokenSource cts = new CancellationTokenSource(10000);
             try
             {
                 HttpResponseMessage response = await SendNotification(job.Invoice, job.EventCode, job.Message, cts.Token);
                 reschedule = !response.IsSuccessStatusCode;
-                Logger.LogInformation("Job " + jobId + " returned " + response.StatusCode);
-
                 _EventAggregator.Publish<InvoiceIPNEvent>(new InvoiceIPNEvent(job.Invoice.Id, job.EventCode, job.Message)
                 {
                     Error = reschedule ? $"Unexpected return code: {(int)response.StatusCode}" : null
@@ -149,9 +114,8 @@ namespace BTCPayServer.HostedServices
                     Error = "Timeout"
                 });
                 reschedule = true;
-                Logger.LogInformation("Job " + jobId + " timed out");
             }
-            catch (Exception ex) // It fails, it is OK because we try with hangfire after
+            catch (Exception ex)
             {
                 _EventAggregator.Publish<InvoiceIPNEvent>(new InvoiceIPNEvent(job.Invoice.Id, job.EventCode, job.Message)
                 {
@@ -166,21 +130,18 @@ namespace BTCPayServer.HostedServices
                     ex = ex.InnerException;
                 }
                 string message = String.Join(',', messages.ToArray());
-                Logger.LogInformation("Job " + jobId + " threw exception " + message);
 
                 _EventAggregator.Publish<InvoiceIPNEvent>(new InvoiceIPNEvent(job.Invoice.Id, job.EventCode, job.Message)
                 {
                     Error = $"Unexpected error: {message}"
                 });
             }
-            finally { cts.Dispose(); _Executing.TryRemove(jobId, out jobId); }
+            finally { cts?.Dispose(); }
 
             job.TryCount++;
 
             if (job.TryCount < MaxTry && reschedule)
             {
-                Logger.LogInformation("Rescheduling " + jobId + " in 10 minutes, remaining try " + (MaxTry - job.TryCount));
-
                 invoiceData = NBitcoin.JsonConverters.Serializer.ToString(job);
                 _JobClient.Schedule(() => NotifyHttp(invoiceData), TimeSpan.FromMinutes(10.0));
             }
@@ -320,11 +281,6 @@ namespace BTCPayServer.HostedServices
 
         int MaxTry = 6;
 
-        private static string GetHttpJobId(InvoiceEntity invoice)
-        {
-            return $"{invoice.Id}-{invoice.Status}-HTTP";
-        }
-
         CompositeDisposable leases = new CompositeDisposable();
         public Task StartAsync(CancellationToken cancellationToken)
         {
@@ -350,19 +306,18 @@ namespace BTCPayServer.HostedServices
                        e.Name == InvoiceEvent.Completed ||
                        e.Name == InvoiceEvent.ExpiredPaidPartial
                      )
-                        tasks.Add(Notify(invoice));
+                        Notify(invoice);
                 }
 
                 if (e.Name == "invoice_confirmed")
                 {
-                    tasks.Add(Notify(invoice));
+                    Notify(invoice);
                 }
 
                 if (invoice.ExtendedNotifications)
                 {
-                    tasks.Add(Notify(invoice, e.EventCode, e.Name));
+                    Notify(invoice, e.EventCode, e.Name);
                 }
-                await Task.WhenAll(tasks.ToArray());
             }));
 
 

@@ -33,7 +33,7 @@
             <div class="form-group">
                 <label asp-for="Amount"></label>
                 <div class="input-group">
-                    <input asp-for="Amount" class="form-control" onkeyup='updateFiatValue();' />
+                    <input asp-for="Amount" asp-format="{0}" class="form-control" onkeyup='updateFiatValue();' />
                     <div class="input-group-prepend">
                         <span class="input-group-text text-muted" style="display:none;" id="fiatValue"></span>
                     </div>
@@ -55,7 +55,23 @@
                 <label asp-for="SubstractFees"></label>
                 <input asp-for="SubstractFees" class="form-check" />
             </div>
-            <button type="submit" class="btn btn-primary">Confirm</button>
+            @if (Model.AdvancedMode)
+            {
+            <div class="form-group">
+                <label asp-for="NoChange"></label>
+                <a href="https://docs.btcpayserver.org/features/wallet#make-sure-no-change-utxo-is-created-expert-mode" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                <input asp-for="NoChange" class="form-check" />
+            </div>
+            }
+            <button name="command" type="submit" class="btn btn-primary">Confirm</button>
+            @if (Model.AdvancedMode)
+            {
+                <button name="command" type="submit" value="noob" class="btn btn-secondary">Use noob mode</button>
+            }
+            else
+            {
+                <button name="command" type="submit" value="expert" class="btn btn-secondary">Use expert mode</button>
+            }
         </form>
     </div>
 </div>

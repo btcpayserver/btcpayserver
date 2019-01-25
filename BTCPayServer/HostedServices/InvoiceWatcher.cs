@@ -11,7 +11,6 @@ using BTCPayServer.Logging;
 using System.Threading;
 using Microsoft.Extensions.Hosting;
 using System.Collections.Concurrent;
-using Hangfire;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Controllers;
 using BTCPayServer.Events;

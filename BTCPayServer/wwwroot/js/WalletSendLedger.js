@@ -3,6 +3,7 @@
     var amount = $("#Amount").val();
     var fee = $("#FeeSatoshiPerByte").val();
     var substractFee = $("#SubstractFees").val();
+    var noChange = $("#NoChange").val();
 
     var loc = window.location, ws_uri;
     if (loc.protocol === "https:") {
@@ -48,8 +49,14 @@
         args += "&amount=" + amount;
         args += "&feeRate=" + fee;
         args += "&substractFees=" + substractFee;
+        args += "&noChange=" + noChange;
 
-        WriteAlert("warning", 'Please validate the transaction on your ledger');
+        if (noChange === "True") {
+            WriteAlert("warning", 'WARNING: Because you want to make sure no change UTXO is created, you will end up sending more than the chosen amount to your destination. Please validate the transaction on your ledger');
+        }
+        else {
+            WriteAlert("warning", 'Please validate the transaction on your ledger');
+        }        
 
         var confirmButton = $("#confirm-button");
         confirmButton.prop("disabled", true);

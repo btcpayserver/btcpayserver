@@ -1,0 +1,68 @@
+﻿@model BTCPayServer.Models.ServerViewModels.EmailsViewModel
+@{
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData.SetActivePageAndTitle(StoreNavPages.Index, "Update Store Email Settings");
+}
+
+
+<h4>@ViewData["Title"]</h4>
+<partial name="_StatusMessage" for="StatusMessage" />
+
+
+<div class="row">
+    <div class="col-md-6">
+        <div asp-validation-summary="All" class="text-danger"></div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-6">
+        <form method="post">
+            <div class="form-group">
+                <label asp-for="Settings.Server"></label>
+                <input asp-for="Settings.Server" class="form-control" />
+                <span asp-validation-for="Settings.Server" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Settings.Port"></label>
+                <input asp-for="Settings.Port" class="form-control" />
+                <span asp-validation-for="Settings.Port" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Settings.From"></label>
+                <input asp-for="Settings.From" class="form-control" />
+                <span asp-validation-for="Settings.From" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Settings.Login"></label>
+                <input asp-for="Settings.Login" class="form-control" />
+                <span asp-validation-for="Settings.Login" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Settings.Password"></label>
+                <input asp-for="Settings.Password" type="password" class="form-control" />
+                <span asp-validation-for="Settings.Password" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Settings.EnableSSL"></label>
+                <input asp-for="Settings.EnableSSL" type="checkbox" class="form-check-inline" />
+            </div>
+
+            <div class="form-group">
+                <label asp-for="TestEmail"></label>
+                <input asp-for="TestEmail" class="form-control" />
+                <span asp-validation-for="TestEmail" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
+            <button type="submit" class="btn btn-primary" name="command" value="Test">Test</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

@@ -96,6 +96,11 @@ namespace BTCPayServer.Controllers
         {
             get; set;
         }
+        [TempData]
+        public bool StoreNotConfigured
+        {
+            get; set;
+        }
 
         [HttpGet]
         [Route("{storeId}/users")]
@@ -167,7 +172,7 @@ namespace BTCPayServer.Controllers
             return View("Confirm", new ConfirmModel()
             {
                 Title = $"Remove store user",
-                Description = $"Are you sure to remove access to remove access to {user.Email}?",
+                Description = $"Are you sure you want to remove store access for {user.Email}?",
                 Action = "Delete"
             });
         }
@@ -567,6 +572,7 @@ namespace BTCPayServer.Controllers
             var model = new TokensViewModel();
             var tokens = await _TokenRepository.GetTokensByStoreIdAsync(StoreData.Id);
             model.StatusMessage = StatusMessage;
+            model.StoreNotConfigured = StoreNotConfigured;
             model.Tokens = tokens.Select(t => new TokenViewModel()
             {
                 Facade = t.Facade,
@@ -794,6 +800,10 @@ namespace BTCPayServer.Controllers
             var pairingResult = await _TokenRepository.PairWithStoreAsync(pairingCode, store.Id);
             if (pairingResult == PairingResult.Complete || pairingResult == PairingResult.Partial)
             {
+                var excludeFilter = store.GetStoreBlob().GetExcludedPaymentMethods();
+                StoreNotConfigured = store.GetSupportedPaymentMethods(_NetworkProvider)
+                                          .Where(p => !excludeFilter.Match(p.PaymentId))
+                                          .Count() == 0;
                 StatusMessage = "Pairing is successful";
                 if (pairingResult == PairingResult.Partial)
                     StatusMessage = "Server initiated pairing code: " + pairingCode;

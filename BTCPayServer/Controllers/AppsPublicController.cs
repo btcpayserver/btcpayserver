@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using BTCPayServer.Crowdfund;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Hubs;
@@ -19,6 +20,7 @@ using BTCPayServer.Services.Rates;
 using Ganss.XSS;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -183,7 +185,7 @@ namespace BTCPayServer.Controllers
                 NotificationURL = settings.NotificationUrl,
                 FullNotifications = true,
                 ExtendedNotifications = true,
-                RedirectURL = request.RedirectUrl,
+                RedirectURL = request.RedirectUrl ?? Request.GetDisplayUrl(),
                 
                 
             }, store, HttpContext.Request.GetAbsoluteRoot());
@@ -254,7 +256,7 @@ namespace BTCPayServer.Controllers
                 BuyerEmail = email,
                 OrderId = orderId,
                 NotificationURL = notificationUrl,
-                RedirectURL = redirectUrl,
+                RedirectURL = redirectUrl  ?? Request.GetDisplayUrl(),
                 FullNotifications = true,
             }, store, HttpContext.Request.GetAbsoluteRoot());
             return RedirectToAction(nameof(InvoiceController.Checkout), "Invoice", new { invoiceId = invoice.Data.Id });

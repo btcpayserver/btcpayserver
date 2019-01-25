@@ -214,7 +214,7 @@ namespace BTCPayServer.Controllers
                                                         string notificationUrl,
                                                         string redirectUrl,
                                                         string choiceKey,
-                                                        string posData)
+                                                        string posData = null)
         {
             var app = await _AppsHelper.GetApp(appId, AppType.PointOfSale);
             if (string.IsNullOrEmpty(choiceKey) && amount <= 0)

@@ -1,10 +1,11 @@
-﻿@model string
+﻿@using Newtonsoft.Json.Linq
+@model string
 
 @if(!String.IsNullOrEmpty(Model))
 {
-    var statusMessageClass = Model.StartsWith("Error") ? "danger" : "success";
-    <div class="alert alert-@statusMessageClass alert-dismissible" role="alert">
+    var parsedModel = new StatusMessageModel(Model);
+    <div class="alert alert-@parsedModel.Severity alert-dismissible" role="alert">
         <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        @Html.Raw(Model)
+        @parsedModel.Message@Html.Raw(parsedModel.Html)
     </div>
 }

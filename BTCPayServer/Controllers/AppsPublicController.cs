@@ -181,7 +181,7 @@ namespace BTCPayServer.Controllers
                 OrderId = $"{CrowdfundHubStreamer.CrowdfundInvoiceOrderIdPrefix}{appId}",
                 Currency = settings.TargetCurrency,
                 ItemCode = request.ChoiceKey ?? string.Empty,
-                ItemDesc = choice?.Description,
+                ItemDesc = title,
                 BuyerEmail = request.Email,
                 Price = price,
                 NotificationURL = settings.NotificationUrl,
@@ -253,8 +253,8 @@ namespace BTCPayServer.Controllers
             store.AdditionalClaims.Add(new Claim(Policies.CanCreateInvoice.Key, store.Id));
             var invoice = await _InvoiceController.CreateInvoiceCore(new NBitpayClient.Invoice()
             {
-                ItemCode = choiceKey ?? string.Empty,
-                ItemDesc = choice?.Description,
+                ItemCode = choice?.Id,
+                ItemDesc = title,
                 Currency = settings.Currency,
                 Price = price,
                 BuyerEmail = email,

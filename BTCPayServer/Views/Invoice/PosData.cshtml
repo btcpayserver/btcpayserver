@@ -1,0 +1,37 @@
+@model Dictionary<string, object>
+
+<table class="table table-sm table-responsive-md">
+    @foreach (var posDataItem in Model)
+    {
+        <tr>
+            @if (!string.IsNullOrEmpty(posDataItem.Key))
+            {
+                <th>@posDataItem.Key</th>
+                <td>
+                    @if (posDataItem.Value is string)
+                    {
+                        @posDataItem.Value
+                    }
+                    else
+                    {
+                        <partial name="PosData" model="@posDataItem.Value"/>
+                    }
+
+                </td>
+            }
+            else
+            {
+                <td colspan="2">
+                    @if (posDataItem.Value is string)
+                    {
+                        @posDataItem.Value
+                    }
+                    else
+                    {
+                        <partial name="PosData" model="@posDataItem.Value"/>
+                    }
+                </td>
+            }
+        </tr>
+    }
+</table>

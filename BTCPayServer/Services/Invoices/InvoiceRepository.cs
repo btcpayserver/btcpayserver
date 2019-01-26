@@ -178,7 +178,6 @@ retry:
             textSearch.Add(invoice.StoreId);
 
             AddToTextSearch(invoice.Id, textSearch.ToArray());
-
             return invoice;
         }
 

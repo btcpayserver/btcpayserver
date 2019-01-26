@@ -53,6 +53,7 @@ In addition to Bitcoin, BTCPay supports the following cryptocurrencies:
 * Polis
 * UFO
 * Viacoin
+* Bitcoinplus
 
 ## Documentation
 

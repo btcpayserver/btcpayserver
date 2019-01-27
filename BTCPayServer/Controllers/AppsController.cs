@@ -77,7 +77,7 @@ namespace BTCPayServer.Controllers
                 {
                     Html =
                         $"Error: You must have created at least one store. <a href='{(Url.Action("CreateStore", "UserStores"))}'>Create store</a>",
-                    Severity = "danger"
+                    Severity = StatusMessageModel.StatusSeverity.Error
                 }.ToString();
                 return RedirectToAction(nameof(ListApps));
             }
@@ -97,7 +97,7 @@ namespace BTCPayServer.Controllers
                 {
                     Html =
                         $"Error: You must have created at least one store. <a href='{(Url.Action("CreateStore", "UserStores"))}'>Create store</a>",
-                    Severity = "danger"
+                    Severity = StatusMessageModel.StatusSeverity.Error
                 }.ToString();
                 return RedirectToAction(nameof(ListApps));
             }

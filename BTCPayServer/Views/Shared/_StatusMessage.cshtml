@@ -5,6 +5,13 @@
     var parsedModel = new StatusMessageModel(Model);
     <div class="alert alert-@parsedModel.SeverityCSS alert-dismissible" role="alert">
         <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        @parsedModel.Message@Html.Raw(parsedModel.Html)
+        @if (!string.IsNullOrEmpty(parsedModel.Message))
+        {
+            @parsedModel.Message
+        }
+        @if (!string.IsNullOrEmpty(parsedModel.Html))
+        {
+            @Html.Raw(parsedModel.Html)
+        }
     </div>
 }

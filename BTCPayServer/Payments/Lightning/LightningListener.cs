@@ -191,6 +191,7 @@ namespace BTCPayServer.Payments.Lightning
             var payment = await _InvoiceRepository.AddPayment(listenedInvoice.InvoiceId, notification.PaidAt.Value, new LightningLikePaymentData()
             {
                 BOLT11 = notification.BOLT11,
+                PaymentHash = BOLT11PaymentRequest.Parse(notification.BOLT11, network.NBitcoinNetwork).PaymentHash,
                 Amount = notification.Amount
             }, network, accounted: true);
             if (payment != null)

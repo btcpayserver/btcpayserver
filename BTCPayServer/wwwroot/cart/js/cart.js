@@ -21,6 +21,7 @@ function Cart() {
     
     this.updateItemsCount();
     this.updateAmount();
+    this.updatePosData();
 }
 
 Cart.prototype.setCustomAmount = function(amount) {
@@ -243,6 +244,7 @@ Cart.prototype.updateAll = function() {
     this.updateSummaryTotal();
     this.updateTotal();
     this.updateAmount();
+    this.updatePosData();
 }
 
 // Update number of cart items
@@ -289,6 +291,20 @@ Cart.prototype.updateTip = function(amount) {
 // Update hidden total amount value to be sent to the checkout page
 Cart.prototype.updateAmount = function() {
     $('#js-cart-amount').val(this.getTotal(true));
+}
+Cart.prototype.updatePosData = function() {
+
+    var result = {
+      cart: this.content,
+      customAmount: this.fromCents(this.getCustomAmount()),
+      discountPercentage: this.discount? parseFloat(this.discount): 0,
+      subTotal: this.fromCents(this.getTotalProducts()),
+      discountAmount: this.fromCents(this.getDiscountAmount(this.totalAmount)),
+      tip: this.tip? this.tip: 0,
+      total: this.getTotal(true)
+    };
+    console.warn(result);
+    $('#js-cart-posdata').val(JSON.stringify(result));
 }
 
 Cart.prototype.resetDiscount = function() {
@@ -644,6 +660,7 @@ $.fn.inputAmount = function(obj, type) {
 
         obj.updateSummaryTotal();
         obj.updateAmount();
+        obj.updatePosData();
         obj.emptyCartToggle();
     });
 }

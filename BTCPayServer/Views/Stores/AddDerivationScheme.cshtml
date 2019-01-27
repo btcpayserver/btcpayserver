@@ -38,12 +38,17 @@
                     </p>
                     <div id="ledger-info" class="form-text text-muted" style="display: none;">
                         <span>A ledger wallet is detected, which account do you want to use? No need to paste manually xpub if your ledger device was detected. Just select derivation scheme from the list bellow and xpub will automatically populate.</span>
-                        <ul>
-                            @for (int i = 0; i < 4; i++)
-                            {
-                                <li><a class="ledger-info-recommended" data-ledgerkeypath="@Model.RootKeyPath.Derive(i, true)" href="#">Account @i (<span>@Model.RootKeyPath.Derive(i, true)</span>)</a></li>
-                            }
-                        </ul>
+                        <div class="dropdown">
+                            <button class="btn btn-primary dropdown-toggle" type="button" id="ledgerAccountsDropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Select Ledger Account
+                            </button>
+                            <div class="dropdown-menu" aria-labelledby="ledgerAccountsDropdownMenuButton">
+                                @for (var i = 0; i < 20; i++)
+                                {
+                                    <a class="dropdown-item ledger-info-recommended" data-ledgerkeypath="@Model.RootKeyPath.Derive(i, true)" href="#">Account @i (<span>@Model.RootKeyPath.Derive(i, true)</span>)</a>
+                                }
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="form-group">

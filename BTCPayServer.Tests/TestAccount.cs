@@ -23,6 +23,7 @@ namespace BTCPayServer.Tests
 {
     public class TestAccount
     {
+        
         ServerTester parent;
         public TestAccount(ServerTester parent)
         {
@@ -113,15 +114,18 @@ namespace BTCPayServer.Tests
         private async Task RegisterAsync()
         {
             var account = parent.PayTester.GetController<AccountController>();
-            await account.Register(new RegisterViewModel()
+            RegisterViewModel = new RegisterViewModel()
             {
                 Email = Guid.NewGuid() + "@toto.com",
                 ConfirmPassword = "Kitten0@",
                 Password = "Kitten0@",
-            });
+            };
+            await account.Register(RegisterViewModel);
             UserId = account.RegisteredUserId;
         }
 
+
+        public RegisterViewModel RegisterViewModel { get; set; }
         public Bitpay BitPay
         {
             get; set;

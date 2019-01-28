@@ -67,6 +67,7 @@ namespace BTCPayServer.Hosting
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
             services.AddSignalR();
+            services.AddBTCPayServer(Configuration);
             services.AddProviderStorage();
             services.AddSession();
             services.AddBTCPayServer(Configuration);

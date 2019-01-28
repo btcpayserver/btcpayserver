@@ -1,11 +1,11 @@
+using BTCPayServer.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace BTCPayServer.Hosting
+namespace BTCPayServer
 {
     public static class OpenIddictServerBuilderExtensions
     {
-        
         public static void ConfigureClientRequirements(this OpenIddictServerBuilder builder,
             IConfiguration configuration)
         {

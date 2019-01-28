@@ -12,21 +12,15 @@ using Microsoft.Extensions.Configuration;
 using BTCPayServer.Configuration;
 using System.IO;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using System.Security.Cryptography;
 using AspNet.Security.OpenIdConnect.Primitives;
 using BTCPayServer.Authentication.OpenId;
 using BTCPayServer.Authentication.OpenId.Models;
 using BTCPayServer.Security;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.IdentityModel.Tokens;
-using NETCore.Encrypt.Extensions.Internal;
 using OpenIddict.Abstractions;
 using OpenIddict.EntityFrameworkCore.Models;
 using System.Net;
 using BTCPayServer.Hubs;
-using Meziantou.AspNetCore.BundleTagHelpers;
-using BTCPayServer.Security;
 
 namespace BTCPayServer.Hosting
 {

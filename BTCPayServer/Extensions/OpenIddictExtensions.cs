@@ -1,5 +1,6 @@
 using System.IO;
 using System.Security.Cryptography;
+using BTCPayServer.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;

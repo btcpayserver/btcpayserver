@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using System.Threading.Tasks;
 using BTCPayServer.Models;
 using BTCPayServer.Services.Stores;

@@ -1,25 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using System.Xml;
 using AspNet.Security.OpenIdConnect.Primitives;
-using BTCPayServer.Controllers;
 using BTCPayServer.Tests.Logging;
-using ExchangeSharp;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-using Microsoft.IdentityModel.Tokens;
-using NBitcoin;
 using Xunit;
 using Xunit.Abstractions;
-using System.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http;
-using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Tests

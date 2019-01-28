@@ -86,6 +86,12 @@ namespace BTCPayServer.Hosting
                     options.ConfigureClientRequirements(Configuration);
                     options.UseRollingTokens();
                     options.UseJsonWebTokens();
+                    
+                    options.AddEventHandler<PasswordGrantTypeEventHandler>();
+                    options.AddEventHandler<AuthorizationCode_RefreshTokenGrantTypeEventHandler>();
+                    options.AddEventHandler<ClientCredentialsGrantTypeEventHandler>();
+                    options.AddEventHandler<AuthorizationEventHandler>();
+                    options.AddEventHandler<LogoutEventHandler>();
 
                     options.AddEventHandler<PasswordGrantTypeEventHandler>();
                     options.AddEventHandler<AuthorizationCode_RefreshTokenGrantTypeEventHandler>();

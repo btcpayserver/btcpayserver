@@ -1,7 +1,5 @@
 ﻿using System;
 using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Http.Extensions;
 using System.Collections.Generic;
 using System.IO;
@@ -10,13 +8,9 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Authentication;
-using BTCPayServer.Models;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitcoin.DataEncoders;
@@ -27,7 +21,6 @@ using BTCPayServer.Logging;
 using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.AspNetCore.Authentication;
 using System.Text.Encodings.Web;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace BTCPayServer.Security
 {
@@ -185,10 +178,10 @@ namespace BTCPayServer.Security
                 return await _TokenRepository.GetStoreIdFromAPIKey(apiKey);
             }
         }
-        internal static void AddAuthentication(IServiceCollection services, Action<BitpayAuthOptions> bitpayAuth = null)
+        public static void AddAuthentication(AuthenticationBuilder builder, Action<BitpayAuthOptions> bitpayAuth = null)
         {
             bitpayAuth = bitpayAuth ?? new Action<BitpayAuthOptions>((o) => { });
-            services.AddAuthentication().AddScheme<BitpayAuthOptions, BitpayAuthHandler>(Policies.BitpayAuthentication, bitpayAuth);
+            builder.AddScheme<BitpayAuthOptions, BitpayAuthHandler>(Policies.BitpayAuthentication, bitpayAuth);
         }
     }
 }

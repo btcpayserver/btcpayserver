@@ -1,0 +1,116 @@
+@page "{id}/Authorizations"
+@using System.Collections.Immutable
+@using BTCPayServer.Authentication.OpenId.Models
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using OpenIddict.Core
+@using PageModel = Microsoft.AspNetCore.Mvc.RazorPages.PageModel
+@model AuthorizationList
+
+<section>
+    <div class="container">
+
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                <partial name="_StatusMessage" for="@Model.StatusMessage"/>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                <h2 class="section-heading">@Model.Application.DisplayName Authorizations</h2>
+                <hr class="primary">
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-1">
+                <div asp-validation-summary="All" class="text-danger"></div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <table class="table table-sm table-responsive-md">
+                    <thead>
+                    <tr>
+                        <th>Subject</th>
+                        <th>Status</th>
+                        <th>Type</th>
+                        <th class="text-right">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var authorization in Model.Authorizations)
+                    {
+                        <tr>
+                            <td>@Model.UserSet[authorization.Subject]</td>
+                            <td>@authorization.Status</td>
+                            <td>@authorization.Type</td>
+                            <td class="text-right">
+
+                                <a asp-page="../Tokens" asp-route-id="@Model.Id" asp-route-authorizationId="@authorization.Id">Tokens</a>
+                                <a asp-page="./Delete" asp-route-id="@authorization.Id">Revoke</a>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Authorizations.Any())
+                    {
+                        <tr>
+                            <td colspan="6">No Authorizations</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+@functions{
+
+    [Authorize]
+    public class AuthorizationList : PageModel
+    {
+        private readonly OpenIddictAuthorizationManager<BTCPayOpenIdAuthorization> _authorizationManager;
+        private readonly OpenIddictApplicationManager<BTCPayOpenIdClient> _applicationManager;
+        private readonly UserManager<ApplicationUser> _userManager;
+
+        [BindProperty(SupportsGet = true)]
+        public string StatusMessage { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public string Id { get; set; }
+
+        public ImmutableArray<BTCPayOpenIdAuthorization> Authorizations { get; internal set; }
+        public Dictionary< string, string> UserSet { get; internal set; }
+        public BTCPayOpenIdClient Application { get; internal set; }
+
+        public AuthorizationList(OpenIddictAuthorizationManager<BTCPayOpenIdAuthorization> authorizationManager,
+            OpenIddictApplicationManager<BTCPayOpenIdClient> applicationManager,
+            UserManager<ApplicationUser> userManager)
+        {
+            _authorizationManager = authorizationManager;
+            _applicationManager = applicationManager;
+            _userManager = userManager;
+        }
+
+        public async Task<IActionResult> OnGetAsync()
+        {
+            Application = await _applicationManager.FindByIdAsync(Id);
+            if (Application == null || Application.ApplicationUserId != _userManager.GetUserId(User))
+            {
+                return NotFound();
+            }
+            Authorizations = await _authorizationManager.FindByApplicationIdAsync(Id);
+            UserSet = await _userManager.Users
+                .Where(user => Authorizations.Any(authorization => authorization.Subject == user.Id))
+                .Distinct()
+                .ToDictionaryAsync(user => user.Id, user => user.UserName);
+            
+            return Page();
+        }
+    }
+
+}

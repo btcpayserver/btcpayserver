@@ -1,4 +1,4 @@
-﻿using BTCPayServer.Logging;
+using BTCPayServer.Logging;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
@@ -6,13 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using System.Text;
-using StandardConfiguration;
 using Microsoft.Extensions.Configuration;
-using NBXplorer;
-using BTCPayServer.Payments.Lightning;
-using Renci.SshNet;
-using NBitcoin.DataEncoders;
 using BTCPayServer.SSH;
 using BTCPayServer.Lightning;
 using BTCPayServer.Configuration.External;
@@ -25,6 +19,25 @@ namespace BTCPayServer.Configuration
         public string CryptoCode { get; internal set; }
         public Uri ExplorerUri { get; internal set; }
         public string CookieFile { get; internal set; }
+    }
+
+    public class OpenIdOptions
+    {
+        public OpenIdOptions(IConfiguration configuration)
+        {
+            EnforceClients = configuration.GetOpenIdEnforceClients();
+            EnforceEndpoints = configuration.GetOpenIdEnforceEndpoints();
+            EnforceScopes = configuration.GetOpenIdEnforceScopes();
+            EnforceGrantTypes = configuration.GetOpenIdEnforceGrantTypes();
+        }
+
+        public bool EnforceGrantTypes { get;  }
+
+        public bool EnforceEndpoints { get;  }
+
+        public bool EnforceScopes { get; }
+
+        public bool EnforceClients { get;  }
     }
 
     public class BTCPayServerOptions
@@ -55,6 +68,8 @@ namespace BTCPayServer.Configuration
             set;
         }
 
+        public OpenIdOptions OpenIdOptions { get; private set; }
+        
         public List<NBXplorerConnectionSetting> NBXplorerConnectionSettings
         {
             get;
@@ -80,8 +95,7 @@ namespace BTCPayServer.Configuration
         public void LoadArgs(IConfiguration conf)
         {
             NetworkType = DefaultConfiguration.GetNetworkType(conf);
-            var defaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType);
-            DataDir = conf.GetOrDefault<string>("datadir", defaultSettings.DefaultDataDirectory);
+            DataDir = conf.GetDataDir(NetworkType);
             Logs.Configuration.LogInformation("Network: " + NetworkType.ToString());
 
             var supportedChains = conf.GetOrDefault<string>("chains", "btc")
@@ -190,7 +204,7 @@ namespace BTCPayServer.Configuration
             PostgresConnectionString = conf.GetOrDefault<string>("postgres", null);
             MySQLConnectionString = conf.GetOrDefault<string>("mysql", null);
             BundleJsCss = conf.GetOrDefault<bool>("bundlejscss", true);
-            ExternalUrl = conf.GetOrDefault<Uri>("externalurl", null);
+            ExternalUrl = conf.GetExternalUri();
 
             var sshSettings = ParseSSHConfiguration(conf);
             if ((!string.IsNullOrEmpty(sshSettings.Password) || !string.IsNullOrEmpty(sshSettings.KeyFile)) && !string.IsNullOrEmpty(sshSettings.Server))
@@ -246,11 +260,12 @@ namespace BTCPayServer.Configuration
             }
 
             DisableRegistration = conf.GetOrDefault<bool>("disable-registration", true);
+            OpenIdOptions = new OpenIdOptions(conf);
         }
 
         private SSHSettings ParseSSHConfiguration(IConfiguration conf)
         {
-            var externalUrl = conf.GetOrDefault<Uri>("externalurl", null);
+            var externalUrl = conf.GetExternalUri();
             var settings = new SSHSettings();
             settings.Server = conf.GetOrDefault<string>("sshconnection", null);
             if (settings.Server != null)

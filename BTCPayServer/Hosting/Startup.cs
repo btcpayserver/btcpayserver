@@ -64,7 +64,7 @@ namespace BTCPayServer.Hosting
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
             services.AddSignalR();
-            services.AddBTCPayServer();
+            services.AddBTCPayServer(Configuration);
             services.AddMvc(o =>
             {
                 o.Filters.Add(new XFrameOptionsAttribute("DENY"));
@@ -165,8 +165,8 @@ namespace BTCPayServer.Hosting
             {
                 app.UseDeveloperExceptionPage();
             }
-
-            app.UseCors();
+            
+            app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
             app.UsePayServer();
             app.UseStaticFiles();
             app.UseAuthentication();

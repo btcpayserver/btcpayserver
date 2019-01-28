@@ -52,7 +52,7 @@ namespace BTCPayServer.Hosting
 {
     public static class BTCPayServerServices
     {
-        public static IServiceCollection AddBTCPayServer(this IServiceCollection services)
+        public static IServiceCollection AddBTCPayServer(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddDbContext<ApplicationDbContext>((provider, o) =>
             {
@@ -62,7 +62,8 @@ namespace BTCPayServer.Hosting
             services.AddHttpClient();
             services.TryAddSingleton<SettingsRepository>();
             services.TryAddSingleton<InvoicePaymentNotification>();
-            services.TryAddSingleton<BTCPayServerOptions>(o => o.GetRequiredService<IOptions<BTCPayServerOptions>>().Value);
+            services.TryAddSingleton<BTCPayServerOptions>(o =>
+                o.GetRequiredService<IOptions<BTCPayServerOptions>>().Value);
             services.TryAddSingleton<InvoiceRepository>(o =>
             {
                 var opts = o.GetRequiredService<BTCPayServerOptions>();
@@ -169,7 +170,7 @@ namespace BTCPayServer.Hosting
             // bundling
 
             services.AddAuthorization(o => Policies.AddBTCPayPolicies(o));
-            BitpayAuthentication.AddAuthentication(services);
+            services.AddBtcPayServerAuthenticationSchemes(configuration);
 
             services.AddBundles();
             services.AddTransient<BundleOptions>(provider =>
@@ -181,15 +182,22 @@ namespace BTCPayServer.Hosting
                 return bundle;
             });
 
-            services.AddCors(options=> 
+            services.AddCors(options =>
             {
-                options.AddPolicy(CorsPolicies.All, p=>p.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
+                options.AddPolicy(CorsPolicies.All, p => p.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
             });
 
             var rateLimits = new RateLimitService();
             rateLimits.SetZone($"zone={ZoneLimits.Login} rate=5r/min burst=3 nodelay");
             services.AddSingleton(rateLimits);
             return services;
+        }
+        
+        private static void AddBtcPayServerAuthenticationSchemes(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.AddAuthentication()
+                .AddCookie()
+                .AddBitpayAuthentication();
         }
 
         public static IApplicationBuilder UsePayServer(this IApplicationBuilder app)

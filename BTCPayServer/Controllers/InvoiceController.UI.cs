@@ -279,7 +279,6 @@ namespace BTCPayServer.Controllers
                 PaymentMethodName = GetDisplayName(paymentMethodId, network),
                 CryptoImage = GetImage(paymentMethodId, network),
                 IsLightning = paymentMethodId.PaymentType == PaymentTypes.LightningLike,
-                ServerUrl = HttpContext.Request.GetAbsoluteRoot(),
                 OrderId = invoice.OrderId,
                 InvoiceId = invoice.Id,
                 DefaultLang = storeBlob.DefaultLang ?? "en",
@@ -370,6 +369,9 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         [Route("i/{invoiceId}/status")]
         [Route("i/{invoiceId}/{paymentMethodId}/status")]
+        [Route("invoice/{invoiceId}/status")]
+        [Route("invoice/{invoiceId}/{paymentMethodId}/status")]
+        [Route("invoice/status")]
         public async Task<IActionResult> GetStatus(string invoiceId, string paymentMethodId = null)
         {
             var model = await GetInvoiceModel(invoiceId, paymentMethodId);
@@ -380,6 +382,10 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("i/{invoiceId}/status/ws")]
+        [Route("i/{invoiceId}/{paymentMethodId}/status/ws")]
+        [Route("invoice/{invoiceId}/status/ws")]
+        [Route("invoice/{invoiceId}/{paymentMethodId}/status")]
+        [Route("invoice/status/ws")]
         public async Task<IActionResult> GetStatusWebSocket(string invoiceId)
         {
             if (!HttpContext.WebSockets.IsWebSocketRequest)
@@ -425,6 +431,7 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("i/{invoiceId}/UpdateCustomer")]
+        [Route("invoice/UpdateCustomer")]
         public async Task<IActionResult> UpdateCustomer(string invoiceId, [FromBody]UpdateCustomerModel data)
         {
             if (!ModelState.IsValid)

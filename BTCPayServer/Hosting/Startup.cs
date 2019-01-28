@@ -92,12 +92,6 @@ namespace BTCPayServer.Hosting
                     options.AddEventHandler<ClientCredentialsGrantTypeEventHandler>();
                     options.AddEventHandler<AuthorizationEventHandler>();
                     options.AddEventHandler<LogoutEventHandler>();
-
-                    options.AddEventHandler<PasswordGrantTypeEventHandler>();
-                    options.AddEventHandler<AuthorizationCode_RefreshTokenGrantTypeEventHandler>();
-                    options.AddEventHandler<ClientCredentialsGrantTypeEventHandler>();
-                    options.AddEventHandler<AuthorizationEventHandler>();
-                    options.AddEventHandler<LogoutEventHandler>();
                    
                     options.RegisterScopes(
                         OpenIdConnectConstants.Scopes.OpenId,

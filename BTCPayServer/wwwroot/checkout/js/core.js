@@ -248,6 +248,9 @@ $(document).ready(function () {
             socket.onmessage = function (e) {
                 fetchStatus();
             };
+            socket.onerror = function (e) {
+                console.error("Error while connecting to websocket for invoice notifications (callback)");
+            };
         }
         catch (e) {
             console.error("Error while connecting to websocket for invoice notifications");

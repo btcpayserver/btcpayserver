@@ -1,0 +1,150 @@
+@page
+@using System.Collections.Immutable
+@using BTCPayServer.Authentication.OpenId.Models
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using OpenIddict.Core
+@using PageModel = Microsoft.AspNetCore.Mvc.RazorPages.PageModel
+@model TokenList
+
+<section>
+    <div class="container">
+
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                <partial name="_StatusMessage" for="@Model.StatusMessage"/>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                <h2 class="section-heading">@Model.Application.DisplayName Tokens</h2>
+                <hr class="primary">
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-1">
+                <div asp-validation-summary="All" class="text-danger"></div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <table class="table table-sm table-responsive-md">
+                    <thead>
+                    <tr>
+                        <th>Subject</th>
+                        <th>Status</th>
+                        <th>Type</th>
+                        <th>CreationDate</th>
+                        <th>ExpirationDate</th>
+                        <th class="text-right">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var token in Model.Tokens)
+                    {
+                        <tr>
+                            <td>@Model.UserSet[token.Subject]</td>
+                            <td>@token.Status</td>
+                            <td>@token.Type</td>
+                            <td>@token.CreationDate?.ToString("g")</td>
+                            <td>@token.ExpirationDate?.ToString("g")</td>
+                            <td class="text-right">
+                                <a asp-page="./Delete" asp-route-id="@token.Id">Revoke</a>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Tokens.Any())
+                    {
+                        <tr>
+                            <td colspan="6">No Tokens</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+@functions{
+
+    [Authorize]
+    public class TokenList : PageModel
+    {
+        private readonly OpenIddictTokenManager<BTCPayOpenIdToken> _tokenManager;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly OpenIddictAuthorizationManager<BTCPayOpenIdAuthorization> _authorizationManager;
+        private readonly OpenIddictApplicationManager<BTCPayOpenIdClient> _applicationManager;
+
+        [BindProperty(SupportsGet = true)]
+        public string StatusMessage { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public string Id { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public string AuthorizationId { get; set; }
+
+        public ImmutableArray<BTCPayOpenIdToken> Tokens { get; private set; }
+        public BTCPayOpenIdClient Application { get; private set; }
+
+        public Dictionary<string, string> UserSet { get; set; }
+        
+        public TokenList(OpenIddictTokenManager<BTCPayOpenIdToken> tokenManager,
+            UserManager<ApplicationUser> userManager,
+            OpenIddictAuthorizationManager<BTCPayOpenIdAuthorization> authorizationManager,
+            OpenIddictApplicationManager<BTCPayOpenIdClient> applicationManager)
+        {
+            _tokenManager = tokenManager;
+            _userManager = userManager;
+            _authorizationManager = authorizationManager;
+            _applicationManager = applicationManager;
+        }
+
+        public async Task<IActionResult> OnGetAsync()
+        {
+            if (!await PopulateApplication())
+            {
+                return NotFound();
+            }
+            
+            if (string.IsNullOrEmpty(AuthorizationId))
+            {
+                Tokens = await _tokenManager.FindByApplicationIdAsync(Id);
+            }
+            else
+            {
+                Tokens = await _tokenManager.FindByAuthorizationIdAsync(AuthorizationId);
+            }
+            UserSet = await _userManager.Users
+                .Where(user => Tokens.Any(authorization => authorization.Subject == user.Id))
+                .Distinct()
+                .ToDictionaryAsync(user => user.Id, user => user.UserName);
+
+            
+            return Page();
+        }
+
+
+        private async Task<bool> PopulateApplication()
+        {
+            var userId = _userManager.GetUserId(User);
+            if (string.IsNullOrEmpty(Id))
+            {
+                var authorization = await _authorizationManager.FindByIdAsync(AuthorizationId);
+                Application = authorization.Application;
+            }
+            else if (string.IsNullOrEmpty(AuthorizationId))
+            {
+                Application = await _applicationManager.FindByIdAsync(Id);
+            }
+
+            return Application != null && Application.ApplicationUserId == userId;
+        }
+    }
+
+}

@@ -165,9 +165,9 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<EmailSenderFactory>();
             // bundling
 
+            services.AddAuthorization(o => Policies.AddBTCPayPolicies(o));
             services.AddBtcPayServerAuthenticationSchemes(configuration);
-            services.AddAuthorization(o => o.AddBTCPayPolicies());
-            //bundling
+
             services.AddBundles();
             services.AddTransient<BundleOptions>(provider =>
             {
@@ -187,6 +187,13 @@ namespace BTCPayServer.Hosting
             rateLimits.SetZone($"zone={ZoneLimits.Login} rate=5r/min burst=3 nodelay");
             services.AddSingleton(rateLimits);
             return services;
+        }
+        
+        private static void AddBtcPayServerAuthenticationSchemes(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.AddAuthentication()
+                .AddCookie()
+                .AddBitpayAuthentication();
         }
 
         private static void AddBtcPayServerAuthenticationSchemes(this IServiceCollection services, IConfiguration configuration)

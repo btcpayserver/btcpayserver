@@ -21,6 +21,7 @@ using BTCPayServer.Services.Invoices.Export;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore.Internal;
 using NBitcoin;
 using NBitpayClient;
 using NBXplorer;
@@ -278,7 +279,6 @@ namespace BTCPayServer.Controllers
                 PaymentMethodName = GetDisplayName(paymentMethodId, network),
                 CryptoImage = GetImage(paymentMethodId, network),
                 IsLightning = paymentMethodId.PaymentType == PaymentTypes.LightningLike,
-                ServerUrl = HttpContext.Request.GetAbsoluteRoot(),
                 OrderId = invoice.OrderId,
                 InvoiceId = invoice.Id,
                 DefaultLang = storeBlob.DefaultLang ?? "en",
@@ -369,6 +369,9 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         [Route("i/{invoiceId}/status")]
         [Route("i/{invoiceId}/{paymentMethodId}/status")]
+        [Route("invoice/{invoiceId}/status")]
+        [Route("invoice/{invoiceId}/{paymentMethodId}/status")]
+        [Route("invoice/status")]
         public async Task<IActionResult> GetStatus(string invoiceId, string paymentMethodId = null)
         {
             var model = await GetInvoiceModel(invoiceId, paymentMethodId);
@@ -379,6 +382,10 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("i/{invoiceId}/status/ws")]
+        [Route("i/{invoiceId}/{paymentMethodId}/status/ws")]
+        [Route("invoice/{invoiceId}/status/ws")]
+        [Route("invoice/{invoiceId}/{paymentMethodId}/status")]
+        [Route("invoice/status/ws")]
         public async Task<IActionResult> GetStatusWebSocket(string invoiceId)
         {
             if (!HttpContext.WebSockets.IsWebSocketRequest)
@@ -424,6 +431,7 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("i/{invoiceId}/UpdateCustomer")]
+        [Route("invoice/UpdateCustomer")]
         public async Task<IActionResult> UpdateCustomer(string invoiceId, [FromBody]UpdateCustomerModel data)
         {
             if (!ModelState.IsValid)
@@ -679,9 +687,9 @@ namespace BTCPayServer.Controllers
 
         public class PosDataParser
         {
-            public static Dictionary<string, string> ParsePosData(string posData)
+            public static Dictionary<string, object> ParsePosData(string posData)
             {
-                var result = new Dictionary<string,string>();
+                var result = new Dictionary<string,object>();
                 if (string.IsNullOrEmpty(posData))
                 {
                     return result;
@@ -689,7 +697,6 @@ namespace BTCPayServer.Controllers
             
                 try
                 {
-                
                     var jObject =JObject.Parse(posData);
                     foreach (var item in jObject)
                     {
@@ -697,7 +704,14 @@ namespace BTCPayServer.Controllers
                         switch (item.Value.Type)
                         {
                             case JTokenType.Array:
-                                result.Add(item.Key, string.Join(',', item.Value.AsEnumerable()));
+                                var items = item.Value.AsEnumerable().ToList();
+                                for (var i = 0; i < items.Count(); i++)
+                                {
+                                    result.Add($"{item.Key}[{i}]", ParsePosData(items[i].ToString()));
+                                }
+                                break;
+                            case JTokenType.Object:
+                                result.Add(item.Key, ParsePosData(item.Value.ToString()));
                                 break;
                             default:
                                 result.Add(item.Key, item.Value.ToString());

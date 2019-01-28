@@ -52,11 +52,13 @@ namespace BTCPayServer
             InitBitcoinGold();
             InitMonacoin();
             InitDash();
-            // Disabled because of https://twitter.com/Cryptopia_NZ/status/1085084168852291586
-            //InitPolis();
             InitFeathercoin();
             InitGroestlcoin();
             InitViacoin();
+
+            // Disabled because of https://twitter.com/Cryptopia_NZ/status/1085084168852291586
+            //InitPolis();
+            //InitBitcoinplus();
             //InitUfo();
         }
 

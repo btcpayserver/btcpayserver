@@ -91,6 +91,12 @@ namespace BTCPayServer.Services.Invoices
             get; set;
         }
 
+        [JsonProperty(PropertyName = "taxIncluded", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public decimal TaxIncluded
+        {
+            get; set;
+        }
+
         [JsonProperty(PropertyName = "currency")]
         public string Currency
         {

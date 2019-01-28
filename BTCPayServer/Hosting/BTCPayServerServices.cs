@@ -162,7 +162,8 @@ namespace BTCPayServer.Hosting
             services.AddTransient<InvoiceController>();
             services.AddTransient<AppsPublicController>();
             // Add application services.
-            services.AddTransient<IEmailSender, EmailSender>();
+            services.AddSingleton<EmailSenderFactory>();
+            // bundling
 
             services.AddBtcPayServerAuthenticationSchemes(configuration);
             services.AddAuthorization(o => o.AddBTCPayPolicies());

@@ -24,7 +24,6 @@ namespace BTCPayServer.Models.InvoicingModels
         public bool IsModal { get; set; }
         public bool IsLightning { get; set; }
         public string CryptoCode { get; set; }
-        public string ServerUrl { get; set; }
         public string InvoiceId { get; set; }
         public string BtcAddress { get; set; }
         public string BtcDue { get; set; }

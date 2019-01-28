@@ -31,7 +31,7 @@ namespace BTCPayServer.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
-        private readonly IEmailSender _emailSender;
+        private readonly EmailSenderFactory _EmailSenderFactory;
         private readonly ILogger _logger;
         private readonly UrlEncoder _urlEncoder;
         TokenRepository _TokenRepository;
@@ -44,7 +44,7 @@ namespace BTCPayServer.Controllers
         public ManageController(
           UserManager<ApplicationUser> userManager,
           SignInManager<ApplicationUser> signInManager,
-          IEmailSender emailSender,
+          EmailSenderFactory emailSenderFactory,
           ILogger<ManageController> logger,
           UrlEncoder urlEncoder,
           TokenRepository tokenRepository,
@@ -54,7 +54,7 @@ namespace BTCPayServer.Controllers
         {
             _userManager = userManager;
             _signInManager = signInManager;
-            _emailSender = emailSender;
+            _EmailSenderFactory = emailSenderFactory;
             _logger = logger;
             _urlEncoder = urlEncoder;
             _TokenRepository = tokenRepository;
@@ -156,8 +156,7 @@ namespace BTCPayServer.Controllers
             var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             var callbackUrl = Url.EmailConfirmationLink(user.Id, code, Request.Scheme);
             var email = user.Email;
-            await _emailSender.SendEmailConfirmationAsync(email, callbackUrl);
-
+            _EmailSenderFactory.GetEmailSender().SendEmailConfirmation(email, callbackUrl);
             StatusMessage = "Verification email sent. Please check your email.";
             return RedirectToAction(nameof(Index));
         }

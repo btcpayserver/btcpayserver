@@ -44,6 +44,6 @@
   "Node Info": "接続情報",
   "txCount": "取引 {{count}} 個",
   "txCount_plural": "取引 {{count}} 個",
-  "Pay with CoinSwitch": "Pay with CoinSwitch",
-  "Pay with Changelly": "Pay with Changelly"
+  "Pay with CoinSwitch": "CoinSwitchでのお支払い",
+  "Pay with Changelly": "Changellyでのお支払い"
 }

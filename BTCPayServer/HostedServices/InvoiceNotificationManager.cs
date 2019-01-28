@@ -46,20 +46,21 @@ namespace BTCPayServer.HostedServices
         EventAggregator _EventAggregator;
         InvoiceRepository _InvoiceRepository;
         BTCPayNetworkProvider _NetworkProvider;
-        IEmailSender _EmailSender;
+        private readonly EmailSenderFactory _EmailSenderFactory;
 
         public InvoiceNotificationManager(
             IBackgroundJobClient jobClient,
             EventAggregator eventAggregator,
             InvoiceRepository invoiceRepository,
             BTCPayNetworkProvider networkProvider,
-            IEmailSender emailSender)
+            ILogger<InvoiceNotificationManager> logger,
+            EmailSenderFactory emailSenderFactory)
         {
             _JobClient = jobClient;
             _EventAggregator = eventAggregator;
             _InvoiceRepository = invoiceRepository;
             _NetworkProvider = networkProvider;
-            _EmailSender = emailSender;
+            _EmailSenderFactory = emailSenderFactory;
         }
 
         void Notify(InvoiceEntity invoice, int? eventCode = null, string name = null)
@@ -76,11 +77,14 @@ namespace BTCPayServer.HostedServices
                     invoice.StoreId
                 };
                 // TODO: Consider adding info on ItemDesc and payment info (amount)
-
+                
                 var emailBody = NBitcoin.JsonConverters.Serializer.ToString(ipn);
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                _EmailSender.SendEmailAsync(invoice.NotificationEmail, $"BtcPayServer Invoice Notification - ${invoice.StoreId}", emailBody);
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+
+                _EmailSenderFactory.GetEmailSender(invoice.StoreId).SendEmail(
+                    invoice.NotificationEmail,
+                    $"BtcPayServer Invoice Notification - ${invoice.StoreId}",
+                    emailBody);
+
             }
             if (string.IsNullOrEmpty(invoice.NotificationURL))
                 return;

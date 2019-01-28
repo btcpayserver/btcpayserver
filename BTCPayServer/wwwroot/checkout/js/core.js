@@ -95,9 +95,8 @@ function onDataCallback(jsonData) {
 }
 
 function fetchStatus() {
-    var path = srvModel.serverUrl + "/i/" + srvModel.invoiceId + "/" + srvModel.paymentMethodId + "/status";
     $.ajax({
-        url: path,
+        url: window.location.pathname + "/status?invoiceId=" + srvModel.invoiceId + "&paymentMethodId=" + srvModel.paymentMethodId,
         type: "GET",
         cache: false
     }).done(function (data) {
@@ -164,11 +163,8 @@ $(document).ready(function () {
                 $("#emailAddressForm .input-wrapper bp-loading-button .action-button").addClass("loading");
                 // Push the email to a server, once the reception is confirmed move on
                 srvModel.customerEmail = emailAddress;
-
-                var path = srvModel.serverUrl + "/i/" + srvModel.invoiceId + "/UpdateCustomer";
-
                 $.ajax({
-                    url: path,
+                    url: window.location.pathname + "/UpdateCustomer?invoiceId=" + srvModel.invoiceId,
                     type: "POST",
                     data: JSON.stringify({ Email: srvModel.customerEmail }),
                     contentType: "application/json; charset=utf-8"
@@ -240,13 +236,21 @@ $(document).ready(function () {
 
     var supportsWebSockets = 'WebSocket' in window && window.WebSocket.CLOSING === 2;
     if (supportsWebSockets) {
-        var path = srvModel.serverUrl + "/i/" + srvModel.invoiceId + "/status/ws";
-        path = path.replace("https://", "wss://");
-        path = path.replace("http://", "ws://");
+        var loc = window.location, ws_uri;
+        if (loc.protocol === "https:") {
+            ws_uri = "wss:";
+        } else {
+            ws_uri = "ws:";
+        }
+        ws_uri += "//" + loc.host;
+        ws_uri += loc.pathname + "/status/ws?invoiceId=" + srvModel.invoiceId;
         try {
-            var socket = new WebSocket(path);
+            var socket = new WebSocket(ws_uri);
             socket.onmessage = function (e) {
                 fetchStatus();
+            };
+            socket.onerror = function (e) {
+                console.error("Error while connecting to websocket for invoice notifications (callback)");
             };
         }
         catch (e) {

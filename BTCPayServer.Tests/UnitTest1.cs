@@ -1630,18 +1630,16 @@ donation:
         public void PosDataParser_ParsesCorrectly()
         {
             var testCases =
-                new List<(string input, Dictionary<string, string> expectedOutput)>()
+                new List<(string input, Dictionary<string, object> expectedOutput)>()
                 {
-                    { (null, new Dictionary<string, string>())},
-                    {("", new Dictionary<string, string>())},
-                    {("{}", new Dictionary<string, string>())},
-                    {("non-json-content", new Dictionary<string, string>(){ {string.Empty, "non-json-content"}})},
-                    {("[1,2,3]", new Dictionary<string, string>(){ {string.Empty, "[1,2,3]"}})},
-                    {("{ \"key\": \"value\"}", new Dictionary<string, string>(){ {"key", "value"}})},
-                    {("{ \"key\": true}", new Dictionary<string, string>(){ {"key", "True"}})},
-                    {("{ \"key\": \"value\", \"key2\": [\"value\", \"value2\"]}",
-                        new Dictionary<string, string>(){ {"key", "value"}, {"key2", "value,value2"}})},
-                    {("{ invalidjson file here}", new Dictionary<string, string>(){ {String.Empty, "{ invalidjson file here}"}})}
+                    { (null, new Dictionary<string, object>())},
+                    {("", new Dictionary<string, object>())},
+                    {("{}", new Dictionary<string, object>())},
+                    {("non-json-content", new Dictionary<string, object>(){ {string.Empty, "non-json-content"}})},
+                    {("[1,2,3]", new Dictionary<string, object>(){ {string.Empty, "[1,2,3]"}})},
+                    {("{ \"key\": \"value\"}", new Dictionary<string, object>(){ {"key", "value"}})},
+                    {("{ \"key\": true}", new Dictionary<string, object>(){ {"key", "True"}})},
+                    {("{ invalidjson file here}", new Dictionary<string, object>(){ {String.Empty, "{ invalidjson file here}"}})}
                 };
 
             testCases.ForEach(tuple =>
@@ -1664,18 +1662,16 @@ donation:
                 var controller = tester.PayTester.GetController<InvoiceController>(null);
 
                 var testCases =
-                    new List<(string input, Dictionary<string, string> expectedOutput)>()
+                    new List<(string input, Dictionary<string, object> expectedOutput)>()
                     {
-                        { (null, new Dictionary<string, string>())},
-                        {("", new Dictionary<string, string>())},
-                        {("{}", new Dictionary<string, string>())},
-                        {("non-json-content", new Dictionary<string, string>(){ {string.Empty, "non-json-content"}})},
-                        {("[1,2,3]", new Dictionary<string, string>(){ {string.Empty, "[1,2,3]"}})},
-                        {("{ \"key\": \"value\"}", new Dictionary<string, string>(){ {"key", "value"}})},
-                        {("{ \"key\": true}", new Dictionary<string, string>(){ {"key", "True"}})},
-                        {("{ \"key\": \"value\", \"key2\": [\"value\", \"value2\"]}",
-                        new Dictionary<string, string>(){ {"key", "value"}, {"key2", "value,value2"}})},
-                        {("{ invalidjson file here}", new Dictionary<string, string>(){ {String.Empty, "{ invalidjson file here}"}})}
+                        { (null, new Dictionary<string, object>())},
+                        {("", new Dictionary<string, object>())},
+                        {("{}", new Dictionary<string, object>())},
+                        {("non-json-content", new Dictionary<string, object>(){ {string.Empty, "non-json-content"}})},
+                        {("[1,2,3]", new Dictionary<string, object>(){ {string.Empty, "[1,2,3]"}})},
+                        {("{ \"key\": \"value\"}", new Dictionary<string, object>(){ {"key", "value"}})},
+                        {("{ \"key\": true}", new Dictionary<string, object>(){ {"key", "True"}})},
+                        {("{ invalidjson file here}", new Dictionary<string, object>(){ {String.Empty, "{ invalidjson file here}"}})}
                     };
 
                 var tasks = new List<Task>();
@@ -1989,6 +1985,7 @@ donation:
                 var invoice = user.BitPay.CreateInvoice(new Invoice()
                 {
                     Price = 5000.0m,
+                    TaxIncluded = 1000.0m,
                     Currency = "USD",
                     PosData = "posData",
                     OrderId = "orderId",
@@ -2018,6 +2015,8 @@ donation:
                 });
 
                 invoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
+                Assert.Equal(1000.0m, invoice.TaxIncluded);
+                Assert.Equal(5000.0m, invoice.Price);
                 Assert.Equal(Money.Coins(0), invoice.BtcPaid);
                 Assert.Equal("new", invoice.Status);
                 Assert.False((bool)((JValue)invoice.ExceptionStatus).Value);

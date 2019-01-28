@@ -1,4 +1,4 @@
-﻿using BTCPayServer.Logging;
+using BTCPayServer.Logging;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using NBitcoin;

@@ -96,7 +96,7 @@ function onDataCallback(jsonData) {
 
 function fetchStatus() {
     $.ajax({
-        url: window.location.pathname + "/status?invoiceId=" + srvModel.invoiceId,
+        url: window.location.pathname + "/status?invoiceId=" + srvModel.invoiceId + "&paymentMethodId=" + srvModel.paymentMethodId,
         type: "GET",
         cache: false
     }).done(function (data) {

@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace BTCPayServer.Migrations
 {
-    public partial class OpenIddict : Migration
+    public partial class AddOpenId_OpenIddict : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -11,9 +11,9 @@ namespace BTCPayServer.Migrations
                 name: "OpenIddictApplications",
                 columns: table => new
                 {
-                    ClientId = table.Column<string>(nullable: false),
+                    ClientId = table.Column<string>(maxLength: 100, nullable: false),
                     ClientSecret = table.Column<string>(nullable: true),
-                    ConcurrencyToken = table.Column<string>(nullable: true),
+                    ConcurrencyToken = table.Column<string>(maxLength: 50, nullable: true),
                     ConsentType = table.Column<string>(nullable: true),
                     DisplayName = table.Column<string>(nullable: true),
                     Id = table.Column<string>(nullable: false),
@@ -21,22 +21,29 @@ namespace BTCPayServer.Migrations
                     PostLogoutRedirectUris = table.Column<string>(nullable: true),
                     Properties = table.Column<string>(nullable: true),
                     RedirectUris = table.Column<string>(nullable: true),
-                    Type = table.Column<string>(nullable: false)
+                    Type = table.Column<string>(maxLength: 25, nullable: false),
+                    ApplicationUserId = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_OpenIddictApplications", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_OpenIddictApplications_AspNetUsers_ApplicationUserId",
+                        column: x => x.ApplicationUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
                 name: "OpenIddictScopes",
                 columns: table => new
                 {
-                    ConcurrencyToken = table.Column<string>(nullable: true),
+                    ConcurrencyToken = table.Column<string>(maxLength: 50, nullable: true),
                     Description = table.Column<string>(nullable: true),
                     DisplayName = table.Column<string>(nullable: true),
                     Id = table.Column<string>(nullable: false),
-                    Name = table.Column<string>(nullable: false),
+                    Name = table.Column<string>(maxLength: 200, nullable: false),
                     Properties = table.Column<string>(nullable: true),
                     Resources = table.Column<string>(nullable: true)
                 },
@@ -50,13 +57,13 @@ namespace BTCPayServer.Migrations
                 columns: table => new
                 {
                     ApplicationId = table.Column<string>(nullable: true),
-                    ConcurrencyToken = table.Column<string>(nullable: true),
+                    ConcurrencyToken = table.Column<string>(maxLength: 50, nullable: true),
                     Id = table.Column<string>(nullable: false),
                     Properties = table.Column<string>(nullable: true),
                     Scopes = table.Column<string>(nullable: true),
-                    Status = table.Column<string>(nullable: false),
-                    Subject = table.Column<string>(nullable: false),
-                    Type = table.Column<string>(nullable: false)
+                    Status = table.Column<string>(maxLength: 25, nullable: false),
+                    Subject = table.Column<string>(maxLength: 450, nullable: false),
+                    Type = table.Column<string>(maxLength: 25, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -75,16 +82,16 @@ namespace BTCPayServer.Migrations
                 {
                     ApplicationId = table.Column<string>(nullable: true),
                     AuthorizationId = table.Column<string>(nullable: true),
+                    ConcurrencyToken = table.Column<string>(maxLength: 50, nullable: true),
                     CreationDate = table.Column<DateTimeOffset>(nullable: true),
                     ExpirationDate = table.Column<DateTimeOffset>(nullable: true),
-                    ConcurrencyToken = table.Column<string>(nullable: true),
                     Id = table.Column<string>(nullable: false),
                     Payload = table.Column<string>(nullable: true),
                     Properties = table.Column<string>(nullable: true),
-                    ReferenceId = table.Column<string>(nullable: true),
-                    Status = table.Column<string>(nullable: true),
-                    Subject = table.Column<string>(nullable: false),
-                    Type = table.Column<string>(nullable: false)
+                    ReferenceId = table.Column<string>(maxLength: 100, nullable: true),
+                    Status = table.Column<string>(maxLength: 25, nullable: false),
+                    Subject = table.Column<string>(maxLength: 450, nullable: false),
+                    Type = table.Column<string>(maxLength: 25, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -104,26 +111,26 @@ namespace BTCPayServer.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_OpenIddictApplications_ApplicationUserId",
+                table: "OpenIddictApplications",
+                column: "ApplicationUserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_OpenIddictApplications_ClientId",
                 table: "OpenIddictApplications",
                 column: "ClientId",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_OpenIddictAuthorizations_ApplicationId",
+                name: "IX_OpenIddictAuthorizations_ApplicationId_Status_Subject_Type",
                 table: "OpenIddictAuthorizations",
-                column: "ApplicationId");
+                columns: new[] { "ApplicationId", "Status", "Subject", "Type" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_OpenIddictScopes_Name",
                 table: "OpenIddictScopes",
                 column: "Name",
                 unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_OpenIddictTokens_ApplicationId",
-                table: "OpenIddictTokens",
-                column: "ApplicationId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_OpenIddictTokens_AuthorizationId",
@@ -135,6 +142,11 @@ namespace BTCPayServer.Migrations
                 table: "OpenIddictTokens",
                 column: "ReferenceId",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OpenIddictTokens_ApplicationId_Status_Subject_Type",
+                table: "OpenIddictTokens",
+                columns: new[] { "ApplicationId", "Status", "Subject", "Type" });
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

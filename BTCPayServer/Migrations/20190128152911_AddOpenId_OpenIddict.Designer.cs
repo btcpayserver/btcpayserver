@@ -9,14 +9,139 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BTCPayServer.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20181120214318_OpenIddictUpgrade")]
-    partial class OpenIddictUpgrade
+    [Migration("20190128152911_AddOpenId_OpenIddict")]
+    partial class AddOpenId_OpenIddict
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "2.1.4-rtm-31024");
+
+            modelBuilder.Entity("BTCPayServer.Authentication.OpenId.Models.BTCPayOpenIdAuthorization", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<string>("ApplicationId");
+
+                    b.Property<string>("ConcurrencyToken")
+                        .IsConcurrencyToken()
+                        .HasMaxLength(50);
+
+                    b.Property<string>("Properties");
+
+                    b.Property<string>("Scopes");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(25);
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(450);
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(25);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationId", "Status", "Subject", "Type");
+
+                    b.ToTable("OpenIddictAuthorizations");
+                });
+
+            modelBuilder.Entity("BTCPayServer.Authentication.OpenId.Models.BTCPayOpenIdClient", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<string>("ApplicationUserId");
+
+                    b.Property<string>("ClientId")
+                        .IsRequired()
+                        .HasMaxLength(100);
+
+                    b.Property<string>("ClientSecret");
+
+                    b.Property<string>("ConcurrencyToken")
+                        .IsConcurrencyToken()
+                        .HasMaxLength(50);
+
+                    b.Property<string>("ConsentType");
+
+                    b.Property<string>("DisplayName");
+
+                    b.Property<string>("Permissions");
+
+                    b.Property<string>("PostLogoutRedirectUris");
+
+                    b.Property<string>("Properties");
+
+                    b.Property<string>("RedirectUris");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(25);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.HasIndex("ClientId")
+                        .IsUnique();
+
+                    b.ToTable("OpenIddictApplications");
+                });
+
+            modelBuilder.Entity("BTCPayServer.Authentication.OpenId.Models.BTCPayOpenIdToken", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<string>("ApplicationId");
+
+                    b.Property<string>("AuthorizationId");
+
+                    b.Property<string>("ConcurrencyToken")
+                        .IsConcurrencyToken()
+                        .HasMaxLength(50);
+
+                    b.Property<DateTimeOffset?>("CreationDate");
+
+                    b.Property<DateTimeOffset?>("ExpirationDate");
+
+                    b.Property<string>("Payload");
+
+                    b.Property<string>("Properties");
+
+                    b.Property<string>("ReferenceId")
+                        .HasMaxLength(100);
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(25);
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(450);
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(25);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorizationId");
+
+                    b.HasIndex("ReferenceId")
+                        .IsUnique();
+
+                    b.HasIndex("ApplicationId", "Status", "Subject", "Type");
+
+                    b.ToTable("OpenIddictTokens");
+                });
 
             modelBuilder.Entity("BTCPayServer.Data.AddressInvoiceData", b =>
                 {
@@ -435,80 +560,7 @@ namespace BTCPayServer.Migrations
                     b.ToTable("AspNetUserTokens");
                 });
 
-            modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictApplication", b =>
-                {
-                    b.Property<string>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<string>("ClientId")
-                        .IsRequired()
-                        .HasMaxLength(100);
-
-                    b.Property<string>("ClientSecret");
-
-                    b.Property<string>("ConcurrencyToken")
-                        .IsConcurrencyToken()
-                        .HasMaxLength(50);
-
-                    b.Property<string>("ConsentType");
-
-                    b.Property<string>("DisplayName");
-
-                    b.Property<string>("Permissions");
-
-                    b.Property<string>("PostLogoutRedirectUris");
-
-                    b.Property<string>("Properties");
-
-                    b.Property<string>("RedirectUris");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(25);
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ClientId")
-                        .IsUnique();
-
-                    b.ToTable("OpenIddictApplications");
-                });
-
-            modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictAuthorization", b =>
-                {
-                    b.Property<string>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<string>("ApplicationId");
-
-                    b.Property<string>("ConcurrencyToken")
-                        .IsConcurrencyToken()
-                        .HasMaxLength(50);
-
-                    b.Property<string>("Properties");
-
-                    b.Property<string>("Scopes");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(25);
-
-                    b.Property<string>("Subject")
-                        .IsRequired()
-                        .HasMaxLength(450);
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(25);
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ApplicationId", "Status", "Subject", "Type");
-
-                    b.ToTable("OpenIddictAuthorizations");
-                });
-
-            modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictScope", b =>
+            modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictScope<string>", b =>
                 {
                     b.Property<string>("Id")
                         .ValueGeneratedOnAdd();
@@ -537,52 +589,29 @@ namespace BTCPayServer.Migrations
                     b.ToTable("OpenIddictScopes");
                 });
 
-            modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictToken", b =>
+            modelBuilder.Entity("BTCPayServer.Authentication.OpenId.Models.BTCPayOpenIdAuthorization", b =>
                 {
-                    b.Property<string>("Id")
-                        .ValueGeneratedOnAdd();
+                    b.HasOne("BTCPayServer.Authentication.OpenId.Models.BTCPayOpenIdClient", "Application")
+                        .WithMany("Authorizations")
+                        .HasForeignKey("ApplicationId");
+                });
 
-                    b.Property<string>("ApplicationId");
+            modelBuilder.Entity("BTCPayServer.Authentication.OpenId.Models.BTCPayOpenIdClient", b =>
+                {
+                    b.HasOne("BTCPayServer.Models.ApplicationUser", "ApplicationUser")
+                        .WithMany("OpenIdClients")
+                        .HasForeignKey("ApplicationUserId");
+                });
 
-                    b.Property<string>("AuthorizationId");
+            modelBuilder.Entity("BTCPayServer.Authentication.OpenId.Models.BTCPayOpenIdToken", b =>
+                {
+                    b.HasOne("BTCPayServer.Authentication.OpenId.Models.BTCPayOpenIdClient", "Application")
+                        .WithMany("Tokens")
+                        .HasForeignKey("ApplicationId");
 
-                    b.Property<string>("ConcurrencyToken")
-                        .IsConcurrencyToken()
-                        .HasMaxLength(50);
-
-                    b.Property<DateTimeOffset?>("CreationDate");
-
-                    b.Property<DateTimeOffset?>("ExpirationDate");
-
-                    b.Property<string>("Payload");
-
-                    b.Property<string>("Properties");
-
-                    b.Property<string>("ReferenceId")
-                        .HasMaxLength(100);
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(25);
-
-                    b.Property<string>("Subject")
-                        .IsRequired()
-                        .HasMaxLength(450);
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(25);
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AuthorizationId");
-
-                    b.HasIndex("ReferenceId")
-                        .IsUnique();
-
-                    b.HasIndex("ApplicationId", "Status", "Subject", "Type");
-
-                    b.ToTable("OpenIddictTokens");
+                    b.HasOne("BTCPayServer.Authentication.OpenId.Models.BTCPayOpenIdAuthorization", "Authorization")
+                        .WithMany("Tokens")
+                        .HasForeignKey("AuthorizationId");
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.AddressInvoiceData", b =>
@@ -721,24 +750,6 @@ namespace BTCPayServer.Migrations
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade);
-                });
-
-            modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictAuthorization", b =>
-                {
-                    b.HasOne("OpenIddict.EntityFrameworkCore.Models.OpenIddictApplication", "Application")
-                        .WithMany("Authorizations")
-                        .HasForeignKey("ApplicationId");
-                });
-
-            modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictToken", b =>
-                {
-                    b.HasOne("OpenIddict.EntityFrameworkCore.Models.OpenIddictApplication", "Application")
-                        .WithMany("Tokens")
-                        .HasForeignKey("ApplicationId");
-
-                    b.HasOne("OpenIddict.EntityFrameworkCore.Models.OpenIddictAuthorization", "Authorization")
-                        .WithMany("Tokens")
-                        .HasForeignKey("AuthorizationId");
                 });
 #pragma warning restore 612, 618
         }

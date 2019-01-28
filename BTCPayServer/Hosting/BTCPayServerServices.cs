@@ -30,9 +30,7 @@ using BTCPayServer.Logging;
 using BTCPayServer.HostedServices;
 using Meziantou.AspNetCore.BundleTagHelpers;
 using BTCPayServer.Authentication.OpenId.Models;
-using System.Security.Claims;
 using BTCPayServer.Crowdfund;
-using BTCPayServer.Hubs;
 using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Security;
@@ -187,13 +185,6 @@ namespace BTCPayServer.Hosting
             rateLimits.SetZone($"zone={ZoneLimits.Login} rate=5r/min burst=3 nodelay");
             services.AddSingleton(rateLimits);
             return services;
-        }
-        
-        private static void AddBtcPayServerAuthenticationSchemes(this IServiceCollection services, IConfiguration configuration)
-        {
-            services.AddAuthentication()
-                .AddCookie()
-                .AddBitpayAuthentication();
         }
 
         private static void AddBtcPayServerAuthenticationSchemes(this IServiceCollection services, IConfiguration configuration)

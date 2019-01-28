@@ -6,6 +6,7 @@ using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Services.U2F.Models;
 using BTCPayServer.Storage.Models;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using OpenIddict.EntityFrameworkCore.Models;
 
 namespace BTCPayServer.Data
 {
@@ -225,6 +226,9 @@ namespace BTCPayServer.Data
 
             builder.Entity<PaymentRequestData>()
                 .HasIndex(o => o.Status);
+
+            builder.UseOpenIddict<BTCPayOpenIdClient, BTCPayOpenIdAuthorization, OpenIddictScope<string>, BTCPayOpenIdToken, string>();
+
         }
     }
 

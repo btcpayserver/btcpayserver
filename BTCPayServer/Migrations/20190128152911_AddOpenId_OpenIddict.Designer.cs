@@ -3,18 +3,20 @@ using System;
 using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BTCPayServer.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20190128152911_AddOpenId_OpenIddict")]
+    partial class AddOpenId_OpenIddict
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "2.1.8-servicing-32085");
+                .HasAnnotation("ProductVersion", "2.1.4-rtm-31024");
 
             modelBuilder.Entity("BTCPayServer.Authentication.OpenId.Models.BTCPayOpenIdAuthorization", b =>
                 {
@@ -188,8 +190,6 @@ namespace BTCPayServer.Migrations
 
                     b.Property<string>("StoreDataId");
 
-                    b.Property<bool>("TagAllInvoices");
-
                     b.HasKey("Id");
 
                     b.HasIndex("StoreDataId");
@@ -261,6 +261,8 @@ namespace BTCPayServer.Migrations
                 {
                     b.Property<string>("Id")
                         .ValueGeneratedOnAdd();
+
+                    b.Property<string>("Facade");
 
                     b.Property<string>("Label");
 
@@ -449,73 +451,6 @@ namespace BTCPayServer.Migrations
                         .HasName("UserNameIndex");
 
                     b.ToTable("AspNetUsers");
-                });
-
-            modelBuilder.Entity("BTCPayServer.Services.PaymentRequests.PaymentRequestData", b =>
-                {
-                    b.Property<string>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<byte[]>("Blob");
-
-                    b.Property<int>("Status");
-
-                    b.Property<string>("StoreDataId");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Status");
-
-                    b.HasIndex("StoreDataId");
-
-                    b.ToTable("PaymentRequests");
-                });
-
-            modelBuilder.Entity("BTCPayServer.Services.U2F.Models.U2FDevice", b =>
-                {
-                    b.Property<string>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<string>("ApplicationUserId");
-
-                    b.Property<byte[]>("AttestationCert")
-                        .IsRequired();
-
-                    b.Property<int>("Counter");
-
-                    b.Property<byte[]>("KeyHandle")
-                        .IsRequired();
-
-                    b.Property<string>("Name");
-
-                    b.Property<byte[]>("PublicKey")
-                        .IsRequired();
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ApplicationUserId");
-
-                    b.ToTable("U2FDevices");
-                });
-
-            modelBuilder.Entity("BTCPayServer.Storage.Models.StoredFile", b =>
-                {
-                    b.Property<string>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<string>("ApplicationUserId");
-
-                    b.Property<string>("FileName");
-
-                    b.Property<string>("StorageFileName");
-
-                    b.Property<DateTime>("Timestamp");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ApplicationUserId");
-
-                    b.ToTable("Files");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -770,28 +705,6 @@ namespace BTCPayServer.Migrations
                         .WithMany("UserStores")
                         .HasForeignKey("StoreDataId")
                         .OnDelete(DeleteBehavior.Cascade);
-                });
-
-            modelBuilder.Entity("BTCPayServer.Services.PaymentRequests.PaymentRequestData", b =>
-                {
-                    b.HasOne("BTCPayServer.Data.StoreData", "StoreData")
-                        .WithMany("PaymentRequests")
-                        .HasForeignKey("StoreDataId")
-                        .OnDelete(DeleteBehavior.Cascade);
-                });
-
-            modelBuilder.Entity("BTCPayServer.Services.U2F.Models.U2FDevice", b =>
-                {
-                    b.HasOne("BTCPayServer.Models.ApplicationUser", "ApplicationUser")
-                        .WithMany("U2FDevices")
-                        .HasForeignKey("ApplicationUserId");
-                });
-
-            modelBuilder.Entity("BTCPayServer.Storage.Models.StoredFile", b =>
-                {
-                    b.HasOne("BTCPayServer.Models.ApplicationUser", "ApplicationUser")
-                        .WithMany("StoredFiles")
-                        .HasForeignKey("ApplicationUserId");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

@@ -32,6 +32,8 @@ using System.Threading;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Mvc.Cors.Internal;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
+using OpenIddict.Abstractions;
+using OpenIddict.EntityFrameworkCore.Models;
 using System.Net;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Security;
@@ -65,12 +67,63 @@ namespace BTCPayServer.Hosting
             services.AddMemoryCache();
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddDefaultTokenProviders();
-            services.AddSignalR();
+                .AddDefaultTokenProviders();      
+            
+            // Register the OpenIddict services.
+            services.AddOpenIddict()
+                .AddCore(options =>
+                {
+                    
+                    // Configure OpenIddict to use the Entity Framework Core stores and entities.
+                    options.UseEntityFrameworkCore()
+                        .UseDbContext<ApplicationDbContext>()
+                        .ReplaceDefaultEntities<BTCPayOpenIdClient, BTCPayOpenIdAuthorization, OpenIddictScope<string>,
+                            BTCPayOpenIdToken, string>();
+                })
+
+                .AddServer(options =>
+                {
+                    // Register the ASP.NET Core MVC binder used by OpenIddict.
+                    // Note: if you don't call this method, you won't be able to
+                    // bind OpenIdConnectRequest or OpenIdConnectResponse parameters.
+                    options.UseMvc();
+
+                    // Enable the token endpoint (required to use the password flow).
+                    options.EnableTokenEndpoint("/connect/token");
+                    options.EnableAuthorizationEndpoint("/connect/authorize");
+                    options.EnableAuthorizationEndpoint("/connect/logout");
+
+                    // Allow client applications various flows
+                    // with the exception of Client Credentials flow as we cannot identify
+                    // a user through that grant type
+                    options.AllowImplicitFlow();
+                    options.AllowClientCredentialsFlow();
+                    options.AllowRefreshTokenFlow();
+                    options.AllowPasswordFlow();
+                    options.AllowAuthorizationCodeFlow();
+                    // During development, you can disable the HTTPS requirement.
+                    options.DisableHttpsRequirement();
+
+                    options.ConfigureClientRequirements(Configuration);
+                    options.UseRollingTokens();
+                    options.UseJsonWebTokens();
+
+                    options.RegisterScopes(
+                        OpenIdConnectConstants.Scopes.OpenId,
+                        OpenIdConnectConstants.Scopes.OfflineAccess,
+                        OpenIdConnectConstants.Scopes.Email,
+                        OpenIdConnectConstants.Scopes.Profile,
+                        OpenIddictConstants.Scopes.Roles);
+
+                    
+                    options.ConfigureSigningKey(Configuration);
+                });
+
             services.AddBTCPayServer(Configuration);
             services.AddProviderStorage();
             services.AddSession();
             services.AddBTCPayServer(Configuration);
+            services.AddSignalR();
             services.AddMvc(o =>
             {
                 o.Filters.Add(new XFrameOptionsAttribute("DENY"));
@@ -97,6 +150,14 @@ namespace BTCPayServer.Hosting
                 options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
                 options.Lockout.MaxFailedAccessAttempts = 5;
                 options.Lockout.AllowedForNewUsers = true;
+                options.Password.RequireUppercase = false;            
+                // Configure Identity to use the same JWT claims as OpenIddict instead
+                // of the legacy WS-Federation claims it uses by default (ClaimTypes),
+                // which saves you from doing the mapping in your authorization controller.
+                
+                options.ClaimsIdentity.UserNameClaimType = OpenIdConnectConstants.Claims.Name;
+                options.ClaimsIdentity.UserIdClaimType = OpenIdConnectConstants.Claims.Subject;
+                options.ClaimsIdentity.RoleClaimType = OpenIdConnectConstants.Claims.Role;
             });
             // If the HTTPS certificate path is not set this logic will NOT be used and the default Kestrel binding logic will be.
             string httpsCertificateFilePath = Configuration.GetOrDefault<string>("HttpsCertificateFilePath", null);

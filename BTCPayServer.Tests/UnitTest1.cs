@@ -2138,19 +2138,20 @@ donation:
             }
         }
 
-        [Fact]
-        [Trait("Integration", "Integration")]
-        public void CheckQuadrigacxRateProvider()
-        {
-            var quadri = new QuadrigacxRateProvider();
-            var rates = quadri.GetRatesAsync().GetAwaiter().GetResult();
-            Assert.NotEmpty(rates);
-            Assert.NotEqual(0.0m, rates.First().BidAsk.Bid);
-            Assert.NotEqual(0.0m, rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("BTC_CAD")).Bid);
-            Assert.NotEqual(0.0m, rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("BTC_USD")).Bid);
-            Assert.NotEqual(0.0m, rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("LTC_CAD")).Bid);
-            Assert.Null(rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("LTC_USD")));
-        }
+        //[Fact]
+        //[Trait("Integration", "Integration")]
+        // 29 january, the exchange is down
+        //public void CheckQuadrigacxRateProvider()
+        //{
+        //    var quadri = new QuadrigacxRateProvider();
+        //    var rates = quadri.GetRatesAsync().GetAwaiter().GetResult();
+        //    Assert.NotEmpty(rates);
+        //    Assert.NotEqual(0.0m, rates.First().BidAsk.Bid);
+        //    Assert.NotEqual(0.0m, rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("BTC_CAD")).Bid);
+        //    Assert.NotEqual(0.0m, rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("BTC_USD")).Bid);
+        //    Assert.NotEqual(0.0m, rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("LTC_CAD")).Bid);
+        //    Assert.Null(rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("LTC_USD")));
+        //}
 
         [Fact]
         [Trait("Integration", "Integration")]
@@ -2164,6 +2165,9 @@ donation:
                 .Select(p => (ExpectedName: p.Key, ResultAsync: p.Value.GetRatesAsync(), Fetcher: (BackgroundFetcherRateProvider)p.Value))
                 .ToList())
             {
+                Logs.Tester.LogInformation($"Testing {result.ExpectedName}");
+                if (result.ExpectedName == "quadrigacx")
+                    continue; // 29 january, the exchange is down
                 result.Fetcher.InvalidateCache();
                 var exchangeRates = result.ResultAsync.Result;
                 result.Fetcher.InvalidateCache();

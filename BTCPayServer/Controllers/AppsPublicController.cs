@@ -176,30 +176,38 @@ namespace BTCPayServer.Controllers
             }
             
             store.AdditionalClaims.Add(new Claim(Policies.CanCreateInvoice.Key, store.Id));
-            var invoice = await _InvoiceController.CreateInvoiceCore(new Invoice()
+            try
             {
-                OrderId = $"{CrowdfundHubStreamer.CrowdfundInvoiceOrderIdPrefix}{appId}",
-                Currency = settings.TargetCurrency,
-                ItemCode = request.ChoiceKey ?? string.Empty,
-                ItemDesc = title,
-                BuyerEmail = request.Email,
-                Price = price,
-                NotificationURL = settings.NotificationUrl,
-                FullNotifications = true,
-                ExtendedNotifications = true,
-                RedirectURL = request.RedirectUrl ?? Request.GetDisplayUrl(),
+                var invoice = await _InvoiceController.CreateInvoiceCore(new Invoice()
+                {
+                    OrderId = $"{CrowdfundHubStreamer.CrowdfundInvoiceOrderIdPrefix}{appId}",
+                    Currency = settings.TargetCurrency,
+                    ItemCode = request.ChoiceKey ?? string.Empty,
+                    ItemDesc = title,
+                    BuyerEmail = request.Email,
+                    Price = price,
+                    NotificationURL = settings.NotificationUrl,
+                    FullNotifications = true,
+                    ExtendedNotifications = true,
+                    RedirectURL = request.RedirectUrl ?? Request.GetDisplayUrl(),
                 
                 
-            }, store, HttpContext.Request.GetAbsoluteRoot());
-            if (request.RedirectToCheckout)
-            {
-                return RedirectToAction(nameof(InvoiceController.Checkout), "Invoice",
-                    new {invoiceId = invoice.Data.Id});
+                }, store, HttpContext.Request.GetAbsoluteRoot());
+                if (request.RedirectToCheckout)
+                {
+                    return RedirectToAction(nameof(InvoiceController.Checkout), "Invoice",
+                        new {invoiceId = invoice.Data.Id});
+                }
+                else
+                {
+                    return Ok(invoice.Data.Id);
+                }
             }
-            else
+            catch (BitpayHttpException e)
             {
-                return Ok(invoice.Data.Id);
+                return BadRequest(e.Message);
             }
+            
         }
         
 

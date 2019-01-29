@@ -19,7 +19,7 @@ You can run BTCPay as a self-hosted solution on your own server, or use a [third
 
 The self-hosted solution allows you not only to attach an unlimited number of stores and use the Lightning Network but also become the payment processor for others.
 
-Thanks to the apps built on top of it, you can use BTCPay to receive donations, start a crowdfunding campaign or have an in-store Point of Sale.
+Thanks to the [apps](Apps.md) built on top of it, you can use BTCPay to receive donations, start a crowdfunding campaign or have an in-store Point of Sale.
 
 ## Features
 

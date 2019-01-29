@@ -29,7 +29,7 @@ namespace BTCPayServer.Models
                     ParseNonJsonStatus(s);
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 ParseNonJsonStatus(s);
             }

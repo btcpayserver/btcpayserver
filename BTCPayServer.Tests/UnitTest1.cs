@@ -2312,6 +2312,42 @@ donation:
             Assert.Throws<InvalidOperationException>(() => fetch.GetRatesAsync().GetAwaiter().GetResult());
         }
 
+        [Fact]
+        [Trait("Fast", "Fast")]
+        public void CheckParseStatusMessageModel()
+        {
+            var legacyStatus = "Error: some bad shit happened";
+            var parsed = new StatusMessageModel(legacyStatus);
+            Assert.Equal(legacyStatus, parsed.Message);
+            Assert.Equal(StatusMessageModel.StatusSeverity.Error, parsed.Severity);
+            
+            var legacyStatus2 = "Some normal shit happened";
+            parsed = new StatusMessageModel(legacyStatus2);
+            Assert.Equal(legacyStatus2, parsed.Message);
+            Assert.Equal(StatusMessageModel.StatusSeverity.Success, parsed.Severity);
+
+            var newStatus = new StatusMessageModel()
+            {
+                Html = "<a href='xxx'>something new</a>",
+                Severity = StatusMessageModel.StatusSeverity.Info
+            };
+            parsed = new StatusMessageModel(newStatus.ToString());
+            Assert.Null(parsed.Message);
+            Assert.Equal(newStatus.Html, parsed.Html);
+            Assert.Equal(StatusMessageModel.StatusSeverity.Info, parsed.Severity);
+            
+            var newStatus2 = new StatusMessageModel()
+            {
+                Message = "something new",
+                Severity = StatusMessageModel.StatusSeverity.Success
+            };
+            parsed = new StatusMessageModel(newStatus2.ToString());
+            Assert.Null(parsed.Html);
+            Assert.Equal(newStatus2.Message, parsed.Message);
+            Assert.Equal(StatusMessageModel.StatusSeverity.Success, parsed.Severity);
+
+        }
+
         private static bool IsMapped(Invoice invoice, ApplicationDbContext ctx)
         {
             var h = BitcoinAddress.Create(invoice.BitcoinAddress, Network.RegTest).ScriptPubKey.Hash.ToString();

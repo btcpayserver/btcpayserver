@@ -50,7 +50,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("/apps/{appId}/pos")]
-        [XFrameOptionsAttribute(null)]
+        [XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
         public async Task<IActionResult> ViewPointOfSale(string appId)
         {
             var app = await _AppsHelper.GetApp(appId, AppType.PointOfSale);
@@ -91,7 +91,7 @@ namespace BTCPayServer.Controllers
         
         [HttpGet]
         [Route("/apps/{appId}/crowdfund")]
-        [XFrameOptionsAttribute(null)]
+        [XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
         public async Task<IActionResult> ViewCrowdfund(string appId, string statusMessage)
         
         {
@@ -120,7 +120,7 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("/apps/{appId}/crowdfund")]
-        [XFrameOptionsAttribute(null)]
+        [XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
         [IgnoreAntiforgeryToken]
         [EnableCors(CorsPolicies.All)]
         public async Task<IActionResult> ContributeToCrowdfund(string appId, ContributeToCrowdfund request)
@@ -213,6 +213,7 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("/apps/{appId}/pos")]
+        [XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
         [IgnoreAntiforgeryToken]
         [EnableCors(CorsPolicies.All)]
         public async Task<IActionResult> ViewPointOfSale(string appId,

@@ -2138,19 +2138,20 @@ donation:
             }
         }
 
-        [Fact]
-        [Trait("Integration", "Integration")]
-        public void CheckQuadrigacxRateProvider()
-        {
-            var quadri = new QuadrigacxRateProvider();
-            var rates = quadri.GetRatesAsync().GetAwaiter().GetResult();
-            Assert.NotEmpty(rates);
-            Assert.NotEqual(0.0m, rates.First().BidAsk.Bid);
-            Assert.NotEqual(0.0m, rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("BTC_CAD")).Bid);
-            Assert.NotEqual(0.0m, rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("BTC_USD")).Bid);
-            Assert.NotEqual(0.0m, rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("LTC_CAD")).Bid);
-            Assert.Null(rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("LTC_USD")));
-        }
+        //[Fact]
+        //[Trait("Integration", "Integration")]
+        // 29 january, the exchange is down
+        //public void CheckQuadrigacxRateProvider()
+        //{
+        //    var quadri = new QuadrigacxRateProvider();
+        //    var rates = quadri.GetRatesAsync().GetAwaiter().GetResult();
+        //    Assert.NotEmpty(rates);
+        //    Assert.NotEqual(0.0m, rates.First().BidAsk.Bid);
+        //    Assert.NotEqual(0.0m, rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("BTC_CAD")).Bid);
+        //    Assert.NotEqual(0.0m, rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("BTC_USD")).Bid);
+        //    Assert.NotEqual(0.0m, rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("LTC_CAD")).Bid);
+        //    Assert.Null(rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("LTC_USD")));
+        //}
 
         [Fact]
         [Trait("Integration", "Integration")]
@@ -2164,6 +2165,9 @@ donation:
                 .Select(p => (ExpectedName: p.Key, ResultAsync: p.Value.GetRatesAsync(), Fetcher: (BackgroundFetcherRateProvider)p.Value))
                 .ToList())
             {
+                Logs.Tester.LogInformation($"Testing {result.ExpectedName}");
+                if (result.ExpectedName == "quadrigacx")
+                    continue; // 29 january, the exchange is down
                 result.Fetcher.InvalidateCache();
                 var exchangeRates = result.ResultAsync.Result;
                 result.Fetcher.InvalidateCache();
@@ -2310,6 +2314,42 @@ donation:
             fetch.GetRatesAsync().GetAwaiter().GetResult();
             Thread.Sleep(1000);
             Assert.Throws<InvalidOperationException>(() => fetch.GetRatesAsync().GetAwaiter().GetResult());
+        }
+
+        [Fact]
+        [Trait("Fast", "Fast")]
+        public void CheckParseStatusMessageModel()
+        {
+            var legacyStatus = "Error: some bad shit happened";
+            var parsed = new StatusMessageModel(legacyStatus);
+            Assert.Equal(legacyStatus, parsed.Message);
+            Assert.Equal(StatusMessageModel.StatusSeverity.Error, parsed.Severity);
+            
+            var legacyStatus2 = "Some normal shit happened";
+            parsed = new StatusMessageModel(legacyStatus2);
+            Assert.Equal(legacyStatus2, parsed.Message);
+            Assert.Equal(StatusMessageModel.StatusSeverity.Success, parsed.Severity);
+
+            var newStatus = new StatusMessageModel()
+            {
+                Html = "<a href='xxx'>something new</a>",
+                Severity = StatusMessageModel.StatusSeverity.Info
+            };
+            parsed = new StatusMessageModel(newStatus.ToString());
+            Assert.Null(parsed.Message);
+            Assert.Equal(newStatus.Html, parsed.Html);
+            Assert.Equal(StatusMessageModel.StatusSeverity.Info, parsed.Severity);
+            
+            var newStatus2 = new StatusMessageModel()
+            {
+                Message = "something new",
+                Severity = StatusMessageModel.StatusSeverity.Success
+            };
+            parsed = new StatusMessageModel(newStatus2.ToString());
+            Assert.Null(parsed.Html);
+            Assert.Equal(newStatus2.Message, parsed.Message);
+            Assert.Equal(StatusMessageModel.StatusSeverity.Success, parsed.Severity);
+
         }
 
         private static bool IsMapped(Invoice invoice, ApplicationDbContext ctx)

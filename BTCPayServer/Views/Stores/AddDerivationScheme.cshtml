@@ -43,7 +43,7 @@
                                 Select ledger wallet account
                             </button>
                             <div class="dropdown-menu" aria-labelledby="ledgerAccountsDropdownMenuButton">
-                                @for (var i = 0; i < 20; i++)
+                                @for (var i = 0; i < 5; i++)
                                 {
                                     <a class="dropdown-item ledger-info-recommended" data-ledgerkeypath="@Model.RootKeyPath.Derive(i, true)" href="#">Account @i (<span>@Model.RootKeyPath.Derive(i, true)</span>)</a>
                                 }

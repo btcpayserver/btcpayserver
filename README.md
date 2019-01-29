@@ -61,7 +61,7 @@ Altcoins are maintained by their respective communities.
 
 ## Documentation
 
-Please check out our [complete documentation](https://github.com/btcpayserver/btcpayserver-doc) and [FAQ](https://github.com/btcpayserver/btcpayserver-doc/tree/master/FAQ#btcpay-frequently-asked-questions-and-common-issues)for more details. 
+Please check out our [complete documentation](https://github.com/btcpayserver/btcpayserver-doc) and [FAQ](https://github.com/btcpayserver/btcpayserver-doc/tree/master/FAQ#btcpay-frequently-asked-questions-and-common-issues) for more details. 
 
 If you have any troubles with BTCPay, please file a [Github issue](https://github.com/btcpayserver/btcpayserver/issues).
 For general questions, please join the community chat on [Mattermost](https://chat.btcpayserver.org/).

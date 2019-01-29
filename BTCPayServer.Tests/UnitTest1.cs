@@ -2141,17 +2141,17 @@ donation:
         //[Fact]
         //[Trait("Integration", "Integration")]
         // 29 january, the exchange is down
-        public void CheckQuadrigacxRateProvider()
-        {
-            var quadri = new QuadrigacxRateProvider();
-            var rates = quadri.GetRatesAsync().GetAwaiter().GetResult();
-            Assert.NotEmpty(rates);
-            Assert.NotEqual(0.0m, rates.First().BidAsk.Bid);
-            Assert.NotEqual(0.0m, rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("BTC_CAD")).Bid);
-            Assert.NotEqual(0.0m, rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("BTC_USD")).Bid);
-            Assert.NotEqual(0.0m, rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("LTC_CAD")).Bid);
-            Assert.Null(rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("LTC_USD")));
-        }
+        //public void CheckQuadrigacxRateProvider()
+        //{
+        //    var quadri = new QuadrigacxRateProvider();
+        //    var rates = quadri.GetRatesAsync().GetAwaiter().GetResult();
+        //    Assert.NotEmpty(rates);
+        //    Assert.NotEqual(0.0m, rates.First().BidAsk.Bid);
+        //    Assert.NotEqual(0.0m, rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("BTC_CAD")).Bid);
+        //    Assert.NotEqual(0.0m, rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("BTC_USD")).Bid);
+        //    Assert.NotEqual(0.0m, rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("LTC_CAD")).Bid);
+        //    Assert.Null(rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("LTC_USD")));
+        //}
 
         [Fact]
         [Trait("Integration", "Integration")]

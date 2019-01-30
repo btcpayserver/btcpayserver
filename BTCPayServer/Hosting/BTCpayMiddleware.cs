@@ -82,6 +82,8 @@ namespace BTCPayServer.Hosting
             var isJson = (httpContext.Request.ContentType ?? string.Empty).StartsWith("application/json", StringComparison.OrdinalIgnoreCase);
             var path = httpContext.Request.Path.Value;
             var method = httpContext.Request.Method;
+
+            isJson = method == "OPTIONS" ? true : isJson;
             if (
                 bitpayAuth &&
               (path == "/invoices" || path == "/invoices/") &&

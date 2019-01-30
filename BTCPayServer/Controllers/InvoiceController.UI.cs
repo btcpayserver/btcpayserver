@@ -460,6 +460,7 @@ namespace BTCPayServer.Controllers
             invoiceQuery.Count = count;
             invoiceQuery.Skip = skip;
             var list = await _InvoiceRepository.GetInvoices(invoiceQuery);
+            
             foreach (var invoice in list)
             {
                 var state = invoice.GetInvoiceState();
@@ -471,7 +472,7 @@ namespace BTCPayServer.Controllers
                     InvoiceId = invoice.Id,
                     OrderId = invoice.OrderId ?? string.Empty,
                     RedirectUrl = invoice.RedirectURL ?? string.Empty,
-                    AmountCurrency = $"{invoice.ProductInformation.Price.ToString(CultureInfo.InvariantCulture)} {invoice.ProductInformation.Currency}",
+                    AmountCurrency = _CurrencyNameTable.DisplayFormatCurrency(invoice.ProductInformation.Price, invoice.ProductInformation.Currency),
                     CanMarkInvalid = state.CanMarkInvalid(),
                     CanMarkComplete = state.CanMarkComplete()
                 });

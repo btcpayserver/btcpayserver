@@ -208,8 +208,8 @@ namespace BTCPayServer.Controllers
                     {
                         builder.Scheme = this.Request.Scheme;
                         builder.Host = vm.DNSDomain;
-                        var addresses1 = Dns.GetHostAddressesAsync(this.Request.Host.Host);
-                        var addresses2 = Dns.GetHostAddressesAsync(vm.DNSDomain);
+                        var addresses1 = GetAddressAsync(this.Request.Host.Host);
+                        var addresses2 = GetAddressAsync(vm.DNSDomain);
                         await Task.WhenAll(addresses1, addresses2);
 
                         var addressesSet = addresses1.GetAwaiter().GetResult().Select(c => c.ToString()).ToHashSet();
@@ -251,6 +251,13 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
             return RedirectToAction(nameof(Maintenance));
+        }
+
+        private Task<IPAddress[]> GetAddressAsync(string domainOrIP)
+        {
+            if (IPAddress.TryParse(domainOrIP, out var ip))
+                return Task.FromResult(new[] { ip });
+            return Dns.GetHostAddressesAsync(domainOrIP);
         }
 
         public static string RunId = Encoders.Hex.EncodeData(NBitcoin.RandomUtils.GetBytes(32));

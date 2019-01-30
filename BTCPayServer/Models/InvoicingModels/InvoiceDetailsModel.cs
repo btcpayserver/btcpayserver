@@ -105,6 +105,7 @@ namespace BTCPayServer.Models.InvoicingModels
             get;
             set;
         }
+        public string TaxIncluded { get; set; }
         public BuyerInformation BuyerInformation
         {
             get;

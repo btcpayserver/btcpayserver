@@ -121,15 +121,18 @@ namespace BTCPayServer.Services.Rates
             var provider = GetNumberFormatInfo(currency, true);
             var currencyData = GetCurrencyData(currency, true);
             var divisibility = currencyData.Divisibility;
-            while (true)
+            if (value != 0m)
             {
-                var rounded = decimal.Round(value, divisibility, MidpointRounding.AwayFromZero);
-                if ((Math.Abs(rounded - value) / value) < 0.001m)
+                while (true)
                 {
-                    value = rounded;
-                    break;
+                    var rounded = decimal.Round(value, divisibility, MidpointRounding.AwayFromZero);
+                    if ((Math.Abs(rounded - value) / value) < 0.001m)
+                    {
+                        value = rounded;
+                        break;
+                    }
+                    divisibility++;
                 }
-                divisibility++;
             }
             if (divisibility != provider.CurrencyDecimalDigits)
             {

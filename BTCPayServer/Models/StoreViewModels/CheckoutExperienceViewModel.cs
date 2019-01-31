@@ -12,10 +12,11 @@ namespace BTCPayServer.Models.StoreViewModels
 {
     public class CheckoutExperienceViewModel
     {
-        class Format
+        public class Format
         {
             public string Name { get; set; }
             public string Value { get; set; }
+            public PaymentMethodId PaymentId { get; set; }
         }
         public SelectList CryptoCurrencies { get; set; }
         public SelectList Languages { get; set; }
@@ -47,28 +48,6 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Custom HTML title to display on Checkout page")]
         public string HtmlTitle { get; set; }
-
-
-        public void SetCryptoCurrencies(BTCPayNetworkProvider networks, Data.StoreData storeData, PaymentMethodId paymentMethodId)
-        {
-            var paymentIds = storeData.GetSupportedPaymentMethods(networks).Select(o => o.PaymentId)
-                            .OrderByDescending(a => a.CryptoCode == "BTC")
-                            .ThenBy(a => a.CryptoCode)
-                            .ThenBy(a => a.PaymentType == PaymentTypes.LightningLike ? 1 : 0);
-
-
-            var choices = paymentIds.Select(o => new Format() { Name = GetDisplayName(networks, o), Value = o.ToString() }).ToArray();
-            var chosen = choices.FirstOrDefault(f => f.Value == paymentMethodId?.ToString()) ?? choices.FirstOrDefault();
-            CryptoCurrencies = new SelectList(choices, nameof(chosen.Value), nameof(chosen.Name), chosen);
-            DefaultPaymentMethod = chosen.Value;
-        }
-
-        private string GetDisplayName(BTCPayNetworkProvider networks, PaymentMethodId paymentMethodId)
-        {
-            var display = networks.GetNetwork(paymentMethodId.CryptoCode)?.DisplayName ?? paymentMethodId.CryptoCode;
-            return paymentMethodId.PaymentType == PaymentTypes.BTCLike ?
-                display : $"{display} (Lightning)";
-        }
 
         public void SetLanguages(LanguageService langService, string defaultLang)
         {

@@ -56,7 +56,6 @@ namespace BTCPayServer.Data
             get;
             set;
         }
-
         public IEnumerable<ISupportedPaymentMethod> GetSupportedPaymentMethods(BTCPayNetworkProvider networks)
         {
 #pragma warning disable CS0618
@@ -204,11 +203,29 @@ namespace BTCPayServer.Data
         public List<Claim> AdditionalClaims { get; set; } = new List<Claim>();
 
 #pragma warning disable CS0618
-        public PaymentMethodId GetDefaultPaymentId(BTCPayNetworkProvider networkProvider = null)
+        public PaymentMethodId GetDefaultPaymentId(BTCPayNetworkProvider networks)
         {
-            var str = DefaultCrypto ?? (networkProvider == null ? "BTC" : GetSupportedPaymentMethods(networkProvider).Select(p => p.PaymentId.ToString()).FirstOrDefault() ?? "BTC");
-            return PaymentMethodId.Parse(str);
+            PaymentMethodId[] paymentMethodIds = GetEnabledPaymentIds(networks);
+
+            var defaultPaymentId = string.IsNullOrEmpty(DefaultCrypto) ? null : PaymentMethodId.Parse(DefaultCrypto);
+            var chosen = paymentMethodIds.FirstOrDefault(f => f == defaultPaymentId) ??
+                         paymentMethodIds.FirstOrDefault(f => f.CryptoCode == defaultPaymentId?.CryptoCode) ??
+                         paymentMethodIds.FirstOrDefault();
+            return chosen;
         }
+
+        public PaymentMethodId[] GetEnabledPaymentIds(BTCPayNetworkProvider networks)
+        {
+            var excludeFilter = GetStoreBlob().GetExcludedPaymentMethods();
+            var paymentMethodIds = GetSupportedPaymentMethods(networks).Select(p => p.PaymentId)
+                                .Where(a => !excludeFilter.Match(a))
+                                .OrderByDescending(a => a.CryptoCode == "BTC")
+                                .ThenBy(a => a.CryptoCode)
+                                .ThenBy(a => a.PaymentType == PaymentTypes.LightningLike ? 1 : 0)
+                                .ToArray();
+            return paymentMethodIds;
+        }
+
         public void SetDefaultPaymentId(PaymentMethodId defaultPaymentId)
         {
             DefaultCrypto = defaultPaymentId.ToString();

@@ -331,7 +331,7 @@ namespace BTCPayServer.Controllers
         {
             var storeBlob = StoreData.GetStoreBlob();
             var vm = new CheckoutExperienceViewModel();
-            vm.SetCryptoCurrencies(_NetworkProvider, StoreData, StoreData.GetDefaultPaymentId(_NetworkProvider));
+            SetCryptoCurrencies(vm, StoreData);
             vm.SetLanguages(_LangService, storeBlob.DefaultLang);
             vm.LightningMaxValue = storeBlob.LightningMaxValue?.ToString() ?? "";
             vm.OnChainMinValue = storeBlob.OnChainMinValue?.ToString() ?? "";
@@ -340,6 +340,23 @@ namespace BTCPayServer.Controllers
             vm.CustomLogo = storeBlob.CustomLogo?.AbsoluteUri;
             vm.HtmlTitle = storeBlob.HtmlTitle;
             return View(vm);
+        }
+        void SetCryptoCurrencies(CheckoutExperienceViewModel vm, Data.StoreData storeData)
+        {
+            var choices = storeData.GetEnabledPaymentIds(_NetworkProvider)
+                                      .Select(o => new CheckoutExperienceViewModel.Format() { Name = GetDisplayName(o), Value = o.ToString(), PaymentId = o }).ToArray();
+
+            var defaultPaymentId = storeData.GetDefaultPaymentId(_NetworkProvider);
+            var chosen = choices.FirstOrDefault(c => c.PaymentId == defaultPaymentId);
+            vm.CryptoCurrencies = new SelectList(choices, nameof(chosen.Value), nameof(chosen.Name), chosen?.Value);
+            vm.DefaultPaymentMethod = chosen?.Value;
+        }
+
+        private string GetDisplayName(PaymentMethodId paymentMethodId)
+        {
+            var display = _NetworkProvider.GetNetwork(paymentMethodId.CryptoCode)?.DisplayName ?? paymentMethodId.CryptoCode;
+            return paymentMethodId.PaymentType == PaymentTypes.BTCLike ?
+                display : $"{display} (Lightning)";
         }
 
         [HttpPost]
@@ -371,7 +388,7 @@ namespace BTCPayServer.Controllers
                 needUpdate = true;
                 StoreData.SetDefaultPaymentId(defaultPaymentMethodId);
             }
-            model.SetCryptoCurrencies(_NetworkProvider, StoreData, defaultPaymentMethodId);
+            SetCryptoCurrencies(model, StoreData);
             model.SetLanguages(_LangService, model.DefaultLang);
 
             if (!ModelState.IsValid)

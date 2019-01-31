@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -11,16 +12,17 @@ namespace BTCPayServer.Models.StoreViewModels
 {
     public class CheckoutExperienceViewModel
     {
-        class Format
+        public class Format
         {
             public string Name { get; set; }
             public string Value { get; set; }
+            public PaymentMethodId PaymentId { get; set; }
         }
         public SelectList CryptoCurrencies { get; set; }
         public SelectList Languages { get; set; }
 
-        [Display(Name = "Default crypto currency on checkout")]
-        public string DefaultCryptoCurrency { get; set; }
+        [Display(Name = "Default the default payment method on checkout")]
+        public string DefaultPaymentMethod { get; set; }
         [Display(Name = "Default language on checkout")]
         public string DefaultLang { get; set; }
         [Display(Name = "Do not propose lightning payment if value of the invoice is above...")]
@@ -46,15 +48,6 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Custom HTML title to display on Checkout page")]
         public string HtmlTitle { get; set; }
-
-
-        public void SetCryptoCurrencies(ExplorerClientProvider explorerProvider, string defaultCrypto)
-        {
-            var choices = explorerProvider.GetAll().Select(o => new Format() { Name = o.Item1.CryptoCode, Value = o.Item1.CryptoCode }).ToArray();
-            var chosen = choices.FirstOrDefault(f => f.Value == defaultCrypto) ?? choices.FirstOrDefault();
-            CryptoCurrencies = new SelectList(choices, nameof(chosen.Value), nameof(chosen.Name), chosen);
-            DefaultCryptoCurrency = chosen.Name;
-        }
 
         public void SetLanguages(LanguageService langService, string defaultLang)
         {

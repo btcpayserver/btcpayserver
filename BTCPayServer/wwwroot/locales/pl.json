@@ -33,7 +33,7 @@
   "What happened?": "Co się stało?",
   "InvoiceExpired_Body_1": "Płatność wygasła. Płatność jest prawidłowa przez {{maxTimeMinutes}} minut. Jeśli chcesz wysłaść płatność ponownie wróć do {{storeName}}.",
   "InvoiceExpired_Body_2": "Jeżeli próbowałeś wysłać płatność to nie została ona zaakcepowana przez sieć. Nie otrzymaliśmy jeszcze twoich funduszy.",
-  "InvoiceExpired_Body_3": "",
+  "InvoiceExpired_Body_3": "Jeśli otrzymamy go w późniejszym terminie, wykonamy transakcję lub skontaktujemy się z tobą aby uzgodnić zwrot",
   "Invoice ID": "Płatność ID",
   "Order ID": "Zamówienie ID",
   "Return to StoreName": "Wróć do {{storeName}}",
@@ -44,6 +44,7 @@
   "Node Info": "Informacja o węźle",
   "txCount": "{{count}} transakcja",
   "txCount_plural": "{{count}} transakcji",
-  "Pay with CoinSwitch": "Pay with CoinSwitch",
-  "Pay with Changelly": "Pay with Changelly"
+  "Pay with CoinSwitch": "Zapłać z CoinSwitch",
+  "Pay with Changelly": "Zapłać z Changelly",
+  "Close": "Close"
 }

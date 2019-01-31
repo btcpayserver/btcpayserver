@@ -45,5 +45,6 @@
   "txCount": "{{count}} transakcija",
   "txCount_plural": "{{count}} transakcij/e",
   "Pay with CoinSwitch": "Plačilo z CoinSwitch",
-  "Pay with Changelly": "Plačilo z Changelly"
+  "Pay with Changelly": "Plačilo z Changelly",
+  "Close": "Close"
 }

@@ -45,5 +45,6 @@
   "txCount": "{{count}} transactie",
   "txCount_plural": "{{count}} transacties",
   "Pay with CoinSwitch": "Betalen met CoinSwitch",
-  "Pay with Changelly": "Betalen met Changelly"
+  "Pay with Changelly": "Betalen met Changelly",
+  "Close": "Close"
 }

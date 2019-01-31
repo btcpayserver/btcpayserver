@@ -19,47 +19,52 @@ You can run BTCPay as a self-hosted solution on your own server, or use a [third
 
 The self-hosted solution allows you not only to attach an unlimited number of stores and use the Lightning Network but also become the payment processor for others.
 
-Thanks to the apps built on top of it, you can use BTCPay to receive donations or have an in-store POS system.
+Thanks to the [apps](https://github.com/btcpayserver/btcpayserver-doc/blob/master/Apps.md) built on top of it, you can use BTCPay to receive donations, start a crowdfunding campaign or have an in-store Point of Sale.
 
 ## Features
 
-* Direct, P2P Bitcoin payments
-* Lightning Network support (LND and c-lightning)
-* Altcoin support
-* Complete control over private keys
-* Full compatibility with BitPay API (easy migration)
-* Enhanced privacy
-* SegWit support
-* Process payments for others
-* Payment buttons
-* Point of sale
+* Direct, peer-to-peer Bitcoin and altcoin payments
 * No transaction fees (other than those for the crypto networks)
 * No processing fees
 * No middleman
 * No KYC
+* User has complete control over private keys
+* Enhanced privacy
+* Enhanced security
+* Self-hosted
+* SegWit support
+* Lightning Network support (LND and c-lightning)
+* Altcoin support
+* Full compatibility with BitPay API (easy migration)
+* Process payments for others
+* Easy-embeddable Payment buttons
+* Point of sale app
+* Crowdfunding app
 
 ## Supported Altcoins
 
-In addition to Bitcoin, BTCPay supports the following cryptocurrencies:
+Bitcoin is the only focus of the project and its core developers. However, support is implemented for several altcoins:
 
-* BGold
-* Bitcore
-* Dash
-* Dogecoin
-* Feathercoin
-* Groestlcoin
-* Litecoin
-* Monacoin
-* Polis
-* UFO
-* Viacoin
-* Bitcoinplus
+* Bitcoin Gold (BTG)
+* Bitcoin Plus (XBC)
+* Bitcore (BTX)
+* Dash (DASH)
+* Dogecoin (DOGE)
+* Feathercoin (FTC)
+* Groestlcoin (GRS)
+* Litecoin (LTC)
+* Monacoin (MONA)
+* Polis (POLIS)
+* Viacoin (VIA)
+
+Altcoins are maintained by their respective communities.
 
 ## Documentation
 
-Please check out our [complete documentation](https://github.com/btcpayserver/btcpayserver-doc) for more details.
+Please check out our [complete documentation](https://github.com/btcpayserver/btcpayserver-doc) and [FAQ](https://github.com/btcpayserver/btcpayserver-doc/tree/master/FAQ#btcpay-frequently-asked-questions-and-common-issues) for more details. 
 
-You can also read the [BTCPay Merchants Guide](https://www.reddit.com/r/Bitcoin/comments/8f1eqf/the_ultimate_guide_to_btcpay_the_free_and/).
+If you have any troubles with BTCPay, please file a [Github issue](https://github.com/btcpayserver/btcpayserver/issues).
+For general questions, please join the community chat on [Mattermost](https://chat.btcpayserver.org/).
 
 ## How to build
 

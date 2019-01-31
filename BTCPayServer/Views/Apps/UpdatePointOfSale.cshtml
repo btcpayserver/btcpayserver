@@ -97,34 +97,83 @@
                         <span asp-validation-for="Template" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <h5>Host button externally</h5>
-                        <p>You can host point of sale buttons in an external website with the following code.</p>
-                        @if (Model.Example1 != null)
-                        {
-                            <span>For anything with a custom amount</span>
-                            <pre><code class="html">@Model.Example1</code></pre>
-                        }
-                        @if (Model.Example2 != null)
-                        {
-                            <span>For a specific item of your template</span>
-                            <pre><code class="html">@Model.Example2</code></pre>
-                        }
-                        <p>A <code>POST</code> callback will be sent to notification with the following form will be sent to <code>notificationUrl</code> once the enough is paid and once again once there is enough confirmations to the payment:</p>
-                        <pre><code class="json">@Model.ExampleCallback</code></pre>
-                        <p><strong>Never</strong> trust anything but <code>id</code>, <strong>ignore</strong> the other fields completely, an attacker can spoof those, they are present only for backward compatibility reason:</p>
-                        <p>
-                            <ul>
-                                <li>Send a <code>GET</code> request to <code>https://btcpay.example.com/invoices/{invoiceId}</code> with <code>Content-Type: application/json</code></li>
-                                <li>Verify that the <code>orderId</code> is from your backend, that the <code>price</code> is correct and that <code>status</code> is either <code>confirmed</code> or <code>complete</code></li>
-                                <li>You can then ship your order</li>
-                            </ul>
-                        </p>
+                        <input type="submit" class="btn btn-primary" value="Save Settings" />
                     </div>
                     <div class="form-group">
-                        <input type="submit" class="btn btn-primary" value="Save Settings" />
+                        <div class="accordion" id="accordian-dev-info">
+                            <div class="card">
+                                <div class="card-header" id="accordian-dev-info-embed-payment-button-header">
+                                    <h2 class="mb-0">
+                                        <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#accordian-dev-info-embed-payment-button" aria-expanded="true" aria-controls="accordian-dev-info-embed-payment-button">
+                                            Embed Payment Button linking to POS item
+                                        </button>
+                                    </h2>
+                                </div>
+
+                                <div id="accordian-dev-info-embed-payment-button" class="collapse" aria-labelledby="accordian-dev-info-embed-payment-button-header" data-parent="#accordian-dev-info">
+                                    <div class="card-body">
+                                        <p>You can host point of sale buttons in an external website with the following code.</p>
+                                        @if (Model.Example1 != null)
+                                        {
+                                            <span>For anything with a custom amount</span>
+                                            <pre><code class="html">@Model.Example1</code></pre>
+                                        }
+                                        @if (Model.Example2 != null)
+                                        {
+                                            <span>For a specific item of your template</span>
+                                            <pre><code class="html">@Model.Example2</code></pre>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card">
+                                <div class="card-header" id="accordian-dev-info-embed-pos-iframe-header">
+                                    <h2 class="mb-0">
+                                        <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#accordian-dev-info-embed-pos-iframe" aria-expanded="false" aria-controls="accordian-dev-info-embed-pos-iframe">
+                                            Embed POS with Iframe
+                                          
+                                        </button>
+                                    </h2>
+                                </div>
+                                <div id="accordian-dev-info-embed-pos-iframe" class="collapse" aria-labelledby="accordian-dev-info-embed-pos-iframe-header" data-parent="#accordian-dev-info">
+                                    <div class="card-body">
+                                        You can embed the POS using an iframe
+                                        @{
+                                            var iframe = $"<iframe src='{(Url.Action("ViewPointOfSale", "AppsPublic", new {appId = Model.Id}, Context.Request.Scheme))}' style='max-width: 100%; border: 0;'></iframe>";
+                                        }
+                                        <pre><code class="html">@iframe</code></pre>
+                                        </div>
+                                </div>
+                            </div>
+                            <div class="card">
+                                <div class="card-header" id="accordian-dev-info-notification-header">
+                                    <h2 class="mb-0">
+                                        <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#accordian-dev-info-notification" aria-expanded="false" aria-controls="accordian-dev-info-notification">
+                                           Notification Url Callbacks
+                                        </button>
+                                    </h2>
+                                </div>
+                                <div id="accordian-dev-info-notification" class="collapse" aria-labelledby="accordian-dev-info-notification-header" data-parent="#accordian-dev-info">
+                                    <div class="card-body">
+                                        <p>A <code>POST</code> callback will be sent to notification with the following form will be sent to <code>notificationUrl</code> once the enough is paid and once again once there is enough confirmations to the payment:</p>
+                                        <pre><code class="json">@Model.ExampleCallback</code></pre>
+                                        <p><strong>Never</strong> trust anything but <code>id</code>, <strong>ignore</strong> the other fields completely, an attacker can spoof those, they are present only for backward compatibility reason:</p>
+                                        <p>
+                                            <ul>
+                                                <li>Send a <code>GET</code> request to <code>https://btcpay.example.com/invoices/{invoiceId}</code> with <code>Content-Type: application/json</code></li>
+                                                <li>Verify that the <code>orderId</code> is from your backend, that the <code>price</code> is correct and that <code>status</code> is either <code>confirmed</code> or <code>complete</code></li>
+                                                <li>You can then ship your order</li>
+                                            </ul>
+                                        </p> </div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </form>
                 <a asp-action="ListApps">Back to the app list</a>
+                
+                
             </div>
         </div>
     </div>

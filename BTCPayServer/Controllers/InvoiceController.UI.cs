@@ -190,7 +190,7 @@ namespace BTCPayServer.Controllers
             id = invoiceId;
             ////
 
-            var model = await GetInvoiceModel(invoiceId, paymentMethodId);
+            var model = await GetInvoiceModel(invoiceId, paymentMethodId == null ? null : PaymentMethodId.Parse(paymentMethodId));
             if (model == null)
                 return NotFound();
 
@@ -213,31 +213,29 @@ namespace BTCPayServer.Controllers
             return View(nameof(Checkout), model);
         }
 
-        private async Task<PaymentModel> GetInvoiceModel(string invoiceId, string paymentMethodIdStr)
+        private async Task<PaymentModel> GetInvoiceModel(string invoiceId, PaymentMethodId paymentMethodId)
         {
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
             if (invoice == null)
                 return null;
             var store = await _StoreRepository.FindStore(invoice.StoreId);
-            bool isDefaultCrypto = false;
-            if (paymentMethodIdStr == null)
+            bool isDefaultPaymentId = false;
+            if (paymentMethodId == null)
             {
-                paymentMethodIdStr = store.GetDefaultCrypto(_NetworkProvider);
-                isDefaultCrypto = true;
+                paymentMethodId = store.GetDefaultPaymentId(_NetworkProvider);
+                isDefaultPaymentId = true;
             }
-            var paymentMethodId = PaymentMethodId.Parse(paymentMethodIdStr);
             var network = _NetworkProvider.GetNetwork(paymentMethodId.CryptoCode);
-            if (network == null && isDefaultCrypto)
+            if (network == null && isDefaultPaymentId)
             {
                 network = _NetworkProvider.GetAll().FirstOrDefault();
                 paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
-                paymentMethodIdStr = paymentMethodId.ToString();
             }
             if (invoice == null || network == null)
                 return null;
             if (!invoice.Support(paymentMethodId))
             {
-                if (!isDefaultCrypto)
+                if (!isDefaultPaymentId)
                     return null;
                 var paymentMethodTemp = invoice.GetPaymentMethods(_NetworkProvider)
                                                .Where(c => paymentMethodId.CryptoCode == c.GetId().CryptoCode)
@@ -246,7 +244,6 @@ namespace BTCPayServer.Controllers
                     paymentMethodTemp = invoice.GetPaymentMethods(_NetworkProvider).First();
                 network = paymentMethodTemp.Network;
                 paymentMethodId = paymentMethodTemp.GetId();
-                paymentMethodIdStr = paymentMethodId.ToString();
             }
 
             var paymentMethod = invoice.GetPaymentMethod(paymentMethodId, _NetworkProvider);
@@ -375,7 +372,7 @@ namespace BTCPayServer.Controllers
         [Route("invoice/status")]
         public async Task<IActionResult> GetStatus(string invoiceId, string paymentMethodId = null)
         {
-            var model = await GetInvoiceModel(invoiceId, paymentMethodId);
+            var model = await GetInvoiceModel(invoiceId, paymentMethodId == null ? null : PaymentMethodId.Parse(paymentMethodId));
             if (model == null)
                 return NotFound();
             return Json(model);

@@ -331,7 +331,7 @@ namespace BTCPayServer.Controllers
         {
             var storeBlob = StoreData.GetStoreBlob();
             var vm = new CheckoutExperienceViewModel();
-            vm.SetCryptoCurrencies(_ExplorerProvider, StoreData.GetDefaultCrypto(_NetworkProvider));
+            vm.SetCryptoCurrencies(_NetworkProvider, StoreData, StoreData.GetDefaultPaymentId(_NetworkProvider));
             vm.SetLanguages(_LangService, storeBlob.DefaultLang);
             vm.LightningMaxValue = storeBlob.LightningMaxValue?.ToString() ?? "";
             vm.OnChainMinValue = storeBlob.OnChainMinValue?.ToString() ?? "";
@@ -365,12 +365,13 @@ namespace BTCPayServer.Controllers
             }
             bool needUpdate = false;
             var blob = StoreData.GetStoreBlob();
-            if (StoreData.GetDefaultCrypto(_NetworkProvider) != model.DefaultCryptoCurrency)
+            var defaultPaymentMethodId = model.DefaultPaymentMethod == null ? null : PaymentMethodId.Parse(model.DefaultPaymentMethod);
+            if (StoreData.GetDefaultPaymentId(_NetworkProvider) != defaultPaymentMethodId)
             {
                 needUpdate = true;
-                StoreData.SetDefaultCrypto(model.DefaultCryptoCurrency);
+                StoreData.SetDefaultPaymentId(defaultPaymentMethodId);
             }
-            model.SetCryptoCurrencies(_ExplorerProvider, model.DefaultCryptoCurrency);
+            model.SetCryptoCurrencies(_NetworkProvider, StoreData, defaultPaymentMethodId);
             model.SetLanguages(_LangService, model.DefaultLang);
 
             if (!ModelState.IsValid)

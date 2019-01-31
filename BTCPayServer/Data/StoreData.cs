@@ -195,7 +195,7 @@ namespace BTCPayServer.Data
             get;
             set;
         }
-        [Obsolete("Use GetDefaultCrypto instead")]
+        [Obsolete("Use GetDefaultPaymentId instead")]
         public string DefaultCrypto { get; set; }
         public List<PairedSINData> PairedSINs { get; set; }
         public IEnumerable<APIKeyData> APIKeys { get; set; }
@@ -204,13 +204,14 @@ namespace BTCPayServer.Data
         public List<Claim> AdditionalClaims { get; set; } = new List<Claim>();
 
 #pragma warning disable CS0618
-        public string GetDefaultCrypto(BTCPayNetworkProvider networkProvider = null)
+        public PaymentMethodId GetDefaultPaymentId(BTCPayNetworkProvider networkProvider = null)
         {
-            return DefaultCrypto ?? (networkProvider == null ? "BTC" : GetSupportedPaymentMethods(networkProvider).Select(p => p.PaymentId.CryptoCode).FirstOrDefault() ?? "BTC");
+            var str = DefaultCrypto ?? (networkProvider == null ? "BTC" : GetSupportedPaymentMethods(networkProvider).Select(p => p.PaymentId.ToString()).FirstOrDefault() ?? "BTC");
+            return PaymentMethodId.Parse(str);
         }
-        public void SetDefaultCrypto(string defaultCryptoCurrency)
+        public void SetDefaultPaymentId(PaymentMethodId defaultPaymentId)
         {
-            DefaultCrypto = defaultCryptoCurrency;
+            DefaultCrypto = defaultPaymentId.ToString();
         }
 #pragma warning restore CS0618
 

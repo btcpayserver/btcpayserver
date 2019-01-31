@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -19,8 +20,8 @@ namespace BTCPayServer.Models.StoreViewModels
         public SelectList CryptoCurrencies { get; set; }
         public SelectList Languages { get; set; }
 
-        [Display(Name = "Default crypto currency on checkout")]
-        public string DefaultCryptoCurrency { get; set; }
+        [Display(Name = "Default the default payment method on checkout")]
+        public string DefaultPaymentMethod { get; set; }
         [Display(Name = "Default language on checkout")]
         public string DefaultLang { get; set; }
         [Display(Name = "Do not propose lightning payment if value of the invoice is above...")]
@@ -48,12 +49,25 @@ namespace BTCPayServer.Models.StoreViewModels
         public string HtmlTitle { get; set; }
 
 
-        public void SetCryptoCurrencies(ExplorerClientProvider explorerProvider, string defaultCrypto)
+        public void SetCryptoCurrencies(BTCPayNetworkProvider networks, Data.StoreData storeData, PaymentMethodId paymentMethodId)
         {
-            var choices = explorerProvider.GetAll().Select(o => new Format() { Name = o.Item1.CryptoCode, Value = o.Item1.CryptoCode }).ToArray();
-            var chosen = choices.FirstOrDefault(f => f.Value == defaultCrypto) ?? choices.FirstOrDefault();
+            var paymentIds = storeData.GetSupportedPaymentMethods(networks).Select(o => o.PaymentId)
+                            .OrderByDescending(a => a.CryptoCode == "BTC")
+                            .ThenBy(a => a.CryptoCode)
+                            .ThenBy(a => a.PaymentType == PaymentTypes.LightningLike ? 1 : 0);
+
+
+            var choices = paymentIds.Select(o => new Format() { Name = GetDisplayName(networks, o), Value = o.ToString() }).ToArray();
+            var chosen = choices.FirstOrDefault(f => f.Value == paymentMethodId?.ToString()) ?? choices.FirstOrDefault();
             CryptoCurrencies = new SelectList(choices, nameof(chosen.Value), nameof(chosen.Name), chosen);
-            DefaultCryptoCurrency = chosen.Name;
+            DefaultPaymentMethod = chosen.Value;
+        }
+
+        private string GetDisplayName(BTCPayNetworkProvider networks, PaymentMethodId paymentMethodId)
+        {
+            var display = networks.GetNetwork(paymentMethodId.CryptoCode)?.DisplayName ?? paymentMethodId.CryptoCode;
+            return paymentMethodId.PaymentType == PaymentTypes.BTCLike ?
+                display : $"{display} (Lightning)";
         }
 
         public void SetLanguages(LanguageService langService, string defaultLang)

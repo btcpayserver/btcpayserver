@@ -141,9 +141,9 @@ namespace BTCPayServer.Controllers
             {
                 var supportedMethods = store.GetSupportedPaymentMethods(_NetworkProvider);
                 var currencyCodes = supportedMethods.Select(method => method.PaymentId.CryptoCode).Distinct();
-                var defaultCrypto = store.GetDefaultCrypto(_NetworkProvider);
+                var defaultPaymentId = store.GetDefaultPaymentId(_NetworkProvider);
 
-                currencyPairs = BuildCurrencyPairs(currencyCodes, defaultCrypto);
+                currencyPairs = BuildCurrencyPairs(currencyCodes, defaultPaymentId.CryptoCode);
 
                 if (string.IsNullOrEmpty(currencyPairs))
                 {

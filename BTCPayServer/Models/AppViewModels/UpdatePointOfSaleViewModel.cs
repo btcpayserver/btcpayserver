@@ -41,5 +41,7 @@ namespace BTCPayServer.Models.AppViewModels
         [MaxLength(500)]
         [Display(Name = "Custom bootstrap CSS file")]
         public string CustomCSSLink { get; set; }
+
+        public string Id { get; set; }
     }
 }

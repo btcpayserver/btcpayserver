@@ -85,6 +85,7 @@ namespace BTCPayServer.Controllers
             var settings = app.GetSettings<PointOfSaleSettings>();
             var vm = new UpdatePointOfSaleViewModel()
             {
+                Id = appId,
                 Title = settings.Title,
                 EnableShoppingCart = settings.EnableShoppingCart,
                 ShowCustomAmount = settings.ShowCustomAmount,

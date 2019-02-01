@@ -12,8 +12,8 @@ using NBitpayClient;
 
 namespace BTCPayServer.Controllers
 {
-    [EnableCors("BitpayAPI")]
     [BitpayAPIConstraint]
+    [EnableCors(CorsPolicies.All)]
     [Authorize(Policies.CanCreateInvoice.Key, AuthenticationSchemes = Policies.BitpayAuthentication)]
     public class InvoiceControllerAPI : Controller
     {

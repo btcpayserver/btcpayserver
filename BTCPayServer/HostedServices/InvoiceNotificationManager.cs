@@ -33,13 +33,10 @@ namespace BTCPayServer.HostedServices
                 get; set;
             }
 
-            public InvoiceEntity Invoice
+            public InvoicePaymentNotificationEventWrapper Notification
             {
                 get; set;
             }
-
-            public int? EventCode { get; set; }
-            public string Message { get; set; }
         }
 
         IBackgroundJobClient _JobClient;
@@ -63,22 +60,70 @@ namespace BTCPayServer.HostedServices
             _EmailSenderFactory = emailSenderFactory;
         }
 
-        void Notify(InvoiceEntity invoice, int? eventCode = null, string name = null)
+        void Notify(InvoiceEntity invoice, InvoiceEvent invoiceEvent, bool extendedNotification)
         {
+            var dto = invoice.EntityToDTO(_NetworkProvider);
+            var notification = new InvoicePaymentNotificationEventWrapper()
+            {
+                Data = new InvoicePaymentNotification()
+                {
+                    Id = dto.Id,
+                    Currency = dto.Currency,
+                    CurrentTime = dto.CurrentTime,
+                    ExceptionStatus = dto.ExceptionStatus,
+                    ExpirationTime = dto.ExpirationTime,
+                    InvoiceTime = dto.InvoiceTime,
+                    PosData = dto.PosData,
+                    Price = dto.Price,
+                    Status = dto.Status,
+                    BuyerFields = invoice.RefundMail == null ? null : new Newtonsoft.Json.Linq.JObject() { new JProperty("buyerEmail", invoice.RefundMail) },
+                    PaymentSubtotals = dto.PaymentSubtotals,
+                    PaymentTotals = dto.PaymentTotals,
+                    AmountPaid = dto.AmountPaid,
+                    ExchangeRates = dto.ExchangeRates,
+                },
+                Event = new InvoicePaymentNotificationEvent()
+                {
+                    Code = invoiceEvent.EventCode,
+                    Name = invoiceEvent.Name
+                },
+                ExtendedNotification = extendedNotification,
+                NotificationURL = invoice.NotificationURL
+            };
+
+            // For lightning network payments, paid, confirmed and completed come all at once.
+            // So despite the event is "paid" or "confirmed" the Status of the invoice is technically complete
+            // This confuse loggers who think their endpoint get duplicated events
+            // So here, we just override the status expressed by the notification
+            if (invoiceEvent.Name == InvoiceEvent.Confirmed)
+            {
+                notification.Data.Status = InvoiceState.ToString(InvoiceStatus.Confirmed);
+            }
+            if (invoiceEvent.Name == InvoiceEvent.PaidInFull)
+            {
+                notification.Data.Status = InvoiceState.ToString(InvoiceStatus.Paid);
+            }
+            //////////////////
+
+            // We keep backward compatibility with bitpay by passing BTC info to the notification
+            // we don't pass other info, as it is a bad idea to use IPN data for logic processing (can be faked)
+            var btcCryptoInfo = dto.CryptoInfo.FirstOrDefault(c => c.GetpaymentMethodId() == new PaymentMethodId("BTC", Payments.PaymentTypes.BTCLike));
+            if (btcCryptoInfo != null)
+            {
+#pragma warning disable CS0618
+                notification.Data.Rate = dto.Rate;
+                notification.Data.Url = dto.Url;
+                notification.Data.BTCDue = dto.BTCDue;
+                notification.Data.BTCPaid = dto.BTCPaid;
+                notification.Data.BTCPrice = dto.BTCPrice;
+#pragma warning restore CS0618
+            }
+
             CancellationTokenSource cts = new CancellationTokenSource(10000);
 
             if (!String.IsNullOrEmpty(invoice.NotificationEmail))
             {
-                // just extracting most important data for email body, merchant should query API back for full invoice based on Invoice.Id
-                var ipn = new
-                {
-                    invoice.Id,
-                    invoice.Status,
-                    invoice.StoreId
-                };
-                // TODO: Consider adding info on ItemDesc and payment info (amount)
-                
-                var emailBody = NBitcoin.JsonConverters.Serializer.ToString(ipn);
+                var emailBody = NBitcoin.JsonConverters.Serializer.ToString(notification);
 
                 _EmailSenderFactory.GetEmailSender(invoice.StoreId).SendEmail(
                     invoice.NotificationEmail,
@@ -86,9 +131,9 @@ namespace BTCPayServer.HostedServices
                     emailBody);
 
             }
-            if (string.IsNullOrEmpty(invoice.NotificationURL))
+            if (string.IsNullOrEmpty(invoice.NotificationURL) || !Uri.IsWellFormedUriString(invoice.NotificationURL, UriKind.Absolute))
                 return;
-            var invoiceStr = NBitcoin.JsonConverters.Serializer.ToString(new ScheduledJob() { TryCount = 0, Invoice = invoice, EventCode = eventCode, Message = name });
+            var invoiceStr = NBitcoin.JsonConverters.Serializer.ToString(new ScheduledJob() { TryCount = 0, Notification = notification });
             if (!string.IsNullOrEmpty(invoice.NotificationURL))
                 _JobClient.Schedule(() => NotifyHttp(invoiceStr), TimeSpan.Zero);
         }
@@ -97,30 +142,23 @@ namespace BTCPayServer.HostedServices
         {
             var job = NBitcoin.JsonConverters.Serializer.ToObject<ScheduledJob>(invoiceData);
             bool reschedule = false;
+            var aggregatorEvent = new InvoiceIPNEvent(job.Notification.Data.Id, job.Notification.Event.Code, job.Notification.Event.Name);
             CancellationTokenSource cts = new CancellationTokenSource(10000);
             try
             {
-                HttpResponseMessage response = await SendNotification(job.Invoice, job.EventCode, job.Message, cts.Token);
+                HttpResponseMessage response = await SendNotification(job.Notification, cts.Token);
                 reschedule = !response.IsSuccessStatusCode;
-                _EventAggregator.Publish<InvoiceIPNEvent>(new InvoiceIPNEvent(job.Invoice.Id, job.EventCode, job.Message)
-                {
-                    Error = reschedule ? $"Unexpected return code: {(int)response.StatusCode}" : null
-                });
+                aggregatorEvent.Error = reschedule ? $"Unexpected return code: {(int)response.StatusCode}" : null;
+                _EventAggregator.Publish<InvoiceIPNEvent>(aggregatorEvent);
             }
             catch (OperationCanceledException) when (cts.IsCancellationRequested)
             {
-                _EventAggregator.Publish<InvoiceIPNEvent>(new InvoiceIPNEvent(job.Invoice.Id, job.EventCode, job.Message)
-                {
-                    Error = "Timeout"
-                });
+                aggregatorEvent.Error = "Timeout";
+                _EventAggregator.Publish<InvoiceIPNEvent>(aggregatorEvent);
                 reschedule = true;
             }
             catch (Exception ex)
             {
-                _EventAggregator.Publish<InvoiceIPNEvent>(new InvoiceIPNEvent(job.Invoice.Id, job.EventCode, job.Message)
-                {
-                    Error = ex.Message
-                });
                 reschedule = true;
 
                 List<string> messages = new List<string>();
@@ -131,10 +169,8 @@ namespace BTCPayServer.HostedServices
                 }
                 string message = String.Join(',', messages.ToArray());
 
-                _EventAggregator.Publish<InvoiceIPNEvent>(new InvoiceIPNEvent(job.Invoice.Id, job.EventCode, job.Message)
-                {
-                    Error = $"Unexpected error: {message}"
-                });
+                aggregatorEvent.Error = $"Unexpected error: {message}";
+                _EventAggregator.Publish<InvoiceIPNEvent>(aggregatorEvent);
             }
             finally { cts?.Dispose(); }
 
@@ -160,64 +196,35 @@ namespace BTCPayServer.HostedServices
             public InvoicePaymentNotificationEvent Event { get; set; }
             [JsonProperty("data")]
             public InvoicePaymentNotification Data { get; set; }
+            [JsonProperty("extendedNotification")]
+            public bool ExtendedNotification { get; set; }
+            [JsonProperty(PropertyName = "notificationURL")]
+            public string NotificationURL { get; set; }
         }
 
         Encoding UTF8 = new UTF8Encoding(false);
-        private async Task<HttpResponseMessage> SendNotification(InvoiceEntity invoice, int? eventCode, string name, CancellationToken cancellation)
+        private async Task<HttpResponseMessage> SendNotification(InvoicePaymentNotificationEventWrapper notification, CancellationToken cancellation)
         {
             var request = new HttpRequestMessage();
             request.Method = HttpMethod.Post;
 
-            var dto = invoice.EntityToDTO(_NetworkProvider);
-            InvoicePaymentNotification notification = new InvoicePaymentNotification()
-            {
-                Id = dto.Id,
-                Currency = dto.Currency,
-                CurrentTime = dto.CurrentTime,
-                ExceptionStatus = dto.ExceptionStatus,
-                ExpirationTime = dto.ExpirationTime,
-                InvoiceTime = dto.InvoiceTime,
-                PosData = dto.PosData,
-                Price = dto.Price,
-                Status = dto.Status,
-                BuyerFields = invoice.RefundMail == null ? null : new Newtonsoft.Json.Linq.JObject() { new JProperty("buyerEmail", invoice.RefundMail) },
-                PaymentSubtotals = dto.PaymentSubtotals,
-                PaymentTotals = dto.PaymentTotals,
-                AmountPaid = dto.AmountPaid,
-                ExchangeRates = dto.ExchangeRates,
+            var notificationString = NBitcoin.JsonConverters.Serializer.ToString(notification);
+            var jobj = JObject.Parse(notificationString);
 
-            };
-
-            // We keep backward compatibility with bitpay by passing BTC info to the notification
-            // we don't pass other info, as it is a bad idea to use IPN data for logic processing (can be faked)
-            var btcCryptoInfo = dto.CryptoInfo.FirstOrDefault(c => c.GetpaymentMethodId() == new PaymentMethodId("BTC", Payments.PaymentTypes.BTCLike));
-            if (btcCryptoInfo != null)
+            if (notification.ExtendedNotification)
             {
-#pragma warning disable CS0618
-                notification.Rate = dto.Rate;
-                notification.Url = dto.Url;
-                notification.BTCDue = dto.BTCDue;
-                notification.BTCPaid = dto.BTCPaid;
-                notification.BTCPrice = dto.BTCPrice;
-#pragma warning restore CS0618
-            }
-
-            string notificationString = null;
-            if (eventCode.HasValue)
-            {
-                var wrapper = new InvoicePaymentNotificationEventWrapper();
-                wrapper.Data = notification;
-                wrapper.Event = new InvoicePaymentNotificationEvent() { Code = eventCode.Value, Name = name };
-                notificationString = JsonConvert.SerializeObject(wrapper);
+                jobj.Remove("extendedNotification");
+                jobj.Remove("notificationURL");
+                notificationString = jobj.ToString();
             }
             else
             {
-                notificationString = JsonConvert.SerializeObject(notification);
+                notificationString = jobj["data"].ToString();
             }
 
-            request.RequestUri = new Uri(invoice.NotificationURL, UriKind.Absolute);
+            request.RequestUri = new Uri(notification.NotificationURL, UriKind.Absolute);
             request.Content = new StringContent(notificationString, UTF8, "application/json");
-            var response = await Enqueue(invoice.Id, async () => await _Client.SendAsync(request, cancellation));
+            var response = await Enqueue(notification.Data.Id, async () => await _Client.SendAsync(request, cancellation));
             return response;
         }
 
@@ -306,17 +313,17 @@ namespace BTCPayServer.HostedServices
                        e.Name == InvoiceEvent.Completed ||
                        e.Name == InvoiceEvent.ExpiredPaidPartial
                      )
-                        Notify(invoice);
+                        Notify(invoice, e, false);
                 }
 
-                if (e.Name == "invoice_confirmed")
+                if (e.Name == InvoiceEvent.Confirmed)
                 {
-                    Notify(invoice);
+                    Notify(invoice, e, false);
                 }
 
                 if (invoice.ExtendedNotifications)
                 {
-                    Notify(invoice, e.EventCode, e.Name);
+                    Notify(invoice, e, true);
                 }
             }));
 

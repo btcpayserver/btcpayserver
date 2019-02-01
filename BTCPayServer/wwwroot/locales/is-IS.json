@@ -24,10 +24,10 @@
   "Copied": "Afritað",
   "ConversionTab_BodyTop": "Þú getur borgað {{btcDue}} {{cryptoCode}} með altcoins.",
   "ConversionTab_BodyDesc": "Þessi þjónusta er veitt af þriðja aðila. Mundu að við höfum ekki stjórn á því hvað þeir gera við peningana. Reikningurinn verður aðeins móttekinn þegar {{cryptoCode}} greiðslan hefur verið staðfest á netinu.",
-  "ConversionTab_CalculateAmount_Error": "Retry",
-  "ConversionTab_LoadCurrencies_Error": "Retry",
+  "ConversionTab_CalculateAmount_Error": "reyndu aftur",
+  "ConversionTab_LoadCurrencies_Error": "reyndu aftur",
   "ConversionTab_Lightning": "Engir viðskiptaveitendur eru í boði fyrir Lightning Network greiðslur.",
-  "ConversionTab_CurrencyList_Select_Option": "Please select a currency to convert from",
+  "ConversionTab_CurrencyList_Select_Option": "veldu gjaldmiðil til að breyta frá",
   "Invoice expiring soon...": "Reikningurinn rennur út fljótlega...",
   "Invoice expired": "Reikningurinn er útrunnin",
   "What happened?": "Hvað gerðist?",
@@ -44,6 +44,7 @@
   "Node Info": "Nótu upplýsingar",
   "txCount": "{{count}} reikningur",
   "txCount_plural": "{{count}} reikningar",
-  "Pay with CoinSwitch": "Pay with CoinSwitch",
-  "Pay with Changelly": "Pay with Changelly"
+  "Pay with CoinSwitch": "Borga með Coinswitch",
+  "Pay with Changelly": "Borgar með Changelly",
+  "Close": "Loka"
 }

@@ -56,7 +56,6 @@ namespace BTCPayServer.Data
             get;
             set;
         }
-
         public IEnumerable<ISupportedPaymentMethod> GetSupportedPaymentMethods(BTCPayNetworkProvider networks)
         {
 #pragma warning disable CS0618
@@ -195,7 +194,7 @@ namespace BTCPayServer.Data
             get;
             set;
         }
-        [Obsolete("Use GetDefaultCrypto instead")]
+        [Obsolete("Use GetDefaultPaymentId instead")]
         public string DefaultCrypto { get; set; }
         public List<PairedSINData> PairedSINs { get; set; }
         public IEnumerable<APIKeyData> APIKeys { get; set; }
@@ -204,13 +203,32 @@ namespace BTCPayServer.Data
         public List<Claim> AdditionalClaims { get; set; } = new List<Claim>();
 
 #pragma warning disable CS0618
-        public string GetDefaultCrypto(BTCPayNetworkProvider networkProvider = null)
+        public PaymentMethodId GetDefaultPaymentId(BTCPayNetworkProvider networks)
         {
-            return DefaultCrypto ?? (networkProvider == null ? "BTC" : GetSupportedPaymentMethods(networkProvider).Select(p => p.PaymentId.CryptoCode).FirstOrDefault() ?? "BTC");
+            PaymentMethodId[] paymentMethodIds = GetEnabledPaymentIds(networks);
+
+            var defaultPaymentId = string.IsNullOrEmpty(DefaultCrypto) ? null : PaymentMethodId.Parse(DefaultCrypto);
+            var chosen = paymentMethodIds.FirstOrDefault(f => f == defaultPaymentId) ??
+                         paymentMethodIds.FirstOrDefault(f => f.CryptoCode == defaultPaymentId?.CryptoCode) ??
+                         paymentMethodIds.FirstOrDefault();
+            return chosen;
         }
-        public void SetDefaultCrypto(string defaultCryptoCurrency)
+
+        public PaymentMethodId[] GetEnabledPaymentIds(BTCPayNetworkProvider networks)
         {
-            DefaultCrypto = defaultCryptoCurrency;
+            var excludeFilter = GetStoreBlob().GetExcludedPaymentMethods();
+            var paymentMethodIds = GetSupportedPaymentMethods(networks).Select(p => p.PaymentId)
+                                .Where(a => !excludeFilter.Match(a))
+                                .OrderByDescending(a => a.CryptoCode == "BTC")
+                                .ThenBy(a => a.CryptoCode)
+                                .ThenBy(a => a.PaymentType == PaymentTypes.LightningLike ? 1 : 0)
+                                .ToArray();
+            return paymentMethodIds;
+        }
+
+        public void SetDefaultPaymentId(PaymentMethodId defaultPaymentId)
+        {
+            DefaultCrypto = defaultPaymentId.ToString();
         }
 #pragma warning restore CS0618
 

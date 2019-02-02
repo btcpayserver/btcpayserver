@@ -82,34 +82,33 @@ namespace BTCPayServer.Hosting
             var isJson = (httpContext.Request.ContentType ?? string.Empty).StartsWith("application/json", StringComparison.OrdinalIgnoreCase);
             var path = httpContext.Request.Path.Value;
             var method = httpContext.Request.Method;
+            var isCors = method == "OPTIONS";
 
-            isJson = method == "OPTIONS" ? true : isJson;
             if (
-                bitpayAuth &&
+                (isCors || bitpayAuth) &&
               (path == "/invoices" || path == "/invoices/") &&
-              (method == "POST" || method == "OPTIONS") &&
-              isJson)
+              (isCors || (method == "POST" && isJson)))
                 return true;
 
             if (
-                bitpayAuth &&
+                (isCors || bitpayAuth) &&
                  (path == "/invoices" || path == "/invoices/") &&
-                 (method == "GET" || method == "OPTIONS"))
+                 (isCors || method == "GET"))
                 return true;
 
             if (
-                path.StartsWith("/invoices/", StringComparison.OrdinalIgnoreCase) &&
-                (method == "GET" || method == "OPTIONS") &&
-                (isJson || httpContext.Request.Query.ContainsKey("token")))
+               path.StartsWith("/invoices/", StringComparison.OrdinalIgnoreCase) &&
+               (isCors || method == "GET") &&
+               (isCors || isJson || httpContext.Request.Query.ContainsKey("token")))
                 return true;
 
             if (path.StartsWith("/rates", StringComparison.OrdinalIgnoreCase) &&
-                (method == "GET" || method == "OPTIONS"))
+                (isCors || method == "GET"))
                 return true;
 
             if (
                 path.Equals("/tokens", StringComparison.Ordinal) &&
-                (method == "GET" || method == "POST" || method == "OPTIONS"))
+                (isCors || method == "GET" || method == "POST"))
                 return true;
 
             return false;

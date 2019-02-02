@@ -861,6 +861,44 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Integration", "Integration")]
+        public async void CheckCORSSetOnBitpayAPI()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.Start();
+                foreach(var req in new[] 
+                {
+                    "invoices/",
+                    "invoices",
+                    "rates",
+                    "tokens"
+                }.Select(async path =>
+                {
+                    using (HttpClient client = new HttpClient())
+                    {
+                        HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Options, tester.PayTester.ServerUri.AbsoluteUri + path);
+                        message.Headers.Add("Access-Control-Request-Headers", "test");
+                        var response = await client.SendAsync(message);
+                        response.EnsureSuccessStatusCode();
+                        Assert.True(response.Headers.TryGetValues("Access-Control-Allow-Origin", out var val));
+                        Assert.Equal("*", val.FirstOrDefault());
+                        Assert.True(response.Headers.TryGetValues("Access-Control-Allow-Headers", out val));
+                        Assert.Equal("test", val.FirstOrDefault());
+                    }
+                }).ToList())
+                {
+                    await req;
+                }
+                HttpClient client2 = new HttpClient();
+                HttpRequestMessage message2 = new HttpRequestMessage(HttpMethod.Options, tester.PayTester.ServerUri.AbsoluteUri + "rates");
+                var response2 = await client2.SendAsync(message2);
+                Assert.True(response2.Headers.TryGetValues("Access-Control-Allow-Origin", out var val2));
+                Assert.Equal("*", val2.FirstOrDefault());
+            }
+        }
+
+        [Fact]
+        [Trait("Integration", "Integration")]
         public void TestAccessBitpayAPI()
         {
             using (var tester = ServerTester.Create())
@@ -2324,7 +2362,7 @@ donation:
             var parsed = new StatusMessageModel(legacyStatus);
             Assert.Equal(legacyStatus, parsed.Message);
             Assert.Equal(StatusMessageModel.StatusSeverity.Error, parsed.Severity);
-            
+
             var legacyStatus2 = "Some normal shit happened";
             parsed = new StatusMessageModel(legacyStatus2);
             Assert.Equal(legacyStatus2, parsed.Message);
@@ -2339,7 +2377,7 @@ donation:
             Assert.Null(parsed.Message);
             Assert.Equal(newStatus.Html, parsed.Html);
             Assert.Equal(StatusMessageModel.StatusSeverity.Info, parsed.Severity);
-            
+
             var newStatus2 = new StatusMessageModel()
             {
                 Message = "something new",

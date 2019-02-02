@@ -38,6 +38,11 @@ namespace BTCPayServer.Hosting
             {
                 var bitpayAuth = GetBitpayAuth(httpContext, out bool isBitpayAuth);
                 var isBitpayAPI = IsBitpayAPI(httpContext, isBitpayAuth);
+                if (isBitpayAPI && httpContext.Request.Method == "OPTIONS")
+                {
+                    httpContext.Response.StatusCode = 200;
+                    return; // We bypass MVC completely
+                }
                 httpContext.SetIsBitpayAPI(isBitpayAPI);
                 if (isBitpayAPI)
                 {

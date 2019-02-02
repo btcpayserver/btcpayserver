@@ -14,8 +14,7 @@ using System.Threading.Tasks;
 namespace BTCPayServer.Controllers
 {
     [Authorize(AuthenticationSchemes = Security.Policies.BitpayAuthentication)]
-    [BitpayAPIConstraint(true)]
-    [EnableCors(CorsPolicies.All)]
+    [BitpayAPIConstraint()]
     public class AccessTokenController : Controller
     {
         TokenRepository _TokenRepository;

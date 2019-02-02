@@ -38,9 +38,20 @@ namespace BTCPayServer.Hosting
             {
                 var bitpayAuth = GetBitpayAuth(httpContext, out bool isBitpayAuth);
                 var isBitpayAPI = IsBitpayAPI(httpContext, isBitpayAuth);
+                if (isBitpayAPI && httpContext.Request.Method == "OPTIONS")
+                {
+                    httpContext.Response.StatusCode = 200;
+                    httpContext.Response.SetHeader("Access-Control-Allow-Origin", "*");
+                    if (httpContext.Request.Headers.ContainsKey("Access-Control-Request-Headers"))
+                    {
+                        httpContext.Response.SetHeader("Access-Control-Allow-Headers", httpContext.Request.Headers["Access-Control-Request-Headers"].FirstOrDefault());
+                    }
+                    return; // We bypass MVC completely
+                }
                 httpContext.SetIsBitpayAPI(isBitpayAPI);
                 if (isBitpayAPI)
                 {
+                    httpContext.Response.SetHeader("Access-Control-Allow-Origin", "*");
                     httpContext.SetBitpayAuth(bitpayAuth);
                 }
                 await _Next(httpContext);
@@ -82,34 +93,33 @@ namespace BTCPayServer.Hosting
             var isJson = (httpContext.Request.ContentType ?? string.Empty).StartsWith("application/json", StringComparison.OrdinalIgnoreCase);
             var path = httpContext.Request.Path.Value;
             var method = httpContext.Request.Method;
+            var isCors = method == "OPTIONS";
 
-            isJson = method == "OPTIONS" ? true : isJson;
             if (
-                bitpayAuth &&
+                (isCors || bitpayAuth) &&
               (path == "/invoices" || path == "/invoices/") &&
-              (method == "POST" || method == "OPTIONS") &&
-              isJson)
+              (isCors || (method == "POST" && isJson)))
                 return true;
 
             if (
-                bitpayAuth &&
+                (isCors || bitpayAuth) &&
                  (path == "/invoices" || path == "/invoices/") &&
-                 (method == "GET" || method == "OPTIONS"))
+                 (isCors || method == "GET"))
                 return true;
 
             if (
-                path.StartsWith("/invoices/", StringComparison.OrdinalIgnoreCase) &&
-                (method == "GET" || method == "OPTIONS") &&
-                (isJson || httpContext.Request.Query.ContainsKey("token")))
+               path.StartsWith("/invoices/", StringComparison.OrdinalIgnoreCase) &&
+               (isCors || method == "GET") &&
+               (isCors || isJson || httpContext.Request.Query.ContainsKey("token")))
                 return true;
 
             if (path.StartsWith("/rates", StringComparison.OrdinalIgnoreCase) &&
-                (method == "GET" || method == "OPTIONS"))
+                (isCors || method == "GET"))
                 return true;
 
             if (
                 path.Equals("/tokens", StringComparison.Ordinal) &&
-                (method == "GET" || method == "POST" || method == "OPTIONS"))
+                (isCors || method == "GET" || method == "POST"))
                 return true;
 
             return false;

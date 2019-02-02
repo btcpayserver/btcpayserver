@@ -41,6 +41,9 @@ namespace BTCPayServer.Hosting
                 if (isBitpayAPI && httpContext.Request.Method == "OPTIONS")
                 {
                     httpContext.Response.StatusCode = 200;
+                    httpContext.Response.SetHeader("Access-Control-Allow-Origin", "*");
+                    httpContext.Response.SetHeader("Access-Control-Allow-Headers", "*");
+                    httpContext.Response.SetHeader("Access-Control-Allow-Methods", "*");
                     return; // We bypass MVC completely
                 }
                 httpContext.SetIsBitpayAPI(isBitpayAPI);

@@ -22,6 +22,7 @@ using BTCPayServer.Payments.CoinSwitch;
 using BTCPayServer.Security;
 using BTCPayServer.Rating;
 using BTCPayServer.Services.Mails;
+using BTCPayServer.Payments.AutoTrade;
 
 namespace BTCPayServer.Data
 {
@@ -344,6 +345,7 @@ namespace BTCPayServer.Data
         public ChangellySettings ChangellySettings { get; set; }
         public CoinSwitchSettings CoinSwitchSettings { get; set; }
 
+        public AutoTradeExchangeSettingsBase AutoTradeExchangeSettings { get; set; }
 
         string _LightningDescriptionTemplate;
         public string LightningDescriptionTemplate

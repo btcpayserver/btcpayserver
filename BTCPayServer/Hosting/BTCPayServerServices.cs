@@ -47,6 +47,8 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using NBXplorer.DerivationStrategy;
 using NicolasDorier.RateLimits;
 using Npgsql;
+using BTCPayServer.Payments.AutoTrade.BitBank;
+using BTCPayServer.Payments.AutoTrade;
 
 namespace BTCPayServer.Hosting
 {
@@ -140,6 +142,8 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService, Payments.Lightning.LightningListener>();
             
             services.AddSingleton<ChangellyClientProvider>();
+
+            services.AddSingleton<AutoTradeExchangeClientProvider>();
 
             services.AddSingleton<IHostedService, NBXplorerWaiters>();
             services.AddSingleton<IHostedService, InvoiceNotificationManager>();

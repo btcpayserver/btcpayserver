@@ -11,6 +11,7 @@ using BTCPayServer.Models;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
+using BTCPayServer.Payments.AutoTrade;
 using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Rating;
@@ -55,7 +56,8 @@ namespace BTCPayServer.Controllers
             LanguageService langService,
             ChangellyClientProvider changellyClientProvider,
             IOptions<MvcJsonOptions> mvcJsonOptions,
-            IHostingEnvironment env, IHttpClientFactory httpClientFactory)
+            IHostingEnvironment env, IHttpClientFactory httpClientFactory,
+            AutoTradeExchangeClientProvider autoTradeProvider)
         {
             _RateFactory = rateFactory;
             _Repo = repo;
@@ -68,6 +70,7 @@ namespace BTCPayServer.Controllers
             _WalletProvider = walletProvider;
             _Env = env;
             _httpClientFactory = httpClientFactory;
+            _autoTradeProvider = autoTradeProvider;
             _NetworkProvider = networkProvider;
             _ExplorerProvider = explorerProvider;
             _FeeRateProvider = feeRateProvider;
@@ -90,6 +93,7 @@ namespace BTCPayServer.Controllers
         private readonly ChangellyClientProvider _changellyClientProvider;
         IHostingEnvironment _Env;
         private IHttpClientFactory _httpClientFactory;
+        private readonly AutoTradeExchangeClientProvider _autoTradeProvider;
 
         [TempData]
         public string StatusMessage

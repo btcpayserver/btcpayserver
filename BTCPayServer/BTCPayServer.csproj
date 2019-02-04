@@ -33,6 +33,7 @@
     <EmbeddedResource Include="Currencies.txt" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="BitBankApi" Version="1.0.0" />
     <PackageReference Include="BTCPayServer.Lightning.All" Version="1.1.0.5" />
     <PackageReference Include="BuildBundlerMinifier" Version="2.7.385" />
     <PackageReference Include="DigitalRuby.ExchangeSharp" Version="0.5.3" />

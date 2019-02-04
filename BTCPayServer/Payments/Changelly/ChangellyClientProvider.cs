@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Stores;
 using NBitcoin;
+using static NBitcoin.Extensions;
 
 namespace BTCPayServer.Payments.Changelly
 {

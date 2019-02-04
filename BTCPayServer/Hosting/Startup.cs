@@ -158,7 +158,7 @@ namespace BTCPayServer.Hosting
                 app.UseDeveloperExceptionPage();
             }
             
-            app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+            app.UseCors();
             app.UsePayServer();
             app.UseStaticFiles();
             app.UseAuthentication();

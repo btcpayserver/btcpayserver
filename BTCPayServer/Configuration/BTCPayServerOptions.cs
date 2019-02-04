@@ -1,4 +1,4 @@
-using BTCPayServer.Logging;
+﻿using BTCPayServer.Logging;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
@@ -23,21 +23,47 @@ namespace BTCPayServer.Configuration
 
     public class OpenIdOptions
     {
-        public OpenIdOptions(IConfiguration configuration)
+        public OpenIdOptions()
         {
-            EnforceClients = configuration.GetOpenIdEnforceClients();
-            EnforceEndpoints = configuration.GetOpenIdEnforceEndpoints();
-            EnforceScopes = configuration.GetOpenIdEnforceScopes();
-            EnforceGrantTypes = configuration.GetOpenIdEnforceGrantTypes();
+            
         }
 
-        public bool EnforceGrantTypes { get;  }
+        public bool EnforceGrantTypes { get; internal set; }
 
-        public bool EnforceEndpoints { get;  }
+        public bool EnforceEndpoints { get; internal set; }
 
-        public bool EnforceScopes { get; }
+        public bool EnforceScopes { get; internal set; }
 
-        public bool EnforceClients { get;  }
+        public bool EnforceClients { get; internal set; }
+
+        public OpenIdOptions Load(IConfiguration configuration)
+        {
+            EnforceClients = GetOpenIdEnforceClients(configuration);
+            EnforceEndpoints = GetOpenIdEnforceEndpoints(configuration);
+            EnforceScopes = GetOpenIdEnforceScopes(configuration);
+            EnforceGrantTypes = GetOpenIdEnforceGrantTypes(configuration);
+            return this;
+        }
+
+        public static bool GetOpenIdEnforceClients(IConfiguration configuration)
+        {
+            return configuration.GetValue("openid_enforce_clientId", false);
+        }
+
+        public static bool GetOpenIdEnforceGrantTypes(IConfiguration configuration)
+        {
+            return configuration.GetValue("openid_enforce_grant_type", false);
+        }
+
+        public static bool GetOpenIdEnforceScopes(IConfiguration configuration)
+        {
+            return configuration.GetValue("openid_enforce_scope", false);
+        }
+
+        public static bool GetOpenIdEnforceEndpoints(IConfiguration configuration)
+        {
+            return configuration.GetValue("openid_enforce_endpoints", false);
+        }
     }
 
     public class BTCPayServerOptions
@@ -260,7 +286,7 @@ namespace BTCPayServer.Configuration
             }
 
             DisableRegistration = conf.GetOrDefault<bool>("disable-registration", true);
-            OpenIdOptions = new OpenIdOptions(conf);
+            OpenIdOptions = new OpenIdOptions().Load(conf);
         }
 
         private SSHSettings ParseSSHConfiguration(IConfiguration conf)

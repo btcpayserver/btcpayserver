@@ -224,6 +224,8 @@ namespace BTCPayServer.Hosting
             {
                 app.UseDeveloperExceptionPage();
             }
+            
+            app.UseCors();
 
             var forwardingOptions = new ForwardedHeadersOptions()
             {

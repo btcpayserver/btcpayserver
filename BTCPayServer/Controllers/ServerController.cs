@@ -170,7 +170,7 @@ namespace BTCPayServer.Controllers
                 vm.DNSDomain = null;
             return View(vm);
         }
-        
+
         [Route("server/maintenance")]
         [HttpPost]
         public async Task<IActionResult> Maintenance(MaintenanceViewModel vm, string command)
@@ -352,22 +352,27 @@ namespace BTCPayServer.Controllers
             var user = await _UserManager.FindByIdAsync(userId);
             if (user == null)
                 return NotFound();
-            var roles = await _UserManager.GetRolesAsync(user);
-            var isAdmin = IsAdmin(roles);
-            bool updated = false;
 
-            if (isAdmin != viewModel.IsAdmin)
+            viewModel.StatusMessage = "";
+
+            var admins = await _UserManager.GetUsersInRoleAsync(Roles.ServerAdmin);
+            if (!viewModel.IsAdmin && admins.Count == 1)
+            {
+                viewModel.StatusMessage = "This is the last Admin, so IsAdmin role can't be removed";
+                return View(viewModel); // return
+            }
+
+            var roles = await _UserManager.GetRolesAsync(user);
+            if (viewModel.IsAdmin != IsAdmin(roles))
             {
                 if (viewModel.IsAdmin)
                     await _UserManager.AddToRoleAsync(user, Roles.ServerAdmin);
                 else
                     await _UserManager.RemoveFromRoleAsync(user, Roles.ServerAdmin);
-                updated = true;
-            }
-            if (updated)
-            {
+
                 viewModel.StatusMessage = "User successfully updated";
             }
+
             return View(viewModel);
         }
 
@@ -467,7 +472,7 @@ namespace BTCPayServer.Controllers
                     });
                 }
             }
-            foreach(var externalService in _Options.ExternalServices)
+            foreach (var externalService in _Options.ExternalServices)
             {
                 result.ExternalServices.Add(new ServicesViewModel.ExternalService()
                 {
@@ -475,7 +480,7 @@ namespace BTCPayServer.Controllers
                     Link = this.Request.GetRelativePathOrAbsolute(externalService.Value)
                 });
             }
-            if(_Options.SSHSettings != null)
+            if (_Options.SSHSettings != null)
             {
                 result.ExternalServices.Add(new ServicesViewModel.ExternalService()
                 {
@@ -534,7 +539,7 @@ namespace BTCPayServer.Controllers
                 return RedirectToAction(nameof(Services));
             }
             var spark = _Options.ExternalServicesByCryptoCode.GetServices<ExternalSpark>(cryptoCode).Select(c => c.ConnectionString).FirstOrDefault();
-            if(spark == null)
+            if (spark == null)
             {
                 return NotFound();
             }
@@ -551,7 +556,7 @@ namespace BTCPayServer.Controllers
                     vm.SparkLink = $"{spark.Server.AbsoluteUri}?access-key={cookie[2]}";
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 StatusMessage = $"Error: {ex.Message}";
                 return RedirectToAction(nameof(Services));
@@ -578,7 +583,7 @@ namespace BTCPayServer.Controllers
                 model.ConnectionType = "GRPC";
                 model.GRPCSSLCipherSuites = "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256";
             }
-            else if(external.ConnectionType == LightningConnectionType.LndREST)
+            else if (external.ConnectionType == LightningConnectionType.LndREST)
             {
                 model.Uri = external.BaseUri.AbsoluteUri;
                 model.ConnectionType = "REST";
@@ -792,7 +797,8 @@ namespace BTCPayServer.Controllers
                     .ToList();
                 vm.LogFileOffset = offset;
 
-                if (string.IsNullOrEmpty(file)) return View("Logs", vm);
+                if (string.IsNullOrEmpty(file))
+                    return View("Logs", vm);
                 vm.Log = "";
                 var path = Path.Combine(di.FullName, file);
                 try

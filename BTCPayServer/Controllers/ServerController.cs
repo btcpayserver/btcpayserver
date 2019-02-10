@@ -383,12 +383,29 @@ namespace BTCPayServer.Controllers
             var user = userId == null ? null : await _UserManager.FindByIdAsync(userId);
             if (user == null)
                 return NotFound();
-            return View("Confirm", new ConfirmModel()
+
+            var admins = await _UserManager.GetUsersInRoleAsync(Roles.ServerAdmin);
+            if (admins.Count == 1)
             {
-                Title = "Delete user " + user.Email,
-                Description = "This user will be permanently deleted",
-                Action = "Delete"
-            });
+                // return
+                return View("Confirm", new ConfirmModel("Unable to Delete Last Admin",
+                    "This is the last Admin, so it can't be removed"));
+            }
+
+
+            var roles = await _UserManager.GetRolesAsync(user);
+            if (IsAdmin(roles))
+            {
+                return View("Confirm", new ConfirmModel("Delete Admin " + user.Email,
+                    "Are you sure you want to delete this Admin and delete all accounts, users and data associated with the server account?",
+                    "Delete"));
+            }
+            else
+            {
+                return View("Confirm", new ConfirmModel("Delete user " + user.Email,
+                                    "This user will be permanently deleted",
+                                    "Delete"));
+            }
         }
 
         [Route("server/users/{userId}/delete")]

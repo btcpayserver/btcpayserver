@@ -12,6 +12,8 @@
                 <p>@Model.Description</p>
             </div>
         </div>
+        @if (!String.IsNullOrEmpty(Model.Action))
+        {
         <div class="row">
             <div class="col-lg-12 text-center">
                 <form method="post">
@@ -19,5 +21,6 @@
                 </form>
             </div>
         </div>
+        }
     </div>
 </section>

@@ -39,9 +39,9 @@ namespace BTCPayServer.Models.AppViewModels
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
 
-        [Required(ErrorMessage="The primary currency is required")]
+        [Required]
         [MaxLength(5)]
-        [Display(Name = "The primary currency used for targets and stats. (e.g. BTC, LTC, USD, etc.)")]
+        [Display(Name = "Primary currency used for targets and stats. (e.g. BTC, LTC, USD, etc.)")]
         public string TargetCurrency { get; set; } = "BTC";
 
         [Display(Name = "Set a Target amount ")]

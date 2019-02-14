@@ -358,7 +358,7 @@ namespace BTCPayServer.Controllers
             var admins = await _UserManager.GetUsersInRoleAsync(Roles.ServerAdmin);
             if (!viewModel.IsAdmin && admins.Count == 1)
             {
-                viewModel.StatusMessage = "This is the last Admin, so IsAdmin role can't be removed";
+                viewModel.StatusMessage = "This is the only Admin, so their role can't be removed until another Admin is added.";
                 return View(viewModel); // return
             }
 

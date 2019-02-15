@@ -41,7 +41,7 @@ namespace BTCPayServer.Models.AppViewModels
 
         [Required]
         [MaxLength(5)]
-        [Display(Name = "The primary currency used for targets and stats. (e.g. BTC, LTC, USD, etc.)")]
+        [Display(Name = "Primary currency used for targets and stats. (e.g. BTC, LTC, USD, etc.)")]
         public string TargetCurrency { get; set; } = "BTC";
 
         [Display(Name = "Set a Target amount ")]

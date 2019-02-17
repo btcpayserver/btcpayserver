@@ -184,62 +184,6 @@ namespace BTCPayServer.Crowdfund
             }, TaskScheduler.Current);
             
         }
-        
-        private async Task<decimal> GetCurrentContributionAmount(Dictionary<string, decimal> stats, string primaryCurrency, RateRules rateRules)
-        {
-            decimal result = 0;
-
-            var ratesTask = _RateFetcher .FetchRates(
-                stats.Keys
-                    .Select((x) => new CurrencyPair( primaryCurrency, PaymentMethodId.Parse(x).CryptoCode))
-                    .Distinct()
-                    .ToHashSet(), 
-                rateRules);
-
-            var finalTasks = new List<Task>();
-            foreach (var rateTask in ratesTask)
-            {
-                finalTasks.Add(Task.Run(async () =>
-                {
-                    var tResult = await rateTask.Value;
-                    var rate = tResult.BidAsk?.Bid;
-                    if (rate == null) return;
-
-                    foreach (var stat in stats)
-                    {
-                        if (string.Equals(PaymentMethodId.Parse(stat.Key).CryptoCode, rateTask.Key.Right,
-                            StringComparison.InvariantCultureIgnoreCase))
-                        {
-                            result += (1m / rate.Value) *  stat.Value;
-                        }
-                    }
-                }));
-            }
-
-            await Task.WhenAll(finalTasks);
-
-            return result;
-        }
-        
-        private static Dictionary<string, decimal> GetCurrentContributionAmountStats(InvoiceEntity[] invoices, bool usePaymentData = true)
-        {
-            if(usePaymentData){
-            var payments = invoices.SelectMany(entity => entity.GetPayments());
-
-            var groupedByMethod = payments.GroupBy(entity => entity.GetPaymentMethodId());
-
-            return groupedByMethod.ToDictionary(entities => entities.Key.ToString(),
-                entities => entities.Sum(entity => entity.GetCryptoPaymentData().GetValue()));
-            }
-            else
-            {
-                return invoices
-                    .GroupBy(entity => entity.ProductInformation.Currency)
-                    .ToDictionary(
-                        entities => entities.Key,
-                        entities => entities.Sum(entity => entity.ProductInformation.Price));
-            }
-        }
         private async Task<ViewCrowdfundViewModel> GetInfo(AppData appData, string statusMessage= null)
         {
             var settings = appData.GetSettings<AppsController.CrowdfundSettings>();
@@ -280,13 +224,13 @@ namespace BTCPayServer.Crowdfund
             
             var rateRules = appData.StoreData.GetStoreBlob().GetRateRules(_BtcPayNetworkProvider);
             
-            var pendingPaymentStats = GetCurrentContributionAmountStats(pendingInvoices, !settings.UseInvoiceAmount);
-            var paymentStats = GetCurrentContributionAmountStats(completeInvoices, !settings.UseInvoiceAmount); 
+            var pendingPaymentStats = _AppsHelper.GetCurrentContributionAmountStats(pendingInvoices, !settings.UseInvoiceAmount);
+            var paymentStats = _AppsHelper.GetCurrentContributionAmountStats(completeInvoices, !settings.UseInvoiceAmount); 
             
-            var currentAmount = await GetCurrentContributionAmount(
+            var currentAmount = await _AppsHelper.GetCurrentContributionAmount(
                 paymentStats,
                 settings.TargetCurrency, rateRules); 
-            var currentPendingAmount =  await GetCurrentContributionAmount(
+            var currentPendingAmount =  await _AppsHelper.GetCurrentContributionAmount(
                 pendingPaymentStats,
                 settings.TargetCurrency, rateRules);
 

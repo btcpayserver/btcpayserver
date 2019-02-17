@@ -102,6 +102,7 @@ namespace BTCPayServer.Services.Invoices.Export
                     InvoiceItemDesc = invoice.ProductInformation.ItemDesc,
                     InvoicePrice = invoice.ProductInformation.Price,
                     InvoiceCurrency = invoice.ProductInformation.Currency,
+                    BuyerEmail = invoice.BuyerInformation?.BuyerEmail
                 };
 
                 exportList.Add(target);
@@ -139,5 +140,6 @@ namespace BTCPayServer.Services.Invoices.Export
         public string InvoiceFullStatus { get; set; }
         public string InvoiceStatus { get; set; }
         public string InvoiceExceptionStatus { get; set; }
+        public string BuyerEmail { get; set; }
     }
 }

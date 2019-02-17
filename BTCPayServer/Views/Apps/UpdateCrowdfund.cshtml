@@ -68,7 +68,15 @@
                     </div>
                     <div class="form-group">
                         <label asp-for="StartDate" class="control-label"></label>
-                        <input asp-for="StartDate" class="form-control datetime " />
+                        <div class="input-group ">
+                            <input asp-for="StartDate" class="form-control datetime"/>
+                            <div class="input-group-append only-for-js">
+
+                                <button class="btn btn-secondary input-group-clear" type="button" title="Clear">
+                                    <span class=" fa fa-times"></span>
+                                </button>
+                            </div>
+                        </div>
                         <span asp-validation-for="StartDate" class="text-danger"></span>
                     </div>
                     <div class="form-group">
@@ -84,10 +92,17 @@
                             </select>
                         </div>
                     </div>
-                    
                     <div class="form-group">
                         <label asp-for="EndDate" class="control-label"></label>
-                        <input asp-for="EndDate" class="form-control datetime" />
+                        <div class="input-group ">
+                            <input asp-for="EndDate" class="form-control datetime" />
+                            <div class="input-group-append only-for-js">
+
+                                <button class="btn btn-secondary input-group-clear" type="button" title="Clear">
+                                    <span class=" fa fa-times"></span>
+                                </button>
+                            </div>
+                        </div>
                         <span asp-validation-for="EndDate" class="text-danger"></span>
                     </div>
                     <div class="form-group">
@@ -116,7 +131,6 @@
                     </div>  
                     <div class="form-group">
                         <label asp-for="EmbeddedCSS" class="control-label"></label>
-                      
                         <textarea asp-for="EmbeddedCSS" rows="10" cols="40" class="form-control"></textarea>
                         <span asp-validation-for="EmbeddedCSS" class="text-danger"></span>
                     </div> 

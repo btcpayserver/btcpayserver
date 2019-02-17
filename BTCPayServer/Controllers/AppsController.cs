@@ -7,6 +7,8 @@ using BTCPayServer.Models;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
+using BTCPayServer.Services.Rates;
+using Ganss.XSS;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -26,12 +28,16 @@ namespace BTCPayServer.Controllers
             ApplicationDbContextFactory contextFactory,
             EventAggregator eventAggregator,
             BTCPayNetworkProvider networkProvider,
+            CurrencyNameTable currencies,
+            HtmlSanitizer htmlSanitizer,
             AppsHelper appsHelper)
         {
             _UserManager = userManager;
             _ContextFactory = contextFactory;
             _EventAggregator = eventAggregator;
             _NetworkProvider = networkProvider;
+            _currencies = currencies;
+            _htmlSanitizer = htmlSanitizer;
             _AppsHelper = appsHelper;
         }
 
@@ -39,6 +45,8 @@ namespace BTCPayServer.Controllers
         private ApplicationDbContextFactory _ContextFactory;
         private readonly EventAggregator _EventAggregator;
         private BTCPayNetworkProvider _NetworkProvider;
+        private readonly CurrencyNameTable _currencies;
+        private readonly HtmlSanitizer _htmlSanitizer;
         private AppsHelper _AppsHelper;
 
         [TempData]

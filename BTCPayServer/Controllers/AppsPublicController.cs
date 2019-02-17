@@ -9,23 +9,21 @@ using System.Threading.Tasks;
 using BTCPayServer.Crowdfund;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
-using BTCPayServer.Hubs;
 using BTCPayServer.Models;
 using BTCPayServer.Models.AppViewModels;
+using BTCPayServer.Payments;
 using BTCPayServer.Rating;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using Ganss.XSS;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NBitpayClient;
-using Newtonsoft.Json.Linq;
 using YamlDotNet.RepresentationModel;
 using static BTCPayServer.Controllers.AppsController;
 
@@ -126,35 +124,34 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> ContributeToCrowdfund(string appId, ContributeToCrowdfund request)
         {
             var app = await _AppsHelper.GetApp(appId, AppType.Crowdfund, true);
-            
+
             if (app == null)
                 return NotFound();
             var settings = app.GetSettings<CrowdfundSettings>();
-            
-           
+
+
             var isAdmin = await _AppsHelper.GetAppDataIfOwner(GetUserId(), appId, AppType.Crowdfund) != null;
- 
+
             if (!settings.Enabled)
             {
-                if(!isAdmin)
+                if (!isAdmin)
                     return NotFound("Crowdfund is not currently active");
             }
 
             var info = await _CrowdfundHubStreamer.GetCrowdfundInfo(appId);
-            
-            if(!isAdmin && 
-               
-               ((settings.StartDate.HasValue && DateTime.Now  < settings.StartDate) || 
-                (settings.EndDate.HasValue && DateTime.Now  > settings.EndDate) || 
-                (settings.EnforceTargetAmount && 
-                    (info.Info.PendingProgressPercentage.GetValueOrDefault(0) + 
-                     info.Info.ProgressPercentage.GetValueOrDefault(0)) >= 100)))
+
+            if (!isAdmin &&
+                ((settings.StartDate.HasValue && DateTime.Now < settings.StartDate) ||
+                 (settings.EndDate.HasValue && DateTime.Now > settings.EndDate) ||
+                 (settings.EnforceTargetAmount &&
+                  (info.Info.PendingProgressPercentage.GetValueOrDefault(0) +
+                   info.Info.ProgressPercentage.GetValueOrDefault(0)) >= 100)))
             {
                 return NotFound("Crowdfund is not currently active");
             }
 
             var store = await _AppsHelper.GetStore(app);
-            var title =  settings.Title;
+            var title = settings.Title;
             var price = request.Amount;
             ViewPointOfSaleViewModel.Item choice = null;
             if (!string.IsNullOrEmpty(request.ChoiceKey))
@@ -170,11 +167,11 @@ namespace BTCPayServer.Controllers
             }
 
             if (!isAdmin && (settings.EnforceTargetAmount && info.TargetAmount.HasValue && price >
-                (info.TargetAmount - (info.Info.CurrentAmount + info.Info.CurrentPendingAmount))))
+                             (info.TargetAmount - (info.Info.CurrentAmount + info.Info.CurrentPendingAmount))))
             {
                 return NotFound("Contribution Amount is more than is currently allowed.");
             }
-            
+
             store.AdditionalClaims.Add(new Claim(Policies.CanCreateInvoice.Key, store.Id));
             try
             {
@@ -189,9 +186,7 @@ namespace BTCPayServer.Controllers
                     NotificationURL = settings.NotificationUrl,
                     FullNotifications = true,
                     ExtendedNotifications = true,
-                    RedirectURL = request.RedirectUrl ?? Request.GetDisplayUrl(),
-                
-                
+                    RedirectURL = request.RedirectUrl ?? Request.GetDisplayUrl()
                 }, store, HttpContext.Request.GetAbsoluteRoot());
                 if (request.RedirectToCheckout)
                 {
@@ -287,64 +282,17 @@ namespace BTCPayServer.Controllers
     {
         ApplicationDbContextFactory _ContextFactory;
         CurrencyNameTable _Currencies;
-        private HtmlSanitizer _HtmlSanitizer;
+        private readonly RateFetcher _RateFetcher;
+        private readonly HtmlSanitizer _HtmlSanitizer;
         public CurrencyNameTable Currencies => _Currencies;
-        public AppsHelper(ApplicationDbContextFactory contextFactory, CurrencyNameTable currencies)
+        public AppsHelper(ApplicationDbContextFactory contextFactory, CurrencyNameTable currencies, RateFetcher rateFetcher, HtmlSanitizer htmlSanitizer)
         {
             _ContextFactory = contextFactory;
             _Currencies = currencies;
-            ConfigureSanitizer();
-        }
-        
-        private void ConfigureSanitizer()
-        {
-            
-            _HtmlSanitizer = new HtmlSanitizer();
-
-
-            _HtmlSanitizer.RemovingAtRule += (sender, args) =>
-            {
-                Debug.WriteLine("");
-                
-            };
-            _HtmlSanitizer.RemovingTag += (sender, args) =>
-            {
-                Debug.WriteLine("");
-                if (args.Tag.TagName.Equals("img", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    if (!args.Tag.ClassList.Contains("img-fluid"))
-                    {
-                        args.Tag.ClassList.Add("img-fluid");
-                    }
-
-                    args.Cancel = true;
-                }
-            };
-            
-            _HtmlSanitizer.RemovingAttribute += (sender, args) =>
-            {
-                if (args.Tag.TagName.Equals("img",StringComparison.InvariantCultureIgnoreCase) &&  
-                    args.Attribute.Name.Equals( "src", StringComparison.InvariantCultureIgnoreCase) && 
-                    args.Reason == RemoveReason.NotAllowedUrlValue)
-                {
-                    args.Cancel = true;
-                }
-                Debug.WriteLine("");
-                
-            };
-            _HtmlSanitizer.RemovingStyle += (sender, args) => { args.Cancel = true; };
-            _HtmlSanitizer.AllowedAttributes.Add("class");
-            _HtmlSanitizer.AllowedTags.Add("iframe");
-            _HtmlSanitizer.AllowedTags.Remove("img");
-            _HtmlSanitizer.AllowedAttributes.Add("webkitallowfullscreen");
-            _HtmlSanitizer.AllowedAttributes.Add("allowfullscreen");
+            _RateFetcher = rateFetcher;
+            _HtmlSanitizer = htmlSanitizer;
         }
 
-        public string Sanitize(string raw)
-        {
-            return _HtmlSanitizer.Sanitize(raw);
-        }
-        
         public async Task<StoreData[]> GetOwnedStores(string userId)
         {
             using (var ctx = _ContextFactory.CreateContext())
@@ -427,19 +375,70 @@ namespace BTCPayServer.Controllers
                 .Where(kv => kv.Value != null)
                 .Select(c => new ViewPointOfSaleViewModel.Item()
                 {
-                    Description = Sanitize(c.GetDetailString("description")),
+                    Description = _HtmlSanitizer.Sanitize(c.GetDetailString("description")),
                     Id = c.Key,
-                    Image = Sanitize(c.GetDetailString("image")),
-                    Title = Sanitize(c.GetDetailString("title") ?? c.Key),
+                    Image = _HtmlSanitizer.Sanitize(c.GetDetailString("image")),
+                    Title = _HtmlSanitizer.Sanitize(c.GetDetailString("title") ?? c.Key),
                     Price = c.GetDetail("price")
                              .Select(cc => new ViewPointOfSaleViewModel.Item.ItemPrice()
                              {
                                  Value = decimal.Parse(cc.Value.Value, CultureInfo.InvariantCulture),
-                                 Formatted = FormatCurrency(cc.Value.Value, currency)
+                                 Formatted = Currencies.FormatCurrency(cc.Value.Value, currency)
                              }).Single(),
                     Custom = c.GetDetailString("custom") == "true"
                 })
                 .ToArray();
+        }
+
+        public async Task<decimal> GetCurrentContributionAmount(Dictionary<string, decimal> stats, string primaryCurrency, RateRules rateRules)
+        {
+            var result = new List<decimal>();
+
+            var ratesTask = _RateFetcher.FetchRates(
+                stats.Keys
+                    .Select((x) => new CurrencyPair(primaryCurrency, PaymentMethodId.Parse(x).CryptoCode))
+                    .Distinct()
+                    .ToHashSet(),
+                rateRules).Select(async rateTask =>
+            {
+                var (key, value) = rateTask;
+                var tResult = await value;
+                var rate = tResult.BidAsk?.Bid;
+                if (rate == null) return;
+
+                foreach (var stat in stats)
+                {
+                    if (string.Equals(PaymentMethodId.Parse(stat.Key).CryptoCode, key.Right,
+                        StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        result.Add((1m / rate.Value) *  stat.Value);
+                    }
+                }
+            });
+
+            await Task.WhenAll(ratesTask);
+
+            return result.Sum();
+        }
+
+         public Dictionary<string, decimal> GetCurrentContributionAmountStats(InvoiceEntity[] invoices, bool usePaymentData = true)
+        {
+            if(usePaymentData){
+            var payments = invoices.SelectMany(entity => entity.GetPayments());
+
+            var groupedByMethod = payments.GroupBy(entity => entity.GetPaymentMethodId());
+
+            return groupedByMethod.ToDictionary(entities => entities.Key.ToString(),
+                entities => entities.Sum(entity => entity.GetCryptoPaymentData().GetValue()));
+            }
+            else
+            {
+                return invoices
+                    .GroupBy(entity => entity.ProductInformation.Currency)
+                    .ToDictionary(
+                        entities => entities.Key,
+                        entities => entities.Sum(entity => entity.ProductInformation.Price));
+            }
         }
 
         private class PosHolder
@@ -468,15 +467,6 @@ namespace BTCPayServer.Controllers
             public YamlScalarNode Value { get; set; }
         }
 
-        public string FormatCurrency(string price, string currency)
-        {
-            return decimal.Parse(price, CultureInfo.InvariantCulture).ToString("C", _Currencies.GetCurrencyProvider(currency));
-        }
-
-        public CurrencyData GetCurrencyData(string currency, bool useFallback)
-        {
-            return _Currencies.GetCurrencyData(currency, useFallback);
-        }
         public async Task<AppData> GetAppDataIfOwner(string userId, string appId, AppType? type = null)
         {
             if (userId == null || appId == null)

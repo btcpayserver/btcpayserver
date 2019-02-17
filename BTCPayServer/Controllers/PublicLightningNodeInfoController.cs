@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
+using BTCPayServer.Filters;
 using BTCPayServer.Lightning;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
@@ -30,6 +31,7 @@ namespace BTCPayServer.Controllers
         }
         
         [HttpGet]
+        [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
         public async Task<IActionResult> ShowLightningNodeInfo(string storeId, string cryptoCode)
         {
             var store = await _StoreRepository.FindStore(storeId);

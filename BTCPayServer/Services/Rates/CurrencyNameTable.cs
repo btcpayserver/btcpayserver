@@ -42,6 +42,15 @@ namespace BTCPayServer.Services.Rates
 
         static Dictionary<string, IFormatProvider> _CurrencyProviders = new Dictionary<string, IFormatProvider>();
 
+        public string FormatCurrency(string price, string currency)
+        {
+            return FormatCurrency(decimal.Parse(price, CultureInfo.InvariantCulture), currency);
+        }
+        public string FormatCurrency(decimal price, string currency)
+        {
+            return price.ToString("C", GetCurrencyProvider(currency));
+        }
+
         public NumberFormatInfo GetNumberFormatInfo(string currency, bool useFallback)
         {
             var data = GetCurrencyProvider(currency);

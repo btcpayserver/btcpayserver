@@ -108,6 +108,45 @@ namespace BTCPayServer.Hosting
             });
 
             services.TryAddSingleton<AppsHelper>();
+            services.TryAddSingleton<Ganss.XSS.HtmlSanitizer>(o =>
+            {
+
+                var htmlSanitizer = new Ganss.XSS.HtmlSanitizer();
+
+
+                htmlSanitizer.RemovingAtRule += (sender, args) =>
+                {
+                };
+                htmlSanitizer.RemovingTag += (sender, args) =>
+                {
+                    if (args.Tag.TagName.Equals("img", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        if (!args.Tag.ClassList.Contains("img-fluid"))
+                        {
+                            args.Tag.ClassList.Add("img-fluid");
+                        }
+
+                        args.Cancel = true;
+                    }
+                };
+
+                htmlSanitizer.RemovingAttribute += (sender, args) =>
+                {
+                    if (args.Tag.TagName.Equals("img", StringComparison.InvariantCultureIgnoreCase) &&
+                        args.Attribute.Name.Equals("src", StringComparison.InvariantCultureIgnoreCase) &&
+                        args.Reason == Ganss.XSS.RemoveReason.NotAllowedUrlValue)
+                    {
+                        args.Cancel = true;
+                    }
+                };
+                htmlSanitizer.RemovingStyle += (sender, args) => { args.Cancel = true; };
+                htmlSanitizer.AllowedAttributes.Add("class");
+                htmlSanitizer.AllowedTags.Add("iframe");
+                htmlSanitizer.AllowedTags.Remove("img");
+                htmlSanitizer.AllowedAttributes.Add("webkitallowfullscreen");
+                htmlSanitizer.AllowedAttributes.Add("allowfullscreen");
+                return htmlSanitizer;
+            });
 
             services.TryAddSingleton<LightningConfigurationProvider>();
             services.TryAddSingleton<LanguageService>();

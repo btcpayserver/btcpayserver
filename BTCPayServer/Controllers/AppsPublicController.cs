@@ -286,65 +286,18 @@ namespace BTCPayServer.Controllers
     public class AppsHelper
     {
         ApplicationDbContextFactory _ContextFactory;
-        CurrencyNameTable _Currencies;
-        private HtmlSanitizer _HtmlSanitizer;
+        private CurrencyNameTable _Currencies;
+        private readonly RateFetcher _RateFetcher;
+        private readonly HtmlSanitizer _HtmlSanitizer;
         public CurrencyNameTable Currencies => _Currencies;
-        public AppsHelper(ApplicationDbContextFactory contextFactory, CurrencyNameTable currencies)
+        public AppsHelper(ApplicationDbContextFactory contextFactory, CurrencyNameTable currencies, RateFetcher rateFetcher, HtmlSanitizer htmlSanitizer)
         {
             _ContextFactory = contextFactory;
             _Currencies = currencies;
-            ConfigureSanitizer();
-        }
-        
-        private void ConfigureSanitizer()
-        {
-            
-            _HtmlSanitizer = new HtmlSanitizer();
-
-
-            _HtmlSanitizer.RemovingAtRule += (sender, args) =>
-            {
-                Debug.WriteLine("");
-                
-            };
-            _HtmlSanitizer.RemovingTag += (sender, args) =>
-            {
-                Debug.WriteLine("");
-                if (args.Tag.TagName.Equals("img", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    if (!args.Tag.ClassList.Contains("img-fluid"))
-                    {
-                        args.Tag.ClassList.Add("img-fluid");
-                    }
-
-                    args.Cancel = true;
-                }
-            };
-            
-            _HtmlSanitizer.RemovingAttribute += (sender, args) =>
-            {
-                if (args.Tag.TagName.Equals("img",StringComparison.InvariantCultureIgnoreCase) &&  
-                    args.Attribute.Name.Equals( "src", StringComparison.InvariantCultureIgnoreCase) && 
-                    args.Reason == RemoveReason.NotAllowedUrlValue)
-                {
-                    args.Cancel = true;
-                }
-                Debug.WriteLine("");
-                
-            };
-            _HtmlSanitizer.RemovingStyle += (sender, args) => { args.Cancel = true; };
-            _HtmlSanitizer.AllowedAttributes.Add("class");
-            _HtmlSanitizer.AllowedTags.Add("iframe");
-            _HtmlSanitizer.AllowedTags.Remove("img");
-            _HtmlSanitizer.AllowedAttributes.Add("webkitallowfullscreen");
-            _HtmlSanitizer.AllowedAttributes.Add("allowfullscreen");
+            _RateFetcher = rateFetcher;
+            _HtmlSanitizer = htmlSanitizer;
         }
 
-        public string Sanitize(string raw)
-        {
-            return _HtmlSanitizer.Sanitize(raw);
-        }
-        
         public async Task<StoreData[]> GetOwnedStores(string userId)
         {
             using (var ctx = _ContextFactory.CreateContext())
@@ -427,15 +380,15 @@ namespace BTCPayServer.Controllers
                 .Where(kv => kv.Value != null)
                 .Select(c => new ViewPointOfSaleViewModel.Item()
                 {
-                    Description = Sanitize(c.GetDetailString("description")),
+                    Description = _HtmlSanitizer.Sanitize(c.GetDetailString("description")),
                     Id = c.Key,
-                    Image = Sanitize(c.GetDetailString("image")),
-                    Title = Sanitize(c.GetDetailString("title") ?? c.Key),
+                    Image = _HtmlSanitizer.Sanitize(c.GetDetailString("image")),
+                    Title = _HtmlSanitizer.Sanitize(c.GetDetailString("title") ?? c.Key),
                     Price = c.GetDetail("price")
                              .Select(cc => new ViewPointOfSaleViewModel.Item.ItemPrice()
                              {
                                  Value = decimal.Parse(cc.Value.Value, CultureInfo.InvariantCulture),
-                                 Formatted = FormatCurrency(cc.Value.Value, currency)
+                                 Formatted = Currencies.FormatCurrency(cc.Value.Value, currency)
                              }).Single(),
                     Custom = c.GetDetailString("custom") == "true"
                 })
@@ -468,15 +421,6 @@ namespace BTCPayServer.Controllers
             public YamlScalarNode Value { get; set; }
         }
 
-        public string FormatCurrency(string price, string currency)
-        {
-            return decimal.Parse(price, CultureInfo.InvariantCulture).ToString("C", _Currencies.GetCurrencyProvider(currency));
-        }
-
-        public CurrencyData GetCurrencyData(string currency, bool useFallback)
-        {
-            return _Currencies.GetCurrencyData(currency, useFallback);
-        }
         public async Task<AppData> GetAppDataIfOwner(string userId, string appId, AppType? type = null)
         {
             if (userId == null || appId == null)

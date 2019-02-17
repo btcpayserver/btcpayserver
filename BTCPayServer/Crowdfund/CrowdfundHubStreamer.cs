@@ -30,6 +30,7 @@ namespace BTCPayServer.Crowdfund
         private readonly RateFetcher _RateFetcher;
         private readonly BTCPayNetworkProvider _BtcPayNetworkProvider;
         private readonly InvoiceRepository _InvoiceRepository;
+        private readonly CurrencyNameTable _currencies;
         private readonly ILogger<CrowdfundHubStreamer> _Logger;
 
         private readonly ConcurrentDictionary<string,(string appId, bool useAllStoreInvoices,bool useInvoiceAmount)> _QuickAppInvoiceLookup = 
@@ -44,6 +45,7 @@ namespace BTCPayServer.Crowdfund
             RateFetcher rateFetcher,
             BTCPayNetworkProvider btcPayNetworkProvider,
             InvoiceRepository invoiceRepository,
+            CurrencyNameTable currencies,
             ILogger<CrowdfundHubStreamer> logger)
         {
             _EventAggregator = eventAggregator;
@@ -53,6 +55,7 @@ namespace BTCPayServer.Crowdfund
             _RateFetcher = rateFetcher;
             _BtcPayNetworkProvider = btcPayNetworkProvider;
             _InvoiceRepository = invoiceRepository;
+            _currencies = currencies;
             _Logger = logger;
 #pragma warning disable 4014
             InitLookup();
@@ -332,7 +335,7 @@ namespace BTCPayServer.Crowdfund
                 DisplayPerksRanking = settings.DisplayPerksRanking,
                 PerkCount = perkCount,
                 ResetEvery = Enum.GetName(typeof(CrowdfundResetEvery),settings.ResetEvery),
-                CurrencyData = _AppsHelper.GetCurrencyData(settings.TargetCurrency, true),
+                CurrencyData = _currencies.GetCurrencyData(settings.TargetCurrency, true),
                 Info = new ViewCrowdfundViewModel.CrowdfundInfo()
                 {
                     TotalContributors = invoices.Length,

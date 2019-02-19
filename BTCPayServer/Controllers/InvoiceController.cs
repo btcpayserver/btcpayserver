@@ -71,6 +71,8 @@ namespace BTCPayServer.Controllers
             {
                 InvoiceTime = DateTimeOffset.UtcNow
             };
+
+            var getAppsTaggingStore = _InvoiceRepository.GetAppsTaggingStore(store.Id);
             var storeBlob = store.GetStoreBlob();
             Uri notificationUri = Uri.IsWellFormedUriString(invoice.NotificationURL, UriKind.Absolute) ? new Uri(invoice.NotificationURL, UriKind.Absolute) : null;
             if (notificationUri == null || (notificationUri.Scheme != "http" && notificationUri.Scheme != "https")) //TODO: Filer non routable addresses ?
@@ -174,11 +176,22 @@ namespace BTCPayServer.Controllers
             entity.SetSupportedPaymentMethods(supported);
             entity.SetPaymentMethods(paymentMethods);
             entity.PosData = invoice.PosData;
+
+            foreach (var app in await getAppsTaggingStore)
+            {
+                entity.InternalTags.Add(AppsHelper.GetAppInternalTag(app.Id));
+            }
+
             entity = await _InvoiceRepository.CreateInvoiceAsync(store.Id, entity, logs, _NetworkProvider);
             await fetchingAll;
             _EventAggregator.Publish(new Events.InvoiceEvent(entity, 1001, InvoiceEvent.Created));
             var resp = entity.EntityToDTO(_NetworkProvider);
             return new DataWrapper<InvoiceResponse>(resp) { Facade = "pos/invoice" };
+        }
+
+        internal Task CreateInvoiceCore(Invoice invoice, StoreData store, string v1, string[] v2)
+        {
+            throw new NotImplementedException();
         }
 
         private Task WhenAllFetched(InvoiceLogs logs, Dictionary<CurrencyPair, Task<RateResult>> fetchingByCurrencyPair)

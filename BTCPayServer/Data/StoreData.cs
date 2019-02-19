@@ -424,9 +424,6 @@ namespace BTCPayServer.Data
 
         public EmailSettings EmailSettings { get; set; }
 
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public HashSet<string> InternalTags { get; set; } = new HashSet<string>();
-
         public IPaymentFilter GetExcludedPaymentMethods()
         {
 #pragma warning disable CS0618 // Type or member is obsolete

@@ -91,8 +91,6 @@ namespace BTCPayServer.Controllers
             entity.PaymentTolerance = storeBlob.PaymentTolerance;
             if (additionalTags != null)
                 entity.InternalTags.AddRange(additionalTags);
-            if (storeBlob.InternalTags != null)
-                entity.InternalTags.AddRange(storeBlob.InternalTags);
             //Another way of passing buyer info to support
             FillBuyerInfo(invoice.Buyer, entity.BuyerInformation);
             if (entity?.BuyerInformation?.BuyerEmail != null)

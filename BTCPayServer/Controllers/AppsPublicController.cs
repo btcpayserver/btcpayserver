@@ -106,11 +106,11 @@ namespace BTCPayServer.Controllers
 
                 return NotFound("A Target Currency must be set for this app in order to be loadable.");
             }
-            if (settings.Enabled) return View(await _AppService.GetCrowdfundInfo(appId));
+            if (settings.Enabled) return View(await _AppService.GetAppInfo(appId));
             if(!isAdmin)
                 return NotFound();
 
-            return View(await _AppService.GetCrowdfundInfo(appId));
+            return View(await _AppService.GetAppInfo(appId));
         }
 
         [HttpPost]
@@ -135,7 +135,7 @@ namespace BTCPayServer.Controllers
                     return NotFound("Crowdfund is not currently active");
             }
 
-            var info = await _AppService.GetCrowdfundInfo(appId);
+            var info = (ViewCrowdfundViewModel)await _AppService.GetAppInfo(appId);
 
             if (!isAdmin &&
                 ((settings.StartDate.HasValue && DateTime.Now < settings.StartDate) ||

@@ -69,8 +69,6 @@ namespace BTCPayServer.Models.AppViewModels
         [Display(Name = "Custom CSS Code")]
         public string EmbeddedCSS { get; set; }
 
-        [Display(Name = "Base the contributed goal amount on the invoice amount and not actual payments")]
-        public bool UseInvoiceAmount { get; set; }       
         [Display(Name = "Count all invoices created on the store as part of the crowdfunding goal")]
         public bool UseAllStoreInvoices { get; set; } 
 

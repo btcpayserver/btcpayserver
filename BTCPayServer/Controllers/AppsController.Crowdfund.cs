@@ -10,10 +10,10 @@ namespace BTCPayServer.Controllers
 {
     public partial class AppsController
     {
-        public class CrowdfundAppUpdated
+        public class AppUpdated
         {
             public string AppId { get; set; }
-            public CrowdfundSettings Settings { get; set; }
+            public object Settings { get; set; }
             public string StoreId { get; set; }
         }
         
@@ -46,7 +46,6 @@ namespace BTCPayServer.Controllers
                 SoundsEnabled = settings.SoundsEnabled,
                 DisqusShortname = settings.DisqusShortname,
                 AnimationsEnabled = settings.AnimationsEnabled,
-                UseInvoiceAmount = settings.UseInvoiceAmount,
                 ResetEveryAmount = settings.ResetEveryAmount,
                 ResetEvery = Enum.GetName(typeof(CrowdfundResetEvery), settings.ResetEvery),
                 UseAllStoreInvoices = app.TagAllInvoices,
@@ -120,7 +119,6 @@ namespace BTCPayServer.Controllers
                 AnimationsEnabled = vm.AnimationsEnabled,
                 ResetEveryAmount = vm.ResetEveryAmount,
                 ResetEvery = Enum.Parse<CrowdfundResetEvery>(vm.ResetEvery),
-                UseInvoiceAmount = vm.UseInvoiceAmount,
                 DisplayPerksRanking = vm.DisplayPerksRanking,
                 SortPerksByPopularity = vm.SortPerksByPopularity
             };
@@ -129,7 +127,7 @@ namespace BTCPayServer.Controllers
             app.SetSettings(newSettings);
             await UpdateAppSettings(app);
 
-            _EventAggregator.Publish(new CrowdfundAppUpdated()
+            _EventAggregator.Publish(new AppUpdated()
             {
                 AppId = appId,
                 StoreId = app.StoreDataId,

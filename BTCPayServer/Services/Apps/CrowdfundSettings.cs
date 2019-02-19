@@ -28,7 +28,6 @@ namespace BTCPayServer.Services.Apps
         public bool SoundsEnabled { get; set; } = true;
         public string DisqusShortname { get; set; }
         public bool AnimationsEnabled { get; set; } = true;
-        public bool UseInvoiceAmount { get; set; } = true;
         public int ResetEveryAmount { get; set; } = 1;
         public CrowdfundResetEvery ResetEvery { get; set; } = CrowdfundResetEvery.Never;
         [Obsolete("Use AppData.TagAllInvoices instead")]

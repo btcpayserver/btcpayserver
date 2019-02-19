@@ -52,7 +52,7 @@ namespace BTCPayServer.Services.Apps
             _Networks = networks;
         }
 
-        public async Task<ViewCrowdfundViewModel> GetCrowdfundInfo(string appId)
+        public async Task<object> GetAppInfo(string appId)
         {
             var app = await GetApp(appId, AppType.Crowdfund, true);
             return await GetInfo(app);
@@ -91,13 +91,13 @@ namespace BTCPayServer.Services.Apps
             }
 
             var invoices = await GetInvoicesForApp(appData, lastResetDate);
-            var completeInvoices = invoices.Where(entity => entity.Status == InvoiceStatus.Complete).ToArray();
-            var pendingInvoices = invoices.Where(entity => entity.Status != InvoiceStatus.Complete).ToArray();
+            var completeInvoices = invoices.Where(entity => entity.Status == InvoiceStatus.Complete || entity.Status == InvoiceStatus.Confirmed).ToArray();
+            var pendingInvoices = invoices.Where(entity => !(entity.Status == InvoiceStatus.Complete || entity.Status == InvoiceStatus.Confirmed)).ToArray();
 
             var rateRules = appData.StoreData.GetStoreBlob().GetRateRules(_Networks);
 
-            var pendingPaymentStats = GetCurrentContributionAmountStats(pendingInvoices, !settings.UseInvoiceAmount);
-            var paymentStats = GetCurrentContributionAmountStats(completeInvoices, !settings.UseInvoiceAmount);
+            var pendingPaymentStats = GetCurrentContributionAmountStats(pendingInvoices, !settings.EnforceTargetAmount);
+            var paymentStats = GetCurrentContributionAmountStats(completeInvoices, !settings.EnforceTargetAmount);
 
             var currentAmount = await GetCurrentContributionAmount(
                 paymentStats,
@@ -105,9 +105,6 @@ namespace BTCPayServer.Services.Apps
             var currentPendingAmount = await GetCurrentContributionAmount(
                 pendingPaymentStats,
                 settings.TargetCurrency, rateRules);
-
-
-
 
             var perkCount = invoices
                 .Where(entity => !string.IsNullOrEmpty(entity.ProductInformation.ItemCode))
@@ -325,25 +322,35 @@ namespace BTCPayServer.Services.Apps
             return result.Sum();
         }
 
-        public Dictionary<string, decimal> GetCurrentContributionAmountStats(InvoiceEntity[] invoices, bool usePaymentData = true)
+        public Dictionary<string, decimal> GetCurrentContributionAmountStats(InvoiceEntity[] invoices, bool softcap)
         {
-            if (usePaymentData)
-            {
-                var payments = invoices.SelectMany(entity => entity.GetPayments());
+            return invoices
+                .SelectMany(p =>
+                {
+                    // For hardcap, we count newly created invoices as part of the contributions
+                    if (!softcap && p.Status == InvoiceStatus.New)
+                        return new[] { (Key: p.ProductInformation.Currency, Value: p.ProductInformation.Price) };
 
-                var groupedByMethod = payments.GroupBy(entity => entity.GetPaymentMethodId());
+                    // If the user get a donation via other mean, he can register an invoice manually for such amount
+                    // then mark the invoice as complete
+                    var payments = p.GetPayments();
+                    if (payments.Count == 0 && 
+                        p.ExceptionStatus == InvoiceExceptionStatus.Marked &&
+                        p.Status == InvoiceStatus.Complete)
+                        return new[] { (Key: p.ProductInformation.Currency, Value: p.ProductInformation.Price) };
 
-                return groupedByMethod.ToDictionary(entities => entities.Key.ToString(),
-                    entities => entities.Sum(entity => entity.GetCryptoPaymentData().GetValue()));
-            }
-            else
-            {
-                return invoices
-                    .GroupBy(entity => entity.ProductInformation.Currency)
-                    .ToDictionary(
-                        entities => entities.Key,
-                        entities => entities.Sum(entity => entity.ProductInformation.Price));
-            }
+                    // If an invoice has been marked invalid, remove the contribution
+                    if (p.ExceptionStatus == InvoiceExceptionStatus.Marked &&
+                        p.Status == InvoiceStatus.Invalid)
+                        return new[] { (Key: p.ProductInformation.Currency, Value: 0m) };
+
+                    // Else, we just sum the payments
+                    return payments
+                             .GroupBy(pay => pay.GetPaymentMethodId())
+                             .Select(payGroup => (Key: payGroup.Key.ToString(),
+                                                  Value: payGroup.Select(pay => pay.GetCryptoPaymentData().GetValue()).Sum())).ToArray();
+                })
+                .ToDictionary(p => p.Key, p => p.Value);
         }
 
         private class PosHolder

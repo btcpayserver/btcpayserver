@@ -27,15 +27,17 @@ namespace BTCPayServer.Services.Apps
     {
         private readonly EventAggregator _EventAggregator;
         private readonly IHubContext<AppHub> _HubContext;
-
+        private readonly AppService _appService;
         private List<IEventAggregatorSubscription> _Subscriptions;
         private CancellationTokenSource _Cts;
 
         public AppHubStreamer(EventAggregator eventAggregator,
-            IHubContext<AppHub> hubContext)
+            IHubContext<AppHub> hubContext,
+            AppService appService)
         {
             _EventAggregator = eventAggregator;
             _HubContext = hubContext;
+            _appService = appService;
         }
 
         private async Task NotifyClients(string appId, InvoiceEvent invoiceEvent, CancellationToken cancellationToken)
@@ -51,19 +53,27 @@ namespace BTCPayServer.Services.Apps
                             invoiceEvent.Payment.GetPaymentMethodId().PaymentType)
                     }, cancellationToken);
             }
+            await InfoUpdated(appId);
         }
 
-        Channel<InvoiceEvent> _InvoiceEvents = Channel.CreateUnbounded<InvoiceEvent>();
+        Channel<object> _Events = Channel.CreateUnbounded<object>();
         public async Task ProcessEvents(CancellationToken cancellationToken)
         {
-            while (await _InvoiceEvents.Reader.WaitToReadAsync(cancellationToken))
+            while (await _Events.Reader.WaitToReadAsync(cancellationToken))
             {
-                if (_InvoiceEvents.Reader.TryRead(out var evt))
+                if (_Events.Reader.TryRead(out var evt))
                 {
                     try
                     {
-                        foreach(var appId in AppService.GetAppInternalTags(evt.Invoice.InternalTags))
-                            await NotifyClients(appId, evt, cancellationToken);
+                        if (evt is InvoiceEvent invoiceEvent)
+                        {
+                            foreach (var appId in AppService.GetAppInternalTags(invoiceEvent.Invoice.InternalTags))
+                                await NotifyClients(appId, invoiceEvent, cancellationToken);
+                        }
+                        else if (evt is AppsController.AppUpdated app)
+                        {
+                            await InfoUpdated(app.AppId);
+                        }
                     }
                     catch when (cancellationToken.IsCancellationRequested)
                     {
@@ -77,11 +87,18 @@ namespace BTCPayServer.Services.Apps
             }
         }
 
+        private async Task InfoUpdated(string appId)
+        {
+            var info = await _appService.GetAppInfo(appId);
+            await _HubContext.Clients.Group(appId).SendCoreAsync(AppHub.InfoUpdated, new object[] { info });
+        }
+
         public Task StartAsync(CancellationToken cancellationToken)
         {
             _Subscriptions = new List<IEventAggregatorSubscription>()
             {
-                _EventAggregator.Subscribe<InvoiceEvent>(e => _InvoiceEvents.Writer.TryWrite(e))
+                _EventAggregator.Subscribe<InvoiceEvent>(e => _Events.Writer.TryWrite(e)),
+                _EventAggregator.Subscribe<AppsController.AppUpdated>(e => _Events.Writer.TryWrite(e))
             };
             _Cts = new CancellationTokenSource();
             _ProcessingEvents = ProcessEvents(_Cts.Token);

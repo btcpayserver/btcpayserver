@@ -334,7 +334,7 @@ namespace BTCPayServer.Services.Apps
                     // If the user get a donation via other mean, he can register an invoice manually for such amount
                     // then mark the invoice as complete
                     var payments = p.GetPayments();
-                    if (payments.Count == 0 && 
+                    if (payments.Count == 0 &&
                         p.ExceptionStatus == InvoiceExceptionStatus.Marked &&
                         p.Status == InvoiceStatus.Complete)
                         return new[] { (Key: p.ProductInformation.Currency, Value: p.ProductInformation.Price) };
@@ -346,11 +346,11 @@ namespace BTCPayServer.Services.Apps
 
                     // Else, we just sum the payments
                     return payments
-                             .GroupBy(pay => pay.GetPaymentMethodId())
-                             .Select(payGroup => (Key: payGroup.Key.ToString(),
-                                                  Value: payGroup.Select(pay => pay.GetCryptoPaymentData().GetValue()).Sum())).ToArray();
+                             .Select(pay => (Key: pay.GetPaymentMethodId().ToString(), Value: pay.GetCryptoPaymentData().GetValue()))
+                             .ToArray();
                 })
-                .ToDictionary(p => p.Key, p => p.Value);
+                .GroupBy(p => p.Key)
+                .ToDictionary(p => p.Key, p => p.Select(v => v.Value).Sum());
         }
 
         private class PosHolder

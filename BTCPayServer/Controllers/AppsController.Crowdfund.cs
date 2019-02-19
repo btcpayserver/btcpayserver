@@ -15,6 +15,10 @@ namespace BTCPayServer.Controllers
             public string AppId { get; set; }
             public object Settings { get; set; }
             public string StoreId { get; set; }
+            public override string ToString()
+            {
+                return String.Empty;
+            }
         }
         
         

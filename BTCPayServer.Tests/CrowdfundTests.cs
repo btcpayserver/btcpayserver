@@ -285,11 +285,12 @@ namespace BTCPayServer.Tests
                 Assert.Equal(0m, model.Info.CurrentPendingAmount);
                 invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, tester.ExplorerNode.Network);
                 tester.ExplorerNode.SendToAddress(invoiceAddress, Money.Coins(0.5m));
+                tester.ExplorerNode.SendToAddress(invoiceAddress, Money.Coins(0.2m));
                 TestUtils.Eventually(() =>
                 {
                     model = Assert.IsType<ViewCrowdfundViewModel>(Assert
                     .IsType<ViewResult>(publicApps.ViewCrowdfund(appId, String.Empty).Result).Model);
-                    Assert.Equal(0.5m, model.Info.CurrentPendingAmount);
+                    Assert.Equal(0.7m, model.Info.CurrentPendingAmount);
                 });
             }
 

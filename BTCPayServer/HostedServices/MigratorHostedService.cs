@@ -85,7 +85,7 @@ namespace BTCPayServer.HostedServices
             {
                 foreach (var app in ctx.Apps.Where(a => a.AppType == "Crowdfund"))
                 {
-                    var settings = app.GetSettings<Controllers.AppsController.CrowdfundSettings>();
+                    var settings = app.GetSettings<Services.Apps.CrowdfundSettings>();
 #pragma warning disable CS0618 // Type or member is obsolete
                     if (settings.UseAllStoreInvoices)
 #pragma warning restore CS0618 // Type or member is obsolete

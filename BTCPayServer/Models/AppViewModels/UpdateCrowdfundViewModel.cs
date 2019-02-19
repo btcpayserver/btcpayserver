@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using BTCPayServer.Services.Apps;
 
 namespace BTCPayServer.Models.AppViewModels
 {
@@ -80,14 +81,5 @@ namespace BTCPayServer.Models.AppViewModels
         public bool SortPerksByPopularity { get; set; }
         [Display(Name = "Display contribution ranking")]
         public bool DisplayPerksRanking { get; set; }
-    }
-
-    public enum CrowdfundResetEvery
-    {
-        Never,
-        Hour,
-        Day,
-        Month,
-        Year
     }
 }

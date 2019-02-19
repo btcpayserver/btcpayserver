@@ -38,8 +38,6 @@ using BTCPayServer.Logging;
 using BTCPayServer.HostedServices;
 using Meziantou.AspNetCore.BundleTagHelpers;
 using System.Security.Claims;
-using BTCPayServer.Crowdfund;
-using BTCPayServer.Hubs;
 using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Security;
@@ -185,7 +183,7 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService, InvoiceWatcher>();
             services.AddSingleton<IHostedService, RatesHostedService>();
             services.AddSingleton<IHostedService, BackgroundJobSchedulerHostedService>();
-            services.AddSingleton<IHostedService, CrowdfundHubStreamer>();
+            services.AddSingleton<IHostedService, AppHubStreamer>();
 
             services.AddSingleton<IBackgroundJobClient, BackgroundJobClient>();
             services.AddTransient<IConfigureOptions<MvcOptions>, BTCPayClaimsFilter>();

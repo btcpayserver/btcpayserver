@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
-using BTCPayServer.Hubs;
 using BTCPayServer.Logging;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Payments;
@@ -22,18 +21,18 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 
-namespace BTCPayServer.Crowdfund
+namespace BTCPayServer.Services.Apps
 {
-    public class CrowdfundHubStreamer : IHostedService
+    public class AppHubStreamer : IHostedService
     {
         private readonly EventAggregator _EventAggregator;
-        private readonly IHubContext<CrowdfundHub> _HubContext;
+        private readonly IHubContext<AppHub> _HubContext;
 
         private List<IEventAggregatorSubscription> _Subscriptions;
         private CancellationTokenSource _Cts;
 
-        public CrowdfundHubStreamer(EventAggregator eventAggregator,
-            IHubContext<CrowdfundHub> hubContext)
+        public AppHubStreamer(EventAggregator eventAggregator,
+            IHubContext<AppHub> hubContext)
         {
             _EventAggregator = eventAggregator;
             _HubContext = hubContext;
@@ -44,7 +43,7 @@ namespace BTCPayServer.Crowdfund
             if (invoiceEvent.Name == InvoiceEvent.ReceivedPayment)
             {
                 var data = invoiceEvent.Payment.GetCryptoPaymentData();
-                await _HubContext.Clients.Group(appId).SendCoreAsync(CrowdfundHub.PaymentReceived, new object[]
+                await _HubContext.Clients.Group(appId).SendCoreAsync(AppHub.PaymentReceived, new object[]
                     {
                         data.GetValue(),
                         invoiceEvent.Payment.GetCryptoCode(),

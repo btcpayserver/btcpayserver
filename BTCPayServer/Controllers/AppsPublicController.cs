@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using BTCPayServer.Crowdfund;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Models;
@@ -42,7 +41,6 @@ namespace BTCPayServer.Controllers
 
         private AppService _AppService;
         private InvoiceController _InvoiceController;
-        private readonly CrowdfundHubStreamer _CrowdfundHubStreamer;
         private readonly UserManager<ApplicationUser> _UserManager;
 
         [HttpGet]

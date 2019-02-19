@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using BTCPayServer.Crowdfund;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Models;
@@ -151,7 +150,7 @@ namespace BTCPayServer.Services.Apps
                 ResetEveryAmount = settings.ResetEveryAmount,
                 DisplayPerksRanking = settings.DisplayPerksRanking,
                 PerkCount = perkCount,
-                ResetEvery = Enum.GetName(typeof(CrowdfundResetEvery), settings.ResetEvery),
+                NeverReset = settings.ResetEvery == CrowdfundResetEvery.Never,
                 CurrencyData = _Currencies.GetCurrencyData(settings.TargetCurrency, true),
                 Info = new ViewCrowdfundViewModel.CrowdfundInfo()
                 {

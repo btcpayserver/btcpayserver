@@ -37,7 +37,7 @@
                 {
                     <span class="mt-3">
                         <span class="h5">@Model.TargetAmount @Model.TargetCurrency</span>
-                        @if (Model.ResetEveryAmount > 0 && Model.ResetEvery != nameof(CrowdfundResetEvery.Never))
+                        @if (Model.ResetEveryAmount > 0 && !Model.NeverReset)
                         {
                             <span> Dynamic</span>
                         }

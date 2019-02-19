@@ -228,18 +228,35 @@ namespace BTCPayServer.Tests
                     .IsType<ViewResult>(publicApps.ViewCrowdfund(appId, String.Empty).Result).Model);
                 
                 var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, tester.ExplorerNode.Network);
-               
-                
-                
                 tester.ExplorerNode.SendToAddress(invoiceAddress,invoice.BtcDue);
                 Assert.Equal(0m ,model.Info.CurrentAmount );
                 Assert.Equal(1m, model.Info.CurrentPendingAmount);
                 Assert.Equal( 0m, model.Info.ProgressPercentage);
                 Assert.Equal(1m, model.Info.PendingProgressPercentage);
 
-                
-    
-               
+                var invoiceEntity = tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id).GetAwaiter().GetResult();
+                Assert.True(invoiceEntity.Version >= InvoiceEntity.InternalTagSupport_Version);
+                Assert.Contains(AppsHelper.GetAppInternalTag(appId), invoiceEntity.InternalTags);
+
+                crowdfundViewModel.Enabled = true;
+                crowdfundViewModel.EndDate = null;
+                crowdfundViewModel.TargetAmount = 100;
+                crowdfundViewModel.TargetCurrency = "BTC";
+                crowdfundViewModel.UseAllStoreInvoices = false;
+                Assert.IsType<RedirectToActionResult>(apps.UpdateCrowdfund(appId, crowdfundViewModel).Result);
+
+                invoice = user.BitPay.CreateInvoice(new Invoice()
+                {
+                    Buyer = new Buyer() { email = "test@fwf.com" },
+                    Price = 1m,
+                    Currency = "BTC",
+                    PosData = "posData",
+                    ItemDesc = "Some description",
+                    TransactionSpeed = "high",
+                    FullNotifications = true
+                }, Facade.Merchant);
+                invoiceEntity = tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id).GetAwaiter().GetResult();
+                Assert.DoesNotContain(AppsHelper.GetAppInternalTag(appId), invoiceEntity.InternalTags);
             }
 
             

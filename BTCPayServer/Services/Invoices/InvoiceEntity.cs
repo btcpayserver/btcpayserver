@@ -164,6 +164,9 @@ namespace BTCPayServer.Services.Invoices
             set;
         }
 
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public HashSet<string> InternalTags { get; set; } = new HashSet<string>();
+        
         [Obsolete("Use GetDerivationStrategies instead")]
         public string DerivationStrategy
         {

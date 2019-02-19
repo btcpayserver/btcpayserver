@@ -61,7 +61,7 @@ namespace BTCPayServer.Controllers
         }
 
 
-        internal async Task<DataWrapper<InvoiceResponse>> CreateInvoiceCore(Invoice invoice, StoreData store, string serverUrl)
+        internal async Task<DataWrapper<InvoiceResponse>> CreateInvoiceCore(Invoice invoice, StoreData store, string serverUrl, List<string> additionalTags = null)
         {
             if (!store.HasClaim(Policies.CanCreateInvoice.Key))
                 throw new UnauthorizedAccessException();
@@ -86,6 +86,10 @@ namespace BTCPayServer.Controllers
             entity.NotificationEmail = invoice.NotificationEmail;
             entity.BuyerInformation = Map<Invoice, BuyerInformation>(invoice);
             entity.PaymentTolerance = storeBlob.PaymentTolerance;
+            if (additionalTags != null)
+                entity.InternalTags.AddRange(additionalTags);
+            if (storeBlob.InternalTags != null)
+                entity.InternalTags.AddRange(storeBlob.InternalTags);
             //Another way of passing buyer info to support
             FillBuyerInfo(invoice.Buyer, entity.BuyerInformation);
             if (entity?.BuyerInformation?.BuyerEmail != null)

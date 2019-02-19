@@ -47,6 +47,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using NBXplorer.DerivationStrategy;
 using NicolasDorier.RateLimits;
 using Npgsql;
+using BTCPayServer.Services.Apps;
 
 namespace BTCPayServer.Hosting
 {
@@ -106,7 +107,7 @@ namespace BTCPayServer.Hosting
                 return opts.NetworkProvider;
             });
 
-            services.TryAddSingleton<AppsHelper>();
+            services.TryAddSingleton<AppService>();
             services.TryAddSingleton<Ganss.XSS.HtmlSanitizer>(o =>
             {
 

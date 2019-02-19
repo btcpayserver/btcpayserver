@@ -11,6 +11,7 @@ using BTCPayServer.Models;
 using BTCPayServer.Payments;
 using BTCPayServer.Rating;
 using BTCPayServer.Security;
+using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
@@ -179,7 +180,7 @@ namespace BTCPayServer.Controllers
 
             foreach (var app in await getAppsTaggingStore)
             {
-                entity.InternalTags.Add(AppsHelper.GetAppInternalTag(app.Id));
+                entity.InternalTags.Add(AppService.GetAppInternalTag(app.Id));
             }
 
             entity = await _InvoiceRepository.CreateInvoiceAsync(store.Id, entity, logs, _NetworkProvider);

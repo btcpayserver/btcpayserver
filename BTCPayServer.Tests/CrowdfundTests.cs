@@ -236,7 +236,7 @@ namespace BTCPayServer.Tests
 
                 var invoiceEntity = tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id).GetAwaiter().GetResult();
                 Assert.True(invoiceEntity.Version >= InvoiceEntity.InternalTagSupport_Version);
-                Assert.Contains(AppsHelper.GetAppInternalTag(appId), invoiceEntity.InternalTags);
+                Assert.Contains(AppService.GetAppInternalTag(appId), invoiceEntity.InternalTags);
 
                 crowdfundViewModel.Enabled = true;
                 crowdfundViewModel.EndDate = null;
@@ -256,7 +256,7 @@ namespace BTCPayServer.Tests
                     FullNotifications = true
                 }, Facade.Merchant);
                 invoiceEntity = tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id).GetAwaiter().GetResult();
-                Assert.DoesNotContain(AppsHelper.GetAppInternalTag(appId), invoiceEntity.InternalTags);
+                Assert.DoesNotContain(AppService.GetAppInternalTag(appId), invoiceEntity.InternalTags);
             }
 
             

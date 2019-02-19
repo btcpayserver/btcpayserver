@@ -63,7 +63,7 @@ namespace BTCPayServer.Crowdfund
                 {
                     try
                     {
-                        foreach(var appId in AppsHelper.GetAppInternalTags(evt.Invoice.InternalTags))
+                        foreach(var appId in AppService.GetAppInternalTags(evt.Invoice.InternalTags))
                             await NotifyClients(appId, evt, cancellationToken);
                     }
                     catch when (cancellationToken.IsCancellationRequested)

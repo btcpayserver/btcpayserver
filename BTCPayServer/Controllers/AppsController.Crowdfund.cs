@@ -43,6 +43,7 @@ namespace BTCPayServer.Controllers
             public bool UseInvoiceAmount { get; set; } = true;
             public int ResetEveryAmount { get; set; } = 1;
             public CrowdfundResetEvery ResetEvery { get; set; } = CrowdfundResetEvery.Never;
+            [Obsolete("Use AppData.TagAllInvoices instead")]
             public bool UseAllStoreInvoices { get; set; }
             public bool DisplayPerksRanking { get; set; }
             public bool SortPerksByPopularity { get; set; }
@@ -80,9 +81,9 @@ namespace BTCPayServer.Controllers
                 UseInvoiceAmount = settings.UseInvoiceAmount,
                 ResetEveryAmount = settings.ResetEveryAmount,
                 ResetEvery = Enum.GetName(typeof(CrowdfundResetEvery), settings.ResetEvery),
-                UseAllStoreInvoices = settings.UseAllStoreInvoices,
+                UseAllStoreInvoices = app.TagAllInvoices,
                 AppId = appId,
-                SearchTerm = settings.UseAllStoreInvoices ? $"storeid:{app.StoreDataId}" : $"orderid:{AppsHelper.GetCrowdfundOrderId(appId)}",
+                SearchTerm = app.TagAllInvoices ? $"storeid:{app.StoreDataId}" : $"orderid:{AppsHelper.GetCrowdfundOrderId(appId)}",
                 DisplayPerksRanking = settings.DisplayPerksRanking,
                 SortPerksByPopularity = settings.SortPerksByPopularity
             };
@@ -152,13 +153,14 @@ namespace BTCPayServer.Controllers
                 ResetEveryAmount = vm.ResetEveryAmount,
                 ResetEvery = Enum.Parse<CrowdfundResetEvery>(vm.ResetEvery),
                 UseInvoiceAmount = vm.UseInvoiceAmount,
-                UseAllStoreInvoices = vm.UseAllStoreInvoices,
                 DisplayPerksRanking = vm.DisplayPerksRanking,
                 SortPerksByPopularity = vm.SortPerksByPopularity
             };
-            
+
+            app.TagAllInvoices = vm.UseAllStoreInvoices;
             app.SetSettings(newSettings);
             await UpdateAppSettings(app);
+
             _EventAggregator.Publish(new CrowdfundAppUpdated()
             {
                 AppId = appId,

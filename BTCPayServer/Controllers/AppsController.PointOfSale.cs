@@ -180,6 +180,7 @@ namespace BTCPayServer.Controllers
                 ctx.Apps.Add(app);
                 ctx.Entry<AppData>(app).State = EntityState.Modified;
                 ctx.Entry<AppData>(app).Property(a => a.Settings).IsModified = true;
+                ctx.Entry<AppData>(app).Property(a => a.TagAllInvoices).IsModified = true;
                 await ctx.SaveChangesAsync();
             }
         }

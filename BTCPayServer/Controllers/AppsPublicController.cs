@@ -32,12 +32,11 @@ namespace BTCPayServer.Controllers
     public class AppsPublicController : Controller
     {
         public AppsPublicController(AppsHelper appsHelper, 
-            InvoiceController invoiceController, 
-            CrowdfundHubStreamer crowdfundHubStreamer, UserManager<ApplicationUser> userManager)
+            InvoiceController invoiceController,
+            UserManager<ApplicationUser> userManager)
         {
             _AppsHelper = appsHelper;
             _InvoiceController = invoiceController;
-            _CrowdfundHubStreamer = crowdfundHubStreamer;
             _UserManager = userManager;
         }
 
@@ -109,11 +108,11 @@ namespace BTCPayServer.Controllers
 
                 return NotFound("A Target Currency must be set for this app in order to be loadable.");
             }
-            if (settings.Enabled) return View(await _CrowdfundHubStreamer.GetCrowdfundInfo(appId));
+            if (settings.Enabled) return View(await _AppsHelper.GetCrowdfundInfo(appId));
             if(!isAdmin)
                 return NotFound();
 
-            return View(await _CrowdfundHubStreamer.GetCrowdfundInfo(appId));
+            return View(await _AppsHelper.GetCrowdfundInfo(appId));
         }
 
         [HttpPost]
@@ -138,7 +137,7 @@ namespace BTCPayServer.Controllers
                     return NotFound("Crowdfund is not currently active");
             }
 
-            var info = await _CrowdfundHubStreamer.GetCrowdfundInfo(appId);
+            var info = await _AppsHelper.GetCrowdfundInfo(appId);
 
             if (!isAdmin &&
                 ((settings.StartDate.HasValue && DateTime.Now < settings.StartDate) ||
@@ -177,7 +176,6 @@ namespace BTCPayServer.Controllers
             {
                 var invoice = await _InvoiceController.CreateInvoiceCore(new Invoice()
                 {
-                    OrderId = $"{CrowdfundHubStreamer.CrowdfundInvoiceOrderIdPrefix}{appId}",
                     Currency = settings.TargetCurrency,
                     ItemCode = request.ChoiceKey ?? string.Empty,
                     ItemDesc = title,
@@ -187,7 +185,7 @@ namespace BTCPayServer.Controllers
                     FullNotifications = true,
                     ExtendedNotifications = true,
                     RedirectURL = request.RedirectUrl ?? Request.GetDisplayUrl()
-                }, store, HttpContext.Request.GetAbsoluteRoot());
+                }, store, HttpContext.Request.GetAbsoluteRoot(), new List<string> { AppsHelper.GetAppInternalTag(appId) });
                 if (request.RedirectToCheckout)
                 {
                     return RedirectToAction(nameof(InvoiceController.Checkout), "Invoice",
@@ -204,7 +202,6 @@ namespace BTCPayServer.Controllers
             }
             
         }
-        
 
         [HttpPost]
         [Route("/apps/{appId}/pos")]
@@ -281,16 +278,169 @@ namespace BTCPayServer.Controllers
     public class AppsHelper
     {
         ApplicationDbContextFactory _ContextFactory;
+        private readonly InvoiceRepository _InvoiceRepository;
         CurrencyNameTable _Currencies;
         private readonly RateFetcher _RateFetcher;
         private readonly HtmlSanitizer _HtmlSanitizer;
+        private readonly BTCPayNetworkProvider _Networks;
         public CurrencyNameTable Currencies => _Currencies;
-        public AppsHelper(ApplicationDbContextFactory contextFactory, CurrencyNameTable currencies, RateFetcher rateFetcher, HtmlSanitizer htmlSanitizer)
+        public AppsHelper(ApplicationDbContextFactory contextFactory,
+                          InvoiceRepository invoiceRepository,
+                          BTCPayNetworkProvider networks,
+                          CurrencyNameTable currencies,
+                          RateFetcher rateFetcher,
+                          HtmlSanitizer htmlSanitizer)
         {
             _ContextFactory = contextFactory;
+            _InvoiceRepository = invoiceRepository;
             _Currencies = currencies;
             _RateFetcher = rateFetcher;
             _HtmlSanitizer = htmlSanitizer;
+            _Networks = networks;
+        }
+
+        public async Task<ViewCrowdfundViewModel> GetCrowdfundInfo(string appId)
+        {
+            var app = await GetApp(appId, AppType.Crowdfund, true);
+            return await GetInfo(app);
+        }
+        private async Task<ViewCrowdfundViewModel> GetInfo(AppData appData, string statusMessage = null)
+        {
+            var settings = appData.GetSettings<AppsController.CrowdfundSettings>();
+            var resetEvery = settings.StartDate.HasValue ? settings.ResetEvery : CrowdfundResetEvery.Never;
+            DateTime? lastResetDate = null;
+            DateTime? nextResetDate = null;
+            if (resetEvery != CrowdfundResetEvery.Never)
+            {
+                lastResetDate = settings.StartDate.Value;
+
+                nextResetDate = lastResetDate.Value;
+                while (DateTime.Now >= nextResetDate)
+                {
+                    lastResetDate = nextResetDate;
+                    switch (resetEvery)
+                    {
+                        case CrowdfundResetEvery.Hour:
+                            nextResetDate = lastResetDate.Value.AddHours(settings.ResetEveryAmount);
+                            break;
+                        case CrowdfundResetEvery.Day:
+                            nextResetDate = lastResetDate.Value.AddDays(settings.ResetEveryAmount);
+                            break;
+                        case CrowdfundResetEvery.Month:
+
+                            nextResetDate = lastResetDate.Value.AddMonths(settings.ResetEveryAmount);
+                            break;
+                        case CrowdfundResetEvery.Year:
+                            nextResetDate = lastResetDate.Value.AddYears(settings.ResetEveryAmount);
+                            break;
+                    }
+                }
+            }
+
+            var invoices = await GetInvoicesForApp(appData, lastResetDate);
+            var completeInvoices = invoices.Where(entity => entity.Status == InvoiceStatus.Complete).ToArray();
+            var pendingInvoices = invoices.Where(entity => entity.Status != InvoiceStatus.Complete).ToArray();
+
+            var rateRules = appData.StoreData.GetStoreBlob().GetRateRules(_Networks);
+
+            var pendingPaymentStats = GetCurrentContributionAmountStats(pendingInvoices, !settings.UseInvoiceAmount);
+            var paymentStats = GetCurrentContributionAmountStats(completeInvoices, !settings.UseInvoiceAmount);
+
+            var currentAmount = await GetCurrentContributionAmount(
+                paymentStats,
+                settings.TargetCurrency, rateRules);
+            var currentPendingAmount = await GetCurrentContributionAmount(
+                pendingPaymentStats,
+                settings.TargetCurrency, rateRules);
+
+
+
+
+            var perkCount = invoices
+                .Where(entity => !string.IsNullOrEmpty(entity.ProductInformation.ItemCode))
+                .GroupBy(entity => entity.ProductInformation.ItemCode)
+                .ToDictionary(entities => entities.Key, entities => entities.Count());
+
+            var perks = Parse(settings.PerksTemplate, settings.TargetCurrency);
+            if (settings.SortPerksByPopularity)
+            {
+                var ordered = perkCount.OrderByDescending(pair => pair.Value);
+                var newPerksOrder = ordered
+                    .Select(keyValuePair => perks.SingleOrDefault(item => item.Id == keyValuePair.Key))
+                    .Where(matchingPerk => matchingPerk != null)
+                    .ToList();
+                var remainingPerks = perks.Where(item => !newPerksOrder.Contains(item));
+                newPerksOrder.AddRange(remainingPerks);
+                perks = newPerksOrder.ToArray();
+            }
+            return new ViewCrowdfundViewModel()
+            {
+                Title = settings.Title,
+                Tagline = settings.Tagline,
+                Description = settings.Description,
+                CustomCSSLink = settings.CustomCSSLink,
+                MainImageUrl = settings.MainImageUrl,
+                EmbeddedCSS = settings.EmbeddedCSS,
+                StoreId = appData.StoreDataId,
+                AppId = appData.Id,
+                StartDate = settings.StartDate?.ToUniversalTime(),
+                EndDate = settings.EndDate?.ToUniversalTime(),
+                TargetAmount = settings.TargetAmount,
+                TargetCurrency = settings.TargetCurrency,
+                EnforceTargetAmount = settings.EnforceTargetAmount,
+                StatusMessage = statusMessage,
+                Perks = perks,
+                DisqusEnabled = settings.DisqusEnabled,
+                SoundsEnabled = settings.SoundsEnabled,
+                DisqusShortname = settings.DisqusShortname,
+                AnimationsEnabled = settings.AnimationsEnabled,
+                ResetEveryAmount = settings.ResetEveryAmount,
+                DisplayPerksRanking = settings.DisplayPerksRanking,
+                PerkCount = perkCount,
+                ResetEvery = Enum.GetName(typeof(CrowdfundResetEvery), settings.ResetEvery),
+                CurrencyData = _Currencies.GetCurrencyData(settings.TargetCurrency, true),
+                Info = new ViewCrowdfundViewModel.CrowdfundInfo()
+                {
+                    TotalContributors = invoices.Length,
+                    CurrentPendingAmount = currentPendingAmount,
+                    CurrentAmount = currentAmount,
+                    ProgressPercentage = (currentAmount / settings.TargetAmount) * 100,
+                    PendingProgressPercentage = (currentPendingAmount / settings.TargetAmount) * 100,
+                    LastUpdated = DateTime.Now,
+                    PaymentStats = paymentStats,
+                    PendingPaymentStats = pendingPaymentStats,
+                    LastResetDate = lastResetDate,
+                    NextResetDate = nextResetDate
+                }
+            };
+        }
+
+        public static string GetCrowdfundOrderId(string appId) => $"crowdfund-app_{appId}";
+        public static string GetAppInternalTag(string appId) => $"APP#{appId}";
+        public static string[] GetAppInternalTags(IEnumerable<string> tags)
+        {
+            return tags == null ? Array.Empty<string>() : tags
+                                                  .Where(t => t.StartsWith("APP#", StringComparison.InvariantCulture))
+                                                  .Select(t => t.Substring("APP#".Length)).ToArray();
+        }
+        private async Task<InvoiceEntity[]> GetInvoicesForApp(AppData appData, DateTime? startDate = null)
+        {
+            var invoices = await _InvoiceRepository.GetInvoices(new InvoiceQuery()
+            {
+                StoreId = new[] { appData.StoreData.Id },
+                OrderId = appData.TagAllInvoices ? null : new[] { GetCrowdfundOrderId(appData.Id) },
+                Status = new string[]{
+                    InvoiceState.ToString(InvoiceStatus.New),
+                    InvoiceState.ToString(InvoiceStatus.Paid),
+                    InvoiceState.ToString(InvoiceStatus.Confirmed),
+                    InvoiceState.ToString(InvoiceStatus.Complete)},
+                StartDate = startDate
+            });
+
+            // Old invoices may have invoices which were not tagged
+            invoices = invoices.Where(inv => inv.Version < InvoiceEntity.InternalTagSupport_Version || 
+                                             inv.InternalTags.Contains(GetAppInternalTag(appData.Id))).ToArray();
+            return invoices;
         }
 
         public async Task<StoreData[]> GetOwnedStores(string userId)
@@ -484,6 +634,5 @@ namespace BTCPayServer.Controllers
                 return app;
             }
         }
-        
     }
 }

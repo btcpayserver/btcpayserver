@@ -218,7 +218,6 @@ namespace BTCPayServer.Tests
                     Price = 1m,
                     Currency = "BTC",
                     PosData = "posData",
-                    OrderId = $"{CrowdfundHubStreamer.CrowdfundInvoiceOrderIdPrefix}{appId}",
                     ItemDesc = "Some description",
                     TransactionSpeed = "high",
                     FullNotifications = true

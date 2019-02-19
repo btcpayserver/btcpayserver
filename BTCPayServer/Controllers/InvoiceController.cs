@@ -189,11 +189,6 @@ namespace BTCPayServer.Controllers
             return new DataWrapper<InvoiceResponse>(resp) { Facade = "pos/invoice" };
         }
 
-        internal Task CreateInvoiceCore(Invoice invoice, StoreData store, string v1, string[] v2)
-        {
-            throw new NotImplementedException();
-        }
-
         private Task WhenAllFetched(InvoiceLogs logs, Dictionary<CurrencyPair, Task<RateResult>> fetchingByCurrencyPair)
         {
             return Task.WhenAll(fetchingByCurrencyPair.Select(async pair =>

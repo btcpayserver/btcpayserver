@@ -113,6 +113,8 @@ namespace BTCPayServer.Services.Invoices
     }
     public class InvoiceEntity
     {
+        public const int InternalTagSupport_Version = 1;
+        public int Version { get; set; } = 1;
         public string Id
         {
             get; set;

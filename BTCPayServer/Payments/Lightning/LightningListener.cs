@@ -198,7 +198,7 @@ namespace BTCPayServer.Payments.Lightning
             {
                 var invoice = await _InvoiceRepository.GetInvoice(listenedInvoice.InvoiceId);
                 if (invoice != null)
-                    _Aggregator.Publish(new InvoiceEvent(invoice.EntityToDTO(_NetworkProvider), 1002, InvoiceEvent.ReceivedPayment){Payment = payment});
+                    _Aggregator.Publish(new InvoiceEvent(invoice, 1002, InvoiceEvent.ReceivedPayment){Payment = payment});
             }
         }
 

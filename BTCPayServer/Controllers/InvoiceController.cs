@@ -75,9 +75,6 @@ namespace BTCPayServer.Controllers
 
             var getAppsTaggingStore = _InvoiceRepository.GetAppsTaggingStore(store.Id);
             var storeBlob = store.GetStoreBlob();
-            Uri notificationUri = Uri.IsWellFormedUriString(invoice.NotificationURL, UriKind.Absolute) ? new Uri(invoice.NotificationURL, UriKind.Absolute) : null;
-            if (notificationUri == null || (notificationUri.Scheme != "http" && notificationUri.Scheme != "https")) //TODO: Filer non routable addresses ?
-                notificationUri = null;
             EmailAddressAttribute emailValidator = new EmailAddressAttribute();
             entity.ExpirationTime = entity.InvoiceTime.AddMinutes(storeBlob.InvoiceExpiration);
             entity.MonitoringExpiration = entity.ExpirationTime + TimeSpan.FromMinutes(storeBlob.MonitoringExpiration);
@@ -85,7 +82,12 @@ namespace BTCPayServer.Controllers
             entity.ServerUrl = serverUrl;
             entity.FullNotifications = invoice.FullNotifications || invoice.ExtendedNotifications;
             entity.ExtendedNotifications = invoice.ExtendedNotifications;
-            entity.NotificationURL = notificationUri?.AbsoluteUri;
+            if (invoice.NotificationURL != null &&
+                Uri.TryCreate(invoice.NotificationURL, UriKind.Absolute, out var notificationUri) &&
+                (notificationUri.Scheme == "http" || notificationUri.Scheme == "https"))
+            {
+                entity.NotificationURL = notificationUri.AbsoluteUri;
+            }
             entity.NotificationEmail = invoice.NotificationEmail;
             entity.BuyerInformation = Map<Invoice, BuyerInformation>(invoice);
             entity.PaymentTolerance = storeBlob.PaymentTolerance;

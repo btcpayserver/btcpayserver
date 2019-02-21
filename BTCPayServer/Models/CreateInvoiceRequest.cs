@@ -72,7 +72,7 @@ namespace BTCPayServer.Models
         [JsonProperty(PropertyName = "refundable", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public bool Refundable { get; set; }
         [JsonProperty(PropertyName = "taxIncluded", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public decimal TaxIncluded { get; set; }
+        public decimal? TaxIncluded { get; set; }
         [JsonProperty(PropertyName = "nonce", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public long Nonce { get; set; }
         [JsonProperty(PropertyName = "guid", DefaultValueHandling = DefaultValueHandling.Ignore)]

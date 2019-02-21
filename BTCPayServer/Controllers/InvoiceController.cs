@@ -102,15 +102,18 @@ namespace BTCPayServer.Controllers
                 entity.RefundMail = entity.BuyerInformation.BuyerEmail;
             }
 
-            var currencyInfo = _CurrencyNameTable.GetNumberFormatInfo(invoice.Currency, false);
-            if (currencyInfo != null)
+            if (invoice.TaxIncluded is decimal taxIncluded)
             {
-                invoice.Price = Math.Round(invoice.Price, currencyInfo.CurrencyDecimalDigits);
-                invoice.TaxIncluded = Math.Round(invoice.TaxIncluded, currencyInfo.CurrencyDecimalDigits);
+                var currencyInfo = _CurrencyNameTable.GetNumberFormatInfo(invoice.Currency, false);
+                if (currencyInfo != null)
+                {
+                    invoice.Price = Math.Round(invoice.Price, currencyInfo.CurrencyDecimalDigits);
+                    invoice.TaxIncluded = Math.Round(taxIncluded, currencyInfo.CurrencyDecimalDigits);
+                }
+                invoice.Price = Math.Max(0.0m, invoice.Price);
+                invoice.TaxIncluded = Math.Max(0.0m, taxIncluded);
+                invoice.TaxIncluded = Math.Min(taxIncluded, invoice.Price);
             }
-            invoice.Price = Math.Max(0.0m, invoice.Price);
-            invoice.TaxIncluded = Math.Max(0.0m, invoice.TaxIncluded);
-            invoice.TaxIncluded = Math.Min(invoice.TaxIncluded, invoice.Price);
 
             entity.ProductInformation = Map<CreateInvoiceRequest, ProductInformation>(invoice);
 

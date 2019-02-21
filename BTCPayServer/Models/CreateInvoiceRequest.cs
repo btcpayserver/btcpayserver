@@ -70,7 +70,7 @@ namespace BTCPayServer.Models
         [JsonProperty(PropertyName = "exchangeRates", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public Dictionary<string, Dictionary<string, decimal>> ExchangeRates { get; set; }
         [JsonProperty(PropertyName = "refundable", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public bool Refundable { get; }
+        public bool Refundable { get; set; }
         [JsonProperty(PropertyName = "taxIncluded", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public decimal TaxIncluded { get; set; }
         [JsonProperty(PropertyName = "nonce", DefaultValueHandling = DefaultValueHandling.Ignore)]

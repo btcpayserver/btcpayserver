@@ -12,6 +12,21 @@ namespace BTCPayServer.Payments
 
     public class PaymentFilter
     {
+        class OrPaymentFilter : IPaymentFilter
+        {
+            private readonly IPaymentFilter _a;
+            private readonly IPaymentFilter _b;
+
+            public OrPaymentFilter(IPaymentFilter a, IPaymentFilter b)
+            {
+                _a = a;
+                _b = b;
+            }
+            public bool Match(PaymentMethodId paymentMethodId)
+            {
+                return _a.Match(paymentMethodId) || _b.Match(paymentMethodId);
+            }
+        }
         class NeverPaymentFilter : IPaymentFilter
         {
 
@@ -53,6 +68,34 @@ namespace BTCPayServer.Payments
             {
                 return paymentMethodId == _paymentMethodId;
             }
+        }
+        class PredicateFilter : IPaymentFilter
+        {
+            private Func<PaymentMethodId, bool> predicate;
+
+            public PredicateFilter(Func<PaymentMethodId, bool> predicate)
+            {
+                this.predicate = predicate;
+            }
+
+            public bool Match(PaymentMethodId paymentMethodId)
+            {
+                return this.predicate(paymentMethodId);
+            }
+        }
+        public static IPaymentFilter Where(Func<PaymentMethodId, bool> predicate)
+        {
+            if (predicate == null)
+                throw new ArgumentNullException(nameof(predicate));
+            return new PredicateFilter(predicate);
+        }
+        public static IPaymentFilter Or(IPaymentFilter a, IPaymentFilter b)
+        {
+            if (a == null)
+                throw new ArgumentNullException(nameof(a));
+            if (b == null)
+                throw new ArgumentNullException(nameof(b));
+            return new OrPaymentFilter(a, b);
         }
         public static IPaymentFilter Never()
         {

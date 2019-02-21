@@ -54,10 +54,10 @@ namespace BTCPayServer.Models
         public string OrderId { get; set; }
         [JsonProperty(PropertyName = "currency", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string Currency { get; set; }
+        [JsonProperty(PropertyName = "price", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public decimal Price { get; set; }
         [JsonProperty(PropertyName = "notificationEmail", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string NotificationEmail { get; set; }
-        [JsonProperty(PropertyName = "id", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public string Id { get; set; }
         [JsonConverter(typeof(DateTimeJsonConverter))]
         [JsonProperty(PropertyName = "expirationTime", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public DateTimeOffset? ExpirationTime { get; set; }

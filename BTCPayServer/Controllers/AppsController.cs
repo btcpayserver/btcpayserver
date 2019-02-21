@@ -30,7 +30,7 @@ namespace BTCPayServer.Controllers
             BTCPayNetworkProvider networkProvider,
             CurrencyNameTable currencies,
             HtmlSanitizer htmlSanitizer,
-            AppsHelper appsHelper)
+            AppService AppService)
         {
             _UserManager = userManager;
             _ContextFactory = contextFactory;
@@ -38,7 +38,7 @@ namespace BTCPayServer.Controllers
             _NetworkProvider = networkProvider;
             _currencies = currencies;
             _htmlSanitizer = htmlSanitizer;
-            _AppsHelper = appsHelper;
+            _AppService = AppService;
         }
 
         private UserManager<ApplicationUser> _UserManager;
@@ -47,7 +47,7 @@ namespace BTCPayServer.Controllers
         private BTCPayNetworkProvider _NetworkProvider;
         private readonly CurrencyNameTable _currencies;
         private readonly HtmlSanitizer _htmlSanitizer;
-        private AppsHelper _AppsHelper;
+        private AppService _AppService;
 
         [TempData]
         public string StatusMessage { get; set; }
@@ -55,7 +55,7 @@ namespace BTCPayServer.Controllers
 
         public async Task<IActionResult> ListApps()
         {
-            var apps = await _AppsHelper.GetAllApps(GetUserId());
+            var apps = await _AppService.GetAllApps(GetUserId());
             return View(new ListAppsViewModel()
             {
                 Apps = apps
@@ -69,7 +69,7 @@ namespace BTCPayServer.Controllers
             var appData = await GetOwnedApp(appId);
             if (appData == null)
                 return NotFound();
-            if (await _AppsHelper.DeleteApp(appData))
+            if (await _AppService.DeleteApp(appData))
                 StatusMessage = "App removed successfully";
             return RedirectToAction(nameof(ListApps));
         }
@@ -78,7 +78,7 @@ namespace BTCPayServer.Controllers
         [Route("create")]
         public async Task<IActionResult> CreateApp()
         {
-            var stores = await _AppsHelper.GetOwnedStores(GetUserId());
+            var stores = await _AppService.GetOwnedStores(GetUserId());
             if (stores.Length == 0)
             {
                 StatusMessage = new StatusMessageModel()
@@ -98,7 +98,7 @@ namespace BTCPayServer.Controllers
         [Route("create")]
         public async Task<IActionResult> CreateApp(CreateAppViewModel vm)
         {
-            var stores = await _AppsHelper.GetOwnedStores(GetUserId());
+            var stores = await _AppService.GetOwnedStores(GetUserId());
             if (stores.Length == 0)
             {
                 StatusMessage = new StatusMessageModel()
@@ -168,7 +168,7 @@ namespace BTCPayServer.Controllers
 
         private Task<AppData> GetOwnedApp(string appId, AppType? type = null)
         {
-            return _AppsHelper.GetAppDataIfOwner(GetUserId(), appId, type);
+            return _AppService.GetAppDataIfOwner(GetUserId(), appId, type);
         }
 
         

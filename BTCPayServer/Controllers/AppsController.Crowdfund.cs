@@ -10,42 +10,15 @@ namespace BTCPayServer.Controllers
 {
     public partial class AppsController
     {
-        public class CrowdfundAppUpdated
+        public class AppUpdated
         {
             public string AppId { get; set; }
-            public CrowdfundSettings Settings { get; set; }
+            public object Settings { get; set; }
             public string StoreId { get; set; }
-        }
-        
-        public class CrowdfundSettings
-        {
-            public string Title { get; set; }
-            public string Description { get; set; }
-            public bool Enabled { get; set; } = false;
-        
-            public DateTime? StartDate { get; set; }
-            public DateTime? EndDate { get; set; }
-        
-            public string TargetCurrency { get; set; }
-            public decimal? TargetAmount { get; set; }
-        
-            public bool EnforceTargetAmount { get; set; }
-            public string CustomCSSLink { get; set; }
-            public string MainImageUrl { get; set; }
-            public string NotificationUrl { get; set; }
-            public string Tagline { get; set; }
-            public string EmbeddedCSS { get; set; }
-            public string PerksTemplate { get; set; }
-            public bool DisqusEnabled { get; set; }= false;
-            public bool SoundsEnabled { get; set; }= true;
-            public string DisqusShortname { get; set; }
-            public bool AnimationsEnabled { get; set; } = true;
-            public bool UseInvoiceAmount { get; set; } = true;
-            public int ResetEveryAmount { get; set; } = 1;
-            public CrowdfundResetEvery ResetEvery { get; set; } = CrowdfundResetEvery.Never;
-            public bool UseAllStoreInvoices { get; set; }
-            public bool DisplayPerksRanking { get; set; }
-            public bool SortPerksByPopularity { get; set; }
+            public override string ToString()
+            {
+                return String.Empty;
+            }
         }
         
         
@@ -77,11 +50,11 @@ namespace BTCPayServer.Controllers
                 SoundsEnabled = settings.SoundsEnabled,
                 DisqusShortname = settings.DisqusShortname,
                 AnimationsEnabled = settings.AnimationsEnabled,
-                UseInvoiceAmount = settings.UseInvoiceAmount,
                 ResetEveryAmount = settings.ResetEveryAmount,
                 ResetEvery = Enum.GetName(typeof(CrowdfundResetEvery), settings.ResetEvery),
-                UseAllStoreInvoices = settings.UseAllStoreInvoices,
+                UseAllStoreInvoices = app.TagAllInvoices,
                 AppId = appId,
+                SearchTerm = app.TagAllInvoices ? $"storeid:{app.StoreDataId}" : $"orderid:{AppService.GetCrowdfundOrderId(appId)}",
                 DisplayPerksRanking = settings.DisplayPerksRanking,
                 SortPerksByPopularity = settings.SortPerksByPopularity
             };
@@ -96,7 +69,7 @@ namespace BTCPayServer.Controllers
           
             try
             {
-                _AppsHelper.Parse(vm.PerksTemplate, vm.TargetCurrency).ToString();
+                _AppService.Parse(vm.PerksTemplate, vm.TargetCurrency).ToString();
             }
             catch
             {
@@ -150,15 +123,15 @@ namespace BTCPayServer.Controllers
                 AnimationsEnabled = vm.AnimationsEnabled,
                 ResetEveryAmount = vm.ResetEveryAmount,
                 ResetEvery = Enum.Parse<CrowdfundResetEvery>(vm.ResetEvery),
-                UseInvoiceAmount = vm.UseInvoiceAmount,
-                UseAllStoreInvoices = vm.UseAllStoreInvoices,
                 DisplayPerksRanking = vm.DisplayPerksRanking,
                 SortPerksByPopularity = vm.SortPerksByPopularity
             };
-            
+
+            app.TagAllInvoices = vm.UseAllStoreInvoices;
             app.SetSettings(newSettings);
             await UpdateAppSettings(app);
-            _EventAggregator.Publish(new CrowdfundAppUpdated()
+
+            _EventAggregator.Publish(new AppUpdated()
             {
                 AppId = appId,
                 StoreId = app.StoreDataId,

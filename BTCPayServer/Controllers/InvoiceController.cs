@@ -11,6 +11,7 @@ using BTCPayServer.Models;
 using BTCPayServer.Payments;
 using BTCPayServer.Rating;
 using BTCPayServer.Security;
+using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
@@ -61,7 +62,7 @@ namespace BTCPayServer.Controllers
         }
 
 
-        internal async Task<DataWrapper<InvoiceResponse>> CreateInvoiceCore(Invoice invoice, StoreData store, string serverUrl)
+        internal async Task<DataWrapper<InvoiceResponse>> CreateInvoiceCore(Invoice invoice, StoreData store, string serverUrl, List<string> additionalTags = null)
         {
             if (!store.HasClaim(Policies.CanCreateInvoice.Key))
                 throw new UnauthorizedAccessException();
@@ -71,10 +72,9 @@ namespace BTCPayServer.Controllers
             {
                 InvoiceTime = DateTimeOffset.UtcNow
             };
+
+            var getAppsTaggingStore = _InvoiceRepository.GetAppsTaggingStore(store.Id);
             var storeBlob = store.GetStoreBlob();
-            Uri notificationUri = Uri.IsWellFormedUriString(invoice.NotificationURL, UriKind.Absolute) ? new Uri(invoice.NotificationURL, UriKind.Absolute) : null;
-            if (notificationUri == null || (notificationUri.Scheme != "http" && notificationUri.Scheme != "https")) //TODO: Filer non routable addresses ?
-                notificationUri = null;
             EmailAddressAttribute emailValidator = new EmailAddressAttribute();
             entity.ExpirationTime = entity.InvoiceTime.AddMinutes(storeBlob.InvoiceExpiration);
             entity.MonitoringExpiration = entity.ExpirationTime + TimeSpan.FromMinutes(storeBlob.MonitoringExpiration);
@@ -82,10 +82,17 @@ namespace BTCPayServer.Controllers
             entity.ServerUrl = serverUrl;
             entity.FullNotifications = invoice.FullNotifications || invoice.ExtendedNotifications;
             entity.ExtendedNotifications = invoice.ExtendedNotifications;
-            entity.NotificationURL = notificationUri?.AbsoluteUri;
+            if (invoice.NotificationURL != null &&
+                Uri.TryCreate(invoice.NotificationURL, UriKind.Absolute, out var notificationUri) &&
+                (notificationUri.Scheme == "http" || notificationUri.Scheme == "https"))
+            {
+                entity.NotificationURL = notificationUri.AbsoluteUri;
+            }
             entity.NotificationEmail = invoice.NotificationEmail;
             entity.BuyerInformation = Map<Invoice, BuyerInformation>(invoice);
             entity.PaymentTolerance = storeBlob.PaymentTolerance;
+            if (additionalTags != null)
+                entity.InternalTags.AddRange(additionalTags);
             //Another way of passing buyer info to support
             FillBuyerInfo(invoice.Buyer, entity.BuyerInformation);
             if (entity?.BuyerInformation?.BuyerEmail != null)
@@ -170,9 +177,15 @@ namespace BTCPayServer.Controllers
             entity.SetSupportedPaymentMethods(supported);
             entity.SetPaymentMethods(paymentMethods);
             entity.PosData = invoice.PosData;
+
+            foreach (var app in await getAppsTaggingStore)
+            {
+                entity.InternalTags.Add(AppService.GetAppInternalTag(app.Id));
+            }
+
             entity = await _InvoiceRepository.CreateInvoiceAsync(store.Id, entity, logs, _NetworkProvider);
             await fetchingAll;
-            _EventAggregator.Publish(new Events.InvoiceEvent(entity.EntityToDTO(_NetworkProvider), 1001, InvoiceEvent.Created));
+            _EventAggregator.Publish(new Events.InvoiceEvent(entity, 1001, InvoiceEvent.Created));
             var resp = entity.EntityToDTO(_NetworkProvider);
             return new DataWrapper<InvoiceResponse>(resp) { Facade = "pos/invoice" };
         }

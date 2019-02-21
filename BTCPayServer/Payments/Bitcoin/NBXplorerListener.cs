@@ -33,12 +33,10 @@ namespace BTCPayServer.Payments.Bitcoin
         private TaskCompletionSource<bool> _RunningTask;
         private CancellationTokenSource _Cts;
         BTCPayWalletProvider _Wallets;
-        BTCPayNetworkProvider _NetworkProvider;
 
         public NBXplorerListener(ExplorerClientProvider explorerClients,
                                 BTCPayWalletProvider wallets,
                                 InvoiceRepository invoiceRepository,
-                                BTCPayNetworkProvider networkProvider,
                                 EventAggregator aggregator, Microsoft.Extensions.Hosting.IApplicationLifetime lifetime)
         {
             PollInterval = TimeSpan.FromMinutes(1.0);
@@ -47,7 +45,6 @@ namespace BTCPayServer.Payments.Bitcoin
             _ExplorerClients = explorerClients;
             _Aggregator = aggregator;
             _Lifetime = lifetime;
-            _NetworkProvider = networkProvider;
         }
 
         CompositeDisposable leases = new CompositeDisposable();
@@ -373,7 +370,7 @@ namespace BTCPayServer.Payments.Bitcoin
                 invoice.SetPaymentMethod(paymentMethod);
             }
             wallet.InvalidateCache(strategy);
-            _Aggregator.Publish(new InvoiceEvent(invoice.EntityToDTO(_NetworkProvider), 1002, InvoiceEvent.ReceivedPayment){Payment = payment});
+            _Aggregator.Publish(new InvoiceEvent(invoice, 1002, InvoiceEvent.ReceivedPayment){Payment = payment});
             return invoice;
         }
         public Task StopAsync(CancellationToken cancellationToken)

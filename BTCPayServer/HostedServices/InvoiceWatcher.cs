@@ -65,10 +65,10 @@ namespace BTCPayServer.HostedServices
                 context.MarkDirty();
                 await _InvoiceRepository.UnaffectAddress(invoice.Id);
 
-                context.Events.Add(new InvoiceEvent(invoice.EntityToDTO(_NetworkProvider), 1004, InvoiceEvent.Expired));
                 invoice.Status = InvoiceStatus.Expired;
-                if(invoice.ExceptionStatus == InvoiceExceptionStatus.PaidPartial)
-                    context.Events.Add(new InvoiceEvent(invoice.EntityToDTO(_NetworkProvider), 2000, InvoiceEvent.ExpiredPaidPartial));
+                context.Events.Add(new InvoiceEvent(invoice, 1004, InvoiceEvent.Expired));
+                if (invoice.ExceptionStatus == InvoiceExceptionStatus.PaidPartial)
+                    context.Events.Add(new InvoiceEvent(invoice, 2000, InvoiceEvent.ExpiredPaidPartial));
             }
 
             var payments = invoice.GetPayments().Where(p => p.Accounted).ToArray();
@@ -83,7 +83,7 @@ namespace BTCPayServer.HostedServices
                 {
                     if (invoice.Status == InvoiceStatus.New)
                     {
-                        context.Events.Add(new InvoiceEvent(invoice.EntityToDTO(_NetworkProvider), 1003, InvoiceEvent.PaidInFull));
+                        context.Events.Add(new InvoiceEvent(invoice, 1003, InvoiceEvent.PaidInFull));
                         invoice.Status = InvoiceStatus.Paid;
                         invoice.ExceptionStatus = accounting.Paid > accounting.TotalDue ? InvoiceExceptionStatus.PaidOver : InvoiceExceptionStatus.None;
                         await _InvoiceRepository.UnaffectAddress(invoice.Id);
@@ -92,7 +92,7 @@ namespace BTCPayServer.HostedServices
                     else if (invoice.Status == InvoiceStatus.Expired && invoice.ExceptionStatus != InvoiceExceptionStatus.PaidLate)
                     {
                         invoice.ExceptionStatus = InvoiceExceptionStatus.PaidLate;
-                        context.Events.Add(new InvoiceEvent(invoice.EntityToDTO(_NetworkProvider), 1009, InvoiceEvent.PaidAfterExpiration));
+                        context.Events.Add(new InvoiceEvent(invoice, 1009, InvoiceEvent.PaidAfterExpiration));
                         context.MarkDirty();
                     }
                 }
@@ -138,15 +138,15 @@ namespace BTCPayServer.HostedServices
                    (confirmedAccounting.Paid < accounting.MinimumTotalDue))
                 {
                     await _InvoiceRepository.UnaffectAddress(invoice.Id);
-                    context.Events.Add(new InvoiceEvent(invoice.EntityToDTO(_NetworkProvider), 1013, InvoiceEvent.FailedToConfirm));
+                    context.Events.Add(new InvoiceEvent(invoice, 1013, InvoiceEvent.FailedToConfirm));
                     invoice.Status = InvoiceStatus.Invalid;
                     context.MarkDirty();
                 }
                 else if (confirmedAccounting.Paid >= accounting.MinimumTotalDue)
                 {
                     await _InvoiceRepository.UnaffectAddress(invoice.Id);
-                    context.Events.Add(new InvoiceEvent(invoice.EntityToDTO(_NetworkProvider), 1005, InvoiceEvent.Confirmed));
                     invoice.Status = InvoiceStatus.Confirmed;
+                    context.Events.Add(new InvoiceEvent(invoice, 1005, InvoiceEvent.Confirmed));
                     context.MarkDirty();
                 }
             }
@@ -156,7 +156,7 @@ namespace BTCPayServer.HostedServices
                 var completedAccounting = paymentMethod.Calculate(p => p.GetCryptoPaymentData().PaymentCompleted(p, network));
                 if (completedAccounting.Paid >= accounting.MinimumTotalDue)
                 {
-                    context.Events.Add(new InvoiceEvent(invoice.EntityToDTO(_NetworkProvider), 1006, InvoiceEvent.Completed));
+                    context.Events.Add(new InvoiceEvent(invoice, 1006, InvoiceEvent.Completed));
                     invoice.Status = InvoiceStatus.Complete;
                     context.MarkDirty();
                 }

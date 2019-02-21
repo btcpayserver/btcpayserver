@@ -20,7 +20,7 @@
 
     <link rel="manifest" href="~/manifest.json">
 
-    <link href="@this.Context.Request.GetAbsoluteUri(themeManager.BootstrapUri)" rel="stylesheet" />
+    <link href="@this.Context.Request.GetRelativePathOrAbsolute(themeManager.BootstrapUri)" rel="stylesheet" />
     @if (Model.CustomCSSLink != null)
     {
         <link href="@Model.CustomCSSLink" rel="stylesheet" />

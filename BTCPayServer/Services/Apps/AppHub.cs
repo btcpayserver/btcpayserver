@@ -6,9 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace BTCPayServer.Hubs
+namespace BTCPayServer.Services.Apps
 {
-    public class CrowdfundHub: Hub
+    public class AppHub: Hub
     {
         public const string InvoiceCreated = "InvoiceCreated";
         public const string PaymentReceived = "PaymentReceived";
@@ -16,7 +16,7 @@ namespace BTCPayServer.Hubs
         public const string InvoiceError = "InvoiceError";
         private readonly AppsPublicController _AppsPublicController;
 
-        public CrowdfundHub(AppsPublicController appsPublicController)
+        public AppHub(AppsPublicController appsPublicController)
         {
             _AppsPublicController = appsPublicController;
         }

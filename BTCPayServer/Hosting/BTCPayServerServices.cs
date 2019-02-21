@@ -38,8 +38,6 @@ using BTCPayServer.Logging;
 using BTCPayServer.HostedServices;
 using Meziantou.AspNetCore.BundleTagHelpers;
 using System.Security.Claims;
-using BTCPayServer.Crowdfund;
-using BTCPayServer.Hubs;
 using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Security;
@@ -47,6 +45,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using NBXplorer.DerivationStrategy;
 using NicolasDorier.RateLimits;
 using Npgsql;
+using BTCPayServer.Services.Apps;
 
 namespace BTCPayServer.Hosting
 {
@@ -76,7 +75,6 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<TokenRepository>();
             services.TryAddSingleton<EventAggregator>();
             services.TryAddSingleton<CoinAverageSettings>();
-            services.TryAddSingleton<CrowdfundHubStreamer>();
             services.TryAddSingleton<ApplicationDbContextFactory>(o => 
             {
                 var opts = o.GetRequiredService<BTCPayServerOptions>();
@@ -107,7 +105,7 @@ namespace BTCPayServer.Hosting
                 return opts.NetworkProvider;
             });
 
-            services.TryAddSingleton<AppsHelper>();
+            services.TryAddSingleton<AppService>();
             services.TryAddSingleton<Ganss.XSS.HtmlSanitizer>(o =>
             {
 
@@ -185,6 +183,8 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService, InvoiceWatcher>();
             services.AddSingleton<IHostedService, RatesHostedService>();
             services.AddSingleton<IHostedService, BackgroundJobSchedulerHostedService>();
+            services.AddSingleton<IHostedService, AppHubStreamer>();
+
             services.AddSingleton<IBackgroundJobClient, BackgroundJobClient>();
             services.AddTransient<IConfigureOptions<MvcOptions>, BTCPayClaimsFilter>();
 

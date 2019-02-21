@@ -116,7 +116,7 @@ namespace BTCPayServer.Controllers
                 }
                 try
                 {
-                    var items = _AppsHelper.Parse(settings.Template, settings.Currency);
+                    var items = _AppService.Parse(settings.Template, settings.Currency);
                     var builder = new StringBuilder();
                     builder.AppendLine($"<form method=\"POST\" action=\"{encoder.Encode(appUrl)}\">");
                     builder.AppendLine($"  <input type=\"hidden\" name=\"email\" value=\"customer@example.com\" />");
@@ -142,7 +142,7 @@ namespace BTCPayServer.Controllers
                 ModelState.AddModelError(nameof(vm.Currency), "Invalid currency");
             try
             {
-                _AppsHelper.Parse(vm.Template, vm.Currency);
+                _AppService.Parse(vm.Template, vm.Currency);
             }
             catch
             {
@@ -180,6 +180,7 @@ namespace BTCPayServer.Controllers
                 ctx.Apps.Add(app);
                 ctx.Entry<AppData>(app).State = EntityState.Modified;
                 ctx.Entry<AppData>(app).Property(a => a.Settings).IsModified = true;
+                ctx.Entry<AppData>(app).Property(a => a.TagAllInvoices).IsModified = true;
                 await ctx.SaveChangesAsync();
             }
         }

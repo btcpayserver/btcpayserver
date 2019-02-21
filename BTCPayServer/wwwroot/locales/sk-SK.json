@@ -44,7 +44,7 @@
   "Node Info": "Informácia o uzle",
   "txCount": "{{count}} transakcia",
   "txCount_plural": "{{count}} transakcií",
-  "Pay with CoinSwitch": "Pay with CoinSwitch",
-  "Pay with Changelly": "Pay with Changelly",
-  "Close": "Close"
+  "Pay with CoinSwitch": "Zaplatiť cez CoinSwitch",
+  "Pay with Changelly": "Zaplatiť cez Changelly",
+  "Close": "Zatvoriť"
 }

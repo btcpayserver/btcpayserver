@@ -578,7 +578,7 @@ namespace BTCPayServer.Controllers
 
             try
             {
-                var result = await CreateInvoiceCore(new Invoice()
+                var result = await CreateInvoiceCore(new CreateInvoiceRequest()
                 {
                     Price = model.Amount.Value,
                     Currency = model.Currency,

@@ -62,7 +62,7 @@ namespace BTCPayServer.Controllers
         }
 
 
-        internal async Task<DataWrapper<InvoiceResponse>> CreateInvoiceCore(Invoice invoice, StoreData store, string serverUrl, List<string> additionalTags = null)
+        internal async Task<DataWrapper<InvoiceResponse>> CreateInvoiceCore(CreateInvoiceRequest invoice, StoreData store, string serverUrl, List<string> additionalTags = null)
         {
             if (!store.HasClaim(Policies.CanCreateInvoice.Key))
                 throw new UnauthorizedAccessException();
@@ -89,7 +89,7 @@ namespace BTCPayServer.Controllers
                 entity.NotificationURL = notificationUri.AbsoluteUri;
             }
             entity.NotificationEmail = invoice.NotificationEmail;
-            entity.BuyerInformation = Map<Invoice, BuyerInformation>(invoice);
+            entity.BuyerInformation = Map<CreateInvoiceRequest, BuyerInformation>(invoice);
             entity.PaymentTolerance = storeBlob.PaymentTolerance;
             if (additionalTags != null)
                 entity.InternalTags.AddRange(additionalTags);
@@ -112,7 +112,7 @@ namespace BTCPayServer.Controllers
             invoice.TaxIncluded = Math.Max(0.0m, invoice.TaxIncluded);
             invoice.TaxIncluded = Math.Min(invoice.TaxIncluded, invoice.Price);
 
-            entity.ProductInformation = Map<Invoice, ProductInformation>(invoice);
+            entity.ProductInformation = Map<CreateInvoiceRequest, ProductInformation>(invoice);
 
 
             entity.RedirectURL = invoice.RedirectURL ?? store.StoreWebsite;

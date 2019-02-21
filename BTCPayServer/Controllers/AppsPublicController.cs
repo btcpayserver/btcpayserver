@@ -172,7 +172,7 @@ namespace BTCPayServer.Controllers
             store.AdditionalClaims.Add(new Claim(Policies.CanCreateInvoice.Key, store.Id));
             try
             {
-                var invoice = await _InvoiceController.CreateInvoiceCore(new Invoice()
+                var invoice = await _InvoiceController.CreateInvoiceCore(new CreateInvoiceRequest()
                 {
                     Currency = settings.TargetCurrency,
                     ItemCode = request.ChoiceKey ?? string.Empty,
@@ -250,7 +250,7 @@ namespace BTCPayServer.Controllers
             }
             var store = await _AppService.GetStore(app);
             store.AdditionalClaims.Add(new Claim(Policies.CanCreateInvoice.Key, store.Id));
-            var invoice = await _InvoiceController.CreateInvoiceCore(new NBitpayClient.Invoice()
+            var invoice = await _InvoiceController.CreateInvoiceCore(new CreateInvoiceRequest()
             {
                 ItemCode = choice?.Id,
                 ItemDesc = title,

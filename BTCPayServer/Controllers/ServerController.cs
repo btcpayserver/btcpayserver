@@ -27,6 +27,7 @@ using Renci.SshNet;
 using BTCPayServer.Logging;
 using BTCPayServer.Lightning;
 using BTCPayServer.Configuration.External;
+using System.Runtime.CompilerServices;
 
 namespace BTCPayServer.Controllers
 {
@@ -474,7 +475,17 @@ namespace BTCPayServer.Controllers
                     {
                         Crypto = cryptoCode,
                         Type = "Spark server",
-                        Action = nameof(SparkServices),
+                        Action = nameof(SparkService),
+                        Index = i++,
+                    });
+                }
+                foreach (var rtlService in _Options.ExternalServicesByCryptoCode.GetServices<ExternalRTL>(cryptoCode))
+                {
+                    result.LNDServices.Add(new ServicesViewModel.LNDServiceViewModel()
+                    {
+                        Crypto = cryptoCode,
+                        Type = "Ride the lightning server",
+                        Action = nameof(RTLService),
                         Index = i++,
                     });
                 }
@@ -548,21 +559,31 @@ namespace BTCPayServer.Controllers
         }
 
         [Route("server/services/spark/{cryptoCode}/{index}")]
-        public async Task<IActionResult> SparkServices(string cryptoCode, int index, bool showQR = false)
+        public async Task<IActionResult> SparkService(string cryptoCode, int index, bool showQR = false)
+        {
+            return await LightningWalletServicesCore<ExternalSpark>(cryptoCode, showQR, "Spark Wallet");
+        }
+        [Route("server/services/rtl/{cryptoCode}/{index}")]
+        public async Task<IActionResult> RTLService(string cryptoCode, int index, bool showQR = false)
+        {
+            return await LightningWalletServicesCore<ExternalRTL>(cryptoCode, showQR, "Ride the Lightning Wallet");
+        }
+        private async Task<IActionResult> LightningWalletServicesCore<T>(string cryptoCode, bool showQR, string walletName) where T : ExternalService, IAccessKeyService
         {
             if (!_dashBoard.IsFullySynched(cryptoCode, out var unusud))
             {
                 StatusMessage = $"Error: {cryptoCode} is not fully synched";
                 return RedirectToAction(nameof(Services));
             }
-            var spark = _Options.ExternalServicesByCryptoCode.GetServices<ExternalSpark>(cryptoCode).Select(c => c.ConnectionString).FirstOrDefault();
+            var spark = _Options.ExternalServicesByCryptoCode.GetServices<T>(cryptoCode).Select(c => c.ConnectionString).FirstOrDefault();
             if (spark == null)
             {
                 return NotFound();
             }
 
-            SparkServicesViewModel vm = new SparkServicesViewModel();
+            LightningWalletServices vm = new LightningWalletServices();
             vm.ShowQR = showQR;
+            vm.WalletName = walletName;
             try
             {
                 var cookie = (spark.CookeFile == "fake"
@@ -570,7 +591,7 @@ namespace BTCPayServer.Controllers
                             : await System.IO.File.ReadAllTextAsync(spark.CookeFile)).Split(':');
                 if (cookie.Length >= 3)
                 {
-                    vm.SparkLink = $"{spark.Server.AbsoluteUri}?access-key={cookie[2]}";
+                    vm.ServiceLink = $"{spark.Server.AbsoluteUri}?access-key={cookie[2]}";
                 }
             }
             catch (Exception ex)
@@ -578,7 +599,7 @@ namespace BTCPayServer.Controllers
                 StatusMessage = $"Error: {ex.Message}";
                 return RedirectToAction(nameof(Services));
             }
-            return View(vm);
+            return View("LightningWalletServices", vm);
         }
 
         [Route("server/services/lnd/{cryptoCode}/{index}")]

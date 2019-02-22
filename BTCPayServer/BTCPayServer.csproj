@@ -139,7 +139,7 @@
     <Content Update="Views\Server\LightningChargeServices.cshtml">
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>
-    <Content Update="Views\Server\SparkServices.cshtml">
+    <Content Update="Views\Server\LightningWalletServices.cshtml">
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>
     <Content Update="Views\Server\SSHService.cshtml">

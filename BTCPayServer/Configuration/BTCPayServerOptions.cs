@@ -144,15 +144,30 @@ namespace BTCPayServer.Configuration
                 externalLnd<ExternalLndGrpc>($"{net.CryptoCode}.external.lnd.grpc", "lnd-grpc");
                 externalLnd<ExternalLndRest>($"{net.CryptoCode}.external.lnd.rest", "lnd-rest");
 
-                var spark = conf.GetOrDefault<string>($"{net.CryptoCode}.external.spark", string.Empty);
-                if (spark.Length != 0)
                 {
-                    if (!SparkConnectionString.TryParse(spark, out var connectionString))
+                    var spark = conf.GetOrDefault<string>($"{net.CryptoCode}.external.spark", string.Empty);
+                    if (spark.Length != 0)
                     {
-                        throw new ConfigException($"Invalid setting {net.CryptoCode}.external.spark, " + Environment.NewLine +
-                            $"Valid example: 'server=https://btcpay.example.com/spark/btc/;cookiefile=/etc/clightning_bitcoin_spark/.cookie'");
+                        if (!SparkConnectionString.TryParse(spark, out var connectionString))
+                        {
+                            throw new ConfigException($"Invalid setting {net.CryptoCode}.external.spark, " + Environment.NewLine +
+                                $"Valid example: 'server=https://btcpay.example.com/spark/btc/;cookiefile=/etc/clightning_bitcoin_spark/.cookie'");
+                        }
+                        ExternalServicesByCryptoCode.Add(net.CryptoCode, new ExternalSpark(connectionString));
                     }
-                    ExternalServicesByCryptoCode.Add(net.CryptoCode, new ExternalSpark(connectionString));
+                }
+
+                {
+                    var rtl = conf.GetOrDefault<string>($"{net.CryptoCode}.external.rtl", string.Empty);
+                    if (rtl.Length != 0)
+                    {
+                        if (!SparkConnectionString.TryParse(rtl, out var connectionString))
+                        {
+                            throw new ConfigException($"Invalid setting {net.CryptoCode}.external.rtl, " + Environment.NewLine +
+                                $"Valid example: 'server=https://btcpay.example.com/rtl/btc/;cookiefile=/etc/clightning_bitcoin_rtl/.cookie'");
+                        }
+                        ExternalServicesByCryptoCode.Add(net.CryptoCode, new ExternalRTL(connectionString));
+                    }
                 }
 
                 var charge = conf.GetOrDefault<string>($"{net.CryptoCode}.external.charge", string.Empty);

@@ -5,15 +5,11 @@ using System.Threading.Tasks;
 
 namespace BTCPayServer.Configuration.External
 {
-    public interface IAccessKeyService
-    {
-        SparkConnectionString ConnectionString { get; }
-    }
-    public class ExternalSpark : ExternalService, IAccessKeyService
+    public class ExternalRTL : ExternalService, IAccessKeyService
     {
         public SparkConnectionString ConnectionString { get; }
 
-        public ExternalSpark(SparkConnectionString connectionString)
+        public ExternalRTL(SparkConnectionString connectionString)
         {
             if (connectionString == null)
                 throw new ArgumentNullException(nameof(connectionString));

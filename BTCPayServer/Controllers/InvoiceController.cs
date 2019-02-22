@@ -108,8 +108,10 @@ namespace BTCPayServer.Controllers
             var currencyInfo = _CurrencyNameTable.GetNumberFormatInfo(invoice.Currency, false);
             if (currencyInfo != null)
             {
-                invoice.Price = Math.Round(invoice.Price, currencyInfo.CurrencyDecimalDigits);
-                invoice.TaxIncluded = Math.Round(taxIncluded, currencyInfo.CurrencyDecimalDigits);
+                int divisibility = currencyInfo.CurrencyDecimalDigits;
+                invoice.Price = invoice.Price.RoundToSignificant(ref divisibility);
+                divisibility = currencyInfo.CurrencyDecimalDigits;
+                invoice.TaxIncluded = taxIncluded.RoundToSignificant(ref divisibility);
             }
             invoice.Price = Math.Max(0.0m, invoice.Price);
             invoice.TaxIncluded = Math.Max(0.0m, taxIncluded);

@@ -51,6 +51,9 @@ else
     <div class="container" id="app" v-cloak>
         <div class="row w-100 p-0 m-0" style="height: 100vh">
             <div class="mx-auto my-auto w-100">
+                <div v-if="srvModel.status === 'Creating'" class="w-100 alert alert-danger text-center font-weight-bold  d-print-none">
+                    This payment request is still in creation mode and can only be viewed by you. Please publish from the settings in order to be able to share it.
+                </div>
                 <div class="card">
                     <h1 class="card-header">
                         {{srvModel.title}}
@@ -117,7 +120,7 @@ else
                                                     <div class="table-responsive">
                                                         <table class="table table-bordered">
                                                             <tr>
-                                                                <th class="p-1"  style="max-width: 300px">Tx Id</th>
+                                                                <th class="p-1" style="max-width: 300px">Tx Id</th>
                                                                 <th class="p-1">Payment Method</th>
                                                                 <th class="p-1">Amount</th>
                                                                 <th class="p-1">Link</th>
@@ -149,7 +152,7 @@ else
                                                 <template v-if="srvModel.allowCustomPaymentAmounts && !srvModel.anyPendingInvoice">
                                                     <form v-on:submit="submitCustomAmountForm">
 
-                                                        <div class="input-group m-auto" style="max-width:250px ">
+                                                        <div class="input-group m-auto" style="max-width: 250px">
                                                             <input
                                                                 :readonly="!srvModel.allowCustomPaymentAmounts"
                                                                 class="form-control"

@@ -40,7 +40,7 @@
                         <label asp-for="AllowCustomPaymentAmounts"></label>
                         <input asp-for="AllowCustomPaymentAmounts" type="checkbox" class="form-check"/>
                         <span asp-validation-for="AllowCustomPaymentAmounts" class="text-danger"></span>
-                    </div> 
+                    </div>
                     <div class="form-group">
 
                         <label asp-for="StoreId" class="control-label"></label>
@@ -82,20 +82,25 @@
                     </div>
                     <div class="form-group">
                         <label asp-for="CustomCSSLink" class="control-label"></label>
-                        <a href="https://docs.btcpayserver.org/development/theme#bootstrap-themes" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
-                        <input asp-for="CustomCSSLink" class="form-control" />
+                        <a href="https://docs.btcpayserver.org/development/theme#bootstrap-themes" target="_blank">
+                            <span class="fa fa-question-circle-o" title="More information..."></span>
+                        </a>
+                        <input asp-for="CustomCSSLink" class="form-control"/>
                         <span asp-validation-for="CustomCSSLink" class="text-danger"></span>
-                    </div>   
+                    </div>
                     <div class="form-group">
                         <label asp-for="EmbeddedCSS" class="control-label"></label>
                         <textarea asp-for="EmbeddedCSS" rows="10" cols="40" class="form-control"></textarea>
                         <span asp-validation-for="EmbeddedCSS" class="text-danger"></span>
-                    </div> 
+                    </div>
 
                     <div class="form-group">
                         <button type="submit" class="btn btn-primary" name="action" value="draft">Save for later</button>
                         <button type="submit" class="btn btn-primary" name="action" value="publish">Save & Publish</button>
-
+                        @if (!string.IsNullOrEmpty(Model.Id))
+                        {
+                            <a class="btn btn-secondary" target="_blank" asp-action="ViewPaymentRequest" id="@Model.Id">View</a>
+                        }
                         <a class="btn btn-secondary" target="_blank" asp-action="GetPaymentRequests">Back to list</a>
                     </div>
                 </form>

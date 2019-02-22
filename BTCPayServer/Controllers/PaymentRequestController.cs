@@ -34,8 +34,6 @@ namespace BTCPayServer.Controllers
         private readonly InvoiceController _InvoiceController;
         private readonly UserManager<ApplicationUser> _UserManager;
         private readonly StoreRepository _StoreRepository;
-        private readonly RateFetcher _RateFetcher;
-        private readonly BTCPayNetworkProvider _BtcPayNetworkProvider;
         private readonly PaymentRequestRepository _PaymentRequestRepository;
         private readonly PaymentRequestService _PaymentRequestService;
         private readonly EventAggregator _EventAggregator;
@@ -46,8 +44,6 @@ namespace BTCPayServer.Controllers
             InvoiceController invoiceController,
             UserManager<ApplicationUser> userManager,
             StoreRepository storeRepository,
-            RateFetcher rateFetcher,
-            BTCPayNetworkProvider btcPayNetworkProvider,
             PaymentRequestRepository paymentRequestRepository,
             PaymentRequestService paymentRequestService,
             EventAggregator eventAggregator,
@@ -57,8 +53,6 @@ namespace BTCPayServer.Controllers
             _InvoiceController = invoiceController;
             _UserManager = userManager;
             _StoreRepository = storeRepository;
-            _RateFetcher = rateFetcher;
-            _BtcPayNetworkProvider = btcPayNetworkProvider;
             _PaymentRequestRepository = paymentRequestRepository;
             _PaymentRequestService = paymentRequestService;
             _EventAggregator = eventAggregator;
@@ -135,6 +129,8 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
+            var oldStatus = data?.Status ?? PaymentRequestData.PaymentRequestStatus.Creating;
+
             if (data != null && data.Status != PaymentRequestData.PaymentRequestStatus.Creating)
             {
                 return RedirectToAction("ViewPaymentRequest", new
@@ -176,8 +172,11 @@ namespace BTCPayServer.Controllers
             _EventAggregator.Publish(new PaymentRequestUpdated()
             {
                 Data = data,
-                PaymentRequestId = data.Id
+                PaymentRequestId = data.Id,
+                Published = oldStatus == PaymentRequestData.PaymentRequestStatus.Creating &&
+                            data.Status != PaymentRequestData.PaymentRequestStatus.Creating
             });
+
             return RedirectToAction("EditPaymentRequest", new {id = data.Id, StatusMessage = "Saved"});
         }
 
@@ -307,7 +306,7 @@ namespace BTCPayServer.Controllers
             store.AdditionalClaims.Add(new Claim(Policies.CanCreateInvoice.Key, store.Id));
             try
             {
-                var newInvoiceId = (await _InvoiceController.CreateInvoiceCore(new Invoice()
+                var newInvoiceId = (await _InvoiceController.CreateInvoiceCore(new CreateInvoiceRequest()
                 {
                     OrderId = $"{PaymentRequestRepository.GetOrderIdForPaymentRequest(id)}",
                     Currency = blob.Currency,

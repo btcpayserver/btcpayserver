@@ -1298,6 +1298,25 @@ namespace BTCPayServer.Tests
                 Assert.True(invoice.SupportedTransactionCurrencies["LTC"].Enabled);
                 Assert.True(invoice.PaymentSubtotals.ContainsKey("LTC"));
                 Assert.True(invoice.PaymentTotals.ContainsKey("LTC"));
+
+
+                // Check if we can disable LTC
+                invoice = user.BitPay.CreateInvoice(new Invoice()
+                {
+                    Price = 5000.0m,
+                    Currency = "USD",
+                    PosData = "posData",
+                    OrderId = "orderId",
+                    ItemDesc = "Some description",
+                    FullNotifications = true,
+                    SupportedTransactionCurrencies = new Dictionary<string, InvoiceSupportedTransactionCurrency>()
+                    {
+                        { "BTC", new InvoiceSupportedTransactionCurrency() { Enabled = true } }
+                    }
+                }, Facade.Merchant);
+
+                Assert.Single(invoice.CryptoInfo.Where(c => c.CryptoCode == "BTC"));
+                Assert.Empty(invoice.CryptoInfo.Where(c => c.CryptoCode == "LTC"));
             }
         }
 

@@ -1997,31 +1997,39 @@ donation:
                 var invoice1 = user.BitPay.CreateInvoice(new Invoice()
                 {
                     Price = 0.000000012m,
-                    Currency = "BTC",
-                    PosData = "posData",
-                    OrderId = "orderId",
-                    ItemDesc = "Some description",
+                    Currency = "USD",
                     FullNotifications = true
                 }, Facade.Merchant);
                 var invoice2 = user.BitPay.CreateInvoice(new Invoice()
                 {
                     Price = 0.000000019m,
-                    Currency = "BTC",
-                    PosData = "posData",
-                    OrderId = "orderId",
-                    ItemDesc = "Some description",
+                    Currency = "USD"
+                }, Facade.Merchant);
+                Assert.Equal(0.000000012m, invoice1.Price);
+                Assert.Equal(0.000000019m, invoice2.Price);
+
+                // Should round up to 1 because 0.000000019 is unsignificant
+                var invoice3 = user.BitPay.CreateInvoice(new Invoice()
+                {
+                    Price = 1.000000019m,
+                    Currency = "USD",
                     FullNotifications = true
                 }, Facade.Merchant);
-                Assert.Equal(0.00000001m, invoice1.Price);
-                Assert.Equal(0.00000002m, invoice2.Price);
+                Assert.Equal(1m, invoice3.Price);
+
+                // Should not round up because BTC precision is 8 digits
+                var invoice4 = user.BitPay.CreateInvoice(new Invoice()
+                {
+                    Price = 1.000000019m,
+                    Currency = "BTC",
+                    FullNotifications = true
+                }, Facade.Merchant);
+                Assert.Equal(1.000000019m, invoice4.Price);
 
                 var invoice = user.BitPay.CreateInvoice(new Invoice()
                 {
                     Price = -0.1m,
                     Currency = "BTC",
-                    PosData = "posData",
-                    OrderId = "orderId",
-                    ItemDesc = "Some description",
                     FullNotifications = true
                 }, Facade.Merchant);
                 Assert.Equal(0.0m, invoice.Price);

@@ -44,7 +44,8 @@ namespace BTCPayServer.PaymentRequest
         public async Task Pay(decimal? amount = null)
         {
             _PaymentRequestController.ControllerContext.HttpContext = Context.GetHttpContext();
-            var result = await _PaymentRequestController.PayPaymentRequest(Context.Items["pr-id"].ToString(), false, amount);
+            var result =
+                await _PaymentRequestController.PayPaymentRequest(Context.Items["pr-id"].ToString(), false, amount);
             switch (result)
             {
                 case OkObjectResult okObjectResult:
@@ -60,31 +61,28 @@ namespace BTCPayServer.PaymentRequest
         }
     }
 
-    public class PaymentRequestStreamer :  EventHostedServiceBase
+    public class PaymentRequestStreamer : EventHostedServiceBase
     {
         private readonly IHubContext<PaymentRequestHub> _HubContext;
         private readonly PaymentRequestRepository _PaymentRequestRepository;
-        private readonly AppService _AppService;
         private readonly PaymentRequestService _PaymentRequestService;
 
-        
+
         public PaymentRequestStreamer(EventAggregator eventAggregator,
             IHubContext<PaymentRequestHub> hubContext,
             PaymentRequestRepository paymentRequestRepository,
-            AppService appService,
             PaymentRequestService paymentRequestService) : base(eventAggregator)
         {
             _HubContext = hubContext;
             _PaymentRequestRepository = paymentRequestRepository;
-            _AppService = appService;
             _PaymentRequestService = paymentRequestService;
         }
 
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
             await base.StartAsync(cancellationToken);
-            _CheckingPendingPayments = CheckingPendingPayments(cancellationToken).ContinueWith(_ => _CheckingPendingPayments = null, TaskScheduler.Default);
-            
+            _CheckingPendingPayments = CheckingPendingPayments(cancellationToken)
+                .ContinueWith(_ => _CheckingPendingPayments = null, TaskScheduler.Default);
         }
 
         private async Task CheckingPendingPayments(CancellationToken cancellationToken)
@@ -92,19 +90,22 @@ namespace BTCPayServer.PaymentRequest
             Logs.PayServer.LogInformation("Starting payment request expiration watcher");
             var (total, items) = await _PaymentRequestRepository.FindPaymentRequests(new PaymentRequestQuery()
             {
-                Status = new[] { PaymentRequestData.PaymentRequestStatus.Pending }
+                Status = new[] {PaymentRequestData.PaymentRequestStatus.Pending}
             }, cancellationToken);
 
             Logs.PayServer.LogInformation($"{total} pending payment requests being checked since last run");
-            await Task.WhenAll(items.Select(i => _PaymentRequestService.UpdatePaymentRequestStateIfNeeded(i)).ToArray());
+            await Task.WhenAll(items.Select(i => _PaymentRequestService.UpdatePaymentRequestStateIfNeeded(i))
+                .ToArray());
         }
 
         Task _CheckingPendingPayments;
+
         public override async Task StopAsync(CancellationToken cancellationToken)
         {
             await base.StopAsync(cancellationToken);
             await (_CheckingPendingPayments ?? Task.CompletedTask);
         }
+
         protected override void SubscibeToEvents()
         {
             Subscribe<InvoiceEvent>();
@@ -116,7 +117,7 @@ namespace BTCPayServer.PaymentRequest
             if (evt is InvoiceEvent invoiceEvent)
             {
                 var paymentRequestId =
-                PaymentRequestRepository.GetPaymentRequestIdFromOrderId(invoiceEvent.Invoice.OrderId);
+                    PaymentRequestRepository.GetPaymentRequestIdFromOrderId(invoiceEvent.Invoice.OrderId);
 
                 if (invoiceEvent.Name == InvoiceEvent.ReceivedPayment)
                 {
@@ -131,14 +132,18 @@ namespace BTCPayServer.PaymentRequest
                                 invoiceEvent.Payment.GetPaymentMethodId().PaymentType)
                         });
                 }
+
                 await InfoUpdated(paymentRequestId);
             }
             else if (evt is PaymentRequestUpdated updated)
             {
-                if (updated.Data.Status != PaymentRequestData.PaymentRequestStatus.Creating)
+                if (updated.Published)
                 {
-                    await InfoUpdated(updated.PaymentRequestId);
+                    await _PaymentRequestService.UpdatePaymentRequestStateIfNeeded(updated.Data);
                 }
+
+                await InfoUpdated(updated.PaymentRequestId);
+
                 var expiry = updated.Data.GetBlob().ExpiryDate;
                 if (updated.Data.Status == PaymentRequestData.PaymentRequestStatus.Pending &&
                     expiry.HasValue)
@@ -165,10 +170,10 @@ namespace BTCPayServer.PaymentRequest
         private async Task InfoUpdated(string paymentRequestId)
         {
             var req = await _PaymentRequestService.GetPaymentRequest(paymentRequestId);
-            if(req != null)
+            if (req != null)
             {
                 await _HubContext.Clients.Group(paymentRequestId)
-                            .SendCoreAsync(PaymentRequestHub.InfoUpdated, new object[] { req });
+                    .SendCoreAsync(PaymentRequestHub.InfoUpdated, new object[] {req});
             }
         }
     }

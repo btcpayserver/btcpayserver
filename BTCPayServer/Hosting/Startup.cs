@@ -34,6 +34,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Mvc.Cors.Internal;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using System.Net;
+using BTCPayServer.PaymentRequest;
 using Meziantou.AspNetCore.BundleTagHelpers;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
@@ -165,6 +166,7 @@ namespace BTCPayServer.Hosting
             app.UseSignalR(route =>
             {
                 route.MapHub<AppHub>("/apps/hub");
+                route.MapHub<PaymentRequestHub>("/payment-requests/hub");
             });
             app.UseWebSockets();
             app.UseStatusCodePages();

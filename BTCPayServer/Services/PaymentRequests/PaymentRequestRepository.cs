@@ -179,6 +179,7 @@ namespace BTCPayServer.Services.PaymentRequests
     {
         public string PaymentRequestId { get; set; }
         public PaymentRequestData Data { get; set; }
+        public bool Published { get; set; }
     }
 
     public class PaymentRequestQuery

@@ -15,21 +15,18 @@ namespace BTCPayServer.PaymentRequest
 {
     public class PaymentRequestService
     {
-
-        private readonly IHubContext<PaymentRequestHub> _HubContext;
         private readonly PaymentRequestRepository _PaymentRequestRepository;
         private readonly BTCPayNetworkProvider _BtcPayNetworkProvider;
         private readonly AppService _AppService;
         private readonly CurrencyNameTable _currencies;
 
-        public PaymentRequestService(EventAggregator eventAggregator,
+        public PaymentRequestService(
             IHubContext<PaymentRequestHub> hubContext,
             PaymentRequestRepository paymentRequestRepository,
             BTCPayNetworkProvider btcPayNetworkProvider,
             AppService appService,
             CurrencyNameTable currencies)
         {
-            _HubContext = hubContext;
             _PaymentRequestRepository = paymentRequestRepository;
             _BtcPayNetworkProvider = btcPayNetworkProvider;
             _AppService = appService;
@@ -43,6 +40,7 @@ namespace BTCPayServer.PaymentRequest
             {
                 return;
             }
+
             await UpdatePaymentRequestStateIfNeeded(pr);
         }
 
@@ -55,7 +53,7 @@ namespace BTCPayServer.PaymentRequest
                 if (blob.ExpiryDate.Value <= DateTimeOffset.UtcNow)
                     currentStatus = PaymentRequestData.PaymentRequestStatus.Expired;
             }
-            else if(pr.Status == PaymentRequestData.PaymentRequestStatus.Pending)
+            else if (pr.Status == PaymentRequestData.PaymentRequestStatus.Pending)
             {
                 var rateRules = pr.StoreData.GetStoreBlob().GetRateRules(_BtcPayNetworkProvider);
                 var invoices = await _PaymentRequestRepository.GetInvoicesForPaymentRequest(pr.Id);
@@ -67,6 +65,7 @@ namespace BTCPayServer.PaymentRequest
                     currentStatus = PaymentRequestData.PaymentRequestStatus.Completed;
                 }
             }
+
             if (pr.Status != PaymentRequestData.PaymentRequestStatus.Creating && currentStatus != pr.Status)
             {
                 pr.Status = currentStatus;

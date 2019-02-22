@@ -484,7 +484,7 @@ namespace BTCPayServer.Controllers
                     result.LNDServices.Add(new ServicesViewModel.LNDServiceViewModel()
                     {
                         Crypto = cryptoCode,
-                        Type = "Ride the lightning server",
+                        Type = "Ride the Lightning server (RTL)",
                         Action = nameof(RTLService),
                         Index = i++,
                     });
@@ -575,8 +575,8 @@ namespace BTCPayServer.Controllers
                 StatusMessage = $"Error: {cryptoCode} is not fully synched";
                 return RedirectToAction(nameof(Services));
             }
-            var spark = _Options.ExternalServicesByCryptoCode.GetServices<T>(cryptoCode).Select(c => c.ConnectionString).FirstOrDefault();
-            if (spark == null)
+            var external = _Options.ExternalServicesByCryptoCode.GetServices<T>(cryptoCode).Where(c => c?.ConnectionString?.Server != null).FirstOrDefault();
+            if (external == null)
             {
                 return NotFound();
             }
@@ -586,13 +586,7 @@ namespace BTCPayServer.Controllers
             vm.WalletName = walletName;
             try
             {
-                var cookie = (spark.CookeFile == "fake"
-                            ? "fake:fake:fake" // If we are testing, it should not crash
-                            : await System.IO.File.ReadAllTextAsync(spark.CookeFile)).Split(':');
-                if (cookie.Length >= 3)
-                {
-                    vm.ServiceLink = $"{spark.Server.AbsoluteUri}?access-key={cookie[2]}";
-                }
+                vm.ServiceLink = $"{external.ConnectionString.Server.AbsoluteUri}?access-key={await external.ExtractAccessKey()}";
             }
             catch (Exception ex)
             {

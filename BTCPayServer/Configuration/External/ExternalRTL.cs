@@ -15,5 +15,12 @@ namespace BTCPayServer.Configuration.External
                 throw new ArgumentNullException(nameof(connectionString));
             ConnectionString = connectionString;
         }
+
+        public async Task<string> ExtractAccessKey()
+        {
+            if (ConnectionString?.CookeFile == null)
+                throw new FormatException("Invalid connection string");
+            return await System.IO.File.ReadAllTextAsync(ConnectionString.CookeFile);
+        }
     }
 }

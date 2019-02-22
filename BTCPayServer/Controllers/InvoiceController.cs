@@ -70,6 +70,7 @@ namespace BTCPayServer.Controllers
             logs.Write("Creation of invoice starting");
             var entity = new InvoiceEntity
             {
+                Version = InvoiceEntity.Lastest_Version,
                 InvoiceTime = DateTimeOffset.UtcNow
             };
 

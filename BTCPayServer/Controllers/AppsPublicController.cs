@@ -174,6 +174,7 @@ namespace BTCPayServer.Controllers
             {
                 var invoice = await _InvoiceController.CreateInvoiceCore(new CreateInvoiceRequest()
                 {
+                    OrderId = AppService.GetCrowdfundOrderId(appId),
                     Currency = settings.TargetCurrency,
                     ItemCode = request.ChoiceKey ?? string.Empty,
                     ItemDesc = title,

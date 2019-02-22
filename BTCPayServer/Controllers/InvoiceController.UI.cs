@@ -453,11 +453,27 @@ namespace BTCPayServer.Controllers
                 Count = count,
                 StatusMessage = StatusMessage
             };
-            InvoiceQuery invoiceQuery = GetInvoiceQuery(searchTerm);
-            var counting = _InvoiceRepository.GetInvoicesTotal(invoiceQuery);
-            invoiceQuery.Count = count;
-            invoiceQuery.Skip = skip;
-            var list = await _InvoiceRepository.GetInvoices(invoiceQuery);
+            InvoiceQuery invoiceQuery = GetInvoiceQuery(searchTerm, out var filterString);
+            
+            //we need to handles filtering invoices of apps in a slightly hacky way
+            var appIds = filterString.Filters.ContainsKey("appid") ? filterString.Filters["appid"].ToArray() : null;
+
+            InvoiceEntity[] list;
+            Task<int> counting;
+            if (appIds != null && appIds.Any())
+            {
+                var invoices = await _InvoiceRepository.GetInvoices(invoiceQuery);
+                var invoicesOfApps = appIds.SelectMany(s => _AppService.FilterInvoicesOfApp(invoices, s)).Distinct().ToList();
+                counting = Task.FromResult(invoicesOfApps.Count());
+                list = invoicesOfApps.Skip(skip).Take(count).ToArray();
+            }
+            else
+            {
+                counting = _InvoiceRepository.GetInvoicesTotal(invoiceQuery);
+                invoiceQuery.Count = count;
+                invoiceQuery.Skip = skip;
+                list = await _InvoiceRepository.GetInvoices(invoiceQuery);
+            }
             
             foreach (var invoice in list)
             {
@@ -479,9 +495,9 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
-        private InvoiceQuery GetInvoiceQuery(string searchTerm = null)
+        private InvoiceQuery GetInvoiceQuery(string searchTerm, out SearchString filterString)
         {
-            var filterString = new SearchString(searchTerm);
+            filterString = new SearchString(searchTerm);
             var invoiceQuery = new InvoiceQuery()
             {
                 TextSearch = filterString.TextSearch,
@@ -493,7 +509,7 @@ namespace BTCPayServer.Controllers
                 ExceptionStatus = filterString.Filters.ContainsKey("exceptionstatus") ? filterString.Filters["exceptionstatus"].ToArray() : null,
                 StoreId = filterString.Filters.ContainsKey("storeid") ? filterString.Filters["storeid"].ToArray() : null,
                 ItemCode = filterString.Filters.ContainsKey("itemcode") ? filterString.Filters["itemcode"].ToArray() : null,
-                OrderId = filterString.Filters.ContainsKey("orderid") ? filterString.Filters["orderid"].ToArray() : null
+                OrderId = filterString.Filters.ContainsKey("orderid") ? filterString.Filters["orderid"].ToArray() : null,
             };
             return invoiceQuery;
         }
@@ -505,10 +521,19 @@ namespace BTCPayServer.Controllers
         {
             var model = new InvoiceExport(_NetworkProvider, _CurrencyNameTable);
 
-            InvoiceQuery invoiceQuery = GetInvoiceQuery(searchTerm);
+            InvoiceQuery invoiceQuery = GetInvoiceQuery(searchTerm, out var filterString);
             invoiceQuery.Count = int.MaxValue;
             invoiceQuery.Skip = 0;
             var invoices = await _InvoiceRepository.GetInvoices(invoiceQuery);
+                
+            //we need to handles filtering invoices of apps in a slightly hacky way
+            var appIds = filterString.Filters.ContainsKey("appid") ? filterString.Filters["appid"].ToArray() : null;
+
+            if (appIds != null && appIds.Any())
+            {
+                invoices = appIds.SelectMany(s => _AppService.FilterInvoicesOfApp(invoices, s)).Distinct().ToArray();
+            }
+
             var res = model.Process(invoices, format);
 
             var cd = new ContentDisposition

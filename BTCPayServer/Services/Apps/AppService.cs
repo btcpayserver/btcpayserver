@@ -188,18 +188,22 @@ namespace BTCPayServer.Services.Apps
                 StartDate = startDate
             });
 
+            return appData.TagAllInvoices ? invoices : FilterInvoicesOfApp(invoices, appData.Id);
+        }
+
+        public InvoiceEntity[] FilterInvoicesOfApp(InvoiceEntity[ ] invoices, string appId)
+        {
             //either: 
             //1. use all invoices in store as requested in settings
             //2. use newer tag system to locate marked invoices if version is correct
             //3. use orderid marker if invoice is older than when tag system was introduced
-            invoices = invoices
-                .Where(inv => appData.TagAllInvoices ||
+            return invoices
+                .Where(inv => 
                               (inv.Version >= InvoiceEntity.InternalTagSupport_Version &&
-                               inv.InternalTags.Contains(GetAppInternalTag(appData.Id))) ||
+                               inv.InternalTags.Contains(GetAppInternalTag(appId))) ||
                               (inv.Version < InvoiceEntity.InternalTagSupport_Version &&
-                               inv.OrderId.Equals(GetCrowdfundOrderId(appData.Id),
+                               inv.OrderId.Equals(GetCrowdfundOrderId(appId),
                                    StringComparison.InvariantCultureIgnoreCase))).ToArray();
-            return invoices;
         }
 
         public async Task<StoreData[]> GetOwnedStores(string userId)

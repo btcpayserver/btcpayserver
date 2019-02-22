@@ -2017,14 +2017,23 @@ donation:
                 }, Facade.Merchant);
                 Assert.Equal(1m, invoice3.Price);
 
-                // Should not round up because BTC precision is 8 digits
+                // Should not round up at 8 digit because the 9th is insignificant
                 var invoice4 = user.BitPay.CreateInvoice(new Invoice()
                 {
                     Price = 1.000000019m,
                     Currency = "BTC",
                     FullNotifications = true
                 }, Facade.Merchant);
-                Assert.Equal(1.000000019m, invoice4.Price);
+                Assert.Equal(1.00000002m, invoice4.Price);
+
+                // But not if the 9th is insignificant
+                invoice4 = user.BitPay.CreateInvoice(new Invoice()
+                {
+                    Price = 0.000000019m,
+                    Currency = "BTC",
+                    FullNotifications = true
+                }, Facade.Merchant);
+                Assert.Equal(0.000000019m, invoice4.Price);
 
                 var invoice = user.BitPay.CreateInvoice(new Invoice()
                 {

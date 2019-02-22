@@ -175,10 +175,11 @@ namespace BTCPayServer.Services.Apps
         }
         private async Task<InvoiceEntity[]> GetInvoicesForApp(AppData appData, DateTime? startDate = null)
         {
+           
             var invoices = await _InvoiceRepository.GetInvoices(new InvoiceQuery()
             {
                 StoreId = new[] { appData.StoreData.Id },
-                OrderId = appData.TagAllInvoices ? null : new[] { GetCrowdfundOrderId(appData.Id) },
+                OrderId = null,
                 Status = new string[]{
                     InvoiceState.ToString(InvoiceStatus.New),
                     InvoiceState.ToString(InvoiceStatus.Paid),
@@ -187,9 +188,17 @@ namespace BTCPayServer.Services.Apps
                 StartDate = startDate
             });
 
-            // Old invoices may have invoices which were not tagged
-            invoices = invoices.Where(inv => inv.Version < InvoiceEntity.InternalTagSupport_Version ||
-                                             inv.InternalTags.Contains(GetAppInternalTag(appData.Id))).ToArray();
+            //either: 
+            //1. use all invoices in store as requested in settings
+            //2. use newer tag system to locate marked invoices if version is correct
+            //3. use orderid marker if invoice is older than when tag system was introduced
+            invoices = invoices
+                .Where(inv => appData.TagAllInvoices ||
+                              (inv.Version >= InvoiceEntity.InternalTagSupport_Version &&
+                               inv.InternalTags.Contains(GetAppInternalTag(appData.Id))) ||
+                              (inv.Version < InvoiceEntity.InternalTagSupport_Version &&
+                               inv.OrderId.Equals(GetCrowdfundOrderId(appData.Id),
+                                   StringComparison.InvariantCultureIgnoreCase))).ToArray();
             return invoices;
         }
 

@@ -54,7 +54,7 @@ namespace BTCPayServer.Controllers
                 ResetEvery = Enum.GetName(typeof(CrowdfundResetEvery), settings.ResetEvery),
                 UseAllStoreInvoices = app.TagAllInvoices,
                 AppId = appId,
-                SearchTerm = app.TagAllInvoices ? $"storeid:{app.StoreDataId}" : $"orderid:{AppService.GetCrowdfundOrderId(appId)}",
+                SearchTerm = app.TagAllInvoices ? $"storeid:{app.StoreDataId}" : $"appid:{appId}",
                 DisplayPerksRanking = settings.DisplayPerksRanking,
                 SortPerksByPopularity = settings.SortPerksByPopularity
             };

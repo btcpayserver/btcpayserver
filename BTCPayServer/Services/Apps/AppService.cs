@@ -346,7 +346,7 @@ namespace BTCPayServer.Services.Apps
 
                     // Else, we just sum the payments
                     return payments
-                             .Select(pay => (Key: pay.GetPaymentMethodId().ToString(), Value: pay.GetCryptoPaymentData().GetValue()))
+                             .Select(pay => (Key: pay.GetPaymentMethodId().ToString(), Value: pay.GetCryptoPaymentData().GetValue() - pay.NetworkFee))
                              .ToArray();
                 })
                 .GroupBy(p => p.Key)

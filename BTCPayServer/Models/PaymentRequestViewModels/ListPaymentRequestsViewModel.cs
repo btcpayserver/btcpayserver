@@ -71,8 +71,6 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         public string EmbeddedCSS { get; set; }        
         [Display(Name = "Allow payee to create invoices in their own denomination")]
         public bool AllowCustomPaymentAmounts { get; set; }
-
-        public bool Enabled { get; set; }
     }
 
     public class ViewPaymentRequestViewModel
@@ -106,8 +104,6 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
                     throw new ArgumentOutOfRangeException();
             }
         }
-
-        public bool Enabled { get; set; }
 
         public bool AllowCustomPaymentAmounts { get; set; }
 

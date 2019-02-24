@@ -1,11 +1,9 @@
 using System;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services.Rates;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
 using NBitcoin;
@@ -179,7 +177,6 @@ namespace BTCPayServer.Services.PaymentRequests
     {
         public string PaymentRequestId { get; set; }
         public PaymentRequestData Data { get; set; }
-        public bool Published { get; set; }
     }
 
     public class PaymentRequestQuery
@@ -239,10 +236,9 @@ namespace BTCPayServer.Services.PaymentRequests
 
         public enum PaymentRequestStatus
         {
-            Creating = 0,
-            Pending = 1,
-            Completed = 2,
-            Expired = 3
+            Pending = 0,
+            Completed = 1,
+            Expired = 2
         }
     }
 }

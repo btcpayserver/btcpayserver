@@ -137,11 +137,6 @@ namespace BTCPayServer.PaymentRequest
             }
             else if (evt is PaymentRequestUpdated updated)
             {
-                if (updated.Published)
-                {
-                    await _PaymentRequestService.UpdatePaymentRequestStateIfNeeded(updated.Data);
-                }
-
                 await InfoUpdated(updated.PaymentRequestId);
 
                 var expiry = updated.Data.GetBlob().ExpiryDate;

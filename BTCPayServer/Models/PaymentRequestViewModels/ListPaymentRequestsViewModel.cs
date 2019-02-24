@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -18,12 +16,6 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
 
         public string StatusMessage { get; set; }
         public int Total { get; set; }
-    }
-
-    public class RemovePaymentRequestViewModel
-    {
-        public string Id { get; set; }
-        public string Title { get; set; }
     }
 
     public class UpdatePaymentRequestViewModel
@@ -66,7 +58,6 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         [Required] public string Title { get; set; }
         public string Description { get; set; }
         public string StatusMessage { get; set; }
-        public string Action { get; set; }
 
         public SelectList Stores { get; set; }
         [EmailAddress]
@@ -80,6 +71,8 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         public string EmbeddedCSS { get; set; }        
         [Display(Name = "Allow payee to create invoices in their own denomination")]
         public bool AllowCustomPaymentAmounts { get; set; }
+
+        public bool Enabled { get; set; }
     }
 
     public class ViewPaymentRequestViewModel
@@ -99,18 +92,8 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             AllowCustomPaymentAmounts = blob.AllowCustomPaymentAmounts;
             switch (data.Status)
             {
-                case PaymentRequestData.PaymentRequestStatus.Creating:
-                    Status = "Creating";
-                    break;
                 case PaymentRequestData.PaymentRequestStatus.Pending:
-                    if (ExpiryDate.HasValue)
-                    {
-                        Status = $"Expires on {ExpiryDate.Value:g}";
-                    }
-                    else
-                    {
-                        Status = "Pending";
-                    }
+                    Status = ExpiryDate.HasValue ? $"Expires on {ExpiryDate.Value:g}" : "Pending";
                     IsPending = true;
                     break;
                 case PaymentRequestData.PaymentRequestStatus.Completed:
@@ -123,6 +106,8 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
                     throw new ArgumentOutOfRangeException();
             }
         }
+
+        public bool Enabled { get; set; }
 
         public bool AllowCustomPaymentAmounts { get; set; }
 

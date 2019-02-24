@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
@@ -36,10 +35,6 @@ namespace BTCPayServer.PaymentRequest
         public async Task UpdatePaymentRequestStateIfNeeded(string id)
         {
             var pr = await _PaymentRequestRepository.FindPaymentRequest(id, null);
-            if (pr == null || pr.Status == PaymentRequestData.PaymentRequestStatus.Creating)
-            {
-                return;
-            }
 
             await UpdatePaymentRequestStateIfNeeded(pr);
         }
@@ -66,7 +61,7 @@ namespace BTCPayServer.PaymentRequest
                 }
             }
 
-            if (pr.Status != PaymentRequestData.PaymentRequestStatus.Creating && currentStatus != pr.Status)
+            if (currentStatus != pr.Status)
             {
                 pr.Status = currentStatus;
                 await _PaymentRequestRepository.UpdatePaymentRequestStatus(pr.Id, currentStatus);
@@ -77,12 +72,6 @@ namespace BTCPayServer.PaymentRequest
         {
             var pr = await _PaymentRequestRepository.FindPaymentRequest(id, null);
             if (pr == null)
-            {
-                return null;
-            }
-
-            if (pr.Status == PaymentRequestData.PaymentRequestStatus.Creating &&
-                !await _PaymentRequestRepository.IsPaymentRequestAdmin(id, userId))
             {
                 return null;
             }

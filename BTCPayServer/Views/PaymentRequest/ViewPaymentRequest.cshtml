@@ -51,9 +51,6 @@ else
     <div class="container" id="app" v-cloak>
         <div class="row w-100 p-0 m-0" style="height: 100vh">
             <div class="mx-auto my-auto w-100">
-                <div v-if="srvModel.status === 'Creating'" class="w-100 alert alert-danger text-center font-weight-bold  d-print-none">
-                    This payment request is still in creation mode and can only be viewed by you. Please publish from the settings in order to be able to share it.
-                </div>
                 <div class="card">
                     <h1 class="card-header">
                         {{srvModel.title}}

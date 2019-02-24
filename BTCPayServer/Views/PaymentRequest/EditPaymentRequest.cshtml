@@ -1,3 +1,4 @@
+@using BTCPayServer.Services.PaymentRequests
 @model BTCPayServer.Models.PaymentRequestViewModels.UpdatePaymentRequestViewModel
 @addTagHelper *, Meziantou.AspNetCore.BundleTagHelpers
 
@@ -95,11 +96,16 @@
                     </div>
 
                     <div class="form-group">
-                        <button type="submit" class="btn btn-primary" name="action" value="draft">Save for later</button>
-                        <button type="submit" class="btn btn-primary" name="action" value="publish">Save & Publish</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
                         @if (!string.IsNullOrEmpty(Model.Id))
                         {
                             <a class="btn btn-secondary" target="_blank" asp-action="ViewPaymentRequest" id="@Model.Id">View</a>
+                            <a class="btn btn-secondary" 
+                               target="_blank"
+                               asp-action="ListInvoices"
+                               asp-controller="Invoice" 
+                               asp-route-searchterm="@($"orderid:{PaymentRequestRepository.GetOrderIdForPaymentRequest(Model.Id)}")">Invoices</a>
+                                                                                                                   
                         }
                         <a class="btn btn-secondary" target="_blank" asp-action="GetPaymentRequests">Back to list</a>
                     </div>

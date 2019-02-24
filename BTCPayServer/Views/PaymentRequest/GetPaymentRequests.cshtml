@@ -46,23 +46,13 @@
                         <td class="text-right">@item.Amount @item.Currency</td>
                         <td class="text-right">@item.Status</td>
                         <td class="text-right">
-                            @if (item.Status.Equals(nameof(PaymentRequestData.PaymentRequestStatus.Creating), StringComparison.InvariantCultureIgnoreCase))
-                            {
-                                <a asp-action="EditPaymentRequest" asp-route-id="@item.Id">Edit</a>
-                                <span> - </span>
-                                <a asp-action="ViewPaymentRequest" asp-route-id="@item.Id">View</a>
-                            }
-                            else
-                            {
-                                <a asp-action="ViewPaymentRequest" asp-route-id="@item.Id">View</a>
-                                <span> - </span>
-                                <a  target="_blank" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@($"orderid:{PaymentRequestRepository.GetOrderIdForPaymentRequest(item.Id)}")">Invoices</a>
-                            }
-                            @if (item.Status.Equals(nameof(PaymentRequestData.PaymentRequestStatus.Pending), StringComparison.InvariantCultureIgnoreCase))
-                            {
-                                <span> - </span>
-                                <a target="_blank" asp-action="PayPaymentRequest" asp-route-id="@item.Id">Pay</a>
-                            }
+                            <a asp-action="EditPaymentRequest" asp-route-id="@item.Id">Edit</a>
+                            <span> - </span>
+                            <a asp-action="ViewPaymentRequest" asp-route-id="@item.Id">View</a>
+                            <span> - </span>
+                            <a target="_blank" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@($"orderid:{PaymentRequestRepository.GetOrderIdForPaymentRequest(item.Id)}")">Invoices</a>
+                            <span> - </span>
+                            <a target="_blank" asp-action="PayPaymentRequest" asp-route-id="@item.Id">Pay</a>
                             <span> - </span>
                             <a asp-action="RemovePaymentRequestPrompt" asp-route-id="@item.Id">Remove</a>
                         </td>

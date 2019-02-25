@@ -116,9 +116,9 @@ namespace BTCPayServer.PaymentRequest
         {
             if (evt is InvoiceEvent invoiceEvent)
             {
-                var paymentRequestId =
-                    PaymentRequestRepository.GetPaymentRequestIdFromOrderId(invoiceEvent.Invoice.OrderId);
-
+                var paymentRequestId = PaymentRequestRepository.GetPaymentRequestIdFromOrderId(invoiceEvent.Invoice.OrderId);
+                if (paymentRequestId == null)
+                    return;
                 if (invoiceEvent.Name == InvoiceEvent.ReceivedPayment)
                 {
                     await _PaymentRequestService.UpdatePaymentRequestStateIfNeeded(paymentRequestId);

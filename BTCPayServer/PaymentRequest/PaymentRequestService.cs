@@ -35,7 +35,6 @@ namespace BTCPayServer.PaymentRequest
         public async Task UpdatePaymentRequestStateIfNeeded(string id)
         {
             var pr = await _PaymentRequestRepository.FindPaymentRequest(id, null);
-
             await UpdatePaymentRequestStateIfNeeded(pr);
         }
 

@@ -1,10 +1,10 @@
-﻿@model SparkServicesViewModel
+﻿@model LightningWalletServices
 @{
     ViewData.SetActivePageAndTitle(ServerNavPages.Services);
 }
 
 
-<h4>Spark service</h4>
+<h4>@Model.WalletName</h4>
 <partial name="_StatusMessage" for="@TempData["StatusMessage"]" />
 
 @if (Model.ShowQR)
@@ -30,7 +30,7 @@
         <div class="form-group">
             <h5>Browser connection</h5>
             <p>
-                <span>You can go to spark from your browser by <a href="@Model.SparkLink" target="_blank">clicking here</a><br /></span>
+                <span>You can go to @Model.WalletName from your browser by <a href="@Model.ServiceLink" target="_blank">clicking here</a><br /></span>
             </p>
         </div>
 
@@ -54,7 +54,7 @@
             {
                 <div class="form-group">
                     <div id="qrCode"></div>
-                    <div id="qrCodeData" data-url="@Html.Raw(Model.SparkLink)"></div>
+                    <div id="qrCodeData" data-url="@Html.Raw(Model.ServiceLink)"></div>
                 </div>
             }
         </div>
@@ -70,7 +70,7 @@
         <script type="text/javascript">
         new QRCode(document.getElementById("qrCode"),
             {
-                text: "@Html.Raw(Model.SparkLink)",
+                text: "@Html.Raw(Model.ServiceLink)",
                 width: 150,
                 height: 150
             });

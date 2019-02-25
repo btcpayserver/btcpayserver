@@ -25,6 +25,10 @@ function Cart() {
 }
 
 Cart.prototype.setCustomAmount = function(amount) {
+    if (!srvModel.showCustomAmount) {
+        return 0;
+    }
+
     this.customAmount = this.toNumber(amount);
 
     if (this.customAmount > 0) {
@@ -36,10 +40,18 @@ Cart.prototype.setCustomAmount = function(amount) {
 }
 
 Cart.prototype.getCustomAmount = function() {
+    if (!srvModel.showCustomAmount) {
+        return 0;
+    }
+
     return this.toCents(this.customAmount);
 }
 
 Cart.prototype.setTip = function(amount) {
+    if (!srvModel.enableTips) {
+        return 0;
+    }
+
     this.tip = this.toNumber(amount);
 
     if (this.tip > 0) {
@@ -51,10 +63,18 @@ Cart.prototype.setTip = function(amount) {
 }
 
 Cart.prototype.getTip = function() {
+    if (!srvModel.enableTips) {
+        return 0;
+    }
+
     return this.toCents(this.tip);
 }
 
 Cart.prototype.setDiscount = function(amount) {
+    if (!srvModel.showDiscount) {
+        return 0;
+    }
+
     this.discount = this.toNumber(amount);
 
     if (this.discount > 0) {
@@ -66,10 +86,18 @@ Cart.prototype.setDiscount = function(amount) {
 }
 
 Cart.prototype.getDiscount = function() {
+    if (!srvModel.showDiscount) {
+        return 0;
+    }
+
     return this.toCents(this.discount);
 }
 
 Cart.prototype.getDiscountAmount = function(amount) {
+    if (!srvModel.showDiscount) {
+        return 0;
+    }
+
     return this.percentage(amount, this.getDiscount());
 }
 

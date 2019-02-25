@@ -5,9 +5,10 @@ using System.Threading.Tasks;
 
 namespace BTCPayServer.Models.ServerViewModels
 {
-    public class SparkServicesViewModel
+    public class LightningWalletServices
     {
-        public string SparkLink { get; set; }
+        public string ServiceLink { get; set; }
         public bool ShowQR { get; set; }
+        public string WalletName { get; internal set; }
     }
 }

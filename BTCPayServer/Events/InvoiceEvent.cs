@@ -20,14 +20,14 @@ namespace BTCPayServer.Events
         public const string Confirmed= "invoice_confirmed";
         public const string Completed= "invoice_completed";
         
-        public InvoiceEvent(Models.InvoiceResponse invoice, int code, string name)
+        public InvoiceEvent(InvoiceEntity invoice, int code, string name)
         {
             Invoice = invoice;
             EventCode = code;
             Name = name;
         }
 
-        public Models.InvoiceResponse Invoice { get; set; }
+        public InvoiceEntity Invoice { get; set; }
         public int EventCode { get; set; }
         public string Name { get; set; }
 

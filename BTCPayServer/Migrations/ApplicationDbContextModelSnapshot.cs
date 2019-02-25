@@ -188,6 +188,8 @@ namespace BTCPayServer.Migrations
 
                     b.Property<string>("StoreDataId");
 
+                    b.Property<bool>("TagAllInvoices");
+
                     b.HasKey("Id");
 
                     b.HasIndex("StoreDataId");
@@ -451,6 +453,26 @@ namespace BTCPayServer.Migrations
                     b.ToTable("AspNetUsers");
                 });
 
+            modelBuilder.Entity("BTCPayServer.Services.PaymentRequests.PaymentRequestData", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<byte[]>("Blob");
+
+                    b.Property<int>("Status");
+
+                    b.Property<string>("StoreDataId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("StoreDataId");
+
+                    b.ToTable("PaymentRequests");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -701,6 +723,14 @@ namespace BTCPayServer.Migrations
 
                     b.HasOne("BTCPayServer.Data.StoreData", "StoreData")
                         .WithMany("UserStores")
+                        .HasForeignKey("StoreDataId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("BTCPayServer.Services.PaymentRequests.PaymentRequestData", b =>
+                {
+                    b.HasOne("BTCPayServer.Data.StoreData", "StoreData")
+                        .WithMany("PaymentRequests")
                         .HasForeignKey("StoreDataId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });

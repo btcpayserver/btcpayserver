@@ -20,7 +20,7 @@
 
     <link rel="manifest" href="~/manifest.json">
 
-    <link href="@this.Context.Request.GetAbsoluteUri(themeManager.BootstrapUri)" rel="stylesheet" />
+    <link href="@this.Context.Request.GetRelativePathOrAbsolute(themeManager.BootstrapUri)" rel="stylesheet" />
     @if (Model.CustomCSSLink != null)
     {
         <link href="@Model.CustomCSSLink" rel="stylesheet" />
@@ -93,6 +93,8 @@
         </div>
     </td>
 </tr>
+@if (Model.ShowDiscount)
+{
 <tr>
     <td colspan="5" class="border-top-0">
         <div class="input-group">
@@ -106,9 +108,12 @@
         </div>
     </td>
 </tr>
+}
 </script>
 
 <script id="template-cart-tip" type="text/template">
+@if (Model.EnableTips)
+{
 <tr class="h5">
     <td colspan="5" class="border-top-0 pt-4">@Model.CustomTipText</td>
 </tr>
@@ -135,6 +140,7 @@
         </div>
     </td>
 </tr>
+}
 </script>
 
 <script id="template-cart-total" type="text/template">
@@ -170,18 +176,24 @@
                                     <span class="js-cart-summary-products text-nowrap"></span>
                                 </td>
                             </tr>
+                            @if (Model.ShowDiscount) 
+                            {
                             <tr class="h6">
                                 <td class="border-0 pb-y">Discount</td>
                                 <td align="right" class="border-0 pb-y">
                                     <span class="js-cart-summary-discount text-nowrap"></span>
                                 </td>
                             </tr>
+                            }
+                            @if (Model.EnableTips) 
+                            {
                             <tr class="h6">
                                 <td class="border-top-0 pt-0">Tip</td>
                                 <td align="right" class="border-top-0 pt-0">
                                     <span class="js-cart-summary-tip text-nowrap"></span>
                                 </td>
                             </tr>
+                            }
                             <tr class="h3 table-light">
                                 <td>Total</td>
                                 <td align="right">

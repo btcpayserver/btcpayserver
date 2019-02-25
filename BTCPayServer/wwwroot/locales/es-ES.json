@@ -45,5 +45,6 @@
   "txCount": "{{count}} transacción",
   "txCount_plural": "{{count}} transacciones",
   "Pay with CoinSwitch": "Pagar con CoinSwitch",
-  "Pay with Changelly": "Pagar con Changelly"
+  "Pay with Changelly": "Pagar con Changelly",
+  "Close": "Cerrar"
 }

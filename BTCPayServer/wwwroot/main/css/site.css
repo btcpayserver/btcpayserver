@@ -14,3 +14,8 @@
     width: 100%;
     overflow: hidden;
 }
+
+
+.only-for-js{
+    display: none;
+}

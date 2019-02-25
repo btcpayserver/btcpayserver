@@ -45,5 +45,6 @@
   "txCount": "{{count}} लेनदेन",
   "txCount_plural": "{{count}} लेनदेन",
   "Pay with CoinSwitch": "Pay with CoinSwitch",
-  "Pay with Changelly": "Pay with Changelly"
+  "Pay with Changelly": "Pay with Changelly",
+  "Close": "Close"
 }

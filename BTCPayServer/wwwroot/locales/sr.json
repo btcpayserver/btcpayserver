@@ -23,7 +23,7 @@
   "Address": "Adresa",
   "Copied": "Kopirano",
   "ConversionTab_BodyTop": "Možete platiti {{btcDue}} {{cryptoCode}} pomoću altcoina koje prodavac ne podržava direktno.",
-  "ConversionTab_BodyDesc": "Ovu usluga pruža treća strana. Vodite računa da nemamo kontroliu nad načinom kako će Vam davatelji usluge proslijediti sredstva. Račun je plaćen tek kada su sredstva primljena na {{cryptoCode}} blokčejnu.",
+  "ConversionTab_BodyDesc": "Ovu uslugu pruža treća strana. Vodite računa da nemamo kontroliu nad načinom kako će Vam davatelji usluge proslijediti sredstva. Račun je plaćen tek kada su sredstva primljena na {{cryptoCode}} blokčejnu.",
   "ConversionTab_CalculateAmount_Error": "Pokušaj ponovo",
   "ConversionTab_LoadCurrencies_Error": "Pokušaj ponovo",
   "ConversionTab_Lightning": "Ne postoji provajder koji će konvertovati Lightning Network uplate.",
@@ -31,7 +31,7 @@
   "Invoice expiring soon...": "Račun uskoro ističe...",
   "Invoice expired": "Račun je istekao",
   "What happened?": "Šta se desilo?",
-  "InvoiceExpired_Body_1": "Ovaj račun je istekao. Račun važi samo {{maxTimeMinutes}} minuta. \nMožete se vratiti na {{storeName}} ukoliko želite da ponovo inicirate plaćanje.",
+  "InvoiceExpired_Body_1": "Ovaj račun je istekao. Račun važi samo {{maxTimeMinutes}} minuta. \nMožete se vratiti na {{storeName}} ukoliko želite da ponovo inicirate plaćanje.",
   "InvoiceExpired_Body_2": "Ako ste pokušali da pošaljete uplatu, još uvek nije prihvaćena na mreži. Nismo još zaprimili Vašu uplatu.",
   "InvoiceExpired_Body_3": "Ukoliko vašu uplatu primimo kasnije, procesuiraćemo vašu narudžbinu ili ćemo vas kontaktirati za povraćaj novca...",
   "Invoice ID": "Broj računa",
@@ -39,11 +39,12 @@
   "Return to StoreName": "Vrati se na {{storeName}}",
   "This invoice has been paid": "Račun je plaćen.",
   "This invoice has been archived": "Račun je arhiviran.",
-  "Archived_Body": "Molimo kontaktirajte prodaca za bili kakvu informaciju ili pomoć u vezi narudžbine.",
+  "Archived_Body": "Molimo kontaktirajte prodavca za bili kakvu informaciju ili pomoć u vezi narudžbine.",
   "BOLT 11 Invoice": "BOLT 11 Račun",
   "Node Info": "Informacije Node-a",
   "txCount": "{{count}} transakcija",
   "txCount_plural": "{{count}} transakcije",
-  "Pay with CoinSwitch": "Pay with CoinSwitch",
-  "Pay with Changelly": "Pay with Changelly"
+  "Pay with CoinSwitch": "Plati putem CoinSwitch-a",
+  "Pay with Changelly": "Plati putem Changelly-ja",
+  "Close": "Zatvori"
 }

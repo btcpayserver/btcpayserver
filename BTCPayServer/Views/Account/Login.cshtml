@@ -19,7 +19,7 @@
             <div class="col-md-4">
                 <section>
                     <form asp-route-returnurl="@ViewData["ReturnUrl"]" method="post">
-                        <h4>Use a local account to log in.</h4>
+                         <h4>User Login</h4>
                         <hr />
                         <div asp-validation-summary="All" class="text-danger"></div>
                         <div class="form-group">
@@ -56,7 +56,7 @@
             </div>
             <div class="col-md-6 col-md-offset-2">
                 <section>
-                    <h4>Use another service to log in.</h4>
+                    <h4>Your next-generation Payment Portal</h4>
                     <hr />
                     @{
                         var loginProviders = (await SignInManager.GetExternalAuthenticationSchemesAsync()).ToList();

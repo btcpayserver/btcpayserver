@@ -62,6 +62,8 @@ namespace BTCPayServer.Controllers
                 Step = step.ToString(CultureInfo.InvariantCulture),
                 EnableShoppingCart = settings.EnableShoppingCart,
                 ShowCustomAmount = settings.ShowCustomAmount,
+                ShowDiscount = settings.ShowDiscount,
+                EnableTips = settings.EnableTips,
                 CurrencyCode = settings.Currency,
                 CurrencySymbol = numberFormatInfo.CurrencySymbol,
                 CurrencyInfo = new ViewPointOfSaleViewModel.CurrencyInfoData()

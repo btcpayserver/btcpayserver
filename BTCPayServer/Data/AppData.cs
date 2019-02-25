@@ -23,6 +23,7 @@ namespace BTCPayServer.Data
         {
             get; set;
         }
+        public bool TagAllInvoices { get; set; }
         public string Settings { get; set; }
 
         public T GetSettings<T>() where T : class, new()

@@ -65,9 +65,8 @@ namespace BTCPayServer.HostedServices
 
         async Task RefreshCoinAverageSupportedExchanges()
         {
-            var tickers = await new CoinAverageRateProvider() { Authenticator = _coinAverageSettings }.GetExchangeTickersAsync();
             var exchanges = new CoinAverageExchanges();
-            foreach (var item in tickers
+            foreach (var item in (await new CoinAverageRateProvider() { Authenticator = _coinAverageSettings }.GetExchangeTickersAsync())
                 .Exchanges
                 .Select(c => new CoinAverageExchange(c.Name, c.DisplayName)))
             {

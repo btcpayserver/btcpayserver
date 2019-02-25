@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using BTCPayServer.Services.Apps;
 
 namespace BTCPayServer.Models.AppViewModels
 {
@@ -41,7 +42,7 @@ namespace BTCPayServer.Models.AppViewModels
 
         [Required]
         [MaxLength(5)]
-        [Display(Name = "The primary currency used for targets and stats. (e.g. BTC, LTC, USD, etc.)")]
+        [Display(Name = "Primary currency used for targets and stats. (e.g. BTC, LTC, USD, etc.)")]
         public string TargetCurrency { get; set; } = "BTC";
 
         [Display(Name = "Set a Target amount ")]
@@ -68,24 +69,15 @@ namespace BTCPayServer.Models.AppViewModels
         [Display(Name = "Custom CSS Code")]
         public string EmbeddedCSS { get; set; }
 
-        [Display(Name = "Base the contributed goal amount on the invoice amount and not actual payments")]
-        public bool UseInvoiceAmount { get; set; }       
         [Display(Name = "Count all invoices created on the store as part of the crowdfunding goal")]
         public bool UseAllStoreInvoices { get; set; } 
 
         public string AppId { get; set; }
+        public string SearchTerm { get; set; }
+
         [Display(Name = "Sort contribution perks by popularity")]
         public bool SortPerksByPopularity { get; set; }
         [Display(Name = "Display contribution ranking")]
         public bool DisplayPerksRanking { get; set; }
-    }
-
-    public enum CrowdfundResetEvery
-    {
-        Never,
-        Hour,
-        Day,
-        Month,
-        Year
     }
 }

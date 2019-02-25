@@ -36,6 +36,8 @@ namespace BTCPayServer.Models.AppViewModels
 
         public bool EnableShoppingCart { get; set; }
         public bool ShowCustomAmount { get; set; }
+        public bool ShowDiscount { get; set; }
+        public bool EnableTips { get; set; }
         public string Step { get; set; }
         public string Title { get; set; }
         public Item[] Items { get; set; }

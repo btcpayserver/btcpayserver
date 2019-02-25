@@ -21,6 +21,7 @@ using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Payments.CoinSwitch;
 using BTCPayServer.Security;
 using BTCPayServer.Rating;
+using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Services.Mails;
 
 namespace BTCPayServer.Data
@@ -38,6 +39,11 @@ namespace BTCPayServer.Data
             get; set;
         }
         public List<AppData> Apps
+        {
+            get; set;
+        }
+        
+        public List<PaymentRequestData> PaymentRequests
         {
             get; set;
         }

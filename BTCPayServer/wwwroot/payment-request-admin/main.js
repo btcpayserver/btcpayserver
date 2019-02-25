@@ -1,4 +1,3 @@
-hljs.initHighlightingOnLoad();
 $(document).ready(function() {
 
     $(".richtext").summernote({
@@ -14,6 +13,7 @@ $(document).ready(function() {
             minDate: min,
             maxDate: max,
             defaultDate: defaultDate
-        });
+        });        
     });
+
 });

@@ -167,11 +167,9 @@ namespace BTCPayServer.Services.Apps
 
         public static string GetCrowdfundOrderId(string appId) => $"crowdfund-app_{appId}";
         public static string GetAppInternalTag(string appId) => $"APP#{appId}";
-        public static string[] GetAppInternalTags(IEnumerable<string> tags)
+        public static string[] GetAppInternalTags(InvoiceEntity invoice)
         {
-            return tags == null ? Array.Empty<string>() : tags
-                                                  .Where(t => t.StartsWith("APP#", StringComparison.InvariantCulture))
-                                                  .Select(t => t.Substring("APP#".Length)).ToArray();
+            return invoice.GetInternalTags("APP#");
         }
         private async Task<InvoiceEntity[]> GetInvoicesForApp(AppData appData, DateTime? startDate = null)
         {

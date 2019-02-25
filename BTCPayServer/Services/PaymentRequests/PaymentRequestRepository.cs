@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -170,6 +171,15 @@ namespace BTCPayServer.Services.PaymentRequests
             }
 
             return invoiceOrderId.Replace("PAY_REQUEST_", "", StringComparison.InvariantCulture);
+        }
+
+        public static string GetInternalTag(string id)
+        {
+            return $"PAYREQ#{id}";
+        }
+        public static string[] GetPaymentIdsFromInternalTags(InvoiceEntity invoiceEntity)
+        {
+            return invoiceEntity.GetInternalTags("PAYREQ#");
         }
     }
 

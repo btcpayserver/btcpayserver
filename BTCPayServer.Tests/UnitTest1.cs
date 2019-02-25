@@ -1298,6 +1298,25 @@ namespace BTCPayServer.Tests
                 Assert.True(invoice.SupportedTransactionCurrencies["LTC"].Enabled);
                 Assert.True(invoice.PaymentSubtotals.ContainsKey("LTC"));
                 Assert.True(invoice.PaymentTotals.ContainsKey("LTC"));
+
+
+                // Check if we can disable LTC
+                invoice = user.BitPay.CreateInvoice(new Invoice()
+                {
+                    Price = 5000.0m,
+                    Currency = "USD",
+                    PosData = "posData",
+                    OrderId = "orderId",
+                    ItemDesc = "Some description",
+                    FullNotifications = true,
+                    SupportedTransactionCurrencies = new Dictionary<string, InvoiceSupportedTransactionCurrency>()
+                    {
+                        { "BTC", new InvoiceSupportedTransactionCurrency() { Enabled = true } }
+                    }
+                }, Facade.Merchant);
+
+                Assert.Single(invoice.CryptoInfo.Where(c => c.CryptoCode == "BTC"));
+                Assert.Empty(invoice.CryptoInfo.Where(c => c.CryptoCode == "LTC"));
             }
         }
 
@@ -1978,31 +1997,48 @@ donation:
                 var invoice1 = user.BitPay.CreateInvoice(new Invoice()
                 {
                     Price = 0.000000012m,
-                    Currency = "BTC",
-                    PosData = "posData",
-                    OrderId = "orderId",
-                    ItemDesc = "Some description",
+                    Currency = "USD",
                     FullNotifications = true
                 }, Facade.Merchant);
                 var invoice2 = user.BitPay.CreateInvoice(new Invoice()
                 {
                     Price = 0.000000019m,
-                    Currency = "BTC",
-                    PosData = "posData",
-                    OrderId = "orderId",
-                    ItemDesc = "Some description",
+                    Currency = "USD"
+                }, Facade.Merchant);
+                Assert.Equal(0.000000012m, invoice1.Price);
+                Assert.Equal(0.000000019m, invoice2.Price);
+
+                // Should round up to 1 because 0.000000019 is unsignificant
+                var invoice3 = user.BitPay.CreateInvoice(new Invoice()
+                {
+                    Price = 1.000000019m,
+                    Currency = "USD",
                     FullNotifications = true
                 }, Facade.Merchant);
-                Assert.Equal(0.00000001m, invoice1.Price);
-                Assert.Equal(0.00000002m, invoice2.Price);
+                Assert.Equal(1m, invoice3.Price);
+
+                // Should not round up at 8 digit because the 9th is insignificant
+                var invoice4 = user.BitPay.CreateInvoice(new Invoice()
+                {
+                    Price = 1.000000019m,
+                    Currency = "BTC",
+                    FullNotifications = true
+                }, Facade.Merchant);
+                Assert.Equal(1.00000002m, invoice4.Price);
+
+                // But not if the 9th is insignificant
+                invoice4 = user.BitPay.CreateInvoice(new Invoice()
+                {
+                    Price = 0.000000019m,
+                    Currency = "BTC",
+                    FullNotifications = true
+                }, Facade.Merchant);
+                Assert.Equal(0.000000019m, invoice4.Price);
 
                 var invoice = user.BitPay.CreateInvoice(new Invoice()
                 {
                     Price = -0.1m,
                     Currency = "BTC",
-                    PosData = "posData",
-                    OrderId = "orderId",
-                    ItemDesc = "Some description",
                     FullNotifications = true
                 }, Facade.Merchant);
                 Assert.Equal(0.0m, invoice.Price);

@@ -14,7 +14,7 @@ namespace BTCPayServer.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "2.1.0-rtm-30799");
+                .HasAnnotation("ProductVersion", "2.1.8-servicing-32085");
 
             modelBuilder.Entity("BTCPayServer.Data.AddressInvoiceData", b =>
                 {
@@ -62,6 +62,8 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("Settings");
 
                     b.Property<string>("StoreDataId");
+
+                    b.Property<bool>("TagAllInvoices");
 
                     b.HasKey("Id");
 
@@ -326,6 +328,26 @@ namespace BTCPayServer.Migrations
                     b.ToTable("AspNetUsers");
                 });
 
+            modelBuilder.Entity("BTCPayServer.Services.PaymentRequests.PaymentRequestData", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<byte[]>("Blob");
+
+                    b.Property<int>("Status");
+
+                    b.Property<string>("StoreDataId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("StoreDataId");
+
+                    b.ToTable("PaymentRequests");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -522,6 +544,14 @@ namespace BTCPayServer.Migrations
 
                     b.HasOne("BTCPayServer.Data.StoreData", "StoreData")
                         .WithMany("UserStores")
+                        .HasForeignKey("StoreDataId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("BTCPayServer.Services.PaymentRequests.PaymentRequestData", b =>
+                {
+                    b.HasOne("BTCPayServer.Data.StoreData", "StoreData")
+                        .WithMany("PaymentRequests")
                         .HasForeignKey("StoreDataId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });

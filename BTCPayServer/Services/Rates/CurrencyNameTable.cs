@@ -42,6 +42,15 @@ namespace BTCPayServer.Services.Rates
 
         static Dictionary<string, IFormatProvider> _CurrencyProviders = new Dictionary<string, IFormatProvider>();
 
+        public string FormatCurrency(string price, string currency)
+        {
+            return FormatCurrency(decimal.Parse(price, CultureInfo.InvariantCulture), currency);
+        }
+        public string FormatCurrency(decimal price, string currency)
+        {
+            return price.ToString("C", GetCurrencyProvider(currency));
+        }
+
         public NumberFormatInfo GetNumberFormatInfo(string currency, bool useFallback)
         {
             var data = GetCurrencyProvider(currency);
@@ -121,19 +130,7 @@ namespace BTCPayServer.Services.Rates
             var provider = GetNumberFormatInfo(currency, true);
             var currencyData = GetCurrencyData(currency, true);
             var divisibility = currencyData.Divisibility;
-            if (value != 0m)
-            {
-                while (true)
-                {
-                    var rounded = decimal.Round(value, divisibility, MidpointRounding.AwayFromZero);
-                    if ((Math.Abs(rounded - value) / value) < 0.001m)
-                    {
-                        value = rounded;
-                        break;
-                    }
-                    divisibility++;
-                }
-            }
+            value = value.RoundToSignificant(ref divisibility);
             if (divisibility != provider.CurrencyDecimalDigits)
             {
                 provider = (NumberFormatInfo)provider.Clone();

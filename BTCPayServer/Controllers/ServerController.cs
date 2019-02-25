@@ -27,6 +27,7 @@ using Renci.SshNet;
 using BTCPayServer.Logging;
 using BTCPayServer.Lightning;
 using BTCPayServer.Configuration.External;
+using System.Runtime.CompilerServices;
 
 namespace BTCPayServer.Controllers
 {
@@ -170,7 +171,7 @@ namespace BTCPayServer.Controllers
                 vm.DNSDomain = null;
             return View(vm);
         }
-        
+
         [Route("server/maintenance")]
         [HttpPost]
         public async Task<IActionResult> Maintenance(MaintenanceViewModel vm, string command)
@@ -352,22 +353,27 @@ namespace BTCPayServer.Controllers
             var user = await _UserManager.FindByIdAsync(userId);
             if (user == null)
                 return NotFound();
-            var roles = await _UserManager.GetRolesAsync(user);
-            var isAdmin = IsAdmin(roles);
-            bool updated = false;
 
-            if (isAdmin != viewModel.IsAdmin)
+            viewModel.StatusMessage = "";
+
+            var admins = await _UserManager.GetUsersInRoleAsync(Roles.ServerAdmin);
+            if (!viewModel.IsAdmin && admins.Count == 1)
+            {
+                viewModel.StatusMessage = "This is the only Admin, so their role can't be removed until another Admin is added.";
+                return View(viewModel); // return
+            }
+
+            var roles = await _UserManager.GetRolesAsync(user);
+            if (viewModel.IsAdmin != IsAdmin(roles))
             {
                 if (viewModel.IsAdmin)
                     await _UserManager.AddToRoleAsync(user, Roles.ServerAdmin);
                 else
                     await _UserManager.RemoveFromRoleAsync(user, Roles.ServerAdmin);
-                updated = true;
-            }
-            if (updated)
-            {
+
                 viewModel.StatusMessage = "User successfully updated";
             }
+
             return View(viewModel);
         }
 
@@ -378,12 +384,29 @@ namespace BTCPayServer.Controllers
             var user = userId == null ? null : await _UserManager.FindByIdAsync(userId);
             if (user == null)
                 return NotFound();
-            return View("Confirm", new ConfirmModel()
+
+            var admins = await _UserManager.GetUsersInRoleAsync(Roles.ServerAdmin);
+            if (admins.Count == 1)
             {
-                Title = "Delete user " + user.Email,
-                Description = "This user will be permanently deleted",
-                Action = "Delete"
-            });
+                // return
+                return View("Confirm", new ConfirmModel("Unable to Delete Last Admin",
+                    "This is the last Admin, so it can't be removed"));
+            }
+
+
+            var roles = await _UserManager.GetRolesAsync(user);
+            if (IsAdmin(roles))
+            {
+                return View("Confirm", new ConfirmModel("Delete Admin " + user.Email,
+                    "Are you sure you want to delete this Admin and delete all accounts, users and data associated with the server account?",
+                    "Delete"));
+            }
+            else
+            {
+                return View("Confirm", new ConfirmModel("Delete user " + user.Email,
+                                    "This user will be permanently deleted",
+                                    "Delete"));
+            }
         }
 
         [Route("server/users/{userId}/delete")]
@@ -452,7 +475,17 @@ namespace BTCPayServer.Controllers
                     {
                         Crypto = cryptoCode,
                         Type = "Spark server",
-                        Action = nameof(SparkServices),
+                        Action = nameof(SparkService),
+                        Index = i++,
+                    });
+                }
+                foreach (var rtlService in _Options.ExternalServicesByCryptoCode.GetServices<ExternalRTL>(cryptoCode))
+                {
+                    result.LNDServices.Add(new ServicesViewModel.LNDServiceViewModel()
+                    {
+                        Crypto = cryptoCode,
+                        Type = "Ride the Lightning server (RTL)",
+                        Action = nameof(RTLService),
                         Index = i++,
                     });
                 }
@@ -467,7 +500,7 @@ namespace BTCPayServer.Controllers
                     });
                 }
             }
-            foreach(var externalService in _Options.ExternalServices)
+            foreach (var externalService in _Options.ExternalServices)
             {
                 result.ExternalServices.Add(new ServicesViewModel.ExternalService()
                 {
@@ -475,7 +508,7 @@ namespace BTCPayServer.Controllers
                     Link = this.Request.GetRelativePathOrAbsolute(externalService.Value)
                 });
             }
-            if(_Options.SSHSettings != null)
+            if (_Options.SSHSettings != null)
             {
                 result.ExternalServices.Add(new ServicesViewModel.ExternalService()
                 {
@@ -526,37 +559,41 @@ namespace BTCPayServer.Controllers
         }
 
         [Route("server/services/spark/{cryptoCode}/{index}")]
-        public async Task<IActionResult> SparkServices(string cryptoCode, int index, bool showQR = false)
+        public async Task<IActionResult> SparkService(string cryptoCode, int index, bool showQR = false)
+        {
+            return await LightningWalletServicesCore<ExternalSpark>(cryptoCode, showQR, "Spark Wallet");
+        }
+        [Route("server/services/rtl/{cryptoCode}/{index}")]
+        public async Task<IActionResult> RTLService(string cryptoCode, int index, bool showQR = false)
+        {
+            return await LightningWalletServicesCore<ExternalRTL>(cryptoCode, showQR, "Ride the Lightning Wallet");
+        }
+        private async Task<IActionResult> LightningWalletServicesCore<T>(string cryptoCode, bool showQR, string walletName) where T : ExternalService, IAccessKeyService
         {
             if (!_dashBoard.IsFullySynched(cryptoCode, out var unusud))
             {
                 StatusMessage = $"Error: {cryptoCode} is not fully synched";
                 return RedirectToAction(nameof(Services));
             }
-            var spark = _Options.ExternalServicesByCryptoCode.GetServices<ExternalSpark>(cryptoCode).Select(c => c.ConnectionString).FirstOrDefault();
-            if(spark == null)
+            var external = _Options.ExternalServicesByCryptoCode.GetServices<T>(cryptoCode).Where(c => c?.ConnectionString?.Server != null).FirstOrDefault();
+            if (external == null)
             {
                 return NotFound();
             }
 
-            SparkServicesViewModel vm = new SparkServicesViewModel();
+            LightningWalletServices vm = new LightningWalletServices();
             vm.ShowQR = showQR;
+            vm.WalletName = walletName;
             try
             {
-                var cookie = (spark.CookeFile == "fake"
-                            ? "fake:fake:fake" // If we are testing, it should not crash
-                            : await System.IO.File.ReadAllTextAsync(spark.CookeFile)).Split(':');
-                if (cookie.Length >= 3)
-                {
-                    vm.SparkLink = $"{spark.Server.AbsoluteUri}?access-key={cookie[2]}";
-                }
+                vm.ServiceLink = $"{external.ConnectionString.Server.AbsoluteUri}?access-key={await external.ExtractAccessKey()}";
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 StatusMessage = $"Error: {ex.Message}";
                 return RedirectToAction(nameof(Services));
             }
-            return View(vm);
+            return View("LightningWalletServices", vm);
         }
 
         [Route("server/services/lnd/{cryptoCode}/{index}")]
@@ -578,7 +615,7 @@ namespace BTCPayServer.Controllers
                 model.ConnectionType = "GRPC";
                 model.GRPCSSLCipherSuites = "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256";
             }
-            else if(external.ConnectionType == LightningConnectionType.LndREST)
+            else if (external.ConnectionType == LightningConnectionType.LndREST)
             {
                 model.Uri = external.BaseUri.AbsoluteUri;
                 model.ConnectionType = "REST";
@@ -792,7 +829,8 @@ namespace BTCPayServer.Controllers
                     .ToList();
                 vm.LogFileOffset = offset;
 
-                if (string.IsNullOrEmpty(file)) return View("Logs", vm);
+                if (string.IsNullOrEmpty(file))
+                    return View("Logs", vm);
                 vm.Log = "";
                 var path = Path.Combine(di.FullName, file);
                 try

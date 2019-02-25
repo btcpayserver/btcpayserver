@@ -55,12 +55,16 @@ namespace BTCPayServer.Controllers
                     "  custom: true";
                 EnableShoppingCart = false;
                 ShowCustomAmount = true;
+                ShowDiscount = true;
+                EnableTips = true;
             }
             public string Title { get; set; }
             public string Currency { get; set; }
             public string Template { get; set; }
             public bool EnableShoppingCart { get; set; }
             public bool ShowCustomAmount { get; set; }
+            public bool ShowDiscount { get; set; }
+            public bool EnableTips { get; set; }
 
             public const string BUTTON_TEXT_DEF = "Buy for {0}";
             public string ButtonText { get; set; } = BUTTON_TEXT_DEF;
@@ -89,6 +93,8 @@ namespace BTCPayServer.Controllers
                 Title = settings.Title,
                 EnableShoppingCart = settings.EnableShoppingCart,
                 ShowCustomAmount = settings.ShowCustomAmount,
+                ShowDiscount = settings.ShowDiscount,
+                EnableTips = settings.EnableTips,
                 Currency = settings.Currency,
                 Template = settings.Template,
                 ButtonText = settings.ButtonText ?? PointOfSaleSettings.BUTTON_TEXT_DEF,
@@ -116,7 +122,7 @@ namespace BTCPayServer.Controllers
                 }
                 try
                 {
-                    var items = _AppsHelper.Parse(settings.Template, settings.Currency);
+                    var items = _AppService.Parse(settings.Template, settings.Currency);
                     var builder = new StringBuilder();
                     builder.AppendLine($"<form method=\"POST\" action=\"{encoder.Encode(appUrl)}\">");
                     builder.AppendLine($"  <input type=\"hidden\" name=\"email\" value=\"customer@example.com\" />");
@@ -138,11 +144,11 @@ namespace BTCPayServer.Controllers
         [Route("{appId}/settings/pos")]
         public async Task<IActionResult> UpdatePointOfSale(string appId, UpdatePointOfSaleViewModel vm)
         {
-            if (_AppsHelper.GetCurrencyData(vm.Currency, false) == null)
+            if (_currencies.GetCurrencyData(vm.Currency, false) == null)
                 ModelState.AddModelError(nameof(vm.Currency), "Invalid currency");
             try
             {
-                _AppsHelper.Parse(vm.Template, vm.Currency);
+                _AppService.Parse(vm.Template, vm.Currency);
             }
             catch
             {
@@ -160,6 +166,8 @@ namespace BTCPayServer.Controllers
                 Title = vm.Title,
                 EnableShoppingCart = vm.EnableShoppingCart,
                 ShowCustomAmount = vm.ShowCustomAmount,
+                ShowDiscount = vm.ShowDiscount,
+                EnableTips = vm.EnableTips,
                 Currency = vm.Currency.ToUpperInvariant(),
                 Template = vm.Template,
                 ButtonText = vm.ButtonText,
@@ -180,6 +188,7 @@ namespace BTCPayServer.Controllers
                 ctx.Apps.Add(app);
                 ctx.Entry<AppData>(app).State = EntityState.Modified;
                 ctx.Entry<AppData>(app).Property(a => a.Settings).IsModified = true;
+                ctx.Entry<AppData>(app).Property(a => a.TagAllInvoices).IsModified = true;
                 await ctx.SaveChangesAsync();
             }
         }

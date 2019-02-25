@@ -169,6 +169,13 @@ namespace BTCPayServer.Services.Invoices
 
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public HashSet<string> InternalTags { get; set; } = new HashSet<string>();
+
+        public string[] GetInternalTags(string suffix)
+        {
+            return InternalTags == null ? Array.Empty<string>() : InternalTags
+                                                  .Where(t => t.StartsWith(suffix, StringComparison.InvariantCulture))
+                                                  .Select(t => t.Substring(suffix.Length)).ToArray();
+        }
         
         [Obsolete("Use GetDerivationStrategies instead")]
         public string DerivationStrategy

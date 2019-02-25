@@ -47,7 +47,7 @@ namespace BTCPayServer.Services.Apps
         {
             if (evt is InvoiceEvent invoiceEvent)
             {
-                foreach (var appId in AppService.GetAppInternalTags(invoiceEvent.Invoice.InternalTags))
+                foreach (var appId in AppService.GetAppInternalTags(invoiceEvent.Invoice))
                 {
                     if (invoiceEvent.Name == InvoiceEvent.ReceivedPayment)
                     {

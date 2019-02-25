@@ -116,24 +116,24 @@ namespace BTCPayServer.PaymentRequest
         {
             if (evt is InvoiceEvent invoiceEvent)
             {
-                var paymentRequestId = PaymentRequestRepository.GetPaymentRequestIdFromOrderId(invoiceEvent.Invoice.OrderId);
-                if (paymentRequestId == null)
-                    return;
-                if (invoiceEvent.Name == InvoiceEvent.ReceivedPayment)
+                foreach (var paymentId in PaymentRequestRepository.GetPaymentIdsFromInternalTags(invoiceEvent.Invoice))
                 {
-                    await _PaymentRequestService.UpdatePaymentRequestStateIfNeeded(paymentRequestId);
-                    var data = invoiceEvent.Payment.GetCryptoPaymentData();
-                    await _HubContext.Clients.Group(paymentRequestId).SendCoreAsync(PaymentRequestHub.PaymentReceived,
-                        new object[]
-                        {
+                    if (invoiceEvent.Name == InvoiceEvent.ReceivedPayment)
+                    {
+                        await _PaymentRequestService.UpdatePaymentRequestStateIfNeeded(paymentId);
+                        var data = invoiceEvent.Payment.GetCryptoPaymentData();
+                        await _HubContext.Clients.Group(paymentId).SendCoreAsync(PaymentRequestHub.PaymentReceived,
+                            new object[]
+                            {
                             data.GetValue(),
                             invoiceEvent.Payment.GetCryptoCode(),
                             Enum.GetName(typeof(PaymentTypes),
                                 invoiceEvent.Payment.GetPaymentMethodId().PaymentType)
-                        });
-                }
+                            });
+                    }
 
-                await InfoUpdated(paymentRequestId);
+                    await InfoUpdated(paymentId);
+                }
             }
             else if (evt is PaymentRequestUpdated updated)
             {

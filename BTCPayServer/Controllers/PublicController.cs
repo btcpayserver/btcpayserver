@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Filters;
+using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Cors;
@@ -45,7 +46,7 @@ namespace BTCPayServer.Controllers
             if (!ModelState.IsValid)
                 return View();
 
-            var invoice = await _InvoiceController.CreateInvoiceCore(new NBitpayClient.Invoice()
+            var invoice = await _InvoiceController.CreateInvoiceCore(new CreateInvoiceRequest()
             {
                 Price = model.Price,
                 Currency = model.Currency,

@@ -1,0 +1,163 @@
+@model BTCPayServer.Models.PaymentRequestViewModels.ViewPaymentRequestViewModel
+
+<div class="container">
+    <div class="row w-100 p-0 m-0" style="height: 100vh">
+        <div class="mx-auto my-auto w-100">
+            <div class="card">
+                <h1 class="card-header">
+                    @Model.Title
+                    <span class="text-muted float-right text-center">@Model.Status</span>
+                </h1>
+                <div class="card-body px-0 pt-0">
+                    <div class="row mb-4">
+                        <div class="col-sm-12 col-md-12 col-lg-6 ">
+                            <ul class="w-100 list-group list-group-flush">
+                                <li class="list-group-item">
+                                    <div class="d-flex justify-content-between">
+                                        <span class="h2 text-muted">Request amount:</span>
+                                        <span class="h2">@Model.AmountFormatted</span>
+                                    </div>
+                                </li>
+                                <li class="list-group-item">
+                                    <div class="d-flex justify-content-between">
+                                        <span class="h2 text-muted">Paid so far:</span>
+                                        <span class="h2">@Model.AmountCollectedFormatted</span>
+                                    </div>
+                                </li>
+                                <li class="list-group-item">
+                                    <div class="d-flex justify-content-between">
+                                        <span class="h2 text-muted">Amount due:</span>
+                                        <span class="h2">@Model.AmountDueFormatted</span>
+                                    </div>
+                                </li>
+                            </ul>
+                            <div class="w-100 p-2">@Html.Raw(Model.Description)</div>
+
+                        </div>
+                        <div class="col-sm-12 col-md-12  col-lg-6">
+                            <div class="table-responsive">
+                                <table class="table border-top-0 ">
+                                    <thead>
+                                    <tr>
+                                        <th class=" border-top-0" scope="col">Invoice #</th>
+                                        <th class=" border-top-0">Price</th>
+                                        <th class=" border-top-0">Expiry</th>
+                                        <th class=" border-top-0">Status</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    @if (Model.Invoices == null && !Model.Invoices.Any())
+                                    {
+                                        <tr>
+                                            <td colspan="4" class="text-center">No payments made yet</td>
+                                        </tr>
+                                    }
+                                    else
+                                    {
+                                        foreach (var invoice in Model.Invoices)
+                                        {
+                                            <tr class="bg-light">
+                                                <td scope="row">@invoice.Id</td>
+                                                <td>@invoice.Amount @invoice.Currency</td>
+                                                <td>@invoice.ExpiryDate.ToString("g")</td>
+                                                <td>@invoice.Status</td>
+                                            </tr>
+                                            if (invoice.Payments != null && invoice.Payments.Any())
+                                            {
+                                                <tr class="bg-light">
+                                                    <td colspan="4" class=" px-2 py-1 border-top-0">
+
+                                                        <div class="table-responsive">
+                                                            <table class="table table-bordered">
+                                                                <tr>
+                                                                    <th class="p-1" style="max-width: 300px">Tx Id</th>
+                                                                    <th class="p-1">Payment Method</th>
+                                                                    <th class="p-1">Amount</th>
+                                                                    <th class="p-1">Link</th>
+                                                                </tr>
+                                                                @foreach (var payment in invoice.Payments)
+                                                                {
+                                                                    <tr class="d-flex">
+                                                                        <td class="p-1 m-0 d-print-none d-block" style="max-width: 300px">
+                                                                            <div style="width: 100%; overflow-x: auto; overflow-wrap: initial;">@payment.Id</div>
+                                                                        </td>
+                                                                        <td class="p-1 m-0 d-none d-print-table-cell" style="max-width: 150px;">
+                                                                            @payment.Id
+                                                                        </td>
+                                                                        <td class="p-1">@payment.PaymentMethod</td>
+                                                                        <td class="p-1">@payment.Amount</td>
+                                                                        <td class="p-1 d-print-none">
+                                                                            @if (!string.IsNullOrEmpty(payment.Link))
+                                                                            {
+                                                                                <a :href="@payment.Link" target="_blank">Link</a>
+                                                                            }
+                                                                        </td>
+                                                                        <td class="p-1 d-none d-print-table-cell" style="max-width: 150px;">
+                                                                            @payment.Link
+                                                                        </td>
+                                                                    </tr>
+                                                                }
+                                                            </table>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        }
+                                    }
+                                    @if (Model.IsPending)
+                                    {
+                                        <tr>
+                                            <td colspan="4" class="text-center">
+                                                @if (Model.AllowCustomPaymentAmounts && !Model.AnyPendingInvoice)
+                                                {
+                                                    <form method="get" asp-action="PayPaymentRequest">
+
+                                                        <div class="input-group m-auto" style="max-width: 250px">
+                                                            <input
+                                                                class="form-control"
+                                                                type="number"
+                                                                name="amount"
+
+                                                                value="@Model.AmountDue"
+                                                                max="@Model.AmountDue"
+                                                                step="any"
+                                                                placeholder="Amount"
+                                                                required>
+                                                            <div class="input-group-append">
+                                                                <span class='input-group-text'>@Model.Currency.ToUpper()</span>
+                                                                <button
+                                                                    class="btn btn-primary"
+                                                                    type="submit">
+                                                                    Pay now
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </form>
+                                                }
+                                                else
+                                                {
+                                                    <a class="btn btn-primary btn-lg d-print-none" asp-action="PayPaymentRequest">
+                                                        Pay now
+                                                    </a>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="card-footer text-muted d-flex justify-content-between">
+
+                    <div >Updated @Model.LastUpdated.ToString("g")</div>
+                    <div >
+                        <span class="text-muted">Powered by </span><a href="https://btcpayserver.org" target="_blank">BTCPay Server</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

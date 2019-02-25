@@ -13,14 +13,14 @@ using BTCPayServer.Configuration;
 using System.IO;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using AspNet.Security.OpenIdConnect.Primitives;
-using BTCPayServer.Authentication.OpenId;
 using BTCPayServer.Authentication.OpenId.Models;
 using BTCPayServer.Security;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using OpenIddict.Abstractions;
 using OpenIddict.EntityFrameworkCore.Models;
 using System.Net;
-using BTCPayServer.Hubs;
+using BTCPayServer.PaymentRequest;
+using BTCPayServer.Services.Apps;
 
 namespace BTCPayServer.Hosting
 {
@@ -141,14 +141,6 @@ namespace BTCPayServer.Hosting
                 options.ClaimsIdentity.UserIdClaimType = OpenIdConnectConstants.Claims.Subject;
                 options.ClaimsIdentity.RoleClaimType = OpenIdConnectConstants.Claims.Role;
             });
-            services.AddCors(o =>
-            {
-                o.AddPolicy("BitpayAPI", b =>
-                {
-                    b.AllowAnyMethod().AllowAnyHeader().AllowAnyOrigin();
-                });
-            });
-
             // If the HTTPS certificate path is not set this logic will NOT be used and the default Kestrel binding logic will be.
             string httpsCertificateFilePath = Configuration.GetOrDefault<string>("HttpsCertificateFilePath", null);
             bool useDefaultCertificate = Configuration.GetOrDefault<bool>("HttpsUseDefaultCertificate", false);
@@ -215,13 +207,14 @@ namespace BTCPayServer.Hosting
                 app.UseDeveloperExceptionPage();
             }
             
-            app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+            app.UseCors();
             app.UsePayServer();
             app.UseStaticFiles();
             app.UseAuthentication();
             app.UseSignalR(route =>
             {
-                route.MapHub<CrowdfundHub>("/apps/crowdfund/hub");
+                route.MapHub<AppHub>("/apps/hub");
+                route.MapHub<PaymentRequestHub>("/payment-requests/hub");
             });
             app.UseWebSockets();
             app.UseStatusCodePages();

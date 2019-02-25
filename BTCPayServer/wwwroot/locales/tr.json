@@ -44,6 +44,7 @@
   "Node Info": "Düğüm Bilgisi",
   "txCount": "{{count}} işlem",
   "txCount_plural": "{{count}} işlem",
-  "Pay with CoinSwitch": "Pay with CoinSwitch",
-  "Pay with Changelly": "Pay with Changelly"
+  "Pay with CoinSwitch": "CoinSwitch ile Öde",
+  "Pay with Changelly": "Changelly ile Öde",
+  "Close": "Kapat"
 }

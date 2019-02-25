@@ -93,6 +93,16 @@ retry:
             }
         }
 
+        public async Task<AppData[]> GetAppsTaggingStore(string storeId)
+        {
+            if (storeId == null)
+                throw new ArgumentNullException(nameof(storeId));
+            using (var ctx = _ContextFactory.CreateContext())
+            {
+                return await ctx.Apps.Where(a => a.StoreDataId == storeId && a.TagAllInvoices).ToArrayAsync();
+            }
+        }
+
         public async Task UpdateInvoice(string invoiceId, UpdateCustomerModel data)
         {
             using (var ctx = _ContextFactory.CreateContext())

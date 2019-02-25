@@ -17,6 +17,10 @@ namespace BTCPayServer.Models.AppViewModels
         public bool EnableShoppingCart { get; set; }
         [Display(Name = "User can input custom amount")]
         public bool ShowCustomAmount { get; set; }
+        [Display(Name = "User can input discount in %")]
+        public bool ShowDiscount { get; set; }
+        [Display(Name = "Enable tips")]
+        public bool EnableTips { get; set; }
         public string Example1 { get; internal set; }
         public string Example2 { get; internal set; }
         public string ExampleCallback { get; internal set; }
@@ -41,5 +45,7 @@ namespace BTCPayServer.Models.AppViewModels
         [MaxLength(500)]
         [Display(Name = "Custom bootstrap CSS file")]
         public string CustomCSSLink { get; set; }
+
+        public string Id { get; set; }
     }
 }

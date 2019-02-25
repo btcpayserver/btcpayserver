@@ -11,6 +11,7 @@ using BTCPayServer.Models;
 using BTCPayServer.Payments;
 using BTCPayServer.Rating;
 using BTCPayServer.Security;
+using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
@@ -61,7 +62,7 @@ namespace BTCPayServer.Controllers
         }
 
 
-        internal async Task<DataWrapper<InvoiceResponse>> CreateInvoiceCore(Invoice invoice, StoreData store, string serverUrl)
+        internal async Task<DataWrapper<InvoiceResponse>> CreateInvoiceCore(CreateInvoiceRequest invoice, StoreData store, string serverUrl, List<string> additionalTags = null)
         {
             if (!store.HasClaim(Policies.CanCreateInvoice.Key))
                 throw new UnauthorizedAccessException();
@@ -69,12 +70,12 @@ namespace BTCPayServer.Controllers
             logs.Write("Creation of invoice starting");
             var entity = new InvoiceEntity
             {
+                Version = InvoiceEntity.Lastest_Version,
                 InvoiceTime = DateTimeOffset.UtcNow
             };
+
+            var getAppsTaggingStore = _InvoiceRepository.GetAppsTaggingStore(store.Id);
             var storeBlob = store.GetStoreBlob();
-            Uri notificationUri = Uri.IsWellFormedUriString(invoice.NotificationURL, UriKind.Absolute) ? new Uri(invoice.NotificationURL, UriKind.Absolute) : null;
-            if (notificationUri == null || (notificationUri.Scheme != "http" && notificationUri.Scheme != "https")) //TODO: Filer non routable addresses ?
-                notificationUri = null;
             EmailAddressAttribute emailValidator = new EmailAddressAttribute();
             entity.ExpirationTime = entity.InvoiceTime.AddMinutes(storeBlob.InvoiceExpiration);
             entity.MonitoringExpiration = entity.ExpirationTime + TimeSpan.FromMinutes(storeBlob.MonitoringExpiration);
@@ -82,10 +83,17 @@ namespace BTCPayServer.Controllers
             entity.ServerUrl = serverUrl;
             entity.FullNotifications = invoice.FullNotifications || invoice.ExtendedNotifications;
             entity.ExtendedNotifications = invoice.ExtendedNotifications;
-            entity.NotificationURL = notificationUri?.AbsoluteUri;
+            if (invoice.NotificationURL != null &&
+                Uri.TryCreate(invoice.NotificationURL, UriKind.Absolute, out var notificationUri) &&
+                (notificationUri.Scheme == "http" || notificationUri.Scheme == "https"))
+            {
+                entity.NotificationURL = notificationUri.AbsoluteUri;
+            }
             entity.NotificationEmail = invoice.NotificationEmail;
-            entity.BuyerInformation = Map<Invoice, BuyerInformation>(invoice);
+            entity.BuyerInformation = Map<CreateInvoiceRequest, BuyerInformation>(invoice);
             entity.PaymentTolerance = storeBlob.PaymentTolerance;
+            if (additionalTags != null)
+                entity.InternalTags.AddRange(additionalTags);
             //Another way of passing buyer info to support
             FillBuyerInfo(invoice.Buyer, entity.BuyerInformation);
             if (entity?.BuyerInformation?.BuyerEmail != null)
@@ -95,17 +103,21 @@ namespace BTCPayServer.Controllers
                 entity.RefundMail = entity.BuyerInformation.BuyerEmail;
             }
 
+            var taxIncluded = invoice.TaxIncluded.HasValue ? invoice.TaxIncluded.Value : 0m;
+            
             var currencyInfo = _CurrencyNameTable.GetNumberFormatInfo(invoice.Currency, false);
             if (currencyInfo != null)
             {
-                invoice.Price = Math.Round(invoice.Price, currencyInfo.CurrencyDecimalDigits);
-                invoice.TaxIncluded = Math.Round(invoice.TaxIncluded, currencyInfo.CurrencyDecimalDigits);
+                int divisibility = currencyInfo.CurrencyDecimalDigits;
+                invoice.Price = invoice.Price.RoundToSignificant(ref divisibility);
+                divisibility = currencyInfo.CurrencyDecimalDigits;
+                invoice.TaxIncluded = taxIncluded.RoundToSignificant(ref divisibility);
             }
             invoice.Price = Math.Max(0.0m, invoice.Price);
-            invoice.TaxIncluded = Math.Max(0.0m, invoice.TaxIncluded);
-            invoice.TaxIncluded = Math.Min(invoice.TaxIncluded, invoice.Price);
+            invoice.TaxIncluded = Math.Max(0.0m, taxIncluded);
+            invoice.TaxIncluded = Math.Min(taxIncluded, invoice.Price);
 
-            entity.ProductInformation = Map<Invoice, ProductInformation>(invoice);
+            entity.ProductInformation = Map<CreateInvoiceRequest, ProductInformation>(invoice);
 
 
             entity.RedirectURL = invoice.RedirectURL ?? store.StoreWebsite;
@@ -118,6 +130,17 @@ namespace BTCPayServer.Controllers
             HashSet<CurrencyPair> currencyPairsToFetch = new HashSet<CurrencyPair>();
             var rules = storeBlob.GetRateRules(_NetworkProvider);
             var excludeFilter = storeBlob.GetExcludedPaymentMethods(); // Here we can compose filters from other origin with PaymentFilter.Any()
+
+            if (invoice.SupportedTransactionCurrencies != null && invoice.SupportedTransactionCurrencies.Count != 0)
+            {
+                var supportedTransactionCurrencies = invoice.SupportedTransactionCurrencies
+                                                            .Where(c => c.Value.Enabled)
+                                                            .Select(c => PaymentMethodId.TryParse(c.Key, out var p) ? p : null)
+                                                            .ToHashSet();
+                excludeFilter = PaymentFilter.Or(excludeFilter, 
+                                                 PaymentFilter.Where(p => !supportedTransactionCurrencies.Contains(p)));
+            }
+
             foreach (var network in store.GetSupportedPaymentMethods(_NetworkProvider)
                                                 .Where(s => !excludeFilter.Match(s.PaymentId))
                                                 .Select(c => _NetworkProvider.GetNetwork(c.PaymentId.CryptoCode))
@@ -170,9 +193,15 @@ namespace BTCPayServer.Controllers
             entity.SetSupportedPaymentMethods(supported);
             entity.SetPaymentMethods(paymentMethods);
             entity.PosData = invoice.PosData;
+
+            foreach (var app in await getAppsTaggingStore)
+            {
+                entity.InternalTags.Add(AppService.GetAppInternalTag(app.Id));
+            }
+
             entity = await _InvoiceRepository.CreateInvoiceAsync(store.Id, entity, logs, _NetworkProvider);
             await fetchingAll;
-            _EventAggregator.Publish(new Events.InvoiceEvent(entity.EntityToDTO(_NetworkProvider), 1001, InvoiceEvent.Created));
+            _EventAggregator.Publish(new Events.InvoiceEvent(entity, 1001, InvoiceEvent.Created));
             var resp = entity.EntityToDTO(_NetworkProvider);
             return new DataWrapper<InvoiceResponse>(resp) { Facade = "pos/invoice" };
         }

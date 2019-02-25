@@ -31,7 +31,7 @@ namespace BTCPayServer.Models.AppViewModels
         public string DisqusShortname { get; set; }
         public bool AnimationsEnabled { get; set; }
         public int ResetEveryAmount { get; set; }
-        public string ResetEvery { get; set; }
+        public bool NeverReset { get; set; }
 
         public Dictionary<string, int> PerkCount { get; set; }
 

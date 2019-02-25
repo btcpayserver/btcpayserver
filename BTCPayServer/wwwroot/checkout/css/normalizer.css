@@ -8154,8 +8154,8 @@ a:hover {
 
 .action-button {
     color: #fff;
-    background-color: #329F80;
-    border-color: #329F80;
+    background-color: #0e1174;
+    border-color: #0e1174;
     padding: 15px;
     word-break: normal;
     font-size: 13.5px;
@@ -8170,21 +8170,21 @@ a:hover {
 
     .action-button:hover {
         color: #fff;
-        background-color: #24725B;
-        border-color: #24725B;
+        background-color: #627efa;
+        border-color: #627efa;
     }
 
     .action-button:focus, .action-button.focus {
         color: #fff;
-        background-color: #24725B;
-        border-color: #24725B;
+        background-color: #627efa;
+        border-color: #627efa;
     }
 
     .action-button:active, .action-button.active,
     .open > .action-button.dropdown-toggle {
         color: #fff;
-        background-color: #24725B;
-        border-color: #24725B;
+        background-color: #627efa;
+        border-color: #627efa;
         background-image: none;
     }
 
@@ -8193,8 +8193,8 @@ a:hover {
         .open > .action-button.dropdown-toggle:focus,
         .open > .action-button.dropdown-toggle.focus {
             color: #fff;
-            background-color: #24725B;
-            border-color: #24725B;
+            background-color: #627efa;
+            border-color: #627efa;
         }
 
     .action-button.disabled:focus, .action-button.disabled.focus, .action-button:disabled:focus, .action-button:disabled.focus {
@@ -8208,7 +8208,7 @@ a:hover {
     }
 
     .action-button:hover {
-        background-color: #24725B;
+        background-color: #627efa;
         border-color: rgba(28, 100, 222, 0);
         opacity: .95;
     }
@@ -8285,7 +8285,7 @@ strong {
 
 .top-header {
     color: #fff;
-    background-color: #329F80;
+    background-color: #0e1173;
     font-weight: 500;
     letter-spacing: .5px;
 }
@@ -8312,7 +8312,7 @@ strong {
 }
 
 .top-header .timer-row {
-    background: #CEDC21;
+    background: #627efa;
     display: flex;
     align-items: center;
     padding: 3px 14px;
@@ -8542,7 +8542,7 @@ strong {
     position: absolute;
     height: 5px;
     width: 50%;
-    background: #329F80;
+    background: #0e1173;
     top: 0;
     right: 50%;
     transition: all .2s ease;
@@ -8805,7 +8805,7 @@ strong {
     transform: rotateZ(45deg);
     margin-left: -5px;
     top: -5px;
-    background: #329F80;
+    background: #0e1173;
     transform-style: preserve-3d;
     backface-visibility: hidden;
 }
@@ -11366,7 +11366,7 @@ low-fee-timeline {
     transform: rotateZ(45deg);
     margin-left: -5px;
     top: -5px;
-    background: #329F80;
+    background: #0e1173;
     transform-style: preserve-3d;
     backface-visibility: hidden;
     margin-bottom: -10px;

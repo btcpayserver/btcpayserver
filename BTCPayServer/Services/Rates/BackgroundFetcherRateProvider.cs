@@ -16,6 +16,7 @@ namespace BTCPayServer.Services.Rates
         {
             public ExchangeRates Latest;
             public DateTimeOffset NextRefresh;
+            public TimeSpan Backoff = TimeSpan.FromSeconds(5.0); 
             public DateTimeOffset Expiration;
             public Exception Exception;
             public string ExchangeName;
@@ -90,6 +91,7 @@ namespace BTCPayServer.Services.Rates
         }
 
         public bool DoNotAutoFetchIfExpired { get; set; }
+        readonly static TimeSpan MaxBackoff = TimeSpan.FromMinutes(5.0);
 
         public async Task<LatestFetch> UpdateIfNecessary()
         {
@@ -142,12 +144,15 @@ namespace BTCPayServer.Services.Rates
                 {
                     fetch.Latest = previous.Latest;
                     fetch.Expiration = previous.Expiration;
+                    fetch.Backoff = previous.Backoff * 2;
+                    if (fetch.Backoff > MaxBackoff)
+                        fetch.Backoff = MaxBackoff;
                 }
                 else
                 {
                     fetch.Expiration = DateTimeOffset.UtcNow;
                 }
-                fetch.NextRefresh = DateTimeOffset.UtcNow;
+                fetch.NextRefresh = DateTimeOffset.UtcNow + fetch.Backoff;
                 fetch.Exception = ex;
             }
             _Latest = fetch;

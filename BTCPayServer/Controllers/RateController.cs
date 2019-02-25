@@ -12,11 +12,13 @@ using BTCPayServer.Rating;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.Authorization;
 using BTCPayServer.Authentication;
+using Microsoft.AspNetCore.Cors;
 
 namespace BTCPayServer.Controllers
 {
     [Authorize(AuthenticationSchemes = Security.Policies.BitpayAuthentication)]
     [AllowAnonymous]
+    [EnableCors(CorsPolicies.All)]
     public class RateController : Controller
     {
         RateFetcher _RateProviderFactory;
@@ -139,9 +141,9 @@ namespace BTCPayServer.Controllers
             {
                 var supportedMethods = store.GetSupportedPaymentMethods(_NetworkProvider);
                 var currencyCodes = supportedMethods.Select(method => method.PaymentId.CryptoCode).Distinct();
-                var defaultCrypto = store.GetDefaultCrypto(_NetworkProvider);
+                var defaultPaymentId = store.GetDefaultPaymentId(_NetworkProvider);
 
-                currencyPairs = BuildCurrencyPairs(currencyCodes, defaultCrypto);
+                currencyPairs = BuildCurrencyPairs(currencyCodes, defaultPaymentId.CryptoCode);
 
                 if (string.IsNullOrEmpty(currencyPairs))
                 {

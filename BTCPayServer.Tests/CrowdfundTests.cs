@@ -5,10 +5,8 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Controllers;
-using BTCPayServer.Crowdfund;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
-using BTCPayServer.Hubs;
 using BTCPayServer.Models;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Models.StoreViewModels;
@@ -25,6 +23,7 @@ using NBitcoin;
 using NBitpayClient;
 using Xunit;
 using Xunit.Abstractions;
+using static BTCPayServer.Tests.UnitTest1;
 
 namespace BTCPayServer.Tests
 {
@@ -178,6 +177,7 @@ namespace BTCPayServer.Tests
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
+                user.ModifyStore(s => s.NetworkFeeMode = NetworkFeeMode.Never);
                 var apps = user.GetController<AppsController>();
                 var vm = Assert.IsType<CreateAppViewModel>(Assert.IsType<ViewResult>(apps.CreateApp().Result).Model);
                 vm.Name = "test";
@@ -185,7 +185,8 @@ namespace BTCPayServer.Tests
                 Assert.IsType<RedirectToActionResult>(apps.CreateApp(vm).Result);
                 var appId = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps().Result).Model)
                     .Apps[0].Id;
-                
+
+                Logs.Tester.LogInformation("We create an invoice with a hardcap");
                 var crowdfundViewModel = Assert.IsType<UpdateCrowdfundViewModel>(Assert
                     .IsType<ViewResult>(apps.UpdateCrowdfund(appId).Result).Model);
                 crowdfundViewModel.Enabled = true;
@@ -193,6 +194,7 @@ namespace BTCPayServer.Tests
                 crowdfundViewModel.TargetAmount = 100;
                 crowdfundViewModel.TargetCurrency = "BTC";
                 crowdfundViewModel.UseAllStoreInvoices = true;
+                crowdfundViewModel.EnforceTargetAmount = true;
                 Assert.IsType<RedirectToActionResult>(apps.UpdateCrowdfund(appId, crowdfundViewModel).Result);
                 
                 var anonAppPubsController = tester.PayTester.GetController<AppsPublicController>();
@@ -209,16 +211,16 @@ namespace BTCPayServer.Tests
                 Assert.Equal(0m, model.Info.CurrentAmount );
                 Assert.Equal(0m, model.Info.CurrentPendingAmount);
                 Assert.Equal(0m, model.Info.ProgressPercentage);
-                
-                
-                
+
+
+                Logs.Tester.LogInformation("Unpaid invoices should show as pending contribution because it is hardcap");
+                Logs.Tester.LogInformation("Because UseAllStoreInvoices is true, we can manually create an invoice and it should show as contribution");
                 var invoice = user.BitPay.CreateInvoice(new Invoice()
                 {
                     Buyer = new Buyer() { email = "test@fwf.com" },
                     Price = 1m,
                     Currency = "BTC",
                     PosData = "posData",
-                    OrderId = $"{CrowdfundHubStreamer.CrowdfundInvoiceOrderIdPrefix}{appId}",
                     ItemDesc = "Some description",
                     TransactionSpeed = "high",
                     FullNotifications = true
@@ -228,19 +230,69 @@ namespace BTCPayServer.Tests
                 model = Assert.IsType<ViewCrowdfundViewModel>(Assert
                     .IsType<ViewResult>(publicApps.ViewCrowdfund(appId, String.Empty).Result).Model);
                 
-                var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, tester.ExplorerNode.Network);
-               
-                
-                
-                tester.ExplorerNode.SendToAddress(invoiceAddress,invoice.BtcDue);
-                Assert.Equal(0m ,model.Info.CurrentAmount );
+                Assert.Equal(0m ,model.Info.CurrentAmount);
                 Assert.Equal(1m, model.Info.CurrentPendingAmount);
-                Assert.Equal( 0m, model.Info.ProgressPercentage);
+                Assert.Equal(0m, model.Info.ProgressPercentage);
                 Assert.Equal(1m, model.Info.PendingProgressPercentage);
 
-                
-    
-               
+                Logs.Tester.LogInformation("Let's check current amount change once payment is confirmed");
+                var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, tester.ExplorerNode.Network);
+                tester.ExplorerNode.SendToAddress(invoiceAddress, invoice.BtcDue);
+                tester.ExplorerNode.Generate(1); // By default invoice confirmed at 1 block
+                TestUtils.Eventually(() =>
+                {
+                    model = Assert.IsType<ViewCrowdfundViewModel>(Assert
+                    .IsType<ViewResult>(publicApps.ViewCrowdfund(appId, String.Empty).Result).Model);
+                    Assert.Equal(1m, model.Info.CurrentAmount);
+                    Assert.Equal(0m, model.Info.CurrentPendingAmount);
+                });
+
+                Logs.Tester.LogInformation("Because UseAllStoreInvoices is true, let's make sure the invoice is tagged");
+                var invoiceEntity = tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id).GetAwaiter().GetResult();
+                Assert.True(invoiceEntity.Version >= InvoiceEntity.InternalTagSupport_Version);
+                Assert.Contains(AppService.GetAppInternalTag(appId), invoiceEntity.InternalTags);
+
+                crowdfundViewModel.UseAllStoreInvoices = false;
+                Assert.IsType<RedirectToActionResult>(apps.UpdateCrowdfund(appId, crowdfundViewModel).Result);
+
+                Logs.Tester.LogInformation("Because UseAllStoreInvoices is false, let's make sure the invoice is not tagged");
+                invoice = user.BitPay.CreateInvoice(new Invoice()
+                {
+                    Buyer = new Buyer() { email = "test@fwf.com" },
+                    Price = 1m,
+                    Currency = "BTC",
+                    PosData = "posData",
+                    ItemDesc = "Some description",
+                    TransactionSpeed = "high",
+                    FullNotifications = true
+                }, Facade.Merchant);
+                invoiceEntity = tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id).GetAwaiter().GetResult();
+                Assert.DoesNotContain(AppService.GetAppInternalTag(appId), invoiceEntity.InternalTags);
+
+                Logs.Tester.LogInformation("After turning setting a softcap, let's check that only actual payments are counted");
+                crowdfundViewModel.EnforceTargetAmount = false;
+                crowdfundViewModel.UseAllStoreInvoices = true;
+                Assert.IsType<RedirectToActionResult>(apps.UpdateCrowdfund(appId, crowdfundViewModel).Result);
+                invoice = user.BitPay.CreateInvoice(new Invoice()
+                {
+                    Buyer = new Buyer() { email = "test@fwf.com" },
+                    Price = 1m,
+                    Currency = "BTC",
+                    PosData = "posData",
+                    ItemDesc = "Some description",
+                    TransactionSpeed = "high",
+                    FullNotifications = true
+                }, Facade.Merchant);
+                Assert.Equal(0m, model.Info.CurrentPendingAmount);
+                invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, tester.ExplorerNode.Network);
+                tester.ExplorerNode.SendToAddress(invoiceAddress, Money.Coins(0.5m));
+                tester.ExplorerNode.SendToAddress(invoiceAddress, Money.Coins(0.2m));
+                TestUtils.Eventually(() =>
+                {
+                    model = Assert.IsType<ViewCrowdfundViewModel>(Assert
+                    .IsType<ViewResult>(publicApps.ViewCrowdfund(appId, String.Empty).Result).Model);
+                    Assert.Equal(0.7m, model.Info.CurrentPendingAmount);
+                });
             }
 
             

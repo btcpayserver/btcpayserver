@@ -113,6 +113,9 @@ namespace BTCPayServer.Services.Invoices
     }
     public class InvoiceEntity
     {
+        public const int InternalTagSupport_Version = 1;
+        public const int Lastest_Version = 1;
+        public int Version { get; set; }
         public string Id
         {
             get; set;
@@ -164,6 +167,16 @@ namespace BTCPayServer.Services.Invoices
             set;
         }
 
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public HashSet<string> InternalTags { get; set; } = new HashSet<string>();
+
+        public string[] GetInternalTags(string suffix)
+        {
+            return InternalTags == null ? Array.Empty<string>() : InternalTags
+                                                  .Where(t => t.StartsWith(suffix, StringComparison.InvariantCulture))
+                                                  .Select(t => t.Substring(suffix.Length)).ToArray();
+        }
+        
         [Obsolete("Use GetDerivationStrategies instead")]
         public string DerivationStrategy
         {

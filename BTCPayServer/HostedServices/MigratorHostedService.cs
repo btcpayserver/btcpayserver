@@ -65,11 +65,35 @@ namespace BTCPayServer.HostedServices
                     settings.ConvertNetworkFeeProperty = true;
                     await _Settings.UpdateSetting(settings);
                 }
+                if (!settings.ConvertCrowdfundOldSettings)
+                {
+                    await ConvertCrowdfundOldSettings();
+                    settings.ConvertCrowdfundOldSettings = true;
+                    await _Settings.UpdateSetting(settings);
+                }
             }
             catch (Exception ex)
             {
                 Logs.PayServer.LogError(ex, "Error on the MigratorHostedService");
                 throw;
+            }
+        }
+
+        private async Task ConvertCrowdfundOldSettings()
+        {
+            using (var ctx = _DBContextFactory.CreateContext())
+            {
+                foreach (var app in ctx.Apps.Where(a => a.AppType == "Crowdfund"))
+                {
+                    var settings = app.GetSettings<Services.Apps.CrowdfundSettings>();
+#pragma warning disable CS0618 // Type or member is obsolete
+                    if (settings.UseAllStoreInvoices)
+#pragma warning restore CS0618 // Type or member is obsolete
+                    {
+                        app.TagAllInvoices = true;
+                    }
+                }
+                await ctx.SaveChangesAsync();
             }
         }
 

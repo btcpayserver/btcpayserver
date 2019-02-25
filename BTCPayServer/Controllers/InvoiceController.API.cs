@@ -12,7 +12,6 @@ using NBitpayClient;
 
 namespace BTCPayServer.Controllers
 {
-    [EnableCors("BitpayAPI")]
     [BitpayAPIConstraint]
     [Authorize(Policies.CanCreateInvoice.Key, AuthenticationSchemes = Policies.BitpayAuthentication)]
     public class InvoiceControllerAPI : Controller
@@ -33,8 +32,10 @@ namespace BTCPayServer.Controllers
         [HttpPost]
         [Route("invoices")]
         [MediaTypeConstraint("application/json")]
-        public async Task<DataWrapper<InvoiceResponse>> CreateInvoice([FromBody] Invoice invoice)
+        public async Task<DataWrapper<InvoiceResponse>> CreateInvoice([FromBody] CreateInvoiceRequest invoice)
         {
+            if (invoice == null)
+                throw new BitpayHttpException(400, "Invalid invoice");
             return await _InvoiceController.CreateInvoiceCore(invoice, HttpContext.GetStoreData(), HttpContext.Request.GetAbsoluteRoot());
         }
 

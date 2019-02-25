@@ -234,6 +234,7 @@ $(document).ready(function () {
     // Should connect using webhook ?
     // If notification received
 
+    var socket = null;
     var supportsWebSockets = 'WebSocket' in window && window.WebSocket.CLOSING === 2;
     if (supportsWebSockets) {
         var loc = window.location, ws_uri;
@@ -245,7 +246,7 @@ $(document).ready(function () {
         ws_uri += "//" + loc.host;
         ws_uri += loc.pathname + "/status/ws?invoiceId=" + srvModel.invoiceId;
         try {
-            var socket = new WebSocket(ws_uri);
+            socket = new WebSocket(ws_uri);
             socket.onmessage = function (e) {
                 fetchStatus();
             };
@@ -259,7 +260,9 @@ $(document).ready(function () {
     }
 
     var watcher = setInterval(function () {
-        fetchStatus();
+        if (socket === null || socket.readyState !== 1) {
+            fetchStatus();
+        }
     }, 2000);
 
     $(".menu__item").click(function () {

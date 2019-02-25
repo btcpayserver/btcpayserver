@@ -13,17 +13,13 @@ using BTCPayServer.Configuration;
 using System.IO;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using AspNet.Security.OpenIdConnect.Primitives;
-using BTCPayServer.Authentication.OpenId;
 using BTCPayServer.Authentication.OpenId.Models;
 using BTCPayServer.Security;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using OpenIddict.Abstractions;
 using OpenIddict.EntityFrameworkCore.Models;
 using System.Net;
-using BTCPayServer.Hubs;
 using BTCPayServer.PaymentRequest;
-using Meziantou.AspNetCore.BundleTagHelpers;
-using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
 
 namespace BTCPayServer.Hosting

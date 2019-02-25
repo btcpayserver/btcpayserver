@@ -9,8 +9,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BTCPayServer.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20190128152911_AddOpenId_OpenIddict")]
-    partial class AddOpenId_OpenIddict
+    [Migration("20190225091644_AddOpenIddict")]
+    partial class AddOpenIddict
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -189,6 +189,8 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("Settings");
 
                     b.Property<string>("StoreDataId");
+
+                    b.Property<bool>("TagAllInvoices");
 
                     b.HasKey("Id");
 
@@ -453,6 +455,26 @@ namespace BTCPayServer.Migrations
                     b.ToTable("AspNetUsers");
                 });
 
+            modelBuilder.Entity("BTCPayServer.Services.PaymentRequests.PaymentRequestData", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<byte[]>("Blob");
+
+                    b.Property<int>("Status");
+
+                    b.Property<string>("StoreDataId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("StoreDataId");
+
+                    b.ToTable("PaymentRequests");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -703,6 +725,14 @@ namespace BTCPayServer.Migrations
 
                     b.HasOne("BTCPayServer.Data.StoreData", "StoreData")
                         .WithMany("UserStores")
+                        .HasForeignKey("StoreDataId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("BTCPayServer.Services.PaymentRequests.PaymentRequestData", b =>
+                {
+                    b.HasOne("BTCPayServer.Data.StoreData", "StoreData")
+                        .WithMany("PaymentRequests")
                         .HasForeignKey("StoreDataId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });

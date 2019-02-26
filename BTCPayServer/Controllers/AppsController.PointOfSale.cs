@@ -55,12 +55,16 @@ namespace BTCPayServer.Controllers
                     "  custom: true";
                 EnableShoppingCart = false;
                 ShowCustomAmount = true;
+                ShowDiscount = true;
+                EnableTips = true;
             }
             public string Title { get; set; }
             public string Currency { get; set; }
             public string Template { get; set; }
             public bool EnableShoppingCart { get; set; }
             public bool ShowCustomAmount { get; set; }
+            public bool ShowDiscount { get; set; }
+            public bool EnableTips { get; set; }
 
             public const string BUTTON_TEXT_DEF = "Buy for {0}";
             public string ButtonText { get; set; } = BUTTON_TEXT_DEF;
@@ -89,6 +93,8 @@ namespace BTCPayServer.Controllers
                 Title = settings.Title,
                 EnableShoppingCart = settings.EnableShoppingCart,
                 ShowCustomAmount = settings.ShowCustomAmount,
+                ShowDiscount = settings.ShowDiscount,
+                EnableTips = settings.EnableTips,
                 Currency = settings.Currency,
                 Template = settings.Template,
                 ButtonText = settings.ButtonText ?? PointOfSaleSettings.BUTTON_TEXT_DEF,
@@ -160,6 +166,8 @@ namespace BTCPayServer.Controllers
                 Title = vm.Title,
                 EnableShoppingCart = vm.EnableShoppingCart,
                 ShowCustomAmount = vm.ShowCustomAmount,
+                ShowDiscount = vm.ShowDiscount,
+                EnableTips = vm.EnableTips,
                 Currency = vm.Currency.ToUpperInvariant(),
                 Template = vm.Template,
                 ButtonText = vm.ButtonText,

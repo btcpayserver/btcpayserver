@@ -21,4 +21,4 @@ ENV BTCPAY_DATADIR=/datadir
 VOLUME /datadir
 
 COPY --from=builder "/app" .
-ENTRYPOINT ["./docker-entrypoint.sh"]
+ENTRYPOINT ["docker-entrypoint.sh"]

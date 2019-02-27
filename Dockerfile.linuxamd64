@@ -21,4 +21,4 @@ ENV BTCPAY_DATADIR=/datadir
 VOLUME /datadir
 
 COPY --from=builder "/app" .
-ENTRYPOINT ["dotnet", "BTCPayServer.dll"]
+ENTRYPOINT ["./docker-entrypoint.sh"]

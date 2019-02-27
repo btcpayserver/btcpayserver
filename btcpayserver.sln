@@ -10,6 +10,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Misc", "Misc", "{29290EC7-00E6-4C4B-96D9-4D7E9611DF28}"
 	ProjectSection(SolutionItems) = preProject
 		.circleci\config.yml = .circleci\config.yml
+		docker-entrypoint.sh = docker-entrypoint.sh
 		Dockerfile.linuxamd64 = Dockerfile.linuxamd64
 		Dockerfile.linuxarm32v7 = Dockerfile.linuxarm32v7
 	EndProjectSection

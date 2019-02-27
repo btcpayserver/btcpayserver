@@ -40,32 +40,35 @@
     display: none;
 }
 
+.paywithRowRight {
+    margin-top: -1px;
+}
+
 .cursorPointer {
     cursor: pointer;
 }
 
 .payment__currencies {
-    font-size: 14px;
+    font-size: 13px;
+    border: 1px solid #e0e0e0;
+    border-radius: 5px;
+    padding: 6px;
 }
 
     .payment__currencies img {
-        height: 32px;
+        margin-top: -3px;
+        height: 24px;
     }
 
-.clickable_underline {
-    border-bottom: 1px dotted #ccc;
-    font-size: 13px;
-}
+    .payment__currencies:hover .clickable_underline {
+        border-bottom: 1px dotted black;
+    }
 
-.payment__currencies:hover .clickable_underline {
-    border-bottom: 1px dotted black;
-}
+    .payment__currencies:hover {
+        border: 1px solid #5c6373;
+        background: #f8f8f8;
+    }
 
 .clickable_indicator {
-    margin-right: -10px;
-    opacity: 0.3;
-}
-
-.payment__currencies:hover .clickable_indicator {
-    opacity: 1;
+    color: #5c6373;
 }

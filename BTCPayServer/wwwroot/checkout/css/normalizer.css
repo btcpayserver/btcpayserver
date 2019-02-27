@@ -8223,7 +8223,7 @@ a:hover {
     }
 
 .action-button--secondary {
-    background: #e7e7e7;
+    background: #e0e0e0;
     border: 0;
     box-shadow: none;
     color: #4A4A4A;
@@ -8397,9 +8397,9 @@ strong {
 }
 
 .currency-selection {
-    border-bottom: 1px solid #E9E9E9;
+    border-bottom: 1px solid #e0e0e0;
     position: relative;
-    padding: 4px 15px;
+    padding: 4px 10px 4px 15px;
     display: flex;
     font-weight: 300;
     color: #565D6E;
@@ -8516,7 +8516,7 @@ strong {
 .payment-tabs {
     position: relative;
     background: #fff;
-    border-top: 1px solid #E9E9E9;
+    border-top: 1px solid #e0e0e0;
     display: flex;
     font-size: 13.5px;
     box-shadow: 0px 5px 7px 0px rgba(0, 0, 0, 0.09);
@@ -8605,7 +8605,7 @@ strong {
         margin-top: 15px;
         padding: 15px;
         background-color: #ffffff;
-        border: 1px solid #E9E9E9;
+        border: 1px solid #e0e0e0;
         border-radius: 5px;
         width: 100%;
         max-height: 300px;
@@ -8701,7 +8701,7 @@ strong {
 
 .manual-box.underpaid-expired__refund-pending > .manual-box__amount {
     transition: all 250ms cubic-bezier(0.4, 0, 1, 1);
-    border-top-color: #E9E9E9;
+    border-top-color: #e0e0e0;
     border-top-right-radius: 5px;
     border-top-left-radius: 5px;
 }
@@ -8722,7 +8722,7 @@ strong {
     padding-bottom: .7rem;
     border-top-left-radius: 5px;
     border-top-right-radius: 5px;
-    border: 1px solid #E9E9E9;
+    border: 1px solid #e0e0e0;
     border-bottom: 0;
     max-height: 300px;
 }
@@ -8737,7 +8737,7 @@ strong {
     text-align: center;
     position: relative;
     border-radius: 5px;
-    border: 1px solid #E9E9E9;
+    border: 1px solid #e0e0e0;
 }
 
 .flipped .manual-box__amount {
@@ -8776,8 +8776,8 @@ strong {
     height: 10px;
     width: 10px;
     left: 50%;
-    border-right: 1px solid #E9E9E9;
-    border-bottom: 1px solid #E9E9E9;
+    border-right: 1px solid #e0e0e0;
+    border-bottom: 1px solid #e0e0e0;
     transform: rotate(45deg);
     margin-left: -5px;
     bottom: -6px;
@@ -8800,8 +8800,8 @@ strong {
     height: 10px;
     width: 10px;
     left: 50%;
-    border-right: 1px solid #E9E9E9;
-    border-bottom: 1px solid #E9E9E9;
+    border-right: 1px solid #e0e0e0;
+    border-bottom: 1px solid #e0e0e0;
     transform: rotateZ(45deg);
     margin-left: -5px;
     top: -5px;
@@ -8813,7 +8813,7 @@ strong {
 .manual-box__address > .flipper {
     backface-visibility: hidden;
     height: 100%;
-    border: 1px solid #E9E9E9;
+    border: 1px solid #e0e0e0;
     border-top: 0;
     border-bottom-left-radius: 5px;
     border-bottom-right-radius: 5px;
@@ -9155,7 +9155,7 @@ strong {
 }
 
 .bp-input {
-    border: 1px solid #E9E9E9;
+    border: 1px solid #e0e0e0;
     border-radius: 2px;
     font-size: 15px;
     font-weight: 400;
@@ -9482,7 +9482,7 @@ strong {
 .payment__scan__qrcode img {
     padding: 15px;
     background-color: #ffffff;
-    border: 1px solid #E9E9E9;
+    border: 1px solid #e0e0e0;
     border-radius: 5px;
 }
 
@@ -9714,7 +9714,7 @@ strong {
     background: #fff;
     padding: 30px 15px;
     text-align: center;
-    border: 1px solid #E9E9E9;
+    border: 1px solid #e0e0e0;
     border-radius: 5px;
     margin: -5px 0 18px;
     font-weight: 300;
@@ -11335,7 +11335,7 @@ low-fee-timeline {
     text-align: center;
     position: relative;
     border-radius: 5px;
-    border: 1px solid #E9E9E9;
+    border: 1px solid #e0e0e0;
     background: #fff;
 }
 
@@ -11353,7 +11353,7 @@ low-fee-timeline {
     }
 
     .copySectionBox.bottomBorder {
-        border-bottom: 1px solid #e9e9e9;
+        border-bottom: 1px solid #e0e0e0;
     }
 
 .separatorGem {
@@ -11361,8 +11361,8 @@ low-fee-timeline {
     height: 10px;
     width: 10px;
     left: 50%;
-    border-right: 1px solid #E9E9E9;
-    border-bottom: 1px solid #E9E9E9;
+    border-right: 1px solid #e0e0e0;
+    border-bottom: 1px solid #e0e0e0;
     transform: rotateZ(45deg);
     margin-left: -5px;
     top: -5px;
@@ -11374,7 +11374,7 @@ low-fee-timeline {
 
 .checkoutTextbox {
     width: 100%;
-    border: 1px solid #e9e9e9;
+    border: 1px solid #e0e0e0;
     border-radius: 4px;
     outline: none;
     padding: 8px 4px 8px;
@@ -11402,7 +11402,7 @@ low-fee-timeline {
         color: #aaa;
         height: 16px;
         padding: 0px 4px;
-        border-right: 1px solid #e9e9e9;
+        border-right: 1px solid #e0e0e0;
     }
 
     .inputWithIcon.inputIconBg img {

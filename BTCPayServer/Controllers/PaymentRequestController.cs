@@ -295,7 +295,7 @@ namespace BTCPayServer.Controllers
                     Price = amount.GetValueOrDefault(result.AmountDue),
                     FullNotifications = true,
                     BuyerEmail = result.Email,
-                    RedirectURL = Request.GetDisplayUrl().Replace("/pay", "", StringComparison.InvariantCulture),
+                    RedirectURL = Request.GetDisplayUrl().TrimEnd("/pay",  StringComparison.InvariantCulture),
                 }, store, HttpContext.Request.GetAbsoluteRoot(), new List<string>() { PaymentRequestRepository.GetInternalTag(id) })).Data.Id;
 
                 if (redirectToInvoice)

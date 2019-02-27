@@ -227,7 +227,6 @@ namespace BTCPayServer.Configuration
             PostgresConnectionString = conf.GetOrDefault<string>("postgres", null);
             MySQLConnectionString = conf.GetOrDefault<string>("mysql", null);
             BundleJsCss = conf.GetOrDefault<bool>("bundlejscss", true);
-            ExternalUrl = conf.GetOrDefault<Uri>("externalurl", null);
 
             var sshSettings = ParseSSHConfiguration(conf);
             if ((!string.IsNullOrEmpty(sshSettings.Password) || !string.IsNullOrEmpty(sshSettings.KeyFile)) && !string.IsNullOrEmpty(sshSettings.Server))
@@ -348,11 +347,6 @@ namespace BTCPayServer.Configuration
             get;
             set;
         }
-        public Uri ExternalUrl
-        {
-            get;
-            set;
-        }
         public bool BundleJsCss
         {
             get;
@@ -363,15 +357,6 @@ namespace BTCPayServer.Configuration
         {
             get;
             set;
-        }
-
-        internal string GetRootUri()
-        {
-            if (ExternalUrl == null)
-                return null;
-            UriBuilder builder = new UriBuilder(ExternalUrl);
-            builder.Path = RootPath;
-            return builder.ToString();
         }
     }
 }

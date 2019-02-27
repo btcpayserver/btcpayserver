@@ -73,7 +73,7 @@ body {
 
 #mainNav {
     border-color: rgba(34, 34, 34, 0.05);
-    background-color: #021c31;
+    background-color: #09163b;
     font-family: 'Open Sans', 'Helvetica Neue', Arial, sans-serif;
     -webkit-transition: all 0.2s;
     -moz-transition: all 0.2s;
@@ -83,12 +83,12 @@ body {
     #mainNav .navbar-brand {
         font-weight: 700;
         text-transform: uppercase;
-        color: #021c31;
+        color: #09163b;
         font-family: 'Open Sans', 'Helvetica Neue', Arial, sans-serif;
     }
 
         #mainNav .navbar-brand:focus, #mainNav .navbar-brand:hover {
-            color: #021c31;
+            color: #09163b;
         }
 
     #mainNav .navbar-toggle {
@@ -152,16 +152,16 @@ body {
 
         #mainNav.navbar-shrink {
             border-color: rgba(34, 34, 34, 0.05);
-            background-color: #021c31;
+            background-color: #09163b;
         }
 
             #mainNav.navbar-shrink .navbar-brand {
                 font-size: 16px;
-                color: #021c31;
+                color: #09163b;
             }
 
                 #mainNav.navbar-shrink .navbar-brand:focus, #mainNav.navbar-shrink .navbar-brand:hover {
-                    color: #021c31;
+                    color: #09163b;
                 }
 
             #mainNav.navbar-shrink .navbar-nav > li.nav-item > a.nav-link,

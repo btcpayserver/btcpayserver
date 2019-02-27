@@ -147,59 +147,33 @@ namespace BTCPayServer.Hosting
                 }
             }
 
-            // Make sure that code executing after this point think that the external url has been hit.
-            if (_Options.ExternalUrl != null)
-            {
-                if (reverseProxyScheme != null && _Options.ExternalUrl.Scheme != reverseProxyScheme)
-                {
-                    if (reverseProxyScheme == "http" && _Options.ExternalUrl.Scheme == "https")
-                        Logs.PayServer.LogWarning($"BTCPay ExternalUrl setting expected to use scheme '{_Options.ExternalUrl.Scheme}' externally, but the reverse proxy uses scheme '{reverseProxyScheme}' (X-Forwarded-Port), forcing ExternalUrl");
-                }
-                httpContext.Request.Scheme = _Options.ExternalUrl.Scheme;
-                if (_Options.ExternalUrl.IsDefaultPort)
-                    httpContext.Request.Host = new HostString(_Options.ExternalUrl.Host);
-                else
-                {
-                    if (reverseProxyPort != null && _Options.ExternalUrl.Port != reverseProxyPort.Value)
-                    {
-                        Logs.PayServer.LogWarning($"BTCPay ExternalUrl setting expected to use port '{_Options.ExternalUrl.Port}' externally, but the reverse proxy uses port '{reverseProxyPort.Value}'");
-                        httpContext.Request.Host = new HostString(_Options.ExternalUrl.Host, reverseProxyPort.Value);
-                    }
-                    else
-                    {
-                        httpContext.Request.Host = new HostString(_Options.ExternalUrl.Host, _Options.ExternalUrl.Port);
-                    }
-                }
-            }
             // NGINX pass X-Forwarded-Proto and X-Forwarded-Port, so let's use that to have better guess of the real domain
-            else
+
+            ushort? p = null;
+            if (reverseProxyScheme != null)
             {
-                ushort? p = null;
-                if (reverseProxyScheme != null)
-                {
-                    httpContext.Request.Scheme = reverseProxyScheme;
-                    if (reverseProxyScheme == "http")
-                        p = 80;
-                    if (reverseProxyScheme == "https")
-                        p = 443;
-                }
-
-
-                if (reverseProxyPort != null)
-                {
-                    p = reverseProxyPort.Value;
-                }
-
-                if (p.HasValue)
-                {
-                    bool isDefault = httpContext.Request.Scheme == "http" && p.Value == 80;
-                    isDefault |= httpContext.Request.Scheme == "https" && p.Value == 443;
-                    if (isDefault)
-                        httpContext.Request.Host = new HostString(httpContext.Request.Host.Host);
-                    else
-                        httpContext.Request.Host = new HostString(httpContext.Request.Host.Host, p.Value);
-                }
+                httpContext.Request.Scheme = reverseProxyScheme;
+                if (reverseProxyScheme == "http")
+                    p = 80;
+                if (reverseProxyScheme == "https")
+                    p = 443;
             }
+
+            if (reverseProxyPort != null)
+            {
+                p = reverseProxyPort.Value;
+            }
+
+            if (p.HasValue)
+            {
+                bool isDefault = httpContext.Request.Scheme == "http" && p.Value == 80;
+                isDefault |= httpContext.Request.Scheme == "https" && p.Value == 443;
+                if (isDefault)
+                    httpContext.Request.Host = new HostString(httpContext.Request.Host.Host);
+                else
+                    httpContext.Request.Host = new HostString(httpContext.Request.Host.Host, p.Value);
+            }
+
         }
 
         private static async Task HandleBitpayHttpException(HttpContext httpContext, BitpayHttpException ex)

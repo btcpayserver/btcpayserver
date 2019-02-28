@@ -227,6 +227,20 @@ namespace BTCPayServer
                 || !new Uri(redirectUrl, UriKind.RelativeOrAbsolute).IsAbsoluteUri;
             return isRelative ? request.GetAbsoluteRoot() + redirectUrl : redirectUrl;
         }
+        public static string GetAbsoluteUriNoPathBase(this HttpRequest request, string url)
+        {
+            bool isRelative =
+                (url.Length > 0 && url[0] == '/')
+                || !new Uri(url, UriKind.RelativeOrAbsolute).IsAbsoluteUri;
+            if (isRelative && (url.Length == 0 || url[0] != '/'))
+            {
+                url = $"/{url}";
+            }
+            return isRelative ? string.Concat(
+                    request.Scheme,
+                    "://",
+                    request.Host.ToUriComponent()) + url : url;
+        }
 
         public static IServiceCollection ConfigureBTCPayServer(this IServiceCollection services, IConfiguration conf)
         {

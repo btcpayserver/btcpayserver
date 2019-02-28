@@ -288,6 +288,8 @@ namespace BTCPayServer.Controllers
             store.AdditionalClaims.Add(new Claim(Policies.CanCreateInvoice.Key, store.Id));
             try
             {
+                var redirectUrl = Request.GetDisplayUrl().TrimEnd("/pay", StringComparison.InvariantCulture)
+                    .Replace("hub?id=", string.Empty, StringComparison.InvariantCultureIgnoreCase);
                 var newInvoiceId = (await _InvoiceController.CreateInvoiceCore(new CreateInvoiceRequest()
                 {
                     OrderId = $"{PaymentRequestRepository.GetOrderIdForPaymentRequest(id)}",
@@ -295,7 +297,7 @@ namespace BTCPayServer.Controllers
                     Price = amount.GetValueOrDefault(result.AmountDue),
                     FullNotifications = true,
                     BuyerEmail = result.Email,
-                    RedirectURL = Request.GetDisplayUrl().TrimEnd("/pay",  StringComparison.InvariantCulture),
+                    RedirectURL = redirectUrl,
                 }, store, HttpContext.Request.GetAbsoluteRoot(), new List<string>() { PaymentRequestRepository.GetInternalTag(id) })).Data.Id;
 
                 if (redirectToInvoice)

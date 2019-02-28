@@ -286,7 +286,6 @@ namespace BTCPayServer.Configuration
 
         private SSHSettings ParseSSHConfiguration(IConfiguration conf)
         {
-            var externalUrl = conf.GetOrDefault<Uri>("externalurl", null);
             var settings = new SSHSettings();
             settings.Server = conf.GetOrDefault<string>("sshconnection", null);
             if (settings.Server != null)
@@ -312,12 +311,6 @@ namespace BTCPayServer.Configuration
                 {
                     settings.Username = "root";
                 }
-            }
-            else if (externalUrl != null)
-            {
-                settings.Port = 22;
-                settings.Username = "root";
-                settings.Server = externalUrl.DnsSafeHost;
             }
             settings.Password = conf.GetOrDefault<string>("sshpassword", "");
             settings.KeyFile = conf.GetOrDefault<string>("sshkeyfile", "");

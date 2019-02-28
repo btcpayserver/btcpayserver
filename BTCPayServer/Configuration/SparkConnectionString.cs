@@ -29,17 +29,14 @@ namespace BTCPayServer.Configuration
                             error = "Duplicated server attribute";
                             return false;
                         }
-                        if (!Uri.IsWellFormedUriString(kv[1], UriKind.Absolute))
+                        if (!Uri.IsWellFormedUriString(kv[1], UriKind.RelativeOrAbsolute))
                         {
                             error = "Invalid URI";
                             return false;
                         }
-                        resultTemp.Server = new Uri(kv[1], UriKind.Absolute);
-                        if(resultTemp.Server.Scheme == "http")
-                        {
-                            error = "Insecure transport protocol (http)";
-                            return false;
-                        }
+                        resultTemp.Server = new Uri(kv[1], UriKind.RelativeOrAbsolute);
+                        if (!resultTemp.Server.IsAbsoluteUri && (kv[1].Length == 0 || kv[1][0] != '/'))
+                            resultTemp.Server = new Uri($"/{kv[1]}", UriKind.RelativeOrAbsolute);
                         break;
                     case "cookiefile":
                     case "cookiefilepath":

@@ -13,9 +13,9 @@ body {
 }
 
 hr {
-    max-width: 50px;
-    border-width: 3px;
-    border-color: #329F80;
+    max-width: 25px;
+    border-width: 2px;
+    border-color: #2064a8;
 }
 
     hr.light {
@@ -73,7 +73,7 @@ body {
 
 #mainNav {
     border-color: rgba(34, 34, 34, 0.05);
-    background-color: #0F3723;
+    background-color: #09163b;
     font-family: 'Open Sans', 'Helvetica Neue', Arial, sans-serif;
     -webkit-transition: all 0.2s;
     -moz-transition: all 0.2s;
@@ -83,12 +83,12 @@ body {
     #mainNav .navbar-brand {
         font-weight: 700;
         text-transform: uppercase;
-        color: #0F3B21;
+        color: #09163b;
         font-family: 'Open Sans', 'Helvetica Neue', Arial, sans-serif;
     }
 
         #mainNav .navbar-brand:focus, #mainNav .navbar-brand:hover {
-            color: #0F3B21;
+            color: #09163b;
         }
 
     #mainNav .navbar-toggle {
@@ -122,6 +122,10 @@ body {
                 background-color: transparent;
             }
 
+	        #mainNav .navbar-nav > li.nav-item > a.nav-link:hover {
+                color: #ff8700 !important;
+	        }
+
 @media (min-width: 992px) {
     #mainNav {
         border-color: rgba(255, 255, 255, 0.3);
@@ -148,16 +152,16 @@ body {
 
         #mainNav.navbar-shrink {
             border-color: rgba(34, 34, 34, 0.05);
-            background-color: #0F3723;
+            background-color: #09163b;
         }
 
             #mainNav.navbar-shrink .navbar-brand {
                 font-size: 16px;
-                color: #0F3B21;
+                color: #09163b;
             }
 
                 #mainNav.navbar-shrink .navbar-brand:focus, #mainNav.navbar-shrink .navbar-brand:hover {
-                    color: #0F3B21;
+                    color: #09163b;
                 }
 
             #mainNav.navbar-shrink .navbar-nav > li.nav-item > a.nav-link,
@@ -171,7 +175,7 @@ header.masthead {
     width: 100%;
     min-height: auto;
     text-align: center;
-    background-image: url("../../img/bg.png");
+    background-image: url("../../img/bg.svg");
     background-position: center;
     -webkit-background-size: cover;
     -moz-background-size: cover;
@@ -206,8 +210,8 @@ header.masthead {
 
 @media (min-width: 768px) {
     header.masthead {
-        height: 70%;
-        min-height: 600px;
+        height: 100vh;
+        min-height: 660px;
     }
 
         header.masthead .header-content {

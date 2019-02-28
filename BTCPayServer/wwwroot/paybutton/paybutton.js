@@ -74,7 +74,7 @@ function inputChanges(event, buttonSize) {
         width = "209px";
     }
     html += '\n    <input type="image" src="' + esc(srvModel.payButtonImageUrl) + '" name="submit" style="width:' + width +
-        '" alt="Pay with BtcPay, Self-Hosted Bitcoin Payment Processor">';
+        '" alt="Pay with Vend, Bitcoin Payment Processor">';
 
     html += '\n</form>';
 

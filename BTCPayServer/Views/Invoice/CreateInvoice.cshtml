@@ -23,32 +23,32 @@
                 <form asp-action="CreateInvoice" method="post" id="create-invoice-form">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                     <div class="form-group">
-                        <label asp-for="Amount" class="control-label"></label>*
+                        <label asp-for="Amount" class="control-label">Amount</label>*
                         <input asp-for="Amount" class="form-control" />
                         <span asp-validation-for="Amount" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="Currency" class="control-label"></label>*
+                        label asp-for="Currency" class="control-label">Currency</label>*
                         <input asp-for="Currency" class="form-control" />
                         <span asp-validation-for="Currency" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="OrderId" class="control-label"></label>
+                        <label asp-for="OrderId" class="control-label">Order Id</label>
                         <input asp-for="OrderId" class="form-control" />
                         <span asp-validation-for="OrderId" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="ItemDesc" class="control-label"></label>
+                        label asp-for="ItemDesc" class="control-label">Item Description</label>
                         <input asp-for="ItemDesc" class="form-control" />
                         <span asp-validation-for="ItemDesc" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="PosData" class="control-label"></label>
+                        <label asp-for="PosData" class="control-label">Point-of-Sale Data</label>
                         <input asp-for="PosData" class="form-control" />
                         <span asp-validation-for="PosData" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="BuyerEmail" class="control-label"></label>
+                        label asp-for="BuyerEmail" class="control-label">Buyer's Email</label>
                         <input asp-for="BuyerEmail" class="form-control" />
                         <span asp-validation-for="BuyerEmail" class="text-danger"></span>
                     </div>
@@ -63,7 +63,7 @@
                         <span asp-validation-for="NotificationUrl" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label asp-for="StoreId" class="control-label"></label>
+                        <label asp-for="StoreId" class="control-label">Store ID</label>
                         <select asp-for="StoreId" asp-items="Model.Stores" class="form-control"></select>
                         <span asp-validation-for="StoreId" class="text-danger"></span>
                     </div>

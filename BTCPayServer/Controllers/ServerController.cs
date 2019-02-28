@@ -586,7 +586,19 @@ namespace BTCPayServer.Controllers
             vm.WalletName = walletName;
             try
             {
-                vm.ServiceLink = $"{external.ConnectionString.Server.AbsoluteUri}?access-key={await external.ExtractAccessKey()}";
+                string serviceUri = null;
+
+                if (external.ConnectionString.Server.IsAbsoluteUri)
+                {
+                    serviceUri = external.ConnectionString.Server.AbsoluteUri;
+                    AssertSecure(serviceUri);
+                }
+                else
+                {
+                    AssertSecure(this.Request.GetCurrentUrl());
+                    serviceUri = this.Request.GetRelativePathOrAbsolute(external.ConnectionString.Server.ToString());
+                }
+                vm.ServiceLink = $"{serviceUri}?access-key={await external.ExtractAccessKey()}";
             }
             catch (Exception ex)
             {
@@ -594,6 +606,17 @@ namespace BTCPayServer.Controllers
                 return RedirectToAction(nameof(Services));
             }
             return View("LightningWalletServices", vm);
+        }
+
+        private void AssertSecure(string serviceUri)
+        {
+            if (!Uri.TryCreate(serviceUri, UriKind.Absolute, out var uri))
+                throw new System.Security.SecurityException("Invalid serviceUri");
+            if(!uri.Scheme.Equals("https", StringComparison.OrdinalIgnoreCase) && 
+               !uri.DnsSafeHost.EndsWith(".onion", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new System.Security.SecurityException("You can only access this service through https or Tor");
+            }
         }
 
         [Route("server/services/lnd/{cryptoCode}/{index}")]

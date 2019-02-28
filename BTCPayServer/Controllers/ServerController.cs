@@ -591,13 +591,12 @@ namespace BTCPayServer.Controllers
                 if (external.ConnectionString.Server.IsAbsoluteUri)
                 {
                     serviceUri = external.ConnectionString.Server.AbsoluteUri;
-                    AssertSecure(serviceUri);
                 }
                 else
                 {
-                    AssertSecure(this.Request.GetCurrentUrl());
-                    serviceUri = this.Request.GetRelativePathOrAbsolute(external.ConnectionString.Server.ToString());
+                    serviceUri = this.Request.GetAbsoluteUriNoPathBase(external.ConnectionString.Server.ToString());
                 }
+                AssertSecure(serviceUri);
                 vm.ServiceLink = $"{serviceUri}?access-key={await external.ExtractAccessKey()}";
             }
             catch (Exception ex)

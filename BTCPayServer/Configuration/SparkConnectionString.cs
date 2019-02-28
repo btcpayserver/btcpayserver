@@ -35,6 +35,8 @@ namespace BTCPayServer.Configuration
                             return false;
                         }
                         resultTemp.Server = new Uri(kv[1], UriKind.RelativeOrAbsolute);
+                        if (!resultTemp.Server.IsAbsoluteUri && (kv[1].Length == 0 || kv[1][0] != '/'))
+                            resultTemp.Server = new Uri($"/{kv[1]}", UriKind.RelativeOrAbsolute);
                         break;
                     case "cookiefile":
                     case "cookiefilepath":

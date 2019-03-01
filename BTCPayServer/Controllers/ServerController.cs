@@ -460,7 +460,7 @@ namespace BTCPayServer.Controllers
                 result.OtherExternalServices.Add(new ServicesViewModel.OtherExternalService()
                 {
                     Name = externalService.Key,
-                    Link = this.Request.GetRelativePathOrAbsolute(externalService.Value)
+                    Link = this.Request.GetAbsoluteUriNoPathBase(externalService.Value).AbsoluteUri
                 });
             }
             if (_Options.SSHSettings != null)

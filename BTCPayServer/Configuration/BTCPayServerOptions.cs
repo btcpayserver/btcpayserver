@@ -141,7 +141,8 @@ namespace BTCPayServer.Configuration
                                                 .Select(p => (Name: p.p.Substring(0, p.SeparatorIndex), 
                                                               Link: p.p.Substring(p.SeparatorIndex + 1))))
                 {
-                    OtherExternalServices.AddOrReplace(service.Name, service.Link);
+                    if (Uri.TryCreate(service.Link, UriKind.RelativeOrAbsolute, out var uri))
+                        OtherExternalServices.AddOrReplace(service.Name, uri);
                 }
             }
 
@@ -247,7 +248,7 @@ namespace BTCPayServer.Configuration
         public string RootPath { get; set; }
         public Dictionary<string, LightningConnectionString> InternalLightningByCryptoCode { get; set; } = new Dictionary<string, LightningConnectionString>();
 
-        public Dictionary<string, string> OtherExternalServices { get; set; } = new Dictionary<string, string>();
+        public Dictionary<string, Uri> OtherExternalServices { get; set; } = new Dictionary<string, Uri>();
         public ExternalServices ExternalServices { get; set; } = new ExternalServices();
 
         public BTCPayNetworkProvider NetworkProvider { get; set; }

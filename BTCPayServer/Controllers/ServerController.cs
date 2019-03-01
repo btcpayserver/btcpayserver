@@ -658,13 +658,22 @@ namespace BTCPayServer.Controllers
                     return NotFound();
                 return File(System.IO.File.ReadAllBytes(settings.KeyFile), "application/octet-stream", "id_rsa");
             }
+
+            var server = IsLocalNetwork(settings.Server) ? this.Request.Host.Host: settings.Server;
             SSHServiceViewModel vm = new SSHServiceViewModel();
             string port = settings.Port == 22 ? "" : $" -p {settings.Port}";
-            vm.CommandLine = $"ssh {settings.Username}@{settings.Server}{port}";
+            vm.CommandLine = $"ssh {settings.Username}@{server}{port}";
             vm.Password = settings.Password;
             vm.KeyFilePassword = settings.KeyFilePassword;
             vm.HasKeyFile = !string.IsNullOrEmpty(settings.KeyFile);
             return View(vm);
+        }
+
+        private static bool IsLocalNetwork(string server)
+        {
+            return server.EndsWith(".internal", StringComparison.OrdinalIgnoreCase) ||
+                   server.Equals("127.0.0.1", StringComparison.OrdinalIgnoreCase) ||
+                   server.Equals("localhost", StringComparison.OrdinalIgnoreCase);
         }
 
         [Route("server/theme")]

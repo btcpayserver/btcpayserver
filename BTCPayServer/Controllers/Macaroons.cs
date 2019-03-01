@@ -25,7 +25,7 @@ namespace BTCPayServer.Controllers
                 throw new ArgumentNullException(nameof(directoryPath));
             Macaroons macaroons = new Macaroons();
             if (!Directory.Exists(directoryPath))
-                return macaroons;
+                throw new DirectoryNotFoundException("Macaroons directory not found");
             foreach(var file in Directory.GetFiles(directoryPath, "*.macaroon"))
             {
                 try

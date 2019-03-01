@@ -34,66 +34,72 @@ namespace BTCPayServer.Configuration
             }
             connectionString.Server = serviceUri;
 
-            // Read the MacaroonFilePath
-            if (connectionString.MacaroonFilePath != null)
+            if (serviceType == ExternalServiceTypes.LNDGRPC || serviceType == ExternalServiceTypes.LNDRest)
             {
-                try
+                // Read the MacaroonDirectory
+                if (connectionString.MacaroonDirectoryPath != null)
                 {
-                    connectionString.Macaroon = await System.IO.File.ReadAllBytesAsync(connectionString.MacaroonFilePath);
-                    connectionString.MacaroonFilePath = null;
-                }
-                catch (Exception ex)
-                {
-                    throw new System.IO.FileNotFoundException("Macaroon not found", ex);
-                }
-            }
-
-            // Read the MacaroonDirectory
-            if (connectionString.MacaroonDirectoryPath != null)
-            {
-                try
-                {
-                    connectionString.Macaroons = await Macaroons.GetFromDirectoryAsync(connectionString.MacaroonDirectoryPath);
-                    connectionString.MacaroonDirectoryPath = null;
-                }
-                catch (Exception ex)
-                {
-                    throw new System.IO.DirectoryNotFoundException("Macaroon directory path not found", ex);
-                }
-            }
-
-            // Read access key from cookie file
-            if (connectionString.CookieFilePath != null)
-            {
-                string cookieFileContent = null;
-                bool isFake = false;
-                try
-                {
-                    cookieFileContent = await System.IO.File.ReadAllTextAsync(connectionString.CookieFilePath);
-                    isFake = connectionString.CookieFilePath == "fake";
-                    connectionString.CookieFilePath = null;
-                }
-                catch (Exception ex)
-                {
-                    throw new System.IO.FileNotFoundException("Cookie file path not found", ex);
-                }
-                if (serviceType == ExternalServiceTypes.RTL)
-                {
-                    connectionString.AccessKey = cookieFileContent;
-                }
-                else if (serviceType == ExternalServiceTypes.Spark)
-                {
-                    var cookie = (isFake ? "fake:fake:fake" // Hacks for testing
-                                : cookieFileContent).Split(':');
-                    if (cookie.Length >= 3)
+                    try
                     {
-                        connectionString.AccessKey = cookie[2];
+                        connectionString.Macaroons = await Macaroons.GetFromDirectoryAsync(connectionString.MacaroonDirectoryPath);
+                        connectionString.MacaroonDirectoryPath = null;
                     }
-                    throw new FormatException("Invalid cookiefile format");
+                    catch (Exception ex)
+                    {
+                        throw new System.IO.DirectoryNotFoundException("Macaroon directory path not found", ex);
+                    }
                 }
-                else if (serviceType == ExternalServiceTypes.Charge)
+
+                // Read the MacaroonFilePath
+                if (connectionString.MacaroonFilePath != null)
                 {
-                    connectionString.APIToken = isFake ? "fake" : cookieFileContent;
+                    try
+                    {
+                        connectionString.Macaroon = await System.IO.File.ReadAllBytesAsync(connectionString.MacaroonFilePath);
+                        connectionString.MacaroonFilePath = null;
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new System.IO.FileNotFoundException("Macaroon not found", ex);
+                    }
+                }
+            }
+
+            if (serviceType == ExternalServiceTypes.Charge || serviceType == ExternalServiceTypes.RTL || serviceType == ExternalServiceTypes.Spark)
+            {
+                // Read access key from cookie file
+                if (connectionString.CookieFilePath != null)
+                {
+                    string cookieFileContent = null;
+                    bool isFake = false;
+                    try
+                    {
+                        cookieFileContent = await System.IO.File.ReadAllTextAsync(connectionString.CookieFilePath);
+                        isFake = connectionString.CookieFilePath == "fake";
+                        connectionString.CookieFilePath = null;
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new System.IO.FileNotFoundException("Cookie file path not found", ex);
+                    }
+                    if (serviceType == ExternalServiceTypes.RTL)
+                    {
+                        connectionString.AccessKey = cookieFileContent;
+                    }
+                    else if (serviceType == ExternalServiceTypes.Spark)
+                    {
+                        var cookie = (isFake ? "fake:fake:fake" // Hacks for testing
+                                    : cookieFileContent).Split(':');
+                        if (cookie.Length >= 3)
+                        {
+                            connectionString.AccessKey = cookie[2];
+                        }
+                        throw new FormatException("Invalid cookiefile format");
+                    }
+                    else if (serviceType == ExternalServiceTypes.Charge)
+                    {
+                        connectionString.APIToken = isFake ? "fake" : cookieFileContent;
+                    }
                 }
             }
             return connectionString;

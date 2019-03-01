@@ -524,6 +524,10 @@ namespace BTCPayServer.Controllers
             ChargeServiceViewModel vm = new ChargeServiceViewModel();
             vm.Uri = connectionString.Server.AbsoluteUri;
             vm.APIToken = connectionString.APIToken;
+            var builder = new UriBuilder(connectionString.Server);
+            builder.UserName = "api-token";
+            builder.Password = vm.APIToken;
+            vm.AuthenticatedUri = builder.ToString();
             return View(nameof(LightningChargeServices), vm);
         }
 

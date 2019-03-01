@@ -17,7 +17,7 @@
     <div class="col-md-8">
         <h4>Crypto services</h4>
         <div class="form-group">
-            <span>You can get access here to LND (gRPC, Rest) services exposed by your server</span>
+            <span>You can get access here to services exposed by your server</span>
         </div>
 
         <div class="form-group">
@@ -30,13 +30,13 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var lnd in Model.LNDServices)
+                    @foreach (var s in Model.ExternalServices)
                     {
                         <tr>
-                            <td>@lnd.Crypto</td>
-                            <td>@lnd.Type</td>
+                            <td>@s.CryptoCode</td>
+                            <td>@s.DisplayName</td>
                             <td style="text-align:right">
-                                <a asp-action="@lnd.Action" asp-route-cryptoCode="@lnd.Crypto" asp-route-index="@lnd.Index">See information</a>
+                                <a asp-action="Service" asp-route-serviceName="@s.ServiceName" asp-route-cryptoCode="@s.CryptoCode">See information</a>
                             </td>
                         </tr>
                     }
@@ -46,7 +46,7 @@
     </div>
 </div>
 
-@if (Model.ExternalServices.Count != 0)
+@if (Model.OtherExternalServices.Count != 0)
 {
 <div class="row">
     <div class="col-md-8">
@@ -63,7 +63,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var s in Model.ExternalServices)
+                    @foreach (var s in Model.OtherExternalServices)
                     {
                         <tr>
                             <td>@s.Name</td>

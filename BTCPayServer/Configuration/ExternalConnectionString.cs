@@ -94,7 +94,10 @@ namespace BTCPayServer.Configuration
                         {
                             connectionString.AccessKey = cookie[2];
                         }
-                        throw new FormatException("Invalid cookiefile format");
+                        else
+                        {
+                            throw new FormatException("Invalid cookiefile format");
+                        }
                     }
                     else if (serviceType == ExternalServiceTypes.Charge)
                     {

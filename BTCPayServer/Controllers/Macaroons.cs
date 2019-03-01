@@ -49,6 +49,17 @@ namespace BTCPayServer.Controllers
             }
             return macaroons;
         }
+
+        public Macaroons Clone()
+        {
+            return new Macaroons()
+            {
+                AdminMacaroon = AdminMacaroon,
+                InvoiceMacaroon = InvoiceMacaroon,
+                ReadonlyMacaroon = ReadonlyMacaroon
+            };
+        }
+
         public Macaroon ReadonlyMacaroon { get; set; }
 
         public Macaroon InvoiceMacaroon { get; set; }

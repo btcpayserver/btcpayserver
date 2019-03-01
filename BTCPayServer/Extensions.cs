@@ -125,6 +125,12 @@ namespace BTCPayServer
                 return str;
             return str + "/";
         }
+        public static string WithStartingSlash(this string str)
+        {
+            if (str.StartsWith("/", StringComparison.InvariantCulture))
+                return str;
+            return $"/{str}";
+        }
 
         public static void SetHeaderOnStarting(this HttpResponse resp, string name, string value)
         {
@@ -227,19 +233,30 @@ namespace BTCPayServer
                 || !new Uri(redirectUrl, UriKind.RelativeOrAbsolute).IsAbsoluteUri;
             return isRelative ? request.GetAbsoluteRoot() + redirectUrl : redirectUrl;
         }
-        public static string GetAbsoluteUriNoPathBase(this HttpRequest request, string url)
+
+        /// <summary>
+        /// Will return an absolute URL. 
+        /// If `relativeOrAsbolute` is absolute, returns it.
+        /// If `relativeOrAsbolute` is relative, send absolute url based on the HOST of this request (without PathBase)
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="relativeOrAbsolte"></param>
+        /// <returns></returns>
+        public static Uri GetAbsoluteUriNoPathBase(this HttpRequest request, Uri relativeOrAbsolute = null)
         {
-            bool isRelative =
-                (url.Length > 0 && url[0] == '/')
-                || !new Uri(url, UriKind.RelativeOrAbsolute).IsAbsoluteUri;
-            if (isRelative && (url.Length == 0 || url[0] != '/'))
+            if (relativeOrAbsolute == null)
             {
-                url = $"/{url}";
-            }
-            return isRelative ? string.Concat(
+                return new Uri(string.Concat(
                     request.Scheme,
                     "://",
-                    request.Host.ToUriComponent()) + url : url;
+                    request.Host.ToUriComponent()), UriKind.Absolute);
+            }
+            if (relativeOrAbsolute.IsAbsoluteUri)
+                return relativeOrAbsolute;
+            return new Uri(string.Concat(
+                    request.Scheme,
+                    "://",
+                    request.Host.ToUriComponent()) + relativeOrAbsolute.ToString().WithStartingSlash(), UriKind.Absolute);
         }
 
         public static IServiceCollection ConfigureBTCPayServer(this IServiceCollection services, IConfiguration conf)

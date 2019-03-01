@@ -26,7 +26,6 @@ using System.Threading.Tasks;
 using Renci.SshNet;
 using BTCPayServer.Logging;
 using BTCPayServer.Lightning;
-using BTCPayServer.Configuration.External;
 using System.Runtime.CompilerServices;
 
 namespace BTCPayServer.Controllers
@@ -455,54 +454,10 @@ namespace BTCPayServer.Controllers
         public IActionResult Services()
         {
             var result = new ServicesViewModel();
-            foreach (var cryptoCode in _Options.ExternalServicesByCryptoCode.Keys)
+            result.ExternalServices = _Options.ExternalServices;
+            foreach (var externalService in _Options.OtherExternalServices)
             {
-                int i = 0;
-                foreach (var grpcService in _Options.ExternalServicesByCryptoCode.GetServices<ExternalLnd>(cryptoCode))
-                {
-                    result.LNDServices.Add(new ServicesViewModel.LNDServiceViewModel()
-                    {
-                        Crypto = cryptoCode,
-                        Type = grpcService.Type,
-                        Action = nameof(LndServices),
-                        Index = i++,
-                    });
-                }
-                i = 0;
-                foreach (var sparkService in _Options.ExternalServicesByCryptoCode.GetServices<ExternalSpark>(cryptoCode))
-                {
-                    result.LNDServices.Add(new ServicesViewModel.LNDServiceViewModel()
-                    {
-                        Crypto = cryptoCode,
-                        Type = "Spark server",
-                        Action = nameof(SparkService),
-                        Index = i++,
-                    });
-                }
-                foreach (var rtlService in _Options.ExternalServicesByCryptoCode.GetServices<ExternalRTL>(cryptoCode))
-                {
-                    result.LNDServices.Add(new ServicesViewModel.LNDServiceViewModel()
-                    {
-                        Crypto = cryptoCode,
-                        Type = "Ride the Lightning server (RTL)",
-                        Action = nameof(RTLService),
-                        Index = i++,
-                    });
-                }
-                foreach (var chargeService in _Options.ExternalServicesByCryptoCode.GetServices<ExternalCharge>(cryptoCode))
-                {
-                    result.LNDServices.Add(new ServicesViewModel.LNDServiceViewModel()
-                    {
-                        Crypto = cryptoCode,
-                        Type = "Lightning charge server",
-                        Action = nameof(LightningChargeServices),
-                        Index = i++,
-                    });
-                }
-            }
-            foreach (var externalService in _Options.ExternalServices)
-            {
-                result.ExternalServices.Add(new ServicesViewModel.ExternalService()
+                result.OtherExternalServices.Add(new ServicesViewModel.OtherExternalService()
                 {
                     Name = externalService.Key,
                     Link = this.Request.GetRelativePathOrAbsolute(externalService.Value)
@@ -510,7 +465,7 @@ namespace BTCPayServer.Controllers
             }
             if (_Options.SSHSettings != null)
             {
-                result.ExternalServices.Add(new ServicesViewModel.ExternalService()
+                result.OtherExternalServices.Add(new ServicesViewModel.OtherExternalService()
                 {
                     Name = "SSH",
                     Link = this.Url.Action(nameof(SSHService))
@@ -519,160 +474,104 @@ namespace BTCPayServer.Controllers
             return View(result);
         }
 
-        [Route("server/services/lightning-charge/{cryptoCode}/{index}")]
-        public async Task<IActionResult> LightningChargeServices(string cryptoCode, int index, bool showQR = false)
+        [Route("server/services/{serviceName}/{cryptoCode}")]
+        public async Task<IActionResult> Service(string serviceName, string cryptoCode, bool showQR = false, uint? nonce = null)
         {
             if (!_dashBoard.IsFullySynched(cryptoCode, out var unusud))
             {
                 StatusMessage = $"Error: {cryptoCode} is not fully synched";
                 return RedirectToAction(nameof(Services));
             }
-            var lightningCharge = _Options.ExternalServicesByCryptoCode.GetServices<ExternalCharge>(cryptoCode).Select(c => c.ConnectionString).FirstOrDefault();
-            if (lightningCharge == null)
-            {
+            var service = _Options.ExternalServices.GetService(serviceName, cryptoCode);
+            if (service == null)
                 return NotFound();
-            }
 
+            try
+            {
+                var connectionString = await service.ConnectionString.Expand(this.Request.GetAbsoluteUriNoPathBase(), service.Type);
+                switch (service.Type)
+                {
+                    case ExternalServiceTypes.Charge:
+                        return LightningChargeServices(service, connectionString, showQR);
+                    case ExternalServiceTypes.RTL:
+                    case ExternalServiceTypes.Spark:
+                        if (connectionString.AccessKey == null)
+                        {
+                            StatusMessage = $"Error: The access key of the service is not set";
+                            return RedirectToAction(nameof(Services));
+                        }
+                        LightningWalletServices vm = new LightningWalletServices();
+                        vm.ShowQR = showQR;
+                        vm.WalletName = service.DisplayName;
+                        vm.ServiceLink = $"{connectionString.Server}?access-key={connectionString.AccessKey}";
+                        return View("LightningWalletServices", vm);
+                    case ExternalServiceTypes.LNDGRPC:
+                    case ExternalServiceTypes.LNDRest:
+                        return LndServices(service, connectionString, nonce);
+                    default:
+                        throw new NotSupportedException(service.Type.ToString());
+                }
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Error: {ex.Message}";
+                return RedirectToAction(nameof(Services));
+            }
+        }
+
+        private IActionResult LightningChargeServices(ExternalService service, ExternalConnectionString connectionString, bool showQR = false)
+        {
             ChargeServiceViewModel vm = new ChargeServiceViewModel();
-            vm.Uri = lightningCharge.ToUri(false).AbsoluteUri;
-            vm.APIToken = lightningCharge.Password;
-            try
-            {
-                if (string.IsNullOrEmpty(vm.APIToken) && lightningCharge.CookieFilePath != null)
-                {
-                    if (lightningCharge.CookieFilePath != "fake")
-                        vm.APIToken = await System.IO.File.ReadAllTextAsync(lightningCharge.CookieFilePath);
-                    else
-                        vm.APIToken = "fake";
-                }
-                var builder = new UriBuilder(lightningCharge.ToUri(false));
-                builder.UserName = "api-token";
-                builder.Password = vm.APIToken;
-                vm.AuthenticatedUri = builder.ToString();
-            }
-            catch (Exception ex)
-            {
-                StatusMessage = $"Error: {ex.Message}";
-                return RedirectToAction(nameof(Services));
-            }
-            return View(vm);
+            vm.Uri = connectionString.Server.AbsoluteUri;
+            vm.APIToken = connectionString.APIToken;
+            return View(nameof(LightningChargeServices), vm);
         }
 
-        [Route("server/services/spark/{cryptoCode}/{index}")]
-        public async Task<IActionResult> SparkService(string cryptoCode, int index, bool showQR = false)
+        private IActionResult LndServices(ExternalService service, ExternalConnectionString connectionString, uint? nonce)
         {
-            return await LightningWalletServicesCore<ExternalSpark>(cryptoCode, showQR, "Spark Wallet");
-        }
-        [Route("server/services/rtl/{cryptoCode}/{index}")]
-        public async Task<IActionResult> RTLService(string cryptoCode, int index, bool showQR = false)
-        {
-            return await LightningWalletServicesCore<ExternalRTL>(cryptoCode, showQR, "Ride the Lightning Wallet");
-        }
-        private async Task<IActionResult> LightningWalletServicesCore<T>(string cryptoCode, bool showQR, string walletName) where T : ExternalService, IAccessKeyService
-        {
-            if (!_dashBoard.IsFullySynched(cryptoCode, out var unusud))
-            {
-                StatusMessage = $"Error: {cryptoCode} is not fully synched";
-                return RedirectToAction(nameof(Services));
-            }
-            var external = _Options.ExternalServicesByCryptoCode.GetServices<T>(cryptoCode).Where(c => c?.ConnectionString?.Server != null).FirstOrDefault();
-            if (external == null)
-            {
-                return NotFound();
-            }
-
-            LightningWalletServices vm = new LightningWalletServices();
-            vm.ShowQR = showQR;
-            vm.WalletName = walletName;
-            try
-            {
-                string serviceUri = null;
-
-                if (external.ConnectionString.Server.IsAbsoluteUri)
-                {
-                    serviceUri = external.ConnectionString.Server.AbsoluteUri;
-                }
-                else
-                {
-                    serviceUri = this.Request.GetAbsoluteUriNoPathBase(external.ConnectionString.Server.ToString());
-                }
-                AssertSecure(serviceUri);
-                vm.ServiceLink = $"{serviceUri}?access-key={await external.ExtractAccessKey()}";
-            }
-            catch (Exception ex)
-            {
-                StatusMessage = $"Error: {ex.Message}";
-                return RedirectToAction(nameof(Services));
-            }
-            return View("LightningWalletServices", vm);
-        }
-
-        private void AssertSecure(string serviceUri)
-        {
-            if (!Uri.TryCreate(serviceUri, UriKind.Absolute, out var uri))
-                throw new System.Security.SecurityException("Invalid serviceUri");
-            if(!uri.Scheme.Equals("https", StringComparison.OrdinalIgnoreCase) && 
-               !uri.DnsSafeHost.EndsWith(".onion", StringComparison.OrdinalIgnoreCase))
-            {
-                throw new System.Security.SecurityException("You can only access this service through https or Tor");
-            }
-        }
-
-        [Route("server/services/lnd/{cryptoCode}/{index}")]
-        public async Task<IActionResult> LndServices(string cryptoCode, int index, uint? nonce)
-        {
-            if (!_dashBoard.IsFullySynched(cryptoCode, out var unusud))
-            {
-                StatusMessage = $"Error: {cryptoCode} is not fully synched";
-                return RedirectToAction(nameof(Services));
-            }
-            var external = GetExternalLndConnectionString(cryptoCode, index);
-            if (external == null)
-                return NotFound();
             var model = new LndGrpcServicesViewModel();
-            if (external.ConnectionType == LightningConnectionType.LndGRPC)
+            if (service.Type == ExternalServiceTypes.LNDGRPC)
             {
-                model.Host = $"{external.BaseUri.DnsSafeHost}:{external.BaseUri.Port}";
-                model.SSL = external.BaseUri.Scheme == "https";
+                model.Host = $"{connectionString.Server.DnsSafeHost}:{connectionString.Server.Port}";
+                model.SSL = connectionString.Server.Scheme == "https";
                 model.ConnectionType = "GRPC";
                 model.GRPCSSLCipherSuites = "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256";
             }
-            else if (external.ConnectionType == LightningConnectionType.LndREST)
+            else if (service.Type == ExternalServiceTypes.LNDRest)
             {
-                model.Uri = external.BaseUri.AbsoluteUri;
+                model.Uri = connectionString.Server.AbsoluteUri;
                 model.ConnectionType = "REST";
             }
 
-            if (external.CertificateThumbprint != null)
+            if (connectionString.CertificateThumbprint != null)
             {
-                model.CertificateThumbprint = Encoders.Hex.EncodeData(external.CertificateThumbprint);
+                model.CertificateThumbprint = connectionString.CertificateThumbprint;
             }
-            if (external.Macaroon != null)
+            if (connectionString.Macaroon != null)
             {
-                model.Macaroon = Encoders.Hex.EncodeData(external.Macaroon);
+                model.Macaroon = Encoders.Hex.EncodeData(connectionString.Macaroon);
             }
-            var macaroons = external.MacaroonDirectoryPath == null ? null : await Macaroons.GetFromDirectoryAsync(external.MacaroonDirectoryPath);
-            model.AdminMacaroon = macaroons?.AdminMacaroon?.Hex;
-            model.InvoiceMacaroon = macaroons?.InvoiceMacaroon?.Hex;
-            model.ReadonlyMacaroon = macaroons?.ReadonlyMacaroon?.Hex;
+            model.AdminMacaroon = connectionString.Macaroons?.AdminMacaroon?.Hex;
+            model.InvoiceMacaroon = connectionString.Macaroons?.InvoiceMacaroon?.Hex;
+            model.ReadonlyMacaroon = connectionString.Macaroons?.ReadonlyMacaroon?.Hex;
 
             if (nonce != null)
             {
-                var configKey = GetConfigKey("lnd", cryptoCode, index, nonce.Value);
+                var configKey = GetConfigKey("lnd", service.ServiceName, service.CryptoCode, nonce.Value);
                 var lnConfig = _LnConfigProvider.GetConfig(configKey);
                 if (lnConfig != null)
                 {
-                    model.QRCodeLink = $"{this.Request.GetAbsoluteRoot().WithTrailingSlash()}lnd-config/{configKey}/lnd.config";
+                    model.QRCodeLink = Url.Action(nameof(GetLNDConfig), new { configKey = configKey });
                     model.QRCode = $"config={model.QRCodeLink}";
                 }
             }
 
-            return View(model);
+            return View(nameof(LndServices), model);
         }
 
-        private static uint GetConfigKey(string type, string cryptoCode, int index, uint nonce)
+        private static uint GetConfigKey(string type, string serviceName, string cryptoCode, uint nonce)
         {
-            return (uint)HashCode.Combine(type, cryptoCode, index, nonce);
+            return (uint)HashCode.Combine(type, serviceName, cryptoCode, nonce);
         }
 
         [Route("lnd-config/{configKey}/lnd.config")]
@@ -685,68 +584,62 @@ namespace BTCPayServer.Controllers
             return Json(conf);
         }
 
-        [Route("server/services/lnd/{cryptoCode}/{index}")]
+        [Route("server/services/{serviceName}/{cryptoCode}")]
         [HttpPost]
-        public async Task<IActionResult> LndServicesPost(string cryptoCode, int index)
+        public async Task<IActionResult> ServicePost(string serviceName, string cryptoCode)
         {
-            var external = GetExternalLndConnectionString(cryptoCode, index);
-            if (external == null)
+            if (!_dashBoard.IsFullySynched(cryptoCode, out var unusud))
+            {
+                StatusMessage = $"Error: {cryptoCode} is not fully synched";
+                return RedirectToAction(nameof(Services));
+            }
+            var service = _Options.ExternalServices.GetService(serviceName, cryptoCode);
+            if (service == null)
                 return NotFound();
+
+            ExternalConnectionString connectionString = null;
+            try
+            {
+                connectionString = await service.ConnectionString.Expand(this.Request.GetAbsoluteUriNoPathBase(), service.Type);
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Error: {ex.Message}";
+                return RedirectToAction(nameof(Services));
+            }
+
             LightningConfigurations confs = new LightningConfigurations();
-            var macaroons = external.MacaroonDirectoryPath == null ? null : await Macaroons.GetFromDirectoryAsync(external.MacaroonDirectoryPath);
-            if (external.ConnectionType == LightningConnectionType.LndGRPC)
+            if (service.Type == ExternalServiceTypes.LNDGRPC)
             {
                 LightningConfiguration grpcConf = new LightningConfiguration();
                 grpcConf.Type = "grpc";
-                grpcConf.Host = external.BaseUri.DnsSafeHost;
-                grpcConf.Port = external.BaseUri.Port;
-                grpcConf.SSL = external.BaseUri.Scheme == "https";
+                grpcConf.Host = connectionString.Server.DnsSafeHost;
+                grpcConf.Port = connectionString.Server.Port;
+                grpcConf.SSL = connectionString.Server.Scheme == "https";
                 confs.Configurations.Add(grpcConf);
             }
-            else if (external.ConnectionType == LightningConnectionType.LndREST)
+            else if (service.Type == ExternalServiceTypes.LNDRest)
             {
                 var restconf = new LNDRestConfiguration();
                 restconf.Type = "lnd-rest";
-                restconf.Uri = external.BaseUri.AbsoluteUri;
+                restconf.Uri = connectionString.Server.AbsoluteUri;
                 confs.Configurations.Add(restconf);
             }
             else
-                throw new NotSupportedException(external.ConnectionType.ToString());
+                throw new NotSupportedException(service.Type.ToString());
             var commonConf = (LNDConfiguration)confs.Configurations[confs.Configurations.Count - 1];
             commonConf.ChainType = _Options.NetworkType.ToString();
             commonConf.CryptoCode = cryptoCode;
-            commonConf.Macaroon = external.Macaroon == null ? null : Encoders.Hex.EncodeData(external.Macaroon);
-            commonConf.CertificateThumbprint = external.CertificateThumbprint == null ? null : Encoders.Hex.EncodeData(external.CertificateThumbprint);
-            commonConf.AdminMacaroon = macaroons?.AdminMacaroon?.Hex;
-            commonConf.ReadonlyMacaroon = macaroons?.ReadonlyMacaroon?.Hex;
-            commonConf.InvoiceMacaroon = macaroons?.InvoiceMacaroon?.Hex;
+            commonConf.Macaroon = connectionString.Macaroon == null ? null : Encoders.Hex.EncodeData(connectionString.Macaroon);
+            commonConf.CertificateThumbprint = connectionString.CertificateThumbprint == null ? null : connectionString.CertificateThumbprint;
+            commonConf.AdminMacaroon = connectionString.Macaroons?.AdminMacaroon?.Hex;
+            commonConf.ReadonlyMacaroon = connectionString.Macaroons?.ReadonlyMacaroon?.Hex;
+            commonConf.InvoiceMacaroon = connectionString.Macaroons?.InvoiceMacaroon?.Hex;
 
             var nonce = RandomUtils.GetUInt32();
-            var configKey = GetConfigKey("lnd", cryptoCode, index, nonce);
+            var configKey = GetConfigKey("lnd", serviceName, cryptoCode, nonce);
             _LnConfigProvider.KeepConfig(configKey, confs);
-            return RedirectToAction(nameof(LndServices), new { cryptoCode = cryptoCode, nonce = nonce });
-        }
-
-        private LightningConnectionString GetExternalLndConnectionString(string cryptoCode, int index)
-        {
-            var connectionString = _Options.ExternalServicesByCryptoCode.GetServices<ExternalLnd>(cryptoCode).Skip(index).Select(c => c.ConnectionString).FirstOrDefault();
-            if (connectionString == null)
-                return null;
-            connectionString = connectionString.Clone();
-            if (connectionString.MacaroonFilePath != null)
-            {
-                try
-                {
-                    connectionString.Macaroon = System.IO.File.ReadAllBytes(connectionString.MacaroonFilePath);
-                    connectionString.MacaroonFilePath = null;
-                }
-                catch
-                {
-                    Logs.Configuration.LogWarning($"{cryptoCode}: The macaroon file path of the external LND grpc config was not found ({connectionString.MacaroonFilePath})");
-                    return null;
-                }
-            }
-            return connectionString;
+            return RedirectToAction(nameof(Service), new { cryptoCode = cryptoCode, serviceName = serviceName, nonce = nonce });
         }
 
         [Route("server/services/ssh")]

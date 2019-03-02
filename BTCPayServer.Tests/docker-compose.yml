@@ -65,7 +65,7 @@ services:
 
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.0.0.8
+    image: nicolasdorier/nbxplorer:2.0.0.15
     restart: unless-stopped
     ports:
       - "32838:32838"
@@ -115,7 +115,7 @@ services:
       - "bitcoin_datadir:/data"
 
   customer_lightningd:
-    image: btcpayserver/lightning:v0.6.2-dev
+    image: btcpayserver/lightning:v0.7.0-1-dev
     stop_signal: SIGKILL
     restart: unless-stopped
     environment:
@@ -161,7 +161,7 @@ services:
       - merchant_lightningd
 
   merchant_lightningd:
-    image: btcpayserver/lightning:v0.6.2-dev
+    image: btcpayserver/lightning:v0.7.0-1-dev
     stop_signal: SIGKILL
     environment:
       EXPOSE_TCP: "true"

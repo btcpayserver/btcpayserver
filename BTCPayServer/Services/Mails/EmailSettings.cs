@@ -35,6 +35,7 @@ namespace BTCPayServer.Services.Mails
             get; set;
         }
 
+        [Display(Name = "Enable SSL")]
         public bool EnableSSL
         {
             get; set;

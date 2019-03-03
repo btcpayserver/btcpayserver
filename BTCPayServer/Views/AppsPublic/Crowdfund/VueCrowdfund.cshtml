@@ -1,4 +1,10 @@
 <div class="container p-0" id="app" v-cloak>
+    @if(!Model.Enabled) 
+    {
+    <div class="alert alert-warning" role="alert" style="text-align: center;">
+        This crowdfund page is not publically viewable!
+    </div>
+    }
     <div class="row h-100 w-100 py-sm-0 py-md-4 mx-0">
         <div class="card w-100 p-0 mx-0">
             <img class="card-img-top" :src="srvModel.mainImageUrl" v-if="srvModel.mainImageUrl" id="crowdfund-main-image">

@@ -45,11 +45,13 @@
         <div class="single-item-order__right">
             @if (Model.AvailableCryptos.Count > 1)
             {
-                <div class="payment__currencies cursorPointer" onclick="openPaymentMethodDialog()">
-                    <img v-bind:src="srvModel.cryptoImage" />
-                    <span class="clickable_underline">{{srvModel.paymentMethodName}} ({{srvModel.cryptoCode}})</span>
-                    <span v-show="srvModel.isLightning">&#9889;</span>
-                    <span class="clickable_indicator fa fa-angle-right"></span>
+                <div class="paywithRowRight cursorPointer" onclick="openPaymentMethodDialog()">
+                    <span class="payment__currencies ">
+                        <img v-bind:src="srvModel.cryptoImage" />
+                        <span>{{srvModel.paymentMethodName}} ({{srvModel.cryptoCode}})</span>
+                        <span v-show="srvModel.isLightning">&#9889;</span>
+                        <span class="clickable_indicator fa fa-angle-right"></span>
+                    </span>
                 </div>
                 <div id="vexPopupDialog">
                     <ul class="vexmenu">

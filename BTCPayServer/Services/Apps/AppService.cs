@@ -140,6 +140,7 @@ namespace BTCPayServer.Services.Apps
                 EnforceTargetAmount = settings.EnforceTargetAmount,
                 StatusMessage = statusMessage,
                 Perks = perks,
+                Enabled = settings.Enabled,
                 DisqusEnabled = settings.DisqusEnabled,
                 SoundsEnabled = settings.SoundsEnabled,
                 DisqusShortname = settings.DisqusShortname,

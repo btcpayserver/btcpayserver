@@ -131,10 +131,8 @@ namespace BTCPayServer.Controllers
 
             var isAdmin = await _AppService.GetAppDataIfOwner(GetUserId(), appId, AppType.Crowdfund) != null;
 
-            if (!settings.Enabled)
-            {
-                if (!isAdmin)
-                    return NotFound("Crowdfund is not currently active");
+            if (!settings.Enabled && !isAdmin) {
+                return NotFound("Crowdfund is not currently active");
             }
 
             var info = (ViewCrowdfundViewModel)await _AppService.GetAppInfo(appId);

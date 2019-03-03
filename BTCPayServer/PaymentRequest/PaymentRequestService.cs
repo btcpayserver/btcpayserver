@@ -100,6 +100,7 @@ namespace BTCPayServer.PaymentRequest
                 {
                     Id = entity.Id,
                     Amount = entity.ProductInformation.Price,
+                    AmountFormatted = _currencies.FormatCurrency(entity.ProductInformation.Price, blob.Currency),
                     Currency = entity.ProductInformation.Currency,
                     ExpiryDate = entity.ExpirationTime.DateTime,
                     Status = entity.GetInvoiceState().ToString(),

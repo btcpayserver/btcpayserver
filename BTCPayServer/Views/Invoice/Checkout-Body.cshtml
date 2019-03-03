@@ -71,12 +71,11 @@
             }
             else
             {
-                <div class="payment__currencies">
+                <div class="payment__currencies_noborder">
                     <img v-bind:src="srvModel.cryptoImage" />
                     <span>{{srvModel.paymentMethodName}} ({{srvModel.cryptoCode}})</span>
                     <span v-show="srvModel.isLightning">&#9889;</span>
                 </div>
-
             }
             <div class="payment__spinner">
                 <partial name="Checkout-Spinner" />

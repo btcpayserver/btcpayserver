@@ -9,19 +9,20 @@ namespace BTCPayServer
         public static void ConfigureClientRequirements(this OpenIddictServerBuilder builder,
             IConfiguration configuration)
         {
-            if(!OpenIdOptions.GetOpenIdEnforceClients(configuration))
+            var options = new OpenIdOptions().Load(configuration);
+            if(!options.EnforceClients)
             {
                 builder.AcceptAnonymousClients();
             }
-            if(!OpenIdOptions.GetOpenIdEnforceGrantTypes(configuration))
+            if(!options.EnforceGrantTypes)
             {
                 builder.IgnoreGrantTypePermissions();
             }
-            if(!OpenIdOptions.GetOpenIdEnforceScopes(configuration))
+            if(!options.EnforceScopes)
             {
                 builder.IgnoreScopePermissions();
             }
-            if(!OpenIdOptions.GetOpenIdEnforceEndpoints(configuration))
+            if(!options.EnforceEndpoints)
             {
                 builder.IgnoreEndpointPermissions();
             }

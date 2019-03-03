@@ -37,31 +37,11 @@ namespace BTCPayServer.Configuration
 
         public OpenIdOptions Load(IConfiguration configuration)
         {
-            EnforceClients = GetOpenIdEnforceClients(configuration);
-            EnforceEndpoints = GetOpenIdEnforceEndpoints(configuration);
-            EnforceScopes = GetOpenIdEnforceScopes(configuration);
-            EnforceGrantTypes = GetOpenIdEnforceGrantTypes(configuration);
+            EnforceClients = configuration.GetValue("openid_enforce_clientId", false);
+            EnforceEndpoints = configuration.GetValue("openid_enforce_endpoints", false);
+            EnforceScopes = configuration.GetValue("openid_enforce_scope", false);
+            EnforceGrantTypes = configuration.GetValue("openid_enforce_grant_type", false);
             return this;
-        }
-
-        public static bool GetOpenIdEnforceClients(IConfiguration configuration)
-        {
-            return configuration.GetValue("openid_enforce_clientId", false);
-        }
-
-        public static bool GetOpenIdEnforceGrantTypes(IConfiguration configuration)
-        {
-            return configuration.GetValue("openid_enforce_grant_type", false);
-        }
-
-        public static bool GetOpenIdEnforceScopes(IConfiguration configuration)
-        {
-            return configuration.GetValue("openid_enforce_scope", false);
-        }
-
-        public static bool GetOpenIdEnforceEndpoints(IConfiguration configuration)
-        {
-            return configuration.GetValue("openid_enforce_endpoints", false);
         }
     }
 

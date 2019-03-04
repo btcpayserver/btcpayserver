@@ -103,7 +103,7 @@
             "wwwroot/vendor/highlightjs/highlight.min.js",
             "wwwroot/vendor/summernote/summernote-bs4.js",
             "wwwroot/vendor/flatpickr/flatpickr.js",
-            "wwwroot/crowdfund-admin/**/*.js",
+            "wwwroot/crowdfund-admin/*.js",
             "wwwroot/products/js/products.js",
             "wwwroot/products/js/products.jquery.js"
         ]

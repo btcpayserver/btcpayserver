@@ -159,10 +159,15 @@ namespace BTCPayServer.Hosting
             {
                 app.UseDeveloperExceptionPage();
             }
-            app.UseForwardedHeaders(new ForwardedHeadersOptions()
+
+            var forwardingOptions = new ForwardedHeadersOptions()
             {
-                ForwardedHeaders = ForwardedHeaders.All
-            });
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+            };
+            forwardingOptions.KnownNetworks.Clear();
+            forwardingOptions.KnownProxies.Clear();
+            forwardingOptions.ForwardedHeaders = ForwardedHeaders.All;
+            app.UseForwardedHeaders(forwardingOptions);
             app.UseCors();
             app.UsePayServer();
             app.UseStaticFiles();

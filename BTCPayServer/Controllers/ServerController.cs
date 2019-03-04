@@ -427,13 +427,6 @@ namespace BTCPayServer.Controllers
         }
         public IHttpClientFactory HttpClientFactory { get; }
 
-        [Route("server/emails")]
-        public async Task<IActionResult> Emails()
-        {
-            var data = (await _SettingsRepository.GetSettingAsync<EmailSettings>()) ?? new EmailSettings();
-            return View(new EmailsViewModel() { Settings = data });
-        }
-
         [Route("server/policies")]
         public async Task<IActionResult> Policies()
         {
@@ -690,19 +683,28 @@ namespace BTCPayServer.Controllers
             return View(settings);
         }
 
+
+        [Route("server/emails")]
+        public async Task<IActionResult> Emails()
+        {
+            var data = (await _SettingsRepository.GetSettingAsync<EmailSettings>()) ?? new EmailSettings();
+            return View(new EmailsViewModel() { Settings = data });
+        }
+
         [Route("server/emails")]
         [HttpPost]
         public async Task<IActionResult> Emails(EmailsViewModel model, string command)
         {
+            if (!model.Settings.IsComplete())
+            {
+                model.StatusMessage = "Error: Required fields missing";
+                return View(model);
+            }
+
             if (command == "Test")
             {
                 try
                 {
-                    if (!model.Settings.IsComplete())
-                    {
-                        model.StatusMessage = "Error: Required fields missing";
-                        return View(model);
-                    }
                     var client = model.Settings.CreateSmtpClient();
                     await client.SendMailAsync(model.Settings.From, model.TestEmail, "BTCPay test", "BTCPay test");
                     model.StatusMessage = "Email sent to " + model.TestEmail + ", please, verify you received it";

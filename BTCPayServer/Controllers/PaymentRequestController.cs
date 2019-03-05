@@ -98,7 +98,12 @@ namespace BTCPayServer.Controllers
                 return RedirectToAction("GetPaymentRequests",
                     new
                     {
-                        StatusMessage = "Error: You need to create at least one store before creating a payment request"
+                        StatusMessage = new StatusMessageModel()
+                        {
+                            Html =
+                                $"Error: You must have created at least one store. <a href='{Url.Action("CreateStore", "UserStores")}'>Create store</a>",
+                            Severity = StatusMessageModel.StatusSeverity.Error
+                        }
                     });
             }
 
@@ -282,18 +287,21 @@ namespace BTCPayServer.Controllers
                 var redirectUrl = Request.GetDisplayUrl().TrimEnd("/pay", StringComparison.InvariantCulture)
                     .Replace("hub?id=", string.Empty, StringComparison.InvariantCultureIgnoreCase);
                 var newInvoiceId = (await _InvoiceController.CreateInvoiceCore(new CreateInvoiceRequest()
-                {
-                    OrderId = $"{PaymentRequestRepository.GetOrderIdForPaymentRequest(id)}",
-                    Currency = blob.Currency,
-                    Price = amount.Value,
-                    FullNotifications = true,
-                    BuyerEmail = result.Email,
-                    RedirectURL = redirectUrl,
-                }, store, HttpContext.Request.GetAbsoluteRoot(), new List<string>() { PaymentRequestRepository.GetInternalTag(id) }, cancellationToken: cancellationToken)).Data.Id;
+                        {
+                            OrderId = $"{PaymentRequestRepository.GetOrderIdForPaymentRequest(id)}",
+                            Currency = blob.Currency,
+                            Price = amount.Value,
+                            FullNotifications = true,
+                            BuyerEmail = result.Email,
+                            RedirectURL = redirectUrl,
+                        }, store, HttpContext.Request.GetAbsoluteRoot(),
+                        new List<string>() {PaymentRequestRepository.GetInternalTag(id)},
+                        cancellationToken: cancellationToken))
+                    .Data.Id;
 
                 if (redirectToInvoice)
                 {
-                    return RedirectToAction("Checkout", "Invoice", new { Id = newInvoiceId });
+                    return RedirectToAction("Checkout", "Invoice", new {Id = newInvoiceId});
                 }
 
                 return Ok(newInvoiceId);

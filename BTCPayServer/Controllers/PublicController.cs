@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Filters;
 using BTCPayServer.Models;
@@ -28,7 +29,7 @@ namespace BTCPayServer.Controllers
         [MediaTypeAcceptConstraintAttribute("text/html")]
         [IgnoreAntiforgeryToken]
         [EnableCors(CorsPolicies.All)]
-        public async Task<IActionResult> PayButtonHandle([FromForm]PayButtonViewModel model)
+        public async Task<IActionResult> PayButtonHandle([FromForm]PayButtonViewModel model, CancellationToken cancellationToken)
         {
             var store = await _StoreRepository.FindStore(model.StoreId);
             if (store == null)
@@ -56,7 +57,7 @@ namespace BTCPayServer.Controllers
                 NotificationURL = model.ServerIpn,
                 RedirectURL = model.BrowserRedirect,
                 FullNotifications = true
-            }, store, HttpContext.Request.GetAbsoluteRoot());
+            }, store, HttpContext.Request.GetAbsoluteRoot(), cancellationToken: cancellationToken);
             return Redirect(invoice.Data.Url);
         }
     }

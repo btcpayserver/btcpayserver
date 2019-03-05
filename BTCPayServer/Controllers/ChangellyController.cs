@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Models;
 using BTCPayServer.Payments.Changelly;
@@ -48,7 +49,7 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         [Route("calculate")]
         public async Task<IActionResult> CalculateAmount(string storeId, string fromCurrency, string toCurrency,
-            decimal toCurrencyAmount)
+            decimal toCurrencyAmount, CancellationToken cancellationToken)
         {
             try
             {
@@ -57,7 +58,7 @@ namespace BTCPayServer.Controllers
                 if (fromCurrency.Equals("usd", StringComparison.InvariantCultureIgnoreCase)
                     || fromCurrency.Equals("eur", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    return await HandleCalculateFiatAmount(fromCurrency, toCurrency, toCurrencyAmount);
+                    return await HandleCalculateFiatAmount(fromCurrency, toCurrency, toCurrencyAmount, cancellationToken);
                 }
                 
                 var callCounter = 0;
@@ -102,11 +103,11 @@ namespace BTCPayServer.Controllers
         }
 
         private async Task<IActionResult> HandleCalculateFiatAmount(string fromCurrency, string toCurrency,
-            decimal toCurrencyAmount)
+            decimal toCurrencyAmount, CancellationToken cancellationToken)
         {
             var store = HttpContext.GetStoreData();
             var rules = store.GetStoreBlob().GetRateRules(_btcPayNetworkProvider);
-            var rate = await _RateProviderFactory.FetchRate(new CurrencyPair(toCurrency, fromCurrency), rules);
+            var rate = await _RateProviderFactory.FetchRate(new CurrencyPair(toCurrency, fromCurrency), rules, cancellationToken);
             if (rate.BidAsk == null) return BadRequest();
             var flatRate = rate.BidAsk.Center;
             return Ok(flatRate * toCurrencyAmount);

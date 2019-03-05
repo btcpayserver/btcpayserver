@@ -13,6 +13,7 @@ using Newtonsoft.Json;
 using Microsoft.AspNetCore.Authorization;
 using BTCPayServer.Authentication;
 using Microsoft.AspNetCore.Cors;
+using System.Threading;
 
 namespace BTCPayServer.Controllers
 {
@@ -88,10 +89,10 @@ namespace BTCPayServer.Controllers
         [Route("rates")]
         [HttpGet]
         [BitpayAPIConstraint]
-        public async Task<IActionResult> GetRates(string currencyPairs, string storeId)
+        public async Task<IActionResult> GetRates(string currencyPairs, string storeId, CancellationToken cancellationToken)
         {
             storeId = await GetStoreId(storeId);
-            var result = await GetRates2(currencyPairs, storeId);
+            var result = await GetRates2(currencyPairs, storeId, cancellationToken);
             var rates = (result as JsonResult)?.Value as Rate[];
             if (rates == null)
                 return result;
@@ -118,7 +119,7 @@ namespace BTCPayServer.Controllers
 
         [Route("api/rates")]
         [HttpGet]
-        public async Task<IActionResult> GetRates2(string currencyPairs, string storeId)
+        public async Task<IActionResult> GetRates2(string currencyPairs, string storeId, CancellationToken cancellationToken)
         {
             storeId = await GetStoreId(storeId);
             if (storeId == null)
@@ -168,7 +169,7 @@ namespace BTCPayServer.Controllers
                 pairs.Add(pair);
             }
 
-            var fetching = _RateProviderFactory.FetchRates(pairs, rules);
+            var fetching = _RateProviderFactory.FetchRates(pairs, rules, cancellationToken);
             await Task.WhenAll(fetching.Select(f => f.Value).ToArray());
             return Json(pairs
                             .Select(r => (Pair: r, Value: fetching[r].GetAwaiter().GetResult().BidAsk?.Bid))

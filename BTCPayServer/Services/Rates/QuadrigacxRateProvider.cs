@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Rating;
 using Newtonsoft.Json.Linq;
@@ -31,9 +32,9 @@ namespace BTCPayServer.Services.Rates
             return true;
         }
 
-        public async Task<ExchangeRates> GetRatesAsync()
+        public async Task<ExchangeRates> GetRatesAsync(CancellationToken cancellationToken)
         {
-            var response = await _Client.GetAsync($"https://api.quadrigacx.com/v2/ticker?book=all");
+            var response = await _Client.GetAsync($"https://api.quadrigacx.com/v2/ticker?book=all", cancellationToken);
             response.EnsureSuccessStatusCode();
             var rates = JObject.Parse(await response.Content.ReadAsStringAsync());
 

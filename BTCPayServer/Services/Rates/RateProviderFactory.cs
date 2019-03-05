@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Rating;
 using ExchangeSharp;
@@ -21,12 +22,12 @@ namespace BTCPayServer.Services.Rates
             {
                 _inner = inner;
             }
-            public async Task<ExchangeRates> GetRatesAsync()
+            public async Task<ExchangeRates> GetRatesAsync(CancellationToken cancellationToken)
             {
                 DateTimeOffset now = DateTimeOffset.UtcNow;
                 try
                 {
-                    return await _inner.GetRatesAsync();
+                    return await _inner.GetRatesAsync(cancellationToken);
                 }
                 catch (Exception ex)
                 {
@@ -174,13 +175,13 @@ namespace BTCPayServer.Services.Rates
             return exchanges;
         }
 
-        public async Task<QueryRateResult> QueryRates(string exchangeName)
+        public async Task<QueryRateResult> QueryRates(string exchangeName, CancellationToken cancellationToken)
         {
             Providers.TryGetValue(exchangeName, out var directProvider);
             directProvider = directProvider ?? NullRateProvider.Instance;
 
             var wrapper = new WrapperRateProvider(directProvider);
-            var value = await wrapper.GetRatesAsync();
+            var value = await wrapper.GetRatesAsync(cancellationToken);
             return new QueryRateResult()
             {
                 Latency = wrapper.Latency,

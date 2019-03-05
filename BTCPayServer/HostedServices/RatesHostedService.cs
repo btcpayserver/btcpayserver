@@ -47,7 +47,7 @@ namespace BTCPayServer.HostedServices
                 {
                     await Task.WhenAll(_RateProviderFactory.Providers
                                     .Select(p => (Fetcher: p.Value as BackgroundFetcherRateProvider, ExchangeName: p.Key)).Where(p => p.Fetcher != null)
-                                    .Select(p => p.Fetcher.UpdateIfNecessary().ContinueWith(t =>
+                                    .Select(p => p.Fetcher.UpdateIfNecessary(timeout.Token).ContinueWith(t =>
                                     {
                                         if (t.Result.Exception != null)
                                         {

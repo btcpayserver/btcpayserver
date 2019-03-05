@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Security.Claims;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
@@ -220,7 +221,7 @@ namespace BTCPayServer.Controllers
         [Route("{id}/pay")]
         [AllowAnonymous]
         public async Task<IActionResult> PayPaymentRequest(string id, bool redirectToInvoice = true,
-            decimal? amount = null)
+            decimal? amount = null, CancellationToken cancellationToken = default)
         {
             var result = ((await ViewPaymentRequest(id)) as ViewResult)?.Model as ViewPaymentRequestViewModel;
             if (result == null)
@@ -270,17 +271,17 @@ namespace BTCPayServer.Controllers
             {
                 var invoiceAmount = result.AmountDue < amount ? result.AmountDue : amount;
 
-                return await CreateInvoiceForPaymentRequest(id, redirectToInvoice, result, invoiceAmount);
+                return await CreateInvoiceForPaymentRequest(id, redirectToInvoice, result, invoiceAmount, cancellationToken: cancellationToken);
             }
 
 
-            return await CreateInvoiceForPaymentRequest(id, redirectToInvoice, result);
+            return await CreateInvoiceForPaymentRequest(id, redirectToInvoice, result, cancellationToken: cancellationToken);
         }
 
         private async Task<IActionResult> CreateInvoiceForPaymentRequest(string id,
             bool redirectToInvoice,
             ViewPaymentRequestViewModel result,
-            decimal? amount = null)
+            decimal? amount = null, CancellationToken cancellationToken = default)
         {
             var pr = await _PaymentRequestRepository.FindPaymentRequest(id, null);
             var blob = pr.GetBlob();
@@ -298,7 +299,7 @@ namespace BTCPayServer.Controllers
                     FullNotifications = true,
                     BuyerEmail = result.Email,
                     RedirectURL = redirectUrl,
-                }, store, HttpContext.Request.GetAbsoluteRoot(), new List<string>() { PaymentRequestRepository.GetInternalTag(id) })).Data.Id;
+                }, store, HttpContext.Request.GetAbsoluteRoot(), new List<string>() { PaymentRequestRepository.GetInternalTag(id) }, cancellationToken: cancellationToken)).Data.Id;
 
                 if (redirectToInvoice)
                 {

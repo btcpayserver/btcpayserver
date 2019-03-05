@@ -589,7 +589,7 @@ namespace BTCPayServer.Tests
             Assert.True(RateRules.TryParse("X_X=kraken(X_BTC) * kraken(BTC_X)", out var rule));
             foreach (var pair in new[] { "DOGE_USD", "DOGE_CAD", "DASH_CAD", "DASH_USD", "DASH_EUR" })
             {
-                var result = fetcher.FetchRate(CurrencyPair.Parse(pair), rule).GetAwaiter().GetResult();
+                var result = fetcher.FetchRate(CurrencyPair.Parse(pair), rule, default).GetAwaiter().GetResult();
                 Assert.NotNull(result.BidAsk);
                 Assert.Empty(result.Errors);
             }
@@ -2239,7 +2239,7 @@ donation:
             foreach (var result in factory
                 .Providers
                 .Where(p => p.Value is BackgroundFetcherRateProvider)
-                .Select(p => (ExpectedName: p.Key, ResultAsync: p.Value.GetRatesAsync(), Fetcher: (BackgroundFetcherRateProvider)p.Value))
+                .Select(p => (ExpectedName: p.Key, ResultAsync: p.Value.GetRatesAsync(default), Fetcher: (BackgroundFetcherRateProvider)p.Value))
                 .ToList())
             {
                 Logs.Tester.LogInformation($"Testing {result.ExpectedName}");
@@ -2262,7 +2262,7 @@ donation:
                                );
             }
             // Kraken emit one request only after first GetRates
-            factory.Providers["kraken"].GetRatesAsync().GetAwaiter().GetResult();
+            factory.Providers["kraken"].GetRatesAsync(default).GetAwaiter().GetResult();
         }
 
         [Fact]
@@ -2278,7 +2278,7 @@ donation:
                     .ToHashSet();
 
             var rules = new StoreBlob().GetDefaultRateRules(provider);
-            var result = fetcher.FetchRates(pairs, rules);
+            var result = fetcher.FetchRates(pairs, rules, default);
             foreach (var value in result)
             {
                 var rateResult = value.Value.GetAwaiter().GetResult();
@@ -2300,7 +2300,7 @@ donation:
         class SpyRateProvider : IRateProvider
         {
             public bool Hit { get; set; }
-            public Task<ExchangeRates> GetRatesAsync()
+            public Task<ExchangeRates> GetRatesAsync(CancellationToken cancellationToken)
             {
                 Hit = true;
                 var rates = new ExchangeRates();
@@ -2407,47 +2407,47 @@ donation:
 
             var fetcher = new RateFetcher(factory);
 
-            var fetchedRate = fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules).GetAwaiter().GetResult();
+            var fetchedRate = fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules, default).GetAwaiter().GetResult();
             spy.AssertHit();
-            fetchedRate = fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules).GetAwaiter().GetResult();
+            fetchedRate = fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules, default).GetAwaiter().GetResult();
             spy.AssertNotHit();
 
             Thread.Sleep(3000);
-            fetchedRate = fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules).GetAwaiter().GetResult();
+            fetchedRate = fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules, default).GetAwaiter().GetResult();
             spy.AssertHit();
-            fetchedRate = fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules).GetAwaiter().GetResult();
+            fetchedRate = fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules, default).GetAwaiter().GetResult();
             spy.AssertNotHit();
             // Should cache at exchange level so this should hit the cache
-            var fetchedRate2 = fetcher.FetchRate(CurrencyPair.Parse("LTC_USD"), rateRules).GetAwaiter().GetResult();
+            var fetchedRate2 = fetcher.FetchRate(CurrencyPair.Parse("LTC_USD"), rateRules, default).GetAwaiter().GetResult();
             spy.AssertNotHit();
             Assert.Null(fetchedRate2.BidAsk);
             Assert.Equal(RateRulesErrors.RateUnavailable, fetchedRate2.Errors.First());
 
             // Should cache at exchange level this should not hit the cache as it is different exchange
             RateRules.TryParse("X_X = bittrex(X_X);", out rateRules);
-            fetchedRate = fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules).GetAwaiter().GetResult();
+            fetchedRate = fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules, default).GetAwaiter().GetResult();
             spy.AssertHit();
 
             factory.Providers.Clear();
             var fetch = new BackgroundFetcherRateProvider(spy);
             fetch.DoNotAutoFetchIfExpired = true;
             factory.Providers.Add("bittrex", fetch);
-            fetchedRate = fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules).GetAwaiter().GetResult();
+            fetchedRate = fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules, default).GetAwaiter().GetResult();
             spy.AssertHit();
-            fetchedRate = fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules).GetAwaiter().GetResult();
+            fetchedRate = fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules, default).GetAwaiter().GetResult();
             spy.AssertNotHit();
-            fetch.UpdateIfNecessary().GetAwaiter().GetResult();
+            fetch.UpdateIfNecessary(default).GetAwaiter().GetResult();
             spy.AssertNotHit();
             fetch.RefreshRate = TimeSpan.FromSeconds(1.0);
             Thread.Sleep(1020);
-            fetchedRate = fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules).GetAwaiter().GetResult();
+            fetchedRate = fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rateRules, default).GetAwaiter().GetResult();
             spy.AssertNotHit();
             fetch.ValidatyTime = TimeSpan.FromSeconds(1.0);
-            fetch.UpdateIfNecessary().GetAwaiter().GetResult();
+            fetch.UpdateIfNecessary(default).GetAwaiter().GetResult();
             spy.AssertHit();
-            fetch.GetRatesAsync().GetAwaiter().GetResult();
+            fetch.GetRatesAsync(default).GetAwaiter().GetResult();
             Thread.Sleep(1000);
-            Assert.Throws<InvalidOperationException>(() => fetch.GetRatesAsync().GetAwaiter().GetResult());
+            Assert.Throws<InvalidOperationException>(() => fetch.GetRatesAsync(default).GetAwaiter().GetResult());
         }
 
         [Fact]

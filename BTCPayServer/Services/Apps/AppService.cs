@@ -96,8 +96,8 @@ namespace BTCPayServer.Services.Apps
 
             var rateRules = appData.StoreData.GetStoreBlob().GetRateRules(_Networks);
 
-            var pendingPayments = GetContributionsByPaymentMethodId(pendingInvoices, !settings.EnforceTargetAmount);
-            var currentPayments = GetContributionsByPaymentMethodId(completeInvoices, !settings.EnforceTargetAmount);
+            var pendingPayments = GetContributionsByPaymentMethodId(settings.TargetCurrency, pendingInvoices, !settings.EnforceTargetAmount);
+            var currentPayments = GetContributionsByPaymentMethodId(settings.TargetCurrency, completeInvoices, !settings.EnforceTargetAmount);
 
             var perkCount = invoices
                 .Where(entity => !string.IsNullOrEmpty(entity.ProductInformation.ItemCode))
@@ -282,9 +282,10 @@ namespace BTCPayServer.Services.Apps
                 .ToArray();
         }
 
-        public Contributions GetContributionsByPaymentMethodId(InvoiceEntity[] invoices, bool softcap)
+        public Contributions GetContributionsByPaymentMethodId(string currency, InvoiceEntity[] invoices, bool softcap)
         {
             var contributions = invoices
+                .Where(p => p.ProductInformation.Currency.Equals(currency, StringComparison.OrdinalIgnoreCase))
                 .SelectMany(p =>
                 {
                     var contribution = new Contribution();

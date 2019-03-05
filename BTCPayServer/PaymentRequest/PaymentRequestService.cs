@@ -51,7 +51,7 @@ namespace BTCPayServer.PaymentRequest
             {
                 var rateRules = pr.StoreData.GetStoreBlob().GetRateRules(_BtcPayNetworkProvider);
                 var invoices = await _PaymentRequestRepository.GetInvoicesForPaymentRequest(pr.Id);
-                var contributions = _AppService.GetContributionsByPaymentMethodId(invoices, true);
+                var contributions = _AppService.GetContributionsByPaymentMethodId(blob.Currency, invoices, true);
                 if (contributions.TotalCurrency >= blob.Amount)
                 {
                     currentStatus = PaymentRequestData.PaymentRequestStatus.Completed;
@@ -78,7 +78,7 @@ namespace BTCPayServer.PaymentRequest
 
             var invoices = await _PaymentRequestRepository.GetInvoicesForPaymentRequest(id);
 
-            var paymentStats = _AppService.GetContributionsByPaymentMethodId(invoices, true);
+            var paymentStats = _AppService.GetContributionsByPaymentMethodId(blob.Currency, invoices, true);
             var amountDue = blob.Amount - paymentStats.TotalCurrency;
 
             return new ViewPaymentRequestViewModel(pr)

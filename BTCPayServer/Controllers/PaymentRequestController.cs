@@ -309,5 +309,21 @@ namespace BTCPayServer.Controllers
         {
             return _UserManager.GetUserId(User);
         }
+
+        [HttpGet]
+        [Route("{id}/clone")]
+        public async Task<IActionResult> ClonePaymentRequest(string id)
+        {
+            var result = await EditPaymentRequest(id);
+            if (result is ViewResult viewResult)
+            {
+                var model = (UpdatePaymentRequestViewModel)viewResult.Model;
+                model.Id = null;
+                model.Title = $"Clone of {model.Title}";
+                return await EditPaymentRequest(null, model);
+            }
+
+            return NotFound();
+        }
     }
 }

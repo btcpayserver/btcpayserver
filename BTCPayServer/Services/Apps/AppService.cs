@@ -152,7 +152,9 @@ namespace BTCPayServer.Services.Apps
                     PaymentStats = currentPayments.ToDictionary(c => c.Key.ToString(), c => c.Value.Value),
                     PendingPaymentStats = pendingPayments.ToDictionary(c => c.Key.ToString(), c => c.Value.Value),
                     LastResetDate = lastResetDate,
-                    NextResetDate = nextResetDate
+                    NextResetDate = nextResetDate,
+                    CurrentPendingAmount = pendingPayments.TotalCurrency,
+                    CurrentAmount = currentPayments.TotalCurrency
                 }
             };
         }

@@ -329,7 +329,7 @@ namespace BTCPayServer.Services.Apps
                 {
                     PaymentMehtodId = p.Key,
                     Value = p.Select(v => v.Value).Sum(),
-                    CurrencyValue = p.Select(v => v.Value).Sum()
+                    CurrencyValue = p.Select(v => v.CurrencyValue).Sum()
                 });
             return new Contributions(contributions);
         }

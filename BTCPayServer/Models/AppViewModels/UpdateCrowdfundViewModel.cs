@@ -46,6 +46,7 @@ namespace BTCPayServer.Models.AppViewModels
         public string TargetCurrency { get; set; } = "BTC";
 
         [Display(Name = "Set a Target amount ")]
+        [Range(0, double.PositiveInfinity)]
         public decimal? TargetAmount { get; set; }
 
 

@@ -268,21 +268,11 @@ namespace BTCPayServer.Controllers
             }
 
             if (result.AllowCustomPaymentAmounts && amount != null)
-            {
-                var invoiceAmount = result.AmountDue < amount ? result.AmountDue : amount;
-
-                return await CreateInvoiceForPaymentRequest(id, redirectToInvoice, result, invoiceAmount, cancellationToken: cancellationToken);
-            }
+                amount = Math.Min(result.AmountDue, amount.Value);
+            else
+                amount = result.AmountDue;
 
 
-            return await CreateInvoiceForPaymentRequest(id, redirectToInvoice, result, cancellationToken: cancellationToken);
-        }
-
-        private async Task<IActionResult> CreateInvoiceForPaymentRequest(string id,
-            bool redirectToInvoice,
-            ViewPaymentRequestViewModel result,
-            decimal? amount = null, CancellationToken cancellationToken = default)
-        {
             var pr = await _PaymentRequestRepository.FindPaymentRequest(id, null);
             var blob = pr.GetBlob();
             var store = pr.StoreData;
@@ -295,7 +285,7 @@ namespace BTCPayServer.Controllers
                 {
                     OrderId = $"{PaymentRequestRepository.GetOrderIdForPaymentRequest(id)}",
                     Currency = blob.Currency,
-                    Price = amount.GetValueOrDefault(result.AmountDue),
+                    Price = amount.Value,
                     FullNotifications = true,
                     BuyerEmail = result.Email,
                     RedirectURL = redirectUrl,
@@ -303,7 +293,7 @@ namespace BTCPayServer.Controllers
 
                 if (redirectToInvoice)
                 {
-                    return RedirectToAction("Checkout", "Invoice", new {Id = newInvoiceId});
+                    return RedirectToAction("Checkout", "Invoice", new { Id = newInvoiceId });
                 }
 
                 return Ok(newInvoiceId);
@@ -313,6 +303,7 @@ namespace BTCPayServer.Controllers
                 return BadRequest(e.Message);
             }
         }
+
 
         private string GetUserId()
         {

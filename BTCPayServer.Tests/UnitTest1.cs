@@ -2256,7 +2256,8 @@ donation:
                 Assert.Contains(exchangeRates.ByExchange[result.ExpectedName],
                         e => (e.CurrencyPair == new CurrencyPair("BTC", "USD") ||
                                e.CurrencyPair == new CurrencyPair("BTC", "EUR") ||
-                               e.CurrencyPair == new CurrencyPair("BTC", "USDT"))
+                               e.CurrencyPair == new CurrencyPair("BTC", "USDT") ||
+                               e.CurrencyPair == new CurrencyPair("BTC", "CAD"))
                                && e.BidAsk.Bid > 1.0m // 1BTC will always be more than 1USD
                                );
             }

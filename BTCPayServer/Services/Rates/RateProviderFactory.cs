@@ -111,6 +111,7 @@ namespace BTCPayServer.Services.Rates
             Providers.Add(QuadrigacxRateProvider.QuadrigacxName, new QuadrigacxRateProvider());
             Providers.Add(CoinAverageRateProvider.CoinAverageName, new CoinAverageRateProvider() { Exchange = CoinAverageRateProvider.CoinAverageName, HttpClient = _httpClientFactory?.CreateClient(), Authenticator = _CoinAverageSettings });
             Providers.Add("kraken", new KrakenExchangeRateProvider() { HttpClient = _httpClientFactory?.CreateClient() });
+            Providers.Add("bylls", new ByllsRateProvider(_httpClientFactory?.CreateClient()));
 
             // Those exchanges make multiple requests when calling GetTickers so we remove them
             //DirectProviders.Add("gdax", new ExchangeSharpRateProvider("gdax", new ExchangeGdaxAPI()));
@@ -167,6 +168,7 @@ namespace BTCPayServer.Services.Rates
 
             // Add other exchanges supported here
             exchanges.Add(new CoinAverageExchange(CoinAverageRateProvider.CoinAverageName, "Coin Average"));
+            exchanges.Add(new CoinAverageExchange("bylls", "Bylls"));
             exchanges.Add(new CoinAverageExchange("cryptopia", "Cryptopia"));
 
             return exchanges;

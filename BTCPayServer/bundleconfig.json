@@ -103,7 +103,7 @@
             "wwwroot/vendor/highlightjs/highlight.min.js",
             "wwwroot/vendor/summernote/summernote-bs4.js",
             "wwwroot/vendor/flatpickr/flatpickr.js",
-            "wwwroot/crowdfund-admin/**/*.js",
+            "wwwroot/crowdfund-admin/main.js",
             "wwwroot/products/js/products.js",
             "wwwroot/products/js/products.jquery.js"
         ]
@@ -113,8 +113,7 @@
         "inputFiles": [
             "wwwroot/vendor/highlightjs/default.min.css",
             "wwwroot/vendor/summernote/summernote-bs4.css",
-            "wwwroot/vendor/flatpickr/flatpickr.min.css",
-            "wwwroot/crowdfund-admin/*.js"
+            "wwwroot/vendor/flatpickr/flatpickr.min.css"
         ]
     },
     {

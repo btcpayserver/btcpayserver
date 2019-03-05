@@ -107,7 +107,7 @@ else
                                         <template v-else v-for="invoice of srvModel.invoices" :key="invoice.id">
                                             <tr class="bg-light">
                                                 <td scope="row">{{invoice.id}}</td>
-                                                <td>{{invoice.amount}} {{invoice.currency}}</td>
+                                                <td>{{invoice.amountFormatted}}</td>
                                                 <td>{{moment(invoice.expiryDate).format('L HH:mm')}}</td>
                                                 <td>{{invoice.status}}</td>
                                             </tr>

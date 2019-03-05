@@ -44,7 +44,7 @@
   "Node Info": "Informations sur le nœud",
   "txCount": "{{count}} transaction",
   "txCount_plural": "{{count}} transactions",
-  "Pay with CoinSwitch": "Pay with CoinSwitch",
-  "Pay with Changelly": "Pay with Changelly",
-  "Close": "Close"
+  "Pay with CoinSwitch": "Payer avec CoinSwitch",
+  "Pay with Changelly": "Payer avec Changelly",
+  "Close": "Fermer"
 }

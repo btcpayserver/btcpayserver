@@ -55,6 +55,7 @@ namespace BTCPayServer.Models.AppViewModels
 
         public bool Ended => !EndDate.HasValue || DateTime.Now.ToUniversalTime() > EndDate;
         public bool DisplayPerksRanking { get; set; }
+        public bool Enabled { get; set; }
     }
 
     public class ContributeToCrowdfund

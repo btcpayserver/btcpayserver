@@ -13,11 +13,10 @@ namespace BTCPayServer.Services
 {
     public class BTCPayServerEnvironment
     {
+        IHttpContextAccessor httpContext;
         public BTCPayServerEnvironment(IHostingEnvironment env, BTCPayNetworkProvider provider, IHttpContextAccessor httpContext)
         {
-            ExpectedHost = httpContext.HttpContext.Request.Host.Value;
-            ExpectedDomain = httpContext.HttpContext.Request.Host.Host;
-            ExpectedProtocol = httpContext.HttpContext.Request.Scheme;
+            this.httpContext = httpContext;
             Version = typeof(BTCPayServerEnvironment).GetTypeInfo().Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>().Version;
 #if DEBUG
             Build = "Debug";
@@ -32,9 +31,9 @@ namespace BTCPayServer.Services
             get; set;
         }
 
-        public string ExpectedDomain { get; set; }
-        public string ExpectedHost { get; set; }
-        public string ExpectedProtocol { get; set; }
+        public string ExpectedDomain => httpContext.HttpContext.Request.Host.Host;
+        public string ExpectedHost => httpContext.HttpContext.Request.Host.Value;
+        public string ExpectedProtocol => httpContext.HttpContext.Request.Scheme;
 
         public NetworkType NetworkType { get; set; }
         public string Version

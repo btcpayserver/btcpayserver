@@ -24,6 +24,7 @@ using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using NBitpayClient;
 
 namespace BTCPayServer.Controllers
@@ -198,7 +199,7 @@ namespace BTCPayServer.Controllers
                     new
                     {
                         StatusMessage =
-                            "Payment request could not be removed. Any request that has generated invoices cannot be removed."
+                            "Error: Payment request could not be removed. Any request that has generated invoices cannot be removed."
                     });
             }
         }
@@ -320,7 +321,9 @@ namespace BTCPayServer.Controllers
                 var model = (UpdatePaymentRequestViewModel)viewResult.Model;
                 model.Id = null;
                 model.Title = $"Clone of {model.Title}";
-                return await EditPaymentRequest(null, model);
+                
+                return View("EditPaymentRequest", model);
+                
             }
 
             return NotFound();

@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
+using BTCPayServer.Payments;
 using BTCPayServer.Services.Rates;
 
 namespace BTCPayServer.Models.AppViewModels
@@ -49,6 +51,20 @@ namespace BTCPayServer.Models.AppViewModels
             public Dictionary<string, decimal> PendingPaymentStats { get; set; }
             public DateTime? LastResetDate { get; set; }
             public DateTime? NextResetDate { get; set; }
+        }
+        public class Contribution
+        {
+            public PaymentMethodId PaymentMehtodId { get; set; }
+            public decimal Value { get; set; }
+            public decimal CurrencyValue { get; set; }
+        }
+        public class Contributions : Dictionary<PaymentMethodId, Contribution>
+        {
+            public Contributions(IEnumerable<KeyValuePair<PaymentMethodId, Contribution>> collection) : base(collection)
+            {
+                TotalCurrency = Values.Select(v => v.CurrencyValue).Sum();
+            }
+            public decimal TotalCurrency { get; }
         }
 
         public bool Started => !StartDate.HasValue || DateTime.Now.ToUniversalTime() > StartDate;

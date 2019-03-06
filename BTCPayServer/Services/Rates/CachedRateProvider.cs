@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Rating;
 using BTCPayServer.Services.Rates;
@@ -40,12 +41,12 @@ namespace BTCPayServer.Services.Rates
         } = TimeSpan.FromMinutes(1.0);
         public IMemoryCache MemoryCache { get => _MemoryCache; set => _MemoryCache = value; }
         
-        public Task<ExchangeRates> GetRatesAsync()
+        public Task<ExchangeRates> GetRatesAsync(CancellationToken cancellationToken)
         {
             return MemoryCache.GetOrCreateAsync("EXCHANGE_RATES_" + ExchangeName, (ICacheEntry entry) =>
             {
                 entry.AbsoluteExpiration = DateTimeOffset.UtcNow + CacheSpan;
-                return _Inner.GetRatesAsync();
+                return _Inner.GetRatesAsync(cancellationToken);
             });
         }
     }

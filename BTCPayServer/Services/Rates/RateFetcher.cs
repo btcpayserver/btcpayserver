@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Rating;
 using ExchangeSharp;
@@ -38,12 +39,12 @@ namespace BTCPayServer.Services.Rates
 
         public RateProviderFactory RateProviderFactory => _rateProviderFactory;
 
-        public async Task<RateResult> FetchRate(CurrencyPair pair, RateRules rules)
+        public async Task<RateResult> FetchRate(CurrencyPair pair, RateRules rules, CancellationToken cancellationToken)
         {
-            return await FetchRates(new HashSet<CurrencyPair>(new[] { pair }), rules).First().Value;
+            return await FetchRates(new HashSet<CurrencyPair>(new[] { pair }), rules, cancellationToken).First().Value;
         }
 
-        public Dictionary<CurrencyPair, Task<RateResult>> FetchRates(HashSet<CurrencyPair> pairs, RateRules rules)
+        public Dictionary<CurrencyPair, Task<RateResult>> FetchRates(HashSet<CurrencyPair> pairs, RateRules rules, CancellationToken cancellationToken)
         {
             if (rules == null)
                 throw new ArgumentNullException(nameof(rules));
@@ -59,7 +60,7 @@ namespace BTCPayServer.Services.Rates
                 {
                     if (!fetchingExchanges.TryGetValue(requiredExchange.Exchange, out var fetching))
                     {
-                        fetching = _rateProviderFactory.QueryRates(requiredExchange.Exchange);
+                        fetching = _rateProviderFactory.QueryRates(requiredExchange.Exchange, cancellationToken);
                         fetchingExchanges.Add(requiredExchange.Exchange, fetching);
                     }
                     dependentQueries.Add(fetching);

@@ -220,7 +220,7 @@ namespace BTCPayServer.Tests
                     tester.NetworkProvider, fetcher);
                 changellyController.IsTest = true;
                 Assert.IsType<decimal>(Assert
-                    .IsType<OkObjectResult>(await changellyController.CalculateAmount(user.StoreId, "ltc", "btc", 1.0m))
+                    .IsType<OkObjectResult>(await changellyController.CalculateAmount(user.StoreId, "ltc", "btc", 1.0m, default))
                     .Value);
             }
         }

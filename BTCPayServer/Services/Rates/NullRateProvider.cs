@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Rating;
 
@@ -20,7 +21,7 @@ namespace BTCPayServer.Services.Rates
                 return _Instance;
             }
         }
-        public Task<ExchangeRates> GetRatesAsync()
+        public Task<ExchangeRates> GetRatesAsync(CancellationToken cancellationToken)
         {
             return Task.FromResult(new ExchangeRates());
         }

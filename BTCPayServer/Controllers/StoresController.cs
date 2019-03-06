@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Authentication;
 using BTCPayServer.Configuration;
@@ -203,7 +204,7 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [Route("{storeId}/rates")]
-        public async Task<IActionResult> Rates(RatesViewModel model, string command = null)
+        public async Task<IActionResult> Rates(RatesViewModel model, string command = null, CancellationToken cancellationToken = default)
         {
             model.SetExchangeRates(GetSupportedExchanges(), model.PreferredExchange);
             if (!ModelState.IsValid)
@@ -267,7 +268,7 @@ namespace BTCPayServer.Controllers
                     pairs.Add(currencyPair);
                 }
 
-                var fetchs = _RateFactory.FetchRates(pairs.ToHashSet(), rules);
+                var fetchs = _RateFactory.FetchRates(pairs.ToHashSet(), rules, cancellationToken);
                 var testResults = new List<RatesViewModel.TestResultViewModel>();
                 foreach (var fetch in fetchs)
                 {

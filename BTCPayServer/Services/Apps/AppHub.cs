@@ -40,7 +40,7 @@ namespace BTCPayServer.Services.Apps
                {
 
                    var result =
-                       await _AppsPublicController.ContributeToCrowdfund(Context.Items["app"].ToString(), model);
+                       await _AppsPublicController.ContributeToCrowdfund(Context.Items["app"].ToString(), model, Context.ConnectionAborted);
                    switch (result)
                    {
                        case OkObjectResult okObjectResult:

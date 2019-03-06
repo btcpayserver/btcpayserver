@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using NBitcoin;
 using BTCPayServer.Rating;
+using System.Threading;
 
 namespace BTCPayServer.Services.Rates
 {
@@ -22,7 +23,7 @@ namespace BTCPayServer.Services.Rates
 
         public string ExchangeName => BitpayName;
 
-        public async Task<ExchangeRates> GetRatesAsync()
+        public async Task<ExchangeRates> GetRatesAsync(CancellationToken cancellationToken)
         {
             return new ExchangeRates((await _Bitpay.GetRatesAsync().ConfigureAwait(false))
                 .AllRates

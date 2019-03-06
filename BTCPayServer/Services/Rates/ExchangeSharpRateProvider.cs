@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Rating;
 using ExchangeSharp;
@@ -31,7 +32,7 @@ namespace BTCPayServer.Services.Rates
 
         public string ExchangeName => _ExchangeName;
 
-        public async Task<ExchangeRates> GetRatesAsync()
+        public async Task<ExchangeRates> GetRatesAsync(CancellationToken cancellationToken)
         {
             await new SynchronizationContextRemover();
             var rates = await _ExchangeAPI.GetTickersAsync();

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Filters;
 using BTCPayServer.Models;
@@ -32,11 +33,11 @@ namespace BTCPayServer.Controllers
         [HttpPost]
         [Route("invoices")]
         [MediaTypeConstraint("application/json")]
-        public async Task<DataWrapper<InvoiceResponse>> CreateInvoice([FromBody] CreateInvoiceRequest invoice)
+        public async Task<DataWrapper<InvoiceResponse>> CreateInvoice([FromBody] CreateInvoiceRequest invoice, CancellationToken cancellationToken)
         {
             if (invoice == null)
                 throw new BitpayHttpException(400, "Invalid invoice");
-            return await _InvoiceController.CreateInvoiceCore(invoice, HttpContext.GetStoreData(), HttpContext.Request.GetAbsoluteRoot());
+            return await _InvoiceController.CreateInvoiceCore(invoice, HttpContext.GetStoreData(), HttpContext.Request.GetAbsoluteRoot(), cancellationToken: cancellationToken);
         }
 
         [HttpGet]

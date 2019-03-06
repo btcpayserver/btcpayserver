@@ -109,7 +109,7 @@ namespace BTCPayServer.Tests
                 Assert.IsType<NotFoundObjectResult>(await anonAppPubsController.ContributeToCrowdfund(appId, new ContributeToCrowdfund()
                 {
                     Amount = new decimal(0.01)
-                }));
+                }, default));
                 
                 Assert.IsType<NotFoundResult>(await anonAppPubsController.ViewCrowdfund(appId, string.Empty));
                 
@@ -118,7 +118,7 @@ namespace BTCPayServer.Tests
                 {
                     RedirectToCheckout = false,
                     Amount = new decimal(0.01)
-                }));
+                }, default));
                 Assert.IsType<ViewResult>(await publicApps.ViewCrowdfund(appId, string.Empty));
                 Assert.IsType<NotFoundResult>(await anonAppPubsController.ViewCrowdfund(appId, string.Empty));
                 
@@ -130,7 +130,7 @@ namespace BTCPayServer.Tests
                 Assert.IsType<NotFoundObjectResult>(await anonAppPubsController.ContributeToCrowdfund(appId, new ContributeToCrowdfund()
                 {
                     Amount = new decimal(0.01)
-                }));
+                }, default));
                 
                 //Scenario 4: Enabled But End Date < Now - Not Allowed
                 
@@ -142,7 +142,7 @@ namespace BTCPayServer.Tests
                 Assert.IsType<NotFoundObjectResult>(await anonAppPubsController.ContributeToCrowdfund(appId, new ContributeToCrowdfund()
                 {
                     Amount = new decimal(0.01)
-                }));
+                }, default));
                 
                 
                 //Scenario 5: Enabled and within correct timeframe, however target is enforced and Amount is Over - Not Allowed
@@ -156,13 +156,13 @@ namespace BTCPayServer.Tests
                 Assert.IsType<NotFoundObjectResult>(await anonAppPubsController.ContributeToCrowdfund(appId, new ContributeToCrowdfund()
                 {
                     Amount = new decimal(1.01)
-                }));
+                }, default));
                 
                 //Scenario 6: Allowed
                 Assert.IsType<OkObjectResult>(await anonAppPubsController.ContributeToCrowdfund(appId, new ContributeToCrowdfund()
                 {
                     Amount = new decimal(0.05)
-                }));
+                }, default));
                 
             }
         }

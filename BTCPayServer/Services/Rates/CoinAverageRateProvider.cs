@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using BTCPayServer.Rating;
+using System.Threading;
 
 namespace BTCPayServer.Services.Rates
 {
@@ -111,7 +112,7 @@ namespace BTCPayServer.Services.Rates
             }
         }
 
-        public async Task<ExchangeRates> GetRatesAsync()
+        public async Task<ExchangeRates> GetRatesAsync(CancellationToken cancellationToken)
         {
             string url = Exchange == CoinAverageName ? $"https://apiv2.bitcoinaverage.com/indices/{Market}/ticker/short"
                                          : $"https://apiv2.bitcoinaverage.com/exchanges/{Exchange}";
@@ -122,7 +123,7 @@ namespace BTCPayServer.Services.Rates
             {
                 await auth.AddHeader(request);
             }
-            var resp = await HttpClient.SendAsync(request);
+            var resp = await HttpClient.SendAsync(request, cancellationToken);
             using (resp)
             {
 

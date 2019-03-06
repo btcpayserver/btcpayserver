@@ -3,7 +3,6 @@ using System.Reflection;
 using System.Linq;
 using Microsoft.AspNetCore.Builder;
 using System;
-using System.Collections.Generic;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -14,7 +13,6 @@ using BTCPayServer.Authentication;
 using Microsoft.EntityFrameworkCore;
 using BTCPayServer.Filters;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
-using BTCPayServer.Services;
 using BTCPayServer.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -39,6 +37,7 @@ using BTCPayServer.PaymentRequest;
 using Meziantou.AspNetCore.BundleTagHelpers;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
+using Robotify.AspNetCore;
 
 namespace BTCPayServer.Hosting
 {
@@ -62,6 +61,7 @@ namespace BTCPayServer.Hosting
             Logs.Configure(LoggerFactory);
             services.ConfigureBTCPayServer(Configuration);
             services.AddMemoryCache();
+            services.AddRobotify(configurer =>     configurer.AddRobotGroupProvider<BTCPayRobotProvider>());
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
@@ -179,6 +179,7 @@ namespace BTCPayServer.Hosting
             });
             app.UseWebSockets();
             app.UseStatusCodePages();
+            app.UseRobotify();
             app.UseMvc(routes =>
             {
                 routes.MapRoute(

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
@@ -56,7 +57,9 @@ namespace BTCPayServer.Controllers
                 AppId = appId,
                 SearchTerm = app.TagAllInvoices ? $"storeid:{app.StoreDataId}" : $"orderid:{AppService.GetCrowdfundOrderId(appId)}",
                 DisplayPerksRanking = settings.DisplayPerksRanking,
-                SortPerksByPopularity = settings.SortPerksByPopularity
+                SortPerksByPopularity = settings.SortPerksByPopularity,
+                Sounds                = string.Join(Environment.NewLine, settings.Sounds),
+                AnimationColors                = string.Join(Environment.NewLine, settings.AnimationColors)
             };
             return View(vm);
         }
@@ -89,6 +92,24 @@ namespace BTCPayServer.Controllers
             if (vm.DisplayPerksRanking && !vm.SortPerksByPopularity)
             {
                 ModelState.AddModelError(nameof(vm.DisplayPerksRanking), "You must sort by popularity in order to display ranking.");
+            }
+
+            var parsedSounds = vm.Sounds.Split(
+                new[] {"\r\n", "\r", "\n"},
+                StringSplitOptions.None
+            ).Select(s => s.Trim()).ToArray();
+            if (vm.SoundsEnabled && !parsedSounds.Any())
+            {
+                ModelState.AddModelError(nameof(vm.Sounds), "You must have at least one sound if you enable sounds");
+            }
+            
+            var parsedAnimationColors = vm.AnimationColors.Split(
+                new[] { "\r\n", "\r", "\n" },
+                StringSplitOptions.None
+            ).Select(s => s.Trim()).ToArray();
+            if (vm.AnimationsEnabled && !parsedAnimationColors.Any())
+            {
+                ModelState.AddModelError(nameof(vm.AnimationColors), "You must have at least one animation color if you enable animations");
             }
             
             if (!ModelState.IsValid)
@@ -124,7 +145,9 @@ namespace BTCPayServer.Controllers
                 ResetEveryAmount = vm.ResetEveryAmount,
                 ResetEvery = Enum.Parse<CrowdfundResetEvery>(vm.ResetEvery),
                 DisplayPerksRanking = vm.DisplayPerksRanking,
-                SortPerksByPopularity = vm.SortPerksByPopularity
+                SortPerksByPopularity = vm.SortPerksByPopularity,
+                Sounds = parsedSounds,
+                AnimationColors = parsedAnimationColors
             };
 
             app.TagAllInvoices = vm.UseAllStoreInvoices;

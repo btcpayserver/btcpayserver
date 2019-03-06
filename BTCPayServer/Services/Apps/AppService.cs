@@ -92,10 +92,6 @@ namespace BTCPayServer.Services.Apps
             var completeInvoices = invoices.Where(entity => entity.Status == InvoiceStatus.Complete || entity.Status == InvoiceStatus.Confirmed).ToArray();
             var pendingInvoices = invoices.Where(entity => !(entity.Status == InvoiceStatus.Complete || entity.Status == InvoiceStatus.Confirmed)).ToArray();
 
-            
-
-            var rateRules = appData.StoreData.GetStoreBlob().GetRateRules(_Networks);
-
             var pendingPayments = GetContributionsByPaymentMethodId(settings.TargetCurrency, pendingInvoices, !settings.EnforceTargetAmount);
             var currentPayments = GetContributionsByPaymentMethodId(settings.TargetCurrency, completeInvoices, !settings.EnforceTargetAmount);
 
@@ -142,6 +138,8 @@ namespace BTCPayServer.Services.Apps
                 DisplayPerksRanking = settings.DisplayPerksRanking,
                 PerkCount = perkCount,
                 NeverReset = settings.ResetEvery == CrowdfundResetEvery.Never,
+                Sounds = settings.Sounds,
+                AnimationColors = settings.AnimationColors,
                 CurrencyData = _Currencies.GetCurrencyData(settings.TargetCurrency, true),
                 Info = new ViewCrowdfundViewModel.CrowdfundInfo()
                 {

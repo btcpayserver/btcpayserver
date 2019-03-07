@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Models.StoreViewModels;
@@ -77,7 +78,7 @@ namespace BTCPayServer.Controllers
                 case "test":
                     try
                     {
-                        var client = new Changelly(_httpClientFactory, changellySettings.ApiKey, changellySettings.ApiSecret,
+                        var client = new Changelly(_httpClientFactory.CreateClient(), changellySettings.ApiKey, changellySettings.ApiSecret,
                             changellySettings.ApiUrl);
                         var result = await client.GetCurrenciesFull();
                         vm.StatusMessage = "Test Successful";

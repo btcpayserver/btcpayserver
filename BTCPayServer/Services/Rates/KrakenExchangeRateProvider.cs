@@ -29,7 +29,7 @@ namespace BTCPayServer.Services.Rates
             }
             set
             {
-                _LocalClient = null;
+                _LocalClient = value;
             }
         }
 

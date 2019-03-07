@@ -256,7 +256,7 @@ addLoadEvent(function (ev) {
             eventAggregator.$on("payment-received", function (amount, cryptoCode, type) {
                 var onChain = type.toLowerCase() === "btclike";
                 if(self.sound) {
-                    playRandomQuakeSound();
+                    playRandomSound();
                 }
                 if(self.animation) {
                     fireworks();

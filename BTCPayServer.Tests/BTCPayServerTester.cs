@@ -129,6 +129,7 @@ namespace BTCPayServer.Tests
                     {
                         s.AddLogging(l =>
                         {
+                            l.AddFilter("System.Net.Http.HttpClient", LogLevel.Critical);
                             l.SetMinimumLevel(LogLevel.Information)
                             .AddFilter("Microsoft", LogLevel.Error)
                             .AddFilter("Hangfire", LogLevel.Error)

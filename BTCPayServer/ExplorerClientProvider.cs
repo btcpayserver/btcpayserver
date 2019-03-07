@@ -8,7 +8,6 @@ using BTCPayServer.Configuration;
 using BTCPayServer.Logging;
 using NBXplorer;
 using BTCPayServer.HostedServices;
-using System.Net.Http;
 
 namespace BTCPayServer
 {

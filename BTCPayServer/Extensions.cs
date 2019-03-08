@@ -217,8 +217,10 @@ namespace BTCPayServer
         /// <returns></returns>
         public static string GetRelativePathOrAbsolute(this HttpRequest request, string path)
         {
-            if (Uri.TryCreate(path, UriKind.Absolute, out var unused))
+            if (!Uri.TryCreate(path, UriKind.RelativeOrAbsolute, out var uri) || 
+                uri.IsAbsoluteUri)
                 return path;
+
             if (path.Length > 0 && path[0] != '/')
                 path = $"/{path}";
             return string.Concat(

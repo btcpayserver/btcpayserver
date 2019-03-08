@@ -51,6 +51,7 @@ namespace BTCPayServer
                     .ConfigureLogging(l =>
                     {
                         l.AddFilter("Microsoft", LogLevel.Error);
+                        l.AddFilter("System.Net.Http.HttpClient", LogLevel.Critical);
                         l.AddFilter("Microsoft.AspNetCore.Antiforgery.Internal", LogLevel.Critical);
                         l.AddProvider(new CustomConsoleLogProvider(processor));
 

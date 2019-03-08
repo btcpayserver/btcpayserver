@@ -54,6 +54,8 @@
                             <span> - </span>
                             <a target="_blank" asp-action="PayPaymentRequest" asp-route-id="@item.Id">Pay</a>
                             <span> - </span>
+                            <a target="_blank" asp-action="ClonePaymentRequest" asp-route-id="@item.Id">Clone</a>
+                            <span> - </span>
                             <a asp-action="RemovePaymentRequestPrompt" asp-route-id="@item.Id">Remove</a>
                         </td>
                     </tr>

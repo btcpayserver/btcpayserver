@@ -19,11 +19,11 @@ namespace BTCPayServer.Payments.Changelly
         private readonly bool _showFiat;
         private readonly HttpClient _httpClient;
 
-        public Changelly(IHttpClientFactory httpClientFactory,  string apiKey, string apiSecret, string apiUrl, bool showFiat = true)
+        public Changelly(HttpClient httpClient,  string apiKey, string apiSecret, string apiUrl, bool showFiat = true)
         {
             _apisecret = apiSecret;
             _showFiat = showFiat;
-            _httpClient = httpClientFactory.CreateClient();
+            _httpClient = httpClient;
             _httpClient.BaseAddress = new Uri(apiUrl);
             _httpClient.DefaultRequestHeaders.Add("api-key", apiKey);
         }

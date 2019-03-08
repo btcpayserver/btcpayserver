@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.Http;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +18,7 @@ namespace BTCPayServer
 
         public BTCPayNetworkProvider NetworkProviders => _NetworkProviders;
         NBXplorerDashboard _Dashboard;
-        public ExplorerClientProvider(BTCPayNetworkProvider networkProviders, BTCPayServerOptions options, NBXplorerDashboard dashboard)
+        public ExplorerClientProvider(IHttpClientFactory httpClientFactory, BTCPayNetworkProvider networkProviders, BTCPayServerOptions options, NBXplorerDashboard dashboard)
         {
             _Dashboard = dashboard;
             _NetworkProviders = networkProviders;
@@ -32,14 +33,15 @@ namespace BTCPayServer
                 Logs.Configuration.LogInformation($"{setting.CryptoCode}: Cookie file is {(setting.CookieFile ?? "not set")}");
                 if (setting.ExplorerUri != null)
                 {
-                    _Clients.TryAdd(setting.CryptoCode, CreateExplorerClient(_NetworkProviders.GetNetwork(setting.CryptoCode), setting.ExplorerUri, setting.CookieFile));
+                    _Clients.TryAdd(setting.CryptoCode, CreateExplorerClient(httpClientFactory.CreateClient($"NBXPLORER_{setting.CryptoCode}"), _NetworkProviders.GetNetwork(setting.CryptoCode), setting.ExplorerUri, setting.CookieFile));
                 }
             }
         }
 
-        private static ExplorerClient CreateExplorerClient(BTCPayNetwork n, Uri uri, string cookieFile)
+        private static ExplorerClient CreateExplorerClient(HttpClient httpClient, BTCPayNetwork n, Uri uri, string cookieFile)
         {
             var explorer = new ExplorerClient(n.NBXplorerNetwork, uri);
+            explorer.SetClient(httpClient);
             if (cookieFile == null)
             {
                 Logs.Configuration.LogWarning($"{n.CryptoCode}: Not using cookie authentication");

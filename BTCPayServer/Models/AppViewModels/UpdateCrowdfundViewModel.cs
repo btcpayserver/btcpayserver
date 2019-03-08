@@ -46,6 +46,7 @@ namespace BTCPayServer.Models.AppViewModels
         public string TargetCurrency { get; set; } = "BTC";
 
         [Display(Name = "Set a Target amount ")]
+        [Range(0, double.PositiveInfinity)]
         public decimal? TargetAmount { get; set; }
 
 
@@ -79,5 +80,11 @@ namespace BTCPayServer.Models.AppViewModels
         public bool SortPerksByPopularity { get; set; }
         [Display(Name = "Display contribution ranking")]
         public bool DisplayPerksRanking { get; set; }
+
+
+        [Display(Name = "Sounds to play when a payment is made. One sound per line")]
+        public string Sounds{ get; set; }
+        [Display(Name = "Colors to rotate between with animation when a payment is made. First color is the default background. One color per line. Can be any valid css color value.")]
+        public string AnimationColors{ get; set; }
     }
 }

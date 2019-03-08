@@ -24,6 +24,7 @@ using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using NBitpayClient;
 
 namespace BTCPayServer.Controllers
@@ -98,7 +99,12 @@ namespace BTCPayServer.Controllers
                 return RedirectToAction("GetPaymentRequests",
                     new
                     {
-                        StatusMessage = "Error: You need to create at least one store before creating a payment request"
+                        StatusMessage = new StatusMessageModel()
+                        {
+                            Html =
+                                $"Error: You need to create at least one store. <a href='{Url.Action("CreateStore", "UserStores")}'>Create store</a>",
+                            Severity = StatusMessageModel.StatusSeverity.Error
+                        }
                     });
             }
 
@@ -198,7 +204,7 @@ namespace BTCPayServer.Controllers
                     new
                     {
                         StatusMessage =
-                            "Payment request could not be removed. Any request that has generated invoices cannot be removed."
+                            "Error: Payment request could not be removed. Any request that has generated invoices cannot be removed."
                     });
             }
         }
@@ -282,18 +288,21 @@ namespace BTCPayServer.Controllers
                 var redirectUrl = Request.GetDisplayUrl().TrimEnd("/pay", StringComparison.InvariantCulture)
                     .Replace("hub?id=", string.Empty, StringComparison.InvariantCultureIgnoreCase);
                 var newInvoiceId = (await _InvoiceController.CreateInvoiceCore(new CreateInvoiceRequest()
-                {
-                    OrderId = $"{PaymentRequestRepository.GetOrderIdForPaymentRequest(id)}",
-                    Currency = blob.Currency,
-                    Price = amount.Value,
-                    FullNotifications = true,
-                    BuyerEmail = result.Email,
-                    RedirectURL = redirectUrl,
-                }, store, HttpContext.Request.GetAbsoluteRoot(), new List<string>() { PaymentRequestRepository.GetInternalTag(id) }, cancellationToken: cancellationToken)).Data.Id;
+                        {
+                            OrderId = $"{PaymentRequestRepository.GetOrderIdForPaymentRequest(id)}",
+                            Currency = blob.Currency,
+                            Price = amount.Value,
+                            FullNotifications = true,
+                            BuyerEmail = result.Email,
+                            RedirectURL = redirectUrl,
+                        }, store, HttpContext.Request.GetAbsoluteRoot(),
+                        new List<string>() {PaymentRequestRepository.GetInternalTag(id)},
+                        cancellationToken: cancellationToken))
+                    .Data.Id;
 
                 if (redirectToInvoice)
                 {
-                    return RedirectToAction("Checkout", "Invoice", new { Id = newInvoiceId });
+                    return RedirectToAction("Checkout", "Invoice", new {Id = newInvoiceId});
                 }
 
                 return Ok(newInvoiceId);
@@ -308,6 +317,24 @@ namespace BTCPayServer.Controllers
         private string GetUserId()
         {
             return _UserManager.GetUserId(User);
+        }
+
+        [HttpGet]
+        [Route("{id}/clone")]
+        public async Task<IActionResult> ClonePaymentRequest(string id)
+        {
+            var result = await EditPaymentRequest(id);
+            if (result is ViewResult viewResult)
+            {
+                var model = (UpdatePaymentRequestViewModel)viewResult.Model;
+                model.Id = null;
+                model.Title = $"Clone of {model.Title}";
+                
+                return View("EditPaymentRequest", model);
+                
+            }
+
+            return NotFound();
         }
     }
 }

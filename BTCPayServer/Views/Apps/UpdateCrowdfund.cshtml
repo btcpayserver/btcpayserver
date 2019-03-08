@@ -1,4 +1,4 @@
-﻿@addTagHelper *, Meziantou.AspNetCore.BundleTagHelpers
+@addTagHelper *, Meziantou.AspNetCore.BundleTagHelpers
 @model UpdateCrowdfundViewModel
 @{
     ViewData["Title"] = "Update Crowdfund";
@@ -67,8 +67,8 @@
                     <div class="form-group">
                         <label asp-for="StartDate" class="control-label"></label>
                         <div class="input-group ">
-                            <input asp-for="StartDate" class="form-control datetime"/>
-                            <div class="input-group-append only-for-js">
+                            <input asp-for="StartDate" class="form-control datetime"  placeholder="No start date has been set for this crowdfund"/>
+                            <div class="input-group-append">
 
                                 <button class="btn btn-secondary input-group-clear" type="button" title="Clear">
                                     <span class=" fa fa-times"></span>
@@ -93,8 +93,8 @@
                     <div class="form-group">
                         <label asp-for="EndDate" class="control-label"></label>
                         <div class="input-group ">
-                            <input asp-for="EndDate" class="form-control datetime" />
-                            <div class="input-group-append only-for-js">
+                            <input asp-for="EndDate" class="form-control datetime"  placeholder="No end date has been set for this crowdfund" />
+                            <div class="input-group-append">
 
                                 <button class="btn btn-secondary input-group-clear" type="button" title="Clear">
                                     <span class=" fa fa-times"></span>
@@ -167,10 +167,22 @@
                         <input asp-for="SoundsEnabled" type="checkbox" class="form-check"/>
                         <span asp-validation-for="SoundsEnabled" class="text-danger"></span>
                     </div>
+                    
+                    <div class="form-group">
+                        <label asp-for="Sounds"></label>
+                        <textarea asp-for="Sounds" class="form-control"></textarea>
+                        <span asp-validation-for="Sounds" class="text-danger"></span>
+                    </div>
                     <div class="form-group">
                         <label asp-for="AnimationsEnabled"></label>
                         <input asp-for="AnimationsEnabled" type="checkbox" class="form-check"/>
                         <span asp-validation-for="AnimationsEnabled" class="text-danger"></span>
+                    </div>
+                     
+                    <div class="form-group">
+                        <label asp-for="AnimationColors"></label>
+                        <textarea asp-for="AnimationColors" class="form-control"></textarea>
+                        <span asp-validation-for="AnimationColors" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label asp-for="DisqusEnabled"></label>

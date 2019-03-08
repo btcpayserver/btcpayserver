@@ -16,6 +16,6 @@
 }
 
 
-.only-for-js{
+.only-for-js, .input-group-clear{
     display: none;
 }

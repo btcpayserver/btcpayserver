@@ -35,6 +35,13 @@
         </script>
         <bundle name="wwwroot/bundles/cart-bundle.min.js" />
     }
+    <style>
+        .card-deck {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-gap: .5rem;
+        }
+    </style> 
 </head>
 
 <script id="template-cart-item" type="text/template">
@@ -233,27 +240,39 @@
 
                 <div id="js-pos-list" class="text-center mx-auto px-4">
                     <div class="row">
-                    @for (int i = 0; i < Model.Items.Length; i++)
+                  
+                        
+                    @{
+                        var rowsJ = Model.Items.Length/4 + (Model.Items.Length % 4 > 0 ? 1 : 0);
+                    }
+                    @for (int x = 0; x < rowsJ; x++)
                     {
-                        var item = Model.Items[i];
-                        var image = item.Image;
-                        var description = item.Description;
+                        var startingIndex = x == 0 ? 0 : x * 4;
+                        var endLoopIndex = startingIndex + Math.Min(4, Model.Items.Length - startingIndex);
+                    
+                        <div class="row  card-deck my-3 mx-auto">
+                            @for (int i = startingIndex; i < endLoopIndex; i++)
+                            {
+                                var item = Model.Items[i];
+                                var image = item.Image;
+                                var description = item.Description;
 
-                        <div class="col-sm-6 col-lg-3 my-3 px-2 card-wrapper">
-                            <div class="js-add-cart card" data-id="@i">
-                                @if (!String.IsNullOrWhiteSpace(image))
-                                {
-                                    <img class="card-img-top" src="@image" alt="Card image cap">
-                                }
-                                <div class="card-body p-3">
-                                    <h6 class="card-title mb-0">@item.Title</h6>
-                                    @if (!String.IsNullOrWhiteSpace(description))
-                                    {
-                                        <p class="card-text">@description</p>
-                                    }
-                                    <span class="text-muted small">@String.Format(Model.ButtonText, @item.Price.Formatted)</span>
-                                </div>
-                            </div>
+                                    <div class="js-add-cart card" data-id="@i">
+                                        @if (!String.IsNullOrWhiteSpace(image))
+                                        {
+                                            <img class="card-img-top" src="@image" alt="Card image cap">
+                                        }
+                                        <div class="card-body p-3">
+                                            <h6 class="card-title mb-0">@item.Title</h6>
+                                            @if (!String.IsNullOrWhiteSpace(description))
+                                            {
+                                                <p class="card-text">@description</p>
+                                            }
+                                            <span class="text-muted small">@String.Format(Model.ButtonText, @item.Price.Formatted)</span>
+                                        </div>
+                                    </div>
+                             
+                            }
                         </div>
                     }
                     </div>
@@ -295,14 +314,20 @@
         <div class="container d-flex h-100">
             <div class="justify-content-center align-self-center text-center mx-auto px-2 py-3 w-100" style="margin: auto;">
                 <h1 class="mb-4">@Model.Title</h1>
-                <div class="row">
-                    @for (int i = 0; i < Model.Items.Length; i++)
+                @{
+                    var rows = Model.Items.Length/4 + (Model.Items.Length % 4 > 0 ? 1 : 0);
+                }
+                @for (int x = 0; x < rows; x++)
+                {
+                    var startingIndex = x == 0 ? 0 : x * 4;
+                    var endLoopIndex = startingIndex + Math.Min(4, Model.Items.Length - startingIndex);
+                    
+                     <div class="row  card-deck my-3 mx-auto">
+                    @for (int i = startingIndex; i < endLoopIndex; i++)
                     {
-                        var className = (Model.Items.Length - i) > (Model.Items.Length % 4) ? "col-sm-6 col-lg-3" : "col-md align-self-start";
                         var item = Model.Items[i];
                         var image = item.Image;
                         var description = item.Description;
-                        <div class="@className my-3 px-2">
                             <div class="card" data-id="@i">
                                 @if (!String.IsNullOrWhiteSpace(image))
                                 {
@@ -339,9 +364,10 @@
                                     }
                                 </div>
                             </div>
-                        </div>
                     }
                 </div>
+                }
+               
                 @if (Model.ShowCustomAmount)
                 {
                     <div class="row mt-2 mb-4">

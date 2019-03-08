@@ -126,7 +126,7 @@
         .use(window.i18nextXHRBackend)
         .init({
             backend: {
-                loadPath: '/locales/{{lng}}.json'
+                loadPath: '@(Model.RootPath)locales/{{lng}}.json'
             },
             lng: startingLanguage,
             fallbackLng: fallbackLanguage,

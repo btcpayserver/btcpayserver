@@ -82,15 +82,15 @@
                         @* Not working because of nsSeparator: false, keySeparator: false,
                             {{$t("nested.lang")}} >>
                         *@
-                    
-                        <select asp-for="DefaultLang"  
+
+                        <select asp-for="DefaultLang"
                                 class="cmblang reverse invisible"
-                            onchange="changeLanguage($(this).val())"
-                            asp-items="@langService.GetLanguages().Select((language) => new SelectListItem(language.DisplayName,language.Code, false))"></select>
-                    
+                                onchange="changeLanguage($(this).val())"
+                                asp-items="@langService.GetLanguages().Select((language) => new SelectListItem(language.DisplayName,language.Code, false))"></select>
+
                         <script>
                             var languageSelectorPrettyDropdown;
-                            $(function() {
+                            $(function () {
                                 // REVIEW: don't use initDropdown method but rather directly initialize select whenever you are using it
                                 $("#DefaultLang").val(startingLanguage);
                                 languageSelectorPrettyDropdown = initDropdown("#DefaultLang");
@@ -113,11 +113,8 @@
             </div>
         </div>
     </invoice>
-<script type="text/javascript">
-    var availableLanguages = @Html.Raw(Json.Serialize(
-                                     langService
-                                         .GetLanguages()
-                                         .Select((language) => language.Code)));;
+    <script type="text/javascript">
+    var availableLanguages = @Html.Raw(Json.Serialize(langService.GetLanguages().Select((language) => language.Code)));;
     var storeDefaultLang = "@Model.DefaultLang";
     var fallbackLanguage = "en";
     startingLanguage = computeStartingLanguage();
@@ -133,7 +130,7 @@
             nsSeparator: false,
             keySeparator: false
         });
-    
+
     function computeStartingLanguage() {
         if (urlParams.lang && isLanguageAvailable(urlParams.lang)) {
             return urlParams.lang;
@@ -150,11 +147,11 @@
             i18next.changeLanguage(lang);
         }
     }
-        
+
     function isLanguageAvailable(languageCode) {
         return availableLanguages.indexOf(languageCode) >= 0;
     }
-    
+
     const i18n = new VueI18next(i18next);
 
     // TODO: Move all logic from core.js to Vue controller
@@ -169,7 +166,7 @@
         i18n: i18n,
         el: '#checkoutCtrl',
         components: {
-            qrcode: VueQr,
+            qrcode: VueQrcode,
             changelly: ChangellyComponent,
             coinswitch: CoinSwitchComponent
         },
@@ -182,6 +179,6 @@
             selectedThirdPartyProcessor: ""
         }
     });
-</script>
+    </script>
 </body>
 </html>

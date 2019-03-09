@@ -24,7 +24,7 @@ function changeCurrency(currency) {
     if (currency !== null && srvModel.paymentMethodId !== currency) {
         $(".payment__currencies").hide();
         $(".payment__spinner").show();
-        checkoutCtrl.scanDisplayQr = ".";
+        checkoutCtrl.scanDisplayQr = "";
         srvModel.paymentMethodId = currency;
         fetchStatus();
     }
@@ -68,7 +68,8 @@ function onDataCallback(jsonData) {
     }
 
     // restoring qr code view only when currency is switched
-    if (jsonData.paymentMethodId === srvModel.paymentMethodId) {
+    if (jsonData.paymentMethodId === srvModel.paymentMethodId &&
+        checkoutCtrl.scanDisplayQr === "") {
         checkoutCtrl.scanDisplayQr = jsonData.invoiceBitcoinUrlQR;
     }
 

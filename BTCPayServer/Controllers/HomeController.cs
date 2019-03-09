@@ -1,15 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using BTCPayServer.Models;
-using NBitcoin.DataEncoders;
 using NBitcoin.Payment;
 using System.Net.Http;
-using System.Text;
-using BTCPayServer.Services;
 using Newtonsoft.Json.Linq;
 using NBitcoin;
 using Newtonsoft.Json;
@@ -18,12 +13,10 @@ namespace BTCPayServer.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly SettingsRepository _SettingsRepository;
         public IHttpClientFactory HttpClientFactory { get; }
 
-        public HomeController(IHttpClientFactory httpClientFactory, SettingsRepository settingsRepository)
+        public HomeController(IHttpClientFactory httpClientFactory)
         {
-            _SettingsRepository = settingsRepository;
             HttpClientFactory = httpClientFactory;
         }
         public IActionResult Index()
@@ -106,17 +99,6 @@ namespace BTCPayServer.Controllers
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        }
-        [Route("robots.txt")]
-        public async Task<IActionResult> Robots()
-        {
-            var settings = await _SettingsRepository.GetSettingAsync<PoliciesSettings>();
-            StringBuilder stringBuilder = new StringBuilder();
-        
-            stringBuilder.AppendLine("user-agent: *");
-            stringBuilder.AppendLine($"disallow: {(settings.DiscourageSearchEngines? "/": string.Empty)}");
-        
-            return Content(stringBuilder.ToString(), "text/plain", Encoding.UTF8);
         }
     }
 }

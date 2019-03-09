@@ -15,6 +15,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
     <meta name="author" content="">
+    <cache expires-after="@TimeSpan.FromMinutes(5)">
+        @await Component.InvokeAsync("RobotsMeta", new { })
+    </cache>
 
     <title>BTCPay Server</title>
 

@@ -37,7 +37,6 @@ using BTCPayServer.PaymentRequest;
 using Meziantou.AspNetCore.BundleTagHelpers;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
-using Robotify.AspNetCore;
 
 namespace BTCPayServer.Hosting
 {

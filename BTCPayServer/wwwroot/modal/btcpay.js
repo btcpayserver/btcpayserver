@@ -1,5 +1,6 @@
 ﻿/* jshint browser: true, strict: false, maxlen: false, maxstatements: false */
 (function () {
+    var showingInvoice = false;
     var supportsCurrentScript = ("currentScript" in document);
     var thisScript = "";
     if (supportsCurrentScript) {
@@ -65,6 +66,7 @@
     function hideFrame() {
         onModalWillLeaveMethod();
         iframe.style.display = 'none';
+        showingInvoice = false;
         iframe = window.document.body.removeChild(iframe);
     }
 
@@ -79,7 +81,7 @@
     function receiveMessage(event) {
         var uri;
 
-        if (origin !== event.origin) {
+        if (!origin.startsWith(event.origin) || !showingInvoice) {
             return;
         }
         if (event.data === 'close') {
@@ -100,6 +102,7 @@
     }
 
     function showInvoice(invoiceId, params) {
+        showingInvoice = true;
         window.document.body.appendChild(iframe);
         var invoiceUrl = origin + '/invoice?id=' + invoiceId + '&view=modal';
         if (params && params.animateEntrance === false) {

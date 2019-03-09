@@ -46,7 +46,9 @@
                     setTimeout(waitForCoinSwitch, 1000);
                     return;
                 }
-                payment.open(config);
+                payment.on("Exchange:Ready", function(){
+                    payment.open(config);
+                });                
                 payment.on("Exchange:Complete", function () {
                     if(window.localStorage){
                         window.localStorage.removeItem(toCurrencyAddress);

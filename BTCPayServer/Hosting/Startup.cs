@@ -61,7 +61,6 @@ namespace BTCPayServer.Hosting
             Logs.Configure(LoggerFactory);
             services.ConfigureBTCPayServer(Configuration);
             services.AddMemoryCache();
-            services.AddRobotify(configurer =>     configurer.AddRobotGroupProvider<BTCPayRobotProvider>());
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
@@ -179,7 +178,6 @@ namespace BTCPayServer.Hosting
             });
             app.UseWebSockets();
             app.UseStatusCodePages();
-            app.UseRobotify();
             app.UseMvc(routes =>
             {
                 routes.MapRoute(

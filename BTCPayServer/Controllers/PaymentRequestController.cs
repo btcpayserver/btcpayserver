@@ -215,6 +215,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> ViewPaymentRequest(string id)
         {
             var result = await _PaymentRequestService.GetPaymentRequest(id, GetUserId());
+            result.HubPath = PaymentRequestHub.GetHubPath(this.Request);
             if (result == null)
             {
                 return NotFound();

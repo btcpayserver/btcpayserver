@@ -12,6 +12,7 @@ using BTCPayServer.Services.PaymentRequests;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using BTCPayServer.Services.Apps;
+using Microsoft.AspNetCore.Http;
 
 namespace BTCPayServer.PaymentRequest
 {
@@ -58,6 +59,15 @@ namespace BTCPayServer.PaymentRequest
                     await Clients.Caller.SendCoreAsync(InvoiceError, System.Array.Empty<object>());
                     break;
             }
+        }
+
+        public static string GetHubPath(HttpRequest request)
+        {
+            return request.GetRelativePathOrAbsolute("/payment-requests/hub");
+        }
+        public static void Register(HubRouteBuilder route)
+        {
+            route.MapHub<PaymentRequestHub>("/payment-requests/hub");
         }
     }
 

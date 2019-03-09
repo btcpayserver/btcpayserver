@@ -174,8 +174,8 @@ namespace BTCPayServer.Hosting
             app.UseAuthentication();
             app.UseSignalR(route =>
             {
-                route.MapHub<AppHub>("/apps/hub");
-                route.MapHub<PaymentRequestHub>("/payment-requests/hub");
+                AppHub.Register(route);
+                PaymentRequestHub.Register(route);
             });
             app.UseWebSockets();
             app.UseStatusCodePages();

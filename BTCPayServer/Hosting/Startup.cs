@@ -3,7 +3,6 @@ using System.Reflection;
 using System.Linq;
 using Microsoft.AspNetCore.Builder;
 using System;
-using System.Collections.Generic;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -14,7 +13,6 @@ using BTCPayServer.Authentication;
 using Microsoft.EntityFrameworkCore;
 using BTCPayServer.Filters;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
-using BTCPayServer.Services;
 using BTCPayServer.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.HttpOverrides;

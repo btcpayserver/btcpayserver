@@ -9448,6 +9448,11 @@ strong {
     margin-bottom: 5px;
 }
 
+.payment__scan canvas {
+    width: 256px !important;
+    height: 256px !important;
+}
+
 .payment__scan__checkmark-wrapper {
     display: flex;
     justify-content: center;

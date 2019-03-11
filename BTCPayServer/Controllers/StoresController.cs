@@ -189,24 +189,39 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("{storeId}/rates")]
-        public IActionResult Rates()
+        public IActionResult Rates(string storeId)
         {
             var storeBlob = StoreData.GetStoreBlob();
             var vm = new RatesViewModel();
             vm.SetExchangeRates(GetSupportedExchanges(), storeBlob.PreferredExchange ?? CoinAverageRateProvider.CoinAverageName);
             vm.Spread = (double)(storeBlob.Spread * 100m);
+            vm.StoreId = storeId;
             vm.Script = storeBlob.GetRateRules(_NetworkProvider).ToString();
             vm.DefaultScript = storeBlob.GetDefaultRateRules(_NetworkProvider).ToString();
             vm.AvailableExchanges = GetSupportedExchanges();
+            vm.DefaultCurrencyPairs = storeBlob.GetDefaultCurrencyPairString();
             vm.ShowScripting = storeBlob.RateScripting;
             return View(vm);
         }
 
         [HttpPost]
         [Route("{storeId}/rates")]
-        public async Task<IActionResult> Rates(RatesViewModel model, string command = null, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Rates(RatesViewModel model, string command = null, string storeId = null, CancellationToken cancellationToken = default)
         {
             model.SetExchangeRates(GetSupportedExchanges(), model.PreferredExchange);
+            model.StoreId = storeId ?? model.StoreId;
+            CurrencyPair[] currencyPairs = null;
+            try
+            {
+                currencyPairs = model.DefaultCurrencyPairs?
+                     .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                     .Select(p => CurrencyPair.Parse(p))
+                     .ToArray();
+            }
+            catch
+            {
+                ModelState.AddModelError(nameof(model.DefaultCurrencyPairs), "Invalid currency pairs (should be for example: BTC_USD,BTC_CAD,BTC_JPY)");
+            }
             if (!ModelState.IsValid)
             {
                 return View(model);
@@ -220,7 +235,7 @@ namespace BTCPayServer.Controllers
 
             blob.PreferredExchange = model.PreferredExchange;
             blob.Spread = (decimal)model.Spread / 100.0m;
-
+            blob.DefaultCurrencyPairs = currencyPairs;
             if (!model.ShowScripting)
             {
                 if (!GetSupportedExchanges().Select(c => c.Name).Contains(blob.PreferredExchange, StringComparer.OrdinalIgnoreCase))

@@ -19,11 +19,15 @@
     <meta name="logo" content="~/btcpaylogo2junglelab.png">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="BTCPay Jungle Server, Accept Bitcoin Litecoin Lightning Charged Network & Alt Coins Payments From Your Customers, Trust Is Minimized, No Waiting Days For A Payment To Clear, No Service Fee Charge, Blockchain Payments, Get Started Today">
+    <meta name="description" content="BTCPay Jungle Server, Accept Bitcoin Lightning Network & Alt Coins Payments From Your Customers, Trust Is Minimized, No Waiting Days For A Payment To Clear, No Service Fee Charge, Blockchain Payments, Get Started Today">
     <meta name="author" content="junglelab.io">
     <meta name="name" content="BTCPayJungle">
     <meta name="url" content="https://btcpayjungle.com">
     <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
+    @if (themeManager.DiscourageSearchEngines)
+    {
+        <META NAME="robots" CONTENT="noindex">
+    }
 
     <title>BTCPayJungle - Hosting The Future Today</title>
 
@@ -67,7 +71,7 @@
                 <ul class="navbar-nav ml-auto">
                     @if (SignInManager.IsSignedIn(User))
                     {
-                        @if (User.IsInRole(Roles.ServerAdmin))
+                        if (User.IsInRole(Roles.ServerAdmin))
                         {
                             <li class="nav-item"><a asp-area="" asp-controller="Server" asp-action="ListUsers" class="nav-link js-scroll-trigger">Server settings</a></li>
                         }
@@ -84,7 +88,7 @@
                         </li>}
                     else
                     {
-                        @if (themeManager.ShowRegister)
+                        if (themeManager.ShowRegister)
                         {
                             <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Register" class="nav-link js-scroll-trigger">Register</a></li>
                         }

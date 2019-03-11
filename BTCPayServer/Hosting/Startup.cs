@@ -3,7 +3,6 @@ using System.Reflection;
 using System.Linq;
 using Microsoft.AspNetCore.Builder;
 using System;
-using System.Collections.Generic;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -14,7 +13,6 @@ using BTCPayServer.Authentication;
 using Microsoft.EntityFrameworkCore;
 using BTCPayServer.Filters;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
-using BTCPayServer.Services;
 using BTCPayServer.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -174,8 +172,8 @@ namespace BTCPayServer.Hosting
             app.UseAuthentication();
             app.UseSignalR(route =>
             {
-                route.MapHub<AppHub>("/apps/hub");
-                route.MapHub<PaymentRequestHub>("/payment-requests/hub");
+                AppHub.Register(route);
+                PaymentRequestHub.Register(route);
             });
             app.UseWebSockets();
             app.UseStatusCodePages();

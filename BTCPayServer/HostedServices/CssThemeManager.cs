@@ -45,10 +45,12 @@ namespace BTCPayServer.HostedServices
         }
 
         public bool ShowRegister { get; set; }
+        public bool DiscourageSearchEngines { get; set; }
 
         internal void Update(PoliciesSettings data)
         {
             ShowRegister = !data.LockSubscription;
+            DiscourageSearchEngines = data.DiscourageSearchEngines;
         }
     }
 

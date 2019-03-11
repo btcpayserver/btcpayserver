@@ -35,6 +35,8 @@ namespace BTCPayServer.Controllers
         [AllowAnonymous]
         public async Task<DataWrapper<List<PairingCodeResponse>>> Tokens([FromBody] TokenRequest request)
         {
+            if (request == null)
+                throw new BitpayHttpException(400, "The request body is missing");
             PairingCodeEntity pairingEntity = null;
             if (string.IsNullOrEmpty(request.PairingCode))
             {

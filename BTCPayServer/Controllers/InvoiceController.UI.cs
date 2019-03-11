@@ -273,6 +273,7 @@ namespace BTCPayServer.Controllers
             var model = new PaymentModel()
             {
                 CryptoCode = network.CryptoCode,
+                RootPath = this.Request.PathBase.Value.WithTrailingSlash(),
                 PaymentMethodId = paymentMethodId.ToString(),
                 PaymentMethodName = GetDisplayName(paymentMethodId, network),
                 CryptoImage = GetImage(paymentMethodId, network),
@@ -345,9 +346,8 @@ namespace BTCPayServer.Controllers
 
         private string GetImage(PaymentMethodId paymentMethodId, BTCPayNetwork network)
         {
-            var res = paymentMethodId.PaymentType == PaymentTypes.BTCLike ?
-                Url.Content(network.CryptoImagePath) : Url.Content(network.LightningImagePath);
-            return "/" + res;
+            return paymentMethodId.PaymentType == PaymentTypes.BTCLike ?
+                this.Request.GetRelativePathOrAbsolute(network.CryptoImagePath) : this.Request.GetRelativePathOrAbsolute(network.LightningImagePath);
         }
 
         private string OrderAmountFromInvoice(string cryptoCode, ProductInformation productInformation)

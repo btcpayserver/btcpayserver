@@ -10,6 +10,7 @@ namespace BTCPayServer.Models.AppViewModels
 {
     public class ViewCrowdfundViewModel
     {
+        public string HubPath { get; set; }
         public string StatusMessage{ get; set; }
         public string StoreId { get; set; }
         public string AppId { get; set; }

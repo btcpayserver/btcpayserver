@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.ModelBinders;
+using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Models.StoreViewModels
 {
     public class PayButtonViewModel
     {
+        [ModelBinder(BinderType = typeof(InvariantDecimalModelBinder))]
         public decimal Price { get; set; }
         public string InvoiceId { get; set; }
         [Required]

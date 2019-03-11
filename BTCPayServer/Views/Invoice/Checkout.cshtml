@@ -85,12 +85,12 @@
 
                         <select asp-for="DefaultLang"
                                 class="cmblang reverse invisible"
-                            onchange="changeLanguage($(this).val())"
-                            asp-items="@langService.GetLanguages().Select((language) => new SelectListItem(language.DisplayName,language.Code, false))"></select>
+                                onchange="changeLanguage($(this).val())"
+                                asp-items="@langService.GetLanguages().Select((language) => new SelectListItem(language.DisplayName,language.Code, false))"></select>
 
                         <script>
                             var languageSelectorPrettyDropdown;
-                            $(function() {
+                            $(function () {
                                 // REVIEW: don't use initDropdown method but rather directly initialize select whenever you are using it
                                 $("#DefaultLang").val(startingLanguage);
                                 languageSelectorPrettyDropdown = initDropdown("#DefaultLang");
@@ -113,11 +113,8 @@
             </div>
         </div>
     </invoice>
-<script type="text/javascript">
-    var availableLanguages = @Html.Raw(Json.Serialize(
-                                     langService
-                                         .GetLanguages()
-                                         .Select((language) => language.Code)));;
+    <script type="text/javascript">
+    var availableLanguages = @Html.Raw(Json.Serialize(langService.GetLanguages().Select((language) => language.Code)));;
     var storeDefaultLang = "@Model.DefaultLang";
     var fallbackLanguage = "en";
     startingLanguage = computeStartingLanguage();
@@ -126,7 +123,7 @@
         .use(window.i18nextXHRBackend)
         .init({
             backend: {
-                loadPath: '/locales/{{lng}}.json'
+                loadPath: '@(Model.RootPath)locales/{{lng}}.json'
             },
             lng: startingLanguage,
             fallbackLng: fallbackLanguage,
@@ -169,7 +166,7 @@
         i18n: i18n,
         el: '#checkoutCtrl',
         components: {
-            qrcode: VueQr,
+            qrcode: VueQrcode,
             changelly: ChangellyComponent,
             coinswitch: CoinSwitchComponent
         },
@@ -182,6 +179,6 @@
             selectedThirdPartyProcessor: ""
         }
     });
-</script>
+    </script>
 </body>
 </html>

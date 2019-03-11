@@ -109,11 +109,13 @@ namespace BTCPayServer.Controllers
 
                 return NotFound("A Target Currency must be set for this app in order to be loadable.");
             }
-            if (settings.Enabled) return View(await _AppService.GetAppInfo(appId));
+            var appInfo = (ViewCrowdfundViewModel)(await _AppService.GetAppInfo(appId));
+            appInfo.HubPath = AppHub.GetHubPath(this.Request);
+            if (settings.Enabled) return View(appInfo);
             if(!isAdmin)
                 return NotFound();
 
-            return View(await _AppService.GetAppInfo(appId));
+            return View(appInfo);
         }
 
         [HttpPost]
@@ -137,7 +139,7 @@ namespace BTCPayServer.Controllers
             }
 
             var info = (ViewCrowdfundViewModel)await _AppService.GetAppInfo(appId);
-
+            info.HubPath = AppHub.GetHubPath(this.Request);
             if (!isAdmin &&
                 ((settings.StartDate.HasValue && DateTime.Now < settings.StartDate) ||
                  (settings.EndDate.HasValue && DateTime.Now > settings.EndDate) ||

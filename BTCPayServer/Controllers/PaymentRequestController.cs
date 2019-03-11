@@ -219,7 +219,7 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
-
+            result.HubPath = PaymentRequestHub.GetHubPath(this.Request);
             return View(result);
         }
 

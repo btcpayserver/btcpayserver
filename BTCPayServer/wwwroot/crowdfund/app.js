@@ -216,7 +216,6 @@ addLoadEvent(function (ev) {
             this.sound = this.srvModel.soundsEnabled;
             this.animation = this.srvModel.animationsEnabled;
             eventAggregator.$on("invoice-created", function (invoiceId) {
-                btcpay.setApiUrlPrefix(window.location.origin);
                 btcpay.showInvoice(invoiceId);
                 btcpay.showFrame();
 

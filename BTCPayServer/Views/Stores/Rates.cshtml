@@ -15,14 +15,14 @@
 <div class="row">
     <div class="col-md-8">
         <form method="post">
-            @if(Model.ShowScripting)
+            @if (Model.ShowScripting)
             {
                 <div class="form-group">
                     <h5>Scripting</h5>
                     <span>Rate script allows you to express precisely how you want to calculate rates for currency pairs.</span>
                     <p class="text-muted">
                         <b>Supported exchanges are</b>:
-                        @for(int i = 0; i < Model.AvailableExchanges.Length; i++)
+                        @for (int i = 0; i < Model.AvailableExchanges.Length; i++)
                         {
                             <a href="@Model.AvailableExchanges[i].Url">@Model.AvailableExchanges[i].Name</a><span>@(i == Model.AvailableExchanges.Length - 1 ? "" : ",")</span>
                         }
@@ -30,16 +30,16 @@
                     <p><a href="#help" data-toggle="collapse"><b>Click here for more information</b></a></p>
                 </div>
             }
-            @if(Model.TestRateRules != null)
+            @if (Model.TestRateRules != null)
             {
                 <div class="form-group">
                     <h5>Test results:</h5>
                     <table class="table table-sm table-responsive-md">
                         <tbody>
-                            @foreach(var result in Model.TestRateRules)
+                            @foreach (var result in Model.TestRateRules)
                             {
                                 <tr>
-                                    @if(result.Error)
+                                    @if (result.Error)
                                     {
                                         <th class="small"><span class="fa fa-times" style="color:red;"></span> @result.CurrencyPair</th>
                                     }
@@ -54,7 +54,7 @@
                     </table>
                 </div>
             }
-            @if(Model.ShowScripting)
+            @if (Model.ShowScripting)
             {
                 <div id="help" class="collapse text-left">
                     <p>
@@ -156,6 +156,14 @@
                     </span>
                 </div>
                 <span asp-validation-for="ScriptTest" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <h5>Default currency pairs</h5>
+                <span>You can query those pairs via REST by querying <a asp-controller="Rate" asp-action="GetRates2" asp-route-storeId="@Model.StoreId" target="_blank">this link</a> without the need to specify currencyPairs.</span>
+                <div class="input-group">
+                    <input placeholder="BTC_USD, BTC_CAD" asp-for="DefaultCurrencyPairs" class="form-control" />
+                </div>
+                <span asp-validation-for="DefaultCurrencyPairs" class="text-danger"></span>
             </div>
             <button name="command" type="submit" class="btn btn-primary" value="Save">Save</button>
             <input type="hidden" asp-for="ShowScripting" />

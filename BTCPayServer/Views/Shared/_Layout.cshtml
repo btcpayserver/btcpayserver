@@ -15,6 +15,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
     <meta name="author" content="">
+    @if (themeManager.DiscourageSearchEngines)
+    {
+        <META NAME="robots" CONTENT="noindex">
+    }
 
     <title>BTCPay Server</title>
 
@@ -58,7 +62,7 @@
                 <ul class="navbar-nav ml-auto">
                     @if (SignInManager.IsSignedIn(User))
                     {
-                        @if (User.IsInRole(Roles.ServerAdmin))
+                        if (User.IsInRole(Roles.ServerAdmin))
                         {
                             <li class="nav-item"><a asp-area="" asp-controller="Server" asp-action="ListUsers" class="nav-link js-scroll-trigger">Server settings</a></li>
                         }
@@ -75,7 +79,7 @@
                         </li>}
                     else
                     {
-                        @if (themeManager.ShowRegister)
+                        if (themeManager.ShowRegister)
                         {
                             <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Register" class="nav-link js-scroll-trigger">Register</a></li>
                         }

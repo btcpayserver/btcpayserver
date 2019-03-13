@@ -229,12 +229,12 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> PayPaymentRequest(string id, bool redirectToInvoice = true,
             decimal? amount = null, CancellationToken cancellationToken = default)
         {
-            var result = ((await ViewPaymentRequest(id)) as ViewResult)?.Model as ViewPaymentRequestViewModel;
+            var result = await _PaymentRequestService.GetPaymentRequest(id, GetUserId());
             if (result == null)
             {
                 return NotFound();
             }
-
+            result.HubPath = PaymentRequestHub.GetHubPath(this.Request);
             if (result.AmountDue <= 0)
             {
                 if (redirectToInvoice)

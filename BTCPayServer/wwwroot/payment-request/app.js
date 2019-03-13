@@ -112,7 +112,6 @@ addLoadEvent(function (ev) {
             var self = this;
             eventAggregator.$on("invoice-created", function (invoiceId) {
                 self.setLoading(false);
-                btcpay.setApiUrlPrefix(window.location.origin);
                 btcpay.showInvoice(invoiceId);
                 btcpay.showFrame();
             });

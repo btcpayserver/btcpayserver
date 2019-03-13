@@ -91,7 +91,6 @@ namespace BTCPayServer.Controllers
         [BitpayAPIConstraint]
         public async Task<IActionResult> GetRates(string currencyPairs, string storeId, CancellationToken cancellationToken)
         {
-            storeId = await GetStoreId(storeId);
             var result = await GetRates2(currencyPairs, storeId, cancellationToken);
             var rates = (result as JsonResult)?.Value as Rate[];
             if (rates == null)
@@ -140,15 +139,10 @@ namespace BTCPayServer.Controllers
 
             if (currencyPairs == null)
             {
-                var supportedMethods = store.GetSupportedPaymentMethods(_NetworkProvider);
-                var currencyCodes = supportedMethods.Select(method => method.PaymentId.CryptoCode).Distinct();
-                var defaultPaymentId = store.GetDefaultPaymentId(_NetworkProvider);
-
-                currencyPairs = BuildCurrencyPairs(currencyCodes, defaultPaymentId.CryptoCode);
-
+                currencyPairs = store.GetStoreBlob().GetDefaultCurrencyPairString();
                 if (string.IsNullOrEmpty(currencyPairs))
                 {
-                    var result = Json(new BitpayErrorsModel() { Error = "You need to specify currencyPairs (eg. BTC_USD,LTC_CAD)" });
+                    var result = Json(new BitpayErrorsModel() { Error = "You need to setup the default currency pairs in 'Store Settings / Rates' or specify 'currencyPairs' query parameter (eg. BTC_USD,LTC_CAD)." });
                     result.StatusCode = 400;
                     return result;
                 }

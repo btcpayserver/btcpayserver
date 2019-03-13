@@ -10,13 +10,13 @@
 <html class="h-100">
 <head>
     <title>@Model.Title</title>
-    <meta charset="utf-8"/>
+    <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.BootstrapUri)" rel="stylesheet"/>
+    <link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.BootstrapUri)" rel="stylesheet" />
     @if (Model.CustomCSSLink != null)
     {
-        <link href="@Model.CustomCSSLink" rel="stylesheet"/>
+        <link href="@Model.CustomCSSLink" rel="stylesheet" />
     }
     @if (!Context.Request.Query.ContainsKey("simple"))
     {
@@ -25,13 +25,15 @@
         </script>
         <bundle name="wwwroot/bundles/crowdfund-bundle-1.min.js"></bundle>
         <bundle name="wwwroot/bundles/crowdfund-bundle-2.min.js"></bundle>
+        @*We need to make sure btcpay.js is not bundled, else it will not work if there is a RootPath*@
+        <script src="~/modal/btcpay.js"></script>
     }
-    
+
     <bundle name="wwwroot/bundles/crowdfund-bundle.min.css"></bundle>
     @if (!string.IsNullOrEmpty(Model.EmbeddedCSS))
     {
         <style>
-            @Html.Raw(Model.EmbeddedCSS); 
+            @Html.Raw(Model.EmbeddedCSS);
         </style>
     }
 

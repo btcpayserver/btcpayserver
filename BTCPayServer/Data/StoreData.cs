@@ -307,6 +307,25 @@ namespace BTCPayServer.Data
 
         public bool RequiresRefundEmail { get; set; }
 
+        CurrencyPair[] _DefaultCurrencyPairs;
+        [JsonProperty("defaultCurrencyPairs", ItemConverterType = typeof(CurrencyPairJsonConverter))]
+        public CurrencyPair[] DefaultCurrencyPairs
+        {
+            get
+            {
+                return _DefaultCurrencyPairs ?? Array.Empty<CurrencyPair>();
+            }
+            set
+            {
+                _DefaultCurrencyPairs = value;
+            }
+        }
+
+        public string GetDefaultCurrencyPairString()
+        {
+            return string.Join(',', DefaultCurrencyPairs.Select(c => c.ToString()));
+        }
+
         public string DefaultLang { get; set; }
         [DefaultValue(60)]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]

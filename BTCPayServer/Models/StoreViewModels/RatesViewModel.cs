@@ -42,6 +42,8 @@ namespace BTCPayServer.Models.StoreViewModels
         public string Script { get; set; }
         public string DefaultScript { get; set; }
         public string ScriptTest { get; set; }
+        public string DefaultCurrencyPairs { get; set; }
+        public string StoreId { get; set; }
         public CoinAverageExchange[] AvailableExchanges { get; set; }
 
         [Display(Name = "Add a spread on exchange rate of ... %")]

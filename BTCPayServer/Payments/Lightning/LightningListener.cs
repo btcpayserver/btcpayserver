@@ -192,7 +192,7 @@ namespace BTCPayServer.Payments.Lightning
             {
                 BOLT11 = notification.BOLT11,
                 PaymentHash = BOLT11PaymentRequest.Parse(notification.BOLT11, network.NBitcoinNetwork).PaymentHash,
-                Amount = notification.Amount
+                Amount = notification.AmountReceived ?? notification.Amount, // if running old version amount received might be unavailable
             }, network, accounted: true);
             if (payment != null)
             {

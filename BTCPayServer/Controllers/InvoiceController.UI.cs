@@ -284,6 +284,7 @@ namespace BTCPayServer.Controllers
                 HtmlTitle = storeBlob.HtmlTitle ?? "BTCPay Invoice",
                 CustomCSSLink = storeBlob.CustomCSS?.AbsoluteUri,
                 CustomLogoLink = storeBlob.CustomLogo?.AbsoluteUri,
+                LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi,
                 BtcAddress = paymentMethodDetails.GetPaymentDestination(),
                 BtcDue = accounting.Due.ToString(),
                 OrderAmount = (accounting.TotalDue - accounting.NetworkFee).ToString(),

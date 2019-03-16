@@ -48,7 +48,7 @@
                 <div class="paywithRowRight cursorPointer" onclick="openPaymentMethodDialog()">
                     <span class="payment__currencies ">
                         <img v-bind:src="srvModel.cryptoImage" />
-                        <span>{{srvModel.paymentMethodName}} ({{srvModel.cryptoCode}})</span>
+                        <span>{{srvModel.paymentMethodName}} ({{srvModel.cryptoCodeSrv}})</span>
                         <span v-show="srvModel.isLightning">&#9889;</span>
                         <span class="clickable_indicator fa fa-angle-right"></span>
                     </span>
@@ -73,7 +73,7 @@
             {
                 <div class="payment__currencies_noborder">
                     <img v-bind:src="srvModel.cryptoImage" />
-                    <span>{{srvModel.paymentMethodName}} ({{srvModel.cryptoCode}})</span>
+                    <span>{{srvModel.paymentMethodName}} ({{srvModel.cryptoCodeSrv}})</span>
                     <span v-show="srvModel.isLightning">&#9889;</span>
                 </div>
             }
@@ -101,7 +101,7 @@
             </div>
 
             <div class="single-item-order__right__ex-rate" v-if="srvModel.orderAmountFiat">
-                1 {{ srvModel.cryptoCode }} = {{ srvModel.rate }}
+                1 {{ srvModel.cryptoCodeSrv }} = {{ srvModel.rate }}
             </div>
         </div>
 

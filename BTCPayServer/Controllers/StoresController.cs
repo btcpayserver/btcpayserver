@@ -348,13 +348,14 @@ namespace BTCPayServer.Controllers
             var storeBlob = StoreData.GetStoreBlob();
             var vm = new CheckoutExperienceViewModel();
             SetCryptoCurrencies(vm, StoreData);
-            vm.SetLanguages(_LangService, storeBlob.DefaultLang);
-            vm.LightningMaxValue = storeBlob.LightningMaxValue?.ToString() ?? "";
-            vm.OnChainMinValue = storeBlob.OnChainMinValue?.ToString() ?? "";
-            vm.RequiresRefundEmail = storeBlob.RequiresRefundEmail;
             vm.CustomCSS = storeBlob.CustomCSS?.AbsoluteUri;
             vm.CustomLogo = storeBlob.CustomLogo?.AbsoluteUri;
             vm.HtmlTitle = storeBlob.HtmlTitle;
+            vm.SetLanguages(_LangService, storeBlob.DefaultLang);
+            vm.RequiresRefundEmail = storeBlob.RequiresRefundEmail;
+            vm.OnChainMinValue = storeBlob.OnChainMinValue?.ToString() ?? "";
+            vm.LightningMaxValue = storeBlob.LightningMaxValue?.ToString() ?? "";
+            vm.LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi;
             return View(vm);
         }
         void SetCryptoCurrencies(CheckoutExperienceViewModel vm, Data.StoreData storeData)
@@ -411,13 +412,14 @@ namespace BTCPayServer.Controllers
             {
                 return View(model);
             }
-            blob.DefaultLang = model.DefaultLang;
-            blob.RequiresRefundEmail = model.RequiresRefundEmail;
-            blob.LightningMaxValue = lightningMaxValue;
-            blob.OnChainMinValue = onchainMinValue;
             blob.CustomLogo = string.IsNullOrWhiteSpace(model.CustomLogo) ? null : new Uri(model.CustomLogo, UriKind.Absolute);
             blob.CustomCSS = string.IsNullOrWhiteSpace(model.CustomCSS) ? null : new Uri(model.CustomCSS, UriKind.Absolute);
             blob.HtmlTitle = string.IsNullOrWhiteSpace(model.HtmlTitle) ? null : model.HtmlTitle;
+            blob.DefaultLang = model.DefaultLang;
+            blob.RequiresRefundEmail = model.RequiresRefundEmail;
+            blob.OnChainMinValue = onchainMinValue;
+            blob.LightningMaxValue = lightningMaxValue;
+            blob.LightningAmountInSatoshi = model.LightningAmountInSatoshi;
             if (StoreData.SetStoreBlob(blob))
             {
                 needUpdate = true;

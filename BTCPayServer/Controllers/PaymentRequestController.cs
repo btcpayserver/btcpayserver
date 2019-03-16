@@ -182,7 +182,7 @@ namespace BTCPayServer.Controllers
             return View("Confirm", new ConfirmModel()
             {
                 Title = $"Remove Payment Request",
-                Description = $"Are you sure to remove access to remove payment request '{blob.Title}' ?",
+                Description = $"Are you sure you want to remove access to the payment request '{blob.Title}' ?",
                 Action = "Delete"
             });
         }

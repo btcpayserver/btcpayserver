@@ -10,7 +10,7 @@
 <html>
 <head>
     <title>@Model.CryptoCode LN Node Info</title>
-    <meta charset="utf-8"/>
+    <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="apple-touch-icon" href="~/img/icons/icon-512x512.png">
@@ -18,10 +18,10 @@
 
     <link rel="manifest" href="~/manifest.json">
 
-    <link href="@this.Context.Request.GetRelativePathOrAbsolute(themeManager.BootstrapUri)" rel="stylesheet"/>
-    <link href="~/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet"/>
+    <link href="@this.Context.Request.GetRelativePathOrAbsolute(themeManager.BootstrapUri)" rel="stylesheet" />
+    <link href="~/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" />
 
-    <bundle name="wwwroot/bundles/lightning-node-info-bundle.min.js"/>
+    <bundle name="wwwroot/bundles/lightning-node-info-bundle.min.js" />
     <script type="text/javascript">
         var srvModel = @Html.Raw(Json.Serialize(Model));
 
@@ -74,70 +74,76 @@
             text-align: center;
         }
 
-        .copy { cursor: copy; }
-        
+            .qr-container svg {
+                width: 256px;
+                height: 256px;
+            }
+
+        .copy {
+            cursor: copy;
+        }
     </style>
 </head>
-<body >
-<noscript>
-    <div class="container">
-        <div class="row " style="height: 100vh">
-            <div class="col-md-8 col-sm-12 col-lg-6 mx-auto my-auto ">
+<body>
+    <noscript>
+        <div class="container">
+            <div class="row " style="height: 100vh">
                 <div class="col-md-8 col-sm-12 col-lg-6 mx-auto my-auto ">
-                    <div class="card border-0">
-                        <div class="row"></div>
-                        <h1 class="card-title text-center">
-                            @Model.CryptoCode Lightning Node - @(Model.Available ? "Online" : "Unavailable")
-                            <small class="@(Model.Available ? "text-success" : "text-danger")">
-                                <span class="fa fa-circle "></span>
-                            </small>
-                        </h1>
-                        @if (Model.Available)
-                        {
-                            <div class="card-body m-sm-0 p-sm-0">
-                                <div class="input-group">
-                                    <input type="text" class="form-control " readonly="readonly" asp-for="NodeInfo" id="peer-info"/>
-                                    <div class="input-group-append">
-                                        <span class="input-group-text fa fa-copy"> </span>
+                    <div class="col-md-8 col-sm-12 col-lg-6 mx-auto my-auto ">
+                        <div class="card border-0">
+                            <div class="row"></div>
+                            <h1 class="card-title text-center">
+                                @Model.CryptoCode Lightning Node - @(Model.Available ? "Online" : "Unavailable")
+                                <small class="@(Model.Available ? "text-success" : "text-danger")">
+                                    <span class="fa fa-circle "></span>
+                                </small>
+                            </h1>
+                            @if (Model.Available)
+                            {
+                                <div class="card-body m-sm-0 p-sm-0">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control " readonly="readonly" asp-for="NodeInfo" id="peer-info" />
+                                        <div class="input-group-append">
+                                            <span class="input-group-text fa fa-copy"> </span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        }
+                            }
 
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</noscript>
-<div id="app" class="container">
-    <div class="row " style="height: 100vh">
-        <div class="col-md-8 col-sm-12 col-lg-6 mx-auto my-auto ">
-            <div class="card border-0">
-                <div class="row"></div>
-                <h1 class="card-title text-center">
-                    {{srvModel.cryptoCode}} Lightning Node
-                    - {{srvModel.available? "Online" : "Unavailable"}}
-                    <small v-bind:class="{ 'text-success': srvModel.available, 'text-danger': !srvModel.available }">
-                        <span class="fa fa-circle "></span>
-                    </small>
-                </h1>
-                <div class="card-body m-sm-0 p-sm-0" v-if="srvModel.available">
-                    <div class="qr-container mb-2">
-                        <img v-bind:src="srvModel.cryptoImage" class="qr-icon"/>
-                        <qrcode v-bind:value="srvModel.nodeInfo" :options="{ width: 256, margin: 0, color: {dark:'#000', light:'#f5f5f7'} }">
-                        </qrcode>
-                    </div>
-                    <div class="input-group copy" data-clipboard-target="#vue-peer-info">
-                        <input type="text" class=" form-control " readonly="readonly" :value="srvModel.nodeInfo" id="vue-peer-info"/>
-                        <div class="input-group-append">
-                            <span class="input-group-text fa fa-copy"> </span>
+    </noscript>
+    <div id="app" class="container">
+        <div class="row " style="height: 100vh">
+            <div class="col-md-8 col-sm-12 col-lg-6 mx-auto my-auto ">
+                <div class="card border-0">
+                    <div class="row"></div>
+                    <h1 class="card-title text-center">
+                        {{srvModel.cryptoCode}} Lightning Node
+                        - {{srvModel.available? "Online" : "Unavailable"}}
+                        <small v-bind:class="{ 'text-success': srvModel.available, 'text-danger': !srvModel.available }">
+                            <span class="fa fa-circle "></span>
+                        </small>
+                    </h1>
+                    <div class="card-body m-sm-0 p-sm-0" v-if="srvModel.available">
+                        <div class="qr-container mb-2">
+                            <img v-bind:src="srvModel.cryptoImage" class="qr-icon" />
+                            <qrcode v-bind:value="srvModel.nodeInfo" :options="{ width: 256, margin: 0, color: {dark:'#000', light:'#fff'} }" tag="svg">
+                            </qrcode>
+                        </div>
+                        <div class="input-group copy" data-clipboard-target="#vue-peer-info">
+                            <input type="text" class=" form-control " readonly="readonly" :value="srvModel.nodeInfo" id="vue-peer-info" />
+                            <div class="input-group-append">
+                                <span class="input-group-text fa fa-copy"> </span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 </body>
 </html>

@@ -33,6 +33,7 @@ using BTCPayServer.Services;
 using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using NBXplorer.DerivationStrategy;
+using System.Net;
 
 namespace BTCPayServer
 {
@@ -320,6 +321,7 @@ namespace BTCPayServer
                 return await doing;
             }
         }
+
         public static async Task WithCancellation(this Task task, CancellationToken cancellationToken)
         {
             using (var delayCTS = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))

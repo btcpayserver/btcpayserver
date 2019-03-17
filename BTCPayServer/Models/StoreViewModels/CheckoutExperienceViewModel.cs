@@ -25,19 +25,6 @@ namespace BTCPayServer.Models.StoreViewModels
         public string DefaultPaymentMethod { get; set; }
         [Display(Name = "Default language on checkout")]
         public string DefaultLang { get; set; }
-        [Display(Name = "Do not propose lightning payment if value of the invoice is above...")]
-        [MaxLength(20)]
-        public string LightningMaxValue { get; set; }
-
-        [Display(Name = "Requires a refund email")]
-        public bool RequiresRefundEmail
-        {
-            get; set;
-        }
-
-        [Display(Name = "Do not propose on chain payment if the value of the invoice is below...")]
-        [MaxLength(20)]
-        public string OnChainMinValue { get; set; }
 
         [Display(Name = "Link to a custom CSS stylesheet")]
         [Uri]
@@ -49,9 +36,23 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Custom HTML title to display on Checkout page")]
         public string HtmlTitle { get; set; }
 
+        [Display(Name = "Requires a refund email")]
+        public bool RequiresRefundEmail { get; set; }
+
+        [Display(Name = "Do not propose on chain payment if the value of the invoice is below...")]
+        [MaxLength(20)]
+        public string OnChainMinValue { get; set; }
+
+        [Display(Name = "Do not propose lightning payment if value of the invoice is above...")]
+        [MaxLength(20)]
+        public string LightningMaxValue { get; set; }
+
+        [Display(Name = "Display lightning payment amounts in Satoshis")]
+        public bool LightningAmountInSatoshi { get; set; }
+
         public void SetLanguages(LanguageService langService, string defaultLang)
         {
-            defaultLang = langService.GetLanguages().Any(language => language.Code == defaultLang)? defaultLang : "en";
+            defaultLang = langService.GetLanguages().Any(language => language.Code == defaultLang) ? defaultLang : "en";
             var choices = langService.GetLanguages().Select(o => new Format() { Name = o.DisplayName, Value = o.Code }).ToArray();
             var chosen = choices.FirstOrDefault(f => f.Value == defaultLang) ?? choices.FirstOrDefault();
             Languages = new SelectList(choices, nameof(chosen.Value), nameof(chosen.Name), chosen);

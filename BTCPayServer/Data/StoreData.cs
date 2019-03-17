@@ -350,9 +350,10 @@ namespace BTCPayServer.Data
         public string PreferredExchange { get; set; }
 
         [JsonConverter(typeof(CurrencyValueJsonConverter))]
-        public CurrencyValue LightningMaxValue { get; set; }
-        [JsonConverter(typeof(CurrencyValueJsonConverter))]
         public CurrencyValue OnChainMinValue { get; set; }
+        [JsonConverter(typeof(CurrencyValueJsonConverter))]
+        public CurrencyValue LightningMaxValue { get; set; }
+        public bool LightningAmountInSatoshi { get; set; }
 
         [JsonConverter(typeof(UriJsonConverter))]
         public Uri CustomLogo { get; set; }

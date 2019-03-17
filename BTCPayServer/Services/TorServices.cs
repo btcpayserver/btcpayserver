@@ -29,8 +29,11 @@ namespace BTCPayServer.Services
             {
                 try
                 {
-                    var onionUrl = (await service.ReadingLines)[0].Trim();
-                    result.Add(new TorService() { Name = service.ServiceName, OnionUrl = onionUrl });
+                    var onionHost = (await service.ReadingLines)[0].Trim();
+                    var torService = new TorService() { Name = service.ServiceName, OnionHost = onionHost };
+                    if (service.ServiceName.Equals("BTCPayServer", StringComparison.OrdinalIgnoreCase))
+                        torService.ServiceType = TorServiceType.BTCPayServer;
+                    result.Add(torService);
                 }
                 catch
                 {
@@ -43,7 +46,14 @@ namespace BTCPayServer.Services
 
     public class TorService
     {
+        public TorServiceType ServiceType { get; set; } = TorServiceType.Other;
         public string Name { get; set; }
-        public string OnionUrl { get; set; }
+        public string OnionHost { get; set; }
+    }
+
+    public enum TorServiceType
+    {
+        BTCPayServer,
+        Other
     }
 }

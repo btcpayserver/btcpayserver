@@ -62,6 +62,7 @@ namespace BTCPayServer.Hosting
             });
             services.AddHttpClient();
             services.TryAddSingleton<SettingsRepository>();
+            services.TryAddSingleton<TorServices>();
             services.TryAddSingleton<InvoicePaymentNotification>();
             services.TryAddSingleton<BTCPayServerOptions>(o => o.GetRequiredService<IOptions<BTCPayServerOptions>>().Value);
             services.TryAddSingleton<InvoiceRepository>(o =>

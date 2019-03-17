@@ -48,35 +48,68 @@
 
 @if (Model.OtherExternalServices.Count != 0)
 {
-<div class="row">
-    <div class="col-md-8">
-        <h4>Other services</h4>
-        <div class="form-group">
-            <span>Other external services</span>
-        </div>
-        <div class="form-group">
-            <table class="table table-sm table-responsive-md">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th style="text-align:right">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var s in Model.OtherExternalServices)
-                    {
+    <div class="row">
+        <div class="col-md-8">
+            <h4>Other services</h4>
+            <div class="form-group">
+                <span>Other external services</span>
+            </div>
+            <div class="form-group">
+                <table class="table table-sm table-responsive-md">
+                    <thead>
                         <tr>
-                            <td>@s.Name</td>
-                            <td style="text-align:right">
-                                <a href="@s.Link" target="_blank">See information</a>
-                            </td>
+                            <th>Name</th>
+                            <th style="text-align:right">Actions</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach (var s in Model.OtherExternalServices)
+                        {
+                            <tr>
+                                <td>@s.Name</td>
+                                <td style="text-align:right">
+                                    <a href="@s.Link" target="_blank">See information</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-</div>
+}
+
+@if (Model.TorServices.Length != 0)
+{
+    <div class="row">
+        <div class="col-md-8">
+            <h4>TOR hidden services</h4>
+            <div class="form-group">
+                <span>TOR services hosted on this server</span>
+            </div>
+            <div class="form-group">
+                <table class="table table-sm table-responsive-md">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th style="text-align:right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var s in Model.TorServices)
+                        {
+                            <tr>
+                                <td>@s.Name</td>
+                                <td style="text-align:right">
+                                    <a href="@s.OnionUrl" target="_blank">See information</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 }
 
 @section Scripts {

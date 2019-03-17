@@ -39,6 +39,7 @@ namespace BTCPayServer.Controllers
         private RateFetcher _RateProviderFactory;
         private StoreRepository _StoreRepository;
         LightningConfigurationProvider _LnConfigProvider;
+        private readonly TorServices _torServices;
         BTCPayServerOptions _Options;
 
         public ServerController(UserManager<ApplicationUser> userManager,
@@ -48,6 +49,7 @@ namespace BTCPayServer.Controllers
             NBXplorerDashboard dashBoard,
             IHttpClientFactory httpClientFactory,
             LightningConfigurationProvider lnConfigProvider,
+            TorServices torServices,
             Services.Stores.StoreRepository storeRepository)
         {
             _Options = options;
@@ -58,6 +60,7 @@ namespace BTCPayServer.Controllers
             _RateProviderFactory = rateProviderFactory;
             _StoreRepository = storeRepository;
             _LnConfigProvider = lnConfigProvider;
+            _torServices = torServices;
         }
 
         [Route("server/rates")]
@@ -443,7 +446,7 @@ namespace BTCPayServer.Controllers
         }
 
         [Route("server/services")]
-        public IActionResult Services()
+        public async Task<IActionResult> Services()
         {
             var result = new ServicesViewModel();
             result.ExternalServices = _Options.ExternalServices;
@@ -463,6 +466,7 @@ namespace BTCPayServer.Controllers
                     Link = this.Url.Action(nameof(SSHService))
                 });
             }
+            result.TorServices = await _torServices.GetServices();
             return View(result);
         }
 

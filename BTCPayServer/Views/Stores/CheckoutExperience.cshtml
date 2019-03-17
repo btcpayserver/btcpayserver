@@ -43,17 +43,22 @@
                 <input asp-for="RequiresRefundEmail" type="checkbox" class="form-check" />
             </div>
             <div class="form-group">
+                <label asp-for="OnChainMinValue"></label>
+                <input asp-for="OnChainMinValue" class="form-control" />
+                <span asp-validation-for="OnChainMinValue" class="text-danger"></span>
+                <p class="form-text text-muted">Example: 5.50 USD</p>
+            </div>
+            <div class="form-group">
                 <label asp-for="LightningMaxValue"></label>
                 <input asp-for="LightningMaxValue" class="form-control" />
                 <span asp-validation-for="LightningMaxValue" class="text-danger"></span>
                 <p class="form-text text-muted">Example: 5.50 USD</p>
             </div>
             <div class="form-group">
-                <label asp-for="OnChainMinValue"></label>
-                <input asp-for="OnChainMinValue" class="form-control" />
-                <span asp-validation-for="OnChainMinValue" class="text-danger"></span>
-                <p class="form-text text-muted">Example: 5.50 USD</p>
+                <label asp-for="LightningAmountInSatoshi"></label>
+                <input asp-for="LightningAmountInSatoshi" type="checkbox" class="form-check" />
             </div>
+            <br />
             <button name="command" type="submit" class="btn btn-primary" value="Save">Save</button>
         </form>
     </div>

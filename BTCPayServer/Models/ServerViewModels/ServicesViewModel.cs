@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Configuration;
+using BTCPayServer.Services;
 
 namespace BTCPayServer.Models.ServerViewModels
 {
@@ -17,5 +18,6 @@ namespace BTCPayServer.Models.ServerViewModels
 
         public List<ExternalService> ExternalServices { get; set; } = new List<ExternalService>();
         public List<OtherExternalService> OtherExternalServices { get; set; } = new List<OtherExternalService>();
+        public TorService[] TorServices { get; set; } = Array.Empty<TorService>();
     }
 }

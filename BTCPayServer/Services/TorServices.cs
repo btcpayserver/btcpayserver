@@ -1,9 +1,11 @@
 ﻿using System;
+using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Configuration;
+using BTCPayServer.Logging;
 
 namespace BTCPayServer.Services
 {
@@ -15,19 +17,31 @@ namespace BTCPayServer.Services
             _Options = options;
         }
 
-        public async Task<TorService[]> GetServices()
+        public TorService[] Services { get; internal set; } = Array.Empty<TorService>();
+
+
+        internal async Task Refresh()
         {
             if (string.IsNullOrEmpty(_Options.TorrcFile) || !File.Exists(_Options.TorrcFile))
-                return Array.Empty<TorService>();
+            {
+                if (!string.IsNullOrEmpty(_Options.TorrcFile))
+                    Logs.PayServer.LogWarning("Torrc file is not found");
+                Services = Array.Empty<TorService>();
+                return;
+            }
             List<TorService> result = new List<TorService>();
             try
             {
                 var torrcContent = await File.ReadAllTextAsync(_Options.TorrcFile);
                 if (!Torrc.TryParse(torrcContent, out var torrc))
-                    return Array.Empty<TorService>();
+                {
+                    Logs.PayServer.LogWarning("Torrc file could not be parsed");
+                    Services = Array.Empty<TorService>();
+                    return;
+                }
 
                 var services = torrc.ServiceDirectories.SelectMany(d => d.ServicePorts.Select(p => (Directory: new DirectoryInfo(d.DirectoryPath), VirtualPort: p.VirtualPort)))
-                .Select(d => (ServiceName: d.Directory.Name, 
+                .Select(d => (ServiceName: d.Directory.Name,
                               ReadingLines: System.IO.File.ReadAllLinesAsync(Path.Combine(d.Directory.FullName, "hostname")),
                               VirtualPort: d.VirtualPort))
                 .ToArray();
@@ -46,16 +60,17 @@ namespace BTCPayServer.Services
                             torService.ServiceType = TorServiceType.BTCPayServer;
                         result.Add(torService);
                     }
-                    catch
+                    catch (Exception ex)
                     {
-
+                        Logs.PayServer.LogWarning(ex, $"Error while reading hidden service {service.ServiceName} configuration");
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                Logs.PayServer.LogWarning(ex, $"Error while reading torrc file");
             }
-            return result.ToArray();
+            Services = result.ToArray();
         }
     }
 

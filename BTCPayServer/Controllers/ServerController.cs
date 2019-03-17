@@ -446,7 +446,7 @@ namespace BTCPayServer.Controllers
         }
 
         [Route("server/services")]
-        public async Task<IActionResult> Services()
+        public IActionResult Services()
         {
             var result = new ServicesViewModel();
             result.ExternalServices = _Options.ExternalServices;
@@ -466,7 +466,7 @@ namespace BTCPayServer.Controllers
                     Link = this.Url.Action(nameof(SSHService))
                 });
             }
-            foreach(var torService in await _torServices.GetServices())
+            foreach(var torService in _torServices.Services)
             {
                 if (torService.VirtualPort == 80)
                 {

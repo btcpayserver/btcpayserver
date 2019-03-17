@@ -155,7 +155,7 @@ namespace BTCPayServer.Controllers
                     var handler = (LightningLikePaymentHandler)_ServiceProvider.GetRequiredService<IPaymentMethodHandler<Payments.Lightning.LightningSupportedPaymentMethod>>();
                     try
                     {
-                        var info = await handler.GetNodeInfo(paymentMethod, network);
+                        var info = await handler.GetNodeInfo(this.Request.IsOnion(), paymentMethod, network);
                         if (!vm.SkipPortTest)
                         {
                             using (CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(20)))

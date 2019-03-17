@@ -25,7 +25,7 @@ namespace BTCPayServer.Payments.Lightning
         public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(LightningSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store, BTCPayNetwork network, object preparePaymentObject)
         {
             var storeBlob = store.GetStoreBlob();
-            var test = GetNodeInfo(supportedPaymentMethod, network);
+            var test = GetNodeInfo(paymentMethod.PreferOnion, supportedPaymentMethod, network);
             var invoice = paymentMethod.ParentEntity;
             var due = Extensions.RoundUp(invoice.ProductInformation.Price / paymentMethod.Rate, 8);
             var client = supportedPaymentMethod.CreateClient(network);
@@ -63,7 +63,7 @@ namespace BTCPayServer.Payments.Lightning
             };
         }
 
-        public async Task<NodeInfo> GetNodeInfo(LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network)
+        public async Task<NodeInfo> GetNodeInfo(bool preferOnion, LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network)
         {
             if (!_Dashboard.IsFullySynched(network.CryptoCode, out var summary))
                 throw new PaymentMethodUnavailableException($"Full node not available");
@@ -84,8 +84,8 @@ namespace BTCPayServer.Payments.Lightning
                 {
                     throw new PaymentMethodUnavailableException($"Error while connecting to the API ({ex.Message})");
                 }
-
-                if (info.NodeInfo == null)
+                var nodeInfo = info.NodeInfoList.FirstOrDefault(i => i.IsTor == preferOnion) ?? info.NodeInfoList.FirstOrDefault();
+                if (nodeInfo == null)
                 {
                     throw new PaymentMethodUnavailableException($"No lightning node public address has been configured");
                 }
@@ -96,7 +96,7 @@ namespace BTCPayServer.Payments.Lightning
                     throw new PaymentMethodUnavailableException($"The lightning node is not synched ({blocksGap} blocks left)");
                 }
 
-                return info.NodeInfo;
+                return nodeInfo;
             }
         }
 

@@ -165,6 +165,11 @@ namespace BTCPayServer
                             (derivationStrategyBase is DirectDerivationStrategy direct) && direct.Segwit;
         }
 
+        public static bool IsOnion(this HttpRequest request)
+        {
+            return request.Host.Host.EndsWith(".onion", StringComparison.OrdinalIgnoreCase);
+        }
+
         public static string GetAbsoluteRoot(this HttpRequest request)
         {
             return string.Concat(

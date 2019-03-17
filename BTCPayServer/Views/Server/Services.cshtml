@@ -85,7 +85,7 @@
         <div class="col-md-8">
             <h4>TOR hidden services</h4>
             <div class="form-group">
-                <span>TOR services hosted on this server, services using auto service registration (like lightning services) will not appear here.</span>
+                <span>TOR services hosted on this server, only http servers are listed here.</span>
             </div>
             <div class="form-group">
                 <table class="table table-sm table-responsive-md">
@@ -100,7 +100,7 @@
                         {
                             <tr>
                                 <td>@s.Name</td>
-                                <td style="text-align:right">@s.OnionHost</td>
+                                <a href="@s.Link" target="_blank">See information</a>
                             </tr>
                         }
                     </tbody>

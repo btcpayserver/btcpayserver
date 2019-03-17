@@ -466,7 +466,17 @@ namespace BTCPayServer.Controllers
                     Link = this.Url.Action(nameof(SSHService))
                 });
             }
-            result.TorServices = await _torServices.GetServices();
+            foreach(var torService in await _torServices.GetServices())
+            {
+                if (torService.VirtualPort == 80)
+                {
+                    result.OtherExternalServices.Add(new ServicesViewModel.OtherExternalService()
+                    {
+                        Name = torService.Name,
+                        Link = $"http://{torService.OnionHost}"
+                    });
+                }
+            }
             return View(result);
         }
 

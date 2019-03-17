@@ -149,7 +149,7 @@ namespace BTCPayServer.Configuration
             PostgresConnectionString = conf.GetOrDefault<string>("postgres", null);
             MySQLConnectionString = conf.GetOrDefault<string>("mysql", null);
             BundleJsCss = conf.GetOrDefault<bool>("bundlejscss", true);
-            TorHiddenServicesDirectory = conf.GetOrDefault<string>("torservices", null);
+            TorrcFile = conf.GetOrDefault<string>("torrcfile", null);
 
             var sshSettings = ParseSSHConfiguration(conf);
             if ((!string.IsNullOrEmpty(sshSettings.Password) || !string.IsNullOrEmpty(sshSettings.KeyFile)) && !string.IsNullOrEmpty(sshSettings.Server))
@@ -274,6 +274,6 @@ namespace BTCPayServer.Configuration
             get;
             set;
         }
-        public string TorHiddenServicesDirectory { get; set; }
+        public string TorrcFile { get; set; }
     }
 }

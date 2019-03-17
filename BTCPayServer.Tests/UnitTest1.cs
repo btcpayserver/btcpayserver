@@ -146,6 +146,46 @@ namespace BTCPayServer.Tests
 #pragma warning restore CS0618
         }
 
+
+        [Fact]
+        [Trait("Fast", "Fast")]
+        public void CanParseTorrc()
+        {
+            var nl = "\n";
+            var input = "# For the hidden service BTCPayServer" + nl +
+                        "HiddenServiceDir /var/lib/tor/hidden_services/BTCPayServer" + nl +
+                        "# Redirecting to nginx" + nl +
+                        "HiddenServicePort 80 172.19.0.10:81";
+            nl = Environment.NewLine;
+            var expected = "HiddenServiceDir /var/lib/tor/hidden_services/BTCPayServer" + nl +
+                           "HiddenServicePort 80 172.19.0.10:81" + nl;
+            Assert.True(Torrc.TryParse(input, out var torrc));
+            Assert.Equal(expected, torrc.ToString());
+            nl = "\r\n";
+            input = "# For the hidden service BTCPayServer" + nl +
+                        "HiddenServiceDir /var/lib/tor/hidden_services/BTCPayServer" + nl +
+                        "# Redirecting to nginx" + nl +
+                        "HiddenServicePort 80 172.19.0.10:81";
+
+            Assert.True(Torrc.TryParse(input, out torrc));
+            Assert.Equal(expected, torrc.ToString());
+
+            input = "# For the hidden service BTCPayServer" + nl +
+                        "HiddenServiceDir /var/lib/tor/hidden_services/BTCPayServer" + nl +
+                        "# Redirecting to nginx" + nl +
+                        "HiddenServicePort 80 172.19.0.10:80" + nl +
+                        "HiddenServiceDir /var/lib/tor/hidden_services/Woocommerce" + nl +
+                        "# Redirecting to nginx" + nl +
+                        "HiddenServicePort 80 172.19.0.11:80";
+            nl = Environment.NewLine;
+            expected = "HiddenServiceDir /var/lib/tor/hidden_services/BTCPayServer" + nl +
+                           "HiddenServicePort 80 172.19.0.10:80" + nl +
+                           "HiddenServiceDir /var/lib/tor/hidden_services/Woocommerce" + nl +
+                           "HiddenServicePort 80 172.19.0.11:80" + nl;
+            Assert.True(Torrc.TryParse(input, out torrc));
+            Assert.Equal(expected, torrc.ToString());
+        }
+
         [Fact]
         [Trait("Fast", "Fast")]
         public void CanCalculateCryptoDue()
@@ -881,7 +921,7 @@ namespace BTCPayServer.Tests
             using (var tester = ServerTester.Create())
             {
                 tester.Start();
-                foreach(var req in new[] 
+                foreach (var req in new[]
                 {
                     "invoices/",
                     "invoices",
@@ -2365,7 +2405,7 @@ donation:
             Assert.True(ExternalConnectionString.TryParse("server=https://tow/test", out connStr, out error));
             expanded = await connStr.Expand(new Uri("https://toto.com"), ExternalServiceTypes.Charge);
             Assert.Equal(new Uri("https://tow/test"), expanded.Server);
-            
+
             // Error if directory not exists
             Assert.True(ExternalConnectionString.TryParse($"server={unusedUri};macaroondirectorypath=pouet", out connStr, out error));
             await Assert.ThrowsAsync<DirectoryNotFoundException>(() => connStr.Expand(unusedUri, ExternalServiceTypes.LNDGRPC));

@@ -470,7 +470,7 @@ namespace BTCPayServer.Controllers
             {
                 if (torService.VirtualPort == 80)
                 {
-                    result.OtherExternalServices.Add(new ServicesViewModel.OtherExternalService()
+                    result.TorServices.Add(new ServicesViewModel.OtherExternalService()
                     {
                         Name = torService.Name,
                         Link = $"http://{torService.OnionHost}"

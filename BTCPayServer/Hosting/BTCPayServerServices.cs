@@ -63,6 +63,7 @@ namespace BTCPayServer.Hosting
             services.AddHttpClient();
             services.TryAddSingleton<SettingsRepository>();
             services.TryAddSingleton<TorServices>();
+            services.TryAddSingleton<SocketFactory>();
             services.TryAddSingleton<InvoicePaymentNotification>();
             services.TryAddSingleton<BTCPayServerOptions>(o => o.GetRequiredService<IOptions<BTCPayServerOptions>>().Value);
             services.TryAddSingleton<InvoiceRepository>(o =>
@@ -189,6 +190,7 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService, RatesHostedService>();
             services.AddSingleton<IHostedService, BackgroundJobSchedulerHostedService>();
             services.AddSingleton<IHostedService, AppHubStreamer>();
+            services.AddSingleton<IHostedService, TorServicesHostedService>();
             services.AddSingleton<IHostedService, PaymentRequestStreamer>();
             services.AddSingleton<IBackgroundJobClient, BackgroundJobClient>();
             services.AddTransient<IConfigureOptions<MvcOptions>, BTCPayClaimsFilter>();

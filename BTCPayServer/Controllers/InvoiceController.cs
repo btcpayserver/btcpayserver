@@ -242,6 +242,7 @@ namespace BTCPayServer.Controllers
                 paymentMethod.Network = network;
                 paymentMethod.SetId(supportedPaymentMethod.PaymentId);
                 paymentMethod.Rate = rate.BidAsk.Bid;
+                paymentMethod.PreferOnion = this.Request.IsOnion();
                 var paymentDetails = await handler.CreatePaymentMethodDetails(supportedPaymentMethod, paymentMethod, store, network, preparePayment);
                 paymentMethod.SetPaymentMethodDetails(paymentDetails);
 

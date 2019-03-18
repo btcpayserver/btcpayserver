@@ -446,7 +446,7 @@ namespace BTCPayServer.Controllers
         }
 
         [Route("server/services")]
-        public async Task<IActionResult> Services()
+        public IActionResult Services()
         {
             var result = new ServicesViewModel();
             result.ExternalServices = _Options.ExternalServices;
@@ -466,7 +466,25 @@ namespace BTCPayServer.Controllers
                     Link = this.Url.Action(nameof(SSHService))
                 });
             }
-            result.TorServices = await _torServices.GetServices();
+            foreach(var torService in _torServices.Services)
+            {
+                if (torService.VirtualPort == 80)
+                {
+                    result.TorHttpServices.Add(new ServicesViewModel.OtherExternalService()
+                    {
+                        Name = torService.Name,
+                        Link = $"http://{torService.OnionHost}"
+                    });
+                }
+                else
+                {
+                    result.TorOtherServices.Add(new ServicesViewModel.OtherExternalService()
+                    {
+                        Name = torService.Name,
+                        Link = $"{torService.OnionHost}:{torService.VirtualPort}"
+                    });
+                }
+            }
             return View(result);
         }
 
@@ -668,6 +686,7 @@ namespace BTCPayServer.Controllers
         private static bool IsLocalNetwork(string server)
         {
             return server.EndsWith(".internal", StringComparison.OrdinalIgnoreCase) ||
+                   server.EndsWith(".local", StringComparison.OrdinalIgnoreCase) ||
                    server.Equals("127.0.0.1", StringComparison.OrdinalIgnoreCase) ||
                    server.Equals("localhost", StringComparison.OrdinalIgnoreCase);
         }

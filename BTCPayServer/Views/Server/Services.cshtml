@@ -79,13 +79,13 @@
     </div>
 }
 
-@if (Model.TorServices.Length != 0)
+@if (Model.TorHttpServices.Count != 0)
 {
     <div class="row">
         <div class="col-md-8">
-            <h4>TOR hidden services</h4>
+            <h4>HTTP TOR hidden services</h4>
             <div class="form-group">
-                <span>TOR services hosted on this server, services using auto service registration (like lightning services) will not appear here.</span>
+                <span>TOR services hosted on this server, only http servers are listed here.</span>
             </div>
             <div class="form-group">
                 <table class="table table-sm table-responsive-md">
@@ -96,11 +96,44 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var s in Model.TorServices)
+                        @foreach (var s in Model.TorHttpServices)
                         {
                             <tr>
                                 <td>@s.Name</td>
-                                <td style="text-align:right">@s.OnionHost</td>
+                                <td style="text-align:right">
+                                    <a href="@s.Link" target="_blank">See information</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+
+@if (Model.TorOtherServices.Count != 0)
+{
+    <div class="row">
+        <div class="col-md-8">
+            <h4>Other TOR hidden services</h4>
+            <div class="form-group">
+                <span>TOR services hosted on this server which are not http based.</span>
+            </div>
+            <div class="form-group">
+                <table class="table table-sm table-responsive-md">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th style="text-align:right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var s in Model.TorOtherServices)
+                        {
+                            <tr>
+                                <td>@s.Name</td>
+                                <td style="text-align:right">@s.Link</td>
                             </tr>
                         }
                     </tbody>

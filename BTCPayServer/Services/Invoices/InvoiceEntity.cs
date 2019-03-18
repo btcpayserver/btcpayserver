@@ -717,6 +717,12 @@ namespace BTCPayServer.Services.Invoices
         [Obsolete("Use GetId().PaymentType instead")]
         public string PaymentType { get; set; }
 
+        /// <summary>
+        /// We only use this to pass a singleton asking to the payment handler to prefer payments through TOR, we don't really
+        /// need to save this information
+        /// </summary>
+        [JsonIgnore]
+        public bool PreferOnion { get; set; }
 
         public PaymentMethodId GetId()
         {

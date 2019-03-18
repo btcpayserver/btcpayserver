@@ -33,6 +33,7 @@ using BTCPayServer.Services;
 using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using NBXplorer.DerivationStrategy;
+using System.Net;
 
 namespace BTCPayServer
 {
@@ -163,6 +164,13 @@ namespace BTCPayServer
         {
             return (derivationStrategyBase is P2WSHDerivationStrategy) ||
                             (derivationStrategyBase is DirectDerivationStrategy direct) && direct.Segwit;
+        }
+
+        public static bool IsOnion(this HttpRequest request)
+        {
+            if (request?.Host.Host == null)
+                return false;
+            return request.Host.Host.EndsWith(".onion", StringComparison.OrdinalIgnoreCase);
         }
 
         public static string GetAbsoluteRoot(this HttpRequest request)
@@ -315,6 +323,7 @@ namespace BTCPayServer
                 return await doing;
             }
         }
+
         public static async Task WithCancellation(this Task task, CancellationToken cancellationToken)
         {
             using (var delayCTS = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))

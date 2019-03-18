@@ -20,31 +20,6 @@ namespace BTCPayServer.Configuration
         public string CookieFile { get; internal set; }
     }
 
-    public class OpenIdOptions
-    {
-        public OpenIdOptions()
-        {
-            
-        }
-
-        public bool EnforceGrantTypes { get; internal set; }
-
-        public bool EnforceEndpoints { get; internal set; }
-
-        public bool EnforceScopes { get; internal set; }
-
-        public bool EnforceClients { get; internal set; }
-
-        public OpenIdOptions Load(IConfiguration configuration)
-        {
-            EnforceClients = configuration.GetValue("openid_enforce_clientId", false);
-            EnforceEndpoints = configuration.GetValue("openid_enforce_endpoints", false);
-            EnforceScopes = configuration.GetValue("openid_enforce_scope", false);
-            EnforceGrantTypes = configuration.GetValue("openid_enforce_grant_type", false);
-            return this;
-        }
-    }
-
     public class BTCPayServerOptions
     {
         public NetworkType NetworkType
@@ -68,8 +43,6 @@ namespace BTCPayServer.Configuration
             private set;
         }
         public EndPoint SocksEndpoint { get; set; }
-
-        public OpenIdOptions OpenIdOptions { get; private set; }
         
         public List<NBXplorerConnectionSetting> NBXplorerConnectionSettings
         {
@@ -231,7 +204,6 @@ namespace BTCPayServer.Configuration
             }
 
             DisableRegistration = conf.GetOrDefault<bool>("disable-registration", true);
-            OpenIdOptions = new OpenIdOptions().Load(conf);
         }
 
         private SSHSettings ParseSSHConfiguration(IConfiguration conf)

@@ -34,16 +34,18 @@ Thanks to the [apps](https://github.com/btcpayserver/btcpayserver-doc/blob/maste
 * Self-hosted
 * SegWit support
 * Lightning Network support (LND and c-lightning)
-* Altcoin support
+* Tor support
+* Opt-in Altcoin integrations
 * Full compatibility with BitPay API (easy migration)
 * Process payments for others
 * Easy-embeddable Payment buttons
 * Point of sale app
 * Crowdfunding app
+* Payment requests
 
 ## Supported Altcoins
 
-Bitcoin is the only focus of the project and its core developers. However, support is implemented for several altcoins:
+Bitcoin is the only focus of the project and its core developers. However, opt in integrations for several altcoins maintained by altcoins community is implemented for several altcoins:
 
 * Bitcoin Gold (BTG)
 * Bitcoin Plus (XBC)

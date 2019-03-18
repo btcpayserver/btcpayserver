@@ -168,6 +168,8 @@ namespace BTCPayServer
 
         public static bool IsOnion(this HttpRequest request)
         {
+            if (request?.Host.Host == null)
+                return false;
             return request.Host.Host.EndsWith(".onion", StringComparison.OrdinalIgnoreCase);
         }
 

@@ -45,7 +45,7 @@ Thanks to the [apps](https://github.com/btcpayserver/btcpayserver-doc/blob/maste
 
 ## Supported Altcoins
 
-Bitcoin is the only focus of the project and its core developers. However, opt in integrations for several altcoins maintained by altcoins community is implemented for several altcoins:
+Bitcoin is the only focus of the project and its core developers. However, opt in integrations for several altcoins is possible:
 
 * Bitcoin Gold (BTG)
 * Bitcoin Plus (XBC)
@@ -59,7 +59,7 @@ Bitcoin is the only focus of the project and its core developers. However, opt i
 * Polis (POLIS)
 * Viacoin (VIA)
 
-Altcoins are maintained by their respective communities.
+Altcoins are added and maintained by their respective communities.
 
 ## Documentation
 

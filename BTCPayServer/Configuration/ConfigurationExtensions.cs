@@ -70,10 +70,5 @@ namespace BTCPayServer.Configuration
             var defaultSettings = BTCPayDefaultSettings.GetDefaultSettings(networkType);
             return configuration.GetOrDefault("datadir", defaultSettings.DefaultDataDirectory);
         }
-
-        public static Uri GetExternalUri(this IConfiguration configuration)
-        {
-            return configuration.GetOrDefault<Uri>("externalurl", null);
-        }
     }
 }

@@ -686,6 +686,7 @@ namespace BTCPayServer.Controllers
         private static bool IsLocalNetwork(string server)
         {
             return server.EndsWith(".internal", StringComparison.OrdinalIgnoreCase) ||
+                   server.EndsWith(".local", StringComparison.OrdinalIgnoreCase) ||
                    server.Equals("127.0.0.1", StringComparison.OrdinalIgnoreCase) ||
                    server.Equals("localhost", StringComparison.OrdinalIgnoreCase);
         }

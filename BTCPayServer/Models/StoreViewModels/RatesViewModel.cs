@@ -21,14 +21,16 @@ namespace BTCPayServer.Models.StoreViewModels
         {
             public string Name { get; set; }
             public string Value { get; set; }
+            public string Url { get; set; }
         }
         public void SetExchangeRates(CoinAverageExchange[] supportedList, string preferredExchange)
         {
             var defaultStore = preferredExchange ?? CoinAverageRateProvider.CoinAverageName;
-            var choices = supportedList.Select(o => new Format() { Name = o.Display, Value = o.Name }).ToArray();
+            var choices = supportedList.Select(o => new Format() { Name = o.Display, Value = o.Name, Url = o.Url }).ToArray();
             var chosen = choices.FirstOrDefault(f => f.Value == defaultStore) ?? choices.FirstOrDefault();
             Exchanges = new SelectList(choices, nameof(chosen.Value), nameof(chosen.Name), chosen);
             PreferredExchange = chosen.Value;
+            RateSource = chosen.Url;
         }
 
         public List<TestResultViewModel> TestRateRules { get; set; }
@@ -59,10 +61,8 @@ namespace BTCPayServer.Models.StoreViewModels
 
         public string RateSource
         {
-            get
-            {
-                return PreferredExchange == CoinAverageRateProvider.CoinAverageName ? "https://apiv2.bitcoinaverage.com/indices/global/ticker/short" : $"https://apiv2.bitcoinaverage.com/exchanges/{PreferredExchange}";
-            }
+            get;
+            set;
         }
     }
 }

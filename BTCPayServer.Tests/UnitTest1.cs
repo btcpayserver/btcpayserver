@@ -2327,15 +2327,22 @@ donation:
                 Assert.NotNull(exchangeRates);
                 Assert.NotEmpty(exchangeRates);
                 Assert.NotEmpty(exchangeRates.ByExchange[result.ExpectedName]);
-
-                // This check if the currency pair is using right currency pair
-                Assert.Contains(exchangeRates.ByExchange[result.ExpectedName],
+                if (result.ExpectedName == "bitbank")
+                {
+                    Assert.Contains(exchangeRates.ByExchange[result.ExpectedName],
+                        e => e.CurrencyPair == new CurrencyPair("BTC", "JPY") && e.BidAsk.Bid > 100m); // 1BTC will always be more than 100JPY
+                }
+                else
+                {
+                    // This check if the currency pair is using right currency pair
+                    Assert.Contains(exchangeRates.ByExchange[result.ExpectedName],
                         e => (e.CurrencyPair == new CurrencyPair("BTC", "USD") ||
                                e.CurrencyPair == new CurrencyPair("BTC", "EUR") ||
                                e.CurrencyPair == new CurrencyPair("BTC", "USDT") ||
                                e.CurrencyPair == new CurrencyPair("BTC", "CAD"))
                                && e.BidAsk.Bid > 1.0m // 1BTC will always be more than 1USD
                                );
+                }
             }
             // Kraken emit one request only after first GetRates
             factory.Providers["kraken"].GetRatesAsync(default).GetAwaiter().GetResult();

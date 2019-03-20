@@ -100,13 +100,25 @@ namespace BTCPayServer.Payments.Lightning
                 {
                     var charge = lightningSupportedMethod.CreateClient(network);
                     LightningInvoice chargeInvoice = null;
+                    string errorMessage = $"{lightningSupportedMethod.CryptoCode} (Lightning): Can't connect to the lightning server";
                     try
                     {
                         chargeInvoice = await charge.GetInvoice(lightningMethod.InvoiceId);
                     }
+                    catch (System.Net.Sockets.SocketException socketEx) when (socketEx.SocketErrorCode == System.Net.Sockets.SocketError.ConnectionRefused)
+                    {
+                        Logs.PayServer.LogError(errorMessage);
+                        continue;
+                    }
+                    catch (Exception ex) when (ex.InnerException is System.Net.Sockets.SocketException socketEx
+                                              && socketEx.SocketErrorCode == System.Net.Sockets.SocketError.ConnectionRefused)
+                    {
+                        Logs.PayServer.LogError(errorMessage);
+                        continue;
+                    }
                     catch (Exception ex)
                     {
-                        Logs.PayServer.LogError(ex, $"{lightningSupportedMethod.CryptoCode} (Lightning): Can't connect to the lightning server");
+                        Logs.PayServer.LogError(ex, errorMessage);
                         continue;
                     }
                     if (chargeInvoice == null)

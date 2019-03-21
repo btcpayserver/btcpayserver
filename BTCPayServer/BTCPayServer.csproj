@@ -69,7 +69,12 @@
   </ItemGroup>
 
 	<ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.9" />
+    <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.6" />
+    <PackageReference Include="TwentyTwenty.Storage" Version="2.10.1" />
+    <PackageReference Include="TwentyTwenty.Storage.Amazon" Version="2.10.1" />
+    <PackageReference Include="TwentyTwenty.Storage.Azure" Version="2.10.1" />
+    <PackageReference Include="TwentyTwenty.Storage.Google" Version="2.10.1" />
+    <PackageReference Include="TwentyTwenty.Storage.Local" Version="2.10.1" />
 		<PackageReference Include="YamlDotNet" Version="5.2.1" />
 	</ItemGroup>
 

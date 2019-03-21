@@ -12,7 +12,7 @@ namespace BTCPayServer.Migrations
                 name: "AddressInvoices",
                 columns: table => new
                 {
-                    Address = table.Column<string>(nullable: false),
+                    Address = table.Column<string>(nullable: false, maxLength: 512),
                     InvoiceDataId = table.Column<string>(nullable: true)
                 },
                 constraints: table =>

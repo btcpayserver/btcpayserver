@@ -331,7 +331,7 @@ body {
     line-height: 1.5;
     background-color: #fff;
     margin: 0;
-    background: #E4E4E4;
+    background: #f7f7f7;
 }
 
 [tabindex="-1"]:focus {
@@ -1195,7 +1195,7 @@ input[type="button"].action-button {
     background-color: #fff;
     background-clip: padding-box;
     border: 1px solid rgba(0, 0, 0, 0.2);
-    border-radius: 0.3rem;
+    border-radius: 0;
     outline: 0;
 }
 
@@ -6831,7 +6831,7 @@ button.close {
     background-color: #fff;
     background-clip: padding-box;
     border: 1px solid rgba(0, 0, 0, 0.2);
-    border-radius: 0.3rem;
+    border-radius: 0;
     outline: 0;
 }
 
@@ -8250,16 +8250,10 @@ strong {
 }
 
 .modal-content {
-    box-shadow: 0 2px 32px 0 rgba(0, 0, 0, 0.85);
+    box-shadow: 0 2px 32px 0 rgba(0, 0, 0, 0.15);
     background: #F5F5F7;
     z-index: 999999;
     border-radius: 0;
-}
-
-@media (min-width: 576px) {
-    .modal-content {
-        border-radius: 7px 7px 6px 6px;
-    }
 }
 
 .opened .modal-content {
@@ -8288,13 +8282,6 @@ strong {
     background-color: #329F80;
     font-weight: 500;
     letter-spacing: .5px;
-}
-
-@media (min-width: 576px) {
-    .top-header {
-        border-top-left-radius: 5px;
-        border-top-right-radius: 5px;
-    }
 }
 
 .top-header .header {

@@ -28,6 +28,7 @@ using BTCPayServer.Logging;
 using BTCPayServer.Lightning;
 using System.Runtime.CompilerServices;
 using BTCPayServer.Storage.Models;
+using BTCPayServer.Storage.Services;
 using BTCPayServer.Storage.Services.Providers;
 using BTCPayServer.Services.Apps;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -48,9 +49,15 @@ namespace BTCPayServer.Controllers
         BTCPayServerOptions _Options;
         private readonly IStorageProviderService _StorageProviderService;
         ApplicationDbContextFactory _ContextFactory;
+        private readonly StoredFileRepository _StoredFileRepository;
+        private readonly FileService _FileService;
+        private readonly IEnumerable<IStorageProviderService> _StorageProviderServices;
 
         public ServerController(UserManager<ApplicationUser> userManager,
             Configuration.BTCPayServerOptions options,
+            StoredFileRepository storedFileRepository,
+            FileService fileService,
+            IEnumerable<IStorageProviderService> storageProviderServices,
             IStorageProviderService storageProviderService,
             BTCPayServerOptions options,
             RateFetcher rateProviderFactory,
@@ -63,7 +70,9 @@ namespace BTCPayServer.Controllers
             ApplicationDbContextFactory contextFactory)
         {
             _Options = options;
-            _StorageProviderService = storageProviderService;
+            _StoredFileRepository = storedFileRepository;
+            _FileService = fileService;
+            _StorageProviderServices = storageProviderServices;
             _UserManager = userManager;
             _SettingsRepository = settingsRepository;
             _dashBoard = dashBoard;

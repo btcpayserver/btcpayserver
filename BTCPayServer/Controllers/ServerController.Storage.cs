@@ -36,7 +36,7 @@ namespace BTCPayServer.Controllers
         {
             return RedirectToAction("StorageProvider", new
             {
-                provider = viewModel.Provider
+                provider = viewModel.Provider.ToString()
             });
         }
 

@@ -17,7 +17,7 @@
         <form method="post">
             <div class="form-group">
                 <label asp-for="Provider"></label>
-                <select asp-for="Provider" asp-items="@Html.GetEnumSelectList<StorageProvider>()"></select>
+                <select asp-for="Provider" asp-items="@Html.GetEnumSelectList<StorageProvider>()" class="form-control"></select>
             </div>
 
             <button type="submit" class="btn btn-primary" name="command" value="Save">Next</button>

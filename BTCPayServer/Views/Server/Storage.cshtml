@@ -1,0 +1,30 @@
+﻿@using BTCPayServer.Storage.Models
+@model BTCPayServer.Storage.Models.StorageSettings
+@{
+    ViewData.SetActivePageAndTitle(ServerNavPages.Storage);
+}
+
+
+<h4>@ViewData["Title"]</h4>
+<partial name="_StatusMessage" for="@TempData["StatusMessage"]"/>
+<div class="row">
+    <div class="col-lg-6">
+        <div asp-validation-summary="All" class="text-danger"></div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-lg-6">
+        <form method="post">
+            <div class="form-group">
+                <label asp-for="Provider"></label>
+                <select asp-for="Provider" asp-items="@Html.GetEnumSelectList<StorageProvider>()"></select>
+            </div>
+
+            <button type="submit" class="btn btn-primary" name="command" value="Save">Next</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

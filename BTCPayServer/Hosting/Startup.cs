@@ -36,6 +36,7 @@ using System.Net;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
+using BTCPayServer.Storage;
 
 namespace BTCPayServer.Hosting
 {
@@ -64,6 +65,7 @@ namespace BTCPayServer.Hosting
                 .AddDefaultTokenProviders();
             services.AddSignalR();
             services.AddBTCPayServer();
+            services.AddProviderStorage();
             services.AddSession();
             services.AddMvc(o =>
             {

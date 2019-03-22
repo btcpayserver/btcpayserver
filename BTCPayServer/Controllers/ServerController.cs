@@ -27,6 +27,8 @@ using Renci.SshNet;
 using BTCPayServer.Logging;
 using BTCPayServer.Lightning;
 using System.Runtime.CompilerServices;
+using BTCPayServer.Storage.Models;
+using BTCPayServer.Storage.Services.Providers;
 using BTCPayServer.Services.Apps;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using BTCPayServer.Data;
@@ -34,7 +36,7 @@ using BTCPayServer.Data;
 namespace BTCPayServer.Controllers
 {
     [Authorize(Policy = BTCPayServer.Security.Policies.CanModifyServerSettings.Key)]
-    public class ServerController : Controller
+    public partial class ServerController : Controller
     {
         private UserManager<ApplicationUser> _UserManager;
         SettingsRepository _SettingsRepository;
@@ -44,9 +46,12 @@ namespace BTCPayServer.Controllers
         LightningConfigurationProvider _LnConfigProvider;
         private readonly TorServices _torServices;
         BTCPayServerOptions _Options;
+        private readonly IStorageProviderService _StorageProviderService;
         ApplicationDbContextFactory _ContextFactory;
 
         public ServerController(UserManager<ApplicationUser> userManager,
+            Configuration.BTCPayServerOptions options,
+            IStorageProviderService storageProviderService,
             BTCPayServerOptions options,
             RateFetcher rateProviderFactory,
             SettingsRepository settingsRepository,
@@ -58,6 +63,7 @@ namespace BTCPayServer.Controllers
             ApplicationDbContextFactory contextFactory)
         {
             _Options = options;
+            _StorageProviderService = storageProviderService;
             _UserManager = userManager;
             _SettingsRepository = settingsRepository;
             _dashBoard = dashBoard;

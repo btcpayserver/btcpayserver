@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Payments;
@@ -15,6 +16,7 @@ namespace BTCPayServer.Data
         /// For not having exceptions thrown by two address on different network, we suffix by "#CRYPTOCODE" 
         /// </summary>
         [Obsolete("Use GetHash instead")]
+        [MaxLength(512)]
         public string Address
         {
             get; set;

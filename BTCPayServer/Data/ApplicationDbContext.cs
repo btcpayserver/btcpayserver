@@ -197,8 +197,14 @@ namespace BTCPayServer.Data
                     o.Address
 #pragma warning restore CS0618
                 });
-
-
+#pragma warning disable 618
+            builder.Entity<HistoricalAddressInvoiceData>()
+                .Property(o => o.Address)
+                .HasMaxLength(512);
+            builder.Entity<AddressInvoiceData>()
+                .Property(o => o.Address)
+                .HasMaxLength(512);
+#pragma warning restore 618
             builder.Entity<InvoiceEventData>()
                    .HasOne(o => o.InvoiceData)
                    .WithMany(i => i.Events).OnDelete(DeleteBehavior.Cascade);

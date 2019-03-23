@@ -218,7 +218,7 @@ namespace BTCPayServer.Hosting
             services.AddAuthorization(o => Policies.AddBTCPayPolicies(o));
             BitpayAuthentication.AddAuthentication(services);
 
-            services.AddBundles();
+            services.AddSingleton<IBundleProvider, ResourceBundleProvider>();
             services.AddTransient<BundleOptions>(provider =>
             {
                 var opts = provider.GetRequiredService<BTCPayServerOptions>();

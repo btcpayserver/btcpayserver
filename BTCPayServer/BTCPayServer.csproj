@@ -30,11 +30,12 @@
     <None Remove="Currencies.txt" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="bundleconfig.json" />
     <EmbeddedResource Include="Currencies.txt" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="BTCPayServer.Lightning.All" Version="1.1.0.14" />
-    <PackageReference Include="BuildBundlerMinifier" Version="2.7.385" />
+    <PackageReference Include="BuildBundlerMinifier" Version="2.8.391" />
     <PackageReference Include="DigitalRuby.ExchangeSharp" Version="0.5.3" />
     <PackageReference Include="HtmlSanitizer" Version="4.0.199" />
     <PackageReference Include="LedgerWallet" Version="2.0.0.3" />

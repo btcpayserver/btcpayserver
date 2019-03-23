@@ -1,8 +1,7 @@
 ﻿@model BTCPayServer.Storage.Services.Providers.GoogleCloudStorage.Configuration.GoogleCloudStorageConfiguration
 @{
-    ViewData.SetActivePageAndTitle(ServerNavPages.Storage);
+    ViewData.SetActivePageAndTitle(ServerNavPages.Storage, $"Storage - Google Cloud Storage");
 }
-
 
 <h4>@ViewData["Title"]</h4>
 <partial name="_StatusMessage" for="@TempData["StatusMessage"]" />

@@ -1,6 +1,6 @@
 ﻿@model BTCPayServer.Storage.Services.Providers.AzureBlobStorage.Configuration.AzureBlobStorageConfiguration
 @{
-    ViewData.SetActivePageAndTitle(ServerNavPages.Storage);
+    ViewData.SetActivePageAndTitle(ServerNavPages.Storage, $"Storage - Azure Blob Storage");
 }
 
 
@@ -21,7 +21,7 @@
             </div>
             <div class="form-group">
                 <label asp-for="ConnectionString"></label>
-                <input type="text" asp-for="ConnectionString"/>
+                <input class="form-control" type="text" asp-for="ConnectionString"/>
                 <span asp-validation-for="ConnectionString" class="text-danger"></span>
             </div>
 

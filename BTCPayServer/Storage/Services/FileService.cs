@@ -39,6 +39,14 @@ namespace BTCPayServer.Storage.Services
             var storedFile = await _FileRepository.GetFile(fileId);
             return await provider.GetFileBase64(storedFile, settings);
         }
+        
+        public async Task<string> GetFileUrl(string fileId)
+        {
+            var settings = await _SettingsRepository.GetSettingAsync<StorageSettings>();
+            var provider = GetProvider(settings);
+            var storedFile = await _FileRepository.GetFile(fileId);
+            return await provider.GetFileUrl(storedFile, settings);
+        }
 
         public async Task RemoveFile(string fileId)
         {
@@ -46,6 +54,7 @@ namespace BTCPayServer.Storage.Services
             var provider = GetProvider(settings);
             var storedFile = await _FileRepository.GetFile(fileId);
             await provider.RemoveFile(storedFile, settings);
+            await _FileRepository.RemoveFile(fileId);
         }
 
         private IStorageProviderService GetProvider(StorageSettings storageSettings)

@@ -17,9 +17,9 @@ namespace BTCPayServer.Storage.Services.Providers
             return provider == StorageProvider();
         }
 
-        public async Task<StoredFile> AddFile(IFormFile file, StorageSettings configuration)
+        public virtual async Task<StoredFile> AddFile(IFormFile file, StorageSettings configuration)
         {
-            var storageFileName = $"{file.FileName}-{Guid.NewGuid()}";
+            var storageFileName = $"{Guid.NewGuid()}_{file.FileName}";
             var providerConfiguration = GetProviderConfiguration(configuration);
             var provider = await GetStorageProvider(providerConfiguration);
             using (var fileStream = file.OpenReadStream())
@@ -41,7 +41,7 @@ namespace BTCPayServer.Storage.Services.Providers
             };
         }
 
-        public async Task<string> GetFileBase64(StoredFile storedFile, StorageSettings configuration)
+        public virtual async Task<string> GetFileBase64(StoredFile storedFile, StorageSettings configuration)
         {
             var providerConfiguration = GetProviderConfiguration(configuration);
             var provider = await GetStorageProvider(providerConfiguration);
@@ -61,7 +61,7 @@ namespace BTCPayServer.Storage.Services.Providers
             }
         }
         
-        public async Task<string> GetFileUrl(StoredFile storedFile, StorageSettings configuration)
+        public virtual async Task<string> GetFileUrl(StoredFile storedFile, StorageSettings configuration)
         {
             var providerConfiguration = GetProviderConfiguration(configuration);
             var provider = await GetStorageProvider(providerConfiguration);

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Storage.Models;
@@ -11,6 +12,7 @@ using BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration;
 using BTCPayServer.Storage.Services.Providers.GoogleCloudStorage;
 using BTCPayServer.Storage.Services.Providers.GoogleCloudStorage.Configuration;
 using BTCPayServer.Storage.Services.Providers.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
 
@@ -18,6 +20,58 @@ namespace BTCPayServer.Controllers
 {
     public partial class ServerController
     {
+        [HttpGet("server/files/{fileId?}")]
+        public async Task<IActionResult> Files(string fileId, string statusMessage)
+        {
+            TempData["StatusMessage"] = statusMessage;
+            return View(new ViewFilesViewModel()
+            {
+                Files = await _StoredFileRepository.GetFiles(),
+                SelectedFileId = fileId,
+                FileUrl = string.IsNullOrEmpty(fileId) ? null : await _FileService.GetFileUrl(fileId)
+            });
+        }
+
+        [HttpGet("server/files/{fileId}/delete")]
+        public async Task<IActionResult> DeleteFile(string fileId)
+        {
+            try
+            {
+                await _FileService.RemoveFile(fileId);
+                return RedirectToAction("Files", new
+                {
+                    fileId= "",
+                    statusMessage = "File removed"
+                });
+            }
+            catch (Exception e)
+            {
+                return RedirectToAction("Files", new
+                {
+                    statusMessage = $"Error:{e.Message}"
+                });
+            }
+        }
+
+
+        [HttpPost("server/files/upload")]
+        public async Task<IActionResult> CreateFile(IFormFile file)
+        {
+            var newFile = await _FileService.AddFile(file);
+            return RedirectToAction("Files", new
+            {
+                statusMessage = "File added!",
+                fileId = newFile.Id
+            });
+        }
+
+        public class ViewFilesViewModel
+        {
+            public List<StoredFile> Files { get; set; }
+            public string FileUrl { get; set; }
+            public string SelectedFileId { get; set; }
+        }
+
         [HttpGet("server/storage")]
         public async Task<IActionResult> Storage(bool forceChoice = false)
         {
@@ -99,7 +153,8 @@ namespace BTCPayServer.Controllers
             return await SaveStorageProvider(viewModel, BTCPayServer.Storage.Models.StorageProvider.FileSystem);
         }
 
-        private async Task<IActionResult> SaveStorageProvider(IBaseStorageConfiguration viewModel, StorageProvider storageProvider)
+        private async Task<IActionResult> SaveStorageProvider(IBaseStorageConfiguration viewModel,
+            StorageProvider storageProvider)
         {
             var data = (await _SettingsRepository.GetSettingAsync<StorageSettings>()) ?? new StorageSettings();
             data.Provider = storageProvider;

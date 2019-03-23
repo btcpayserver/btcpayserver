@@ -1,0 +1,83 @@
+@model BTCPayServer.Controllers.ServerController.ViewFilesViewModel
+@{
+    ViewData.SetActivePageAndTitle(ServerNavPages.Files);
+}
+
+
+<h4>@ViewData["Title"]</h4>
+<partial name="_StatusMessage" for="@TempData["StatusMessage"]"/>
+
+
+<table class="table table-sm table-responsive-md">
+    <thead>
+    <tr>
+        <th>Name</th>
+        <th>Uploaded Timestamp</th>
+        <th></th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var file in Model.Files)
+    {
+        <tr>
+            <td>@file.FileName</td>
+            <td>@file.Timestamp.ToString("g")</td>
+            <td>
+                <a asp-action="Files" asp-route-fileId="@file.Id">Get Link</a> - <a asp-action="DeleteFile" asp-route-fileId="@file.Id">Remove</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+@if (!string.IsNullOrEmpty(Model.SelectedFileId))
+{
+    var file = Model.Files.Single(storedFile => storedFile.Id.Equals(Model.SelectedFileId, StringComparison.InvariantCultureIgnoreCase));
+    <div class="card mb-2">
+        <div class="card-text">
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">
+                    @file.FileName
+                </li>
+                <li class="list-group-item">
+                    <a href="@Model.FileUrl" target="_blank">@Model.FileUrl</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+}
+
+<div class="card">
+    <form asp-action="CreateFile" method="post" enctype="multipart/form-data">
+        
+        <div class="card-body">
+            <h3 class="header">Upload File</h3>
+            
+                <div class="custom-file">
+                    <input type="file" class="custom-file-input" name="file" id="file" required>
+                    <label class="custom-file-label" for="customFile">Choose file</label>
+                </div>
+           
+        </div>
+        <div class="card-footer">
+            <button class="btn btn-primary" role="button"><span class="fa fa-plus"></span> Upload file</button>
+        </div>
+    </form>
+</div>
+
+
+<script>
+    $(document).ready(function() {
+
+        $('.custom-file-input').on('change',
+            function() {
+                var label = $(this).next('label');
+                if (document.getElementById("file").files.length > 0) {
+                    var fileName = document.getElementById("file").files[0].name;
+                    label.addClass("selected").html(fileName);
+                } else {
+                    label.removeClass("selected").html("Choose file");
+                }
+            });
+    });
+</script>

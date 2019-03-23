@@ -10,19 +10,24 @@ using BTCPayServer.Storage.Services.Providers.FileSystemStorage;
 using BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration;
 using BTCPayServer.Storage.Services.Providers.GoogleCloudStorage;
 using BTCPayServer.Storage.Services.Providers.GoogleCloudStorage.Configuration;
+using BTCPayServer.Storage.Services.Providers.Models;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Controllers
 {
     public partial class ServerController
     {
         [HttpGet("server/storage")]
-        public async Task<IActionResult> Storage()
+        public async Task<IActionResult> Storage(bool forceChoice = false)
         {
             var savedSettings = await _SettingsRepository.GetSettingAsync<StorageSettings>();
-            if (savedSettings == null)
+            if (forceChoice || savedSettings == null)
             {
-                return View(new StorageSettings());
+                return View(new StorageSettings()
+                {
+                    Provider = savedSettings?.Provider ?? BTCPayServer.Storage.Models.StorageProvider.FileSystem
+                });
             }
 
             return RedirectToAction("StorageProvider", new
@@ -34,13 +39,13 @@ namespace BTCPayServer.Controllers
         [HttpPost("server/storage")]
         public async Task<IActionResult> Storage(StorageSettings viewModel)
         {
-            return RedirectToAction("StorageProvider", new
+            return RedirectToAction("StorageProvider", "Server", new
             {
                 provider = viewModel.Provider.ToString()
             });
         }
 
-        [Route("server/storage/{provider}")]
+        [HttpGet("server/storage/{provider}")]
         public async Task<IActionResult> StorageProvider(string provider)
         {
             var storageProvider = Enum.Parse(typeof(StorageProvider), provider);
@@ -49,8 +54,7 @@ namespace BTCPayServer.Controllers
             var storageProviderService =
                 _StorageProviderServices.Single(service => service.StorageProvider().Equals(storageProvider));
 
-
-            var viewName = $"{storageProvider}StorageProvider";
+            var viewName = $"Edit{storageProvider}StorageProvider";
             switch (storageProviderService)
             {
                 case AzureBlobStorageFileProviderService fileProviderService:
@@ -71,39 +75,37 @@ namespace BTCPayServer.Controllers
 
 
         [HttpPost("server/storage/AzureBlobStorage")]
-        public async Task<IActionResult> StorageProvider(AzureBlobStorageConfiguration viewModel)
+        public async Task<IActionResult> EditAzureBlobStorageStorageProvider(AzureBlobStorageConfiguration viewModel)
         {
-            var data = (await _SettingsRepository.GetSettingAsync<StorageSettings>()) ?? new StorageSettings();
-            data.Provider = BTCPayServer.Storage.Models.StorageProvider.AzureBlobStorage;
-            data.Configuration = viewModel.ConvertConfiguration();
-
-            return View(viewModel);
+            return await SaveStorageProvider(viewModel, BTCPayServer.Storage.Models.StorageProvider.AzureBlobStorage);
         }
 
         [HttpPost("server/storage/AmazonS3")]
-        public async Task<IActionResult> StorageProvider(AmazonS3StorageConfiguration viewModel)
+        public async Task<IActionResult> EditAmazonS3StorageProvider(AmazonS3StorageConfiguration viewModel)
         {
-            var data = (await _SettingsRepository.GetSettingAsync<StorageSettings>()) ?? new StorageSettings();
-            data.Provider = BTCPayServer.Storage.Models.StorageProvider.AmazonS3;
-            data.Configuration = viewModel.ConvertConfiguration();
-            return View(viewModel);
+            return await SaveStorageProvider(viewModel, BTCPayServer.Storage.Models.StorageProvider.AmazonS3);
         }
 
         [HttpPost("server/storage/GoogleCloudStorage")]
-        public async Task<IActionResult> StorageProvider(GoogleCloudStorageConfiguration viewModel)
+        public async Task<IActionResult> EditGoogleCloudStorageStorageProvider(
+            GoogleCloudStorageConfiguration viewModel)
         {
-            var data = (await _SettingsRepository.GetSettingAsync<StorageSettings>()) ?? new StorageSettings();
-            data.Provider = BTCPayServer.Storage.Models.StorageProvider.GoogleCloudStorage;
-            data.Configuration = viewModel.ConvertConfiguration();
-            return View(viewModel);
+            return await SaveStorageProvider(viewModel, BTCPayServer.Storage.Models.StorageProvider.GoogleCloudStorage);
         }
 
         [HttpPost("server/storage/FileSystem")]
-        public async Task<IActionResult> StorageProvider(FileSystemStorageConfiguration viewModel)
+        public async Task<IActionResult> EditFileSystemStorageProvider(FileSystemStorageConfiguration viewModel)
+        {
+            return await SaveStorageProvider(viewModel, BTCPayServer.Storage.Models.StorageProvider.FileSystem);
+        }
+
+        private async Task<IActionResult> SaveStorageProvider(IBaseStorageConfiguration viewModel, StorageProvider storageProvider)
         {
             var data = (await _SettingsRepository.GetSettingAsync<StorageSettings>()) ?? new StorageSettings();
-            data.Provider = BTCPayServer.Storage.Models.StorageProvider.FileSystem;
-            data.Configuration = viewModel.ConvertConfiguration();
+            data.Provider = storageProvider;
+            data.Configuration = JObject.FromObject(viewModel);
+            await _SettingsRepository.UpdateSetting(data);
+            TempData["StatusMessage"] = "Storage settings updated successfully";
             return View(viewModel);
         }
     }

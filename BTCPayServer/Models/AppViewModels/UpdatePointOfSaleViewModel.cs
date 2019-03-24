@@ -10,7 +10,6 @@ namespace BTCPayServer.Models.AppViewModels
         [Required]
         [MaxLength(5)]
         public string Currency { get; set; }
-        [MaxLength(5000)]
         public string Template { get; set; }
 
         [Display(Name = "Enable shopping cart")]

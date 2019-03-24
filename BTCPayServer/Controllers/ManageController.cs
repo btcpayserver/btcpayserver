@@ -110,7 +110,7 @@ namespace BTCPayServer.Controllers
             {
                 var setEmailResult = await _userManager.SetEmailAsync(user, model.Email);
                 if (!setEmailResult.Succeeded)
-                {                    
+                {
                     throw new ApplicationException($"Unexpected error occurred setting email for user with ID '{user.Id}'.");
                 }
                 await _userManager.SetUserNameAsync(user, model.Username);

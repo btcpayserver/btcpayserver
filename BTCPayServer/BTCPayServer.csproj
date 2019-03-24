@@ -35,11 +35,12 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="BTCPayServer.Lightning.All" Version="1.1.0.14" />
-    <PackageReference Include="BuildBundlerMinifier" Version="2.8.391" />
+    <PackageReference Include="BuildBundlerMinifier" Version="2.9.406" />
+    <PackageReference Include="BundlerMinifier.Core" Version="2.9.406" />
+    <PackageReference Include="BundlerMinifier.TagHelpers" Version="2.9.406" />
     <PackageReference Include="DigitalRuby.ExchangeSharp" Version="0.5.3" />
     <PackageReference Include="HtmlSanitizer" Version="4.0.199" />
     <PackageReference Include="LedgerWallet" Version="2.0.0.3" />
-    <PackageReference Include="Meziantou.AspNetCore.BundleTagHelpers" Version="2.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.1.4" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.2" />
     <PackageReference Include="Microsoft.NetCore.Analyzers" Version="2.6.2">

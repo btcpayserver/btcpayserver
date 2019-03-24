@@ -34,7 +34,6 @@ using Microsoft.AspNetCore.Mvc.Cors.Internal;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using System.Net;
 using BTCPayServer.PaymentRequest;
-using Meziantou.AspNetCore.BundleTagHelpers;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
 

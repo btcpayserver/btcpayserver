@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using Meziantou.AspNetCore.BundleTagHelpers;
+using BundlerMinifier.TagHelpers;
 using Microsoft.AspNetCore.Hosting;
 using Newtonsoft.Json.Linq;
 

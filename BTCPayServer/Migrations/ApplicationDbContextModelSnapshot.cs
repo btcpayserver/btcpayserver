@@ -353,6 +353,8 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("Id")
                         .ValueGeneratedOnAdd();
 
+                    b.Property<string>("ApplicationUserId");
+
                     b.Property<string>("FileName");
 
                     b.Property<string>("StorageFileName");
@@ -360,6 +362,8 @@ namespace BTCPayServer.Migrations
                     b.Property<DateTime>("Timestamp");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId");
 
                     b.ToTable("Files");
                 });
@@ -570,6 +574,13 @@ namespace BTCPayServer.Migrations
                         .WithMany("PaymentRequests")
                         .HasForeignKey("StoreDataId")
                         .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("BTCPayServer.Storage.Models.StoredFile", b =>
+                {
+                    b.HasOne("BTCPayServer.Models.ApplicationUser", "ApplicationUser")
+                        .WithMany("StoredFiles")
+                        .HasForeignKey("ApplicationUserId");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

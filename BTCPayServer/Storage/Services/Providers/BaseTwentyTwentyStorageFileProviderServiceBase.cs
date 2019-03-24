@@ -29,7 +29,7 @@ namespace BTCPayServer.Storage.Services.Providers
                     {
                         ContentType = file.ContentType,
                         ContentDisposition = file.ContentDisposition,
-                        Security = BlobSecurity.Private,
+                        Security = BlobSecurity.Public,
                     });
             }
 

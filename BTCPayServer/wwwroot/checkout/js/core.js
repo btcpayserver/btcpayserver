@@ -106,7 +106,8 @@ function onDataCallback(jsonData) {
 }
 
 function numberFormatted(x) {
-    var parts = x.toString().split(".");
+    var rounded = Math.round(x);
+    var parts = rounded.toString().split(".");
     parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
     return parts.join(".");
 }

@@ -55,7 +55,7 @@ namespace BTCPayServer.Storage.Services.Providers.FileSystemStorage
                 
                 $"{_BtcPayServerEnvironment.ExpectedProtocol}://" +
                 $"{_BtcPayServerEnvironment.ExpectedHost}" +
-                $"{(string.IsNullOrEmpty(_Options.RootPath) ? "" : "/" + _Options.RootPath)}";
+                $"{_Options.RootPath}".TrimEnd('/');
             return baseResult.Replace(_HostingEnvironment.WebRootPath, url,
                 StringComparison.InvariantCultureIgnoreCase);
         }

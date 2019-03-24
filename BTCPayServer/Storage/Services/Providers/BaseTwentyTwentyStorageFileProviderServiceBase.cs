@@ -7,7 +7,8 @@ using TwentyTwenty.Storage;
 
 namespace BTCPayServer.Storage.Services.Providers
 {
-    public abstract class BaseTwentyTwentyStorageFileProviderServiceBase<TStorageConfiguration> : IStorageProviderService
+    public abstract class
+        BaseTwentyTwentyStorageFileProviderServiceBase<TStorageConfiguration> : IStorageProviderService
         where TStorageConfiguration : IBaseStorageConfiguration
     {
         public abstract StorageProvider StorageProvider();
@@ -41,33 +42,12 @@ namespace BTCPayServer.Storage.Services.Providers
             };
         }
 
-        public virtual async Task<string> GetFileBase64(StoredFile storedFile, StorageSettings configuration)
-        {
-            var providerConfiguration = GetProviderConfiguration(configuration);
-            var provider = await GetStorageProvider(providerConfiguration);
-
-            var getBlobDescriptor =
-                provider.GetBlobDescriptorAsync(providerConfiguration.ContainerName, storedFile.StorageFileName);
-            var getBlobStream =
-                provider.GetBlobStreamAsync(providerConfiguration.ContainerName, storedFile.StorageFileName);
-
-            await Task.WhenAll(getBlobDescriptor, getBlobStream);
-
-            using (var stream = getBlobStream.Result)
-            {
-                var fileBytes = new byte[stream.Length];
-                await stream.ReadAsync(fileBytes, 0, (int)fileBytes.Length);
-                return $"data:{getBlobDescriptor.Result.ContentType};base64, {Convert.ToBase64String(fileBytes)}";
-            }
-        }
-        
         public virtual async Task<string> GetFileUrl(StoredFile storedFile, StorageSettings configuration)
         {
             var providerConfiguration = GetProviderConfiguration(configuration);
             var provider = await GetStorageProvider(providerConfiguration);
 
             return provider.GetBlobUrl(providerConfiguration.ContainerName, storedFile.StorageFileName);
-
         }
 
         public async Task RemoveFile(StoredFile storedFile, StorageSettings configuration)

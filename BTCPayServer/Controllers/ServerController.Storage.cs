@@ -1,7 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Storage.Models;
 using BTCPayServer.Storage.Services.Providers.AmazonS3Storage;
 using BTCPayServer.Storage.Services.Providers.AmazonS3Storage.Configuration;
@@ -12,7 +12,6 @@ using BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration;
 using BTCPayServer.Storage.Services.Providers.GoogleCloudStorage;
 using BTCPayServer.Storage.Services.Providers.GoogleCloudStorage.Configuration;
 using BTCPayServer.Storage.Services.Providers.Models;
-using Microsoft.AspNetCore.Hosting.Internal;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
@@ -29,7 +28,8 @@ namespace BTCPayServer.Controllers
             {
                 Files = await _StoredFileRepository.GetFiles(),
                 SelectedFileId = fileId,
-                FileUrl = string.IsNullOrEmpty(fileId) ? null : await _FileService.GetFileUrl(fileId)
+                FileUrl = string.IsNullOrEmpty(fileId) ? null : await _FileService.GetFileUrl(fileId),
+                StorageConfigured =  (await _SettingsRepository.GetSettingAsync<StorageSettings>()) != null
             });
         }
 
@@ -69,14 +69,7 @@ namespace BTCPayServer.Controllers
         private string GetUserId()
         {
             return _UserManager.GetUserId(ControllerContext.HttpContext.User);
-        }
-
-        public class ViewFilesViewModel
-        {
-            public List<StoredFile> Files { get; set; }
-            public string FileUrl { get; set; }
-            public string SelectedFileId { get; set; }
-        }
+        }      
 
         [HttpGet("server/storage")]
         public async Task<IActionResult> Storage(bool forceChoice = false)

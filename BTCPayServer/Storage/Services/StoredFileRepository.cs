@@ -62,8 +62,8 @@ namespace BTCPayServer.Storage.Services
 
         public class FilesQuery
         {
-            public string[] Id { get; set; }
-            public string[] UserIds { get; set; }
+            public string[] Id { get; set; } = new string[0];
+            public string[] UserIds { get; set; } = new string[0];
         }
     }
 }

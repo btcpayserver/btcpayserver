@@ -12,6 +12,7 @@ using BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration;
 using BTCPayServer.Storage.Services.Providers.GoogleCloudStorage;
 using BTCPayServer.Storage.Services.Providers.GoogleCloudStorage.Configuration;
 using BTCPayServer.Storage.Services.Providers.Models;
+using Microsoft.AspNetCore.Hosting.Internal;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
@@ -37,7 +38,7 @@ namespace BTCPayServer.Controllers
         {
             try
             {
-                await _FileService.RemoveFile(fileId);
+                await _FileService.RemoveFile(fileId, null);
                 return RedirectToAction("Files", new
                 {
                     fileId= "",
@@ -57,12 +58,17 @@ namespace BTCPayServer.Controllers
         [HttpPost("server/files/upload")]
         public async Task<IActionResult> CreateFile(IFormFile file)
         {
-            var newFile = await _FileService.AddFile(file);
+            var newFile = await _FileService.AddFile(file, GetUserId());
             return RedirectToAction("Files", new
             {
                 statusMessage = "File added!",
                 fileId = newFile.Id
             });
+        }
+
+        private string GetUserId()
+        {
+            return _UserManager.GetUserId(ControllerContext.HttpContext.User);
         }
 
         public class ViewFilesViewModel

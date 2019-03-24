@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Services;
@@ -22,24 +23,17 @@ namespace BTCPayServer.Storage.Services
             _SettingsRepository = settingsRepository;
         }
 
-        public async Task<StoredFile> AddFile(IFormFile file)
+        public async Task<StoredFile> AddFile(IFormFile file, string userId)
         {
             var settings = await _SettingsRepository.GetSettingAsync<StorageSettings>();
             var provider = GetProvider(settings);
 
             var storedFile = await provider.AddFile(file, settings);
+            storedFile.ApplicationUserId = userId;
             await _FileRepository.AddFile(storedFile);
             return storedFile;
         }
 
-        public async Task<string> GetFileBase64(string fileId)
-        {
-            var settings = await _SettingsRepository.GetSettingAsync<StorageSettings>();
-            var provider = GetProvider(settings);
-            var storedFile = await _FileRepository.GetFile(fileId);
-            return await provider.GetFileBase64(storedFile, settings);
-        }
-        
         public async Task<string> GetFileUrl(string fileId)
         {
             var settings = await _SettingsRepository.GetSettingAsync<StorageSettings>();
@@ -48,13 +42,17 @@ namespace BTCPayServer.Storage.Services
             return await provider.GetFileUrl(storedFile, settings);
         }
 
-        public async Task RemoveFile(string fileId)
+        public async Task RemoveFile(string fileId, string userId)
         {
             var settings = await _SettingsRepository.GetSettingAsync<StorageSettings>();
             var provider = GetProvider(settings);
             var storedFile = await _FileRepository.GetFile(fileId);
-            await provider.RemoveFile(storedFile, settings);
-            await _FileRepository.RemoveFile(fileId);
+            if (string.IsNullOrEmpty(userId) ||
+                storedFile.ApplicationUserId.Equals(userId, StringComparison.InvariantCultureIgnoreCase))
+            {
+                await provider.RemoveFile(storedFile, settings);
+                await _FileRepository.RemoveFile(storedFile);
+            }
         }
 
         private IStorageProviderService GetProvider(StorageSettings storageSettings)

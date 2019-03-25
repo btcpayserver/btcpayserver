@@ -71,24 +71,22 @@ namespace BTCPayServer.Security
                         success = storeId != null;
                     }
 
-                    if (success.HasValue)
+                    if (success is true)
                     {
-                        if (success.Value)
+                        if (storeId != null)
                         {
-                            if (storeId != null)
-                            {
-                                claims.Add(new Claim(Policies.CanCreateInvoice.Key, storeId));
-                                var store = await _StoreRepository.FindStore(storeId);
-                                store.AdditionalClaims.AddRange(claims);
-                                Context.Request.HttpContext.SetStoreData(store);
-                            }
-                            return AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(new ClaimsIdentity(claims, Policies.BitpayAuthentication)), Policies.BitpayAuthentication));
+                            claims.Add(new Claim(Policies.CanCreateInvoice.Key, storeId));
+                            var store = await _StoreRepository.FindStore(storeId);
+                            store.AdditionalClaims.AddRange(claims);
+                            Context.Request.HttpContext.SetStoreData(store);
                         }
-                        else
-                        {
-                            return AuthenticateResult.Fail("Invalid credentials");
-                        }
+                        return AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(new ClaimsIdentity(claims, Policies.BitpayAuthentication)), Policies.BitpayAuthentication));
                     }
+                    else if (success is false)
+                    {
+                        return AuthenticateResult.Fail("Invalid credentials");
+                    }
+                    // else if (success is null)
                 }
                 return AuthenticateResult.NoResult();
             }

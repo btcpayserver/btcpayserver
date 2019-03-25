@@ -57,26 +57,28 @@ namespace BTCPayServer.Security
                     List<Claim> claims = new List<Claim>();
                     var bitpayAuth = Context.Request.HttpContext.GetBitpayAuth();
                     string storeId = null;
-                    bool hasCredentials = false;
+                    bool anonymous = true;
                     bool? success = null;
                     if (!string.IsNullOrEmpty(bitpayAuth.Signature) && !string.IsNullOrEmpty(bitpayAuth.Id))
                     {
                         var result = await CheckBitId(Context.Request.HttpContext, bitpayAuth.Signature, bitpayAuth.Id, claims);
                         storeId = result.StoreId;
                         success = result.SuccessAuth;
-                        hasCredentials = true;
+                        anonymous = false;
                     }
                     else if (!string.IsNullOrEmpty(bitpayAuth.Authorization))
                     {
                         storeId = await CheckLegacyAPIKey(Context.Request.HttpContext, bitpayAuth.Authorization);
                         success = storeId != null;
-                        hasCredentials = true;
+                        anonymous = false;
                     }
                     else
                     {
                         if (Context.Request.HttpContext.Request.Query.TryGetValue("storeId", out var storeIdStringValues))
                         {
-                            storeId = storeIdStringValues.FirstOrDefault();
+                            storeId = storeIdStringValues.FirstOrDefault() ?? string.Empty;
+                            success = true;
+                            anonymous = true;
                         }
                     }
 
@@ -86,7 +88,7 @@ namespace BTCPayServer.Security
                         {
                             claims.Add(new Claim(Policies.CanCreateInvoice.Key, storeId));
                             var store = await _StoreRepository.FindStore(storeId);
-                            if (!hasCredentials && !store.GetStoreBlob().AnyoneCanInvoice)
+                            if (anonymous && !store.GetStoreBlob().AnyoneCanInvoice)
                             {
                                 return AuthenticateResult.Fail("Invalid credentials");
                             }
@@ -99,6 +101,7 @@ namespace BTCPayServer.Security
                     {
                         return AuthenticateResult.Fail("Invalid credentials");
                     }
+                    // else if (success is null)
                 }
                 return AuthenticateResult.NoResult();
             }

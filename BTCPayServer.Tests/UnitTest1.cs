@@ -1098,6 +1098,49 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Integration", "Integration")]
+        public async Task CanUseAnyoneCanCreateInvoice()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.Start();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                user.RegisterDerivationScheme("BTC");
+
+                Logs.Tester.LogInformation("StoreId without anyone can create invoice = 401");
+                var response = await tester.PayTester.HttpClient.SendAsync(new HttpRequestMessage(HttpMethod.Post, $"invoices?storeId={user.StoreId}")
+                {
+                    Content = new StringContent("{\"Price\": 5000, \"currency\": \"USD\"}", Encoding.UTF8, "application/json"),
+                });
+                Assert.Equal(401, (int)response.StatusCode);
+
+                Logs.Tester.LogInformation("No store without  anyone can create invoice = 404 because the bitpay API can't know the storeid");
+                response = await tester.PayTester.HttpClient.SendAsync(new HttpRequestMessage(HttpMethod.Post, $"invoices")
+                {
+                    Content = new StringContent("{\"Price\": 5000, \"currency\": \"USD\"}", Encoding.UTF8, "application/json"),
+                });
+                Assert.Equal(404, (int)response.StatusCode);
+
+                user.ModifyStore(s => s.AnyoneCanCreateInvoice = true);
+
+                Logs.Tester.LogInformation("Bad store with anyone can create invoice = 401");
+                response = await tester.PayTester.HttpClient.SendAsync(new HttpRequestMessage(HttpMethod.Post, $"invoices?storeId=badid")
+                {
+                    Content = new StringContent("{\"Price\": 5000, \"currency\": \"USD\"}", Encoding.UTF8, "application/json"),
+                });
+                Assert.Equal(401, (int)response.StatusCode);
+
+                Logs.Tester.LogInformation("Good store with anyone can create invoice = 200");
+                response = await tester.PayTester.HttpClient.SendAsync(new HttpRequestMessage(HttpMethod.Post, $"invoices?storeId={user.StoreId}")
+                {
+                    Content = new StringContent("{\"Price\": 5000, \"currency\": \"USD\"}", Encoding.UTF8, "application/json"),
+                });
+                Assert.Equal(200, (int)response.StatusCode);
+            }
+        }
+
+        [Fact]
+        [Trait("Integration", "Integration")]
         public void CanTweakRate()
         {
             using (var tester = ServerTester.Create())

@@ -35,6 +35,7 @@ using System.Text;
 using System.Threading;
 using Xunit;
 using BTCPayServer.Services;
+using System.Net.Http;
 
 namespace BTCPayServer.Tests
 {
@@ -120,7 +121,8 @@ namespace BTCPayServer.Tests
             File.WriteAllText(confPath, config.ToString());
 
             ServerUri = new Uri("http://" + HostName + ":" + Port + "/");
-
+            HttpClient = new HttpClient();
+            HttpClient.BaseAddress = ServerUri;
             Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
             var conf = new DefaultConfiguration() { Logger = Logs.LogProvider.CreateLogger("Console") }.CreateConfiguration(new[] { "--datadir", _Directory, "--conf", confPath, "--disable-registration", "false" });
             _Host = new WebHostBuilder()
@@ -208,6 +210,8 @@ namespace BTCPayServer.Tests
                 rateProvider.Providers.Add("bittrex", bittrex);
             }
         }
+
+        public HttpClient HttpClient { get; set; }
 
         public string HostName
         {

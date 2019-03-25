@@ -88,7 +88,8 @@ namespace BTCPayServer.Security
                         {
                             claims.Add(new Claim(Policies.CanCreateInvoice.Key, storeId));
                             var store = await _StoreRepository.FindStore(storeId);
-                            if (anonymous && !store.GetStoreBlob().AnyoneCanInvoice)
+                            if (store == null ||
+                               (anonymous && !store.GetStoreBlob().AnyoneCanInvoice))
                             {
                                 return AuthenticateResult.Fail("Invalid credentials");
                             }

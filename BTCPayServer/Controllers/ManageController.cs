@@ -113,6 +113,7 @@ namespace BTCPayServer.Controllers
                 {
                     throw new ApplicationException($"Unexpected error occurred setting email for user with ID '{user.Id}'.");
                 }
+                await _userManager.SetUserNameAsync(user, model.Username);
             }
 
             var phoneNumber = user.PhoneNumber;

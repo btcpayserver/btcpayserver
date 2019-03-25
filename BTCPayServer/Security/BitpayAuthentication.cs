@@ -57,18 +57,27 @@ namespace BTCPayServer.Security
                     List<Claim> claims = new List<Claim>();
                     var bitpayAuth = Context.Request.HttpContext.GetBitpayAuth();
                     string storeId = null;
-
+                    bool hasCredentials = false;
                     bool? success = null;
                     if (!string.IsNullOrEmpty(bitpayAuth.Signature) && !string.IsNullOrEmpty(bitpayAuth.Id))
                     {
                         var result = await CheckBitId(Context.Request.HttpContext, bitpayAuth.Signature, bitpayAuth.Id, claims);
                         storeId = result.StoreId;
                         success = result.SuccessAuth;
+                        hasCredentials = true;
                     }
                     else if (!string.IsNullOrEmpty(bitpayAuth.Authorization))
                     {
                         storeId = await CheckLegacyAPIKey(Context.Request.HttpContext, bitpayAuth.Authorization);
                         success = storeId != null;
+                        hasCredentials = true;
+                    }
+                    else
+                    {
+                        if (Context.Request.HttpContext.Request.Query.TryGetValue("storeId", out var storeIdStringValues))
+                        {
+                            storeId = storeIdStringValues.FirstOrDefault();
+                        }
                     }
 
                     if (success is true)
@@ -77,6 +86,10 @@ namespace BTCPayServer.Security
                         {
                             claims.Add(new Claim(Policies.CanCreateInvoice.Key, storeId));
                             var store = await _StoreRepository.FindStore(storeId);
+                            if (!hasCredentials && !store.GetStoreBlob().AnyoneCanInvoice)
+                            {
+                                return AuthenticateResult.Fail("Invalid credentials");
+                            }
                             store.AdditionalClaims.AddRange(claims);
                             Context.Request.HttpContext.SetStoreData(store);
                         }
@@ -86,7 +99,6 @@ namespace BTCPayServer.Security
                     {
                         return AuthenticateResult.Fail("Invalid credentials");
                     }
-                    // else if (success is null)
                 }
                 return AuthenticateResult.NoResult();
             }

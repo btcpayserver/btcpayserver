@@ -5,7 +5,7 @@
 
 
 <h4>@ViewData["Title"]</h4>
-<partial name="_StatusMessage" for="@TempData["TempDataProperty-StatusMessage"]" />
+<partial name="_StatusMessage" for="@TempData["TempDataProperty-StatusMessage"]"/>
 <div class="row">
     <div class="col-md-6">
         <div asp-validation-summary="All" class="text-danger"></div>
@@ -23,23 +23,23 @@
         <div class="form-group">
             <table class="table table-sm table-responsive-md">
                 <thead>
-                    <tr>
-                        <th>Crypto</th>
-                        <th>Access Type</th>
-                        <th style="text-align:right">Actions</th>
-                    </tr>
+                <tr>
+                    <th>Crypto</th>
+                    <th>Access Type</th>
+                    <th style="text-align: right">Actions</th>
+                </tr>
                 </thead>
                 <tbody>
-                    @foreach (var s in Model.ExternalServices)
-                    {
-                        <tr>
-                            <td>@s.CryptoCode</td>
-                            <td>@s.DisplayName</td>
-                            <td style="text-align:right">
-                                <a asp-action="Service" asp-route-serviceName="@s.ServiceName" asp-route-cryptoCode="@s.CryptoCode">See information</a>
-                            </td>
-                        </tr>
-                    }
+                @foreach (var s in Model.ExternalServices)
+                {
+                    <tr>
+                        <td>@s.CryptoCode</td>
+                        <td>@s.DisplayName</td>
+                        <td style="text-align: right">
+                            <a asp-action="Service" asp-route-serviceName="@s.ServiceName" asp-route-cryptoCode="@s.CryptoCode">See information</a>
+                        </td>
+                    </tr>
+                }
                 </tbody>
             </table>
         </div>
@@ -57,21 +57,21 @@
             <div class="form-group">
                 <table class="table table-sm table-responsive-md">
                     <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th style="text-align:right">Actions</th>
-                        </tr>
+                    <tr>
+                        <th>Name</th>
+                        <th style="text-align: right">Actions</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        @foreach (var s in Model.OtherExternalServices)
-                        {
-                            <tr>
-                                <td>@s.Name</td>
-                                <td style="text-align:right">
-                                    <a href="@s.Link" target="_blank">See information</a>
-                                </td>
-                            </tr>
-                        }
+                    @foreach (var s in Model.OtherExternalServices)
+                    {
+                        <tr>
+                            <td>@s.Name</td>
+                            <td style="text-align: right">
+                                <a href="@s.Link" target="_blank">See information</a>
+                            </td>
+                        </tr>
+                    }
                     </tbody>
                 </table>
             </div>
@@ -90,21 +90,21 @@
             <div class="form-group">
                 <table class="table table-sm table-responsive-md">
                     <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th style="text-align:right">Actions</th>
-                        </tr>
+                    <tr>
+                        <th>Name</th>
+                        <th style="text-align: right">Actions</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        @foreach (var s in Model.TorHttpServices)
-                        {
-                            <tr>
-                                <td>@s.Name</td>
-                                <td style="text-align:right">
-                                    <a href="@s.Link" target="_blank">See information</a>
-                                </td>
-                            </tr>
-                        }
+                    @foreach (var s in Model.TorHttpServices)
+                    {
+                        <tr>
+                            <td>@s.Name</td>
+                            <td style="text-align: right">
+                                <a href="@s.Link" target="_blank">See information</a>
+                            </td>
+                        </tr>
+                    }
                     </tbody>
                 </table>
             </div>
@@ -123,25 +123,54 @@
             <div class="form-group">
                 <table class="table table-sm table-responsive-md">
                     <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th style="text-align:right">Actions</th>
-                        </tr>
+                    <tr>
+                        <th>Name</th>
+                        <th style="text-align: right">Actions</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        @foreach (var s in Model.TorOtherServices)
-                        {
-                            <tr>
-                                <td>@s.Name</td>
-                                <td style="text-align:right">@s.Link</td>
-                            </tr>
-                        }
+                    @foreach (var s in Model.TorOtherServices)
+                    {
+                        <tr>
+                            <td>@s.Name</td>
+                            <td style="text-align: right">@s.Link</td>
+                        </tr>
+                    }
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 }
+<div class="row">
+    <div class="col-md-8">
+        <h4>External storage services</h4>
+        <div class="form-group">
+            <span>Integrated Storage providers to store file uploads from btcpay</span>
+        </div>
+        <div class="form-group">
+            <table class="table table-sm table-responsive-md">
+                <thead>
+                <tr>
+                    <th>Name</th>
+                    <th style="text-align: right">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var s in Model.ExternalStorageServices)
+                {
+                    <tr>
+                        <td>@s.Name</td>
+                        <td style="text-align: right">
+                            <a href="@s.Link">Edit</a>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")

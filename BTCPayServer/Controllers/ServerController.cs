@@ -505,7 +505,7 @@ namespace BTCPayServer.Controllers
         }
 
         [Route("server/services")]
-        public IActionResult Services()
+        public async Task<IActionResult> Services()
         {
             var result = new ServicesViewModel();
             result.ExternalServices = _Options.ExternalServices;
@@ -544,6 +544,13 @@ namespace BTCPayServer.Controllers
                     });
                 }
             }
+
+            var storageSettings = await _SettingsRepository.GetSettingAsync<StorageSettings>();
+            result.ExternalStorageServices.Add(new ServicesViewModel.OtherExternalService()
+            {
+                Name = storageSettings == null? "Not set": storageSettings.Provider.ToString(),
+                Link = Url.Action("Storage")
+            });
             return View(result);
         }
 

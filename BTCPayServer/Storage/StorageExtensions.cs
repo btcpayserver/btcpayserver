@@ -32,10 +32,11 @@ namespace BTCPayServer.Storage
             {
                 Directory.CreateDirectory(dir);
             }
+
             builder.UseStaticFiles(new StaticFileOptions()
             {
                 ServeUnknownFileTypes = true,
-                RequestPath = new PathString("/Storage"),
+                RequestPath = new PathString($"/{FileSystemFileProviderService.LocalStorageDirectoryName}"),
                 FileProvider = new PhysicalFileProvider(dir)
             });
         }

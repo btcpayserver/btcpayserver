@@ -47,8 +47,18 @@
                 <li class="list-group-item">
                     @file.FileName
                 </li>
-                <li class="list-group-item">
-                    <a href="@Model.FileUrl" target="_blank">@Model.FileUrl</a>
+               
+                <li class="list-group-item d-flex justify-content-between">
+                    <span>Url: </span>
+                    <a asp-action="GetFile" asp-controller="Storage" asp-route-fileId="@Model.SelectedFileId" target="_blank">
+                        @Url.Action("GetFile", "Storage", new
+                        {
+                            fileId = Model.SelectedFileId
+                        }, Context.Request.Scheme, Context.Request.Host.ToString(), Context.Request.PathBase.ToString())
+                    </a>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span>Direct Url:</span> <a href="@Model.DirectFileUrl" target="_blank">@Model.DirectFileUrl</a>
                 </li>
             </ul>
         </div>
@@ -75,21 +85,21 @@
         </form>
     </div>
 
-    @section Scripts {
-        <script>
-            $(document).ready(function() {
-    
-                $('.custom-file-input').on('change',
-                    function() {
-                        var label = $(this).next('label');
-                        if (document.getElementById("file").files.length > 0) {
-                            var fileName = document.getElementById("file").files[0].name;
-                            label.addClass("selected").html(fileName);
-                        } else {
-                            label.removeClass("selected").html("Choose file");
-                        }
-                    });
-            });
-        </script>
-    }    
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+
+            $('.custom-file-input').on('change',
+                function() {
+                    var label = $(this).next('label');
+                    if (document.getElementById("file").files.length > 0) {
+                        var fileName = document.getElementById("file").files[0].name;
+                        label.addClass("selected").html(fileName);
+                    } else {
+                        label.removeClass("selected").html("Choose file");
+                    }
+                });
+        });
+    </script>
+}
 }

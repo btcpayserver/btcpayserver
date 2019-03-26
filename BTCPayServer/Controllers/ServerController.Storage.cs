@@ -28,7 +28,7 @@ namespace BTCPayServer.Controllers
             {
                 Files = await _StoredFileRepository.GetFiles(),
                 SelectedFileId = fileId,
-                FileUrl = string.IsNullOrEmpty(fileId) ? null : await _FileService.GetFileUrl(fileId),
+                DirectFileUrl = string.IsNullOrEmpty(fileId) ? null : await _FileService.GetFileUrl(fileId),
                 StorageConfigured =  (await _SettingsRepository.GetSettingAsync<StorageSettings>()) != null
             });
         }

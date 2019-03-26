@@ -26,10 +26,11 @@ namespace BTCPayServer.Storage.Services.Providers.FileSystemStorage
             _Options = options;
             _HttpContextAccessor = httpContextAccessor;
         }
+        public const string LocalStorageDirectoryName = "LocalStorage";
 
         public static string GetStorageDir(BTCPayServerOptions options)
         {
-            return Path.Combine(options.DataDir, "Storage");
+            return Path.Combine(options.DataDir, LocalStorageDirectoryName);
         }
 
         public override StorageProvider StorageProvider()
@@ -56,7 +57,7 @@ namespace BTCPayServer.Storage.Services.Providers.FileSystemStorage
                     ? _BtcPayServerEnvironment.OnionUrl
                     : $"{_BtcPayServerEnvironment.ExpectedProtocol}://" +
                       $"{_BtcPayServerEnvironment.ExpectedHost}" +
-                      $"{_Options.RootPath}Storage";
+                      $"{_Options.RootPath}{LocalStorageDirectoryName}";
             return baseResult.Replace(GetStorageDir(_Options), url,
                 StringComparison.InvariantCultureIgnoreCase);
         }

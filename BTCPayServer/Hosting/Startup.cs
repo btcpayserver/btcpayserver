@@ -37,6 +37,9 @@ using BTCPayServer.PaymentRequest;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Storage;
+using BTCPayServer.Storage.Services.Providers.FileSystemStorage;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.FileProviders;
 
 namespace BTCPayServer.Hosting
 {
@@ -171,6 +174,7 @@ namespace BTCPayServer.Hosting
             app.UseCors();
             app.UsePayServer();
             app.UseStaticFiles();
+            app.UseProviderStorage(options);
             app.UseAuthentication();
             app.UseSession();
             app.UseSignalR(route =>

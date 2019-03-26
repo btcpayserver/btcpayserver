@@ -90,7 +90,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("server/storage")]
-        public async Task<IActionResult> Storage(StorageSettings viewModel)
+        public IActionResult Storage(StorageSettings viewModel)
         {
             return RedirectToAction("StorageProvider", "Server", new
             {

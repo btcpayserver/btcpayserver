@@ -13,11 +13,6 @@ namespace BTCPayServer.Storage.Services.Providers
     {
         public abstract StorageProvider StorageProvider();
 
-        public async Task<bool> Match(StorageProvider provider)
-        {
-            return provider == StorageProvider();
-        }
-
         public virtual async Task<StoredFile> AddFile(IFormFile file, StorageSettings configuration)
         {
             var storageFileName = $"{Guid.NewGuid()}_{file.FileName}";

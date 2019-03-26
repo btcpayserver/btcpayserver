@@ -13,17 +13,7 @@
 <div class="row">
     <div class="col-lg-6">
         <form method="post">
-            <div class="form-group">
-                <label asp-for="ContainerName"></label>
-                <input class="form-control" asp-for="ContainerName" />
-                <span asp-validation-for="ContainerName" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="BasePath"></label>
-                <input class="form-control" asp-for="BasePath"/>
-                <span asp-validation-for="BasePath" class="text-danger"></span>
-            </div>
-
+            <p>Nothing to configure here. Data will be saved in the btcpay data directory.</p>
             <button type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
             <a asp-action="Storage" asp-route-forceChoice="true" >Change Storage provider</a>
         </form>

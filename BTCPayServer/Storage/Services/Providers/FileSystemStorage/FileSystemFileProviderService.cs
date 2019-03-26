@@ -15,18 +15,21 @@ namespace BTCPayServer.Storage.Services.Providers.FileSystemStorage
     public class
         FileSystemFileProviderService : BaseTwentyTwentyStorageFileProviderServiceBase<FileSystemStorageConfiguration>
     {
-        private readonly IHostingEnvironment _HostingEnvironment;
         private readonly BTCPayServerEnvironment _BtcPayServerEnvironment;
         private readonly BTCPayServerOptions _Options;
         private readonly IHttpContextAccessor _HttpContextAccessor;
 
-        public FileSystemFileProviderService(IHostingEnvironment hostingEnvironment,
-            BTCPayServerEnvironment btcPayServerEnvironment, BTCPayServerOptions options, IHttpContextAccessor httpContextAccessor)
+        public FileSystemFileProviderService(BTCPayServerEnvironment btcPayServerEnvironment,
+            BTCPayServerOptions options, IHttpContextAccessor httpContextAccessor)
         {
-            _HostingEnvironment = hostingEnvironment;
             _BtcPayServerEnvironment = btcPayServerEnvironment;
             _Options = options;
             _HttpContextAccessor = httpContextAccessor;
+        }
+
+        public static string GetStorageDir(BTCPayServerOptions options)
+        {
+            return Path.Combine(options.DataDir, "Storage");
         }
 
         public override StorageProvider StorageProvider()
@@ -42,21 +45,19 @@ namespace BTCPayServer.Storage.Services.Providers.FileSystemStorage
         protected override Task<IStorageProvider> GetStorageProvider(FileSystemStorageConfiguration configuration)
         {
             return Task.FromResult<IStorageProvider>(
-                new LocalStorageProvider(Path.Combine(_HostingEnvironment.WebRootPath, configuration.BasePath)));
+                new LocalStorageProvider(GetStorageDir(_Options)));
         }
 
         public override async Task<string> GetFileUrl(StoredFile storedFile, StorageSettings configuration)
         {
-            
             var baseResult = await base.GetFileUrl(storedFile, configuration);
             var url =
-                _HttpContextAccessor.HttpContext.Request.IsOnion()?
-                    _BtcPayServerEnvironment.OnionUrl :
-                
-                $"{_BtcPayServerEnvironment.ExpectedProtocol}://" +
-                $"{_BtcPayServerEnvironment.ExpectedHost}" +
-                $"{_Options.RootPath}".TrimEnd('/');
-            return baseResult.Replace(_HostingEnvironment.WebRootPath, url,
+                _HttpContextAccessor.HttpContext.Request.IsOnion()
+                    ? _BtcPayServerEnvironment.OnionUrl
+                    : $"{_BtcPayServerEnvironment.ExpectedProtocol}://" +
+                      $"{_BtcPayServerEnvironment.ExpectedHost}" +
+                      $"{_Options.RootPath}Storage";
+            return baseResult.Replace(GetStorageDir(_Options), url,
                 StringComparison.InvariantCultureIgnoreCase);
         }
     }

@@ -333,6 +333,8 @@ namespace BTCPayServer.HostedServices
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
+            if (_Cts == null)
+                return Task.CompletedTask;
             leases.Dispose();
             _Cts.Cancel();
             var waitingPendingInvoices = _WaitingInvoices ?? Task.CompletedTask;

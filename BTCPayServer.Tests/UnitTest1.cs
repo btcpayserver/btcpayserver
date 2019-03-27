@@ -462,14 +462,14 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
+        [Fact(Timeout = 60 * 1000)]
         [Trait("Integration", "Integration")]
         public async Task CanSendLightningPaymentCLightning()
         {
             await ProcessLightningPayment(LightningConnectionType.CLightning);
         }
 
-        [Fact]
+        [Fact(Timeout = 60 * 1000)]
         [Trait("Integration", "Integration")]
         public async Task CanSendLightningPaymentCharge()
         {
@@ -516,7 +516,9 @@ namespace BTCPayServer.Tests
                 ItemDesc = "Some description"
             });
             await Task.Delay(TimeSpan.FromMilliseconds(1000)); // Give time to listen the new invoices
+            Logs.Tester.LogInformation($"Trying to send Lightning payment to {invoice.Id}");
             await tester.SendLightningPaymentAsync(invoice);
+            Logs.Tester.LogInformation($"Lightning payment to {invoice.Id} is sent");
             await TestUtils.EventuallyAsync(async () =>
             {
                 var localInvoice = await user.BitPay.GetInvoiceAsync(invoice.Id);

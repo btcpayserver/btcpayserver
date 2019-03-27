@@ -23,6 +23,7 @@ using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Lightning.CLightning;
 using BTCPayServer.Lightning;
 using BTCPayServer.Services;
+using BTCPayServer.Tests.Logging;
 
 namespace BTCPayServer.Tests
 {
@@ -85,9 +86,11 @@ namespace BTCPayServer.Tests
         /// Connect a customer LN node to the merchant LN node
         /// </summary>
         /// <returns></returns>
-        public Task EnsureChannelsSetup()
+        public async Task EnsureChannelsSetup()
         {
-            return BTCPayServer.Lightning.Tests.ConnectChannels.ConnectAll(ExplorerNode, GetLightningSenderClients(), GetLightningDestClients());
+            Logs.Tester.LogInformation("Connecting channels");
+            await BTCPayServer.Lightning.Tests.ConnectChannels.ConnectAll(ExplorerNode, GetLightningSenderClients(), GetLightningDestClients()).ConfigureAwait(false);
+            Logs.Tester.LogInformation("Channels connected");
         }
 
         private IEnumerable<ILightningClient> GetLightningSenderClients()

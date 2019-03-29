@@ -45,7 +45,14 @@ namespace BTCPayServer.HostedServices
             {
 
             }
-            await BackgroundJobClient.WaitAllRunning(cancellationToken);
+            try
+            {
+                await BackgroundJobClient.WaitAllRunning(cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+
+            }
         }
     }
 
@@ -91,6 +98,8 @@ namespace BTCPayServer.HostedServices
             Task[] processing = null;
             lock (_Processing)
             {
+                if (_Processing.Count == 0)
+                    return;
                 processing = _Processing.ToArray();
             }
 

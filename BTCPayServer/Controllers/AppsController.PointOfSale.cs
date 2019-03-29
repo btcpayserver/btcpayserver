@@ -77,6 +77,8 @@ namespace BTCPayServer.Controllers
 
 
             public string CustomCSSLink { get; set; }
+            public string NotificationEmail { get; set; }
+            public string NotificationUrl { get; set; }
         }
 
         [HttpGet]
@@ -101,7 +103,9 @@ namespace BTCPayServer.Controllers
                 CustomButtonText = settings.CustomButtonText ?? PointOfSaleSettings.CUSTOM_BUTTON_TEXT_DEF,
                 CustomTipText = settings.CustomTipText ?? PointOfSaleSettings.CUSTOM_TIP_TEXT_DEF,
                 CustomTipPercentages = settings.CustomTipPercentages != null ? string.Join(",", settings.CustomTipPercentages) : string.Join(",", PointOfSaleSettings.CUSTOM_TIP_PERCENTAGES_DEF),
-                CustomCSSLink = settings.CustomCSSLink
+                CustomCSSLink = settings.CustomCSSLink,
+                NotificationEmail = settings.NotificationEmail,
+                NotificationUrl = settings.NotificationUrl
             };
             if (HttpContext?.Request != null)
             {

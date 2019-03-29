@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Services.Apps;
+using BTCPayServer.Validation;
 
 namespace BTCPayServer.Models.AppViewModels
 {
@@ -16,8 +17,13 @@ namespace BTCPayServer.Models.AppViewModels
         
         [Display(Name = "Featured Image")]
         public string MainImageUrl { get; set; }
-
+        
+        [Display(Name = "Callback Notification Url")] 
+        [Uri]
         public string NotificationUrl { get; set; }
+        [Display(Name = "Invoice Email Notification")]
+        [EmailAddress]
+        public string NotificationEmail { get; set; }
 
         [Required]
         [Display(Name = "Allow crowdfund to be publicly visible (still visible to you)")]

@@ -5,4 +5,4 @@ git merge master
 git checkout master
 git tag -d "stable"
 git tag -a "stable" -m "stable"
-git push --tags --force
+git push origin latest master --tags --force

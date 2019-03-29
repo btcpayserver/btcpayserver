@@ -59,6 +59,8 @@ namespace BTCPayServer.HostedServices
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
+            if (_Cts == null)
+                return Task.CompletedTask;
             _Cts.Cancel();
             return Task.WhenAll(_Tasks);
         }

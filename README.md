@@ -34,16 +34,18 @@ Thanks to the [apps](https://github.com/btcpayserver/btcpayserver-doc/blob/maste
 * Self-hosted
 * SegWit support
 * Lightning Network support (LND and c-lightning)
-* Altcoin support
+* Tor support
+* Opt-in Altcoin integrations
 * Full compatibility with BitPay API (easy migration)
 * Process payments for others
 * Easy-embeddable Payment buttons
 * Point of sale app
 * Crowdfunding app
+* Payment requests
 
 ## Supported Altcoins
 
-Bitcoin is the only focus of the project and its core developers. However, support is implemented for several altcoins:
+Bitcoin is the only focus of the project and its core developers. However, opt in integrations for several altcoins maintained by altcoins community is implemented for several altcoins:
 
 * Bitcoin Gold (BTG)
 * Bitcoin Plus (XBC)
@@ -70,7 +72,7 @@ For general questions, please join the community chat on [Mattermost](https://ch
 
 While the documentation advises to use docker-compose, you may want to build BTCPay yourself.
 
-First install .NET Core SDK v2.1.6 as specified by [Microsoft website](https://www.microsoft.com/net/download/dotnet-core/2.1).
+First install .NET Core SDK v2.1.9 as specified by [Microsoft website](https://www.microsoft.com/net/download/dotnet-core/2.1).
 
 On Powershell:
 ```

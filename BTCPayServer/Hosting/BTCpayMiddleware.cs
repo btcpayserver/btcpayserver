@@ -88,6 +88,9 @@ namespace BTCPayServer.Hosting
             if (!httpContext.Request.Path.HasValue)
                 return false;
 
+            // In case of anyone can create invoice, the storeId can be set explicitely
+            bitpayAuth |= httpContext.Request.Query.ContainsKey("storeid");
+
             var isJson = (httpContext.Request.ContentType ?? string.Empty).StartsWith("application/json", StringComparison.OrdinalIgnoreCase);
             var path = httpContext.Request.Path.Value;
             var method = httpContext.Request.Method;
@@ -95,7 +98,7 @@ namespace BTCPayServer.Hosting
 
             if (
                 (isCors || bitpayAuth) &&
-              (path == "/invoices" || path == "/invoices/") &&
+                (path == "/invoices" || path == "/invoices/") &&
               (isCors || (method == "POST" && isJson)))
                 return true;
 

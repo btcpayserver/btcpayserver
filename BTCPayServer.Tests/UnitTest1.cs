@@ -462,21 +462,21 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
+        [Fact(Timeout = 60 * 2 * 1000)]
         [Trait("Integration", "Integration")]
         public async Task CanSendLightningPaymentCLightning()
         {
             await ProcessLightningPayment(LightningConnectionType.CLightning);
         }
 
-        [Fact]
+        [Fact(Timeout = 60 * 2 * 1000)]
         [Trait("Integration", "Integration")]
         public async Task CanSendLightningPaymentCharge()
         {
             await ProcessLightningPayment(LightningConnectionType.Charge);
         }
 
-        [Fact(Timeout = 60 * 1000)]
+        [Fact(Timeout = 60 * 2 * 1000)]
         [Trait("Integration", "Integration")]
         public async Task CanSendLightningPaymentLnd()
         {
@@ -516,7 +516,9 @@ namespace BTCPayServer.Tests
                 ItemDesc = "Some description"
             });
             await Task.Delay(TimeSpan.FromMilliseconds(1000)); // Give time to listen the new invoices
+            Logs.Tester.LogInformation($"Trying to send Lightning payment to {invoice.Id}");
             await tester.SendLightningPaymentAsync(invoice);
+            Logs.Tester.LogInformation($"Lightning payment to {invoice.Id} is sent");
             await TestUtils.EventuallyAsync(async () =>
             {
                 var localInvoice = await user.BitPay.GetInvoiceAsync(invoice.Id);
@@ -1094,6 +1096,49 @@ namespace BTCPayServer.Tests
                 FullNotifications = true
             }, Facade.Merchant);
             return invoice2.CryptoInfo[0].Rate;
+        }
+
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public async Task CanUseAnyoneCanCreateInvoice()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.Start();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                user.RegisterDerivationScheme("BTC");
+
+                Logs.Tester.LogInformation("StoreId without anyone can create invoice = 401");
+                var response = await tester.PayTester.HttpClient.SendAsync(new HttpRequestMessage(HttpMethod.Post, $"invoices?storeId={user.StoreId}")
+                {
+                    Content = new StringContent("{\"Price\": 5000, \"currency\": \"USD\"}", Encoding.UTF8, "application/json"),
+                });
+                Assert.Equal(401, (int)response.StatusCode);
+
+                Logs.Tester.LogInformation("No store without  anyone can create invoice = 404 because the bitpay API can't know the storeid");
+                response = await tester.PayTester.HttpClient.SendAsync(new HttpRequestMessage(HttpMethod.Post, $"invoices")
+                {
+                    Content = new StringContent("{\"Price\": 5000, \"currency\": \"USD\"}", Encoding.UTF8, "application/json"),
+                });
+                Assert.Equal(404, (int)response.StatusCode);
+
+                user.ModifyStore(s => s.AnyoneCanCreateInvoice = true);
+
+                Logs.Tester.LogInformation("Bad store with anyone can create invoice = 401");
+                response = await tester.PayTester.HttpClient.SendAsync(new HttpRequestMessage(HttpMethod.Post, $"invoices?storeId=badid")
+                {
+                    Content = new StringContent("{\"Price\": 5000, \"currency\": \"USD\"}", Encoding.UTF8, "application/json"),
+                });
+                Assert.Equal(401, (int)response.StatusCode);
+
+                Logs.Tester.LogInformation("Good store with anyone can create invoice = 200");
+                response = await tester.PayTester.HttpClient.SendAsync(new HttpRequestMessage(HttpMethod.Post, $"invoices?storeId={user.StoreId}")
+                {
+                    Content = new StringContent("{\"Price\": 5000, \"currency\": \"USD\"}", Encoding.UTF8, "application/json"),
+                });
+                Assert.Equal(200, (int)response.StatusCode);
+            }
         }
 
         [Fact]
@@ -2327,15 +2372,22 @@ donation:
                 Assert.NotNull(exchangeRates);
                 Assert.NotEmpty(exchangeRates);
                 Assert.NotEmpty(exchangeRates.ByExchange[result.ExpectedName]);
-
-                // This check if the currency pair is using right currency pair
-                Assert.Contains(exchangeRates.ByExchange[result.ExpectedName],
+                if (result.ExpectedName == "bitbank")
+                {
+                    Assert.Contains(exchangeRates.ByExchange[result.ExpectedName],
+                        e => e.CurrencyPair == new CurrencyPair("BTC", "JPY") && e.BidAsk.Bid > 100m); // 1BTC will always be more than 100JPY
+                }
+                else
+                {
+                    // This check if the currency pair is using right currency pair
+                    Assert.Contains(exchangeRates.ByExchange[result.ExpectedName],
                         e => (e.CurrencyPair == new CurrencyPair("BTC", "USD") ||
                                e.CurrencyPair == new CurrencyPair("BTC", "EUR") ||
                                e.CurrencyPair == new CurrencyPair("BTC", "USDT") ||
                                e.CurrencyPair == new CurrencyPair("BTC", "CAD"))
                                && e.BidAsk.Bid > 1.0m // 1BTC will always be more than 1USD
                                );
+                }
             }
             // Kraken emit one request only after first GetRates
             factory.Providers["kraken"].GetRatesAsync(default).GetAwaiter().GetResult();

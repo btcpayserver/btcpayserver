@@ -113,6 +113,7 @@ namespace BTCPayServer.Services.Rates
             Providers.Add(CoinAverageRateProvider.CoinAverageName, new CoinAverageRateProvider() { Exchange = CoinAverageRateProvider.CoinAverageName, HttpClient = _httpClientFactory?.CreateClient("EXCHANGE_COINAVERAGE"), Authenticator = _CoinAverageSettings });
             Providers.Add("kraken", new KrakenExchangeRateProvider() { HttpClient = _httpClientFactory?.CreateClient("EXCHANGE_KRAKEN") });
             Providers.Add("bylls", new ByllsRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_BYLLS")));
+            Providers.Add("bitbank", new BitbankRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_BITBANK")));
 
             // Those exchanges make multiple requests when calling GetTickers so we remove them
             //DirectProviders.Add("gdax", new ExchangeSharpRateProvider("gdax", new ExchangeGdaxAPI()));
@@ -168,9 +169,9 @@ namespace BTCPayServer.Services.Rates
             }
 
             // Add other exchanges supported here
-            exchanges.Add(new CoinAverageExchange(CoinAverageRateProvider.CoinAverageName, "Coin Average"));
-            exchanges.Add(new CoinAverageExchange("bylls", "Bylls"));
-            exchanges.Add(new CoinAverageExchange("cryptopia", "Cryptopia"));
+            exchanges.Add(new CoinAverageExchange(CoinAverageRateProvider.CoinAverageName, "Coin Average", $"https://apiv2.bitcoinaverage.com/indices/global/ticker/short"));
+            exchanges.Add(new CoinAverageExchange("bylls", "Bylls", "https://bylls.com/api/price?from_currency=BTC&to_currency=CAD"));
+            exchanges.Add(new CoinAverageExchange("bitbank", "Bitbank", "https://public.bitbank.cc/prices"));
 
             return exchanges;
         }

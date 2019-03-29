@@ -36,7 +36,6 @@ using BTCPayServer.Authentication;
 using Microsoft.Extensions.Caching.Memory;
 using BTCPayServer.Logging;
 using BTCPayServer.HostedServices;
-using Meziantou.AspNetCore.BundleTagHelpers;
 using System.Security.Claims;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Payments.Changelly;
@@ -48,6 +47,7 @@ using NBXplorer.DerivationStrategy;
 using NicolasDorier.RateLimits;
 using Npgsql;
 using BTCPayServer.Services.Apps;
+using BundlerMinifier.TagHelpers;
 
 namespace BTCPayServer.Hosting
 {
@@ -218,7 +218,7 @@ namespace BTCPayServer.Hosting
             services.AddAuthorization(o => Policies.AddBTCPayPolicies(o));
             BitpayAuthentication.AddAuthentication(services);
 
-            services.AddBundles();
+            services.AddSingleton<IBundleProvider, ResourceBundleProvider>();
             services.AddTransient<BundleOptions>(provider =>
             {
                 var opts = provider.GetRequiredService<BTCPayServerOptions>();

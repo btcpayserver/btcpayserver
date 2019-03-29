@@ -57,38 +57,52 @@ namespace BTCPayServer.Security
                     List<Claim> claims = new List<Claim>();
                     var bitpayAuth = Context.Request.HttpContext.GetBitpayAuth();
                     string storeId = null;
-
+                    bool anonymous = true;
                     bool? success = null;
                     if (!string.IsNullOrEmpty(bitpayAuth.Signature) && !string.IsNullOrEmpty(bitpayAuth.Id))
                     {
                         var result = await CheckBitId(Context.Request.HttpContext, bitpayAuth.Signature, bitpayAuth.Id, claims);
                         storeId = result.StoreId;
                         success = result.SuccessAuth;
+                        anonymous = false;
                     }
                     else if (!string.IsNullOrEmpty(bitpayAuth.Authorization))
                     {
                         storeId = await CheckLegacyAPIKey(Context.Request.HttpContext, bitpayAuth.Authorization);
                         success = storeId != null;
+                        anonymous = false;
+                    }
+                    else
+                    {
+                        if (Context.Request.HttpContext.Request.Query.TryGetValue("storeId", out var storeIdStringValues))
+                        {
+                            storeId = storeIdStringValues.FirstOrDefault() ?? string.Empty;
+                            success = true;
+                            anonymous = true;
+                        }
                     }
 
-                    if (success.HasValue)
+                    if (success is true)
                     {
-                        if (success.Value)
+                        if (storeId != null)
                         {
-                            if (storeId != null)
+                            claims.Add(new Claim(Policies.CanCreateInvoice.Key, storeId));
+                            var store = await _StoreRepository.FindStore(storeId);
+                            if (store == null ||
+                               (anonymous && !store.GetStoreBlob().AnyoneCanInvoice))
                             {
-                                claims.Add(new Claim(Policies.CanCreateInvoice.Key, storeId));
-                                var store = await _StoreRepository.FindStore(storeId);
-                                store.AdditionalClaims.AddRange(claims);
-                                Context.Request.HttpContext.SetStoreData(store);
+                                return AuthenticateResult.Fail("Invalid credentials");
                             }
-                            return AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(new ClaimsIdentity(claims, Policies.BitpayAuthentication)), Policies.BitpayAuthentication));
+                            store.AdditionalClaims.AddRange(claims);
+                            Context.Request.HttpContext.SetStoreData(store);
                         }
-                        else
-                        {
-                            return AuthenticateResult.Fail("Invalid credentials");
-                        }
+                        return AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(new ClaimsIdentity(claims, Policies.BitpayAuthentication)), Policies.BitpayAuthentication));
                     }
+                    else if (success is false)
+                    {
+                        return AuthenticateResult.Fail("Invalid credentials");
+                    }
+                    // else if (success is null)
                 }
                 return AuthenticateResult.NoResult();
             }

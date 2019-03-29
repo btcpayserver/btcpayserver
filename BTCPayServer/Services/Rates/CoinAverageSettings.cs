@@ -23,20 +23,18 @@ namespace BTCPayServer.Services.Rates
 
     public class CoinAverageExchange
     {
-        public CoinAverageExchange(string name, string display)
+        public CoinAverageExchange(string name, string display, string url)
         {
             Name = name;
             Display = display;
+            Url = url;
         }
         public string Name { get; set; }
         public string Display { get; set; }
         public string Url
         {
-            get
-            {
-                return Name == CoinAverageRateProvider.CoinAverageName ? $"https://apiv2.bitcoinaverage.com/indices/global/ticker/short"
-                                     : $"https://apiv2.bitcoinaverage.com/exchanges/{Name}";
-            }
+            get;
+            set;
         }
     }
     public class CoinAverageExchanges : Dictionary<string, CoinAverageExchange>
@@ -47,7 +45,11 @@ namespace BTCPayServer.Services.Rates
 
         public void Add(CoinAverageExchange exchange)
         {
-            TryAdd(exchange.Name, exchange);
+            if (!TryAdd(exchange.Name, exchange))
+            {
+                this.Remove(exchange.Name);
+                this.Add(exchange.Name, exchange);
+            }
         }
     }
     public class CoinAverageSettings : ICoinAverageAuthenticator
@@ -84,7 +86,6 @@ namespace BTCPayServer.Services.Rates
                 (DisplayName: "Coincheck", Name: "coincheck"),
                 (DisplayName: "Bittylicious", Name: "bittylicious"),
                 (DisplayName: "Gemini", Name: "gemini"),
-                (DisplayName: "QuadrigaCX", Name: "quadrigacx"),
                 (DisplayName: "Bit2C", Name: "bit2c"),
                 (DisplayName: "Luno", Name: "luno"),
                 (DisplayName: "Negocie Coins", Name: "negociecoins"),
@@ -122,7 +123,7 @@ namespace BTCPayServer.Services.Rates
                 (DisplayName: "Bitso", Name: "bitso"),
                 })
             {
-                AvailableExchanges.TryAdd(item.Name, new CoinAverageExchange(item.Name, item.DisplayName));
+                AvailableExchanges.TryAdd(item.Name, new CoinAverageExchange(item.Name, item.DisplayName, $"https://apiv2.bitcoinaverage.com/exchanges/{item.Name}"));
             }
         }
 

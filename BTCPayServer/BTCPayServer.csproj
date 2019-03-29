@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
-		<Version>1.0.3.86</Version>
+		<Version>1.0.3.89</Version>
     <NoWarn>NU1701,CA1816,CA1308,CA1810,CA2208</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
@@ -30,15 +30,17 @@
     <None Remove="Currencies.txt" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="bundleconfig.json" />
     <EmbeddedResource Include="Currencies.txt" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="BTCPayServer.Lightning.All" Version="1.1.0.14" />
-    <PackageReference Include="BuildBundlerMinifier" Version="2.7.385" />
+    <PackageReference Include="BuildBundlerMinifier" Version="2.9.406" />
+    <PackageReference Include="BundlerMinifier.Core" Version="2.9.406" />
+    <PackageReference Include="BundlerMinifier.TagHelpers" Version="2.9.406" />
     <PackageReference Include="DigitalRuby.ExchangeSharp" Version="0.5.3" />
     <PackageReference Include="HtmlSanitizer" Version="4.0.199" />
     <PackageReference Include="LedgerWallet" Version="2.0.0.3" />
-    <PackageReference Include="Meziantou.AspNetCore.BundleTagHelpers" Version="2.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.1.4" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.2" />
     <PackageReference Include="Microsoft.NetCore.Analyzers" Version="2.6.2">
@@ -67,7 +69,7 @@
   </ItemGroup>
 
 	<ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.6" />
+    <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.9" />
 		<PackageReference Include="YamlDotNet" Version="5.2.1" />
 	</ItemGroup>
 

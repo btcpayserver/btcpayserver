@@ -1,0 +1,49 @@
+﻿@model PaymentModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <META NAME="robots" CONTENT="noindex,nofollow">
+    <title>@Model.HtmlTitle</title>
+</head>
+<body>
+        <h1>Pay with @Model.StoreName</h1>
+        @if (Model.Status == "new")
+        {
+            <div>
+                <p>To complete payment, please send <b>@Model.BtcDue @Model.CryptoCode</b> to <b>@Model.BtcAddress</b></p>
+                <p>Time remaining: @Model.TimeLeft</p>
+                <p><a href="@Model.InvoiceBitcoinUrl">@Model.InvoiceBitcoinUrl</a></p>
+            </div>
+        }
+        else if (Model.Status == "paid" || Model.Status == "complete" || Model.Status == "confirmed")
+        {
+            <div>
+                <p>This invoice has been paid</p>
+            </div>
+        }
+        else if (Model.Status == "expired" || Model.Status == "invalid")
+        {
+            <div>
+                <p>This invoice has expired</p>
+            </div>
+        }
+        else
+        {
+            <div>
+                <p>Non-supported state of invoice</p>
+            </div>
+        }
+
+        <hr />
+        <p>
+            <a href="/i/@Model.InvoiceId">Go back to Javascript enabled invoice</a>
+        </p>
+</body>
+</html>

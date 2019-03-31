@@ -1,4 +1,5 @@
 ﻿using System;
+using NBitcoin;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;

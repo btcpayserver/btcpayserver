@@ -1,4 +1,5 @@
 ﻿using System;
+using NBitcoin;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
@@ -107,9 +108,8 @@ namespace BTCPayServer.HostedServices
             {
                 await Task.WhenAll(processing).WithCancellation(cancellationToken);
             }
-            catch (Exception) when (cancellationToken.IsCancellationRequested)
+            catch (Exception) when (!cancellationToken.IsCancellationRequested)
             {
-                throw;
             }
         }
 

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Primitives;
+using NBitcoin;
 
 namespace BTCPayServer.Configuration
 {
@@ -39,12 +40,6 @@ namespace BTCPayServer.Configuration
                 return (T)(object)str;
             else if (typeof(T) == typeof(IPAddress))
                 return (T)(object)IPAddress.Parse(str);
-            else if (typeof(T) == typeof(EndPoint))
-            {
-                if (EndPointParser.TryParse(str, out var endpoint))
-                    return (T)(object)endpoint;
-                throw new FormatException("Invalid endpoint");
-            }
             else if (typeof(T) == typeof(IPEndPoint))
             {
                 var separator = str.LastIndexOf(":", StringComparison.InvariantCulture);

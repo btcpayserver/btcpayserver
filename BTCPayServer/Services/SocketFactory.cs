@@ -1,4 +1,5 @@
 ﻿using System;
+using NBitcoin;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -7,7 +8,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Configuration;
-using BTCPayServer.Tor;
 
 namespace BTCPayServer.Services
 {
@@ -18,7 +18,7 @@ namespace BTCPayServer.Services
         {
             _options = options;
         }
-        public async Task<Socket> ConnectAsync(EndPoint endPoint, SocketType socketType, ProtocolType protocolType, CancellationToken cancellationToken)
+        public async Task<Socket> ConnectAsync(EndPoint endPoint, CancellationToken cancellationToken)
         {
             Socket socket = null;
             try
@@ -28,11 +28,22 @@ namespace BTCPayServer.Services
                     socket = new Socket(ipEndpoint.Address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                     await socket.ConnectAsync(ipEndpoint).WithCancellation(cancellationToken);
                 }
-                else if (endPoint is OnionEndpoint onionEndpoint)
+                else if (IsTor(endPoint))
                 {
                     if (_options.SocksEndpoint == null)
                         throw new NotSupportedException("It is impossible to connect to an onion address without btcpay's -socksendpoint configured");
-                    socket = await Socks5Connect.ConnectSocksAsync(_options.SocksEndpoint, onionEndpoint, cancellationToken);
+                    if (_options.SocksEndpoint.AddressFamily != AddressFamily.Unspecified)
+                    {
+                        socket = new Socket(_options.SocksEndpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                    }
+                    else
+                    {
+                        // If the socket is a DnsEndpoint, we allow either ipv6 or ipv4
+                        socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp);
+                        socket.DualMode = true;
+                    }
+                    await socket.ConnectAsync(_options.SocksEndpoint).WithCancellation(cancellationToken);
+                    await NBitcoin.Socks.SocksHelper.Handshake(socket, endPoint, cancellationToken);
                 }
                 else if (endPoint is DnsEndPoint dnsEndPoint)
                 {
@@ -49,6 +60,15 @@ namespace BTCPayServer.Services
                 throw;
             }
             return socket;
+        }
+
+        private bool IsTor(EndPoint endPoint)
+        {
+            if (endPoint is IPEndPoint)
+                return endPoint.AsOnionDNSEndpoint() != null;
+            if (endPoint is DnsEndPoint dns)
+                return dns.Host.EndsWith(".onion", StringComparison.OrdinalIgnoreCase);
+            return false;
         }
 
         private void CloseSocket(ref Socket s)

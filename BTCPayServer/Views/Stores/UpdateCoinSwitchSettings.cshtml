@@ -30,7 +30,11 @@
                 <select asp-for="Mode" asp-items="Model.Modes" class="form-control">
                 </select>
             </div>
-
+            <div class="form-group">
+                <label asp-for="AmountMarkupPercentage"></label>
+                <input asp-for="AmountMarkupPercentage" class="form-control"/>
+                <span asp-validation-for="AmountMarkupPercentage" class="text-danger"></span>
+            </div>
             <div class="form-group">
                 <label asp-for="Enabled"></label>
                 <input asp-for="Enabled" type="checkbox" class="form-check"/>

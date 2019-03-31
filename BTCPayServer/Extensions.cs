@@ -311,31 +311,6 @@ namespace BTCPayServer
             NBitcoin.Extensions.TryAdd(ctx.Items, "BitpayAuth", value);
         }
 
-        public static async Task<T> WithCancellation<T>(this Task<T> task, CancellationToken cancellationToken)
-        {
-            using (var delayCTS = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
-            {
-                var waiting = Task.Delay(-1, delayCTS.Token);
-                var doing = task;
-                await Task.WhenAny(waiting, doing);
-                delayCTS.Cancel();
-                cancellationToken.ThrowIfCancellationRequested();
-                return await doing;
-            }
-        }
-
-        public static async Task WithCancellation(this Task task, CancellationToken cancellationToken)
-        {
-            using (var delayCTS = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
-            {
-                var waiting = Task.Delay(-1, delayCTS.Token);
-                var doing = task;
-                await Task.WhenAny(waiting, doing);
-                delayCTS.Cancel();
-                cancellationToken.ThrowIfCancellationRequested();
-            }
-        }
-
         public static (string Signature, String Id, String Authorization) GetBitpayAuth(this HttpContext ctx)
         {
             ctx.Items.TryGetValue("BitpayAuth", out object obj);

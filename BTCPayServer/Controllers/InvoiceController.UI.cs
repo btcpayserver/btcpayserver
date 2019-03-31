@@ -438,7 +438,7 @@ namespace BTCPayServer.Controllers
                 return BadRequest(ModelState);
             }
             await _InvoiceRepository.UpdateInvoice(invoiceId, data).ConfigureAwait(false);
-            return Ok();
+            return Ok("{}");
         }
 
         [HttpGet]

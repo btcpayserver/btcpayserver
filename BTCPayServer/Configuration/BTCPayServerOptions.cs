@@ -146,9 +146,15 @@ namespace BTCPayServer.Configuration
             MySQLConnectionString = conf.GetOrDefault<string>("mysql", null);
             BundleJsCss = conf.GetOrDefault<bool>("bundlejscss", true);
             TorrcFile = conf.GetOrDefault<string>("torrcfile", null);
-            SocksEndpoint = conf.GetOrDefault<EndPoint>("socksendpoint", null);
-            if (SocksEndpoint is Tor.OnionEndpoint)
-                throw new ConfigException($"socksendpoint should not be a tor endpoint");
+
+            var socksEndpointString = conf.GetOrDefault<string>("socksendpoint", null);
+            if(!string.IsNullOrEmpty(socksEndpointString))
+            {
+                if (!Utils.TryParseEndpoint(socksEndpointString, 9050, out var endpoint))
+                    throw new ConfigException("Invalid value for socksendpoint");
+                SocksEndpoint = endpoint;
+            }
+            
 
             var sshSettings = ParseSSHConfiguration(conf);
             if ((!string.IsNullOrEmpty(sshSettings.Password) || !string.IsNullOrEmpty(sshSettings.KeyFile)) && !string.IsNullOrEmpty(sshSettings.Server))

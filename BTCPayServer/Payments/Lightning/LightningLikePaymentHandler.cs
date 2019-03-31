@@ -9,8 +9,8 @@ using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
 using BTCPayServer.Services.Invoices;
-using BTCPayServer.Tor;
 using BTCPayServer.Services;
+using NBitcoin;
 
 namespace BTCPayServer.Payments.Lightning
 {
@@ -110,10 +110,10 @@ namespace BTCPayServer.Payments.Lightning
         {
             try
             {
-                if (!EndPointParser.TryParse(nodeInfo.Host, nodeInfo.Port, out var endpoint))
+                if (!Utils.TryParseEndpoint(nodeInfo.Host, nodeInfo.Port, out var endpoint))
                     throw new PaymentMethodUnavailableException($"Could not parse the endpoint {nodeInfo.Host}");
 
-                using (var tcp = await _socketFactory.ConnectAsync(endpoint, SocketType.Stream, ProtocolType.Tcp, cancellation))
+                using (var tcp = await _socketFactory.ConnectAsync(endpoint, cancellation))
                 {
                 }
             }

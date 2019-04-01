@@ -11,7 +11,7 @@
 
     <div class="col-md-8">
         <form method="post">
-            @if(!Model.ExposedSSH)
+            @if (!Model.ExposedSSH)
             {
                 <div class="form-group">
                     <h5>SSH Settings</h5>
@@ -60,6 +60,15 @@
             <div class="form-group">
                 <div class="input-group">
                     <button name="command" type="submit" class="btn btn-primary" value="update">Update</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <h5>Clean</h5>
+                <span>Click here to delete unused docker images present on your system</span>
+            </div>
+            <div class="form-group">
+                <div class="input-group">
+                    <button name="command" type="submit" class="btn btn-primary" value="clean">Clean</button>
                 </div>
             </div>
         </form>

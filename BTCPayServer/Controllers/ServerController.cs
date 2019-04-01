@@ -249,6 +249,13 @@ namespace BTCPayServer.Controllers
                     return error;
                 StatusMessage = $"The server might restart soon if an update is available...";
             }
+            else if (command == "clean")
+            {
+                var error = RunSSH(vm, $"btcpay-clean.sh");
+                if (error != null)
+                    return error;
+                StatusMessage = $"The old docker images will be cleaned soon...";
+            }
             else
             {
                 return NotFound();

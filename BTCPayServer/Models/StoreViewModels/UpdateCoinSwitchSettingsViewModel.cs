@@ -12,6 +12,12 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Integration Mode")]
         public string Mode { get; set; } = "inline";
+        
+        [Required]
+        [Range(0, 100)]
+        [Display(Name =
+            "Percentage to multiply amount requested at Coinswitch to avoid underpaid situations due to Coinswitch not guaranteeing rates. ")]
+        public decimal AmountMarkupPercentage { get; set; } = new decimal(2);
 
         public List<SelectListItem> Modes { get; } = new List<SelectListItem>
         {

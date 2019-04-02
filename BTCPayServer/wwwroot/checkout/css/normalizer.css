@@ -11513,7 +11513,7 @@ low-fee-timeline {
 }
 
 [v-cloak] > * { display:none }
-[v-cloak]::before { content: "loading…" }
+[v-cloak]::before { content: "" }
 
 
 .btn-link {

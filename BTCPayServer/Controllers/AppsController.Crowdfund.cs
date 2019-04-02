@@ -136,6 +136,7 @@ namespace BTCPayServer.Controllers
                 MainImageUrl = vm.MainImageUrl,
                 EmbeddedCSS = vm.EmbeddedCSS,
                 NotificationUrl = vm.NotificationUrl,
+                NotificationEmail = vm.NotificationEmail,
                 Tagline = vm.Tagline,
                 PerksTemplate = vm.PerksTemplate,
                 DisqusEnabled = vm.DisqusEnabled,

@@ -188,7 +188,7 @@ namespace BTCPayServer.Controllers
             //Keep compatibility with Bitpay
             invoiceId = invoiceId ?? id;
             id = invoiceId;
-            ////
+            //
 
             var model = await GetInvoiceModel(invoiceId, paymentMethodId == null ? null : PaymentMethodId.Parse(paymentMethodId));
             if (model == null)
@@ -212,6 +212,23 @@ namespace BTCPayServer.Controllers
 
             return View(nameof(Checkout), model);
         }
+
+        [HttpGet]
+        [Route("invoice-noscript")]
+        public async Task<IActionResult> CheckoutNoScript(string invoiceId, string id = null, string paymentMethodId = null)
+        {
+            //Keep compatibility with Bitpay
+            invoiceId = invoiceId ?? id;
+            id = invoiceId;
+            //
+
+            var model = await GetInvoiceModel(invoiceId, paymentMethodId == null ? null : PaymentMethodId.Parse(paymentMethodId));
+            if (model == null)
+                return NotFound();
+
+            return View(nameof(CheckoutNoScript), model);
+        }
+
 
         private async Task<PaymentModel> GetInvoiceModel(string invoiceId, PaymentMethodId paymentMethodId)
         {
@@ -316,6 +333,7 @@ namespace BTCPayServer.Controllers
                 ChangellyMerchantId = changelly?.ChangellyMerchantId,
                 ChangellyAmountDue = changellyAmountDue,
                 CoinSwitchEnabled = coinswitch != null,
+                CoinSwitchAmountMarkupPercentage = coinswitch?.AmountMarkupPercentage?? 0,
                 CoinSwitchMerchantId = coinswitch?.MerchantId,
                 CoinSwitchMode = coinswitch?.Mode,
                 StoreId = store.Id,
@@ -438,7 +456,7 @@ namespace BTCPayServer.Controllers
                 return BadRequest(ModelState);
             }
             await _InvoiceRepository.UpdateInvoice(invoiceId, data).ConfigureAwait(false);
-            return Ok();
+            return Ok("{}");
         }
 
         [HttpGet]

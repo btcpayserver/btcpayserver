@@ -28,6 +28,7 @@ namespace BTCPayServer.Controllers
             vm.MerchantId = existing.MerchantId;
             vm.Enabled = existing.Enabled;
             vm.Mode = existing.Mode;
+            vm.AmountMarkupPercentage = existing.AmountMarkupPercentage;
         }
 
         [HttpPost]
@@ -50,7 +51,8 @@ namespace BTCPayServer.Controllers
             {
                 MerchantId =  vm.MerchantId,
                 Enabled = vm.Enabled,
-                Mode = vm.Mode
+                Mode = vm.Mode,
+                AmountMarkupPercentage = vm.AmountMarkupPercentage
             };
             
             switch (command)

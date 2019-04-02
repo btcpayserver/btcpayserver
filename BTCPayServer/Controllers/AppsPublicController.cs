@@ -184,6 +184,7 @@ namespace BTCPayServer.Controllers
                     BuyerEmail = request.Email,
                     Price = price,
                     NotificationURL = settings.NotificationUrl,
+                    NotificationEmail = settings.NotificationEmail,
                     FullNotifications = true,
                     ExtendedNotifications = true,
                     RedirectURL = request.RedirectUrl ?? Request.GetDisplayUrl()
@@ -262,7 +263,8 @@ namespace BTCPayServer.Controllers
                 Price = price,
                 BuyerEmail = email,
                 OrderId = orderId,
-                NotificationURL = notificationUrl,
+                NotificationURL = string.IsNullOrEmpty(notificationUrl)? settings.NotificationUrl: notificationUrl,
+                NotificationEmail = settings.NotificationEmail,
                 RedirectURL = redirectUrl  ?? Request.GetDisplayUrl(),
                 FullNotifications = true,
                 PosData = string.IsNullOrEmpty(posData) ? null : posData

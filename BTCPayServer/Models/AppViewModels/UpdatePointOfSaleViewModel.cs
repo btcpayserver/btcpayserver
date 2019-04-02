@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using BTCPayServer.Validation;
 
 namespace BTCPayServer.Models.AppViewModels
 {
@@ -24,6 +25,13 @@ namespace BTCPayServer.Models.AppViewModels
         public string Example2 { get; internal set; }
         public string ExampleCallback { get; internal set; }
         public string InvoiceUrl { get; internal set; }
+        
+        [Display(Name = "Callback Notification Url")] 
+        [Uri]
+        public string NotificationUrl { get; set; }
+        [Display(Name = "Invoice Email Notification")]
+        [EmailAddress]
+        public string NotificationEmail { get; set; }
 
         [Required]
         [MaxLength(30)]

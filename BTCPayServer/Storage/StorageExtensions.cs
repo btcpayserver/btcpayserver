@@ -28,6 +28,7 @@ namespace BTCPayServer.Storage
         public static void UseProviderStorage(this IApplicationBuilder builder, BTCPayServerOptions options)
         {
             var dir = FileSystemFileProviderService.GetStorageDir(options);
+
             if (!Directory.Exists(dir))
             {
                 Directory.CreateDirectory(dir);
@@ -37,7 +38,7 @@ namespace BTCPayServer.Storage
             {
                 ServeUnknownFileTypes = true,
                 RequestPath = new PathString($"/{FileSystemFileProviderService.LocalStorageDirectoryName}"),
-                FileProvider = new PhysicalFileProvider(dir)
+                FileProvider = new PhysicalFileProvider(new DirectoryInfo(dir).FullName)
             });
         }
     }

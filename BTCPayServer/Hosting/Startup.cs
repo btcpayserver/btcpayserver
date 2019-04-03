@@ -95,8 +95,6 @@ namespace BTCPayServer.Hosting
                     options.EnableAuthorizationEndpoint("/connect/logout");
 
                     // Allow client applications various flows
-                    // with the exception of Client Credentials flow as we cannot identify
-                    // a user through that grant type
                     options.AllowImplicitFlow();
                     options.AllowClientCredentialsFlow();
                     options.AllowRefreshTokenFlow();

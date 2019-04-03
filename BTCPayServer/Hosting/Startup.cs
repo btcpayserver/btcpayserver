@@ -104,8 +104,6 @@ namespace BTCPayServer.Hosting
                     options.AllowAuthorizationCodeFlow();
                     // During development, you can disable the HTTPS requirement.
                     options.DisableHttpsRequirement();
-
-                    options.ConfigureClientRequirements(Configuration);
                     options.UseRollingTokens();
                     options.UseJsonWebTokens();
 

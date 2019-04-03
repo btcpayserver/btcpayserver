@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using BTCPayServer.Authentication.OpenId.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using BTCPayServer.Models;

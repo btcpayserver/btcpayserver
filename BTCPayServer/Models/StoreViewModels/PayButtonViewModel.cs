@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
 using BTCPayServer.ModelBinders;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,6 +15,7 @@ namespace BTCPayServer.Models.StoreViewModels
         public string CheckoutDesc { get; set; }
         public string OrderId { get; set; }
         public int ButtonSize { get; set; }
+        public int ButtonType { get; set; }
         [Url]
         public string ServerIpn { get; set; }
         [Url]

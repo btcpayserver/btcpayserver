@@ -891,7 +891,8 @@ namespace BTCPayServer.Controllers
                 ButtonSize = 2,
                 UrlRoot = appUrl,
                 PayButtonImageUrl = appUrl + "img/paybutton/pay.png",
-                StoreId = store.Id
+                StoreId = store.Id,
+                ButtonType = 0
             };
             return View(model);
         }

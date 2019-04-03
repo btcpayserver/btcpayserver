@@ -22,7 +22,7 @@ function esc(input) {
         (but it's not necessary).
         Or for XML, only if the named entities are defined in its DTD.
         */
-    ;
+        ;
 }
 
 Vue.use(VeeValidate);
@@ -42,9 +42,35 @@ function inputChanges(event, buttonSize) {
         srvModel.buttonSize = buttonSize;
     }
 
+    var width = "209px";
+    var widthInput = "3em";
+    if (srvModel.buttonSize === 0) {
+        width = "146px";
+        widthInput = "2em";
+    } else if (srvModel.buttonSize === 1) {
+        width = "168px";
+    } else if (srvModel.buttonSize === 2) {
+        width = "209px";
+    }
+
     var html = '<form method="POST" action="' + esc(srvModel.urlRoot) + 'api/v1/invoices">';
     html += addinput("storeId", srvModel.storeId);
-    html += addinput("price", srvModel.price);
+
+    // Add price as hidden only if it's a fixed amount
+    if (srvModel.buttonType == 0) {
+        html += addinput("price", srvModel.price);
+    }
+    else if (srvModel.buttonType == 1) {
+        html += '\n    <div style="text-align:center;width:' + width + '">';
+        html += addPlusMinusButton("-");
+        html += '<input type="text" id="btcpay-input-price" name="price" value="' + srvModel.price + '" style="' +
+            'border:none;background-image:none;background-color:transparent;-webkit-box-shadow:none;-moz-box-shadow:none;-webkit-appearance: none;' + // Reset css
+            'width:' + widthInput + ';text-align:center;font-size:25px;margin:auto;border-radius:5px;line-height:50px;background:#fff;"' + // Custom css
+            'oninput="event.preventDefault();isNaN(event.target.value) ? document.querySelector(\'#btcpay-input-price\').value = ' + srvModel.price + ' : event.target.value" />'; // Method to try if it's a number
+        html += addPlusMinusButton("+");
+        html += '</div>';
+    }
+
     if (srvModel.currency) {
         html += addinput("currency", srvModel.currency);
     }
@@ -65,14 +91,6 @@ function inputChanges(event, buttonSize) {
         html += addinput("notifyEmail", srvModel.notifyEmail);
     }
 
-    var width = "209px";
-    if (srvModel.buttonSize === 0) {
-        width = "146px";
-    } else if (srvModel.buttonSize === 1) {
-        width = "168px";
-    } else if (srvModel.buttonSize === 2) {
-        width = "209px";
-    }
     html += '\n    <input type="image" src="' + esc(srvModel.payButtonImageUrl) + '" name="submit" style="width:' + width +
         '" alt="Pay with BtcPay, Self-Hosted Bitcoin Payment Processor">';
 
@@ -93,3 +111,11 @@ function addinput(name, value) {
     return html;
 }
 
+function addPlusMinusButton(type) {
+    var button = '<button style="cursor:pointer; font-size:25px; line-height: 25px; background: rgba(0,0,0,.1); height: 30px; width: 45px; border:none; border-radius: 60px; margin: auto;" onclick="event.preventDefault();document.querySelector(\'#btcpay-input-price\').value = parseInt(document.querySelector(\'#btcpay-input-price\').value) TYPE 1;">TYPE</button>';
+    if (type === "+") {
+        return button.replace(/TYPE/g, '+');
+    } else {
+        return button.replace(/TYPE/g, '-');
+    }
+}

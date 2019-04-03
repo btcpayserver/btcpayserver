@@ -57,6 +57,17 @@
                     </button>
                 </div>
             </div>
+            <div class="form-group">
+                <label>Button Type</label>
+                <div>
+                    <input type="radio" name="button-type" id="btn-fixed" value="0" v-model="srvModel.buttonType" v-on:change="inputChanges" checked />
+                    <label for="btn-fixed">Fixed amount</label>
+                </div>
+                <div>
+                    <input type="radio" name="button-type" id="btn-custom" value="1" v-model="srvModel.buttonType" v-on:change="inputChanges" />
+                    <label for="btn-custom">Custom amount</label>
+                </div>
+            </div>
         </div>
         <div class="col-lg-5">
             <br />
@@ -123,20 +134,20 @@
     </div>
 
 
-@section HeadScripts {
-    <link rel="stylesheet" href="~/vendor/highlightjs/default.min.css">
-    <script src="~/vendor/highlightjs/highlight.min.js"></script>
+    @section HeadScripts {
+        <link rel="stylesheet" href="~/vendor/highlightjs/default.min.css">
+        <script src="~/vendor/highlightjs/highlight.min.js"></script>
 
-    <script src="~/vendor/vuejs/vue.js"></script>
-    <script src="~/vendor/vuejs-vee-validate/vee-validate.js"></script>
+        <script src="~/vendor/vuejs/vue.js"></script>
+        <script src="~/vendor/vuejs-vee-validate/vee-validate.js"></script>
 
-    <script src="~/vendor/clipboard.js/clipboard.js"></script>
+        <script src="~/vendor/clipboard.js/clipboard.js"></script>
 
-    <script src="~/paybutton/paybutton.js"></script>
-}
+        <script src="~/paybutton/paybutton.js"></script>
+    }
 
-@section Scripts {
-    <script type="text/javascript">
+    @section Scripts {
+        <script type="text/javascript">
         var srvModel = @Html.Raw(Json.Serialize(Model));
 
         var payButtonCtrl = new Vue({
@@ -150,5 +161,5 @@
                 }
             }
         });
-    </script>
-}
+        </script>
+    }

@@ -34,6 +34,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Authentication;
+using BTCPayServer.Authentication.OpenId.Models;
 using Microsoft.Extensions.Caching.Memory;
 using BTCPayServer.Logging;
 using BTCPayServer.HostedServices;

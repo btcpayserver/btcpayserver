@@ -3,7 +3,6 @@ using System.Reflection;
 using System.Linq;
 using Microsoft.AspNetCore.Builder;
 using System;
-using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
@@ -12,7 +11,6 @@ using NBitpayClient;
 using BTCPayServer.Authentication;
 using Microsoft.EntityFrameworkCore;
 using BTCPayServer.Filters;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
 using BTCPayServer.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -125,7 +123,6 @@ namespace BTCPayServer.Hosting
             services.AddBTCPayServer(Configuration);
             services.AddProviderStorage();
             services.AddSession();
-            services.AddBTCPayServer(Configuration);
             services.AddSignalR();
             services.AddMvc(o =>
             {

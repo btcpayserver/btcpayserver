@@ -200,9 +200,10 @@ namespace BTCPayServer.Controllers
                 entity.InternalTags.Add(AppService.GetAppInternalTag(app.Id));
             }
 
-            logs.Write($"Saving invoice...");
-            entity = await _InvoiceRepository.CreateInvoiceAsync(store.Id, entity, _NetworkProvider);
-            logs.Write($"Invoice saved!");
+            using (logs.Measure("Saving invoice"))
+            {
+                entity = await _InvoiceRepository.CreateInvoiceAsync(store.Id, entity, _NetworkProvider);
+            }
             _ = Task.Run(async () =>
             {
                 try
@@ -258,10 +259,11 @@ namespace BTCPayServer.Controllers
                 paymentMethod.Rate = rate.BidAsk.Bid;
                 paymentMethod.PreferOnion = this.Request.IsOnion();
 
-                logs.Write($"{logPrefix} Creating payment method details...");
-                var paymentDetails = await handler.CreatePaymentMethodDetails(supportedPaymentMethod, paymentMethod, store, network, preparePayment);
-                logs.Write($"{logPrefix} Payment method details created...");
-                paymentMethod.SetPaymentMethodDetails(paymentDetails);
+                using (logs.Measure($"{logPrefix} Payment method details creation"))
+                {
+                    var paymentDetails = await handler.CreatePaymentMethodDetails(supportedPaymentMethod, paymentMethod, store, network, preparePayment);
+                    paymentMethod.SetPaymentMethodDetails(paymentDetails);
+                }
 
                 Func<Money, Money, bool> compare = null;
                 CurrencyValue limitValue = null;

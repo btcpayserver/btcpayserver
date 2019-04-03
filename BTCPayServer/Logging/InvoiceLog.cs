@@ -33,5 +33,35 @@ namespace BTCPayServer.Logging
                 return _InvoiceLogs.ToList();
             }
         }
+
+        internal IDisposable Measure(string logs)
+        {
+            return new Mesuring(this, logs);
+        }
+
+        class Mesuring : IDisposable
+        {
+            private readonly InvoiceLogs _logs;
+            private readonly string _msg;
+            private readonly DateTimeOffset _Before;
+            public Mesuring(InvoiceLogs logs, string msg)
+            {
+                _logs = logs;
+                _msg = msg;
+                _Before = DateTimeOffset.UtcNow;
+            }
+            public void Dispose()
+            {
+                var timespan = DateTimeOffset.UtcNow - _Before;
+                if (timespan.TotalSeconds >= 1.0)
+                {
+                    _logs.Write($"{_msg} took {(int)timespan.TotalSeconds} seconds");
+                }
+                else
+                {
+                    _logs.Write($"{_msg} took {(int)timespan.TotalMilliseconds} milliseconds");
+                }
+            }
+        }
     }
 }

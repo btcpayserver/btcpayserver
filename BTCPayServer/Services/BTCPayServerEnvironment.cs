@@ -56,6 +56,18 @@ namespace BTCPayServer.Services
                 return NetworkType == NetworkType.Regtest && Environment.IsDevelopment();
             }
         }
+
+        public bool IsSecure
+        {
+            get
+            {
+                return NetworkType != NetworkType.Mainnet ||
+                       httpContext.HttpContext.Request.Scheme == "https" ||
+                       httpContext.HttpContext.Request.Host.Host.EndsWith(".onion", StringComparison.OrdinalIgnoreCase) ||
+                       Extensions.IsLocalNetwork(httpContext.HttpContext.Request.Host.Host);
+            }
+        }
+
         public override string ToString()
         {
             StringBuilder txt = new StringBuilder();

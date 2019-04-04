@@ -94,13 +94,14 @@
                         <li class="nav-item">
                             <a asp-area="" asp-controller="Account" asp- asp-action="Logout" title="Manage" class="nav-link js-scroll-trigger">Log out</a>
                         </li>}
-                    else
+                    else if (env.IsSecure)
                     {
                         if (themeManager.ShowRegister)
                         {
                             <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Register" class="nav-link js-scroll-trigger">Register</a></li>
                         }
-                        <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Login" class="nav-link js-scroll-trigger">Log in</a></li>}
+                        <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Login" class="nav-link js-scroll-trigger">Log in</a></li>
+                    }
 
                 </ul>
             </div>
@@ -108,6 +109,14 @@
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <span>BTCPay is expecting you to access this website from <b>@(env.ExpectedProtocol)://@(env.ExpectedHost)/</b>. If you use a reverse proxy, please set the <b>X-Forwarded-Proto</b> header to <b id="browserScheme">@(env.ExpectedProtocol)</b> (<a href="https://docs.btcpayserver.org/faq-and-common-issues/faq-deployment#btcpay-is-expecting-you-to-access-this-website-from" target="_blank">More information</a>)</span>
             </div>
+            @if (!env.IsSecure)
+            {
+                <div class="alert alert-danger alert-dismissible" style="position:absolute; top:75px;" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <span>You access BTCPay Server over an unsecured network. If you are using docker deployment with NGINX and HTTPS is not available, you probably did not configured your DNS settings right. <br /> 
+                          We disabled the register and login link so you don't leak your credentials.</span>
+                </div>
+            }
         </div>
     </nav>
 

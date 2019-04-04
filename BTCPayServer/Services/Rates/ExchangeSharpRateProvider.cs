@@ -39,7 +39,9 @@ namespace BTCPayServer.Services.Rates
             lock (notFoundSymbols)
             {
                 var exchangeRates =
-                    rates.Select(t => CreateExchangeRate(t))
+                    rates
+                    .Where(t => t.Value.Ask != 0m && t.Value.Bid != 0m)
+                    .Select(t => CreateExchangeRate(t))
                     .Where(t => t != null)
                     .ToArray();
                 return new ExchangeRates(exchangeRates);

@@ -118,7 +118,7 @@ retry:
             }
         }
 
-        public async Task<InvoiceEntity> CreateInvoiceAsync(string storeId, InvoiceEntity invoice, InvoiceLogs creationLogs, BTCPayNetworkProvider networkProvider)
+        public async Task<InvoiceEntity> CreateInvoiceAsync(string storeId, InvoiceEntity invoice, BTCPayNetworkProvider networkProvider)
         {
             List<string> textSearch = new List<string>();
             invoice = Clone(invoice, null);
@@ -165,17 +165,6 @@ retry:
                     textSearch.Add(paymentMethod.Calculate().TotalDue.ToString());
                 }
                 context.PendingInvoices.Add(new PendingInvoiceData() { Id = invoice.Id });
-
-                foreach (var log in creationLogs.ToList())
-                {
-                    context.InvoiceEvents.Add(new InvoiceEventData()
-                    {
-                        InvoiceDataId = invoice.Id,
-                        Message = log.Log,
-                        Timestamp = log.Timestamp,
-                        UniqueId = Encoders.Hex.EncodeData(RandomUtils.GetBytes(10))
-                    });
-                }
                 await context.SaveChangesAsync().ConfigureAwait(false);
             }
 
@@ -189,6 +178,24 @@ retry:
 
             AddToTextSearch(invoice.Id, textSearch.ToArray());
             return invoice;
+        }
+
+        public async Task AddInvoiceLogs(string invoiceId, InvoiceLogs logs)
+        {
+            using (var context = _ContextFactory.CreateContext())
+            {
+                foreach (var log in logs.ToList())
+                {
+                    context.InvoiceEvents.Add(new InvoiceEventData()
+                    {
+                        InvoiceDataId = invoiceId,
+                        Message = log.Log,
+                        Timestamp = log.Timestamp,
+                        UniqueId = Encoders.Hex.EncodeData(RandomUtils.GetBytes(10))
+                    });
+                }
+                await context.SaveChangesAsync().ConfigureAwait(false);
+            }
         }
 
         private static string GetDestination(PaymentMethod paymentMethod, Network network)

@@ -1,4 +1,4 @@
-@addTagHelper *, BundlerMinifier.TagHelpers
+﻿@addTagHelper *, BundlerMinifier.TagHelpers
 @inject BTCPayServer.HostedServices.CssThemeManager themeManager
 
 @model BTCPayServer.Models.AppViewModels.ViewPointOfSaleViewModel
@@ -251,7 +251,7 @@
                             var image = item.Image;
                             var description = item.Description;
 
-                            <div class="js-add-cart card my-2" data-id="@index">
+                            <div class="js-add-cart card my-2 card-wrapper" data-id="@index">
                                 @if (!String.IsNullOrWhiteSpace(image))
                                 {
                                     @:<img class="card-img-top" src="@image" alt="Card image cap">

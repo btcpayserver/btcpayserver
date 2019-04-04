@@ -166,6 +166,24 @@ namespace BTCPayServer
                             (derivationStrategyBase is DirectDerivationStrategy direct) && direct.Segwit;
         }
 
+        public static bool IsLocalNetwork(string server)
+        {
+            if (server == null)
+                throw new ArgumentNullException(nameof(server));
+            if (Uri.CheckHostName(server) == UriHostNameType.Dns)
+            {
+                return server.EndsWith(".internal", StringComparison.OrdinalIgnoreCase) ||
+                   server.EndsWith(".local", StringComparison.OrdinalIgnoreCase) ||
+                   server.EndsWith(".lan", StringComparison.OrdinalIgnoreCase) ||
+                   server.IndexOf('.', StringComparison.OrdinalIgnoreCase) == -1;
+            }
+            if(IPAddress.TryParse(server, out var ip))
+            {
+                return ip.IsLocal();
+            }
+            return false;
+        }
+
         public static bool IsOnion(this HttpRequest request)
         {
             if (request?.Host.Host == null)

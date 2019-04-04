@@ -94,7 +94,7 @@ $(document).ready(function(){
         $('#js-pos-list').find(".card-wrapper").show();
 
         if (str.length > 1) {
-            var $list = $('#js-pos-list').find(".card-title:not(:icontains('" + str + "'))");
+            var $list = $('#js-pos-list').find(".card-title:not(:icontains('" + $.escapeSelector(str) + "'))");
             $list.parents('.card-wrapper').hide();
             $('.js-search-reset').show();
         }

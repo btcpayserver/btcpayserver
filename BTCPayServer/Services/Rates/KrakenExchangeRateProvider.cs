@@ -39,7 +39,37 @@ namespace BTCPayServer.Services.Rates
         static HttpClient _Client = new HttpClient();
 
         // ExchangeSymbolToGlobalSymbol throws exception which would kill perf
-        ConcurrentDictionary<string, string> notFoundSymbols = new ConcurrentDictionary<string, string>();
+        ConcurrentDictionary<string, string> notFoundSymbols = new ConcurrentDictionary<string, string>(new Dictionary<string, string>()
+        {
+            {"ADAXBT","ADAXBT"},
+            { "BSVUSD","BSVUSD"},
+            { "QTUMEUR","QTUMEUR"},
+            { "QTUMXBT","QTUMXBT"},
+            { "EOSUSD","EOSUSD"},
+            { "XTZUSD","XTZUSD"},
+            { "XREPZUSD","XREPZUSD"},
+            { "ADAEUR","ADAEUR"},
+            { "ADAUSD","ADAUSD"},
+            { "GNOEUR","GNOEUR"},
+            { "XTZETH","XTZETH"},
+            { "XXRPZJPY","XXRPZJPY"},
+            { "XXRPZCAD","XXRPZCAD"},
+            { "XTZEUR","XTZEUR"},
+            { "QTUMETH","QTUMETH"},
+            { "XXLMZUSD","XXLMZUSD"},
+            { "QTUMCAD","QTUMCAD"},
+            { "QTUMUSD","QTUMUSD"},
+            { "XTZXBT","XTZXBT"},
+            { "GNOUSD","GNOUSD"},
+            { "ADAETH","ADAETH"},
+            { "ADACAD","ADACAD"},
+            { "XTZCAD","XTZCAD"},
+            { "BSVEUR","BSVEUR"},
+            { "XZECZJPY","XZECZJPY"},
+            { "XXLMZEUR","XXLMZEUR"},
+            {"EOSEUR","EOSEUR"},
+            {"BSVXBT","BSVXBT"}
+        });
         string[] _Symbols = Array.Empty<string>();
         DateTimeOffset? _LastSymbolUpdate = null;
 

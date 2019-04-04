@@ -10,8 +10,7 @@
         </div>
         <div class="modal-body">
             <p>
-                Some of your nodes are still synchronizing...<br />
-                BTCPay Server will not create invoices with those cryptocurrencies.
+                Your node is synching the entire blockchain and validating the consensus rules...
             </p>
             @foreach (var line in dashboard.GetAll())
             {
@@ -49,8 +48,8 @@
                         {
                             <li>The node is synchronized (Height: @line.Status.BitcoinStatus.Headers)</li>
                             @if (line.Status.BitcoinStatus.IsSynched &&
-                                line.Status.SyncHeight.HasValue &&
-                                line.Status.SyncHeight.Value < line.Status.BitcoinStatus.Headers)
+                              line.Status.SyncHeight.HasValue &&
+                              line.Status.SyncHeight.Value < line.Status.BitcoinStatus.Headers)
                             {
                                 <li>NBXplorer is synchronizing... (Height: @line.Status.SyncHeight.Value)</li>
                             }
@@ -72,7 +71,13 @@
                     }
                 }
             }
+            <p>
+                <a href="https://www.youtube.com/watch?v=OrYDehC-8TU" target="_blank">Watch this video</a> to understand the importance of blockchain synchronization.
+            </p>
+
+            <p>If you really don't want to synch and that you are familiar with command line, check <a href="https://github.com/btcpayserver/btcpayserver-docker/blob/master/contrib/FastSync/README.md" target="_blank">FastSync</a>.</p>
         </div>
+
     </div>
 
 </div>

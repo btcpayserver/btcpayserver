@@ -62,9 +62,12 @@ function inputChanges(event, buttonSize) {
     }
     else if (srvModel.buttonType == 1) {
         html += '\n    <div style="text-align:center;width:' + width + '">';
+        html += '<div>';
         html += addPlusMinusButton("-");
         html += addInputPrice(srvModel.price, widthInput, "");
         html += addPlusMinusButton("+");
+        html += '</div>';
+        html += addSelectCurrency();
         html += '</div>';
     }
     else if (srvModel.buttonType == 2) {
@@ -72,7 +75,7 @@ function inputChanges(event, buttonSize) {
 
         // Input price
         html += addInputPrice(srvModel.price, width, 'onchange="document.querySelector(\'#btcpay-input-range\').value = document.querySelector(\'#btcpay-input-price\').value"');
-
+        html += addSelectCurrency();
         // Slider
         html += '<input class="btcpay-input-range" id="btcpay-input-range" value="' + srvModel.price + '" type="range" min="' + srvModel.min + '" max="' + srvModel.max + '" step="' + srvModel.step + '" style="width:' + width + ';margin-bottom:15px;"' +
             'oninput="document.querySelector(\'#btcpay-input-price\').value = document.querySelector(\'#btcpay-input-range\').value" />';
@@ -134,10 +137,19 @@ function addPlusMinusButton(type) {
 function addInputPrice(price, widthInput, customFn) {
     var input = '<input type="text" id="btcpay-input-price" name="price" value="' + price + '" style="' +
         'border:none;background-image:none;background-color:transparent;-webkit-box-shadow:none;-moz-box-shadow:none;-webkit-appearance: none;' + // Reset css
-        'width:' + widthInput + ';text-align:center;font-size:25px;margin:auto;border-radius:5px;line-height:50px;background:#fff;"' + // Custom css
+        'width:' + widthInput + ';text-align:center;font-size:25px;margin:auto;border-radius:5px;line-height:35px;background:#fff;"' + // Custom css
         'oninput="event.preventDefault();isNaN(event.target.value) ? document.querySelector(\'#btcpay-input-price\').value = ' + price + ' : event.target.value" CUSTOM />';
     if (customFn) {
         return input.replace("CUSTOM", customFn);
     }
     return input.replace("CUSTOM", "");
+}
+
+function addSelectCurrency() {
+    return '<select onchange="document.querySelector(\'input[type = hidden][name = currency]\').value = event.target.value" style="-webkit-appearance: none; border: 0; display: block; padding: 0 3em; margin: auto auto 5px auto; font-size: 11px; background: 0 0; cursor: pointer;">' +
+        '<option value="USD">USD</option>' +
+        '<option value="GBP">GBP</option>' +
+        '<option value="EUR">EUR</option>' +
+        '<option value="BTC">BTC</option>' +
+        '</select>';
 }

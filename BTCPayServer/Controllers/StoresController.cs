@@ -892,7 +892,7 @@ namespace BTCPayServer.Controllers
                 UrlRoot = appUrl,
                 PayButtonImageUrl = appUrl + "img/paybutton/pay.png",
                 StoreId = store.Id,
-                ButtonType = 2,
+                ButtonType = 0,
                 Min = 1,
                 Max = 20,
                 Step = 1

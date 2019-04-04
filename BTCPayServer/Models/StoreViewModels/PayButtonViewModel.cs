@@ -16,6 +16,12 @@ namespace BTCPayServer.Models.StoreViewModels
         public string OrderId { get; set; }
         public int ButtonSize { get; set; }
         public int ButtonType { get; set; }
+
+        // Slider properties (ButtonType = 2)
+        public decimal Min { get; set; }
+        public decimal Max { get; set; }
+        public decimal Step { get; set; }
+
         [Url]
         public string ServerIpn { get; set; }
         [Url]

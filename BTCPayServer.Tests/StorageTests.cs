@@ -31,7 +31,7 @@ namespace BTCPayServer.Tests
                 var controller = tester.PayTester.GetController<ServerController>(user.UserId, user.StoreId);
 
                 //Initially, there is no configuration, make sure we display the choices available to configure
-                Assert.IsType<StorageSettings>(Assert.IsType<ViewResult>(controller.Storage()).Model);
+                Assert.IsType<StorageSettings>(Assert.IsType<ViewResult>(await controller.Storage()).Model);
                 
                 //Once we select a provider, redirect to its view
                 Assert.Equal(nameof(ServerController.EditFileSystemStorageProvider), (Assert
@@ -62,20 +62,20 @@ namespace BTCPayServer.Tests
                 
                 //Let's try and cheat and go to an invalid storage provider config
                 Assert.Equal(nameof(Storage), (Assert
-                    .IsType<RedirectToActionResult>(controller.StorageProvider("I am not a real provider"))
+                    .IsType<RedirectToActionResult>(await controller.StorageProvider("I am not a real provider"))
                     .ActionName));
                 
                 //ok no more messing around, let's configure this shit. 
                 var fileSystemStorageConfiguration =   Assert.IsType<FileSystemStorageConfiguration>(Assert
-                    .IsType<ViewResult>(controller.StorageProvider(StorageProvider.FileSystem.ToString()))
+                    .IsType<ViewResult>(await controller.StorageProvider(StorageProvider.FileSystem.ToString()))
                     .Model);
                 
                 //local file system does not need config, easy days!
-                Assert.IsType<ViewResult>(controller.EditFileSystemStorageProvider(fileSystemStorageConfiguration));
+                Assert.IsType<ViewResult>(await controller.EditFileSystemStorageProvider(fileSystemStorageConfiguration));
                 
                 //ok cool, let's see if this got set right
                 var shouldBeRedirectingToLocalStorageConfigPage =
-                    Assert.IsType<RedirectToActionResult>(controller.Storage());
+                    Assert.IsType<RedirectToActionResult>(await controller.Storage());
                 Assert.Equal(nameof(StorageProvider), shouldBeRedirectingToLocalStorageConfigPage.ActionName);
                 Assert.Equal(StorageProvider.FileSystem, shouldBeRedirectingToLocalStorageConfigPage.RouteValues["provider"]);
                 
@@ -83,25 +83,25 @@ namespace BTCPayServer.Tests
                 //ok we're set up with local file storage. let's change to azure
                 
                 //if we tell the settings page to force, it should allow us to select a new provider
-                Assert.IsType<StorageSettings>(Assert.IsType<ViewResult>(controller.Storage(true)).Model);
+                Assert.IsType<StorageSettings>(Assert.IsType<ViewResult>(await controller.Storage(true)).Model);
                 
                 var azureBlobStorageConfiguration =   Assert.IsType<AzureBlobStorageConfiguration>(Assert
-                    .IsType<ViewResult>(controller.StorageProvider(StorageProvider.AzureBlobStorage.ToString()))
+                    .IsType<ViewResult>(await controller.StorageProvider(StorageProvider.AzureBlobStorage.ToString()))
                     .Model);
 
                 azureBlobStorageConfiguration.ConnectionString = GetFromSecrets("AzureBlobStorageConnectionString");
-                Assert.IsType<ViewResult>(controller.EditAzureBlobStorageStorageProvider(azureBlobStorageConfiguration));
+                Assert.IsType<ViewResult>(await controller.EditAzureBlobStorageStorageProvider(azureBlobStorageConfiguration));
                 
                 
                 var shouldBeRedirectingToAzureStorageConfigPage =
-                    Assert.IsType<RedirectToActionResult>(controller.Storage());
+                    Assert.IsType<RedirectToActionResult>(await controller.Storage());
                 Assert.Equal(nameof(StorageProvider), shouldBeRedirectingToLocalStorageConfigPage.ActionName);
                 Assert.Equal(StorageProvider.AzureBlobStorage, shouldBeRedirectingToLocalStorageConfigPage.RouteValues["provider"]);
                 
                //seems like everything worked, let's see if the conn string was actually saved
                
                Assert.Equal(azureBlobStorageConfiguration.ConnectionString, Assert.IsType<AzureBlobStorageConfiguration>(Assert
-                   .IsType<ViewResult>(controller.StorageProvider(StorageProvider.AzureBlobStorage.ToString()))
+                   .IsType<ViewResult>(await controller.StorageProvider(StorageProvider.AzureBlobStorage.ToString()))
                    .Model).ConnectionString);
             }
         }

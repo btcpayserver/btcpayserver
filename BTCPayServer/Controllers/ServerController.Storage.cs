@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Models;
 using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Storage.Models;
 using BTCPayServer.Storage.Services.Providers.AmazonS3Storage;
@@ -72,8 +73,9 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("server/storage")]
-        public async Task<IActionResult> Storage(bool forceChoice = false)
+        public async Task<IActionResult> Storage(bool forceChoice = false, string statusMessage = null)
         {
+            TempData["StatusMessage"] = statusMessage;
             var savedSettings = await _SettingsRepository.GetSettingAsync<StorageSettings>();
             if (forceChoice || savedSettings == null)
             {
@@ -101,7 +103,18 @@ namespace BTCPayServer.Controllers
         [HttpGet("server/storage/{provider}")]
         public async Task<IActionResult> StorageProvider(string provider)
         {
-            var storageProvider = Enum.Parse(typeof(StorageProvider), provider);
+            if (!Enum.TryParse(typeof(StorageProvider), provider, out var storageProvider))
+            {
+                return RedirectToAction(nameof(Storage), new
+                {
+                    StatusMessage = new StatusMessageModel()
+                    {
+                        Severity = StatusMessageModel.StatusSeverity.Error,
+                        Message = $"{provider} provider is not supported"
+                    }.ToString()
+                });
+            }
+
             var data = (await _SettingsRepository.GetSettingAsync<StorageSettings>()) ?? new StorageSettings();
 
             var storageProviderService =
@@ -162,7 +175,11 @@ namespace BTCPayServer.Controllers
             data.Provider = storageProvider;
             data.Configuration = JObject.FromObject(viewModel);
             await _SettingsRepository.UpdateSetting(data);
-            TempData["StatusMessage"] = "Storage settings updated successfully";
+            TempData["StatusMessage"] = new StatusMessageModel()
+            {
+                Severity = StatusMessageModel.StatusSeverity.Success,
+                Message = "Storage settings updated successfully"
+            }.ToString();
             return View(viewModel);
         }
     }

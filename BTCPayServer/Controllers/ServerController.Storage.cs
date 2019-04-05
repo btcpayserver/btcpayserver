@@ -29,7 +29,7 @@ namespace BTCPayServer.Controllers
                 Files = await _StoredFileRepository.GetFiles(),
                 SelectedFileId = fileId,
                 DirectFileUrl = string.IsNullOrEmpty(fileId) ? null : await _FileService.GetFileUrl(fileId),
-                StorageConfigured =  (await _SettingsRepository.GetSettingAsync<StorageSettings>()) != null
+                StorageConfigured = (await _SettingsRepository.GetSettingAsync<StorageSettings>()) != null
             });
         }
 
@@ -41,7 +41,7 @@ namespace BTCPayServer.Controllers
                 await _FileService.RemoveFile(fileId, null);
                 return RedirectToAction("Files", new
                 {
-                    fileId= "",
+                    fileId = "",
                     statusMessage = "File removed"
                 });
             }
@@ -69,7 +69,7 @@ namespace BTCPayServer.Controllers
         private string GetUserId()
         {
             return _UserManager.GetUserId(ControllerContext.HttpContext.User);
-        }      
+        }
 
         [HttpGet("server/storage")]
         public async Task<IActionResult> Storage(bool forceChoice = false)
@@ -107,20 +107,23 @@ namespace BTCPayServer.Controllers
             var storageProviderService =
                 _StorageProviderServices.Single(service => service.StorageProvider().Equals(storageProvider));
 
-            var viewName = $"Edit{storageProvider}StorageProvider";
             switch (storageProviderService)
             {
                 case AzureBlobStorageFileProviderService fileProviderService:
-                    return View(viewName, fileProviderService.GetProviderConfiguration(data));
+                    return View(nameof(EditAzureBlobStorageStorageProvider),
+                        fileProviderService.GetProviderConfiguration(data));
 
                 case AmazonS3FileProviderService fileProviderService:
-                    return View(viewName, fileProviderService.GetProviderConfiguration(data));
+                    return View(nameof(EditAmazonS3StorageProvider),
+                        fileProviderService.GetProviderConfiguration(data));
 
                 case GoogleCloudStorageFileProviderService fileProviderService:
-                    return View(viewName, fileProviderService.GetProviderConfiguration(data));
+                    return View(nameof(EditGoogleCloudStorageStorageProvider),
+                        fileProviderService.GetProviderConfiguration(data));
 
                 case FileSystemFileProviderService fileProviderService:
-                    return View(viewName, fileProviderService.GetProviderConfiguration(data));
+                    return View(nameof(EditFileSystemStorageProvider),
+                        fileProviderService.GetProviderConfiguration(data));
             }
 
             return NotFound();

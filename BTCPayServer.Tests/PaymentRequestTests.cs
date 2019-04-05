@@ -92,7 +92,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
+        [Fact(Timeout = 60 * 2 * 1000)]
         [Trait("Integration", "Integration")]
         public async Task CanPayPaymentRequestWhenPossible()
         {

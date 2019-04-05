@@ -1718,13 +1718,13 @@ donation:
             bool[] jobs = new bool[4];
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
             Logs.Tester.LogInformation("Start Job[0] in 5 sec");
-            client.Schedule(async () => { Logs.Tester.LogInformation("Job[0]"); jobs[0] = true; }, TimeSpan.FromSeconds(5.0));
+            client.Schedule(async (_) => { Logs.Tester.LogInformation("Job[0]"); jobs[0] = true; }, TimeSpan.FromSeconds(5.0));
             Logs.Tester.LogInformation("Start Job[1] in 2 sec");
-            client.Schedule(async () => { Logs.Tester.LogInformation("Job[1]"); jobs[1] = true; }, TimeSpan.FromSeconds(2.0));
+            client.Schedule(async (_) => { Logs.Tester.LogInformation("Job[1]"); jobs[1] = true; }, TimeSpan.FromSeconds(2.0));
             Logs.Tester.LogInformation("Start Job[2] fails in 6 sec");
-            client.Schedule(async () => { jobs[2] = true; throw new Exception("Job[2]"); }, TimeSpan.FromSeconds(6.0));
+            client.Schedule(async (_) => { jobs[2] = true; throw new Exception("Job[2]"); }, TimeSpan.FromSeconds(6.0));
             Logs.Tester.LogInformation("Start Job[3] starts in in 7 sec");
-            client.Schedule(async () => { Logs.Tester.LogInformation("Job[3]"); jobs[3] = true; }, TimeSpan.FromSeconds(7.0));
+            client.Schedule(async (_) => { Logs.Tester.LogInformation("Job[3]"); jobs[3] = true; }, TimeSpan.FromSeconds(7.0));
 
             Assert.True(new[] { false, false, false, false }.SequenceEqual(jobs));
             CancellationTokenSource cts = new CancellationTokenSource();
@@ -1757,7 +1757,7 @@ donation:
 
             bool jobExecuted = false;
             Logs.Tester.LogInformation("This job will be cancelled");
-            client.Schedule(async () => { jobExecuted = true; }, TimeSpan.FromSeconds(1.0));
+            client.Schedule(async (_) => { jobExecuted = true; }, TimeSpan.FromSeconds(1.0));
             mockDelay.Advance(TimeSpan.FromSeconds(0.5));
             Assert.False(jobExecuted);
             Thread.Sleep(100);

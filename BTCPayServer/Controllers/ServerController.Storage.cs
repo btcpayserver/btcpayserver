@@ -118,10 +118,19 @@ namespace BTCPayServer.Controllers
             var data = (await _SettingsRepository.GetSettingAsync<StorageSettings>()) ?? new StorageSettings();
 
             var storageProviderService =
-                _StorageProviderServices.Single(service => service.StorageProvider().Equals(storageProvider));
+                _StorageProviderServices.SingleOrDefault(service => service.StorageProvider().Equals(storageProvider));
 
             switch (storageProviderService)
             {
+                case null:
+                    return RedirectToAction(nameof(Storage), new
+                    {
+                        StatusMessage = new StatusMessageModel()
+                        {
+                            Severity = StatusMessageModel.StatusSeverity.Error,
+                            Message = $"{storageProvider} is not supported"
+                        }.ToString()
+                    });
                 case AzureBlobStorageFileProviderService fileProviderService:
                     return View(nameof(EditAzureBlobStorageStorageProvider),
                         fileProviderService.GetProviderConfiguration(data));

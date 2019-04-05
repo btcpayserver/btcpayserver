@@ -39,7 +39,7 @@ namespace BTCPayServer.Controllers
             try
             {
                 await _FileService.RemoveFile(fileId, null);
-                return RedirectToAction("Files", new
+                return RedirectToAction(nameof(Files), new
                 {
                     fileId = "",
                     statusMessage = "File removed"
@@ -47,7 +47,7 @@ namespace BTCPayServer.Controllers
             }
             catch (Exception e)
             {
-                return RedirectToAction("Files", new
+                return RedirectToAction(nameof(Files), new
                 {
                     statusMessage = $"Error:{e.Message}"
                 });
@@ -59,7 +59,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> CreateFile(IFormFile file)
         {
             var newFile = await _FileService.AddFile(file, GetUserId());
-            return RedirectToAction("Files", new
+            return RedirectToAction(nameof(Files), new
             {
                 statusMessage = "File added!",
                 fileId = newFile.Id
@@ -83,7 +83,7 @@ namespace BTCPayServer.Controllers
                 });
             }
 
-            return RedirectToAction("StorageProvider", new
+            return RedirectToAction(nameof(StorageProvider), new
             {
                 provider = savedSettings.Provider
             });

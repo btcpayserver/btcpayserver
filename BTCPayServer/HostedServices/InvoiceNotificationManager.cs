@@ -137,23 +137,29 @@ namespace BTCPayServer.HostedServices
                 return;
             var invoiceStr = NBitcoin.JsonConverters.Serializer.ToString(new ScheduledJob() { TryCount = 0, Notification = notification });
             if (!string.IsNullOrEmpty(invoice.NotificationURL))
-                _JobClient.Schedule(() => NotifyHttp(invoiceStr), TimeSpan.Zero);
+                _JobClient.Schedule((cancellation) => NotifyHttp(invoiceStr, cancellation), TimeSpan.Zero);
         }
 
-        public async Task NotifyHttp(string invoiceData)
+        public async Task NotifyHttp(string invoiceData, CancellationToken cancellationToken)
         {
             var job = NBitcoin.JsonConverters.Serializer.ToObject<ScheduledJob>(invoiceData);
             bool reschedule = false;
             var aggregatorEvent = new InvoiceIPNEvent(job.Notification.Data.Id, job.Notification.Event.Code, job.Notification.Event.Name);
-            CancellationTokenSource cts = new CancellationTokenSource(10000);
             try
             {
-                HttpResponseMessage response = await SendNotification(job.Notification, cts.Token);
+                HttpResponseMessage response = await SendNotification(job.Notification, cancellationToken);
                 reschedule = !response.IsSuccessStatusCode;
                 aggregatorEvent.Error = reschedule ? $"Unexpected return code: {(int)response.StatusCode}" : null;
                 _EventAggregator.Publish<InvoiceIPNEvent>(aggregatorEvent);
             }
-            catch (OperationCanceledException) when (cts.IsCancellationRequested)
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                // When the JobClient will be persistent, this will reschedule the job for after reboot
+                invoiceData = NBitcoin.JsonConverters.Serializer.ToString(job);
+                _JobClient.Schedule((cancellation) => NotifyHttp(invoiceData, cancellation), TimeSpan.FromMinutes(10.0));
+                return;
+            }
+            catch (OperationCanceledException)
             {
                 aggregatorEvent.Error = "Timeout";
                 _EventAggregator.Publish<InvoiceIPNEvent>(aggregatorEvent);
@@ -174,14 +180,13 @@ namespace BTCPayServer.HostedServices
                 aggregatorEvent.Error = $"Unexpected error: {message}";
                 _EventAggregator.Publish<InvoiceIPNEvent>(aggregatorEvent);
             }
-            finally { cts?.Dispose(); }
 
             job.TryCount++;
 
             if (job.TryCount < MaxTry && reschedule)
             {
                 invoiceData = NBitcoin.JsonConverters.Serializer.ToString(job);
-                _JobClient.Schedule(() => NotifyHttp(invoiceData), TimeSpan.FromMinutes(10.0));
+                _JobClient.Schedule((cancellation) => NotifyHttp(invoiceData, cancellation), TimeSpan.FromMinutes(10.0));
             }
         }
 
@@ -205,7 +210,7 @@ namespace BTCPayServer.HostedServices
         }
 
         Encoding UTF8 = new UTF8Encoding(false);
-        private async Task<HttpResponseMessage> SendNotification(InvoicePaymentNotificationEventWrapper notification, CancellationToken cancellation)
+        private async Task<HttpResponseMessage> SendNotification(InvoicePaymentNotificationEventWrapper notification, CancellationToken cancellationToken)
         {
             var request = new HttpRequestMessage();
             request.Method = HttpMethod.Post;
@@ -226,7 +231,14 @@ namespace BTCPayServer.HostedServices
 
             request.RequestUri = new Uri(notification.NotificationURL, UriKind.Absolute);
             request.Content = new StringContent(notificationString, UTF8, "application/json");
-            var response = await Enqueue(notification.Data.Id, async () => await _Client.SendAsync(request, cancellation));
+            var response = await Enqueue(notification.Data.Id, async () =>
+            {
+                using (CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
+                {
+                    cts.CancelAfter(TimeSpan.FromMinutes(1.0));
+                    return await _Client.SendAsync(request, cts.Token);
+                }
+            });
             return response;
         }
 

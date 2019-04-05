@@ -1,4 +1,5 @@
 ﻿using BTCPayServer.Logging;
+using NBitcoin;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Net.Mail;
@@ -17,7 +18,7 @@ namespace BTCPayServer.Services.Mails
 
         public void SendEmail(string email, string subject, string message)
         {
-            _JobClient.Schedule(async () =>
+            _JobClient.Schedule(async (cancellationToken) =>
             {
                 var emailSettings = await GetEmailSettings();
                 if (emailSettings?.IsComplete() != true)
@@ -25,13 +26,21 @@ namespace BTCPayServer.Services.Mails
                     Logs.Configuration.LogWarning("Should have sent email, but email settings are not configured");
                     return;
                 }
-                var smtp = emailSettings.CreateSmtpClient();
-                var mail = new MailMessage(emailSettings.From, email, subject, message)
+                using (var smtp = emailSettings.CreateSmtpClient())
                 {
-                    IsBodyHtml = true
-                };
-                await smtp.SendMailAsync(mail);
-
+                    var mail = new MailMessage(emailSettings.From, email, subject, message)
+                    {
+                        IsBodyHtml = true
+                    };
+                    try
+                    {
+                        await smtp.SendMailAsync(mail).WithCancellation(cancellationToken);
+                    }
+                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                    {
+                        smtp.SendAsyncCancel();
+                    }
+                }
            }, TimeSpan.Zero);
         }
 

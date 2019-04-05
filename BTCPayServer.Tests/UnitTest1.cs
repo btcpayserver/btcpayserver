@@ -1775,6 +1775,8 @@ donation:
 
             Assert.False(jobExecuted);
             Assert.Equal(0, client.GetExecutingCount());
+
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await processing);
             Assert.True(processing.IsCanceled);
             Assert.True(client.WaitAllRunning(default).Wait(100));
         }

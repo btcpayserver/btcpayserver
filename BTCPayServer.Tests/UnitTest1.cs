@@ -401,7 +401,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact(Timeout = 60 * 1000)]
+        [Fact(Timeout = 60 * 2 * 1000)]
         [Trait("Integration", "Integration")]
         public async Task CanSetLightningServer()
         {
@@ -1555,7 +1555,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact(Timeout = 60 * 1000)]
+        [Fact(Timeout = 60 * 2 * 1000)]
         [Trait("Integration", "Integration")]
         public async Task CanSetPaymentMethodLimits()
         {

@@ -24,7 +24,7 @@ namespace BTCPayServer.HostedServices
 {
     public class InvoiceNotificationManager : IHostedService
     {
-        public static HttpClient _Client = new HttpClient();
+        HttpClient _Client;
 
         public class ScheduledJob
         {
@@ -46,6 +46,7 @@ namespace BTCPayServer.HostedServices
         private readonly EmailSenderFactory _EmailSenderFactory;
 
         public InvoiceNotificationManager(
+            IHttpClientFactory httpClientFactory,
             IBackgroundJobClient jobClient,
             EventAggregator eventAggregator,
             InvoiceRepository invoiceRepository,
@@ -53,6 +54,7 @@ namespace BTCPayServer.HostedServices
             ILogger<InvoiceNotificationManager> logger,
             EmailSenderFactory emailSenderFactory)
         {
+            _Client = httpClientFactory.CreateClient();
             _JobClient = jobClient;
             _EventAggregator = eventAggregator;
             _InvoiceRepository = invoiceRepository;

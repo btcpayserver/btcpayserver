@@ -226,7 +226,7 @@ namespace BTCPayServer.Controllers
             if (model == null)
                 return NotFound();
 
-            return View(nameof(CheckoutNoScript), model);
+            return View(model);
         }
 
 

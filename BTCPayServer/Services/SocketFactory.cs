@@ -8,6 +8,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Configuration;
+using NBitcoin.Protocol.Connectors;
+using NBitcoin.Protocol;
 
 namespace BTCPayServer.Services
 {
@@ -20,76 +22,42 @@ namespace BTCPayServer.Services
         }
         public async Task<Socket> ConnectAsync(EndPoint endPoint, CancellationToken cancellationToken)
         {
-            Socket socket = null;
+            DefaultEndpointConnector connector = new DefaultEndpointConnector();
+            NodeConnectionParameters connectionParameters = new NodeConnectionParameters();
+            if (_options.SocksEndpoint != null)
+            {
+                connectionParameters.TemplateBehaviors.Add(new NBitcoin.Protocol.Behaviors.SocksSettingsBehavior()
+                {
+                    SocksEndpoint = _options.SocksEndpoint
+                });
+            }
+            var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
             try
             {
-                if (endPoint is IPEndPoint ipEndpoint)
-                {
-                    socket = new Socket(ipEndpoint.Address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                    await socket.ConnectAsync(ipEndpoint).WithCancellation(cancellationToken);
-                }
-                else if (IsTor(endPoint))
-                {
-                    if (_options.SocksEndpoint == null)
-                        throw new NotSupportedException("It is impossible to connect to an onion address without btcpay's -socksendpoint configured");
-                    if (_options.SocksEndpoint.AddressFamily != AddressFamily.Unspecified)
-                    {
-                        socket = new Socket(_options.SocksEndpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                    }
-                    else
-                    {
-                        // If the socket is a DnsEndpoint, we allow either ipv6 or ipv4
-                        socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp);
-                        socket.DualMode = true;
-                    }
-                    await socket.ConnectAsync(_options.SocksEndpoint).WithCancellation(cancellationToken);
-                    await NBitcoin.Socks.SocksHelper.Handshake(socket, endPoint, cancellationToken);
-                }
-                else if (endPoint is DnsEndPoint dnsEndPoint)
-                {
-                    var address = (await Dns.GetHostAddressesAsync(dnsEndPoint.Host)).FirstOrDefault();
-                    socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                    await socket.ConnectAsync(dnsEndPoint).WithCancellation(cancellationToken);
-                }
-                else
-                    throw new NotSupportedException("Endpoint type not supported");
+                await connector.ConnectSocket(socket, endPoint, connectionParameters, cancellationToken);
             }
             catch
             {
-                CloseSocket(ref socket);
-                throw;
+                SafeCloseSocket(socket);
             }
             return socket;
         }
 
-        private bool IsTor(EndPoint endPoint)
+        internal static void SafeCloseSocket(System.Net.Sockets.Socket socket)
         {
-            if (endPoint is IPEndPoint)
-                return endPoint.AsOnionDNSEndpoint() != null;
-            if (endPoint is DnsEndPoint dns)
-                return dns.Host.EndsWith(".onion", StringComparison.OrdinalIgnoreCase);
-            return false;
-        }
-
-        private void CloseSocket(ref Socket s)
-        {
-            if (s == null)
-                return;
             try
             {
-                s.Shutdown(SocketShutdown.Both);
+                socket.Shutdown(SocketShutdown.Both);
             }
             catch
             {
-                try
-                {
-                    s.Dispose();
-                }
-                catch { }
             }
-            finally
+            try
             {
-                s = null;
+                socket.Dispose();
+            }
+            catch
+            {
             }
         }
     }

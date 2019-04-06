@@ -401,7 +401,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact(Timeout = 60 * 1000)]
+        [Fact(Timeout = 60 * 2 * 1000)]
         [Trait("Integration", "Integration")]
         public async Task CanSetLightningServer()
         {
@@ -1555,7 +1555,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact(Timeout = 60 * 1000)]
+        [Fact(Timeout = 60 * 2 * 1000)]
         [Trait("Integration", "Integration")]
         public async Task CanSetPaymentMethodLimits()
         {
@@ -1710,21 +1710,20 @@ donation:
 
         [Fact]
         [Trait("Fast", "Fast")]
-        public void CanScheduleBackgroundTasks()
+        public async Task CanScheduleBackgroundTasks()
         {
             BackgroundJobClient client = new BackgroundJobClient();
             MockDelay mockDelay = new MockDelay();
             client.Delay = mockDelay;
             bool[] jobs = new bool[4];
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
             Logs.Tester.LogInformation("Start Job[0] in 5 sec");
-            client.Schedule(async () => { Logs.Tester.LogInformation("Job[0]"); jobs[0] = true; }, TimeSpan.FromSeconds(5.0));
+            client.Schedule((_) => { Logs.Tester.LogInformation("Job[0]"); jobs[0] = true; return Task.CompletedTask; }, TimeSpan.FromSeconds(5.0));
             Logs.Tester.LogInformation("Start Job[1] in 2 sec");
-            client.Schedule(async () => { Logs.Tester.LogInformation("Job[1]"); jobs[1] = true; }, TimeSpan.FromSeconds(2.0));
+            client.Schedule((_) => { Logs.Tester.LogInformation("Job[1]"); jobs[1] = true; return Task.CompletedTask; }, TimeSpan.FromSeconds(2.0));
             Logs.Tester.LogInformation("Start Job[2] fails in 6 sec");
-            client.Schedule(async () => { jobs[2] = true; throw new Exception("Job[2]"); }, TimeSpan.FromSeconds(6.0));
+            client.Schedule((_) => { jobs[2] = true; throw new Exception("Job[2]"); }, TimeSpan.FromSeconds(6.0));
             Logs.Tester.LogInformation("Start Job[3] starts in in 7 sec");
-            client.Schedule(async () => { Logs.Tester.LogInformation("Job[3]"); jobs[3] = true; }, TimeSpan.FromSeconds(7.0));
+            client.Schedule((_) => { Logs.Tester.LogInformation("Job[3]"); jobs[3] = true; return Task.CompletedTask; }, TimeSpan.FromSeconds(7.0));
 
             Assert.True(new[] { false, false, false, false }.SequenceEqual(jobs));
             CancellationTokenSource cts = new CancellationTokenSource();
@@ -1734,52 +1733,52 @@ donation:
 
             var waitJobsFinish = client.WaitAllRunning(default);
 
-            mockDelay.Advance(TimeSpan.FromSeconds(2.0));
+            await mockDelay.Advance(TimeSpan.FromSeconds(2.0));
             Assert.True(new[] { false, true, false, false }.SequenceEqual(jobs));
 
-            mockDelay.Advance(TimeSpan.FromSeconds(3.0));
+            await mockDelay.Advance(TimeSpan.FromSeconds(3.0));
             Assert.True(new[] { true, true, false, false }.SequenceEqual(jobs));
 
-            mockDelay.Advance(TimeSpan.FromSeconds(1.0));
+            await mockDelay.Advance(TimeSpan.FromSeconds(1.0));
             Assert.True(new[] { true, true, true, false }.SequenceEqual(jobs));
             Assert.Equal(1, client.GetExecutingCount());
 
-            Assert.False(waitJobsFinish.Wait(100));
+            Assert.False(waitJobsFinish.Wait(1));
             Assert.False(waitJobsFinish.IsCompletedSuccessfully);
 
-            mockDelay.Advance(TimeSpan.FromSeconds(1.0));
+            await mockDelay.Advance(TimeSpan.FromSeconds(1.0));
             Assert.True(new[] { true, true, true, true }.SequenceEqual(jobs));
 
-            Assert.True(waitJobsFinish.Wait(100));
+            await waitJobsFinish;
             Assert.True(waitJobsFinish.IsCompletedSuccessfully);
             Assert.True(!waitJobsFinish.IsFaulted);
             Assert.Equal(0, client.GetExecutingCount());
 
             bool jobExecuted = false;
             Logs.Tester.LogInformation("This job will be cancelled");
-            client.Schedule(async () => { jobExecuted = true; }, TimeSpan.FromSeconds(1.0));
-            mockDelay.Advance(TimeSpan.FromSeconds(0.5));
+            client.Schedule((_) => { jobExecuted = true; return Task.CompletedTask; }, TimeSpan.FromSeconds(1.0));
+            await mockDelay.Advance(TimeSpan.FromSeconds(0.5));
             Assert.False(jobExecuted);
-            Thread.Sleep(100);
-            Assert.Equal(1, client.GetExecutingCount());
+            TestUtils.Eventually(() => Assert.Equal(1, client.GetExecutingCount()));
 
 
             waitJobsFinish = client.WaitAllRunning(default);
             Assert.False(waitJobsFinish.Wait(100));
             cts.Cancel();
-            Assert.True(waitJobsFinish.Wait(1000));
+            await waitJobsFinish;
+            Assert.True(waitJobsFinish.Wait(1));
             Assert.True(waitJobsFinish.IsCompletedSuccessfully);
-            Assert.True(!waitJobsFinish.IsFaulted);
+            Assert.False(waitJobsFinish.IsFaulted);
             Assert.False(jobExecuted);
 
-            mockDelay.Advance(TimeSpan.FromSeconds(1.0));
-            Thread.Sleep(100); // Make sure it get cancelled
+            await mockDelay.Advance(TimeSpan.FromSeconds(1.0));
 
             Assert.False(jobExecuted);
             Assert.Equal(0, client.GetExecutingCount());
+
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await processing);
             Assert.True(processing.IsCanceled);
             Assert.True(client.WaitAllRunning(default).Wait(100));
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         }
 
         [Fact]

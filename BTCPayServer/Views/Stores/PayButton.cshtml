@@ -195,13 +195,12 @@
     <select onchange="document.querySelector('input[type = hidden][name = currency]').value = event.target.value" style="-webkit-appearance: none; border: 0; display: block; padding: 0 3em; margin: auto auto 5px auto; font-size: 11px; background: 0 0; cursor: pointer;"><option value="USD">USD</option><option value="GBP">GBP</option><option value="EUR">EUR</option><option value="BTC">BTC</option></select>
 </script>
 
-
 <script id="template-button-plus-minus" type="text/template">
-    <button style="cursor:pointer; font-size:25px; line-height: 25px; background: rgba(0,0,0,.1); height: 30px; width: 45px; border:none; border-radius: 60px; margin: auto;" onclick="event.preventDefault();document.querySelector('#btcpay-input-price').value = parseInt(document.querySelector('#btcpay-input-price').value) TYPE 1;">TYPE</button>
+    <button style="cursor:pointer; font-size:25px; line-height: 25px; background: rgba(0,0,0,.1); height: 30px; width: 45px; border:none; border-radius: 60px; margin: auto;" onclick="event.preventDefault(); var price = parseInt(document.querySelector('#btcpay-input-price').value); if ('TYPE' == '-' && (price - 1) < 1) { return; } document.querySelector('#btcpay-input-price').value = parseInt(document.querySelector('#btcpay-input-price').value) TYPE 1;">TYPE</button>
 </script>
 
 <script id="template-input-price" type="text/template">
-    <input type="text" id="btcpay-input-price" name="price" value="PRICEVALUE" style="border: none; background-image: none; background-color: transparent; -webkit-box-shadow: none ; -moz-box-shadow: none ; -webkit-appearance: none ; width: WIDTHINPUT; text-align: center; font-size: 25px; margin: auto; border-radius: 5px; line-height: 35px; background: #fff;" oninput="event.preventDefault();isNaN(event.target.value) ? document.querySelector('#btcpay-input-price').value = PRICEVALUE : event.target.value" CUSTOM />
+    <input type="text" id="btcpay-input-price" name="price" value="PRICEVALUE" style="border: none; background-image: none; background-color: transparent; -webkit-box-shadow: none ; -moz-box-shadow: none ; -webkit-appearance: none ; width: WIDTHINPUT; text-align: center; font-size: 25px; margin: auto; border-radius: 5px; line-height: 35px; background: #fff;" oninput="event.preventDefault();isNaN(event.target.value) || event.target.value <= 0 ? document.querySelector('#btcpay-input-price').value = PRICEVALUE : event.target.value" CUSTOM />
 </script>
 
 <script id="template-input-slider" type="text/template">

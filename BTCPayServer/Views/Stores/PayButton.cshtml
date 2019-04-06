@@ -159,22 +159,22 @@
             Please fix errors shown in order for code generation to successfully execute.
         </div>
     </div>
+</div>
 
+@section HeadScripts {
+    <link rel="stylesheet" href="~/vendor/highlightjs/default.min.css">
+    <script src="~/vendor/highlightjs/highlight.min.js"></script>
 
-    @section HeadScripts {
-        <link rel="stylesheet" href="~/vendor/highlightjs/default.min.css">
-        <script src="~/vendor/highlightjs/highlight.min.js"></script>
+    <script src="~/vendor/vuejs/vue.js"></script>
+    <script src="~/vendor/vuejs-vee-validate/vee-validate.js"></script>
 
-        <script src="~/vendor/vuejs/vue.js"></script>
-        <script src="~/vendor/vuejs-vee-validate/vee-validate.js"></script>
+    <script src="~/vendor/clipboard.js/clipboard.js"></script>
 
-        <script src="~/vendor/clipboard.js/clipboard.js"></script>
+    <script src="~/paybutton/paybutton.js"></script>
+}
 
-        <script src="~/paybutton/paybutton.js"></script>
-    }
-
-    @section Scripts {
-        <script type="text/javascript">
+@section Scripts {
+    <script type="text/javascript">
         var srvModel = @Html.Raw(Json.Serialize(Model));
 
         var payButtonCtrl = new Vue({
@@ -188,5 +188,23 @@
                 }
             }
         });
-        </script>
-    }
+    </script>
+}
+
+<script id="template-select-currency" type="text/template">
+    <select onchange="document.querySelector('input[type = hidden][name = currency]').value = event.target.value" style="-webkit-appearance: none; border: 0; display: block; padding: 0 3em; margin: auto auto 5px auto; font-size: 11px; background: 0 0; cursor: pointer;"><option value="USD">USD</option><option value="GBP">GBP</option><option value="EUR">EUR</option><option value="BTC">BTC</option></select>
+</script>
+
+
+<script id="template-button-plus-minus" type="text/template">
+    <button style="cursor:pointer; font-size:25px; line-height: 25px; background: rgba(0,0,0,.1); height: 30px; width: 45px; border:none; border-radius: 60px; margin: auto;" onclick="event.preventDefault();document.querySelector('#btcpay-input-price').value = parseInt(document.querySelector('#btcpay-input-price').value) TYPE 1;">TYPE</button>
+</script>
+
+<script id="template-input-price" type="text/template">
+    <input type="text" id="btcpay-input-price" name="price" value="PRICEVALUE" style="border: none; background-image: none; background-color: transparent; -webkit-box-shadow: none ; -moz-box-shadow: none ; -webkit-appearance: none ; width: WIDTHINPUT; text-align: center; font-size: 25px; margin: auto; border-radius: 5px; line-height: 35px; background: #fff;" oninput="event.preventDefault();isNaN(event.target.value) ? document.querySelector('#btcpay-input-price').value = PRICEVALUE : event.target.value" CUSTOM />
+</script>
+
+<script id="template-input-slider" type="text/template">
+    <input class="btcpay-input-range" id="btcpay-input-range" value="PRICE" type="range" min="MIN" max="MAX" step="STEP" style="width:WIDTH ;margin-bottom:15px;" oninput="document.querySelector('#btcpay-input-price').value = document.querySelector('#btcpay-input-range').value" />
+    <style type="text/css">input[type=range].btcpay-input-range{-webkit-appearance:none;width:100%;margin:9.45px 0}input[type=range].btcpay-input-range:focus{outline:0}input[type=range].btcpay-input-range::-webkit-slider-runnable-track{width:100%;height:3.1px;cursor:pointer;box-shadow:0 0 1.7px #020,0 0 0 #003c00;background:#f3f3f3;border-radius:1px;border:0 solid rgba(24,213,1,0)}input[type=range].btcpay-input-range::-webkit-slider-thumb{box-shadow:0 0 3.7px rgba(0,170,0,0),0 0 0 rgba(0,195,0,0);border:2.5px solid #cedc21;height:22px;width:23px;border-radius:12px;background:#0f3723;cursor:pointer;-webkit-appearance:none;margin-top:-9.45px}input[type=range].btcpay-input-range:focus::-webkit-slider-runnable-track{background:#fff}input[type=range].btcpay-input-range::-moz-range-track{width:100%;height:3.1px;cursor:pointer;box-shadow:0 0 1.7px #020,0 0 0 #003c00;background:#f3f3f3;border-radius:1px;border:0 solid rgba(24,213,1,0)}input[type=range].btcpay-input-range::-moz-range-thumb{box-shadow:0 0 3.7px rgba(0,170,0,0),0 0 0 rgba(0,195,0,0);border:2.5px solid #cedc21;height:22px;width:23px;border-radius:12px;background:#0f3723;cursor:pointer}input[type=range].btcpay-input-range::-ms-track{width:100%;height:3.1px;cursor:pointer;background:0 0;border-color:transparent;color:transparent}input[type=range].btcpay-input-range::-ms-fill-lower{background:#e6e6e6;border:0 solid rgba(24,213,1,0);border-radius:2px;box-shadow:0 0 1.7px #020,0 0 0 #003c00}input[type=range].btcpay-input-range::-ms-fill-upper{background:#f3f3f3;border:0 solid rgba(24,213,1,0);border-radius:2px;box-shadow:0 0 1.7px #020,0 0 0 #003c00}input[type=range].btcpay-input-range::-ms-thumb{box-shadow:0 0 3.7px rgba(0,170,0,0),0 0 0 rgba(0,195,0,0);border:2.5px solid #cedc21;height:22px;width:23px;border-radius:12px;background:#0f3723;cursor:pointer;height:3.1px}input[type=range].btcpay-input-range:focus::-ms-fill-lower{background:#f3f3f3}input[type=range].btcpay-input-range:focus::-ms-fill-upper{background:#fff}</style>
+</script>

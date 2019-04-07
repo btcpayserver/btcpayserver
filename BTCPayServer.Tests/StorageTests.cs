@@ -34,28 +34,40 @@ namespace BTCPayServer.Tests
                 Assert.IsType<StorageSettings>(Assert.IsType<ViewResult>(await controller.Storage()).Model);
                 
                 //Once we select a provider, redirect to its view
-                Assert.Equal(nameof(ServerController.EditFileSystemStorageProvider), (Assert
+                var localResult = Assert
                     .IsType<RedirectToActionResult>(controller.Storage(new StorageSettings()
                     {
                         Provider = StorageProvider.FileSystem
-                    })).ActionName));
-                Assert.Equal(nameof(ServerController.EditAmazonS3StorageProvider), (Assert
+                    }));
+                Assert.Equal(nameof(ServerController.StorageProvider), localResult.ActionName);
+                Assert.Equal(StorageProvider.FileSystem.ToString(), localResult.RouteValues["provider"]);
+                
+                
+                
+                var AmazonS3result = Assert
                     .IsType<RedirectToActionResult>(controller.Storage(new StorageSettings()
                     {
                         Provider = StorageProvider.AmazonS3
-                    })).ActionName));
-                Assert.Equal(nameof(ServerController.EditAzureBlobStorageStorageProvider), (Assert
-                    .IsType<RedirectToActionResult>(controller.Storage(new StorageSettings()
-                    {
-                        Provider = StorageProvider.AzureBlobStorage
-                    })).ActionName));
-                Assert.Equal(nameof(ServerController.EditGoogleCloudStorageStorageProvider), (Assert
+                    }));
+                Assert.Equal(nameof(ServerController.StorageProvider), AmazonS3result.ActionName);
+                Assert.Equal(StorageProvider.AmazonS3.ToString(), AmazonS3result.RouteValues["provider"]);
+                
+                var GoogleResult = Assert
                     .IsType<RedirectToActionResult>(controller.Storage(new StorageSettings()
                     {
                         Provider = StorageProvider.GoogleCloudStorage
-                    })).ActionName));
+                    }));
+                Assert.Equal(nameof(ServerController.StorageProvider), GoogleResult.ActionName);
+                Assert.Equal(StorageProvider.GoogleCloudStorage.ToString(), GoogleResult.RouteValues["provider"]);
                 
                 
+                var AzureResult = Assert
+                    .IsType<RedirectToActionResult>(controller.Storage(new StorageSettings()
+                    {
+                        Provider = StorageProvider.AzureBlobStorage
+                    }));
+                Assert.Equal(nameof(ServerController.StorageProvider), AzureResult.ActionName);
+                Assert.Equal(StorageProvider.AzureBlobStorage.ToString(), AzureResult.RouteValues["provider"]);
                 
                 //Cool, we get redirected to the config pages
                 //Let's configure this stuff

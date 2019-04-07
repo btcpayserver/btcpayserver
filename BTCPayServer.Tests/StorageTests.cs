@@ -1,10 +1,16 @@
+using System;
+using System.IO;
 using BTCPayServer.Controllers;
+using BTCPayServer.Models;
+using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Storage.Models;
 using BTCPayServer.Storage.Services.Providers.AzureBlobStorage.Configuration;
 using BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration;
 using BTCPayServer.Tests.Logging;
+using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.Resources;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -115,9 +121,68 @@ namespace BTCPayServer.Tests
                Assert.Equal(azureBlobStorageConfiguration.ConnectionString, Assert.IsType<AzureBlobStorageConfiguration>(Assert
                    .IsType<ViewResult>(await controller.StorageProvider(StorageProvider.AzureBlobStorage.ToString()))
                    .Model).ConnectionString);
+               
+               //awesome, now let's see if the files result says we're all set up
+               var viewFilesViewModel = Assert.IsType<ViewFilesViewModel>(Assert.IsType<ViewResult>(await controller.Files()).Model);
+               Assert.True(viewFilesViewModel.StorageConfigured);
+               Assert.Empty(viewFilesViewModel.Files);
             }
         }
-        
+
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public async void CanUploadAndViewAndDeleteFiles()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.Start();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                var controller = tester.PayTester.GetController<ServerController>(user.UserId, user.StoreId);
+                
+                
+                var shouldBeRedirectingToLocalStorageConfigPage =
+                    Assert.IsType<RedirectToActionResult>(await controller.Storage());
+                Assert.Equal(nameof(StorageProvider), shouldBeRedirectingToLocalStorageConfigPage.ActionName);
+                Assert.Equal(StorageProvider.FileSystem, shouldBeRedirectingToLocalStorageConfigPage.RouteValues["provider"]);
+                
+                
+
+                var filename = "uploadtestfile.txt";
+                var fileContent = "content";
+                File.WriteAllText(filename, fileContent);
+
+                var fileInfo = new FileInfo(filename);
+                var formFile = new FormFile(
+                    new FileStream(filename, FileMode.OpenOrCreate),
+                    0,
+                    fileInfo.Length, fileInfo.Name, fileInfo.FullName);
+                var uploadFormFileResult = Assert.IsType<RedirectToActionResult>(await controller.CreateFile(formFile));
+                Assert.True(uploadFormFileResult.RouteValues.ContainsKey("fileId"));
+                var fileId = uploadFormFileResult.RouteValues["fileId"].ToString();
+                Assert.Equal("Files", uploadFormFileResult.ActionName);
+
+                var viewFilesViewModel =
+                    Assert.IsType<ViewFilesViewModel>(Assert.IsType<ViewResult>(await controller.Files(fileId)).Model);
+
+                Assert.NotEmpty(viewFilesViewModel.Files);
+                Assert.Equal(fileId, viewFilesViewModel.SelectedFileId);
+                Assert.NotEmpty(viewFilesViewModel.DirectFileUrl);
+                
+                
+                var net = new System.Net.WebClient();
+                var data = await net.DownloadStringTaskAsync(new Uri(viewFilesViewModel.DirectFileUrl));
+                Assert.Equal(fileContent, data);
+
+                Assert.Equal(StatusMessageModel.StatusSeverity.Success, new StatusMessageModel(Assert.IsType<RedirectToActionResult>(await controller.DeleteFile(fileId))
+                    .RouteValues["statusMessage"].ToString()).Severity);
+                
+                viewFilesViewModel =
+                    Assert.IsType<ViewFilesViewModel>(Assert.IsType<ViewResult>(await controller.Files(fileId)).Model);
+
+                Assert.Empty(viewFilesViewModel.Files);
+            }
+        }
         private static string GetFromSecrets(string key)
         {
             var builder = new ConfigurationBuilder();

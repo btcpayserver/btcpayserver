@@ -22,7 +22,7 @@ namespace BTCPayServer.Controllers
     public partial class ServerController
     {
         [HttpGet("server/files/{fileId?}")]
-        public async Task<IActionResult> Files(string fileId, string statusMessage)
+        public async Task<IActionResult> Files(string fileId = null, string statusMessage = null)
         {
             TempData["StatusMessage"] = statusMessage;
             return View(new ViewFilesViewModel()

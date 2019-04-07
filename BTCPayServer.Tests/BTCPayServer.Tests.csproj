@@ -33,4 +33,8 @@
   <ItemGroup>
     <ProjectReference Include="..\BTCPayServer\BTCPayServer.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="uploadtestfile.txt" />
+  </ItemGroup>
 </Project>

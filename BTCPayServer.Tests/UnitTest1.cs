@@ -1649,7 +1649,7 @@ donation:
                 Assert.Equal("Nicolas Sexy Hair", vmview.CustomButtonText);
                 Assert.Equal("Wanna tip?", vmview.CustomTipText);
                 Assert.Equal("15,18,20", string.Join(',', vmview.CustomTipPercentages));
-                Assert.IsType<RedirectToActionResult>(publicApps.ViewPointOfSale(appId, 0, null, null, null, null, "orange").Result);
+                Assert.IsType<RedirectToActionResult>(publicApps.ViewPointOfSale(appId, "0", null, null, null, null, "orange").Result);
 
                 //
                 var invoices = user.BitPay.GetInvoices();
@@ -1659,7 +1659,7 @@ donation:
                 Assert.Equal("orange", orangeInvoice.ItemDesc);
 
                 // testing custom amount
-                var action = Assert.IsType<RedirectToActionResult>(publicApps.ViewPointOfSale(appId, 5, null, null, null, null, "donation").Result);
+                var action = Assert.IsType<RedirectToActionResult>(publicApps.ViewPointOfSale(appId, "5", null, null, null, null, "donation").Result);
                 Assert.Equal(nameof(InvoiceController.Checkout), action.ActionName);
                 invoices = user.BitPay.GetInvoices();
                 var donationInvoice = invoices.Single(i => i.Price == 5m);

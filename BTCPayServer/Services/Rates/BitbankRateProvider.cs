@@ -24,9 +24,17 @@ namespace BTCPayServer.Services.Rates
             var jobj = await response.Content.ReadAsAsync<JObject>(cancellationToken);
             return new ExchangeRates(((jobj["data"] as JObject) ?? new JObject())
                 .Properties()
-                .Select(p => new ExchangeRate(ExchangeName, CurrencyPair.Parse(p.Name), new BidAsk(p.Value["buy"].Value<decimal>(), p.Value["sell"].Value<decimal>())))
+                .Select(p => new ExchangeRate(ExchangeName, CurrencyPair.Parse(p.Name), CreateBidAsk(p)))
                 .ToArray());
-                
+
+        }
+
+        private static BidAsk CreateBidAsk(JProperty p)
+        {
+            var buy = p.Value["buy"].Value<decimal>();
+            var sell = p.Value["sell"].Value<decimal>();
+            // Bug from their API (https://github.com/btcpayserver/btcpayserver/issues/741)
+            return buy < sell ? new BidAsk(buy, sell) : new BidAsk(sell, buy);
         }
     }
 }

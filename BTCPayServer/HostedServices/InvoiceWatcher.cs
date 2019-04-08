@@ -49,7 +49,6 @@ namespace BTCPayServer.HostedServices
             InvoiceRepository invoiceRepository,
             EventAggregator eventAggregator)
         {
-            PollInterval = TimeSpan.FromMinutes(1.0);
             _InvoiceRepository = invoiceRepository ?? throw new ArgumentNullException(nameof(invoiceRepository));
             _EventAggregator = eventAggregator ?? throw new ArgumentNullException(nameof(eventAggregator));
             _NetworkProvider = networkProvider;
@@ -99,8 +98,8 @@ namespace BTCPayServer.HostedServices
 
                 if (accounting.Paid < accounting.MinimumTotalDue && invoice.GetPayments().Count != 0 && invoice.ExceptionStatus != InvoiceExceptionStatus.PaidPartial)
                 {
-                        invoice.ExceptionStatus = InvoiceExceptionStatus.PaidPartial;
-                        context.MarkDirty();
+                    invoice.ExceptionStatus = InvoiceExceptionStatus.PaidPartial;
+                    context.MarkDirty();
                 }
             }
 
@@ -185,19 +184,6 @@ namespace BTCPayServer.HostedServices
             return result;
         }
 
-        TimeSpan _PollInterval;
-        public TimeSpan PollInterval
-        {
-            get
-            {
-                return _PollInterval;
-            }
-            set
-            {
-                _PollInterval = value;
-            }
-        }
-
         private void Watch(string invoiceId)
         {
             if (invoiceId == null)
@@ -231,25 +217,24 @@ namespace BTCPayServer.HostedServices
         BlockingCollection<string> _WatchRequests = new BlockingCollection<string>(new ConcurrentQueue<string>());
 
         Task _Loop;
-        Task _WaitingInvoices;
         CancellationTokenSource _Cts;
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
             _Cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             _Loop = StartLoop(_Cts.Token);
-            _WaitingInvoices = WaitPendingInvoices();
+            _ = WaitPendingInvoices();
 
             leases.Add(_EventAggregator.Subscribe<Events.InvoiceNeedUpdateEvent>(b =>
             {
                 Watch(b.InvoiceId);
             }));
-            leases.Add(_EventAggregator.Subscribe<Events.InvoiceEvent>(async b =>
+            leases.Add(_EventAggregator.Subscribe<Events.InvoiceEvent>(b =>
             {
                 if (b.Name == InvoiceEvent.Created)
                 {
                     Watch(b.Invoice.Id);
-                    await Wait(b.Invoice.Id);
+                    _ = Wait(b.Invoice.Id);
                 }
 
                 if (b.Name == InvoiceEvent.ReceivedPayment)
@@ -264,81 +249,76 @@ namespace BTCPayServer.HostedServices
         {
             await Task.WhenAll((await _InvoiceRepository.GetPendingInvoices())
                 .Select(id => Wait(id)).ToArray());
-            _WaitingInvoices = null;
         }
 
         async Task StartLoop(CancellationToken cancellation)
         {
             Logs.PayServer.LogInformation("Start watching invoices");
             await Task.Delay(1).ConfigureAwait(false); // Small hack so that the caller does not block on GetConsumingEnumerable
-            try
+
+            foreach (var invoiceId in _WatchRequests.GetConsumingEnumerable(cancellation))
             {
-                foreach (var invoiceId in _WatchRequests.GetConsumingEnumerable(cancellation))
+                int maxLoop = 5;
+                int loopCount = -1;
+                while (loopCount < maxLoop)
                 {
-                    int maxLoop = 5;
-                    int loopCount = -1;
-                    while (!cancellation.IsCancellationRequested && loopCount < maxLoop)
+                    loopCount++;
+                    try
                     {
-                        loopCount++;
-                        try
+                        cancellation.ThrowIfCancellationRequested();
+                        var invoice = await _InvoiceRepository.GetInvoice(invoiceId, true);
+                        if (invoice == null)
+                            break;
+                        var updateContext = new UpdateInvoiceContext(invoice);
+                        await UpdateInvoice(updateContext);
+                        if (updateContext.Dirty)
                         {
-                            var invoice = await _InvoiceRepository.GetInvoice(invoiceId, true);
-                            if (invoice == null)
-                                break;
-                            var updateContext = new UpdateInvoiceContext(invoice);
-                            await UpdateInvoice(updateContext);
-                            if (updateContext.Dirty)
-                            {
-                                await _InvoiceRepository.UpdateInvoiceStatus(invoice.Id, invoice.GetInvoiceState());
-                                updateContext.Events.Insert(0, new InvoiceDataChangedEvent(invoice));
-                            }
-
-                            foreach (var evt in updateContext.Events)
-                            {
-                                _EventAggregator.Publish(evt, evt.GetType());
-                            }
-
-                            if (invoice.Status == InvoiceStatus.Complete ||
-                               ((invoice.Status == InvoiceStatus.Invalid || invoice.Status == InvoiceStatus.Expired) && invoice.MonitoringExpiration < DateTimeOffset.UtcNow))
-                            {
-                                if (await _InvoiceRepository.RemovePendingInvoice(invoice.Id))
-                                    _EventAggregator.Publish(new InvoiceStopWatchedEvent(invoice.Id));
-                                break;
-                            }
-
-                            if (updateContext.Events.Count == 0 || cancellation.IsCancellationRequested)
-                                break;
+                            await _InvoiceRepository.UpdateInvoiceStatus(invoice.Id, invoice.GetInvoiceState());
+                            updateContext.Events.Insert(0, new InvoiceDataChangedEvent(invoice));
                         }
-                        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+
+                        foreach (var evt in updateContext.Events)
                         {
+                            _EventAggregator.Publish(evt, evt.GetType());
+                        }
+
+                        if (invoice.Status == InvoiceStatus.Complete ||
+                           ((invoice.Status == InvoiceStatus.Invalid || invoice.Status == InvoiceStatus.Expired) && invoice.MonitoringExpiration < DateTimeOffset.UtcNow))
+                        {
+                            if (await _InvoiceRepository.RemovePendingInvoice(invoice.Id))
+                                _EventAggregator.Publish(new InvoiceStopWatchedEvent(invoice.Id));
                             break;
                         }
-                        catch (Exception ex)
-                        {
-                            Logs.PayServer.LogError(ex, "Unhandled error on watching invoice " + invoiceId);
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                            Task.Delay(10000, cancellation)
-                                .ContinueWith(t => _WatchRequests.Add(invoiceId), TaskScheduler.Default);
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+
+                        if (updateContext.Events.Count == 0)
                             break;
-                        }
+                    }
+                    catch (Exception ex) when (!cancellation.IsCancellationRequested)
+                    {
+                        Logs.PayServer.LogError(ex, "Unhandled error on watching invoice " + invoiceId);
+                        _ = Task.Delay(10000, cancellation)
+                            .ContinueWith(t => Watch(invoiceId), TaskScheduler.Default);
+                        break;
                     }
                 }
             }
-            catch when (cancellation.IsCancellationRequested)
-            {
-            }
-            Logs.PayServer.LogInformation("Stop watching invoices");
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        public async Task StopAsync(CancellationToken cancellationToken)
         {
             if (_Cts == null)
-                return Task.CompletedTask;
+                return;
             leases.Dispose();
             _Cts.Cancel();
-            var waitingPendingInvoices = _WaitingInvoices ?? Task.CompletedTask;
-            return Task.WhenAll(waitingPendingInvoices, _Loop);
+            try
+            {
+                await _Loop;
+            }
+            catch { }
+            finally
+            {
+                Logs.PayServer.LogInformation("Stop watching invoices");
+            }
         }
     }
 }

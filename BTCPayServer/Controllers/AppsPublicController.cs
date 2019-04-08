@@ -256,19 +256,22 @@ namespace BTCPayServer.Controllers
             var store = await _AppService.GetStore(app);
             store.AdditionalClaims.Add(new Claim(Policies.CanCreateInvoice.Key, store.Id));
             var invoice = await _InvoiceController.CreateInvoiceCore(new CreateInvoiceRequest()
-            {
-                ItemCode = choice?.Id,
-                ItemDesc = title,
-                Currency = settings.Currency,
-                Price = price,
-                BuyerEmail = email,
-                OrderId = orderId,
-                NotificationURL = string.IsNullOrEmpty(notificationUrl)? settings.NotificationUrl: notificationUrl,
-                NotificationEmail = settings.NotificationEmail,
-                RedirectURL = redirectUrl  ?? Request.GetDisplayUrl(),
-                FullNotifications = true,
-                PosData = string.IsNullOrEmpty(posData) ? null : posData
-            }, store, HttpContext.Request.GetAbsoluteRoot(), cancellationToken: cancellationToken);
+                {
+                    ItemCode = choice?.Id,
+                    ItemDesc = title,
+                    Currency = settings.Currency,
+                    Price = price,
+                    BuyerEmail = email,
+                    OrderId = orderId,
+                    NotificationURL =
+                        string.IsNullOrEmpty(notificationUrl) ? settings.NotificationUrl : notificationUrl,
+                    NotificationEmail = settings.NotificationEmail,
+                    RedirectURL = redirectUrl ?? Request.GetDisplayUrl(),
+                    FullNotifications = true,
+                    PosData = string.IsNullOrEmpty(posData) ? null : posData
+                }, store, HttpContext.Request.GetAbsoluteRoot(),
+                new List<string>() {AppService.GetAppInternalTag(appId)},
+                cancellationToken);
             return RedirectToAction(nameof(InvoiceController.Checkout), "Invoice", new { invoiceId = invoice.Data.Id });
         }
         

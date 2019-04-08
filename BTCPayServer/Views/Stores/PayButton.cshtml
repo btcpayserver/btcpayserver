@@ -18,7 +18,7 @@
                 </div>
                 <div class="form-group col-md-4">
                     <label>&nbsp;</label>
-                    <input name="price" type="text" class="form-control"
+                    <input name="currency" type="text" class="form-control"
                            v-model="srvModel.currency" v-on:change="inputChanges"
                            :class="{'is-invalid': errors.has('currency') }">
                 </div>
@@ -55,6 +55,44 @@
                             v-on:click="inputChanges($event, 2)" v-bind:class="{'btn-primary': (srvModel.buttonSize == 2) }">
                         209 x 57 px
                     </button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Button Type</label>
+                <div>
+                    <input type="radio" name="button-type" id="btn-fixed" value="0" v-model="srvModel.buttonType" v-on:change="inputChanges" checked />
+                    <label for="btn-fixed">Fixed amount</label>
+                </div>
+                <div>
+                    <input type="radio" name="button-type" id="btn-custom" value="1" v-model="srvModel.buttonType" v-on:change="inputChanges" />
+                    <label for="btn-custom">Custom amount</label>
+                </div>
+                <div>
+                    <input type="radio" name="button-type" id="btn-slider" value="2" v-model="srvModel.buttonType" v-on:change="inputChanges" />
+                    <label for="btn-slider">Slider</label>
+                </div>
+            </div>
+            <div class="form-row" v-if="srvModel.buttonType == 2">
+                <div class="form-group col-md-4">
+                    <label>Min</label>
+                    <input name="min" type="text" class="form-control"
+                           v-model="srvModel.min" v-on:change="inputChanges"
+                           v-validate="'required|decimal|min_value:1'" :class="{'is-invalid': errors.has('min') }">
+                    <small class="text-danger">{{ errors.first('min') }}</small>
+                </div>
+                <div class="form-group col-md-4">
+                    <label>Max</label>
+                    <input name="max" type="text" class="form-control"
+                           v-model="srvModel.max" v-on:change="inputChanges"
+                           v-validate="'required|decimal|min_value:1'" :class="{'is-invalid': errors.has('max') }">
+                    <small class="text-danger">{{ errors.first('max') }}</small>
+                </div>
+                <div class="form-group col-md-4">
+                    <label>Step</label>
+                    <input name="step" type="text" class="form-control"
+                           v-model="srvModel.step" v-on:change="inputChanges"
+                           v-validate="'required|decimal|min_value:1'" :class="{'is-invalid': errors.has('step') }">
+                    <small class="text-danger">{{ errors.first('step') }}</small>
                 </div>
             </div>
         </div>
@@ -121,7 +159,7 @@
             Please fix errors shown in order for code generation to successfully execute.
         </div>
     </div>
-
+</div>
 
 @section HeadScripts {
     <link rel="stylesheet" href="~/vendor/highlightjs/default.min.css">
@@ -152,3 +190,20 @@
         });
     </script>
 }
+
+<script id="template-select-currency" type="text/template">
+    <select onchange="document.querySelector('input[type = hidden][name = currency]').value = event.target.value" style="-webkit-appearance: none; border: 0; display: block; padding: 0 3em; margin: auto auto 5px auto; font-size: 11px; background: 0 0; cursor: pointer;"><option value="USD">USD</option><option value="GBP">GBP</option><option value="EUR">EUR</option><option value="BTC">BTC</option></select>
+</script>
+
+<script id="template-button-plus-minus" type="text/template">
+    <button style="cursor:pointer; font-size:25px; line-height: 25px; background: rgba(0,0,0,.1); height: 30px; width: 45px; border:none; border-radius: 60px; margin: auto;" onclick="event.preventDefault(); var price = parseInt(document.querySelector('#btcpay-input-price').value); if ('TYPE' == '-' && (price - 1) < 1) { return; } document.querySelector('#btcpay-input-price').value = parseInt(document.querySelector('#btcpay-input-price').value) TYPE 1;">TYPE</button>
+</script>
+
+<script id="template-input-price" type="text/template">
+    <input type="text" id="btcpay-input-price" name="price" value="PRICEVALUE" style="border: none; background-image: none; background-color: transparent; -webkit-box-shadow: none ; -moz-box-shadow: none ; -webkit-appearance: none ; width: WIDTHINPUT; text-align: center; font-size: 25px; margin: auto; border-radius: 5px; line-height: 35px; background: #fff;" oninput="event.preventDefault();isNaN(event.target.value) || event.target.value <= 0 ? document.querySelector('#btcpay-input-price').value = PRICEVALUE : event.target.value" CUSTOM />
+</script>
+
+<script id="template-input-slider" type="text/template">
+    <input class="btcpay-input-range" id="btcpay-input-range" value="PRICE" type="range" min="MIN" max="MAX" step="STEP" style="width:WIDTH ;margin-bottom:15px;" oninput="document.querySelector('#btcpay-input-price').value = document.querySelector('#btcpay-input-range').value" />
+    <style type="text/css">input[type=range].btcpay-input-range{-webkit-appearance:none;width:100%;margin:9.45px 0}input[type=range].btcpay-input-range:focus{outline:0}input[type=range].btcpay-input-range::-webkit-slider-runnable-track{width:100%;height:3.1px;cursor:pointer;box-shadow:0 0 1.7px #020,0 0 0 #003c00;background:#f3f3f3;border-radius:1px;border:0 solid rgba(24,213,1,0)}input[type=range].btcpay-input-range::-webkit-slider-thumb{box-shadow:0 0 3.7px rgba(0,170,0,0),0 0 0 rgba(0,195,0,0);border:2.5px solid #cedc21;height:22px;width:23px;border-radius:12px;background:#0f3723;cursor:pointer;-webkit-appearance:none;margin-top:-9.45px}input[type=range].btcpay-input-range:focus::-webkit-slider-runnable-track{background:#fff}input[type=range].btcpay-input-range::-moz-range-track{width:100%;height:3.1px;cursor:pointer;box-shadow:0 0 1.7px #020,0 0 0 #003c00;background:#f3f3f3;border-radius:1px;border:0 solid rgba(24,213,1,0)}input[type=range].btcpay-input-range::-moz-range-thumb{box-shadow:0 0 3.7px rgba(0,170,0,0),0 0 0 rgba(0,195,0,0);border:2.5px solid #cedc21;height:22px;width:23px;border-radius:12px;background:#0f3723;cursor:pointer}input[type=range].btcpay-input-range::-ms-track{width:100%;height:3.1px;cursor:pointer;background:0 0;border-color:transparent;color:transparent}input[type=range].btcpay-input-range::-ms-fill-lower{background:#e6e6e6;border:0 solid rgba(24,213,1,0);border-radius:2px;box-shadow:0 0 1.7px #020,0 0 0 #003c00}input[type=range].btcpay-input-range::-ms-fill-upper{background:#f3f3f3;border:0 solid rgba(24,213,1,0);border-radius:2px;box-shadow:0 0 1.7px #020,0 0 0 #003c00}input[type=range].btcpay-input-range::-ms-thumb{box-shadow:0 0 3.7px rgba(0,170,0,0),0 0 0 rgba(0,195,0,0);border:2.5px solid #cedc21;height:22px;width:23px;border-radius:12px;background:#0f3723;cursor:pointer;height:3.1px}input[type=range].btcpay-input-range:focus::-ms-fill-lower{background:#f3f3f3}input[type=range].btcpay-input-range:focus::-ms-fill-upper{background:#fff}</style>
+</script>

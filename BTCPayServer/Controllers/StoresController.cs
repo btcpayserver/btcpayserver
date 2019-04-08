@@ -507,7 +507,7 @@ namespace BTCPayServer.Controllers
                 Action = nameof(UpdateChangellySettings),
                 Provider = "Changelly"
             });
-            
+
             var coinSwitchEnabled = storeBlob.CoinSwitchSettings != null && storeBlob.CoinSwitchSettings.Enabled;
             vm.ThirdPartyPaymentMethods.Add(new StoreViewModel.ThirdPartyPaymentMethod()
             {
@@ -891,7 +891,11 @@ namespace BTCPayServer.Controllers
                 ButtonSize = 2,
                 UrlRoot = appUrl,
                 PayButtonImageUrl = appUrl + "img/paybutton/pay.png",
-                StoreId = store.Id
+                StoreId = store.Id,
+                ButtonType = 0,
+                Min = 1,
+                Max = 20,
+                Step = 1
             };
             return View(model);
         }

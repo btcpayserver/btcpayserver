@@ -22,7 +22,7 @@ function esc(input) {
         (but it's not necessary).
         Or for XML, only if the named entities are defined in its DTD.
         */
-    ;
+        ;
 }
 
 Vue.use(VeeValidate);
@@ -42,9 +42,42 @@ function inputChanges(event, buttonSize) {
         srvModel.buttonSize = buttonSize;
     }
 
+    var width = "209px";
+    var widthInput = "3em";
+    if (srvModel.buttonSize === 0) {
+        width = "146px";
+        widthInput = "2em";
+    } else if (srvModel.buttonSize === 1) {
+        width = "168px";
+    } else if (srvModel.buttonSize === 2) {
+        width = "209px";
+    }
+
     var html = '<form method="POST" action="' + esc(srvModel.urlRoot) + 'api/v1/invoices">';
     html += addinput("storeId", srvModel.storeId);
-    html += addinput("price", srvModel.price);
+
+    // Add price as hidden only if it's a fixed amount (srvModel.buttonType = 0)
+    if (srvModel.buttonType == 0) {
+        html += addinput("price", srvModel.price);
+    }
+    else if (srvModel.buttonType == 1) {
+        html += '\n    <div style="text-align:center;width:' + width + '">';
+        html += '<div>';
+        html += addPlusMinusButton("-");
+        html += addInputPrice(srvModel.price, widthInput, "");
+        html += addPlusMinusButton("+");
+        html += '</div>';
+        html += addSelectCurrency();
+        html += '</div>';
+    }
+    else if (srvModel.buttonType == 2) {
+        html += '\n    <div style="text-align:center;width:' + width + '">';
+        html += addInputPrice(srvModel.price, width, 'onchange="document.querySelector(\'#btcpay-input-range\').value = document.querySelector(\'#btcpay-input-price\').value"');
+        html += addSelectCurrency();
+        html += addSlider(srvModel.price, srvModel.min, srvModel.max, srvModel.step, width);
+        html += '</div>';
+    }
+
     if (srvModel.currency) {
         html += addinput("currency", srvModel.currency);
     }
@@ -65,14 +98,6 @@ function inputChanges(event, buttonSize) {
         html += addinput("notifyEmail", srvModel.notifyEmail);
     }
 
-    var width = "209px";
-    if (srvModel.buttonSize === 0) {
-        width = "146px";
-    } else if (srvModel.buttonSize === 1) {
-        width = "168px";
-    } else if (srvModel.buttonSize === 2) {
-        width = "209px";
-    }
     html += '\n    <input type="image" src="' + esc(srvModel.payButtonImageUrl) + '" name="submit" style="width:' + width +
         '" alt="Pay with BtcPay, Self-Hosted Bitcoin Payment Processor">';
 
@@ -93,3 +118,37 @@ function addinput(name, value) {
     return html;
 }
 
+function addPlusMinusButton(type) {
+    var button = document.getElementById('template-button-plus-minus').innerHTML.trim();
+    if (type === "+") {
+        return button.replace(/TYPE/g, '+');
+    } else {
+        return button.replace(/TYPE/g, '-');
+    }
+}
+
+function addInputPrice(price, widthInput, customFn) {
+    var input = document.getElementById('template-input-price').innerHTML.trim();
+
+    input = input.replace(/PRICEVALUE/g, price);
+    input = input.replace("WIDTHINPUT", widthInput);
+
+    if (customFn) {
+        return input.replace("CUSTOM", customFn);
+    }
+    return input.replace("CUSTOM", "");
+}
+
+function addSelectCurrency() {
+    return document.getElementById('template-select-currency').innerHTML.trim();
+}
+
+function addSlider(price, min, max, step, width) {
+    var input = document.getElementById('template-input-slider').innerHTML.trim();
+    input = input.replace("PRICE", price);
+    input = input.replace("MIN", min);
+    input = input.replace("MAX", max);
+    input = input.replace("STEP", step);
+    input = input.replace("WIDTH", width);
+    return input;
+}

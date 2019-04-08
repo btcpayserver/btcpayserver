@@ -303,7 +303,7 @@
                                     :mode="srvModel.coinSwitchMode"
                                     :merchant-id="srvModel.coinSwitchMerchantId"
                                     :to-currency="srvModel.paymentMethodId"
-                                    :to-currency-due="srvModel.coinSwitchAmountMarkupPercentage? (1 + (srvModel.coinSwitchAmountMarkupPercentage / 100) :srvModel.btcDue"
+                                    :to-currency-due="coinswitchAmountDue"
                                     :autoload="selectedThirdPartyProcessor === 'coinswitch'"
                                     :to-currency-address="srvModel.btcAddress">
                             <div>

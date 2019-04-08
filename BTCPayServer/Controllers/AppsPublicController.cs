@@ -212,7 +212,7 @@ namespace BTCPayServer.Controllers
         [IgnoreAntiforgeryToken]
         [EnableCors(CorsPolicies.All)]
         public async Task<IActionResult> ViewPointOfSale(string appId,
-                                                        decimal amount,
+                                                        string amount,
                                                         string email,
                                                         string orderId,
                                                         string notificationUrl,
@@ -221,7 +221,9 @@ namespace BTCPayServer.Controllers
                                                         string posData = null, CancellationToken cancellationToken = default)
         {
             var app = await _AppService.GetApp(appId, AppType.PointOfSale);
-            if (string.IsNullOrEmpty(choiceKey) && amount <= 0)
+            bool isDecimalOk = decimal.TryParse(amount, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out decimal amountConverted);
+
+            if (string.IsNullOrEmpty(choiceKey) && !isDecimalOk && amountConverted <= 0)
             {
                 return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
             }
@@ -243,14 +245,14 @@ namespace BTCPayServer.Controllers
                     return NotFound();
                 title = choice.Title;
                 price = choice.Price.Value;
-                if (amount > price)
-                    price = amount;
+                if (amountConverted > price)
+                    price = amountConverted;
             }
             else
             {
                 if (!settings.ShowCustomAmount && !settings.EnableShoppingCart)
                     return NotFound();
-                price = amount;
+                price = amountConverted;
                 title = settings.Title;
             }
             var store = await _AppService.GetStore(app);

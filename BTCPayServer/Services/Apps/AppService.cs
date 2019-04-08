@@ -53,7 +53,11 @@ namespace BTCPayServer.Services.Apps
         public async Task<object> GetAppInfo(string appId)
         {
             var app = await GetApp(appId, AppType.Crowdfund, true);
-            return await GetInfo(app);
+            if (app != null)
+            {
+                return await GetInfo(app);
+            }
+            return null;
         }
         private async Task<ViewCrowdfundViewModel> GetInfo(AppData appData, string statusMessage = null)
         {

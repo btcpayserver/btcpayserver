@@ -15,7 +15,8 @@ namespace BTCPayServer.Storage.Services.Providers
 
         public virtual async Task<StoredFile> AddFile(IFormFile file, StorageSettings configuration)
         {
-            var storageFileName = $"{Guid.NewGuid()}_{file.FileName}";
+            //respect https://www.microsoftpressstore.com/articles/article.aspx?p=2224058&seqNum=8 in naming
+            var storageFileName = $"{Guid.NewGuid()}-{file.FileName.ToLowerInvariant()}";
             var providerConfiguration = GetProviderConfiguration(configuration);
             var provider = await GetStorageProvider(providerConfiguration);
             using (var fileStream = file.OpenReadStream())

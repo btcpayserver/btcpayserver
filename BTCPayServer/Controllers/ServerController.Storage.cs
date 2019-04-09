@@ -157,6 +157,7 @@ namespace BTCPayServer.Controllers
         [HttpPost("server/storage/AzureBlobStorage")]
         public async Task<IActionResult> EditAzureBlobStorageStorageProvider(AzureBlobStorageConfiguration viewModel)
         {
+            
             return await SaveStorageProvider(viewModel, BTCPayServer.Storage.Models.StorageProvider.AzureBlobStorage);
         }
 
@@ -182,6 +183,10 @@ namespace BTCPayServer.Controllers
         private async Task<IActionResult> SaveStorageProvider(IBaseStorageConfiguration viewModel,
             StorageProvider storageProvider)
         {
+            if (!ModelState.IsValid)
+            {
+                return View(viewModel);
+            }
             var data = (await _SettingsRepository.GetSettingAsync<StorageSettings>()) ?? new StorageSettings();
             data.Provider = storageProvider;
             data.Configuration = JObject.FromObject(viewModel);

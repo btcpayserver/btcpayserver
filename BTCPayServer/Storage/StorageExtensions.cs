@@ -29,16 +29,21 @@ namespace BTCPayServer.Storage
         {
             var dir = FileSystemFileProviderService.GetStorageDir(options);
 
+            DirectoryInfo dirInfo;
             if (!Directory.Exists(dir))
             {
-                Directory.CreateDirectory(dir);
+                dirInfo = Directory.CreateDirectory(dir);
+            }
+            else
+            {
+                dirInfo = new DirectoryInfo(dir);
             }
 
             builder.UseStaticFiles(new StaticFileOptions()
             {
                 ServeUnknownFileTypes = true,
                 RequestPath = new PathString($"/{FileSystemFileProviderService.LocalStorageDirectoryName}"),
-                FileProvider = new PhysicalFileProvider(new DirectoryInfo(dir).FullName)
+                FileProvider = new PhysicalFileProvider(dirInfo.FullName)
             });
         }
     }

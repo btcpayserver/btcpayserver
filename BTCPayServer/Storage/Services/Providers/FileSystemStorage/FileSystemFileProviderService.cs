@@ -46,7 +46,7 @@ namespace BTCPayServer.Storage.Services.Providers.FileSystemStorage
         protected override Task<IStorageProvider> GetStorageProvider(FileSystemStorageConfiguration configuration)
         {
             return Task.FromResult<IStorageProvider>(
-                new LocalStorageProvider(GetStorageDir(_Options)));
+                new LocalStorageProvider(new DirectoryInfo(GetStorageDir(_Options)).FullName));
         }
 
         public override async Task<string> GetFileUrl(StoredFile storedFile, StorageSettings configuration)
@@ -58,7 +58,7 @@ namespace BTCPayServer.Storage.Services.Providers.FileSystemStorage
                     : $"{_BtcPayServerEnvironment.ExpectedProtocol}://" +
                       $"{_BtcPayServerEnvironment.ExpectedHost}" +
                       $"{_Options.RootPath}{LocalStorageDirectoryName}";
-            return baseResult.Replace(GetStorageDir(_Options), url,
+            return baseResult.Replace(new DirectoryInfo(GetStorageDir(_Options)).FullName, url,
                 StringComparison.InvariantCultureIgnoreCase);
         }
     }

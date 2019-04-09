@@ -8,6 +8,7 @@ using BTCPayServer.Storage.Models;
 using BTCPayServer.Storage.Services.Providers.AzureBlobStorage.Configuration;
 using BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration;
 using BTCPayServer.Tests.Logging;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -127,7 +128,12 @@ namespace BTCPayServer.Tests
                 user.GrantAccess();
                 var controller = tester.PayTester.GetController<ServerController>(user.UserId, user.StoreId);
 
-
+                var fileSystemStorageConfiguration = Assert.IsType<FileSystemStorageConfiguration>(Assert
+                    .IsType<ViewResult>(await controller.StorageProvider(StorageProvider.FileSystem.ToString()))
+                    .Model);
+                Assert.IsType<ViewResult>(
+                    await controller.EditFileSystemStorageProvider(fileSystemStorageConfiguration));
+                
                 var shouldBeRedirectingToLocalStorageConfigPage =
                     Assert.IsType<RedirectToActionResult>(await controller.Storage());
                 Assert.Equal(nameof(StorageProvider), shouldBeRedirectingToLocalStorageConfigPage.ActionName);
@@ -189,7 +195,12 @@ namespace BTCPayServer.Tests
             var formFile = new FormFile(
                 new FileStream(filename, FileMode.OpenOrCreate),
                 0,
-                fileInfo.Length, fileInfo.Name, fileInfo.FullName);
+                fileInfo.Length, fileInfo.Name, fileInfo.FullName)
+            {
+                Headers = new HeaderDictionary()
+            };
+            formFile.ContentType = "text/plain";
+            formFile.ContentDisposition = $"form-data; name=\"file\"; filename=\"{fileInfo.Name}\"";
             var uploadFormFileResult = Assert.IsType<RedirectToActionResult>(await controller.CreateFile(formFile));
             Assert.True(uploadFormFileResult.RouteValues.ContainsKey("fileId"));
             var fileId = uploadFormFileResult.RouteValues["fileId"].ToString();

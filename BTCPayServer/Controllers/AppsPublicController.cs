@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
+using BTCPayServer.ModelBinders;
 using BTCPayServer.Models;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Payments;
@@ -212,7 +213,7 @@ namespace BTCPayServer.Controllers
         [IgnoreAntiforgeryToken]
         [EnableCors(CorsPolicies.All)]
         public async Task<IActionResult> ViewPointOfSale(string appId,
-                                                        decimal amount,
+                                                        [ModelBinder(typeof(InvariantDecimalModelBinder))] decimal amount,
                                                         string email,
                                                         string orderId,
                                                         string notificationUrl,

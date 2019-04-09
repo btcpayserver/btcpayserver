@@ -195,7 +195,7 @@ namespace BTCPayServer.Tests
             var formFile = new FormFile(
                 new FileStream(filename, FileMode.OpenOrCreate),
                 0,
-                fileInfo.Length, fileInfo.Name, fileInfo.FullName)
+                fileInfo.Length, fileInfo.Name, fileInfo.Name)
             {
                 Headers = new HeaderDictionary()
             };

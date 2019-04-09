@@ -25,11 +25,13 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> Files(string fileId = null, string statusMessage = null)
         {
             TempData["StatusMessage"] = statusMessage;
+            var fileUrl = string.IsNullOrEmpty(fileId) ? null : await _FileService.GetFileUrl(fileId);
+            
             return View(new ViewFilesViewModel()
             {
                 Files = await _StoredFileRepository.GetFiles(),
-                SelectedFileId = fileId,
-                DirectFileUrl = string.IsNullOrEmpty(fileId) ? null : await _FileService.GetFileUrl(fileId),
+                SelectedFileId = string.IsNullOrEmpty(fileUrl)? null: fileId,
+                DirectFileUrl = fileUrl,
                 StorageConfigured = (await _SettingsRepository.GetSettingAsync<StorageSettings>()) != null
             });
         }

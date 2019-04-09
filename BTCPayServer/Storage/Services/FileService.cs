@@ -39,7 +39,7 @@ namespace BTCPayServer.Storage.Services
             var settings = await _SettingsRepository.GetSettingAsync<StorageSettings>();
             var provider = GetProvider(settings);
             var storedFile = await _FileRepository.GetFile(fileId);
-            return await provider.GetFileUrl(storedFile, settings);
+            return storedFile == null ? null: await provider.GetFileUrl(storedFile, settings);
         }
 
         public async Task RemoveFile(string fileId, string userId)

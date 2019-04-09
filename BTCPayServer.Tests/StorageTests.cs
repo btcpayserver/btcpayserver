@@ -225,7 +225,8 @@ namespace BTCPayServer.Tests
             viewFilesViewModel =
                 Assert.IsType<ViewFilesViewModel>(Assert.IsType<ViewResult>(await controller.Files(fileId)).Model);
 
-            Assert.Empty(viewFilesViewModel.Files);
+            Assert.Null(viewFilesViewModel.DirectFileUrl);
+            Assert.Null(viewFilesViewModel.SelectedFileId);
         }
 
       

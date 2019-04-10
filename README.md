@@ -35,31 +35,13 @@ Thanks to the [apps](https://github.com/btcpayserver/btcpayserver-doc/blob/maste
 * SegWit support
 * Lightning Network support (LND and c-lightning)
 * Tor support
-* Opt-in Altcoin integrations
+* Opt-in altcoin integrations
 * Full compatibility with BitPay API (easy migration)
 * Process payments for others
 * Easy-embeddable Payment buttons
 * Point of sale app
 * Crowdfunding app
 * Payment requests
-
-## Supported Altcoins
-
-Bitcoin is the only focus of the project and its core developers. However, opt in integrations for several altcoins maintained by altcoins community is implemented for several altcoins:
-
-* Bitcoin Gold (BTG)
-* Bitcoin Plus (XBC)
-* Bitcore (BTX)
-* Dash (DASH)
-* Dogecoin (DOGE)
-* Feathercoin (FTC)
-* Groestlcoin (GRS)
-* Litecoin (LTC)
-* Monacoin (MONA)
-* Polis (POLIS)
-* Viacoin (VIA)
-
-Altcoins are maintained by their respective communities.
 
 ## Documentation
 
@@ -115,8 +97,24 @@ dotnet dev-certs https --trust
 
 Then use the `Docker-Regtest-https` debug profile.
 
-
-
 ## Other dependencies
 
 For more information, see the documentation: [How to deploy a BTCPay server instance](https://github.com/btcpayserver/btcpayserver-doc/#deployment).
+
+## Supported altcoins
+
+Bitcoin is the only focus of the project and its core developers. However, opt in integrations for several altcoins maintained by altcoins community is implemented for several altcoins:
+
+* BGold (BTG) (also known as Bitcoin Gold)
+* BPlus (XBC) (also known as Bitcoin Plus)
+* Bitcore (BTX)
+* Dash (DASH)
+* Dogecoin (DOGE)
+* Feathercoin (FTC)
+* Groestlcoin (GRS)
+* Litecoin (LTC)
+* Monacoin (MONA)
+* Polis (POLIS)
+* Viacoin (VIA)
+
+Altcoins are maintained by their respective communities.

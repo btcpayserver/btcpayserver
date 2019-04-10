@@ -51,6 +51,13 @@ If you have trouble using BTCPay, consider joining [communities listed on offici
 
 Main community chat is located on [Mattermost](https://chat.btcpayserver.org/).
 
+## Contributing
+BTCPay is built and maintained entirely by volunteer contributors around the internet. We welcome and appreciate new contributions.
+
+If you're a developer looking to help, but you're not sure where to begin, check the [good first issue label](https://github.com/btcpayserver/btcpayserver/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22), which contains small pieces of work that have been specifically flagged as being friendly to new contributors.
+
+Contributors looking to do something a bit more challenging, before opening a pull request, please [create an issue](https://github.com/btcpayserver/btcpayserver/issues/new/choose) or join [our community chat](https://chat.btcpayserver.org/) to get early feedback, discuss best ways to tackle the problem and to ensure there is no work duplication.
+
 ## How to build
 
 While the documentation advises to use docker-compose, you may want to build BTCPay yourself.

@@ -61,5 +61,11 @@ namespace BTCPayServer.Storage.Services.Providers.FileSystemStorage
             return baseResult.Replace(new DirectoryInfo(GetStorageDir(_Options)).FullName, url,
                 StringComparison.InvariantCultureIgnoreCase);
         }
+
+        public override Task<string> GetTemporaryFileUrl(StoredFile storedFile, StorageSettings configuration, DateTimeOffset expiry, bool isDownload,
+            BlobUrlAccess access = BlobUrlAccess.Read)
+        {
+            return GetFileUrl(storedFile, configuration);
+        }
     }
 }

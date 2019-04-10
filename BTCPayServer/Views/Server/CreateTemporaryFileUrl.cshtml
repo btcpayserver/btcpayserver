@@ -1,0 +1,44 @@
+@using BTCPayServer.Controllers
+@model BTCPayServer.Controllers.ServerController.CreateTemporaryFileUrlViewModel
+@{
+    ViewData.SetActivePageAndTitle(ServerNavPages.Services, $"Create temporary file link");
+   
+}
+
+
+<h4>@ViewData["Title"]</h4>
+<partial name="_StatusMessage" for="@TempData["StatusMessage"]"/>
+<div class="row">
+    <div class="col-lg-6">
+        <div asp-validation-summary="All" class="text-danger"></div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-lg-6">
+        <form method="post">
+            <div class="form-group">
+                <label asp-for="IsDownload"></label>
+                <input type="checkbox" class="form-check" asp-for="IsDownload"/>
+                <span asp-validation-for="IsDownload" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="TimeAmount" class="control-label"></label>
+                <div class="input-group">
+
+                    <input type="number" asp-for="TimeAmount"  class="form-control">
+                    <div class="input-group-append">
+                        <select asp-for="TimeType" asp-items="@Html.GetEnumSelectList< ServerController.CreateTemporaryFileUrlViewModel.TmpFileTimeType>()" class="custom-select"></select>
+                    </div>
+                </div>
+                
+                <span asp-validation-for="TimeAmount" class="text-danger"></span>
+                <span asp-validation-for="TimeType" class="text-danger"></span>
+            </div>
+            <button type="submit" class="btn btn-primary" name="command" value="Generate">Generate</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

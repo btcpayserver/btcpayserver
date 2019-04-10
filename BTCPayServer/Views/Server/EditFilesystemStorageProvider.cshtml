@@ -10,11 +10,12 @@
         <div asp-validation-summary="All" class="text-danger"></div>
     </div>
 </div>
+<p>Nothing to configure here. Data will be saved in the btcpay data directory.</p>
 <div class="row">
     <div class="col-lg-6">
         <form method="post">
-            <p>Nothing to configure here. Data will be saved in the btcpay data directory.</p>
-            <button type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
+            
+            <button type="submit" class="btn btn-primary" name="command" value="Save">Choose</button>
             <a asp-action="Storage" asp-route-forceChoice="true" >Change Storage provider</a>
         </form>
     </div>

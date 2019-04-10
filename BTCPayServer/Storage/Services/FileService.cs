@@ -41,6 +41,14 @@ namespace BTCPayServer.Storage.Services
             var storedFile = await _FileRepository.GetFile(fileId);
             return storedFile == null ? null: await provider.GetFileUrl(storedFile, settings);
         }
+        
+        public async Task<string> GetTemporaryFileUrl(string fileId, DateTimeOffset expiry, bool isDownload)
+        {
+            var settings = await _SettingsRepository.GetSettingAsync<StorageSettings>();
+            var provider = GetProvider(settings);
+            var storedFile = await _FileRepository.GetFile(fileId);
+            return storedFile == null ? null: await provider.GetTemporaryFileUrl(storedFile, settings,expiry,isDownload);
+        }
 
         public async Task RemoveFile(string fileId, string userId)
         {

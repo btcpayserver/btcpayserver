@@ -13,6 +13,7 @@ using BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration;
 using BTCPayServer.Storage.Services.Providers.GoogleCloudStorage;
 using BTCPayServer.Storage.Services.Providers.GoogleCloudStorage.Configuration;
 using BTCPayServer.Storage.Services.Providers.Models;
+using BTCPayServer.Storage.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
@@ -26,11 +27,11 @@ namespace BTCPayServer.Controllers
         {
             TempData["StatusMessage"] = statusMessage;
             var fileUrl = string.IsNullOrEmpty(fileId) ? null : await _FileService.GetFileUrl(fileId);
-            
+
             return View(new ViewFilesViewModel()
             {
                 Files = await _StoredFileRepository.GetFiles(),
-                SelectedFileId = string.IsNullOrEmpty(fileUrl)? null: fileId,
+                SelectedFileId = string.IsNullOrEmpty(fileUrl) ? null : fileId,
                 DirectFileUrl = fileUrl,
                 StorageConfigured = (await _SettingsRepository.GetSettingAsync<StorageSettings>()) != null
             });
@@ -52,9 +53,94 @@ namespace BTCPayServer.Controllers
             {
                 return RedirectToAction(nameof(Files), new
                 {
-                    statusMessage = $"Error:{e.Message}"
+                    statusMessage = new StatusMessageModel()
+                    {
+                        Severity = StatusMessageModel.StatusSeverity.Error,
+                        Message = e.Message
+                    }
                 });
             }
+        }
+
+        [HttpGet("server/files/{fileId}/tmp")]
+        public async Task<IActionResult> CreateTemporaryFileUrl(string fileId)
+        {
+            var file = await _StoredFileRepository.GetFile(fileId);
+
+            if (file == null)
+            {
+                return NotFound();
+            }
+
+            return View(new CreateTemporaryFileUrlViewModel());
+        }
+
+        [HttpPost("server/files/{fileId}/tmp")]
+        public async Task<IActionResult> CreateTemporaryFileUrl(string fileId,
+            CreateTemporaryFileUrlViewModel viewModel)
+        {
+            if (viewModel.TimeAmount <= 0)
+            {
+                ModelState.AddModelError(nameof(viewModel.TimeAmount), "Time must be at least 1");
+            }
+            
+            if (!ModelState.IsValid)
+            {
+                return View(viewModel);
+            }
+
+            var file = await _StoredFileRepository.GetFile(fileId);
+
+            if (file == null)
+            {
+                return NotFound();
+            }
+
+            var expiry = DateTimeOffset.Now;
+            switch (viewModel.TimeType)
+            {
+                case CreateTemporaryFileUrlViewModel.TmpFileTimeType.Seconds:
+                    expiry =expiry.AddSeconds(viewModel.TimeAmount);
+                    break;
+                case CreateTemporaryFileUrlViewModel.TmpFileTimeType.Minutes:
+                    expiry = expiry.AddMinutes(viewModel.TimeAmount);
+                    break;
+                case CreateTemporaryFileUrlViewModel.TmpFileTimeType.Hours:
+                    expiry = expiry.AddHours(viewModel.TimeAmount);
+                    break;
+                case CreateTemporaryFileUrlViewModel.TmpFileTimeType.Days:
+                    expiry = expiry.AddDays(viewModel.TimeAmount);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            var url = await _FileService.GetTemporaryFileUrl(fileId, expiry, viewModel.IsDownload);
+
+            return RedirectToAction(nameof(Files), new
+            {
+                StatusMessage = new StatusMessageModel()
+                {
+                    Html =
+                        $"Generated Temporary Url for file {file.FileName} which expires at {expiry.ToString("G")}. <a href='{url}' target='_blank'>{url}</a>"
+                }.ToString(),
+                fileId,
+            });
+
+        }
+
+        public class CreateTemporaryFileUrlViewModel
+        {
+            public enum TmpFileTimeType
+            {
+                Seconds,
+                Minutes,
+                Hours,
+                Days
+            }
+            public int TimeAmount { get; set; }
+            public TmpFileTimeType TimeType { get; set; }
+            public bool IsDownload { get; set; }
         }
 
 
@@ -81,8 +167,9 @@ namespace BTCPayServer.Controllers
             var savedSettings = await _SettingsRepository.GetSettingAsync<StorageSettings>();
             if (forceChoice || savedSettings == null)
             {
-                return View(new StorageSettings()
+                return View(new ChooseStorageViewModel()
                 {
+                    ShowChangeWarning = savedSettings != null,
                     Provider = savedSettings?.Provider ?? BTCPayServer.Storage.Models.StorageProvider.FileSystem
                 });
             }
@@ -157,7 +244,6 @@ namespace BTCPayServer.Controllers
         [HttpPost("server/storage/AzureBlobStorage")]
         public async Task<IActionResult> EditAzureBlobStorageStorageProvider(AzureBlobStorageConfiguration viewModel)
         {
-            
             return await SaveStorageProvider(viewModel, BTCPayServer.Storage.Models.StorageProvider.AzureBlobStorage);
         }
 
@@ -187,6 +273,7 @@ namespace BTCPayServer.Controllers
             {
                 return View(viewModel);
             }
+
             var data = (await _SettingsRepository.GetSettingAsync<StorageSettings>()) ?? new StorageSettings();
             data.Provider = storageProvider;
             data.Configuration = JObject.FromObject(viewModel);

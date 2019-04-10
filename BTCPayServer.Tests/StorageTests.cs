@@ -147,7 +147,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
-        [Trait("Integration", "Integration")]
+        [Trait("ExternalIntegration", "ExternalIntegration")]
         public async Task CanUseAzureBlobStorage()
         {
             using (var tester = ServerTester.Create())

@@ -47,8 +47,9 @@ Thanks to the [apps](https://github.com/btcpayserver/btcpayserver-doc/blob/maste
 
 Please check out our [official website](https://btcpayserver.org/), our [complete documentation](https://github.com/btcpayserver/btcpayserver-doc) and [FAQ](https://github.com/btcpayserver/btcpayserver-doc/tree/master/FAQ#btcpay-frequently-asked-questions-and-common-issues) for more details. 
 
-If you have any troubles with BTCPay, please file a [Github issue](https://github.com/btcpayserver/btcpayserver/issues).
-For general questions, please join the community chat on [Mattermost](https://chat.btcpayserver.org/).
+If you have trouble using BTCPay, consider joining [communities listed on official website](https://btcpayserver.org/#communityCTA) to get help from BTCPay community members. Only file [Github issue](https://github.com/btcpayserver/btcpayserver/issues) for technical issues you can't resolve through other channels or feature requests you've validated with other members of community.
+
+Main community chat is located on [Mattermost](https://chat.btcpayserver.org/).
 
 ## How to build
 
@@ -82,11 +83,11 @@ On linux:
 
 ## How to debug
 
-If you want to debug, use Visual Studio Code or Visual studio 2017.
+If you want to debug, use Visual Studio Code or Visual Studio 2017.
 
 You need to run the development time docker-compose as described [in the test guide](BTCPayServer.Tests/README.md).
 
-You can then run the debugger by using the Launch Profile `Docker-Regtest` on either Visual Studio Code or Visual studio 2017.
+You can then run the debugger by using the Launch Profile `Docker-Regtest` on either Visual Studio Code or Visual Studio 2017.
 
 If you need to debug ledger wallet interaction, install the development time certificate with:
 
@@ -103,7 +104,7 @@ For more information, see the documentation: [How to deploy a BTCPay server inst
 
 ## Supported altcoins
 
-Bitcoin is the only focus of the project and its core developers. However, opt in integrations for several altcoins maintained by altcoins community is implemented for several altcoins:
+Bitcoin is the only focus of the project and its core developers. However, opt in integrations are present for several altcoins:
 
 * BGold (BTG) (also known as Bitcoin Gold)
 * BPlus (XBC) (also known as Bitcoin Plus)

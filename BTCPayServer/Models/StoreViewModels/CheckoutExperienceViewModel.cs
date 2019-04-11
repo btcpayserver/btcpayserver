@@ -49,6 +49,9 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Display lightning payment amounts in Satoshis")]
         public bool LightningAmountInSatoshi { get; set; }
+        
+        [Display(Name = "Redirect invoice to redirect url automatically after paid")]
+        public bool  RedirectAutomatically { get; set; }
 
         public void SetLanguages(LanguageService langService, string defaultLang)
         {

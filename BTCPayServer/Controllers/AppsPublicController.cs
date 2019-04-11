@@ -271,7 +271,7 @@ namespace BTCPayServer.Controllers
                     FullNotifications = true,
                     ExtendedNotifications = true,
                     PosData = string.IsNullOrEmpty(posData) ? null : posData,
-                     RedirectAutomatically =  settings.RedirectAutomatically
+                    RedirectAutomatically =  settings.RedirectAutomatically,
                 }, store, HttpContext.Request.GetAbsoluteRoot(),
                 new List<string>() {AppService.GetAppInternalTag(appId)},
                 cancellationToken);

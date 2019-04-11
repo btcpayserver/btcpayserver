@@ -118,10 +118,9 @@
                         <input type="email" asp-for="NotificationEmail" class="form-control" />
                         <span asp-validation-for="NotificationEmail" class="text-danger"></span>
                     </div>
-                    
                     <div class="form-group">
-                        <label asp-for="RedirectAutomatically"></label>
-                        <input asp-for="RedirectAutomatically" type="checkbox" class="form-check" />
+                        <label asp-for="RedirectAutomatically" class="control-label"></label>*
+                        <select asp-for="RedirectAutomatically" asp-items="Model.RedirectAutomaticallySelectList" class="form-control"></select>
                         <span asp-validation-for="RedirectAutomatically" class="text-danger"></span>
                     </div>
                     <div class="form-group">

@@ -81,6 +81,6 @@ namespace BTCPayServer.Models
         public string Token { get; set; }
 
         [JsonProperty(PropertyName = "redirectAutomatically", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public bool RedirectAutomatically { get; set; }
+        public bool? RedirectAutomatically { get; set; }
     }
 }

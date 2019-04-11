@@ -79,7 +79,7 @@ namespace BTCPayServer.Controllers
             public string CustomCSSLink { get; set; }
             public string NotificationEmail { get; set; }
             public string NotificationUrl { get; set; }
-            public bool RedirectAutomatically { get; set; }
+            public bool? RedirectAutomatically { get; set; }
         }
 
         [HttpGet]
@@ -107,7 +107,7 @@ namespace BTCPayServer.Controllers
                 CustomCSSLink = settings.CustomCSSLink,
                 NotificationEmail = settings.NotificationEmail,
                 NotificationUrl = settings.NotificationUrl,
-                RedirectAutomatically = settings.RedirectAutomatically
+                RedirectAutomatically = settings.RedirectAutomatically.HasValue? settings.RedirectAutomatically.Value? "true": "false" : "" 
             };
             if (HttpContext?.Request != null)
             {
@@ -183,7 +183,7 @@ namespace BTCPayServer.Controllers
                 CustomCSSLink = vm.CustomCSSLink,
                 NotificationUrl = vm.NotificationUrl,
                 NotificationEmail = vm.NotificationEmail,
-                RedirectAutomatically = vm.RedirectAutomatically
+                RedirectAutomatically = string.IsNullOrEmpty(vm.RedirectAutomatically)? (bool?) null: bool.Parse(vm.RedirectAutomatically)
                 
             });
             await UpdateAppSettings(app);

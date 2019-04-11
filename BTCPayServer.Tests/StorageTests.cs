@@ -7,6 +7,7 @@ using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Storage.Models;
 using BTCPayServer.Storage.Services.Providers.AzureBlobStorage.Configuration;
 using BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration;
+using BTCPayServer.Storage.ViewModels;
 using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Internal;
@@ -108,7 +109,7 @@ namespace BTCPayServer.Tests
 
 
                 //if we tell the settings page to force, it should allow us to select a new provider
-                Assert.IsType<StorageSettings>(Assert.IsType<ViewResult>(await controller.Storage(true)).Model);
+                Assert.IsType<ChooseStorageViewModel>(Assert.IsType<ViewResult>(await controller.Storage(true)).Model);
 
                 //awesome, now let's see if the files result says we're all set up
                 var viewFilesViewModel =

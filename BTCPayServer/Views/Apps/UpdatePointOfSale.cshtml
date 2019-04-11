@@ -52,18 +52,22 @@
                     <div class="form-group">
                         <label asp-for="EnableShoppingCart"></label>
                         <input asp-for="EnableShoppingCart" type="checkbox" class="form-check" />
+                        <span asp-validation-for="EnableShoppingCart" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label asp-for="ShowCustomAmount"></label>
                         <input asp-for="ShowCustomAmount" type="checkbox" class="form-check" />
+                        <span asp-validation-for="ShowCustomAmount" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label asp-for="ShowDiscount"></label>
                         <input asp-for="ShowDiscount" type="checkbox" class="form-check" />
+                        <span asp-validation-for="ShowDiscount" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label asp-for="EnableTips"></label>
                         <input asp-for="EnableTips" type="checkbox" class="form-check" />
+                        <span asp-validation-for="EnableTips" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label asp-for="ButtonText" class="control-label"></label>*
@@ -113,6 +117,12 @@
                         <label asp-for="NotificationEmail" class="control-label"></label>
                         <input type="email" asp-for="NotificationEmail" class="form-control" />
                         <span asp-validation-for="NotificationEmail" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label asp-for="RedirectAutomatically"></label>
+                        <input asp-for="RedirectAutomatically" type="checkbox" class="form-check" />
+                        <span asp-validation-for="RedirectAutomatically" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <input type="submit" class="btn btn-primary" value="Save Settings" />

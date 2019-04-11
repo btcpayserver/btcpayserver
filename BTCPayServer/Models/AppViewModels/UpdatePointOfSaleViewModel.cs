@@ -54,5 +54,8 @@ namespace BTCPayServer.Models.AppViewModels
         public string CustomCSSLink { get; set; }
 
         public string Id { get; set; }
+        
+        [Display(Name = "Redirect invoice to redirect url automatically after paid")]
+        public bool  RedirectAutomatically { get; set; }
     }
 }

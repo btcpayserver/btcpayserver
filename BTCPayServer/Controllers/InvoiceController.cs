@@ -125,6 +125,8 @@ namespace BTCPayServer.Controllers
             if (!Uri.IsWellFormedUriString(entity.RedirectURL, UriKind.Absolute))
                 entity.RedirectURL = null;
 
+            entity.RedirectAutomatically = invoice.RedirectAutomatically;
+
             entity.Status = InvoiceStatus.New;
             entity.SpeedPolicy = ParseSpeedPolicy(invoice.TransactionSpeed, store.SpeedPolicy);
 

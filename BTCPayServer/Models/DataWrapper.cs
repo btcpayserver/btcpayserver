@@ -22,12 +22,6 @@ namespace BTCPayServer.Models
         {
             Data = data;
         }
-
-        [JsonProperty("facade", NullValueHandling = NullValueHandling.Ignore)]
-        public string Facade
-        {
-            get; set;
-        }
         [JsonProperty("data")]
         public T Data
         {

@@ -218,7 +218,7 @@ namespace BTCPayServer.Controllers
             });
             _EventAggregator.Publish(new Events.InvoiceEvent(entity, 1001, InvoiceEvent.Created));
             var resp = entity.EntityToDTO(_NetworkProvider);
-            return new DataWrapper<InvoiceResponse>(resp) { Facade = "pos/invoice" };
+            return new DataWrapper<InvoiceResponse>(resp) {  };
         }
 
         private Task WhenAllFetched(InvoiceLogs logs, Dictionary<CurrencyPair, Task<RateResult>> fetchingByCurrencyPair)

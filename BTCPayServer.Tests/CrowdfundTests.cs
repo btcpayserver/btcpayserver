@@ -224,7 +224,7 @@ namespace BTCPayServer.Tests
                     ItemDesc = "Some description",
                     TransactionSpeed = "high",
                     FullNotifications = true
-                }, Facade.Merchant);
+                });
 
                 
                 model = Assert.IsType<ViewCrowdfundViewModel>(Assert
@@ -265,7 +265,7 @@ namespace BTCPayServer.Tests
                     ItemDesc = "Some description",
                     TransactionSpeed = "high",
                     FullNotifications = true
-                }, Facade.Merchant);
+                });
                 invoiceEntity = tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id).GetAwaiter().GetResult();
                 Assert.DoesNotContain(AppService.GetAppInternalTag(appId), invoiceEntity.InternalTags);
 
@@ -282,7 +282,7 @@ namespace BTCPayServer.Tests
                     ItemDesc = "Some description",
                     TransactionSpeed = "high",
                     FullNotifications = true
-                }, Facade.Merchant);
+                });
                 Assert.Equal(0m, model.Info.CurrentPendingAmount);
                 invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, tester.ExplorerNode.Network);
                 tester.ExplorerNode.SendToAddress(invoiceAddress, Money.Coins(0.5m));

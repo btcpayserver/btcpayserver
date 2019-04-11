@@ -611,7 +611,6 @@ namespace BTCPayServer.Controllers
             model.StoreNotConfigured = StoreNotConfigured;
             model.Tokens = tokens.Select(t => new TokenViewModel()
             {
-                Facade = t.Facade,
                 Label = t.Label,
                 SIN = t.SIN,
                 Id = t.Value
@@ -696,7 +695,6 @@ namespace BTCPayServer.Controllers
 
             var tokenRequest = new TokenRequest()
             {
-                Facade = model.Facade,
                 Label = model.Label,
                 Id = model.PublicKey == null ? null : NBitpayClient.Extensions.BitIdExtensions.GetBitIDSIN(new PubKey(model.PublicKey))
             };
@@ -708,7 +706,6 @@ namespace BTCPayServer.Controllers
                 await _TokenRepository.UpdatePairingCode(new PairingCodeEntity()
                 {
                     Id = tokenRequest.PairingCode,
-                    Facade = model.Facade,
                     Label = model.Label,
                 });
                 await _TokenRepository.PairWithStoreAsync(tokenRequest.PairingCode, storeId);
@@ -748,7 +745,6 @@ namespace BTCPayServer.Controllers
                 }
             }
             var model = new CreateTokenViewModel();
-            model.Facade = "merchant";
             ViewBag.HidePublicKey = storeId == null;
             ViewBag.ShowStores = storeId == null;
             ViewBag.ShowMenu = storeId != null;
@@ -800,7 +796,6 @@ namespace BTCPayServer.Controllers
                 return View(new PairingModel()
                 {
                     Id = pairing.Id,
-                    Facade = pairing.Facade,
                     Label = pairing.Label,
                     SIN = pairing.SIN ?? "Server-Initiated Pairing",
                     SelectedStore = selectedStore ?? stores.FirstOrDefault()?.Id,

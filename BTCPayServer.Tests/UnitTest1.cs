@@ -366,7 +366,7 @@ namespace BTCPayServer.Tests
                     OrderId = "orderId",
                     ItemDesc = "Some description",
                     FullNotifications = true
-                }, Facade.Merchant);
+                });
 
                 // Pays 75%
                 var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, tester.ExplorerNode.Network);
@@ -374,7 +374,7 @@ namespace BTCPayServer.Tests
 
                 TestUtils.Eventually(() =>
                 {
-                    var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
+                    var localInvoice = user.BitPay.GetInvoice(invoice.Id);
                     Assert.Equal("paid", localInvoice.Status);
                 });
             }
@@ -518,7 +518,6 @@ namespace BTCPayServer.Tests
                 var controller = acc.GetController<StoresController>();
                 var token = (RedirectToActionResult)controller.CreateToken(new Models.StoreViewModels.CreateTokenViewModel()
                 {
-                    Facade = Facade.Merchant.ToString(),
                     Label = "bla",
                     PublicKey = null
                 }).GetAwaiter().GetResult();
@@ -724,7 +723,7 @@ namespace BTCPayServer.Tests
                     OrderId = "orderId",
                     ItemDesc = "Some description",
                     FullNotifications = true
-                }, Facade.Merchant);
+                });
 
                 var cashCow = tester.ExplorerNode;
                 var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, cashCow.Network);
@@ -822,7 +821,7 @@ namespace BTCPayServer.Tests
                 {
                     Price = 5000.0m,
                     Currency = "USD"
-                }, Facade.Merchant);
+                });
                 var payment1 = invoice.BtcDue + Money.Coins(0.0001m);
                 var payment2 = invoice.BtcDue;
 
@@ -972,7 +971,6 @@ namespace BTCPayServer.Tests
                 var storeController = user.GetController<StoresController>();
                 storeController.CreateToken(new CreateTokenViewModel()
                 {
-                    Facade = Facade.Merchant.ToString(),
                     Label = "test2",
                     StoreId = user.StoreId
                 }).GetAwaiter().GetResult();
@@ -1071,7 +1069,7 @@ namespace BTCPayServer.Tests
                 OrderId = "orderId",
                 ItemDesc = "Some description",
                 FullNotifications = true
-            }, Facade.Merchant);
+            });
             return invoice2.CryptoInfo[0].Rate;
         }
 
@@ -1137,7 +1135,7 @@ namespace BTCPayServer.Tests
                     OrderId = "orderId",
                     ItemDesc = "Some description",
                     FullNotifications = true
-                }, Facade.Merchant);
+                });
                 Assert.Equal(Money.Coins(1.0m), invoice1.BtcPrice);
 
                 var storeController = user.GetController<StoresController>();
@@ -1155,7 +1153,7 @@ namespace BTCPayServer.Tests
                     OrderId = "orderId",
                     ItemDesc = "Some description",
                     FullNotifications = true
-                }, Facade.Merchant);
+                });
 
                 var expectedRate = 5000.0m * 0.6m;
                 var expectedCoins = invoice2.Price / expectedRate;
@@ -1183,7 +1181,7 @@ namespace BTCPayServer.Tests
                     OrderId = "orderId",
                     ItemDesc = "Some description",
                     FullNotifications = true
-                }, Facade.Merchant);
+                });
 
                 Assert.Single(invoice.CryptoInfo);
                 Assert.Equal("LTC", invoice.CryptoInfo[0].CryptoCode);
@@ -1309,7 +1307,7 @@ namespace BTCPayServer.Tests
                     OrderId = "orderId",
                     ItemDesc = "Some description",
                     FullNotifications = true
-                }, Facade.Merchant);
+                });
 
                 var cashCow = tester.ExplorerNode;
                 cashCow.Generate(2); // get some money in case
@@ -1351,7 +1349,7 @@ namespace BTCPayServer.Tests
                     OrderId = "orderId",
                     ItemDesc = "Some description",
                     FullNotifications = true
-                }, Facade.Merchant);
+                });
 
                 cashCow = tester.ExplorerNode;
                 invoiceAddress = BitcoinAddress.Create(invoice.BitcoinAddress, cashCow.Network);
@@ -1414,7 +1412,7 @@ namespace BTCPayServer.Tests
                     {
                         { "BTC", new InvoiceSupportedTransactionCurrency() { Enabled = true } }
                     }
-                }, Facade.Merchant);
+                });
 
                 Assert.Single(invoice.CryptoInfo.Where(c => c.CryptoCode == "BTC"));
                 Assert.Empty(invoice.CryptoInfo.Where(c => c.CryptoCode == "LTC"));
@@ -1517,7 +1515,7 @@ namespace BTCPayServer.Tests
                     OrderId = "orderId",
                     ItemDesc = "Some description",
                     FullNotifications = true
-                }, Facade.Merchant);
+                });
 
                 Assert.Equal(3, invoice.CryptoInfo.Length);
 
@@ -1548,7 +1546,7 @@ namespace BTCPayServer.Tests
                     OrderId = "orderId",
                     ItemDesc = "Some description",
                     FullNotifications = true
-                }, Facade.Merchant);
+                });
 
                 Assert.Single(invoice.CryptoInfo);
                 Assert.Equal("LTC", invoice.CryptoInfo[0].CryptoCode);
@@ -1580,7 +1578,7 @@ namespace BTCPayServer.Tests
                     OrderId = "orderId",
                     ItemDesc = "Some description",
                     FullNotifications = true
-                }, Facade.Merchant);
+                });
 
                 Assert.Single(invoice.CryptoInfo);
                 Assert.Equal(PaymentTypes.LightningLike.ToString(), invoice.CryptoInfo[0].PaymentType);
@@ -1593,7 +1591,7 @@ namespace BTCPayServer.Tests
                     OrderId = "orderId",
                     ItemDesc = "Some description",
                     FullNotifications = true
-                }, Facade.Merchant);
+                });
 
                 Assert.Single(invoice.CryptoInfo);
                 Assert.Equal(PaymentTypes.BTCLike.ToString(), invoice.CryptoInfo[0].PaymentType);
@@ -1875,7 +1873,7 @@ donation:
                     OrderId = "orderId",
                     ItemDesc = "Some \", description",
                     FullNotifications = true
-                }, Facade.Merchant);
+                });
 
                 var networkFee = new FeeRate(invoice.MinerFees["BTC"].SatoshiPerBytes).GetFee(100);
                 // ensure 0 invoices exported because there are no payments yet
@@ -1947,7 +1945,7 @@ donation:
                         OrderId = "orderId",
                         ItemDesc = "Some \", description",
                         FullNotifications = true
-                    }, Facade.Merchant);
+                    });
 
                     var networkFee = Money.Satoshis(10000).ToDecimal(MoneyUnit.BTC);
                     var missingMoney = Money.Satoshis(5000).ToDecimal(MoneyUnit.BTC);
@@ -2025,7 +2023,7 @@ donation:
                     OrderId = "orderId",
                     ItemDesc = "Some \", description",
                     FullNotifications = true
-                }, Facade.Merchant);
+                });
 
                 var cashCow = tester.ExplorerNode;
                 var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, cashCow.Network);
@@ -2099,12 +2097,12 @@ donation:
                     Price = 0.000000012m,
                     Currency = "USD",
                     FullNotifications = true
-                }, Facade.Merchant);
+                });
                 var invoice2 = user.BitPay.CreateInvoice(new Invoice()
                 {
                     Price = 0.000000019m,
                     Currency = "USD"
-                }, Facade.Merchant);
+                });
                 Assert.Equal(0.000000012m, invoice1.Price);
                 Assert.Equal(0.000000019m, invoice2.Price);
 
@@ -2114,7 +2112,7 @@ donation:
                     Price = 1.000000019m,
                     Currency = "USD",
                     FullNotifications = true
-                }, Facade.Merchant);
+                });
                 Assert.Equal(1m, invoice3.Price);
 
                 // Should not round up at 8 digit because the 9th is insignificant
@@ -2123,7 +2121,7 @@ donation:
                     Price = 1.000000019m,
                     Currency = "BTC",
                     FullNotifications = true
-                }, Facade.Merchant);
+                });
                 Assert.Equal(1.00000002m, invoice4.Price);
 
                 // But not if the 9th is insignificant
@@ -2132,7 +2130,7 @@ donation:
                     Price = 0.000000019m,
                     Currency = "BTC",
                     FullNotifications = true
-                }, Facade.Merchant);
+                });
                 Assert.Equal(0.000000019m, invoice4.Price);
 
                 var invoice = user.BitPay.CreateInvoice(new Invoice()
@@ -2140,7 +2138,7 @@ donation:
                     Price = -0.1m,
                     Currency = "BTC",
                     FullNotifications = true
-                }, Facade.Merchant);
+                });
                 Assert.Equal(0.0m, invoice.Price);
             }
         }
@@ -2164,7 +2162,7 @@ donation:
                     OrderId = "orderId",
                     ItemDesc = "Some description",
                     FullNotifications = true
-                }, Facade.Merchant);
+                });
                 var repo = tester.PayTester.GetService<InvoiceRepository>();
                 var ctx = tester.PayTester.GetService<ApplicationDbContextFactory>().CreateContext();
                 Assert.Equal(0, invoice.CryptoInfo[0].TxCount);
@@ -2187,7 +2185,7 @@ donation:
                     Assert.Single(textSearchResult);
                 });
 
-                invoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
+                invoice = user.BitPay.GetInvoice(invoice.Id);
                 Assert.Equal(1000.0m, invoice.TaxIncluded);
                 Assert.Equal(5000.0m, invoice.Price);
                 Assert.Equal(Money.Coins(0), invoice.BtcPaid);
@@ -2220,7 +2218,7 @@ donation:
 
                 TestUtils.Eventually(() =>
                 {
-                    var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
+                    var localInvoice = user.BitPay.GetInvoice(invoice.Id);
                     Assert.Equal("new", localInvoice.Status);
                     Assert.Equal(firstPayment, localInvoice.BtcPaid);
                     txFee = localInvoice.BtcDue - invoice.BtcDue;
@@ -2243,7 +2241,7 @@ donation:
 
                 TestUtils.Eventually(() =>
                 {
-                    var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
+                    var localInvoice = user.BitPay.GetInvoice(invoice.Id);
                     Assert.Equal("paid", localInvoice.Status);
                     Assert.Equal(2, localInvoice.CryptoInfo[0].TxCount);
                     Assert.Equal(firstPayment + secondPayment, localInvoice.BtcPaid);
@@ -2257,7 +2255,7 @@ donation:
 
                 TestUtils.Eventually(() =>
                 {
-                    var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
+                    var localInvoice = user.BitPay.GetInvoice(invoice.Id);
                     Assert.Equal("confirmed", localInvoice.Status);
                 });
 
@@ -2265,7 +2263,7 @@ donation:
 
                 TestUtils.Eventually(() =>
                 {
-                    var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
+                    var localInvoice = user.BitPay.GetInvoice(invoice.Id);
                     Assert.Equal("complete", localInvoice.Status);
                     Assert.NotEqual(0.0m, localInvoice.Rate);
                 });
@@ -2280,14 +2278,14 @@ donation:
                     //NotificationURL = CallbackUri + "/notification",
                     ItemDesc = "Some description",
                     FullNotifications = true
-                }, Facade.Merchant);
+                });
                 invoiceAddress = BitcoinAddress.Create(invoice.BitcoinAddress, cashCow.Network);
 
                 var txId = cashCow.SendToAddress(invoiceAddress, invoice.BtcDue + Money.Coins(1));
 
                 TestUtils.Eventually(() =>
                 {
-                    var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
+                    var localInvoice = user.BitPay.GetInvoice(invoice.Id);
                     Assert.Equal("paid", localInvoice.Status);
                     Assert.Equal(Money.Zero, localInvoice.BtcDue);
                     Assert.Equal("paidOver", (string)((JValue)localInvoice.ExceptionStatus).Value);
@@ -2304,7 +2302,7 @@ donation:
 
                 TestUtils.Eventually(() =>
                 {
-                    var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
+                    var localInvoice = user.BitPay.GetInvoice(invoice.Id);
                     Assert.Equal("confirmed", localInvoice.Status);
                     Assert.Equal(Money.Zero, localInvoice.BtcDue);
                     Assert.Equal("paidOver", (string)((JValue)localInvoice.ExceptionStatus).Value);

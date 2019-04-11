@@ -90,7 +90,6 @@ namespace BTCPayServer.Authentication
             return new BitTokenEntity()
             {
                 Label = data.Label,
-                Facade = data.Facade,
                 Value = data.Id,
                 SIN = data.SIN,
                 PairingTime = data.PairingTime,
@@ -129,7 +128,6 @@ namespace BTCPayServer.Authentication
             {
                 var pairingCode = await ctx.PairingCodes.FindAsync(pairingCodeEntity.Id);
                 pairingCode.Label = pairingCodeEntity.Label;
-                pairingCode.Facade = pairingCodeEntity.Facade;
                 await ctx.SaveChangesAsync();
                 return CreatePairingCodeEntity(pairingCode);
             }
@@ -178,7 +176,6 @@ namespace BTCPayServer.Authentication
                 {
                     Id = pairingCode.TokenValue,
                     PairingTime = DateTime.UtcNow,
-                    Facade = pairingCode.Facade,
                     Label = pairingCode.Label,
                     StoreDataId = pairingCode.StoreDataId,
                     SIN = pairingCode.SIN
@@ -213,7 +210,6 @@ namespace BTCPayServer.Authentication
                 return null;
             return new PairingCodeEntity()
             {
-                Facade = data.Facade,
                 Id = data.Id,
                 Label = data.Label,
                 Expiration = data.Expiration,

@@ -201,15 +201,7 @@ namespace BTCPayServer.Security
 
             private IEnumerable<BitTokenEntity> GetCompatibleTokens(BitTokenEntity token)
             {
-                if (token.Facade == Facade.Merchant.ToString())
-                {
-                    yield return token.Clone(Facade.User);
-                    yield return token.Clone(Facade.PointOfSale);
-                }
-                if (token.Facade == Facade.PointOfSale.ToString())
-                {
-                    yield return token.Clone(Facade.User);
-                }
+              
                 yield return token;
             }
         }

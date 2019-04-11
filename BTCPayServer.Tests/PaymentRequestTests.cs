@@ -131,7 +131,7 @@ namespace BTCPayServer.Tests
                 Assert.Equal("Invoice", actionResult.ControllerName);
                 Assert.Contains(actionResult.RouteValues, pair => pair.Key == "Id" && pair.Value.ToString() == invoiceId);
 
-                var invoice = user.BitPay.GetInvoice(invoiceId, Facade.Merchant);
+                var invoice = user.BitPay.GetInvoice(invoiceId);
                 Assert.Equal(1, invoice.Price);
                 
                 request = new UpdatePaymentRequestViewModel()

@@ -27,10 +27,6 @@ namespace BTCPayServer.Models.StoreViewModels
         {
             get; set;
         }
-        public string Facade
-        {
-            get; set;
-        }
         public string SIN
         {
             get; set;

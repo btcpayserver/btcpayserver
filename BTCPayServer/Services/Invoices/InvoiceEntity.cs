@@ -430,7 +430,7 @@ namespace BTCPayServer.Services.Invoices
                         PaymentType = data.GetPaymentType().ToString(),
                         ReceivedDate = entity.ReceivedTime.DateTime
                     };
-                });
+                }).ToList();
                 
                 if (paymentId.PaymentType == PaymentTypes.BTCLike)
                 {

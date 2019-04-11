@@ -10,17 +10,17 @@ namespace BTCPayServer.Services
     public class PoliciesSettings
     {
         [Display(Name = "Requires a confirmation mail for registering")]
-        public bool RequiresConfirmedEmail
-        {
-            get; set;
-        }
+        public bool RequiresConfirmedEmail { get; set; }
 
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         [Display(Name = "Disable registration")]
         public bool LockSubscription { get; set; }
-        
+
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         [Display(Name = "Discourage search engines from indexing this site")]
         public bool DiscourageSearchEngines { get; set; }
+
+        [Display(Name = "Display app on website root")]
+        public string DisplayAppOnRoot { get; set; }
     }
 }

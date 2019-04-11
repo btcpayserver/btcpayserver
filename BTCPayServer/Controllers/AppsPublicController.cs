@@ -32,7 +32,7 @@ namespace BTCPayServer.Controllers
 {
     public class AppsPublicController : Controller
     {
-        public AppsPublicController(AppService AppService, 
+        public AppsPublicController(AppService AppService,
             InvoiceController invoiceController,
             UserManager<ApplicationUser> userManager)
         {
@@ -86,34 +86,34 @@ namespace BTCPayServer.Controllers
                 AppId = appId
             });
         }
-        
-        
+
+
         [HttpGet]
         [Route("/apps/{appId}/crowdfund")]
         [XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
         public async Task<IActionResult> ViewCrowdfund(string appId, string statusMessage)
-        
         {
             var app = await _AppService.GetApp(appId, AppType.Crowdfund, true);
-            
+
             if (app == null)
                 return NotFound();
             var settings = app.GetSettings<CrowdfundSettings>();
-            
+
             var isAdmin = await _AppService.GetAppDataIfOwner(GetUserId(), appId, AppType.Crowdfund) != null;
-            
-            var hasEnoughSettingsToLoad = !string.IsNullOrEmpty(settings.TargetCurrency );
+
+            var hasEnoughSettingsToLoad = !string.IsNullOrEmpty(settings.TargetCurrency);
             if (!hasEnoughSettingsToLoad)
             {
-                if(!isAdmin)
+                if (!isAdmin)
                     return NotFound();
 
                 return NotFound("A Target Currency must be set for this app in order to be loadable.");
             }
             var appInfo = (ViewCrowdfundViewModel)(await _AppService.GetAppInfo(appId));
             appInfo.HubPath = AppHub.GetHubPath(this.Request);
-            if (settings.Enabled) return View(appInfo);
-            if(!isAdmin)
+            if (settings.Enabled)
+                return View(appInfo);
+            if (!isAdmin)
                 return NotFound();
 
             return View(appInfo);
@@ -135,7 +135,8 @@ namespace BTCPayServer.Controllers
 
             var isAdmin = await _AppService.GetAppDataIfOwner(GetUserId(), appId, AppType.Crowdfund) != null;
 
-            if (!settings.Enabled && !isAdmin) {
+            if (!settings.Enabled && !isAdmin)
+            {
                 return NotFound("Crowdfund is not currently active");
             }
 
@@ -193,7 +194,7 @@ namespace BTCPayServer.Controllers
                 if (request.RedirectToCheckout)
                 {
                     return RedirectToAction(nameof(InvoiceController.Checkout), "Invoice",
-                        new {invoiceId = invoice.Data.Id});
+                        new { invoiceId = invoice.Data.Id });
                 }
                 else
                 {
@@ -204,7 +205,7 @@ namespace BTCPayServer.Controllers
             {
                 return BadRequest(e.Message);
             }
-            
+
         }
 
         [HttpPost]
@@ -257,28 +258,28 @@ namespace BTCPayServer.Controllers
             var store = await _AppService.GetStore(app);
             store.AdditionalClaims.Add(new Claim(Policies.CanCreateInvoice.Key, store.Id));
             var invoice = await _InvoiceController.CreateInvoiceCore(new CreateInvoiceRequest()
-                {
-                    ItemCode = choice?.Id,
-                    ItemDesc = title,
-                    Currency = settings.Currency,
-                    Price = price,
-                    BuyerEmail = email,
-                    OrderId = orderId,
-                    NotificationURL =
+            {
+                ItemCode = choice?.Id,
+                ItemDesc = title,
+                Currency = settings.Currency,
+                Price = price,
+                BuyerEmail = email,
+                OrderId = orderId,
+                NotificationURL =
                         string.IsNullOrEmpty(notificationUrl) ? settings.NotificationUrl : notificationUrl,
-                    NotificationEmail = settings.NotificationEmail,
-                    RedirectURL = redirectUrl ?? Request.GetDisplayUrl(),
-                    FullNotifications = true,
-                    ExtendedNotifications = true,
-                    PosData = string.IsNullOrEmpty(posData) ? null : posData,
-                    RedirectAutomatically =  settings.RedirectAutomatically,
-                }, store, HttpContext.Request.GetAbsoluteRoot(),
-                new List<string>() {AppService.GetAppInternalTag(appId)},
+                NotificationEmail = settings.NotificationEmail,
+                RedirectURL = redirectUrl ?? Request.GetDisplayUrl(),
+                FullNotifications = true,
+                ExtendedNotifications = true,
+                PosData = string.IsNullOrEmpty(posData) ? null : posData,
+                RedirectAutomatically = settings.RedirectAutomatically,
+            }, store, HttpContext.Request.GetAbsoluteRoot(),
+                new List<string>() { AppService.GetAppInternalTag(appId) },
                 cancellationToken);
             return RedirectToAction(nameof(InvoiceController.Checkout), "Invoice", new { invoiceId = invoice.Data.Id });
         }
-        
-        
+
+
         private string GetUserId()
         {
             return _UserManager.GetUserId(User);

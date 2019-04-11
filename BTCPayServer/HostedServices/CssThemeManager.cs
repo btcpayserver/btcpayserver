@@ -13,6 +13,7 @@ using BTCPayServer.Events;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Mvc.Filters;
 using BTCPayServer.Security;
+using BTCPayServer.Services.Apps;
 
 namespace BTCPayServer.HostedServices
 {
@@ -44,13 +45,30 @@ namespace BTCPayServer.HostedServices
             get { return _creativeStartUri; }
         }
 
+
         public bool ShowRegister { get; set; }
         public bool DiscourageSearchEngines { get; set; }
+
+        public AppType? RootAppType { get; set; }
+        public string RootAppId { get; set; }
 
         internal void Update(PoliciesSettings data)
         {
             ShowRegister = !data.LockSubscription;
             DiscourageSearchEngines = data.DiscourageSearchEngines;
+
+            RootAppType = null;
+            RootAppId = null;
+            try
+            {
+                var arr = data.DisplayAppOnRoot.Split('/');
+                RootAppType = Enum.Parse(typeof(AppType), arr[0], true) as AppType?;
+                RootAppId = arr[1];
+            }
+            catch
+            {
+                // ignore parsing errors
+            }
         }
     }
 

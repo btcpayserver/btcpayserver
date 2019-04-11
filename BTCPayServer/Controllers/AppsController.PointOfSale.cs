@@ -178,7 +178,10 @@ namespace BTCPayServer.Controllers
                 CustomButtonText = vm.CustomButtonText,
                 CustomTipText = vm.CustomTipText,
                 CustomTipPercentages = ListSplit(vm.CustomTipPercentages),
-                CustomCSSLink = vm.CustomCSSLink
+                CustomCSSLink = vm.CustomCSSLink,
+                NotificationUrl = vm.NotificationUrl,
+                NotificationEmail = vm.NotificationEmail
+                
             });
             await UpdateAppSettings(app);
             StatusMessage = "App updated";

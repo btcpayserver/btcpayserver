@@ -269,6 +269,7 @@ namespace BTCPayServer.Controllers
                     NotificationEmail = settings.NotificationEmail,
                     RedirectURL = redirectUrl ?? Request.GetDisplayUrl(),
                     FullNotifications = true,
+                    ExtendedNotifications = true,
                     PosData = string.IsNullOrEmpty(posData) ? null : posData
                 }, store, HttpContext.Request.GetAbsoluteRoot(),
                 new List<string>() {AppService.GetAppInternalTag(appId)},

@@ -48,7 +48,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
     <PackageReference Include="NBitcoin" Version="4.1.1.98" />
-    <PackageReference Include="NBitpayClient" Version="1.0.0.32" />	  
+    <PackageReference Include="NBitpayClient" Version="1.0.0.34" />	  
     <PackageReference Include="DBreeze" Version="1.92.0" />
     <PackageReference Include="NBXplorer.Client" Version="2.0.0.6" />
     <PackageReference Include="NicolasDorier.CommandLine" Version="1.0.0.2" />

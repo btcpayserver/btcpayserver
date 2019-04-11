@@ -8,10 +8,6 @@ namespace BTCPayServer.Authentication
 {
     public class BitTokenEntity
     {
-        public string Facade
-        {
-            get; set;
-        }
         public string Value
         {
             get; set;
@@ -39,7 +35,6 @@ namespace BTCPayServer.Authentication
             return new BitTokenEntity()
             {
                 Label = Label,
-                Facade = Facade,
                 StoreId = StoreId,
                 PairingTime = PairingTime,
                 SIN = SIN,

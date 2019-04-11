@@ -11,11 +11,6 @@ namespace BTCPayServer.Authentication
             get;
             set;
         }
-        public string Facade
-        {
-            get;
-            set;
-        }
         public string Label
         {
             get;

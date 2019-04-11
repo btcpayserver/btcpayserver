@@ -22,12 +22,6 @@ namespace BTCPayServer.Models.StoreViewModels
         }
 
         [Required]
-        public string Facade
-        {
-            get; set;
-        }
-
-        [Required]
         public string StoreId
         {
             get; set;
@@ -49,10 +43,6 @@ namespace BTCPayServer.Models.StoreViewModels
             get; set;
         }
         public string SIN
-        {
-            get; set;
-        }
-        public string Facade
         {
             get; set;
         }

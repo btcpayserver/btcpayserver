@@ -21,7 +21,7 @@ namespace BTCPayServer.Models.StoreViewModels
         public SelectList CryptoCurrencies { get; set; }
         public SelectList Languages { get; set; }
 
-        [Display(Name = "Default the default payment method on checkout")]
+        [Display(Name = "Default payment method on checkout")]
         public string DefaultPaymentMethod { get; set; }
         [Display(Name = "Default language on checkout")]
         public string DefaultLang { get; set; }

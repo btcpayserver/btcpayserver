@@ -37,6 +37,8 @@ namespace BTCPayServer.Models.StoreViewModels
         {
             get; set;
         }
+
+        public bool DisableFacadeSelection { get; set; }
     }
     public class TokenViewModel
     {

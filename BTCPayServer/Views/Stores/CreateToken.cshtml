@@ -30,7 +30,7 @@
                 </div>}
             <div class="form-group">
                 <label asp-for="Facade"></label>
-                <select asp-for="Facade" class="form-control">
+                <select asp-for="Facade" class="form-control" disabled="@Model.DisableFacadeSelection">
                     <option value="merchant">merchant</option>
                     <option value="pos">pos</option>
                 </select>

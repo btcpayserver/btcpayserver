@@ -29,6 +29,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitcoin.DataEncoders;
+using NBitpayClient;
 
 namespace BTCPayServer.Controllers
 {
@@ -734,8 +735,17 @@ namespace BTCPayServer.Controllers
         [Route("/api-tokens")]
         [Route("{storeId}/Tokens/Create")]
         [AllowAnonymous]
-        public async Task<IActionResult> CreateToken()
+        public async Task<IActionResult> CreateToken(string facade = null)
         {
+            if (facade != null && !facade.Equals(Facade.Merchant.ToString(), StringComparison.InvariantCultureIgnoreCase) &&
+                !facade.Equals(Facade.PointOfSale.ToString(), StringComparison.InvariantCultureIgnoreCase))
+            {
+                facade = null;
+            }
+            else
+            {
+                facade = facade?.ToLowerInvariant();
+            }
             var userId = GetUserId();
             if (string.IsNullOrWhiteSpace(userId))
                 return Challenge(Policies.CookieAuthentication);
@@ -748,7 +758,8 @@ namespace BTCPayServer.Controllers
                 }
             }
             var model = new CreateTokenViewModel();
-            model.Facade = "merchant";
+            model.Facade =  facade?? "merchant";
+            model.DisableFacadeSelection = !string.IsNullOrEmpty(facade);
             ViewBag.HidePublicKey = storeId == null;
             ViewBag.ShowStores = storeId == null;
             ViewBag.ShowMenu = storeId != null;
@@ -781,7 +792,7 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         [Route("/api-access-request")]
         [AllowAnonymous]
-        public async Task<IActionResult> RequestPairing(string pairingCode, string selectedStore = null)
+        public async Task<IActionResult> RequestPairing(string pairingCode, string selectedStore = null, string facade = null)
         {
             var userId = GetUserId();
             if (userId == null)

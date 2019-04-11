@@ -298,6 +298,12 @@ namespace BTCPayServer.Services.Invoices
             get;
             set;
         }
+        
+        public bool RedirectAutomatically
+        {
+            get;
+            set;
+        }
 
         [Obsolete("Use GetPaymentMethod(network).GetTxFee() instead")]
         public Money TxFee

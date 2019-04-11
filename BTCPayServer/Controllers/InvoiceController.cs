@@ -84,6 +84,7 @@ namespace BTCPayServer.Controllers
             entity.ServerUrl = serverUrl;
             entity.FullNotifications = invoice.FullNotifications || invoice.ExtendedNotifications;
             entity.ExtendedNotifications = invoice.ExtendedNotifications;
+            
             if (invoice.NotificationURL != null &&
                 Uri.TryCreate(invoice.NotificationURL, UriKind.Absolute, out var notificationUri) &&
                 (notificationUri.Scheme == "http" || notificationUri.Scheme == "https"))
@@ -124,6 +125,9 @@ namespace BTCPayServer.Controllers
             entity.RedirectURL = invoice.RedirectURL ?? store.StoreWebsite;
             if (!Uri.IsWellFormedUriString(entity.RedirectURL, UriKind.Absolute))
                 entity.RedirectURL = null;
+
+            entity.RedirectAutomatically =
+                invoice.RedirectAutomatically.GetValueOrDefault(storeBlob.RedirectAutomatically);
 
             entity.Status = InvoiceStatus.New;
             entity.SpeedPolicy = ParseSpeedPolicy(invoice.TransactionSpeed, store.SpeedPolicy);

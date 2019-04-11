@@ -270,7 +270,8 @@ namespace BTCPayServer.Controllers
                     RedirectURL = redirectUrl ?? Request.GetDisplayUrl(),
                     FullNotifications = true,
                     ExtendedNotifications = true,
-                    PosData = string.IsNullOrEmpty(posData) ? null : posData
+                    PosData = string.IsNullOrEmpty(posData) ? null : posData,
+                    RedirectAutomatically =  settings.RedirectAutomatically,
                 }, store, HttpContext.Request.GetAbsoluteRoot(),
                 new List<string>() {AppService.GetAppInternalTag(appId)},
                 cancellationToken);

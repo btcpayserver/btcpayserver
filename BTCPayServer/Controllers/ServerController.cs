@@ -451,11 +451,13 @@ namespace BTCPayServer.Controllers
             // load display app dropdown
             using (var ctx = _ContextFactory.CreateContext())
             {
-                var selectList = ctx.Apps.Select(a =>
-                    new SelectListItem($"{a.AppType} - {a.Name}", a.Id)
-                ).ToList();
+                var userId = _UserManager.GetUserId(base.User);
+                var selectList = ctx.Users.Where(user => user.Id == userId)
+                                .SelectMany(s => s.UserStores)
+                                .Select(s => s.StoreData)
+                                .SelectMany(s => s.Apps)
+                                .Select(a => new SelectListItem($"{a.AppType} - {a.Name}", a.Id)).ToList();
                 selectList.Insert(0, new SelectListItem("(None)", null));
-
                 ViewBag.AppsList = new SelectList(selectList, "Value", "Text", data.RootAppId);
             }
 
@@ -472,6 +474,8 @@ namespace BTCPayServer.Controllers
                     var app = ctx.Apps.SingleOrDefault(a => a.Id == settings.RootAppId);
                     if (app != null)
                         settings.RootAppType = Enum.Parse<AppType>(app.AppType);
+                    else
+                        settings.RootAppType = null;
                 }
             }
             else

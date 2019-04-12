@@ -27,7 +27,7 @@ namespace BTCPayServer.Controllers
         
         public async Task<IActionResult> Index()
         {
-            if (_cachedServerSettings.RootAppType == Services.Apps.AppType.Crowdfund)
+            if (_cachedServerSettings.RootAppType is Services.Apps.AppType.Crowdfund)
             {
                 var serviceProvider = HttpContext.RequestServices;
                 var controller = (AppsPublicController)serviceProvider.GetService(typeof(AppsPublicController));

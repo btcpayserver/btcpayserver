@@ -58,6 +58,10 @@ If you're a developer looking to help, but you're not sure where to begin, check
 
 Contributors looking to do something a bit more challenging, before opening a pull request, please [create an issue](https://github.com/btcpayserver/btcpayserver/issues/new/choose) or join [our community chat](https://chat.btcpayserver.org/) to get early feedback, discuss best ways to tackle the problem and to ensure there is no work duplication.
 
+You also have an awesome video of our contributors which explains you how to get started.
+
+[![Rockstar Dev and Britt Kelly - Btc Pay Server Code Along](https://img.youtube.com/vi/ZePbMPSIvHM/sddefault.jpg)](https://www.youtube.com/embed/VNMnd-dX9Q8)
+
 ## How to build
 
 While the documentation advises to use docker-compose, you may want to build BTCPay yourself.

@@ -41,19 +41,19 @@
 <body>
 @if (Context.Request.Query.ContainsKey("simple"))
 {
-    @await Html.PartialAsync("Crowdfund/MinimalCrowdfund", Model)
+    @await Html.PartialAsync("/Views/AppsPublic/Crowdfund/MinimalCrowdfund.cshtml", Model)
 }
 else
 {
     <noscript>
-        @await Html.PartialAsync("Crowdfund/MinimalCrowdfund", Model)
+        @await Html.PartialAsync("/Views/AppsPublic/Crowdfund/MinimalCrowdfund.cshtml", Model)
     </noscript>
 
     if (Model.AnimationsEnabled)
     {
         <canvas id="fireworks"></canvas>
     }
-    @await Html.PartialAsync("Crowdfund/VueCrowdfund", Model)
+    @await Html.PartialAsync("/Views/AppsPublic/Crowdfund/VueCrowdfund.cshtml", Model)
 }
 
 </body>

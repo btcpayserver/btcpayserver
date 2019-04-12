@@ -44,7 +44,7 @@ namespace BTCPayServer.Controllers
         LightningConfigurationProvider _LnConfigProvider;
         private readonly TorServices _torServices;
         BTCPayServerOptions _Options;
-        ApplicationDbContextFactory _ContextFactory;
+        AppService _AppService;
 
         public ServerController(UserManager<ApplicationUser> userManager,
             BTCPayServerOptions options,
@@ -55,7 +55,7 @@ namespace BTCPayServer.Controllers
             LightningConfigurationProvider lnConfigProvider,
             TorServices torServices,
             StoreRepository storeRepository,
-            ApplicationDbContextFactory contextFactory)
+            AppService appService)
         {
             _Options = options;
             _UserManager = userManager;
@@ -66,7 +66,7 @@ namespace BTCPayServer.Controllers
             _StoreRepository = storeRepository;
             _LnConfigProvider = lnConfigProvider;
             _torServices = torServices;
-            _ContextFactory = contextFactory;
+            _AppService = appService;
         }
 
         [Route("server/rates")]
@@ -448,17 +448,13 @@ namespace BTCPayServer.Controllers
         {
             var data = (await _SettingsRepository.GetSettingAsync<PoliciesSettings>()) ?? new PoliciesSettings();
 
-            // load display app dropdown
-            using (var ctx = _ContextFactory.CreateContext())
-            {
-                var selectList = ctx.Apps.Select(a =>
-                    new SelectListItem($"{a.AppType} - {a.Name}", a.Id)
+            var userId = _UserManager.GetUserId(base.User);
+            var selectList = (await _AppService.GetAllApps(userId))
+                .Select(a =>
+                    new SelectListItem($"{a.AppType} - {a.AppName}", a.Id)
                 ).ToList();
-                selectList.Insert(0, new SelectListItem("(None)", null));
-
-                ViewBag.AppsList = new SelectList(selectList, "Value", "Text", data.RootAppId);
-            }
-
+            selectList.Insert(0, new SelectListItem("(None)", null));
+            ViewBag.AppsList = new SelectList(selectList, "Value", "Text", data.RootAppId);
             return View(data);
         }
         [Route("server/policies")]
@@ -467,11 +463,15 @@ namespace BTCPayServer.Controllers
         {
             if (!String.IsNullOrEmpty(settings.RootAppId))
             {
-                using (var ctx = _ContextFactory.CreateContext())
+                var userId = _UserManager.GetUserId(base.User);
+                var appData = await _AppService.GetApp(settings.RootAppId, null);
+                if (appData != null)
                 {
-                    var app = ctx.Apps.SingleOrDefault(a => a.Id == settings.RootAppId);
-                    if (app != null)
-                        settings.RootAppType = Enum.Parse<AppType>(app.AppType);
+                    settings.RootAppType = Enum.Parse<AppType>(appData.AppType);
+                }
+                else
+                {
+                    settings.RootAppType = null;
                 }
             }
             else

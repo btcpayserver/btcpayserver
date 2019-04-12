@@ -208,12 +208,12 @@ namespace BTCPayServer.Services.Apps
             }
         }
 
-        public async Task<ListAppsViewModel.ListAppViewModel[]> GetAllApps(string userId, bool allowNoUser = false)
+        public async Task<ListAppsViewModel.ListAppViewModel[]> GetAllApps(string userId)
         {
             using (var ctx = _ContextFactory.CreateContext())
             {
                 return await ctx.UserStore
-                    .Where(us => (allowNoUser && string.IsNullOrEmpty(userId)) || us.ApplicationUserId == userId)
+                    .Where(us => us.ApplicationUserId == userId)
                     .Join(ctx.Apps, us => us.StoreDataId, app => app.StoreDataId,
                         (us, app) =>
                             new ListAppsViewModel.ListAppViewModel()
@@ -230,13 +230,15 @@ namespace BTCPayServer.Services.Apps
         }
 
 
-        public async Task<AppData> GetApp(string appId, AppType appType, bool includeStore = false)
+        public async Task<AppData> GetApp(string appId, AppType? appType, bool includeStore = false)
         {
             using (var ctx = _ContextFactory.CreateContext())
             {
                 var query = ctx.Apps
-                    .Where(us => us.Id == appId &&
-                                 us.AppType == appType.ToString());
+                    .Where(us => us.Id == appId);
+
+                if (appType is AppType appTypeValue)
+                    query = query.Where(us => us.AppType == appTypeValue.ToString());
 
                 if (includeStore)
                 {

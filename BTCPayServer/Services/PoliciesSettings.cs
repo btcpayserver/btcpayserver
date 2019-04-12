@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Services.Apps;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Services
@@ -21,6 +22,8 @@ namespace BTCPayServer.Services
         public bool DiscourageSearchEngines { get; set; }
 
         [Display(Name = "Display app on website root")]
-        public string DisplayAppOnRoot { get; set; }
+        public string RootAppId { get; set; }
+
+        public AppType? RootAppType { get; set; }
     }
 }

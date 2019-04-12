@@ -27,9 +27,8 @@
                 <input asp-for="DiscourageSearchEngines" type="checkbox" class="form-check-inline" />
             </div>
             <div class="form-group">
-                <label asp-for="DisplayAppOnRoot"></label>
-                <input asp-for="DisplayAppOnRoot" class="form-control" />
-                <span asp-validation-for="DisplayAppOnRoot" class="text-danger"></span>
+                <label asp-for="RootAppId"></label>
+                <select asp-for="RootAppId" asp-items="ViewBag.AppsList" class="form-control"></select>
             </div>
             <button type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
         </form>

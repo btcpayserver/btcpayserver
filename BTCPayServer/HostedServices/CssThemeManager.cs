@@ -57,18 +57,8 @@ namespace BTCPayServer.HostedServices
             ShowRegister = !data.LockSubscription;
             DiscourageSearchEngines = data.DiscourageSearchEngines;
 
-            RootAppType = null;
-            RootAppId = null;
-            try
-            {
-                var arr = data.DisplayAppOnRoot.Split('/');
-                RootAppType = Enum.Parse(typeof(AppType), arr[0], true) as AppType?;
-                RootAppId = arr[1];
-            }
-            catch
-            {
-                // ignore parsing errors
-            }
+            RootAppType = data.RootAppType;
+            RootAppId = data.RootAppId;
         }
     }
 

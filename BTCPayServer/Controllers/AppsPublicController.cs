@@ -7,6 +7,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.ModelBinders;
@@ -33,15 +34,18 @@ namespace BTCPayServer.Controllers
     public class AppsPublicController : Controller
     {
         public AppsPublicController(AppService AppService,
+            BTCPayServerOptions btcPayServerOptions,
             InvoiceController invoiceController,
             UserManager<ApplicationUser> userManager)
         {
             _AppService = AppService;
+            _BtcPayServerOptions = btcPayServerOptions;
             _InvoiceController = invoiceController;
             _UserManager = userManager;
         }
 
         private AppService _AppService;
+        private readonly BTCPayServerOptions _BtcPayServerOptions;
         private InvoiceController _InvoiceController;
         private readonly UserManager<ApplicationUser> _UserManager;
 
@@ -178,19 +182,22 @@ namespace BTCPayServer.Controllers
             try
             {
                 var invoice = await _InvoiceController.CreateInvoiceCore(new CreateInvoiceRequest()
-                {
-                    OrderId = AppService.GetCrowdfundOrderId(appId),
-                    Currency = settings.TargetCurrency,
-                    ItemCode = request.ChoiceKey ?? string.Empty,
-                    ItemDesc = title,
-                    BuyerEmail = request.Email,
-                    Price = price,
-                    NotificationURL = settings.NotificationUrl,
-                    NotificationEmail = settings.NotificationEmail,
-                    FullNotifications = true,
-                    ExtendedNotifications = true,
-                    RedirectURL = request.RedirectUrl ?? Request.GetDisplayUrl()
-                }, store, HttpContext.Request.GetAbsoluteRoot(), new List<string> { AppService.GetAppInternalTag(appId) }, cancellationToken: cancellationToken);
+                    {
+                        OrderId = AppService.GetCrowdfundOrderId(appId),
+                        Currency = settings.TargetCurrency,
+                        ItemCode = request.ChoiceKey ?? string.Empty,
+                        ItemDesc = title,
+                        BuyerEmail = request.Email,
+                        Price = price,
+                        NotificationURL = settings.NotificationUrl,
+                        NotificationEmail = settings.NotificationEmail,
+                        FullNotifications = true,
+                        ExtendedNotifications = true,
+                        RedirectURL = request.RedirectUrl ?? 
+                                     new Uri(new Uri( new Uri(HttpContext.Request.GetAbsoluteRoot()),  _BtcPayServerOptions.RootPath), $"apps/{appId}/crowdfund").ToString()
+                    }, store, HttpContext.Request.GetAbsoluteRoot(),
+                    new List<string> {AppService.GetAppInternalTag(appId)},
+                    cancellationToken: cancellationToken);
                 if (request.RedirectToCheckout)
                 {
                     return RedirectToAction(nameof(InvoiceController.Checkout), "Invoice",

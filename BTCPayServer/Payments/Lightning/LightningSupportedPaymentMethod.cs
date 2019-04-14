@@ -60,10 +60,5 @@ namespace BTCPayServer.Payments.Lightning
             LightningChargeUrl = null;
 #pragma warning restore CS0618 // Type or member is obsolete
         }
-
-        public ILightningClient CreateClient(BTCPayNetwork network)
-        {
-            return LightningClientFactory.CreateClient(this.GetLightningUrl(), network.NBitcoinNetwork);
-        }
     }
 }

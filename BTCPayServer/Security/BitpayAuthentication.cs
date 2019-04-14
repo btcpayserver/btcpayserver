@@ -148,7 +148,7 @@ namespace BTCPayServer.Security
 
                         if (token != null)
                         {
-                            var bitToken = await GetTokenPermissionAsync(sin, token);
+                            var bitToken = (await _TokenRepository.GetTokens(sin)).FirstOrDefault();
                             if (bitToken == null)
                             {
                                 return (null, false);
@@ -183,34 +183,6 @@ namespace BTCPayServer.Security
                     return null;
                 }
                 return await _TokenRepository.GetStoreIdFromAPIKey(apiKey);
-            }
-
-            private async Task<BitTokenEntity> GetTokenPermissionAsync(string sin, string expectedToken)
-            {
-                var actualTokens = (await _TokenRepository.GetTokens(sin)).ToArray();
-                actualTokens = actualTokens.SelectMany(t => GetCompatibleTokens(t)).ToArray();
-
-                var actualToken = actualTokens.FirstOrDefault(a => a.Value.Equals(expectedToken, StringComparison.Ordinal));
-                if (expectedToken == null || actualToken == null)
-                {
-                    Logs.PayServer.LogDebug($"No token found for facade {Facade.Merchant} for SIN {sin}");
-                    return null;
-                }
-                return actualToken;
-            }
-
-            private IEnumerable<BitTokenEntity> GetCompatibleTokens(BitTokenEntity token)
-            {
-                if (token.Facade == Facade.Merchant.ToString())
-                {
-                    yield return token.Clone(Facade.User);
-                    yield return token.Clone(Facade.PointOfSale);
-                }
-                if (token.Facade == Facade.PointOfSale.ToString())
-                {
-                    yield return token.Clone(Facade.User);
-                }
-                yield return token;
             }
         }
         internal static void AddAuthentication(IServiceCollection services, Action<BitpayAuthOptions> bitpayAuth = null)

@@ -28,14 +28,6 @@
                     <input asp-for="PublicKey" class="form-control" />
                     <span asp-validation-for="PublicKey" class="text-danger"></span>
                 </div>}
-            <div class="form-group">
-                <label asp-for="Facade"></label>
-                <select asp-for="Facade" class="form-control">
-                    <option value="merchant">merchant</option>
-                    <option value="pos">pos</option>
-                </select>
-                <span asp-validation-for="Facade" class="text-danger"></span>
-            </div>
 
             @if(ViewBag.ShowStores)
             {

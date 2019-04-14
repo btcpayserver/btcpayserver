@@ -21,7 +21,7 @@ namespace BTCPayServer.Models.StoreViewModels
         public SelectList CryptoCurrencies { get; set; }
         public SelectList Languages { get; set; }
 
-        [Display(Name = "Default the default payment method on checkout")]
+        [Display(Name = "Default payment method on checkout")]
         public string DefaultPaymentMethod { get; set; }
         [Display(Name = "Default language on checkout")]
         public string DefaultLang { get; set; }
@@ -49,6 +49,9 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Display lightning payment amounts in Satoshis")]
         public bool LightningAmountInSatoshi { get; set; }
+        
+        [Display(Name = "Redirect invoice to redirect url automatically after paid")]
+        public bool  RedirectAutomatically { get; set; }
 
         public void SetLanguages(LanguageService langService, string defaultLang)
         {

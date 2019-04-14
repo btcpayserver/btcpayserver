@@ -57,6 +57,12 @@
             <div class="form-group">
                 <label asp-for="LightningAmountInSatoshi"></label>
                 <input asp-for="LightningAmountInSatoshi" type="checkbox" class="form-check" />
+                <span asp-validation-for="LightningAmountInSatoshi" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="RedirectAutomatically"></label>
+                <input asp-for="RedirectAutomatically" type="checkbox" class="form-check" />
+                <span asp-validation-for="RedirectAutomatically" class="text-danger"></span>
             </div>
             <br />
             <button name="command" type="submit" class="btn btn-primary" value="Save">Save</button>

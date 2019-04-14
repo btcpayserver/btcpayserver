@@ -8,19 +8,39 @@ using System.Net.Http;
 using Newtonsoft.Json.Linq;
 using NBitcoin;
 using Newtonsoft.Json;
+using BTCPayServer.Services;
+using BTCPayServer.HostedServices;
 
 namespace BTCPayServer.Controllers
 {
     public class HomeController : Controller
     {
+        private readonly CssThemeManager _cachedServerSettings;
+
         public IHttpClientFactory HttpClientFactory { get; }
 
-        public HomeController(IHttpClientFactory httpClientFactory)
+        public HomeController(IHttpClientFactory httpClientFactory, CssThemeManager cachedServerSettings)
         {
             HttpClientFactory = httpClientFactory;
+            _cachedServerSettings = cachedServerSettings;
         }
-        public IActionResult Index()
+        
+        public async Task<IActionResult> Index()
         {
+            if (_cachedServerSettings.RootAppType is Services.Apps.AppType.Crowdfund)
+            {
+                var serviceProvider = HttpContext.RequestServices;
+                var controller = (AppsPublicController)serviceProvider.GetService(typeof(AppsPublicController));
+                controller.Url = Url;
+                controller.ControllerContext = ControllerContext;
+                var res = await controller.ViewCrowdfund(_cachedServerSettings.RootAppId, null) as ViewResult;
+                if (res != null)
+                {
+                    res.ViewName = "/Views/AppsPublic/ViewCrowdfund.cshtml";
+                    return res; // return 
+                }
+            }
+
             return View("Home");
         }
 

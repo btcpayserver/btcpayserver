@@ -11,7 +11,7 @@ namespace BTCPayServer.Data
         {
             get; set;
         }
-
+        [Obsolete("Unused")]
         public string Facade
         {
             get; set;

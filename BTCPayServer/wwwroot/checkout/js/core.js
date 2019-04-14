@@ -46,6 +46,12 @@ function onDataCallback(jsonData) {
 
         resetTabsSlider();
         $("#paid").addClass("active");
+        if (!jsonData.isModal && jsonData.redirectAutomatically && jsonData.merchantRefLink) {
+            $(".payment__spinner").show();
+            setTimeout(function () {
+                window.location = jsonData.merchantRefLink;
+            }, 2000);
+        }
     }
 
     if (newStatus === "expired" || newStatus === "invalid") { //TODO: different state if the invoice is invalid (failed to confirm after timeout)

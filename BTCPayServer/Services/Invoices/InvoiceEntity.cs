@@ -298,6 +298,12 @@ namespace BTCPayServer.Services.Invoices
             get;
             set;
         }
+        
+        public bool RedirectAutomatically
+        {
+            get;
+            set;
+        }
 
         [Obsolete("Use GetPaymentMethod(network).GetTxFee() instead")]
         public Money TxFee
@@ -355,7 +361,6 @@ namespace BTCPayServer.Services.Invoices
         {
             return DateTimeOffset.UtcNow > ExpirationTime;
         }
-
 
         public InvoiceResponse EntityToDTO(BTCPayNetworkProvider networkProvider)
         {
@@ -417,6 +422,22 @@ namespace BTCPayServer.Services.Invoices
                 var scheme = info.Network.UriScheme;
                 cryptoInfo.Url = ServerUrl.WithTrailingSlash() + $"i/{paymentId}/{Id}";
 
+                cryptoInfo.Payments = GetPayments(info.Network).Select(entity =>
+                {
+                    var data = entity.GetCryptoPaymentData();
+                    return new InvoicePaymentInfo()
+                    {
+                        Id = data.GetPaymentId(),
+                        Fee = entity.NetworkFee,
+                        Value = data.GetValue(),
+                        Completed = data.PaymentCompleted(entity, info.Network),
+                        Confirmed = data.PaymentConfirmed(entity, SpeedPolicy, info.Network),
+                        Destination = data.GetDestination(info.Network),
+                        PaymentType = data.GetPaymentType().ToString(),
+                        ReceivedDate = entity.ReceivedTime.DateTime
+                    };
+                }).ToList();
+                
                 if (paymentId.PaymentType == PaymentTypes.BTCLike)
                 {
                     var minerInfo = new MinerFeeInfo();

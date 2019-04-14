@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
-		<Version>1.0.3.92</Version>
+		<Version>1.0.3.93</Version>
     <NoWarn>NU1701,CA1816,CA1308,CA1810,CA2208</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
@@ -34,7 +34,7 @@
     <EmbeddedResource Include="Currencies.txt" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="BTCPayServer.Lightning.All" Version="1.1.0.15" />
+    <PackageReference Include="BTCPayServer.Lightning.All" Version="1.1.0.16" />
     <PackageReference Include="BuildBundlerMinifier" Version="2.9.406" />
     <PackageReference Include="BundlerMinifier.Core" Version="2.9.406" />
     <PackageReference Include="BundlerMinifier.TagHelpers" Version="2.9.406" />
@@ -48,7 +48,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
     <PackageReference Include="NBitcoin" Version="4.1.1.98" />
-    <PackageReference Include="NBitpayClient" Version="1.0.0.32" />	  
+    <PackageReference Include="NBitpayClient" Version="1.0.0.34" />	  
     <PackageReference Include="DBreeze" Version="1.92.0" />
     <PackageReference Include="NBXplorer.Client" Version="2.0.0.6" />
     <PackageReference Include="NicolasDorier.CommandLine" Version="1.0.0.2" />

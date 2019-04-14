@@ -449,6 +449,7 @@ namespace BTCPayServer.Data
         public Dictionary<string, string> WalletKeyPathRoots { get; set; } = new Dictionary<string, string>();
 
         public EmailSettings EmailSettings { get; set; }
+        public bool RedirectAutomatically { get; set; }
 
         public IPaymentFilter GetExcludedPaymentMethods()
         {

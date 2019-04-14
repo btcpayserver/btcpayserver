@@ -314,6 +314,7 @@ namespace BTCPayServer.Controllers
                 ItemDesc = invoice.ProductInformation.ItemDesc,
                 Rate = ExchangeRate(paymentMethod),
                 MerchantRefLink = invoice.RedirectURL ?? "/",
+                RedirectAutomatically = invoice.RedirectAutomatically,
                 StoreName = store.StoreName,
                 InvoiceBitcoinUrl = paymentMethodId.PaymentType == PaymentTypes.BTCLike ? cryptoInfo.PaymentUrls.BIP21 :
                                     paymentMethodId.PaymentType == PaymentTypes.LightningLike ? cryptoInfo.PaymentUrls.BOLT11 :

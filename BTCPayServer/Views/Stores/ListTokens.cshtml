@@ -25,7 +25,6 @@
             <thead>
                 <tr>
                     <th>Label</th>
-                    <th>Facade</th>
                     <th class="text-right">Actions</th>
                 </tr>
             </thead>
@@ -34,7 +33,6 @@
                 {
                     <tr>
                         <td>@token.Label</td>
-                        <td>@token.Facade</td>
                         <td class="text-right">
                             <a asp-action="ShowToken" asp-route-tokenId="@token.Id">See information</a> - <a asp-action="RevokeToken" asp-route-tokenId="@token.Id">Revoke</a>
                         </td>

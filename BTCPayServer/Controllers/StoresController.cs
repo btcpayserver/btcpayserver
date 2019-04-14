@@ -356,6 +356,7 @@ namespace BTCPayServer.Controllers
             vm.OnChainMinValue = storeBlob.OnChainMinValue?.ToString() ?? "";
             vm.LightningMaxValue = storeBlob.LightningMaxValue?.ToString() ?? "";
             vm.LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi;
+            vm.RedirectAutomatically = storeBlob.RedirectAutomatically;
             return View(vm);
         }
         void SetCryptoCurrencies(CheckoutExperienceViewModel vm, Data.StoreData storeData)
@@ -420,6 +421,7 @@ namespace BTCPayServer.Controllers
             blob.OnChainMinValue = onchainMinValue;
             blob.LightningMaxValue = lightningMaxValue;
             blob.LightningAmountInSatoshi = model.LightningAmountInSatoshi;
+            blob.RedirectAutomatically = model.RedirectAutomatically;
             if (StoreData.SetStoreBlob(blob))
             {
                 needUpdate = true;
@@ -507,7 +509,7 @@ namespace BTCPayServer.Controllers
                 Action = nameof(UpdateChangellySettings),
                 Provider = "Changelly"
             });
-            
+
             var coinSwitchEnabled = storeBlob.CoinSwitchSettings != null && storeBlob.CoinSwitchSettings.Enabled;
             vm.ThirdPartyPaymentMethods.Add(new StoreViewModel.ThirdPartyPaymentMethod()
             {
@@ -611,7 +613,6 @@ namespace BTCPayServer.Controllers
             model.StoreNotConfigured = StoreNotConfigured;
             model.Tokens = tokens.Select(t => new TokenViewModel()
             {
-                Facade = t.Facade,
                 Label = t.Label,
                 SIN = t.SIN,
                 Id = t.Value
@@ -696,7 +697,6 @@ namespace BTCPayServer.Controllers
 
             var tokenRequest = new TokenRequest()
             {
-                Facade = model.Facade,
                 Label = model.Label,
                 Id = model.PublicKey == null ? null : NBitpayClient.Extensions.BitIdExtensions.GetBitIDSIN(new PubKey(model.PublicKey))
             };
@@ -708,7 +708,6 @@ namespace BTCPayServer.Controllers
                 await _TokenRepository.UpdatePairingCode(new PairingCodeEntity()
                 {
                     Id = tokenRequest.PairingCode,
-                    Facade = model.Facade,
                     Label = model.Label,
                 });
                 await _TokenRepository.PairWithStoreAsync(tokenRequest.PairingCode, storeId);
@@ -748,7 +747,6 @@ namespace BTCPayServer.Controllers
                 }
             }
             var model = new CreateTokenViewModel();
-            model.Facade = "merchant";
             ViewBag.HidePublicKey = storeId == null;
             ViewBag.ShowStores = storeId == null;
             ViewBag.ShowMenu = storeId != null;
@@ -800,7 +798,6 @@ namespace BTCPayServer.Controllers
                 return View(new PairingModel()
                 {
                     Id = pairing.Id,
-                    Facade = pairing.Facade,
                     Label = pairing.Label,
                     SIN = pairing.SIN ?? "Server-Initiated Pairing",
                     SelectedStore = selectedStore ?? stores.FirstOrDefault()?.Id,
@@ -891,7 +888,11 @@ namespace BTCPayServer.Controllers
                 ButtonSize = 2,
                 UrlRoot = appUrl,
                 PayButtonImageUrl = appUrl + "img/paybutton/pay.png",
-                StoreId = store.Id
+                StoreId = store.Id,
+                ButtonType = 0,
+                Min = 1,
+                Max = 20,
+                Step = 1
             };
             return View(model);
         }

@@ -48,7 +48,9 @@
                 <a class="btn btn-primary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     Export
                 </a>
-                <a href="https://docs.btcpayserver.org/features/accounting" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                <a href="https://docs.btcpayserver.org/features/accounting" target="_blank">
+                    <span class="fa fa-question-circle-o" title="More information..."></span>
+                </a>
                 <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
                     <a asp-action="Export" asp-route-format="csv" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item" target="_blank">CSV</a>
                     <a asp-action="Export" asp-route-format="json" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item" target="_blank">JSON</a>
@@ -77,7 +79,12 @@
             <table class="table table-sm table-responsive-md">
                 <thead>
                     <tr>
-                        <th>Date</th>
+                        <th style="min-width: 90px;" class="col-md-auto">
+                            Date
+                            <a href="javascript:switchTimeFormat()">
+                                <span class="fa fa-clock-o" title="Switch date format"></span>
+                            </a>
+                        </th>
                         <th>OrderId</th>
                         <th>InvoiceId</th>
                         <th>Status</th>
@@ -89,7 +96,11 @@
                     @foreach (var invoice in Model.Invoices)
                     {
                         <tr>
-                            <td>@invoice.Date.ToBrowserDate()</td>
+                            <td>
+                                <span class="switchTimeFormat" data-switch="@invoice.Date.ToTimeAgo()">
+                                    @invoice.Date.ToBrowserDate()
+                                </span> 
+                            </td>
                             <td>
                                 @if (invoice.RedirectUrl != string.Empty)
                                 {
@@ -173,7 +184,7 @@
                     </li>
                 </ul>
             </nav>
-            @{ 
+            @{
                 string listInvoices(int prevNext, int count)
                 {
                     var skip = Model.Skip;
@@ -192,8 +203,19 @@
                     return act;
                 }
             }
-
         </div>
 
     </div>
+
+    <script type="text/javascript">
+        function switchTimeFormat() {
+            $(".switchTimeFormat").each(function (index) {
+                var htmlVal = $(this).html();
+                var switchVal = $(this).attr("data-switch");
+
+                $(this).html(switchVal);
+                $(this).attr("data-switch", htmlVal);
+            });
+        }
+    </script>
 </section>

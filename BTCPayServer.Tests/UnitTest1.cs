@@ -518,7 +518,6 @@ namespace BTCPayServer.Tests
                 var controller = acc.GetController<StoresController>();
                 var token = (RedirectToActionResult)controller.CreateToken(new Models.StoreViewModels.CreateTokenViewModel()
                 {
-                    Facade = Facade.Merchant.ToString(),
                     Label = "bla",
                     PublicKey = null
                 }).GetAwaiter().GetResult();
@@ -972,7 +971,6 @@ namespace BTCPayServer.Tests
                 var storeController = user.GetController<StoresController>();
                 storeController.CreateToken(new CreateTokenViewModel()
                 {
-                    Facade = Facade.Merchant.ToString(),
                     Label = "test2",
                     StoreId = user.StoreId
                 }).GetAwaiter().GetResult();

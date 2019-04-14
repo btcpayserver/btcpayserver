@@ -71,14 +71,14 @@ retry:
             using (var db = _ContextFactory.CreateContext())
             {
                 var key = scriptPubKey.Hash.ToString() + "#" + cryptoCode;
-                var result = await db.AddressInvoices
+                var result = (await db.AddressInvoices
 #pragma warning disable CS0618
                                     .Where(a => a.Address == key)
 #pragma warning restore CS0618
                                     .Select(a => a.InvoiceData)
                                     .Include(a => a.Payments)
                                     .Include(a => a.RefundAddresses)
-                                    .FirstOrDefaultAsync();
+                                    .ToListAsync()).FirstOrDefault();
                 if (result == null)
                     return null;
                 return ToEntity(result);
@@ -213,7 +213,7 @@ retry:
         {
             using (var context = _ContextFactory.CreateContext())
             {
-                var invoice = await context.Invoices.FirstOrDefaultAsync(i => i.Id == invoiceId);
+                var invoice = (await context.Invoices.Where(i => i.Id == invoiceId).ToListAsync()).FirstOrDefault();
                 if (invoice == null)
                     return false;
 
@@ -383,7 +383,7 @@ retry:
                     query = query.Include(o => o.HistoricalAddressInvoices).Include(o => o.AddressInvoices);
                 query = query.Where(i => i.Id == id);
 
-                var invoice = await query.FirstOrDefaultAsync().ConfigureAwait(false);
+                var invoice = (await query.ToListAsync()).FirstOrDefault();
                 if (invoice == null)
                     return null;
 

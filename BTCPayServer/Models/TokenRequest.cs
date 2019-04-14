@@ -20,11 +20,6 @@ namespace BTCPayServer.Models
         {
             get; set;
         }
-        [JsonProperty(PropertyName = "facade")]
-        public string Facade
-        {
-            get; set;
-        }
         [JsonProperty(PropertyName = "count")]
         public int Count
         {

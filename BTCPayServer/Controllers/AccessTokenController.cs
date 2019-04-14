@@ -42,15 +42,12 @@ namespace BTCPayServer.Controllers
             {
                 if (string.IsNullOrEmpty(request.Id) || !NBitpayClient.Extensions.BitIdExtensions.ValidateSIN(request.Id))
                     throw new BitpayHttpException(400, "'id' property is required");
-                if (string.IsNullOrEmpty(request.Facade))
-                    throw new BitpayHttpException(400, "'facade' property is required");
 
                 var pairingCode = await _TokenRepository.CreatePairingCodeAsync();
                 await _TokenRepository.PairWithSINAsync(pairingCode, request.Id);
                 pairingEntity = await _TokenRepository.UpdatePairingCode(new PairingCodeEntity()
                 {
                     Id = pairingCode,
-                    Facade = request.Facade,
                     Label = request.Label
                 });
 
@@ -86,7 +83,7 @@ namespace BTCPayServer.Controllers
                         PairingCode = pairingEntity.Id,
                         PairingExpiration = pairingEntity.Expiration,
                         DateCreated = pairingEntity.CreatedTime,
-                        Facade = pairingEntity.Facade,
+                        Facade = "merchant",
                         Token = pairingEntity.TokenValue,
                         Label = pairingEntity.Label
                     }

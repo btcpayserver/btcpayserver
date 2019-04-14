@@ -35,7 +35,6 @@ Thanks to the [apps](https://github.com/btcpayserver/btcpayserver-doc/blob/maste
 * SegWit support
 * Lightning Network support (LND and c-lightning)
 * Tor support
-* Opt-in altcoin integrations
 * Full compatibility with BitPay API (easy migration)
 * Process payments for others
 * Easy-embeddable Payment buttons
@@ -117,8 +116,6 @@ For more information, see the documentation: [How to deploy a BTCPay server inst
 
 Bitcoin is the only focus of the project and its core developers. However, opt in integrations are present for several altcoins:
 
-* BGold (BTG) (also known as Bitcoin Gold)
-* BPlus (XBC) (also known as Bitcoin Plus)
 * Bitcore (BTX)
 * Dash (DASH)
 * Dogecoin (DOGE)
@@ -128,5 +125,7 @@ Bitcoin is the only focus of the project and its core developers. However, opt i
 * Monacoin (MONA)
 * Polis (POLIS)
 * Viacoin (VIA)
+* BGold (BTG) (also known as Bitcoin Gold)
+* BPlus (XBC) (also known as Bitcoin Plus)
 
 Altcoins are maintained by their respective communities.

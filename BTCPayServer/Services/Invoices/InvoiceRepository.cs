@@ -494,7 +494,7 @@ retry:
             if (queryObject.Unusual != null)
             {
                 var unused = queryObject.Unusual.Value;
-                query = query.Where(i => unused == (i.Status == "invalid" || i.ExceptionStatus != null));
+                query = query.Where(i => unused == (i.Status == "invalid" || !string.IsNullOrEmpty(i.ExceptionStatus)));
             }
 
             if (queryObject.ExceptionStatus != null && queryObject.ExceptionStatus.Length > 0)

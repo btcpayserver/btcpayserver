@@ -139,6 +139,7 @@ namespace BTCPayServer.Services.Apps
                 DisqusShortname = settings.DisqusShortname,
                 AnimationsEnabled = settings.AnimationsEnabled,
                 ResetEveryAmount = settings.ResetEveryAmount,
+                ResetEvery = Enum.GetName(typeof(CrowdfundResetEvery), settings.ResetEvery),
                 DisplayPerksRanking = settings.DisplayPerksRanking,
                 PerkCount = perkCount,
                 NeverReset = settings.ResetEvery == CrowdfundResetEvery.Never,

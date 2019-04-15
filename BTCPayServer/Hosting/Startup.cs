@@ -64,6 +64,7 @@ namespace BTCPayServer.Hosting
                 .AddDefaultTokenProviders();
             services.AddSignalR();
             services.AddBTCPayServer();
+            services.AddSession();
             services.AddMvc(o =>
             {
                 o.Filters.Add(new XFrameOptionsAttribute("DENY"));
@@ -169,6 +170,7 @@ namespace BTCPayServer.Hosting
             app.UsePayServer();
             app.UseStaticFiles();
             app.UseAuthentication();
+            app.UseSession();
             app.UseSignalR(route =>
             {
                 AppHub.Register(route);

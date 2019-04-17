@@ -5,6 +5,10 @@
 
 @section HeadScripts {
     <script src="~/modal/btcpay.js"></script>
+    
+    <script>
+      var srvModel = @Html.Raw(Json.Serialize(Model));
+    </script>
 }
 
 <section>
@@ -58,23 +62,30 @@
             </div>
 
             <div class="col-lg-6">
-                <div class="form-group">
-                    <form asp-action="SearchInvoice" method="post" style="float:right;">
-                        <div class="input-group">
-                            <input asp-for="SearchTerm" class="form-control" style="width:300px;" />
-                            <span class="input-group-btn">
-                                <button type="submit" class="btn btn-primary" title="Search invoice">
-                                    <span class="fa fa-search"></span> Search
-                                </button>
-                            </span>
-                        </div>
-                        <input type="hidden" asp-for="Count" />
-                        <span asp-validation-for="SearchTerm" class="text-danger"></span>
-                    </form>
-                </div>
+                <noscript>
+                    <div class="form-group">
+                        <form asp-action="SearchInvoice" method="post" style="float: right;">
+                            <div class="input-group">
+                                <input asp-for="SearchTerm" class="form-control" style="width: 300px;"/>
+                                <span class="input-group-btn">
+                                    <button type="submit" class="btn btn-primary" title="Search invoice">
+                                        <span class="fa fa-search"></span> Search
+                                    </button>
+                                </span>
+                            </div>
+                            <input type="hidden" asp-for="Count"/>
+                            <span asp-validation-for="SearchTerm" class="text-danger"></span>
+                        </form>
+                    </div>
+                </noscript>
             </div>
         </div>
-
+        <div class="row no-gutter mb-1">
+            <div class="col-12">
+                
+                @await Html.PartialAsync("InvoicesFilter", Model)
+            </div>
+        </div>
         <div class="row">
             <table class="table table-sm table-responsive-md">
                 <thead>

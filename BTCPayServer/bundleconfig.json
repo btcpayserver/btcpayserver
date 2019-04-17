@@ -83,6 +83,7 @@
             "wwwroot/vendor/bootstrap-vue/bootstrap-vue.js",
             "wwwroot/vendor/signalr/signalr.js",
             "wwwroot/vendor/animejs/anime.min.js",
+            "wwwroot/common/**/*.js",
             "wwwroot/crowdfund/**/*.js"
         ]
     },
@@ -149,7 +150,7 @@
             "wwwroot/vendor/vue-toasted/vue-toasted.min.js",
             "wwwroot/vendor/bootstrap-vue/bootstrap-vue.js",
             "wwwroot/vendor/signalr/signalr.js",
-            "wwwroot/vendor/animejs/anime.min.js",
+            "wwwroot/common/**/*.js",
             "wwwroot/payment-request/**/*.js"
         ]
     },
@@ -169,6 +170,15 @@
             "wwwroot/vendor/font-awesome/css/font-awesome.min.css",
             "wwwroot/vendor/bootstrap-vue/bootstrap-vue.css",
             "wwwroot/payment-request/**/*.css"
+        ]
+    },
+
+    {
+        "outputFileName": "wwwroot/bundles/invoice-filter.min.js",
+        "inputFiles": [
+            "wwwroot/vendor/vuejs/vue.min.js",
+            "wwwroot/common/**/*.js",
+            "wwwroot/invoice-filter/**/*.js"
         ]
     }
 ]

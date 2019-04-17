@@ -2,6 +2,7 @@ var app = null;
 var eventAggregator = new Vue();
 
 addLoadEvent(function (ev) {
+    document.getElementById("help-toggle").hidden = true;
     if(document.getElementById("invoice-filter-app") == null){
         return;
     }
@@ -71,6 +72,9 @@ addLoadEvent(function (ev) {
 
                 for (i = 0; i < this.filters.length; i++) {
                     var currentFilter = this.filters[i];
+                    if(currentFilter.value == null || currentFilter.value ==""){
+                        continue;
+                    }
                     result += " " + currentFilter.key + ":" + currentFilter.value;
                 }
                 return result;
@@ -82,13 +86,16 @@ addLoadEvent(function (ev) {
         },
         methods: {
             hasEmptyFilter: function(filter){
+                                return this.getEmptyFilterIndex(filter) >= 0;
+            },
+            getEmptyFilterIndex: function(filter){
                 var filters = this.getSpecificFilters(filter);
                 for (var i = 0; i < filters.length; i++) {
                     if(filters[i].value == null || filters[i].value ===""){
-                        return true;
+                        return i;
                     }
                 }
-                return false;
+                return -1;
             },
             getOptionFromKey: function(options, key){
                 for (var j = 0; j < options.length; j++) {
@@ -117,7 +124,6 @@ addLoadEvent(function (ev) {
                 });
             },
             setValue: function(index, value) {
-                debugger;
                 var currentValue = this.filters[index];
                 Vue.set(this.filters, index, {key: currentValue.key, value: value});
                 console.log(this.searchTerm);

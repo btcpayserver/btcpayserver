@@ -8,149 +8,185 @@
         color: inherit;
         text-shadow: none;
     }
+    #invoice-filter-app-toggle {
+        position: absolute;
+        height: 35px;
+        z-index: 1;
+        top: -40px;
+        right: 0px
+    }
     
 </style>
 
-<form id="invoice-filter-app" asp-action="SearchInvoice" method="post" class="card">
+<form id="invoice-filter-app" asp-action="SearchInvoice" method="post">
+    <button class="btn btn-primary" id="invoice-filter-app-toggle" href="#invoice-filter-app-container" type="button" data-toggle="collapse">Invoice Filtering</button>
+    <div class="card collapse show " id="invoice-filter-app-container">
+        <div class="list-group list-group-flush">
+            <div class="list-group-item">
+                <h5>Text Search</h5>
+                <div class="form-group mb-1">
+                    <div class="input-group">
+                        <input class="form-control" placeholder="Any text in an invoice" type="text" v-model="textSearch">
+                        <div class="input-group-append">
+                            <button class="btn btn-sm btn-danger" type="button" v-on:click="textSearch = ''">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="list-group-item" v-if="statusFilters.length>0">
+                <h5 class="py-0 my-0">
+                    Status
+                    <template v-for="item in statusFilters" :key="item.index">
 
+                        <div class="form-group" v-if="!item.value">
+                            <select v-model="item.value" v-on:change="setValue(item.index, $event.target.value)">
+                                <option disabled value="">Select Status</option>
+                                <option v-for="availableFilter in availableStatusFilters" :value="availableFilter.key" :key="availableFilter.key">{{availableFilter.text}}</option>
+                            </select>
+                            <button class="btn btn-sm btn-danger" type="button" v-on:click="filters.splice(item.index, 1)">Cancel</button>
+                        </div>
+                        <div class="badge badge-secondary mx-1 mb-1" v-else>
+                            {{getOptionFromKey(statusOptions,item.value).text}}
+                            <button type="button" class="close" aria-label="Remove filter" v-on:click="filters.splice(item.index, 1)">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    </template>
 
-    <div class="list-group list-group-flush">
-        <div class="list-group-item">{{searchTerm}}</div>
-        <div class="list-group-item">
-            <h5>Text Search</h5>
+                </h5>
+            </div>
+            <div class="list-group-item" v-if="exceptionStatusFilters.length>0">
 
-            <input type="text" class="form-control" v-model="textSearch"/>
+                <h5 class="py-0 my-0">
+                    Exception Status
+                    <template v-for="item in exceptionStatusFilters" :key="item.index">
+
+                        <div class="form-group my-2" v-if="!item.value">
+                            <div class="input-group">
+                                <select v-model="item.value" class="custom-select" v-on:change="setValue(item.index, $event.target.value)">
+                                    <option disabled value="">Select Exception Status</option>
+                                    <option v-for="availableFilter in availableExceptionStatusFilters" :value="availableFilter.key" :key="availableFilter.key">{{availableFilter.text}}</option>
+                                </select>
+                                <div class="input-group-append">
+                                    <button class="btn btn-sm btn-danger" type="button" v-on:click="filters.splice(item.index, 1)">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="badge badge-secondary mx-1 mb-1" v-else>
+
+                            {{getOptionFromKey(exceptionStatusOptions,item.value).text}}
+                            <button type="button" class="close" aria-label="Remove filter" v-on:click="filters.splice(item.index, 1)">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    </template>
+
+                </h5>
+            </div>
+            <div class="list-group-item" v-if="storeFilters.length>0">
+                <h5 class="py-0 my-0">
+                    Store
+                    <template v-for="item in storeFilters" :key="item.index">
+                        <div class="form-group my-2" v-if="!item.value">
+                            <div class="input-group">
+                                <input class="form-control" placeholder="Store ID" aria-label="Store Id" type="text" v-model="item.value" v-on:change="setValue(item.index, $event.target.value)">
+                                <div class="input-group-append">
+                                    <button class="btn btn-sm btn-danger" type="button" v-on:click="filters.splice(item.index, 1)">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="badge badge-secondary mx-1 mb-1" v-else>
+                            {{item.value}}
+                            <button type="button" class="close" aria-label="Remove filter" v-on:click="filters.splice(item.index, 1)">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    </template>
+
+                </h5>
+            </div>
+            <div class="list-group-item" v-if="orderFilters.length>0">
+                <h5 class="py-0 my-0">
+                    Order Id
+                    <template v-for="item in orderFilters" :key="item.index">
+
+                        <div class="form-group my-2" v-if="!item.value">
+                            <div class="input-group">
+                                <input class="form-control" placeholder="Store ID" aria-label="Store Id" type="text" v-model="item.value" v-on:change="setValue(item.index, $event.target.value)">
+                                <div class="input-group-append">
+                                    <button class="btn btn-sm btn-danger" type="button" v-on:click="filters.splice(item.index, 1)">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="badge badge-secondary mx-1 mb-1" v-else>
+                            {{item.value}}
+                            <button type="button" class="close" aria-label="Remove filter" v-on:click="filters.splice(item.index, 1)">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    </template>
+
+                </h5>
+            </div>
+            <div class="list-group-item" v-if="itemCodeFilters.length>0">
+                <h5 class="py-0 my-0">
+                    Item Code
+                    <template v-for="item in itemCodeFilters" :key="item.index">
+
+                        <div class="form-group my-2" v-if="!item.value">
+                            <div class="input-group">
+                                <input class="form-control" placeholder="Store ID" aria-label="Store Id" type="text" v-model="item.value" v-on:change="setValue(item.index, $event.target.value)">
+                                <div class="input-group-append">
+                                    <button class="btn btn-sm btn-danger" type="button" v-on:click="filters.splice(item.index, 1)">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="badge badge-secondary mx-1 mb-1" v-else>
+                            {{item.value}}
+                            <button type="button" class="close" aria-label="Remove filter" v-on:click="filters.splice(item.index, 1)">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    </template>
+
+                </h5>
+            </div>
+            <div class="list-group-item" v-if="unusualFilters.length > 0">
+                <h5 class="py-0 my-0">
+                    Unusual Invoices
+                    <input type="checkbox" v-model="unusualFilters[0].value" v-on:change="setValue(unusualFilters[0].index, event.target.checked)">
+                    <button class="btn btn-sm btn-danger" type="button" v-on:click="filters.splice(unusualFilters[0].index, 1)">Remove</button>
+                </h5>
+
+            </div>
         </div>
-        <div class="list-group-item" v-if="statusFilters.length>0">
-            <h5 class="py-0 my-0">
-                Status
-                <template v-for="item in statusFilters" :key="item.index">
-
-                    <div class="form-group" v-if="!item.value">
-                        <select v-model="item.value" v-on:change="setValue(item.index, $event.target.value)">
-                            <option disabled value="">Select Status</option>
-                            <option v-for="availableFilter in availableStatusFilters" :value="availableFilter.key" :key="availableFilter.key">{{availableFilter.text}}</option>
-                        </select>
-                        <button class="btn btn-sm btn-danger" type="button" v-on:click="filters.splice(item.index, 1)">Cancel</button>
-                    </div>
-                    <div class="badge badge-secondary mx-1" v-else>
-                        {{getOptionFromKey(statusOptions,item.value).text}}
-                        <button type="button" class="close" aria-label="Remove filter" v-on:click="filters.splice(item.index, 1)">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                </template>
-
-            </h5>
+        <div class="card-footer bg-transparent border-0">
+            <button :disabled="unusualFilters.length > 0" type="button" class="btn btn-sm btn-secondary mb-1" v-on:click="filters.push({ key: 'unusual', value: true})">Add Unusual Filter</button>
+            <button :disabled="availableStatusFilters.length<=0 || hasEmptyFilter('status')" type="button" class="btn btn-sm btn-secondary mb-1" v-on:click="filters.push({ key: 'status', value: ''})">Add Status Filter</button>
+            <button :disabled="availableExceptionStatusFilters.length<=0 || hasEmptyFilter('exceptionstatus')" type="button" class="btn btn-sm btn-secondary mb-1" v-on:click="filters.push({ key: 'exceptionstatus', value: ''})">Add Exception Status Filter</button>
+            <button :disabled="hasEmptyFilter('storeid')"type="button" class="btn btn-sm btn-secondary mb-1" v-on:click="filters.push({ key: 'storeid', value: ''})">Add Store Filter</button>
+            <button :disabled="hasEmptyFilter('orderid')"type="button" class="btn btn-sm btn-secondary mb-1 " v-on:click="filters.push({ key: 'orderid', value: ''})">Add Order Filter</button>
+            <button :disabled="hasEmptyFilter('itemcode')" type="button" class="btn btn-sm btn-secondary mb-1" v-on:click="filters.push({ key: 'itemcode', value: ''})">Add Item Code Filter</button>
         </div>
-        <div class="list-group-item" v-if="exceptionStatusFilters.length>0">
-            <h5 class="py-0 my-0">
-                Exception Status
-                <template v-for="item in exceptionStatusFilters" :key="item.index">
+        <div class="card-footer bg-transparent border-0">
 
-                    <div class="form-group" v-if="!item.value">
-                        <select v-model="item.value" v-on:change="setValue(item.index, $event.target.value)">
-                            <option disabled value="">Select Exception Status</option>
-                            <option v-for="availableFilter in availableExceptionStatusFilters" :value="availableFilter.key" :key="availableFilter.key">{{availableFilter.text}}</option>
-                        </select>
-                        <button class="btn btn-sm btn-danger" type="button" v-on:click="filters.splice(item.index, 1)">Cancel</button>
-                    </div>
-                    <div class="badge badge-secondary mx-1" v-else>
-
-                        {{getOptionFromKey(exceptionStatusOptions,item.value).text}}
-                        <button type="button" class="close" aria-label="Remove filter" v-on:click="filters.splice(item.index, 1)">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                </template>
-
-            </h5>
+            <button type="submit" class="btn btn-primary" title="Search invoice">
+                <span class="fa fa-search"></span> Search
+            </button>
+            <button type="button" class="btn btn-secondary" v-on:click="parseSearchString('')">Clear all</button>
         </div>
-        <div class="list-group-item" v-if="storeFilters.length>0">
-            <h5 class="py-0 my-0">
-                Store
-                <template v-for="item in storeFilters" :key="item.index">
-
-                    <div class="form-group" v-if="!item.value">
-
-                        <input type="text" v-model="item.value" v-on:change="setValue(item.index, $event.target.value)"/>
-                        <button class="btn btn-sm btn-danger" type="button" v-on:click="filters.splice(item.index, 1)">Cancel</button>
-                    </div>
-                    <div class="badge badge-secondary mx-1" v-else>
-                        {{item.value}}
-                        <button type="button" class="close" aria-label="Remove filter" v-on:click="filters.splice(item.index, 1)">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                </template>
-
-            </h5>
-        </div>
-        <div class="list-group-item" v-if="orderFilters.length>0">
-            <h5 class="py-0 my-0">
-                Order Id
-                <template v-for="item in orderFilters" :key="item.index">
-
-                    <div class="form-group" v-if="!item.value">
-
-                        <input type="text" v-model="item.value" v-on:change="setValue(item.index, $event.target.value)"/>
-                        <button class="btn btn-sm btn-danger" type="button" v-on:click="filters.splice(item.index, 1)">Cancel</button>
-                    </div>
-                    <div class="badge badge-secondary mx-1" v-else>
-                        {{item.value}}
-                        <button type="button" class="close" aria-label="Remove filter" v-on:click="filters.splice(item.index, 1)">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                </template>
-
-            </h5>
-        </div>
-        <div class="list-group-item" v-if="itemCodeFilters.length>0">
-            <h5 class="py-0 my-0">
-                Item Code
-                <template v-for="item in itemCodeFilters" :key="item.index">
-
-                    <div class="form-group" v-if="!item.value">
-
-                        <input type="text" v-model="item.value" v-on:change="setValue(item.index, $event.target.value)"/>
-                        <button class="btn btn-sm btn-danger" type="button" v-on:click="filters.splice(item.index, 1)">Cancel</button>
-                    </div>
-                    <div class="badge badge-secondary mx-1" v-else>
-                        {{item.value}}
-                        <button type="button" class="close" aria-label="Remove filter" v-on:click="filters.splice(item.index, 1)">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                </template>
-
-            </h5>
-        </div>
-        <div class="list-group-item" v-if="unusualFilters.length > 0">
-            <h5 class="py-0 my-0">
-                Unusual Invoices
-                <input type="checkbox" v-model="unusualFilters[0].value" v-on:change="setValue(unusualFilters[0].index, event.target.checked)">
-                <button class="btn btn-sm btn-danger" type="button" v-on:click="filters.splice(unusualFilters[0].index, 1)">Remove</button>
-            </h5>
-
-        </div>
+        <input asp-for="SearchTerm" type="hidden" v-model="searchTerm"/>
+        <input asp-for="Count" type="hidden" v-model="count"/>
     </div>
-    <div class="card-footer bg-transparent border-0">
-        <button :disabled="unusualFilters.length > 0" type="button" class="btn btn-sm btn-secondary" v-on:click="filters.push({ key: 'unusual', value: true})">Add Unusual Filter</button>
-        <button :disabled="availableStatusFilters.length<=0 || hasEmptyFilter('status')" type="button" class="btn btn-sm btn-secondary" v-on:click="filters.push({ key: 'status', value: ''})">Add Status Filter</button>
-        <button :disabled="availableExceptionStatusFilters.length<=0 || hasEmptyFilter('exceptionstatus')" type="button" class="btn btn-sm btn-secondary" v-on:click="filters.push({ key: 'exceptionstatus', value: ''})">Add Exception Status Filter</button>
-        <button :disabled="hasEmptyFilter('storeid')"type="button" class="btn btn-sm btn-secondary" v-on:click="filters.push({ key: 'storeid', value: ''})">Add Store Filter</button>
-        <button :disabled="hasEmptyFilter('orderid')"type="button" class="btn btn-sm btn-secondary" v-on:click="filters.push({ key: 'orderid', value: ''})">Add Order Filter</button>
-        <button :disabled="hasEmptyFilter('itemcode')" type="button" class="btn btn-sm btn-secondary" v-on:click="filters.push({ key: 'itemcode', value: ''})">Add Item Code Filter</button>
-    </div>
-    <div class="card-footer bg-transparent border-0">
-
-        <button type="submit" class="btn btn-primary" title="Search invoice">
-            <span class="fa fa-search"></span> Search
-        </button>
-        <button type="button" class="btn btn-secondary" v-on:click="parseSearchString('')">Clear all</button>
-    </div>
-    <input asp-for="SearchTerm" type="hidden" v-model="searchTerm"/>
-    <input asp-for="Count" type="hidden" v-model="count"/>
-
 </form>

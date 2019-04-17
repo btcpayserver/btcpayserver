@@ -8,6 +8,7 @@
         color: inherit;
         text-shadow: none;
     }
+
     #invoice-filter-app-toggle {
         position: absolute;
         height: 35px;
@@ -40,12 +41,19 @@
                     Status
                     <template v-for="item in statusFilters" :key="item.index">
 
-                        <div class="form-group" v-if="!item.value">
-                            <select v-model="item.value" v-on:change="setValue(item.index, $event.target.value)">
-                                <option disabled value="">Select Status</option>
-                                <option v-for="availableFilter in availableStatusFilters" :value="availableFilter.key" :key="availableFilter.key">{{availableFilter.text}}</option>
-                            </select>
-                            <button class="btn btn-sm btn-danger" type="button" v-on:click="filters.splice(item.index, 1)">Cancel</button>
+
+                        <div class="form-group my-2" v-if="!item.value">
+                            <div class="input-group">
+                                <select v-model="item.value" class="custom-select" v-on:change="setValue(item.index, $event.target.value)">
+                                    <option disabled value="">Select Status</option>
+                                    <option v-for="availableFilter in availableStatusFilters" :value="availableFilter.key" :key="availableFilter.key">{{availableFilter.text}}</option>
+                                </select>
+                                <div class="input-group-append">
+                                    <button class="btn btn-sm btn-danger" type="button" v-on:click="filters.splice(item.index, 1)">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                         <div class="badge badge-secondary mx-1 mb-1" v-else>
                             {{getOptionFromKey(statusOptions,item.value).text}}

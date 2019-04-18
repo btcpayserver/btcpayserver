@@ -122,7 +122,7 @@ namespace BTCPayServer.Controllers
                 StatusMessage = new StatusMessageModel()
                 {
                     Html =
-                        $"Generated Temporary Url for file {file.FileName} which expires at {expiry.ToString("G")}. <a href='{url}' target='_blank'>{url}</a>"
+                        $"Generated Temporary Url for file {file.FileName} which expires at {expiry:G}. <a href='{url}' target='_blank'>{url}</a>"
                 }.ToString(),
                 fileId,
             });

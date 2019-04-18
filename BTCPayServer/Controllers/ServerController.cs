@@ -47,18 +47,15 @@ namespace BTCPayServer.Controllers
         LightningConfigurationProvider _LnConfigProvider;
         private readonly TorServices _torServices;
         BTCPayServerOptions _Options;
-        private readonly IStorageProviderService _StorageProviderService;
         ApplicationDbContextFactory _ContextFactory;
         private readonly StoredFileRepository _StoredFileRepository;
         private readonly FileService _FileService;
         private readonly IEnumerable<IStorageProviderService> _StorageProviderServices;
 
         public ServerController(UserManager<ApplicationUser> userManager,
-            Configuration.BTCPayServerOptions options,
             StoredFileRepository storedFileRepository,
             FileService fileService,
             IEnumerable<IStorageProviderService> storageProviderServices,
-            IStorageProviderService storageProviderService,
             BTCPayServerOptions options,
             RateFetcher rateProviderFactory,
             SettingsRepository settingsRepository,

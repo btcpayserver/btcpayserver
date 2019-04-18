@@ -158,7 +158,7 @@ addLoadEvent(function (ev) {
                     }
                 } 
                 return result;
-            },
+            }
         }
     });
 });

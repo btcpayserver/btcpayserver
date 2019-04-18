@@ -191,9 +191,4 @@
 	  </Content>
 	</ItemGroup>
 
-	<ItemGroup>
-	  <_ContentIncludedByDefault Remove="wwwroot\invoice-filter\helpers\math.js" />
-	  <_ContentIncludedByDefault Remove="wwwroot\payment-request\helpers\math.js" />
-	  <_ContentIncludedByDefault Remove="wwwroot\invoice-filter\styles\main.css" />
-	</ItemGroup>
 </Project>

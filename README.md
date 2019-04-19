@@ -21,6 +21,8 @@ The self-hosted solution allows you not only to attach an unlimited number of st
 
 Thanks to the [apps](https://github.com/btcpayserver/btcpayserver-doc/blob/master/Apps.md) built on top of it, you can use BTCPay to receive donations, start a crowdfunding campaign or have an in-store Point of Sale.
 
+[![What is BTCPay](https://img.youtube.com/vi/q7xJMno_B3U/sddefault.jpg)](https://www.youtube.com/watch?v=q7xJMno_B3U "What is BTCPay")
+
 ## Table of Contents
 
 * [Features](#features)

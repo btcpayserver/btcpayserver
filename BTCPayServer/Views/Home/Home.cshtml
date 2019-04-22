@@ -11,6 +11,9 @@
             <a class="btn btn-primary btn-lg" href="https://btcpayjungle.com/Account/Register" role="button">Register now</a>
         </div>
     </div>
+
+
+
 </header>
 <section id="services">
     <div class="container">
@@ -38,111 +41,235 @@
             </div>
         </div>
         <br />
-    </div>
-    <br />
-    <br />
-    <div class="container">
-        <!-- START THE FEATURETTES -->
-        <br />
-        <div class="row featurette">
-            <div class="col-md-7">
-                <h2 class="featurette-heading">BTCPay Jungle Hosted. <span class="text-muted">what we build.</span></h2>
-                <p class="lead">
-                    BTCPayJungle Bitcoin Payment Processor
-                    <br />
-                    is a free hosted non-custodial invoicing system, All payments go directly to your wallet, which increases the privacy and security. Your private keys are never uploaded to the server. There is no address re-use since each invoice generates a new address deriving from your xpubkey.
-                    We care 100% about all users privacy, and maintain all the software updates.
-                    BTCPay <a href="https://docs.btcpayserver.org">Documentation</a>
-                    <a href="https://btcpayserver.org">Community</a>
-                    <br />
-                    Our users donations help us to evolve. <a href="https://btcpayjungle.com/apps/3FWCtVySscwGMyrYAprgyroyHLbA/pos">Donate here</a>
-                    <br />
-                    <a href="https://www.youtube.com/playlist?list=PL7b9Wt9shK2ouN9E-g0viktMMEKFFqelm">Learn</a> how to create your first
-                    e-commerce store in <a href="https://wordpress.org">WordPress</a> and <a href="https://wordpress.org/plugins/btcpay-for-woocommerce/">WooCommerce</a> begin accepting Bitcoin payment through BTCPay Jungle.
-                    <br />
-                    The Ultimate <a href="https://bitcoinshirt.co/btcpay-stores/">List</a> "of BTCPay Server Merchants, <br /> add your store details on the BTCPay Slack to be included on this list."
-                    <br /> Launch your own node, Start Here <a href="https://www.lunanode.com">Luna Node</a> and <a href="https://launchbtcpay.lunanode.com">Launchbtcpay</a>
-                    <br />
-                    Raspberry Pi Deployment <a href="https://docs.btcpayserver.org/deployment/raspberrypideployment">Raspberry Pi Deployment</a>
-                    <br />
-                    “Your keys, your Bitcoin. Not your keys, not your Bitcoin”.
-                    <br />
-                </p>
+        <div class="embed-responsive embed-responsive-16by9">
+            <iframe src="https://player.vimeo.com/video/330290302" width="640" height="360" frameborder="0" allow="autoplay; fullscreen" allowfullscreen></iframe>
+            <p><a href="https://vimeo.com/330290302">What is BTCPayJungle Server?</a> from <a href="https://vimeo.com/btcpayserver">btcpayserver</a> on <a href="https://vimeo.com">Vimeo</a>.</p>
+        </div>
+        <h4 class="text-center">BTCPayJungle.com maintains operating costs through user donations,
+        <br /> Support BTCPay hosting by donating Bitcoin</h4>
+
             </div>
-            <div class="col-md-5">
-                <img class="featurette-image img-fluid mx-auto" src="~/img/logosquare.png" alt="~/img/logosquare.png">
+
+
+        <div class="d-flex justify-content-center align-items-center container ">
+
+            <div class="row ">
+
+                <form method="POST" action="https://btcpayjungle.com/api/v1/invoices">
+                    <input type="hidden" name="storeId" value="EDEE4hbCKwc7sp7uXGuhEx4phrGKxjk6mnUd7sCVbgN9" />
+                    <div style="text-align:center;width:146px">
+                        <input type="text" id="btcpay-input-price" name="price" value="10" style="border: none; background-image: none; background-color: transparent; -webkit-box-shadow: none ; -moz-box-shadow: none ; -webkit-appearance: none ; width: 146px; text-align: center; font-size: 25px; margin: auto; border-radius: 5px; line-height: 35px; background: #fff;" oninput="event.preventDefault();isNaN(event.target.value) || event.target.value <= 0 ? document.querySelector('#btcpay-input-price').value = 10 : event.target.value" onchange="document.querySelector('#btcpay-input-range').value = document.querySelector('#btcpay-input-price').value" /><select onchange="document.querySelector('input[type = hidden][name = currency]').value = event.target.value" style="-webkit-appearance: none; border: 0; display: block; padding: 0 3em; margin: auto auto 5px auto; font-size: 11px; background: 0 0; cursor: pointer;"><option value="USD">USD</option><option value="GBP">GBP</option><option value="EUR">EUR</option><option value="BTC">BTC</option></select><input class="btcpay-input-range" id="btcpay-input-range" value="10" type="range" min="1" max="500" step="1" style="width:146px ;margin-bottom:15px;" oninput="document.querySelector('#btcpay-input-price').value = document.querySelector('#btcpay-input-range').value" />
+                        <style type="text/css">
+                            input[type=range].btcpay-input-range {
+                                -webkit-appearance: none;
+                                width: 100%;
+                                margin: 9.45px 0
+                            }
+
+                                input[type=range].btcpay-input-range:focus {
+                                    outline: 0
+                                }
+
+                                input[type=range].btcpay-input-range::-webkit-slider-runnable-track {
+                                    width: 100%;
+                                    height: 3.1px;
+                                    cursor: pointer;
+                                    box-shadow: 0 0 1.7px #020,0 0 0 #003c00;
+                                    background: #f3f3f3;
+                                    border-radius: 1px;
+                                    border: 0 solid rgba(24,213,1,0)
+                                }
+
+                                input[type=range].btcpay-input-range::-webkit-slider-thumb {
+                                    box-shadow: 0 0 3.7px rgba(0,170,0,0),0 0 0 rgba(0,195,0,0);
+                                    border: 2.5px solid #cedc21;
+                                    height: 22px;
+                                    width: 23px;
+                                    border-radius: 12px;
+                                    background: #0f3723;
+                                    cursor: pointer;
+                                    -webkit-appearance: none;
+                                    margin-top: -9.45px
+                                }
+
+                                input[type=range].btcpay-input-range:focus::-webkit-slider-runnable-track {
+                                    background: #fff
+                                }
+
+                                input[type=range].btcpay-input-range::-moz-range-track {
+                                    width: 100%;
+                                    height: 3.1px;
+                                    cursor: pointer;
+                                    box-shadow: 0 0 1.7px #020,0 0 0 #003c00;
+                                    background: #f3f3f3;
+                                    border-radius: 1px;
+                                    border: 0 solid rgba(24,213,1,0)
+                                }
+
+                                input[type=range].btcpay-input-range::-moz-range-thumb {
+                                    box-shadow: 0 0 3.7px rgba(0,170,0,0),0 0 0 rgba(0,195,0,0);
+                                    border: 2.5px solid #cedc21;
+                                    height: 22px;
+                                    width: 23px;
+                                    border-radius: 12px;
+                                    background: #0f3723;
+                                    cursor: pointer
+                                }
+
+                                input[type=range].btcpay-input-range::-ms-track {
+                                    width: 100%;
+                                    height: 3.1px;
+                                    cursor: pointer;
+                                    background: 0 0;
+                                    border-color: transparent;
+                                    color: transparent
+                                }
+
+                                input[type=range].btcpay-input-range::-ms-fill-lower {
+                                    background: #e6e6e6;
+                                    border: 0 solid rgba(24,213,1,0);
+                                    border-radius: 2px;
+                                    box-shadow: 0 0 1.7px #020,0 0 0 #003c00
+                                }
+
+                                input[type=range].btcpay-input-range::-ms-fill-upper {
+                                    background: #f3f3f3;
+                                    border: 0 solid rgba(24,213,1,0);
+                                    border-radius: 2px;
+                                    box-shadow: 0 0 1.7px #020,0 0 0 #003c00
+                                }
+
+                                input[type=range].btcpay-input-range::-ms-thumb {
+                                    box-shadow: 0 0 3.7px rgba(0,170,0,0),0 0 0 rgba(0,195,0,0);
+                                    border: 2.5px solid #cedc21;
+                                    height: 22px;
+                                    width: 23px;
+                                    border-radius: 12px;
+                                    background: #0f3723;
+                                    cursor: pointer;
+                                    height: 3.1px
+                                }
+
+                                input[type=range].btcpay-input-range:focus::-ms-fill-lower {
+                                    background: #f3f3f3
+                                }
+
+                                input[type=range].btcpay-input-range:focus::-ms-fill-upper {
+                                    background: #fff
+                                }
+                        </style>
+                    </div>
+                    <input type="hidden" name="currency" value="USD" />
+                    <input type="hidden" name="checkoutDesc" value="Donation BTCPayJungle Server" />
+                    <input type="image" src="https://btcpayjungle.com/img/paybutton/donate.png" name="submit" style="width:146px" alt="Pay with BtcPay, Self-Hosted Bitcoin Payment Processor">
+                </form>
             </div>
+
         </div>
         <br />
         <br />
-        <br />
-        <br />
-        <br />
-        <div class="row featurette">
-            <div class="col-md-7 order-md-2">
-                <h2 class="featurette-heading">Oh yeah, it's that good. <span class="text-muted">See for yourself.</span></h2>
-                <p class="lead">The software is built in C# and conforms to the invoice <a href="https://bitpay.com/api">API of Bitpay</a>. It allows for your website to be easily migrated from Bitpay and configured as a self-hosted or hosted payment processor. Founded in Aug 2017 by Nicolas Dorier. RockstarDev, BTCPay Community.</p>
-            </div>
-            <div class="col-md-5 order-md-1">
-                <img class="featurette-image img-fluid mx-auto" src="~/img/btcpayserver1.png" alt="~/img/btcpayserver1.png">
-            </div>
-        </div>
-        <br />
-        <br />
-        <br />
-        <br />
-        <div class="row featurette">
-            <div class="col-md-7">
-                <h2 class="featurette-heading">And lastly, this one. <span class="text-muted">Checkmate.</span></h2>
-                <p class="lead">
-                    <br />
-                    About Bitcoin
-                    <br />
-                    Bitcoin (BTC) is a consensus network that enables a new payment system and a completely digital currency.
-                    Powered by its users, it is a peer to peer payment network that requires no central authority to operate.
-                    On October 31st, 2008, an individual or group of individuals operating under the pseudonym "Satoshi Nakamoto"
-                    published the Bitcoin Whitepaper and described it as: "a purely peer-to-peer version of electronic cash would
-                    allow online payments to be sent directly from one party to another without going through a financial institution."
-                    <br />
-                    Self-Sovereign, Disruptive Technology, Secure & Private Open-Source,
-                    <br /> A cross platform, decentralised hosted merchant server compatible with Bitpay API
-                </p>
-            </div>
-            <div class="col-md-5">
-                <img class="featurette-image img-fluid mx-auto" src="~/img/bitcoin.png" alt="~/img/bitcoin.png">
-            </div>
-        </div>
-        <br />
-        <br />
-        <!-- /END THE FEATURETTES -->
-        <br />
-        <br />
-        <div class="container marketing">
-            <!-- Three columns of text below the carousel -->
-            <div class="row">
-                <div class="col-lg-4 col-md-6 text-center">
-                    <img class="rounded-circle" src="~/img/btcpay-1.png" alt="~/img/btcpay-1.png" width="140" height="140">
-                    <h2>BTCPay Server</h2>
-                    <p>
-                        BTCPay Server is an open-source, hosted payment processor for Bitcoin and other cryptocurrencies. If you have any issues with BTCPay Jungle, please file a Github issue. If you have more general questions, please come on Slack.
+        <div class="container">
+            <!-- START THE FEATURETTES -->
+            <br />
+            <div class="row featurette">
+                <div class="col-md-7">
+                    <h2 class="featurette-heading">BTCPay Jungle Hosted. <span class="text-muted">what we build.</span></h2>
+                    <p class="lead">
+                        BTCPayJungle Bitcoin Payment Processor
+                        <br />
+                        is a free hosted non-custodial invoicing system, All payments go directly to your wallet, which increases the privacy and security. Your private keys are never uploaded to the server. There is no address re-use since each invoice generates a new address deriving from your xpubkey.
+                        We care 100% about all users privacy, and maintain all the software updates.
+                        BTCPay <a href="https://docs.btcpayserver.org">Documentation</a>
+                        <a href="https://btcpayserver.org">Community</a>
+                        <br />
+                        Our users donations help us to evolve. <a href="https://btcpayjungle.com/apps/3FWCtVySscwGMyrYAprgyroyHLbA/pos">Donate here</a>
+                        <br />
+                        <a href="https://www.youtube.com/playlist?list=PL7b9Wt9shK2ouN9E-g0viktMMEKFFqelm">Learn</a> how to create your first
+                        e-commerce store in <a href="https://wordpress.org">WordPress</a> and <a href="https://wordpress.org/plugins/btcpay-for-woocommerce/">WooCommerce</a> begin accepting Bitcoin payment through BTCPay Jungle.
+                        <br />
+                        The Ultimate <a href="https://bitcoinshirt.co/btcpay-stores/">List</a> "of BTCPay Server Merchants, <br /> add your store details on the BTCPay Slack to be included on this list."
+                        <br /> Launch your own node, Start Here <a href="https://www.lunanode.com">Luna Node</a> and <a href="https://launchbtcpay.lunanode.com">Launchbtcpay</a>
+                        <br />
+                        Raspberry Pi Deployment <a href="https://docs.btcpayserver.org/deployment/raspberrypideployment">Raspberry Pi Deployment</a>
+                        <br />
+                        “Your keys, your Bitcoin. Not your keys, not your Bitcoin”.
+                        <br />
                     </p>
-                    <p><a class="btn btn-primary btn-lg" href="https://github.com/btcpayserver/btcpayserver-doc/blob/master/README.md" role="button">View details &raquo;</a></p>
-                </div><!-- /.col-lg-4 -->
-                <div class="col-lg-4 col-md-6 text-center">
-                    <img class="rounded-circle" src="~/img/c-lightning.jpeg" alt="~/img/c-lightning.jpeg" width="140" height="140">
-                    <h2>c-lightning Network</h2>
-                    <p>Blockstream is collaborating with industry leaders to create a Bitcoin micropayment system that supports high volumes of instant tiny payments using proportional transaction fees and that operates at the speed of light.</p>
-                    <p><a class="btn btn-primary btn-lg" href="https://blockstream.com/2018/06/25/c-lightning-06.html" role="button">View details &raquo;</a></p>
-                </div><!-- /.col-lg-4 -->
-                <div class="col-lg-4 col-md-6 text-center">
-                    <img class="rounded-circle" src="~/img/lndlogo.png" alt="~/img/lndlogo.png" width="140" height="140">
-                    <h2>Lightning Labs</h2>
-                    <p>The most advanced and most developer-friendly implementation of the Lightning Network protocol. lnd provides superior reliability, interoperability and security for the next generation of global-scale financial applications.</p>
-                    <p><a class="btn btn-primary btn-lg" href="https://lightning.engineering" role="button">View details &raquo;</a></p>
-                </div><!-- /.col-lg-4 -->
-            </div><!-- /.row -->
+                </div>
+                <div class="col-md-5">
+                    <img class="featurette-image img-fluid mx-auto" src="~/img/logosquare.png" alt="~/img/logosquare.png">
+                </div>
+            </div>
+            <br />
+            <br />
+            <br />
+            <br />
+            <br />
+            <div class="row featurette">
+                <div class="col-md-7 order-md-2">
+                    <h2 class="featurette-heading">Oh yeah, it's that good. <span class="text-muted">See for yourself.</span></h2>
+                    <p class="lead">The software is built in C# and conforms to the invoice <a href="https://bitpay.com/api">API of Bitpay</a>. It allows for your website to be easily migrated from Bitpay and configured as a self-hosted or hosted payment processor. Founded in Aug 2017 by Nicolas Dorier. RockstarDev, BTCPay Community.</p>
+                </div>
+                <div class="col-md-5 order-md-1">
+                    <img class="featurette-image img-fluid mx-auto" src="~/img/btcpayserver1.png" alt="~/img/btcpayserver1.png">
+                </div>
+            </div>
+            <br />
+            <br />
+            <br />
+            <br />
+            <div class="row featurette">
+                <div class="col-md-7">
+                    <h2 class="featurette-heading">And lastly, this one. <span class="text-muted">Checkmate.</span></h2>
+                    <p class="lead">
+                        <br />
+                        About Bitcoin
+                        <br />
+                        Bitcoin (BTC) is a consensus network that enables a new payment system and a completely digital currency.
+                        Powered by its users, it is a peer to peer payment network that requires no central authority to operate.
+                        On October 31st, 2008, an individual or group of individuals operating under the pseudonym "Satoshi Nakamoto"
+                        published the Bitcoin Whitepaper and described it as: "a purely peer-to-peer version of electronic cash would
+                        allow online payments to be sent directly from one party to another without going through a financial institution."
+                        <br />
+                        Self-Sovereign, Disruptive Technology, Secure & Private Open-Source,
+                        <br /> A cross platform, decentralised hosted merchant server compatible with Bitpay API
+                    </p>
+                </div>
+                <div class="col-md-5">
+                    <img class="featurette-image img-fluid mx-auto" src="~/img/bitcoin.png" alt="~/img/bitcoin.png">
+                </div>
+            </div>
+            <br />
+            <br />
+            <!-- /END THE FEATURETTES -->
+            <br />
+            <br />
+            <div class="container marketing">
+                <!-- Three columns of text below the carousel -->
+                <div class="row">
+                    <div class="col-lg-4 col-md-6 text-center">
+                        <img class="rounded-circle" src="~/img/btcpay-1.png" alt="~/img/btcpay-1.png" width="140" height="140">
+                        <h2>BTCPay Server</h2>
+                        <p>
+                            BTCPay Server is an open-source, hosted payment processor for Bitcoin and other cryptocurrencies. If you have any issues with BTCPay Jungle, please file a Github issue. If you have more general questions, please come on Slack.
+                        </p>
+                        <p><a class="btn btn-primary btn-lg" href="https://github.com/btcpayserver/btcpayserver-doc/blob/master/README.md" role="button">View details &raquo;</a></p>
+                    </div><!-- /.col-lg-4 -->
+                    <div class="col-lg-4 col-md-6 text-center">
+                        <img class="rounded-circle" src="~/img/c-lightning.jpeg" alt="~/img/c-lightning.jpeg" width="140" height="140">
+                        <h2>c-lightning Network</h2>
+                        <p>Blockstream is collaborating with industry leaders to create a Bitcoin micropayment system that supports high volumes of instant tiny payments using proportional transaction fees and that operates at the speed of light.</p>
+                        <p><a class="btn btn-primary btn-lg" href="https://blockstream.com/2018/06/25/c-lightning-06.html" role="button">View details &raquo;</a></p>
+                    </div><!-- /.col-lg-4 -->
+                    <div class="col-lg-4 col-md-6 text-center">
+                        <img class="rounded-circle" src="~/img/lndlogo.png" alt="~/img/lndlogo.png" width="140" height="140">
+                        <h2>Lightning Labs</h2>
+                        <p>The most advanced and most developer-friendly implementation of the Lightning Network protocol. lnd provides superior reliability, interoperability and security for the next generation of global-scale financial applications.</p>
+                        <p><a class="btn btn-primary btn-lg" href="https://lightning.engineering" role="button">View details &raquo;</a></p>
+                    </div><!-- /.col-lg-4 -->
+                </div><!-- /.row -->
+            </div>
         </div>
-    </div>
 </section>
 <div class="call-to-action bg-dark text-white">
     <div class="container text-center">
@@ -221,22 +348,6 @@
         <hr class="primary">
         <p><img src="~/img/donation.png"></p>
         <p>Bitcoin : 3BUfqbBdJ6QhGhGsfxYaFKYuVQL19Beddx</p>
-        <div>
-            <p>
-                BTCPayJungle maintains operating costs through user donations.
-                <br />
-                <a href="https://btcpayjungle.com/apps/3BB7MDrDx89CAnkQVupshZrpbMWY/pos">Support BTCPayJungle by donating Bitcoin</a>
-                <form method="POST" action="https://btcpayjungle.com/api/v1/invoices">
-                    <input type="hidden" name="storeId" value="EDEE4hbCKwc7sp7uXGuhEx4phrGKxjk6mnUd7sCVbgN9" />
-                    <input type="hidden" name="price" value="10" />
-                    <input type="hidden" name="currency" value="EUR" />
-                    <input type="hidden" name="checkoutDesc" value="donation" />
-                    <input type="hidden" name="browserRedirect" value="https://btcpayjungle.com" />
-                    <input type="hidden" name="notifyEmail" value="support@btcpayjungle.com" />
-                    <input type="image" src="https://btcpayjungle.com/img/paybutton/donate.png" name="submit" style="width:146px" alt="Pay with BtcPayJungle, Hosted Bitcoin Payment Processor">
-                </form>
-            </p>
-        </div>
     </div>
 </div>
 <section id="contact">

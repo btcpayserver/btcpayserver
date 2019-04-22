@@ -236,6 +236,9 @@ namespace BTCPayServer.Tests
 
         private static string GetFromSecrets(string key)
         {
+            var connStr = Environment.GetEnvironmentVariable($"TESTS_{key}");
+            if (!string.IsNullOrEmpty(connStr) && connStr != "none")
+                return connStr;
             var builder = new ConfigurationBuilder();
             builder.AddUserSecrets("AB0AC1DD-9D26-485B-9416-56A33F268117");
             var config = builder.Build();

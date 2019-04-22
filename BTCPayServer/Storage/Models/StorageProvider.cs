@@ -2,9 +2,9 @@
 {
     public enum StorageProvider
     {
-        AzureBlobStorage,
-        AmazonS3,
-        GoogleCloudStorage,
-        FileSystem
+        AzureBlobStorage=0,
+//        AmazonS3 =1,
+//        GoogleCloudStorage =2,
+        FileSystem =3
     }
 }

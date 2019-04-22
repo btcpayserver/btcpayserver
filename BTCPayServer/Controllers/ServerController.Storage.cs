@@ -224,13 +224,13 @@ namespace BTCPayServer.Controllers
                     return View(nameof(EditAzureBlobStorageStorageProvider),
                         fileProviderService.GetProviderConfiguration(data));
 
-                case AmazonS3FileProviderService fileProviderService:
-                    return View(nameof(EditAmazonS3StorageProvider),
-                        fileProviderService.GetProviderConfiguration(data));
-
-                case GoogleCloudStorageFileProviderService fileProviderService:
-                    return View(nameof(EditGoogleCloudStorageStorageProvider),
-                        fileProviderService.GetProviderConfiguration(data));
+//                case AmazonS3FileProviderService fileProviderService:
+//                    return View(nameof(EditAmazonS3StorageProvider),
+//                        fileProviderService.GetProviderConfiguration(data));
+//
+//                case GoogleCloudStorageFileProviderService fileProviderService:
+//                    return View(nameof(EditGoogleCloudStorageStorageProvider),
+//                        fileProviderService.GetProviderConfiguration(data));
 
                 case FileSystemFileProviderService fileProviderService:
                     return View(nameof(EditFileSystemStorageProvider),
@@ -247,18 +247,18 @@ namespace BTCPayServer.Controllers
             return await SaveStorageProvider(viewModel, BTCPayServer.Storage.Models.StorageProvider.AzureBlobStorage);
         }
 
-        [HttpPost("server/storage/AmazonS3")]
-        public async Task<IActionResult> EditAmazonS3StorageProvider(AmazonS3StorageConfiguration viewModel)
-        {
-            return await SaveStorageProvider(viewModel, BTCPayServer.Storage.Models.StorageProvider.AmazonS3);
-        }
-
-        [HttpPost("server/storage/GoogleCloudStorage")]
-        public async Task<IActionResult> EditGoogleCloudStorageStorageProvider(
-            GoogleCloudStorageConfiguration viewModel)
-        {
-            return await SaveStorageProvider(viewModel, BTCPayServer.Storage.Models.StorageProvider.GoogleCloudStorage);
-        }
+//        [HttpPost("server/storage/AmazonS3")]
+//        public async Task<IActionResult> EditAmazonS3StorageProvider(AmazonS3StorageConfiguration viewModel)
+//        {
+//            return await SaveStorageProvider(viewModel, BTCPayServer.Storage.Models.StorageProvider.AmazonS3);
+//        }
+//
+//        [HttpPost("server/storage/GoogleCloudStorage")]
+//        public async Task<IActionResult> EditGoogleCloudStorageStorageProvider(
+//            GoogleCloudStorageConfiguration viewModel)
+//        {
+//            return await SaveStorageProvider(viewModel, BTCPayServer.Storage.Models.StorageProvider.GoogleCloudStorage);
+//        }
 
         [HttpPost("server/storage/FileSystem")]
         public async Task<IActionResult> EditFileSystemStorageProvider(FileSystemStorageConfiguration viewModel)

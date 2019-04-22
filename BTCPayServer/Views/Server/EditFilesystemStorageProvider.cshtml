@@ -1,0 +1,26 @@
+﻿@model BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration.FileSystemStorageConfiguration
+@{
+    ViewData.SetActivePageAndTitle(ServerNavPages.Services, $"Storage - Local Filesystem");
+}
+
+<h4>@ViewData["Title"]</h4>
+<partial name="_StatusMessage" for="@TempData["StatusMessage"]" />
+<div class="row">
+    <div class="col-lg-6">
+        <div asp-validation-summary="All" class="text-danger"></div>
+    </div>
+</div>
+<p>Nothing to configure here. Data will be saved in the btcpay data directory.</p>
+<div class="row">
+    <div class="col-lg-6">
+        <form method="post">
+            
+            <button type="submit" class="btn btn-primary" name="command" value="Save">Choose</button>
+            <a asp-action="Storage" asp-route-forceChoice="true" >Change Storage provider</a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

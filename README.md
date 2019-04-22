@@ -11,7 +11,7 @@
 
 BTCPay Server is a free and open-source cryptocurrency payment processor which allows you to receive payments in Bitcoin and altcoins directly, with no fees, transaction cost or a middleman.
 
-BTCPay is a non-custodial invoicing system which eliminates the involvement of a third-party. Payments with BTCPay go directly to your wallet, which increases the privacy and security. Your private keys are never uploaded to the server. There is no address re-use since each invoice generates a new address deriving from your xpubkey.
+BTCPay is a non-custodial invoicing system which eliminates the involvement of a third-party. Payments with BTCPay go directly to your wallet, which increases the privacy and security. Your private keys are never uploaded to the server. There is no address re-use, since each invoice generates a new address deriving from your xpubkey.
 
 The software is built in C# and conforms to the invoice [API of BitPay](https://bitpay.com/api). It allows for your website to be easily migrated from BitPay and configured as a self-hosted payment processor.
 
@@ -20,6 +20,19 @@ You can run BTCPay as a self-hosted solution on your own server, or use a [third
 The self-hosted solution allows you not only to attach an unlimited number of stores and use the Lightning Network but also become the payment processor for others.
 
 Thanks to the [apps](https://github.com/btcpayserver/btcpayserver-doc/blob/master/Apps.md) built on top of it, you can use BTCPay to receive donations, start a crowdfunding campaign or have an in-store Point of Sale.
+
+[![What is BTCPay](https://img.youtube.com/vi/q7xJMno_B3U/sddefault.jpg)](https://www.youtube.com/watch?v=q7xJMno_B3U "What is BTCPay")
+
+## Table of Contents
+
+* [Features](#features)
+* [Getting Started](#getting-started)
+* [Documentation](#documentation)
+* [Contributing](#Contributing)
+* [How to build](#how-to-build)
+* [How to run](#how-to-run)
+* [How to debug](#how-to-debug)
+* [Dependencies](#dependencies)
 
 ## Features
 
@@ -41,6 +54,12 @@ Thanks to the [apps](https://github.com/btcpayserver/btcpayserver-doc/blob/maste
 * Point of sale app
 * Crowdfunding app
 * Payment requests
+
+## Getting Started
+
+Firstly, decide if you want to host an instance yourself or use a [third-party host](https://docs.btcpayserver.org/deployment/thirdpartyhosting). If you've chosen to self-host, we documented plenty [ways to deploy BTCPay Server](https://docs.btcpayserver.org/deployment/deployment). 
+
+After successful deployment, make sure to check our [getting started](https://docs.btcpayserver.org/btcpay-basics/gettingstarted) and [walkthrough](https://docs.btcpayserver.org/btcpay-basics/walkthrough) guides. In case you would like to use Lightning Network, see [Lightning guide](https://docs.btcpayserver.org/features/lightningnetwork).
 
 ## Documentation
 

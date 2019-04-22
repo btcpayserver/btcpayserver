@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Linq;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using BTCPayServer.Models;
 using BTCPayServer.Services.PaymentRequests;
-using Microsoft.EntityFrameworkCore.Infrastructure.Internal;
+using BTCPayServer.Storage.Models;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace BTCPayServer.Data
@@ -93,6 +90,11 @@ namespace BTCPayServer.Data
         }
 
         public DbSet<APIKeyData> ApiKeys
+        {
+            get; set;
+        } 
+        
+        public DbSet<StoredFile> Files
         {
             get; set;
         }

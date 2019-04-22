@@ -20,5 +20,6 @@ namespace BTCPayServer.Models.ServerViewModels
         public List<OtherExternalService> OtherExternalServices { get; set; } = new List<OtherExternalService>();
         public List<OtherExternalService> TorHttpServices { get; set; } = new List<OtherExternalService>();
         public List<OtherExternalService> TorOtherServices { get; set; } = new List<OtherExternalService>();
+        public List<OtherExternalService> ExternalStorageServices { get; set; } = new List<OtherExternalService>();
     }
 }

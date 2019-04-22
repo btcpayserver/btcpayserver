@@ -1,0 +1,112 @@
+@model ViewFilesViewModel
+@{
+    ViewData.SetActivePageAndTitle(ServerNavPages.Files);
+}
+
+
+<h4>@ViewData["Title"]</h4>
+<partial name="_StatusMessage" for="@TempData["StatusMessage"]"/>
+
+
+<table class="table table-sm table-responsive-md">
+    <thead>
+    <tr>
+        <th>Name</th>
+        <th>Timestamp</th>
+        <th>User</th>
+        <th></th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var file in Model.Files)
+    {
+        <tr>
+            <td>@file.FileName</td>
+            <td>@file.Timestamp.ToString("g")</td>
+            <td>@file.ApplicationUser.UserName</td>
+            <td>
+                <a asp-action="Files" asp-route-fileId="@file.Id">Get Link</a>
+                - <a asp-action="CreateTemporaryFileUrl" asp-route-fileId="@file.Id">Get Temp Link</a>
+                - <a asp-action="DeleteFile" asp-route-fileId="@file.Id">Remove</a>
+            </td>
+        </tr>
+    }
+    @if (!Model.Files.Any())
+    {
+        <tr>
+            <td colspan="4" class="text-center">No files</td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+@if (!string.IsNullOrEmpty(Model.SelectedFileId))
+{
+    var file = Model.Files.Single(storedFile => storedFile.Id.Equals(Model.SelectedFileId, StringComparison.InvariantCultureIgnoreCase));
+    <div class="card mb-2">
+        <div class="card-text">
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">
+                    @file.FileName
+                </li>
+
+                <li class="list-group-item">
+                    <div class="row px-0 mx-0">
+                        <span class="col-sm-12 col-md-2">Url: </span>
+                        <a class="col-sm-12 col-md-10 text-right" asp-action="GetFile" asp-controller="Storage" asp-route-fileId="@Model.SelectedFileId" target="_blank">
+                            @Url.Action("GetFile", "Storage", new
+                            {
+                                fileId = Model.SelectedFileId
+                            }, Context.Request.Scheme, Context.Request.Host.ToString(), Context.Request.PathBase.ToString())
+                        </a>
+                    </div>
+                </li>
+                <li class="list-group-item ">
+                    <div class="row px-0 mx-0">
+                        <span class="col-sm-12 col-md-2">Direct Url </span>
+                        <a class="col-sm-12 col-md-10 text-right" href="@Model.DirectFileUrl" target="_blank">@Model.DirectFileUrl</a>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+}
+
+@if (Model.StorageConfigured)
+{
+    <div class="card">
+        <form asp-action="CreateFile" method="post" enctype="multipart/form-data">
+
+            <div class="card-body">
+                <h3 class="header">Upload File</h3>
+
+                <div class="custom-file">
+                    <input type="file" class="custom-file-input" name="file" id="file" required>
+                    <label class="custom-file-label" for="customFile">Choose file</label>
+                </div>
+
+            </div>
+            <div class="card-footer">
+                <button class="btn btn-primary" role="button"><span class="fa fa-plus"></span> Upload file</button>
+            </div>
+        </form>
+    </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+
+            $('.custom-file-input').on('change',
+                function() {
+                    var label = $(this).next('label');
+                    if (document.getElementById("file").files.length > 0) {
+                        var fileName = document.getElementById("file").files[0].name;
+                        label.addClass("selected").html(fileName);
+                    } else {
+                        label.removeClass("selected").html("Choose file");
+                    }
+                });
+        });
+    </script>
+}
+}

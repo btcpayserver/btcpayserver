@@ -16,7 +16,7 @@ jobs:
             cd BTCPayServer.Tests
             docker-compose down --v
             docker-compose build
-            docker-compose run tests
+            docker-compose run -e TESTS_RUN_EXTERNAL_INTEGRATION=true tests
 
   # publish jobs require $DOCKERHUB_REPO, $DOCKERHUB_USER, $DOCKERHUB_PASS defined
   publish_docker_linuxamd64:

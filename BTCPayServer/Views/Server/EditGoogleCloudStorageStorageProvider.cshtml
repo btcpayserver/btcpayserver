@@ -1,0 +1,45 @@
+﻿@model BTCPayServer.Storage.Services.Providers.GoogleCloudStorage.Configuration.GoogleCloudStorageConfiguration
+@{
+    ViewData.SetActivePageAndTitle(ServerNavPages.Services, $"Storage - Google Cloud Storage");
+}
+
+<h4>@ViewData["Title"]</h4>
+<partial name="_StatusMessage" for="@TempData["StatusMessage"]" />
+<div class="row">
+    <div class="col-lg-6">
+        <div asp-validation-summary="All" class="text-danger"></div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-lg-6">
+        <form method="post">
+            <div class="form-group">
+                <label asp-for="ContainerName"></label>
+                <input class="form-control" asp-for="ContainerName" />
+                <span asp-validation-for="ContainerName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="JsonCredentials"></label>
+                <input class="form-control" asp-for="JsonCredentials"/>
+                <span asp-validation-for="JsonCredentials" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Bucket"></label>
+                <input class="form-control" asp-for="Bucket"/>
+                <span asp-validation-for="Bucket" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Email"></label>
+                <input class="form-control" asp-for="Email"/>
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
+            <a asp-action="Storage" asp-route-forceChoice="true" >Change Storage provider</a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

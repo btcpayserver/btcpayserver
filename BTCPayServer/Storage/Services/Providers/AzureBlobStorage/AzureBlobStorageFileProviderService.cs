@@ -14,12 +14,6 @@ namespace BTCPayServer.Storage.Services.Providers.AzureBlobStorage
         {
             return Storage.Models.StorageProvider.AzureBlobStorage;
         }
-
-        public override AzureBlobStorageConfiguration GetProviderConfiguration(StorageSettings configuration)
-        {
-            return configuration.Configuration.ParseAzureBlobStorageConfiguration();
-        }
-
         protected override Task<IStorageProvider> GetStorageProvider(AzureBlobStorageConfiguration configuration)
         {
             return Task.FromResult<IStorageProvider>(new AzureStorageProvider(configuration));

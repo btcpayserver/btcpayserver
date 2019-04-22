@@ -14,11 +14,6 @@ namespace BTCPayServer.Storage.Services.Providers.AmazonS3Storage
             return Storage.Models.StorageProvider.AmazonS3;
         }
 
-        public override AmazonS3StorageConfiguration GetProviderConfiguration(StorageSettings configuration)
-        {
-            return configuration.Configuration.ParseAmazonS3StorageConfiguration();
-        }
-
         protected override Task<IStorageProvider> GetStorageProvider(AmazonS3StorageConfiguration configuration)
         {
             return Task.FromResult<IStorageProvider>(new AmazonStorageProvider(configuration));

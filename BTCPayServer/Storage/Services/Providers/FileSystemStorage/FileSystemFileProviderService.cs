@@ -38,11 +38,6 @@ namespace BTCPayServer.Storage.Services.Providers.FileSystemStorage
             return Storage.Models.StorageProvider.FileSystem;
         }
 
-        public override FileSystemStorageConfiguration GetProviderConfiguration(StorageSettings configuration)
-        {
-            return configuration.Configuration.ParseFileSystemStorageConfiguration();
-        }
-
         protected override Task<IStorageProvider> GetStorageProvider(FileSystemStorageConfiguration configuration)
         {
             return Task.FromResult<IStorageProvider>(

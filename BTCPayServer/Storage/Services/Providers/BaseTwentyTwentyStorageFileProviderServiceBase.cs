@@ -13,7 +13,7 @@ namespace BTCPayServer.Storage.Services.Providers
     {
         public abstract StorageProvider StorageProvider();
 
-        public virtual async Task<StoredFile> AddFile(IFormFile file, StorageSettings configuration)
+        public async Task<StoredFile> AddFile(IFormFile file, StorageSettings configuration)
         {
             //respect https://www.microsoftpressstore.com/articles/article.aspx?p=2224058&seqNum=8 in naming
             var storageFileName = $"{Guid.NewGuid()}-{file.FileName.ToLowerInvariant()}";
@@ -70,7 +70,11 @@ namespace BTCPayServer.Storage.Services.Providers
             await provider.DeleteBlobAsync(providerConfiguration.ContainerName, storedFile.StorageFileName);
         }
 
-        public abstract TStorageConfiguration GetProviderConfiguration(StorageSettings configuration);
+        public TStorageConfiguration GetProviderConfiguration(StorageSettings configuration)
+        {
+            return configuration.Configuration.ToObject<TStorageConfiguration>();
+        }
+
 
         protected abstract Task<IStorageProvider> GetStorageProvider(TStorageConfiguration configuration);
     }

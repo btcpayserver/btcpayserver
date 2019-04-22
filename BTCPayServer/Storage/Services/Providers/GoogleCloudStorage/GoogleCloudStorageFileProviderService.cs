@@ -16,11 +16,6 @@ namespace BTCPayServer.Storage.Services.Providers.GoogleCloudStorage
             return Storage.Models.StorageProvider.GoogleCloudStorage;
         }
 
-        public override GoogleCloudStorageConfiguration GetProviderConfiguration(StorageSettings configuration)
-        {
-            return configuration.Configuration.ParseGoogleCloudStorageConfiguration();
-        }
-
         protected override Task<IStorageProvider> GetStorageProvider(
             GoogleCloudStorageConfiguration configuration)
         {

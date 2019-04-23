@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -35,7 +36,8 @@ namespace BTCPayServer.Models
             JObject jobj = new JObject();
             JArray jarray = new JArray();
             jobj.Add("data", jarray);
-            foreach (var token in _Tokens)
+            var token = _Tokens.FirstOrDefault();
+            if (token != null)
             {
                 JObject item = new JObject();
                 jarray.Add(item);

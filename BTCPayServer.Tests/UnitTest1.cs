@@ -654,7 +654,6 @@ namespace BTCPayServer.Tests
                 var rescan = Assert.IsType<RescanWalletModel>(Assert.IsType<ViewResult>(walletController.WalletRescan(walletId).Result).Model);
                 Assert.False(rescan.Ok);
                 Assert.True(rescan.IsFullySync);
-                Assert.True(rescan.IsSegwit);
                 Assert.False(rescan.IsSupportedByCurrency);
                 Assert.False(rescan.IsServerAdmin);
 

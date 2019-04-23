@@ -36,14 +36,6 @@
             {
                 <p><span class="fa fa-times-circle" style="color:red;"></span> <span>This full node do not support rescan of the UTXO set</span></p>
             }
-            @if (Model.IsSegwit)
-            {
-                <p><span class="fa fa-check-circle" style="color:green;"></span> <span>This wallet is compatible with segwit</span></p>
-            }
-            else
-            {
-                <p><span class="fa fa-times-circle" style="color:red;"></span> <span>This wallet is not compatible with segwit</span></p>
-            }
         </div>
     </div>
 }

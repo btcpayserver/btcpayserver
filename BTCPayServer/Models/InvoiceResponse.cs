@@ -123,6 +123,12 @@ namespace BTCPayServer.Models
         public string ItemDesc
         {
             get; set;
+        }       
+        
+        [JsonProperty("itemCode")]
+        public string ItemCode
+        {
+            get; set;
         }
 
         //"orderId":"orderId"

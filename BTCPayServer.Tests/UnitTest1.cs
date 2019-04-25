@@ -1656,12 +1656,13 @@ donation:
                 Assert.Equal("orange", orangeInvoice.ItemDesc);
                 
                 
-                Assert.IsType<RedirectToActionResult>(publicApps.ViewPointOfSale(appId, 0, null, null, null, null, "apple").Result);
+                Assert.IsType<RedirectToActionResult>(publicApps.ViewPointOfSale(appId, 7, null, null, null, null, "apple").Result);
 
                 invoices = user.BitPay.GetInvoices();
                 var appleInvoice = invoices.SingleOrDefault(invoice => invoice.ItemCode.Equals("apple"));
                 Assert.NotNull(appleInvoice);
                 Assert.Equal("good apple", appleInvoice.ItemDesc);
+                Assert.Equal(7m, appleInvoice.Price);
                 
 
                 // testing custom amount

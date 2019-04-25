@@ -276,7 +276,7 @@ namespace BTCPayServer.Controllers
                                            storeBlob.ChangellySettings.IsConfigured())
                 ? storeBlob.ChangellySettings
                 : null;
-            
+
             CoinSwitchSettings coinswitch = (storeBlob.CoinSwitchSettings != null && storeBlob.CoinSwitchSettings.Enabled &&
                                            storeBlob.CoinSwitchSettings.IsConfigured())
                 ? storeBlob.CoinSwitchSettings
@@ -335,7 +335,7 @@ namespace BTCPayServer.Controllers
                 ChangellyMerchantId = changelly?.ChangellyMerchantId,
                 ChangellyAmountDue = changellyAmountDue,
                 CoinSwitchEnabled = coinswitch != null,
-                CoinSwitchAmountMarkupPercentage = coinswitch?.AmountMarkupPercentage?? 0,
+                CoinSwitchAmountMarkupPercentage = coinswitch?.AmountMarkupPercentage ?? 0,
                 CoinSwitchMerchantId = coinswitch?.MerchantId,
                 CoinSwitchMode = coinswitch?.Mode,
                 StoreId = store.Id,
@@ -410,7 +410,7 @@ namespace BTCPayServer.Controllers
             if (!HttpContext.WebSockets.IsWebSocketRequest)
                 return NotFound();
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
-            if (invoice == null || invoice.Status == InvoiceStatus.Complete || invoice.Status ==  InvoiceStatus.Invalid || invoice.Status == InvoiceStatus.Expired)
+            if (invoice == null || invoice.Status == InvoiceStatus.Complete || invoice.Status == InvoiceStatus.Invalid || invoice.Status == InvoiceStatus.Expired)
                 return NotFound();
             var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
             CompositeDisposable leases = new CompositeDisposable();
@@ -465,25 +465,22 @@ namespace BTCPayServer.Controllers
         [Route("invoices")]
         [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
         [BitpayAPIConstraint(false)]
-        public async Task<IActionResult> ListInvoices(string searchTerm = null, int skip = 0, int count = 50)
+        public async Task<IActionResult> ListInvoices(string searchTerm = null, int skip = 0, int count = 50, int timezoneOffset = 0)
         {
-            if (searchTerm == null)
-            {
-                searchTerm = HttpContext.Session.GetString("InvoicesSearchTerm");
-            }
             var model = new InvoicesModel
             {
                 SearchTerm = searchTerm,
                 Skip = skip,
                 Count = count,
-                StatusMessage = StatusMessage
+                StatusMessage = StatusMessage,
+                TimezoneOffset = timezoneOffset
             };
-            InvoiceQuery invoiceQuery = GetInvoiceQuery(searchTerm);
+            InvoiceQuery invoiceQuery = GetInvoiceQuery(searchTerm, timezoneOffset);
             var counting = _InvoiceRepository.GetInvoicesTotal(invoiceQuery);
             invoiceQuery.Count = count;
             invoiceQuery.Skip = skip;
             var list = await _InvoiceRepository.GetInvoices(invoiceQuery);
-            
+
             foreach (var invoice in list)
             {
                 var state = invoice.GetInvoiceState();
@@ -504,21 +501,21 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
-        private InvoiceQuery GetInvoiceQuery(string searchTerm = null)
+        private InvoiceQuery GetInvoiceQuery(string searchTerm = null, int timezoneOffset = 0)
         {
-            var filterString = new SearchString(searchTerm);
+            var fs = new SearchString(searchTerm);
             var invoiceQuery = new InvoiceQuery()
             {
-                TextSearch = filterString.TextSearch,
+                TextSearch = fs.TextSearch,
                 UserId = GetUserId(),
-                Unusual = !filterString.Filters.ContainsKey("unusual") ? null
-                          : !bool.TryParse(filterString.Filters["unusual"].First(), out var r) ? (bool?)null
-                          : r,
-                Status = filterString.Filters.ContainsKey("status") ? filterString.Filters["status"].ToArray() : null,
-                ExceptionStatus = filterString.Filters.ContainsKey("exceptionstatus") ? filterString.Filters["exceptionstatus"].ToArray() : null,
-                StoreId = filterString.Filters.ContainsKey("storeid") ? filterString.Filters["storeid"].ToArray() : null,
-                ItemCode = filterString.Filters.ContainsKey("itemcode") ? filterString.Filters["itemcode"].ToArray() : null,
-                OrderId = filterString.Filters.ContainsKey("orderid") ? filterString.Filters["orderid"].ToArray() : null
+                Unusual = fs.GetFilterBool("unusual"),
+                Status = fs.GetFilterArray("status"),
+                ExceptionStatus = fs.GetFilterArray("exceptionstatus"),
+                StoreId = fs.GetFilterArray("storeid"),
+                ItemCode = fs.GetFilterArray("itemcode"),
+                OrderId = fs.GetFilterArray("orderid"),
+                StartDate = fs.GetFilterDate("startdate", timezoneOffset),
+                EndDate = fs.GetFilterDate("enddate", timezoneOffset)
             };
             return invoiceQuery;
         }
@@ -526,13 +523,13 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
         [BitpayAPIConstraint(false)]
-        public async Task<IActionResult> Export(string format, string searchTerm = null)
+        public async Task<IActionResult> Export(string format, string searchTerm = null, int timezoneOffset = 0)
         {
             var model = new InvoiceExport(_NetworkProvider, _CurrencyNameTable);
 
-            InvoiceQuery invoiceQuery = GetInvoiceQuery(searchTerm);
-            invoiceQuery.Count = int.MaxValue;
+            InvoiceQuery invoiceQuery = GetInvoiceQuery(searchTerm, timezoneOffset);
             invoiceQuery.Skip = 0;
+            invoiceQuery.Count = int.MaxValue;
             var invoices = await _InvoiceRepository.GetInvoices(invoiceQuery);
             var res = model.Process(invoices, format);
 
@@ -627,27 +624,6 @@ namespace BTCPayServer.Controllers
             }
         }
 
-        [HttpPost]
-        [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
-        [BitpayAPIConstraint(false)]
-        public IActionResult SearchInvoice(InvoicesModel invoices)
-        {
-            if (invoices.SearchTerm == null)
-            {
-                HttpContext.Session.Remove("InvoicesSearchTerm");
-            }
-            else
-            {
-                HttpContext.Session.SetString("InvoicesSearchTerm", invoices.SearchTerm);  
-            } 
-            return RedirectToAction(nameof(ListInvoices), new
-            {
-                searchTerm = invoices.SearchTerm,
-                skip = invoices.Skip,
-                count = invoices.Count,
-            });
-        }
-
         [HttpGet]
         [Route("invoices/{invoiceId}/changestate/{newState}")]
         [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
@@ -696,7 +672,7 @@ namespace BTCPayServer.Controllers
                 _EventAggregator.Publish(new InvoiceEvent(invoice, 1008, InvoiceEvent.MarkedInvalid));
                 StatusMessage = "Invoice marked invalid";
             }
-            else if(newState == "complete")
+            else if (newState == "complete")
             {
                 await _InvoiceRepository.UpdatePaidInvoiceToComplete(invoiceId);
                 _EventAggregator.Publish(new InvoiceEvent(invoice, 2008, InvoiceEvent.MarkedCompleted));
@@ -721,18 +697,18 @@ namespace BTCPayServer.Controllers
         {
             public static Dictionary<string, object> ParsePosData(string posData)
             {
-                var result = new Dictionary<string,object>();
+                var result = new Dictionary<string, object>();
                 if (string.IsNullOrEmpty(posData))
                 {
                     return result;
                 }
-            
+
                 try
                 {
-                    var jObject =JObject.Parse(posData);
+                    var jObject = JObject.Parse(posData);
                     foreach (var item in jObject)
                     {
-                    
+
                         switch (item.Value.Type)
                         {
                             case JTokenType.Array:
@@ -749,7 +725,7 @@ namespace BTCPayServer.Controllers
                                 result.Add(item.Key, item.Value.ToString());
                                 break;
                         }
-                    
+
                     }
                 }
                 catch
@@ -759,6 +735,6 @@ namespace BTCPayServer.Controllers
                 return result;
             }
         }
-        
+
     }
 }

@@ -33,6 +33,8 @@
                         <li><code>status:(expired|invalid|complete|confirmed|paid|new)</code> for filtering a specific status</li>
                         <li><code>exceptionstatus:(paidover|paidlate|paidpartial)</code> for filtering a specific exception state</li>
                         <li><code>unusual:(true|false)</code> for filtering invoices which might requires merchant attention (those invalid or with an exceptionstatus)</li>
+                        <li><code>startdate:yyyy-MM-dd HH:mm:ss</code> getting invoices that were created after certain date</li>
+                        <li><code>enddate:yyyy-MM-dd HH:mm:ss</code> getting invoices that were created before certain date</li>
                     </ul>
                     <p>
                         If you want all confirmed and complete invoices, you can duplicate a filter <code>status:confirmed status:complete</code>.
@@ -52,15 +54,16 @@
                     <span class="fa fa-question-circle-o" title="More information..."></span>
                 </a>
                 <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-                    <a asp-action="Export" asp-route-format="csv" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item" target="_blank">CSV</a>
-                    <a asp-action="Export" asp-route-format="json" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item" target="_blank">JSON</a>
+                    <a asp-action="Export" asp-route-timezoneoffset="0" asp-route-format="csv" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item export-link" target="_blank">CSV</a>
+                    <a asp-action="Export" asp-route-timezoneoffset="0" asp-route-format="json" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item export-link" target="_blank">JSON</a>
                 </div>
             </div>
 
             <div class="col-lg-6">
                 <div class="form-group">
-                    <form asp-action="SearchInvoice" method="post" style="float:right;">
+                    <form asp-action="ListInvoices" method="get" style="float:right;">
                         <div class="input-group">
+                            <input asp-for="TimezoneOffset" type="hidden" />
                             <input asp-for="SearchTerm" class="form-control" style="width:300px;" />
                             <span class="input-group-btn">
                                 <button type="submit" class="btn btn-primary" title="Search invoice">
@@ -217,5 +220,13 @@
                 $(this).attr("data-switch", htmlVal);
             });
         }
+
+        $(function () {
+            var timezoneOffset = new Date().getTimezoneOffset()
+            $("#TimezoneOffset").val(timezoneOffset);
+            $(".export-link").each(function () {
+                this.href = this.href.replace("timezoneoffset=0", "timezoneoffset=" + timezoneOffset);
+            });
+        })
     </script>
 </section>

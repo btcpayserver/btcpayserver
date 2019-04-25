@@ -11,7 +11,6 @@
         <div class="row">
             <form  class="col-12" method="post" asp-route-returnUrl="@ViewData["ReturnUrl"]" asp-action="LoginWith2fa">
                 <input asp-for="RememberMe" type="hidden"/>
-                <div asp-validation-summary="All" class="text-danger"></div>
                 <div class="form-group">
                     <label asp-for="TwoFactorCode"></label>
                     <input asp-for="TwoFactorCode" class="form-control" autocomplete="off"/>

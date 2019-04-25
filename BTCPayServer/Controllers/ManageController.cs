@@ -552,8 +552,9 @@ namespace BTCPayServer.Controllers
         }
         
         [HttpGet]
-        public IActionResult RemoveU2FDevice(string id)
+        public async Task<IActionResult> RemoveU2FDevice(string id)
         {
+            await _u2FService.RemoveDevice(id, _userManager.GetUserId(User));
             return RedirectToAction("U2FAuthentication", new
             {
                 StatusMessage = "Device removed"

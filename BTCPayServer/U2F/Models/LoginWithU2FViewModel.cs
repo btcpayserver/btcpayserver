@@ -22,5 +22,7 @@ namespace BTCPayServer.Services.U2F.Models
 
         [Display(Name = "Challenge")]
         public string Challenge { get; set; }
+
+        public bool RememberMe { get; set; }
     }
 }

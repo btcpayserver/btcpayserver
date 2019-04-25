@@ -109,30 +109,16 @@ namespace BTCPayServer.Controllers
                         {
                             // we need to do an actual sign in attempt so that 2fa can function in next step
                             await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: true);
-                            twoFModel = new LoginWith2faViewModel { RememberMe = model.RememberMe };
-                        }
-
-                        if (Request.IsHttps)
-                        {
-
-                            var u2fChallenge = await _u2FService.GenerateDeviceChallenges(user.Id,
-                                Request.GetAbsoluteUriNoPathBase().ToString().TrimEnd('/'));
-
-                            u2fModel = new LoginWithU2FViewModel()
+                            twoFModel = new LoginWith2faViewModel
                             {
-                                Version = u2fChallenge[0].version,
-                                Challenge = u2fChallenge[0].challenge,
-                                Challenges = JsonConvert.SerializeObject(u2fChallenge),
-                                AppId = u2fChallenge[0].appId,
-                                UserId = user.Id
+                                RememberMe = model.RememberMe
                             };
-
                         }
 
                         return View("SecondaryLogin", new SecondaryLoginViewModel()
                         {
                             LoginWith2FaViewModel = twoFModel,
-                            LoginWithU2FViewModel = u2fModel
+                            LoginWithU2FViewModel = await BuildU2FViewModel(model.RememberMe, user)
                         });
                     }
                     else
@@ -177,16 +163,44 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
+        private async Task<LoginWithU2FViewModel> BuildU2FViewModel(bool rememberMe, ApplicationUser user)
+        {
+            if (Request.IsHttps)
+            {
+                var u2fChallenge = await _u2FService.GenerateDeviceChallenges(user.Id,
+                    Request.GetAbsoluteUriNoPathBase().ToString().TrimEnd('/'));
+
+                return new LoginWithU2FViewModel()
+                {
+                    Version = u2fChallenge[0].version,
+                    Challenge = u2fChallenge[0].challenge,
+                    Challenges = JsonConvert.SerializeObject(u2fChallenge),
+                    AppId = u2fChallenge[0].appId,
+                    UserId = user.Id,
+                    RememberMe = rememberMe
+                };
+            }
+
+            return null;
+        }
+
         [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> LoginWithU2F(LoginWithU2FViewModel viewModel, string returnUrl = null)
         {
             ViewData["ReturnUrl"] = returnUrl;
+            var user = await _userManager.FindByIdAsync(viewModel.UserId);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
             try
             {
                 if (await _u2FService.AuthenticateUser(viewModel.UserId, viewModel.DeviceResponse))
                 {
-                    var user = await _userManager.FindByIdAsync(viewModel.UserId);
-                    await _signInManager.SignInAsync(user, new AuthenticationProperties(), "U2F");
+                    await _signInManager.SignInAsync(user, viewModel.RememberMe, "U2F");
                     _logger.LogInformation("User logged in.");
                     return RedirectToLocal(returnUrl);
                 }
@@ -195,7 +209,14 @@ namespace BTCPayServer.Controllers
             catch (Exception e)
             {
                 ModelState.AddModelError(string.Empty, e.Message);
-                return View(viewModel);
+                return View("SecondaryLogin", new SecondaryLoginViewModel()
+                {
+                    LoginWithU2FViewModel = viewModel,
+                    LoginWith2FaViewModel = !user.TwoFactorEnabled? null : new LoginWith2faViewModel()
+                    {
+                        RememberMe = viewModel.RememberMe
+                    }
+                });
             }
         }
 
@@ -215,7 +236,8 @@ namespace BTCPayServer.Controllers
 
             return View("SecondaryLogin", new SecondaryLoginViewModel()
             {
-                LoginWith2FaViewModel = new LoginWith2faViewModel { RememberMe = rememberMe }
+                LoginWith2FaViewModel = new LoginWith2faViewModel { RememberMe = rememberMe },
+                LoginWithU2FViewModel =  (await _u2FService.HasDevices(user.Id))? await BuildU2FViewModel(rememberMe, user): null
             });
         }
 
@@ -255,7 +277,8 @@ namespace BTCPayServer.Controllers
                 ModelState.AddModelError(string.Empty, "Invalid authenticator code.");
                 return View("SecondaryLogin", new SecondaryLoginViewModel()
                 {
-                    LoginWith2FaViewModel = model
+                    LoginWith2FaViewModel = model,
+                    LoginWithU2FViewModel =  (await _u2FService.HasDevices(user.Id))? await BuildU2FViewModel(rememberMe, user): null
                 });
             }
         }

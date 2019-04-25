@@ -40,12 +40,12 @@ namespace BTCPayServer.Services.U2F
             }
         }
 
-        public async Task RemoveDevice(string id)
+        public async Task RemoveDevice(string id, string userId)
         {
             using (var context = _contextFactory.CreateContext())
             {
                 var device = await context.U2FDevices.FindAsync(id);
-                if (device == null)
+                if (device == null || !device.ApplicationUserId.Equals(userId, StringComparison.InvariantCulture))
                 {
                     return;
                 }

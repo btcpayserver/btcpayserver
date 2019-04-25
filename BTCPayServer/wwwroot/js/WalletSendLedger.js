@@ -18,7 +18,6 @@
 
     var ledgerDetected = false;
     var bridge = new ledgerwebsocket.LedgerWebSocketBridge(ws_uri);
-    var cryptoCode = $("#cryptoCode").val();
     function WriteAlert(type, message) {
         $("#walletAlert").removeClass("alert-danger");
         $("#walletAlert").removeClass("alert-warning");
@@ -44,7 +43,6 @@
             return false;
         $(".crypto-info").css("display", "block");
         var args = "";
-        args += "cryptoCode=" + cryptoCode;
         args += "&destination=" + destination;
         args += "&amount=" + amount;
         args += "&feeRate=" + fee;

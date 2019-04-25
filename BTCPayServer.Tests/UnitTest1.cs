@@ -654,7 +654,6 @@ namespace BTCPayServer.Tests
                 var rescan = Assert.IsType<RescanWalletModel>(Assert.IsType<ViewResult>(walletController.WalletRescan(walletId).Result).Model);
                 Assert.False(rescan.Ok);
                 Assert.True(rescan.IsFullySync);
-                Assert.True(rescan.IsSegwit);
                 Assert.False(rescan.IsSupportedByCurrency);
                 Assert.False(rescan.IsServerAdmin);
 
@@ -1655,6 +1654,15 @@ donation:
                 Assert.Equal(10.00m, orangeInvoice.Price);
                 Assert.Equal("CAD", orangeInvoice.Currency);
                 Assert.Equal("orange", orangeInvoice.ItemDesc);
+                
+                
+                Assert.IsType<RedirectToActionResult>(publicApps.ViewPointOfSale(appId, 0, null, null, null, null, "apple").Result);
+
+                invoices = user.BitPay.GetInvoices();
+                var appleInvoice = invoices.SingleOrDefault(invoice => invoice.ItemCode.Equals("apple"));
+                Assert.NotNull(appleInvoice);
+                Assert.Equal("good apple", appleInvoice.ItemDesc);
+                
 
                 // testing custom amount
                 var action = Assert.IsType<RedirectToActionResult>(publicApps.ViewPointOfSale(appId, 5, null, null, null, null, "donation").Result);

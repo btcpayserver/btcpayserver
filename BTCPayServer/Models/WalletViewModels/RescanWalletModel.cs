@@ -12,8 +12,7 @@ namespace BTCPayServer.Models.WalletViewModels
         public bool IsServerAdmin { get; set; }
         public bool IsSupportedByCurrency { get; set; }
         public bool IsFullySync { get; set; }
-        public bool IsSegwit { get; set; }
-        public bool Ok => IsServerAdmin && IsSupportedByCurrency && IsFullySync && IsSegwit;
+        public bool Ok => IsServerAdmin && IsSupportedByCurrency && IsFullySync;
 
         [Range(1000, 10_000)]
         public int BatchSize { get; set; } = 3000;

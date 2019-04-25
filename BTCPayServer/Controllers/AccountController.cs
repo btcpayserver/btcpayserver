@@ -18,6 +18,9 @@ using BTCPayServer.Services.Stores;
 using BTCPayServer.Logging;
 using BTCPayServer.Security;
 using System.Globalization;
+using BTCPayServer.Services.U2F;
+using BTCPayServer.Services.U2F.Models;
+using Newtonsoft.Json;
 using NicolasDorier.RateLimits;
 
 namespace BTCPayServer.Controllers
@@ -33,6 +36,7 @@ namespace BTCPayServer.Controllers
         RoleManager<IdentityRole> _RoleManager;
         SettingsRepository _SettingsRepository;
         Configuration.BTCPayServerOptions _Options;
+        private readonly U2FService _u2FService;
         ILogger _logger;
 
         public AccountController(
@@ -42,7 +46,8 @@ namespace BTCPayServer.Controllers
             SignInManager<ApplicationUser> signInManager,
             EmailSenderFactory emailSenderFactory,
             SettingsRepository settingsRepository,
-            Configuration.BTCPayServerOptions options)
+            Configuration.BTCPayServerOptions options,
+            U2FService u2FService)
         {
             this.storeRepository = storeRepository;
             _userManager = userManager;
@@ -51,6 +56,7 @@ namespace BTCPayServer.Controllers
             _RoleManager = roleManager;
             _SettingsRepository = settingsRepository;
             _Options = options;
+            _u2FService = u2FService;
             _logger = Logs.PayServer;
         }
 
@@ -91,8 +97,54 @@ namespace BTCPayServer.Controllers
                         return View(model);
                     }
                 }
-                // This doesn't count login failures towards account lockout
-                // To enable password failures to trigger account lockout, set lockoutOnFailure: true
+
+                if (!await _userManager.IsLockedOutAsync(user) && await _u2FService.HasDevices(user.Id))
+                {
+                    if (await _userManager.CheckPasswordAsync(user, model.Password))
+                    {
+                        LoginWith2faViewModel twoFModel = null;
+                        LoginWithU2FViewModel u2fModel = null;
+                        
+                        if (user.TwoFactorEnabled)
+                        {
+                            // we need to do an actual sign in attempt so that 2fa can function in next step
+                            await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: true);
+                            twoFModel = new LoginWith2faViewModel { RememberMe = model.RememberMe };
+                        }
+
+                        if (Request.IsHttps)
+                        {
+
+                            var u2fChallenge = await _u2FService.GenerateDeviceChallenges(user.Id,
+                                Request.GetAbsoluteUriNoPathBase().ToString().TrimEnd('/'));
+
+                            u2fModel = new LoginWithU2FViewModel()
+                            {
+                                Version = u2fChallenge[0].version,
+                                Challenge = u2fChallenge[0].challenge,
+                                Challenges = JsonConvert.SerializeObject(u2fChallenge),
+                                AppId = u2fChallenge[0].appId,
+                                UserId = user.Id
+                            };
+
+                        }
+
+                        return View("SecondaryLogin", new SecondaryLoginViewModel()
+                        {
+                            LoginWith2FaViewModel = twoFModel,
+                            LoginWithU2FViewModel = u2fModel
+                        });
+                    }
+                    else
+                    {
+                      var incrementAccessFailedResult = await  _userManager.AccessFailedAsync(user);
+                      ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                      return View(model);
+                      
+                    }
+                }
+                
+               
                 var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: true);
                 if (result.Succeeded)
                 {
@@ -101,10 +153,12 @@ namespace BTCPayServer.Controllers
                 }
                 if (result.RequiresTwoFactor)
                 {
-                    return RedirectToAction(nameof(LoginWith2fa), new
+                    return View("SecondaryLogin", new SecondaryLoginViewModel()
                     {
-                        returnUrl,
-                        model.RememberMe
+                        LoginWith2FaViewModel = new LoginWith2faViewModel()
+                        {
+                            RememberMe = model.RememberMe
+                        }
                     });
                 }
                 if (result.IsLockedOut)
@@ -123,6 +177,28 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
+        [HttpPost]
+        public async Task<IActionResult> LoginWithU2F(LoginWithU2FViewModel viewModel, string returnUrl = null)
+        {
+            ViewData["ReturnUrl"] = returnUrl;
+            try
+            {
+                if (await _u2FService.AuthenticateUser(viewModel.UserId, viewModel.DeviceResponse))
+                {
+                    var user = await _userManager.FindByIdAsync(viewModel.UserId);
+                    await _signInManager.SignInAsync(user, new AuthenticationProperties(), "U2F");
+                    _logger.LogInformation("User logged in.");
+                    return RedirectToLocal(returnUrl);
+                }
+                throw new Exception("Invalid login attempt.");
+            }
+            catch (Exception e)
+            {
+                ModelState.AddModelError(string.Empty, e.Message);
+                return View(viewModel);
+            }
+        }
+
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> LoginWith2fa(bool rememberMe, string returnUrl = null)
@@ -135,10 +211,12 @@ namespace BTCPayServer.Controllers
                 throw new ApplicationException($"Unable to load two-factor authentication user.");
             }
 
-            var model = new LoginWith2faViewModel { RememberMe = rememberMe };
             ViewData["ReturnUrl"] = returnUrl;
 
-            return View(model);
+            return View("SecondaryLogin", new SecondaryLoginViewModel()
+            {
+                LoginWith2FaViewModel = new LoginWith2faViewModel { RememberMe = rememberMe }
+            });
         }
 
         [HttpPost]
@@ -175,7 +253,10 @@ namespace BTCPayServer.Controllers
             {
                 _logger.LogWarning("Invalid authenticator code entered for user with ID {UserId}.", user.Id);
                 ModelState.AddModelError(string.Empty, "Invalid authenticator code.");
-                return View();
+                return View("SecondaryLogin", new SecondaryLoginViewModel()
+                {
+                    LoginWith2FaViewModel = model
+                });
             }
         }
 

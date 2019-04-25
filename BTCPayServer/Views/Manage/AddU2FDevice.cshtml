@@ -1,0 +1,59 @@
+@model BTCPayServer.Services.U2F.Models.AddU2FDeviceViewModel
+@{
+    ViewData.SetActivePageAndTitle(ManageNavPages.U2F, "Add U2F device");
+}
+
+<form asp-action="AddU2FDevice" method="post" id="registerForm" class="hidden">
+    
+    <input type="hidden" asp-for="AppId"/>
+    <input type="hidden" asp-for="Version"/>
+    <input type="hidden" asp-for="Challenge"/>
+    <input type="hidden" asp-for="Name"/>
+    <input type="hidden" asp-for="DeviceResponse"/>
+</form>
+
+
+<div class="card">
+    <h3 class="card-title">Performing U2F action</h3>
+    <div class="card-body">
+        
+        <p>You may be prompted to allow the site permission to access your security keys. After granting permission, the device will start to blink.</p>
+    </div>
+    
+    <div class="card-footer">
+        <a class="btn btn-secondary" asp-action="U2FAuthentication" id="btn-back">Abort</a>
+    </div>
+</div>
+
+@section Scripts {
+
+    <script src="~/vendor/u2f/u2f-api-1.1.js"></script>
+    <script type="text/javascript">
+        var errorMap = {
+            1: 'Unknown error, try again',
+            2: "Bad request error, try again",
+            3: "This key isn't supported, please try another one",
+            4: 'The device is already registered, please login',
+            5: 'Authentication timed out. Please reload to try again.'
+        };
+
+        setTimeout(function() {
+                var request = { "challenge": "@Model.Challenge", "version": "@Model.Version", "appId": "@Model.AppId" };
+                var registerRequests = [{version: request.version, challenge: request.challenge}];
+                console.log(request);
+                u2f.register(request.appId, registerRequests, [],
+                    function(data) {
+                        if (data.errorCode) {
+                            alert(errorMap[data.errorCode]);
+                            $("#btn-back").click();
+                        }
+                        console.log("Register callback", data);
+                        $('#DeviceResponse').val(JSON.stringify(data));
+                        $('#registerForm').submit();
+
+                        return false;
+                    });
+            },
+            1000);
+    </script>
+}

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -22,6 +23,8 @@ using BTCPayServer.Services.Wallets;
 using BTCPayServer.Services.Mails;
 using System.Globalization;
 using BTCPayServer.Security;
+using BTCPayServer.Services.U2F;
+using BTCPayServer.Services.U2F.Models;
 
 namespace BTCPayServer.Controllers
 {
@@ -36,6 +39,7 @@ namespace BTCPayServer.Controllers
         private readonly UrlEncoder _urlEncoder;
         TokenRepository _TokenRepository;
         IHostingEnvironment _Env;
+        private readonly U2FService _u2FService;
         StoreRepository _StoreRepository;
 
 
@@ -50,7 +54,8 @@ namespace BTCPayServer.Controllers
           TokenRepository tokenRepository,
           BTCPayWalletProvider walletProvider,
           StoreRepository storeRepository,
-          IHostingEnvironment env)
+          IHostingEnvironment env, 
+          U2FService  u2FService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -59,6 +64,7 @@ namespace BTCPayServer.Controllers
             _urlEncoder = urlEncoder;
             _TokenRepository = tokenRepository;
             _Env = env;
+            _u2FService = u2FService;
             _StoreRepository = storeRepository;
         }
 
@@ -534,5 +540,81 @@ namespace BTCPayServer.Controllers
         }
 
         #endregion
+        
+        [HttpGet]
+        public async Task<IActionResult> U2FAuthentication(string statusMessage = null)
+        {
+            return View(new U2FAuthenticationViewModel()
+            {
+            StatusMessage = statusMessage,
+                Devices = await  _u2FService.GetDevices(_userManager.GetUserId(User))
+            });
+        }
+        
+        [HttpGet]
+        public IActionResult RemoveU2FDevice(string id)
+        {
+            return RedirectToAction("U2FAuthentication", new
+            {
+                StatusMessage = "Device removed"
+            });
+        }
+        
+        [HttpGet]
+        public IActionResult AddU2FDevice(string name)
+        {
+            if (!Request.IsHttps)
+            {
+                return RedirectToAction("U2FAuthentication", new
+                {
+                    StatusMessage = new StatusMessageModel()
+                    {
+                        Severity = StatusMessageModel.StatusSeverity.Error,
+                        Message = "Cannot register U2F device while not on https"
+                    }
+                });
+            }
+            var serverRegisterResponse = _u2FService.StartDeviceRegistration(_userManager.GetUserId(User), Request.GetAbsoluteUriNoPathBase().ToString().TrimEnd('/'));
+
+            return View(new AddU2FDeviceViewModel()
+            {
+                AppId = serverRegisterResponse.AppId,
+                Challenge = serverRegisterResponse.Challenge,
+                Version = serverRegisterResponse.Version,
+                Name = name
+            });
+        }
+        
+        [HttpPost]
+        public async Task<IActionResult> AddU2FDevice(AddU2FDeviceViewModel viewModel)
+        {
+            try
+            {
+                if (await _u2FService.CompleteRegistration(_userManager.GetUserId(User), viewModel.DeviceResponse, viewModel.Name))
+                {
+                    return RedirectToAction("U2FAuthentication", new
+                    {
+                        StatusMessage = "Device added!"
+                    });
+                }
+
+                throw new Exception("Could not add device.");
+            }
+            catch (Exception e)
+            {
+                return RedirectToAction("U2FAuthentication", new
+                {
+                    StatusMessage = new StatusMessageModel()
+                    {
+                        Severity = StatusMessageModel.StatusSeverity.Error,
+                        Message = e.Message
+                    }
+                });
+            }
+
+
+        }
     }
+
+  
 }

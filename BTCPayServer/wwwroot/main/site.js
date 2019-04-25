@@ -33,3 +33,13 @@
         }
     }
 });
+
+function switchTimeFormat() {
+    $(".switchTimeFormat").each(function (index) {
+        var htmlVal = $(this).html();
+        var switchVal = $(this).attr("data-switch");
+
+        $(this).html(switchVal);
+        $(this).attr("data-switch", htmlVal);
+    });
+}

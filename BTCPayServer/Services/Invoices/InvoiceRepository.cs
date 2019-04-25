@@ -463,7 +463,7 @@ retry:
                 {
                     // Hacky way to return an empty query object. The nice way is much too elaborate:
                     // https://stackoverflow.com/questions/33305495/how-to-return-empty-iqueryable-in-an-async-repository-method
-                    return query.Where(x => false); 
+                    return query.Where(x => false);
                 }
                 query = query.Where(i => ids.Contains(i.Id));
             }

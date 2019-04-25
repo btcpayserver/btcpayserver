@@ -742,6 +742,12 @@ namespace BTCPayServer.Tests
                 AssertSearchInvoice(acc, false, invoice.Id, $"exceptionstatus:paidOver");
                 AssertSearchInvoice(acc, true, invoice.Id, $"unusual:true");
                 AssertSearchInvoice(acc, false, invoice.Id, $"unusual:false");
+
+                var time = invoice.InvoiceTime;
+                AssertSearchInvoice(acc, true, invoice.Id, $"startdate:{time.ToString("yyyy-MM-dd HH:mm:ss")}");
+                AssertSearchInvoice(acc, true, invoice.Id, $"enddate:{time.ToStringLowerInvariant()}");
+                AssertSearchInvoice(acc, false, invoice.Id, $"startdate:{time.AddSeconds(1).ToString("yyyy-MM-dd HH:mm:ss")}");
+                AssertSearchInvoice(acc, false, invoice.Id, $"enddate:{time.AddSeconds(-1).ToString("yyyy-MM-dd HH:mm:ss")}");
             }
         }
 
@@ -879,22 +885,28 @@ namespace BTCPayServer.Tests
         [Trait("Fast", "Fast")]
         public void CanParseFilter()
         {
-            var filter = "storeid:abc status:abed blabhbalh ";
+            var filter = "storeid:abc, status:abed, blabhbalh ";
             var search = new SearchString(filter);
-            Assert.Equal("storeid:abc status:abed blabhbalh", search.ToString());
+            Assert.Equal("storeid:abc, status:abed, blabhbalh", search.ToString());
             Assert.Equal("blabhbalh", search.TextSearch);
             Assert.Single(search.Filters["storeid"]);
             Assert.Single(search.Filters["status"]);
             Assert.Equal("abc", search.Filters["storeid"].First());
             Assert.Equal("abed", search.Filters["status"].First());
 
-            filter = "status:abed status:abed2";
+            filter = "status:abed, status:abed2";
             search = new SearchString(filter);
-            Assert.Equal("status:abed status:abed2", search.ToString());
+            Assert.Equal("", search.TextSearch);
+            Assert.Equal("status:abed, status:abed2", search.ToString());
             Assert.Throws<KeyNotFoundException>(() => search.Filters["test"]);
             Assert.Equal(2, search.Filters["status"].Count);
             Assert.Equal("abed", search.Filters["status"].First());
             Assert.Equal("abed2", search.Filters["status"].Skip(1).First());
+
+            filter = "StartDate:2019-04-25 01:00 AM, hekki";
+            search = new SearchString(filter);
+            Assert.Equal("2019-04-25 01:00 AM", search.Filters["startdate"].First());
+            Assert.Equal("hekki", search.TextSearch);
         }
 
         [Fact]

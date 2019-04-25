@@ -24,6 +24,7 @@
                 <div id="help" class="collapse text-left">
                     <p>
                         You can search for invoice Id, deposit address, price, order id, store id, any buyer information and any product information.<br />
+                        Be sure to split your search parameters with comma, for example: <code>startdate:2019-04-25 13:00:00, status:paid</code><br />
                         You can also apply filters to your search by searching for <code>filtername:value</code>, here is a list of supported filters
                     </p>
                     <ul>
@@ -37,7 +38,7 @@
                         <li><code>enddate:yyyy-MM-dd HH:mm:ss</code> getting invoices that were created before certain date</li>
                     </ul>
                     <p>
-                        If you want all confirmed and complete invoices, you can duplicate a filter <code>status:confirmed status:complete</code>.
+                        If you want all confirmed and complete invoices, you can duplicate a filter <code>status:confirmed, status:complete</code>.
                     </p>
                 </div>
             </div>
@@ -211,16 +212,6 @@
     </div>
 
     <script type="text/javascript">
-        function switchTimeFormat() {
-            $(".switchTimeFormat").each(function (index) {
-                var htmlVal = $(this).html();
-                var switchVal = $(this).attr("data-switch");
-
-                $(this).html(switchVal);
-                $(this).attr("data-switch", htmlVal);
-            });
-        }
-
         $(function () {
             var timezoneOffset = new Date().getTimezoneOffset()
             $("#TimezoneOffset").val(timezoneOffset);

@@ -103,7 +103,6 @@ namespace BTCPayServer.Controllers
                     if (await _userManager.CheckPasswordAsync(user, model.Password))
                     {
                         LoginWith2faViewModel twoFModel = null;
-                        LoginWithU2FViewModel u2fModel = null;
                         
                         if (user.TwoFactorEnabled)
                         {

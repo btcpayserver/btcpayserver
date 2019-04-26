@@ -6,12 +6,11 @@
 <partial name="_StatusMessage" for="StatusMessage"/>
 <h4>Registered U2F Devices</h4>
 <form asp-action="AddU2FDevice" method="get">
-    <table class="table table-sm table-responsive-md">
+    <table class="table table-lg">
         <thead>
         <tr>
-            <th class="text-center">Name</th>
-            <th class="text-center">Counter</th>
-            <th class="text-center">Actions</th>
+            <th >Name</th>
+            <th class="text-right">Actions</th>
         </tr>
         </thead>
         <tbody>
@@ -19,18 +18,16 @@
         {
             <tr>
                 <td>@device.Name</td>
-                <td>@device.Counter</td>
-                <td >
-                    <div class="pull-right">
+                <td class="text-right" >
                         <a asp-action="RemoveU2FDevice" asp-route-id="@device.Id">Remove</a>
-                    </div>
+               
                 </td>
             </tr>
         }
         @if (!Model.Devices.Any())
         {
             <tr>
-                <td colspan="3" class="text-center h5 py-2">
+                <td colspan="2" class="text-center h5 py-2">
                     No registered devices
                 </td>
             </tr>
@@ -39,7 +36,6 @@
             <td>
                 <input type="text" class="form-control" name="Name" placeholder="New Device Name"/>
             </td>
-            <td></td>
             <td>
                 <div class="pull-right">
                     <button type="submit" class="btn btn-primary">Add New Device</button>

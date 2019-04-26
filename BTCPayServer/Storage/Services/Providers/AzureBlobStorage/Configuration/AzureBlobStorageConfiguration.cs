@@ -9,8 +9,11 @@ namespace BTCPayServer.Storage.Services.Providers.AzureBlobStorage.Configuration
         [Required]
         [MinLength(3)]
         [MaxLength(63)]
-         [RegularExpression(@"[a-z0-9-]+", 
-                 ErrorMessage = "Characters must be lowercase or digits or -")]
+        [RegularExpression(@"[a-z0-9-]+",
+            ErrorMessage = "Characters must be lowercase or digits or -")]
         public string ContainerName { get; set; }
+
+        [Required][AzureBlobStorageConnectionStringValidator] 
+        public new string ConnectionString { get; set; }
     }
 }

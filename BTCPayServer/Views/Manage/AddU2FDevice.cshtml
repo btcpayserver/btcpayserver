@@ -46,6 +46,7 @@
                     function(data) {
                         if (data.errorCode) {
                             $("#error-response").text(errorMap[data.errorCode]);
+                            return;
                         }
                         console.log("Register callback", data);
                         $('#DeviceResponse').val(JSON.stringify(data));

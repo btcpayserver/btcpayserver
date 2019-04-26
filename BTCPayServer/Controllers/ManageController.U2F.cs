@@ -51,7 +51,7 @@ namespace BTCPayServer.Controllers
                 AppId = serverRegisterResponse.AppId,
                 Challenge = serverRegisterResponse.Challenge,
                 Version = serverRegisterResponse.Version,
-                Name = string.IsNullOrEmpty(name) ? "Unlabelled U2F Device" : name
+                Name = name
             });
         }
 
@@ -61,7 +61,7 @@ namespace BTCPayServer.Controllers
             try
             {
                 if (await _u2FService.CompleteRegistration(_userManager.GetUserId(User), viewModel.DeviceResponse,
-                    viewModel.Name))
+                    string.IsNullOrEmpty(viewModel.Name) ? "Unlabelled U2F Device" : viewModel.Name))
                 {
                     return RedirectToAction("U2FAuthentication", new
                     {

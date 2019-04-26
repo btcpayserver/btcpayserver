@@ -160,10 +160,16 @@ namespace BTCPayServer.Controllers
 
             var rateRules = storeBlob.GetRateRules(_NetworkProvider);
             var fetchingByCurrencyPair = _RateProvider.FetchRates(currencyPairsToFetch, rateRules, cancellationToken);
-
             var fetchingAll = WhenAllFetched(logs, fetchingByCurrencyPair);
             var supportedPaymentMethods = store.GetSupportedPaymentMethods(_NetworkProvider)
                                                .Where(s => !excludeFilter.Match(s.PaymentId))
+                                               .Where(s => invoice.PaymentMethods == null || 
+                                                           !invoice.PaymentMethods.Any() || 
+                                                           invoice.PaymentMethods.Any(selectedPaymentMethod =>
+                                                               s.PaymentId.ToString()
+                                                                   .Equals(
+                                                                       selectedPaymentMethod, 
+                                                                       StringComparison.InvariantCultureIgnoreCase)))
                                                .Select(c =>
                                                 (Handler: (IPaymentMethodHandler)_ServiceProvider.GetService(typeof(IPaymentMethodHandler<>).MakeGenericType(c.GetType())),
                                                 SupportedPaymentMethod: c,
@@ -180,6 +186,8 @@ namespace BTCPayServer.Controllers
                 var paymentMethod = await o.PaymentMethod;
                 if (paymentMethod == null)
                     continue;
+                
+                
                 supported.Add(o.SupportedPaymentMethod);
                 paymentMethods.Add(paymentMethod);
             }

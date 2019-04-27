@@ -91,12 +91,10 @@ namespace BTCPayServer.Controllers
             if (app == null)
                 return NotFound();
             var settings = app.GetSettings<PointOfSaleSettings>();
-            var emailWarning =
-                !((await (_emailSenderFactory.GetEmailSender(app.StoreDataId) as EmailSender)?.GetEmailSettings())
-                  ?.IsComplete() ?? false);
+          
             var vm = new UpdatePointOfSaleViewModel()
             {
-                NotificationEmailWarning = emailWarning,
+                NotificationEmailWarning = await ShowEmailWarningForStore(app.StoreDataId),
                 Id = appId,
                 Title = settings.Title,
                 EnableShoppingCart = settings.EnableShoppingCart,

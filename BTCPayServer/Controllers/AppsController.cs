@@ -180,5 +180,10 @@ namespace BTCPayServer.Controllers
         {
             return _UserManager.GetUserId(User);
         }
+
+        private async Task<bool> ShowEmailWarningForStore(string storeId)
+        {
+            return !((await (_emailSenderFactory.GetEmailSender(storeId) as EmailSender)?.GetEmailSettings())?.IsComplete() is true);
+        }
     }
 }

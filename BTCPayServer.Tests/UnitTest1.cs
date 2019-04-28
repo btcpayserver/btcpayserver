@@ -2607,6 +2607,44 @@ donation:
             Assert.Equal(StatusMessageModel.StatusSeverity.Success, parsed.Severity);
 
         }
+        
+        [Fact]
+        [Trait("Fast", "Fast")]
+       public  async Task CanCreateInvoiceWithSpecificPaymentMethods()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.Start();
+                await tester.EnsureChannelsSetup();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                user.RegisterLightningNode("BTC", LightningConnectionType.Charge);
+                user.RegisterDerivationScheme("BTC");
+                user.RegisterDerivationScheme("LTC");
+
+                var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice(100, "BTC"));
+                Assert.Equal(2, invoice.SupportedTransactionCurrencies.Count);
+
+                Assert.Equal(nameof(InvoiceController.ListInvoices),Assert.IsType<RedirectToActionResult>(await user.GetController<InvoiceController>()
+                    .CreateInvoice(
+                        new CreateInvoiceModel()
+                        {
+                            Amount = 77,
+                            Currency = "BTC",
+                            PaymentMethods = new List<string>()
+                            {
+                                "BTC"
+                            },
+                            StoreId = user.StoreId
+                        }, CancellationToken.None)).ActionName);
+
+                var invoices =  await user.BitPay.GetInvoicesAsync();
+                invoice = invoices.Single(invoice1 => invoice1.Price == 77);
+                
+                Assert.Equal(1, invoice.SupportedTransactionCurrencies.Count);
+            }
+        }
+        
 
         private static bool IsMapped(Invoice invoice, ApplicationDbContext ctx)
         {

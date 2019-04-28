@@ -115,7 +115,11 @@
                     </div>
                     <div class="form-group">
                         <label asp-for="NotificationEmail" class="control-label"></label>
-                        <input type="email" asp-for="NotificationEmail" class="form-control" />
+                        @if (Model.NotificationEmailWarning)
+                        {
+                            <partial name="NotificationEmailWarning"></partial>
+                        }
+                        <input type="email" asp-for="NotificationEmail" class="form-control"/>
                         <span asp-validation-for="NotificationEmail" class="text-danger"></span>
                     </div>
                     <div class="form-group">
@@ -123,6 +127,7 @@
                         <select asp-for="RedirectAutomatically" asp-items="Model.RedirectAutomaticallySelectList" class="form-control"></select>
                         <span asp-validation-for="RedirectAutomatically" class="text-danger"></span>
                     </div>
+                    <input type="hidden" asp-for="NotificationEmailWarning"/>
                     <div class="form-group">
                         <input type="submit" class="btn btn-primary" value="Save Settings" />
                     </div>

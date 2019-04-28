@@ -40,8 +40,6 @@
             "@Model.AppId",
             "@Model.Challenge",
             @Html.Raw(@Model.Challenges), function (data) {
-                console.log("call back data: ", data);
-
                 if (data.errorCode) {
                     $("#error-response").text(errorMap[data.errorCode]);
                     return;

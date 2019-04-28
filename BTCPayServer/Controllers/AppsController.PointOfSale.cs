@@ -94,7 +94,7 @@ namespace BTCPayServer.Controllers
           
             var vm = new UpdatePointOfSaleViewModel()
             {
-                NotificationEmailWarning = await ShowEmailWarningForStore(app.StoreDataId),
+                NotificationEmailWarning = !await IsEmailConfigured(app.StoreDataId),
                 Id = appId,
                 Title = settings.Title,
                 EnableShoppingCart = settings.EnableShoppingCart,

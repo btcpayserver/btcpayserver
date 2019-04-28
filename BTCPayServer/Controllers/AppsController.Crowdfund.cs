@@ -34,7 +34,7 @@ namespace BTCPayServer.Controllers
             var settings = app.GetSettings<CrowdfundSettings>();
             var vm = new UpdateCrowdfundViewModel()
             {
-                NotificationEmailWarning = await ShowEmailWarningForStore(app.StoreDataId),
+                NotificationEmailWarning = !await IsEmailConfigured(app.StoreDataId),
                 Title = settings.Title,
                 Enabled = settings.Enabled,
                 EnforceTargetAmount = settings.EnforceTargetAmount,

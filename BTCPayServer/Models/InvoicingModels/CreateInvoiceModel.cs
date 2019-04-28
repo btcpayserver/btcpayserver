@@ -71,7 +71,7 @@ namespace BTCPayServer.Models.InvoicingModels
             set;
         }
         
-        public List<string> PaymentMethods
+        public List<string> SupportedTransactionCurrencies
         {
             get;
             set;

@@ -2624,22 +2624,18 @@ donation:
 
                 var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice(100, "BTC"));
                 Assert.Equal(2, invoice.SupportedTransactionCurrencies.Count);
-
-                Assert.Equal(nameof(InvoiceController.ListInvoices),Assert.IsType<RedirectToActionResult>(await user.GetController<InvoiceController>()
-                    .CreateInvoice(
-                        new CreateInvoiceModel()
+               
+                
+                invoice = await user.BitPay.CreateInvoiceAsync(new Invoice(100, "BTC")
+                {
+                    SupportedTransactionCurrencies = new Dictionary<string, InvoiceSupportedTransactionCurrency>()
+                    {
+                        {"BTC", new InvoiceSupportedTransactionCurrency()
                         {
-                            Amount = 77,
-                            Currency = "BTC",
-                            PaymentMethods = new List<string>()
-                            {
-                                "BTC"
-                            },
-                            StoreId = user.StoreId
-                        }, CancellationToken.None)).ActionName);
-
-                var invoices =  await user.BitPay.GetInvoicesAsync();
-                invoice = invoices.Single(invoice1 => invoice1.Price == 77);
+                            Enabled = true
+                        }}
+                    }
+                });
                 
                 Assert.Equal(1, invoice.SupportedTransactionCurrencies.Count);
             }

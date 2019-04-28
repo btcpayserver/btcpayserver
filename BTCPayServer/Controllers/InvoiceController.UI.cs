@@ -632,7 +632,10 @@ namespace BTCPayServer.Controllers
                     ItemDesc = model.ItemDesc,
                     FullNotifications = true,
                     BuyerEmail = model.BuyerEmail,
-                    PaymentMethods = model.PaymentMethods?.ToArray()
+                    SupportedTransactionCurrencies = model.SupportedTransactionCurrencies?.ToDictionary(s => s, s => new InvoiceSupportedTransactionCurrency()
+                    {
+                        Enabled =true
+                    })
                 }, store, HttpContext.Request.GetAbsoluteRoot(), cancellationToken: cancellationToken);
 
                 StatusMessage = $"Invoice {result.Data.Id} just created!";

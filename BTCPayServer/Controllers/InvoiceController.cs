@@ -163,13 +163,6 @@ namespace BTCPayServer.Controllers
             var fetchingAll = WhenAllFetched(logs, fetchingByCurrencyPair);
             var supportedPaymentMethods = store.GetSupportedPaymentMethods(_NetworkProvider)
                                                .Where(s => !excludeFilter.Match(s.PaymentId))
-                                               .Where(s => invoice.PaymentMethods == null || 
-                                                           !invoice.PaymentMethods.Any() || 
-                                                           invoice.PaymentMethods.Any(selectedPaymentMethod =>
-                                                               s.PaymentId.ToString()
-                                                                   .Equals(
-                                                                       selectedPaymentMethod, 
-                                                                       StringComparison.InvariantCultureIgnoreCase)))
                                                .Select(c =>
                                                 (Handler: (IPaymentMethodHandler)_ServiceProvider.GetService(typeof(IPaymentMethodHandler<>).MakeGenericType(c.GetType())),
                                                 SupportedPaymentMethod: c,

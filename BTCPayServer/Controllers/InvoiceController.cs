@@ -179,8 +179,6 @@ namespace BTCPayServer.Controllers
                 var paymentMethod = await o.PaymentMethod;
                 if (paymentMethod == null)
                     continue;
-                
-                
                 supported.Add(o.SupportedPaymentMethod);
                 paymentMethods.Add(paymentMethod);
             }

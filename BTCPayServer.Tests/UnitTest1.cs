@@ -2609,7 +2609,7 @@ donation:
         }
         
         [Fact]
-        [Trait("Fast", "Fast")]
+        [Trait("Integration", "Integration")]
        public  async Task CanCreateInvoiceWithSpecificPaymentMethods()
         {
             using (var tester = ServerTester.Create())

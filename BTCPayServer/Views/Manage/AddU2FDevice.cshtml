@@ -41,7 +41,6 @@
         setTimeout(function() {
                 var request = { "challenge": "@Model.Challenge", "version": "@Model.Version", "appId": "@Model.AppId" };
                 var registerRequests = [{version: request.version, challenge: request.challenge}];
-                console.log(request);
                 u2f.register(request.appId, registerRequests, [],
                     function(data) {
                         if (data.errorCode) {

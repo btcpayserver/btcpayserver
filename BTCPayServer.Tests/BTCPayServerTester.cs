@@ -110,7 +110,6 @@ namespace BTCPayServer.Tests
 
             config.AppendLine($"ltc.explorer.url={LTCNBXplorerUri.AbsoluteUri}");
             config.AppendLine($"ltc.explorer.cookiefile=0");
-
             config.AppendLine($"btc.lightning={IntegratedLightning.AbsoluteUri}");
 
             if (TestDatabase == TestDatabases.MySQL && !String.IsNullOrEmpty(MySQL))
@@ -127,6 +126,7 @@ namespace BTCPayServer.Tests
             var conf = new DefaultConfiguration() { Logger = Logs.LogProvider.CreateLogger("Console") }.CreateConfiguration(new[] { "--datadir", _Directory, "--conf", confPath, "--disable-registration", "false" });
             _Host = new WebHostBuilder()
                     .UseConfiguration(conf)
+                    .UseContentRoot(FindBTCPayServerDirectory())
                     .ConfigureServices(s =>
                     {
                         s.AddLogging(l =>
@@ -209,6 +209,12 @@ namespace BTCPayServer.Tests
                 });
                 rateProvider.Providers.Add("bittrex", bittrex);
             }
+        }
+
+        private string FindBTCPayServerDirectory()
+        {
+            var solutionDirectory = LanguageService.TryGetSolutionDirectoryInfo(Directory.GetCurrentDirectory());
+            return Path.Combine(solutionDirectory.FullName, "BTCPayServer");
         }
 
         public HttpClient HttpClient { get; set; }

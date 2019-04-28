@@ -56,6 +56,8 @@ using BTCPayServer.Configuration;
 using System.Security;
 using System.Runtime.CompilerServices;
 using System.Net;
+using BTCPayServer.Models.AccountViewModels;
+using BTCPayServer.Services.U2F.Models;
 
 namespace BTCPayServer.Tests
 {

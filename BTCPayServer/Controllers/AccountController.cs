@@ -36,6 +36,7 @@ namespace BTCPayServer.Controllers
         RoleManager<IdentityRole> _RoleManager;
         SettingsRepository _SettingsRepository;
         Configuration.BTCPayServerOptions _Options;
+        private readonly BTCPayServerEnvironment _btcPayServerEnvironment;
         private readonly U2FService _u2FService;
         ILogger _logger;
 
@@ -47,6 +48,7 @@ namespace BTCPayServer.Controllers
             EmailSenderFactory emailSenderFactory,
             SettingsRepository settingsRepository,
             Configuration.BTCPayServerOptions options,
+            BTCPayServerEnvironment btcPayServerEnvironment,
             U2FService u2FService)
         {
             this.storeRepository = storeRepository;
@@ -56,6 +58,7 @@ namespace BTCPayServer.Controllers
             _RoleManager = roleManager;
             _SettingsRepository = settingsRepository;
             _Options = options;
+            _btcPayServerEnvironment = btcPayServerEnvironment;
             _u2FService = u2FService;
             _logger = Logs.PayServer;
         }
@@ -164,7 +167,7 @@ namespace BTCPayServer.Controllers
 
         private async Task<LoginWithU2FViewModel> BuildU2FViewModel(bool rememberMe, ApplicationUser user)
         {
-            if (Request.IsHttps)
+            if (_btcPayServerEnvironment.IsSecure)
             {
                 var u2fChallenge = await _u2FService.GenerateDeviceChallenges(user.Id,
                     Request.GetAbsoluteUriNoPathBase().ToString().TrimEnd('/'));

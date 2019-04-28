@@ -31,14 +31,14 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         public IActionResult AddU2FDevice(string name)
         {
-            if (!Request.IsHttps)
+            if (!_btcPayServerEnvironment.IsSecure)
             {
                 return RedirectToAction("U2FAuthentication", new
                 {
                     StatusMessage = new StatusMessageModel()
                     {
                         Severity = StatusMessageModel.StatusSeverity.Error,
-                        Message = "Cannot register U2F device while not on https"
+                        Message = "Cannot register U2F device while not on https or tor"
                     }
                 });
             }

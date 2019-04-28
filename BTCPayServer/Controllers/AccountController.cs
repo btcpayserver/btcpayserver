@@ -198,6 +198,8 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
+
+            var errorMessage = string.Empty;
             try
             {
                 if (await _u2FService.AuthenticateUser(viewModel.UserId, viewModel.DeviceResponse))
@@ -206,20 +208,26 @@ namespace BTCPayServer.Controllers
                     _logger.LogInformation("User logged in.");
                     return RedirectToLocal(returnUrl);
                 }
-                throw new Exception("Invalid login attempt.");
+
+                errorMessage = "Invalid login attempt.";
             }
             catch (Exception e)
             {
-                ModelState.AddModelError(string.Empty, e.Message);
-                return View("SecondaryLogin", new SecondaryLoginViewModel()
-                {
-                    LoginWithU2FViewModel = viewModel,
-                    LoginWith2FaViewModel = !user.TwoFactorEnabled? null : new LoginWith2faViewModel()
+
+                errorMessage = e.Message;
+            }
+
+            ModelState.AddModelError(string.Empty, errorMessage);
+            return View("SecondaryLogin", new SecondaryLoginViewModel()
+            {
+                LoginWithU2FViewModel = viewModel,
+                LoginWith2FaViewModel = !user.TwoFactorEnabled
+                    ? null
+                    : new LoginWith2faViewModel()
                     {
                         RememberMe = viewModel.RememberMe
                     }
-                });
-            }
+            });
         }
 
         [HttpGet]

@@ -49,7 +49,7 @@
     </PackageReference>
     <PackageReference Include="NBitcoin" Version="4.1.1.98" />
     <PackageReference Include="NBitpayClient" Version="1.0.0.34" />	  
-    <PackageReference Include="DBriize" Version="1.0.0.2" />
+    <PackageReference Include="DBriize" Version="1.0.0.4" />
     <PackageReference Include="NBXplorer.Client" Version="2.0.0.6" />
     <PackageReference Include="NicolasDorier.CommandLine" Version="1.0.0.2" />
     <PackageReference Include="NicolasDorier.CommandLine.Configuration" Version="1.0.0.3" />

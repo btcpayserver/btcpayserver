@@ -33,5 +33,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public string ExceptionStatus { get; set; }
         public string AmountCurrency { get; set; }
         public string StatusMessage { get; set; }
+
+        public InvoiceDetailsModel Details { get; set; }
     }
 }

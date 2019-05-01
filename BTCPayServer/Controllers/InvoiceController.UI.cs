@@ -498,7 +498,8 @@ namespace BTCPayServer.Controllers
                 var state = invoice.GetInvoiceState();
                 model.Invoices.Add(new InvoiceModel()
                 {
-                    Status = state.ToString(),
+                    Status = invoice.Status,
+                    StatusString = state.ToString(),
                     ShowCheckout = invoice.Status == InvoiceStatus.New,
                     Date = invoice.InvoiceTime,
                     InvoiceId = invoice.Id,

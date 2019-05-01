@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Services.Invoices;
 
 namespace BTCPayServer.Models.InvoicingModels
 {
@@ -25,7 +26,8 @@ namespace BTCPayServer.Models.InvoicingModels
         public string RedirectUrl { get; set; }
         public string InvoiceId { get; set; }
 
-        public string Status { get; set; }
+        public InvoiceStatus Status { get; set; }
+        public string StatusString { get; set; }
         public bool CanMarkComplete { get; set; }
         public bool CanMarkInvalid { get; set; }
         public bool CanMarkStatus => CanMarkComplete || CanMarkInvalid;

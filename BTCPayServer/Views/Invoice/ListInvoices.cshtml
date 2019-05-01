@@ -116,25 +116,13 @@
                                 }
                             </td>
                             <td>@invoice.InvoiceId</td>
-                            <td>@invoice.Status</td>
-                            <td style="text-align:right">@invoice.AmountCurrency</td>
-                            <td style="text-align:right">
-                                @if (invoice.ShowCheckout)
-                                {
-                                    <span>
-                                        <a asp-action="Checkout" asp-route-invoiceId="@invoice.InvoiceId">Checkout</a>
-                                        <a href="javascript:btcpay.showInvoice('@invoice.InvoiceId')">[^]</a>
-                                        @if (!invoice.CanMarkStatus)
-                                        {
-                                            <span>-</span>
-                                        }
-                                    </span>
-                                }
+                            <td>
                                 @if (invoice.CanMarkStatus)
                                 {
-                                    <a class="dropdown-toggle dropdown-toggle-split" href="#" style="cursor: pointer;" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        Change status <span class="sr-only">Toggle Dropdown</span>
-                                    </a>
+                                    <span class="dropdown-toggle dropdown-toggle-split pavpill pavpil-@invoice.Status.ToString().ToLower()"
+                                          data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        @invoice.StatusString
+                                    </span>
                                     <div class="dropdown-menu pull-right">
                                         @if (invoice.CanMarkInvalid)
                                         {
@@ -149,6 +137,24 @@
                                             </form>
                                         }
                                     </div>
+                                }
+                                else
+                                {
+                                    <span class="pavpill pavpil-@invoice.Status.ToString().ToLower()">@invoice.StatusString</span>
+                                }
+                            </td>
+                            <td style="text-align:right">@invoice.AmountCurrency</td>
+                            <td style="text-align:right">
+                                @if (invoice.ShowCheckout)
+                                {
+                                    <span>
+                                        <a asp-action="Checkout" asp-route-invoiceId="@invoice.InvoiceId">Checkout</a>
+                                        <a href="javascript:btcpay.showInvoice('@invoice.InvoiceId')">[^]</a>
+                                        @if (!invoice.CanMarkStatus)
+                                        {
+                                            <span>-</span>
+                                        }
+                                    </span>
                                 }
                                 &nbsp;
                                 <a asp-action="Invoice" asp-route-invoiceId="@invoice.InvoiceId">Details</a>
@@ -259,6 +265,47 @@
             overflow: hidden;
             display: block;
             white-space: nowrap;
+        }
+
+        .pavpill {
+            display: inline-block;
+            padding: 0.3em 0.5em;
+            font-size: 85%;
+            font-weight: 500;
+            line-height: 1;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border-radius: 0.25rem;
+        }
+
+            .pavpill.dropdown-toggle {
+                cursor: pointer;
+            }
+
+        .pavpil-new {
+            background: #d4edda;
+            color: #000;
+        }
+
+        .pavpil-expired {
+            background: #eee;
+            color: #000;
+        }
+
+        .pavpil-invalid {
+            background: #c94a47;
+            color: #fff;
+        }
+
+        .pavpil-confirmed, .pavpil-paid {
+            background: #f1c332;
+            color: #000;
+        }
+
+        .pavpil-complete {
+            background: #329f80;
+            color: #fff;
         }
     </style>
 </section>

@@ -571,7 +571,16 @@ namespace BTCPayServer.Controllers
                 StatusMessage = "Error: You need to create at least one store before creating a transaction";
                 return RedirectToAction(nameof(UserStoresController.ListStores), "UserStores");
             }
-            return View(new CreateInvoiceModel() { Stores = stores });
+
+            var paymentMethods = new SelectList(_NetworkProvider.GetAll().SelectMany(network => new[]
+                                                         {
+                                                             new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike),
+                                                             new PaymentMethodId(network.CryptoCode, PaymentTypes.LightningLike)
+                                                         }).Select(id => new SelectListItem(id.ToString(true), id.ToString(false))), 
+                                                             nameof(SelectListItem.Value), 
+                                                             nameof(SelectListItem.Text));
+            
+            return View(new CreateInvoiceModel() { Stores = stores, AvailablePaymentMethods = paymentMethods});
         }
 
         [HttpPost]
@@ -582,6 +591,16 @@ namespace BTCPayServer.Controllers
         {
             var stores = await _StoreRepository.GetStoresByUserId(GetUserId());
             model.Stores = new SelectList(stores, nameof(StoreData.Id), nameof(StoreData.StoreName), model.StoreId);
+            
+            var paymentMethods = new SelectList(_NetworkProvider.GetAll().SelectMany(network => new[]
+                {
+                    new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike),
+                    new PaymentMethodId(network.CryptoCode, PaymentTypes.LightningLike)
+                }).Select(id => new SelectListItem(id.ToString(true), id.ToString(false))), 
+                nameof(SelectListItem.Value), 
+                nameof(SelectListItem.Text));
+            model.AvailablePaymentMethods = paymentMethods;
+            
             var store = stores.FirstOrDefault(s => s.Id == model.StoreId);
             if (store == null)
             {
@@ -603,6 +622,7 @@ namespace BTCPayServer.Controllers
                 ModelState.AddModelError(nameof(model.StoreId), "You need to configure the derivation scheme in order to create an invoice");
                 return View(model);
             }
+            
 
             if (StatusMessage != null)
             {
@@ -626,6 +646,10 @@ namespace BTCPayServer.Controllers
                     ItemDesc = model.ItemDesc,
                     FullNotifications = true,
                     BuyerEmail = model.BuyerEmail,
+                    SupportedTransactionCurrencies = model.SupportedTransactionCurrencies?.ToDictionary(s => s, s => new InvoiceSupportedTransactionCurrency()
+                    {
+                        Enabled =true
+                    })
                 }, store, HttpContext.Request.GetAbsoluteRoot(), cancellationToken: cancellationToken);
 
                 StatusMessage = $"Invoice {result.Data.Id} just created!";

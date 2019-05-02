@@ -2609,6 +2609,40 @@ donation:
             Assert.Equal(StatusMessageModel.StatusSeverity.Success, parsed.Severity);
 
         }
+        
+        [Fact]
+        [Trait("Integration", "Integration")]
+       public  async Task CanCreateInvoiceWithSpecificPaymentMethods()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.Start();
+                await tester.EnsureChannelsSetup();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                user.RegisterLightningNode("BTC", LightningConnectionType.Charge);
+                user.RegisterDerivationScheme("BTC");
+                user.RegisterDerivationScheme("LTC");
+
+                var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice(100, "BTC"));
+                Assert.Equal(2, invoice.SupportedTransactionCurrencies.Count);
+               
+                
+                invoice = await user.BitPay.CreateInvoiceAsync(new Invoice(100, "BTC")
+                {
+                    SupportedTransactionCurrencies = new Dictionary<string, InvoiceSupportedTransactionCurrency>()
+                    {
+                        {"BTC", new InvoiceSupportedTransactionCurrency()
+                        {
+                            Enabled = true
+                        }}
+                    }
+                });
+                
+                Assert.Equal(1, invoice.SupportedTransactionCurrencies.Count);
+            }
+        }
+        
 
         
          [Fact]

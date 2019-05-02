@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using BTCPayServer.Models;
 using BTCPayServer.Services.PaymentRequests;
+using BTCPayServer.Services.U2F.Models;
 using BTCPayServer.Storage.Models;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
@@ -98,7 +99,10 @@ namespace BTCPayServer.Data
         {
             get; set;
         }
+       
 
+        public DbSet<U2FDevice> U2FDevices { get; set; }   
+        
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             var isConfigured = optionsBuilder.Options.Extensions.OfType<RelationalOptionsExtension>().Any();
@@ -223,4 +227,5 @@ namespace BTCPayServer.Data
                 .HasIndex(o => o.Status);
         }
     }
+
 }

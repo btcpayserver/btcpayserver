@@ -74,6 +74,7 @@
     <PackageReference Include="TwentyTwenty.Storage.Azure" Version="2.10.1" />
     <PackageReference Include="TwentyTwenty.Storage.Google" Version="2.10.1" />
     <PackageReference Include="TwentyTwenty.Storage.Local" Version="2.10.1" />
+    <PackageReference Include="U2F.Core" Version="2.0.1" />
 		<PackageReference Include="YamlDotNet" Version="5.2.1" />
 	</ItemGroup>
 
@@ -129,9 +130,11 @@
 
 	<ItemGroup>
 	  <Folder Include="Build\" />
+	  <Folder Include="U2F\Services" />
 	  <Folder Include="wwwroot\vendor\clipboard.js\" />
 	  <Folder Include="wwwroot\vendor\highlightjs\" />
 	  <Folder Include="wwwroot\vendor\summernote" />
+	  <Folder Include="wwwroot\vendor\u2f" />
 	</ItemGroup>
 
 	<ItemGroup>

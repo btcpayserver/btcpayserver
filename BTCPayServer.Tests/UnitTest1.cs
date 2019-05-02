@@ -56,6 +56,8 @@ using BTCPayServer.Configuration;
 using System.Security;
 using System.Runtime.CompilerServices;
 using System.Net;
+using BTCPayServer.Models.AccountViewModels;
+using BTCPayServer.Services.U2F.Models;
 
 namespace BTCPayServer.Tests
 {
@@ -2608,6 +2610,78 @@ donation:
 
         }
 
+        
+         [Fact]
+        [Trait("Integration", "Integration")]
+        public async Task CanLoginWithNoSecondaryAuthSystemsOrRequestItWhenAdded()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.Start();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+
+               var accountController = tester.PayTester.GetController<AccountController>();
+
+               //no 2fa or u2f enabled, login should work
+               Assert.Equal(nameof(HomeController.Index), Assert.IsType<RedirectToActionResult>(await accountController.Login(new LoginViewModel()
+               {
+                   Email = user.RegisterDetails.Email,
+                   Password = user.RegisterDetails.Password
+               })).ActionName);
+
+               var manageController = user.GetController<ManageController>();
+               
+               //by default no u2f devices available
+               Assert.Empty(Assert.IsType<U2FAuthenticationViewModel>(Assert.IsType<ViewResult>(await manageController.U2FAuthentication()).Model).Devices);
+               var addRequest = Assert.IsType<AddU2FDeviceViewModel>(Assert.IsType<ViewResult>(manageController.AddU2FDevice("label")).Model);
+               //name should match the one provided in beginning
+               Assert.Equal("label",addRequest.Name);
+               
+               //sending an invalid response model back to server, should error out
+               var statusMessage = Assert
+                   .IsType<RedirectToActionResult>(await manageController.AddU2FDevice(addRequest))
+                   .RouteValues["StatusMessage"].ToString();
+               Assert.NotNull(statusMessage);
+               Assert.Equal(StatusMessageModel.StatusSeverity.Error, new StatusMessageModel(statusMessage).Severity);
+
+               var contextFactory = tester.PayTester.GetService<ApplicationDbContextFactory>();
+
+               //add a fake u2f device in db directly since emulating a u2f device is hard and annoying
+               using (var context = contextFactory.CreateContext())
+               {
+                   var newDevice = new U2FDevice()
+                   {
+                       Name = "fake",
+                       Counter = 0,
+                       KeyHandle = UTF8Encoding.UTF8.GetBytes("fake"),
+                       PublicKey= UTF8Encoding.UTF8.GetBytes("fake"),
+                       AttestationCert= UTF8Encoding.UTF8.GetBytes("fake"),
+                       ApplicationUserId= user.UserId
+                   };
+                   await context.U2FDevices.AddAsync(newDevice);
+                   await context.SaveChangesAsync();
+                   
+                   Assert.NotNull(newDevice.Id);
+                   Assert.NotEmpty(Assert.IsType<U2FAuthenticationViewModel>(Assert.IsType<ViewResult>(await manageController.U2FAuthentication()).Model).Devices);
+                   
+               }
+
+               //check if we are showing the u2f login screen now
+               var secondLoginResult = Assert.IsType<ViewResult>(await accountController.Login(new LoginViewModel()
+               {
+                   Email = user.RegisterDetails.Email,
+                   Password = user.RegisterDetails.Password
+               }));
+
+               Assert.Equal("SecondaryLogin", secondLoginResult.ViewName);
+               var vm = Assert.IsType<SecondaryLoginViewModel>(secondLoginResult.Model);
+               //2fa was never enabled for user so this should be empty
+               Assert.Null(vm.LoginWith2FaViewModel);
+               Assert.NotNull(vm.LoginWithU2FViewModel);               
+            }
+        }
+        
         private static bool IsMapped(Invoice invoice, ApplicationDbContext ctx)
         {
             var h = BitcoinAddress.Create(invoice.BitcoinAddress, Network.RegTest).ScriptPubKey.Hash.ToString();

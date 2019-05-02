@@ -2639,7 +2639,7 @@ donation:
                     }
                 });
                 
-                Assert.Equal(1, invoice.SupportedTransactionCurrencies.Count);
+                Assert.Single(invoice.SupportedTransactionCurrencies);
             }
         }
         

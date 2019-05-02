@@ -118,7 +118,7 @@ namespace BTCPayServer.Services
                     if (network.NBitcoinNetwork.NetworkType == NetworkType.Mainnet)
                         throw new Exception($"The opened ledger app does not seems to support {network.NBitcoinNetwork.Name}.");
                 }
-                var fingerprint = onlyChaincode ? new byte[4] : (await ledger.GetWalletPubKeyAsync(account.Parent, cancellation: cancellation)).UncompressedPublicKey.Compress().Hash.ToBytes().Take(4).ToArray();
+                var fingerprint = onlyChaincode ? default : (await ledger.GetWalletPubKeyAsync(account.Parent, cancellation: cancellation)).UncompressedPublicKey.Compress().GetHDFingerPrint();
                 var extpubkey = new ExtPubKey(pubKey.UncompressedPublicKey.Compress(), pubKey.ChainCode, (byte)account.Indexes.Length, fingerprint, account.Indexes.Last()).GetWif(network.NBitcoinNetwork);
                 return extpubkey;
             }

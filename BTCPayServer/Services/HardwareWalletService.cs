@@ -164,17 +164,39 @@ namespace BTCPayServer.Services
             return foundKeyPath;
         }
 
-        public async Task<Transaction> SignTransactionAsync(SignatureRequest[] signatureRequests,
-                                                     Transaction unsigned,
-                                                     KeyPath changeKeyPath,
+        public async Task<PSBT> SignTransactionAsync(PSBT psbt,
                                                      CancellationToken cancellationToken)
         {
             try
             {
+                var unsigned = psbt.GetGlobalTransaction();
+                var changeKeyPath = psbt.Outputs.Where(o => o.HDKeyPaths.Any())
+                                                .Select(o => o.HDKeyPaths.First().Value.Item2)
+                                                .FirstOrDefault();
+                var signatureRequests = psbt
+                    .Inputs
+                    .Where(o => o.HDKeyPaths.Any())
+                    .Where(o => !o.PartialSigs.ContainsKey(o.HDKeyPaths.First().Key))
+                    .Select(i => new SignatureRequest()
+                {
+                    InputCoin = i.GetSignableCoin(),
+                    InputTransaction = i.NonWitnessUtxo,
+                    KeyPath = i.HDKeyPaths.First().Value.Item2,
+                    PubKey = i.HDKeyPaths.First().Key
+                }).ToArray();
                 var signedTransaction = await Ledger.SignTransactionAsync(signatureRequests, unsigned, changeKeyPath, cancellationToken);
                 if (signedTransaction == null)
                     throw new Exception("The ledger failed to sign the transaction");
-                return signedTransaction;
+
+                psbt = psbt.Clone();
+                foreach (var signature in signatureRequests)
+                {
+                    var input = psbt.Inputs.FindIndexedInput(signature.InputCoin.Outpoint);
+                    if (input == null)
+                        continue;
+                    input.PartialSigs.Add(signature.PubKey, signature.Signature);
+                }
+                return psbt;
             }
             catch (Exception ex)
             {

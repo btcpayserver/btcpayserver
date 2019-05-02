@@ -123,6 +123,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async void CanUseLocalProviderFiles()
         {
+            Logs.Tester.LogInformation($"ENV VAR TESTS_RUN_EXTERNAL_INTEGRATION: {Environment.GetEnvironmentVariable("TESTS_RUN_EXTERNAL_INTEGRATION")}");
             using (var tester = ServerTester.Create())
             {
                 tester.Start();

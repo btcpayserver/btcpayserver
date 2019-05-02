@@ -20,7 +20,7 @@ jobs:
             if [ -n "$CIRCLE_PR_NUMBER" ]; then
                 TESTS_RUN_EXTERNAL_INTEGRATION="false"
             fi
-            docker-compose run -e TESTS_RUN_EXTERNAL_INTEGRATION=$TESTS_RUN_EXTERNAL_INTEGRATION tests
+            docker-compose run -e TESTS_RUN_EXTERNAL_INTEGRATION=$TESTS_RUN_EXTERNAL_INTEGRATION tests --build  
 
   # publish jobs require $DOCKERHUB_REPO, $DOCKERHUB_USER, $DOCKERHUB_PASS defined
   publish_docker_linuxamd64:

@@ -323,9 +323,9 @@ namespace BTCPayServer.Tests
             using (var tester = ServerTester.Create())
             {
                 tester.Start();
-                var client = HttpClientFactory.Create();
+                var client = tester.PayTester.HttpClient;
                 //Wallets endpoint is protected
-                var response = await client.GetAsync(new Uri(tester.PayTester.ServerUri, "wallets"));
+                var response = await client.GetAsync("wallets");
                 var urlPath = response.RequestMessage.RequestUri.ToString()
                     .Replace(tester.PayTester.ServerUri.ToString(), "");
                 //Cookie Challenge redirects you to login page

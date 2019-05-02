@@ -39,7 +39,10 @@
                 to_amount: parseFloat(toCurrencyDue),
                 state: orderId
             };
-            waitForCoinSwitch();
+
+            payment.on('Exchange:Ready', function(){
+                waitForCoinSwitch();
+            })
 
             function waitForCoinSwitch() {
                 if (typeof payment.open !== "function") {

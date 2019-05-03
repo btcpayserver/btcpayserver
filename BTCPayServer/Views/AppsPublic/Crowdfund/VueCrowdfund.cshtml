@@ -12,10 +12,10 @@
                 <h1>
                     {{srvModel.title}} 
                     <span class="h6 text-muted" v-if="!started && srvModel.startDate" v-b-tooltip :title="startDate" id="crowdfund-header-start-date">
-                        Starts {{startDateRelativeTime}}
+                        Starts in {{startDiff}}
                     </span>
                     <span class="h6 text-muted" v-else-if="started && !ended && srvModel.endDate" v-b-tooltip :title="endDate" id="crowdfund-header-end-date">
-                        Ends {{endDateRelativeTime}}
+                        Ends in {{endDiff}}
                     </span>
                     <span class="h6 text-muted" v-else-if="started && !ended && !srvModel.endDate" v-b-tooltip title="No set end date" id="crowdfund-header-active">
                         Currently Active!

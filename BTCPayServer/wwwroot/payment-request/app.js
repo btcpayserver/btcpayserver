@@ -26,7 +26,6 @@ addLoadEvent(function (ev) {
                 srvModel: window.srvModel,
                 connectionStatus: "",
                 endDate: "",
-                endDateRelativeTime: "",
                 ended: false,
                 endDiff: "",
                 active: true,
@@ -49,11 +48,12 @@ addLoadEvent(function (ev) {
                 if (this.srvModel.expiryDate) {
                     var endDateM = moment(this.srvModel.expiryDate);
                     this.endDate = endDateM.format('MMMM Do YYYY');
-                    this.endDateRelativeTime = endDateM.fromNow();
                     this.ended = endDateM.isBefore(moment());
 
                 } else {
                     this.ended = false;
+                    this.endDate = null;
+                    this.endDiff = null;
                 }
 
                 if (!this.ended && this.srvModel.expiryDate) {

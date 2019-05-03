@@ -85,8 +85,6 @@ addLoadEvent(function (ev) {
                 connectionStatus: "",
                 endDate: "",
                 startDate: "",
-                startDateRelativeTime: "",
-                endDateRelativeTime: "",
                 started: false,
                 ended: false,
                 contributeModalOpen: false,
@@ -170,24 +168,20 @@ addLoadEvent(function (ev) {
                 if (this.srvModel.endDate) {
                     var endDateM = moment(this.srvModel.endDate);
                     this.endDate = endDateM.format('MMMM Do YYYY');
-                    this.endDateRelativeTime = endDateM.fromNow();
                     this.ended = endDateM.isBefore(moment());
                     
                 }else{
                     this.ended = false;
-                    this.endDateRelativeTime  = null;
                     this.endDate = null;
                 }
 
                 if (this.srvModel.startDate) {
                     var startDateM = moment(this.srvModel.startDate);
                     this.startDate = startDateM.format('MMMM Do YYYY');
-                    this.startDateRelativeTime = startDateM.fromNow();
                     this.started = startDateM.isBefore(moment());
                 }else{
                     this.started = true;
                     this.startDate = null;
-                    this.startDateRelativeTime = null;
                 }
                 if(this.started && !this.ended && this.srvModel.endDate){
                     var mDiffD =  moment(this.srvModel.endDate).diff(moment(), "days");

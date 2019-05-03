@@ -673,61 +673,46 @@ namespace BTCPayServer.Controllers
             }
         }
 
-        [HttpGet]
-        [Route("invoices/{invoiceId}/changestate/{newState}")]
-        [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
-        [BitpayAPIConstraint(false)]
-        public IActionResult ChangeInvoiceState(string invoiceId, string newState)
-        {
-            if (newState == "invalid")
-            {
-                return View("Confirm", new ConfirmModel()
-                {
-                    Action = "Make invoice invalid",
-                    Title = "Change invoice state",
-                    Description = $"You will transition the state of this invoice to \"invalid\", do you want to continue?",
-                });
-            }
-            else if (newState == "complete")
-            {
-                return View("Confirm", new ConfirmModel()
-                {
-                    Action = "Make invoice complete",
-                    Title = "Change invoice state",
-                    Description = $"You will transition the state of this invoice to \"complete\", do you want to continue?",
-                    ButtonClass = "btn-primary"
-                });
-            }
-            else
-                return NotFound();
-        }
-
         [HttpPost]
         [Route("invoices/{invoiceId}/changestate/{newState}")]
         [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
         [BitpayAPIConstraint(false)]
-        public async Task<IActionResult> ChangeInvoiceStateConfirm(string invoiceId, string newState)
+        public async Task<IActionResult> ChangeInvoiceState(string invoiceId, string newState)
         {
             var invoice = (await _InvoiceRepository.GetInvoices(new InvoiceQuery()
             {
                 InvoiceId = invoiceId,
                 UserId = GetUserId()
             })).FirstOrDefault();
+
+            var model = new InvoiceStateChangeModel();
             if (invoice == null)
-                return NotFound();
+            {
+                model.NotFound = true;
+                return NotFound(model);
+            }
+
+
             if (newState == "invalid")
             {
                 await _InvoiceRepository.UpdatePaidInvoiceToInvalid(invoiceId);
                 _EventAggregator.Publish(new InvoiceEvent(invoice, 1008, InvoiceEvent.MarkedInvalid));
-                StatusMessage = "Invoice marked invalid";
+                model.StatusString = new InvoiceState("invalid", "marked").ToString();
             }
             else if (newState == "complete")
             {
                 await _InvoiceRepository.UpdatePaidInvoiceToComplete(invoiceId);
                 _EventAggregator.Publish(new InvoiceEvent(invoice, 2008, InvoiceEvent.MarkedCompleted));
-                StatusMessage = "Invoice marked complete";
+                model.StatusString = new InvoiceState("complete", "marked").ToString();
             }
-            return RedirectToAction(nameof(ListInvoices));
+
+            return Json(model);
+        }
+
+        public class InvoiceStateChangeModel
+        {
+            public bool NotFound { get; set; }
+            public string StatusString { get; set; }
         }
 
         [TempData]

@@ -104,6 +104,7 @@ services:
       BITCOIN_EXTRA_ARGS: |-
         rpcuser=ceiwHEbqWI83
         rpcpassword=DwubwWsoo3
+        rpcport=43782
         rpcbind=0.0.0.0:43782
         port=39388
         whitelist=0.0.0.0/0

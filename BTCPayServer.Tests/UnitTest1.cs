@@ -56,6 +56,8 @@ using BTCPayServer.Configuration;
 using System.Security;
 using System.Runtime.CompilerServices;
 using System.Net;
+using BTCPayServer.Models.AccountViewModels;
+using BTCPayServer.Services.U2F.Models;
 
 namespace BTCPayServer.Tests
 {
@@ -742,6 +744,12 @@ namespace BTCPayServer.Tests
                 AssertSearchInvoice(acc, false, invoice.Id, $"exceptionstatus:paidOver");
                 AssertSearchInvoice(acc, true, invoice.Id, $"unusual:true");
                 AssertSearchInvoice(acc, false, invoice.Id, $"unusual:false");
+
+                var time = invoice.InvoiceTime;
+                AssertSearchInvoice(acc, true, invoice.Id, $"startdate:{time.ToString("yyyy-MM-dd HH:mm:ss")}");
+                AssertSearchInvoice(acc, true, invoice.Id, $"enddate:{time.ToStringLowerInvariant()}");
+                AssertSearchInvoice(acc, false, invoice.Id, $"startdate:{time.AddSeconds(1).ToString("yyyy-MM-dd HH:mm:ss")}");
+                AssertSearchInvoice(acc, false, invoice.Id, $"enddate:{time.AddSeconds(-1).ToString("yyyy-MM-dd HH:mm:ss")}");
             }
         }
 
@@ -879,22 +887,28 @@ namespace BTCPayServer.Tests
         [Trait("Fast", "Fast")]
         public void CanParseFilter()
         {
-            var filter = "storeid:abc status:abed blabhbalh ";
+            var filter = "storeid:abc, status:abed, blabhbalh ";
             var search = new SearchString(filter);
-            Assert.Equal("storeid:abc status:abed blabhbalh", search.ToString());
+            Assert.Equal("storeid:abc, status:abed, blabhbalh", search.ToString());
             Assert.Equal("blabhbalh", search.TextSearch);
             Assert.Single(search.Filters["storeid"]);
             Assert.Single(search.Filters["status"]);
             Assert.Equal("abc", search.Filters["storeid"].First());
             Assert.Equal("abed", search.Filters["status"].First());
 
-            filter = "status:abed status:abed2";
+            filter = "status:abed, status:abed2";
             search = new SearchString(filter);
-            Assert.Equal("status:abed status:abed2", search.ToString());
+            Assert.Equal("", search.TextSearch);
+            Assert.Equal("status:abed, status:abed2", search.ToString());
             Assert.Throws<KeyNotFoundException>(() => search.Filters["test"]);
             Assert.Equal(2, search.Filters["status"].Count);
             Assert.Equal("abed", search.Filters["status"].First());
             Assert.Equal("abed2", search.Filters["status"].Skip(1).First());
+
+            filter = "StartDate:2019-04-25 01:00 AM, hekki";
+            search = new SearchString(filter);
+            Assert.Equal("2019-04-25 01:00 AM", search.Filters["startdate"].First());
+            Assert.Equal("hekki", search.TextSearch);
         }
 
         [Fact]
@@ -1665,10 +1679,10 @@ donation:
                 
 
                 // testing custom amount
-                var action = Assert.IsType<RedirectToActionResult>(publicApps.ViewPointOfSale(appId, 5, null, null, null, null, "donation").Result);
+                var action = Assert.IsType<RedirectToActionResult>(publicApps.ViewPointOfSale(appId, 6.6m, null, null, null, null, "donation").Result);
                 Assert.Equal(nameof(InvoiceController.Checkout), action.ActionName);
                 invoices = user.BitPay.GetInvoices();
-                var donationInvoice = invoices.Single(i => i.Price == 5m);
+                var donationInvoice = invoices.Single(i => i.Price == 6.6m);
                 Assert.NotNull(donationInvoice);
                 Assert.Equal("CAD", donationInvoice.Currency);
                 Assert.Equal("donation", donationInvoice.ItemDesc);
@@ -2595,7 +2609,113 @@ donation:
             Assert.Equal(StatusMessageModel.StatusSeverity.Success, parsed.Severity);
 
         }
+        
+        [Fact]
+        [Trait("Integration", "Integration")]
+       public  async Task CanCreateInvoiceWithSpecificPaymentMethods()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.Start();
+                await tester.EnsureChannelsSetup();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                user.RegisterLightningNode("BTC", LightningConnectionType.Charge);
+                user.RegisterDerivationScheme("BTC");
+                user.RegisterDerivationScheme("LTC");
 
+                var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice(100, "BTC"));
+                Assert.Equal(2, invoice.SupportedTransactionCurrencies.Count);
+               
+                
+                invoice = await user.BitPay.CreateInvoiceAsync(new Invoice(100, "BTC")
+                {
+                    SupportedTransactionCurrencies = new Dictionary<string, InvoiceSupportedTransactionCurrency>()
+                    {
+                        {"BTC", new InvoiceSupportedTransactionCurrency()
+                        {
+                            Enabled = true
+                        }}
+                    }
+                });
+                
+                Assert.Single(invoice.SupportedTransactionCurrencies);
+            }
+        }
+        
+
+        
+         [Fact]
+        [Trait("Integration", "Integration")]
+        public async Task CanLoginWithNoSecondaryAuthSystemsOrRequestItWhenAdded()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.Start();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+
+               var accountController = tester.PayTester.GetController<AccountController>();
+
+               //no 2fa or u2f enabled, login should work
+               Assert.Equal(nameof(HomeController.Index), Assert.IsType<RedirectToActionResult>(await accountController.Login(new LoginViewModel()
+               {
+                   Email = user.RegisterDetails.Email,
+                   Password = user.RegisterDetails.Password
+               })).ActionName);
+
+               var manageController = user.GetController<ManageController>();
+               
+               //by default no u2f devices available
+               Assert.Empty(Assert.IsType<U2FAuthenticationViewModel>(Assert.IsType<ViewResult>(await manageController.U2FAuthentication()).Model).Devices);
+               var addRequest = Assert.IsType<AddU2FDeviceViewModel>(Assert.IsType<ViewResult>(manageController.AddU2FDevice("label")).Model);
+               //name should match the one provided in beginning
+               Assert.Equal("label",addRequest.Name);
+               
+               //sending an invalid response model back to server, should error out
+               var statusMessage = Assert
+                   .IsType<RedirectToActionResult>(await manageController.AddU2FDevice(addRequest))
+                   .RouteValues["StatusMessage"].ToString();
+               Assert.NotNull(statusMessage);
+               Assert.Equal(StatusMessageModel.StatusSeverity.Error, new StatusMessageModel(statusMessage).Severity);
+
+               var contextFactory = tester.PayTester.GetService<ApplicationDbContextFactory>();
+
+               //add a fake u2f device in db directly since emulating a u2f device is hard and annoying
+               using (var context = contextFactory.CreateContext())
+               {
+                   var newDevice = new U2FDevice()
+                   {
+                       Name = "fake",
+                       Counter = 0,
+                       KeyHandle = UTF8Encoding.UTF8.GetBytes("fake"),
+                       PublicKey= UTF8Encoding.UTF8.GetBytes("fake"),
+                       AttestationCert= UTF8Encoding.UTF8.GetBytes("fake"),
+                       ApplicationUserId= user.UserId
+                   };
+                   await context.U2FDevices.AddAsync(newDevice);
+                   await context.SaveChangesAsync();
+                   
+                   Assert.NotNull(newDevice.Id);
+                   Assert.NotEmpty(Assert.IsType<U2FAuthenticationViewModel>(Assert.IsType<ViewResult>(await manageController.U2FAuthentication()).Model).Devices);
+                   
+               }
+
+               //check if we are showing the u2f login screen now
+               var secondLoginResult = Assert.IsType<ViewResult>(await accountController.Login(new LoginViewModel()
+               {
+                   Email = user.RegisterDetails.Email,
+                   Password = user.RegisterDetails.Password
+               }));
+
+               Assert.Equal("SecondaryLogin", secondLoginResult.ViewName);
+               var vm = Assert.IsType<SecondaryLoginViewModel>(secondLoginResult.Model);
+               //2fa was never enabled for user so this should be empty
+               Assert.Null(vm.LoginWith2FaViewModel);
+               Assert.NotNull(vm.LoginWithU2FViewModel);               
+            }
+        }
+        
         private static bool IsMapped(Invoice invoice, ApplicationDbContext ctx)
         {
             var h = BitcoinAddress.Create(invoice.BitcoinAddress, Network.RegTest).ScriptPubKey.Hash.ToString();

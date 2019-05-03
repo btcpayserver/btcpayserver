@@ -1,4 +1,4 @@
-﻿using DBreeze;
+﻿using DBriize;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -27,8 +27,8 @@ namespace BTCPayServer.Services.Invoices
     {
 
 
-        private readonly DBreezeEngine _Engine;
-        public DBreezeEngine Engine
+        private readonly DBriizeEngine _Engine;
+        public DBriizeEngine Engine
         {
             get
             {
@@ -44,7 +44,7 @@ namespace BTCPayServer.Services.Invoices
 retry:
             try
             {
-                _Engine = new DBreezeEngine(dbreezePath);
+                _Engine = new DBriizeEngine(dbreezePath);
             }
             catch when (retryCount++ < 5) { goto retry; }
             _IndexerThread = new CustomThreadPool(1, "Invoice Indexer");
@@ -463,7 +463,7 @@ retry:
                 {
                     // Hacky way to return an empty query object. The nice way is much too elaborate:
                     // https://stackoverflow.com/questions/33305495/how-to-return-empty-iqueryable-in-an-async-repository-method
-                    return query.Where(x => false); 
+                    return query.Where(x => false);
                 }
                 query = query.Where(i => ids.Contains(i.Id));
             }

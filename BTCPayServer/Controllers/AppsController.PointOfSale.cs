@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Services.Apps;
+using BTCPayServer.Services.Mails;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -90,8 +91,10 @@ namespace BTCPayServer.Controllers
             if (app == null)
                 return NotFound();
             var settings = app.GetSettings<PointOfSaleSettings>();
+          
             var vm = new UpdatePointOfSaleViewModel()
             {
+                NotificationEmailWarning = !await IsEmailConfigured(app.StoreDataId),
                 Id = appId,
                 Title = settings.Title,
                 EnableShoppingCart = settings.EnableShoppingCart,

@@ -24,6 +24,7 @@
                 <div id="help" class="collapse text-left">
                     <p>
                         You can search for invoice Id, deposit address, price, order id, store id, any buyer information and any product information.<br />
+                        Be sure to split your search parameters with comma, for example: <code>startdate:2019-04-25 13:00:00, status:paid</code><br />
                         You can also apply filters to your search by searching for <code>filtername:value</code>, here is a list of supported filters
                     </p>
                     <ul>
@@ -33,9 +34,11 @@
                         <li><code>status:(expired|invalid|complete|confirmed|paid|new)</code> for filtering a specific status</li>
                         <li><code>exceptionstatus:(paidover|paidlate|paidpartial)</code> for filtering a specific exception state</li>
                         <li><code>unusual:(true|false)</code> for filtering invoices which might requires merchant attention (those invalid or with an exceptionstatus)</li>
+                        <li><code>startdate:yyyy-MM-dd HH:mm:ss</code> getting invoices that were created after certain date</li>
+                        <li><code>enddate:yyyy-MM-dd HH:mm:ss</code> getting invoices that were created before certain date</li>
                     </ul>
                     <p>
-                        If you want all confirmed and complete invoices, you can duplicate a filter <code>status:confirmed status:complete</code>.
+                        If you want all confirmed and complete invoices, you can duplicate a filter <code>status:confirmed, status:complete</code>.
                     </p>
                 </div>
             </div>
@@ -52,15 +55,16 @@
                     <span class="fa fa-question-circle-o" title="More information..."></span>
                 </a>
                 <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-                    <a asp-action="Export" asp-route-format="csv" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item" target="_blank">CSV</a>
-                    <a asp-action="Export" asp-route-format="json" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item" target="_blank">JSON</a>
+                    <a asp-action="Export" asp-route-timezoneoffset="0" asp-route-format="csv" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item export-link" target="_blank">CSV</a>
+                    <a asp-action="Export" asp-route-timezoneoffset="0" asp-route-format="json" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item export-link" target="_blank">JSON</a>
                 </div>
             </div>
 
             <div class="col-lg-6">
                 <div class="form-group">
-                    <form asp-action="SearchInvoice" method="post" style="float:right;">
+                    <form asp-action="ListInvoices" method="get" style="float:right;">
                         <div class="input-group">
+                            <input asp-for="TimezoneOffset" type="hidden" />
                             <input asp-for="SearchTerm" class="form-control" style="width:300px;" />
                             <span class="input-group-btn">
                                 <button type="submit" class="btn btn-primary" title="Search invoice">
@@ -85,7 +89,7 @@
                                 <span class="fa fa-clock-o" title="Switch date format"></span>
                             </a>
                         </th>
-                        <th>OrderId</th>
+                        <th style="max-width: 180px;">OrderId</th>
                         <th>InvoiceId</th>
                         <th>Status</th>
                         <th style="text-align:right">Amount</th>
@@ -99,12 +103,12 @@
                             <td>
                                 <span class="switchTimeFormat" data-switch="@invoice.Date.ToTimeAgo()">
                                     @invoice.Date.ToBrowserDate()
-                                </span> 
+                                </span>
                             </td>
-                            <td>
+                            <td style="max-width: 180px;">
                                 @if (invoice.RedirectUrl != string.Empty)
                                 {
-                                    <a href="@invoice.RedirectUrl">@invoice.OrderId</a>
+                                    <a href="@invoice.RedirectUrl" class="wraptext200">@invoice.OrderId</a>
                                 }
                                 else
                                 {
@@ -112,25 +116,13 @@
                                 }
                             </td>
                             <td>@invoice.InvoiceId</td>
-                            <td>@invoice.Status</td>
-                            <td style="text-align:right">@invoice.AmountCurrency</td>
-                            <td style="text-align:right">
-                                @if (invoice.ShowCheckout)
-                                {
-                                    <span>
-                                        <a asp-action="Checkout" asp-route-invoiceId="@invoice.InvoiceId">Checkout</a>
-                                        <a href="javascript:btcpay.showInvoice('@invoice.InvoiceId')">[^]</a>
-                                        @if (!invoice.CanMarkStatus)
-                                        {
-                                            <span>-</span>
-                                        }
-                                    </span>
-                                }
+                            <td>
                                 @if (invoice.CanMarkStatus)
                                 {
-                                    <a class="dropdown-toggle dropdown-toggle-split" href="#" style="cursor: pointer;" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        Change status <span class="sr-only">Toggle Dropdown</span>
-                                    </a>
+                                    <span class="dropdown-toggle dropdown-toggle-split pavpill pavpil-@invoice.Status.ToString().ToLower()"
+                                          data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        @invoice.StatusString
+                                    </span>
                                     <div class="dropdown-menu pull-right">
                                         @if (invoice.CanMarkInvalid)
                                         {
@@ -146,7 +138,38 @@
                                         }
                                     </div>
                                 }
+                                else
+                                {
+                                    <span class="pavpill pavpil-@invoice.Status.ToString().ToLower()">@invoice.StatusString</span>
+                                }
+                            </td>
+                            <td style="text-align:right">@invoice.AmountCurrency</td>
+                            <td style="text-align:right">
+                                @if (invoice.ShowCheckout)
+                                {
+                                    <span>
+                                        <a asp-action="Checkout" asp-route-invoiceId="@invoice.InvoiceId">Checkout</a>
+                                        <a href="javascript:btcpay.showInvoice('@invoice.InvoiceId')">[^]</a>
+                                        @if (!invoice.CanMarkStatus)
+                                        {
+                                            <span>-</span>
+                                        }
+                                    </span>
+                                }
+                                &nbsp;
                                 <a asp-action="Invoice" asp-route-invoiceId="@invoice.InvoiceId">Details</a>
+                                @*<span title="Details" class="fa fa-list"></span>*@
+                                &nbsp;
+                                <a href="javascript:void(0);" onclick="detailsToggle(this, '@invoice.InvoiceId')">
+                                    <span title="Invoice Details Toggle" class="fa fa-1x fa-angle-double-down"></span>
+                                </a>
+                            </td>
+                        </tr>
+                        <tr id="invoice_@invoice.InvoiceId" style="display:none;">
+                            <td colspan="99">
+                                <div style="margin-left: 15px; margin-bottom: 0px;">
+                                    <partial name="InvoicePaymentsPartial" model="invoice.Details" />
+                                </div>
                             </td>
                         </tr>
                     }
@@ -208,14 +231,81 @@
     </div>
 
     <script type="text/javascript">
-        function switchTimeFormat() {
-            $(".switchTimeFormat").each(function (index) {
-                var htmlVal = $(this).html();
-                var switchVal = $(this).attr("data-switch");
-
-                $(this).html(switchVal);
-                $(this).attr("data-switch", htmlVal);
+        $(function () {
+            var timezoneOffset = new Date().getTimezoneOffset()
+            $("#TimezoneOffset").val(timezoneOffset);
+            $(".export-link").each(function () {
+                this.href = this.href.replace("timezoneoffset=0", "timezoneoffset=" + timezoneOffset);
             });
+        })
+
+        function detailsToggle(sender, invoiceId) {
+            $("#invoice_" + invoiceId).toggle(0, function () {
+                var detailsRow = $(this);
+                var btnToggle = $(sender).children().first();
+                if (detailsRow.is(':visible')) {
+                    btnToggle.removeClass('fa-angle-double-down').addClass('fa-angle-double-up');
+                } else {
+                    btnToggle.removeClass('fa-angle-double-up').addClass('fa-angle-double-down');
+                }
+            });
+            return false;
         }
     </script>
+
+    <style type="text/css">
+        .invoice-payments h3 {
+            font-size: 15px;
+            font-weight: bold;
+        }
+
+        .wraptext200 {
+            max-width: 200px;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            display: block;
+            white-space: nowrap;
+        }
+
+        .pavpill {
+            display: inline-block;
+            padding: 0.3em 0.5em;
+            font-size: 85%;
+            font-weight: 500;
+            line-height: 1;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border-radius: 0.25rem;
+        }
+
+            .pavpill.dropdown-toggle {
+                cursor: pointer;
+            }
+
+        .pavpil-new {
+            background: #d4edda;
+            color: #000;
+        }
+
+        .pavpil-expired {
+            background: #eee;
+            color: #000;
+        }
+
+        .pavpil-invalid {
+            background: #c94a47;
+            color: #fff;
+        }
+
+        .pavpil-confirmed, .pavpil-paid {
+            background: #f1c332;
+            color: #000;
+        }
+
+        .pavpil-complete {
+            background: #329f80;
+            color: #fff;
+        }
+    </style>
 </section>

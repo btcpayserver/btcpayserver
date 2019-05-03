@@ -36,7 +36,7 @@ services:
 
   # The dev container is not actually used, it is just handy to run `docker-compose up dev` to start all services
   dev:
-    image: btcpayserver/bitcoin:0.17.0
+    image: btcpayserver/bitcoin:0.18.0
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_EXTRA_ARGS: |
@@ -52,7 +52,7 @@ services:
       - merchant_lnd
 
   devlnd:
-    image: btcpayserver/bitcoin:0.17.0
+    image: btcpayserver/bitcoin:0.18.0
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_EXTRA_ARGS: |
@@ -67,7 +67,7 @@ services:
 
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.0.0.27
+    image: nicolasdorier/nbxplorer:2.0.0.37
     restart: unless-stopped
     ports:
       - "32838:32838"
@@ -94,13 +94,14 @@ services:
 
   bitcoind:
     restart: unless-stopped
-    image: btcpayserver/bitcoin:0.17.0
+    image: btcpayserver/bitcoin:0.18.0
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_EXTRA_ARGS: |-
         rpcuser=ceiwHEbqWI83
         rpcpassword=DwubwWsoo3
         rpcport=43782
+        rpcbind=0.0.0.0:43782
         port=39388
         whitelist=0.0.0.0/0
         zmqpubrawblock=tcp://0.0.0.0:28332

@@ -47,10 +47,10 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NBitcoin" Version="4.1.1.98" />
+    <PackageReference Include="NBitcoin" Version="4.1.2.12" />
     <PackageReference Include="NBitpayClient" Version="1.0.0.34" />	  
-    <PackageReference Include="DBreeze" Version="1.92.0" />
-    <PackageReference Include="NBXplorer.Client" Version="2.0.0.6" />
+    <PackageReference Include="DBriize" Version="1.0.0.4" />
+    <PackageReference Include="NBXplorer.Client" Version="2.0.0.11" />
     <PackageReference Include="NicolasDorier.CommandLine" Version="1.0.0.2" />
     <PackageReference Include="NicolasDorier.CommandLine.Configuration" Version="1.0.0.3" />
     <PackageReference Include="NicolasDorier.RateLimits" Version="1.0.0.3" />
@@ -61,7 +61,6 @@
     <PackageReference Include="Serilog.AspNetCore" Version="2.1.1" />
     <PackageReference Include="Serilog.Sinks.File" Version="4.0.0" />
     <PackageReference Include="SSH.NET" Version="2016.1.0" />
-    <PackageReference Include="System.Xml.XmlSerializer" Version="4.3.0" />
     <PackageReference Include="Text.Analyzers" Version="2.6.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
@@ -75,6 +74,7 @@
     <PackageReference Include="TwentyTwenty.Storage.Azure" Version="2.10.1" />
     <PackageReference Include="TwentyTwenty.Storage.Google" Version="2.10.1" />
     <PackageReference Include="TwentyTwenty.Storage.Local" Version="2.10.1" />
+    <PackageReference Include="U2F.Core" Version="2.0.1" />
 		<PackageReference Include="YamlDotNet" Version="5.2.1" />
 	</ItemGroup>
 
@@ -130,9 +130,11 @@
 
 	<ItemGroup>
 	  <Folder Include="Build\" />
+	  <Folder Include="U2F\Services" />
 	  <Folder Include="wwwroot\vendor\clipboard.js\" />
 	  <Folder Include="wwwroot\vendor\highlightjs\" />
 	  <Folder Include="wwwroot\vendor\summernote" />
+	  <Folder Include="wwwroot\vendor\u2f" />
 	</ItemGroup>
 
 	<ItemGroup>

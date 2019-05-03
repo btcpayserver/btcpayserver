@@ -137,8 +137,6 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<string>("Facade");
-
                     b.Property<string>("Label");
 
                     b.Property<DateTimeOffset>("PairingTime");
@@ -346,6 +344,33 @@ namespace BTCPayServer.Migrations
                     b.HasIndex("StoreDataId");
 
                     b.ToTable("PaymentRequests");
+                });
+
+            modelBuilder.Entity("BTCPayServer.Services.U2F.Models.U2FDevice", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<string>("ApplicationUserId");
+
+                    b.Property<byte[]>("AttestationCert")
+                        .IsRequired();
+
+                    b.Property<int>("Counter");
+
+                    b.Property<byte[]>("KeyHandle")
+                        .IsRequired();
+
+                    b.Property<string>("Name");
+
+                    b.Property<byte[]>("PublicKey")
+                        .IsRequired();
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.ToTable("U2FDevices");
                 });
 
             modelBuilder.Entity("BTCPayServer.Storage.Models.StoredFile", b =>
@@ -574,6 +599,13 @@ namespace BTCPayServer.Migrations
                         .WithMany("PaymentRequests")
                         .HasForeignKey("StoreDataId")
                         .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("BTCPayServer.Services.U2F.Models.U2FDevice", b =>
+                {
+                    b.HasOne("BTCPayServer.Models.ApplicationUser", "ApplicationUser")
+                        .WithMany("U2FDevices")
+                        .HasForeignKey("ApplicationUserId");
                 });
 
             modelBuilder.Entity("BTCPayServer.Storage.Models.StoredFile", b =>

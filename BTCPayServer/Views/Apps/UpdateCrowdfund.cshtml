@@ -138,8 +138,13 @@
                         <span asp-validation-for="NotificationUrl" class="text-danger"></span>
                     </div>
                     <div class="form-group">
+                       
                         <label asp-for="NotificationEmail" class="control-label"></label>
-                        <input type="email" asp-for="NotificationEmail" class="form-control" />
+                        @if (Model.NotificationEmailWarning)
+                        {
+                            <partial name="NotificationEmailWarning"></partial>
+                        }
+                        <input type="email" asp-for="NotificationEmail" class="form-control"/>
                         <span asp-validation-for="NotificationEmail" class="text-danger"></span>
                     </div>
                     <div class="form-group">
@@ -199,6 +204,8 @@
                         <input asp-for="DisqusShortname" class="form-control" />
                         <span asp-validation-for="DisqusShortname" class="text-danger"></span>
                     </div>
+                    
+                    <input type="hidden" asp-for="NotificationEmailWarning"/>
                     <div class="form-group">
                         <input type="submit" class="btn btn-primary" value="Save Settings" />
                         <a class="btn btn-secondary" target="_blank" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm">Invoices</a>

@@ -79,5 +79,7 @@ namespace BTCPayServer.Models.AppViewModels
                     Value = ""
                 }
             }, nameof(SelectListItem.Value), nameof(SelectListItem.Text), RedirectAutomatically);
+
+        public bool NotificationEmailWarning { get; set; }
     }
 }

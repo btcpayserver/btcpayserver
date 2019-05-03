@@ -5,6 +5,7 @@ using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Services.Apps;
+using BTCPayServer.Services.Mails;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Controllers
@@ -33,6 +34,7 @@ namespace BTCPayServer.Controllers
             var settings = app.GetSettings<CrowdfundSettings>();
             var vm = new UpdateCrowdfundViewModel()
             {
+                NotificationEmailWarning = !await IsEmailConfigured(app.StoreDataId),
                 Title = settings.Title,
                 Enabled = settings.Enabled,
                 EnforceTargetAmount = settings.EnforceTargetAmount,

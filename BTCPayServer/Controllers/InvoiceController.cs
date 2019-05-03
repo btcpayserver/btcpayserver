@@ -160,7 +160,6 @@ namespace BTCPayServer.Controllers
 
             var rateRules = storeBlob.GetRateRules(_NetworkProvider);
             var fetchingByCurrencyPair = _RateProvider.FetchRates(currencyPairsToFetch, rateRules, cancellationToken);
-
             var fetchingAll = WhenAllFetched(logs, fetchingByCurrencyPair);
             var supportedPaymentMethods = store.GetSupportedPaymentMethods(_NetworkProvider)
                                                .Where(s => !excludeFilter.Match(s.PaymentId))

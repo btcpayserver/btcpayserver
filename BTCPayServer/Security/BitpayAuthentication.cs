@@ -141,7 +141,7 @@ namespace BTCPayServer.Security
                         {
                             try
                             {
-                                token = JObject.Parse(body)?.Property("token")?.Value?.Value<string>();
+                                token = JObject.Parse(body)?.Property("token", StringComparison.OrdinalIgnoreCase)?.Value?.Value<string>();
                             }
                             catch { }
                         }

@@ -7,6 +7,7 @@ using BTCPayServer.Models;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
+using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Rates;
 using Ganss.XSS;
 using Microsoft.AspNetCore.Authorization;
@@ -30,6 +31,7 @@ namespace BTCPayServer.Controllers
             BTCPayNetworkProvider networkProvider,
             CurrencyNameTable currencies,
             HtmlSanitizer htmlSanitizer,
+            EmailSenderFactory emailSenderFactory,
             AppService AppService)
         {
             _UserManager = userManager;
@@ -38,6 +40,7 @@ namespace BTCPayServer.Controllers
             _NetworkProvider = networkProvider;
             _currencies = currencies;
             _htmlSanitizer = htmlSanitizer;
+            _emailSenderFactory = emailSenderFactory;
             _AppService = AppService;
         }
 
@@ -47,6 +50,7 @@ namespace BTCPayServer.Controllers
         private BTCPayNetworkProvider _NetworkProvider;
         private readonly CurrencyNameTable _currencies;
         private readonly HtmlSanitizer _htmlSanitizer;
+        private readonly EmailSenderFactory _emailSenderFactory;
         private AppService _AppService;
 
         [TempData]
@@ -175,6 +179,11 @@ namespace BTCPayServer.Controllers
         private string GetUserId()
         {
             return _UserManager.GetUserId(User);
+        }
+
+        private async Task<bool> IsEmailConfigured(string storeId)
+        {
+            return (await (_emailSenderFactory.GetEmailSender(storeId) as EmailSender)?.GetEmailSettings())?.IsComplete() is true;
         }
     }
 }

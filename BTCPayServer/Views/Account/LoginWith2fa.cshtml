@@ -1,45 +1,37 @@
 ﻿@model LoginWith2faViewModel
-@{
-    ViewData["Title"] = "Two-factor authentication";
-}
 
 <section>
-    <div class="container">
+    <div class="container-fluid">
         <div class="row">
             <div class="col-lg-12 text-center">
-                <h2 class="section-heading">@ViewData["Title"]</h2>
+                <h2 class="section-heading">Two-factor authentication</h2>
                 <hr class="primary">
             </div>
         </div>
         <div class="row">
-            <div class="col-md-4"></div>
-            <div class="col-md-4">
-                <form method="post" asp-route-returnUrl="@ViewData["ReturnUrl"]">
-                    <input asp-for="RememberMe" type="hidden" />
-                    <div asp-validation-summary="All" class="text-danger"></div>
-                    <div class="form-group">
-                        <label asp-for="TwoFactorCode"></label>
-                        <input asp-for="TwoFactorCode" class="form-control" autocomplete="off" />
-                        <span asp-validation-for="TwoFactorCode" class="text-danger"></span>
+            <form  class="col-12" method="post" asp-route-returnUrl="@ViewData["ReturnUrl"]" asp-action="LoginWith2fa">
+                <input asp-for="RememberMe" type="hidden"/>
+                <div class="form-group">
+                    <label asp-for="TwoFactorCode"></label>
+                    <input asp-for="TwoFactorCode" class="form-control" autocomplete="off"/>
+                    <span asp-validation-for="TwoFactorCode" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <div class="checkbox">
+                        <label asp-for="RememberMachine">
+                            <input asp-for="RememberMachine"/>
+                            @Html.DisplayNameFor(m => m.RememberMachine)
+                        </label>
                     </div>
-                    <div class="form-group">
-                        <div class="checkbox">
-                            <label asp-for="RememberMachine">
-                                <input asp-for="RememberMachine" />
-                                @Html.DisplayNameFor(m => m.RememberMachine)
-                            </label>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <button type="submit" class="btn btn-primary">Log in</button>
-                    </div>
-                </form>
-            </div>
-            <div class="col-md-4"></div>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Log in</button>
+                </div>
+                
+            </form>
         </div>
         <div class="row">
-            <div class="col-md-4"></div>
-            <div class="col-md-4">
+            <div class="col-12">
                 <p>
                     Don't have access to your authenticator device? You can
                     <a asp-action="LoginWithRecoveryCode" asp-route-returnUrl="@ViewData["ReturnUrl"]">log in with a recovery code</a>.
@@ -48,6 +40,7 @@
         </div>
     </div>
 </section>
+
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
 }

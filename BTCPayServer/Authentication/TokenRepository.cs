@@ -1,5 +1,5 @@
 ﻿using BTCPayServer.Data;
-using DBreeze;
+using DBriize;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using Newtonsoft.Json;

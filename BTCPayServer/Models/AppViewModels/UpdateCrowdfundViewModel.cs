@@ -92,5 +92,7 @@ namespace BTCPayServer.Models.AppViewModels
         public string Sounds{ get; set; }
         [Display(Name = "Colors to rotate between with animation when a payment is made. First color is the default background. One color per line. Can be any valid css color value.")]
         public string AnimationColors{ get; set; }
+
+        public bool NotificationEmailWarning { get; set; }
     }
 }

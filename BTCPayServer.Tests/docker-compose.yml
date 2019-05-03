@@ -98,13 +98,13 @@ services:
 
   bitcoind:
     restart: unless-stopped
-    image: btcpayserver/bitcoin:0.17.0
+    image: btcpayserver/bitcoin:0.18.0
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_EXTRA_ARGS: |-
         rpcuser=ceiwHEbqWI83
         rpcpassword=DwubwWsoo3
-        rpcport=43782
+        rpcbind=0.0.0.0:43782
         port=39388
         whitelist=0.0.0.0/0
         zmqpubrawblock=tcp://0.0.0.0:28332

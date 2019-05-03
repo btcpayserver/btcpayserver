@@ -1,10 +1,10 @@
 hljs.initHighlightingOnLoad();
-$(document).ready(function() {
+$(document).ready(function () {
 
     $(".richtext").summernote({
         minHeight: 300
     });
-    $(".datetime").each(function(){
+    $(".datetime").each(function () {
         var element = $(this);
         var min = element.attr("min");
         var max = element.attr("max");
@@ -13,7 +13,14 @@ $(document).ready(function() {
             enableTime: true,
             minDate: min,
             maxDate: max,
-            defaultDate: defaultDate
+            defaultDate: defaultDate,
+            dateFormat: 'Z',
+            altInput: true,
+            altFormat: 'J F Y H:i',
+            time_24hr: true,
+            parseDate: function (date) {
+                return moment(date).toDate();
+            }
         });
     });
 });

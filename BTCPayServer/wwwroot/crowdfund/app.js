@@ -175,6 +175,8 @@ addLoadEvent(function (ev) {
                     
                 }else{
                     this.ended = false;
+                    this.endDateRelativeTime  = null;
+                    this.endDate = null;
                 }
 
                 if (this.srvModel.startDate) {
@@ -184,6 +186,8 @@ addLoadEvent(function (ev) {
                     this.started = startDateM.isBefore(moment());
                 }else{
                     this.started = true;
+                    this.startDate = null;
+                    this.startDateRelativeTime = null;
                 }
                 if(this.started && !this.ended && this.srvModel.endDate){
                     var mDiffD =  moment(this.srvModel.endDate).diff(moment(), "days");
@@ -191,6 +195,8 @@ addLoadEvent(function (ev) {
                     var mDiffM =  moment(this.srvModel.endDate).diff(moment(), "minutes");
                     var mDiffS =  moment(this.srvModel.endDate).diff(moment(), "seconds");
                     this.endDiff =  mDiffD > 0? mDiffD + " days" : mDiffH> 0? mDiffH + " hours" : mDiffM> 0? mDiffM+ " minutes" : mDiffS> 0? mDiffS + " seconds": "";
+                }else{
+                    this.endDiff = null;
                 }
                 if(!this.started && this.srvModel.startDate){
                     var mDiffD =  moment(this.srvModel.startDate).diff(moment(), "days");
@@ -198,6 +204,8 @@ addLoadEvent(function (ev) {
                     var mDiffM =  moment(this.srvModel.startDate).diff(moment(), "minutes");
                     var mDiffS =  moment(this.srvModel.startDate).diff(moment(), "seconds");
                     this.startDiff =  mDiffD > 0? mDiffD + " days" : mDiffH> 0? mDiffH + " hours" : mDiffM> 0? mDiffM+ " minutes" : mDiffS> 0? mDiffS + " seconds": "";
+                }else {
+                    this.startDiff = null;
                 }
                 this.lastUpdated = moment(this.srvModel.info.lastUpdated).calendar();
                 this.active = this.started && !this.ended;

@@ -6,6 +6,7 @@ using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
+using BTCPayServer.Events;
 using BTCPayServer.Filters;
 using BTCPayServer.Models;
 using BTCPayServer.Models.PaymentRequestViewModels;
@@ -215,7 +216,7 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         [Route("{id}")]
         [AllowAnonymous]
-        public async Task<IActionResult> ViewPaymentRequest(string id)
+        public async Task<IActionResult> ViewPaymentRequest(string id, string statusMessage = null)
         {
             var result = await _PaymentRequestService.GetPaymentRequest(id, GetUserId());
             if (result == null)
@@ -223,6 +224,8 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
             result.HubPath = PaymentRequestHub.GetHubPath(this.Request);
+            result.StatusMessage = statusMessage;
+            
             return View(result);
         }
 
@@ -318,10 +321,10 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("{id}/cancel")]
-        public async Task<IActionResult> CancelUnpaidPendingInvoice(string id)
+        public async Task<IActionResult> CancelUnpaidPendingInvoice(string id, bool redirect = true)
         {
             var result = await _PaymentRequestService.GetPaymentRequest(id, GetUserId());
-            if (result == null)
+            if (result == null )
             {
                 return NotFound();
             }
@@ -333,7 +336,20 @@ namespace BTCPayServer.Controllers
             {
                 return BadRequest("No unpaid pending invoice to cancel");
             }
-            return await _InvoiceController.ChangeInvoiceStateConfirm(invoice.Id, "invalid");
+            
+            await _InvoiceRepository.UpdatePaidInvoiceToInvalid(invoice.Id);
+            _EventAggregator.Publish(new InvoiceEvent(await _InvoiceRepository.GetInvoice(invoice.Id), 1008, InvoiceEvent.MarkedInvalid));
+
+            if (redirect)
+            {
+                return RedirectToAction(nameof(ViewPaymentRequest), new
+                {
+                    Id = id,
+                    StatusMessage = "Payment cancelled"
+                });
+            }
+
+            return Ok("Payment cancelled");
         }
         
         private string GetUserId()

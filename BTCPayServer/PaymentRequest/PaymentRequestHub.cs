@@ -23,6 +23,8 @@ namespace BTCPayServer.PaymentRequest
         public const string PaymentReceived = "PaymentReceived";
         public const string InfoUpdated = "InfoUpdated";
         public const string InvoiceError = "InvoiceError";
+        public const string CancelInvoiceError = "CancelInvoiceError";
+        public const string InvoiceCancelled = "InvoiceCancelled";
 
         public PaymentRequestHub(PaymentRequestController paymentRequestController)
         {
@@ -61,15 +63,20 @@ namespace BTCPayServer.PaymentRequest
             }
         }
 
-        public async Task CancelUnpaidPendingInvoice(string id)
+        public async Task CancelUnpaidPendingInvoice()
         {
             _PaymentRequestController.ControllerContext.HttpContext = Context.GetHttpContext();
             var result =
-                await _PaymentRequestController.CancelUnpaidPendingInvoice(Context.Items["pr-id"].ToString());
+                await _PaymentRequestController.CancelUnpaidPendingInvoice(Context.Items["pr-id"].ToString(), false);
             switch (result)
             {
-                case BadRequestResult badRequestResult:
-                    await 
+                case OkObjectResult okObjectResult:T
+                    await Clients.Group(Context.Items["pr-id"].ToString()).SendCoreAsync(InvoiceCancelled, System.Array.Empty<object>());
+                    break;
+                    
+                default:
+                    await Clients.Caller.SendCoreAsync(CancelInvoiceError, System.Array.Empty<object>());
+                    break;
             }
         }
 

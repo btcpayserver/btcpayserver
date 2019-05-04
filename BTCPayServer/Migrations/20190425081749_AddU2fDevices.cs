@@ -7,9 +7,12 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "Facade",
-                table: "PairedSINData");
+            if (this.SupportDropColumn(migrationBuilder.ActiveProvider))
+            {
+                migrationBuilder.DropColumn(
+                    name: "Facade",
+                    table: "PairedSINData");
+            }
 
             migrationBuilder.CreateTable(
                 name: "U2FDevices",
@@ -44,11 +47,14 @@ namespace BTCPayServer.Migrations
         {
             migrationBuilder.DropTable(
                 name: "U2FDevices");
-
-            migrationBuilder.AddColumn<string>(
-                name: "Facade",
-                table: "PairedSINData",
-                nullable: true);
+            //if it did not support dropping it, then it is still here and re-adding it would throw
+            if (this.SupportDropColumn(migrationBuilder.ActiveProvider))
+            {
+                migrationBuilder.AddColumn<string>(
+                    name: "Facade",
+                    table: "PairedSINData",
+                    nullable: true);
+            }
         }
     }
 }

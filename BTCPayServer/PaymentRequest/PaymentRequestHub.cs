@@ -61,6 +61,18 @@ namespace BTCPayServer.PaymentRequest
             }
         }
 
+        public async Task CancelUnpaidPendingInvoice(string id)
+        {
+            _PaymentRequestController.ControllerContext.HttpContext = Context.GetHttpContext();
+            var result =
+                await _PaymentRequestController.CancelUnpaidPendingInvoice(Context.Items["pr-id"].ToString());
+            switch (result)
+            {
+                case BadRequestResult badRequestResult:
+                    await 
+            }
+        }
+
         public static string GetHubPath(HttpRequest request)
         {
             return request.GetRelativePathOrAbsolute("/payment-requests/hub");

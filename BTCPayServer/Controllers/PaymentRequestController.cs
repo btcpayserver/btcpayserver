@@ -41,6 +41,7 @@ namespace BTCPayServer.Controllers
         private readonly EventAggregator _EventAggregator;
         private readonly CurrencyNameTable _Currencies;
         private readonly HtmlSanitizer _htmlSanitizer;
+        private readonly InvoiceRepository _InvoiceRepository;
 
         public PaymentRequestController(
             InvoiceController invoiceController,
@@ -50,7 +51,8 @@ namespace BTCPayServer.Controllers
             PaymentRequestService paymentRequestService,
             EventAggregator eventAggregator,
             CurrencyNameTable currencies,
-            HtmlSanitizer htmlSanitizer)
+            HtmlSanitizer htmlSanitizer,
+            InvoiceRepository invoiceRepository)
         {
             _InvoiceController = invoiceController;
             _UserManager = userManager;
@@ -60,6 +62,7 @@ namespace BTCPayServer.Controllers
             _EventAggregator = eventAggregator;
             _Currencies = currencies;
             _htmlSanitizer = htmlSanitizer;
+            _InvoiceRepository = invoiceRepository;
         }
 
         [HttpGet]
@@ -313,7 +316,26 @@ namespace BTCPayServer.Controllers
             }
         }
 
+        [HttpGet]
+        [Route("{id}/cancel")]
+        public async Task<IActionResult> CancelUnpaidPendingInvoice(string id)
+        {
+            var result = await _PaymentRequestService.GetPaymentRequest(id, GetUserId());
+            if (result == null)
+            {
+                return NotFound();
+            }
 
+            var invoice = result.Invoices.SingleOrDefault(requestInvoice =>
+                requestInvoice.Status.Equals(InvoiceState.ToString(InvoiceStatus.New),StringComparison.InvariantCulture) && !requestInvoice.Payments.Any());
+
+            if (invoice == null )
+            {
+                return BadRequest("No unpaid pending invoice to cancel");
+            }
+            return await _InvoiceController.ChangeInvoiceStateConfirm(invoice.Id, "invalid");
+        }
+        
         private string GetUserId()
         {
             return _UserManager.GetUserId(User);

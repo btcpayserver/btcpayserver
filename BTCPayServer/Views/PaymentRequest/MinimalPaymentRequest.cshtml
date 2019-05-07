@@ -136,9 +136,16 @@
                                                 }
                                                 else
                                                 {
-                                                    <a class="btn btn-primary btn-lg d-print-none" asp-action="PayPaymentRequest">
+                                                    <a class="btn btn-primary btn-lg d-print-none mt-1" asp-action="PayPaymentRequest">
                                                         Pay now
                                                     </a>
+                                                    if (Model.AnyPendingInvoice && !Model.PendingInvoiceHasPayments)
+                                                    {
+                                                        <form method="get" asp-action="CancelUnpaidPendingInvoice">
+                                                            <button class="btn btn-secondary btn-lg mt-1" type="submit">
+                                                                Cancel current invoice</button>   
+                                                        </form>
+                                                    }
                                                 }
                                             </td>
                                         </tr>

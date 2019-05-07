@@ -134,7 +134,9 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         public string AmountCollectedFormatted { get; set; }
         public string AmountFormatted { get; set; }
         public bool AnyPendingInvoice { get; set; }
+        public bool PendingInvoiceHasPayments { get; set; }
         public string HubPath { get; set; }
+        public string StatusMessage { get; set; }
 
         public class PaymentRequestInvoice
         {

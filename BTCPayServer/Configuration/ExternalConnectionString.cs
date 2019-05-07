@@ -8,6 +8,14 @@ namespace BTCPayServer.Configuration
 {
     public class ExternalConnectionString
     {
+        public ExternalConnectionString()
+        {
+
+        }
+        public ExternalConnectionString(Uri server)
+        {
+            Server = server;
+        }
         public Uri Server { get; set; }
         public byte[] Macaroon { get; set; }
         public Macaroons Macaroons { get; set; }

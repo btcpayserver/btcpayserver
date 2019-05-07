@@ -504,17 +504,17 @@ namespace BTCPayServer.Controllers
                         {
                             psbtRequest.ExplicitChangeAddress = destinationPSBT.Destination;
                         }
-                        var psbt = (await nbx.CreatePSBTAsync(derivationScheme, psbtRequest, normalOperationTimeout.Token))?.PSBT;
+                        var psbt = (await nbx.CreatePSBTAsync(derivationScheme, psbtRequest, normalOperationTimeout.Token));
                         if (psbt == null)
                             throw new Exception("You need to update your version of NBXplorer");
 
                         if (network.MinFee != null)
                         {
-                            psbt.TryGetFee(out var fee);
+                            psbt.PSBT.TryGetFee(out var fee);
                             if (fee < network.MinFee)
                             {
                                 psbtRequest.FeePreference = new FeePreference() { ExplicitFee = network.MinFee };
-                                psbt = (await nbx.CreatePSBTAsync(derivationScheme, psbtRequest, normalOperationTimeout.Token)).PSBT;
+                                psbt = (await nbx.CreatePSBTAsync(derivationScheme, psbtRequest, normalOperationTimeout.Token));
                             }
                         }
 
@@ -538,7 +538,7 @@ namespace BTCPayServer.Controllers
                         // Here we rebase the hd_keys in the PSBT to have a keypath relative to the root HD so the wallet can sign
                         // Note that the fingerprint of the hd keys are now 0, which is wrong
                         // However, hardware wallets does not give a damn, and sometimes does not even allow us to get this fingerprint anyway.
-                        foreach (var o in psbt.Inputs.OfType<PSBTCoin>().Concat(psbt.Outputs))
+                        foreach (var o in psbt.PSBT.Inputs.OfType<PSBTCoin>().Concat(psbt.PSBT.Outputs))
                         {
                             foreach (var keypath in o.HDKeyPaths.ToList())
                             {
@@ -549,12 +549,12 @@ namespace BTCPayServer.Controllers
                         }
 
                         signTimeout.CancelAfter(TimeSpan.FromMinutes(5));
-                        psbt = await hw.SignTransactionAsync(psbt, signTimeout.Token);
-                        if(!psbt.TryFinalize(out var errors))
+                        psbt.PSBT = await hw.SignTransactionAsync(psbt.PSBT, psbt.ChangeAddress?.ScriptPubKey, signTimeout.Token);
+                        if(!psbt.PSBT.TryFinalize(out var errors))
                         {
                             throw new Exception($"Error while finalizing the transaction ({new PSBTException(errors).ToString()})");
                         }
-                        var transaction = psbt.ExtractTransaction();
+                        var transaction = psbt.PSBT.ExtractTransaction();
                         try
                         {
                             var broadcastResult = await nbx.BroadcastAsync(transaction);

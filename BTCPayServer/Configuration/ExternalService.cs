@@ -75,6 +75,7 @@ namespace BTCPayServer.Configuration
         LNDGRPC,
         Spark,
         RTL,
-        Charge
+        Charge,
+        P2P
     }
 }

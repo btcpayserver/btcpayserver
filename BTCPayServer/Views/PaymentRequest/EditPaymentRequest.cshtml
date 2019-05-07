@@ -1,4 +1,5 @@
 @using BTCPayServer.Services.PaymentRequests
+@using System.Globalization
 @model BTCPayServer.Models.PaymentRequestViewModels.UpdatePaymentRequestViewModel
 @addTagHelper *, BundlerMinifier.TagHelpers
 
@@ -66,7 +67,10 @@
                     <div class="form-group">
                         <label asp-for="ExpiryDate" class="control-label"></label>
                         <div class="input-group ">
-                            <input asp-for="ExpiryDate" class="form-control datetime" min="today" placeholder="No expiry date has been set for this payment request"/>
+                            <input asp-for="ExpiryDate" 
+                                   
+                                   value="@( Model.ExpiryDate?.ToString("u", CultureInfo.InvariantCulture))"
+                                   class="form-control datetime" min="today" placeholder="No expiry date has been set for this payment request"/>
                             <div class="input-group-append">
 
                                 <button class="btn btn-secondary input-group-clear" type="button" title="Clear">
@@ -116,7 +120,7 @@
 </section>
 
 @section Scripts {
-
+    <script src= "~/vendor/moment/moment.js"></script>
     <bundle name="wwwroot/bundles/payment-request-admin-bundle.min.js"></bundle>
     <bundle name="wwwroot/bundles/payment-request-admin-bundle.min.css"></bundle>
 }

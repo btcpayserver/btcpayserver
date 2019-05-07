@@ -164,13 +164,15 @@ namespace BTCPayServer.Services
             return foundKeyPath;
         }
 
-        public async Task<PSBT> SignTransactionAsync(PSBT psbt,
+        public async Task<PSBT> SignTransactionAsync(PSBT psbt, Script changeHint,
                                                      CancellationToken cancellationToken)
         {
             try
             {
                 var unsigned = psbt.GetGlobalTransaction();
-                var changeKeyPath = psbt.Outputs.Where(o => o.HDKeyPaths.Any())
+                var changeKeyPath = psbt.Outputs
+                                                .Where(o => changeHint == null ? true : changeHint == o.ScriptPubKey)
+                                                .Where(o => o.HDKeyPaths.Any())
                                                 .Select(o => o.HDKeyPaths.First().Value.Item2)
                                                 .FirstOrDefault();
                 var signatureRequests = psbt

@@ -1,4 +1,5 @@
 @addTagHelper *, BundlerMinifier.TagHelpers
+@using System.Globalization
 @model UpdateCrowdfundViewModel
 @{
     ViewData["Title"] = "Update Crowdfund";
@@ -67,7 +68,9 @@
                     <div class="form-group">
                         <label asp-for="StartDate" class="control-label"></label>
                         <div class="input-group ">
-                            <input asp-for="StartDate" class="form-control datetime"  placeholder="No start date has been set for this crowdfund"/>
+                            <input asp-for="StartDate"
+                                   value="@( Model.StartDate?.ToString("u", CultureInfo.InvariantCulture))"
+                                   class="datetime form-control" placeholder="No start date has been set for this crowdfund"/>
                             <div class="input-group-append">
 
                                 <button class="btn btn-secondary input-group-clear" type="button" title="Clear">
@@ -93,7 +96,11 @@
                     <div class="form-group">
                         <label asp-for="EndDate" class="control-label"></label>
                         <div class="input-group ">
-                            <input asp-for="EndDate" class="form-control datetime"  placeholder="No end date has been set for this crowdfund" />
+                            <input  type="datetime-local"  asp-for="EndDate"  
+                                    value="@( Model.EndDate?.ToString("u", CultureInfo.InvariantCulture))"
+                                   class="datetime form-control"   
+                                   type="datetime-local"  
+                                   placeholder="No end date has been set for this crowdfund" />
                             <div class="input-group-append">
 
                                 <button class="btn btn-secondary input-group-clear" type="button" title="Clear">
@@ -221,6 +228,7 @@
 
 @section Scripts {
 
+    <script src= "~/vendor/moment/moment.js"></script>
     <bundle name="wwwroot/bundles/crowdfund-admin-bundle.min.js"></bundle>
     <bundle name="wwwroot/bundles/crowdfund-admin-bundle.min.css"></bundle>
 

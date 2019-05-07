@@ -132,6 +132,12 @@ namespace BTCPayServer
                 return str;
             return $"/{str}";
         }
+        public static string WithoutEndingSlash(this string str)
+        {
+            if (str.EndsWith("/", StringComparison.InvariantCulture))
+                return str.Substring(0, str.Length - 1);
+            return str;
+        }
 
         public static void SetHeaderOnStarting(this HttpResponse resp, string name, string value)
         {

@@ -19,6 +19,13 @@ var hubListener = function () {
     connection.on("InfoUpdated", function (model) {
         eventAggregator.$emit("info-updated", model);
     });
+    connection.on("InvoiceCancelled", function (model) {
+        eventAggregator.$emit("invoice-cancelled", model);
+    });
+    connection.on("CancelInvoiceError", function (model) {
+        eventAggregator.$emit("cancel-invoice-error", model);
+    });
+
 
     function connect() {
 
@@ -38,6 +45,9 @@ var hubListener = function () {
 
     eventAggregator.$on("pay", function (amount) {
         connection.invoke("Pay", amount);
+    });
+    eventAggregator.$on("cancel-invoice", function () {
+        connection.invoke("CancelUnpaidPendingInvoice");
     });
 
 

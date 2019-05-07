@@ -11,9 +11,11 @@ namespace BTCPayServer.Services
 {
     public class TorServices
     {
+        private readonly BTCPayNetworkProvider _networks;
         BTCPayServerOptions _Options;
-        public TorServices(BTCPayServerOptions options)
+        public TorServices(BTCPayServer.BTCPayNetworkProvider networks, BTCPayServerOptions options)
         {
+            _networks = networks;
             _Options = options;
         }
 
@@ -58,6 +60,11 @@ namespace BTCPayServer.Services
                         };
                         if (service.ServiceName.Equals("BTCPayServer", StringComparison.OrdinalIgnoreCase))
                             torService.ServiceType = TorServiceType.BTCPayServer;
+                        else if (TryParseP2PService(service.ServiceName, out var network))
+                        {
+                            torService.ServiceType = TorServiceType.P2P;
+                            torService.Network = network;
+                        }
                         result.Add(torService);
                     }
                     catch (Exception ex)
@@ -72,11 +79,22 @@ namespace BTCPayServer.Services
             }
             Services = result.ToArray();
         }
+
+        private bool TryParseP2PService(string name, out BTCPayNetwork network)
+        {
+            network = null;
+            var splitted = name.Trim().Split('-');
+            if (splitted.Length != 2 || splitted[1] != "P2P")
+                return false;
+            network = _networks.GetNetwork(splitted[0]);
+            return network != null;
+        }
     }
 
     public class TorService
     {
         public TorServiceType ServiceType { get; set; } = TorServiceType.Other;
+        public BTCPayNetwork Network { get; set; }
         public string Name { get; set; }
         public string OnionHost { get; set; }
         public int VirtualPort { get; set; }
@@ -85,6 +103,7 @@ namespace BTCPayServer.Services
     public enum TorServiceType
     {
         BTCPayServer,
+        P2P,
         Other
     }
 }

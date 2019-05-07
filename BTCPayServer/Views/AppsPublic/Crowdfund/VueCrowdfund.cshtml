@@ -12,10 +12,10 @@
                 <h1>
                     {{srvModel.title}} 
                     <span class="h6 text-muted" v-if="!started && srvModel.startDate" v-b-tooltip :title="startDate" id="crowdfund-header-start-date">
-                        Starts {{startDateRelativeTime}}
+                        Starts in {{startDiff}}
                     </span>
                     <span class="h6 text-muted" v-else-if="started && !ended && srvModel.endDate" v-b-tooltip :title="endDate" id="crowdfund-header-end-date">
-                        Ends {{endDateRelativeTime}}
+                        Ends in {{endDiff}}
                     </span>
                     <span class="h6 text-muted" v-else-if="started && !ended && !srvModel.endDate" v-b-tooltip title="No set end date" id="crowdfund-header-active">
                         Currently Active!
@@ -58,7 +58,7 @@
             </div>
            
             <div class="card-body">
-                <div class="row py-2 text-center">
+                <div class="row py-2 text-center crowdfund-stats">
                     <div class="col-sm border-right" id="crowdfund-body-raised-amount">
                         <h5>{{ raisedAmount }} {{targetCurrency}} </h5>
                         <h5 class="text-muted">Raised</h5>
@@ -73,23 +73,7 @@
                         </h5>
                         <h5 class="text-muted">Contributors</h5>
                     </div> 
-                    <div  class="col-sm" v-if="endDiff" id="crowdfund-body-campaign-dates-started">
-                        <h5>
-                            {{endDiff}}
-                        </h5>
-                        <h5 class="text-muted">Left</h5>
-                        <b-tooltip target="crowdfund-body-campaign-dates-started" >
-                            <ul class="p-0">
-                                <li v-if="startDate" class="list-unstyled">
-                                    {{started? "Started" : "Starts"}} {{startDate}}
-                                </li>
-                                <li v-if="endDate" class="list-unstyled">
-                                    {{ended? "Ended" : "Ends"}} {{endDate}}
-                                </li>
-                            </ul>
-                        </b-tooltip>
-                    </div>
-                    <div  class="col-sm" v-if="startDiff" id="crowdfund-body-campaign-dates-not-started">
+                    <div  class="col-sm  border-right" v-if="startDiff" id="crowdfund-body-campaign-dates-not-started">
                         <h5>
                             {{startDiff}}
                         </h5>
@@ -106,7 +90,23 @@
                             </ul>
                         </b-tooltip>
                     </div>
-                    <div  class="col-sm" v-if="ended" id="crowdfund-body-campaign-dates-not-active">
+                    <div  class="col-sm  border-right" v-if="endDiff" id="crowdfund-body-campaign-dates-started">
+                        <h5>
+                            {{endDiff}}
+                        </h5>
+                        <h5 class="text-muted">Left</h5>
+                        <b-tooltip target="crowdfund-body-campaign-dates-started" >
+                            <ul class="p-0">
+                                <li v-if="startDate" class="list-unstyled">
+                                    {{started? "Started" : "Starts"}} {{startDate}}
+                                </li>
+                                <li v-if="endDate" class="list-unstyled">
+                                    {{ended? "Ended" : "Ends"}} {{endDate}}
+                                </li>
+                            </ul>
+                        </b-tooltip>
+                    </div>
+                    <div  class="col-sm border-right" v-if="ended" id="crowdfund-body-campaign-dates-not-active">
                         <h5>
                             Campaign
                         </h5>

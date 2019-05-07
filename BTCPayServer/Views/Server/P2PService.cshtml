@@ -25,13 +25,23 @@
 </div>
 
 <div class="row">
-
     <div class="col-md-8">
         <div class="form-group">
             <h5>QR Code connection</h5>
             <p>
-                <span>You can use QR Code to connect to your @Model.WalletName from your mobile.<br /></span>
+                <span>You can use QR Code to connect @Model.WalletName from outside application.<br /></span>
             </p>
+        </div>
+        <div class="form-group">
+            <h5>Compatible wallets</h5>
+        </div>
+        <div class="row">
+            <div class="col-lg-3 ml-auto text-center">
+                <a href="https://play.google.com/store/apps/details?id=com.greenaddress.greenbits_android_wallet" target="_blank">
+                    <img src="~/img/GreenWallet.png" height="100" />
+                </a>
+                <p><a href="https://play.google.com/store/apps/details?id=com.greenaddress.greenbits_android_wallet" target="_blank">Blockstream Green Wallet</a></p>
+            </div>
         </div>
         <div class="form-group">
             @if (!Model.ShowQR)

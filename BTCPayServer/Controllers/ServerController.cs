@@ -505,7 +505,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> Services()
         {
             var result = new ServicesViewModel();
-            result.ExternalServices = _Options.ExternalServices;
+            result.ExternalServices = _Options.ExternalServices.ToList();
             foreach (var externalService in _Options.OtherExternalServices)
             {
                 result.OtherExternalServices.Add(new ServicesViewModel.OtherExternalService()

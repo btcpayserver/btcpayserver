@@ -91,7 +91,7 @@
                         </th>
                         <th style="max-width: 180px;">OrderId</th>
                         <th>InvoiceId</th>
-                        <th style="min-width: 140px;">Status</th>
+                        <th style="min-width: 150px;">Status</th>
                         <th style="text-align:right">Amount</th>
                         <th style="text-align:right">Actions</th>
                     </tr>
@@ -261,7 +261,7 @@
 
             $.post("invoices/" + invoiceId + "/changestate/" + newState)
                 .done(function (data) {
-                    var statusHtml = "<span class='pavpill pavpil-" + newState + "'>" + data.statusString + "</span>";
+                    var statusHtml = "<span class='pavpill pavpil-" + newState + "'>" + data.statusString + " <span class='fa fa-check'></span></span>";
                     pavpill.html(statusHtml);
                 })
                 .fail(function (data) {

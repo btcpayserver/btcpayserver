@@ -601,7 +601,7 @@ namespace BTCPayServer.Controllers
                     {
                         ShowQR = showQR,
                         WalletName = service.ServiceName,
-                        ServiceLink = service.ConnectionString.Server.AbsoluteUri
+                        ServiceLink = service.ConnectionString.Server.AbsoluteUri.WithoutEndingSlash()
                     });
                 }
                 var connectionString = await service.ConnectionString.Expand(this.Request.GetAbsoluteUriNoPathBase(), service.Type);

@@ -83,6 +83,15 @@ addLoadEvent(function (ev) {
 
                 eventAggregator.$emit("pay", amount);
             },
+            cancelPayment: function (amount) {
+                this.setLoading(true);
+                var self = this;
+                self.timeoutState = setTimeout(function () {
+                    self.setLoading(false);
+                }, 5000);
+
+                eventAggregator.$emit("cancel-invoice", amount);
+            },
             formatPaymentMethod: function (str) {
 
                 if (str.endsWith("LightningLike")) {
@@ -114,6 +123,26 @@ addLoadEvent(function (ev) {
                 self.setLoading(false);
                 btcpay.showInvoice(invoiceId);
                 btcpay.showFrame();
+            });
+            eventAggregator.$on("invoice-cancelled", function(){
+                self.setLoading(false);
+                Vue.toasted.show('Payment cancelled', {
+                    iconPack: "fontawesome",
+                    icon: "check",
+                    duration: 10000
+                });
+            });
+            eventAggregator.$on("cancel-invoice-error", function (error) {
+                self.setLoading(false);
+                Vue.toasted.show("Error cancelling payment", {
+                    iconPack: "fontawesome",
+                    icon: "exclamation-triangle",
+                    fullWidth: false,
+                    theme: "bubble",
+                    type: "error",
+                    position: "top-center",
+                    duration: 10000
+                });
             });
             eventAggregator.$on("invoice-error", function (error) {
                 self.setLoading(false);

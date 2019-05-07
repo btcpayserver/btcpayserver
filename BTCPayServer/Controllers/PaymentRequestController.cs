@@ -6,6 +6,7 @@ using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
+using BTCPayServer.Events;
 using BTCPayServer.Filters;
 using BTCPayServer.Models;
 using BTCPayServer.Models.PaymentRequestViewModels;
@@ -41,6 +42,7 @@ namespace BTCPayServer.Controllers
         private readonly EventAggregator _EventAggregator;
         private readonly CurrencyNameTable _Currencies;
         private readonly HtmlSanitizer _htmlSanitizer;
+        private readonly InvoiceRepository _InvoiceRepository;
 
         public PaymentRequestController(
             InvoiceController invoiceController,
@@ -50,7 +52,8 @@ namespace BTCPayServer.Controllers
             PaymentRequestService paymentRequestService,
             EventAggregator eventAggregator,
             CurrencyNameTable currencies,
-            HtmlSanitizer htmlSanitizer)
+            HtmlSanitizer htmlSanitizer,
+            InvoiceRepository invoiceRepository)
         {
             _InvoiceController = invoiceController;
             _UserManager = userManager;
@@ -60,6 +63,7 @@ namespace BTCPayServer.Controllers
             _EventAggregator = eventAggregator;
             _Currencies = currencies;
             _htmlSanitizer = htmlSanitizer;
+            _InvoiceRepository = invoiceRepository;
         }
 
         [HttpGet]
@@ -212,7 +216,7 @@ namespace BTCPayServer.Controllers
         [HttpGet]
         [Route("{id}")]
         [AllowAnonymous]
-        public async Task<IActionResult> ViewPaymentRequest(string id)
+        public async Task<IActionResult> ViewPaymentRequest(string id, string statusMessage = null)
         {
             var result = await _PaymentRequestService.GetPaymentRequest(id, GetUserId());
             if (result == null)
@@ -220,6 +224,8 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
             result.HubPath = PaymentRequestHub.GetHubPath(this.Request);
+            result.StatusMessage = statusMessage;
+            
             return View(result);
         }
 
@@ -313,7 +319,39 @@ namespace BTCPayServer.Controllers
             }
         }
 
+        [HttpGet]
+        [Route("{id}/cancel")]
+        public async Task<IActionResult> CancelUnpaidPendingInvoice(string id, bool redirect = true)
+        {
+            var result = await _PaymentRequestService.GetPaymentRequest(id, GetUserId());
+            if (result == null )
+            {
+                return NotFound();
+            }
 
+            var invoice = result.Invoices.SingleOrDefault(requestInvoice =>
+                requestInvoice.Status.Equals(InvoiceState.ToString(InvoiceStatus.New),StringComparison.InvariantCulture) && !requestInvoice.Payments.Any());
+
+            if (invoice == null )
+            {
+                return BadRequest("No unpaid pending invoice to cancel");
+            }
+            
+            await _InvoiceRepository.UpdatePaidInvoiceToInvalid(invoice.Id);
+            _EventAggregator.Publish(new InvoiceEvent(await _InvoiceRepository.GetInvoice(invoice.Id), 1008, InvoiceEvent.MarkedInvalid));
+
+            if (redirect)
+            {
+                return RedirectToAction(nameof(ViewPaymentRequest), new
+                {
+                    Id = id,
+                    StatusMessage = "Payment cancelled"
+                });
+            }
+
+            return Ok("Payment cancelled");
+        }
+        
         private string GetUserId()
         {
             return _UserManager.GetUserId(User);

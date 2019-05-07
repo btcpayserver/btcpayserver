@@ -49,7 +49,7 @@ namespace BTCPayServer.HostedServices
         }
         public NBXplorerSummary Get(string cryptoCode)
         {
-            _Summaries.TryGetValue(cryptoCode, out var summary);
+            _Summaries.TryGetValue(cryptoCode.ToUpperInvariant(), out var summary);
             return summary;
         }
         public IEnumerable<NBXplorerSummary> GetAll()

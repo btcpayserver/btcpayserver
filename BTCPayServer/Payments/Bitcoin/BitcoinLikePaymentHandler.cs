@@ -10,7 +10,7 @@ using NBitcoin;
 
 namespace BTCPayServer.Payments.Bitcoin
 {
-    public class BitcoinLikePaymentHandler : PaymentMethodHandlerBase<DerivationStrategy>
+    public class BitcoinLikePaymentHandler : PaymentMethodHandlerBase<DerivationSchemeSettings>
     {
         ExplorerClientProvider _ExplorerProvider;
         private IFeeProviderFactory _FeeRateProviderFactory;
@@ -33,16 +33,16 @@ namespace BTCPayServer.Payments.Bitcoin
             public Task<BitcoinAddress> ReserveAddress;
         }
 
-        public override object PreparePayment(DerivationStrategy supportedPaymentMethod, StoreData store, BTCPayNetwork network)
+        public override object PreparePayment(DerivationSchemeSettings supportedPaymentMethod, StoreData store, BTCPayNetwork network)
         {
             return new Prepare()
             {
                 GetFeeRate = _FeeRateProviderFactory.CreateFeeProvider(network).GetFeeRateAsync(),
-                ReserveAddress = _WalletProvider.GetWallet(network).ReserveAddressAsync(supportedPaymentMethod.DerivationStrategyBase)
+                ReserveAddress = _WalletProvider.GetWallet(network).ReserveAddressAsync(supportedPaymentMethod.AccountDerivation)
             };
         }
 
-        public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(DerivationStrategy supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store, BTCPayNetwork network, object preparePaymentObject)
+        public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(DerivationSchemeSettings supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store, BTCPayNetwork network, object preparePaymentObject)
         {
             if (!_ExplorerProvider.IsAvailable(network))
                 throw new PaymentMethodUnavailableException($"Full node not available");

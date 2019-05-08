@@ -73,7 +73,7 @@ namespace BTCPayServer.Data
                 if (networks.BTC != null)
                 {
                     btcReturned = true;
-                    yield return BTCPayServer.DerivationStrategy.Parse(DerivationStrategy, networks.BTC);
+                    yield return DerivationSchemeSettings.Parse(DerivationStrategy, networks.BTC);
                 }
             }
 
@@ -103,11 +103,8 @@ namespace BTCPayServer.Data
         /// </summary>
         /// <param name="paymentMethodId">The paymentMethodId</param>
         /// <param name="supportedPaymentMethod">The payment method, or null to remove</param>
-        public void SetSupportedPaymentMethod(PaymentMethodId paymentMethodId, ISupportedPaymentMethod supportedPaymentMethod)
+        public void SetSupportedPaymentMethod(ISupportedPaymentMethod supportedPaymentMethod)
         {
-            if (supportedPaymentMethod != null && paymentMethodId != supportedPaymentMethod.PaymentId)
-                throw new InvalidOperationException("Argument mismatch");
-
 #pragma warning disable CS0618
             JObject strategies = string.IsNullOrEmpty(DerivationStrategies) ? new JObject() : JObject.Parse(DerivationStrategies);
             bool existing = false;
@@ -119,7 +116,7 @@ namespace BTCPayServer.Data
                     // Legacy stuff which should go away
                     DerivationStrategy = null;
                 }
-                if (stratId == paymentMethodId)
+                if (stratId == supportedPaymentMethod.PaymentId)
                 {
                     if (supportedPaymentMethod == null)
                     {
@@ -134,7 +131,7 @@ namespace BTCPayServer.Data
                 }
             }
 
-            if (!existing && supportedPaymentMethod == null && paymentMethodId.IsBTCOnChain)
+            if (!existing && supportedPaymentMethod == null && supportedPaymentMethod.PaymentId.IsBTCOnChain)
             {
                 DerivationStrategy = null;
             }
@@ -430,23 +427,9 @@ namespace BTCPayServer.Data
 
         [Obsolete("Use GetExcludedPaymentMethods instead")]
         public string[] ExcludedPaymentMethods { get; set; }
-#pragma warning disable CS0618 // Type or member is obsolete
-        public void SetWalletKeyPathRoot(PaymentMethodId paymentMethodId, KeyPath keyPath)
-        {
-            if (keyPath == null)
-                WalletKeyPathRoots.Remove(paymentMethodId.ToString());
-            else
-                WalletKeyPathRoots.AddOrReplace(paymentMethodId.ToString().ToLowerInvariant(), keyPath.ToString());
-        }
-        public KeyPath GetWalletKeyPathRoot(PaymentMethodId paymentMethodId)
-        {
-            if (WalletKeyPathRoots.TryGetValue(paymentMethodId.ToString().ToLowerInvariant(), out var k))
-                return KeyPath.Parse(k);
-            return null;
-        }
-#pragma warning restore CS0618 // Type or member is obsolete
-        [Obsolete("Use SetWalletKeyPathRoot/GetWalletKeyPathRoot instead")]
-        public Dictionary<string, string> WalletKeyPathRoots { get; set; } = new Dictionary<string, string>();
+
+        [Obsolete("Use DerivationSchemeSettings instead")]
+        public Dictionary<string, string> WalletKeyPathRoots { get; set; }
 
         public EmailSettings EmailSettings { get; set; }
         public bool RedirectAutomatically { get; set; }

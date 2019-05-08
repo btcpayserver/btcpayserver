@@ -345,8 +345,8 @@ namespace BTCPayServer.Payments.Bitcoin
 
         private DerivationStrategyBase GetDerivationStrategy(InvoiceEntity invoice, BTCPayNetwork network)
         {
-            return invoice.GetSupportedPaymentMethod<DerivationStrategy>(new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike), _ExplorerClients.NetworkProviders)
-                          .Select(d => d.DerivationStrategyBase)
+            return invoice.GetSupportedPaymentMethod<DerivationSchemeSettings>(new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike), _ExplorerClients.NetworkProviders)
+                          .Select(d => d.AccountDerivation)
                           .FirstOrDefault();
         }
 

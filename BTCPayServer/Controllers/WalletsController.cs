@@ -146,7 +146,7 @@ namespace BTCPayServer.Controllers
         [Route("{walletId}/send")]
         public async Task<IActionResult> WalletSend(
             [ModelBinder(typeof(WalletIdModelBinder))]
-            WalletId walletId, string defaultDestination = null, string defaultAmount = null, bool advancedMode = false)
+            WalletId walletId, string defaultDestination = null, string defaultAmount = null)
         {
             if (walletId?.StoreId == null)
                 return NotFound();
@@ -195,7 +195,6 @@ namespace BTCPayServer.Controllers
                 }
                 catch (Exception ex) { model.RateError = ex.Message; }
             }
-            model.AdvancedMode = advancedMode;
             return View(model);
         }
 
@@ -203,7 +202,7 @@ namespace BTCPayServer.Controllers
         [Route("{walletId}/send")]
         public async Task<IActionResult> WalletSend(
             [ModelBinder(typeof(WalletIdModelBinder))]
-            WalletId walletId, WalletSendModel vm, string command = null)
+            WalletId walletId, WalletSendModel vm)
         {
             if (walletId?.StoreId == null)
                 return NotFound();
@@ -213,13 +212,6 @@ namespace BTCPayServer.Controllers
             var network = this.NetworkProvider.GetNetwork(walletId?.CryptoCode);
             if (network == null)
                 return NotFound();
-
-            if (command == "noob" || command == "expert")
-            {
-                ModelState.Clear();
-                vm.AdvancedMode = command == "expert";
-                return View(vm);
-            }
 
             var destination = ParseDestination(vm.Destination, network.NBitcoinNetwork);
             if (destination == null)

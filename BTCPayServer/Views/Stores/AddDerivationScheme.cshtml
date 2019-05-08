@@ -68,7 +68,10 @@
                         
                     </div>
                     <div class="d-flex">
-                        <div class="dropdown display-when-ledger-connected mr-2">
+                        <button type="button" class="btn btn-primary mr-2 " data-toggle="modal" data-target="#coldcardimport">
+                            Import Coldcard wallet
+                        </button>
+                        <div class="dropdown display-when-ledger-connected">
                             <button class="btn btn-primary dropdown-toggle" type="button" id="ledgerAccountsDropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 Select ledger wallet account
                             </button>
@@ -79,10 +82,8 @@
                                 }
                             </div>
                         </div>
-                        
-                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#coldcardimport">
-                            Import Coldcard wallet
-                        </button>
+
+
                     </div>
                    
 

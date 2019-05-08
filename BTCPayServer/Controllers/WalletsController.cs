@@ -243,13 +243,13 @@ namespace BTCPayServer.Controllers
             else
             {
                 var storeData = (await Repository.FindStore(walletId.StoreId, GetUserId()));
-                var derivationScheme = GetPaymentMethod(walletId, storeData).AccountDerivation;
+                var derivationScheme = GetPaymentMethod(walletId, storeData);
                 var psbt = await CreatePSBT(network, derivationScheme, sendModel, cancellation);
                 return File(psbt.PSBT.ToBytes(), "application/octet-stream", $"Send-{vm.Amount.Value}-{network.CryptoCode}-to-{destination[0].ToString()}.psbt");
             }
         }
 
-        private async Task<CreatePSBTResponse> CreatePSBT(BTCPayNetwork network, DerivationStrategyBase derivationScheme, WalletSendLedgerModel sendModel, CancellationToken cancellationToken)
+        private async Task<CreatePSBTResponse> CreatePSBT(BTCPayNetwork network, DerivationSchemeSettings derivationSettings, WalletSendLedgerModel sendModel, CancellationToken cancellationToken)
         {
             var nbx = ExplorerClientProvider.GetExplorerClient(network);
             CreatePSBTRequest psbtRequest = new CreatePSBTRequest();
@@ -269,7 +269,7 @@ namespace BTCPayServer.Controllers
             }
             psbtDestination.SubstractFees = sendModel.SubstractFees;
 
-            var psbt = (await nbx.CreatePSBTAsync(derivationScheme, psbtRequest, cancellationToken));
+            var psbt = (await nbx.CreatePSBTAsync(derivationSettings.AccountDerivation, psbtRequest, cancellationToken));
             if (psbt == null)
                 throw new NotSupportedException("You need to update your version of NBXplorer");
 
@@ -279,10 +279,28 @@ namespace BTCPayServer.Controllers
                 if (fee < network.MinFee)
                 {
                     psbtRequest.FeePreference = new FeePreference() { ExplicitFee = network.MinFee };
-                    psbt = (await nbx.CreatePSBTAsync(derivationScheme, psbtRequest, cancellationToken));
+                    psbt = (await nbx.CreatePSBTAsync(derivationSettings.AccountDerivation, psbtRequest, cancellationToken));
                 }
             }
 
+
+            if (derivationSettings.AccountKeyPath != null && derivationSettings.AccountKeyPath.Indexes.Length != 0)
+            {
+                // NBX only know the path relative to the account xpub.
+                // Here we rebase the hd_keys in the PSBT to have a keypath relative to the root HD so the wallet can sign
+                // Note that the fingerprint of the hd keys are now 0, which is wrong
+                // However, hardware wallets does not give a damn, and sometimes does not even allow us to get this fingerprint anyway.
+                foreach (var o in psbt.PSBT.Inputs.OfType<PSBTCoin>().Concat(psbt.PSBT.Outputs))
+                {
+                    var rootFP = derivationSettings.RootFingerprint is HDFingerprint fp ? fp : default;
+                    foreach (var keypath in o.HDKeyPaths.ToList())
+                    {
+                        var newKeyPath = derivationSettings.AccountKeyPath.Derive(keypath.Value.Item2);
+                        o.HDKeyPaths.Remove(keypath.Key);
+                        o.HDKeyPaths.Add(keypath.Key, Tuple.Create(rootFP, newKeyPath));
+                    }
+                }
+            }
             return psbt;
         }
 
@@ -461,7 +479,6 @@ namespace BTCPayServer.Controllers
             var cryptoCode = walletId.CryptoCode;
             var storeData = (await Repository.FindStore(walletId.StoreId, GetUserId()));
             var derivationSettings = GetPaymentMethod(walletId, storeData);
-            var derivationScheme = GetPaymentMethod(walletId, storeData).AccountDerivation;
 
             var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
 
@@ -527,9 +544,9 @@ namespace BTCPayServer.Controllers
                         if (!_dashboard.IsFullySynched(network.CryptoCode, out var summary))
                             throw new Exception($"{network.CryptoCode}: not started or fully synched");
 
-                        var psbt = await CreatePSBT(network, derivationScheme, model, normalOperationTimeout.Token);
+                        
 
-                        var strategy = GetDirectDerivationStrategy(derivationScheme);
+                        var strategy = GetDirectDerivationStrategy(derivationSettings.AccountDerivation);
                         // Some deployment have the wallet root key path saved in the store blob
                         // If it does, we only have to make 1 call to the hw to check if it can sign the given strategy,
                         if (derivationSettings.AccountKeyPath == null || !await hw.CanSign(network, strategy, derivationSettings.AccountKeyPath, normalOperationTimeout.Token))
@@ -543,20 +560,8 @@ namespace BTCPayServer.Controllers
                             await Repository.UpdateStore(storeData);
                         }
 
-                        // NBX only know the path relative to the account xpub.
-                        // Here we rebase the hd_keys in the PSBT to have a keypath relative to the root HD so the wallet can sign
-                        // Note that the fingerprint of the hd keys are now 0, which is wrong
-                        // However, hardware wallets does not give a damn, and sometimes does not even allow us to get this fingerprint anyway.
-                        foreach (var o in psbt.PSBT.Inputs.OfType<PSBTCoin>().Concat(psbt.PSBT.Outputs))
-                        {
-                            foreach (var keypath in o.HDKeyPaths.ToList())
-                            {
-                                var newKeyPath = derivationSettings.AccountKeyPath.Derive(keypath.Value.Item2);
-                                o.HDKeyPaths.Remove(keypath.Key);
-                                o.HDKeyPaths.Add(keypath.Key, Tuple.Create(default(HDFingerprint), newKeyPath));
-                            }
-                        }
 
+                        var psbt = await CreatePSBT(network, derivationSettings, model, normalOperationTimeout.Token);
                         signTimeout.CancelAfter(TimeSpan.FromMinutes(5));
                         psbt.PSBT = await hw.SignTransactionAsync(psbt.PSBT, psbt.ChangeAddress?.ScriptPubKey, signTimeout.Token);
                         if(!psbt.PSBT.TryFinalize(out var errors))
@@ -577,7 +582,7 @@ namespace BTCPayServer.Controllers
                             throw new Exception("Error while broadcasting: " + ex.Message);
                         }
                         var wallet = _walletProvider.GetWallet(network);
-                        wallet.InvalidateCache(derivationScheme);
+                        wallet.InvalidateCache(derivationSettings.AccountDerivation);
                         result = new SendToAddressResult() { TransactionId = transaction.GetHash().ToString() };
                     }
                 }

@@ -55,23 +55,44 @@
                 <label asp-for="SubstractFees"></label>
                 <input asp-for="SubstractFees" class="form-check" />
             </div>
-            @if (Model.AdvancedMode)
-            {
-            <div class="form-group">
-                <label asp-for="NoChange"></label>
-                <a href="https://docs.btcpayserver.org/features/wallet#make-sure-no-change-utxo-is-created-expert-mode" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
-                <input asp-for="NoChange" class="form-check" />
+
+            <div class="card">
+                <div class="card-header" id="accordian-dev-info-notification-header">
+                    <h2 class="mb-0">
+                        <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#accordian-advanced" aria-expanded="false" aria-controls="accordian-advanced">
+                            Advanced settings
+                        </button>
+                    </h2>
+                </div>
+                <div id="accordian-advanced" class="collapse" aria-labelledby="accordian-advanced-header" data-parent="#accordian-advanced">
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label asp-for="NoChange"></label>
+                            <a href="https://docs.btcpayserver.org/features/wallet#make-sure-no-change-utxo-is-created-expert-mode" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                            <input asp-for="NoChange" class="form-check" />
+                        </div>
+                        @if (Model.SupportRBF)
+                        {
+                        <div class="form-group">
+                            <label asp-for="DisableRBF"></label>
+                            <a href="https://bitcoin.org/en/glossary/rbf" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                            <input asp-for="DisableRBF" class="form-check" />
+                        </div>
+                        }
+                    </div>
+                </div>
             </div>
-            }
-            <button name="command" type="submit" class="btn btn-primary">Confirm</button>
-            @if (Model.AdvancedMode)
-            {
-                <button name="command" type="submit" value="noob" class="btn btn-secondary">Use noob mode</button>
-            }
-            else
-            {
-                <button name="command" type="submit" value="expert" class="btn btn-secondary">Use expert mode</button>
-            }
+            <div class="form-group">
+                <div class="dropdown" style="margin-top:16px;">
+                    <button class="btn btn-primary dropdown-toggle" type="button" id="SendMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Sign with...
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="SendMenu">
+                        <button name="command" type="submit" class="dropdown-item" value="ledger">... your Ledger Wallet device</button>
+                        <button name="command" type="submit" class="dropdown-item" value="save-psbt">... a wallet supporting PSBT</button>
+                    </div>
+                </div>
+            </div>
         </form>
     </div>
 </div>

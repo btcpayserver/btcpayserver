@@ -64,6 +64,7 @@ namespace BTCPayServer
         public KeyPath CoinType { get; internal set; }
         public int MaxTrackedConfirmation { get; internal set; } = 6;
         public string[] DefaultRateRules { get; internal set; } = Array.Empty<string>();
+        public bool SupportRBF { get; internal set; }
 
         public override string ToString()
         {

@@ -99,15 +99,15 @@ namespace BTCPayServer.Controllers
 
         private void SetExistingValues(StoreData store, DerivationSchemeViewModel vm)
         {
-            vm.DerivationScheme = GetExistingDerivationStrategy(vm.CryptoCode, store)?.DerivationStrategyBase.ToString();
+            vm.DerivationScheme = GetExistingDerivationStrategy(vm.CryptoCode, store)?.AccountDerivation.ToString();
             vm.Enabled = !store.GetStoreBlob().IsExcluded(new PaymentMethodId(vm.CryptoCode, PaymentTypes.BTCLike));
         }
 
-        private DerivationStrategy GetExistingDerivationStrategy(string cryptoCode, StoreData store)
+        private DerivationSchemeSettings GetExistingDerivationStrategy(string cryptoCode, StoreData store)
         {
             var id = new PaymentMethodId(cryptoCode, PaymentTypes.BTCLike);
             var existing = store.GetSupportedPaymentMethods(_NetworkProvider)
-                .OfType<DerivationStrategy>()
+                .OfType<DerivationSchemeSettings>()
                 .FirstOrDefault(d => d.PaymentId == id);
             return existing;
         }
@@ -136,10 +136,10 @@ namespace BTCPayServer.Controllers
             PaymentMethodId paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
             var exisingStrategy = store.GetSupportedPaymentMethods(_NetworkProvider)
                                        .Where(c => c.PaymentId == paymentMethodId)
-                                       .OfType<DerivationStrategy>()
-                                       .Select(c => c.DerivationStrategyBase.ToString())
+                                       .OfType<DerivationSchemeSettings>()
+                                       .Select(c => c.AccountDerivation.ToString())
                                        .FirstOrDefault();
-            DerivationStrategy strategy = null;
+            DerivationSchemeSettings strategy = null;
             try
             {
                 if (!string.IsNullOrEmpty(vm.DerivationScheme))
@@ -162,7 +162,7 @@ namespace BTCPayServer.Controllers
                               // - If the user is testing the hint address in confirmation screen
                               (vm.Confirmation && !string.IsNullOrWhiteSpace(vm.HintAddress)) ||
                               // - The user is setting a new derivation scheme
-                              (!vm.Confirmation && strategy != null && exisingStrategy != strategy.DerivationStrategyBase.ToString()) ||
+                              (!vm.Confirmation && strategy != null && exisingStrategy != strategy.AccountDerivation.ToString()) ||
                               // - The user is clicking on continue without changing anything   
                               (!vm.Confirmation && willBeExcluded == wasExcluded);
 
@@ -172,10 +172,10 @@ namespace BTCPayServer.Controllers
                 try
                 {
                     if (strategy != null)
-                        await wallet.TrackAsync(strategy.DerivationStrategyBase);
-                    store.SetSupportedPaymentMethod(paymentMethodId, strategy);
-                    storeBlob.SetExcluded(paymentMethodId, willBeExcluded);                    
-                    storeBlob.SetWalletKeyPathRoot(paymentMethodId, vm.KeyPath == null ? null : KeyPath.Parse(vm.KeyPath));
+                        await wallet.TrackAsync(strategy.AccountDerivation);
+                    strategy.AccountKeyPath = vm.KeyPath == null ? null : KeyPath.Parse(vm.KeyPath);
+                    store.SetSupportedPaymentMethod(strategy);
+                    storeBlob.SetExcluded(paymentMethodId, willBeExcluded);
                     store.SetStoreBlob(storeBlob);
                 }
                 catch
@@ -218,12 +218,12 @@ namespace BTCPayServer.Controllers
             return ShowAddresses(vm, strategy);
         }
 
-        private IActionResult ShowAddresses(DerivationSchemeViewModel vm, DerivationStrategy strategy)
+        private IActionResult ShowAddresses(DerivationSchemeViewModel vm, DerivationSchemeSettings strategy)
         {
-            vm.DerivationScheme = strategy.DerivationStrategyBase.ToString();
+            vm.DerivationScheme = strategy.AccountDerivation.ToString();
             if (!string.IsNullOrEmpty(vm.DerivationScheme))
             {
-                var line = strategy.DerivationStrategyBase.GetLineFor(DerivationFeature.Deposit);
+                var line = strategy.AccountDerivation.GetLineFor(DerivationFeature.Deposit);
 
                 for (int i = 0; i < 10; i++)
                 {

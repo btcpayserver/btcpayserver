@@ -12,10 +12,19 @@ namespace BTCPayServer.Payments
     {
         public static ISupportedPaymentMethod Deserialize(PaymentMethodId paymentMethodId, JToken value, BTCPayNetwork network)
         {
-            // Legacy
             if (paymentMethodId.PaymentType == PaymentTypes.BTCLike)
             {
-                return BTCPayServer.DerivationStrategy.Parse(((JValue)value).Value<string>(), network);
+                if (value is JObject jobj)
+                {
+                    var scheme = network.NBXplorerNetwork.Serializer.ToObject<DerivationSchemeSettings>(jobj);
+                    scheme.Network = network;
+                    return scheme;
+                }
+                // Legacy
+                else
+                {
+                    return BTCPayServer.DerivationSchemeSettings.Parse(((JValue)value).Value<string>(), network);
+                }
             }
             //////////
             else if (paymentMethodId.PaymentType == PaymentTypes.LightningLike)
@@ -44,7 +53,9 @@ namespace BTCPayServer.Payments
             // Legacy
             if (factory.PaymentId.PaymentType == PaymentTypes.BTCLike)
             {
-                return new JValue(((DerivationStrategy)factory).DerivationStrategyBase.ToString());
+                var derivation = (DerivationSchemeSettings)factory;
+                var str = derivation.Network.NBXplorerNetwork.Serializer.ToString(derivation);
+                return JObject.Parse(str);
             }
             //////////////
             else

@@ -176,7 +176,7 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService, CssThemeManagerHostedService>();
             services.AddSingleton<IHostedService, MigratorHostedService>();
 
-            services.AddSingleton<Payments.IPaymentMethodHandler<DerivationStrategy>, Payments.Bitcoin.BitcoinLikePaymentHandler>();
+            services.AddSingleton<Payments.IPaymentMethodHandler<DerivationSchemeSettings>, Payments.Bitcoin.BitcoinLikePaymentHandler>();
             services.AddSingleton<IHostedService, Payments.Bitcoin.NBXplorerListener>();
 
             services.AddSingleton<IHostedService, HostedServices.CheckConfigurationHostedService>();

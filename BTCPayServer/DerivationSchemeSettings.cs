@@ -131,8 +131,8 @@ namespace BTCPayServer
         }
         public string ToPrettyString()
         {
-            return string.IsNullOrEmpty(Label) ? Label :
-                   String.IsNullOrEmpty(AccountOriginal) ? AccountOriginal :
+            return !string.IsNullOrEmpty(Label) ? Label :
+                   !String.IsNullOrEmpty(AccountOriginal) ? AccountOriginal :
                    ToString();
         }
     }

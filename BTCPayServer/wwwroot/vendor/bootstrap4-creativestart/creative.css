@@ -6,10 +6,12 @@
 body,
 html {
     width: 100%;
+    background: #f9fafb;
 }
 
 body {
     font-family: 'Helvetica Neue', Arial, sans-serif;
+    background: #f9fafb;
 }
 
 hr {
@@ -326,4 +328,81 @@ header.masthead {
 .no-gutter > [class*='col-'] {
     padding-right: 0;
     padding-left: 0;
+}
+
+/* Custom CSS */
+
+#content {
+    background: #fff;
+    border: 1px solid #DFE3E8;
+    padding: 16px;
+    border-radius: 4px;
+}
+
+.heading-container {
+    display: flex;
+}
+
+.heading-left {
+    flex: 1;
+}
+
+.heading-left > h4 {
+    margin-bottom: 0;
+}
+
+.heading-right {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+}
+
+#users {
+    background: #fff;
+    border: 1px solid #DFE3E8;
+    border-radius: 4px;
+    margin-top: 16px;
+}
+
+.table {
+    margin-bottom: 0px;
+}
+
+thead > tr {
+    height: 56px;
+}
+
+thead > tr > th {
+    /* display: table-cell;
+    padding: 4px 56px 4px 24px;
+    text-align: left;
+    border-bottom: 1px solid #DFE3E8;
+    vertical-align: middle; */
+}
+
+.table thead th {
+    border-bottom: none;
+    border-top: none;
+    vertical-align: middle;
+    padding: 4px 56px 4px 24px;
+}
+
+
+.table tr {
+    height: 64px;
+}
+
+.table tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+.table td {
+    display: table-cell;
+    padding: 4px 56px 4px 24px;
+    text-align: left;
+    border-bottom: 1px solid #DFE3E8;
+    color: #12161B;
+    font-size: 0.8125rem;
+    font-weight: 400;
+    vertical-align: middle;
 }

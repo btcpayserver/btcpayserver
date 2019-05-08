@@ -24,7 +24,7 @@
         $("#ledger-loading").css("display", id === "ledger-loading" ? "block" : "none");
         $("#no-ledger-info").css("display", id === "no-ledger-info" ? "block" : "none");
         $("#ledger-validate").css("display", id === "ledger-validate" ? "block" : "none");
-        $("#ledger-info").css("display", id === "ledger-info" ? "block" : "none");
+        $(".display-when-ledger-connected").css("display", id === "ledger-info" ? "block" : "none");
     }
     function Write(prefix, type, message) {
         if (type === "error") {

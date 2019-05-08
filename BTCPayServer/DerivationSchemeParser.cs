@@ -53,7 +53,7 @@ namespace BTCPayServer
                 return new DirectDerivationStrategy(extPubKey) { Segwit = true };
             if (labels[0] == "legacy")
                 return new DirectDerivationStrategy(extPubKey) { Segwit = false };
-            if (labels[0] == "p2sh")
+            if (labels[0] == "p2sh") // segwit p2sh
                 return new DerivationStrategyFactory(Network).Parse(extPubKey.ToString() + "-[p2sh]");
             throw new FormatException();
         }

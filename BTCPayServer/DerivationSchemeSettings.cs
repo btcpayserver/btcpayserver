@@ -30,6 +30,7 @@ namespace BTCPayServer
             if (network == null)
                 throw new ArgumentNullException(nameof(network));
             var result = new DerivationSchemeSettings();
+            result.Source = "Coldcard";
             var derivationSchemeParser = new DerivationSchemeParser(network.NBitcoinNetwork);
             JObject jobj = null;
             try
@@ -48,6 +49,8 @@ namespace BTCPayServer
                 {
                     result.AccountOriginal = jobj["xpub"].Value<string>().Trim();
                     result.AccountDerivation = derivationSchemeParser.ParseElectrum(result.AccountOriginal);
+                    if (result.AccountDerivation is DirectDerivationStrategy direct && !direct.Segwit)
+                        result.AccountOriginal = null; // Saving this would be confusing for user, as xpub of electrum is legacy derivation, but for btcpay, it is segwit derivation
                 }
                 catch
                 {
@@ -109,7 +112,7 @@ namespace BTCPayServer
         }
         [JsonIgnore]
         public BTCPayNetwork Network { get; set; }
-
+        public string Source { get; set; }
         public KeyPath AccountKeyPath { get; set; }
         
         public DerivationStrategyBase AccountDerivation { get; set; }

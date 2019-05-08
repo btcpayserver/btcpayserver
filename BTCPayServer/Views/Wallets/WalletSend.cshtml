@@ -71,6 +71,14 @@
                             <a href="https://docs.btcpayserver.org/features/wallet#make-sure-no-change-utxo-is-created-expert-mode" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
                             <input asp-for="NoChange" class="form-check" />
                         </div>
+                        @if (Model.SupportRBF)
+                        {
+                        <div class="form-group">
+                            <label asp-for="DisableRBF"></label>
+                            <a href="https://bitcoin.org/en/glossary/rbf" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                            <input asp-for="DisableRBF" class="form-check" />
+                        </div>
+                        }
                     </div>
                 </div>
             </div>

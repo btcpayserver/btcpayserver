@@ -25,7 +25,8 @@ namespace BTCPayServer
                 CryptoImagePath = "imlegacy/bitcoin.svg",
                 LightningImagePath = "imlegacy/bitcoin-lightning.svg",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
-                CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("0'") : new KeyPath("1'")
+                CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("0'") : new KeyPath("1'"),
+                SupportRBF = true
             });
         }
     }

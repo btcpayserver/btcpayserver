@@ -35,5 +35,8 @@ namespace BTCPayServer.Models.WalletViewModels
         public int Divisibility { get; set; }
         public string Fiat { get; set; }
         public string RateError { get; set; }
+        public bool SupportRBF { get; set; }
+        [Display(Name = "Disable RBF")]
+        public bool DisableRBF { get; set; }
     }
 }

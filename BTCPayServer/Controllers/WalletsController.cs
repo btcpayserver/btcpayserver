@@ -175,7 +175,7 @@ namespace BTCPayServer.Controllers
             model.CurrentBalance = (await balance).ToDecimal(MoneyUnit.BTC);
             model.RecommendedSatoshiPerByte = (int)(await recommendedFees).GetFee(1).Satoshi;
             model.FeeSatoshiPerByte = model.RecommendedSatoshiPerByte;
-
+            model.SupportRBF = network.SupportRBF;
             using (CancellationTokenSource cts = new CancellationTokenSource())
             {
                 try
@@ -212,7 +212,7 @@ namespace BTCPayServer.Controllers
             var network = this.NetworkProvider.GetNetwork(walletId?.CryptoCode);
             if (network == null)
                 return NotFound();
-
+            vm.SupportRBF = network.SupportRBF;
             var destination = ParseDestination(vm.Destination, network.NBitcoinNetwork);
             if (destination == null)
                 ModelState.AddModelError(nameof(vm.Destination), "Invalid address");
@@ -233,7 +233,8 @@ namespace BTCPayServer.Controllers
                 Amount = vm.Amount.Value,
                 SubstractFees = vm.SubstractFees,
                 FeeSatoshiPerByte = vm.FeeSatoshiPerByte,
-                NoChange = vm.NoChange
+                NoChange = vm.NoChange,
+                DisableRBF = vm.DisableRBF
             };
             if (command == "ledger")
             {
@@ -254,6 +255,10 @@ namespace BTCPayServer.Controllers
             CreatePSBTRequest psbtRequest = new CreatePSBTRequest();
             CreatePSBTDestination psbtDestination = new CreatePSBTDestination();
             psbtRequest.Destinations.Add(psbtDestination);
+            if (network.SupportRBF)
+            {
+                psbtRequest.RBF = !sendModel.DisableRBF;
+            }
             psbtDestination.Destination = BitcoinAddress.Create(sendModel.Destination, network.NBitcoinNetwork);
             psbtDestination.Amount = Money.Coins(sendModel.Amount);
             psbtRequest.FeePreference = new FeePreference();
@@ -447,7 +452,7 @@ namespace BTCPayServer.Controllers
             int account = 0,
             // sendtoaddress
             bool noChange = false,
-            string destination = null, string amount = null, string feeRate = null, bool substractFees = false
+            string destination = null, string amount = null, string feeRate = null, bool substractFees = false, bool disableRBF = false
             )
         {
             if (!HttpContext.WebSockets.IsWebSocketRequest)
@@ -511,6 +516,7 @@ namespace BTCPayServer.Controllers
 
                     model.SubstractFees = substractFees;
                     model.NoChange = noChange;
+                    model.DisableRBF = disableRBF;
                     if (command == "test")
                     {
                         result = await hw.Test(normalOperationTimeout.Token);

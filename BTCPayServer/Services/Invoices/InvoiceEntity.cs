@@ -238,8 +238,8 @@ namespace BTCPayServer.Services.Invoices
             {
                 obj.Add(strat.PaymentId.ToString(), PaymentMethodExtensions.Serialize(strat));
 #pragma warning disable CS0618
-                if (strat.PaymentId.IsBTCOnChain)
-                    DerivationStrategy = ((JValue)PaymentMethodExtensions.Serialize(strat)).Value<string>();
+                // This field should eventually disappear
+                DerivationStrategy = null;
             }
             DerivationStrategies = JsonConvert.SerializeObject(obj);
 #pragma warning restore CS0618

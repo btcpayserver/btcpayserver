@@ -98,7 +98,7 @@ namespace BTCPayServer.HostedServices
                         continue;
                     foreach (var scheme in store.GetSupportedPaymentMethods(_NetworkProvider).OfType<DerivationSchemeSettings>())
                     {
-                        if (blob.WalletKeyPathRoots.TryGetValue(scheme.PaymentId.ToString(), out var root))
+                        if (blob.WalletKeyPathRoots.TryGetValue(scheme.PaymentId.ToString().ToLowerInvariant(), out var root))
                         {
                             scheme.AccountKeyPath = new NBitcoin.KeyPath(root);
                             store.SetSupportedPaymentMethod(scheme);

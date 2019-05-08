@@ -75,7 +75,15 @@
                 </div>
             </div>
             <div class="form-group">
-                <button name="command" type="submit" class="btn btn-primary" style="margin-top:16px;">Confirm</button>
+                <div class="dropdown" style="margin-top:16px;">
+                    <button class="btn btn-primary dropdown-toggle" type="button" id="SendMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Sign with...
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="SendMenu">
+                        <button name="command" type="submit" class="dropdown-item" value="ledger">... your Ledger Wallet device</button>
+                        <button name="command" type="submit" class="dropdown-item" value="save-psbt">... a wallet supporting PSBT</button>
+                    </div>
+                </div>
             </div>
         </form>
     </div>

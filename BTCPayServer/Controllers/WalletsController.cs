@@ -244,8 +244,21 @@ namespace BTCPayServer.Controllers
             {
                 var storeData = (await Repository.FindStore(walletId.StoreId, GetUserId()));
                 var derivationScheme = GetPaymentMethod(walletId, storeData);
-                var psbt = await CreatePSBT(network, derivationScheme, sendModel, cancellation);
-                return File(psbt.PSBT.ToBytes(), "application/octet-stream", $"Send-{vm.Amount.Value}-{network.CryptoCode}-to-{destination[0].ToString()}.psbt");
+                try
+                {
+                    var psbt = await CreatePSBT(network, derivationScheme, sendModel, cancellation);
+                    return File(psbt.PSBT.ToBytes(), "application/octet-stream", $"Send-{vm.Amount.Value}-{network.CryptoCode}-to-{destination[0].ToString()}.psbt");
+                }
+                catch (NBXplorerException ex)
+                {
+                    ModelState.AddModelError(nameof(vm.Amount), ex.Error.Message);
+                    return View(vm);
+                }
+                catch (NotSupportedException)
+                {
+                    ModelState.AddModelError(nameof(vm.Destination), "You need to update your version of NBXplorer");
+                    return View(vm);
+                }
             }
         }
 
@@ -282,7 +295,6 @@ namespace BTCPayServer.Controllers
                     psbt = (await nbx.CreatePSBTAsync(derivationSettings.AccountDerivation, psbtRequest, cancellationToken));
                 }
             }
-
 
             if (derivationSettings.AccountKeyPath != null && derivationSettings.AccountKeyPath.Indexes.Length != 0)
             {

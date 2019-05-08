@@ -885,6 +885,14 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Fast", "Fast")]
+        public void CanParseColdcard()
+        {
+            var mnemonic = new Mnemonic("usage fever hen zero slide mammal silent heavy donate budget pulse say brain thank sausage brand craft about save attract muffin advance illegal cabbage");
+            var coldcardWallet = "{\"keystore\": {\"ckcc_xpub\": \"xpub661MyMwAqRbcGVBsTGeNZN6QGVHmMHLdSA4FteGsRrEriu4pnVZMZWnruFFFXkMnyoBjyHndD3Qwcfz4MPzBUxjSevweNFQx7SAYZATtcDw\", \"xpub\": \"ypub6WWc2gWwHbdnAAyJDnR4SPL1phRh7REqrPBfZeizaQ1EmTshieRXJC3Z5YoU4wkcdKHEjQGkh6AYEzCQC1Kz3DNaWSwdc1pc8416hAjzqyD\", \"label\": \"Coldcard Import 0x60d1af8b\", \"ckcc_xfp\": 1624354699, \"type\": \"hardware\", \"hw_type\": \"coldcard\", \"derivation\": \"m/49'/0'/0'\"}, \"wallet_type\": \"standard\", \"use_encryption\": false, \"seed_version\": 17}";
+        }
+
+        [Fact]
+        [Trait("Fast", "Fast")]
         public void CanParseFilter()
         {
             var filter = "storeid:abc, status:abed, blabhbalh ";
@@ -2572,6 +2580,20 @@ donation:
             fetch.GetRatesAsync(default).GetAwaiter().GetResult();
             Thread.Sleep(1000);
             Assert.Throws<InvalidOperationException>(() => fetch.GetRatesAsync(default).GetAwaiter().GetResult());
+        }
+
+        [Fact]
+        [Trait("Fast", "Fast")]
+        public void ParseDerivationSchemeSettings()
+        {
+            var mainnet = new BTCPayNetworkProvider(NetworkType.Mainnet).GetNetwork("BTC");
+            var root = new Mnemonic("usage fever hen zero slide mammal silent heavy donate budget pulse say brain thank sausage brand craft about save attract muffin advance illegal cabbage").DeriveExtKey();
+            Assert.True(DerivationSchemeSettings.TryParseFromColdcard("{\"keystore\": {\"ckcc_xpub\": \"xpub661MyMwAqRbcGVBsTGeNZN6QGVHmMHLdSA4FteGsRrEriu4pnVZMZWnruFFFXkMnyoBjyHndD3Qwcfz4MPzBUxjSevweNFQx7SAYZATtcDw\", \"xpub\": \"ypub6WWc2gWwHbdnAAyJDnR4SPL1phRh7REqrPBfZeizaQ1EmTshieRXJC3Z5YoU4wkcdKHEjQGkh6AYEzCQC1Kz3DNaWSwdc1pc8416hAjzqyD\", \"label\": \"Coldcard Import 0x60d1af8b\", \"ckcc_xfp\": 1624354699, \"type\": \"hardware\", \"hw_type\": \"coldcard\", \"derivation\": \"m/49'/0'/0'\"}, \"wallet_type\": \"standard\", \"use_encryption\": false, \"seed_version\": 17}", mainnet, out var settings));
+            Assert.Equal(root.GetPublicKey().GetHDFingerPrint(), settings.RootFingerprint);
+            Assert.Equal("Coldcard Import 0x60d1af8b", settings.Label);
+            Assert.Equal("49'/0'/0'", settings.AccountKeyPath.ToString());
+            Assert.Equal("ypub6WWc2gWwHbdnAAyJDnR4SPL1phRh7REqrPBfZeizaQ1EmTshieRXJC3Z5YoU4wkcdKHEjQGkh6AYEzCQC1Kz3DNaWSwdc1pc8416hAjzqyD", settings.AccountOriginal);
+            Assert.Equal(root.Derive(new KeyPath("m/49'/0'/0'")).Neuter().PubKey.WitHash.ScriptPubKey.Hash.ScriptPubKey, settings.AccountDerivation.Derive(new KeyPath()).ScriptPubKey);
         }
 
         [Fact]

@@ -21,7 +21,79 @@ namespace BTCPayServer
             var result = new NBXplorer.DerivationStrategy.DerivationStrategyFactory(network.NBitcoinNetwork).Parse(derivationStrategy);
             return new DerivationSchemeSettings(result, network) { AccountOriginal = derivationStrategy.Trim() };
         }
-        
+
+        public static bool TryParseFromColdcard(string coldcardExport, BTCPayNetwork network, out DerivationSchemeSettings settings)
+        {
+            settings = null;
+            if (coldcardExport == null)
+                throw new ArgumentNullException(nameof(coldcardExport));
+            if (network == null)
+                throw new ArgumentNullException(nameof(network));
+            var result = new DerivationSchemeSettings();
+            var derivationSchemeParser = new DerivationSchemeParser(network.NBitcoinNetwork);
+            JObject jobj = null;
+            try
+            {
+                jobj = JObject.Parse(coldcardExport);
+                jobj = (JObject)jobj["keystore"];
+            }
+            catch
+            {
+                return false;
+            }
+
+            if (jobj.ContainsKey("xpub"))
+            {
+                try
+                {
+                    result.AccountOriginal = jobj["xpub"].Value<string>().Trim();
+                    result.AccountDerivation = derivationSchemeParser.ParseElectrum(result.AccountOriginal);
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                return false;
+            }
+
+            if (jobj.ContainsKey("label"))
+            {
+                try
+                {
+                    result.Label = jobj["label"].Value<string>();
+                }
+                catch { return false; }
+            }
+
+            if (jobj.ContainsKey("ckcc_xfp"))
+            {
+                try
+                {
+                    result.RootFingerprint = new HDFingerprint(jobj["ckcc_xfp"].Value<uint>());
+                }
+                catch { return false; }
+            }
+
+            if (jobj.ContainsKey("derivation"))
+            {
+                try
+                {
+                    result.AccountKeyPath = new KeyPath(jobj["derivation"].Value<string>());
+                }
+                catch { return false; }
+            }
+            else
+            {
+                result.AccountKeyPath = new KeyPath();
+            }
+            settings = result;
+            settings.Network = network;
+            return true;
+        }
+
         public DerivationSchemeSettings()
         {
 

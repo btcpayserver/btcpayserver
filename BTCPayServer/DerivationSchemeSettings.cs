@@ -122,6 +122,7 @@ namespace BTCPayServer
 
         public string Label { get; set; }
 
+        [JsonIgnore]
         public PaymentMethodId PaymentId => new PaymentMethodId(Network.CryptoCode, PaymentTypes.BTCLike);
 
         public override string ToString()

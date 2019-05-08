@@ -187,24 +187,26 @@ namespace BTCPayServer.Services.U2F
                 var requests = new List<U2FDeviceAuthenticationRequest>();
 
 
-                var challenge = global::U2F.Core.Crypto.U2F.GenerateChallenge();
 
                 var serverChallenges = new List<ServerChallenge>();
                 foreach (var registeredDevice in devices)
                 {
-                    serverChallenges.Add(new ServerChallenge
-                    {
-                        appId = appId,
-                        challenge = challenge,
-                        keyHandle = registeredDevice.KeyHandle.ByteArrayToBase64String(),
-                        version = global::U2F.Core.Crypto.U2F.U2FVersion,
-                    });
-
+                   var challenge =  global::U2F.Core.Crypto.U2F.StartAuthentication(appId,
+                       new DeviceRegistration(registeredDevice.KeyHandle, registeredDevice.PublicKey,
+                           registeredDevice.AttestationCert, (uint)registeredDevice.Counter));
+                   serverChallenges.Add(new ServerChallenge()
+                   {
+                       challenge = challenge.Challenge,
+                       appId = challenge.AppId,
+                       version = challenge.Version,
+                       keyHandle = challenge.KeyHandle
+                   });
+                   
                     requests.Add(
                         new U2FDeviceAuthenticationRequest()
                         {
                             AppId = appId,
-                            Challenge = challenge,
+                            Challenge = challenge.Challenge,
                             KeyHandle = registeredDevice.KeyHandle.ByteArrayToBase64String(),
                             Version = global::U2F.Core.Crypto.U2F.U2FVersion
                         });

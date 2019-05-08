@@ -51,6 +51,7 @@
     <PackageReference Include="NBitpayClient" Version="1.0.0.34" />	  
     <PackageReference Include="DBriize" Version="1.0.0.4" />
     <PackageReference Include="NBXplorer.Client" Version="2.0.0.11" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
     <PackageReference Include="NicolasDorier.CommandLine" Version="1.0.0.2" />
     <PackageReference Include="NicolasDorier.CommandLine.Configuration" Version="1.0.0.3" />
     <PackageReference Include="NicolasDorier.RateLimits" Version="1.0.0.3" />
@@ -74,7 +75,7 @@
     <PackageReference Include="TwentyTwenty.Storage.Azure" Version="2.10.1" />
     <PackageReference Include="TwentyTwenty.Storage.Google" Version="2.10.1" />
     <PackageReference Include="TwentyTwenty.Storage.Local" Version="2.10.1" />
-    <PackageReference Include="U2F.Core" Version="2.0.1" />
+    <PackageReference Include="U2F.Core" Version="1.0.4" />
 		<PackageReference Include="YamlDotNet" Version="5.2.1" />
 	</ItemGroup>
 

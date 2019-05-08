@@ -478,7 +478,7 @@ namespace BTCPayServer.Controllers
                 vm.DerivationSchemes.Add(new StoreViewModel.DerivationScheme()
                 {
                     Crypto = network.CryptoCode,
-                    Value = strategy?.AccountDerivation?.ToString() ?? string.Empty,
+                    Value = strategy?.ToPrettyString() ?? string.Empty,
                     WalletId = new WalletId(store.Id, network.CryptoCode),
                     Enabled = !excludeFilters.Match(new Payments.PaymentMethodId(network.CryptoCode, Payments.PaymentTypes.BTCLike))
                 });

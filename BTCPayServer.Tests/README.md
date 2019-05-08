@@ -41,8 +41,13 @@ You can call bitcoin-cli inside the container with `docker exec`, for example, i
 ```
 
 If you are using Powershell:
-```
+```powershell
 .\docker-bitcoin-cli.ps1 sendtoaddress "mohu16LH66ptoWGEL1GtP6KHTBJYXMWhEf" 0.23111090
+```
+
+You can also generate blocks:
+```powershell
+.\docker-bitcoin-generate.ps1 3
 ```
 
 ### Using the test litecoin-cli

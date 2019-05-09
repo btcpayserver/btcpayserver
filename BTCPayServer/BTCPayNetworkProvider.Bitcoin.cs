@@ -27,18 +27,20 @@ namespace BTCPayServer
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
                 CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("0'") : new KeyPath("1'"),
                 SupportRBF = true,
-                ElectrumMapping = new Dictionary<uint, string[]>()
-                {
-                    //https://github.com/spesmilo/electrum/blob/11733d6bc271646a00b69ff07657119598874da4/electrum/constants.py
-                    //mainnet
-                    {0x0488b21eU, new[] { "legacy" }},
-                    {0x049d7cb2U, new[] { "p2sh" }},
-                    {0x4b24746U, Array.Empty<string>()},
-                    //testnet
-                    {0x043587cfU, new[] { "legacy" }},
-                    {0x044a5262U, new[] { "p2sh" }},
-                    {0x045f1cf6U, Array.Empty<string>()}
-                }
+                //https://github.com/spesmilo/electrum/blob/11733d6bc271646a00b69ff07657119598874da4/electrum/constants.py
+                ElectrumMapping = NetworkType == NetworkType.Mainnet
+                    ? new Dictionary<uint, string[]>()
+                    {
+                        {0x0488b21eU, new[] {"legacy"}},
+                        {0x049d7cb2U, new[] {"p2sh"}},
+                        {0x4b24746U, Array.Empty<string>()},
+                    }
+                    : new Dictionary<uint, string[]>()
+                    {
+                        {0x043587cfU, new[] {"legacy"}},
+                        {0x044a5262U, new[] {"p2sh"}},
+                        {0x045f1cf6U, Array.Empty<string>()}
+                    }
             });
         }
     }

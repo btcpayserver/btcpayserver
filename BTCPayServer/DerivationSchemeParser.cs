@@ -17,12 +17,15 @@ namespace BTCPayServer
         public Network Network => BtcPayNetwork.NBitcoinNetwork;
 
         public Script HintScriptPubKey { get; set; }
+
+        Dictionary<uint, string[]> ElectrumMapping = new Dictionary<uint, string[]>();
         
         public DerivationSchemeParser(BTCPayNetwork expectedNetwork)
         {
+            if (expectedNetwork == null)
+                throw new ArgumentNullException(nameof(expectedNetwork));
             BtcPayNetwork = expectedNetwork;
         }
-
 
 
         public DerivationStrategyBase ParseElectrum(string str)

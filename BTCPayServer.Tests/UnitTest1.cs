@@ -1459,7 +1459,9 @@ namespace BTCPayServer.Tests
         [Trait("Fast", "Fast")]
         public void CanParseDerivationScheme()
         {
-            var parser = new DerivationSchemeParser(Network.TestNet);
+            var  testnetNetworkProvider = new BTCPayNetworkProvider(NetworkType.Testnet);
+            var regtestNetworkProvider = new BTCPayNetworkProvider(NetworkType.Regtest);
+            var parser = new DerivationSchemeParser(testnetNetworkProvider.GetNetwork("BTC"));
             NBXplorer.DerivationStrategy.DerivationStrategyBase result;
             //  Passing electrum stuff
             // Native
@@ -1495,16 +1497,16 @@ namespace BTCPayServer.Tests
             result = parser.Parse(tpub);
             Assert.Equal($"{tpub}-[p2sh]", result.ToString());
 
-            parser = new DerivationSchemeParser(Network.RegTest);
+            parser = new DerivationSchemeParser(regtestNetworkProvider.GetNetwork("BTC"));
             var parsed = parser.Parse("xpub6DG1rMYXiQtCc6CfdLFD9CtxqhzzRh7j6Sq6EdE9abgYy3cfDRrniLLv2AdwqHL1exiLnnKR5XXcaoiiexf3Y9R6J6rxkJtqJHzNzMW9QMZ-[p2sh]");
             Assert.Equal("tpubDDdeNbNDRgqestPX5XEJM8ELAq6eR5cne5RPbBHHvWSSiLHNHehsrn1kGCijMnHFSsFFQMqHcdMfGzDL3pWHRasPMhcGRqZ4tFankQ3i4ok-[p2sh]", parsed.ToString());
 
             // Let's make sure we can't generate segwit with dogecoin
-            parser = new DerivationSchemeParser(NBitcoin.Altcoins.Dogecoin.Instance.Regtest);
+            parser = new DerivationSchemeParser(regtestNetworkProvider.GetNetwork("DOGE"));
             parsed = parser.Parse("xpub6DG1rMYXiQtCc6CfdLFD9CtxqhzzRh7j6Sq6EdE9abgYy3cfDRrniLLv2AdwqHL1exiLnnKR5XXcaoiiexf3Y9R6J6rxkJtqJHzNzMW9QMZ-[p2sh]");
             Assert.Equal("tpubDDdeNbNDRgqestPX5XEJM8ELAq6eR5cne5RPbBHHvWSSiLHNHehsrn1kGCijMnHFSsFFQMqHcdMfGzDL3pWHRasPMhcGRqZ4tFankQ3i4ok-[legacy]", parsed.ToString());
 
-            parser = new DerivationSchemeParser(NBitcoin.Altcoins.Dogecoin.Instance.Regtest);
+            parser = new DerivationSchemeParser(regtestNetworkProvider.GetNetwork("DOGE"));
             parsed = parser.Parse("tpubDDdeNbNDRgqestPX5XEJM8ELAq6eR5cne5RPbBHHvWSSiLHNHehsrn1kGCijMnHFSsFFQMqHcdMfGzDL3pWHRasPMhcGRqZ4tFankQ3i4ok-[p2sh]");
             Assert.Equal("tpubDDdeNbNDRgqestPX5XEJM8ELAq6eR5cne5RPbBHHvWSSiLHNHehsrn1kGCijMnHFSsFFQMqHcdMfGzDL3pWHRasPMhcGRqZ4tFankQ3i4ok-[legacy]", parsed.ToString());
         }

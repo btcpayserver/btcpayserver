@@ -598,7 +598,7 @@ namespace BTCPayServer.Controllers
 
         private DerivationSchemeSettings ParseDerivationStrategy(string derivationScheme, Script hint, BTCPayNetwork network)
         {
-            var parser = new DerivationSchemeParser(network.NBitcoinNetwork);
+            var parser = new DerivationSchemeParser(network);
             parser.HintScriptPubKey = hint;
             return new DerivationSchemeSettings(parser.Parse(derivationScheme), network);
         }

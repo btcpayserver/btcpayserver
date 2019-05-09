@@ -1,16 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
+using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using LedgerWallet;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBXplorer.DerivationStrategy;
@@ -99,7 +102,12 @@ namespace BTCPayServer.Controllers
 
         private void SetExistingValues(StoreData store, DerivationSchemeViewModel vm)
         {
-            vm.DerivationScheme = GetExistingDerivationStrategy(vm.CryptoCode, store)?.AccountDerivation.ToString();
+            var derivation = GetExistingDerivationStrategy(vm.CryptoCode, store);
+            if (derivation != null)
+            {
+                vm.DerivationScheme = derivation.AccountDerivation.ToString();
+                vm.Config = derivation.ToJson();
+            }
             vm.Enabled = !store.GetStoreBlob().IsExcluded(new PaymentMethodId(vm.CryptoCode, PaymentTypes.BTCLike));
         }
 
@@ -111,10 +119,13 @@ namespace BTCPayServer.Controllers
                 .FirstOrDefault(d => d.PaymentId == id);
             return existing;
         }
+        
+        
 
         [HttpPost]
         [Route("{storeId}/derivations/{cryptoCode}")]
-        public async Task<IActionResult> AddDerivationScheme(string storeId, DerivationSchemeViewModel vm, string cryptoCode)
+        public async Task<IActionResult> AddDerivationScheme(string storeId, DerivationSchemeViewModel vm,
+            string cryptoCode)
         {
             vm.CryptoCode = cryptoCode;
             var store = HttpContext.GetStoreData();
@@ -126,45 +137,89 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
+
             vm.RootKeyPath = network.GetRootKeyPath();
+            DerivationSchemeSettings strategy = null;
+            
             var wallet = _WalletProvider.GetWallet(network);
             if (wallet == null)
             {
                 return NotFound();
             }
 
-            PaymentMethodId paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
-            var exisingStrategy = store.GetSupportedPaymentMethods(_NetworkProvider)
-                                       .Where(c => c.PaymentId == paymentMethodId)
-                                       .OfType<DerivationSchemeSettings>()
-                                       .Select(c => c.AccountDerivation.ToString())
-                                       .FirstOrDefault();
-            DerivationSchemeSettings strategy = null;
-            try
+            if (!string.IsNullOrEmpty(vm.Config))
             {
-                if (!string.IsNullOrEmpty(vm.DerivationScheme))
+                if (!DerivationSchemeSettings.TryParseFromJson(vm.Config, network, out strategy))
                 {
-                    strategy = ParseDerivationStrategy(vm.DerivationScheme, null, network);
-                    vm.DerivationScheme = strategy.ToString();
+                    vm.StatusMessage = new StatusMessageModel()
+                    {
+                        Severity = StatusMessageModel.StatusSeverity.Error,
+                        Message = "Config file was not in the correct format"
+                    }.ToString();
+                    vm.Confirmation = false;
+                    return View(vm);
                 }
             }
-            catch
+
+            if (vm.ColdcardPublicFile != null)
             {
-                ModelState.AddModelError(nameof(vm.DerivationScheme), "Invalid Derivation Scheme");
-                vm.Confirmation = false;
-                return View(vm);
+                if (!DerivationSchemeSettings.TryParseFromColdcard(await ReadAllText(vm.ColdcardPublicFile), network, out strategy))
+                {
+                    vm.StatusMessage = new StatusMessageModel()
+                    {
+                        Severity = StatusMessageModel.StatusSeverity.Error,
+                        Message = "Coldcard public file was not in the correct format"
+                    }.ToString();
+                    vm.Confirmation = false;
+                    return View(vm);
+                }
             }
+            else
+            {
+                try
+                {
+                    if (!string.IsNullOrEmpty(vm.DerivationScheme))
+                    {
+                        var newStrategy = ParseDerivationStrategy(vm.DerivationScheme, null, network);
+                        if (newStrategy.AccountDerivation != strategy?.AccountDerivation)
+                        {
+                            strategy = newStrategy;
+                            strategy.AccountKeyPath = vm.KeyPath == null ? null : KeyPath.Parse(vm.KeyPath);
+                            vm.DerivationScheme = strategy.AccountDerivation.ToString();
+                        }
+                    }
+                    else
+                    {
+                        strategy = null;
+                    }
+                }
+                catch
+                {
+                    ModelState.AddModelError(nameof(vm.DerivationScheme), "Invalid Derivation Scheme");
+                    vm.Confirmation = false;
+                    return View(vm);
+                }
+            }
+
+            var oldConfig = vm.Config;
+            vm.Config = strategy == null ? null : strategy.ToJson();
+
+            PaymentMethodId paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
+            var exisingStrategy = store.GetSupportedPaymentMethods(_NetworkProvider)
+                .Where(c => c.PaymentId == paymentMethodId)
+                .OfType<DerivationSchemeSettings>()
+                .FirstOrDefault();
             var storeBlob = store.GetStoreBlob();
             var wasExcluded = storeBlob.GetExcludedPaymentMethods().Match(paymentMethodId);
             var willBeExcluded = !vm.Enabled;
 
             var showAddress = // Show addresses if:
-                              // - If the user is testing the hint address in confirmation screen
-                              (vm.Confirmation && !string.IsNullOrWhiteSpace(vm.HintAddress)) ||
-                              // - The user is setting a new derivation scheme
-                              (!vm.Confirmation && strategy != null && exisingStrategy != strategy.AccountDerivation.ToString()) ||
-                              // - The user is clicking on continue without changing anything   
-                              (!vm.Confirmation && willBeExcluded == wasExcluded);
+                // - If the user is testing the hint address in confirmation screen
+                (vm.Confirmation && !string.IsNullOrWhiteSpace(vm.HintAddress)) ||
+                // - The user is clicking on continue after changing the config
+                (!vm.Confirmation && oldConfig != vm.Config) ||
+                // - The user is clickingon continue without changing config nor enabling/disabling
+                (!vm.Confirmation && oldConfig == vm.Config && willBeExcluded == wasExcluded);
 
             showAddress = showAddress && strategy != null;
             if (!showAddress)
@@ -173,8 +228,7 @@ namespace BTCPayServer.Controllers
                 {
                     if (strategy != null)
                         await wallet.TrackAsync(strategy.AccountDerivation);
-                    strategy.AccountKeyPath = vm.KeyPath == null ? null : KeyPath.Parse(vm.KeyPath);
-                    store.SetSupportedPaymentMethod(strategy);
+                    store.SetSupportedPaymentMethod(paymentMethodId, strategy);
                     storeBlob.SetExcluded(paymentMethodId, willBeExcluded);
                     store.SetStoreBlob(storeBlob);
                 }
@@ -185,8 +239,14 @@ namespace BTCPayServer.Controllers
                 }
 
                 await _Repo.UpdateStore(store);
-                StatusMessage = $"Derivation scheme for {network.CryptoCode} has been modified.";
-                return RedirectToAction(nameof(UpdateStore), new { storeId = storeId });
+                if (oldConfig != vm.Config)
+                    StatusMessage = $"Derivation settings for {network.CryptoCode} has been modified.";
+                if (willBeExcluded != wasExcluded)
+                {
+                    var label = willBeExcluded ? "disabled" : "enabled";
+                    StatusMessage = $"On-Chain payments for {network.CryptoCode} has been {label}.";
+                }
+                return RedirectToAction(nameof(UpdateStore), new {storeId = storeId});
             }
             else if (!string.IsNullOrEmpty(vm.HintAddress))
             {
@@ -203,19 +263,35 @@ namespace BTCPayServer.Controllers
 
                 try
                 {
-                    strategy = ParseDerivationStrategy(vm.DerivationScheme, address.ScriptPubKey, network);
+                    var newStrategy = ParseDerivationStrategy(vm.DerivationScheme, address.ScriptPubKey, network);
+                    if (newStrategy.AccountDerivation != strategy.AccountDerivation)
+                    {
+                        strategy.AccountDerivation = newStrategy.AccountDerivation;
+                        strategy.AccountOriginal = null;
+                    }
                 }
                 catch
                 {
                     ModelState.AddModelError(nameof(vm.HintAddress), "Impossible to find a match with this address");
                     return ShowAddresses(vm, strategy);
                 }
+
                 vm.HintAddress = "";
-                vm.StatusMessage = "Address successfully found, please verify that the rest is correct and click on \"Confirm\"";
+                vm.StatusMessage =
+                    "Address successfully found, please verify that the rest is correct and click on \"Confirm\"";
                 ModelState.Remove(nameof(vm.HintAddress));
                 ModelState.Remove(nameof(vm.DerivationScheme));
             }
+
             return ShowAddresses(vm, strategy);
+        }
+
+        private async Task<string> ReadAllText(IFormFile file)
+        {
+            using (var stream = new StreamReader(file.OpenReadStream()))
+            {
+                return await stream.ReadToEndAsync();
+            }
         }
 
         private IActionResult ShowAddresses(DerivationSchemeViewModel vm, DerivationSchemeSettings strategy)

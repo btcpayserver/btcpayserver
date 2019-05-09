@@ -58,6 +58,8 @@ using System.Runtime.CompilerServices;
 using System.Net;
 using BTCPayServer.Models.AccountViewModels;
 using BTCPayServer.Services.U2F.Models;
+using Microsoft.AspNetCore.Http.Internal;
+using Microsoft.AspNetCore.Http;
 
 namespace BTCPayServer.Tests
 {
@@ -885,14 +887,6 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Fast", "Fast")]
-        public void CanParseColdcard()
-        {
-            var mnemonic = new Mnemonic("usage fever hen zero slide mammal silent heavy donate budget pulse say brain thank sausage brand craft about save attract muffin advance illegal cabbage");
-            var coldcardWallet = "{\"keystore\": {\"ckcc_xpub\": \"xpub661MyMwAqRbcGVBsTGeNZN6QGVHmMHLdSA4FteGsRrEriu4pnVZMZWnruFFFXkMnyoBjyHndD3Qwcfz4MPzBUxjSevweNFQx7SAYZATtcDw\", \"xpub\": \"ypub6WWc2gWwHbdnAAyJDnR4SPL1phRh7REqrPBfZeizaQ1EmTshieRXJC3Z5YoU4wkcdKHEjQGkh6AYEzCQC1Kz3DNaWSwdc1pc8416hAjzqyD\", \"label\": \"Coldcard Import 0x60d1af8b\", \"ckcc_xfp\": 1624354699, \"type\": \"hardware\", \"hw_type\": \"coldcard\", \"derivation\": \"m/49'/0'/0'\"}, \"wallet_type\": \"standard\", \"use_encryption\": false, \"seed_version\": 17}";
-        }
-
-        [Fact]
-        [Trait("Fast", "Fast")]
         public void CanParseFilter()
         {
             var filter = "storeid:abc, status:abed, blabhbalh ";
@@ -1465,7 +1459,9 @@ namespace BTCPayServer.Tests
         [Trait("Fast", "Fast")]
         public void CanParseDerivationScheme()
         {
-            var parser = new DerivationSchemeParser(Network.TestNet);
+            var  testnetNetworkProvider = new BTCPayNetworkProvider(NetworkType.Testnet);
+            var regtestNetworkProvider = new BTCPayNetworkProvider(NetworkType.Regtest);
+            var parser = new DerivationSchemeParser(testnetNetworkProvider.GetNetwork("BTC"));
             NBXplorer.DerivationStrategy.DerivationStrategyBase result;
             //  Passing electrum stuff
             // Native
@@ -1501,23 +1497,23 @@ namespace BTCPayServer.Tests
             result = parser.Parse(tpub);
             Assert.Equal($"{tpub}-[p2sh]", result.ToString());
 
-            parser = new DerivationSchemeParser(Network.RegTest);
+            parser = new DerivationSchemeParser(regtestNetworkProvider.GetNetwork("BTC"));
             var parsed = parser.Parse("xpub6DG1rMYXiQtCc6CfdLFD9CtxqhzzRh7j6Sq6EdE9abgYy3cfDRrniLLv2AdwqHL1exiLnnKR5XXcaoiiexf3Y9R6J6rxkJtqJHzNzMW9QMZ-[p2sh]");
             Assert.Equal("tpubDDdeNbNDRgqestPX5XEJM8ELAq6eR5cne5RPbBHHvWSSiLHNHehsrn1kGCijMnHFSsFFQMqHcdMfGzDL3pWHRasPMhcGRqZ4tFankQ3i4ok-[p2sh]", parsed.ToString());
 
             // Let's make sure we can't generate segwit with dogecoin
-            parser = new DerivationSchemeParser(NBitcoin.Altcoins.Dogecoin.Instance.Regtest);
+            parser = new DerivationSchemeParser(regtestNetworkProvider.GetNetwork("DOGE"));
             parsed = parser.Parse("xpub6DG1rMYXiQtCc6CfdLFD9CtxqhzzRh7j6Sq6EdE9abgYy3cfDRrniLLv2AdwqHL1exiLnnKR5XXcaoiiexf3Y9R6J6rxkJtqJHzNzMW9QMZ-[p2sh]");
             Assert.Equal("tpubDDdeNbNDRgqestPX5XEJM8ELAq6eR5cne5RPbBHHvWSSiLHNHehsrn1kGCijMnHFSsFFQMqHcdMfGzDL3pWHRasPMhcGRqZ4tFankQ3i4ok-[legacy]", parsed.ToString());
 
-            parser = new DerivationSchemeParser(NBitcoin.Altcoins.Dogecoin.Instance.Regtest);
+            parser = new DerivationSchemeParser(regtestNetworkProvider.GetNetwork("DOGE"));
             parsed = parser.Parse("tpubDDdeNbNDRgqestPX5XEJM8ELAq6eR5cne5RPbBHHvWSSiLHNHehsrn1kGCijMnHFSsFFQMqHcdMfGzDL3pWHRasPMhcGRqZ4tFankQ3i4ok-[p2sh]");
             Assert.Equal("tpubDDdeNbNDRgqestPX5XEJM8ELAq6eR5cne5RPbBHHvWSSiLHNHehsrn1kGCijMnHFSsFFQMqHcdMfGzDL3pWHRasPMhcGRqZ4tFankQ3i4ok-[legacy]", parsed.ToString());
         }
 
         [Fact]
         [Trait("Integration", "Integration")]
-        public void CanDisablePaymentMethods()
+        public void CanAddDerivationSchemes()
         {
             using (var tester = ServerTester.Create())
             {
@@ -1548,16 +1544,18 @@ namespace BTCPayServer.Tests
                 lightningVM = (LightningNodeViewModel)Assert.IsType<ViewResult>(controller.AddLightningNode(user.StoreId, "BTC")).Model;
                 Assert.False(lightningVM.Enabled);
 
+                // Only Enabling/Disabling the payment method must redirect to store page
                 var derivationVM = (DerivationSchemeViewModel)Assert.IsType<ViewResult>(controller.AddDerivationScheme(user.StoreId, "BTC")).Model;
                 Assert.True(derivationVM.Enabled);
                 derivationVM.Enabled = false;
                 Assert.IsType<RedirectToActionResult>(controller.AddDerivationScheme(user.StoreId, derivationVM, "BTC").GetAwaiter().GetResult());
                 derivationVM = (DerivationSchemeViewModel)Assert.IsType<ViewResult>(controller.AddDerivationScheme(user.StoreId, "BTC")).Model;
-                // Confirmation
-                controller.AddDerivationScheme(user.StoreId, derivationVM, "BTC").GetAwaiter().GetResult();
                 Assert.False(derivationVM.Enabled);
+
+                // Clicking next without changing anything should send to the confirmation screen
                 derivationVM = (DerivationSchemeViewModel)Assert.IsType<ViewResult>(controller.AddDerivationScheme(user.StoreId, "BTC")).Model;
-                Assert.False(derivationVM.Enabled);
+                derivationVM = (DerivationSchemeViewModel)Assert.IsType<ViewResult>(controller.AddDerivationScheme(user.StoreId, derivationVM, "BTC").GetAwaiter().GetResult()).Model;
+                Assert.True(derivationVM.Confirmation);
 
                 invoice = user.BitPay.CreateInvoice(new Invoice()
                 {
@@ -1571,6 +1569,39 @@ namespace BTCPayServer.Tests
 
                 Assert.Single(invoice.CryptoInfo);
                 Assert.Equal("LTC", invoice.CryptoInfo[0].CryptoCode);
+
+                // Removing the derivation scheme, should redirect to store page
+                var oldScheme = derivationVM.DerivationScheme;
+                derivationVM = (DerivationSchemeViewModel)Assert.IsType<ViewResult>(controller.AddDerivationScheme(user.StoreId, "BTC")).Model;
+                derivationVM.DerivationScheme = null;
+                Assert.IsType<RedirectToActionResult>(controller.AddDerivationScheme(user.StoreId, derivationVM, "BTC").GetAwaiter().GetResult());
+
+                // Setting it again should redirect to the confirmation page
+                derivationVM = (DerivationSchemeViewModel)Assert.IsType<ViewResult>(controller.AddDerivationScheme(user.StoreId, "BTC")).Model;
+                derivationVM.DerivationScheme = oldScheme;
+                derivationVM = (DerivationSchemeViewModel)Assert.IsType<ViewResult>(controller.AddDerivationScheme(user.StoreId, derivationVM, "BTC").GetAwaiter().GetResult()).Model;
+                Assert.True(derivationVM.Confirmation);
+
+                // Can we upload coldcard settings? (Should fail, we are giving a mainnet file to a testnet network)
+                derivationVM = (DerivationSchemeViewModel)Assert.IsType<ViewResult>(controller.AddDerivationScheme(user.StoreId, "BTC")).Model;
+                string content = "{\"keystore\": {\"ckcc_xpub\": \"xpub661MyMwAqRbcGVBsTGeNZN6QGVHmMHLdSA4FteGsRrEriu4pnVZMZWnruFFFXkMnyoBjyHndD3Qwcfz4MPzBUxjSevweNFQx7SAYZATtcDw\", \"xpub\": \"ypub6WWc2gWwHbdnAAyJDnR4SPL1phRh7REqrPBfZeizaQ1EmTshieRXJC3Z5YoU4wkcdKHEjQGkh6AYEzCQC1Kz3DNaWSwdc1pc8416hAjzqyD\", \"label\": \"Coldcard Import 0x60d1af8b\", \"ckcc_xfp\": 1624354699, \"type\": \"hardware\", \"hw_type\": \"coldcard\", \"derivation\": \"m/49'/0'/0'\"}, \"wallet_type\": \"standard\", \"use_encryption\": false, \"seed_version\": 17}";
+                derivationVM.ColdcardPublicFile = TestUtils.GetFormFile("wallet.json", content);
+                derivationVM = (DerivationSchemeViewModel)Assert.IsType<ViewResult>(controller.AddDerivationScheme(user.StoreId, derivationVM, "BTC").GetAwaiter().GetResult()).Model;
+                Assert.False(derivationVM.Confirmation); // Should fail, we are giving a mainnet file to a testnet network 
+
+                // And with a good file? (upub)
+                content = "{\"keystore\": {\"ckcc_xpub\": \"tpubD6NzVbkrYhZ4YHNiuTdTmHRmbcPRLfqgyneZFCL1mkzkUBjXriQShxTh9HL34FK2mhieasJVk9EzJrUfkFqRNQBjiXgx3n5BhPkxKBoFmaS\", \"xpub\": \"upub5DBYp1qGgsTrkzCptMGZc2x18pquLwGrBw6nS59T4NViZ4cni1mGowQzziy85K8vzkp1jVtWrSkLhqk9KDfvrGeB369wGNYf39kX8rQfiLn\", \"label\": \"Coldcard Import 0x60d1af8b\", \"ckcc_xfp\": 1624354699, \"type\": \"hardware\", \"hw_type\": \"coldcard\", \"derivation\": \"m/49'/0'/0'\"}, \"wallet_type\": \"standard\", \"use_encryption\": false, \"seed_version\": 17}";
+                derivationVM = (DerivationSchemeViewModel)Assert.IsType<ViewResult>(controller.AddDerivationScheme(user.StoreId, "BTC")).Model;
+                derivationVM.ColdcardPublicFile = TestUtils.GetFormFile("wallet2.json", content);
+                derivationVM = (DerivationSchemeViewModel)Assert.IsType<ViewResult>(controller.AddDerivationScheme(user.StoreId, derivationVM, "BTC").GetAwaiter().GetResult()).Model;
+                Assert.True(derivationVM.Confirmation);
+                Assert.IsType<RedirectToActionResult>(controller.AddDerivationScheme(user.StoreId, derivationVM, "BTC").GetAwaiter().GetResult());
+
+                // Now let's check that no data has been lost in the process
+                var store = tester.PayTester.StoreRepository.FindStore(user.StoreId).GetAwaiter().GetResult();
+                var onchainBTC = store.GetSupportedPaymentMethods(tester.PayTester.Networks).OfType<DerivationSchemeSettings>().First(o => o.PaymentId.IsBTCOnChain);
+                DerivationSchemeSettings.TryParseFromColdcard(content, onchainBTC.Network, out var expected);
+                Assert.Equal(expected.ToJson(), onchainBTC.ToJson());
             }
         }
 
@@ -2742,43 +2773,6 @@ donation:
         {
             var h = BitcoinAddress.Create(invoice.BitcoinAddress, Network.RegTest).ScriptPubKey.Hash.ToString();
             return ctx.AddressInvoices.FirstOrDefault(i => i.InvoiceDataId == invoice.Id && i.GetAddress() == h) != null;
-        }
-
-        public static class TestUtils
-        {
-            public static void Eventually(Action act)
-            {
-                CancellationTokenSource cts = new CancellationTokenSource(20000);
-                while (true)
-                {
-                    try
-                    {
-                        act();
-                        break;
-                    }
-                    catch (XunitException) when (!cts.Token.IsCancellationRequested)
-                    {
-                        cts.Token.WaitHandle.WaitOne(500);
-                    }
-                }
-            }
-
-            public static async Task EventuallyAsync(Func<Task> act)
-            {
-                CancellationTokenSource cts = new CancellationTokenSource(20000);
-                while (true)
-                {
-                    try
-                    {
-                        await act();
-                        break;
-                    }
-                    catch (XunitException) when (!cts.Token.IsCancellationRequested)
-                    {
-                        await Task.Delay(500);
-                    }
-                }
-            }
         }
     }
 }

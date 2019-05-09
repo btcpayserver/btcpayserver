@@ -190,21 +190,8 @@ namespace BTCPayServer.Tests
         
         private async Task CanUploadRemoveFiles(ServerController controller)
         {
-            var filename = "uploadtestfile.txt";
             var fileContent = "content";
-            File.WriteAllText(filename, fileContent);
-
-            var fileInfo = new FileInfo(filename);
-            var formFile = new FormFile(
-                new FileStream(filename, FileMode.OpenOrCreate),
-                0,
-                fileInfo.Length, fileInfo.Name, fileInfo.Name)
-            {
-                Headers = new HeaderDictionary()
-            };
-            formFile.ContentType = "text/plain";
-            formFile.ContentDisposition = $"form-data; name=\"file\"; filename=\"{fileInfo.Name}\"";
-            var uploadFormFileResult = Assert.IsType<RedirectToActionResult>(await controller.CreateFile(formFile));
+            var uploadFormFileResult = Assert.IsType<RedirectToActionResult>(await controller.CreateFile(TestUtils.GetFormFile("uploadtestfile.txt", fileContent)));
             Assert.True(uploadFormFileResult.RouteValues.ContainsKey("fileId"));
             var fileId = uploadFormFileResult.RouteValues["fileId"].ToString();
             Assert.Equal("Files", uploadFormFileResult.ActionName);

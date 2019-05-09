@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using NBitcoin;
 
@@ -32,5 +33,9 @@ namespace BTCPayServer.Models.StoreViewModels
 
         public string StatusMessage { get; internal set; }
         public KeyPath RootKeyPath { get; set; }
+
+        [Display(Name = "Coldcard Wallet File")]
+        public IFormFile ColdcardPublicFile{ get; set; }
+        public string Config { get; set; }
     }
 }

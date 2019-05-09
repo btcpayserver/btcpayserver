@@ -22,6 +22,22 @@ namespace BTCPayServer
             return new DerivationSchemeSettings(result, network) { AccountOriginal = derivationStrategy.Trim() };
         }
 
+        public static bool TryParseFromJson(string config, BTCPayNetwork network, out DerivationSchemeSettings strategy)
+        {
+            if (network == null)
+                throw new ArgumentNullException(nameof(network));
+            if (config == null)
+                throw new ArgumentNullException(nameof(config));
+            strategy = null;
+            try
+            {
+                strategy = network.NBXplorerNetwork.Serializer.ToObject<DerivationSchemeSettings>(config);
+                strategy.Network = network;
+            }
+            catch { }
+            return strategy != null;
+        }
+
         public static bool TryParseFromColdcard(string coldcardExport, BTCPayNetwork network, out DerivationSchemeSettings settings)
         {
             settings = null;
@@ -31,7 +47,7 @@ namespace BTCPayServer
                 throw new ArgumentNullException(nameof(network));
             var result = new DerivationSchemeSettings();
             result.Source = "Coldcard";
-            var derivationSchemeParser = new DerivationSchemeParser(network.NBitcoinNetwork);
+            var derivationSchemeParser = new DerivationSchemeParser(network);
             JObject jobj = null;
             try
             {
@@ -88,10 +104,6 @@ namespace BTCPayServer
                 }
                 catch { return false; }
             }
-            else
-            {
-                result.AccountKeyPath = new KeyPath();
-            }
             settings = result;
             settings.Network = network;
             return true;
@@ -131,9 +143,14 @@ namespace BTCPayServer
         }
         public string ToPrettyString()
         {
-            return string.IsNullOrEmpty(Label) ? Label :
-                   String.IsNullOrEmpty(AccountOriginal) ? AccountOriginal :
+            return !string.IsNullOrEmpty(Label) ? Label :
+                   !String.IsNullOrEmpty(AccountOriginal) ? AccountOriginal :
                    ToString();
+        }
+
+        public string ToJson()
+        {
+            return Network.NBXplorerNetwork.Serializer.ToString(this);
         }
     }
 }

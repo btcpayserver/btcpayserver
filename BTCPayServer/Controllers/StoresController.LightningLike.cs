@@ -144,7 +144,7 @@ namespace BTCPayServer.Controllers
                     var storeBlob = store.GetStoreBlob();
                     storeBlob.SetExcluded(paymentMethodId, !vm.Enabled);
                     store.SetStoreBlob(storeBlob);
-                    store.SetSupportedPaymentMethod(paymentMethod);
+                    store.SetSupportedPaymentMethod(paymentMethodId, paymentMethod);
                     await _Repo.UpdateStore(store);
                     StatusMessage = $"Lightning node modified ({network.CryptoCode})";
                     return RedirectToAction(nameof(UpdateStore), new { storeId = storeId });

@@ -19,3 +19,7 @@
 .only-for-js, .input-group-clear{
     display: none;
 }
+
+.display-when-ledger-connected{
+    display: none;
+}

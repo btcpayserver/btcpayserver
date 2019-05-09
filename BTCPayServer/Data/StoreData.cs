@@ -98,13 +98,29 @@ namespace BTCPayServer.Data
 #pragma warning restore CS0618
         }
 
+        public void SetSupportedPaymentMethod(ISupportedPaymentMethod supportedPaymentMethod)
+        {
+            SetSupportedPaymentMethod(null, supportedPaymentMethod);
+        }
+
         /// <summary>
         /// Set or remove a new supported payment method for the store
         /// </summary>
         /// <param name="paymentMethodId">The paymentMethodId</param>
         /// <param name="supportedPaymentMethod">The payment method, or null to remove</param>
-        public void SetSupportedPaymentMethod(ISupportedPaymentMethod supportedPaymentMethod)
+        public void SetSupportedPaymentMethod(PaymentMethodId paymentMethodId, ISupportedPaymentMethod supportedPaymentMethod)
         {
+            if (supportedPaymentMethod != null && paymentMethodId != null && paymentMethodId != supportedPaymentMethod.PaymentId)
+            {
+                throw new InvalidOperationException("Incoherent arguments, this should never happen");
+            }
+            if (supportedPaymentMethod == null && paymentMethodId == null)
+                throw new ArgumentException($"{nameof(supportedPaymentMethod)} or {nameof(paymentMethodId)} should be specified");
+            if (supportedPaymentMethod != null && paymentMethodId == null)
+            {
+                paymentMethodId = supportedPaymentMethod.PaymentId;
+            }
+
 #pragma warning disable CS0618
             JObject strategies = string.IsNullOrEmpty(DerivationStrategies) ? new JObject() : JObject.Parse(DerivationStrategies);
             bool existing = false;
@@ -116,7 +132,7 @@ namespace BTCPayServer.Data
                     // Legacy stuff which should go away
                     DerivationStrategy = null;
                 }
-                if (stratId == supportedPaymentMethod.PaymentId)
+                if (stratId == paymentMethodId)
                 {
                     if (supportedPaymentMethod == null)
                     {

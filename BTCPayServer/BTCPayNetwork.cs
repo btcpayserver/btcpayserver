@@ -10,6 +10,12 @@ using NBXplorer;
 
 namespace BTCPayServer
 {
+    public enum DerivationType
+    {
+        Legacy,
+        SegwitP2SH,
+        Segwit
+    }
     public class BTCPayDefaultSettings
     {
         static BTCPayDefaultSettings()
@@ -65,7 +71,7 @@ namespace BTCPayServer
         public int MaxTrackedConfirmation { get; internal set; } = 6;
         public string[] DefaultRateRules { get; internal set; } = Array.Empty<string>();
         public bool SupportRBF { get; internal set; }
-        public Dictionary<uint, string[]> ElectrumMapping = new Dictionary<uint, string[]>();
+        public Dictionary<uint, DerivationType> ElectrumMapping = new Dictionary<uint, DerivationType>();
         public override string ToString()
         {
             return CryptoCode;

@@ -1531,7 +1531,7 @@ namespace BTCPayServer.Tests
                 user.RegisterDerivationScheme("BTC");
                 user.RegisterDerivationScheme("LTC");
                 user.RegisterLightningNode("BTC", LightningConnectionType.CLightning);
-
+                var btcNetwork = tester.PayTester.Networks.GetNetwork("BTC");
                 var invoice = user.BitPay.CreateInvoice(new Invoice()
                 {
                     Price = 1.5m,
@@ -1601,6 +1601,7 @@ namespace BTCPayServer.Tests
                 content = "{\"keystore\": {\"ckcc_xpub\": \"tpubD6NzVbkrYhZ4YHNiuTdTmHRmbcPRLfqgyneZFCL1mkzkUBjXriQShxTh9HL34FK2mhieasJVk9EzJrUfkFqRNQBjiXgx3n5BhPkxKBoFmaS\", \"xpub\": \"upub5DBYp1qGgsTrkzCptMGZc2x18pquLwGrBw6nS59T4NViZ4cni1mGowQzziy85K8vzkp1jVtWrSkLhqk9KDfvrGeB369wGNYf39kX8rQfiLn\", \"label\": \"Coldcard Import 0x60d1af8b\", \"ckcc_xfp\": 1624354699, \"type\": \"hardware\", \"hw_type\": \"coldcard\", \"derivation\": \"m/49'/0'/0'\"}, \"wallet_type\": \"standard\", \"use_encryption\": false, \"seed_version\": 17}";
                 derivationVM = (DerivationSchemeViewModel)Assert.IsType<ViewResult>(controller.AddDerivationScheme(user.StoreId, "BTC")).Model;
                 derivationVM.ColdcardPublicFile = TestUtils.GetFormFile("wallet2.json", content);
+                derivationVM.Enabled = true;
                 derivationVM = (DerivationSchemeViewModel)Assert.IsType<ViewResult>(controller.AddDerivationScheme(user.StoreId, derivationVM, "BTC").GetAwaiter().GetResult()).Model;
                 Assert.True(derivationVM.Confirmation);
                 Assert.IsType<RedirectToActionResult>(controller.AddDerivationScheme(user.StoreId, derivationVM, "BTC").GetAwaiter().GetResult());
@@ -1610,6 +1611,44 @@ namespace BTCPayServer.Tests
                 var onchainBTC = store.GetSupportedPaymentMethods(tester.PayTester.Networks).OfType<DerivationSchemeSettings>().First(o => o.PaymentId.IsBTCOnChain);
                 DerivationSchemeSettings.TryParseFromColdcard(content, onchainBTC.Network, out var expected);
                 Assert.Equal(expected.ToJson(), onchainBTC.ToJson());
+
+                // Let's check that the root hdkey and account key path are taken into account when making a PSBT
+                invoice = user.BitPay.CreateInvoice(new Invoice()
+                {
+                    Price = 1.5m,
+                    Currency = "USD",
+                    PosData = "posData",
+                    OrderId = "orderId",
+                    ItemDesc = "Some description",
+                    FullNotifications = true
+                }, Facade.Merchant);
+
+                tester.ExplorerNode.Generate(1);
+                var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo.First(c => c.CryptoCode == "BTC").Address, tester.ExplorerNode.Network);
+                tester.ExplorerNode.SendToAddress(invoiceAddress, Money.Coins(1m));
+                TestUtils.Eventually(() =>
+                {
+                    invoice = user.BitPay.GetInvoice(invoice.Id);
+                    Assert.Equal("paid", invoice.Status);
+                });
+                var wallet = tester.PayTester.GetController<WalletsController>();
+                var psbt = wallet.CreatePSBT(btcNetwork, onchainBTC, new WalletSendLedgerModel()
+                {
+                    Amount = 0.5m,
+                    Destination = new Key().PubKey.GetAddress(btcNetwork.NBitcoinNetwork).ToString(),
+                    FeeSatoshiPerByte = 1
+                }, default).GetAwaiter().GetResult();
+
+                Assert.NotNull(psbt);
+
+                var root = new Mnemonic("usage fever hen zero slide mammal silent heavy donate budget pulse say brain thank sausage brand craft about save attract muffin advance illegal cabbage").DeriveExtKey().AsHDKeyCache();
+                Assert.All(psbt.PSBT.Inputs, input =>
+                {
+                    var keyPath = input.HDKeyPaths.Single();
+                    Assert.StartsWith(onchainBTC.AccountKeyPath.ToString(), keyPath.Value.Item2.ToString());
+                    Assert.Equal(root.Derive(keyPath.Value.Item2).GetPublicKey(), keyPath.Key);
+                    Assert.Equal(keyPath.Value.Item1, onchainBTC.RootFingerprint.Value);
+                });
             }
         }
 

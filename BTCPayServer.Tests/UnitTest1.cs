@@ -1586,19 +1586,7 @@ namespace BTCPayServer.Tests
                 derivationVM = (DerivationSchemeViewModel)Assert.IsType<ViewResult>(controller.AddDerivationScheme(user.StoreId, "BTC")).Model;
                 string filename = "wallet.json";
                 string content = "{\"keystore\": {\"ckcc_xpub\": \"xpub661MyMwAqRbcGVBsTGeNZN6QGVHmMHLdSA4FteGsRrEriu4pnVZMZWnruFFFXkMnyoBjyHndD3Qwcfz4MPzBUxjSevweNFQx7SAYZATtcDw\", \"xpub\": \"ypub6WWc2gWwHbdnAAyJDnR4SPL1phRh7REqrPBfZeizaQ1EmTshieRXJC3Z5YoU4wkcdKHEjQGkh6AYEzCQC1Kz3DNaWSwdc1pc8416hAjzqyD\", \"label\": \"Coldcard Import 0x60d1af8b\", \"ckcc_xfp\": 1624354699, \"type\": \"hardware\", \"hw_type\": \"coldcard\", \"derivation\": \"m/49'/0'/0'\"}, \"wallet_type\": \"standard\", \"use_encryption\": false, \"seed_version\": 17}";
-                File.WriteAllText(filename, content);
-
-                var fileInfo = new FileInfo(filename);
-                var formFile = new FormFile(
-                    new FileStream(filename, FileMode.OpenOrCreate),
-                    0,
-                    fileInfo.Length, fileInfo.Name, fileInfo.Name)
-                {
-                    Headers = new HeaderDictionary()
-                };
-                formFile.ContentType = "text/plain";
-                formFile.ContentDisposition = $"form-data; name=\"file\"; filename=\"{fileInfo.Name}\"";
-                derivationVM.ColdcardPublicFile = formFile;
+                derivationVM.ColdcardPublicFile = TestUtils.GetFormFile(filename, content);
                 derivationVM = (DerivationSchemeViewModel)Assert.IsType<ViewResult>(controller.AddDerivationScheme(user.StoreId, derivationVM, "BTC").GetAwaiter().GetResult()).Model;
                 Assert.True(derivationVM.Confirmation);
                 Assert.IsType<RedirectToActionResult>(controller.AddDerivationScheme(user.StoreId, derivationVM, "BTC").GetAwaiter().GetResult());
@@ -2779,43 +2767,6 @@ donation:
         {
             var h = BitcoinAddress.Create(invoice.BitcoinAddress, Network.RegTest).ScriptPubKey.Hash.ToString();
             return ctx.AddressInvoices.FirstOrDefault(i => i.InvoiceDataId == invoice.Id && i.GetAddress() == h) != null;
-        }
-
-        public static class TestUtils
-        {
-            public static void Eventually(Action act)
-            {
-                CancellationTokenSource cts = new CancellationTokenSource(20000);
-                while (true)
-                {
-                    try
-                    {
-                        act();
-                        break;
-                    }
-                    catch (XunitException) when (!cts.Token.IsCancellationRequested)
-                    {
-                        cts.Token.WaitHandle.WaitOne(500);
-                    }
-                }
-            }
-
-            public static async Task EventuallyAsync(Func<Task> act)
-            {
-                CancellationTokenSource cts = new CancellationTokenSource(20000);
-                while (true)
-                {
-                    try
-                    {
-                        await act();
-                        break;
-                    }
-                    catch (XunitException) when (!cts.Token.IsCancellationRequested)
-                    {
-                        await Task.Delay(500);
-                    }
-                }
-            }
         }
     }
 }

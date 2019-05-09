@@ -31,9 +31,9 @@ namespace BTCPayServer
                 ElectrumMapping = NetworkType == NetworkType.Mainnet
                     ? new Dictionary<uint, string[]>()
                     {
-                        {0x0488b21eU, new[] {"legacy"}},
-                        {0x049d7cb2U, new[] {"p2sh"}},
-                        {0x4b24746U, Array.Empty<string>()},
+                        {0x0488b21eU, new[] {"legacy"}}, // xpub
+                        {0x049d7cb2U, new[] {"p2sh"}}, // ypub
+                        {0x4b24746U, Array.Empty<string>()}, //zpub
                     }
                     : new Dictionary<uint, string[]>()
                     {

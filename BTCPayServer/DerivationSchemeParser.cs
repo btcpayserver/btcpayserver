@@ -12,7 +12,7 @@ namespace BTCPayServer
 {
     public class DerivationSchemeParser
     {
-        private BTCPayNetwork BtcPayNetwork { get; }
+        public BTCPayNetwork BtcPayNetwork { get; }
 
         public Network Network => BtcPayNetwork.NBitcoinNetwork;
 

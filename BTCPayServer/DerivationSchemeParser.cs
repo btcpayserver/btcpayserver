@@ -118,22 +118,16 @@ namespace BTCPayServer
                         data[ii] = standardPrefix[ii];
                     var derivationScheme = new BitcoinExtPubKey(Network.GetBase58CheckEncoder().EncodeData(data), Network.Main).ToNetwork(Network).ToString();
 
-                    BtcPayNetwork.ElectrumMapping.TryGetValue(prefix, out var type);
-                    List<string> labels = new List<string>();
-                    switch (type)
+                    if (BtcPayNetwork.ElectrumMapping.TryGetValue(prefix, out var type))
                     {
-                        case DerivationType.Legacy:
-                            labels.Add("legacy");
-                            break;
-                        case DerivationType.SegwitP2SH:
-                            labels.Add("p2sh");
-                            break;
-                    }
-                    if (labels != null)
-                    {
-                        foreach (var label in labels)
+                        switch (type)
                         {
-                            hintedLabels.Add(label.ToLowerInvariant());
+                            case DerivationType.Legacy:
+                                hintedLabels.Add("legacy");
+                                break;
+                            case DerivationType.SegwitP2SH:
+                                hintedLabels.Add("p2sh");
+                                break;
                         }
                     }
                     parts[i] = derivationScheme;

@@ -36,5 +36,6 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Coldcard Wallet File")]
         public IFormFile ColdcardPublicFile{ get; set; }
+        public string Config { get; set; }
     }
 }

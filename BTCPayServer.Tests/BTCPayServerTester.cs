@@ -144,6 +144,7 @@ namespace BTCPayServer.Tests
             _Host.Start();
             InvoiceRepository = (InvoiceRepository)_Host.Services.GetService(typeof(InvoiceRepository));
             StoreRepository = (StoreRepository)_Host.Services.GetService(typeof(StoreRepository));
+            Networks = (BTCPayNetworkProvider)_Host.Services.GetService(typeof(BTCPayNetworkProvider));
             var dashBoard = (NBXplorerDashboard)_Host.Services.GetService(typeof(NBXplorerDashboard));
             while(!dashBoard.IsFullySynched())
             {
@@ -226,6 +227,7 @@ namespace BTCPayServer.Tests
         }
         public InvoiceRepository InvoiceRepository { get; private set; }
         public StoreRepository StoreRepository { get; private set; }
+        public BTCPayNetworkProvider Networks { get; private set; }
         public Uri IntegratedLightning { get; internal set; }
         public bool InContainer { get; internal set; }
 

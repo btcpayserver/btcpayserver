@@ -57,10 +57,12 @@
                         <tr @replaced>
                             <td>@payment.Crypto</td>
                             <td>@payment.DepositAddress</td>
-                            <td class="smMaxWidth text-truncate">
-                                <a href="@payment.TransactionLink" target="_blank">
-                                    @payment.TransactionId
-                                </a>
+                            <td>
+                                <div class="wraptextAuto">
+                                    <a href="@payment.TransactionLink" target="_blank">
+                                        @payment.TransactionId
+                                    </a>
+                                </div>
                             </td>
                             <td class="text-right">@payment.Confirmations</td>
                         </tr>
@@ -87,7 +89,7 @@
                     {
                         <tr>
                             <td>@payment.Crypto</td>
-                            <td class="smMaxWidth text-truncate">@payment.BOLT11</td>
+                            <td><div class="wraptextAuto">@payment.BOLT11</div></td>
                         </tr>
                     }
                 </tbody>

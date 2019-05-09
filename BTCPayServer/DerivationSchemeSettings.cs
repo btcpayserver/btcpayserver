@@ -47,7 +47,7 @@ namespace BTCPayServer
                 throw new ArgumentNullException(nameof(network));
             var result = new DerivationSchemeSettings();
             result.Source = "Coldcard";
-            var derivationSchemeParser = new DerivationSchemeParser(network.NBitcoinNetwork);
+            var derivationSchemeParser = new DerivationSchemeParser(network);
             JObject jobj = null;
             try
             {

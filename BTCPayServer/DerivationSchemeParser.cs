@@ -12,27 +12,22 @@ namespace BTCPayServer
 {
     public class DerivationSchemeParser
     {
-        public Network Network { get; set; }
-        public Script HintScriptPubKey { get; set; }
-        static Dictionary<uint, string[]> electrumMapping;
+        private BTCPayNetwork BtcPayNetwork { get; }
 
-        static DerivationSchemeParser()
+        public Network Network => BtcPayNetwork.NBitcoinNetwork;
+
+        public Script HintScriptPubKey { get; set; }
+        
+        public DerivationSchemeParser(BTCPayNetwork expectedNetwork)
         {
-            //Source https://github.com/spesmilo/electrum/blob/11733d6bc271646a00b69ff07657119598874da4/electrum/constants.py
-            electrumMapping = new Dictionary<uint, string[]>();
-            electrumMapping.Add(0x0488b21eU, new[] { "legacy" });
-            electrumMapping.Add(0x049d7cb2U, new string[] { "p2sh" });
-            electrumMapping.Add(0x4b24746U, Array.Empty<string>());
-        }
-        public DerivationSchemeParser(Network expectedNetwork)
-        {
-            Network = expectedNetwork;
+            BtcPayNetwork = expectedNetwork;
         }
 
 
 
         public DerivationStrategyBase ParseElectrum(string str)
         {
+            
             if (str == null)
                 throw new ArgumentNullException(nameof(str));
             str = str.Trim();
@@ -45,7 +40,7 @@ namespace BTCPayServer
             for (int ii = 0; ii < 4; ii++)
                 data[ii] = standardPrefix[ii];
             var extPubKey = new BitcoinExtPubKey(Network.GetBase58CheckEncoder().EncodeData(data), Network.Main).ToNetwork(Network);
-            if (!electrumMapping.TryGetValue(prefix, out string[] labels))
+            if (!BtcPayNetwork.ElectrumMapping.TryGetValue(prefix, out string[] labels))
             {
                 throw new FormatException();
             }
@@ -120,7 +115,7 @@ namespace BTCPayServer
                         data[ii] = standardPrefix[ii];
                     var derivationScheme = new BitcoinExtPubKey(Network.GetBase58CheckEncoder().EncodeData(data), Network.Main).ToNetwork(Network).ToString();
 
-                    electrumMapping.TryGetValue(prefix, out string[] labels);
+                    BtcPayNetwork.ElectrumMapping.TryGetValue(prefix, out string[] labels);
                     if (labels != null)
                     {
                         foreach (var label in labels)

@@ -560,9 +560,9 @@ namespace BTCPayServer.Controllers
                         
 
                         var strategy = GetDirectDerivationStrategy(derivationSettings.AccountDerivation);
-                        // Some deployment have the wallet root key path saved in the store blob
-                        // If it does, we only have to make 1 call to the hw to check if it can sign the given strategy,
-                        if (derivationSettings.AccountKeyPath == null || !await hw.CanSign(network, strategy, derivationSettings.AccountKeyPath, normalOperationTimeout.Token))
+
+                        // Some deployment does not have the AccountKeyPath set, let's fix this...
+                        if (derivationSettings.AccountKeyPath == null)
                         {
                             // If the saved wallet key path is not present or incorrect, let's scan the wallet to see if it can sign strategy
                             var foundKeyPath = await hw.FindKeyPath(network, strategy, normalOperationTimeout.Token);
@@ -572,7 +572,34 @@ namespace BTCPayServer.Controllers
                             storeData.SetSupportedPaymentMethod(derivationSettings);
                             await Repository.UpdateStore(storeData);
                         }
+                        // If it has the AccountKeyPath, let's check if we opened the right ledger
+                        else
+                        {
+                            // Checking if ledger is right with the RootFingerprint is faster as it does not need to make a query to the parent xpub, 
+                            // but some deployment does not have it, so let's use AccountKeyPath instead
+                            if (derivationSettings.RootFingerprint == null)
+                            {
+                                
+                                var actualPubKey = await hw.GetExtPubKey(network, derivationSettings.AccountKeyPath, normalOperationTimeout.Token);
+                                if (!derivationSettings.AccountDerivation.GetExtPubKeys().Any(p => p.GetPublicKey() == actualPubKey.GetPublicKey()))
+                                    throw new HardwareWalletException($"This store is not configured to use this ledger");
+                            }
+                            // We have the root fingerprint, we can check the root from it
+                            else
+                            {
+                                var actualPubKey = await hw.GetExtPubKey(network, new KeyPath(), normalOperationTimeout.Token);
+                                if (actualPubKey.GetPublicKey().GetHDFingerPrint() != derivationSettings.RootFingerprint.Value)
+                                    throw new HardwareWalletException($"This store is not configured to use this ledger");
+                            }
+                        }
 
+                        // Some deployment does not have the RootFingerprint set, let's fix this...
+                        if (derivationSettings.RootFingerprint == null)
+                        {
+                            derivationSettings.RootFingerprint = (await hw.GetExtPubKey(network, new KeyPath(), normalOperationTimeout.Token)).GetPublicKey().GetHDFingerPrint();
+                            storeData.SetSupportedPaymentMethod(derivationSettings);
+                            await Repository.UpdateStore(storeData);
+                        }
 
                         var psbt = await CreatePSBT(network, derivationSettings, model, normalOperationTimeout.Token);
                         signTimeout.CancelAfter(TimeSpan.FromMinutes(5));

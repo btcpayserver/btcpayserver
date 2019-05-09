@@ -48,7 +48,9 @@
 
                 showFeedback("ledger-info");
 
-                $("#DerivationScheme").val(result.extPubKey);
+                $("#DerivationScheme").val(result.derivationScheme);
+                $("#RootFingerprint").val(result.rootFingerprint);
+                $("#Source").val(result.source);
                 $("#DerivationSchemeFormat").val("BTCPay");
                 $("#KeyPath").val(keypath);
             })

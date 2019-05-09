@@ -50,6 +50,8 @@
                 </div>
                 <input id="CryptoCurrency" asp-for="CryptoCode" type="hidden" />
                 <input id="KeyPath" asp-for="KeyPath" type="hidden" />
+                <input id="Source" asp-for="Source" type="hidden" />
+                <input id="RootFingerprint" asp-for="RootFingerprint" type="hidden" />
                 <input id="Config" asp-for="Config" type="hidden" />
                 <div class="form-group">
                     <label asp-for="DerivationScheme"></label>
@@ -66,7 +68,6 @@
                     </p>
                     <div id="ledger-info" class="form-text text-muted display-when-ledger-connected">
                         <span>A ledger wallet is detected, which account do you want to use? No need to paste manually xpub if your ledger device was detected. Just select derivation scheme from the list bellow and xpub will automatically populate.</span>
-
                     </div>
                     <div class="d-flex">
                         <button type="button" class="btn btn-primary mr-2 " data-toggle="modal" data-target="#coldcardimport">
@@ -84,9 +85,7 @@
                             </div>
                         </div>
 
-
                     </div>
-
 
                 </div>
                 <div class="form-group">
@@ -140,6 +139,8 @@
                 </div>
                 <input type="hidden" asp-for="Confirmation" />
                 <input id="KeyPath" asp-for="KeyPath" type="hidden" />
+                <input id="Source" asp-for="Source" type="hidden" />
+                <input id="RootFingerprint" asp-for="RootFingerprint" type="hidden" />
                 <input type="hidden" asp-for="DerivationScheme" />
                 <input type="hidden" asp-for="Enabled" />
                 <input id="Config" asp-for="Config" type="hidden" />

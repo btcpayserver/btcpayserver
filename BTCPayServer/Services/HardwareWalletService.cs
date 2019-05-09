@@ -73,6 +73,9 @@ namespace BTCPayServer.Services
                 return _Ledger;
             }
         }
+
+        public string Device => "Ledger wallet";
+
         WebSocketTransport _Transport = null;
         public HardwareWalletService(System.Net.WebSockets.WebSocket ledgerWallet)
         {
@@ -89,19 +92,11 @@ namespace BTCPayServer.Services
             return new LedgerTestResult() { Success = true };
         }
 
-        public async Task<GetXPubResult> GetExtPubKey(BTCPayNetwork network, KeyPath keyPath, CancellationToken cancellation)
+        public async Task<BitcoinExtPubKey> GetExtPubKey(BTCPayNetwork network, KeyPath keyPath, CancellationToken cancellation)
         {
             if (network == null)
                 throw new ArgumentNullException(nameof(network));
-
-            var segwit = network.NBitcoinNetwork.Consensus.SupportSegwit;
-            var pubkey = await GetExtPubKey(Ledger, network, keyPath, false, cancellation);
-            var derivation = new DerivationStrategyFactory(network.NBitcoinNetwork).CreateDirectDerivationStrategy(pubkey, new DerivationStrategyOptions()
-            {
-                P2SH = segwit,
-                Legacy = !segwit
-            });
-            return new GetXPubResult() { ExtPubKey = derivation.ToString(), KeyPath = keyPath };
+            return await GetExtPubKey(Ledger, network, keyPath, false, cancellation);
         }
 
         private static async Task<BitcoinExtPubKey> GetExtPubKey(LedgerClient ledger, BTCPayNetwork network, KeyPath account, bool onlyChaincode, CancellationToken cancellation)
@@ -118,20 +113,18 @@ namespace BTCPayServer.Services
                     if (network.NBitcoinNetwork.NetworkType == NetworkType.Mainnet)
                         throw new Exception($"The opened ledger app does not seems to support {network.NBitcoinNetwork.Name}.");
                 }
-                var fingerprint = onlyChaincode ? default : (await ledger.GetWalletPubKeyAsync(account.Parent, cancellation: cancellation)).UncompressedPublicKey.Compress().GetHDFingerPrint();
-                var extpubkey = new ExtPubKey(pubKey.UncompressedPublicKey.Compress(), pubKey.ChainCode, (byte)account.Indexes.Length, fingerprint, account.Indexes.Last()).GetWif(network.NBitcoinNetwork);
+                var parentFP = onlyChaincode || account.Indexes.Length == 0 ? default : (await ledger.GetWalletPubKeyAsync(account.Parent, cancellation: cancellation)).UncompressedPublicKey.Compress().GetHDFingerPrint();
+                var extpubkey = new ExtPubKey(pubKey.UncompressedPublicKey.Compress(), 
+                                              pubKey.ChainCode, 
+                                              (byte)account.Indexes.Length, 
+                                              parentFP, 
+                                              account.Indexes.Length == 0 ? 0 : account.Indexes.Last()).GetWif(network.NBitcoinNetwork);
                 return extpubkey;
             }
             catch (FormatException)
             {
                 throw new HardwareWalletException("Unsupported ledger app");
             }
-        }
-
-        public async Task<bool> CanSign(BTCPayNetwork network, DirectDerivationStrategy strategy, KeyPath keyPath, CancellationToken cancellation)
-        {
-            var hwKey = await GetExtPubKey(Ledger, network, keyPath, true, cancellation);
-            return hwKey.ExtPubKey.PubKey == strategy.Root.PubKey;
         }
 
         public async Task<KeyPath> FindKeyPath(BTCPayNetwork network, DirectDerivationStrategy directStrategy, CancellationToken cancellation)
@@ -217,12 +210,5 @@ namespace BTCPayServer.Services
     {
         public bool Success { get; set; }
         public string Error { get; set; }
-    }
-
-    public class GetXPubResult
-    {
-        public string ExtPubKey { get; set; }
-        [JsonConverter(typeof(NBitcoin.JsonConverters.KeyPathJsonConverter))]
-        public KeyPath KeyPath { get; set; }
     }
 }

@@ -499,7 +499,7 @@ namespace BTCPayServer.Controllers
             using (var signTimeout = new CancellationTokenSource())
             {
                 normalOperationTimeout.CancelAfter(TimeSpan.FromMinutes(30));
-                var hw = new HardwareWalletService(webSocket);
+                var hw = new LedgerHardwareWalletService(webSocket);
                 var model = new WalletSendLedgerModel();
                 object result = null;
                 try

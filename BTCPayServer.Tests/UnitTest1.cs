@@ -330,6 +330,11 @@ namespace BTCPayServer.Tests
                     .Replace(tester.PayTester.ServerUri.ToString(), "");
                 //Cookie Challenge redirects you to login page
                 Assert.StartsWith("Account/Login", urlPath, StringComparison.InvariantCultureIgnoreCase);
+
+                var queryString = response.RequestMessage.RequestUri.ParseQueryString();
+                
+                Assert.NotNull(queryString["ReturnUrl"]);
+                Assert.Equal("/wallets", queryString["ReturnUrl"]);
             }
         }
 

@@ -247,6 +247,12 @@ namespace BTCPayServer.Controllers
                 try
                 {
                     var psbt = await CreatePSBT(network, derivationScheme, sendModel, cancellation);
+                    if (command == "analyze-psbt")
+                        return View(nameof(WalletPSBT), new WalletPSBTViewModel()
+                        {
+                            Decoded = psbt.PSBT.ToString(),
+                            PSBT = psbt.PSBT.ToBase64()
+                        });
                     return File(psbt.PSBT.ToBytes(), "application/octet-stream", $"Send-{vm.Amount.Value}-{network.CryptoCode}-to-{destination[0].ToString()}.psbt");
                 }
                 catch (NBXplorerException ex)
@@ -329,6 +335,31 @@ namespace BTCPayServer.Controllers
             {
                 return null;
             }
+        }
+
+        [HttpGet]
+        [Route("{walletId}/psbt")]
+        public IActionResult WalletPSBT()
+        {
+            return View(new WalletPSBTViewModel());
+        }
+        [HttpPost]
+        [Route("{walletId}/psbt")]
+        public IActionResult WalletPSBT(
+            [ModelBinder(typeof(WalletIdModelBinder))]
+            WalletId walletId, 
+            WalletPSBTViewModel vm)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(vm.PSBT))
+                    vm.Decoded = PSBT.Parse(vm.PSBT, NetworkProvider.GetNetwork(walletId.CryptoCode).NBitcoinNetwork).ToString();
+            }
+            catch (FormatException ex)
+            {
+                ModelState.AddModelError(nameof(vm.PSBT), ex.Message);
+            }
+            return View(vm);
         }
 
         [HttpGet]

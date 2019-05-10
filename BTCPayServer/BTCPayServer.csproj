@@ -182,6 +182,9 @@
 	  <Content Update="Views\Wallets\ListWallets.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
+	  <Content Update="Views\Wallets\WalletPSBT.cshtml">
+	    <Pack>$(IncludeRazorContentInPack)</Pack>
+	  </Content>
 	  <Content Update="Views\Wallets\WalletRescan.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>

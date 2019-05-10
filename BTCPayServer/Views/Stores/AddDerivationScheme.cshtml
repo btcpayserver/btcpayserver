@@ -70,6 +70,11 @@
                     <div id="ledger-info" class="form-text text-muted display-when-ledger-connected">
                         <span>A ledger wallet is detected, which account do you want to use? No need to paste manually xpub if your ledger device was detected. Just select derivation scheme from the list bellow and xpub will automatically populate.</span>
                     </div>
+                    
+                    
+                    <p id="hw-loading"><span class="fa fa-question-circle" style="color:orange"></span> <span>Detecting Trezor hardware wallet...</span></p>
+                    <p id="hw-error" style="display:none;"><span class="fa fa-times-circle" style="color:red;"></span> <span class="hw-label">An error happened</span></p>
+                    <p id="hw-success" style="display:none;"><span class="fa fa-check-circle" style="color:green;"></span> <span class="hw-label">Detecting hardware wallet...</span></p>
                     <div class="d-flex">
                         <button type="button" class="btn btn-primary mr-2 " data-toggle="modal" data-target="#coldcardimport">
                             Import Coldcard wallet
@@ -85,7 +90,17 @@
                                 }
                             </div>
                         </div>
-
+                        <div class="dropdown display-when-trezor-connected">
+                            <button class="btn btn-primary dropdown-toggle" type="button" id="trezorAccountsDropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Select Trezor wallet account
+                            </button>
+                            <div class="dropdown-menu overflow-auto" style="max-height: 200px;" aria-labelledby="trezorAccountsDropdownMenuButton">
+                                @for (var i = 0; i < 20; i++)
+                                {
+                                    <a class="dropdown-item" data-trezorkeypath="@Model.RootKeyPath.Derive(i, true)" href="#">Account @i (<span>@Model.RootKeyPath.Derive(i, true)</span>)</a>
+                                }
+                            </div>
+                        </div>
                     </div>
 
                 </div>
@@ -181,8 +196,59 @@
     </div>
 </div>
 
+
+
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
-    <script src="~/js/ledgerwebsocket.js" type="text/javascript" defer="defer"></script>
-    <script src="~/js/StoreAddDerivationScheme.js" type="text/javascript" defer="defer"></script>
+    @* <script src="~/js/ledgerwebsocket.js" type="text/javascript" defer="defer"></script> *@
+    @* <script src="~/js/StoreAddDerivationScheme.js" type="text/javascript" defer="defer"></script> *@
+
+    <script src="~/vendor/trezor/trezor.js-umd.js"></script>
+    <script src="~/js/trezor/trezor-client.js" type="text/javascript" defer="defer"></script>
+
+    <script>
+
+
+        $(document).ready(function() {
+
+            $("[data-trezorkeypath]").on("click",
+                function(e) {
+                    var keypath = $(this).data("trezorkeypath");
+                    var keys = keypath.split("/");
+                    if (trezorDevice != null) {
+                        var hardeningConstant = 0x80000000;
+
+                        trezorDevice.waitForSessionAndRun(function(session) {
+                                debugger;
+                                var path = [];
+                                for (var i = 0; i < keys.length; i++) {
+                                    var key = keys[i];
+                                    
+                                    if (keys[i].endsWith("'")) {
+                                        key = key.substring(0, key.length - 1);
+                                        path.push((parseInt(key) | hardeningConstant) >>> 0);
+                                        continue;
+                                    }
+                                    
+                                    path.push(parseInt(key));
+                                }
+                                return session.getHDNode(path, 'bitcoin');
+                            })
+                            .then(function(hdNode) {
+                                console.warn("HDNODe", arguments);
+
+                                $("#RootFingerprint").val(hdNode.parentFingerprint);
+                                $("#KeyPath").val(keys[keys.length - 1]);
+                                $("#DerivationScheme").val(hdNode.toBase58());
+
+                            });
+                    }
+                    
+                });
+        });
+
+        function onTrezorDeviceFound(device) {
+            $(".display-when-trezor-connected").show();
+        }
+    </script>
 }

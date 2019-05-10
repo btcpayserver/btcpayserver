@@ -5,7 +5,7 @@ window.trezorClient = {
     
     init: function(){
         window.trezorDeviceList = new trezor.DeviceList({
-            config: trezorConfig,
+            config: window.trezorConfig|| null,
             debug: debug,
             transport: new trezorLink.Lowlevel(new trezorLink.WebUsb(), function () {
                 return null;

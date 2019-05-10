@@ -282,38 +282,21 @@ namespace BTCPayServer.Controllers
                 psbtRequest.ExplicitChangeAddress = psbtDestination.Destination;
             }
             psbtDestination.SubstractFees = sendModel.SubstractFees;
-
+            if (derivationSettings.AccountKeyPath != null && derivationSettings.AccountKeyPath.Indexes.Length != 0)
+            {
+                psbtRequest.RebaseKeyPaths = new List<PSBTRebaseKeyRules>()
+                {
+                    new PSBTRebaseKeyRules()
+                    {
+                        AccountKeyPath = derivationSettings.AccountKeyPath,
+                        AccountKey = derivationSettings.AccountKey,
+                        MasterFingerprint = derivationSettings.RootFingerprint is HDFingerprint fp ? fp : default
+                    }
+                };
+            }
             var psbt = (await nbx.CreatePSBTAsync(derivationSettings.AccountDerivation, psbtRequest, cancellationToken));
             if (psbt == null)
                 throw new NotSupportedException("You need to update your version of NBXplorer");
-
-            if (network.MinFee != null)
-            {
-                psbt.PSBT.TryGetFee(out var fee);
-                if (fee < network.MinFee)
-                {
-                    psbtRequest.FeePreference = new FeePreference() { ExplicitFee = network.MinFee };
-                    psbt = (await nbx.CreatePSBTAsync(derivationSettings.AccountDerivation, psbtRequest, cancellationToken));
-                }
-            }
-
-            if (derivationSettings.AccountKeyPath != null && derivationSettings.AccountKeyPath.Indexes.Length != 0)
-            {
-                // NBX only know the path relative to the account xpub.
-                // Here we rebase the hd_keys in the PSBT to have a keypath relative to the root HD so the wallet can sign
-                // Note that the fingerprint of the hd keys are now 0, which is wrong
-                // However, hardware wallets does not give a damn, and sometimes does not even allow us to get this fingerprint anyway.
-                foreach (var o in psbt.PSBT.Inputs.OfType<PSBTCoin>().Concat(psbt.PSBT.Outputs))
-                {
-                    var rootFP = derivationSettings.RootFingerprint is HDFingerprint fp ? fp : default;
-                    foreach (var keypath in o.HDKeyPaths.ToList())
-                    {
-                        var newKeyPath = derivationSettings.AccountKeyPath.Derive(keypath.Value.Item2);
-                        o.HDKeyPaths.Remove(keypath.Key);
-                        o.HDKeyPaths.Add(keypath.Key, Tuple.Create(rootFP, newKeyPath));
-                    }
-                }
-            }
             return psbt;
         }
 

@@ -39,5 +39,6 @@ namespace BTCPayServer.Models.StoreViewModels
         public IFormFile ColdcardPublicFile{ get; set; }
         public string Config { get; set; }
         public string Source { get; set; }
+        public string AccountKey { get; set; }
     }
 }

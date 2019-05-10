@@ -28,8 +28,7 @@ namespace BTCPayServer
                 },
                 CryptoImagePath = "imlegacy/dogecoin.png",
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
-                CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("3'") : new KeyPath("1'"),
-                MinFee = Money.Coins(1m)
+                CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("3'") : new KeyPath("1'")
             });
         }
     }

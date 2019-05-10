@@ -50,6 +50,7 @@
 
                 $("#DerivationScheme").val(result.derivationScheme);
                 $("#RootFingerprint").val(result.rootFingerprint);
+                $("#AccountKey").val(result.extPubKey);
                 $("#Source").val(result.source);
                 $("#DerivationSchemeFormat").val("BTCPay");
                 $("#KeyPath").val(keypath);

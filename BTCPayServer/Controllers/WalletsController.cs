@@ -557,22 +557,18 @@ namespace BTCPayServer.Controllers
                         if (!_dashboard.IsFullySynched(network.CryptoCode, out var summary))
                             throw new Exception($"{network.CryptoCode}: not started or fully synched");
 
-                        
-
-                        var strategy = GetDirectDerivationStrategy(derivationSettings.AccountDerivation);
-
                         // Some deployment does not have the AccountKeyPath set, let's fix this...
                         if (derivationSettings.AccountKeyPath == null)
                         {
                             // If the saved wallet key path is not present or incorrect, let's scan the wallet to see if it can sign strategy
-                            var foundKeyPath = await hw.FindKeyPath(network, strategy, normalOperationTimeout.Token);
-                            if (foundKeyPath == null)
-                                throw new HardwareWalletException($"This store is not configured to use this ledger");
-                            derivationSettings.AccountKeyPath = foundKeyPath;
+                            var foundKeyPath = await hw.FindKeyPathFromPubkeys(network,
+                                                                               derivationSettings.AccountDerivation.GetExtPubKeys().Select(p => p.GetPublicKey()).ToArray(),
+                                                                               normalOperationTimeout.Token);
+                            derivationSettings.AccountKeyPath = foundKeyPath ?? throw new HardwareWalletException($"This store is not configured to use this ledger");
                             storeData.SetSupportedPaymentMethod(derivationSettings);
                             await Repository.UpdateStore(storeData);
                         }
-                        // If it has the AccountKeyPath, let's check if we opened the right ledger
+                        // If it has already the AccountKeyPath, we did not looked up for it, so we need to check if we are on the right ledger
                         else
                         {
                             // Checking if ledger is right with the RootFingerprint is faster as it does not need to make a query to the parent xpub, 
@@ -587,8 +583,8 @@ namespace BTCPayServer.Controllers
                             // We have the root fingerprint, we can check the root from it
                             else
                             {
-                                var actualPubKey = await hw.GetExtPubKey(network, new KeyPath(), normalOperationTimeout.Token);
-                                if (actualPubKey.GetPublicKey().GetHDFingerPrint() != derivationSettings.RootFingerprint.Value)
+                                var actualPubKey = await hw.GetPubKey(network, new KeyPath(), normalOperationTimeout.Token);
+                                if (actualPubKey.GetHDFingerPrint() != derivationSettings.RootFingerprint.Value)
                                     throw new HardwareWalletException($"This store is not configured to use this ledger");
                             }
                         }
@@ -596,7 +592,7 @@ namespace BTCPayServer.Controllers
                         // Some deployment does not have the RootFingerprint set, let's fix this...
                         if (derivationSettings.RootFingerprint == null)
                         {
-                            derivationSettings.RootFingerprint = (await hw.GetExtPubKey(network, new KeyPath(), normalOperationTimeout.Token)).GetPublicKey().GetHDFingerPrint();
+                            derivationSettings.RootFingerprint = (await hw.GetPubKey(network, new KeyPath(), normalOperationTimeout.Token)).GetHDFingerPrint();
                             storeData.SetSupportedPaymentMethod(derivationSettings);
                             await Repository.UpdateStore(storeData);
                         }
@@ -647,16 +643,6 @@ namespace BTCPayServer.Controllers
                 }
             }
             return new EmptyResult();
-        }
-
-        private DirectDerivationStrategy GetDirectDerivationStrategy(DerivationStrategyBase strategy)
-        {
-            if (strategy == null)
-                throw new Exception("The derivation scheme is not provided");
-            var directStrategy = strategy as DirectDerivationStrategy;
-            if (directStrategy == null)
-                directStrategy = (strategy as P2SHDerivationStrategy).Inner as DirectDerivationStrategy;
-            return directStrategy;
         }
     }
 

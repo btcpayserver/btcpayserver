@@ -31,13 +31,20 @@ namespace BTCPayServer.Services
             return (await GetExtPubKey(network, keyPath, cancellation)).GetPublicKey();
         }
 
-        public async Task<KeyPath> FindKeyPathFromPubkeys(BTCPayNetwork network, PubKey[] pubKeys, CancellationToken cancellation)
+        public async Task<KeyPath> FindKeyPathFromDerivation(BTCPayNetwork network, DerivationStrategyBase derivationScheme, CancellationToken cancellation)
         {
+            var pubKeys = derivationScheme.GetExtPubKeys().Select(k => k.GetPublicKey()).ToArray();
+            var derivation = derivationScheme.Derive(new KeyPath(0));
             List<KeyPath> derivations = new List<KeyPath>();
             if (network.NBitcoinNetwork.Consensus.SupportSegwit)
-                derivations.Add(new KeyPath("49'"));
+            {
+                if (derivation.Redeem?.IsWitness is true ||
+                    derivation.ScriptPubKey.IsWitness) // Native or p2sh segwit
+                    derivations.Add(new KeyPath("49'"));
+                if (derivation.Redeem == null && derivation.ScriptPubKey.IsWitness) // Native segwit
+                    derivations.Add(new KeyPath("84'"));
+            }
             derivations.Add(new KeyPath("44'"));
-            derivations.Add(new KeyPath("84'"));
             KeyPath foundKeyPath = null;
             foreach (var account in
                                   derivations

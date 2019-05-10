@@ -561,8 +561,8 @@ namespace BTCPayServer.Controllers
                         if (derivationSettings.AccountKeyPath == null)
                         {
                             // If the saved wallet key path is not present or incorrect, let's scan the wallet to see if it can sign strategy
-                            var foundKeyPath = await hw.FindKeyPathFromPubkeys(network,
-                                                                               derivationSettings.AccountDerivation.GetExtPubKeys().Select(p => p.GetPublicKey()).ToArray(),
+                            var foundKeyPath = await hw.FindKeyPathFromDerivation(network,
+                                                                               derivationSettings.AccountDerivation,
                                                                                normalOperationTimeout.Token);
                             derivationSettings.AccountKeyPath = foundKeyPath ?? throw new HardwareWalletException($"This store is not configured to use this ledger");
                             storeData.SetSupportedPaymentMethod(derivationSettings);

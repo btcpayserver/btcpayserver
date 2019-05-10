@@ -126,11 +126,22 @@ namespace BTCPayServer
         public BTCPayNetwork Network { get; set; }
         public string Source { get; set; }
         public KeyPath AccountKeyPath { get; set; }
-        
+
         public DerivationStrategyBase AccountDerivation { get; set; }
         public string AccountOriginal { get; set; }
 
         public HDFingerprint? RootFingerprint { get; set; }
+
+        public BitcoinExtPubKey ExplicitAccountKey { get; set; }
+
+        [JsonIgnore]
+        public BitcoinExtPubKey AccountKey
+        {
+            get
+            {
+                return ExplicitAccountKey ?? new BitcoinExtPubKey(AccountDerivation.GetExtPubKeys().First(), Network.NBitcoinNetwork);
+            }
+        }
 
         public string Label { get; set; }
 

@@ -29,17 +29,17 @@ namespace BTCPayServer
                 SupportRBF = true,
                 //https://github.com/spesmilo/electrum/blob/11733d6bc271646a00b69ff07657119598874da4/electrum/constants.py
                 ElectrumMapping = NetworkType == NetworkType.Mainnet
-                    ? new Dictionary<uint, string[]>()
+                    ? new Dictionary<uint, DerivationType>()
                     {
-                        {0x0488b21eU, new[] {"legacy"}},
-                        {0x049d7cb2U, new[] {"p2sh"}},
-                        {0x4b24746U, Array.Empty<string>()},
+                        {0x0488b21eU, DerivationType.Legacy }, // xpub
+                        {0x049d7cb2U, DerivationType.SegwitP2SH }, // ypub
+                        {0x4b24746U, DerivationType.Segwit }, //zpub
                     }
-                    : new Dictionary<uint, string[]>()
+                    : new Dictionary<uint, DerivationType>()
                     {
-                        {0x043587cfU, new[] {"legacy"}},
-                        {0x044a5262U, new[] {"p2sh"}},
-                        {0x045f1cf6U, Array.Empty<string>()}
+                        {0x043587cfU, DerivationType.Legacy},
+                        {0x044a5262U, DerivationType.SegwitP2SH},
+                        {0x045f1cf6U, DerivationType.Segwit}
                     }
             });
         }

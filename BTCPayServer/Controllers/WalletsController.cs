@@ -247,6 +247,12 @@ namespace BTCPayServer.Controllers
                 try
                 {
                     var psbt = await CreatePSBT(network, derivationScheme, sendModel, cancellation);
+                    if (command == "analyze-psbt")
+                        return View(nameof(WalletPSBT), new WalletPSBTViewModel()
+                        {
+                            Decoded = psbt.PSBT.ToString(),
+                            PSBT = psbt.PSBT.ToBase64()
+                        });
                     return File(psbt.PSBT.ToBytes(), "application/octet-stream", $"Send-{vm.Amount.Value}-{network.CryptoCode}-to-{destination[0].ToString()}.psbt");
                 }
                 catch (NBXplorerException ex)
@@ -262,7 +268,8 @@ namespace BTCPayServer.Controllers
             }
         }
 
-        private async Task<CreatePSBTResponse> CreatePSBT(BTCPayNetwork network, DerivationSchemeSettings derivationSettings, WalletSendLedgerModel sendModel, CancellationToken cancellationToken)
+        [NonAction]
+        public async Task<CreatePSBTResponse> CreatePSBT(BTCPayNetwork network, DerivationSchemeSettings derivationSettings, WalletSendLedgerModel sendModel, CancellationToken cancellationToken)
         {
             var nbx = ExplorerClientProvider.GetExplorerClient(network);
             CreatePSBTRequest psbtRequest = new CreatePSBTRequest();
@@ -281,38 +288,21 @@ namespace BTCPayServer.Controllers
                 psbtRequest.ExplicitChangeAddress = psbtDestination.Destination;
             }
             psbtDestination.SubstractFees = sendModel.SubstractFees;
-
+            if (derivationSettings.AccountKeyPath != null && derivationSettings.AccountKeyPath.Indexes.Length != 0)
+            {
+                psbtRequest.RebaseKeyPaths = new List<PSBTRebaseKeyRules>()
+                {
+                    new PSBTRebaseKeyRules()
+                    {
+                        AccountKeyPath = derivationSettings.AccountKeyPath,
+                        AccountKey = derivationSettings.AccountKey,
+                        MasterFingerprint = derivationSettings.RootFingerprint is HDFingerprint fp ? fp : default
+                    }
+                };
+            }
             var psbt = (await nbx.CreatePSBTAsync(derivationSettings.AccountDerivation, psbtRequest, cancellationToken));
             if (psbt == null)
                 throw new NotSupportedException("You need to update your version of NBXplorer");
-
-            if (network.MinFee != null)
-            {
-                psbt.PSBT.TryGetFee(out var fee);
-                if (fee < network.MinFee)
-                {
-                    psbtRequest.FeePreference = new FeePreference() { ExplicitFee = network.MinFee };
-                    psbt = (await nbx.CreatePSBTAsync(derivationSettings.AccountDerivation, psbtRequest, cancellationToken));
-                }
-            }
-
-            if (derivationSettings.AccountKeyPath != null && derivationSettings.AccountKeyPath.Indexes.Length != 0)
-            {
-                // NBX only know the path relative to the account xpub.
-                // Here we rebase the hd_keys in the PSBT to have a keypath relative to the root HD so the wallet can sign
-                // Note that the fingerprint of the hd keys are now 0, which is wrong
-                // However, hardware wallets does not give a damn, and sometimes does not even allow us to get this fingerprint anyway.
-                foreach (var o in psbt.PSBT.Inputs.OfType<PSBTCoin>().Concat(psbt.PSBT.Outputs))
-                {
-                    var rootFP = derivationSettings.RootFingerprint is HDFingerprint fp ? fp : default;
-                    foreach (var keypath in o.HDKeyPaths.ToList())
-                    {
-                        var newKeyPath = derivationSettings.AccountKeyPath.Derive(keypath.Value.Item2);
-                        o.HDKeyPaths.Remove(keypath.Key);
-                        o.HDKeyPaths.Add(keypath.Key, Tuple.Create(rootFP, newKeyPath));
-                    }
-                }
-            }
             return psbt;
         }
 
@@ -345,6 +335,31 @@ namespace BTCPayServer.Controllers
             {
                 return null;
             }
+        }
+
+        [HttpGet]
+        [Route("{walletId}/psbt")]
+        public IActionResult WalletPSBT()
+        {
+            return View(new WalletPSBTViewModel());
+        }
+        [HttpPost]
+        [Route("{walletId}/psbt")]
+        public IActionResult WalletPSBT(
+            [ModelBinder(typeof(WalletIdModelBinder))]
+            WalletId walletId, 
+            WalletPSBTViewModel vm)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(vm.PSBT))
+                    vm.Decoded = PSBT.Parse(vm.PSBT, NetworkProvider.GetNetwork(walletId.CryptoCode).NBitcoinNetwork).ToString();
+            }
+            catch (FormatException ex)
+            {
+                ModelState.AddModelError(nameof(vm.PSBT), ex.Message);
+            }
+            return View(vm);
         }
 
         [HttpGet]
@@ -498,7 +513,7 @@ namespace BTCPayServer.Controllers
             using (var signTimeout = new CancellationTokenSource())
             {
                 normalOperationTimeout.CancelAfter(TimeSpan.FromMinutes(30));
-                var hw = new HardwareWalletService(webSocket);
+                var hw = new LedgerHardwareWalletService(webSocket);
                 var model = new WalletSendLedgerModel();
                 object result = null;
                 try
@@ -556,22 +571,45 @@ namespace BTCPayServer.Controllers
                         if (!_dashboard.IsFullySynched(network.CryptoCode, out var summary))
                             throw new Exception($"{network.CryptoCode}: not started or fully synched");
 
-                        
-
-                        var strategy = GetDirectDerivationStrategy(derivationSettings.AccountDerivation);
-                        // Some deployment have the wallet root key path saved in the store blob
-                        // If it does, we only have to make 1 call to the hw to check if it can sign the given strategy,
-                        if (derivationSettings.AccountKeyPath == null || !await hw.CanSign(network, strategy, derivationSettings.AccountKeyPath, normalOperationTimeout.Token))
+                        // Some deployment does not have the AccountKeyPath set, let's fix this...
+                        if (derivationSettings.AccountKeyPath == null)
                         {
                             // If the saved wallet key path is not present or incorrect, let's scan the wallet to see if it can sign strategy
-                            var foundKeyPath = await hw.FindKeyPath(network, strategy, normalOperationTimeout.Token);
-                            if (foundKeyPath == null)
-                                throw new HardwareWalletException($"This store is not configured to use this ledger");
-                            derivationSettings.AccountKeyPath = foundKeyPath;
+                            var foundKeyPath = await hw.FindKeyPathFromDerivation(network,
+                                                                               derivationSettings.AccountDerivation,
+                                                                               normalOperationTimeout.Token);
+                            derivationSettings.AccountKeyPath = foundKeyPath ?? throw new HardwareWalletException($"This store is not configured to use this ledger");
                             storeData.SetSupportedPaymentMethod(derivationSettings);
                             await Repository.UpdateStore(storeData);
                         }
+                        // If it has already the AccountKeyPath, we did not looked up for it, so we need to check if we are on the right ledger
+                        else
+                        {
+                            // Checking if ledger is right with the RootFingerprint is faster as it does not need to make a query to the parent xpub, 
+                            // but some deployment does not have it, so let's use AccountKeyPath instead
+                            if (derivationSettings.RootFingerprint == null)
+                            {
+                                
+                                var actualPubKey = await hw.GetExtPubKey(network, derivationSettings.AccountKeyPath, normalOperationTimeout.Token);
+                                if (!derivationSettings.AccountDerivation.GetExtPubKeys().Any(p => p.GetPublicKey() == actualPubKey.GetPublicKey()))
+                                    throw new HardwareWalletException($"This store is not configured to use this ledger");
+                            }
+                            // We have the root fingerprint, we can check the root from it
+                            else
+                            {
+                                var actualPubKey = await hw.GetPubKey(network, new KeyPath(), normalOperationTimeout.Token);
+                                if (actualPubKey.GetHDFingerPrint() != derivationSettings.RootFingerprint.Value)
+                                    throw new HardwareWalletException($"This store is not configured to use this ledger");
+                            }
+                        }
 
+                        // Some deployment does not have the RootFingerprint set, let's fix this...
+                        if (derivationSettings.RootFingerprint == null)
+                        {
+                            derivationSettings.RootFingerprint = (await hw.GetPubKey(network, new KeyPath(), normalOperationTimeout.Token)).GetHDFingerPrint();
+                            storeData.SetSupportedPaymentMethod(derivationSettings);
+                            await Repository.UpdateStore(storeData);
+                        }
 
                         var psbt = await CreatePSBT(network, derivationSettings, model, normalOperationTimeout.Token);
                         signTimeout.CancelAfter(TimeSpan.FromMinutes(5));
@@ -619,16 +657,6 @@ namespace BTCPayServer.Controllers
                 }
             }
             return new EmptyResult();
-        }
-
-        private DirectDerivationStrategy GetDirectDerivationStrategy(DerivationStrategyBase strategy)
-        {
-            if (strategy == null)
-                throw new Exception("The derivation scheme is not provided");
-            var directStrategy = strategy as DirectDerivationStrategy;
-            if (directStrategy == null)
-                directStrategy = (strategy as P2SHDerivationStrategy).Inner as DirectDerivationStrategy;
-            return directStrategy;
         }
     }
 

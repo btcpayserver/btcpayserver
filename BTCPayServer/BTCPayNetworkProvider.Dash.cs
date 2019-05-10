@@ -27,8 +27,7 @@ namespace BTCPayServer
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
                 //https://github.com/satoshilabs/slips/blob/master/slip-0044.md
                 CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("5'")
-                    : new KeyPath("1'"),
-                MinFee = Money.Satoshis(1m)
+                    : new KeyPath("1'")
             });
         }
     }

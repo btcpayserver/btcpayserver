@@ -66,7 +66,7 @@ namespace BTCPayServer
                     {
                         network.Value.ElectrumMapping =
                             network.Value.ElectrumMapping
-                            .Where(kv => kv.Value.Contains("legacy"))
+                            .Where(kv => kv.Value == DerivationType.Legacy)
                             .ToDictionary(k => k.Key, k => k.Value);
                     }
                 }

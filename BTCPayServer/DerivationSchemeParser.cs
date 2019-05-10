@@ -12,7 +12,7 @@ namespace BTCPayServer
 {
     public class DerivationSchemeParser
     {
-        private BTCPayNetwork BtcPayNetwork { get; }
+        public BTCPayNetwork BtcPayNetwork { get; }
 
         public Network Network => BtcPayNetwork.NBitcoinNetwork;
 
@@ -43,15 +43,15 @@ namespace BTCPayServer
             for (int ii = 0; ii < 4; ii++)
                 data[ii] = standardPrefix[ii];
             var extPubKey = new BitcoinExtPubKey(Network.GetBase58CheckEncoder().EncodeData(data), Network.Main).ToNetwork(Network);
-            if (!BtcPayNetwork.ElectrumMapping.TryGetValue(prefix, out string[] labels))
+            if (!BtcPayNetwork.ElectrumMapping.TryGetValue(prefix, out var type))
             {
                 throw new FormatException();
             }
-            if (labels.Length == 0)
+            if (type == DerivationType.Segwit)
                 return new DirectDerivationStrategy(extPubKey) { Segwit = true };
-            if (labels[0] == "legacy")
+            if (type == DerivationType.Legacy)
                 return new DirectDerivationStrategy(extPubKey) { Segwit = false };
-            if (labels[0] == "p2sh") // segwit p2sh
+            if (type == DerivationType.SegwitP2SH)
                 return new DerivationStrategyFactory(Network).Parse(extPubKey.ToString() + "-[p2sh]");
             throw new FormatException();
         }
@@ -118,12 +118,16 @@ namespace BTCPayServer
                         data[ii] = standardPrefix[ii];
                     var derivationScheme = new BitcoinExtPubKey(Network.GetBase58CheckEncoder().EncodeData(data), Network.Main).ToNetwork(Network).ToString();
 
-                    BtcPayNetwork.ElectrumMapping.TryGetValue(prefix, out string[] labels);
-                    if (labels != null)
+                    if (BtcPayNetwork.ElectrumMapping.TryGetValue(prefix, out var type))
                     {
-                        foreach (var label in labels)
+                        switch (type)
                         {
-                            hintedLabels.Add(label.ToLowerInvariant());
+                            case DerivationType.Legacy:
+                                hintedLabels.Add("legacy");
+                                break;
+                            case DerivationType.SegwitP2SH:
+                                hintedLabels.Add("p2sh");
+                                break;
                         }
                     }
                     parts[i] = derivationScheme;

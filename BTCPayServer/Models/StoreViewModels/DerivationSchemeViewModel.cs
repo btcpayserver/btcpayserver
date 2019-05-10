@@ -26,6 +26,7 @@ namespace BTCPayServer.Models.StoreViewModels
 
         public string CryptoCode { get; set; }
         public string KeyPath { get; set; }
+        public string RootFingerprint { get; set; }
         [Display(Name = "Hint address")]
         public string HintAddress { get; set; }
         public bool Confirmation { get; set; }
@@ -37,5 +38,7 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Coldcard Wallet File")]
         public IFormFile ColdcardPublicFile{ get; set; }
         public string Config { get; set; }
+        public string Source { get; set; }
+        public string AccountKey { get; set; }
     }
 }

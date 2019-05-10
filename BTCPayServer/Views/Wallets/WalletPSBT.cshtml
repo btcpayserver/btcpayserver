@@ -1,0 +1,29 @@
+﻿@model WalletPSBTViewModel
+@{
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData["Title"] = "PSBT";
+    ViewData.SetActivePageAndTitle(WalletsNavPages.PSBT);
+}
+<div class="row">
+    <div class="col-md-10">
+        @if (!string.IsNullOrEmpty(Model.Decoded))
+        {
+            <h3>Decoded PSBT</h3>
+            <pre><code class="json">@Model.Decoded</code></pre>
+        }
+        <h3>PSBT to decode</h3>
+        <form class="form-group" method="post" asp-action="WalletPSBT">
+            <div class="form-group">
+                <textarea class="form-control" rows="5" asp-for="PSBT"></textarea>
+                <span asp-validation-for="PSBT" class="text-danger"></span>
+            </div>
+            <button type="submit" class="btn btn-primary">Decode</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="~/vendor/highlightjs/default.min.css">
+    <script src="~/vendor/highlightjs/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+}

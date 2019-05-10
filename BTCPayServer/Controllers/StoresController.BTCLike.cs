@@ -43,6 +43,14 @@ namespace BTCPayServer.Controllers
             return View(vm);
         }
 
+        class GetXPubs
+        {
+            public BitcoinExtPubKey ExtPubKey { get; set; }
+            public DerivationStrategyBase DerivationScheme { get; set; }
+            public HDFingerprint RootFingerprint { get; set; }
+            public string Source { get; set; }
+        }
+
         [HttpGet]
         [Route("{storeId}/derivations/{cryptoCode}/ledger/ws")]
         public async Task<IActionResult> AddDerivationSchemeLedger(
@@ -55,7 +63,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
 
             var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-            var hw = new HardwareWalletService(webSocket);
+            var hw = new LedgerHardwareWalletService(webSocket);
             object result = null;
             var network = _NetworkProvider.GetNetwork(cryptoCode);
 
@@ -73,7 +81,18 @@ namespace BTCPayServer.Controllers
                         var k = KeyPath.Parse(keyPath);
                         if (k.Indexes.Length == 0)
                             throw new FormatException("Invalid key path");
-                        var getxpubResult = await hw.GetExtPubKey(network, k, normalOperationTimeout.Token);
+
+                        var getxpubResult = new GetXPubs();
+                        getxpubResult.ExtPubKey = await hw.GetExtPubKey(network, k, normalOperationTimeout.Token);
+                        var segwit = network.NBitcoinNetwork.Consensus.SupportSegwit;
+                        var derivation = new DerivationStrategyFactory(network.NBitcoinNetwork).CreateDirectDerivationStrategy(getxpubResult.ExtPubKey, new DerivationStrategyOptions()
+                        {
+                            P2SH = segwit,
+                            Legacy = !segwit
+                        });
+                        getxpubResult.DerivationScheme = derivation;
+                        getxpubResult.RootFingerprint = (await hw.GetExtPubKey(network, new KeyPath(), normalOperationTimeout.Token)).ExtPubKey.PubKey.GetHDFingerPrint();
+                        getxpubResult.Source = hw.Device;
                         result = getxpubResult;
                     }
                 }
@@ -87,7 +106,7 @@ namespace BTCPayServer.Controllers
                     if (result != null)
                     {
                         UTF8Encoding UTF8NOBOM = new UTF8Encoding(false);
-                        var bytes = UTF8NOBOM.GetBytes(JsonConvert.SerializeObject(result, MvcJsonOptions.Value.SerializerSettings));
+                        var bytes = UTF8NOBOM.GetBytes(JsonConvert.SerializeObject(result, network.NBXplorerNetwork.JsonSerializerSettings));
                         await webSocket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, new CancellationTokenSource(2000).Token);
                     }
                 }
@@ -185,6 +204,9 @@ namespace BTCPayServer.Controllers
                         {
                             strategy = newStrategy;
                             strategy.AccountKeyPath = vm.KeyPath == null ? null : KeyPath.Parse(vm.KeyPath);
+                            strategy.RootFingerprint = string.IsNullOrEmpty(vm.RootFingerprint) ? (HDFingerprint?)null : new HDFingerprint(NBitcoin.DataEncoders.Encoders.Hex.DecodeData(vm.RootFingerprint));
+                            strategy.ExplicitAccountKey = string.IsNullOrEmpty(vm.AccountKey) ? null : new BitcoinExtPubKey(vm.AccountKey, network.NBitcoinNetwork);
+                            strategy.Source = vm.Source;
                             vm.DerivationScheme = strategy.AccountDerivation.ToString();
                         }
                     }

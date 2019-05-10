@@ -1,0 +1,49 @@
+﻿@model WalletSendLedgerModel
+@{
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData["Title"] = "Manage wallet";
+    ViewData.SetActivePageAndTitle(WalletsNavPages.Send);
+}
+
+<h4>Sign the transaction with Ledger</h4>
+<div id="walletAlert" class="alert alert-danger alert-dismissible" style="display:none;" role="alert">
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+    <span id="alertMessage"></span>
+</div>
+<div class="row">
+    <div class="col-md-10">
+        <input type="hidden" asp-for="Destination" />
+        <input type="hidden" asp-for="Amount" />
+        <input type="hidden" asp-for="FeeSatoshiPerByte" />
+        <input type="hidden" asp-for="DisableRBF" />
+        <input type="hidden" asp-for="SubstractFees" />
+        <input type="hidden" asp-for="NoChange" />
+        <p>
+            You can send money received by this store to an address with the help of your Trezor Wallet. <br />
+            If you don't have a Trezor Wallet, use Electrum with your favorite hardware wallet to transfer crypto. <br />
+            If your Trezor wallet is not detected:
+        </p>
+        <ul>
+            <li>Enter your pin on the wallet and <span class="btn-link" onclick="trezorClient.requestDevice()"></span></li>
+            <li>Use Google Chrome browser or a WebUSB compatible browser.</li>
+        </ul>
+        <p id="hw-loading"><span class="fa fa-question-circle" style="color:orange"></span> <span>Detecting hardware wallet...</span></p>
+        <p id="hw-error" style="display:none;"><span class="fa fa-times-circle" style="color:red;"></span> <span class="hw-label">An error happened</span></p>
+        <p id="hw-success" style="display:none;"><span class="fa fa-check-circle" style="color:green;"></span> <span class="hw-label">Detecting hardware wallet...</span></p>
+    </div>
+</div>
+
+
+@section Scripts
+{
+
+    <script src="~/vendor/trezor/trezor.js-umd.js"></script>
+    <script src="~/js/trezor/trezor-client.js" type="text/javascript" defer="defer"></script>
+    
+    <script>
+        
+        function onTrezorDeviceFound(device) {
+            
+        }
+    </script>
+}

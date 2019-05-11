@@ -62,8 +62,7 @@
                 if (result.error) {
                     WriteAlert("danger", result.error);
                 } else {
-                    WriteAlert("success", 'Transaction broadcasted (' + result.transactionId + ')');
-                    window.location.replace(loc.protocol + "//" + loc.host + successPath + "?txid=" + result.transactionId);
+                    window.location.replace(loc.protocol + "//" + loc.host + successPath + "?psbt=" + encodeURIComponent(result.psbt));
                 }
             });
     };

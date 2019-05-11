@@ -20,8 +20,9 @@
     display: none;
 }
 
-.display-when-ledger-connected{
+.display-when-ledger-connected {
     display: none;
+}
 
 .wraptextAuto {
     max-width: 300px;

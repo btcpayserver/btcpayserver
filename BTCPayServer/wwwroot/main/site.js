@@ -7,6 +7,7 @@
         $(this).text(dateString);
     });
 
+    // intializing date time pickers throughts website
     $(".flatdtpicker").each(function () {
         var element = $(this);
         var min = element.attr("min");
@@ -14,13 +15,15 @@
         var defaultDate = element.attr("value");
         element.flatpickr({
             enableTime: true,
+            enableSeconds: true,
+            dateFormat: 'Z',
+            altInput: true,
+            altFormat: 'Y-m-d H:i:S',
             minDate: min,
             maxDate: max,
             defaultDate: defaultDate,
-            dateFormat: 'Z',
-            altInput: true,
-            altFormat: 'J F Y H:i',
             time_24hr: true,
+            defaultHour: 0,
             parseDate: function (date) {
                 return moment(date).toDate();
             }

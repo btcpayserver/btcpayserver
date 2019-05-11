@@ -4,6 +4,8 @@ var debug = true;
 window.trezorClient = {
     
     init: function(){
+
+        document.getElementById("trezor-loading").style.display= "block";
         window.trezorDeviceList = new trezor.DeviceList({
             config: window.trezorConfig|| null,
             debug: debug,
@@ -25,49 +27,39 @@ window.trezorClient = {
     },
     onDeviceConnected: function(device){
         window.trezorDevice = null;
+        document.getElementById("trezor-error").style.display= "none";
+        document.getElementById("trezor-error").innerText = 'Device could not be used.';
         console.log("Connected device " + device.features.label);
         device.on('disconnect', function () {
             window.trezorDevice = null;
-            document.getElementById("hw-error").style.display= "block";
-
-            document.getElementById("hw-loading").style.display= "block";
-            document.getElementById("hw-success").style.display= "none";
-            WriteAlert("danger", 'Device was disconnected');
+            document.getElementById("trezor-error").style.display= "block";
+            document.getElementById("trezor-error").innerText = 'Device was disconnected';
+            document.getElementById("trezor-loading").style.display= "block";
+            document.getElementById("trezor-success").style.display= "none";
             
         });
         if (device.isBootloader()) {
-            document.getElementById("hw-error").style.display= "block";
-            WriteAlert("danger", 'Device is in Bootloader, reconnect it.');
+            document.getElementById("trezor-error").style.display= "block";
+
+            document.getElementById("trezor-error").innerText = 'Device is in Bootloader, reconnect it.';
             return;
         }
         // You generally want to filter out devices connected in bootloader mode:
         if (!device.isInitialized()) {
-            document.getElementById("hw-error").style.display= "block";
-            WriteAlert("danger", 'Device is not yet setup.');
+            document.getElementById("trezor-error").style.display= "block";
+
+            document.getElementById("trezor-error").innerText = 'Device is not yet setup.';
             return;
         }
-        document.getElementById("hw-loading").style.display= "none";
-        document.getElementById("hw-success").style.display= "block";       
+        document.getElementById("trezor-loading").style.display= "none";
+        document.getElementById("trezor-success").style.display= "block";       
         window.trezorDevice = device;
         if(window.onTrezorDeviceFound){
+            console.log("Connected device " + device.features.label);
+            document.getElementById("trezor-devicename").innerText = device.features.label;
             window.onTrezorDeviceFound(device);
         }
     }   
     
 };
 
-
-
-function WriteAlert(type, message) {
-    $("#walletAlert").removeClass("alert-danger");
-    $("#walletAlert").removeClass("alert-warning");
-    $("#walletAlert").removeClass("alert-success");
-    $("#walletAlert").addClass("alert-" + type);
-    $("#walletAlert").css("display", "block");
-    $("#alertMessage").text(message);
-}
-window.onload = function () {
-
-
-    window.trezorClient.init();
-};

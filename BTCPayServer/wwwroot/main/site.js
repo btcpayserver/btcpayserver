@@ -10,24 +10,33 @@
     // intializing date time pickers throughts website
     $(".flatdtpicker").each(function () {
         var element = $(this);
-        var min = element.attr("min");
-        var max = element.attr("max");
-        var defaultDate = element.attr("value");
-        element.flatpickr({
-            enableTime: true,
-            enableSeconds: true,
-            dateFormat: 'Z',
-            altInput: true,
-            altFormat: 'Y-m-d H:i:S',
-            minDate: min,
-            maxDate: max,
-            defaultDate: defaultDate,
-            time_24hr: true,
-            defaultHour: 0,
-            parseDate: function (date) {
-                return moment(date).toDate();
-            }
-        });
+        var fdtp = element.attr("data-fdtp");
+
+        // support for initializing with special options per instance
+        if (fdtp) {
+            var parsed = JSON.parse(fdtp);
+            element.flatpickr(parsed);
+        } else {
+            var min = element.attr("min");
+            var max = element.attr("max");
+            var defaultDate = element.attr("value");
+            element.flatpickr({
+                enableTime: true,
+                enableSeconds: true,
+                dateFormat: 'Z',
+                altInput: true,
+                altFormat: 'Y-m-d H:i:S',
+                minDate: min,
+                maxDate: max,
+                defaultDate: defaultDate,
+                time_24hr: true,
+                defaultHour: 0,
+                parseDate: function (date) {
+                    // check with Kukks if this is still needed with new date format
+                    return moment(date).toDate();
+                }
+            });
+        }
     });
 
 

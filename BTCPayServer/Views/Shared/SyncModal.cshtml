@@ -1,6 +1,8 @@
 ﻿@inject BTCPayServer.HostedServices.NBXplorerDashboard dashboard
 <!-- Modal -->
-<div id="modalDialog" class="modal-dialog animated bounceInRight">
+<div id="modalDialog" class="modal-dialog animated bounceInRight"
+     style="z-index:1000">
+    @* Z-Index less then other bootstrap modals (1050) *@
 
     <!-- Modal content-->
     <div class="modal-content">
@@ -48,8 +50,8 @@
                         {
                             <li>The node is synchronized (Height: @line.Status.BitcoinStatus.Headers)</li>
                             @if (line.Status.BitcoinStatus.IsSynched &&
-                              line.Status.SyncHeight.HasValue &&
-                              line.Status.SyncHeight.Value < line.Status.BitcoinStatus.Headers)
+                             line.Status.SyncHeight.HasValue &&
+                             line.Status.SyncHeight.Value < line.Status.BitcoinStatus.Headers)
                             {
                                 <li>NBXplorer is synchronizing... (Height: @line.Status.SyncHeight.Value)</li>
                             }

@@ -1634,7 +1634,7 @@ namespace BTCPayServer.Tests
                     Assert.Equal("paid", invoice.Status);
                 });
                 var wallet = tester.PayTester.GetController<WalletsController>();
-                var psbt = wallet.CreatePSBT(btcNetwork, onchainBTC, new WalletSendLedgerModel()
+                var psbt = wallet.CreatePSBT(btcNetwork, onchainBTC, new WalletSendModel()
                 {
                     Amount = 0.5m,
                     Destination = new Key().PubKey.GetAddress(btcNetwork.NBitcoinNetwork).ToString(),

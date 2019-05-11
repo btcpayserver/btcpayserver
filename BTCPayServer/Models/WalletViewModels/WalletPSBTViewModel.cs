@@ -9,5 +9,6 @@ namespace BTCPayServer.Models.WalletViewModels
     {
         public string Decoded { get; set; }
         public string PSBT { get; set; }
+        public List<string> Errors { get; set; } = new List<string>();
     }
 }

@@ -5,11 +5,9 @@ using System.Threading.Tasks;
 
 namespace BTCPayServer.Models.WalletViewModels
 {
-    public class WalletSendLedgerModel
+    public class WalletPSBTReadyViewModel
     {
-        public string WebsocketPath { get; set; }
         public string PSBT { get; set; }
-        public string HintChange { get; set; }
-        public string SuccessPath { get; set; }
+        public List<string> Errors { get; set; }
     }
 }

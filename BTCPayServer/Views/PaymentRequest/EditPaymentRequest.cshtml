@@ -70,7 +70,7 @@
                             <input asp-for="ExpiryDate" 
                                    
                                    value="@( Model.ExpiryDate?.ToString("u", CultureInfo.InvariantCulture))"
-                                   class="form-control datetime" min="today" placeholder="No expiry date has been set for this payment request"/>
+                                   class="form-control flatdtpicker" min="today" placeholder="No expiry date has been set for this payment request"/>
                             <div class="input-group-append">
 
                                 <button class="btn btn-secondary input-group-clear" type="button" title="Clear">

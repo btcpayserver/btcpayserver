@@ -7,6 +7,26 @@
         $(this).text(dateString);
     });
 
+    $(".flatdtpicker").each(function () {
+        var element = $(this);
+        var min = element.attr("min");
+        var max = element.attr("max");
+        var defaultDate = element.attr("value");
+        element.flatpickr({
+            enableTime: true,
+            minDate: min,
+            maxDate: max,
+            defaultDate: defaultDate,
+            dateFormat: 'Z',
+            altInput: true,
+            altFormat: 'J F Y H:i',
+            time_24hr: true,
+            parseDate: function (date) {
+                return moment(date).toDate();
+            }
+        });
+    });
+
 
     $(".input-group-clear").on("click", function () {
         $(this).parents(".input-group").find("input").val(null);
@@ -18,19 +38,19 @@
         handleInputGroupClearButtonDisplay(inputGroupClearBtn);
         $(this).parents(".input-group").find("input").on("change input", function () {
             handleInputGroupClearButtonDisplay(inputGroupClearBtn);
-        })
+        });
     });
 
 
     $(".only-for-js").show();
 
     function handleInputGroupClearButtonDisplay(element) {
-        var inputs =$(element).parents(".input-group").find("input");
+        var inputs = $(element).parents(".input-group").find("input");
 
         $(element).hide();
         for (var i = 0; i < inputs.length; i++) {
             var el = inputs.get(i);
-            if($(el).val() || el.attributes.value){
+            if ($(el).val() || el.attributes.value) {
                 $(element).show();
                 break;
             }

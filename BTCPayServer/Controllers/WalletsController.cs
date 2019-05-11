@@ -233,25 +233,19 @@ namespace BTCPayServer.Controllers
             
             if (command == "ledger")
             {
-                return View("WalletSendLedger", new WalletSendLedgerModel()
-                {
-                    PSBT = psbt.PSBT.ToBase64(),
-                    HintChange = psbt.ChangeAddress?.ToString(),
-                    WebsocketPath = this.Url.Action(nameof(LedgerConnection)),
-                    SuccessPath = this.Url.Action(nameof(WalletSendLedgerSuccess))
-                });
+                return ViewWalletSendLedger(psbt.PSBT, psbt.ChangeAddress);
             }
             else
             {
                 try
-                {                    
+                {
                     if (command == "analyze-psbt")
                         return View(nameof(WalletPSBT), new WalletPSBTViewModel()
                         {
                             Decoded = psbt.PSBT.ToString(),
                             PSBT = psbt.PSBT.ToBase64()
                         });
-                    return File(psbt.PSBT.ToBytes(), "application/octet-stream", $"Send-{vm.Amount.Value}-{network.CryptoCode}-to-{destination[0].ToString()}.psbt");
+                    return FilePSBT(psbt.PSBT, $"Send-{vm.Amount.Value}-{network.CryptoCode}-to-{destination[0].ToString()}.psbt");
                 }
                 catch (NBXplorerException ex)
                 {
@@ -264,6 +258,22 @@ namespace BTCPayServer.Controllers
                     return View(vm);
                 }
             }
+        }
+
+        private IActionResult FilePSBT(PSBT psbt, string fileName)
+        {
+            return File(psbt.ToBytes(), "application/octet-stream", fileName);
+        }
+
+        private ViewResult ViewWalletSendLedger(PSBT psbt, BitcoinAddress hintChange = null)
+        {
+            return View("WalletSendLedger", new WalletSendLedgerModel()
+            {
+                PSBT = psbt.ToBase64(),
+                HintChange = hintChange?.ToString(),
+                WebsocketPath = this.Url.Action(nameof(LedgerConnection)),
+                SuccessPath = this.Url.Action(nameof(WalletSendLedgerSuccess))
+            });
         }
 
         [NonAction]
@@ -340,6 +350,26 @@ namespace BTCPayServer.Controllers
                 ModelState.AddModelError(nameof(vm.PSBT), ex.Message);
             }
             return View(vm);
+        }
+
+        [HttpPost]
+        [Route("{walletId}/psbt/sign")]
+        public IActionResult WalletPSBTSign(
+            [ModelBinder(typeof(WalletIdModelBinder))]
+            WalletId walletId,
+            WalletPSBTViewModel vm,
+            string command = null
+            )
+        {
+            var psbt = PSBT.Parse(vm.PSBT, NetworkProvider.GetNetwork(walletId.CryptoCode).NBitcoinNetwork);
+            if (command == "ledger")
+            {
+                return ViewWalletSendLedger(psbt);
+            }
+            else
+            {
+                return FilePSBT(psbt, "psbt-export.psbt");
+            }
         }
 
         [HttpGet]

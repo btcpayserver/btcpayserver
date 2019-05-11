@@ -10,6 +10,20 @@
         {
             <h3>Decoded PSBT</h3>
             <pre><code class="json">@Model.Decoded</code></pre>
+            <div class="form-group">
+                <div class="dropdown" style="margin-top:16px;">
+                    <button class="btn btn-primary dropdown-toggle" type="button" id="SendMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Sign with...
+                    </button>
+                    <form method="post" asp-action="WalletPSBTSign">
+                        <input type="hidden" asp-for="PSBT" />
+                        <div class="dropdown-menu" aria-labelledby="SendMenu">
+                            <button name="command" type="submit" class="dropdown-item" value="ledger">... your Ledger Wallet device</button>
+                            <button name="command" type="submit" class="dropdown-item" value="save-psbt">... a wallet supporting PSBT files</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         }
         <h3>PSBT to decode</h3>
         <form class="form-group" method="post" asp-action="WalletPSBT">

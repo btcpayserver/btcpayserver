@@ -1,4 +1,5 @@
-﻿$(function () {
+﻿function initLedger(){
+
     var ledgerDetected = false;
 
     var loc = window.location, new_uri;
@@ -18,7 +19,7 @@
     }
 
     function WriteAlert(type, message) {
-        
+
     }
     function showFeedback(id) {
         $("#ledger-loading").css("display", id === "ledger-loading" ? "block" : "none");
@@ -84,4 +85,16 @@
                     });
             }
         });
+}
+
+$(document).ready(function () {
+    var ledgerInit = false;
+    $(".check-for-ledger").on("click", function(){
+        if(!ledgerInit){
+
+            initLedger();
+        }
+        ledgerInit = true;
+    });
+    
 });

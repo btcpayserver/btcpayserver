@@ -67,12 +67,11 @@
                     </div>
                     <div class="form-group">
                         <label asp-for="StartDate" class="control-label"></label>
-                        <div class="input-group ">
-                            <input asp-for="StartDate"
+                        <div class="input-group">
+                            <input type="datetime-local" asp-for="StartDate"
                                    value="@(Model.StartDate?.ToString("u", CultureInfo.InvariantCulture))"
                                    class="form-control flatdtpicker" placeholder="No start date has been set for this crowdfund" />
                             <div class="input-group-append">
-
                                 <button class="btn btn-secondary input-group-clear" type="button" title="Clear">
                                     <span class=" fa fa-times"></span>
                                 </button>
@@ -95,13 +94,12 @@
                     </div>
                     <div class="form-group">
                         <label asp-for="EndDate" class="control-label"></label>
-                        <div class="input-group ">
+                        <div class="input-group">
                             <input type="datetime-local" asp-for="EndDate"
                                    value="@(Model.EndDate?.ToString("u", CultureInfo.InvariantCulture))"
                                    class="form-control flatdtpicker"
                                    placeholder="No end date has been set for this crowdfund" />
                             <div class="input-group-append">
-
                                 <button class="btn btn-secondary input-group-clear" type="button" title="Clear">
                                     <span class=" fa fa-times"></span>
                                 </button>

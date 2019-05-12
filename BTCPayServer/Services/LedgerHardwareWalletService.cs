@@ -114,11 +114,7 @@ namespace BTCPayServer.Services
                                             account.Indexes.Length == 0 ? 0 : account.Indexes.Last()).GetWif(network.NBitcoinNetwork);
             return extpubkey;
         }
-        class HDKey
-        {
-            public PubKey PubKey { get; set; }
-            public KeyPath KeyPath { get; set; }
-        }
+
         public override async Task<PSBT> SignTransactionAsync(PSBT psbt, HDFingerprint? rootFingerprint, BitcoinExtPubKey accountKey, Script changeHint, CancellationToken cancellationToken)
         {
             HashSet<HDFingerprint> knownFingerprints = new HashSet<HDFingerprint>();
@@ -126,22 +122,20 @@ namespace BTCPayServer.Services
             if (rootFingerprint is HDFingerprint fp)
                 knownFingerprints.Add(fp);
             var unsigned = psbt.GetGlobalTransaction();
-            var changeKeyPath = psbt.Outputs
-                                            .Where(o => changeHint == null ? true : changeHint == o.ScriptPubKey)
-                                            .Select(o => (Output: o, HDKey: GetHDKey(knownFingerprints, accountKey, o)))
-                                            .Where(o => o.HDKey != null)
-                                            .Select(o => o.HDKey.KeyPath)
+            var changeKeyPath = psbt.Outputs.HDKeysFor(rootFingerprint, accountKey)
+                                            .Where(o => changeHint == null ? true : changeHint == o.Coin.ScriptPubKey)
+                                            .Select(o => o.KeyPath)
                                             .FirstOrDefault();
             var signatureRequests = psbt
                 .Inputs
-                .Select(i => (Input: i, HDKey: GetHDKey(knownFingerprints, accountKey, i)))
-                .Where(i => i.HDKey != null)
+                .HDKeysFor(rootFingerprint, accountKey)
+                .GroupBy(hd => hd.Coin)
                 .Select(i => new SignatureRequest()
                 {
-                    InputCoin = i.Input.GetSignableCoin(),
-                    InputTransaction = i.Input.NonWitnessUtxo,
-                    KeyPath = i.HDKey.KeyPath,
-                    PubKey = i.HDKey.PubKey
+                    InputCoin = i.Key.GetSignableCoin(),
+                    InputTransaction = i.Key.NonWitnessUtxo,
+                    KeyPath = i.First().KeyPath,
+                    PubKey = i.First().PubKey
                 }).ToArray();
             var signedTransaction = await Ledger.SignTransactionAsync(signatureRequests, unsigned, changeKeyPath, cancellationToken);
             if (signedTransaction == null)
@@ -158,22 +152,6 @@ namespace BTCPayServer.Services
                 input.PartialSigs.Add(signature.PubKey, signature.Signature);
             }
             return psbt;
-        }
-
-        private HDKey GetHDKey(HashSet<HDFingerprint> knownFingerprints, BitcoinExtPubKey accountKey, PSBTCoin coin)
-        {
-            // Check if the accountKey match this coin by checking if the non hardened last part of the path
-            // can derive the same pubkey
-            foreach (var key in coin.HDKeyPaths)
-            {
-                if (!knownFingerprints.Contains(key.Value.Item1))
-                    continue;
-                var accountKeyPath = key.Value.Item2.GetAccountKeyPath();
-                // We might have a fingerprint collision, let's check
-                if (accountKey.ExtPubKey.Derive(accountKeyPath).GetPublicKey() == key.Key)
-                    return new HDKey() { KeyPath = key.Value.Item2, PubKey = key.Key };
-            }
-            return null;
         }
 
         public override void Dispose()

@@ -14,50 +14,6 @@ namespace BTCPayServer.Controllers
     public partial class WalletsController
     {
 
-
-        [HttpPost]
-        [Route("{walletId}/psbt/sign")]
-        public async Task<IActionResult> WalletPSBTSign(
-            [ModelBinder(typeof(WalletIdModelBinder))]
-            WalletId walletId,
-            WalletPSBTViewModel vm,
-            string command = null
-            )
-        {
-            var network = NetworkProvider.GetNetwork(walletId.CryptoCode);
-            var psbt = PSBT.Parse(vm.PSBT, network.NBitcoinNetwork);
-            if (command == "ledger")
-            {
-                return ViewWalletSendLedger(psbt);
-            }
-            else if (command == "broadcast")
-            {
-                if (!psbt.IsAllFinalized() && !psbt.TryFinalize(out var errors))
-                {
-                    return ViewPSBT(psbt, errors);
-                }
-                var transaction = psbt.ExtractTransaction();
-                try
-                {
-                    var broadcastResult = await ExplorerClientProvider.GetExplorerClient(network).BroadcastAsync(transaction);
-                    if (!broadcastResult.Success)
-                    {
-                        return ViewPSBT(psbt, new[] { $"RPC Error while broadcasting: {broadcastResult.RPCCode} {broadcastResult.RPCCodeMessage} {broadcastResult.RPCMessage}" });
-                    }
-                }
-                catch (Exception ex)
-                {
-                    return ViewPSBT(psbt, "Error while broadcasting: " + ex.Message);
-                }
-                return await RedirectToWalletTransaction(walletId, transaction);
-            }
-            else
-            {
-                (await GetDerivationSchemeSettings(walletId)).RebaseKeyPaths(psbt);
-                return FilePSBT(psbt, "psbt-export.psbt");
-            }
-        }
-
         [NonAction]
         public async Task<CreatePSBTResponse> CreatePSBT(BTCPayNetwork network, DerivationSchemeSettings derivationSettings, WalletSendModel sendModel, CancellationToken cancellationToken)
         {
@@ -93,21 +49,59 @@ namespace BTCPayServer.Controllers
         }
         [HttpPost]
         [Route("{walletId}/psbt")]
-        public IActionResult WalletPSBT(
+        public async Task<IActionResult> WalletPSBT(
             [ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId,
-            WalletPSBTViewModel vm)
+            WalletPSBTViewModel vm, string command = null)
         {
-            try
+            var network = NetworkProvider.GetNetwork(walletId.CryptoCode);
+            var psbt = vm.GetPSBT(network.NBitcoinNetwork);
+            if (psbt == null)
             {
-                if (!string.IsNullOrEmpty(vm.PSBT))
-                    vm.Decoded = PSBT.Parse(vm.PSBT, NetworkProvider.GetNetwork(walletId.CryptoCode).NBitcoinNetwork).ToString();
+                ModelState.AddModelError(nameof(vm.PSBT), "Invalid PSBT");
+                return View(vm);
             }
-            catch (FormatException ex)
+
+            if (command == null)
             {
-                ModelState.AddModelError(nameof(vm.PSBT), ex.Message);
+                vm.Decoded = psbt.ToString();
+                return View(vm);
             }
-            return View(vm);
+            else if (command == "ledger")
+            {
+                return ViewWalletSendLedger(psbt);
+            }
+            else if (command == "broadcast")
+            {
+                if (!psbt.IsAllFinalized() && !psbt.TryFinalize(out var errors))
+                {
+                    return ViewPSBT(psbt, errors);
+                }
+                var transaction = psbt.ExtractTransaction();
+                try
+                {
+                    var broadcastResult = await ExplorerClientProvider.GetExplorerClient(network).BroadcastAsync(transaction);
+                    if (!broadcastResult.Success)
+                    {
+                        return ViewPSBT(psbt, new[] { $"RPC Error while broadcasting: {broadcastResult.RPCCode} {broadcastResult.RPCCodeMessage} {broadcastResult.RPCMessage}" });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return ViewPSBT(psbt, "Error while broadcasting: " + ex.Message);
+                }
+                return await RedirectToWalletTransaction(walletId, transaction);
+            }
+            else if (command == "combine")
+            {
+                ModelState.Remove(nameof(vm.PSBT));
+                return View(nameof(WalletPSBTCombine), new WalletPSBTCombineViewModel() { OtherPSBT = psbt.ToBase64() });
+            }
+            else
+            {
+                (await GetDerivationSchemeSettings(walletId)).RebaseKeyPaths(psbt);
+                return FilePSBT(psbt, "psbt-export.psbt");
+            }
         }
 
         [HttpGet]
@@ -193,6 +187,29 @@ namespace BTCPayServer.Controllers
         private IActionResult FilePSBT(PSBT psbt, string fileName)
         {
             return File(psbt.ToBytes(), "application/octet-stream", fileName);
+        }
+
+        [HttpPost]
+        [Route("{walletId}/psbt/combine")]
+        public async Task<IActionResult> WalletPSBTCombine([ModelBinder(typeof(WalletIdModelBinder))]
+            WalletId walletId, WalletPSBTCombineViewModel vm)
+        {
+            var network = NetworkProvider.GetNetwork(walletId.CryptoCode);
+            var psbt = await vm.GetPSBT(network.NBitcoinNetwork);
+            if (psbt == null)
+            {
+                ModelState.AddModelError(nameof(vm.PSBT), "Invalid PSBT");
+                return View(vm);
+            }
+            var sourcePSBT = vm.GetSourcePSBT(network.NBitcoinNetwork);
+            if (sourcePSBT == null)
+            {
+                ModelState.AddModelError(nameof(vm.OtherPSBT), "Invalid PSBT");
+                return View(vm);
+            }
+            sourcePSBT = sourcePSBT.Combine(psbt);
+            StatusMessage = "PSBT Successfully combined!";
+            return ViewPSBT(sourcePSBT);
         }
     }
 }

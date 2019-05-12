@@ -47,7 +47,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NBitcoin" Version="4.1.2.17" />
+    <PackageReference Include="NBitcoin" Version="4.1.2.19" />
     <PackageReference Include="NBitpayClient" Version="1.0.0.34" />	  
     <PackageReference Include="DBriize" Version="1.0.0.4" />
     <PackageReference Include="NBXplorer.Client" Version="2.0.0.12" />
@@ -180,6 +180,9 @@
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
 	  <Content Update="Views\Wallets\ListWallets.cshtml">
+	    <Pack>$(IncludeRazorContentInPack)</Pack>
+	  </Content>
+	  <Content Update="Views\Wallets\WalletPSBTCombine.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
 	  <Content Update="Views\Wallets\WalletPSBTReady.cshtml">

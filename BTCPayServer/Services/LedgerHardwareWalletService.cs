@@ -141,6 +141,8 @@ namespace BTCPayServer.Services
             psbt = psbt.Clone();
             foreach (var signature in signatureRequests)
             {
+                if (signature.Signature == null)
+                    continue;
                 var input = psbt.Inputs.FindIndexedInput(signature.InputCoin.Outpoint);
                 if (input == null)
                     continue;

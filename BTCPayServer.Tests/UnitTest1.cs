@@ -1644,12 +1644,13 @@ namespace BTCPayServer.Tests
                 Assert.NotNull(psbt);
 
                 var root = new Mnemonic("usage fever hen zero slide mammal silent heavy donate budget pulse say brain thank sausage brand craft about save attract muffin advance illegal cabbage").DeriveExtKey().AsHDKeyCache();
+                var account = root.Derive(new KeyPath("m/49'/0'/0'"));
                 Assert.All(psbt.PSBT.Inputs, input =>
                 {
                     var keyPath = input.HDKeyPaths.Single();
-                    Assert.StartsWith(onchainBTC.AccountKeyPath.ToString(), keyPath.Value.Item2.ToString());
-                    Assert.Equal(root.Derive(keyPath.Value.Item2).GetPublicKey(), keyPath.Key);
-                    Assert.Equal(keyPath.Value.Item1, onchainBTC.RootFingerprint.Value);
+                    Assert.False(keyPath.Value.Item2.IsHardened);
+                    Assert.Equal(account.Derive(keyPath.Value.Item2).GetPublicKey(), keyPath.Key);
+                    Assert.Equal(keyPath.Value.Item1, onchainBTC.AccountKeySettings[0].AccountKey.GetPublicKey().GetHDFingerPrint());
                 });
             }
         }

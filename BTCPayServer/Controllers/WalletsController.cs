@@ -23,6 +23,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using NBitcoin;
+using NBitcoin.DataEncoders;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
@@ -452,14 +453,16 @@ namespace BTCPayServer.Controllers
                         if (!_dashboard.IsFullySynched(network.CryptoCode, out var summary))
                             throw new Exception($"{network.CryptoCode}: not started or fully synched");
 
+                        var accountKey = derivationSettings.AccountKeySettings.Where(a => a.IsFullySetup()).FirstOrDefault();
+                        accountKey = accountKey ?? derivationSettings.AccountKeySettings.FirstOrDefault();
                         // Some deployment does not have the AccountKeyPath set, let's fix this...
-                        if (derivationSettings.AccountKeyPath == null)
+                        if (accountKey.AccountKeyPath == null)
                         {
                             // If the saved wallet key path is not present or incorrect, let's scan the wallet to see if it can sign strategy
                             var foundKeyPath = await hw.FindKeyPathFromDerivation(network,
                                                                                derivationSettings.AccountDerivation,
                                                                                normalOperationTimeout.Token);
-                            derivationSettings.AccountKeyPath = foundKeyPath ?? throw new HardwareWalletException($"This store is not configured to use this ledger");
+                            accountKey.AccountKeyPath = foundKeyPath ?? throw new HardwareWalletException($"This store is not configured to use this ledger");
                             storeData.SetSupportedPaymentMethod(derivationSettings);
                             await Repository.UpdateStore(storeData);
                         }
@@ -468,10 +471,10 @@ namespace BTCPayServer.Controllers
                         {
                             // Checking if ledger is right with the RootFingerprint is faster as it does not need to make a query to the parent xpub, 
                             // but some deployment does not have it, so let's use AccountKeyPath instead
-                            if (derivationSettings.RootFingerprint == null)
+                            if (accountKey.RootFingerprint == null)
                             {
 
-                                var actualPubKey = await hw.GetExtPubKey(network, derivationSettings.AccountKeyPath, normalOperationTimeout.Token);
+                                var actualPubKey = await hw.GetExtPubKey(network, accountKey.AccountKeyPath, normalOperationTimeout.Token);
                                 if (!derivationSettings.AccountDerivation.GetExtPubKeys().Any(p => p.GetPublicKey() == actualPubKey.GetPublicKey()))
                                     throw new HardwareWalletException($"This store is not configured to use this ledger");
                             }
@@ -479,15 +482,15 @@ namespace BTCPayServer.Controllers
                             else
                             {
                                 var actualPubKey = await hw.GetPubKey(network, new KeyPath(), normalOperationTimeout.Token);
-                                if (actualPubKey.GetHDFingerPrint() != derivationSettings.RootFingerprint.Value)
+                                if (actualPubKey.GetHDFingerPrint() != accountKey.RootFingerprint.Value)
                                     throw new HardwareWalletException($"This store is not configured to use this ledger");
                             }
                         }
 
                         // Some deployment does not have the RootFingerprint set, let's fix this...
-                        if (derivationSettings.RootFingerprint == null)
+                        if (accountKey.RootFingerprint == null)
                         {
-                            derivationSettings.RootFingerprint = (await hw.GetPubKey(network, new KeyPath(), normalOperationTimeout.Token)).GetHDFingerPrint();
+                            accountKey.RootFingerprint = (await hw.GetPubKey(network, new KeyPath(), normalOperationTimeout.Token)).GetHDFingerPrint();
                             storeData.SetSupportedPaymentMethod(derivationSettings);
                             await Repository.UpdateStore(storeData);
                         }
@@ -502,7 +505,7 @@ namespace BTCPayServer.Controllers
                         derivationSettings.RebaseKeyPaths(psbtResponse.PSBT);
 
                         signTimeout.CancelAfter(TimeSpan.FromMinutes(5));
-                        psbtResponse.PSBT = await hw.SignTransactionAsync(psbtResponse.PSBT, psbtResponse.ChangeAddress?.ScriptPubKey, signTimeout.Token);
+                        psbtResponse.PSBT = await hw.SignTransactionAsync(psbtResponse.PSBT, accountKey.RootFingerprint, accountKey.AccountKey, psbtResponse.ChangeAddress?.ScriptPubKey, signTimeout.Token);
                         result = new SendToAddressResult() { PSBT = psbtResponse.PSBT.ToBase64() };
                     }
                 }
@@ -527,6 +530,57 @@ namespace BTCPayServer.Controllers
                 }
             }
             return new EmptyResult();
+        }
+
+        [Route("{walletId}/settings")]
+        public async Task<IActionResult> WalletSettings(
+             [ModelBinder(typeof(WalletIdModelBinder))]
+            WalletId walletId)
+        {
+            var derivationSchemeSettings = await GetDerivationSchemeSettings(walletId);
+            if (derivationSchemeSettings == null)
+                return NotFound();
+
+            var vm = new WalletSettingsViewModel()
+            {
+                Label = derivationSchemeSettings.Label,
+                DerivationScheme = derivationSchemeSettings.AccountDerivation.ToString(),
+                DerivationSchemeInput = derivationSchemeSettings.AccountOriginal
+            };
+            vm.AccountKeys = derivationSchemeSettings.AccountKeySettings
+                            .Select(e => new WalletSettingsAccountKeyViewModel()
+                            {
+                                AccountKey = e.AccountKey.ToString(),
+                                MasterFingerprint = e.RootFingerprint is HDFingerprint fp ? fp.ToString() : null,
+                                AccountKeyPath = e.AccountKeyPath == null ? "" : $"m/{e.AccountKeyPath}"
+                            }).ToList();
+            return View(vm);
+        }
+
+        [Route("{walletId}/settings")]
+        [HttpPost]
+        public async Task<IActionResult> WalletSettings(
+             [ModelBinder(typeof(WalletIdModelBinder))]
+            WalletId walletId, WalletSettingsViewModel vm)
+        {
+            if (!ModelState.IsValid)
+                return View(vm);
+            var derivationScheme = await GetDerivationSchemeSettings(walletId);
+            if (derivationScheme == null)
+                return NotFound();
+            derivationScheme.Label = vm.Label;
+            for (int i = 0; i < derivationScheme.AccountKeySettings.Length; i++)
+            {
+                derivationScheme.AccountKeySettings[i].AccountKeyPath = string.IsNullOrWhiteSpace(vm.AccountKeys[i].AccountKeyPath) ? null
+                                                          : new KeyPath(vm.AccountKeys[i].AccountKeyPath);
+                derivationScheme.AccountKeySettings[i].RootFingerprint = string.IsNullOrWhiteSpace(vm.AccountKeys[i].MasterFingerprint) ? (HDFingerprint?)null
+                                                          : new HDFingerprint(Encoders.Hex.DecodeData(vm.AccountKeys[i].MasterFingerprint));
+            }
+            var store = (await Repository.FindStore(walletId.StoreId, GetUserId()));
+            store.SetSupportedPaymentMethod(derivationScheme);
+            await Repository.UpdateStore(store);
+            StatusMessage = "Wallet settings updated";
+            return RedirectToAction(nameof(WalletSettings));
         }
     }
 

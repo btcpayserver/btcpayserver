@@ -65,6 +65,9 @@ namespace BTCPayServer
                 {
                     result.AccountOriginal = jobj["xpub"].Value<string>().Trim();
                     result.AccountDerivation = derivationSchemeParser.ParseElectrum(result.AccountOriginal);
+                    result.AccountKeySettings = new AccountKeySettings[1];
+                    result.AccountKeySettings[0] = new AccountKeySettings();
+                    result.AccountKeySettings[0].AccountKey = result.AccountDerivation.GetExtPubKeys().Single().GetWif(network.NBitcoinNetwork);
                     if (result.AccountDerivation is DirectDerivationStrategy direct && !direct.Segwit)
                         result.AccountOriginal = null; // Saving this would be confusing for user, as xpub of electrum is legacy derivation, but for btcpay, it is segwit derivation
                 }
@@ -91,7 +94,7 @@ namespace BTCPayServer
             {
                 try
                 {
-                    result.RootFingerprint = new HDFingerprint(jobj["ckcc_xfp"].Value<uint>());
+                    result.AccountKeySettings[0].RootFingerprint = new HDFingerprint(jobj["ckcc_xfp"].Value<uint>());
                 }
                 catch { return false; }
             }
@@ -100,7 +103,7 @@ namespace BTCPayServer
             {
                 try
                 {
-                    result.AccountKeyPath = new KeyPath(jobj["derivation"].Value<string>());
+                    result.AccountKeySettings[0].AccountKeyPath = new KeyPath(jobj["derivation"].Value<string>());
                 }
                 catch { return false; }
             }
@@ -121,20 +124,32 @@ namespace BTCPayServer
                 throw new ArgumentNullException(nameof(derivationStrategy));
             AccountDerivation = derivationStrategy;
             Network = network;
+            AccountKeySettings = derivationStrategy.GetExtPubKeys().Select(c => new AccountKeySettings()
+            {
+                AccountKey = c.GetWif(network.NBitcoinNetwork)
+            }).ToArray();
         }
         [JsonIgnore]
         public BTCPayNetwork Network { get; set; }
         public string Source { get; set; }
+
+        [Obsolete("Use GetAccountKeySettings().AccountKeyPath instead")]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public KeyPath AccountKeyPath { get; set; }
 
         public DerivationStrategyBase AccountDerivation { get; set; }
         public string AccountOriginal { get; set; }
 
+        [Obsolete("Use GetAccountKeySettings().RootFingerprint instead")]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public HDFingerprint? RootFingerprint { get; set; }
 
+        [Obsolete("Use GetAccountKeySettings().AccountKey instead")]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public BitcoinExtPubKey ExplicitAccountKey { get; set; }
 
         [JsonIgnore]
+        [Obsolete("Use GetAccountKeySettings().AccountKey instead")]
         public BitcoinExtPubKey AccountKey
         {
             get
@@ -143,16 +158,49 @@ namespace BTCPayServer
             }
         }
 
+        AccountKeySettings[] _AccountKeySettings;
+        public AccountKeySettings[] AccountKeySettings
+        {
+            get
+            {
+                // Legacy
+                if (_AccountKeySettings == null)
+                {
+                    if (this.Network == null)
+                        return null;
+                    _AccountKeySettings = AccountDerivation.GetExtPubKeys().Select(e => new AccountKeySettings()
+                    {
+                        AccountKey = e.GetWif(this.Network.NBitcoinNetwork),
+                    }).ToArray();
+#pragma warning disable CS0618 // Type or member is obsolete
+                    _AccountKeySettings[0].AccountKeyPath = AccountKeyPath;
+                    _AccountKeySettings[0].RootFingerprint = RootFingerprint;
+                    ExplicitAccountKey = null;
+                    AccountKeyPath = null;
+                    RootFingerprint = null;
+#pragma warning restore CS0618 // Type or member is obsolete
+                }
+                return _AccountKeySettings;
+            }
+            set
+            {
+                _AccountKeySettings = value;
+            }
+        }
+
         public IEnumerable<NBXplorer.Models.PSBTRebaseKeyRules> GetPSBTRebaseKeyRules()
         {
-            if (AccountKey != null && AccountKeyPath != null && RootFingerprint is HDFingerprint fp)
+            foreach(var accountKey in AccountKeySettings)
             {
-                yield return new NBXplorer.Models.PSBTRebaseKeyRules()
+                if (accountKey.AccountKeyPath != null && accountKey.RootFingerprint is HDFingerprint fp)
                 {
-                    AccountKey = AccountKey,
-                    AccountKeyPath = AccountKeyPath,
-                    MasterFingerprint = fp
-                };
+                    yield return new NBXplorer.Models.PSBTRebaseKeyRules()
+                    {
+                        AccountKey = accountKey.AccountKey,
+                        AccountKeyPath = accountKey.AccountKeyPath,
+                        MasterFingerprint = fp
+                    };
+                }
             }
         }
 
@@ -183,6 +231,16 @@ namespace BTCPayServer
             {
                 psbt.RebaseKeyPaths(rebase.AccountKey, rebase.AccountKeyPath, rebase.MasterFingerprint);
             }
+        }
+    }
+    public class AccountKeySettings
+    {
+        public HDFingerprint? RootFingerprint { get; set; }
+        public KeyPath AccountKeyPath { get; set; }
+        public BitcoinExtPubKey AccountKey { get; set; }
+        public bool IsFullySetup()
+        {
+            return AccountKeyPath != null && RootFingerprint is HDFingerprint;
         }
     }
 }

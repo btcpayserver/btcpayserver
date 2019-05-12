@@ -64,6 +64,7 @@ namespace BTCPayServer.Controllers
             if (command == null)
             {
                 vm.Decoded = psbt.ToString();
+                vm.FileName = string.Empty;
                 return View(vm);
             }
             else if (command == "ledger")
@@ -96,11 +97,11 @@ namespace BTCPayServer.Controllers
                 ModelState.Remove(nameof(vm.PSBT));
                 return View(nameof(WalletPSBTCombine), new WalletPSBTCombineViewModel() { OtherPSBT = psbt.ToBase64() });
             }
-            else
+            else if (command == "save-psbt")
             {
-                (await GetDerivationSchemeSettings(walletId)).RebaseKeyPaths(psbt);
-                return FilePSBT(psbt, "psbt-export.psbt");
+                return FilePSBT(psbt, vm.FileName);
             }
+            return View(vm);
         }
 
         [HttpGet]
@@ -171,13 +172,18 @@ namespace BTCPayServer.Controllers
 
         private IActionResult ViewPSBT<T>(PSBT psbt, IEnumerable<T> errors = null)
         {
-            return ViewPSBT(psbt, errors?.Select(e => e.ToString()).ToList());
+            return ViewPSBT(psbt, null, errors?.Select(e => e.ToString()).ToList());
         }
         private IActionResult ViewPSBT(PSBT psbt, IEnumerable<string> errors = null)
+        {
+            return ViewPSBT(psbt, null, errors);
+        }
+        private IActionResult ViewPSBT(PSBT psbt, string fileName, IEnumerable<string> errors = null)
         {
             return View(nameof(WalletPSBT), new WalletPSBTViewModel()
             {
                 Decoded = psbt.ToString(),
+                FileName = fileName ?? string.Empty,
                 PSBT = psbt.ToBase64(),
                 Errors = errors?.ToList()
             });

@@ -228,32 +228,32 @@ namespace BTCPayServer.Controllers
                 return View(vm);
 
             DerivationSchemeSettings derivationScheme = await GetDerivationSchemeSettings(walletId);
-            var psbt = await CreatePSBT(network, derivationScheme, vm, cancellation);
 
+            CreatePSBTResponse psbt = null;
+            try
+            {
+                psbt = await CreatePSBT(network, derivationScheme, vm, cancellation);
+            }
+            catch (NBXplorerException ex)
+            {
+                ModelState.AddModelError(nameof(vm.Amount), ex.Error.Message);
+                return View(vm);
+            }
+            catch (NotSupportedException)
+            {
+                ModelState.AddModelError(nameof(vm.Destination), "You need to update your version of NBXplorer");
+                return View(vm);
+            }
+            derivationScheme.RebaseKeyPaths(psbt.PSBT);
             if (command == "ledger")
             {
                 return ViewWalletSendLedger(psbt.PSBT, psbt.ChangeAddress);
             }
-            else
+            else if (command == "analyze-psbt")
             {
-                try
-                {
-                    if (command == "analyze-psbt")
-                        return ViewPSBT(psbt.PSBT);
-                    derivationScheme.RebaseKeyPaths(psbt.PSBT);
-                    return FilePSBT(psbt.PSBT, $"Send-{vm.Amount.Value}-{network.CryptoCode}-to-{destination[0].ToString()}.psbt");
-                }
-                catch (NBXplorerException ex)
-                {
-                    ModelState.AddModelError(nameof(vm.Amount), ex.Error.Message);
-                    return View(vm);
-                }
-                catch (NotSupportedException)
-                {
-                    ModelState.AddModelError(nameof(vm.Destination), "You need to update your version of NBXplorer");
-                    return View(vm);
-                }
+                return ViewPSBT(psbt.PSBT, $"Send-{vm.Amount.Value}-{network.CryptoCode}-to-{destination[0].ToString()}.psbt");
             }
+            return View(vm);
         }
 
         private ViewResult ViewWalletSendLedger(PSBT psbt, BitcoinAddress hintChange = null)

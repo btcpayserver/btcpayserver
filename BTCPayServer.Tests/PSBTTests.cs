@@ -67,7 +67,7 @@ namespace BTCPayServer.Tests
                 var unsignedPSBT = PSBT.Parse(vmPSBT.PSBT, user.SupportedNetwork.NBitcoinNetwork);
                 Assert.NotNull(vmPSBT.Decoded);
 
-                var filePSBT = (FileContentResult)(await walletController.WalletSend(walletId, sendModel, command: "save-psbt"));
+                var filePSBT = (FileContentResult)(await walletController.WalletPSBT(walletId, vmPSBT, "save-psbt"));
                 PSBT.Load(filePSBT.FileContents, user.SupportedNetwork.NBitcoinNetwork);
 
                 await walletController.WalletPSBT(walletId, vmPSBT, "ledger").AssertViewModelAsync<WalletSendLedgerModel>();

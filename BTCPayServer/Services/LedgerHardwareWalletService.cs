@@ -134,10 +134,7 @@ namespace BTCPayServer.Services
                     KeyPath = i.First().KeyPath,
                     PubKey = i.First().PubKey
                 }).ToArray();
-            var signedTransaction = await Ledger.SignTransactionAsync(signatureRequests, unsigned, changeKeyPath, cancellationToken);
-            if (signedTransaction == null)
-                throw new HardwareWalletException("The ledger failed to sign the transaction");
-
+            await Ledger.SignTransactionAsync(signatureRequests, unsigned, changeKeyPath, cancellationToken);
             psbt = psbt.Clone();
             foreach (var signature in signatureRequests)
             {

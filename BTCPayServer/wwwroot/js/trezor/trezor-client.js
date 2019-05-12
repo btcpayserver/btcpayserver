@@ -7,7 +7,7 @@ window.trezorClient = {
 
         document.getElementById("trezor-loading").style.display= "block";
         window.trezorDeviceList = new trezor.DeviceList({
-            config: window.trezorConfig|| null,
+            config: window.trezorConfig || null,
             debug: debug,
             transport: new trezorLink.Lowlevel(new trezorLink.WebUsb(), function () {
                 return null;

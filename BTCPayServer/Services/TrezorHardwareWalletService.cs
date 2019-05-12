@@ -5,6 +5,7 @@ using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Device.Net;
+using Hardwarewallets.Net.AddressManagement;
 using LedgerWallet;
 using NBitcoin;
 using NBitpayClient;
@@ -17,6 +18,8 @@ namespace BTCPayServer.Services
 {
     public class TrezorHardwareWalletService : HardwareWalletService
     {
+        private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
+
         class WebSocketTransport : IDevice
         {
             private readonly WebSocket webSocket;
@@ -120,10 +123,11 @@ namespace BTCPayServer.Services
 
         WebSocketTransport _Transport = null;
 
-        public TrezorHardwareWalletService(System.Net.WebSockets.WebSocket trezorWallet)
+        public TrezorHardwareWalletService(System.Net.WebSockets.WebSocket trezorWallet, BTCPayNetworkProvider btcPayNetworkProvider)
         {
             if (trezorWallet == null)
                 throw new ArgumentNullException(nameof(trezorWallet));
+            _btcPayNetworkProvider = btcPayNetworkProvider;
             _Transport = new WebSocketTransport(trezorWallet);
             _trezor = new TrezorManager(() => Task.FromResult(string.Empty), () => Task.FromResult(string.Empty),
                 _Transport);
@@ -168,8 +172,8 @@ namespace BTCPayServer.Services
             
             
         }
-
-        public override async Task<PSBT> SignTransactionAsync(PSBT psbt, Script changeHint,
+        
+        public override async Task<PSBT> SignTransactionAsync(PSBT psbt, HDFingerprint? rootFingerprint, BitcoinExtPubKey accountKey, Script changeHint,
             CancellationToken cancellationToken)
         {
             var unsigned = psbt.GetGlobalTransaction();
@@ -182,12 +186,9 @@ namespace BTCPayServer.Services
                 .Inputs
                 .Where(o => o.HDKeyPaths.Any())
                 .Where(o => !o.PartialSigs.ContainsKey(o.HDKeyPaths.First().Key))
-                .Select(i => new SignatureRequest()
+                .Select(i => new TxAck.TransactionType.TxInputType()
                 {
-                    InputCoin = i.GetSignableCoin(),
-                    InputTransaction = i.NonWitnessUtxo,
-                    KeyPath = i.HDKeyPaths.First().Value.Item2,
-                    PubKey = i.HDKeyPaths.First().Key
+                   
                 }).ToArray();
             
             
@@ -220,10 +221,10 @@ namespace BTCPayServer.Services
             {
                 Expiry = 0,
                 LockTime = 0,
-                CoinName = "Bitcoin",
+                CoinName = _trezor.CoinUtility.GetCoinInfo(_btcPayNetworkProvider.GetAll().Single(network => network.NBitcoinNetwork == accountKey.Network).CoinType[0]).CoinName,
                 Version = 2,
-                OutputsCount = 1,
-                InputsCount = 1
+                OutputsCount = (uint) psbt.Outputs.Count,
+                InputsCount = (uint) signatureRequests.Length
             };
 
             // For every TX request from Trezor to us, we response with TxAck like below
@@ -309,6 +310,8 @@ namespace BTCPayServer.Services
 
             return psbt;
         }
+
+       
 
         public override void Dispose()
         {

@@ -453,8 +453,7 @@ namespace BTCPayServer.Controllers
                         if (!_dashboard.IsFullySynched(network.CryptoCode, out var summary))
                             throw new Exception($"{network.CryptoCode}: not started or fully synched");
 
-                        var accountKey = derivationSettings.AccountKeySettings.Where(a => a.IsFullySetup()).FirstOrDefault();
-                        accountKey = accountKey ?? derivationSettings.AccountKeySettings.FirstOrDefault();
+                        var accountKey = derivationSettings.GetSigningAccountKeySettings();
                         // Some deployment does not have the AccountKeyPath set, let's fix this...
                         if (accountKey.AccountKeyPath == null)
                         {
@@ -540,12 +539,13 @@ namespace BTCPayServer.Controllers
             var derivationSchemeSettings = await GetDerivationSchemeSettings(walletId);
             if (derivationSchemeSettings == null)
                 return NotFound();
-
+            var store = (await Repository.FindStore(walletId.StoreId, GetUserId()));
             var vm = new WalletSettingsViewModel()
             {
                 Label = derivationSchemeSettings.Label,
                 DerivationScheme = derivationSchemeSettings.AccountDerivation.ToString(),
-                DerivationSchemeInput = derivationSchemeSettings.AccountOriginal
+                DerivationSchemeInput = derivationSchemeSettings.AccountOriginal,
+                SelectedSigningKey = derivationSchemeSettings.SigningKey.ToString()
             };
             vm.AccountKeys = derivationSchemeSettings.AccountKeySettings
                             .Select(e => new WalletSettingsAccountKeyViewModel()
@@ -569,6 +569,7 @@ namespace BTCPayServer.Controllers
             if (derivationScheme == null)
                 return NotFound();
             derivationScheme.Label = vm.Label;
+            derivationScheme.SigningKey = new BitcoinExtPubKey(vm.SelectedSigningKey, derivationScheme.Network.NBitcoinNetwork);
             for (int i = 0; i < derivationScheme.AccountKeySettings.Length; i++)
             {
                 derivationScheme.AccountKeySettings[i].AccountKeyPath = string.IsNullOrWhiteSpace(vm.AccountKeys[i].AccountKeyPath) ? null

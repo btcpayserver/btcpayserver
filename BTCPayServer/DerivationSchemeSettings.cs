@@ -116,6 +116,7 @@ namespace BTCPayServer
         {
 
         }
+
         public DerivationSchemeSettings(DerivationStrategyBase derivationStrategy, BTCPayNetwork network)
         {
             if (network == null)
@@ -129,6 +130,21 @@ namespace BTCPayServer
                 AccountKey = c.GetWif(network.NBitcoinNetwork)
             }).ToArray();
         }
+
+
+        BitcoinExtPubKey _SigningKey;
+        public BitcoinExtPubKey SigningKey
+        {
+            get
+            {
+                return _SigningKey ?? AccountKeySettings?.Select(k => k.AccountKey).FirstOrDefault();
+            }
+            set
+            {
+                _SigningKey = value;
+            }
+        }
+
         [JsonIgnore]
         public BTCPayNetwork Network { get; set; }
         public string Source { get; set; }
@@ -156,6 +172,11 @@ namespace BTCPayServer
             {
                 return ExplicitAccountKey ?? new BitcoinExtPubKey(AccountDerivation.GetExtPubKeys().First(), Network.NBitcoinNetwork);
             }
+        }
+
+        public AccountKeySettings GetSigningAccountKeySettings()
+        {
+            return AccountKeySettings.Single(a => a.AccountKey == SigningKey);
         }
 
         AccountKeySettings[] _AccountKeySettings;
@@ -190,7 +211,7 @@ namespace BTCPayServer
 
         public IEnumerable<NBXplorer.Models.PSBTRebaseKeyRules> GetPSBTRebaseKeyRules()
         {
-            foreach(var accountKey in AccountKeySettings)
+            foreach (var accountKey in AccountKeySettings)
             {
                 if (accountKey.AccountKeyPath != null && accountKey.RootFingerprint is HDFingerprint fp)
                 {

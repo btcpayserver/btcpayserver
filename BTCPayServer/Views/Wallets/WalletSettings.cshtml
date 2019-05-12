@@ -60,6 +60,13 @@
                     <input asp-for="@Model.AccountKeys[i].AccountKeyPath" class="form-control" />
                     <span asp-validation-for="@Model.AccountKeys[i].AccountKeyPath" class="text-danger"></span>
                 </div>
+                @if (Model.IsMultiSig)
+                {
+                    <div class="form-group">
+                        <label asp-for="SelectedSigningKey"></label>
+                        <input asp-for="SelectedSigningKey" type="radio" value="@Model.AccountKeys[i].AccountKey" />
+                    </div>
+                }
             }
 
             <div class="form-group">

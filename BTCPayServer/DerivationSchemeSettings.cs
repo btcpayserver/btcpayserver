@@ -143,6 +143,19 @@ namespace BTCPayServer
             }
         }
 
+        public IEnumerable<NBXplorer.Models.PSBTRebaseKeyRules> GetPSBTRebaseKeyRules()
+        {
+            if (AccountKey != null && AccountKeyPath != null && RootFingerprint is HDFingerprint fp)
+            {
+                yield return new NBXplorer.Models.PSBTRebaseKeyRules()
+                {
+                    AccountKey = AccountKey,
+                    AccountKeyPath = AccountKeyPath,
+                    MasterFingerprint = fp
+                };
+            }
+        }
+
         public string Label { get; set; }
 
         [JsonIgnore]
@@ -162,6 +175,14 @@ namespace BTCPayServer
         public string ToJson()
         {
             return Network.NBXplorerNetwork.Serializer.ToString(this);
+        }
+
+        public void RebaseKeyPaths(PSBT psbt)
+        {
+            foreach (var rebase in GetPSBTRebaseKeyRules())
+            {
+                psbt.RebaseKeyPaths(rebase.AccountKey, rebase.AccountKeyPath, rebase.MasterFingerprint);
+            }
         }
     }
 }

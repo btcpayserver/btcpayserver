@@ -129,6 +129,7 @@ namespace BTCPayServer.Services
             var signatureRequests = psbt
                 .Inputs
                 .HDKeysFor(rootFingerprint, accountKey)
+                .Where(hd => !hd.Coin.PartialSigs.ContainsKey(hd.PubKey)) // Don't want to sign something twice
                 .GroupBy(hd => hd.Coin)
                 .Select(i => new SignatureRequest()
                 {

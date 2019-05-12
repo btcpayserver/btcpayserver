@@ -117,10 +117,6 @@ namespace BTCPayServer.Services
 
         public override async Task<PSBT> SignTransactionAsync(PSBT psbt, HDFingerprint? rootFingerprint, BitcoinExtPubKey accountKey, Script changeHint, CancellationToken cancellationToken)
         {
-            HashSet<HDFingerprint> knownFingerprints = new HashSet<HDFingerprint>();
-            knownFingerprints.Add(accountKey.GetPublicKey().GetHDFingerPrint());
-            if (rootFingerprint is HDFingerprint fp)
-                knownFingerprints.Add(fp);
             var unsigned = psbt.GetGlobalTransaction();
             var changeKeyPath = psbt.Outputs.HDKeysFor(rootFingerprint, accountKey)
                                             .Where(o => changeHint == null ? true : changeHint == o.Coin.ScriptPubKey)

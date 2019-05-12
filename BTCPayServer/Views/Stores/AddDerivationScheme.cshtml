@@ -130,7 +130,7 @@
                     <label asp-for="Enabled"></label>
                     <input asp-for="Enabled" type="checkbox" class="form-check" />
                 </div>
-                <button name="command" type="submit" class="btn btn-primary" value="save">Continue</button>
+                <button name="command" type="submit" class="btn btn-primary" value="save" id="Continue">Continue</button>
             }
             else
             {
@@ -172,7 +172,7 @@
                     <input asp-for="HintAddress" class="form-control" />
                     <span asp-validation-for="HintAddress" class="text-danger"></span>
                 </div>
-                <button name="command" type="submit" class="btn btn-primary" value="save">Confirm</button>
+                <button name="command" type="submit" class="btn btn-primary" value="save" id="Confirm">Confirm</button>
             }
         </form>
     </div>

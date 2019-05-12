@@ -25,7 +25,6 @@
         @if (!string.IsNullOrEmpty(Model.Decoded))
         {
             <h3>Decoded PSBT</h3>
-            <pre><code class="json">@Model.Decoded</code></pre>
             <div class="form-group">
                 <form method="post" asp-action="WalletPSBT">
                     <div class="dropdown" style="margin-top:16px;">
@@ -42,6 +41,7 @@
                     </div>
                 </form>
             </div>
+            <pre><code class="json">@Model.Decoded</code></pre>
         }
         <h3>PSBT to decode</h3>
         <form class="form-group" method="post" asp-action="WalletPSBT">

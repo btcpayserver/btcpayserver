@@ -28,6 +28,22 @@ namespace BTCPayServer.Tests
             formFile.ContentDisposition = $"form-data; name=\"file\"; filename=\"{fileInfo.Name}\"";
             return formFile;
         }
+        public static FormFile GetFormFile(string filename, byte[] content)
+        {
+            File.WriteAllBytes(filename, content);
+
+            var fileInfo = new FileInfo(filename);
+            FormFile formFile = new FormFile(
+                new FileStream(filename, FileMode.OpenOrCreate),
+                0,
+                fileInfo.Length, fileInfo.Name, fileInfo.Name)
+            {
+                Headers = new HeaderDictionary()
+            };
+            formFile.ContentType = "application/octet-stream";
+            formFile.ContentDisposition = $"form-data; name=\"file\"; filename=\"{fileInfo.Name}\"";
+            return formFile;
+        }
         public static void Eventually(Action act)
         {
             CancellationTokenSource cts = new CancellationTokenSource(20000);

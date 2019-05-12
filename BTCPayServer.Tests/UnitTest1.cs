@@ -2080,8 +2080,8 @@ donation:
                     var firstPayment = productPartDue - missingMoney;
                     cashCow.SendToAddress(invoiceAddress, Money.Coins(firstPayment));
 
-                    TestUtils.Eventually(() =>
-                    {
+                        TestUtils.Eventually(() =>
+                        {
                         invoice = user.BitPay.GetInvoice(invoice.Id);
                         // Check that for the second payment, network fee are included
                         due = Money.Parse(invoice.CryptoInfo[0].Due);

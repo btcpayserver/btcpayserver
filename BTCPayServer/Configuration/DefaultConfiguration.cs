@@ -29,6 +29,7 @@ namespace BTCPayServer.Configuration
             app.Option("-n | --network", $"Set the network among (mainnet,testnet,regtest) (default: mainnet)", CommandOptionType.SingleValue);
             app.Option("--testnet | -testnet", $"Use testnet (deprecated, use --network instead)", CommandOptionType.BoolValue);
             app.Option("--regtest | -regtest", $"Use regtest (deprecated, use --network instead)", CommandOptionType.BoolValue);
+            app.Option("--allow-admin-registration", $"For debug only, will show a checkbox when a new user register to add himself as admin. (default: false)", CommandOptionType.BoolValue);
             app.Option("--chains | -c", $"Chains to support as a comma separated (default: btc; available: {chains})", CommandOptionType.SingleValue);
             app.Option("--postgres", $"Connection string to a PostgreSQL database (default: SQLite)", CommandOptionType.SingleValue);
             app.Option("--mysql", $"Connection string to a MySQL database (default: SQLite)", CommandOptionType.SingleValue);

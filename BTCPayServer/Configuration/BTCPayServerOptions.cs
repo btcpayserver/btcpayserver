@@ -145,6 +145,7 @@ namespace BTCPayServer.Configuration
             PostgresConnectionString = conf.GetOrDefault<string>("postgres", null);
             MySQLConnectionString = conf.GetOrDefault<string>("mysql", null);
             BundleJsCss = conf.GetOrDefault<bool>("bundlejscss", true);
+            AllowAdminRegistration = conf.GetOrDefault<bool>("allow-admin-registration", false);
             TorrcFile = conf.GetOrDefault<string>("torrcfile", null);
 
             var socksEndpointString = conf.GetOrDefault<string>("socksendpoint", null);
@@ -273,6 +274,7 @@ namespace BTCPayServer.Configuration
             get;
             set;
         }
+        public bool AllowAdminRegistration { get; set; }
         public List<SSHFingerprint> TrustedFingerprints { get; set; } = new List<SSHFingerprint>();
         public SSHSettings SSHSettings
         {

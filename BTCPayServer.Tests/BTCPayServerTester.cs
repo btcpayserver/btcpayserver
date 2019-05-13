@@ -107,7 +107,7 @@ namespace BTCPayServer.Tests
 
             config.AppendLine($"btc.explorer.url={NBXplorerUri.AbsoluteUri}");
             config.AppendLine($"btc.explorer.cookiefile=0");
-
+            config.AppendLine("allow-admin-registration=1");
             config.AppendLine($"ltc.explorer.url={LTCNBXplorerUri.AbsoluteUri}");
             config.AppendLine($"ltc.explorer.cookiefile=0");
             config.AppendLine($"btc.lightning={IntegratedLightning.AbsoluteUri}");

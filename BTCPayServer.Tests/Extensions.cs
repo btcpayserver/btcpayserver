@@ -3,12 +3,17 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using OpenQA.Selenium;
 using Xunit;
 
 namespace BTCPayServer.Tests
 {
     public static class Extensions
     {
+        public static void AssertNoError(this IWebDriver driver)
+        {
+            Assert.NotNull(driver.FindElement(By.ClassName("navbar-brand")));
+        }
         public static T AssertViewModel<T>(this IActionResult result)
         {
             Assert.NotNull(result);

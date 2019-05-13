@@ -72,7 +72,7 @@
                     {
                         if (User.IsInRole(Roles.ServerAdmin))
                         {
-                            <li class="nav-item"><a asp-area="" asp-controller="Server" asp-action="ListUsers" class="nav-link js-scroll-trigger">Server settings</a></li>
+                            <li class="nav-item"><a asp-area="" asp-controller="Server" asp-action="ListUsers" class="nav-link js-scroll-trigger" id="ServerSettings">Server settings</a></li>
                         }
                         <li class="nav-item"><a asp-area="" asp-controller="UserStores" asp-action="ListStores" class="nav-link js-scroll-trigger" id="Stores">Stores</a></li>
                         <li class="nav-item"><a asp-area="" asp-controller="Apps" asp-action="ListApps" class="nav-link js-scroll-trigger" id="Apps">Apps</a></li>

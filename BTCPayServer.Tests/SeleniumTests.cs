@@ -6,6 +6,7 @@ using BTCPayServer.Tests.Logging;
 using Xunit.Abstractions;
 using OpenQA.Selenium.Interactions;
 using System.Linq;
+using NBitcoin;
 
 namespace BTCPayServer.Tests
 {
@@ -24,6 +25,9 @@ namespace BTCPayServer.Tests
             using (var tester = ServerTester.Create())
             {
                 tester.Start();
+                var logOut = Driver.FindElements(By.Id("Logout"));
+                if (logOut.Count != 0)
+                    logOut[0].Click();
                 func.Invoke(tester.PayTester.ServerUri.ToString());
             }
         }
@@ -39,23 +43,27 @@ namespace BTCPayServer.Tests
             Driver = new ChromeDriver(Environment.CurrentDirectory, options);
         }
 
-        public void RegisterNewUser(string random)
+        public string RegisterNewUser(bool isAdmin = false)
         {
+            var usr = RandomUtils.GetUInt256().ToString() + "@a.com";
             Driver.FindElement(By.Id("Register")).Click();
-            Driver.FindElement(By.Id("Email")).SendKeys(random + "@a.com");
+            Driver.FindElement(By.Id("Email")).SendKeys(usr);
             Driver.FindElement(By.Id("Password")).SendKeys("123456");
             Driver.FindElement(By.Id("ConfirmPassword")).SendKeys("123456");
+            Driver.FindElement(By.Id("IsAdmin")).Click();
             Driver.FindElement(By.Id("RegisterButton")).Click();
-            return;
+            Driver.AssertNoError();
+            return usr;
         }
 
-        public void CreateNewStore(string random)
+        public string CreateNewStore()
         {
+            var usr = "Store" + RandomUtils.GetUInt64().ToString();
             Driver.FindElement(By.Id("Stores")).Click();
             Driver.FindElement(By.Id("CreateStore")).Click();
-            Driver.FindElement(By.Id("Name")).SendKeys("Store" + random);
+            Driver.FindElement(By.Id("Name")).SendKeys(usr);
             Driver.FindElement(By.Id("Create")).Click();
-            return;
+            return usr;
         }
 
         public void AddDerivationScheme()
@@ -80,9 +88,9 @@ namespace BTCPayServer.Tests
         
     }
     
+    [Trait("Selenium", "Selenium")]
     public class ChromeTests : Browsers
     {
-        private string random = (new Random()).Next(1, 1000).ToString();
         [Fact]
         public void AccessRequiresLogin()
         {
@@ -95,20 +103,36 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        public void CanNavigateServerSettings()
+        {
+            Wrap(s =>
+            {
+                Driver.Navigate().GoToUrl(s);
+                RegisterNewUser(true);
+                Driver.FindElement(By.Id("ServerSettings")).Click();
+                Driver.AssertNoError();
+                ClickOnAllSideMenus();
+                Driver.Quit();
+            });
+        }
+
+        [Fact]
         public void NewUserLogin()
         {
             Wrap(s =>
             {
                 //Register & Log Out
                 Driver.Navigate().GoToUrl(s);
-                RegisterNewUser(random);
+                var email = RegisterNewUser();
                 Driver.FindElement(By.Id("Logout")).Click();
-                
+                Driver.AssertNoError();
+
                 //Same User Can Log Back In
                 Driver.FindElement(By.Id("Login")).Click();
-                Driver.FindElement(By.Id("Email")).SendKeys(random + "@a.com");
+                Driver.FindElement(By.Id("Email")).SendKeys(email);
                 Driver.FindElement(By.Id("Password")).SendKeys("123456");
                 Driver.FindElement(By.Id("LoginButton")).Click();
+                Driver.AssertNoError();
 
                 //Change Password & Log Out
                 Driver.FindElement(By.Id("MySettings")).Click();
@@ -118,10 +142,11 @@ namespace BTCPayServer.Tests
                 Driver.FindElement(By.Id("ConfirmPassword")).SendKeys("abc???");
                 Driver.FindElement(By.Id("UpdatePassword")).Click();
                 Driver.FindElement(By.Id("Logout")).Click();
+                Driver.AssertNoError();
 
                 //Log In With New Password
                 Driver.FindElement(By.Id("Login")).Click();
-                Driver.FindElement(By.Id("Email")).SendKeys(random + "@a.com");
+                Driver.FindElement(By.Id("Email")).SendKeys(email);
                 Driver.FindElement(By.Id("Password")).SendKeys("abc???");
                 Driver.FindElement(By.Id("LoginButton")).Click();
                 Assert.True(Driver.PageSource.Contains("Stores"), "Can't Access Stores");
@@ -136,11 +161,26 @@ namespace BTCPayServer.Tests
             Wrap(s =>
             {
                 Driver.Navigate().GoToUrl(s);
-                RegisterNewUser(random);
-                CreateNewStore(random);
-                Assert.Contains("Store" + random, Driver.PageSource);
+                RegisterNewUser();
+                var store = CreateNewStore();
+                Driver.AssertNoError();
+                Assert.Contains(store, Driver.PageSource);
+
+                ClickOnAllSideMenus();
+
                 Driver.Quit();
             });
+        }
+
+        private void ClickOnAllSideMenus()
+        {
+            var links = Driver.FindElements(By.CssSelector(".nav-pills .nav-link")).Select(c => c.GetAttribute("href")).ToList();
+            Assert.NotEmpty(links);
+            foreach (var l in links)
+            {
+                Driver.Navigate().GoToUrl(l);
+                Driver.AssertNoError();
+            }
         }
 
         [Fact]
@@ -149,14 +189,14 @@ namespace BTCPayServer.Tests
             Wrap(s =>
             {
                 Driver.Navigate().GoToUrl(s);
-                RegisterNewUser(random);
-                CreateNewStore(random);
+                RegisterNewUser();
+                var store = CreateNewStore();
                 AddDerivationScheme();
 
                 Driver.FindElement(By.Id("Invoices")).Click();
                 Driver.FindElement(By.Id("CreateNewInvoice")).Click();
                 Driver.FindElement(By.CssSelector("input#Amount.form-control")).SendKeys("100");
-                Driver.FindElement(By.Name("StoreId")).SendKeys("Deriv" + random + Keys.Enter);
+                Driver.FindElement(By.Name("StoreId")).SendKeys(store + Keys.Enter);
                 Driver.FindElement(By.Id("Create")).Click();
                 Assert.True(Driver.PageSource.Contains("just created!"), "Unable to create Invoice");
                 Driver.Quit();
@@ -169,14 +209,14 @@ namespace BTCPayServer.Tests
             Wrap(s =>
             {
                 Driver.Navigate().GoToUrl(s);
-                RegisterNewUser(random);
-                CreateNewStore(random);
+                RegisterNewUser();
+                var store = CreateNewStore();
 
                 Driver.FindElement(By.Id("Apps")).Click();
                 Driver.FindElement(By.Id("CreateNewApp")).Click();
-                Driver.FindElement(By.Name("Name")).SendKeys("PoS" + random);
+                Driver.FindElement(By.Name("Name")).SendKeys("PoS" + store);
                 Driver.FindElement(By.CssSelector("select#SelectedAppType.form-control")).SendKeys("PointOfSale" + Keys.Enter);
-                Driver.FindElement(By.CssSelector("select#SelectedStore.form-control")).SendKeys("Store" + random + Keys.Enter);
+                Driver.FindElement(By.CssSelector("select#SelectedStore.form-control")).SendKeys(store + Keys.Enter);
                 Driver.FindElement(By.Id("Create")).Click();
                 Driver.FindElement(By.CssSelector("input#EnableShoppingCart.form-check")).Click();
                 Driver.FindElement(By.Id("SaveSettings")).Click();
@@ -191,15 +231,15 @@ namespace BTCPayServer.Tests
             Wrap(s =>
             {
                 Driver.Navigate().GoToUrl(s);
-                RegisterNewUser(random);
-                CreateNewStore(random);
+                RegisterNewUser();
+                var store = CreateNewStore();
                 AddDerivationScheme();
 
                 Driver.FindElement(By.Id("Apps")).Click();
                 Driver.FindElement(By.Id("CreateNewApp")).Click();
-                Driver.FindElement(By.Name("Name")).SendKeys("CF" + random);
+                Driver.FindElement(By.Name("Name")).SendKeys("CF" + store);
                 Driver.FindElement(By.CssSelector("select#SelectedAppType.form-control")).SendKeys("Crowdfund" + Keys.Enter);
-                Driver.FindElement(By.CssSelector("select#SelectedStore.form-control")).SendKeys("Store" + random + Keys.Enter);
+                Driver.FindElement(By.CssSelector("select#SelectedStore.form-control")).SendKeys(store + Keys.Enter);
                 Driver.FindElement(By.Id("Create")).Click();
                 Driver.FindElement(By.Id("Title")).SendKeys("Kukkstarter");
                 Driver.FindElement(By.CssSelector("div.note-editable.card-block")).SendKeys("1BTC = 1BTC");
@@ -219,8 +259,8 @@ namespace BTCPayServer.Tests
             Wrap(s =>
             {
                 Driver.Navigate().GoToUrl(s);
-                RegisterNewUser(random);
-                CreateNewStore(random);
+                RegisterNewUser();
+                CreateNewStore();
                 AddDerivationScheme();
 
                 Driver.FindElement(By.Id("PaymentRequests")).Click();
@@ -232,6 +272,25 @@ namespace BTCPayServer.Tests
                 Driver.FindElement(By.Name("ViewAppButton")).SendKeys(Keys.Return);
                 Driver.SwitchTo().Window(Driver.WindowHandles.Last());
                 Assert.True(Driver.PageSource.Contains("Amount due"), "Unable to create Payment Request");
+                Driver.Quit();
+            });
+        }
+
+        [Fact]
+        public void CanManageWallet()
+        {
+            Wrap(s =>
+            {
+                Driver.Navigate().GoToUrl(s);
+                RegisterNewUser();
+                CreateNewStore();
+                AddDerivationScheme();
+
+                Driver.FindElement(By.Id("Wallets")).Click();
+                Driver.FindElement(By.LinkText("Manage")).Click();
+
+                ClickOnAllSideMenus();
+
                 Driver.Quit();
             });
         }

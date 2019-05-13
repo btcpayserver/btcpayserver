@@ -84,29 +84,6 @@ namespace BTCPayServer.Controllers
                 Current = !h.UnAssigned.HasValue
             }).ToArray();
 
-            var updateConfirmationCountIfNeeded = invoice
-                .GetPayments()
-                .Select<PaymentEntity, Task>(async payment =>
-                {
-                    var paymentNetwork = _NetworkProvider.GetNetwork(payment.GetCryptoCode());
-                    var paymentData = payment.GetCryptoPaymentData();
-                    if (paymentData is Payments.Bitcoin.BitcoinLikePaymentData onChainPaymentData)
-                    {
-                        int confirmationCount = 0;
-                        if ((onChainPaymentData.ConfirmationCount < paymentNetwork.MaxTrackedConfirmation && payment.Accounted)
-                             && (onChainPaymentData.Legacy || invoice.MonitoringExpiration < DateTimeOffset.UtcNow))
-                        // The confirmation count in the paymentData is not up to date
-                        {
-                            confirmationCount = (await ((ExplorerClientProvider)_ServiceProvider.GetService(typeof(ExplorerClientProvider))).GetExplorerClient(payment.GetCryptoCode())?.GetTransactionAsync(onChainPaymentData.Outpoint.Hash))?.Confirmations ?? 0;
-                            onChainPaymentData.ConfirmationCount = confirmationCount;
-                            payment.SetCryptoPaymentData(onChainPaymentData);
-                            await _InvoiceRepository.UpdatePayments(new List<PaymentEntity> { payment });
-                        }
-                    }
-                })
-                .ToArray();
-            await Task.WhenAll(updateConfirmationCountIfNeeded);
-
             var details = InvoicePopulatePayments(invoice);
             model.CryptoPayments = details.CryptoPayments;
             model.OnChainPayments = details.OnChainPayments;

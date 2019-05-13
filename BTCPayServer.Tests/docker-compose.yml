@@ -50,6 +50,7 @@ services:
       - lightning-charged
       - customer_lnd
       - merchant_lnd
+      - selenium
 
   devlnd:
     image: btcpayserver/bitcoin:0.18.0
@@ -271,6 +272,9 @@ services:
       - "bitcoin_datadir:/deps/.bitcoin"
     links:
       - bitcoind
+
+  selenium:
+    image:  selenium/standalone-chrome
 
 volumes:
     bitcoin_datadir:

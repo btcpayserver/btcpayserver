@@ -6,19 +6,19 @@
     <div class="modal" id="product-modal" tabindex="-1" role="dialog">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Product management</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <p>Modal body text goes here.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button type="button" class="js-product-save btn btn-primary">Save Changes</button>
-            </div>
+                <div class="modal-header">
+                    <h5 class="modal-title">Product management</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Modal body text goes here.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="js-product-save btn btn-primary">Save Changes</button>
+                </div>
             </div>
         </div>
     </div>
@@ -119,7 +119,7 @@
                         {
                             <partial name="NotificationEmailWarning"></partial>
                         }
-                        <input type="email" asp-for="NotificationEmail" class="form-control"/>
+                        <input type="email" asp-for="NotificationEmail" class="form-control" />
                         <span asp-validation-for="NotificationEmail" class="text-danger"></span>
                     </div>
                     <div class="form-group">
@@ -127,9 +127,9 @@
                         <select asp-for="RedirectAutomatically" asp-items="Model.RedirectAutomaticallySelectList" class="form-control"></select>
                         <span asp-validation-for="RedirectAutomatically" class="text-danger"></span>
                     </div>
-                    <input type="hidden" asp-for="NotificationEmailWarning"/>
+                    <input type="hidden" asp-for="NotificationEmailWarning" />
                     <div class="form-group">
-                        <input type="submit" class="btn btn-primary" value="Save Settings" />
+                        <input type="submit" class="btn btn-primary" value="Save Settings" id="SaveSettings" />
                     </div>
                     <div class="form-group">
                         <div class="accordion" id="accordian-dev-info">
@@ -163,7 +163,7 @@
                                     <h2 class="mb-0">
                                         <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#accordian-dev-info-embed-pos-iframe" aria-expanded="false" aria-controls="accordian-dev-info-embed-pos-iframe">
                                             Embed POS with Iframe
-                                          
+
                                         </button>
                                     </h2>
                                 </div>
@@ -171,17 +171,17 @@
                                     <div class="card-body">
                                         You can embed the POS using an iframe
                                         @{
-                                            var iframe = $"<iframe src='{(Url.Action("ViewPointOfSale", "AppsPublic", new {appId = Model.Id}, Context.Request.Scheme))}' style='max-width: 100%; border: 0;'></iframe>";
+                                            var iframe = $"<iframe src='{(Url.Action("ViewPointOfSale", "AppsPublic", new { appId = Model.Id }, Context.Request.Scheme))}' style='max-width: 100%; border: 0;'></iframe>";
                                         }
                                         <pre><code class="html">@iframe</code></pre>
-                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="card">
                                 <div class="card-header" id="accordian-dev-info-notification-header">
                                     <h2 class="mb-0">
                                         <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#accordian-dev-info-notification" aria-expanded="false" aria-controls="accordian-dev-info-notification">
-                                           Notification Url Callbacks
+                                            Notification Url Callbacks
                                         </button>
                                     </h2>
                                 </div>
@@ -196,7 +196,8 @@
                                                 <li>Verify that the <code>orderId</code> is from your backend, that the <code>price</code> is correct and that <code>status</code> is either <code>confirmed</code> or <code>complete</code></li>
                                                 <li>You can then ship your order</li>
                                             </ul>
-                                        </p> </div>
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -204,8 +205,8 @@
                     </div>
                 </form>
                 <a asp-action="ListApps">Back to the app list</a>
-                
-                
+
+
             </div>
         </div>
     </div>
@@ -230,38 +231,38 @@
     </script>
 
     <script id="template-product-content" type="text/template">
-    <div class="mb-3">
-        <input class="js-product-id" type="hidden" name="id" value="{id}">
-        <input class="js-product-index" type="hidden" name="index" value="{index}">
-        <div class="form-row">
-            <div class="col-sm-6">
-                <label>Title</label>*
-                <input type="text" class="js-product-title form-control mb-2" value="{title}" autofocus />
+        <div class="mb-3">
+            <input class="js-product-id" type="hidden" name="id" value="{id}">
+            <input class="js-product-index" type="hidden" name="index" value="{index}">
+            <div class="form-row">
+                <div class="col-sm-6">
+                    <label>Title</label>*
+                    <input type="text" class="js-product-title form-control mb-2" value="{title}" autofocus />
+                </div>
+                <div class="col-sm-3">
+                    <label>Price</label>*
+                    <input type="number" class="js-product-price form-control mb-2" value="{price}" />
+                </div>
+                <div class="col-sm-3">
+                    <label>Custom price</label>
+                    <select class="js-product-custom form-control">
+                        {custom}
+                    </select>
+                </div>
             </div>
-            <div class="col-sm-3">
-                <label>Price</label>*
-                <input type="number" class="js-product-price form-control mb-2" value="{price}" />
+            <div class="form-row">
+                <div class="col">
+                    <label>Image</label>
+                    <input type="text" class="js-product-image form-control mb-2" value="{image}" />
+                </div>
             </div>
-            <div class="col-sm-3">
-                <label>Custom price</label>
-                <select class="js-product-custom form-control">
-                    {custom}
-                </select>
+            <div class="form-row">
+                <div class="col">
+                    <label>Description</label>
+                    <textarea rows="3" cols="40" class="js-product-description form-control mb-2">{description}</textarea>
+                </div>
             </div>
         </div>
-        <div class="form-row">
-            <div class="col">
-                <label>Image</label>
-                <input type="text" class="js-product-image form-control mb-2" value="{image}" />
-            </div>
-        </div>
-        <div class="form-row">
-            <div class="col">
-                <label>Description</label>
-                <textarea rows="3" cols="40" class="js-product-description form-control mb-2">{description}</textarea>
-            </div>
-        </div>
-    </div>
     </script>
 
     <script src="~/products/js/products.js"></script>

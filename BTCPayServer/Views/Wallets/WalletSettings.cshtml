@@ -1,0 +1,77 @@
+﻿@model WalletSettingsViewModel
+@{
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData["Title"] = "Wallet settings";
+    ViewData.SetActivePageAndTitle(WalletsNavPages.Settings);
+}
+
+<div class="row">
+    <div class="col-md-10 text-center">
+        <partial name="_StatusMessage" for="@TempData["TempDataProperty-StatusMessage"]" />
+    </div>
+</div>
+
+<h4>@ViewData["Title"]</h4>
+<div class="row">
+    <div class="col-md-10">
+        <p>
+            Additional information about your wallet
+        </p>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-6">
+        <form method="post" asp-action="WalletSettings">
+            <div class="form-group">
+                <label asp-for="Label"></label>
+                <input asp-for="Label" class="form-control" />
+                <span asp-validation-for="Label" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="DerivationScheme"></label>
+                <input asp-for="DerivationScheme" class="form-control" readonly />
+                <span asp-validation-for="DerivationScheme" class="text-danger"></span>
+            </div>
+            @if (!string.IsNullOrEmpty(Model.DerivationSchemeInput) && Model.DerivationSchemeInput != Model.DerivationScheme)
+            {
+                <div class="form-group">
+                    <label asp-for="DerivationSchemeInput"></label>
+                    <input asp-for="DerivationSchemeInput" class="form-control" readonly />
+                    <span asp-validation-for="DerivationSchemeInput" class="text-danger"></span>
+                </div>
+            }
+
+            @for (int i = 0; i < Model.AccountKeys.Count; i++)
+            {
+                <hr />
+                <h5>Account key @i</h5>
+                <div class="form-group">
+                    <label asp-for="@Model.AccountKeys[i].AccountKey"></label>
+                    <input asp-for="@Model.AccountKeys[i].AccountKey" class="form-control" readonly />
+                    <span asp-validation-for="@Model.AccountKeys[i].AccountKey" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="@Model.AccountKeys[i].MasterFingerprint"></label>
+                    <input asp-for="@Model.AccountKeys[i].MasterFingerprint" class="form-control" />
+                    <span asp-validation-for="@Model.AccountKeys[i].MasterFingerprint" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="@Model.AccountKeys[i].AccountKeyPath"></label>
+                    <input asp-for="@Model.AccountKeys[i].AccountKeyPath" class="form-control" />
+                    <span asp-validation-for="@Model.AccountKeys[i].AccountKeyPath" class="text-danger"></span>
+                </div>
+                @if (Model.IsMultiSig)
+                {
+                    <div class="form-group">
+                        <label asp-for="SelectedSigningKey"></label>
+                        <input asp-for="SelectedSigningKey" type="radio" value="@Model.AccountKeys[i].AccountKey" />
+                    </div>
+                }
+            }
+
+            <div class="form-group">
+                <button name="command" type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </form>
+    </div>
+</div>

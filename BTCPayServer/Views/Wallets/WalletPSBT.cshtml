@@ -4,6 +4,12 @@
     ViewData["Title"] = "PSBT";
     ViewData.SetActivePageAndTitle(WalletsNavPages.PSBT);
 }
+
+<div class="row">
+    <div class="col-md-10 text-center">
+        <partial name="_StatusMessage" for="@TempData["TempDataProperty-StatusMessage"]" />
+    </div>
+</div>
 <div class="row">
     <div class="col-md-10">
         @if (Model.Errors != null && Model.Errors.Count != 0)
@@ -19,9 +25,8 @@
         @if (!string.IsNullOrEmpty(Model.Decoded))
         {
             <h3>Decoded PSBT</h3>
-            <pre><code class="json">@Model.Decoded</code></pre>
             <div class="form-group">
-                <form method="post" asp-action="WalletPSBTSign">
+                <form method="post" asp-action="WalletPSBT">
                     <div class="dropdown" style="margin-top:16px;">
                         <button class="btn btn-primary dropdown-toggle" type="button" id="SendMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             Sign with...
@@ -31,11 +36,12 @@
                             <button name="command" type="submit" class="dropdown-item" value="ledger">... your Ledger Wallet device</button>
                             <button name="command" type="submit" class="dropdown-item" value="save-psbt">... a wallet supporting PSBT files</button>
                         </div>
-                        or
-                        <button name="command" type="submit" class="btn btn-primary" value="broadcast">Broadcast</button>
+                        <button name="command" type="submit" class="btn btn-secondary" value="broadcast">Broadcast</button>
+                        <button name="command" type="submit" class="btn btn-secondary" value="combine">Combine with another PSBT</button>
                     </div>
                 </form>
             </div>
+            <pre><code class="json">@Model.Decoded</code></pre>
         }
         <h3>PSBT to decode</h3>
         <form class="form-group" method="post" asp-action="WalletPSBT">

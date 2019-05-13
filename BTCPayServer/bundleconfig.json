@@ -6,7 +6,8 @@
             "wwwroot/vendor/magnific-popup/magnific-popup.css",
             "wwwroot/vendor/font-awesome/css/font-awesome.css",
             "wwwroot/main/**/*.css",
-            "wwwroot/vendor/animatecss/animate.css"
+            "wwwroot/vendor/animatecss/animate.css",
+            "wwwroot/vendor/flatpickr/flatpickr.css"
         ]
     },
     {
@@ -19,6 +20,8 @@
             "wwwroot/vendor/scrollreveal/scrollreveal.min.js",
             "wwwroot/vendor/magnific-popup/jquery.magnific-popup.js",
             "wwwroot/vendor/bootstrap4-creativestart/*.js",
+            "wwwroot/vendor/moment/moment.min.js",
+            "wwwroot/vendor/flatpickr/flatpickr.js",
             "wwwroot/main/**/*.js"
         ]
     },
@@ -90,7 +93,7 @@
     {
         "outputFileName": "wwwroot/bundles/crowdfund-bundle-2.min.js",
         "inputFiles": [
-            "wwwroot/vendor/moment/moment.js"
+            "wwwroot/vendor/moment/moment.min.js"
         ],
         "minify": {
             "enabled": false
@@ -101,7 +104,6 @@
         "inputFiles": [
             "wwwroot/vendor/highlightjs/highlight.min.js",
             "wwwroot/vendor/summernote/summernote-bs4.js",
-            "wwwroot/vendor/flatpickr/flatpickr.js",
             "wwwroot/crowdfund-admin/main.js",
             "wwwroot/products/js/products.js",
             "wwwroot/products/js/products.jquery.js"
@@ -111,8 +113,7 @@
         "outputFileName": "wwwroot/bundles/crowdfund-admin-bundle.min.css",
         "inputFiles": [
             "wwwroot/vendor/highlightjs/default.min.css",
-            "wwwroot/vendor/summernote/summernote-bs4.css",
-            "wwwroot/vendor/flatpickr/flatpickr.min.css"
+            "wwwroot/vendor/summernote/summernote-bs4.css"
         ]
     },
     {
@@ -128,7 +129,6 @@
         "outputFileName": "wwwroot/bundles/payment-request-admin-bundle.min.js",
         "inputFiles": [
             "wwwroot/vendor/summernote/summernote-bs4.js",
-            "wwwroot/vendor/flatpickr/flatpickr.js",
             "wwwroot/payment-request-admin/**/*.js"
         ]
     },
@@ -136,8 +136,7 @@
     {
         "outputFileName": "wwwroot/bundles/payment-request-admin-bundle.min.css",
         "inputFiles": [
-            "wwwroot/vendor/summernote/summernote-bs4.css",
-            "wwwroot/vendor/flatpickr/flatpickr.min.css"
+            "wwwroot/vendor/summernote/summernote-bs4.css"
         ]
     },
 
@@ -157,7 +156,7 @@
     {
         "outputFileName": "wwwroot/bundles/payment-request-bundle-2.min.js",
         "inputFiles": [
-            "wwwroot/vendor/moment/moment.js"
+            "wwwroot/vendor/moment/moment.min.js"
         ],
         "minify": {
             "enabled": false

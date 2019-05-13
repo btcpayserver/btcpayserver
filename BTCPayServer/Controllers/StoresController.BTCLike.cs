@@ -202,10 +202,17 @@ namespace BTCPayServer.Controllers
                         var newStrategy = ParseDerivationStrategy(vm.DerivationScheme, null, network);
                         if (newStrategy.AccountDerivation != strategy?.AccountDerivation)
                         {
+                            var accountKey = string.IsNullOrEmpty(vm.AccountKey) ? null : new BitcoinExtPubKey(vm.AccountKey, network.NBitcoinNetwork);
+                            if (accountKey != null)
+                            {
+                                var accountSettings = newStrategy.AccountKeySettings.FirstOrDefault(a => a.AccountKey == accountKey);
+                                if (accountSettings != null)
+                                {
+                                    accountSettings.AccountKeyPath = vm.KeyPath == null ? null : KeyPath.Parse(vm.KeyPath);
+                                    accountSettings.RootFingerprint = string.IsNullOrEmpty(vm.RootFingerprint) ? (HDFingerprint?)null : new HDFingerprint(NBitcoin.DataEncoders.Encoders.Hex.DecodeData(vm.RootFingerprint));
+                                }
+                            }
                             strategy = newStrategy;
-                            strategy.AccountKeyPath = vm.KeyPath == null ? null : KeyPath.Parse(vm.KeyPath);
-                            strategy.RootFingerprint = string.IsNullOrEmpty(vm.RootFingerprint) ? (HDFingerprint?)null : new HDFingerprint(NBitcoin.DataEncoders.Encoders.Hex.DecodeData(vm.RootFingerprint));
-                            strategy.ExplicitAccountKey = string.IsNullOrEmpty(vm.AccountKey) ? null : new BitcoinExtPubKey(vm.AccountKey, network.NBitcoinNetwork);
                             strategy.Source = vm.Source;
                             vm.DerivationScheme = strategy.AccountDerivation.ToString();
                         }

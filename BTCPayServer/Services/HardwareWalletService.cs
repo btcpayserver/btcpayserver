@@ -62,8 +62,7 @@ namespace BTCPayServer.Services
             return foundKeyPath;
         }
 
-        public abstract Task<PSBT> SignTransactionAsync(PSBT psbt, Script changeHint,
-                                                     CancellationToken cancellationToken);
+        public abstract Task<PSBT> SignTransactionAsync(PSBT psbt, HDFingerprint? rootFingerprint, BitcoinExtPubKey accountKey, Script changeHint, CancellationToken cancellationToken);
 
         public virtual void Dispose()
         {

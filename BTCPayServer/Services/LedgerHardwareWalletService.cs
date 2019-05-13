@@ -115,32 +115,31 @@ namespace BTCPayServer.Services
             return extpubkey;
         }
 
-        public override async Task<PSBT> SignTransactionAsync(PSBT psbt, Script changeHint, CancellationToken cancellationToken)
+        public override async Task<PSBT> SignTransactionAsync(PSBT psbt, HDFingerprint? rootFingerprint, BitcoinExtPubKey accountKey, Script changeHint, CancellationToken cancellationToken)
         {
             var unsigned = psbt.GetGlobalTransaction();
-            var changeKeyPath = psbt.Outputs
-                                            .Where(o => changeHint == null ? true : changeHint == o.ScriptPubKey)
-                                            .Where(o => o.HDKeyPaths.Any())
-                                            .Select(o => o.HDKeyPaths.First().Value.Item2)
+            var changeKeyPath = psbt.Outputs.HDKeysFor(rootFingerprint, accountKey)
+                                            .Where(o => changeHint == null ? true : changeHint == o.Coin.ScriptPubKey)
+                                            .Select(o => o.KeyPath)
                                             .FirstOrDefault();
             var signatureRequests = psbt
                 .Inputs
-                .Where(o => o.HDKeyPaths.Any())
-                .Where(o => !o.PartialSigs.ContainsKey(o.HDKeyPaths.First().Key))
+                .HDKeysFor(rootFingerprint, accountKey)
+                .Where(hd => !hd.Coin.PartialSigs.ContainsKey(hd.PubKey)) // Don't want to sign something twice
+                .GroupBy(hd => hd.Coin)
                 .Select(i => new SignatureRequest()
                 {
-                    InputCoin = i.GetSignableCoin(),
-                    InputTransaction = i.NonWitnessUtxo,
-                    KeyPath = i.HDKeyPaths.First().Value.Item2,
-                    PubKey = i.HDKeyPaths.First().Key
+                    InputCoin = i.Key.GetSignableCoin(),
+                    InputTransaction = i.Key.NonWitnessUtxo,
+                    KeyPath = i.First().KeyPath,
+                    PubKey = i.First().PubKey
                 }).ToArray();
-            var signedTransaction = await Ledger.SignTransactionAsync(signatureRequests, unsigned, changeKeyPath, cancellationToken);
-            if (signedTransaction == null)
-                throw new HardwareWalletException("The ledger failed to sign the transaction");
-
+            await Ledger.SignTransactionAsync(signatureRequests, unsigned, changeKeyPath, cancellationToken);
             psbt = psbt.Clone();
             foreach (var signature in signatureRequests)
             {
+                if (signature.Signature == null)
+                    continue;
                 var input = psbt.Inputs.FindIndexedInput(signature.InputCoin.Outpoint);
                 if (input == null)
                     continue;

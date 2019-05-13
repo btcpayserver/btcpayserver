@@ -22,6 +22,7 @@ jobs:
             fi
             docker-compose run -e TESTS_RUN_EXTERNAL_INTEGRATION=$TESTS_RUN_EXTERNAL_INTEGRATION tests
 
+
   # publish jobs require $DOCKERHUB_REPO, $DOCKERHUB_USER, $DOCKERHUB_PASS defined
   publish_docker_linuxamd64:
     machine:

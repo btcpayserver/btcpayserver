@@ -39,6 +39,7 @@ namespace BTCPayServer.Controllers
             DerivationSchemeViewModel vm = new DerivationSchemeViewModel();
             vm.CryptoCode = cryptoCode;
             vm.RootKeyPath = network.GetRootKeyPath();
+            vm.Network = network;
             SetExistingValues(store, vm);
             return View(vm);
         }
@@ -177,6 +178,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
+            vm.Network = network;
             vm.RootKeyPath = network.GetRootKeyPath();
             DerivationSchemeSettings strategy = null;
             

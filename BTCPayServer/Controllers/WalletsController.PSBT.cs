@@ -61,47 +61,48 @@ namespace BTCPayServer.Controllers
                 return View(vm);
             }
 
-            if (command == null)
+            switch (command)
             {
-                vm.Decoded = psbt.ToString();
-                vm.FileName = string.Empty;
-                return View(vm);
-            }
-            else if (command == "ledger")
-            {
-                return ViewWalletSendLedger(psbt);
-            }
-            else if (command == "broadcast")
-            {
-                if (!psbt.IsAllFinalized() && !psbt.TryFinalize(out var errors))
-                {
-                    return ViewPSBT(psbt, errors);
-                }
-                var transaction = psbt.ExtractTransaction();
-                try
-                {
-                    var broadcastResult = await ExplorerClientProvider.GetExplorerClient(network).BroadcastAsync(transaction);
-                    if (!broadcastResult.Success)
+                case null:
+                    vm.Decoded = psbt.ToString();
+                    vm.FileName = string.Empty;
+                    return View(vm);
+                case "ledger":
+                    return ViewWalletSendLedger(psbt);
+                case "seed":
+                    return RedirectToAction("SignWithSeed", new
                     {
-                        return ViewPSBT(psbt, new[] { $"RPC Error while broadcasting: {broadcastResult.RPCCode} {broadcastResult.RPCCodeMessage} {broadcastResult.RPCMessage}" });
-                    }
-                }
-                catch (Exception ex)
+                        psbt = psbt.ToBase64(),
+                        walletId,
+                        send = false
+                    });
+                case "broadcast" when !psbt.IsAllFinalized() && !psbt.TryFinalize(out var errors):
+                    return ViewPSBT(psbt, errors);
+                case "broadcast":
                 {
-                    return ViewPSBT(psbt, "Error while broadcasting: " + ex.Message);
+                    var transaction = psbt.ExtractTransaction();
+                    try
+                    {
+                        var broadcastResult = await ExplorerClientProvider.GetExplorerClient(network).BroadcastAsync(transaction);
+                        if (!broadcastResult.Success)
+                        {
+                            return ViewPSBT(psbt, new[] { $"RPC Error while broadcasting: {broadcastResult.RPCCode} {broadcastResult.RPCCodeMessage} {broadcastResult.RPCMessage}" });
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        return ViewPSBT(psbt, "Error while broadcasting: " + ex.Message);
+                    }
+                    return await RedirectToWalletTransaction(walletId, transaction);
                 }
-                return await RedirectToWalletTransaction(walletId, transaction);
+                case "combine":
+                    ModelState.Remove(nameof(vm.PSBT));
+                    return View(nameof(WalletPSBTCombine), new WalletPSBTCombineViewModel() { OtherPSBT = psbt.ToBase64() });
+                case "save-psbt":
+                    return FilePSBT(psbt, vm.FileName);
+                default:
+                    return View(vm);
             }
-            else if (command == "combine")
-            {
-                ModelState.Remove(nameof(vm.PSBT));
-                return View(nameof(WalletPSBTCombine), new WalletPSBTCombineViewModel() { OtherPSBT = psbt.ToBase64() });
-            }
-            else if (command == "save-psbt")
-            {
-                return FilePSBT(psbt, vm.FileName);
-            }
-            return View(vm);
         }
 
         [HttpGet]

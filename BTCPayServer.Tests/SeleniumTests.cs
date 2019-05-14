@@ -43,13 +43,24 @@ namespace BTCPayServer.Tests
                 var email = s.RegisterNewUser();
                 s.Driver.FindElement(By.Id("Logout")).Click();
                 s.Driver.AssertNoError();
-
-                //Same User Can Log Back In
                 s.Driver.FindElement(By.Id("Login")).Click();
+                s.Driver.AssertNoError();
+
+                s.Driver.Navigate().GoToUrl(s.Link("/invoices"));
+                Assert.Contains("ReturnUrl=%2Finvoices", s.Driver.Url);
+
+                // We should be redirected to login
+                //Same User Can Log Back In
                 s.Driver.FindElement(By.Id("Email")).SendKeys(email);
                 s.Driver.FindElement(By.Id("Password")).SendKeys("123456");
                 s.Driver.FindElement(By.Id("LoginButton")).Click();
-                s.Driver.AssertNoError();
+
+                // We should be redirected to invoice
+                Assert.EndsWith("/invoices", s.Driver.Url);
+
+                // Should not be able to reach server settings
+                s.Driver.Navigate().GoToUrl(s.Link("/server/users"));
+                Assert.Contains("ReturnUrl=%2Fserver%2Fusers", s.Driver.Url);
 
                 //Change Password & Log Out
                 s.Driver.FindElement(By.Id("MySettings")).Click();
@@ -67,10 +78,22 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("Password")).SendKeys("abc???");
                 s.Driver.FindElement(By.Id("LoginButton")).Click();
                 Assert.True(s.Driver.PageSource.Contains("Stores"), "Can't Access Stores");
+
+                s.Driver.FindElement(By.Id("MySettings")).Click();
+                s.ClickOnAllSideMenus();
+
                 s.Driver.Quit();
             }
         }
-        
+
+        private static void LogIn(SeleniumTester s, string email)
+        {
+            s.Driver.FindElement(By.Id("Login")).Click();
+            s.Driver.FindElement(By.Id("Email")).SendKeys(email);
+            s.Driver.FindElement(By.Id("Password")).SendKeys("123456");
+            s.Driver.FindElement(By.Id("LoginButton")).Click();
+            s.Driver.AssertNoError();
+        }
 
         [Fact]
         public void CanCreateStores()
@@ -78,14 +101,47 @@ namespace BTCPayServer.Tests
             using (var s = SeleniumTester.Create())
             {
                 s.Start();
-                s.RegisterNewUser();
+                var alice = s.RegisterNewUser();
                 var store = s.CreateNewStore();
+                s.AddDerivationScheme();
                 s.Driver.AssertNoError();
                 Assert.Contains(store, s.Driver.PageSource);
-
+                var storeUrl = s.Driver.Url;
                 s.ClickOnAllSideMenus();
 
-                s.Driver.Quit();
+                CreateInvoice(s, store);
+                s.Driver.FindElement(By.ClassName("invoice-details-link")).Click();
+                var invoiceUrl = s.Driver.Url;
+
+                // When logout we should not be able to access store and invoice details
+                s.Driver.FindElement(By.Id("Logout")).Click();
+                s.Driver.Navigate().GoToUrl(storeUrl);
+                Assert.Contains("ReturnUrl", s.Driver.Url);
+                s.Driver.Navigate().GoToUrl(invoiceUrl);
+                Assert.Contains("ReturnUrl", s.Driver.Url);
+
+                // When logged we should not be able to access store and invoice details
+                var bob = s.RegisterNewUser();
+                s.Driver.Navigate().GoToUrl(storeUrl);
+                Assert.Contains("ReturnUrl", s.Driver.Url);
+                s.Driver.Navigate().GoToUrl(invoiceUrl);
+                s.AssertNotFound();
+                s.GoToHome();
+                s.Logout();
+
+                // Let's add Bob as a guest to alice's store
+                LogIn(s, alice);
+                s.Driver.Navigate().GoToUrl(storeUrl + "/users");
+                s.Driver.FindElement(By.Id("Email")).SendKeys(bob + Keys.Enter);
+                Assert.Contains("User added successfully", s.Driver.PageSource);
+                s.Logout();
+
+                // Bob should not have access to store, but should have access to invoice
+                LogIn(s, bob);
+                s.Driver.Navigate().GoToUrl(storeUrl);
+                Assert.Contains("ReturnUrl", s.Driver.Url);
+                s.Driver.Navigate().GoToUrl(invoiceUrl);
+                s.Driver.AssertNoError();
             }
         }
 
@@ -99,16 +155,27 @@ namespace BTCPayServer.Tests
                 var store = s.CreateNewStore();
                 s.AddDerivationScheme();
 
-                s.Driver.FindElement(By.Id("Invoices")).Click();
-                s.Driver.FindElement(By.Id("CreateNewInvoice")).Click();
-                s.Driver.FindElement(By.CssSelector("input#Amount.form-control")).SendKeys("100");
-                s.Driver.FindElement(By.Name("StoreId")).SendKeys(store + Keys.Enter);
-                s.Driver.FindElement(By.Id("Create")).Click();
-                Assert.True(s.Driver.PageSource.Contains("just created!"), "Unable to create Invoice");
+                CreateInvoice(s, store);
+
+                s.Driver.FindElement(By.ClassName("invoice-details-link")).Click();
+                s.Driver.AssertNoError();
+                s.Driver.Navigate().Back();
+                s.Driver.FindElement(By.ClassName("invoice-checkout-link")).Click();
+                Assert.NotEmpty(s.Driver.FindElements(By.Id("checkoutCtrl")));
                 s.Driver.Quit();
             }
         }
-        
+
+        private static void CreateInvoice(SeleniumTester s, string store)
+        {
+            s.Driver.FindElement(By.Id("Invoices")).Click();
+            s.Driver.FindElement(By.Id("CreateNewInvoice")).Click();
+            s.Driver.FindElement(By.CssSelector("input#Amount.form-control")).SendKeys("100");
+            s.Driver.FindElement(By.Name("StoreId")).SendKeys(store + Keys.Enter);
+            s.Driver.FindElement(By.Id("Create")).Click();
+            Assert.True(s.Driver.PageSource.Contains("just created!"), "Unable to create Invoice");
+        }
+
         [Fact]
         public void CanCreateAppPoS()
         {

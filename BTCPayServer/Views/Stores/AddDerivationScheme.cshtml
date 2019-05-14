@@ -137,8 +137,6 @@
     </div>
 </div>
 
-
-
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
     <script src="~/js/ledgerwebsocket.js" type="text/javascript" defer="defer"></script>
@@ -146,61 +144,8 @@
 
     <script src="~/vendor/trezor/trezor.js-umd.js"></script>
     <script src="~/js/trezor/trezor-client.js" type="text/javascript" defer="defer"></script>
-
+    <script src="~/js/trezor/trezor-add-derivation-scheme.js" type="text/javascript" defer="defer"></script>
     <script>
-
-
-        $(document).ready(function() {
-            var trezorInit = false;
-            $(".check-for-trezor").on("click",
-                function() {
-                    if (!trezorInit) {
-                        trezorClient.init();
-                        trezorInit = true;
-                    }
-                });
-            $("[data-trezorkeypath]").on("click",
-                function() {
-                    var keypath = $(this).data("trezorkeypath");
-                    var keys = keypath.split("/");
-                    if (trezorDevice != null) {
-                        var hardeningConstant = 0x80000000;
-
-                        trezorDevice.waitForSessionAndRun(function(session) {
-                                debugger;
-                                var path = [];
-                                for (var i = 0; i < keys.length; i++) {
-                                    var key = keys[i];
-
-                                    if (keys[i].endsWith("'")) {
-                                        key = key.substring(0, key.length - 1);
-                                        path.push((parseInt(key) | hardeningConstant) >>> 0);
-                                        continue;
-                                    }
-
-                                    path.push(parseInt(key));
-                                }
-                                
-                                return session.getHDNode(path, @Model.Network.DisplayName);
-                            })
-                            .then(function(hdNode) {
-                                console.warn("HDNODe", arguments);
-
-                                $("#RootFingerprint").val(hdNode.parentFingerprint);
-                                $("#KeyPath").val(keys[keys.length - 1]);
-                                $("#DerivationScheme").val(hdNode.toBase58()+  "-[p2sh]");
-//Seems like Trezor does not allow you to select anything else for their own ui. They tell you to use electrum for native segwit: https://wiki.trezor.io/Bech32
-                                debugger;
-                                $("#trezor-submit").submit();
-                            });
-                    }
-
-                });
-        });
-
-        function onTrezorDeviceFound(device) {
-            $(".display-when-trezor-connected").show();
-            
-        }
+        window.coinName = "@Model.Network.DisplayName.ToLowerInvariant()";
     </script>
 }

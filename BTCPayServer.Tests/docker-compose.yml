@@ -286,11 +286,6 @@ services:
     links:
       - bitcoind
 
-  selenium:
-    image:  selenium/standalone-chrome
-    expose:
-        - "4444"
-
 volumes:
     bitcoin_datadir:
     customer_lightningd_datadir:

@@ -33,26 +33,12 @@ namespace BTCPayServer.Tests
             ChromeOptions options = new ChromeOptions();
             options.AddArguments("headless"); // Comment to view browser
             options.AddArguments("window-size=1200x600"); // Comment to view browser
-            if (Server.PayTester.InContainer)
-            {
-                Driver = new OpenQA.Selenium.Remote.RemoteWebDriver(new Uri("http://selenium:4444/wd/hub"), options);
-                Logs.Tester.LogInformation("Selenium: Using remote driver");
-            }
-            else
-            {
-                Driver = new ChromeDriver(Directory.GetCurrentDirectory(), options);
-                Logs.Tester.LogInformation("Selenium: Using chrome driver");
-            }
+
+            Driver = new ChromeDriver(Directory.GetCurrentDirectory(), options);
+            Logs.Tester.LogInformation("Selenium: Using chrome driver");
             Logs.Tester.LogInformation("Selenium: Browsing to " + Server.PayTester.ServerUri);
-            int tryCount = 0;
-retry:
+
             Driver.Navigate().GoToUrl(Server.PayTester.ServerUri);
-            if (tryCount < 10 && Driver.FindElements(By.ClassName("navbar-brand")).Count == 0)
-            {
-                Thread.Sleep(1000);
-                tryCount++;
-                goto retry;
-            }
             Driver.AssertNoError();
         }
 

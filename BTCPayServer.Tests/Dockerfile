@@ -8,6 +8,7 @@ WORKDIR /source
 COPY BTCPayServer/BTCPayServer.csproj BTCPayServer/BTCPayServer.csproj
 COPY BTCPayServer.Tests/BTCPayServer.Tests.csproj BTCPayServer.Tests/BTCPayServer.Tests.csproj
 RUN dotnet restore BTCPayServer.Tests/BTCPayServer.Tests.csproj
+RUN apk add chromium-chromedriver
 COPY . .
 RUN dotnet build
 WORKDIR /source/BTCPayServer.Tests

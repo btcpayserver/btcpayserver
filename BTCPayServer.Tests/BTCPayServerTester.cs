@@ -37,6 +37,7 @@ using Xunit;
 using BTCPayServer.Services;
 using System.Net.Http;
 using Microsoft.AspNetCore.Hosting.Server.Features;
+using System.Threading.Tasks;
 
 namespace BTCPayServer.Tests
 {
@@ -158,11 +159,6 @@ namespace BTCPayServer.Tests
             InvoiceRepository = (InvoiceRepository)_Host.Services.GetService(typeof(InvoiceRepository));
             StoreRepository = (StoreRepository)_Host.Services.GetService(typeof(StoreRepository));
             Networks = (BTCPayNetworkProvider)_Host.Services.GetService(typeof(BTCPayNetworkProvider));
-            var dashBoard = (NBXplorerDashboard)_Host.Services.GetService(typeof(NBXplorerDashboard));
-            while(!dashBoard.IsFullySynched())
-            {
-                Thread.Sleep(10);
-            }
 
             if (MockRates)
             {
@@ -222,6 +218,35 @@ namespace BTCPayServer.Tests
                     BidAsk = new BidAsk(0.004m)
                 });
                 rateProvider.Providers.Add("bittrex", bittrex);
+            }
+
+            
+
+            WaitSiteIsOperational().GetAwaiter().GetResult();
+        }
+
+        private async Task WaitSiteIsOperational()
+        {
+            var synching = WaitIsFullySynched();
+            var accessingHomepage = WaitCanAccessHomepage();
+            await Task.WhenAll(synching, accessingHomepage).ConfigureAwait(false);
+        }
+
+        private async Task WaitCanAccessHomepage()
+        {
+            var resp = await HttpClient.GetAsync("/").ConfigureAwait(false);
+            while (resp.StatusCode != HttpStatusCode.OK)
+            {
+                await Task.Delay(10).ConfigureAwait(false);
+            }
+        }
+
+        private async Task WaitIsFullySynched()
+        {
+            var dashBoard = GetService<NBXplorerDashboard>();
+            while (!dashBoard.IsFullySynched())
+            {
+                await Task.Delay(10).ConfigureAwait(false);
             }
         }
 

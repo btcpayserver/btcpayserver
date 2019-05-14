@@ -19,7 +19,6 @@ namespace BTCPayServer.Tests
 
         public static SeleniumTester Create([CallerMemberNameAttribute] string scope = null)
         {
-            
             var server = ServerTester.Create(scope);
             return new SeleniumTester()
             {
@@ -45,6 +44,7 @@ namespace BTCPayServer.Tests
             }
             Logs.Tester.LogInformation("Selenium: Browsing to " + Server.PayTester.ServerUri);
             Driver.Navigate().GoToUrl(Server.PayTester.ServerUri);
+            Driver.AssertNoError();
         }
 
 

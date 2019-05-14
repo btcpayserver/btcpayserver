@@ -318,6 +318,42 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Integration", "Integration")]
+        public async Task GetRedirectedToLoginPathOnChallenge()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.Start();
+                var client = tester.PayTester.HttpClient;
+                //Wallets endpoint is protected
+                var response = await client.GetAsync("wallets");
+                var urlPath = response.RequestMessage.RequestUri.ToString()
+                    .Replace(tester.PayTester.ServerUri.ToString(), "");
+                //Cookie Challenge redirects you to login page
+                Assert.StartsWith("Account/Login", urlPath, StringComparison.InvariantCultureIgnoreCase);
+
+                var queryString = response.RequestMessage.RequestUri.ParseQueryString();
+                
+                Assert.NotNull(queryString["ReturnUrl"]);
+                Assert.Equal("/wallets", queryString["ReturnUrl"]);
+            }
+        }
+
+        
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public async Task CanUseTestWebsiteUI()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.Start();
+                var http = new HttpClient();
+                var response = await http.GetAsync(tester.PayTester.ServerUri);
+                Assert.True(response.IsSuccessStatusCode);
+            }
+        }
+
+        [Fact]
+        [Trait("Integration", "Integration")]
         public void CanAcceptInvoiceWithTolerance()
         {
             var entity = new InvoiceEntity();

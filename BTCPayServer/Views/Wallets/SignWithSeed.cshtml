@@ -1,7 +1,7 @@
 @model SignWithSeedViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["Title"] = "Sign PSBT With Key";
+    ViewData["Title"] = "Sign PSBT With an HD private key or mnemonic seed";
     ViewData.SetActivePageAndTitle(Model.Send ? WalletsNavPages.Send : WalletsNavPages.PSBT);
 }
 

@@ -6,7 +6,7 @@ namespace BTCPayServer.Models.WalletViewModels
     {
         [Required]
         public string PSBT { get; set; }
-        [Required][Display(Name = "Seed(12/24 word mnemonic seed) Or WIF(xprv...)")]
+        [Required][Display(Name = "Seed(12/24 word mnemonic seed) Or HD private keyWIF(xprv...)")]
         public string SeedOrKey { get; set; }
 
         [Display(Name = "Optional seed passphrase")]

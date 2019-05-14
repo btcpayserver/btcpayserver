@@ -102,7 +102,14 @@ namespace BTCPayServer.Tests
 
             StringBuilder config = new StringBuilder();
             config.AppendLine($"{chain.ToLowerInvariant()}=1");
-            config.AppendLine($"port={Port}");
+            if (InContainer)
+            {
+                config.AppendLine($"bind=0.0.0.0:{Port}");
+            }
+            else
+            {
+                config.AppendLine($"port={Port}");
+            }
             config.AppendLine($"chains=btc,ltc");
 
             config.AppendLine($"btc.explorer.url={NBXplorerUri.AbsoluteUri}");

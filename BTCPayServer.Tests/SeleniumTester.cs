@@ -1,4 +1,5 @@
 ﻿using System;
+using BTCPayServer;
 using System.Linq;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -47,6 +48,10 @@ namespace BTCPayServer.Tests
             Driver.AssertNoError();
         }
 
+        public string Link(string relativeLink)
+        {
+            return Server.PayTester.ServerUri.AbsoluteUri.WithoutEndingSlash() + relativeLink.WithStartingSlash();
+        }
 
         public string RegisterNewUser(bool isAdmin = false)
         {
@@ -55,7 +60,8 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.Id("Email")).SendKeys(usr);
             Driver.FindElement(By.Id("Password")).SendKeys("123456");
             Driver.FindElement(By.Id("ConfirmPassword")).SendKeys("123456");
-            Driver.FindElement(By.Id("IsAdmin")).Click();
+            if (isAdmin)
+                Driver.FindElement(By.Id("IsAdmin")).Click();
             Driver.FindElement(By.Id("RegisterButton")).Click();
             Driver.AssertNoError();
             return usr;
@@ -116,6 +122,21 @@ namespace BTCPayServer.Tests
             }
             if (Server != null)
                 Server.Dispose();
+        }
+
+        internal void AssertNotFound()
+        {
+            Assert.Contains("Status Code: 404; Not Found", Driver.PageSource);
+        }
+
+        internal void GoToHome()
+        {
+            Driver.Navigate().GoToUrl(Server.PayTester.ServerUri);
+        }
+
+        internal void Logout()
+        {
+            Driver.FindElement(By.Id("Logout")).Click();
         }
     }
 }

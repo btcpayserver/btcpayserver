@@ -15,7 +15,7 @@ namespace BTCPayServer.Tests
         {
             try
             {
-                Assert.NotNull(driver.FindElement(By.ClassName("navbar-brand")));
+                Assert.NotEmpty(driver.FindElements(By.ClassName("navbar-brand")));
             }
             catch
             {

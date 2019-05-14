@@ -9,6 +9,7 @@ using OpenQA.Selenium.Chrome;
 using Xunit;
 using System.IO;
 using BTCPayServer.Tests.Logging;
+using System.Threading;
 
 namespace BTCPayServer.Tests
 {
@@ -43,7 +44,15 @@ namespace BTCPayServer.Tests
                 Logs.Tester.LogInformation("Selenium: Using chrome driver");
             }
             Logs.Tester.LogInformation("Selenium: Browsing to " + Server.PayTester.ServerUri);
+            int tryCount = 0;
+retry:
             Driver.Navigate().GoToUrl(Server.PayTester.ServerUri);
+            if (tryCount < 10 && Driver.FindElements(By.ClassName("navbar-brand")).Count == 0)
+            {
+                Thread.Sleep(1000);
+                tryCount++;
+                goto retry;
+            }
             Driver.AssertNoError();
         }
 

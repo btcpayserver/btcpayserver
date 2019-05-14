@@ -115,23 +115,23 @@ namespace BTCPayServer.Services
             return extpubkey;
         }
 
-        public override async Task<PSBT> SignTransactionAsync(PSBT psbt, HDFingerprint? rootFingerprint, BitcoinExtPubKey accountKey, Script changeHint, CancellationToken cancellationToken)
+        public override async Task<PSBT> SignTransactionAsync(PSBT psbt, RootedKeyPath accountKeyPath, BitcoinExtPubKey accountKey, Script changeHint, CancellationToken cancellationToken)
         {
             var unsigned = psbt.GetGlobalTransaction();
-            var changeKeyPath = psbt.Outputs.HDKeysFor(rootFingerprint, accountKey)
+            var changeKeyPath = psbt.Outputs.HDKeysFor(accountKey, accountKeyPath)
                                             .Where(o => changeHint == null ? true : changeHint == o.Coin.ScriptPubKey)
-                                            .Select(o => o.KeyPath)
+                                            .Select(o => o.RootedKeyPath.KeyPath)
                                             .FirstOrDefault();
             var signatureRequests = psbt
                 .Inputs
-                .HDKeysFor(rootFingerprint, accountKey)
+                .HDKeysFor(accountKey, accountKeyPath)
                 .Where(hd => !hd.Coin.PartialSigs.ContainsKey(hd.PubKey)) // Don't want to sign something twice
                 .GroupBy(hd => hd.Coin)
                 .Select(i => new SignatureRequest()
                 {
                     InputCoin = i.Key.GetSignableCoin(),
                     InputTransaction = i.Key.NonWitnessUtxo,
-                    KeyPath = i.First().KeyPath,
+                    KeyPath = i.First().RootedKeyPath.KeyPath,
                     PubKey = i.First().PubKey
                 }).ToArray();
             await Ledger.SignTransactionAsync(signatureRequests, unsigned, changeKeyPath, cancellationToken);

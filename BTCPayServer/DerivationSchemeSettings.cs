@@ -250,7 +250,7 @@ namespace BTCPayServer
         {
             foreach (var rebase in GetPSBTRebaseKeyRules())
             {
-                psbt.RebaseKeyPaths(rebase.AccountKey, rebase.AccountKeyPath, rebase.MasterFingerprint);
+                psbt.RebaseKeyPaths(rebase.AccountKey, rebase.GetRootedKeyPath());
             }
         }
     }
@@ -258,6 +258,13 @@ namespace BTCPayServer
     {
         public HDFingerprint? RootFingerprint { get; set; }
         public KeyPath AccountKeyPath { get; set; }
+
+        public RootedKeyPath GetRootedKeyPath()
+        {
+            if (RootFingerprint is HDFingerprint fp && AccountKeyPath != null)
+                return new RootedKeyPath(fp, AccountKeyPath);
+            return null;
+        }
         public BitcoinExtPubKey AccountKey { get; set; }
         public bool IsFullySetup()
         {

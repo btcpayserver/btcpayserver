@@ -1648,9 +1648,9 @@ namespace BTCPayServer.Tests
                 Assert.All(psbt.PSBT.Inputs, input =>
                 {
                     var keyPath = input.HDKeyPaths.Single();
-                    Assert.False(keyPath.Value.Item2.IsHardened);
-                    Assert.Equal(account.Derive(keyPath.Value.Item2).GetPublicKey(), keyPath.Key);
-                    Assert.Equal(keyPath.Value.Item1, onchainBTC.AccountKeySettings[0].AccountKey.GetPublicKey().GetHDFingerPrint());
+                    Assert.False(keyPath.Value.KeyPath.IsHardened);
+                    Assert.Equal(account.Derive(keyPath.Value.KeyPath).GetPublicKey(), keyPath.Key);
+                    Assert.Equal(keyPath.Value.MasterFingerprint, onchainBTC.AccountKeySettings[0].AccountKey.GetPublicKey().GetHDFingerPrint());
                 });
             }
         }

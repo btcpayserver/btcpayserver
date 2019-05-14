@@ -252,7 +252,7 @@ namespace BTCPayServer.Controllers
                 case "ledger":
                     return ViewWalletSendLedger(psbt.PSBT, psbt.ChangeAddress);
                 case "seed":
-                    return RedirectToAction("SignWithSeed", new
+                    return RedirectToAction(nameof(SignWithSeed), new
                     {
                         psbt = psbt.PSBT.ToBase64(),
                         send = true
@@ -351,7 +351,7 @@ namespace BTCPayServer.Controllers
                 }, "broadcast");
             }
 
-            return RedirectToAction("WalletPSBTReady", new
+            return RedirectToAction(nameof(WalletPSBTReady), new
             {
                 walletId,
                 psbt = signedpsbt.ToBase64()

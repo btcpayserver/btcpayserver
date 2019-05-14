@@ -36,6 +36,7 @@ using System.Threading;
 using Xunit;
 using BTCPayServer.Services;
 using System.Net.Http;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 
 namespace BTCPayServer.Tests
 {
@@ -104,12 +105,9 @@ namespace BTCPayServer.Tests
             config.AppendLine($"{chain.ToLowerInvariant()}=1");
             if (InContainer)
             {
-                config.AppendLine($"bind=0.0.0.0:{Port}");
+                config.AppendLine($"bind=0.0.0.0");
             }
-            else
-            {
-                config.AppendLine($"port={Port}");
-            }
+            config.AppendLine($"port={Port}");
             config.AppendLine($"chains=btc,ltc");
 
             config.AppendLine($"btc.explorer.url={NBXplorerUri.AbsoluteUri}");
@@ -149,6 +147,14 @@ namespace BTCPayServer.Tests
                     .UseStartup<Startup>()
                     .Build();
             _Host.Start();
+
+            var urls = _Host.ServerFeatures.Get<IServerAddressesFeature>().Addresses;
+            foreach (var url in urls)
+            {
+                Logs.Tester.LogInformation("Listening on " + url);
+            }
+            Logs.Tester.LogInformation("Server URI " + ServerUri);
+
             InvoiceRepository = (InvoiceRepository)_Host.Services.GetService(typeof(InvoiceRepository));
             StoreRepository = (StoreRepository)_Host.Services.GetService(typeof(StoreRepository));
             Networks = (BTCPayNetworkProvider)_Host.Services.GetService(typeof(BTCPayNetworkProvider));

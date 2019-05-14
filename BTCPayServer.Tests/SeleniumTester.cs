@@ -33,11 +33,16 @@ namespace BTCPayServer.Tests
             ChromeOptions options = new ChromeOptions();
             options.AddArguments("headless"); // Comment to view browser
             options.AddArguments("window-size=1200x600"); // Comment to view browser
-
-            Driver = new ChromeDriver(Directory.GetCurrentDirectory(), options);
+            options.AddArgument("shm-size=2g");
+            if (Server.PayTester.InContainer)
+            {
+                options.AddArgument("no-sandbox");
+            }
+            Driver = new ChromeDriver(Server.PayTester.InContainer ? "/usr/bin" : Directory.GetCurrentDirectory(), options);
             Logs.Tester.LogInformation("Selenium: Using chrome driver");
             Logs.Tester.LogInformation("Selenium: Browsing to " + Server.PayTester.ServerUri);
-
+            Logs.Tester.LogInformation($"Selenium: Resolution {Driver.Manage().Window.Size}");
+            Driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(10);
             Driver.Navigate().GoToUrl(Server.PayTester.ServerUri);
             Driver.AssertNoError();
         }
@@ -68,11 +73,11 @@ namespace BTCPayServer.Tests
 
         public void AddDerivationScheme()
         {
-            Driver.FindElement(By.Id("ModifyBTC")).Click();
+            Driver.FindElement(By.Id("ModifyBTC")).ForceClick();
             Driver.FindElement(By.Id("DerivationScheme")).SendKeys("xpub661MyMwAqRbcGABgHMUXDzPzH1tU7eZaAaJQXhDXsSxsqyQzQeU6kznNfSuAyqAK9UaWSaZaMFdNiY5BCF4zBPAzSnwfUAwUhwttuAKwfRX-[legacy]");
-            Driver.FindElement(By.Id("Continue")).Click();
-            Driver.FindElement(By.Id("Confirm")).Click();
-            Driver.FindElement(By.Id("Save")).Click();
+            Driver.FindElement(By.Id("Continue")).ForceClick();
+            Driver.FindElement(By.Id("Confirm")).ForceClick();
+            Driver.FindElement(By.Id("Save")).ForceClick();
             return;
         }
 

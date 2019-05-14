@@ -30,7 +30,6 @@ services:
       - "80"
     links:
       - dev
-      - selenium
     extra_hosts: 
       - "tests:127.0.0.1"
     volumes:

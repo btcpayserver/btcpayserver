@@ -125,7 +125,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.CssSelector("select#SelectedStore.form-control")).SendKeys(store + Keys.Enter);
                 s.Driver.FindElement(By.Id("Create")).Click();
                 s.Driver.FindElement(By.CssSelector("input#EnableShoppingCart.form-check")).Click();
-                s.Driver.FindElement(By.Id("SaveSettings")).Click();
+                s.Driver.FindElement(By.Id("SaveSettings")).ForceClick();
                 Assert.True(s.Driver.PageSource.Contains("App updated"), "Unable to create PoS");
                 s.Driver.Quit();
             }
@@ -152,7 +152,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("TargetCurrency")).SendKeys("JPY");
                 s.Driver.FindElement(By.Id("TargetAmount")).SendKeys("700");
                 s.Driver.FindElement(By.Id("SaveSettings")).Submit();
-                s.Driver.FindElement(By.Id("ViewApp")).Click();
+                s.Driver.FindElement(By.Id("ViewApp")).ForceClick();
                 s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
                 Assert.True(s.Driver.PageSource.Contains("Currently Active!"), "Unable to create CF");
                 s.Driver.Quit();

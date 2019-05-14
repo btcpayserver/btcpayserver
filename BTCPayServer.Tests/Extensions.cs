@@ -11,6 +11,19 @@ namespace BTCPayServer.Tests
 {
     public static class Extensions
     {
+        public static void ScrollTo(this IWebDriver driver, By by)
+        {
+            var element = driver.FindElement(by);
+            ((IJavaScriptExecutor)driver).ExecuteScript($"window.scrollBy({element.Location.X},{element.Location.Y});");
+        }
+        /// <summary>
+        /// Sometimes the chrome driver is fucked up and we need some magic to click on the element.
+        /// </summary>
+        /// <param name="element"></param>
+        public static void ForceClick(this IWebElement element)
+        {
+            element.SendKeys(Keys.Return);
+        }
         public static void AssertNoError(this IWebDriver driver)
         {
             try

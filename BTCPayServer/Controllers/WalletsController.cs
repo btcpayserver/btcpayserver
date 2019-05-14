@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Linq;
 using System.Net.WebSockets;
@@ -21,6 +22,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitcoin.DataEncoders;
@@ -245,15 +247,21 @@ namespace BTCPayServer.Controllers
                 return View(vm);
             }
             derivationScheme.RebaseKeyPaths(psbt.PSBT);
-            if (command == "ledger")
+            switch (command)
             {
-                return ViewWalletSendLedger(psbt.PSBT, psbt.ChangeAddress);
+                case "ledger":
+                    return ViewWalletSendLedger(psbt.PSBT, psbt.ChangeAddress);
+                case "seed":
+                    return RedirectToAction(nameof(SignWithSeed), new
+                    {
+                        psbt = psbt.PSBT.ToBase64(),
+                        send = true
+                    });
+                case "analyze-psbt":
+                    return ViewPSBT(psbt.PSBT, $"Send-{vm.Amount.Value}-{network.CryptoCode}-to-{destination[0].ToString()}.psbt");
+                default:
+                    return View(vm);
             }
-            else if (command == "analyze-psbt")
-            {
-                return ViewPSBT(psbt.PSBT, $"Send-{vm.Amount.Value}-{network.CryptoCode}-to-{destination[0].ToString()}.psbt");
-            }
-            return View(vm);
         }
 
         private ViewResult ViewWalletSendLedger(PSBT psbt, BitcoinAddress hintChange = null)
@@ -266,7 +274,91 @@ namespace BTCPayServer.Controllers
                 SuccessPath = this.Url.Action(nameof(WalletPSBTReady))
             });
         }
+      
+        [HttpGet("{walletId}/psbt/seed")]
+        public IActionResult SignWithSeed([ModelBinder(typeof(WalletIdModelBinder))]
+            WalletId walletId,string psbt, bool send)
+        {
+            return View(new SignWithSeedViewModel()
+            {
+                PSBT = psbt,
+                Send = send
+            });
+        }
 
+        [HttpPost("{walletId}/psbt/seed")]
+        public async Task<IActionResult> SignWithSeed([ModelBinder(typeof(WalletIdModelBinder))]
+            WalletId walletId, SignWithSeedViewModel viewModel)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(viewModel);
+            }
+            var network = NetworkProvider.GetNetwork(walletId.CryptoCode);
+            if (network == null)
+                throw new FormatException("Invalid value for crypto code");
+            var isMnemonic = false;
+            var isExtKey = false;
+            ExtKey extKey = null;
+            try
+            {
+                var mnemonic = new Mnemonic(viewModel.SeedOrKey);
+                isMnemonic = true;
+                extKey = mnemonic.DeriveExtKey(viewModel.Passphrase);
+            }
+            catch (Exception)
+            {
+            }
+
+            if (!isMnemonic)
+            {
+                try
+                {
+                    extKey = ExtKey.Parse(viewModel.SeedOrKey, network.NBitcoinNetwork);
+                    isExtKey = true;
+                }
+                catch (Exception)
+                {
+                }
+            }
+
+            if (!isMnemonic && !isExtKey)
+            {
+                ModelState.AddModelError(nameof(viewModel.SeedOrKey),
+                    "Seed or Key was not in a valid format. It is either the 12/24 words or starts with xprv");
+            }
+
+            var psbt = PSBT.Parse(viewModel.PSBT, network.NBitcoinNetwork);
+
+            if (!psbt.IsReadyToSign())
+            {
+                ModelState.AddModelError(nameof(viewModel.PSBT), "PSBT is not ready to be signed");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return View(viewModel);
+            }
+
+
+            var signedpsbt = psbt.SignAll(extKey);
+
+            if (viewModel.Send)
+            {
+                return await WalletPSBTReady(walletId, new WalletPSBTReadyViewModel()
+                {
+                    PSBT = signedpsbt.ToBase64()
+                }, "broadcast");
+            }
+
+            return RedirectToAction(nameof(WalletPSBTReady), new
+            {
+                walletId,
+                psbt = signedpsbt.ToBase64()
+            });
+
+        }      
+        
         private IDestination[] ParseDestination(string destination, Network network)
         {
             try

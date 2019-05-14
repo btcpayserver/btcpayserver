@@ -30,6 +30,7 @@ services:
       - "80"
     links:
       - dev
+      - selenium
     extra_hosts: 
       - "tests:127.0.0.1"
     volumes:
@@ -53,7 +54,6 @@ services:
       - lightning-charged
       - customer_lnd
       - merchant_lnd
-      - selenium
 
   devlnd: 
     image: btcpayserver/bitcoin:0.18.0
@@ -288,6 +288,8 @@ services:
 
   selenium:
     image:  selenium/standalone-chrome
+    expose:
+        - "4444"
 
 volumes:
     bitcoin_datadir:

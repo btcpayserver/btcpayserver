@@ -34,7 +34,14 @@ namespace BTCPayServer.Tests
             ChromeOptions options = new ChromeOptions();
             options.AddArguments("headless"); // Comment to view browser
             options.AddArguments("window-size=1200x600"); // Comment to view browser
-            Driver = new ChromeDriver(Directory.GetCurrentDirectory(), options);
+            if (Server.PayTester.InContainer)
+            {
+                Driver = new OpenQA.Selenium.Remote.RemoteWebDriver(new Uri("http://selenium:4444/wd/hub"), options);
+            }
+            else
+            {
+                Driver = new ChromeDriver(Directory.GetCurrentDirectory(), options);
+            }
             Driver.Navigate().GoToUrl(Server.PayTester.ServerUri);
         }
 

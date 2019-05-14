@@ -53,9 +53,8 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
-        [Route("{storeId}/derivations/{cryptoCode}/{device}/ws")]
-        public async Task<IActionResult> AddDerivationSchemeHardware(
-            string device,
+        [Route("{storeId}/derivations/{cryptoCode}/{ledger}/ws")]
+        public async Task<IActionResult> AddDerivationSchemeLedger(
             string storeId,
             string cryptoCode,
             string command,
@@ -65,24 +64,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
 
             var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-            HardwareWalletService hw = null;
-            switch (device)
-            {
-                    case "ledger":
-                        
-                        hw = new LedgerHardwareWalletService(webSocket);
-                        break;
-                    case "trezor":
-                        
-                        hw = new TrezorHardwareWalletService(webSocket, _NetworkProvider);
-                        break;
-                        
-            }
-
-            if (hw == null)
-            {
-                return NotFound();
-            }
+            var hw = new LedgerHardwareWalletService(webSocket);
             object result = null;
             var network = _NetworkProvider.GetNetwork(cryptoCode);
 

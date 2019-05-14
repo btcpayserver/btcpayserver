@@ -72,7 +72,6 @@
 
 	<ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.9" />
-    <PackageReference Include="Trezor.Net" Version="4.2.0" />
     <PackageReference Include="TwentyTwenty.Storage" Version="2.10.1" />
     <PackageReference Include="TwentyTwenty.Storage.Amazon" Version="2.10.1" />
     <PackageReference Include="TwentyTwenty.Storage.Azure" Version="2.10.1" />

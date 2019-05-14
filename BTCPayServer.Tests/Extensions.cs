@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Mvc;
 using OpenQA.Selenium;
 using Xunit;
@@ -19,15 +20,21 @@ namespace BTCPayServer.Tests
             catch
             {
                 StringBuilder builder = new StringBuilder();
+                builder.AppendLine();
                 foreach (var logKind in new []{ LogType.Browser, LogType.Client, LogType.Driver })
                 {
-                    builder.AppendLine($"Selenium [{logKind}]:");
-                    foreach (var entry in driver.Manage().Logs.GetLog(logKind))
+                    try
                     {
-                        builder.AppendLine($"[{entry.Level}]: {entry.Message}");
+                        builder.AppendLine($"Selenium [{logKind}]:");
+                        foreach (var entry in driver.Manage().Logs.GetLog(logKind))
+                        {
+                            builder.AppendLine($"[{entry.Level}]: {entry.Message}");
+                        }
+                        builder.AppendLine($"---------");
                     }
-                    builder.AppendLine($"---------");
+                    catch { }
                 }
+                Logs.Tester.LogInformation(builder.ToString());
                 throw;
             }
         }

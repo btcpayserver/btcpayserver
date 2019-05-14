@@ -21,19 +21,25 @@ namespace BTCPayServer.Tests
             {
                 StringBuilder builder = new StringBuilder();
                 builder.AppendLine();
-                foreach (var logKind in new []{ LogType.Browser, LogType.Client, LogType.Driver })
+                foreach (var logKind in new []{ LogType.Browser, LogType.Client, LogType.Driver, LogType.Server })
                 {
                     try
                     {
+                        var logs = driver.Manage().Logs.GetLog(logKind);
                         builder.AppendLine($"Selenium [{logKind}]:");
-                        foreach (var entry in driver.Manage().Logs.GetLog(logKind))
+                        foreach (var entry in logs)
                         {
                             builder.AppendLine($"[{entry.Level}]: {entry.Message}");
                         }
-                        builder.AppendLine($"---------");
                     }
                     catch { }
+                    builder.AppendLine($"---------");
                 }
+                Logs.Tester.LogInformation(builder.ToString());
+                builder = new StringBuilder();
+                builder.AppendLine($"Selenium [Sources]:");
+                builder.AppendLine(driver.PageSource);
+                builder.AppendLine($"---------");
                 Logs.Tester.LogInformation(builder.ToString());
                 throw;
             }

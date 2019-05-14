@@ -12,7 +12,24 @@ namespace BTCPayServer.Tests
     {
         public static void AssertNoError(this IWebDriver driver)
         {
-            Assert.NotNull(driver.FindElement(By.ClassName("navbar-brand")));
+            try
+            {
+                Assert.NotNull(driver.FindElement(By.ClassName("navbar-brand")));
+            }
+            catch
+            {
+                StringBuilder builder = new StringBuilder();
+                foreach (var logKind in new []{ LogType.Browser, LogType.Client, LogType.Driver })
+                {
+                    builder.AppendLine($"Selenium [{logKind}]:");
+                    foreach (var entry in driver.Manage().Logs.GetLog(logKind))
+                    {
+                        builder.AppendLine($"[{entry.Level}]: {entry.Message}");
+                    }
+                    builder.AppendLine($"---------");
+                }
+                throw;
+            }
         }
         public static T AssertViewModel<T>(this IActionResult result)
         {

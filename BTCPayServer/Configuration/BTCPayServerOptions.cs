@@ -72,6 +72,9 @@ namespace BTCPayServer.Configuration
             DataDir = conf.GetDataDir(NetworkType);
             Logs.Configuration.LogInformation("Network: " + NetworkType.ToString());
 
+            if (conf.GetOrDefault<bool>("launchsettings", false) && NetworkType != NetworkType.Regtest)
+                throw new ConfigException($"You need to run BTCPayServer with the run.sh or run.ps1 script");
+
             var supportedChains = conf.GetOrDefault<string>("chains", "btc")
                                       .Split(',', StringSplitOptions.RemoveEmptyEntries)
                                       .Select(t => t.ToUpperInvariant());

@@ -14,6 +14,7 @@ using BTCPayServer.Storage.Services.Providers.GoogleCloudStorage;
 using BTCPayServer.Storage.Services.Providers.GoogleCloudStorage.Configuration;
 using BTCPayServer.Storage.Services.Providers.Models;
 using BTCPayServer.Storage.ViewModels;
+using BTCPayServer.Views;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
@@ -96,7 +97,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
-            var expiry = DateTimeOffset.Now;
+            var expiry = DateTimeOffset.UtcNow;
             switch (viewModel.TimeType)
             {
                 case CreateTemporaryFileUrlViewModel.TmpFileTimeType.Seconds:
@@ -122,7 +123,7 @@ namespace BTCPayServer.Controllers
                 StatusMessage = new StatusMessageModel()
                 {
                     Html =
-                        $"Generated Temporary Url for file {file.FileName} which expires at {expiry:G}. <a href='{url}' target='_blank'>{url}</a>"
+                        $"Generated Temporary Url for file {file.FileName} which expires at {expiry.ToBrowserDate()}. <a href='{url}' target='_blank'>{url}</a>"
                 }.ToString(),
                 fileId,
             });

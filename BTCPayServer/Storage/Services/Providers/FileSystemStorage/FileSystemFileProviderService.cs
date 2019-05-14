@@ -57,10 +57,10 @@ namespace BTCPayServer.Storage.Services.Providers.FileSystemStorage
                 StringComparison.InvariantCultureIgnoreCase);
         }
 
-        public override Task<string> GetTemporaryFileUrl(StoredFile storedFile, StorageSettings configuration, DateTimeOffset expiry, bool isDownload,
+        public override async Task<string> GetTemporaryFileUrl(StoredFile storedFile, StorageSettings configuration, DateTimeOffset expiry, bool isDownload,
             BlobUrlAccess access = BlobUrlAccess.Read)
         {
-            return GetFileUrl(storedFile, configuration);
+            return $"{(await GetFileUrl(storedFile, configuration))}{(isDownload ? "?download" : string.Empty)}";
         }
     }
 }

@@ -8,6 +8,7 @@ using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using Xunit;
 using System.IO;
+using BTCPayServer.Tests.Logging;
 
 namespace BTCPayServer.Tests
 {
@@ -16,14 +17,12 @@ namespace BTCPayServer.Tests
         public IWebDriver Driver { get; set; }
         public ServerTester Server { get; set; }
 
-        string _Directory;
         public static SeleniumTester Create([CallerMemberNameAttribute] string scope = null)
         {
             
             var server = ServerTester.Create(scope);
             return new SeleniumTester()
             {
-                _Directory = scope,
                 Server = server
             };
         }
@@ -37,11 +36,14 @@ namespace BTCPayServer.Tests
             if (Server.PayTester.InContainer)
             {
                 Driver = new OpenQA.Selenium.Remote.RemoteWebDriver(new Uri("http://selenium:4444/wd/hub"), options);
+                Logs.Tester.LogInformation("Selenium: Using remote driver");
             }
             else
             {
                 Driver = new ChromeDriver(Directory.GetCurrentDirectory(), options);
+                Logs.Tester.LogInformation("Selenium: Using chrome driver");
             }
+            Logs.Tester.LogInformation("Selenium: Browsing to " + Server.PayTester.ServerUri);
             Driver.Navigate().GoToUrl(Server.PayTester.ServerUri);
         }
 

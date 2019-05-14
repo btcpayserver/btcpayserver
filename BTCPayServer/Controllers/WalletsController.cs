@@ -504,7 +504,7 @@ namespace BTCPayServer.Controllers
                         derivationSettings.RebaseKeyPaths(psbtResponse.PSBT);
 
                         signTimeout.CancelAfter(TimeSpan.FromMinutes(5));
-                        psbtResponse.PSBT = await hw.SignTransactionAsync(psbtResponse.PSBT, accountKey.RootFingerprint, accountKey.AccountKey, psbtResponse.ChangeAddress?.ScriptPubKey, signTimeout.Token);
+                        psbtResponse.PSBT = await hw.SignTransactionAsync(psbtResponse.PSBT, accountKey.GetRootedKeyPath(), accountKey.AccountKey, psbtResponse.ChangeAddress?.ScriptPubKey, signTimeout.Token);
                         result = new SendToAddressResult() { PSBT = psbtResponse.PSBT.ToBase64() };
                     }
                 }

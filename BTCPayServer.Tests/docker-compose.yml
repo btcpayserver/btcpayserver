@@ -50,7 +50,6 @@ services:
       - lightning-charged
       - customer_lnd
       - merchant_lnd
-      - selenium
 
   devlnd:
     image: btcpayserver/bitcoin:0.18.0
@@ -68,7 +67,7 @@ services:
 
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.0.0.40
+    image: nicolasdorier/nbxplorer:2.0.0.41
     restart: unless-stopped
     ports:
       - "32838:32838"
@@ -272,9 +271,6 @@ services:
       - "bitcoin_datadir:/deps/.bitcoin"
     links:
       - bitcoind
-
-  selenium:
-    image:  selenium/standalone-chrome
 
 volumes:
     bitcoin_datadir:

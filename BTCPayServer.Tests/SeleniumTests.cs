@@ -289,7 +289,8 @@ namespace BTCPayServer.Tests
                     var bob = new Key().PubKey.Hash.GetAddress(Network.RegTest);
                     s.Driver.FindElement(By.Id("Destination")).SendKeys(bob.ToString());
                     s.Driver.FindElement(By.Id("Amount")).SendKeys("1");
-                    s.Driver.FindElement(By.Id("SendMenu")).Click();
+                    s.Driver.ScrollTo(By.Id("SendMenu"));
+                    s.Driver.FindElement(By.Id("SendMenu")).ForceClick();
                     s.Driver.FindElement(By.CssSelector("button[value=seed]")).Click();
 
                     // Input the seed

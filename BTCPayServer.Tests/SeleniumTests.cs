@@ -257,14 +257,46 @@ namespace BTCPayServer.Tests
                 s.Start();
                 s.RegisterNewUser();
                 s.CreateNewStore();
-                s.AddDerivationScheme();
+
+                // In this test, we try to spend from a manual seed. We import the xpub 49'/0'/0', then try to use the seed 
+                // to sign the transaction
+                var mnemonic = "usage fever hen zero slide mammal silent heavy donate budget pulse say brain thank sausage brand craft about save attract muffin advance illegal cabbage";
+                var root = new Mnemonic(mnemonic).DeriveExtKey();
+                s.AddDerivationScheme("ypub6WWc2gWwHbdnAAyJDnR4SPL1phRh7REqrPBfZeizaQ1EmTshieRXJC3Z5YoU4wkcdKHEjQGkh6AYEzCQC1Kz3DNaWSwdc1pc8416hAjzqyD");
+                var tx = s.Server.ExplorerNode.SendToAddress(BitcoinAddress.Create("bcrt1qmxg8fgnmkp354vhe78j6sr4ut64tyz2xyejel4", Network.RegTest), Money.Coins(1.0m));
+
 
                 s.Driver.FindElement(By.Id("Wallets")).Click();
                 s.Driver.FindElement(By.LinkText("Manage")).Click();
 
                 s.ClickOnAllSideMenus();
 
-                s.Driver.Quit();
+                // We setup the fingerprint and the account key path
+                s.Driver.FindElement(By.Id("WalletSettings")).ForceClick();
+                s.Driver.FindElement(By.Id("AccountKeys_0__MasterFingerprint")).SendKeys("8bafd160");
+                s.Driver.FindElement(By.Id("AccountKeys_0__AccountKeyPath")).SendKeys("m/49'/0'/0'" + Keys.Enter);
+
+                // Check the tx sent earlier arrived
+                s.Driver.FindElement(By.Id("WalletTransactions")).ForceClick();
+                var walletTransactionLink = s.Driver.Url;
+                Assert.Contains(tx.ToString(), s.Driver.PageSource);
+
+                // Send to bob
+                s.Driver.FindElement(By.Id("WalletSend")).Click();
+                var bob = new Key().PubKey.Hash.GetAddress(Network.RegTest);
+                s.Driver.FindElement(By.Id("Destination")).SendKeys(bob.ToString());
+                s.Driver.FindElement(By.Id("Amount")).SendKeys("1");
+                s.Driver.FindElement(By.Id("SendMenu")).Click();
+                s.Driver.FindElement(By.CssSelector("button[value=seed]")).Click();
+
+                // Input the seed
+                s.Driver.FindElement(By.Id("SeedOrKey")).SendKeys(mnemonic + Keys.Enter);
+
+                // Broadcast
+                Assert.Contains(bob.ToString(), s.Driver.PageSource);
+                Assert.Contains("1.00000000", s.Driver.PageSource);
+                s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).Click();
+                Assert.Equal(walletTransactionLink, s.Driver.Url);
             }
         }
     }

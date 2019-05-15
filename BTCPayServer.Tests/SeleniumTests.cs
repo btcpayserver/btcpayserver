@@ -263,8 +263,8 @@ namespace BTCPayServer.Tests
                 var mnemonic = "usage fever hen zero slide mammal silent heavy donate budget pulse say brain thank sausage brand craft about save attract muffin advance illegal cabbage";
                 var root = new Mnemonic(mnemonic).DeriveExtKey();
                 s.AddDerivationScheme("ypub6WWc2gWwHbdnAAyJDnR4SPL1phRh7REqrPBfZeizaQ1EmTshieRXJC3Z5YoU4wkcdKHEjQGkh6AYEzCQC1Kz3DNaWSwdc1pc8416hAjzqyD");
-                var tx = s.Server.ExplorerNode.SendToAddress(BitcoinAddress.Create("bcrt1qmxg8fgnmkp354vhe78j6sr4ut64tyz2xyejel4", Network.RegTest), Money.Coins(1.0m));
-
+                var tx = s.Server.ExplorerNode.SendToAddress(BitcoinAddress.Create("bcrt1qmxg8fgnmkp354vhe78j6sr4ut64tyz2xyejel4", Network.RegTest), Money.Coins(3.0m));
+                s.Server.ExplorerNode.Generate(1);
 
                 s.Driver.FindElement(By.Id("Wallets")).Click();
                 s.Driver.FindElement(By.LinkText("Manage")).Click();
@@ -281,22 +281,29 @@ namespace BTCPayServer.Tests
                 var walletTransactionLink = s.Driver.Url;
                 Assert.Contains(tx.ToString(), s.Driver.PageSource);
 
-                // Send to bob
-                s.Driver.FindElement(By.Id("WalletSend")).Click();
-                var bob = new Key().PubKey.Hash.GetAddress(Network.RegTest);
-                s.Driver.FindElement(By.Id("Destination")).SendKeys(bob.ToString());
-                s.Driver.FindElement(By.Id("Amount")).SendKeys("1");
-                s.Driver.FindElement(By.Id("SendMenu")).Click();
-                s.Driver.FindElement(By.CssSelector("button[value=seed]")).Click();
+                
+                void SignWith(string signingSource)
+                {
+                    // Send to bob
+                    s.Driver.FindElement(By.Id("WalletSend")).Click();
+                    var bob = new Key().PubKey.Hash.GetAddress(Network.RegTest);
+                    s.Driver.FindElement(By.Id("Destination")).SendKeys(bob.ToString());
+                    s.Driver.FindElement(By.Id("Amount")).SendKeys("1");
+                    s.Driver.FindElement(By.Id("SendMenu")).Click();
+                    s.Driver.FindElement(By.CssSelector("button[value=seed]")).Click();
 
-                // Input the seed
-                s.Driver.FindElement(By.Id("SeedOrKey")).SendKeys(mnemonic + Keys.Enter);
+                    // Input the seed
+                    s.Driver.FindElement(By.Id("SeedOrKey")).SendKeys(signingSource + Keys.Enter);
 
-                // Broadcast
-                Assert.Contains(bob.ToString(), s.Driver.PageSource);
-                Assert.Contains("1.00000000", s.Driver.PageSource);
-                s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).Click();
-                Assert.Equal(walletTransactionLink, s.Driver.Url);
+                    // Broadcast
+                    Assert.Contains(bob.ToString(), s.Driver.PageSource);
+                    Assert.Contains("1.00000000", s.Driver.PageSource);
+                    s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).Click();
+                    Assert.Equal(walletTransactionLink, s.Driver.Url);
+                }
+                SignWith(mnemonic);
+                var accountKey = root.Derive(new KeyPath("m/49'/0'/0'")).GetWif(Network.RegTest).ToString();
+                SignWith(accountKey);
             }
         }
     }

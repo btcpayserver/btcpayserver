@@ -313,25 +313,31 @@ namespace BTCPayServer.Controllers
                 return View(viewModel);
             }
 
-            RootedKeyPath rootedKeyPath = null;
+            ExtKey signingKey = null;
             var settings = (await GetDerivationSchemeSettings(walletId));
             var signingKeySettings = settings.GetSigningAccountKeySettings();
             if (signingKeySettings.RootFingerprint is null)
                 signingKeySettings.RootFingerprint = extKey.GetPublicKey().GetHDFingerPrint();
-            if (signingKeySettings.GetRootedKeyPath()?.MasterFingerprint == extKey.GetPublicKey().GetHDFingerPrint())
-            {
-                psbt.RebaseKeyPaths(signingKeySettings.AccountKey, signingKeySettings.GetRootedKeyPath());
-                rootedKeyPath = signingKeySettings.GetRootedKeyPath();
-            }
 
-            ExtKey signingKey = rootedKeyPath == null ? extKey : extKey.Derive(rootedKeyPath.KeyPath);
+            RootedKeyPath rootedKeyPath = signingKeySettings.GetRootedKeyPath();
+            // The user gave the root key, let's try to rebase the PSBT, and derive the account private key
+            if (rootedKeyPath?.MasterFingerprint == extKey.GetPublicKey().GetHDFingerPrint())
+            {
+                psbt.RebaseKeyPaths(signingKeySettings.AccountKey, rootedKeyPath);
+                signingKey = extKey.Derive(rootedKeyPath.KeyPath);
+            }
+            // The user maybe gave the account key, let's try to sign with it
+            else
+            {
+                signingKey = extKey;
+            }
             var balanceChange = psbt.GetBalance(signingKey, rootedKeyPath);
             if (balanceChange == Money.Zero)
             {
                 ModelState.AddModelError(nameof(viewModel.SeedOrKey), "This seed does not seem to be able to sign this transaction. Either this is the wrong key, or Wallet Settings have not the correct account path in the wallet settings.");
                 return View(viewModel);
             }
-            psbt.SignAll(extKey, rootedKeyPath);
+            psbt.SignAll(signingKey, rootedKeyPath);
             ModelState.Remove(nameof(viewModel.PSBT));
             return await WalletPSBTReady(walletId, psbt.ToBase64(), signingKey.GetWif(network.NBitcoinNetwork).ToString(), rootedKeyPath.ToString());
         }

@@ -9,17 +9,25 @@ window.trezorClient = {
                 return null;
             })
         });
+        
         trezorDeviceList.on("connect", trezorClient.onDeviceConnected);
+        trezorDeviceList.on("connectUnacquired", function(e){
+            e.steal.then(trezorClient.onDeviceConnected);
+        });
 
-        if (trezorDeviceList.asArray().length < 1 || trezorDeviceList.requestNeeded) {
-            if (!navigator.usb) {
-                document.getElementById("trezor-loading").style.display = "none";
-                document.getElementById("trezor-error").style.display = "block";
-                document.getElementById("trezor-error").innerHTML = 'Your browser does not support WebUsb. Please switch to a <a href="https://caniuse.com/#feat=webusb" target="_blank">supported browser</a> or request Trezor to implement <a href="https://github.com/trezor/trezord-go/issues/155" target="_blank">this feature</a>.';
-                return;
+        trezorDeviceList.on("transport", function(){
+            if (trezorDeviceList.asArray().length < 1 || trezorDeviceList.requestNeeded) {
+                if (!navigator.usb) {
+                    document.getElementById("trezor-loading").style.display = "none";
+                    document.getElementById("trezor-error").style.display = "block";
+                    document.getElementById("trezor-error").innerHTML = 'Your browser does not support WebUsb. Please switch to a <a href="https://caniuse.com/#feat=webusb" target="_blank">supported browser</a> or request Trezor to implement <a href="https://github.com/trezor/trezord-go/issues/155" target="_blank">this feature</a>.';
+                    return;
+                }
+                trezorClient.requestDevice();
             }
-            trezorClient.requestDevice();
-        }
+        });
+
+        
     },
     requestDevice: function () {
         return trezorDeviceList.requestDevice().catch(function () {

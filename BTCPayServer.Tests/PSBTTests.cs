@@ -50,9 +50,10 @@ namespace BTCPayServer.Tests
 
                 var walletController = tester.PayTester.GetController<WalletsController>(user.UserId);
                 var walletId = new WalletId(user.StoreId, "BTC");
+                var sendDestination = new Key().PubKey.Hash.GetAddress(user.SupportedNetwork.NBitcoinNetwork).ToString();
                 var sendModel = new WalletSendModel()
                 {
-                    Destination = new Key().PubKey.Hash.GetAddress(user.SupportedNetwork.NBitcoinNetwork).ToString(),
+                    Destination = sendDestination,
                     Amount = 0.1m,
                     FeeSatoshiPerByte = 1,
                     CurrentBalance = 1.5m
@@ -63,7 +64,8 @@ namespace BTCPayServer.Tests
                 Assert.NotNull(vmLedger.SuccessPath);
                 Assert.NotNull(vmLedger.WebsocketPath);
 
-                var vmPSBT = await walletController.WalletSend(walletId, sendModel, command: "analyze-psbt").AssertViewModelAsync<WalletPSBTViewModel>();
+                var redirectedPSBT = (string)Assert.IsType<RedirectToActionResult>(await walletController.WalletSend(walletId, sendModel, command: "analyze-psbt")).RouteValues["psbt"];
+                var vmPSBT = walletController.WalletPSBT(walletId, new WalletPSBTViewModel() { PSBT = redirectedPSBT }).AssertViewModel<WalletPSBTViewModel>();
                 var unsignedPSBT = PSBT.Parse(vmPSBT.PSBT, user.SupportedNetwork.NBitcoinNetwork);
                 Assert.NotNull(vmPSBT.Decoded);
 
@@ -79,7 +81,11 @@ namespace BTCPayServer.Tests
                 var signedPSBT = unsignedPSBT.Clone();
                 signedPSBT.SignAll(user.ExtKey);
                 vmPSBT.PSBT = signedPSBT.ToBase64();
-                var redirect = Assert.IsType<RedirectToActionResult>(await walletController.WalletPSBT(walletId, vmPSBT, "broadcast"));
+                var psbtReady = await walletController.WalletPSBT(walletId, vmPSBT, "broadcast").AssertViewModelAsync<WalletPSBTReadyViewModel>();
+                Assert.Equal(2, psbtReady.Destinations.Count);
+                Assert.Contains(psbtReady.Destinations, d => d.Destination == sendDestination && !d.Positive);
+                Assert.Contains(psbtReady.Destinations, d => d.Positive);
+                var redirect = Assert.IsType<RedirectToActionResult>(await walletController.WalletPSBTReady(walletId, psbtReady, command: "broadcast"));
                 Assert.Equal(nameof(walletController.WalletTransactions), redirect.ActionName);
 
                 vmPSBT.PSBT = unsignedPSBT.ToBase64();
@@ -102,10 +108,10 @@ namespace BTCPayServer.Tests
                 Assert.True(signedPSBT2.TryFinalize(out _));
                 Assert.Equal(signedPSBT, signedPSBT2);
 
-                var ready = walletController.WalletPSBTReady(walletId, signedPSBT.ToBase64()).AssertViewModel<WalletPSBTReadyViewModel>();
+                var ready = (await walletController.WalletPSBTReady(walletId, signedPSBT.ToBase64())).AssertViewModel<WalletPSBTReadyViewModel>();
                 Assert.Equal(signedPSBT.ToBase64(), ready.PSBT);
-                vmPSBT = await walletController.WalletPSBTReady(walletId, ready, command: "analyze-psbt").AssertViewModelAsync<WalletPSBTViewModel>();
-                Assert.Equal(signedPSBT.ToBase64(), vmPSBT.PSBT);
+                redirect = Assert.IsType<RedirectToActionResult>(await walletController.WalletPSBTReady(walletId, ready, command: "analyze-psbt"));
+                Assert.Equal(signedPSBT.ToBase64(), (string)redirect.RouteValues["psbt"]);
                 redirect = Assert.IsType<RedirectToActionResult>(await walletController.WalletPSBTReady(walletId, ready, command: "broadcast"));
                 Assert.Equal(nameof(walletController.WalletTransactions), redirect.ActionName);
             }

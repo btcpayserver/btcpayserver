@@ -77,10 +77,10 @@ namespace BTCPayServer.Tests
             return usr;
         }
 
-        public void AddDerivationScheme()
+        public void AddDerivationScheme(string derivationScheme = "xpub661MyMwAqRbcGABgHMUXDzPzH1tU7eZaAaJQXhDXsSxsqyQzQeU6kznNfSuAyqAK9UaWSaZaMFdNiY5BCF4zBPAzSnwfUAwUhwttuAKwfRX-[legacy]")
         {
             Driver.FindElement(By.Id("ModifyBTC")).ForceClick();
-            Driver.FindElement(By.Id("DerivationScheme")).SendKeys("xpub661MyMwAqRbcGABgHMUXDzPzH1tU7eZaAaJQXhDXsSxsqyQzQeU6kznNfSuAyqAK9UaWSaZaMFdNiY5BCF4zBPAzSnwfUAwUhwttuAKwfRX-[legacy]");
+            Driver.FindElement(By.Id("DerivationScheme")).SendKeys(derivationScheme);
             Driver.FindElement(By.Id("Continue")).ForceClick();
             Driver.FindElement(By.Id("Confirm")).ForceClick();
             Driver.FindElement(By.Id("Save")).ForceClick();
@@ -90,6 +90,7 @@ namespace BTCPayServer.Tests
         public void ClickOnAllSideMenus()
         {
             var links = Driver.FindElements(By.CssSelector(".nav-pills .nav-link")).Select(c => c.GetAttribute("href")).ToList();
+            Driver.AssertNoError();
             Assert.NotEmpty(links);
             foreach (var l in links)
             {

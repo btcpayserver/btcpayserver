@@ -58,8 +58,8 @@ namespace BTCPayServer.Tests
                     Content = new FormUrlEncodedContent(new List<KeyValuePair<string, string>>()
                     {
                         new KeyValuePair<string, string>("grant_type", "password"),
-                        new KeyValuePair<string, string>("username", user.RegisterViewModel.Email),
-                        new KeyValuePair<string, string>("password", user.RegisterViewModel.Password)
+                        new KeyValuePair<string, string>("username", user.RegisterDetails.Email),
+                        new KeyValuePair<string, string>("password", user.RegisterDetails.Password)
                     })
                 };
 

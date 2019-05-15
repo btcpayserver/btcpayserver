@@ -252,13 +252,9 @@ namespace BTCPayServer.Controllers
                 case "ledger":
                     return ViewWalletSendLedger(psbt.PSBT, psbt.ChangeAddress);
                 case "seed":
-                    return RedirectToAction(nameof(SignWithSeed), new
-                    {
-                        psbt = psbt.PSBT.ToBase64(),
-                        send = true
-                    });
+                    return SignWithSeed(walletId, psbt.PSBT.ToBase64());
                 case "analyze-psbt":
-                    return ViewPSBT(psbt.PSBT, $"Send-{vm.Amount.Value}-{network.CryptoCode}-to-{destination[0].ToString()}.psbt");
+                    return RedirectToAction(nameof(WalletPSBT), new { walletId = walletId, psbt = psbt.PSBT.ToBase64(), FileName= $"Send-{vm.Amount.Value}-{network.CryptoCode}-to-{destination[0].ToString()}.psbt" });
                 default:
                     return View(vm);
             }
@@ -277,12 +273,11 @@ namespace BTCPayServer.Controllers
       
         [HttpGet("{walletId}/psbt/seed")]
         public IActionResult SignWithSeed([ModelBinder(typeof(WalletIdModelBinder))]
-            WalletId walletId,string psbt, bool send)
+            WalletId walletId,string psbt)
         {
-            return View(new SignWithSeedViewModel()
+            return View(nameof(SignWithSeed), new SignWithSeedViewModel()
             {
-                PSBT = psbt,
-                Send = send
+                PSBT = psbt
             });
         }
 
@@ -297,32 +292,10 @@ namespace BTCPayServer.Controllers
             var network = NetworkProvider.GetNetwork(walletId.CryptoCode);
             if (network == null)
                 throw new FormatException("Invalid value for crypto code");
-            var isMnemonic = false;
-            var isExtKey = false;
-            ExtKey extKey = null;
-            try
-            {
-                var mnemonic = new Mnemonic(viewModel.SeedOrKey);
-                isMnemonic = true;
-                extKey = mnemonic.DeriveExtKey(viewModel.Passphrase);
-            }
-            catch (Exception)
-            {
-            }
 
-            if (!isMnemonic)
-            {
-                try
-                {
-                    extKey = ExtKey.Parse(viewModel.SeedOrKey, network.NBitcoinNetwork);
-                    isExtKey = true;
-                }
-                catch (Exception)
-                {
-                }
-            }
+            ExtKey extKey = viewModel.GetExtKey(network.NBitcoinNetwork);
 
-            if (!isMnemonic && !isExtKey)
+            if (extKey == null)
             {
                 ModelState.AddModelError(nameof(viewModel.SeedOrKey),
                     "Seed or Key was not in a valid format. It is either the 12/24 words or starts with xprv");
@@ -340,25 +313,34 @@ namespace BTCPayServer.Controllers
                 return View(viewModel);
             }
 
-
-            var signedpsbt = psbt.SignAll(extKey);
-
-            if (viewModel.Send)
+            RootedKeyPath rootedKeyPath = null;
+            var settings = (await GetDerivationSchemeSettings(walletId));
+            var signingKeySettings = settings.GetSigningAccountKeySettings();
+            if (signingKeySettings.RootFingerprint is null)
+                signingKeySettings.RootFingerprint = extKey.GetPublicKey().GetHDFingerPrint();
+            if (signingKeySettings.GetRootedKeyPath()?.MasterFingerprint == extKey.GetPublicKey().GetHDFingerPrint())
             {
-                return await WalletPSBTReady(walletId, new WalletPSBTReadyViewModel()
-                {
-                    PSBT = signedpsbt.ToBase64()
-                }, "broadcast");
+                psbt.RebaseKeyPaths(signingKeySettings.AccountKey, signingKeySettings.GetRootedKeyPath());
+                rootedKeyPath = signingKeySettings.GetRootedKeyPath();
             }
 
-            return RedirectToAction(nameof(WalletPSBTReady), new
+            ExtKey signingKey = rootedKeyPath == null ? extKey : extKey.Derive(rootedKeyPath.KeyPath);
+            var balanceChange = psbt.GetBalance(signingKey, rootedKeyPath);
+            if (balanceChange == Money.Zero)
             {
-                walletId,
-                psbt = signedpsbt.ToBase64()
-            });
+                ModelState.AddModelError(nameof(viewModel.SeedOrKey), "This seed does not seem to be able to sign this transaction. Either this is the wrong key, or Wallet Settings have not the correct account path in the wallet settings.");
+                return View(viewModel);
+            }
+            psbt.SignAll(extKey, rootedKeyPath);
+            ModelState.Remove(nameof(viewModel.PSBT));
+            return await WalletPSBTReady(walletId, psbt.ToBase64(), signingKey.GetWif(network.NBitcoinNetwork).ToString(), rootedKeyPath.ToString());
+        }
 
-        }      
-        
+        private string ValueToString(Money v, BTCPayNetwork network)
+        {
+            return v.ToString() + " " + network.CryptoCode;
+        }
+
         private IDestination[] ParseDestination(string destination, Network network)
         {
             try
@@ -661,7 +643,7 @@ namespace BTCPayServer.Controllers
             if (derivationScheme == null)
                 return NotFound();
             derivationScheme.Label = vm.Label;
-            derivationScheme.SigningKey = new BitcoinExtPubKey(vm.SelectedSigningKey, derivationScheme.Network.NBitcoinNetwork);
+            derivationScheme.SigningKey = string.IsNullOrEmpty(vm.SelectedSigningKey) ? null : new BitcoinExtPubKey(vm.SelectedSigningKey, derivationScheme.Network.NBitcoinNetwork);
             for (int i = 0; i < derivationScheme.AccountKeySettings.Length; i++)
             {
                 derivationScheme.AccountKeySettings[i].AccountKeyPath = string.IsNullOrWhiteSpace(vm.AccountKeys[i].AccountKeyPath) ? null

@@ -42,9 +42,15 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("{walletId}/psbt")]
-        public IActionResult WalletPSBT()
+        public IActionResult WalletPSBT([ModelBinder(typeof(WalletIdModelBinder))]
+            WalletId walletId, WalletPSBTViewModel vm)
         {
-            return View(new WalletPSBTViewModel());
+            var network = NetworkProvider.GetNetwork(walletId.CryptoCode);
+            if (vm?.PSBT != null)
+            {
+                vm.Decoded = vm.GetPSBT(network.NBitcoinNetwork)?.ToString();
+            }
+            return View(vm ?? new WalletPSBTViewModel());
         }
         [HttpPost]
         [Route("{walletId}/psbt")]
@@ -70,30 +76,12 @@ namespace BTCPayServer.Controllers
                 case "ledger":
                     return ViewWalletSendLedger(psbt);
                 case "seed":
-                    return RedirectToAction("SignWithSeed", new
-                    {
-                        psbt = psbt.ToBase64(),
-                        walletId,
-                        send = false
-                    });
+                    return SignWithSeed(walletId, psbt.ToBase64());
                 case "broadcast" when !psbt.IsAllFinalized() && !psbt.TryFinalize(out var errors):
                     return ViewPSBT(psbt, errors);
                 case "broadcast":
                 {
-                    var transaction = psbt.ExtractTransaction();
-                    try
-                    {
-                        var broadcastResult = await ExplorerClientProvider.GetExplorerClient(network).BroadcastAsync(transaction);
-                        if (!broadcastResult.Success)
-                        {
-                            return ViewPSBT(psbt, new[] { $"RPC Error while broadcasting: {broadcastResult.RPCCode} {broadcastResult.RPCCodeMessage} {broadcastResult.RPCMessage}" });
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        return ViewPSBT(psbt, "Error while broadcasting: " + ex.Message);
-                    }
-                    return await RedirectToWalletTransaction(walletId, transaction);
+                    return await WalletPSBTReady(walletId, psbt.ToBase64());
                 }
                 case "combine":
                     ModelState.Remove(nameof(vm.PSBT));
@@ -107,11 +95,80 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("{walletId}/psbt/ready")]
-        public IActionResult WalletPSBTReady(
+        public async Task<IActionResult> WalletPSBTReady(
             [ModelBinder(typeof(WalletIdModelBinder))]
-            WalletId walletId, string psbt = null)
+            WalletId walletId, string psbt = null, 
+            string signingKey = null,
+            string signingKeyPath = null)
         {
-            return View(new WalletPSBTReadyViewModel() { PSBT = psbt });
+            var network = NetworkProvider.GetNetwork(walletId.CryptoCode);
+            var vm = new WalletPSBTReadyViewModel() { PSBT = psbt };
+            vm.SigningKey = signingKey;
+            vm.SigningKeyPath = signingKeyPath;
+            await FetchTransactionDetails(walletId, vm, network);
+            return View(nameof(WalletPSBTReady), vm);
+        }
+
+        private async Task FetchTransactionDetails(WalletId walletId, WalletPSBTReadyViewModel vm, BTCPayNetwork network)
+        {
+            var psbtObject = PSBT.Parse(vm.PSBT, network.NBitcoinNetwork);
+            IHDKey signingKey = null;
+            RootedKeyPath signingKeyPath = null;
+
+            try
+            {
+                signingKey = new BitcoinExtPubKey(vm.SigningKey, network.NBitcoinNetwork);
+            }
+            catch { }
+            try
+            {
+                signingKey = signingKey ?? new BitcoinExtKey(vm.SigningKey, network.NBitcoinNetwork);
+            }
+            catch { }
+
+            try
+            {
+                signingKeyPath = RootedKeyPath.Parse(vm.SigningKeyPath);
+            }
+            catch { }
+
+            if (signingKey == null || signingKeyPath == null)
+            {
+                var signingKeySettings = (await GetDerivationSchemeSettings(walletId)).GetSigningAccountKeySettings();
+                if (signingKey == null)
+                {
+                    signingKey = signingKeySettings.AccountKey;
+                    vm.SigningKey = signingKey.ToString();
+                }
+                if (vm.SigningKeyPath == null)
+                {
+                    signingKeyPath = signingKeySettings.GetRootedKeyPath();
+                    vm.SigningKeyPath = signingKeyPath?.ToString();
+                }
+            }
+
+            var balanceChange = psbtObject.GetBalance(signingKey, signingKeyPath);
+
+            vm.BalanceChange = ValueToString(balanceChange, network);
+            vm.Positive = balanceChange >= Money.Zero;
+
+            foreach (var output in psbtObject.Outputs)
+            {
+                var dest = new WalletPSBTReadyViewModel.DestinationViewModel();
+                vm.Destinations.Add(dest);
+                var mine = output.HDKeysFor(signingKey, signingKeyPath).Any();
+                var balanceChange2 = output.Value;
+                if (!mine)
+                    balanceChange2 = -balanceChange2;
+                dest.Balance = ValueToString(balanceChange2, network);
+                dest.Positive = balanceChange2 >= Money.Zero;
+                dest.Destination = output.ScriptPubKey.GetDestinationAddress(network.NBitcoinNetwork)?.ToString() ?? output.ScriptPubKey.ToString();
+            }
+
+            if (psbtObject.TryGetFee(out var fee))
+            {
+                vm.Fee = ValueToString(fee, network);
+            }
         }
 
         [HttpPost]
@@ -125,6 +182,7 @@ namespace BTCPayServer.Controllers
             try
             {
                 psbt = PSBT.Parse(vm.PSBT, network.NBitcoinNetwork);
+                await FetchTransactionDetails(walletId, vm, network);
             }
             catch
             {
@@ -161,7 +219,7 @@ namespace BTCPayServer.Controllers
             }
             else if (command == "analyze-psbt")
             {
-                return ViewPSBT(psbt);
+                return RedirectToAction(nameof(WalletPSBT), new { walletId = walletId, psbt = psbt.ToBase64() });
             }
             else
             {

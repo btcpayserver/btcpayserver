@@ -7,12 +7,12 @@
     <!-- Modal content-->
     <div class="modal-content">
         <div class="modal-header">
-            <h4 class="modal-title">Your nodes are synching...</h4>
+            <h4 class="modal-title">Your nodes are synchronizing...</h4>
             <button type="button" class="close" onclick="dismissSyncModal()">&times;</button>
         </div>
         <div class="modal-body">
             <p>
-                Your node is synching the entire blockchain and validating the consensus rules...
+                Your node is synchronizing the entire blockchain and validating the consensus rules...
             </p>
             @foreach (var line in dashboard.GetAll())
             {
@@ -77,7 +77,7 @@
                 <a href="https://www.youtube.com/watch?v=OrYDehC-8TU" target="_blank">Watch this video</a> to understand the importance of blockchain synchronization.
             </p>
 
-            <p>If you really don't want to synch and that you are familiar with command line, check <a href="https://github.com/btcpayserver/btcpayserver-docker/blob/master/contrib/FastSync/README.md" target="_blank">FastSync</a>.</p>
+            <p>If you really don't want to sync and you are familiar with command line, check <a href="https://github.com/btcpayserver/btcpayserver-docker/blob/master/contrib/FastSync/README.md" target="_blank">FastSync</a>.</p>
         </div>
 
     </div>

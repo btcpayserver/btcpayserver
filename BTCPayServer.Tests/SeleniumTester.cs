@@ -11,7 +11,6 @@ using Xunit;
 using System.IO;
 using BTCPayServer.Tests.Logging;
 using System.Threading;
-using NUglify.Helpers;
 
 namespace BTCPayServer.Tests
 {
@@ -81,7 +80,7 @@ namespace BTCPayServer.Tests
         public void AddDerivationScheme(string derivationScheme = "xpub661MyMwAqRbcGABgHMUXDzPzH1tU7eZaAaJQXhDXsSxsqyQzQeU6kznNfSuAyqAK9UaWSaZaMFdNiY5BCF4zBPAzSnwfUAwUhwttuAKwfRX-[legacy]")
         {
             Driver.FindElement(By.Id("ModifyBTC")).ForceClick();
-            Driver.FindElements(By.Id("DerivationScheme")).ForEach(element => element.SendKeys(derivationScheme));
+            Driver.FindElement(By.ClassName("store-derivation-scheme")).SendKeys(derivationScheme);
             Driver.FindElement(By.Id("Continue")).ForceClick();
             Driver.FindElement(By.Id("Confirm")).ForceClick();
             Driver.FindElement(By.Id("Save")).ForceClick();

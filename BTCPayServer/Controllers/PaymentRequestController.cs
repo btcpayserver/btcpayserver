@@ -154,7 +154,7 @@ namespace BTCPayServer.Controllers
             blob.Email = viewModel.Email;
             blob.Description = _htmlSanitizer.Sanitize(viewModel.Description);
             blob.Amount = viewModel.Amount;
-            blob.ExpiryDate = viewModel.ExpiryDate;
+            blob.ExpiryDate = viewModel.ExpiryDate?.ToUniversalTime();
             blob.Currency = viewModel.Currency;
             blob.EmbeddedCSS = viewModel.EmbeddedCSS;
             blob.CustomCSSLink = viewModel.CustomCSSLink;

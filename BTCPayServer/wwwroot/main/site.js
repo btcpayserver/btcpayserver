@@ -30,11 +30,7 @@
                 maxDate: max,
                 defaultDate: defaultDate,
                 time_24hr: true,
-                defaultHour: 0,
-                parseDate: function (date) {
-                    // check with Kukks if this is still needed with new date format
-                    return moment(date).toDate();
-                }
+                defaultHour: 0
             });
         }
     });

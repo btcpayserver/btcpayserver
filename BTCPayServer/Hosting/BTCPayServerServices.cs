@@ -251,10 +251,8 @@ namespace BTCPayServer.Hosting
                 })
                 .AddJwtBearer(options =>
                 {
-//                    options.Authority = externalUrl?.ToString()?? "http://127.0.0.1:14142/";
-//                    options.Audience = externalUrl?.ToString()?? "http://127.0.0.1:14142/";
-                    options.RequireHttpsMetadata = false;
-                    options.TokenValidationParameters.ValidateAudience = false;
+//                    options.RequireHttpsMetadata = false;
+//                    options.TokenValidationParameters.ValidateAudience = false;
                     options.TokenValidationParameters.ValidateIssuer = false;
                 })
                 .AddCookie()

@@ -70,51 +70,7 @@ namespace BTCPayServer.Hosting
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();      
             
-            // Register the OpenIddict services.
-            services.AddOpenIddict()
-                .AddCore(options =>
-                {
-                    
-                    // Configure OpenIddict to use the Entity Framework Core stores and entities.
-                    options.UseEntityFrameworkCore()
-                        .UseDbContext<ApplicationDbContext>()
-                        .ReplaceDefaultEntities<BTCPayOpenIdClient, BTCPayOpenIdAuthorization, OpenIddictScope<string>,
-                            BTCPayOpenIdToken, string>();
-                })
-
-                .AddServer(options =>
-                {
-                    // Register the ASP.NET Core MVC binder used by OpenIddict.
-                    // Note: if you don't call this method, you won't be able to
-                    // bind OpenIdConnectRequest or OpenIdConnectResponse parameters.
-                    options.UseMvc();
-
-                    // Enable the token endpoint (required to use the password flow).
-                    options.EnableTokenEndpoint("/connect/token");
-                    options.EnableAuthorizationEndpoint("/connect/authorize");
-                    options.EnableAuthorizationEndpoint("/connect/logout");
-
-                    // Allow client applications various flows
-                    options.AllowImplicitFlow();
-                    options.AllowClientCredentialsFlow();
-                    options.AllowRefreshTokenFlow();
-                    options.AllowPasswordFlow();
-                    options.AllowAuthorizationCodeFlow();
-                    // During development, you can disable the HTTPS requirement.
-                    options.DisableHttpsRequirement();
-                    options.UseRollingTokens();
-                    options.UseJsonWebTokens();
-
-                    options.RegisterScopes(
-                        OpenIdConnectConstants.Scopes.OpenId,
-                        OpenIdConnectConstants.Scopes.OfflineAccess,
-                        OpenIdConnectConstants.Scopes.Email,
-                        OpenIdConnectConstants.Scopes.Profile,
-                        OpenIddictConstants.Scopes.Roles);
-
-                    
-                    options.ConfigureSigningKey(Configuration);
-                });
+            ConfigureOpenIddict(services);
 
             services.AddBTCPayServer(Configuration);
             services.AddProviderStorage();
@@ -150,7 +106,6 @@ namespace BTCPayServer.Hosting
                 // Configure Identity to use the same JWT claims as OpenIddict instead
                 // of the legacy WS-Federation claims it uses by default (ClaimTypes),
                 // which saves you from doing the mapping in your authorization controller.
-                
                 options.ClaimsIdentity.UserNameClaimType = OpenIdConnectConstants.Claims.Name;
                 options.ClaimsIdentity.UserIdClaimType = OpenIdConnectConstants.Claims.Subject;
                 options.ClaimsIdentity.RoleClaimType = OpenIdConnectConstants.Claims.Role;
@@ -191,6 +146,50 @@ namespace BTCPayServer.Hosting
                     });
                 });
             }
+        }
+
+        private void ConfigureOpenIddict(IServiceCollection services)
+        {
+// Register the OpenIddict services.
+            services.AddOpenIddict()
+                .AddCore(options =>
+                {
+                    // Configure OpenIddict to use the Entity Framework Core stores and entities.
+                    options.UseEntityFrameworkCore()
+                        .UseDbContext<ApplicationDbContext>()
+                        .ReplaceDefaultEntities<BTCPayOpenIdClient, BTCPayOpenIdAuthorization, OpenIddictScope<string>,
+                            BTCPayOpenIdToken, string>();
+                })
+                .AddServer(options =>
+                {
+                    // Register the ASP.NET Core MVC binder used by OpenIddict.
+                    // Note: if you don't call this method, you won't be able to
+                    // bind OpenIdConnectRequest or OpenIdConnectResponse parameters.
+                    options.UseMvc();
+
+                    // Enable the token endpoint (required to use the password flow).
+                    options.EnableTokenEndpoint("/connect/token");
+                    options.EnableAuthorizationEndpoint("/connect/authorize");
+                    options.EnableAuthorizationEndpoint("/connect/logout");
+
+                    // Allow client applications various flows
+                    options.AllowImplicitFlow();
+                    options.AllowClientCredentialsFlow();
+                    options.AllowRefreshTokenFlow();
+                    options.AllowPasswordFlow();
+                    options.AllowAuthorizationCodeFlow();
+                    options.UseRollingTokens();
+                    options.UseJsonWebTokens();
+
+                    options.RegisterScopes(
+                        OpenIdConnectConstants.Scopes.OpenId,
+                        OpenIdConnectConstants.Scopes.OfflineAccess,
+                        OpenIdConnectConstants.Scopes.Email,
+                        OpenIdConnectConstants.Scopes.Profile,
+                        OpenIddictConstants.Scopes.Roles);
+
+                    options.ConfigureSigningKey(Configuration);
+                });
         }
 
         public void Configure(

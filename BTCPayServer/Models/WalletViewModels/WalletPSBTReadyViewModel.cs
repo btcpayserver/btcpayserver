@@ -23,5 +23,6 @@ namespace BTCPayServer.Models.WalletViewModels
         public bool Positive { get; set; }
         public List<DestinationViewModel> Destinations { get; set; } = new List<DestinationViewModel>();
         public string Fee { get; set; }
+        public string FeeRate { get; set; }
     }
 }

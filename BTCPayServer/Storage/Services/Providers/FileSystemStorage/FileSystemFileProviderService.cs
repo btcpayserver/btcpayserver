@@ -32,7 +32,12 @@ namespace BTCPayServer.Storage.Services.Providers.FileSystemStorage
         {
             return Path.Combine(options.DataDir, LocalStorageDirectoryName);
         }
-
+        
+        
+        public static string GetTempStorageDir(BTCPayServerOptions options)
+        {
+            return Path.Combine(GetStorageDir(options), "tmp");
+        }
         public override StorageProvider StorageProvider()
         {
             return Storage.Models.StorageProvider.FileSystem;
@@ -60,6 +65,12 @@ namespace BTCPayServer.Storage.Services.Providers.FileSystemStorage
         public override async Task<string> GetTemporaryFileUrl(StoredFile storedFile, StorageSettings configuration, DateTimeOffset expiry, bool isDownload,
             BlobUrlAccess access = BlobUrlAccess.Read)
         {
+
+            var tmpFD = new StorageController.TemporaryLocalFileDescriptor()
+            {
+                Expiry = expiry, FileId = storedFile.Id, IsDownload = isDownload
+            };
+            
             return $"{(await GetFileUrl(storedFile, configuration))}{(isDownload ? "?download" : string.Empty)}";
         }
     }

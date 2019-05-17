@@ -34,15 +34,17 @@
                     <input asp-for="DerivationScheme" class="form-control store-derivation-scheme" />
                     <span asp-validation-for="DerivationScheme" class="text-danger"></span>
                     
-                    <div class="dropdown mt-2">
-                        <button class="btn btn-primary dropdown-toggle" type="button" id="hardwarewlletimportdropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <div class="dropdown mt-2 text-right">
+                        <div class="btn-group">
+                        <button class="btn btn-link dropdown-toggle" type="button" id="hardwarewlletimportdropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             Import from hardware device
                         </button>
-                        <div class="dropdown-menu" aria-labelledby="hardwarewlletimportdropdown">
-                            <button class="dropdown-item" type="button" data-toggle="modal" data-target="#coldcardimport">Coldcard</button>
-                            <button class="dropdown-item  check-for-ledger" data-toggle="modal" data-target="#ledgerimport" type="button">Ledger</button>
-                            <button class="dropdown-item check-for-trezor" type="button" data-toggle="modal" data-target="#trezorimport">Trezor</button>
-                        </div>
+                            <div class="dropdown-menu  dropdown-menu-right w-100" aria-labelledby="hardwarewlletimportdropdown">
+                                <button class="dropdown-item" type="button" data-toggle="modal" data-target="#coldcardimport">Coldcard</button>
+                                <button class="dropdown-item check-for-ledger" data-toggle="modal" data-target="#ledgerimport" type="button">Ledger</button>
+                                <button class="dropdown-item check-for-trezor" type="button" data-toggle="modal" data-target="#trezorimport">Trezor</button>
+                            </div>
+                    </div>
                     </div>
                 </div>
                 <div class="form-group">

@@ -169,6 +169,10 @@ namespace BTCPayServer.Controllers
             {
                 vm.Fee = ValueToString(fee, network);
             }
+            if (psbtObject.TryGetEstimatedFeeRate(out var feeRate))
+            {
+                vm.FeeRate = feeRate.ToString();
+            }
         }
 
         [HttpPost]

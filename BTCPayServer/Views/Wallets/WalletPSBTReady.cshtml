@@ -72,6 +72,16 @@
                 <div class="col-lg-3 text-center"></div>
             </div>
         }
+        @if (Model.FeeRate != null)
+        {
+            <div class="row">
+                <div class="col-lg-3 text-center"></div>
+                <div class="col-lg-6 text-left">
+                    <p>Transaction fee rate: <b>@Model.FeeRate</b></p>
+                </div>
+                <div class="col-lg-3 text-center"></div>
+            </div>
+        }
         <div class="row">
             <div class="col-lg-12 text-center">
                 <form method="post" asp-action="WalletPSBTReady">

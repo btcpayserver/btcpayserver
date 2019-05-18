@@ -7,6 +7,7 @@ using BTCPayServer.Storage.Models;
 using BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json;
 using TwentyTwenty.Storage;
 using TwentyTwenty.Storage.Local;
 
@@ -66,12 +67,27 @@ namespace BTCPayServer.Storage.Services.Providers.FileSystemStorage
             BlobUrlAccess access = BlobUrlAccess.Read)
         {
 
-            var tmpFD = new StorageController.TemporaryLocalFileDescriptor()
+            var localFileDescriptor = new TemporaryLocalFileDescriptor()
             {
-                Expiry = expiry, FileId = storedFile.Id, IsDownload = isDownload
+                Expiry = expiry, 
+                FileId = storedFile.Id, 
+                IsDownload = isDownload
             };
+            var name = Guid.NewGuid().ToString();
+            var fullPath = Path.Combine(GetTempStorageDir(_Options), name);
+            if (!File.Exists(fullPath))
+            {
+                File.Create(fullPath).Dispose();
+            }
             
-            return $"{(await GetFileUrl(storedFile, configuration))}{(isDownload ? "?download" : string.Empty)}";
+            await File.WriteAllTextAsync(Path.Combine(GetTempStorageDir(_Options), name), JsonConvert.SerializeObject(localFileDescriptor));
+            return
+                _HttpContextAccessor.HttpContext.Request.IsOnion()
+                    ? $"{_BtcPayServerEnvironment.OnionUrl}/{LocalStorageDirectoryName}tmp/{name}"
+                    : $"{_BtcPayServerEnvironment.ExpectedProtocol}://" +
+                      $"{_BtcPayServerEnvironment.ExpectedHost}" +
+                      $"{_Options.RootPath}{LocalStorageDirectoryName}tmp/{name}";
+
         }
     }
 }

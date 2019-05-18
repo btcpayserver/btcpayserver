@@ -305,7 +305,9 @@ namespace BTCPayServer.Tests
                 void SetTransactionOutput(int index, BitcoinAddress dest, decimal amount, bool subtract = false)
                 {
                     s.Driver.FindElement(By.Id($"Outputs_{index}__DestinationAddress")).SendKeys(dest.ToString());
-                    s.Driver.FindElement(By.Id($"Outputs_{index}__Amount")).SendKeys(amount.ToString());
+                    var amountElement = s.Driver.FindElement(By.Id($"Outputs_{index}__Amount"));
+                    amountElement.Clear();
+                    amountElement.SendKeys(amount.ToString());
                     var checkboxElement = s.Driver.FindElement(By.Id($"Outputs_{index}__SubtractFeesFromOutput"));
                     if (checkboxElement.Selected != subtract)
                     {

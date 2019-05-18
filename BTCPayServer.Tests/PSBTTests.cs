@@ -53,8 +53,14 @@ namespace BTCPayServer.Tests
                 var sendDestination = new Key().PubKey.Hash.GetAddress(user.SupportedNetwork.NBitcoinNetwork).ToString();
                 var sendModel = new WalletSendModel()
                 {
-                    Destination = sendDestination,
-                    Amount = 0.1m,
+                    Outputs = new List<WalletSendModel.TransactionOutput>()
+                    {
+                        new WalletSendModel.TransactionOutput()
+                        {
+                            DestinationAddress = sendDestination,
+                            Amount = 0.1m,
+                        }
+                    },
                     FeeSatoshiPerByte = 1,
                     CurrentBalance = 1.5m
                 };

@@ -232,7 +232,7 @@ namespace BTCPayServer.Controllers
             }
             if (command.StartsWith("remove-output", StringComparison.InvariantCultureIgnoreCase))
             {
-                var index = int.Parse(command.Substring(command.IndexOf(":",StringComparison.InvariantCultureIgnoreCase) + 1));
+                var index = int.Parse(command.Substring(command.IndexOf(":",StringComparison.InvariantCultureIgnoreCase) + 1),  CultureInfo.InvariantCulture);
                 vm.Outputs.RemoveAt(index);
                 return View(vm);
             }

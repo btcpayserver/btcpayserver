@@ -331,13 +331,13 @@ namespace BTCPayServer.Controllers
             {
                 signingKey = extKey;
             }
-            var balanceChange = psbt.GetBalance(signingKey, rootedKeyPath);
+            var balanceChange = psbt.GetBalance(settings.AccountDerivation, signingKey, rootedKeyPath);
             if (balanceChange == Money.Zero)
             {
                 ModelState.AddModelError(nameof(viewModel.SeedOrKey), "This seed does not seem to be able to sign this transaction. Either this is the wrong key, or Wallet Settings have not the correct account path in the wallet settings.");
                 return View(viewModel);
             }
-            psbt.SignAll(signingKey, rootedKeyPath);
+            psbt.SignAll(settings.AccountDerivation, signingKey, rootedKeyPath);
             ModelState.Remove(nameof(viewModel.PSBT));
             return await WalletPSBTReady(walletId, psbt.ToBase64(), signingKey.GetWif(network.NBitcoinNetwork).ToString(), rootedKeyPath.ToString());
         }

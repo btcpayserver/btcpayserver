@@ -8,7 +8,7 @@
 <h4>Combine PSBT</h4>
 <div class="row">
     <div class="col-md-10">
-        <form class="form-group" method="post" asp-action="WalletPSBTCombine">
+        <form class="form-group" method="post" asp-action="WalletPSBTCombine" enctype="multipart/form-data">
             <input type="hidden" asp-for="OtherPSBT" />
             <div class="form-group">
                 <label asp-for="PSBT"></label>

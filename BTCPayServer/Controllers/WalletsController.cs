@@ -242,57 +242,56 @@ namespace BTCPayServer.Controllers
             {
                 ModelState.AddModelError(string.Empty,
                     "Please add at least one transaction output");
+                return View(vm);
             }
-            else
-            {
-                var subtractFeesOutputsCount = new List<int>();
 
+            var subtractFeesOutputsCount = new List<int>();
+
+            for (var i = 0; i < vm.Outputs.Count; i++)
+            {
+                var transactionOutput = vm.Outputs[i];
+                if (transactionOutput.SubtractFeesFromOutput)
+                {
+                    subtractFeesOutputsCount.Add(i);
+                }
+                var destination = ParseDestination(transactionOutput.DestinationAddress, network.NBitcoinNetwork);
+                if (destination == null)
+                    ModelState.AddModelError(nameof(transactionOutput.DestinationAddress), "Invalid address");
+
+                if (transactionOutput.Amount.HasValue)
+                {
+                    transactionAmountSum += transactionOutput.Amount.Value;
+
+                    if (vm.CurrentBalance == transactionOutput.Amount.Value &&
+                        !transactionOutput.SubtractFeesFromOutput)
+                        vm.AddModelError(model => model.Outputs[i].SubtractFeesFromOutput,
+                            "You are sending your entire balance to the same destination, you should subtract the fees",
+                            ModelState);
+                }
+            }
+
+            if (subtractFeesOutputsCount.Count > 1)
+            {
+                foreach (var subtractFeesOutput in subtractFeesOutputsCount)
+                {
+                    vm.AddModelError(model => model.Outputs[subtractFeesOutput].SubtractFeesFromOutput,
+                        "You can only subtract fees from one output", ModelState);
+                }
+            }else if (vm.CurrentBalance == transactionAmountSum && vm.Outputs.Count > 1)
+            {
+                ModelState.AddModelError(string.Empty,
+                    "You are sending your entire balance, you should subtract the fees from an output");
+            }
+
+            if (vm.CurrentBalance < transactionAmountSum)
+            {
                 for (var i = 0; i < vm.Outputs.Count; i++)
                 {
-                    var transactionOutput = vm.Outputs[i];
-                    if (transactionOutput.SubtractFeesFromOutput)
-                    {
-                        subtractFeesOutputsCount.Add(i);
-                    }
-                    var destination = ParseDestination(transactionOutput.DestinationAddress, network.NBitcoinNetwork);
-                    if (destination == null)
-                        ModelState.AddModelError(nameof(transactionOutput.DestinationAddress), "Invalid address");
-
-                    if (transactionOutput.Amount.HasValue)
-                    {
-                        transactionAmountSum += transactionOutput.Amount.Value;
-
-                        if (vm.CurrentBalance == transactionOutput.Amount.Value &&
-                            !transactionOutput.SubtractFeesFromOutput)
-                            vm.AddModelError(model => model.Outputs[i].SubtractFeesFromOutput,
-                                "You are sending your entire balance to the same destination, you should subtract the fees",
-                                ModelState);
-                    }
-                }
-
-                if (subtractFeesOutputsCount.Count > 1)
-                {
-                    foreach (var subtractFeesOutput in subtractFeesOutputsCount)
-                    {
-                        vm.AddModelError(model => model.Outputs[subtractFeesOutput].SubtractFeesFromOutput,
-                            "You can only subtract fees from one output", ModelState);
-                    }
-                }else if (vm.CurrentBalance == transactionAmountSum && vm.Outputs.Count > 1)
-                {
-                    ModelState.AddModelError(string.Empty,
-                        "You are sending your entire balance, you should subtract the fees from an output");
-                }
-
-                if (vm.CurrentBalance < transactionAmountSum)
-                {
-                    for (var i = 0; i < vm.Outputs.Count; i++)
-                    {
-                        vm.AddModelError(model => model.Outputs[i].Amount,
-                            "You are sending more than what you own", ModelState);
-                    }
+                    vm.AddModelError(model => model.Outputs[i].Amount,
+                        "You are sending more than what you own", ModelState);
                 }
             }
-            
+
             if (!ModelState.IsValid)
                 return View(vm);
 

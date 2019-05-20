@@ -141,12 +141,12 @@
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
-    <script src="~/js/ledgerwebsocket.js" type="text/javascript" defer="defer"></script>
-    <script src="~/js/StoreAddDerivationScheme.js" type="text/javascript" defer="defer"></script>
+    <script src="~/js/ledgerwebsocket.js" type="text/javascript" async  defer="defer"></script>
+    <script src="~/js/StoreAddDerivationScheme.js" async  type="text/javascript" defer="defer"></script>
 
-    <script src="~/vendor/trezor/trezor.js-umd.js"></script>
-    <script src="~/js/trezor/trezor-client.js" type="text/javascript" defer="defer"></script>
-    <script src="~/js/trezor/trezor-add-derivation-scheme.js" type="text/javascript" defer="defer"></script>
+    <script src="~/vendor/trezor/trezor.js-umd.min.js" async defer="defer"></script>
+    <script src="~/js/trezor/trezor-client.js" async  type="text/javascript" defer="defer"></script>
+    <script src="~/js/trezor/trezor-add-derivation-scheme.js" async  type="text/javascript" defer="defer"></script>
     <script>
         window.coinName = "@Model.Network.DisplayName.ToLowerInvariant()";
     </script>

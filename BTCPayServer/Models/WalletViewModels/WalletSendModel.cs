@@ -20,7 +20,7 @@ namespace BTCPayServer.Models.WalletViewModels
             [Display(Name = "Amount")] [Required]  [Range(0.0, double.MaxValue)]public decimal? Amount { get; set; }
 
 
-            [Display(Name = "Subtract fees from this output amount")]
+            [Display(Name = "The destination pays mining fees")]
             public bool SubtractFeesFromOutput { get; set; }
         }
         public decimal CurrentBalance { get; set; }

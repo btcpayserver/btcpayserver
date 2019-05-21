@@ -163,13 +163,20 @@ namespace BTCPayServer.Controllers
             var rateRules = store.GetStoreBlob().GetRateRules(NetworkProvider);
             rateRules.Spread = 0.0m;
             var currencyPair = new Rating.CurrencyPair(paymentMethod.PaymentId.CryptoCode, GetCurrencyCode(storeData.DefaultLang) ?? "USD");
-            WalletSendModel model = new WalletSendModel()
+            double.TryParse(defaultAmount, out var amount);
+           var model = new WalletSendModel()
             {
-                Destination = defaultDestination,
+                Outputs = new List<WalletSendModel.TransactionOutput>()
+                {
+                    new WalletSendModel.TransactionOutput()
+                    {
+                        Amount = Convert.ToDecimal(amount),
+                        DestinationAddress = defaultDestination
+                    }
+                },
                 CryptoCode = walletId.CryptoCode
             };
-            if (double.TryParse(defaultAmount, out var amount))
-                model.Amount = (decimal)amount;
+            
 
             var feeProvider = _feeRateProvider.CreateFeeProvider(network);
             var recommendedFees = feeProvider.GetFeeRateAsync();
@@ -204,7 +211,7 @@ namespace BTCPayServer.Controllers
         [Route("{walletId}/send")]
         public async Task<IActionResult> WalletSend(
             [ModelBinder(typeof(WalletIdModelBinder))]
-            WalletId walletId, WalletSendModel vm, string command = null, CancellationToken cancellation = default)
+            WalletId walletId, WalletSendModel vm, string command = "", CancellationToken cancellation = default)
         {
             if (walletId?.StoreId == null)
                 return NotFound();
@@ -215,17 +222,76 @@ namespace BTCPayServer.Controllers
             if (network == null)
                 return NotFound();
             vm.SupportRBF = network.SupportRBF;
-            var destination = ParseDestination(vm.Destination, network.NBitcoinNetwork);
-            if (destination == null)
-                ModelState.AddModelError(nameof(vm.Destination), "Invalid address");
-
-            if (vm.Amount.HasValue)
+            decimal transactionAmountSum  = 0;
+            
+            if (command == "add-output")
             {
-                if (vm.CurrentBalance == vm.Amount.Value && !vm.SubstractFees)
-                    ModelState.AddModelError(nameof(vm.Amount), "You are sending all your balance to the same destination, you should substract the fees");
-                if (vm.CurrentBalance < vm.Amount.Value)
-                    ModelState.AddModelError(nameof(vm.Amount), "You are sending more than what you own");
+                vm.Outputs.Add(new WalletSendModel.TransactionOutput());
+                return View(vm);
+
             }
+            if (command.StartsWith("remove-output", StringComparison.InvariantCultureIgnoreCase))
+            {
+                var index = int.Parse(command.Substring(command.IndexOf(":",StringComparison.InvariantCultureIgnoreCase) + 1),  CultureInfo.InvariantCulture);
+                vm.Outputs.RemoveAt(index);
+                return View(vm);
+            }
+            
+
+            if (!vm.Outputs.Any())
+            {
+                ModelState.AddModelError(string.Empty,
+                    "Please add at least one transaction output");
+                return View(vm);
+            }
+
+            var subtractFeesOutputsCount = new List<int>();
+
+            for (var i = 0; i < vm.Outputs.Count; i++)
+            {
+                var transactionOutput = vm.Outputs[i];
+                if (transactionOutput.SubtractFeesFromOutput)
+                {
+                    subtractFeesOutputsCount.Add(i);
+                }
+                var destination = ParseDestination(transactionOutput.DestinationAddress, network.NBitcoinNetwork);
+                if (destination == null)
+                    ModelState.AddModelError(nameof(transactionOutput.DestinationAddress), "Invalid address");
+
+                if (transactionOutput.Amount.HasValue)
+                {
+                    transactionAmountSum += transactionOutput.Amount.Value;
+
+                    if (vm.CurrentBalance == transactionOutput.Amount.Value &&
+                        !transactionOutput.SubtractFeesFromOutput)
+                        vm.AddModelError(model => model.Outputs[i].SubtractFeesFromOutput,
+                            "You are sending your entire balance to the same destination, you should subtract the fees",
+                            ModelState);
+                }
+            }
+
+            if (subtractFeesOutputsCount.Count > 1)
+            {
+                foreach (var subtractFeesOutput in subtractFeesOutputsCount)
+                {
+                    vm.AddModelError(model => model.Outputs[subtractFeesOutput].SubtractFeesFromOutput,
+                        "You can only subtract fees from one output", ModelState);
+                }
+            }else if (vm.CurrentBalance == transactionAmountSum && vm.Outputs.Count > 1)
+            {
+                ModelState.AddModelError(string.Empty,
+                    "You are sending your entire balance, you should subtract the fees from an output");
+            }
+
+            if (vm.CurrentBalance < transactionAmountSum)
+            {
+                for (var i = 0; i < vm.Outputs.Count; i++)
+                {
+                    vm.AddModelError(model => model.Outputs[i].Amount,
+                        "You are sending more than what you own", ModelState);
+                }
+            }
+
             if (!ModelState.IsValid)
                 return View(vm);
 
@@ -238,15 +304,16 @@ namespace BTCPayServer.Controllers
             }
             catch (NBXplorerException ex)
             {
-                ModelState.AddModelError(nameof(vm.Amount), ex.Error.Message);
+                ModelState.AddModelError(string.Empty, ex.Error.Message);
                 return View(vm);
             }
             catch (NotSupportedException)
             {
-                ModelState.AddModelError(nameof(vm.Destination), "You need to update your version of NBXplorer");
+                ModelState.AddModelError(string.Empty, "You need to update your version of NBXplorer");
                 return View(vm);
             }
             derivationScheme.RebaseKeyPaths(psbt.PSBT);
+            
             switch (command)
             {
                 case "ledger":
@@ -254,10 +321,13 @@ namespace BTCPayServer.Controllers
                 case "seed":
                     return SignWithSeed(walletId, psbt.PSBT.ToBase64());
                 case "analyze-psbt":
-                    return RedirectToAction(nameof(WalletPSBT), new { walletId = walletId, psbt = psbt.PSBT.ToBase64(), FileName= $"Send-{vm.Amount.Value}-{network.CryptoCode}-to-{destination[0].ToString()}.psbt" });
+                    var name =
+                        $"Send-{string.Join('_', vm.Outputs.Select(output => $"{output.Amount}->{output.DestinationAddress}{(output.SubtractFeesFromOutput ? "-Fees" : string.Empty)}"))}.psbt";
+                    return RedirectToAction(nameof(WalletPSBT), new { walletId = walletId, psbt = psbt.PSBT.ToBase64(), FileName= name });
                 default:
                     return View(vm);
             }
+            
         }
 
         private ViewResult ViewWalletSendLedger(PSBT psbt, BitcoinAddress hintChange = null)

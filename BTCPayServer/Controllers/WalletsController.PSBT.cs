@@ -19,21 +19,28 @@ namespace BTCPayServer.Controllers
         {
             var nbx = ExplorerClientProvider.GetExplorerClient(network);
             CreatePSBTRequest psbtRequest = new CreatePSBTRequest();
-            CreatePSBTDestination psbtDestination = new CreatePSBTDestination();
-            psbtRequest.Destinations.Add(psbtDestination);
+
+            foreach (var transactionOutput in sendModel.Outputs)
+            {
+                var psbtDestination = new CreatePSBTDestination();
+                psbtRequest.Destinations.Add(psbtDestination);
+                psbtDestination.Destination = BitcoinAddress.Create(transactionOutput.DestinationAddress, network.NBitcoinNetwork);
+                psbtDestination.Amount = Money.Coins(transactionOutput.Amount.Value);
+                psbtDestination.SubstractFees = transactionOutput.SubtractFeesFromOutput;
+            }
+           
             if (network.SupportRBF)
             {
                 psbtRequest.RBF = !sendModel.DisableRBF;
             }
-            psbtDestination.Destination = BitcoinAddress.Create(sendModel.Destination, network.NBitcoinNetwork);
-            psbtDestination.Amount = Money.Coins(sendModel.Amount.Value);
+           
             psbtRequest.FeePreference = new FeePreference();
             psbtRequest.FeePreference.ExplicitFeeRate = new FeeRate(Money.Satoshis(sendModel.FeeSatoshiPerByte), 1);
             if (sendModel.NoChange)
             {
-                psbtRequest.ExplicitChangeAddress = psbtDestination.Destination;
+                psbtRequest.ExplicitChangeAddress = psbtRequest.Destinations.First().Destination;
             }
-            psbtDestination.SubstractFees = sendModel.SubstractFees;
+           
             var psbt = (await nbx.CreatePSBTAsync(derivationSettings.AccountDerivation, psbtRequest, cancellationToken));
             if (psbt == null)
                 throw new NotSupportedException("You need to update your version of NBXplorer");

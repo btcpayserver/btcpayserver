@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using BTCPayServer;
 using System.Linq;
 using System.Collections.Generic;

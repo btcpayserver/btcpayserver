@@ -61,6 +61,11 @@
                             <div class="row">
                                 <div class="col-sm-12 col-md-12 col-lg-10  py-2 ">
                                     <div class="form-group">
+                                        <label asp-for="Outputs[index].DestinationAddress" class="control-label"></label>
+                                        <input asp-for="Outputs[index].DestinationAddress" class="form-control" />
+                                        <span asp-validation-for="Outputs[index].DestinationAddress" class="text-danger"></span>
+                                    </div>
+                                    <div class="form-group">
                                         <label asp-for="Outputs[index].Amount" class="control-label"></label>
                                         <div class="input-group">
                                             <input asp-for="Outputs[index].Amount" type="number" step="any" asp-format="{0}" class="form-control output-amount" />
@@ -73,11 +78,6 @@
                                             <button type="button" class="crypto-balance-link btn btn-link p-0">@Model.CurrentBalance</button> <span>@Model.CryptoCode</span>.
                                         </p>
                                         <span asp-validation-for="Outputs[index].Amount" class="text-danger"></span>
-                                    </div>
-                                    <div class="form-group">
-                                        <label asp-for="Outputs[index].DestinationAddress" class="control-label"></label>
-                                        <input asp-for="Outputs[index].DestinationAddress" class="form-control" />
-                                        <span asp-validation-for="Outputs[index].DestinationAddress" class="text-danger"></span>
                                     </div>
                                     <div class="form-group">
                                         <label asp-for="Outputs[index].SubtractFeesFromOutput" class="control-label"></label>

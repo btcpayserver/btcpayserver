@@ -247,7 +247,7 @@ namespace BTCPayServer.Controllers
             }
 
             var subtractFeesOutputsCount = new List<int>();
-
+            var substractFees = vm.Outputs.Any(o => o.SubtractFeesFromOutput);
             for (var i = 0; i < vm.Outputs.Count; i++)
             {
                 var transactionOutput = vm.Outputs[i];
@@ -278,7 +278,7 @@ namespace BTCPayServer.Controllers
                     vm.AddModelError(model => model.Outputs[subtractFeesOutput].SubtractFeesFromOutput,
                         "You can only subtract fees from one output", ModelState);
                 }
-            }else if (vm.CurrentBalance == transactionAmountSum && vm.Outputs.Count > 1)
+            }else if (vm.CurrentBalance == transactionAmountSum && !substractFees)
             {
                 ModelState.AddModelError(string.Empty,
                     "You are sending your entire balance, you should subtract the fees from an output");

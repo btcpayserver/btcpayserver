@@ -31,10 +31,12 @@ namespace BTCPayServer.Models.WalletViewModels
 
         [Display(Name = "Make sure no change UTXO is created")]
         public bool NoChange { get; set; }
-        public bool AdvancedMode { get; set; }
         public decimal? Rate { get; set; }
         public int Divisibility { get; set; }
         public string Fiat { get; set; }
         public string RateError { get; set; }
+        public bool SupportRBF { get; set; }
+        [Display(Name = "Disable RBF")]
+        public bool DisableRBF { get; set; }
     }
 }

@@ -17,7 +17,7 @@
             asp-route-logon="false" 
             class="btn btn-primary" 
             role="button">
-            <span class="fa fa-plus"></span> Create a new user
+            <span class="fa fa-plus"></span> Add User
         </a>
     </div>
 </div>
@@ -37,7 +37,7 @@
                 <tr>
                     <td>@user.Name</td>
                     <td>@user.Email</td>
-                    <td><a asp-action="User" asp-route-userId="@user.Id">Modify</a> <span> - </span> <a asp-action="DeleteUser" asp-route-userId="@user.Id">Remove</a></td>
+                    <td><a asp-action="User" asp-route-userId="@user.Id">Edit</a> <span> - </span> <a asp-action="DeleteUser" asp-route-userId="@user.Id">Remove</a></td>
                 </tr>
             }
         </tbody>

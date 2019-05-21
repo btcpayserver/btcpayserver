@@ -107,7 +107,7 @@ namespace BTCPayServer.Controllers
                 .ToArray();
             await Task.WhenAll(updateConfirmationCountIfNeeded);
 
-            var details = await InvoicePopulatePayments(invoice);
+            var details = InvoicePopulatePayments(invoice);
             model.CryptoPayments = details.CryptoPayments;
             model.OnChainPayments = details.OnChainPayments;
             model.OffChainPayments = details.OffChainPayments;
@@ -115,7 +115,7 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
-        private async Task<InvoiceDetailsModel> InvoicePopulatePayments(InvoiceEntity invoice)
+        private InvoiceDetailsModel InvoicePopulatePayments(InvoiceEntity invoice)
         {
             var model = new InvoiceDetailsModel();
 
@@ -138,49 +138,42 @@ namespace BTCPayServer.Controllers
                 model.CryptoPayments.Add(cryptoPayment);
             }
 
-            var onChainPayments = invoice
-                .GetPayments()
-                .Select<PaymentEntity, Task<object>>(async payment =>
+            foreach (var payment in invoice.GetPayments())
+            {
+                var paymentNetwork = _NetworkProvider.GetNetwork(payment.GetCryptoCode());
+                var paymentData = payment.GetCryptoPaymentData();
+                if (paymentData is Payments.Bitcoin.BitcoinLikePaymentData onChainPaymentData)
                 {
-                    var paymentNetwork = _NetworkProvider.GetNetwork(payment.GetCryptoCode());
-                    var paymentData = payment.GetCryptoPaymentData();
-                    if (paymentData is Payments.Bitcoin.BitcoinLikePaymentData onChainPaymentData)
+                    var m = new InvoiceDetailsModel.Payment();
+                    m.Crypto = payment.GetPaymentMethodId().CryptoCode;
+                    m.DepositAddress = onChainPaymentData.GetDestination(paymentNetwork);
+
+                    int confirmationCount = onChainPaymentData.ConfirmationCount;
+                    if (confirmationCount >= paymentNetwork.MaxTrackedConfirmation)
                     {
-                        var m = new InvoiceDetailsModel.Payment();
-                        m.Crypto = payment.GetPaymentMethodId().CryptoCode;
-                        m.DepositAddress = onChainPaymentData.GetDestination(paymentNetwork);
-
-                        int confirmationCount = onChainPaymentData.ConfirmationCount;
-                        if (confirmationCount >= paymentNetwork.MaxTrackedConfirmation)
-                        {
-                            m.Confirmations = "At least " + (paymentNetwork.MaxTrackedConfirmation);
-                        }
-                        else
-                        {
-                            m.Confirmations = confirmationCount.ToString(CultureInfo.InvariantCulture);
-                        }
-
-                        m.TransactionId = onChainPaymentData.Outpoint.Hash.ToString();
-                        m.ReceivedTime = payment.ReceivedTime;
-                        m.TransactionLink = string.Format(CultureInfo.InvariantCulture, paymentNetwork.BlockExplorerLink, m.TransactionId);
-                        m.Replaced = !payment.Accounted;
-                        return m;
+                        m.Confirmations = "At least " + (paymentNetwork.MaxTrackedConfirmation);
                     }
                     else
                     {
-                        var lightningPaymentData = (LightningLikePaymentData)paymentData;
-                        return new InvoiceDetailsModel.OffChainPayment()
-                        {
-                            Crypto = paymentNetwork.CryptoCode,
-                            BOLT11 = lightningPaymentData.BOLT11
-                        };
+                        m.Confirmations = confirmationCount.ToString(CultureInfo.InvariantCulture);
                     }
-                })
-                .ToArray();
-            await Task.WhenAll(onChainPayments);
-            model.OnChainPayments = onChainPayments.Select(p => p.GetAwaiter().GetResult()).OfType<InvoiceDetailsModel.Payment>().ToList();
-            model.OffChainPayments = onChainPayments.Select(p => p.GetAwaiter().GetResult()).OfType<InvoiceDetailsModel.OffChainPayment>().ToList();
 
+                    m.TransactionId = onChainPaymentData.Outpoint.Hash.ToString();
+                    m.ReceivedTime = payment.ReceivedTime;
+                    m.TransactionLink = string.Format(CultureInfo.InvariantCulture, paymentNetwork.BlockExplorerLink, m.TransactionId);
+                    m.Replaced = !payment.Accounted;
+                    model.OnChainPayments.Add(m);
+                }
+                else
+                {
+                    var lightningPaymentData = (LightningLikePaymentData)paymentData;
+                    model.OffChainPayments.Add(new InvoiceDetailsModel.OffChainPayment()
+                    {
+                        Crypto = paymentNetwork.CryptoCode,
+                        BOLT11 = lightningPaymentData.BOLT11
+                    });
+                }
+            }
             return model;
         }
 
@@ -519,7 +512,7 @@ namespace BTCPayServer.Controllers
                     AmountCurrency = _CurrencyNameTable.DisplayFormatCurrency(invoice.ProductInformation.Price, invoice.ProductInformation.Currency),
                     CanMarkInvalid = state.CanMarkInvalid(),
                     CanMarkComplete = state.CanMarkComplete(),
-                    Details = await InvoicePopulatePayments(invoice)
+                    Details = InvoicePopulatePayments(invoice)
                 });
             }
             model.Total = await counting;

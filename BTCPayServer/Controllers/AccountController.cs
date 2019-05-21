@@ -100,6 +100,11 @@ namespace BTCPayServer.Controllers
                         return View(model);
                     }
                 }
+                else
+                {
+                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                    return View(model);
+                }
 
                 if (!await _userManager.IsLockedOutAsync(user) && await _u2FService.HasDevices(user.Id))
                 {

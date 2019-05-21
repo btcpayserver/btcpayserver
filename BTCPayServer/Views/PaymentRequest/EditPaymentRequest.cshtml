@@ -70,7 +70,7 @@
                             <input asp-for="ExpiryDate" 
                                    
                                    value="@( Model.ExpiryDate?.ToString("u", CultureInfo.InvariantCulture))"
-                                   class="form-control datetime" min="today" placeholder="No expiry date has been set for this payment request"/>
+                                   class="form-control flatdtpicker" min="today" placeholder="No expiry date has been set for this payment request"/>
                             <div class="input-group-append">
 
                                 <button class="btn btn-secondary input-group-clear" type="button" title="Clear">
@@ -100,10 +100,10 @@
                     </div>
 
                     <div class="form-group">
-                        <button type="submit" class="btn btn-primary">Save</button>
+                        <button type="submit" class="btn btn-primary" id="SaveButton">Save</button>
                         @if (!string.IsNullOrEmpty(Model.Id))
                         {
-                            <a class="btn btn-secondary" target="_blank" asp-action="ViewPaymentRequest" id="@Model.Id">View</a>
+                            <a class="btn btn-secondary" target="_blank" asp-action="ViewPaymentRequest" id="@Model.Id" name="ViewAppButton">View</a>
                             <a class="btn btn-secondary" 
                                target="_blank"
                                asp-action="ListInvoices"

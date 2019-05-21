@@ -14,6 +14,33 @@
 </div>
 <div class="row">
     <div class="col-md-8">
+    
+        <div class="modal fade" id="coldcardimport" tabindex="-1" role="dialog" aria-labelledby="coldcardimport" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <form class="modal-content" form method="post" enctype="multipart/form-data">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Import Coldcard Wallet</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p>You may import your Coldcard wallet by exporting the public details from <kbd>Advanced->MicroSD Card->Electrum Wallet</kbd> and uploading it here.</p>
+                        <div class="form-group">
+                            <label asp-for="ColdcardPublicFile"></label>
+                            
+                            <input type="file" class="form-control-file"  asp-for="ColdcardPublicFile" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
+                    
+                </form>
+            </div>
+        </div>
+    
         <form method="post">
             @if (!Model.Confirmation)
             {
@@ -23,6 +50,10 @@
                 </div>
                 <input id="CryptoCurrency" asp-for="CryptoCode" type="hidden" />
                 <input id="KeyPath" asp-for="KeyPath" type="hidden" />
+                <input id="Source" asp-for="Source" type="hidden" />
+                <input id="RootFingerprint" asp-for="RootFingerprint" type="hidden" />
+                <input id="AccountKey" asp-for="AccountKey" type="hidden" />
+                <input id="Config" asp-for="Config" type="hidden" />
                 <div class="form-group">
                     <label asp-for="DerivationScheme"></label>
                     <input asp-for="DerivationScheme" class="form-control" />
@@ -36,9 +67,14 @@
                     <p id="no-ledger-info" class="form-text text-muted" style="display: none;">
                         No ledger wallet detected. If you own one, use chrome, open the app, and refresh this page.
                     </p>
-                    <div id="ledger-info" class="form-text text-muted" style="display: none;">
+                    <div id="ledger-info" class="form-text text-muted display-when-ledger-connected">
                         <span>A ledger wallet is detected, which account do you want to use? No need to paste manually xpub if your ledger device was detected. Just select derivation scheme from the list bellow and xpub will automatically populate.</span>
-                        <div class="dropdown">
+                    </div>
+                    <div class="d-flex">
+                        <button type="button" class="btn btn-primary mr-2 " data-toggle="modal" data-target="#coldcardimport">
+                            Import Coldcard wallet
+                        </button>
+                        <div class="dropdown display-when-ledger-connected">
                             <button class="btn btn-primary dropdown-toggle" type="button" id="ledgerAccountsDropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 Select ledger wallet account
                             </button>
@@ -49,7 +85,9 @@
                                 }
                             </div>
                         </div>
+
                     </div>
+
                 </div>
                 <div class="form-group">
                     <span>BTCPay format memo</span>
@@ -92,7 +130,7 @@
                     <label asp-for="Enabled"></label>
                     <input asp-for="Enabled" type="checkbox" class="form-check" />
                 </div>
-                <button name="command" type="submit" class="btn btn-primary" value="save">Continue</button>
+                <button name="command" type="submit" class="btn btn-primary" value="save" id="Continue">Continue</button>
             }
             else
             {
@@ -102,8 +140,12 @@
                 </div>
                 <input type="hidden" asp-for="Confirmation" />
                 <input id="KeyPath" asp-for="KeyPath" type="hidden" />
+                <input id="Source" asp-for="Source" type="hidden" />
+                <input id="RootFingerprint" asp-for="RootFingerprint" type="hidden" />
+                <input id="AccountKey" asp-for="AccountKey" type="hidden" />
                 <input type="hidden" asp-for="DerivationScheme" />
                 <input type="hidden" asp-for="Enabled" />
+                <input id="Config" asp-for="Config" type="hidden" />
                 <div class="form-group">
                     <table class="table table-sm table-responsive-md">
                         <thead>
@@ -133,7 +175,7 @@
                     <input asp-for="HintAddress" class="form-control" />
                     <span asp-validation-for="HintAddress" class="text-danger"></span>
                 </div>
-                <button name="command" type="submit" class="btn btn-primary" value="save">Confirm</button>
+                <button name="command" type="submit" class="btn btn-primary" value="save" id="Confirm">Confirm</button>
             }
         </form>
     </div>

@@ -16,7 +16,7 @@
                 </div>
                 <div class="modal-body">
                 </div>
-                <div class="modal-footer">PRS
+                <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                     <button type="button" class="js-product-save btn btn-primary">Save Changes</button>
                 </div>
@@ -67,12 +67,11 @@
                     </div>
                     <div class="form-group">
                         <label asp-for="StartDate" class="control-label"></label>
-                        <div class="input-group ">
-                            <input asp-for="StartDate"
-                                   value="@( Model.StartDate?.ToString("u", CultureInfo.InvariantCulture))"
-                                   class="datetime form-control" placeholder="No start date has been set for this crowdfund"/>
+                        <div class="input-group">
+                            <input type="datetime-local" asp-for="StartDate"
+                                   value="@(Model.StartDate?.ToString("u", CultureInfo.InvariantCulture))"
+                                   class="form-control flatdtpicker" placeholder="No start date has been set for this crowdfund" />
                             <div class="input-group-append">
-
                                 <button class="btn btn-secondary input-group-clear" type="button" title="Clear">
                                     <span class=" fa fa-times"></span>
                                 </button>
@@ -95,14 +94,12 @@
                     </div>
                     <div class="form-group">
                         <label asp-for="EndDate" class="control-label"></label>
-                        <div class="input-group ">
-                            <input  type="datetime-local"  asp-for="EndDate"  
-                                    value="@( Model.EndDate?.ToString("u", CultureInfo.InvariantCulture))"
-                                   class="datetime form-control"   
-                                   type="datetime-local"  
+                        <div class="input-group">
+                            <input type="datetime-local" asp-for="EndDate"
+                                   value="@(Model.EndDate?.ToString("u", CultureInfo.InvariantCulture))"
+                                   class="form-control flatdtpicker"
                                    placeholder="No end date has been set for this crowdfund" />
                             <div class="input-group-append">
-
                                 <button class="btn btn-secondary input-group-clear" type="button" title="Clear">
                                     <span class=" fa fa-times"></span>
                                 </button>
@@ -145,46 +142,46 @@
                         <span asp-validation-for="NotificationUrl" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                       
+
                         <label asp-for="NotificationEmail" class="control-label"></label>
                         @if (Model.NotificationEmailWarning)
                         {
                             <partial name="NotificationEmailWarning"></partial>
                         }
-                        <input type="email" asp-for="NotificationEmail" class="form-control"/>
+                        <input type="email" asp-for="NotificationEmail" class="form-control" />
                         <span asp-validation-for="NotificationEmail" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label asp-for="Enabled"></label>
-                        <input asp-for="Enabled" type="checkbox" class="form-check"/>
+                        <input asp-for="Enabled" type="checkbox" class="form-check" />
                         <span asp-validation-for="Enabled" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label asp-for="SortPerksByPopularity"></label>
-                        <input asp-for="SortPerksByPopularity" type="checkbox" class="form-check"/>
+                        <input asp-for="SortPerksByPopularity" type="checkbox" class="form-check" />
                         <span asp-validation-for="SortPerksByPopularity" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label asp-for="DisplayPerksRanking"></label>
-                        <input asp-for="DisplayPerksRanking" type="checkbox" class="form-check"/>
+                        <input asp-for="DisplayPerksRanking" type="checkbox" class="form-check" />
                         <span asp-validation-for="DisplayPerksRanking" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label asp-for="EnforceTargetAmount"></label>
-                        <input asp-for="EnforceTargetAmount" type="checkbox" class="form-check"/>
+                        <input asp-for="EnforceTargetAmount" type="checkbox" class="form-check" />
                         <span asp-validation-for="EnforceTargetAmount" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label asp-for="UseAllStoreInvoices"></label>
-                        <input asp-for="UseAllStoreInvoices" type="checkbox" class="form-check"/>
+                        <input asp-for="UseAllStoreInvoices" type="checkbox" class="form-check" />
                         <span asp-validation-for="UseAllStoreInvoices" class="text-danger"></span>
                     </div>
                     <div class="form-group">
                         <label asp-for="SoundsEnabled"></label>
-                        <input asp-for="SoundsEnabled" type="checkbox" class="form-check"/>
+                        <input asp-for="SoundsEnabled" type="checkbox" class="form-check" />
                         <span asp-validation-for="SoundsEnabled" class="text-danger"></span>
                     </div>
-                    
+
                     <div class="form-group">
                         <label asp-for="Sounds"></label>
                         <textarea asp-for="Sounds" class="form-control"></textarea>
@@ -192,10 +189,10 @@
                     </div>
                     <div class="form-group">
                         <label asp-for="AnimationsEnabled"></label>
-                        <input asp-for="AnimationsEnabled" type="checkbox" class="form-check"/>
+                        <input asp-for="AnimationsEnabled" type="checkbox" class="form-check" />
                         <span asp-validation-for="AnimationsEnabled" class="text-danger"></span>
                     </div>
-                     
+
                     <div class="form-group">
                         <label asp-for="AnimationColors"></label>
                         <textarea asp-for="AnimationColors" class="form-control"></textarea>
@@ -203,7 +200,7 @@
                     </div>
                     <div class="form-group">
                         <label asp-for="DisqusEnabled"></label>
-                        <input asp-for="DisqusEnabled" type="checkbox" class="form-check"/>
+                        <input asp-for="DisqusEnabled" type="checkbox" class="form-check" />
                         <span asp-validation-for="DisqusEnabled" class="text-danger"></span>
                     </div>
                     <div class="form-group">
@@ -211,12 +208,12 @@
                         <input asp-for="DisqusShortname" class="form-control" />
                         <span asp-validation-for="DisqusShortname" class="text-danger"></span>
                     </div>
-                    
-                    <input type="hidden" asp-for="NotificationEmailWarning"/>
+
+                    <input type="hidden" asp-for="NotificationEmailWarning" />
                     <div class="form-group">
-                        <input type="submit" class="btn btn-primary" value="Save Settings" />
+                        <input type="submit" class="btn btn-primary" value="Save Settings" id="SaveSettings" />
                         <a class="btn btn-secondary" target="_blank" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
-                        <a class="btn btn-secondary" target="_blank" asp-action="ViewCrowdfund" asp-controller="AppsPublic" asp-route-appId="@Model.AppId">View App</a>
+                        <a class="btn btn-secondary" target="_blank" asp-action="ViewCrowdfund" asp-controller="AppsPublic" asp-route-appId="@Model.AppId" id="ViewApp">View App</a>
                         <a class="btn btn-secondary" target="_blank" asp-action="ListApps">Back to the app list</a>
                     </div>
 
@@ -228,7 +225,7 @@
 
 @section Scripts {
 
-    <script src= "~/vendor/moment/moment.js"></script>
+    <script src="~/vendor/moment/moment.js"></script>
     <bundle name="wwwroot/bundles/crowdfund-admin-bundle.min.js"></bundle>
     <bundle name="wwwroot/bundles/crowdfund-admin-bundle.min.css"></bundle>
 

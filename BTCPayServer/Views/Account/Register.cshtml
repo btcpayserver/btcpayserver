@@ -35,7 +35,15 @@
                         <input asp-for="ConfirmPassword" class="form-control" />
                         <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
                     </div>
-                    <button type="submit" class="btn btn-primary">Register</button>
+                    @if (ViewData["AllowIsAdmin"] is true)
+                    {
+                        <div class="form-group">
+                            <label asp-for="IsAdmin"></label>
+                            <input asp-for="IsAdmin" class="form-check" />
+                            <span asp-validation-for="IsAdmin" class="text-danger"></span>
+                        </div>
+                    }
+                    <button type="submit" class="btn btn-primary" id="RegisterButton">Register</button>
                 </form>
             </div>
         </div>

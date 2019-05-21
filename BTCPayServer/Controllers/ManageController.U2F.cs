@@ -58,30 +58,32 @@ namespace BTCPayServer.Controllers
         [HttpPost]
         public async Task<IActionResult> AddU2FDevice(AddU2FDeviceViewModel viewModel)
         {
+            var errorMessage = string.Empty;
             try
             {
                 if (await _u2FService.CompleteRegistration(_userManager.GetUserId(User), viewModel.DeviceResponse,
                     string.IsNullOrEmpty(viewModel.Name) ? "Unlabelled U2F Device" : viewModel.Name))
                 {
                     return RedirectToAction("U2FAuthentication", new
+                        
                     {
                         StatusMessage = "Device added!"
                     });
                 }
-
-                throw new Exception("Could not add device.");
             }
             catch (Exception e)
             {
-                return RedirectToAction("U2FAuthentication", new
-                {
-                    StatusMessage = new StatusMessageModel()
-                    {
-                        Severity = StatusMessageModel.StatusSeverity.Error,
-                        Message = e.Message
-                    }
-                });
+                errorMessage = e.Message;
             }
+
+            return RedirectToAction("U2FAuthentication", new
+            {
+                StatusMessage = new StatusMessageModel()
+                {
+                    Severity = StatusMessageModel.StatusSeverity.Error,
+                    Message = string.IsNullOrEmpty(errorMessage) ? "Could not add device." : errorMessage
+                }
+            });
         }
     }
 }

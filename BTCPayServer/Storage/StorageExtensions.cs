@@ -43,7 +43,14 @@ namespace BTCPayServer.Storage
             {
                 ServeUnknownFileTypes = true,
                 RequestPath = new PathString($"/{FileSystemFileProviderService.LocalStorageDirectoryName}"),
-                FileProvider = new PhysicalFileProvider(dirInfo.FullName)
+                FileProvider = new PhysicalFileProvider(dirInfo.FullName),
+                OnPrepareResponse = context =>
+                {
+                    if (context.Context.Request.Query.ContainsKey("download"))
+                    {
+                        context.Context.Response.Headers["Content-Disposition"] = "attachment";
+                    }
+                }
             });
         }
     }

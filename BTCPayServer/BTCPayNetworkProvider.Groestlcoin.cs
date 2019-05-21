@@ -10,20 +10,21 @@ namespace BTCPayServer
     {
         public void InitGroestlcoin()
         {
-
             var nbxplorerNetwork = NBXplorerNetworkProvider.GetFromCryptoCode("GRS");
             Add(new BTCPayNetwork()
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "Groestlcoin",
-                BlockExplorerLink = NetworkType == NetworkType.Mainnet ? "https://chainz.cryptoid.info/grs/tx.dws?{0}.htm" : "https://chainz.cryptoid.info/grs-test/tx.dws?{0}.htm",
+                BlockExplorerLink = NetworkType == NetworkType.Mainnet
+                    ? "https://chainz.cryptoid.info/grs/tx.dws?{0}.htm"
+                    : "https://chainz.cryptoid.info/grs-test/tx.dws?{0}.htm",
                 NBitcoinNetwork = nbxplorerNetwork.NBitcoinNetwork,
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "groestlcoin",
                 DefaultRateRules = new[]
                 {
-                                "GRS_X = GRS_BTC * BTC_X",
-                                "GRS_BTC = bittrex(GRS_BTC)"
+                    "GRS_X = GRS_BTC * BTC_X",
+                    "GRS_BTC = bittrex(GRS_BTC)"
                 },
                 CryptoImagePath = "imlegacy/groestlcoin.png",
                 LightningImagePath = "imlegacy/groestlcoin-lightning.svg",

@@ -470,7 +470,7 @@ namespace BTCPayServer.Controllers
             var derivationByCryptoCode =
                 store
                 .GetSupportedPaymentMethods(_NetworkProvider)
-                .OfType<DerivationStrategy>()
+                .OfType<DerivationSchemeSettings>()
                 .ToDictionary(c => c.Network.CryptoCode);
             foreach (var network in _NetworkProvider.GetAll())
             {
@@ -478,7 +478,7 @@ namespace BTCPayServer.Controllers
                 vm.DerivationSchemes.Add(new StoreViewModel.DerivationScheme()
                 {
                     Crypto = network.CryptoCode,
-                    Value = strategy?.DerivationStrategyBase?.ToString() ?? string.Empty,
+                    Value = strategy?.ToPrettyString() ?? string.Empty,
                     WalletId = new WalletId(store.Id, network.CryptoCode),
                     Enabled = !excludeFilters.Match(new Payments.PaymentMethodId(network.CryptoCode, Payments.PaymentTypes.BTCLike))
                 });
@@ -596,11 +596,11 @@ namespace BTCPayServer.Controllers
                     .ToArray();
         }
 
-        private DerivationStrategy ParseDerivationStrategy(string derivationScheme, Script hint, BTCPayNetwork network)
+        private DerivationSchemeSettings ParseDerivationStrategy(string derivationScheme, Script hint, BTCPayNetwork network)
         {
-            var parser = new DerivationSchemeParser(network.NBitcoinNetwork);
+            var parser = new DerivationSchemeParser(network);
             parser.HintScriptPubKey = hint;
-            return new DerivationStrategy(parser.Parse(derivationScheme), network);
+            return new DerivationSchemeSettings(parser.Parse(derivationScheme), network);
         }
 
         [HttpGet]

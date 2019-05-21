@@ -27,7 +27,7 @@ namespace BTCPayServer.Tests
             Logs.LogProvider = new XUnitLogProvider(helper);
         }
 
-        [Fact]
+        [Fact(Timeout = 60000)]
         [Trait("Integration", "Integration")]
         public async void CanSetChangellyPaymentMethod()
         {

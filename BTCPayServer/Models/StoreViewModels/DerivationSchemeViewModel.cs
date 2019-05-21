@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using NBitcoin;
 
@@ -25,6 +26,7 @@ namespace BTCPayServer.Models.StoreViewModels
 
         public string CryptoCode { get; set; }
         public string KeyPath { get; set; }
+        public string RootFingerprint { get; set; }
         [Display(Name = "Hint address")]
         public string HintAddress { get; set; }
         public bool Confirmation { get; set; }
@@ -32,5 +34,11 @@ namespace BTCPayServer.Models.StoreViewModels
 
         public string StatusMessage { get; internal set; }
         public KeyPath RootKeyPath { get; set; }
+
+        [Display(Name = "Coldcard Wallet File")]
+        public IFormFile ColdcardPublicFile{ get; set; }
+        public string Config { get; set; }
+        public string Source { get; set; }
+        public string AccountKey { get; set; }
     }
 }

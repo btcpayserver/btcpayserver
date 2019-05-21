@@ -83,4 +83,21 @@ a.nav-link {
     background-color: #d9f7ef;
     border-left: 5px solid var(--primary);
     font-weight: 500;
+
+.display-when-ledger-connected {
+    display: none;
+}
+
+.wraptextAuto {
+    max-width: 300px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    display: block;
+    white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+    .wraptextAuto {
+        max-width: 600px;
+    }
 }

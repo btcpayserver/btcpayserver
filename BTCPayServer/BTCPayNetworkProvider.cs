@@ -56,6 +56,22 @@ namespace BTCPayServer
             InitGroestlcoin();
             InitViacoin();
 
+            // Assume that electrum mappings are same as BTC if not specified
+            foreach (var network in _Networks)
+            {
+                if(network.Value.ElectrumMapping.Count == 0)
+                {
+                    network.Value.ElectrumMapping = GetNetwork("BTC").ElectrumMapping;
+                    if (!network.Value.NBitcoinNetwork.Consensus.SupportSegwit)
+                    {
+                        network.Value.ElectrumMapping =
+                            network.Value.ElectrumMapping
+                            .Where(kv => kv.Value == DerivationType.Legacy)
+                            .ToDictionary(k => k.Key, k => k.Value);
+                    }
+                }
+            }
+
             // Disabled because of https://twitter.com/Cryptopia_NZ/status/1085084168852291586
             //InitPolis();
             //InitBitcoinplus();

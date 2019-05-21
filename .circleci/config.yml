@@ -14,11 +14,12 @@ jobs:
       - run:
           command: |
             cd BTCPayServer.Tests
+            docker-compose -v
             docker-compose down --v
             docker-compose build
-            TESTS_RUN_EXTERNAL_INTEGRATION="true"
-            if [ -n "$CIRCLE_PULL_REQUEST" ] || [ -n "$CIRCLE_PR_NUMBER" ]; then
-                TESTS_RUN_EXTERNAL_INTEGRATION="false"
+            TESTS_RUN_EXTERNAL_INTEGRATION="false"
+            if [ "$CIRCLE_PROJECT_USERNAME" == "btcpayserver" ] && [ "$CIRCLE_PROJECT_REPONAME" == "btcpayserver" ]; then
+                TESTS_RUN_EXTERNAL_INTEGRATION="true"
             fi
             docker-compose run -e TESTS_RUN_EXTERNAL_INTEGRATION=$TESTS_RUN_EXTERNAL_INTEGRATION tests
 

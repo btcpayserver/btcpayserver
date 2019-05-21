@@ -44,9 +44,9 @@
                 }
                 @for (var index = 0; index < Model.Outputs.Count; index++)
                 {
-                    <div class="list-group-item transaction-output-form p-0 pl-lg-2 ">
+                    <div class="list-group-item transaction-output-form p-0 pl-lg-2 @(Model.Outputs.Count==1? "border-0": "")  ">
                         <div class="row">
-                            <div class="col-sm-12 col-md-12 col-lg-10 py-2 ">
+                            <div class="col-sm-12 col-md-12 @(Model.Outputs.Count==1? "col-lg-12": "col-lg-10")  py-2 ">
                                 <div class="form-group">
                                     <label asp-for="Outputs[index].Amount" class="control-label"></label>
                                     <div class="input-group">

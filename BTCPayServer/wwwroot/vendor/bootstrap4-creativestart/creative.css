@@ -346,10 +346,6 @@ header.masthead {
     border-radius: 4px;
 }
 
-.heading-left > h4 {
-    margin-bottom: 0;
-}
-
 #users {
     background: #fff;
     border: 1px solid #DFE3E8;
@@ -361,16 +357,8 @@ header.masthead {
     margin-bottom: 0px;
 }
 
-thead > tr {
+.table thead > tr {
     height: 56px;
-}
-
-thead > tr > th {
-    /* display: table-cell;
-    padding: 4px 56px 4px 24px;
-    text-align: left;
-    border-bottom: 1px solid #DFE3E8;
-    vertical-align: middle; */
 }
 
 .table thead th {
@@ -380,12 +368,12 @@ thead > tr > th {
     padding: 4px 56px 4px 24px;
 }
 
-.table tr {
-    height: 64px;
-}
-
 .table tbody tr:hover {
     background-color: #f8fafc;
+}
+
+.table tr {
+    height: 64px;
 }
 
 .table td {
@@ -399,14 +387,6 @@ thead > tr > th {
     vertical-align: middle;
 }
 
-.nav-pills .nav-link.active,
-.nav-pills .show > .nav-link {
-    color: #66788A;
-    background-color: #d9f7ef;
-    border-left: 5px solid var(--primary);
-    font-weight: 500;
-}
-
 a.nav-link {
     color: #66788A;
 }
@@ -415,4 +395,11 @@ a.nav-link {
     color: var(--gray-dark);
     font-weight: 500;
 }
-    
+
+.nav-pills .nav-link.active,
+.nav-pills .show > .nav-link {
+    color: #66788A;
+    background-color: #d9f7ef;
+    border-left: 5px solid var(--primary);
+    font-weight: 500;
+}

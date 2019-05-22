@@ -62,22 +62,9 @@ namespace BTCPayServer.Payments
 
         public override string ToString()
         {
-            return ToString(false);
+            return PaymentType == PaymentTypes.BTCLike ? CryptoCode : $"{CryptoCode}_{PaymentType}";
         }
 
-        public string ToString(bool pretty)
-        {
-            if (pretty)
-            {
-                return $"{CryptoCode} ({PrettyMethod(PaymentType)})";
-            }
-            else
-            {
-                if (PaymentType == PaymentTypes.BTCLike)
-                    return CryptoCode;
-                return CryptoCode + "_" + PaymentType.ToString();
-            }
-        }
 
         private static string PrettyMethod(PaymentTypes paymentType)
         {

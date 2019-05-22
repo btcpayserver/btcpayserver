@@ -36,6 +36,7 @@ namespace BTCPayServer.Controllers
         private CurrencyNameTable _CurrencyNameTable;
         EventAggregator _EventAggregator;
         BTCPayNetworkProvider _NetworkProvider;
+        private readonly IEnumerable<IPaymentMethodHandler> _paymentMethodHandlers;
         private readonly BTCPayWalletProvider _WalletProvider;
         IServiceProvider _ServiceProvider;
         public InvoiceController(
@@ -48,7 +49,8 @@ namespace BTCPayServer.Controllers
             EventAggregator eventAggregator,
             BTCPayWalletProvider walletProvider,
             ContentSecurityPolicies csp,
-            BTCPayNetworkProvider networkProvider)
+            BTCPayNetworkProvider networkProvider,
+            IEnumerable<IPaymentMethodHandler> paymentMethodHandlers)
         {
             _ServiceProvider = serviceProvider;
             _CurrencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
@@ -58,6 +60,7 @@ namespace BTCPayServer.Controllers
             _UserManager = userManager;
             _EventAggregator = eventAggregator;
             _NetworkProvider = networkProvider;
+            _paymentMethodHandlers = paymentMethodHandlers;
             _WalletProvider = walletProvider;
             _CSP = csp;
         }
@@ -247,7 +250,7 @@ namespace BTCPayServer.Controllers
         {
             try
             {
-                var logPrefix = $"{supportedPaymentMethod.PaymentId.ToString(true)}:";
+                var logPrefix = $"{handler.ToPrettyString(supportedPaymentMethod.PaymentId)}:";
                 var storeBlob = store.GetStoreBlob();
                 var preparePayment = handler.PreparePayment(supportedPaymentMethod, store, network);
                 var rate = await fetchingByCurrencyPair[new CurrencyPair(network.CryptoCode, entity.ProductInformation.Currency)];

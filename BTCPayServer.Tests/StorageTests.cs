@@ -204,7 +204,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(fileContent, data);
             
             //create a temporary link to file
-            var tmpLinkGenerate = Assert.IsType<RedirectToActionResult>(controller.CreateTemporaryFileUrl(fileId,
+            var tmpLinkGenerate = Assert.IsType<RedirectToActionResult>(await controller.CreateTemporaryFileUrl(fileId,
                 new ServerController.CreateTemporaryFileUrlViewModel()
                 {
                     IsDownload = true,

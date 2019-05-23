@@ -22,7 +22,7 @@ namespace BTCPayServer.Storage
         [HttpGet("{fileId}")]
         public async Task<IActionResult> GetFile(string fileId)
         {
-            var url = await _FileService.GetFileUrl(fileId);
+            var url = await _FileService.GetFileUrl(Request.GetAbsoluteRootUri(), fileId);
             return new RedirectResult(url);
         }
     }

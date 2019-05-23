@@ -12,6 +12,7 @@ namespace BTCPayServer.Models.WalletViewModels
             public string StoreName { get; set; }
             public string StoreId { get; set; }
             public string CryptoCode { get; set; }
+            public string CryptoImage { get; set; }
             public string Balance { get; set; }
             public bool IsOwner { get; set; }
             public WalletId Id { get; set; }

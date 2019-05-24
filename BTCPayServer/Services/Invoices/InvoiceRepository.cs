@@ -399,7 +399,6 @@ retry:
         private InvoiceEntity ToEntity(Data.InvoiceData invoice)
         {
             var entity = ToObject(invoice.Blob);
-            entity.PaymentMethodHandlers = _paymentMethodHandlers;
             PaymentMethodDictionary paymentMethods = null;
 #pragma warning disable CS0618
             entity.Payments = invoice.Payments.Select(p =>
@@ -610,7 +609,7 @@ retry:
                 var invoice = context.Invoices.Find(invoiceId);
                 if (invoice == null)
                     return null;
-                InvoiceEntity invoiceEntity = ToObject<InvoiceEntity>(invoice.Blob, network.NBitcoinNetwork);
+                InvoiceEntity invoiceEntity = ToObject(invoice.Blob);
                 invoiceEntity.PaymentMethodHandlers = _paymentMethodHandlers;
                 PaymentMethod paymentMethod = invoiceEntity.GetPaymentMethod(new PaymentMethodId(network.CryptoCode, paymentData.GetPaymentType()), null);
                 IPaymentMethodDetails paymentMethodDetails = paymentMethod.GetPaymentMethodDetails();
@@ -680,6 +679,8 @@ retry:
         private InvoiceEntity ToObject(byte[] value)
         {
             var entity = NBitcoin.JsonConverters.Serializer.ToObject<InvoiceEntity>(ZipUtils.Unzip(value), null);
+            
+            entity.PaymentMethodHandlers = _paymentMethodHandlers;
             entity.Networks = _Networks;
             return entity;
         }

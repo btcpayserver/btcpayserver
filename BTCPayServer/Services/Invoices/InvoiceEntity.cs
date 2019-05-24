@@ -15,7 +15,6 @@ using NBXplorer.DerivationStrategy;
 using BTCPayServer.Payments;
 using NBitpayClient;
 using BTCPayServer.Payments.Bitcoin;
-using NUglify.Helpers;
 
 namespace BTCPayServer.Services.Invoices
 {
@@ -818,10 +817,10 @@ namespace BTCPayServer.Services.Invoices
             bool paidEnough = paid >= Extensions.RoundUp(totalDue, precision);
             int txRequired = 0;
 
-            ParentEntity.GetPayments()
+            var _ = ParentEntity.GetPayments()
                 .Where(p => p.Accounted && paymentPredicate(p))
                 .OrderBy(p => p.ReceivedTime)
-                .ForEach(_ =>
+                .Select(_ =>
                 {
                     var txFee = _.GetValue(paymentMethods, GetId(), _.NetworkFee);
                     paid += _.GetValue(paymentMethods, GetId());
@@ -829,12 +828,15 @@ namespace BTCPayServer.Services.Invoices
                     {
                         totalDue += txFee;
                     }
+
                     paidEnough |= Extensions.RoundUp(paid, precision) >= Extensions.RoundUp(totalDue, precision);
                     if (GetId() == _.GetPaymentMethodId())
                     {
                         cryptoPaid += _.GetCryptoPaymentData().GetValue();
                         txRequired++;
                     }
+
+                    return _;
                 });
 
             var accounting = new PaymentMethodAccounting();

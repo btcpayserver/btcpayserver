@@ -77,17 +77,17 @@
                 </button>
             </div>
             <div class="modal-body">
-                @await Html.PartialAsync("_StatusMessage", 
+                @await Html.PartialAsync("_StatusMessage",
                     new StatusMessageModel()
                     {
                         AllowDismiss = false,
-                        Severity = StatusMessageModel.StatusSeverity.Warning, 
+                        Severity = StatusMessageModel.StatusSeverity.Warning,
                         Message = "The Trezor wallet import feature is still experimental and may not work as expected. Please double-check that the details were imported correctly before using in production."
                     }.ToString())
                 <p id="trezor-loading" style="display: none;">
                     <span class="fa fa-question-circle" style="color: orange"></span> <span>Detecting Trezor hardware wallet...</span>
                 </p>
-                <p id="trezor-error" style="display: none;">
+                <p id="trezor-error" class="text-danger" style="display: none;">
                     <span class="fa fa-times-circle" style="color: red;"></span> <span class="hw-label">An error happened</span>
                 </p>
                 <p id="trezor-success" style="display: none;">
@@ -101,21 +101,69 @@
                 <input type="hidden" asp-for="DerivationScheme"/>
                 <input type="hidden" asp-for="Enabled"/>
 
+                <div class="form-group display-when-trezor-connected" style="display: none">
+
+                    <label class="control-label">Wallet address type</label>
+                    <select class="form-control" id="trezor-address-type-select">
+                        <option data-hide=".trezor-account-dropdown" selected>Select an address type</option>
+                        <option data-show="#trezor-account-dropdown-legacy" data-hide=".trezor-account-dropdown"> Legacy</option>
+                        @if (Model.Network.NBitcoinNetwork.Consensus.SupportSegwit)
+                        {
+                            <option data-show="#trezor-account-dropdown-p2sh" data-hide=".trezor-account-dropdown"> P2SH-Segwit</option>
+                            <option data-show="#trezor-account-dropdown-segwit" data-hide=".trezor-account-dropdown"> Segwit( Bech32 )</option>
+                        }
+                    </select>
+                </div>
+
+                @if (Model.Network.NBitcoinNetwork.Consensus.SupportSegwit)
+                {
+                    <div class="form-group trezor-account-dropdown" style="display: none" id="trezor-account-dropdown-p2sh">
+
+                    <label class="control-label">Wallet account</label>
+                        <select class="form-control">
+                        <option>Select a wallet account</option>
+                            @for (var i = 0; i < 20; i++)
+                            {
+                                <option
+                                    data-derivation-suffix="-[p2sh]"
+                                    data-trezorkeypath="@Model.Network.GetRootKeyPath(DerivationType.SegwitP2SH).Derive(i, true)" 
+                                    >Account @i (<span>@Model.Network.GetRootKeyPath(DerivationType.SegwitP2SH).Derive(i, true)</span>)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group trezor-account-dropdown" style="display: none" id="trezor-account-dropdown-segwit">
+
+                    <label class="control-label">Wallet account</label>
+                        <select class="form-control">
+                        <option>Select a wallet account</option>
+                            @for (var i = 0; i < 20; i++)
+                            {
+                                <option 
+                                    data-derivation-suffix=""
+                                    data-trezorkeypath="@Model.Network.GetRootKeyPath(DerivationType.Segwit).Derive(i, true)" href="#">Account @i (<span>@Model.Network.GetRootKeyPath(DerivationType.Segwit).Derive(i, true)</span>)</option>
+                            }
+                        </select>
+                    </div>
+                }
+                <div class="form-group trezor-account-dropdown" style="display: none" id="trezor-account-dropdown-legacy">
+
+                    <label class="control-label">Wallet account</label>
+                    <select class="form-control">
+                        <option>Select a wallet account</option>
+                        @for (var i = 0; i < 20; i++)
+                        {
+                            <option
+                                data-derivation-suffix="-[legacy]"
+                                data-trezorkeypath="@Model.Network.GetRootKeyPath(DerivationType.Legacy).Derive(i, true)">Account @i (<span>@Model.Network.GetRootKeyPath(DerivationType.Legacy).Derive(i, true)</span>)</option>
+                        }
+                    </select>
+                </div>
+
 
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <div class="dropdown display-when-trezor-connected" style="display: none">
-                    <button class="btn btn-primary dropdown-toggle" type="button" id="trezorAccountsDropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        Select Trezor wallet account
-                    </button>
-                    <div class="dropdown-menu overflow-auto" style="max-height: 200px;" aria-labelledby="trezorAccountsDropdownMenuButton">
-                        @for (var i = 0; i < 20; i++)
-                        {
-                            <a class="dropdown-item" data-trezorkeypath="@Model.RootKeyPath.Derive(i, true)" href="#">Account @i (<span>@Model.RootKeyPath.Derive(i, true)</span>)</a>
-                        }
-                    </div>
-                </div>
+                <button class="btn btn-primary" id="trezorsubmitbutton">Submit</button>
             </div>
 
         </form>

@@ -7,9 +7,13 @@ $(document).ready(function() {
                 trezorInit = true;
             }
         });
+    
     $("[data-trezorkeypath]").on("click",
         function() {
+
+            $("#trezor-error").hide();
             var keypath = $(this).data("trezorkeypath");
+            var suffix = $(this).data("derivation-suffix");
             var keys = keypath.split("/");
             if (trezorDevice != null) {
                 var hardeningConstant = 0x80000000;
@@ -31,15 +35,48 @@ $(document).ready(function() {
                     .then(function(hdNode) {
                         $("#RootFingerprint").val(hdNode.parentFingerprint);
                         $("#KeyPath").val(keys[keys.length - 1]);
-                        $("#DerivationScheme").val(hdNode.toBase58()+  "-[p2sh]");
+                        $("#DerivationScheme").val(hdNode.toBase58()+  suffix);
+                        $("#trezorsubmitbutton").show();
                         //Seems like Trezor does not allow you to select anything else for their own ui. 
                         // They tell you to use electrum for native segwit: https://wiki.trezor.io/Bech32
-                        $("#trezor-submit").submit();
-                    });
+                    }).catch(function(e){
+                        alert(e.message);
+                        
+                        $("#trezor-error").text("An error occurred when communicating with the trezor device. try with a different USB port?").show();
+                        
+                })
             }
         });
+    $("[data-hide]").on("click", function(){
+        $($(this).data("hide")).hide();
+    });
+    $("[data-show]").on("click", function(){
+        $($(this).data("show")).show();
+    });
+    
+    $(".trezor-account-dropdown select").on("input", function(){
+        $(this).find(":selected").click();
+    });
+
+    $("#trezor-address-type-select").on("input", function(){
+        $(this).find(":selected").click();
+        $("#RootFingerprint").val("");
+        $("#KeyPath").val("");
+        $("#DerivationScheme").val("");
+        $("#trezorsubmitbutton").hide();
+        
+    });
+    
 });
 
 function onTrezorDeviceFound(device) {
     $(".display-when-trezor-connected").show();
+}
+function onTrezorDeviceLost(){
+    $(".display-when-trezor-connected").hide();
+    $("#RootFingerprint").val("");
+    $(".trezor-account-dropdown").hide();
+    $("#KeyPath").val("");
+    $("#DerivationScheme").val("");
+    $("#trezorsubmitbutton").hide();
 }

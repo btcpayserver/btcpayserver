@@ -47,7 +47,9 @@ window.trezorClient = {
             document.getElementById("trezor-error").innerText = 'Device was disconnected';
             document.getElementById("trezor-loading").style.display = "block";
             document.getElementById("trezor-success").style.display = "none";
-
+            if (window.onTrezorDeviceLost) {
+                window.onTrezorDeviceLost();
+            }
         });
         if (device.isBootloader()) {
             document.getElementById("trezor-error").style.display = "block";

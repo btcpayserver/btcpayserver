@@ -198,7 +198,7 @@ namespace BTCPayServer.Payments.Bitcoin
         {
             return invoice.GetPayments()
                     .Where(p => p.GetPaymentMethodId().PaymentType == PaymentTypes.BTCLike)
-                    .Select(p => (BitcoinLikePaymentData)p.GetCryptoPaymentData(invoice.PaymentMethodHandlers));
+                    .Select(p => (BitcoinLikePaymentData)p.GetCryptoPaymentData());
         }
 
         async Task<InvoiceEntity> UpdatePaymentStates(BTCPayWallet wallet, string invoiceId)
@@ -215,7 +215,7 @@ namespace BTCPayServer.Payments.Bitcoin
             {
                 if (payment.GetPaymentMethodId().PaymentType != PaymentTypes.BTCLike)
                     continue;
-                var paymentData = (BitcoinLikePaymentData)payment.GetCryptoPaymentData(invoice.PaymentMethodHandlers);
+                var paymentData = (BitcoinLikePaymentData)payment.GetCryptoPaymentData();
                 if (!transactions.TryGetValue(paymentData.Outpoint.Hash, out TransactionResult tx))
                     continue;
                 var txId = tx.Transaction.GetHash();
@@ -353,7 +353,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
         private async Task<InvoiceEntity> ReceivedPayment(BTCPayWallet wallet, InvoiceEntity invoice, PaymentEntity payment, DerivationStrategyBase strategy)
         {
-            var paymentData = (BitcoinLikePaymentData)payment.GetCryptoPaymentData(invoice.PaymentMethodHandlers);
+            var paymentData = (BitcoinLikePaymentData)payment.GetCryptoPaymentData();
             invoice = (await UpdatePaymentStates(wallet, invoice.Id));
             if (invoice == null)
                 return null;

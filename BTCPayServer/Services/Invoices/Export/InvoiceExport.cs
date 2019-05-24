@@ -66,7 +66,7 @@ namespace BTCPayServer.Services.Invoices.Export
                 if (!payment.Accounted)
                     continue;
                 var cryptoCode = payment.GetPaymentMethodId().CryptoCode;
-                var pdata = payment.GetCryptoPaymentData(invoice.PaymentMethodHandlers);
+                var pdata = payment.GetCryptoPaymentData();
 
                 var pmethod = invoice.GetPaymentMethod(payment.GetPaymentMethodId(), Networks);
                 var paidAfterNetworkFees = pdata.GetValue() - payment.NetworkFee;
@@ -78,8 +78,9 @@ namespace BTCPayServer.Services.Invoices.Export
                     PaymentId = pdata.GetPaymentId(),
                     CryptoCode = cryptoCode,
                     ConversionRate = pmethod.Rate,
+                    //TODO: Abstract
                     PaymentType = payment.GetPaymentMethodId().PaymentType == Payments.PaymentTypes.BTCLike ? "OnChain" : "OffChain",
-                    Destination = payment.GetCryptoPaymentData(invoice.PaymentMethodHandlers).GetDestination(Networks.GetNetwork(cryptoCode)),
+                    Destination = payment.GetCryptoPaymentData().GetDestination(Networks.GetNetwork(cryptoCode)),
                     Paid = pdata.GetValue().ToString(CultureInfo.InvariantCulture),
                     PaidCurrency = Math.Round(pdata.GetValue() * pmethod.Rate, currency.NumberDecimalDigits).ToString(CultureInfo.InvariantCulture),
                     // Adding NetworkFee because Paid doesn't take into account network fees

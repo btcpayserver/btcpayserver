@@ -125,7 +125,7 @@ namespace BTCPayServer.Controllers
             foreach (var payment in invoice.GetPayments())
             {
                 var paymentNetwork = _NetworkProvider.GetNetwork(payment.GetCryptoCode());
-                var paymentData = payment.GetCryptoPaymentData(_paymentMethodHandlers);
+                var paymentData = payment.GetCryptoPaymentData();
                 if (paymentData is Payments.Bitcoin.BitcoinLikePaymentData onChainPaymentData)
                 {
                     var m = new InvoiceDetailsModel.Payment();

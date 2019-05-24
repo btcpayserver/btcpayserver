@@ -151,7 +151,7 @@ namespace BTCPayServer.PaymentRequest
                     if (invoiceEvent.Name == InvoiceEvent.ReceivedPayment)
                     {
                         await _PaymentRequestService.UpdatePaymentRequestStateIfNeeded(paymentId);
-                        var data = invoiceEvent.Payment.GetCryptoPaymentData(invoiceEvent.Invoice.PaymentMethodHandlers);
+                        var data = invoiceEvent.Payment.GetCryptoPaymentData();
                         await _HubContext.Clients.Group(paymentId).SendCoreAsync(PaymentRequestHub.PaymentReceived,
                             new object[]
                             {

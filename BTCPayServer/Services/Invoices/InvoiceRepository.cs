@@ -406,7 +406,7 @@ retry:
             {
                 var paymentEntity = ToObject<PaymentEntity>(p.Blob, null);
                 paymentEntity.Accounted = p.Accounted;
-
+                paymentEntity.PaymentMethodHandlers = _paymentMethodHandlers;
                 // PaymentEntity on version 0 does not have their own fee, because it was assumed that the payment method have fixed fee.
                 // We want to hide this legacy detail in InvoiceRepository, so we fetch the fee from the PaymentMethod and assign it to the PaymentEntity.
                 if (paymentEntity.Version == 0)
@@ -622,7 +622,8 @@ retry:
 #pragma warning restore CS0618
                     ReceivedTime = date.UtcDateTime,
                     Accounted = accounted,
-                    NetworkFee = paymentMethodDetails.GetNextNetworkFee()
+                    NetworkFee = paymentMethodDetails.GetNextNetworkFee(),
+                    PaymentMethodHandlers = _paymentMethodHandlers
                 };
                 entity.SetCryptoPaymentData(paymentData);
 
@@ -663,7 +664,7 @@ retry:
             {
                 foreach (var payment in payments)
                 {
-                    var paymentData = payment.GetCryptoPaymentData(_paymentMethodHandlers);
+                    var paymentData = payment.GetCryptoPaymentData();
                     var data = new PaymentData();
                     data.Id = paymentData.GetPaymentId();
                     data.Accounted = payment.Accounted;

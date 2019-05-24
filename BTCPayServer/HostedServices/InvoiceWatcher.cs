@@ -45,20 +45,17 @@ namespace BTCPayServer.HostedServices
         EventAggregator _EventAggregator;
         BTCPayNetworkProvider _NetworkProvider;
         ExplorerClientProvider _ExplorerClientProvider;
-        private readonly IEnumerable<IPaymentMethodHandler> _paymentMethodHandlers;
 
         public InvoiceWatcher(
             BTCPayNetworkProvider networkProvider,
             InvoiceRepository invoiceRepository,
             EventAggregator eventAggregator,
-            ExplorerClientProvider explorerClientProvider,
-            IEnumerable<IPaymentMethodHandler> paymentMethodHandlers)
+            ExplorerClientProvider explorerClientProvider)
         {
             _InvoiceRepository = invoiceRepository ?? throw new ArgumentNullException(nameof(invoiceRepository));
             _EventAggregator = eventAggregator ?? throw new ArgumentNullException(nameof(eventAggregator));
             _NetworkProvider = networkProvider;
             _ExplorerClientProvider = explorerClientProvider;
-            _paymentMethodHandlers = paymentMethodHandlers;
         }
         CompositeDisposable leases = new CompositeDisposable();
 
@@ -135,7 +132,7 @@ namespace BTCPayServer.HostedServices
 
             if (invoice.Status == InvoiceStatus.Paid)
             {
-                var confirmedAccounting = paymentMethod.Calculate(p => p.GetCryptoPaymentData(_paymentMethodHandlers).PaymentConfirmed(p, invoice.SpeedPolicy, network));
+                var confirmedAccounting = paymentMethod.Calculate(p => p.GetCryptoPaymentData().PaymentConfirmed(p, invoice.SpeedPolicy, network));
 
                 if (// Is after the monitoring deadline
                    (invoice.MonitoringExpiration < DateTimeOffset.UtcNow)
@@ -159,7 +156,7 @@ namespace BTCPayServer.HostedServices
 
             if (invoice.Status == InvoiceStatus.Confirmed)
             {
-                var completedAccounting = paymentMethod.Calculate(p => p.GetCryptoPaymentData(_paymentMethodHandlers).PaymentCompleted(p, network));
+                var completedAccounting = paymentMethod.Calculate(p => p.GetCryptoPaymentData().PaymentCompleted(p, network));
                 if (completedAccounting.Paid >= accounting.MinimumTotalDue)
                 {
                     context.Events.Add(new InvoiceEvent(invoice, 1006, InvoiceEvent.Completed));
@@ -297,7 +294,7 @@ namespace BTCPayServer.HostedServices
                                 .Select<PaymentEntity, Task>(async payment =>
                                 {
                                     var paymentNetwork = _NetworkProvider.GetNetwork(payment.GetCryptoCode());
-                                    var paymentData = payment.GetCryptoPaymentData(_paymentMethodHandlers);
+                                    var paymentData = payment.GetCryptoPaymentData();
                                     if (paymentData is Payments.Bitcoin.BitcoinLikePaymentData onChainPaymentData)
                                     {
                                         // Do update if confirmation count in the paymentData is not up to date

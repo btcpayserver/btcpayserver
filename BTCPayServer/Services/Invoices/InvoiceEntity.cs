@@ -430,7 +430,7 @@ namespace BTCPayServer.Services.Invoices
 
                 cryptoInfo.Payments = GetPayments(info.Network).Select(entity =>
                 {
-                    var data = entity.GetCryptoPaymentData(PaymentMethodHandlers);
+                    var data = entity.GetCryptoPaymentData();
                     return new InvoicePaymentInfo()
                     {
                         Id = data.GetPaymentId(),
@@ -823,8 +823,8 @@ namespace BTCPayServer.Services.Invoices
                 .OrderBy(p => p.ReceivedTime)
                 .ForEach(_ =>
                 {
-                    var txFee = _.GetValue(ParentEntity.PaymentMethodHandlers, paymentMethods, GetId(), _.NetworkFee);
-                    paid += _.GetValue(ParentEntity.PaymentMethodHandlers, paymentMethods, GetId());
+                    var txFee = _.GetValue(paymentMethods, GetId(), _.NetworkFee);
+                    paid += _.GetValue(paymentMethods, GetId());
                     if (!paidEnough)
                     {
                         totalDue += txFee;
@@ -832,7 +832,7 @@ namespace BTCPayServer.Services.Invoices
                     paidEnough |= Extensions.RoundUp(paid, precision) >= Extensions.RoundUp(totalDue, precision);
                     if (GetId() == _.GetPaymentMethodId())
                     {
-                        cryptoPaid += _.GetCryptoPaymentData(ParentEntity.PaymentMethodHandlers).GetValue();
+                        cryptoPaid += _.GetCryptoPaymentData().GetValue();
                         txRequired++;
                     }
                 });
@@ -868,6 +868,8 @@ namespace BTCPayServer.Services.Invoices
 
     public class PaymentEntity
     {
+        [JsonIgnore]
+        public IEnumerable<IPaymentMethodHandler> PaymentMethodHandlers { get; set; }
         public int Version { get; set; }
         public DateTimeOffset ReceivedTime
         {
@@ -905,10 +907,10 @@ namespace BTCPayServer.Services.Invoices
         public string CryptoPaymentDataType { get; set; }
 
 
-        public CryptoPaymentData GetCryptoPaymentData(IEnumerable<IPaymentMethodHandler> paymentMethodHandlers)
+        public CryptoPaymentData GetCryptoPaymentData()
         {
             var paymentMethodId = GetPaymentMethodId();
-            return paymentMethodHandlers.GetCorrectHandler(paymentMethodId).GetCryptoPaymentData(this);
+            return PaymentMethodHandlers.GetCorrectHandler(paymentMethodId).GetCryptoPaymentData(this);
         }
 
         public PaymentEntity SetCryptoPaymentData(CryptoPaymentData cryptoPaymentData)
@@ -926,10 +928,10 @@ namespace BTCPayServer.Services.Invoices
 #pragma warning restore CS0618
             return this;
         }
-        internal decimal GetValue(IEnumerable<IPaymentMethodHandler>paymentMethodHandlers, PaymentMethodDictionary paymentMethods, PaymentMethodId paymentMethodId, decimal? value = null)
+        internal decimal GetValue(PaymentMethodDictionary paymentMethods, PaymentMethodId paymentMethodId, decimal? value = null)
         {
             
-            value = value ?? this.GetCryptoPaymentData(paymentMethodHandlers).GetValue();
+            value = value ?? this.GetCryptoPaymentData().GetValue();
             var to = paymentMethodId;
             var from = this.GetPaymentMethodId();
             if (to == from)

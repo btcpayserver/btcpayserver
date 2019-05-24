@@ -51,7 +51,7 @@ namespace BTCPayServer.Services.Apps
                 {
                     if (invoiceEvent.Name == InvoiceEvent.ReceivedPayment)
                     {
-                        var data = invoiceEvent.Payment.GetCryptoPaymentData(invoiceEvent.Invoice.PaymentMethodHandlers);
+                        var data = invoiceEvent.Payment.GetCryptoPaymentData();
                         await _HubContext.Clients.Group(appId).SendCoreAsync(AppHub.PaymentReceived, new object[]
                             {
                         data.GetValue(),

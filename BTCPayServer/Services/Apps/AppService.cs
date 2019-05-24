@@ -323,7 +323,7 @@ namespace BTCPayServer.Services.Apps
                              {
                                  var paymentMethodContribution = new Contribution();
                                  paymentMethodContribution.PaymentMehtodId = pay.GetPaymentMethodId();
-                                 paymentMethodContribution.Value = pay.GetCryptoPaymentData(p.PaymentMethodHandlers).GetValue() - pay.NetworkFee;
+                                 paymentMethodContribution.Value = pay.GetCryptoPaymentData().GetValue() - pay.NetworkFee;
                                  var rate = p.GetPaymentMethod(paymentMethodContribution.PaymentMehtodId, _Networks).Rate;
                                  paymentMethodContribution.CurrencyValue =  rate * paymentMethodContribution.Value;
                                  return paymentMethodContribution;

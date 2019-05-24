@@ -33,8 +33,7 @@ namespace BTCPayServer.Payments.Lightning
                               InvoiceRepository invoiceRepository,
                               IMemoryCache memoryCache,
                               BTCPayNetworkProvider networkProvider,
-                              LightningClientFactoryService lightningClientFactory,
-                              IHttpClientFactory httpClientFactory)
+                              LightningClientFactoryService lightningClientFactory)
         {
             _Aggregator = aggregator;
             _InvoiceRepository = invoiceRepository;

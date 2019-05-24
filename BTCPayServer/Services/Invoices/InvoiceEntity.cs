@@ -817,7 +817,7 @@ namespace BTCPayServer.Services.Invoices
             bool paidEnough = paid >= Extensions.RoundUp(totalDue, precision);
             int txRequired = 0;
 
-            var _ = ParentEntity.GetPayments()
+            _ = ParentEntity.GetPayments()
                 .Where(p => p.Accounted && paymentPredicate(p))
                 .OrderBy(p => p.ReceivedTime)
                 .Select(_ =>
@@ -837,7 +837,7 @@ namespace BTCPayServer.Services.Invoices
                     }
 
                     return _;
-                });
+                }).ToArray();
 
             var accounting = new PaymentMethodAccounting();
             accounting.TxCount = txRequired;

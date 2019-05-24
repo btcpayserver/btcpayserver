@@ -679,7 +679,6 @@ retry:
         private InvoiceEntity ToObject(byte[] value)
         {
             var entity = NBitcoin.JsonConverters.Serializer.ToObject<InvoiceEntity>(ZipUtils.Unzip(value), null);
-            
             entity.PaymentMethodHandlers = _paymentMethodHandlers;
             entity.Networks = _Networks;
             return entity;

@@ -8,6 +8,7 @@ namespace BTCPayServer.Security
 {
     public static class Policies
     {
+        
         public const string BitpayAuthentication = "Bitpay.Auth";
         public const string CookieAuthentication = "Identity.Application";
         public static AuthorizationOptions AddBTCPayPolicies(this AuthorizationOptions options)
@@ -31,10 +32,10 @@ namespace BTCPayServer.Security
         {
             public const string Key = "btcpay.store.canmodifystoresettings";
         }
-
         public class CanCreateInvoice
         {
             public const string Key = "btcpay.store.cancreateinvoice";
         }
+        
     }
 }

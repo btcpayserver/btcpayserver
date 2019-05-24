@@ -38,7 +38,6 @@
     <PackageReference Include="BuildBundlerMinifier" Version="2.9.406" />
     <PackageReference Include="BundlerMinifier.Core" Version="2.9.406" />
     <PackageReference Include="BundlerMinifier.TagHelpers" Version="2.9.406" />
-    <PackageReference Include="DigitalRuby.ExchangeSharp" Version="0.5.3" />
     <PackageReference Include="HtmlSanitizer" Version="4.0.207" />
     <PackageReference Include="LedgerWallet" Version="2.0.0.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.1.4" />
@@ -47,10 +46,8 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NBitcoin" Version="4.1.2.32" />
     <PackageReference Include="NBitpayClient" Version="1.0.0.34" />	  
     <PackageReference Include="DBriize" Version="1.0.0.4" />
-    <PackageReference Include="NBXplorer.Client" Version="2.0.0.16" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
     <PackageReference Include="NicolasDorier.CommandLine" Version="1.0.0.2" />
     <PackageReference Include="NicolasDorier.CommandLine.Configuration" Version="1.0.0.3" />
@@ -138,6 +135,11 @@
 	  <Folder Include="wwwroot\vendor\highlightjs\" />
 	  <Folder Include="wwwroot\vendor\summernote" />
 	  <Folder Include="wwwroot\vendor\u2f" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\BTCPayServer.Rating\BTCPayServer.Rating.csproj" />
+	  <ProjectReference Include="..\BTCPayServer.Common\BTCPayServer.Common.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

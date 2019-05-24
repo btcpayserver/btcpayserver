@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services.Rates;
 using NBitcoin;
 using NBXplorer;
 
@@ -76,7 +74,7 @@ namespace BTCPayServer
             return CryptoCode;
         }
 
-        internal KeyPath GetRootKeyPath()
+        public KeyPath GetRootKeyPath()
         {
             return new KeyPath(NBitcoinNetwork.Consensus.SupportSegwit ? "49'" : "44'")
                         .Derive(CoinType); 

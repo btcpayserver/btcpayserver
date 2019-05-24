@@ -82,7 +82,7 @@ namespace BTCPayServer.Storage
             }
             catch (Exception e)
             {
-                Logs.Utils.LogError(e, $"Could not initialize the Local File Storage system( uploading and storing files locally)");
+                Logs.Utils.LogError(e, $"Could not initialize the Local File Storage system(uploading and storing files locally)");
             }
         }
     }

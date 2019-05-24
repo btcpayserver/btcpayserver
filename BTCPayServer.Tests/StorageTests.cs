@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using BTCPayServer.Controllers;
@@ -9,6 +10,7 @@ using BTCPayServer.Storage.Services.Providers.AzureBlobStorage.Configuration;
 using BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration;
 using BTCPayServer.Storage.ViewModels;
 using BTCPayServer.Tests.Logging;
+using DBriize.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.AspNetCore.Mvc;
@@ -37,15 +39,6 @@ namespace BTCPayServer.Tests
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 var controller = tester.PayTester.GetController<ServerController>(user.UserId, user.StoreId);
-
-//                //For some reason, the tests cache something on circleci and this is set by default
-//                //Initially, there is no configuration, make sure we display the choices available to configure
-//                Assert.IsType<StorageSettings>(Assert.IsType<ViewResult>(await controller.Storage()).Model);
-//
-//                //the file list should tell us it's not configured:
-//                var viewFilesViewModelInitial =
-//                    Assert.IsType<ViewFilesViewModel>(Assert.IsType<ViewResult>(await controller.Files()).Model);
-//                Assert.False(viewFilesViewModelInitial.StorageConfigured);
 
 
                 //Once we select a provider, redirect to its view
@@ -196,6 +189,7 @@ namespace BTCPayServer.Tests
             var fileId = uploadFormFileResult.RouteValues["fileId"].ToString();
             Assert.Equal("Files", uploadFormFileResult.ActionName);
 
+            //check if file was uploaded and saved in db
             var viewFilesViewModel =
                 Assert.IsType<ViewFilesViewModel>(Assert.IsType<ViewResult>(await controller.Files(fileId)).Model);
 
@@ -203,21 +197,48 @@ namespace BTCPayServer.Tests
             Assert.Equal(fileId, viewFilesViewModel.SelectedFileId);
             Assert.NotEmpty(viewFilesViewModel.DirectFileUrl);
 
-
+            
+            //verify file is available and the same
             var net = new System.Net.WebClient();
             var data = await net.DownloadStringTaskAsync(new Uri(viewFilesViewModel.DirectFileUrl));
             Assert.Equal(fileContent, data);
-
+            
+            //create a temporary link to file
+            var tmpLinkGenerate = Assert.IsType<RedirectToActionResult>(await controller.CreateTemporaryFileUrl(fileId,
+                new ServerController.CreateTemporaryFileUrlViewModel()
+                {
+                    IsDownload = true,
+                    TimeAmount = 1,
+                    TimeType = ServerController.CreateTemporaryFileUrlViewModel.TmpFileTimeType.Minutes
+                }));
+            Assert.True(tmpLinkGenerate.RouteValues.ContainsKey("StatusMessage"));
+            var statusMessageModel = new StatusMessageModel(tmpLinkGenerate.RouteValues["StatusMessage"].ToString());
+            Assert.Equal(StatusMessageModel.StatusSeverity.Success, statusMessageModel.Severity);
+            var index = statusMessageModel.Html.IndexOf("target='_blank'>");
+            var url = statusMessageModel.Html.Substring(index).ReplaceMultiple(new Dictionary<string, string>()
+            {
+                {"</a>", string.Empty}, {"target='_blank'>", string.Empty}
+            });
+            //verify tmpfile is available and the same
+            data = await net.DownloadStringTaskAsync(new Uri(url));
+            Assert.Equal(fileContent, data);
+            
+            
+            //delete file
             Assert.Equal(StatusMessageModel.StatusSeverity.Success, new StatusMessageModel(Assert
                 .IsType<RedirectToActionResult>(await controller.DeleteFile(fileId))
                 .RouteValues["statusMessage"].ToString()).Severity);
-
+            
+            //attempt to fetch deleted file
             viewFilesViewModel =
                 Assert.IsType<ViewFilesViewModel>(Assert.IsType<ViewResult>(await controller.Files(fileId)).Model);
 
             Assert.Null(viewFilesViewModel.DirectFileUrl);
             Assert.Null(viewFilesViewModel.SelectedFileId);
         }
+        
+        
+        
 
       
 

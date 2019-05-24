@@ -211,6 +211,11 @@ namespace BTCPayServer
                         request.PathBase.ToUriComponent());
         }
 
+        public static Uri GetAbsoluteRootUri(this HttpRequest request)
+        {
+            return new Uri(request.GetAbsoluteRoot());
+        }
+
         public static string GetCurrentUrl(this HttpRequest request)
         {
             return string.Concat(

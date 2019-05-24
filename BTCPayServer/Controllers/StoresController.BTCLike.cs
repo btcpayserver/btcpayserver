@@ -53,7 +53,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
-        [Route("{storeId}/derivations/{cryptoCode}/{ledger}/ws")]
+        [Route("{storeId}/derivations/{cryptoCode}/ledger/ws")]
         public async Task<IActionResult> AddDerivationSchemeLedger(
             string storeId,
             string cryptoCode,

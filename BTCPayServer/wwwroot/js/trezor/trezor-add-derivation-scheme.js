@@ -19,6 +19,7 @@ $(document).ready(function() {
                 var hardeningConstant = 0x80000000;
 
                 trezorDevice.waitForSessionAndRun(function(session) {
+                    
                     var path = [];
                     for (var i = 0; i < keys.length; i++) {
                         var key = keys[i];
@@ -37,8 +38,6 @@ $(document).ready(function() {
                         $("#KeyPath").val(keys[keys.length - 1]);
                         $("#DerivationScheme").val(hdNode.toBase58()+  suffix);
                         $("#trezorsubmitbutton").show();
-                        //Seems like Trezor does not allow you to select anything else for their own ui. 
-                        // They tell you to use electrum for native segwit: https://wiki.trezor.io/Bech32
                     }).catch(function(e){
                         alert(e.message);
                         

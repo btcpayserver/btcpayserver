@@ -42,6 +42,9 @@ namespace BTCPayServer.Payments.Bitcoin
             };
         }
 
+        public override string PrettyDescription => "On-Chain";
+        public override PaymentTypes PaymentType => PaymentTypes.BTCLike;
+
         public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(DerivationSchemeSettings supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store, BTCPayNetwork network, object preparePaymentObject)
         {
             if (!_ExplorerProvider.IsAvailable(network))

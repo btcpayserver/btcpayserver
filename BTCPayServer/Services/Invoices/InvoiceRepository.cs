@@ -126,6 +126,7 @@ retry:
         {
             List<string> textSearch = new List<string>();
             invoice = NBitcoin.JsonConverters.Serializer.ToObject<InvoiceEntity>(ToString(invoice, null), null);
+            invoice.PaymentMethodHandlers = _paymentMethodHandlers;
             invoice.Networks = _Networks;
             invoice.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16));
 #pragma warning disable CS0618

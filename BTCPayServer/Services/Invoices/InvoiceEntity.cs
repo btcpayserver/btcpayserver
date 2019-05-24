@@ -113,6 +113,8 @@ namespace BTCPayServer.Services.Invoices
     }
     public class InvoiceEntity
     {
+        [JsonIgnore]
+        public BTCPayNetworkProvider Networks { get; set; }
         public const int InternalTagSupport_Version = 1;
         public const int Lastest_Version = 1;
         public int Version { get; set; }
@@ -190,18 +192,18 @@ namespace BTCPayServer.Services.Invoices
             get;
             set;
         }
-        public IEnumerable<T> GetSupportedPaymentMethod<T>(PaymentMethodId paymentMethodId, BTCPayNetworkProvider networks) where T : ISupportedPaymentMethod
+        public IEnumerable<T> GetSupportedPaymentMethod<T>(PaymentMethodId paymentMethodId) where T : ISupportedPaymentMethod
         {
             return
-                GetSupportedPaymentMethod(networks)
+                GetSupportedPaymentMethod()
                 .Where(p => paymentMethodId == null || p.PaymentId == paymentMethodId)
                 .OfType<T>();
         }
-        public IEnumerable<T> GetSupportedPaymentMethod<T>(BTCPayNetworkProvider networks) where T : ISupportedPaymentMethod
+        public IEnumerable<T> GetSupportedPaymentMethod<T>() where T : ISupportedPaymentMethod
         {
-            return GetSupportedPaymentMethod<T>(null, networks);
+            return GetSupportedPaymentMethod<T>(null);
         }
-        public IEnumerable<ISupportedPaymentMethod> GetSupportedPaymentMethod(BTCPayNetworkProvider networks)
+        public IEnumerable<ISupportedPaymentMethod> GetSupportedPaymentMethod()
         {
 #pragma warning disable CS0618
             bool btcReturned = false;
@@ -211,10 +213,10 @@ namespace BTCPayServer.Services.Invoices
                 foreach (var strat in strategies.Properties())
                 {
                     var paymentMethodId = PaymentMethodId.Parse(strat.Name);
-                    var network = networks.GetNetwork(paymentMethodId.CryptoCode);
+                    var network = Networks.GetNetwork(paymentMethodId.CryptoCode);
                     if (network != null)
                     {
-                        if (network == networks.BTC && paymentMethodId.PaymentType == PaymentTypes.BTCLike)
+                        if (network == Networks.BTC && paymentMethodId.PaymentType == PaymentTypes.BTCLike)
                             btcReturned = true;
                         yield return PaymentMethodExtensions.Deserialize(paymentMethodId, strat.Value, network);
                     }
@@ -223,9 +225,9 @@ namespace BTCPayServer.Services.Invoices
 
             if (!btcReturned && !string.IsNullOrEmpty(DerivationStrategy))
             {
-                if (networks.BTC != null)
+                if (Networks.BTC != null)
                 {
-                    yield return BTCPayServer.DerivationSchemeSettings.Parse(DerivationStrategy, networks.BTC);
+                    yield return BTCPayServer.DerivationSchemeSettings.Parse(DerivationStrategy, Networks.BTC);
                 }
             }
 #pragma warning restore CS0618
@@ -362,7 +364,7 @@ namespace BTCPayServer.Services.Invoices
             return DateTimeOffset.UtcNow > ExpirationTime;
         }
 
-        public InvoiceResponse EntityToDTO(BTCPayNetworkProvider networkProvider)
+        public InvoiceResponse EntityToDTO()
         {
             ServerUrl = ServerUrl ?? "";
             InvoiceResponse dto = new InvoiceResponse
@@ -391,7 +393,7 @@ namespace BTCPayServer.Services.Invoices
             dto.Url = ServerUrl.WithTrailingSlash() + $"invoice?id=" + Id;
             dto.CryptoInfo = new List<NBitpayClient.InvoiceCryptoInfo>();
             dto.MinerFees = new Dictionary<string, MinerFeeInfo>();
-            foreach (var info in this.GetPaymentMethods(networkProvider))
+            foreach (var info in this.GetPaymentMethods())
             {
                 var accounting = info.Calculate();
                 var cryptoInfo = new NBitpayClient.InvoiceCryptoInfo();
@@ -510,13 +512,13 @@ namespace BTCPayServer.Services.Invoices
 
         internal bool Support(PaymentMethodId paymentMethodId)
         {
-            var rates = GetPaymentMethods(null);
+            var rates = GetPaymentMethods();
             return rates.TryGet(paymentMethodId) != null;
         }
 
         public PaymentMethod GetPaymentMethod(PaymentMethodId paymentMethodId, BTCPayNetworkProvider networkProvider)
         {
-            GetPaymentMethods(networkProvider).TryGetValue(paymentMethodId, out var data);
+            GetPaymentMethods().TryGetValue(paymentMethodId, out var data);
             return data;
         }
         public PaymentMethod GetPaymentMethod(BTCPayNetwork network, PaymentTypes paymentType, BTCPayNetworkProvider networkProvider)
@@ -524,7 +526,7 @@ namespace BTCPayServer.Services.Invoices
             return GetPaymentMethod(new PaymentMethodId(network.CryptoCode, paymentType), networkProvider);
         }
 
-        public PaymentMethodDictionary GetPaymentMethods(BTCPayNetworkProvider networkProvider)
+        public PaymentMethodDictionary GetPaymentMethods()
         {
             PaymentMethodDictionary paymentMethods = new PaymentMethodDictionary();
             var serializer = new Serializer(Dummy);
@@ -538,8 +540,8 @@ namespace BTCPayServer.Services.Invoices
                     r.CryptoCode = paymentMethodId.CryptoCode;
                     r.PaymentType = paymentMethodId.PaymentType.ToString();
                     r.ParentEntity = this;
-                    r.Network = networkProvider?.GetNetwork(r.CryptoCode);
-                    if (r.Network != null || networkProvider == null)
+                    r.Network = Networks?.GetNetwork(r.CryptoCode);
+                    if (r.Network != null || Networks == null)
                         paymentMethods.Add(r);
                 }
             }
@@ -551,7 +553,7 @@ namespace BTCPayServer.Services.Invoices
 
         public void SetPaymentMethod(PaymentMethod paymentMethod)
         {
-            var dict = GetPaymentMethods(null);
+            var dict = GetPaymentMethods();
             dict.AddOrReplace(paymentMethod);
             SetPaymentMethods(dict);
         }
@@ -830,7 +832,7 @@ namespace BTCPayServer.Services.Invoices
         public PaymentMethodAccounting Calculate(Func<PaymentEntity, bool> paymentPredicate = null)
         {
             paymentPredicate = paymentPredicate ?? new Func<PaymentEntity, bool>((p) => true);
-            var paymentMethods = ParentEntity.GetPaymentMethods(null);
+            var paymentMethods = ParentEntity.GetPaymentMethods();
 
             var totalDue = ParentEntity.ProductInformation.Price / Rate;
             var paid = 0m;

@@ -329,7 +329,7 @@ namespace BTCPayServer.Controllers
                                                   PaymentMethodName = availableCryptoHandler.GetPaymentMethodName(availableCryptoPaymentMethodId),
                                                   IsLightning =
                                                       kv.GetId().PaymentType == PaymentTypes.LightningLike,
-                                                  CryptoImage = Request.GetAbsoluteUri(availableCryptoHandler.GetCryptoImage(availableCryptoPaymentMethodId)),
+                                                  CryptoImage = Request.GetRelativePathOrAbsolute(availableCryptoHandler.GetCryptoImage(availableCryptoPaymentMethodId)),
                                                   Link = Url.Action(nameof(Checkout),
                                                       new
                                                       {

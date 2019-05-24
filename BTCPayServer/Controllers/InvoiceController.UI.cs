@@ -539,7 +539,22 @@ namespace BTCPayServer.Controllers
         }
 
 
-
+        private SelectList GetPaymentMethodsSelectList()
+        {
+            return new SelectList(
+                _NetworkProvider.GetAll()
+                    .SelectMany(network => new[]
+                    {
+                        new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike),
+                        new PaymentMethodId(network.CryptoCode, PaymentTypes.LightningLike)
+                    }).Select(id =>
+                    {
+                        var handler = _paymentMethodHandlers.GetCorrectHandler(id);
+                        return new SelectListItem(handler.ToPrettyString(id), id.ToString());
+                    }),
+                nameof(SelectListItem.Value),
+                nameof(SelectListItem.Text));
+        }
         [HttpGet]
         [Route("invoices/create")]
         [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
@@ -553,15 +568,7 @@ namespace BTCPayServer.Controllers
                 return RedirectToAction(nameof(UserStoresController.ListStores), "UserStores");
             }
 
-            var paymentMethods = new SelectList(_NetworkProvider.GetAll().SelectMany(network => new[]
-                                                         {
-                                                             new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike),
-                                                             new PaymentMethodId(network.CryptoCode, PaymentTypes.LightningLike)
-                                                         }).Select(id => new SelectListItem(id.ToString(true), id.ToString(false))),
-                                                             nameof(SelectListItem.Value),
-                                                             nameof(SelectListItem.Text));
-
-            return View(new CreateInvoiceModel() { Stores = stores, AvailablePaymentMethods = paymentMethods });
+            return View(new CreateInvoiceModel() { Stores = stores, AvailablePaymentMethods = GetPaymentMethodsSelectList() });
         }
 
         [HttpPost]
@@ -573,14 +580,7 @@ namespace BTCPayServer.Controllers
             var stores = await _StoreRepository.GetStoresByUserId(GetUserId());
             model.Stores = new SelectList(stores, nameof(StoreData.Id), nameof(StoreData.StoreName), model.StoreId);
 
-            var paymentMethods = new SelectList(_NetworkProvider.GetAll().SelectMany(network => new[]
-                {
-                    new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike),
-                    new PaymentMethodId(network.CryptoCode, PaymentTypes.LightningLike)
-                }).Select(id => new SelectListItem(id.ToString(true), id.ToString(false))),
-                nameof(SelectListItem.Value),
-                nameof(SelectListItem.Text));
-            model.AvailablePaymentMethods = paymentMethods;
+            model.AvailablePaymentMethods = GetPaymentMethodsSelectList();
 
             var store = stores.FirstOrDefault(s => s.Id == model.StoreId);
             if (store == null)

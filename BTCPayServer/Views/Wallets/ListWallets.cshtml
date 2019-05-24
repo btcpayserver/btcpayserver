@@ -32,14 +32,17 @@
                                 <div class="card-header bg-white mb-3">
                                     <div class="row">
                                         <div class="col"><img alt="" src="@wallet.CryptoImage" style="height:30px; width:30px" /></div>
-                                        <div class="col"><a class="btn-sm btn-primary" asp-action="UpdateStore" asp-controller="Stores" asp-route-storeId="@wallet.StoreId">@wallet.StoreName</a></div>
+                                        <div class="col"></div>
                                     </div>
                                 </div>
 
                                 <div class="card-body text-dark" style="text-align:center">
+                                    <h6>@wallet.StoreName</h6>
                                     <h6>@wallet.CryptoCode</h6>
                                     <p class="card-text">@wallet.Balance</p>
-                                    <a class="btn-sm btn-primary btn-sm" asp-action="WalletTransactions" asp-route-walletId="@wallet.Id">Manage Wallet</a>
+                                    <hr />
+                                    <a class="" asp-action="UpdateStore" asp-controller="Stores" asp-route-storeId="@wallet.StoreId">Update Store</a><span> - </span>
+                                    <a class="" asp-action="WalletTransactions" asp-route-walletId="@wallet.Id">Manage Wallet</a>
                                     <br />
                                 </div>
                             </div>

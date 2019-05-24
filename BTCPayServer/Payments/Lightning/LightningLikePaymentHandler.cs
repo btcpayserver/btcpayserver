@@ -181,7 +181,7 @@ namespace BTCPayServer.Payments.Lightning
             };
         }
 
-        public override Task PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse)
+        public override void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse)
         {
             var paymentMethodId = new PaymentMethodId(model.CryptoCode, PaymentTypes.LightningLike);
             
@@ -192,7 +192,6 @@ namespace BTCPayServer.Payments.Lightning
             model.CryptoImage = GetCryptoImage(network);
             model.InvoiceBitcoinUrl = cryptoInfo.PaymentUrls.BOLT11;
             model.InvoiceBitcoinUrlQR = cryptoInfo.PaymentUrls.BOLT11.ToUpperInvariant();
-            return Task.CompletedTask;
         }
 
         public override string GetCryptoImage(PaymentMethodId paymentMethodId)

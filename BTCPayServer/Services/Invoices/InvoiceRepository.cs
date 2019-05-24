@@ -1,4 +1,4 @@
-﻿using DBriize;
+using DBriize;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -398,7 +398,7 @@ retry:
 
         private InvoiceEntity ToEntity(Data.InvoiceData invoice)
         {
-            var entity = ToObject<InvoiceEntity>(invoice.Blob);
+            var entity = ToObject(invoice.Blob);
             entity.PaymentMethodHandlers = _paymentMethodHandlers;
             PaymentMethodDictionary paymentMethods = null;
 #pragma warning disable CS0618

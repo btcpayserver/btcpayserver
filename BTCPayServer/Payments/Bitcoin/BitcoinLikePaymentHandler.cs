@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
@@ -39,7 +38,7 @@ namespace BTCPayServer.Payments.Bitcoin
             public Task<BitcoinAddress> ReserveAddress;
         }
 
-        public override Task PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse)
+        public override void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse)
         {
             var paymentMethodId = new PaymentMethodId(model.CryptoCode, PaymentTypes.BTCLike);
 
@@ -50,7 +49,6 @@ namespace BTCPayServer.Payments.Bitcoin
             model.CryptoImage = GetCryptoImage(network);
             model.InvoiceBitcoinUrl = cryptoInfo.PaymentUrls.BIP21;
             model.InvoiceBitcoinUrlQR = cryptoInfo.PaymentUrls.BIP21;
-            return Task.CompletedTask;
         }
 
         public override string GetCryptoImage(PaymentMethodId paymentMethodId)

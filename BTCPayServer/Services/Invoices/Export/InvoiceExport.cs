@@ -13,13 +13,11 @@ namespace BTCPayServer.Services.Invoices.Export
 {
     public class InvoiceExport
     {
-        private readonly IEnumerable<IPaymentMethodHandler> _paymentMethodHandlers;
         public BTCPayNetworkProvider Networks { get; }
         public CurrencyNameTable Currencies { get; }
 
-        public InvoiceExport(BTCPayNetworkProvider networks, CurrencyNameTable currencies, IEnumerable<IPaymentMethodHandler> paymentMethodHandlers)
+        public InvoiceExport(BTCPayNetworkProvider networks, CurrencyNameTable currencies)
         {
-            _paymentMethodHandlers = paymentMethodHandlers;
             Networks = networks;
             Currencies = currencies;
         }
@@ -68,7 +66,7 @@ namespace BTCPayServer.Services.Invoices.Export
                 if (!payment.Accounted)
                     continue;
                 var cryptoCode = payment.GetPaymentMethodId().CryptoCode;
-                var pdata = payment.GetCryptoPaymentData(_paymentMethodHandlers);
+                var pdata = payment.GetCryptoPaymentData(invoice.PaymentMethodHandlers);
 
                 var pmethod = invoice.GetPaymentMethod(payment.GetPaymentMethodId(), Networks);
                 var paidAfterNetworkFees = pdata.GetValue() - payment.NetworkFee;
@@ -81,7 +79,7 @@ namespace BTCPayServer.Services.Invoices.Export
                     CryptoCode = cryptoCode,
                     ConversionRate = pmethod.Rate,
                     PaymentType = payment.GetPaymentMethodId().PaymentType == Payments.PaymentTypes.BTCLike ? "OnChain" : "OffChain",
-                    Destination = payment.GetCryptoPaymentData(_paymentMethodHandlers).GetDestination(Networks.GetNetwork(cryptoCode)),
+                    Destination = payment.GetCryptoPaymentData(invoice.PaymentMethodHandlers).GetDestination(Networks.GetNetwork(cryptoCode)),
                     Paid = pdata.GetValue().ToString(CultureInfo.InvariantCulture),
                     PaidCurrency = Math.Round(pdata.GetValue() * pmethod.Rate, currency.NumberDecimalDigits).ToString(CultureInfo.InvariantCulture),
                     // Adding NetworkFee because Paid doesn't take into account network fees

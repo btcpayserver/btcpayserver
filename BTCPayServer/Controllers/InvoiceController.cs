@@ -225,7 +225,7 @@ namespace BTCPayServer.Controllers
                 await _InvoiceRepository.AddInvoiceLogs(entity.Id, logs);
             });
             _EventAggregator.Publish(new Events.InvoiceEvent(entity, 1001, InvoiceEvent.Created));
-            var resp = entity.EntityToDTO(_NetworkProvider, _paymentMethodHandlers);
+            var resp = entity.EntityToDTO();
             return new DataWrapper<InvoiceResponse>(resp) { Facade = "pos/invoice" };
         }
 

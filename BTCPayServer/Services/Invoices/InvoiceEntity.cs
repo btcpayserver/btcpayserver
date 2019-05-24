@@ -369,7 +369,7 @@ namespace BTCPayServer.Services.Invoices
             return DateTimeOffset.UtcNow > ExpirationTime;
         }
 
-        public InvoiceResponse EntityToDTO(IEnumerable<IPaymentMethodHandler> paymentMethodHandlers)
+        public InvoiceResponse EntityToDTO()
         {
             ServerUrl = ServerUrl ?? "";
             InvoiceResponse dto = new InvoiceResponse
@@ -430,7 +430,7 @@ namespace BTCPayServer.Services.Invoices
 
                 cryptoInfo.Payments = GetPayments(info.Network).Select(entity =>
                 {
-                    var data = entity.GetCryptoPaymentData(paymentMethodHandlers);
+                    var data = entity.GetCryptoPaymentData(PaymentMethodHandlers);
                     return new InvoicePaymentInfo()
                     {
                         Id = data.GetPaymentId(),
@@ -444,7 +444,7 @@ namespace BTCPayServer.Services.Invoices
                     };
                 }).ToList();
 
-                var paymentHandler = paymentMethodHandlers.GetCorrectHandler(paymentId);
+                var paymentHandler = PaymentMethodHandlers.GetCorrectHandler(paymentId);
 
                 paymentHandler.PrepareInvoiceDto(dto, this, cryptoInfo, accounting, info);
                 

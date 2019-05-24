@@ -45,7 +45,7 @@ namespace BTCPayServer.Payments
         
         string ToPrettyString(PaymentMethodId paymentMethodId);
 
-        Task PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse);
+        void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse);
         string GetCryptoImage(PaymentMethodId paymentMethodId);
         string GetPaymentMethodName(PaymentMethodId paymentMethodId);
 
@@ -74,7 +74,7 @@ namespace BTCPayServer.Payments
         public abstract void PrepareInvoiceDto(InvoiceResponse invoiceResponse, InvoiceEntity invoiceEntity,
             InvoiceCryptoInfo invoiceCryptoInfo, PaymentMethodAccounting accounting, PaymentMethod info);
 
-        public abstract Task PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse);
+        public abstract void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse);
         public abstract string GetCryptoImage(PaymentMethodId paymentMethodId);
         public abstract string GetPaymentMethodName(PaymentMethodId paymentMethodId);
         public abstract Task<string> IsPaymentMethodAllowedBasedOnInvoiceAmount(StoreBlob storeBlob,

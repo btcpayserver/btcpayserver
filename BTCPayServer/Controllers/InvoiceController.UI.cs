@@ -314,13 +314,13 @@ namespace BTCPayServer.Controllers
                 CoinSwitchMerchantId = coinswitch?.MerchantId,
                 CoinSwitchMode = coinswitch?.Mode,
                 StoreId = store.Id,
-                AvailableCryptos = invoice.GetPaymentMethods(_NetworkProvider)
+                AvailableCryptos = invoice.GetPaymentMethods()
                                           .Where(i => i.Network != null)
                                           .Select(kv =>
                                           {
                                               var availableCryptoPaymentMethodId = kv.GetId();
                                               var availableCryptoHandler =
-                                                  _paymentMethodHandlers.GetCorrectHandler(
+                                                  kv.ParentEntity.PaymentMethodHandlers.GetCorrectHandler(
                                                       availableCryptoPaymentMethodId);
                                               return new PaymentModel.AvailableCrypto()
                                               {
@@ -342,9 +342,9 @@ namespace BTCPayServer.Controllers
                                           .ToList()
             };
 
-            var correctHandler = _paymentMethodHandlers.GetCorrectHandler(paymentMethod.GetId());
+            var correctHandler = invoice.PaymentMethodHandlers.GetCorrectHandler(paymentMethod.GetId());
 
-            await correctHandler.PreparePaymentModel(model, dto);
+            correctHandler.PreparePaymentModel(model, dto);
             model.PaymentMethodId = paymentMethodId.ToString();
             var expiration = TimeSpan.FromSeconds(model.ExpirationSeconds);
             model.TimeLeft = expiration.PrettyPrint();
@@ -508,7 +508,7 @@ namespace BTCPayServer.Controllers
         [BitpayAPIConstraint(false)]
         public async Task<IActionResult> Export(string format, string searchTerm = null, int timezoneOffset = 0)
         {
-            var model = new InvoiceExport(_NetworkProvider, _CurrencyNameTable, _paymentMethodHandlers);
+            var model = new InvoiceExport(_NetworkProvider, _CurrencyNameTable);
 
             InvoiceQuery invoiceQuery = GetInvoiceQuery(searchTerm, timezoneOffset);
             invoiceQuery.Skip = 0;

@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Models.PaymentRequestViewModels;
+using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
@@ -18,18 +20,21 @@ namespace BTCPayServer.PaymentRequest
         private readonly BTCPayNetworkProvider _BtcPayNetworkProvider;
         private readonly AppService _AppService;
         private readonly CurrencyNameTable _currencies;
+        private readonly IEnumerable<IPaymentMethodHandler> _paymentMethodHandlers;
 
         public PaymentRequestService(
             IHubContext<PaymentRequestHub> hubContext,
             PaymentRequestRepository paymentRequestRepository,
             BTCPayNetworkProvider btcPayNetworkProvider,
             AppService appService,
-            CurrencyNameTable currencies)
+            CurrencyNameTable currencies,
+            IEnumerable<IPaymentMethodHandler> paymentMethodHandlers)
         {
             _PaymentRequestRepository = paymentRequestRepository;
             _BtcPayNetworkProvider = btcPayNetworkProvider;
             _AppService = appService;
             _currencies = currencies;
+            _paymentMethodHandlers = paymentMethodHandlers;
         }
 
         public async Task UpdatePaymentRequestStateIfNeeded(string id)
@@ -105,7 +110,7 @@ namespace BTCPayServer.PaymentRequest
                     Payments = entity.GetPayments().Select(paymentEntity =>
                     {
                         var paymentNetwork = _BtcPayNetworkProvider.GetNetwork(paymentEntity.GetCryptoCode());
-                        var paymentData = paymentEntity.GetCryptoPaymentData();
+                        var paymentData = paymentEntity.GetCryptoPaymentData(_paymentMethodHandlers);
                         string link = null;
                         string txId = null;
                         switch (paymentData)

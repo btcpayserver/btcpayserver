@@ -74,6 +74,7 @@ namespace BTCPayServer.Controllers
             logs.Write("Creation of invoice starting");
             var entity = new InvoiceEntity
             {
+                PaymentMethodHandlers = _paymentMethodHandlers,
                 Version = InvoiceEntity.Lastest_Version,
                 InvoiceTime = DateTimeOffset.UtcNow,
                 Networks = _NetworkProvider
@@ -224,7 +225,7 @@ namespace BTCPayServer.Controllers
                 await _InvoiceRepository.AddInvoiceLogs(entity.Id, logs);
             });
             _EventAggregator.Publish(new Events.InvoiceEvent(entity, 1001, InvoiceEvent.Created));
-            var resp = entity.EntityToDTO();
+            var resp = entity.EntityToDTO(_NetworkProvider, _paymentMethodHandlers);
             return new DataWrapper<InvoiceResponse>(resp) { Facade = "pos/invoice" };
         }
 
@@ -271,39 +272,16 @@ namespace BTCPayServer.Controllers
                     var paymentDetails = await handler.CreatePaymentMethodDetails(supportedPaymentMethod, paymentMethod, store, network, preparePayment);
                     paymentMethod.SetPaymentMethodDetails(paymentDetails);
                 }
-
-                Func<Money, Money, bool> compare = null;
-                CurrencyValue limitValue = null;
-                string errorMessage = null;
-                if (supportedPaymentMethod.PaymentId.PaymentType == PaymentTypes.LightningLike &&
-                   storeBlob.LightningMaxValue != null)
+                
+                var errorMessage = await
+                    _paymentMethodHandlers.GetCorrectHandler(supportedPaymentMethod.PaymentId)
+                        .IsPaymentMethodAllowedBasedOnInvoiceAmount(storeBlob, fetchingByCurrencyPair,
+                            paymentMethod.Calculate().Due, supportedPaymentMethod.PaymentId);
+                if (errorMessage != null)
                 {
-                    compare = (a, b) => a > b;
-                    limitValue = storeBlob.LightningMaxValue;
-                    errorMessage = "The amount of the invoice is too high to be paid with lightning";
+                    logs.Write($"{logPrefix} {errorMessage}");
+                    return null;
                 }
-                else if (supportedPaymentMethod.PaymentId.PaymentType == PaymentTypes.BTCLike &&
-                   storeBlob.OnChainMinValue != null)
-                {
-                    compare = (a, b) => a < b;
-                    limitValue = storeBlob.OnChainMinValue;
-                    errorMessage = "The amount of the invoice is too low to be paid on chain";
-                }
-
-                if (compare != null)
-                {
-                    var limitValueRate = await fetchingByCurrencyPair[new CurrencyPair(network.CryptoCode, limitValue.Currency)];
-                    if (limitValueRate.BidAsk != null)
-                    {
-                        var limitValueCrypto = Money.Coins(limitValue.Value / limitValueRate.BidAsk.Bid);
-                        if (compare(paymentMethod.Calculate().Due, limitValueCrypto))
-                        {
-                            logs.Write($"{logPrefix} {errorMessage}");
-                            return null;
-                        }
-                    }
-                }
-                ///////////////
 
 
 #pragma warning disable CS0618

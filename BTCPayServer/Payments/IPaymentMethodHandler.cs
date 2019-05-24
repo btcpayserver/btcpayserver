@@ -1,9 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
+using BTCPayServer.Models.InvoicingModels;
+using BTCPayServer.Rating;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Rates;
+using NBitcoin;
+using NBitpayClient;
+using InvoiceResponse = BTCPayServer.Models.InvoiceResponse;
 
 namespace BTCPayServer.Payments
 {
@@ -32,8 +37,25 @@ namespace BTCPayServer.Payments
         object PreparePayment(ISupportedPaymentMethod supportedPaymentMethod, StoreData store, BTCPayNetwork network);
         
         bool CanHandle(PaymentMethodId paymentMethodId);
+
+        void PrepareInvoiceDto(InvoiceResponse invoiceResponse, InvoiceEntity invoiceEntity,
+            InvoiceCryptoInfo invoiceCryptoInfo,
+            PaymentMethodAccounting accounting, PaymentMethod info);
+        
         
         string ToPrettyString(PaymentMethodId paymentMethodId);
+
+        Task PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse);
+        string GetCryptoImage(PaymentMethodId paymentMethodId);
+        string GetPaymentMethodName(PaymentMethodId paymentMethodId);
+
+        Task<string> IsPaymentMethodAllowedBasedOnInvoiceAmount(StoreBlob storeBlob,
+            Dictionary<CurrencyPair, Task<RateResult>> rate,
+            Money amount, PaymentMethodId paymentMethodId);
+        
+        IEnumerable<PaymentMethodId> GetSupportedPaymentMethods();
+
+        CryptoPaymentData GetCryptoPaymentData(PaymentEntity paymentEntity);
     }
 
     public interface IPaymentMethodHandler<T> : IPaymentMethodHandler where T : ISupportedPaymentMethod
@@ -45,7 +67,22 @@ namespace BTCPayServer.Payments
     {
         public abstract string PrettyDescription { get; }
         public abstract PaymentTypes PaymentType { get; }
-        public abstract Task<IPaymentMethodDetails> CreatePaymentMethodDetails(T supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store, BTCPayNetwork network, object preparePaymentObject);
+
+        public abstract Task<IPaymentMethodDetails> CreatePaymentMethodDetails(T supportedPaymentMethod,
+            PaymentMethod paymentMethod, StoreData store, BTCPayNetwork network, object preparePaymentObject);
+
+        public abstract void PrepareInvoiceDto(InvoiceResponse invoiceResponse, InvoiceEntity invoiceEntity,
+            InvoiceCryptoInfo invoiceCryptoInfo, PaymentMethodAccounting accounting, PaymentMethod info);
+
+        public abstract Task PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse);
+        public abstract string GetCryptoImage(PaymentMethodId paymentMethodId);
+        public abstract string GetPaymentMethodName(PaymentMethodId paymentMethodId);
+        public abstract Task<string> IsPaymentMethodAllowedBasedOnInvoiceAmount(StoreBlob storeBlob,
+            Dictionary<CurrencyPair, Task<RateResult>> rate, Money amount, PaymentMethodId paymentMethodId);
+        public abstract IEnumerable<PaymentMethodId> GetSupportedPaymentMethods();
+        public abstract CryptoPaymentData GetCryptoPaymentData(PaymentEntity paymentEntity);
+
+
         public virtual object PreparePayment(T supportedPaymentMethod, StoreData store, BTCPayNetwork network)
         {
             return null;

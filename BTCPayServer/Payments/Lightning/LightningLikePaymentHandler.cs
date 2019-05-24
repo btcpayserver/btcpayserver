@@ -8,9 +8,15 @@ using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
+using BTCPayServer.Models;
+using BTCPayServer.Models.InvoicingModels;
+using BTCPayServer.Rating;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Rates;
 using NBitcoin;
+using NBitpayClient;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Payments.Lightning
 {
@@ -20,15 +26,18 @@ namespace BTCPayServer.Payments.Lightning
 
         NBXplorerDashboard _Dashboard;
         private readonly LightningClientFactoryService _lightningClientFactory;
+        private readonly BTCPayNetworkProvider _networkProvider;
         private readonly SocketFactory _socketFactory;
 
         public LightningLikePaymentHandler(
             NBXplorerDashboard dashboard,
             LightningClientFactoryService lightningClientFactory,
+            BTCPayNetworkProvider networkProvider,
             SocketFactory socketFactory)
         {
             _Dashboard = dashboard;
             _lightningClientFactory = lightningClientFactory;
+            _networkProvider = networkProvider;
             _socketFactory = socketFactory;
         }
 
@@ -127,6 +136,84 @@ namespace BTCPayServer.Payments.Lightning
             {
                 throw new PaymentMethodUnavailableException($"Error while connecting to the lightning node via {nodeInfo.Host}:{nodeInfo.Port} ({ex.Message})");
             }
+        }
+        
+        public override IEnumerable<PaymentMethodId> GetSupportedPaymentMethods()
+        {
+            return _networkProvider.GetAll().Select(network => new PaymentMethodId(network.CryptoCode, PaymentTypes.LightningLike));
+        }
+        
+        
+        public override async Task<string> IsPaymentMethodAllowedBasedOnInvoiceAmount(StoreBlob storeBlob,
+            Dictionary<CurrencyPair, Task<RateResult>> rate, Money amount, PaymentMethodId paymentMethodId)
+        {
+            if (storeBlob.OnChainMinValue == null)
+            {
+                return null;
+            }
+
+            var limitValueRate = await rate[new CurrencyPair(paymentMethodId.CryptoCode, storeBlob.OnChainMinValue.Currency)];
+            
+            if (limitValueRate.BidAsk != null)
+            {
+                var limitValueCrypto = Money.Coins(storeBlob.OnChainMinValue.Value / limitValueRate.BidAsk.Bid);
+
+                if (amount < limitValueCrypto)
+                {
+                    return null;
+                }
+            }
+            return "The amount of the invoice is too high to be paid with lightning";
+        }
+        public override CryptoPaymentData GetCryptoPaymentData(PaymentEntity paymentEntity)
+        {
+#pragma warning disable CS0618
+            return JsonConvert.DeserializeObject<LightningLikePaymentData>(paymentEntity.CryptoPaymentData);
+#pragma warning restore CS0618
+        }
+
+        public override void PrepareInvoiceDto(InvoiceResponse invoiceResponse, InvoiceEntity invoiceEntity,
+            InvoiceCryptoInfo invoiceCryptoInfo, PaymentMethodAccounting accounting, PaymentMethod info)
+        {
+            invoiceCryptoInfo.PaymentUrls = new InvoicePaymentUrls()
+            {
+                BOLT11 = $"lightning:{invoiceCryptoInfo.Address}"
+            };
+        }
+
+        public override Task PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse)
+        {
+            var paymentMethodId = new PaymentMethodId(model.CryptoCode, PaymentTypes.LightningLike);
+            
+            var cryptoInfo = invoiceResponse.CryptoInfo.First(o => o.GetpaymentMethodId() == paymentMethodId);
+            var network = _networkProvider.GetNetwork(model.CryptoCode);
+            model.IsLightning = false;
+            model.PaymentMethodName = GetPaymentMethodName(network);
+            model.CryptoImage = GetCryptoImage(network);
+            model.InvoiceBitcoinUrl = cryptoInfo.PaymentUrls.BOLT11;
+            model.InvoiceBitcoinUrlQR = cryptoInfo.PaymentUrls.BOLT11.ToUpperInvariant();
+            return Task.CompletedTask;
+        }
+
+        public override string GetCryptoImage(PaymentMethodId paymentMethodId)
+        {
+            var network = _networkProvider.GetNetwork(paymentMethodId.CryptoCode);
+            return GetCryptoImage(network);
+        }
+        
+        private string GetCryptoImage(BTCPayNetwork network)
+        {
+            return network.LightningImagePath;
+        }
+        public override string GetPaymentMethodName(PaymentMethodId paymentMethodId)
+        {
+            var network = _networkProvider.GetNetwork(paymentMethodId.CryptoCode);
+            return GetPaymentMethodName(network);
+        }
+        
+        private string GetPaymentMethodName(BTCPayNetwork network)
+        {
+            return $"{network.DisplayName} (Lightning)";
         }
     }
 }

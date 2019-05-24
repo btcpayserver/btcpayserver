@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
@@ -12,11 +13,13 @@ namespace BTCPayServer.Services.Invoices.Export
 {
     public class InvoiceExport
     {
+        private readonly IEnumerable<IPaymentMethodHandler> _paymentMethodHandlers;
         public BTCPayNetworkProvider Networks { get; }
         public CurrencyNameTable Currencies { get; }
 
-        public InvoiceExport(BTCPayNetworkProvider networks, CurrencyNameTable currencies)
+        public InvoiceExport(BTCPayNetworkProvider networks, CurrencyNameTable currencies, IEnumerable<IPaymentMethodHandler> paymentMethodHandlers)
         {
+            _paymentMethodHandlers = paymentMethodHandlers;
             Networks = networks;
             Currencies = currencies;
         }
@@ -65,7 +68,7 @@ namespace BTCPayServer.Services.Invoices.Export
                 if (!payment.Accounted)
                     continue;
                 var cryptoCode = payment.GetPaymentMethodId().CryptoCode;
-                var pdata = payment.GetCryptoPaymentData();
+                var pdata = payment.GetCryptoPaymentData(_paymentMethodHandlers);
 
                 var pmethod = invoice.GetPaymentMethod(payment.GetPaymentMethodId(), Networks);
                 var paidAfterNetworkFees = pdata.GetValue() - payment.NetworkFee;
@@ -78,7 +81,7 @@ namespace BTCPayServer.Services.Invoices.Export
                     CryptoCode = cryptoCode,
                     ConversionRate = pmethod.Rate,
                     PaymentType = payment.GetPaymentMethodId().PaymentType == Payments.PaymentTypes.BTCLike ? "OnChain" : "OffChain",
-                    Destination = payment.GetCryptoPaymentData().GetDestination(Networks.GetNetwork(cryptoCode)),
+                    Destination = payment.GetCryptoPaymentData(_paymentMethodHandlers).GetDestination(Networks.GetNetwork(cryptoCode)),
                     Paid = pdata.GetValue().ToString(CultureInfo.InvariantCulture),
                     PaidCurrency = Math.Round(pdata.GetValue() * pmethod.Rate, currency.NumberDecimalDigits).ToString(CultureInfo.InvariantCulture),
                     // Adding NetworkFee because Paid doesn't take into account network fees

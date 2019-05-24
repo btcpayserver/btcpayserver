@@ -37,9 +37,10 @@ namespace BTCPayServer.Services.Invoices
         }
 
         private ApplicationDbContextFactory _ContextFactory;
+        private readonly IEnumerable<IPaymentMethodHandler> _paymentMethodHandlers;
         private readonly BTCPayNetworkProvider _Networks;
         private CustomThreadPool _IndexerThread;
-        public InvoiceRepository(ApplicationDbContextFactory contextFactory, string dbreezePath, BTCPayNetworkProvider networks)
+        public InvoiceRepository(ApplicationDbContextFactory contextFactory, string dbreezePath, BTCPayNetworkProvider networks, IEnumerable<IPaymentMethodHandler> paymentMethodHandlers)
         {
             int retryCount = 0;
 retry:
@@ -50,6 +51,7 @@ retry:
             catch when (retryCount++ < 5) { goto retry; }
             _IndexerThread = new CustomThreadPool(1, "Invoice Indexer");
             _ContextFactory = contextFactory;
+            _paymentMethodHandlers = paymentMethodHandlers;
             _Networks = networks;
         }
 
@@ -201,7 +203,7 @@ retry:
             }
         }
 
-        private static string GetDestination(PaymentMethod paymentMethod, Network network)
+        private string GetDestination(PaymentMethod paymentMethod, Network network)
         {
             // For legacy reason, BitcoinLikeOnChain is putting the hashes of addresses in database
             if (paymentMethod.GetId().PaymentType == Payments.PaymentTypes.BTCLike)
@@ -279,7 +281,7 @@ retry:
             }
         }
 
-        private static void MarkUnassigned(string invoiceId, InvoiceEntity entity, ApplicationDbContext context, PaymentMethodId paymentMethodId)
+        private void MarkUnassigned(string invoiceId, InvoiceEntity entity, ApplicationDbContext context, PaymentMethodId paymentMethodId)
         {
             foreach (var address in entity.GetPaymentMethods())
             {
@@ -396,7 +398,8 @@ retry:
 
         private InvoiceEntity ToEntity(Data.InvoiceData invoice)
         {
-            var entity = ToObject(invoice.Blob);
+            var entity = ToObject<InvoiceEntity>(invoice.Blob);
+            entity.PaymentMethodHandlers = _paymentMethodHandlers;
             PaymentMethodDictionary paymentMethods = null;
 #pragma warning disable CS0618
             entity.Payments = invoice.Payments.Select(p =>
@@ -607,7 +610,8 @@ retry:
                 var invoice = context.Invoices.Find(invoiceId);
                 if (invoice == null)
                     return null;
-                InvoiceEntity invoiceEntity = ToObject(invoice.Blob);
+                InvoiceEntity invoiceEntity = ToObject<InvoiceEntity>(invoice.Blob, network.NBitcoinNetwork);
+                invoiceEntity.PaymentMethodHandlers = _paymentMethodHandlers;
                 PaymentMethod paymentMethod = invoiceEntity.GetPaymentMethod(new PaymentMethodId(network.CryptoCode, paymentData.GetPaymentType()), null);
                 IPaymentMethodDetails paymentMethodDetails = paymentMethod.GetPaymentMethodDetails();
                 PaymentEntity entity = new PaymentEntity
@@ -659,7 +663,7 @@ retry:
             {
                 foreach (var payment in payments)
                 {
-                    var paymentData = payment.GetCryptoPaymentData();
+                    var paymentData = payment.GetCryptoPaymentData(_paymentMethodHandlers);
                     var data = new PaymentData();
                     data.Id = paymentData.GetPaymentId();
                     data.Accounted = payment.Accounted;

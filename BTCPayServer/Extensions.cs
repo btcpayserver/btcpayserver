@@ -39,11 +39,6 @@ namespace BTCPayServer
 {
     public static class Extensions
     {
-        public static IPaymentMethodHandler GetCorrectHandler(
-            this IEnumerable<IPaymentMethodHandler> paymentMethodHandlers, PaymentMethodId paymentMethodId)
-        {
-            return paymentMethodHandlers.First(handler => handler.CanHandle(paymentMethodId));
-        }
         public static string PrettyPrint(this TimeSpan expiration)
         {
             StringBuilder builder = new StringBuilder();
@@ -368,6 +363,12 @@ namespace BTCPayServer
                 return input.Substring(0, input.Length - suffixToRemove.Length);
             }
             else return input;
+        }
+
+        public static IPaymentMethodHandler GetCorrectHandler(
+            this IEnumerable<IPaymentMethodHandler> paymentMethodHandlers, PaymentMethodId paymentMethodId)
+        {
+            return paymentMethodHandlers.First(handler => handler.CanHandle(paymentMethodId));
         }
     }
 }

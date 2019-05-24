@@ -44,6 +44,7 @@ namespace BTCPayServer.HostedServices
         InvoiceRepository _InvoiceRepository;
         BTCPayNetworkProvider _NetworkProvider;
         private readonly EmailSenderFactory _EmailSenderFactory;
+        private readonly IEnumerable<IPaymentMethodHandler> _paymentMethodHandlers;
 
         public InvoiceNotificationManager(
             IHttpClientFactory httpClientFactory,
@@ -52,7 +53,8 @@ namespace BTCPayServer.HostedServices
             InvoiceRepository invoiceRepository,
             BTCPayNetworkProvider networkProvider,
             ILogger<InvoiceNotificationManager> logger,
-            EmailSenderFactory emailSenderFactory)
+            EmailSenderFactory emailSenderFactory, 
+            IEnumerable<IPaymentMethodHandler> paymentMethodHandlers)
         {
             _Client = httpClientFactory.CreateClient();
             _JobClient = jobClient;
@@ -60,11 +62,12 @@ namespace BTCPayServer.HostedServices
             _InvoiceRepository = invoiceRepository;
             _NetworkProvider = networkProvider;
             _EmailSenderFactory = emailSenderFactory;
+            _paymentMethodHandlers = paymentMethodHandlers;
         }
 
         void Notify(InvoiceEntity invoice, InvoiceEvent invoiceEvent, bool extendedNotification)
         {
-            var dto = invoice.EntityToDTO();
+            var dto = invoice.EntityToDTO( _paymentMethodHandlers);
             var notification = new InvoicePaymentNotificationEventWrapper()
             {
                 Data = new InvoicePaymentNotification()

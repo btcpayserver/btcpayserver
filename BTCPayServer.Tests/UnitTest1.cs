@@ -60,6 +60,7 @@ using BTCPayServer.Models.AccountViewModels;
 using BTCPayServer.Services.U2F.Models;
 using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using NBXplorer.DerivationStrategy;
 
 namespace BTCPayServer.Tests
@@ -98,44 +99,45 @@ namespace BTCPayServer.Tests
         [Trait("Fast", "Fast")]
         public void CanCalculateCryptoDue2()
         {
-            var dummy = new Key().PubKey.GetAddress(ScriptPubKeyType.Legacy, Network.RegTest).ToString();
 #pragma warning disable CS0618
-            InvoiceEntity invoiceEntity = new InvoiceEntity();
+            var dummy = new Key().PubKey.GetAddress(ScriptPubKeyType.Legacy, Network.RegTest).ToString();
+            var paymentMethodHandlers = new IPaymentMethodHandler[]
+            {
+                new BitcoinLikePaymentHandler(null, null, null, null),
+                new LightningLikePaymentHandler(null, null, null, null),
+            };
+            InvoiceEntity invoiceEntity = new InvoiceEntity() {PaymentMethodHandlers = paymentMethodHandlers};
             invoiceEntity.Payments = new System.Collections.Generic.List<PaymentEntity>();
-            invoiceEntity.ProductInformation = new ProductInformation() { Price = 100 };
+            invoiceEntity.ProductInformation = new ProductInformation() {Price = 100};
             PaymentMethodDictionary paymentMethods = new PaymentMethodDictionary();
-            paymentMethods.Add(new PaymentMethod()
-            {
-                CryptoCode = "BTC",
-                Rate = 10513.44m,
-            }.SetPaymentMethodDetails(new BTCPayServer.Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod()
-            {
-                NextNetworkFee = Money.Coins(0.00000100m),
-                DepositAddress = dummy
-            }));
-            paymentMethods.Add(new PaymentMethod()
-            {
-                CryptoCode = "LTC",
-                Rate = 216.79m
-            }.SetPaymentMethodDetails(new BTCPayServer.Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod()
-            {
-                NextNetworkFee = Money.Coins(0.00010000m),
-                DepositAddress = dummy
-            }));
+            paymentMethods.Add(new PaymentMethod() {CryptoCode = "BTC", Rate = 10513.44m,}.SetPaymentMethodDetails(
+                new BTCPayServer.Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod()
+                {
+                    NextNetworkFee = Money.Coins(0.00000100m), DepositAddress = dummy
+                }));
+            paymentMethods.Add(new PaymentMethod() {CryptoCode = "LTC", Rate = 216.79m}.SetPaymentMethodDetails(
+                new BTCPayServer.Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod()
+                {
+                    NextNetworkFee = Money.Coins(0.00010000m), DepositAddress = dummy
+                }));
             invoiceEntity.SetPaymentMethods(paymentMethods);
 
             var btc = invoiceEntity.GetPaymentMethod(new PaymentMethodId("BTC", PaymentTypes.BTCLike), null);
             var accounting = btc.Calculate();
 
-            invoiceEntity.Payments.Add(new PaymentEntity() { Accounted = true, CryptoCode = "BTC", NetworkFee = 0.00000100m }.SetCryptoPaymentData(new BitcoinLikePaymentData()
-            {
-                Output = new TxOut() { Value = Money.Coins(0.00151263m) }
-            }));
+            invoiceEntity.Payments.Add(
+                new PaymentEntity() {Accounted = true, CryptoCode = "BTC", NetworkFee = 0.00000100m}
+                    .SetCryptoPaymentData(new BitcoinLikePaymentData()
+                    {
+                        Output = new TxOut() {Value = Money.Coins(0.00151263m)}
+                    }));
             accounting = btc.Calculate();
-            invoiceEntity.Payments.Add(new PaymentEntity() { Accounted = true, CryptoCode = "BTC", NetworkFee = 0.00000100m }.SetCryptoPaymentData(new BitcoinLikePaymentData()
-            {
-                Output = new TxOut() { Value = accounting.Due }
-            }));
+            invoiceEntity.Payments.Add(
+                new PaymentEntity() {Accounted = true, CryptoCode = "BTC", NetworkFee = 0.00000100m}
+                    .SetCryptoPaymentData(new BitcoinLikePaymentData()
+                    {
+                        Output = new TxOut() {Value = accounting.Due}
+                    }));
             accounting = btc.Calculate();
             Assert.Equal(Money.Zero, accounting.Due);
             Assert.Equal(Money.Zero, accounting.DueUncapped);
@@ -195,125 +197,167 @@ namespace BTCPayServer.Tests
         [Trait("Fast", "Fast")]
         public void CanCalculateCryptoDue()
         {
-            var entity = new InvoiceEntity();
+                var paymentMethodHandlers = new IPaymentMethodHandler[]
+                {
+                    new BitcoinLikePaymentHandler(null, null, null, null),
+                    new LightningLikePaymentHandler(null, null,null, null),
+                };
+                var entity = new InvoiceEntity()
+                {
+                    PaymentMethodHandlers = paymentMethodHandlers
+                };
 #pragma warning disable CS0618
-            entity.Payments = new System.Collections.Generic.List<PaymentEntity>();
-            entity.SetPaymentMethod(new PaymentMethod() { CryptoCode = "BTC", Rate = 5000, NextNetworkFee = Money.Coins(0.1m) });
-            entity.ProductInformation = new ProductInformation() { Price = 5000 };
+                entity.Payments = new System.Collections.Generic.List<PaymentEntity>();
+                entity.SetPaymentMethod(new PaymentMethod()
+                {
+                    CryptoCode = "BTC", Rate = 5000, NextNetworkFee = Money.Coins(0.1m)
+                });
+                entity.ProductInformation = new ProductInformation() {Price = 5000};
 
             var paymentMethod = entity.GetPaymentMethods().TryGet("BTC", PaymentTypes.BTCLike);
             var accounting = paymentMethod.Calculate();
             Assert.Equal(Money.Coins(1.1m), accounting.Due);
             Assert.Equal(Money.Coins(1.1m), accounting.TotalDue);
 
-            entity.Payments.Add(new PaymentEntity() { Output = new TxOut(Money.Coins(0.5m), new Key()), Accounted = true, NetworkFee = 0.1m });
+                entity.Payments.Add(new PaymentEntity()
+                {
+                    Output = new TxOut(Money.Coins(0.5m), new Key()), Accounted = true, NetworkFee = 0.1m
+                });
 
-            accounting = paymentMethod.Calculate();
-            //Since we need to spend one more txout, it should be 1.1 - 0,5 + 0.1
-            Assert.Equal(Money.Coins(0.7m), accounting.Due);
-            Assert.Equal(Money.Coins(1.2m), accounting.TotalDue);
+                accounting = paymentMethod.Calculate();
+                //Since we need to spend one more txout, it should be 1.1 - 0,5 + 0.1
+                Assert.Equal(Money.Coins(0.7m), accounting.Due);
+                Assert.Equal(Money.Coins(1.2m), accounting.TotalDue);
 
-            entity.Payments.Add(new PaymentEntity() { Output = new TxOut(Money.Coins(0.2m), new Key()), Accounted = true, NetworkFee = 0.1m });
+                entity.Payments.Add(new PaymentEntity()
+                {
+                    Output = new TxOut(Money.Coins(0.2m), new Key()), Accounted = true, NetworkFee = 0.1m
+                });
 
-            accounting = paymentMethod.Calculate();
-            Assert.Equal(Money.Coins(0.6m), accounting.Due);
-            Assert.Equal(Money.Coins(1.3m), accounting.TotalDue);
+                accounting = paymentMethod.Calculate();
+                Assert.Equal(Money.Coins(0.6m), accounting.Due);
+                Assert.Equal(Money.Coins(1.3m), accounting.TotalDue);
 
-            entity.Payments.Add(new PaymentEntity() { Output = new TxOut(Money.Coins(0.6m), new Key()), Accounted = true, NetworkFee = 0.1m });
+                entity.Payments.Add(new PaymentEntity()
+                {
+                    Output = new TxOut(Money.Coins(0.6m), new Key()), Accounted = true, NetworkFee = 0.1m
+                });
 
-            accounting = paymentMethod.Calculate();
-            Assert.Equal(Money.Zero, accounting.Due);
-            Assert.Equal(Money.Coins(1.3m), accounting.TotalDue);
+                accounting = paymentMethod.Calculate();
+                Assert.Equal(Money.Zero, accounting.Due);
+                Assert.Equal(Money.Coins(1.3m), accounting.TotalDue);
 
-            entity.Payments.Add(new PaymentEntity() { Output = new TxOut(Money.Coins(0.2m), new Key()), Accounted = true });
+                entity.Payments.Add(new PaymentEntity()
+                {
+                    Output = new TxOut(Money.Coins(0.2m), new Key()), Accounted = true
+                });
 
-            accounting = paymentMethod.Calculate();
-            Assert.Equal(Money.Zero, accounting.Due);
-            Assert.Equal(Money.Coins(1.3m), accounting.TotalDue);
+                accounting = paymentMethod.Calculate();
+                Assert.Equal(Money.Zero, accounting.Due);
+                Assert.Equal(Money.Coins(1.3m), accounting.TotalDue);
 
-            entity = new InvoiceEntity();
-            entity.ProductInformation = new ProductInformation() { Price = 5000 };
-            PaymentMethodDictionary paymentMethods = new PaymentMethodDictionary();
-            paymentMethods.Add(new PaymentMethod()
-            {
-                CryptoCode = "BTC",
-                Rate = 1000,
-                NextNetworkFee = Money.Coins(0.1m)
-            });
-            paymentMethods.Add(new PaymentMethod()
-            {
-                CryptoCode = "LTC",
-                Rate = 500,
-                NextNetworkFee = Money.Coins(0.01m)
-            });
-            entity.SetPaymentMethods(paymentMethods);
-            entity.Payments = new List<PaymentEntity>();
-            paymentMethod = entity.GetPaymentMethod(new PaymentMethodId("BTC", PaymentTypes.BTCLike), null);
-            accounting = paymentMethod.Calculate();
-            Assert.Equal(Money.Coins(5.1m), accounting.Due);
+                entity = new InvoiceEntity()
+                {
+                    PaymentMethodHandlers = paymentMethodHandlers
+                };
+                entity.ProductInformation = new ProductInformation() {Price = 5000};
+                PaymentMethodDictionary paymentMethods = new PaymentMethodDictionary();
+                paymentMethods.Add(new PaymentMethod()
+                {
+                    CryptoCode = "BTC", Rate = 1000, NextNetworkFee = Money.Coins(0.1m)
+                });
+                paymentMethods.Add(new PaymentMethod()
+                {
+                    CryptoCode = "LTC", Rate = 500, NextNetworkFee = Money.Coins(0.01m)
+                });
+                entity.SetPaymentMethods(paymentMethods);
+                entity.Payments = new List<PaymentEntity>();
+                paymentMethod = entity.GetPaymentMethod(new PaymentMethodId("BTC", PaymentTypes.BTCLike), null);
+                accounting = paymentMethod.Calculate();
+                Assert.Equal(Money.Coins(5.1m), accounting.Due);
 
-            paymentMethod = entity.GetPaymentMethod(new PaymentMethodId("LTC", PaymentTypes.BTCLike), null);
-            accounting = paymentMethod.Calculate();
-            Assert.Equal(Money.Coins(10.01m), accounting.TotalDue);
+                paymentMethod = entity.GetPaymentMethod(new PaymentMethodId("LTC", PaymentTypes.BTCLike), null);
+                accounting = paymentMethod.Calculate();
+                    
+                Assert.Equal(Money.Coins(10.01m), accounting.TotalDue);
 
-            entity.Payments.Add(new PaymentEntity() { CryptoCode = "BTC", Output = new TxOut(Money.Coins(1.0m), new Key()), Accounted = true, NetworkFee = 0.1m });
+                entity.Payments.Add(new PaymentEntity()
+                {
+                    CryptoCode = "BTC",
+                    Output = new TxOut(Money.Coins(1.0m), new Key()),
+                    Accounted = true,
+                    NetworkFee = 0.1m
+                });
 
-            paymentMethod = entity.GetPaymentMethod(new PaymentMethodId("BTC", PaymentTypes.BTCLike), null);
-            accounting = paymentMethod.Calculate();
-            Assert.Equal(Money.Coins(4.2m), accounting.Due);
-            Assert.Equal(Money.Coins(1.0m), accounting.CryptoPaid);
-            Assert.Equal(Money.Coins(1.0m), accounting.Paid);
-            Assert.Equal(Money.Coins(5.2m), accounting.TotalDue);
-            Assert.Equal(2, accounting.TxRequired);
+                paymentMethod = entity.GetPaymentMethod(new PaymentMethodId("BTC", PaymentTypes.BTCLike), null);
+                accounting = paymentMethod.Calculate();
+                Assert.Equal(Money.Coins(4.2m), accounting.Due);
+                Assert.Equal(Money.Coins(1.0m), accounting.CryptoPaid);
+                Assert.Equal(Money.Coins(1.0m), accounting.Paid);
+                Assert.Equal(Money.Coins(5.2m), accounting.TotalDue);
+                Assert.Equal(2, accounting.TxRequired);
 
-            paymentMethod = entity.GetPaymentMethod(new PaymentMethodId("LTC", PaymentTypes.BTCLike), null);
-            accounting = paymentMethod.Calculate();
-            Assert.Equal(Money.Coins(10.01m + 0.1m * 2 - 2.0m /* 8.21m */), accounting.Due);
-            Assert.Equal(Money.Coins(0.0m), accounting.CryptoPaid);
-            Assert.Equal(Money.Coins(2.0m), accounting.Paid);
-            Assert.Equal(Money.Coins(10.01m + 0.1m * 2), accounting.TotalDue);
+                paymentMethod = entity.GetPaymentMethod(new PaymentMethodId("LTC", PaymentTypes.BTCLike), null);
+                accounting = paymentMethod.Calculate();
+                Assert.Equal(Money.Coins(10.01m + 0.1m * 2 - 2.0m /* 8.21m */), accounting.Due);
+                Assert.Equal(Money.Coins(0.0m), accounting.CryptoPaid);
+                Assert.Equal(Money.Coins(2.0m), accounting.Paid);
+                Assert.Equal(Money.Coins(10.01m + 0.1m * 2), accounting.TotalDue);
 
-            entity.Payments.Add(new PaymentEntity() { CryptoCode = "LTC", Output = new TxOut(Money.Coins(1.0m), new Key()), Accounted = true, NetworkFee = 0.01m });
+                entity.Payments.Add(new PaymentEntity()
+                {
+                    CryptoCode = "LTC",
+                    Output = new TxOut(Money.Coins(1.0m), new Key()),
+                    Accounted = true,
+                    NetworkFee = 0.01m
+                });
+                
+                paymentMethod = entity.GetPaymentMethod(new PaymentMethodId("BTC", PaymentTypes.BTCLike), null);
+                accounting = paymentMethod.Calculate();
+                Assert.Equal(Money.Coins(4.2m - 0.5m + 0.01m / 2), accounting.Due);
+                Assert.Equal(Money.Coins(1.0m), accounting.CryptoPaid);
+                Assert.Equal(Money.Coins(1.5m), accounting.Paid);
+                Assert.Equal(Money.Coins(5.2m + 0.01m / 2), accounting.TotalDue); // The fee for LTC added
+                Assert.Equal(2, accounting.TxRequired);
 
+                paymentMethod = entity.GetPaymentMethod(new PaymentMethodId("LTC", PaymentTypes.BTCLike), null);
+                accounting = paymentMethod.Calculate();
+                Assert.Equal(Money.Coins(8.21m - 1.0m + 0.01m), accounting.Due);
+                Assert.Equal(Money.Coins(1.0m), accounting.CryptoPaid);
+                Assert.Equal(Money.Coins(3.0m), accounting.Paid);
+                Assert.Equal(Money.Coins(10.01m + 0.1m * 2 + 0.01m), accounting.TotalDue);
+                Assert.Equal(2, accounting.TxRequired);
 
-            paymentMethod = entity.GetPaymentMethod(new PaymentMethodId("BTC", PaymentTypes.BTCLike), null);
-            accounting = paymentMethod.Calculate();
-            Assert.Equal(Money.Coins(4.2m - 0.5m + 0.01m / 2), accounting.Due);
-            Assert.Equal(Money.Coins(1.0m), accounting.CryptoPaid);
-            Assert.Equal(Money.Coins(1.5m), accounting.Paid);
-            Assert.Equal(Money.Coins(5.2m + 0.01m / 2), accounting.TotalDue); // The fee for LTC added
-            Assert.Equal(2, accounting.TxRequired);
+                var remaining = Money.Coins(4.2m - 0.5m + 0.01m / 2);
+                entity.Payments.Add(new PaymentEntity()
+                {
+                    CryptoCode = "BTC",
+                    Output = new TxOut(remaining, new Key()),
+                    Accounted = true,
+                    NetworkFee = 0.1m
+                });
 
-            paymentMethod = entity.GetPaymentMethod(new PaymentMethodId("LTC", PaymentTypes.BTCLike), null);
-            accounting = paymentMethod.Calculate();
-            Assert.Equal(Money.Coins(8.21m - 1.0m + 0.01m), accounting.Due);
-            Assert.Equal(Money.Coins(1.0m), accounting.CryptoPaid);
-            Assert.Equal(Money.Coins(3.0m), accounting.Paid);
-            Assert.Equal(Money.Coins(10.01m + 0.1m * 2 + 0.01m), accounting.TotalDue);
-            Assert.Equal(2, accounting.TxRequired);
+                paymentMethod = entity.GetPaymentMethod(new PaymentMethodId("BTC", PaymentTypes.BTCLike), null);
+                accounting = paymentMethod.Calculate();
+                Assert.Equal(Money.Zero, accounting.Due);
+                Assert.Equal(Money.Coins(1.0m) + remaining, accounting.CryptoPaid);
+                Assert.Equal(Money.Coins(1.5m) + remaining, accounting.Paid);
+                Assert.Equal(Money.Coins(5.2m + 0.01m / 2), accounting.TotalDue);
+                Assert.Equal(accounting.Paid, accounting.TotalDue);
+                Assert.Equal(2, accounting.TxRequired);
 
-            var remaining = Money.Coins(4.2m - 0.5m + 0.01m / 2);
-            entity.Payments.Add(new PaymentEntity() { CryptoCode = "BTC", Output = new TxOut(remaining, new Key()), Accounted = true, NetworkFee = 0.1m });
-
-            paymentMethod = entity.GetPaymentMethod(new PaymentMethodId("BTC", PaymentTypes.BTCLike), null);
-            accounting = paymentMethod.Calculate();
-            Assert.Equal(Money.Zero, accounting.Due);
-            Assert.Equal(Money.Coins(1.0m) + remaining, accounting.CryptoPaid);
-            Assert.Equal(Money.Coins(1.5m) + remaining, accounting.Paid);
-            Assert.Equal(Money.Coins(5.2m + 0.01m / 2), accounting.TotalDue);
-            Assert.Equal(accounting.Paid, accounting.TotalDue);
-            Assert.Equal(2, accounting.TxRequired);
-
-            paymentMethod = entity.GetPaymentMethod(new PaymentMethodId("LTC", PaymentTypes.BTCLike), null);
-            accounting = paymentMethod.Calculate();
-            Assert.Equal(Money.Zero, accounting.Due);
-            Assert.Equal(Money.Coins(1.0m), accounting.CryptoPaid);
-            Assert.Equal(Money.Coins(3.0m) + remaining * 2, accounting.Paid);
-            // Paying 2 BTC fee, LTC fee removed because fully paid
-            Assert.Equal(Money.Coins(10.01m + 0.1m * 2 + 0.1m * 2 /* + 0.01m no need to pay this fee anymore */), accounting.TotalDue);
-            Assert.Equal(1, accounting.TxRequired);
-            Assert.Equal(accounting.Paid, accounting.TotalDue);
+                paymentMethod = entity.GetPaymentMethod(new PaymentMethodId("LTC", PaymentTypes.BTCLike), null);
+                accounting = paymentMethod.Calculate();
+                Assert.Equal(Money.Zero, accounting.Due);
+                Assert.Equal(Money.Coins(1.0m), accounting.CryptoPaid);
+                Assert.Equal(Money.Coins(3.0m) + remaining * 2, accounting.Paid);
+                // Paying 2 BTC fee, LTC fee removed because fully paid
+                Assert.Equal(Money.Coins(10.01m + 0.1m * 2 + 0.1m * 2 /* + 0.01m no need to pay this fee anymore */),
+                    accounting.TotalDue);
+                Assert.Equal(1, accounting.TxRequired);
+                Assert.Equal(accounting.Paid, accounting.TotalDue);
 #pragma warning restore CS0618
+            
         }
 
         [Fact]
@@ -353,15 +397,26 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
-        [Trait("Integration", "Integration")]
+        [Trait("Fast", "Fast")]
         public void CanAcceptInvoiceWithTolerance()
         {
-            var entity = new InvoiceEntity();
+                var paymentMethodHandlers = new IPaymentMethodHandler[]
+                {
+                    new BitcoinLikePaymentHandler(null, null, null, null),
+                    new LightningLikePaymentHandler(null, null, null, null),
+                };
+                var entity = new InvoiceEntity()
+                {
+                    PaymentMethodHandlers = paymentMethodHandlers
+                };
 #pragma warning disable CS0618
-            entity.Payments = new List<PaymentEntity>();
-            entity.SetPaymentMethod(new PaymentMethod() { CryptoCode = "BTC", Rate = 5000, NextNetworkFee = Money.Coins(0.1m) });
-            entity.ProductInformation = new ProductInformation() { Price = 5000 };
-            entity.PaymentTolerance = 0;
+                entity.Payments = new List<PaymentEntity>();
+                entity.SetPaymentMethod(new PaymentMethod()
+                {
+                    CryptoCode = "BTC", Rate = 5000, NextNetworkFee = Money.Coins(0.1m)
+                });
+                entity.ProductInformation = new ProductInformation() {Price = 5000};
+                entity.PaymentTolerance = 0;
 
 
             var paymentMethod = entity.GetPaymentMethods().TryGet("BTC", PaymentTypes.BTCLike);
@@ -370,13 +425,13 @@ namespace BTCPayServer.Tests
             Assert.Equal(Money.Coins(1.1m), accounting.TotalDue);
             Assert.Equal(Money.Coins(1.1m), accounting.MinimumTotalDue);
 
-            entity.PaymentTolerance = 10;
-            accounting = paymentMethod.Calculate();
-            Assert.Equal(Money.Coins(0.99m), accounting.MinimumTotalDue);
+                entity.PaymentTolerance = 10;
+                accounting = paymentMethod.Calculate();
+                Assert.Equal(Money.Coins(0.99m), accounting.MinimumTotalDue);
 
-            entity.PaymentTolerance = 100;
-            accounting = paymentMethod.Calculate();
-            Assert.Equal(Money.Satoshis(1), accounting.MinimumTotalDue);
+                entity.PaymentTolerance = 100;
+                accounting = paymentMethod.Calculate();
+                Assert.Equal(Money.Satoshis(1), accounting.MinimumTotalDue);
 
         }
 

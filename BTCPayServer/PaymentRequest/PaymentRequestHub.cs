@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using System.Threading;
@@ -95,16 +96,19 @@ namespace BTCPayServer.PaymentRequest
         private readonly IHubContext<PaymentRequestHub> _HubContext;
         private readonly PaymentRequestRepository _PaymentRequestRepository;
         private readonly PaymentRequestService _PaymentRequestService;
+        private readonly IEnumerable<IPaymentMethodHandler> _paymentMethodHandlers;
 
 
         public PaymentRequestStreamer(EventAggregator eventAggregator,
             IHubContext<PaymentRequestHub> hubContext,
             PaymentRequestRepository paymentRequestRepository,
-            PaymentRequestService paymentRequestService) : base(eventAggregator)
+            PaymentRequestService paymentRequestService, 
+            IEnumerable<IPaymentMethodHandler> paymentMethodHandlers) : base(eventAggregator)
         {
             _HubContext = hubContext;
             _PaymentRequestRepository = paymentRequestRepository;
             _PaymentRequestService = paymentRequestService;
+            _paymentMethodHandlers = paymentMethodHandlers;
         }
 
         public override async Task StartAsync(CancellationToken cancellationToken)
@@ -150,7 +154,7 @@ namespace BTCPayServer.PaymentRequest
                     if (invoiceEvent.Name == InvoiceEvent.ReceivedPayment)
                     {
                         await _PaymentRequestService.UpdatePaymentRequestStateIfNeeded(paymentId);
-                        var data = invoiceEvent.Payment.GetCryptoPaymentData();
+                        var data = invoiceEvent.Payment.GetCryptoPaymentData(_paymentMethodHandlers);
                         await _HubContext.Clients.Group(paymentId).SendCoreAsync(PaymentRequestHub.PaymentReceived,
                             new object[]
                             {

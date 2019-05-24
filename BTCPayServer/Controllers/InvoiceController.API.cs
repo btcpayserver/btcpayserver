@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Filters;
 using BTCPayServer.Models;
+using BTCPayServer.Payments;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Authorization;
@@ -20,14 +22,17 @@ namespace BTCPayServer.Controllers
         private InvoiceController _InvoiceController;
         private InvoiceRepository _InvoiceRepository;
         private BTCPayNetworkProvider _NetworkProvider;
+        private readonly IEnumerable<IPaymentMethodHandler> _paymentMethodHandlers;
 
         public InvoiceControllerAPI(InvoiceController invoiceController,
                                     InvoiceRepository invoceRepository,
-                                    BTCPayNetworkProvider networkProvider)
+                                    BTCPayNetworkProvider networkProvider,
+                                    IEnumerable<IPaymentMethodHandler> paymentMethodHandlers)
         {
             this._InvoiceController = invoiceController;
             this._InvoiceRepository = invoceRepository;
             this._NetworkProvider = networkProvider;
+            _paymentMethodHandlers = paymentMethodHandlers;
         }
 
         [HttpPost]
@@ -51,7 +56,7 @@ namespace BTCPayServer.Controllers
             })).FirstOrDefault();
             if (invoice == null)
                 throw new BitpayHttpException(404, "Object not found");
-            var resp = invoice.EntityToDTO();
+            var resp = invoice.EntityToDTO(_NetworkProvider, _paymentMethodHandlers);
             return new DataWrapper<InvoiceResponse>(resp);
         }
         [HttpGet]
@@ -81,8 +86,8 @@ namespace BTCPayServer.Controllers
                 StoreId = new[] { this.HttpContext.GetStoreData().Id }
             };
 
-            var entities = (await _InvoiceRepository.GetInvoices(query))
-                            .Select((o) => o.EntityToDTO()).ToArray();
+            var entities =  (await _InvoiceRepository.GetInvoices(query))
+                            .Select((o) => o.EntityToDTO(_NetworkProvider, _paymentMethodHandlers)).ToArray();
 
             return DataWrapper.Create(entities);
         }

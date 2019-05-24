@@ -35,18 +35,21 @@ namespace BTCPayServer.Services.Apps
         private readonly InvoiceRepository _InvoiceRepository;
         CurrencyNameTable _Currencies;
         private readonly HtmlSanitizer _HtmlSanitizer;
+        private readonly IEnumerable<IPaymentMethodHandler> _paymentMethodHandlers;
         private readonly BTCPayNetworkProvider _Networks;
         public CurrencyNameTable Currencies => _Currencies;
         public AppService(ApplicationDbContextFactory contextFactory,
                           InvoiceRepository invoiceRepository,
                           BTCPayNetworkProvider networks,
                           CurrencyNameTable currencies,
-                          HtmlSanitizer htmlSanitizer)
+                          HtmlSanitizer htmlSanitizer,
+                          IEnumerable<IPaymentMethodHandler> paymentMethodHandlers)
         {
             _ContextFactory = contextFactory;
             _InvoiceRepository = invoiceRepository;
             _Currencies = currencies;
             _HtmlSanitizer = htmlSanitizer;
+            _paymentMethodHandlers = paymentMethodHandlers;
             _Networks = networks;
         }
 
@@ -323,7 +326,7 @@ namespace BTCPayServer.Services.Apps
                              {
                                  var paymentMethodContribution = new Contribution();
                                  paymentMethodContribution.PaymentMehtodId = pay.GetPaymentMethodId();
-                                 paymentMethodContribution.Value = pay.GetCryptoPaymentData().GetValue() - pay.NetworkFee;
+                                 paymentMethodContribution.Value = pay.GetCryptoPaymentData(_paymentMethodHandlers).GetValue() - pay.NetworkFee;
                                  var rate = p.GetPaymentMethod(paymentMethodContribution.PaymentMehtodId, _Networks).Rate;
                                  paymentMethodContribution.CurrencyValue =  rate * paymentMethodContribution.Value;
                                  return paymentMethodContribution;

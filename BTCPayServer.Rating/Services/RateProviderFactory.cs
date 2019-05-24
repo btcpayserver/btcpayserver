@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Rating;
 using ExchangeSharp;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace BTCPayServer.Services.Rates

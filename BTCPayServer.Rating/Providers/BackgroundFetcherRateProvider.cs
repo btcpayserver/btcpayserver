@@ -4,10 +4,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
-using BTCPayServer.Data;
-using BTCPayServer.Logging;
 using BTCPayServer.Rating;
 using System.Threading;
+using Microsoft.Extensions.Logging.Abstractions;
+using BTCPayServer.Logging;
 
 namespace BTCPayServer.Services.Rates
 {
@@ -39,6 +39,7 @@ namespace BTCPayServer.Services.Rates
         }
 
         IRateProvider _Inner;
+
         public BackgroundFetcherRateProvider(IRateProvider inner)
         {
             if (inner == null)

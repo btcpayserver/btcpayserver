@@ -75,7 +75,8 @@ namespace BTCPayServer.Controllers
             var entity = new InvoiceEntity
             {
                 Version = InvoiceEntity.Lastest_Version,
-                InvoiceTime = DateTimeOffset.UtcNow
+                InvoiceTime = DateTimeOffset.UtcNow,
+                Networks = _NetworkProvider
             };
 
             var getAppsTaggingStore = _InvoiceRepository.GetAppsTaggingStore(store.Id);
@@ -208,7 +209,7 @@ namespace BTCPayServer.Controllers
 
             using (logs.Measure("Saving invoice"))
             {
-                entity = await _InvoiceRepository.CreateInvoiceAsync(store.Id, entity, _NetworkProvider);
+                entity = await _InvoiceRepository.CreateInvoiceAsync(store.Id, entity);
             }
             _ = Task.Run(async () =>
             {
@@ -223,7 +224,7 @@ namespace BTCPayServer.Controllers
                 await _InvoiceRepository.AddInvoiceLogs(entity.Id, logs);
             });
             _EventAggregator.Publish(new Events.InvoiceEvent(entity, 1001, InvoiceEvent.Created));
-            var resp = entity.EntityToDTO(_NetworkProvider);
+            var resp = entity.EntityToDTO();
             return new DataWrapper<InvoiceResponse>(resp) { Facade = "pos/invoice" };
         }
 

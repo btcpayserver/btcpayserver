@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace BTCPayServer
 {
-    class CustomThreadPool : IDisposable
+    public class CustomThreadPool : IDisposable
     {
         CancellationTokenSource _Cancel = new CancellationTokenSource();
         TaskCompletionSource<bool> _Exited;

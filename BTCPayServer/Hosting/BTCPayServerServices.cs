@@ -1,9 +1,7 @@
 ﻿using BTCPayServer.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Hosting;
 using System;
-using System.Collections.Generic;
-using System.Text;
+using System.IdentityModel.Tokens.Jwt;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.AspNetCore.Http;
@@ -12,7 +10,6 @@ using NBitcoin;
 using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore;
 using System.IO;
-using NBXplorer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Hosting;
 using BTCPayServer.Services;
@@ -21,19 +18,15 @@ using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Fees;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Rewrite;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
-using Microsoft.AspNetCore.Authorization;
 using BTCPayServer.Controllers;
 using BTCPayServer.Services.Mails;
 using Microsoft.AspNetCore.Identity;
-using BTCPayServer.Models;
-using System.Threading.Tasks;
 using System.Threading;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Authentication;
-using Microsoft.Extensions.Caching.Memory;
+using BTCPayServer.Authentication.OpenId.Models;
 using BTCPayServer.Logging;
 using BTCPayServer.HostedServices;
 using System.Security.Claims;
@@ -44,11 +37,13 @@ using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Security;
 using BTCPayServer.Services.PaymentRequests;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using NBXplorer.DerivationStrategy;
 using NicolasDorier.RateLimits;
 using Npgsql;
 using BTCPayServer.Services.Apps;
+using OpenIddict.EntityFrameworkCore.Models;
 using BTCPayServer.Services.U2F;
 using BundlerMinifier.TagHelpers;
 
@@ -62,6 +57,7 @@ namespace BTCPayServer.Hosting
             {
                 var factory = provider.GetRequiredService<ApplicationDbContextFactory>();
                 factory.ConfigureBuilder(o);
+                o.UseOpenIddict<BTCPayOpenIdClient, BTCPayOpenIdAuthorization, OpenIddictScope<string>, BTCPayOpenIdToken, string>();
             });
             services.AddHttpClient();
             services.TryAddSingleton<SettingsRepository>();
@@ -250,7 +246,16 @@ namespace BTCPayServer.Hosting
         
         private static void AddBtcPayServerAuthenticationSchemes(this IServiceCollection services, IConfiguration configuration)
         {
+            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+            JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
+
             services.AddAuthentication()
+                .AddJwtBearer(options =>
+                {
+//                    options.RequireHttpsMetadata = false;
+//                    options.TokenValidationParameters.ValidateAudience = false;
+                    options.TokenValidationParameters.ValidateIssuer = false;
+                })
                 .AddCookie()
                 .AddBitpayAuthentication();
         }

@@ -55,6 +55,17 @@ retry:
             _Networks = networks;
         }
 
+        public InvoiceEntity CreateNewInvoice()
+        {
+            return new InvoiceEntity()
+            {
+                PaymentMethodHandlers = _paymentMethodHandlers,
+                Networks = _Networks,
+                Version = InvoiceEntity.Lastest_Version,
+                InvoiceTime = DateTimeOffset.UtcNow,
+            };
+        }
+
         public async Task<bool> RemovePendingInvoice(string invoiceId)
         {
             Logs.PayServer.LogInformation($"Remove pending invoice {invoiceId}");

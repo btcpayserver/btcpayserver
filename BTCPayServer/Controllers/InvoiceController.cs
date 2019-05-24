@@ -37,7 +37,6 @@ namespace BTCPayServer.Controllers
         EventAggregator _EventAggregator;
         BTCPayNetworkProvider _NetworkProvider;
         private readonly IEnumerable<IPaymentMethodHandler> _paymentMethodHandlers;
-        private readonly BTCPayWalletProvider _WalletProvider;
         IServiceProvider _ServiceProvider;
         public InvoiceController(
             IServiceProvider serviceProvider,
@@ -47,7 +46,6 @@ namespace BTCPayServer.Controllers
             RateFetcher rateProvider,
             StoreRepository storeRepository,
             EventAggregator eventAggregator,
-            BTCPayWalletProvider walletProvider,
             ContentSecurityPolicies csp,
             BTCPayNetworkProvider networkProvider,
             IEnumerable<IPaymentMethodHandler> paymentMethodHandlers)
@@ -61,7 +59,6 @@ namespace BTCPayServer.Controllers
             _EventAggregator = eventAggregator;
             _NetworkProvider = networkProvider;
             _paymentMethodHandlers = paymentMethodHandlers;
-            _WalletProvider = walletProvider;
             _CSP = csp;
         }
 
@@ -72,13 +69,7 @@ namespace BTCPayServer.Controllers
                 throw new UnauthorizedAccessException();
             InvoiceLogs logs = new InvoiceLogs();
             logs.Write("Creation of invoice starting");
-            var entity = new InvoiceEntity
-            {
-                PaymentMethodHandlers = _paymentMethodHandlers,
-                Version = InvoiceEntity.Lastest_Version,
-                InvoiceTime = DateTimeOffset.UtcNow,
-                Networks = _NetworkProvider
-            };
+            var entity = _InvoiceRepository.CreateNewInvoice();
 
             var getAppsTaggingStore = _InvoiceRepository.GetAppsTaggingStore(store.Id);
             var storeBlob = store.GetStoreBlob();
@@ -272,9 +263,9 @@ namespace BTCPayServer.Controllers
                     var paymentDetails = await handler.CreatePaymentMethodDetails(supportedPaymentMethod, paymentMethod, store, network, preparePayment);
                     paymentMethod.SetPaymentMethodDetails(paymentDetails);
                 }
-                
+
                 var errorMessage = await
-                    _paymentMethodHandlers.GetCorrectHandler(supportedPaymentMethod.PaymentId)
+                    handler
                         .IsPaymentMethodAllowedBasedOnInvoiceAmount(storeBlob, fetchingByCurrencyPair,
                             paymentMethod.Calculate().Due, supportedPaymentMethod.PaymentId);
                 if (errorMessage != null)

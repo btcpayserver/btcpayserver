@@ -82,7 +82,7 @@ namespace BTCPayServer.Controllers
                 {
                     Destination = h.GetAddress(),
                     PaymentMethod =
-                        _paymentMethodHandlers
+                        invoice.PaymentMethodHandlers
                             .GetCorrectHandler(h.GetPaymentMethodId())
                             .ToPrettyString(h.GetPaymentMethodId()),
                     Current = !h.UnAssigned.HasValue

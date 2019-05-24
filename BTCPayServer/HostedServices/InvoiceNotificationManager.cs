@@ -64,7 +64,7 @@ namespace BTCPayServer.HostedServices
 
         void Notify(InvoiceEntity invoice, InvoiceEvent invoiceEvent, bool extendedNotification)
         {
-            var dto = invoice.EntityToDTO(_NetworkProvider);
+            var dto = invoice.EntityToDTO();
             var notification = new InvoicePaymentNotificationEventWrapper()
             {
                 Data = new InvoicePaymentNotification()

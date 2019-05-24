@@ -37,8 +37,9 @@ namespace BTCPayServer.Services.Invoices
         }
 
         private ApplicationDbContextFactory _ContextFactory;
+        private readonly BTCPayNetworkProvider _Networks;
         private CustomThreadPool _IndexerThread;
-        public InvoiceRepository(ApplicationDbContextFactory contextFactory, string dbreezePath)
+        public InvoiceRepository(ApplicationDbContextFactory contextFactory, string dbreezePath, BTCPayNetworkProvider networks)
         {
             int retryCount = 0;
 retry:
@@ -49,6 +50,7 @@ retry:
             catch when (retryCount++ < 5) { goto retry; }
             _IndexerThread = new CustomThreadPool(1, "Invoice Indexer");
             _ContextFactory = contextFactory;
+            _Networks = networks;
         }
 
         public async Task<bool> RemovePendingInvoice(string invoiceId)
@@ -118,10 +120,11 @@ retry:
             }
         }
 
-        public async Task<InvoiceEntity> CreateInvoiceAsync(string storeId, InvoiceEntity invoice, BTCPayNetworkProvider networkProvider)
+        public async Task<InvoiceEntity> CreateInvoiceAsync(string storeId, InvoiceEntity invoice)
         {
             List<string> textSearch = new List<string>();
-            invoice = Clone(invoice, null);
+            invoice = NBitcoin.JsonConverters.Serializer.ToObject<InvoiceEntity>(ToString(invoice, null), null);
+            invoice.Networks = _Networks;
             invoice.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16));
 #pragma warning disable CS0618
             invoice.Payments = new List<PaymentEntity>();
@@ -143,7 +146,7 @@ retry:
                     CustomerEmail = invoice.RefundMail
                 });
 
-                foreach (var paymentMethod in invoice.GetPaymentMethods(networkProvider))
+                foreach (var paymentMethod in invoice.GetPaymentMethods())
                 {
                     if (paymentMethod.Network == null)
                         throw new InvalidOperationException("CryptoCode unsupported");
@@ -217,7 +220,7 @@ retry:
                 if (invoice == null)
                     return false;
 
-                var invoiceEntity = ToObject<InvoiceEntity>(invoice.Blob, network.NBitcoinNetwork);
+                var invoiceEntity = ToObject(invoice.Blob);
                 var currencyData = invoiceEntity.GetPaymentMethod(network, paymentMethod.GetPaymentType(), null);
                 if (currencyData == null)
                     return false;
@@ -278,7 +281,7 @@ retry:
 
         private static void MarkUnassigned(string invoiceId, InvoiceEntity entity, ApplicationDbContext context, PaymentMethodId paymentMethodId)
         {
-            foreach (var address in entity.GetPaymentMethods(null))
+            foreach (var address in entity.GetPaymentMethods())
             {
                 if (paymentMethodId != null && paymentMethodId != address.GetId())
                     continue;
@@ -298,7 +301,7 @@ retry:
                 var invoiceData = await context.FindAsync<Data.InvoiceData>(invoiceId).ConfigureAwait(false);
                 if (invoiceData == null)
                     return;
-                var invoiceEntity = ToObject<InvoiceEntity>(invoiceData.Blob, null);
+                var invoiceEntity = ToObject(invoiceData.Blob);
                 MarkUnassigned(invoiceId, invoiceEntity, context, null);
                 try
                 {
@@ -393,7 +396,7 @@ retry:
 
         private InvoiceEntity ToEntity(Data.InvoiceData invoice)
         {
-            var entity = ToObject<InvoiceEntity>(invoice.Blob, null);
+            var entity = ToObject(invoice.Blob);
             PaymentMethodDictionary paymentMethods = null;
 #pragma warning disable CS0618
             entity.Payments = invoice.Payments.Select(p =>
@@ -406,7 +409,7 @@ retry:
                 if (paymentEntity.Version == 0)
                 {
                     if (paymentMethods == null)
-                        paymentMethods = entity.GetPaymentMethods(null);
+                        paymentMethods = entity.GetPaymentMethods();
                     var paymentMethodDetails = paymentMethods.TryGet(paymentEntity.GetPaymentMethodId())?.GetPaymentMethodDetails();
                     if (paymentMethodDetails != null) // == null should never happen, but we never know.
                         paymentEntity.NetworkFee = paymentMethodDetails.GetNextNetworkFee();
@@ -604,7 +607,7 @@ retry:
                 var invoice = context.Invoices.Find(invoiceId);
                 if (invoice == null)
                     return null;
-                InvoiceEntity invoiceEntity = ToObject<InvoiceEntity>(invoice.Blob, network.NBitcoinNetwork);
+                InvoiceEntity invoiceEntity = ToObject(invoice.Blob);
                 PaymentMethod paymentMethod = invoiceEntity.GetPaymentMethod(new PaymentMethodId(network.CryptoCode, paymentData.GetPaymentType()), null);
                 IPaymentMethodDetails paymentMethodDetails = paymentMethod.GetPaymentMethodDetails();
                 PaymentEntity entity = new PaymentEntity
@@ -669,19 +672,21 @@ retry:
             }
         }
 
+        private InvoiceEntity ToObject(byte[] value)
+        {
+            var entity = NBitcoin.JsonConverters.Serializer.ToObject<InvoiceEntity>(ZipUtils.Unzip(value), null);
+            entity.Networks = _Networks;
+            return entity;
+        }
         private T ToObject<T>(byte[] value, Network network)
         {
             return NBitcoin.JsonConverters.Serializer.ToObject<T>(ZipUtils.Unzip(value), network);
         }
 
+
         private byte[] ToBytes<T>(T obj, Network network)
         {
             return ZipUtils.Zip(NBitcoin.JsonConverters.Serializer.ToString(obj, network));
-        }
-
-        private T Clone<T>(T invoice, Network network)
-        {
-            return NBitcoin.JsonConverters.Serializer.ToObject<T>(ToString(invoice, network), network);
         }
 
         private string ToString<T>(T data, Network network)

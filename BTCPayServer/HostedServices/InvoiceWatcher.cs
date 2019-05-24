@@ -74,7 +74,7 @@ namespace BTCPayServer.HostedServices
             }
 
             var payments = invoice.GetPayments().Where(p => p.Accounted).ToArray();
-            var allPaymentMethods = invoice.GetPaymentMethods(_NetworkProvider);
+            var allPaymentMethods = invoice.GetPaymentMethods();
             var paymentMethod = GetNearestClearedPayment(allPaymentMethods, out var accounting, _NetworkProvider);
             if (paymentMethod == null)
                 return;

@@ -65,20 +65,6 @@ namespace BTCPayServer.Payments
             return PaymentType == PaymentTypes.BTCLike ? CryptoCode : $"{CryptoCode}_{PaymentType}";
         }
 
-
-        private static string PrettyMethod(PaymentTypes paymentType)
-        {
-            switch (paymentType)
-            {
-                case PaymentTypes.BTCLike:
-                    return "On-Chain";
-                case PaymentTypes.LightningLike:
-                    return "Off-Chain";
-                default:
-                    return paymentType.ToString();
-            }
-        }
-
         public static bool TryParse(string str, out PaymentMethodId paymentMethodId)
         {
             paymentMethodId = null;

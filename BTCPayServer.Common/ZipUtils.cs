@@ -6,7 +6,7 @@ using System.Text;
 
 namespace BTCPayServer
 {
-    class ZipUtils
+    public class ZipUtils
     {
         public static byte[] Zip(string unzipped)
         {

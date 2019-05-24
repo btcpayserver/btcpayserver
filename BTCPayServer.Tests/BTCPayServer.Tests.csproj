@@ -33,6 +33,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\BTCPayServer.Rating\BTCPayServer.Rating.csproj" />
     <ProjectReference Include="..\BTCPayServer\BTCPayServer.csproj" />
   </ItemGroup>
 

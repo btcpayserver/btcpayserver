@@ -38,6 +38,8 @@ using BTCPayServer.Logging;
 using BTCPayServer.HostedServices;
 using System.Security.Claims;
 using BTCPayServer.PaymentRequest;
+using BTCPayServer.Payments;
+using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Security;
@@ -177,15 +179,18 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService, CssThemeManagerHostedService>();
             services.AddSingleton<IHostedService, MigratorHostedService>();
 
-            services.AddSingleton<Payments.IPaymentMethodHandler<DerivationSchemeSettings>, Payments.Bitcoin.BitcoinLikePaymentHandler>();
-            services.AddSingleton<IHostedService, Payments.Bitcoin.NBXplorerListener>();
-
             services.AddSingleton<IHostedService, HostedServices.CheckConfigurationHostedService>();
-
-            services.AddSingleton<Payments.IPaymentMethodHandler<Payments.Lightning.LightningSupportedPaymentMethod>, Payments.Lightning.LightningLikePaymentHandler>();
-            services.AddSingleton<LightningLikePaymentHandler>();
-            services.AddSingleton<IHostedService, Payments.Lightning.LightningListener>();
             
+            services.AddSingleton<BitcoinLikePaymentHandler>();
+            services.AddSingleton<IPaymentMethodHandler>(provider => provider.GetService<BitcoinLikePaymentHandler>());
+            services.AddSingleton<IPaymentMethodHandler<DerivationSchemeSettings>>(provider => provider.GetService<BitcoinLikePaymentHandler>());
+            services.AddSingleton<IHostedService, NBXplorerListener>();
+
+            services.AddSingleton<LightningLikePaymentHandler>();
+            services.AddSingleton<IPaymentMethodHandler>(provider => provider.GetService<LightningLikePaymentHandler>());
+            services.AddSingleton<IPaymentMethodHandler<LightningSupportedPaymentMethod>>(provider => provider.GetService<LightningLikePaymentHandler>());
+            services.AddSingleton<IHostedService, LightningListener>();
+
             services.AddSingleton<ChangellyClientProvider>();
 
             services.AddSingleton<IHostedService, NBXplorerWaiters>();

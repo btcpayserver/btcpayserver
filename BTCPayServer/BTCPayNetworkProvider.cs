@@ -89,13 +89,7 @@ namespace BTCPayServer
         }
 
         [Obsolete("To use only for legacy stuff")]
-        public BTCPayNetwork BTC
-        {
-            get
-            {
-                return GetNetwork("BTC");
-            }
-        }
+        public BTCPayNetwork BTC => GetNetwork("BTC");
 
         public void Add(BTCPayNetwork network)
         {

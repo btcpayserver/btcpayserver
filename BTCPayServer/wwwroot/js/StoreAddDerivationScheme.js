@@ -48,13 +48,14 @@
                     return;
 
                 showFeedback("ledger-info");
-
                 $("#DerivationScheme").val(result.derivationScheme);
                 $("#RootFingerprint").val(result.rootFingerprint);
                 $("#AccountKey").val(result.extPubKey);
                 $("#Source").val(result.source);
                 $("#DerivationSchemeFormat").val("BTCPay");
                 $("#KeyPath").val(keypath);
+                $(".modal").modal('hide');
+                $(".hw-fields").show();
             })
             .catch(function (reason) { Write('check', 'error', reason); });
         return false;

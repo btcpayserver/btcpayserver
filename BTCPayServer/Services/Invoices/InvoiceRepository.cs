@@ -274,6 +274,18 @@ retry:
             }
         }
 
+        public async Task AddPendingInvoiceIfNotPresent(string invoiceId)
+        {
+            using (var context = _ContextFactory.CreateContext())
+            {
+                if (!context.PendingInvoices.Any(a => a.Id == invoiceId))
+                {
+                    context.PendingInvoices.Add(new PendingInvoiceData() { Id = invoiceId });
+                    await context.SaveChangesAsync();
+                }
+            }
+        }
+
         public async Task AddInvoiceEvent(string invoiceId, object evt)
         {
             using (var context = _ContextFactory.CreateContext())

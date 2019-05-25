@@ -40,5 +40,6 @@ namespace BTCPayServer.Models.StoreViewModels
         public string Config { get; set; }
         public string Source { get; set; }
         public string AccountKey { get; set; }
+        public BTCPayNetwork Network { get; set; }
     }
 }

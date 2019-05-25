@@ -73,6 +73,34 @@ namespace BTCPayServer
         {
             return CryptoCode;
         }
+        
+        public KeyPath GetRootKeyPath(DerivationType type)
+        {
+            KeyPath baseKey;
+            if (!NBitcoinNetwork.Consensus.SupportSegwit)
+            {
+                baseKey = new KeyPath("44'");
+            }
+            else
+            {
+                switch (type)
+                {
+                    case DerivationType.Legacy:
+                        baseKey = new KeyPath("44'");
+                        break;
+                    case DerivationType.SegwitP2SH:
+                        baseKey = new KeyPath("49'");
+                        break;
+                    case DerivationType.Segwit:
+                        baseKey = new KeyPath("84'");
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(type), type, null);
+                }
+            }
+            return baseKey
+                .Derive(CoinType);
+        }
 
         public KeyPath GetRootKeyPath()
         {

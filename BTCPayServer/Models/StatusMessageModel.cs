@@ -23,6 +23,7 @@ namespace BTCPayServer.Models
                     Html = model.Html;
                     Message = model.Message;
                     Severity = model.Severity;
+                    AllowDismiss = model.AllowDismiss;
                 }
                 else
                 {
@@ -38,6 +39,7 @@ namespace BTCPayServer.Models
         public string Message { get; set; }
         public string Html { get; set; }
         public StatusSeverity Severity { get; set; }
+        public bool AllowDismiss { get; set; } = true;
 
         public string SeverityCSS
         {
@@ -51,6 +53,8 @@ namespace BTCPayServer.Models
                         return "danger";
                     case StatusSeverity.Success:
                         return "success";
+                    case StatusSeverity.Warning:
+                        return "warning";
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
@@ -74,7 +78,8 @@ namespace BTCPayServer.Models
         {
             Info,
             Error,
-            Success
+            Success,
+            Warning
         }
     }
 }

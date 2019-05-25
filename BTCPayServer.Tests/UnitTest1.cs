@@ -101,12 +101,12 @@ namespace BTCPayServer.Tests
         {
 #pragma warning disable CS0618
             var dummy = new Key().PubKey.GetAddress(ScriptPubKeyType.Legacy, Network.RegTest).ToString();
-            var paymentMethodHandlers = new IPaymentMethodHandler[]
+            var paymentMethodHandlerDictionary = new PaymentMethodHandlerDictionary(new IPaymentMethodHandler[]
             {
                 new BitcoinLikePaymentHandler(null, null, null, null),
                 new LightningLikePaymentHandler(null, null, null, null),
-            };
-            InvoiceEntity invoiceEntity = new InvoiceEntity() {PaymentMethodHandlers = paymentMethodHandlers};
+            });
+            InvoiceEntity invoiceEntity = new InvoiceEntity() { PaymentMethodHandlerDictionary = paymentMethodHandlerDictionary};
             invoiceEntity.Payments = new System.Collections.Generic.List<PaymentEntity>();
             invoiceEntity.ProductInformation = new ProductInformation() {Price = 100};
             PaymentMethodDictionary paymentMethods = new PaymentMethodDictionary();
@@ -131,7 +131,7 @@ namespace BTCPayServer.Tests
                         Accounted = true,
                         CryptoCode = "BTC",
                         NetworkFee = 0.00000100m,
-                        PaymentMethodHandlers = paymentMethodHandlers
+                        PaymentMethodHandlerDictionary = paymentMethodHandlerDictionary
                     }
                     .SetCryptoPaymentData(new BitcoinLikePaymentData()
                     {
@@ -144,7 +144,7 @@ namespace BTCPayServer.Tests
                         Accounted = true,
                         CryptoCode = "BTC",
                         NetworkFee = 0.00000100m,
-                        PaymentMethodHandlers = paymentMethodHandlers
+                        PaymentMethodHandlerDictionary = paymentMethodHandlerDictionary
                     }
                     .SetCryptoPaymentData(new BitcoinLikePaymentData()
                     {
@@ -209,12 +209,12 @@ namespace BTCPayServer.Tests
         [Trait("Fast", "Fast")]
         public void CanCalculateCryptoDue()
         {
-            var paymentMethodHandlers = new IPaymentMethodHandler[]
+            var paymentMethodHandlerDictionary = new PaymentMethodHandlerDictionary(new IPaymentMethodHandler[]
             {
                 new BitcoinLikePaymentHandler(null, null, null, null),
                 new LightningLikePaymentHandler(null, null, null, null),
-            };
-            var entity = new InvoiceEntity() {PaymentMethodHandlers = paymentMethodHandlers};
+            });
+            var entity = new InvoiceEntity() {PaymentMethodHandlerDictionary = paymentMethodHandlerDictionary};
 #pragma warning disable CS0618
             entity.Payments = new System.Collections.Generic.List<PaymentEntity>();
             entity.SetPaymentMethod(new PaymentMethod()
@@ -233,7 +233,7 @@ namespace BTCPayServer.Tests
                 Output = new TxOut(Money.Coins(0.5m), new Key()),
                 Accounted = true,
                 NetworkFee = 0.1m,
-                PaymentMethodHandlers = paymentMethodHandlers
+                PaymentMethodHandlerDictionary = paymentMethodHandlerDictionary
             });
 
             accounting = paymentMethod.Calculate();
@@ -246,7 +246,7 @@ namespace BTCPayServer.Tests
                 Output = new TxOut(Money.Coins(0.2m), new Key()),
                 Accounted = true,
                 NetworkFee = 0.1m,
-                PaymentMethodHandlers = paymentMethodHandlers
+                PaymentMethodHandlerDictionary = paymentMethodHandlerDictionary
             });
 
             accounting = paymentMethod.Calculate();
@@ -258,7 +258,7 @@ namespace BTCPayServer.Tests
                 Output = new TxOut(Money.Coins(0.6m), new Key()),
                 Accounted = true,
                 NetworkFee = 0.1m,
-                PaymentMethodHandlers = paymentMethodHandlers
+                PaymentMethodHandlerDictionary = paymentMethodHandlerDictionary
             });
 
             accounting = paymentMethod.Calculate();
@@ -269,14 +269,14 @@ namespace BTCPayServer.Tests
             {
                 Output = new TxOut(Money.Coins(0.2m), new Key()),
                 Accounted = true,
-                PaymentMethodHandlers = paymentMethodHandlers
+                PaymentMethodHandlerDictionary = paymentMethodHandlerDictionary
             });
 
             accounting = paymentMethod.Calculate();
             Assert.Equal(Money.Zero, accounting.Due);
             Assert.Equal(Money.Coins(1.3m), accounting.TotalDue);
 
-            entity = new InvoiceEntity() {PaymentMethodHandlers = paymentMethodHandlers};
+            entity = new InvoiceEntity() {PaymentMethodHandlerDictionary = paymentMethodHandlerDictionary};
             entity.ProductInformation = new ProductInformation() {Price = 5000};
             PaymentMethodDictionary paymentMethods = new PaymentMethodDictionary();
             paymentMethods.Add(
@@ -300,7 +300,7 @@ namespace BTCPayServer.Tests
                 Output = new TxOut(Money.Coins(1.0m), new Key()),
                 Accounted = true,
                 NetworkFee = 0.1m,
-                PaymentMethodHandlers = paymentMethodHandlers
+                PaymentMethodHandlerDictionary = paymentMethodHandlerDictionary
             });
 
             paymentMethod = entity.GetPaymentMethod(new PaymentMethodId("BTC", PaymentTypes.BTCLike), null);
@@ -324,7 +324,7 @@ namespace BTCPayServer.Tests
                 Output = new TxOut(Money.Coins(1.0m), new Key()),
                 Accounted = true,
                 NetworkFee = 0.01m,
-                PaymentMethodHandlers = paymentMethodHandlers
+                PaymentMethodHandlerDictionary = paymentMethodHandlerDictionary
             });
 
             paymentMethod = entity.GetPaymentMethod(new PaymentMethodId("BTC", PaymentTypes.BTCLike), null);
@@ -350,7 +350,7 @@ namespace BTCPayServer.Tests
                 Output = new TxOut(remaining, new Key()),
                 Accounted = true,
                 NetworkFee = 0.1m,
-                PaymentMethodHandlers = paymentMethodHandlers
+                PaymentMethodHandlerDictionary = paymentMethodHandlerDictionary
             });
 
             paymentMethod = entity.GetPaymentMethod(new PaymentMethodId("BTC", PaymentTypes.BTCLike), null);
@@ -415,23 +415,20 @@ namespace BTCPayServer.Tests
         [Trait("Fast", "Fast")]
         public void CanAcceptInvoiceWithTolerance()
         {
-                var paymentMethodHandlers = new IPaymentMethodHandler[]
-                {
-                    new BitcoinLikePaymentHandler(null, null, null, null),
-                    new LightningLikePaymentHandler(null, null, null, null),
-                };
-                var entity = new InvoiceEntity()
-                {
-                    PaymentMethodHandlers = paymentMethodHandlers
-                };
+            var paymentMethodHandlerDictionary = new PaymentMethodHandlerDictionary(new IPaymentMethodHandler[]
+            {
+                new BitcoinLikePaymentHandler(null, null, null, null),
+                new LightningLikePaymentHandler(null, null, null, null),
+            });
+            var entity = new InvoiceEntity() {PaymentMethodHandlerDictionary = paymentMethodHandlerDictionary};
 #pragma warning disable CS0618
-                entity.Payments = new List<PaymentEntity>();
-                entity.SetPaymentMethod(new PaymentMethod()
-                {
-                    CryptoCode = "BTC", Rate = 5000, NextNetworkFee = Money.Coins(0.1m)
-                });
-                entity.ProductInformation = new ProductInformation() {Price = 5000};
-                entity.PaymentTolerance = 0;
+            entity.Payments = new List<PaymentEntity>();
+            entity.SetPaymentMethod(new PaymentMethod()
+            {
+                CryptoCode = "BTC", Rate = 5000, NextNetworkFee = Money.Coins(0.1m)
+            });
+            entity.ProductInformation = new ProductInformation() {Price = 5000};
+            entity.PaymentTolerance = 0;
 
 
             var paymentMethod = entity.GetPaymentMethods().TryGet("BTC", PaymentTypes.BTCLike);

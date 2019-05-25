@@ -116,7 +116,7 @@ namespace BTCPayServer.Services.Invoices
     {
         
         [JsonIgnore]
-        public IEnumerable<IPaymentMethodHandler> PaymentMethodHandlers { get; set; }
+        public PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary { get; set; }
         [JsonIgnore]
         public BTCPayNetworkProvider Networks { get; set; }
         public const int InternalTagSupport_Version = 1;
@@ -442,10 +442,8 @@ namespace BTCPayServer.Services.Invoices
                         ReceivedDate = entity.ReceivedTime.DateTime
                     };
                 }).ToList();
-
-                var paymentHandler = PaymentMethodHandlers.GetCorrectHandler(paymentId);
-
-                paymentHandler.PrepareInvoiceDto(dto, this, cryptoInfo, accounting, info);
+                
+                PaymentMethodHandlerDictionary[paymentId].PrepareInvoiceDto(dto, this, cryptoInfo, accounting, info);
                 
                 dto.CryptoInfo.Add(cryptoInfo);
                 dto.PaymentCodes.Add(paymentId.ToString(), cryptoInfo.PaymentUrls);
@@ -871,7 +869,7 @@ namespace BTCPayServer.Services.Invoices
     public class PaymentEntity
     {
         [JsonIgnore]
-        public IEnumerable<IPaymentMethodHandler> PaymentMethodHandlers { get; set; }
+        public PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary { get; set; }
         public int Version { get; set; }
         public DateTimeOffset ReceivedTime
         {
@@ -912,7 +910,7 @@ namespace BTCPayServer.Services.Invoices
         public CryptoPaymentData GetCryptoPaymentData()
         {
             var paymentMethodId = GetPaymentMethodId();
-            return PaymentMethodHandlers.GetCorrectHandler(paymentMethodId).GetCryptoPaymentData(this);
+            return PaymentMethodHandlerDictionary[paymentMethodId].GetCryptoPaymentData(this);
         }
 
         public PaymentEntity SetCryptoPaymentData(CryptoPaymentData cryptoPaymentData)

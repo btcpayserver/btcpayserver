@@ -71,11 +71,12 @@ namespace BTCPayServer.Hosting
             {
                 var opts = o.GetRequiredService<BTCPayServerOptions>();
                 var dbContext = o.GetRequiredService<ApplicationDbContextFactory>();
-                var paymentMethodHandlers = o.GetServices<IPaymentMethodHandler>();
+                var paymentMethodHandlerDictionary = o.GetService<PaymentMethodHandlerDictionary>();
                 var dbpath = Path.Combine(opts.DataDir, "InvoiceDB");
                 if (!Directory.Exists(dbpath))
                     Directory.CreateDirectory(dbpath);
-                return new InvoiceRepository(dbContext, dbpath, o.GetRequiredService<BTCPayNetworkProvider>(), paymentMethodHandlers);
+                return new InvoiceRepository(dbContext, dbpath, o.GetRequiredService<BTCPayNetworkProvider>(),
+                    paymentMethodHandlerDictionary);
             });
             services.AddSingleton<BTCPayServerEnvironment>();
             services.TryAddSingleton<TokenRepository>();
@@ -187,6 +188,8 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IPaymentMethodHandler>(provider => provider.GetService<LightningLikePaymentHandler>());
             services.AddSingleton<IPaymentMethodHandler<LightningSupportedPaymentMethod>>(provider => provider.GetService<LightningLikePaymentHandler>());
             services.AddSingleton<IHostedService, LightningListener>();
+
+            services.AddSingleton<PaymentMethodHandlerDictionary>();
 
             services.AddSingleton<ChangellyClientProvider>();
 

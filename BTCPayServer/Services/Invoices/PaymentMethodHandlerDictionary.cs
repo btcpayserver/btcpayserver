@@ -1,0 +1,24 @@
+using System.Collections.Generic;
+using BTCPayServer.Payments;
+
+namespace BTCPayServer.Services.Invoices
+{
+    public class PaymentMethodHandlerDictionary
+    {
+        private readonly Dictionary<PaymentMethodId, IPaymentMethodHandler> _mappedHandlers =
+            new Dictionary<PaymentMethodId, IPaymentMethodHandler>();
+
+        public PaymentMethodHandlerDictionary(IEnumerable<IPaymentMethodHandler> paymentMethodHandlers)
+        {
+            foreach (var paymentMethodHandler in paymentMethodHandlers)
+            {
+                foreach (var supportedPaymentMethod in paymentMethodHandler.GetSupportedPaymentMethods())
+                {
+                    _mappedHandlers.Add(supportedPaymentMethod, paymentMethodHandler);
+                }
+            }
+        }
+
+        public IPaymentMethodHandler this[PaymentMethodId index] => _mappedHandlers[index];
+    }
+}

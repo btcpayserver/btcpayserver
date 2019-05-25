@@ -35,8 +35,6 @@ namespace BTCPayServer.Payments
         /// <param name="network"></param>
         /// <returns></returns>
         object PreparePayment(ISupportedPaymentMethod supportedPaymentMethod, StoreData store, BTCPayNetwork network);
-        
-        bool CanHandle(PaymentMethodId paymentMethodId);
 
         void PrepareInvoiceDto(InvoiceResponse invoiceResponse, InvoiceEntity invoiceEntity,
             InvoiceCryptoInfo invoiceCryptoInfo,
@@ -95,11 +93,6 @@ namespace BTCPayServer.Payments
                 return PreparePayment(method, store, network);
             }
             throw new NotSupportedException("Invalid supportedPaymentMethod");
-        }
-
-        public bool CanHandle(PaymentMethodId paymentMethodId)
-        {
-            return paymentMethodId.PaymentType.Equals(PaymentType);
         }
 
         public string ToPrettyString(PaymentMethodId paymentMethodId)

@@ -82,8 +82,7 @@ namespace BTCPayServer.Controllers
                 {
                     Destination = h.GetAddress(),
                     PaymentMethod =
-                        invoice.PaymentMethodHandlers
-                            .GetCorrectHandler(h.GetPaymentMethodId())
+                        invoice.PaymentMethodHandlerDictionary[h.GetPaymentMethodId()]
                             .ToPrettyString(h.GetPaymentMethodId()),
                     Current = !h.UnAssigned.HasValue
                 }).ToArray();
@@ -105,8 +104,7 @@ namespace BTCPayServer.Controllers
                 var accounting = data.Calculate();
                 var paymentMethodId = data.GetId();
                 var cryptoPayment = new InvoiceDetailsModel.CryptoPayment();
-                cryptoPayment.PaymentMethod = _paymentMethodHandlers
-                    .GetCorrectHandler(paymentMethodId)
+                cryptoPayment.PaymentMethod = invoice.PaymentMethodHandlerDictionary[paymentMethodId]
                     .ToPrettyString(data.GetId());
                 cryptoPayment.Due = _CurrencyNameTable.DisplayFormatCurrency(accounting.Due.ToDecimal(MoneyUnit.BTC), paymentMethodId.CryptoCode);
                 cryptoPayment.Paid = _CurrencyNameTable.DisplayFormatCurrency(accounting.CryptoPaid.ToDecimal(MoneyUnit.BTC), paymentMethodId.CryptoCode);
@@ -320,8 +318,7 @@ namespace BTCPayServer.Controllers
                                           {
                                               var availableCryptoPaymentMethodId = kv.GetId();
                                               var availableCryptoHandler =
-                                                  kv.ParentEntity.PaymentMethodHandlers.GetCorrectHandler(
-                                                      availableCryptoPaymentMethodId);
+                                                  invoice.PaymentMethodHandlerDictionary[availableCryptoPaymentMethodId];
                                               return new PaymentModel.AvailableCrypto()
                                               {
                                                   PaymentMethodId = kv.GetId().ToString(),
@@ -342,9 +339,7 @@ namespace BTCPayServer.Controllers
                                           .ToList()
             };
 
-            var correctHandler = invoice.PaymentMethodHandlers.GetCorrectHandler(paymentMethod.GetId());
-
-            correctHandler.PreparePaymentModel(model, dto);
+            invoice.PaymentMethodHandlerDictionary[paymentMethod.GetId()].PreparePaymentModel(model, dto);
             model.PaymentMethodId = paymentMethodId.ToString();
             var expiration = TimeSpan.FromSeconds(model.ExpirationSeconds);
             model.TimeLeft = expiration.PrettyPrint();
@@ -535,11 +530,7 @@ namespace BTCPayServer.Controllers
                     {
                         new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike),
                         new PaymentMethodId(network.CryptoCode, PaymentTypes.LightningLike)
-                    }).Select(id =>
-                    {
-                        var handler = _paymentMethodHandlers.GetCorrectHandler(id);
-                        return new SelectListItem(handler.ToPrettyString(id), id.ToString());
-                    }),
+                    }).Select(id => new SelectListItem(_paymentMethodHandlerDictionary[id].ToPrettyString(id), id.ToString())),
                 nameof(SelectListItem.Value),
                 nameof(SelectListItem.Text));
         }

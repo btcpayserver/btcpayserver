@@ -36,7 +36,7 @@ namespace BTCPayServer.Controllers
         private CurrencyNameTable _CurrencyNameTable;
         EventAggregator _EventAggregator;
         BTCPayNetworkProvider _NetworkProvider;
-        private readonly IEnumerable<IPaymentMethodHandler> _paymentMethodHandlers;
+        private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
         IServiceProvider _ServiceProvider;
         public InvoiceController(
             IServiceProvider serviceProvider,
@@ -48,7 +48,7 @@ namespace BTCPayServer.Controllers
             EventAggregator eventAggregator,
             ContentSecurityPolicies csp,
             BTCPayNetworkProvider networkProvider,
-            IEnumerable<IPaymentMethodHandler> paymentMethodHandlers)
+            PaymentMethodHandlerDictionary paymentMethodHandlerDictionary)
         {
             _ServiceProvider = serviceProvider;
             _CurrencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
@@ -58,7 +58,7 @@ namespace BTCPayServer.Controllers
             _UserManager = userManager;
             _EventAggregator = eventAggregator;
             _NetworkProvider = networkProvider;
-            _paymentMethodHandlers = paymentMethodHandlers;
+            _paymentMethodHandlerDictionary = paymentMethodHandlerDictionary;
             _CSP = csp;
         }
 

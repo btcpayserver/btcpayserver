@@ -101,10 +101,11 @@ namespace BTCPayServer.Tests
         {
 #pragma warning disable CS0618
             var dummy = new Key().PubKey.GetAddress(ScriptPubKeyType.Legacy, Network.RegTest).ToString();
+            var networkProvider = new BTCPayNetworkProvider(NetworkType.Regtest);
             var paymentMethodHandlerDictionary = new PaymentMethodHandlerDictionary(new IPaymentMethodHandler[]
             {
-                new BitcoinLikePaymentHandler(null, null, null, null),
-                new LightningLikePaymentHandler(null, null, null, null),
+                new BitcoinLikePaymentHandler(null, networkProvider, null, null),
+                new LightningLikePaymentHandler(null, null, networkProvider, null),
             });
             InvoiceEntity invoiceEntity = new InvoiceEntity() { PaymentMethodHandlerDictionary = paymentMethodHandlerDictionary};
             invoiceEntity.Payments = new System.Collections.Generic.List<PaymentEntity>();
@@ -209,10 +210,11 @@ namespace BTCPayServer.Tests
         [Trait("Fast", "Fast")]
         public void CanCalculateCryptoDue()
         {
+            var networkProvider = new BTCPayNetworkProvider(NetworkType.Regtest);
             var paymentMethodHandlerDictionary = new PaymentMethodHandlerDictionary(new IPaymentMethodHandler[]
             {
-                new BitcoinLikePaymentHandler(null, null, null, null),
-                new LightningLikePaymentHandler(null, null, null, null),
+                new BitcoinLikePaymentHandler(null, networkProvider, null, null),
+                new LightningLikePaymentHandler(null, null, networkProvider, null),
             });
             var entity = new InvoiceEntity() {PaymentMethodHandlerDictionary = paymentMethodHandlerDictionary};
 #pragma warning disable CS0618
@@ -415,10 +417,11 @@ namespace BTCPayServer.Tests
         [Trait("Fast", "Fast")]
         public void CanAcceptInvoiceWithTolerance()
         {
+            var networkProvider = new BTCPayNetworkProvider(NetworkType.Regtest);
             var paymentMethodHandlerDictionary = new PaymentMethodHandlerDictionary(new IPaymentMethodHandler[]
             {
-                new BitcoinLikePaymentHandler(null, null, null, null),
-                new LightningLikePaymentHandler(null, null, null, null),
+                new BitcoinLikePaymentHandler(null, networkProvider, null, null),
+                new LightningLikePaymentHandler(null, null, networkProvider, null),
             });
             var entity = new InvoiceEntity() {PaymentMethodHandlerDictionary = paymentMethodHandlerDictionary};
 #pragma warning disable CS0618

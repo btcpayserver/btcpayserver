@@ -120,6 +120,20 @@ retry:
             }
         }
 
+        public async Task ExtendInvoiceMonitor(string invoiceId)
+        {
+            using (var ctx = _ContextFactory.CreateContext())
+            {
+                var invoiceData = await ctx.Invoices.FindAsync(invoiceId);
+
+                var invoice = ToObject(invoiceData.Blob);
+                invoice.MonitoringExpiration = invoice.MonitoringExpiration.AddHours(1);
+                invoiceData.Blob = ToBytes(invoice, null);
+
+                await ctx.SaveChangesAsync();
+            }
+        }
+
         public async Task<InvoiceEntity> CreateInvoiceAsync(string storeId, InvoiceEntity invoice)
         {
             List<string> textSearch = new List<string>();
@@ -257,6 +271,18 @@ retry:
                 await context.SaveChangesAsync();
                 AddToTextSearch(invoice.Id, paymentMethod.GetPaymentDestination());
                 return true;
+            }
+        }
+
+        public async Task AddPendingInvoiceIfNotPresent(string invoiceId)
+        {
+            using (var context = _ContextFactory.CreateContext())
+            {
+                if (!context.PendingInvoices.Any(a => a.Id == invoiceId))
+                {
+                    context.PendingInvoices.Add(new PendingInvoiceData() { Id = invoiceId });
+                    await context.SaveChangesAsync();
+                }
             }
         }
 

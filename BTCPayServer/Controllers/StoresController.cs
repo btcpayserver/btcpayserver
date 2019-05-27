@@ -475,7 +475,7 @@ namespace BTCPayServer.Controllers
                 .OfType<LightningSupportedPaymentMethod>()
                 .ToDictionary(c => c.CryptoCode);
 
-            foreach (var paymentMethodId in _paymentMethodHandlerDictionary.SelectMany(handler => handler.GetSupportedPaymentMethods()))
+            foreach (var paymentMethodId in _paymentMethodHandlerDictionary.Distinct().SelectMany(handler => handler.GetSupportedPaymentMethods()))
             {
                  switch (paymentMethodId.PaymentType)
                 {

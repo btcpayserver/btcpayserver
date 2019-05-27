@@ -19,15 +19,12 @@ using BTCPayServer.Security;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Invoices.Export;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore.Internal;
 using NBitcoin;
 using NBitpayClient;
 using NBXplorer;
 using Newtonsoft.Json.Linq;
-using NUglify.Helpers;
 
 namespace BTCPayServer.Controllers
 {

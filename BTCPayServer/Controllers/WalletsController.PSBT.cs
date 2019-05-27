@@ -114,11 +114,15 @@ namespace BTCPayServer.Controllers
             var vm = new WalletPSBTReadyViewModel() { PSBT = psbt };
             vm.SigningKey = signingKey;
             vm.SigningKeyPath = signingKeyPath;
-            await FetchTransactionDetails(walletId, vm, network);
+
+            var derivationSchemeSettings = await GetDerivationSchemeSettings(walletId);
+            if (derivationSchemeSettings == null)
+                return NotFound();
+            await FetchTransactionDetails(derivationSchemeSettings, vm, network);
             return View(nameof(WalletPSBTReady), vm);
         }
 
-        private async Task FetchTransactionDetails(WalletId walletId, WalletPSBTReadyViewModel vm, BTCPayNetwork network)
+        private Task FetchTransactionDetails(DerivationSchemeSettings derivationSchemeSettings, WalletPSBTReadyViewModel vm, BTCPayNetwork network)
         {
             var psbtObject = PSBT.Parse(vm.PSBT, network.NBitcoinNetwork);
             IHDKey signingKey = null;
@@ -141,7 +145,6 @@ namespace BTCPayServer.Controllers
             }
             catch { }
 
-            var derivationSchemeSettings = await GetDerivationSchemeSettings(walletId);
             if (signingKey == null || signingKeyPath == null)
             {
                 var signingKeySettings = derivationSchemeSettings.GetSigningAccountKeySettings();
@@ -200,6 +203,7 @@ namespace BTCPayServer.Controllers
             {
                 vm.SetErrors(errors);
             }
+            return Task.CompletedTask;
         }
 
         [HttpPost]
@@ -213,7 +217,10 @@ namespace BTCPayServer.Controllers
             try
             {
                 psbt = PSBT.Parse(vm.PSBT, network.NBitcoinNetwork);
-                await FetchTransactionDetails(walletId, vm, network);
+                var derivationSchemeSettings = await GetDerivationSchemeSettings(walletId);
+                if (derivationSchemeSettings == null)
+                    return NotFound();
+                await FetchTransactionDetails(derivationSchemeSettings, vm, network);
             }
             catch
             {

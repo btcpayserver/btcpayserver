@@ -27,6 +27,7 @@ using NBitcoin;
 using NBitpayClient;
 using NBXplorer;
 using Newtonsoft.Json.Linq;
+using NUglify.Helpers;
 
 namespace BTCPayServer.Controllers
 {
@@ -524,16 +525,13 @@ namespace BTCPayServer.Controllers
 
         private SelectList GetPaymentMethodsSelectList()
         {
-            return new SelectList(
-                _NetworkProvider.GetAll()
-                    .SelectMany(network => new[]
-                    {
-                        new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike),
-                        new PaymentMethodId(network.CryptoCode, PaymentTypes.LightningLike)
-                    }).Select(id => new SelectListItem(_paymentMethodHandlerDictionary[id].ToPrettyString(id), id.ToString())),
+            return new SelectList(_paymentMethodHandlerDictionary.Distinct().SelectMany(handler =>
+                    handler.GetSupportedPaymentMethods()
+                        .Select(id => new SelectListItem(handler.ToPrettyString(id), id.ToString()))),
                 nameof(SelectListItem.Value),
                 nameof(SelectListItem.Text));
         }
+
         [HttpGet]
         [Route("invoices/create")]
         [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]

@@ -95,6 +95,7 @@ namespace BTCPayServer.Payments.Bitcoin
         public override IEnumerable<PaymentMethodId> GetSupportedPaymentMethods()
         {
             return _networkProvider.GetAll()
+                .Where(network => network.NBXplorerNetwork != null)
                 .Select(network => new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike));
         }
 

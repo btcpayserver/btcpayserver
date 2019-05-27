@@ -1,9 +1,10 @@
+using System.Collections;
 using System.Collections.Generic;
 using BTCPayServer.Payments;
 
 namespace BTCPayServer.Services.Invoices
 {
-    public class PaymentMethodHandlerDictionary
+    public class PaymentMethodHandlerDictionary : IEnumerable<IPaymentMethodHandler>
     {
         private readonly Dictionary<PaymentMethodId, IPaymentMethodHandler> _mappedHandlers =
             new Dictionary<PaymentMethodId, IPaymentMethodHandler>();
@@ -20,5 +21,14 @@ namespace BTCPayServer.Services.Invoices
         }
 
         public IPaymentMethodHandler this[PaymentMethodId index] => _mappedHandlers[index];
+        public IEnumerator<IPaymentMethodHandler> GetEnumerator()
+        {
+            return _mappedHandlers.Values.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
     }
 }

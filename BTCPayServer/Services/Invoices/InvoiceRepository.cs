@@ -255,7 +255,7 @@ retry:
                 }
 #pragma warning restore CS0618
                 invoiceEntity.SetPaymentMethod(currencyData);
-                invoice.Blob = ToBytes(invoiceEntity, (network as BTCPayNetwork)?.NBitcoinNetwork);
+                invoice.Blob = ToBytes(invoiceEntity, network);
 
                 context.AddressInvoices.Add(new AddressInvoiceData()
                 {
@@ -593,7 +593,7 @@ retry:
             return status;
         }
 
-        public async Task AddRefundsAsync(string invoiceId, TxOut[] outputs, Network network)
+        public async Task AddRefundsAsync(string invoiceId, TxOut[] outputs, BTCPayNetwork network)
         {
             if (outputs.Length == 0)
                 return;
@@ -614,7 +614,7 @@ retry:
                 await context.SaveChangesAsync().ConfigureAwait(false);
             }
 
-            var addresses = outputs.Select(o => o.ScriptPubKey.GetDestinationAddress(network)).Where(a => a != null).ToArray();
+            var addresses = outputs.Select(o => o.ScriptPubKey.GetDestinationAddress(network.NBitcoinNetwork)).Where(a => a != null).ToArray();
             AddToTextSearch(invoiceId, addresses.Select(a => a.ToString()).ToArray());
         }
 
@@ -656,7 +656,7 @@ retry:
                     bitcoinPaymentMethod.NextNetworkFee = bitcoinPaymentMethod.FeeRate.GetFee(100); // assume price for 100 bytes
                     paymentMethod.SetPaymentMethodDetails(bitcoinPaymentMethod);
                     invoiceEntity.SetPaymentMethod(paymentMethod);
-                    invoice.Blob = ToBytes(invoiceEntity, (network as BTCPayNetwork)?.NBitcoinNetwork);
+                    invoice.Blob = ToBytes(invoiceEntity, network);
                 }
                 PaymentData data = new PaymentData
                 {
@@ -705,20 +705,19 @@ retry:
             entity.Networks = _Networks;
             return entity;
         }
-        private T ToObject<T>(byte[] value, Network network)
+        private T ToObject<T>(byte[] value, BTCPayNetworkBase network)
         {
-            return NBitcoin.JsonConverters.Serializer.ToObject<T>(ZipUtils.Unzip(value), network);
+            return network.ToObject<T>(ZipUtils.Unzip(value));
         }
 
-
-        private byte[] ToBytes<T>(T obj, Network network)
+        private byte[] ToBytes<T>(T obj, BTCPayNetworkBase network)
         {
-            return ZipUtils.Zip(NBitcoin.JsonConverters.Serializer.ToString(obj, network));
+            return ZipUtils.Zip(ToString(obj, network));
         }
 
-        private string ToString<T>(T data, Network network)
+        private string ToString<T>(T data, BTCPayNetworkBase network)
         {
-            return NBitcoin.JsonConverters.Serializer.ToString(data, network);
+            return network.ToString(data);
         }
 
         public void Dispose()

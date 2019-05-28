@@ -87,7 +87,7 @@ namespace BTCPayServer.Tests
             parent.Stores.Add(StoreId);
         }
 
-        public BTCPayNetwork SupportedNetwork { get; set; }
+        public BitcoinSpecificBTCPayNetwork SupportedNetwork { get; set; }
 
         public WalletId RegisterDerivationScheme(string crytoCode, bool segwit = false)
         {
@@ -95,7 +95,7 @@ namespace BTCPayServer.Tests
         }
         public async Task<WalletId> RegisterDerivationSchemeAsync(string cryptoCode, bool segwit = false)
         {
-            SupportedNetwork = parent.NetworkProvider.GetNetwork(cryptoCode);
+            SupportedNetwork = parent.NetworkProvider.GetNetwork<BitcoinSpecificBTCPayNetwork>(cryptoCode);
             var store = parent.PayTester.GetController<StoresController>(UserId, StoreId);
             ExtKey = new ExtKey().GetWif(SupportedNetwork.NBitcoinNetwork);
             DerivationScheme = new DerivationStrategyFactory(SupportedNetwork.NBitcoinNetwork).Parse(ExtKey.Neuter().ToString() + (segwit ? "" : "-[legacy]"));

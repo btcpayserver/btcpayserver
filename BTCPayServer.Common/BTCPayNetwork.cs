@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using NBitcoin;
 using NBXplorer;
+using Newtonsoft.Json;
 
 namespace BTCPayServer
 {
@@ -87,6 +88,16 @@ namespace BTCPayServer
             return new KeyPath(NBitcoinNetwork.Consensus.SupportSegwit ? "49'" : "44'")
                 .Derive(CoinType);
         }
+
+        public override T ToObject<T>(string json)
+        {
+            return NBXplorerNetwork.Serializer.ToObject<T>(json);
+        }
+
+        public override string ToString<T>(T obj)
+        {
+            return NBXplorerNetwork.Serializer.ToString(obj);
+        }
     }
 
     public abstract class BTCPayNetworkBase
@@ -114,6 +125,15 @@ namespace BTCPayServer
         {
             return CryptoCode;
         }
-       
+
+        public virtual T ToObject<T>(string json)
+        {
+            return JsonConvert.DeserializeObject<T>(json);
+        }
+
+        public virtual string ToString<T>(T obj)
+        {
+            return JsonConvert.SerializeObject(obj);
+        }
     }
 }

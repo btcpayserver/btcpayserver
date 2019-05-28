@@ -711,6 +711,10 @@ namespace BTCPayServer.Services.Invoices
 
         private string ToString<T>(T data, BTCPayNetworkBase network)
         {
+            if (network == null)
+            {
+                return JsonConvert.SerializeObject(data);
+            }
             return network.ToString(data);
         }
 

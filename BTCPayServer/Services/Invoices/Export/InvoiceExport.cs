@@ -78,8 +78,7 @@ namespace BTCPayServer.Services.Invoices.Export
                     PaymentId = pdata.GetPaymentId(),
                     CryptoCode = cryptoCode,
                     ConversionRate = pmethod.Rate,
-                    //TODO: Abstract, we should use Payment Type or Pretty Description from handler
-                    PaymentType = payment.GetPaymentMethodId().PaymentType == Payments.PaymentTypes.BTCLike ? "OnChain" : "OffChain",
+                    PaymentType = invoice.PaymentMethodHandlerDictionary[payment.GetPaymentMethodId()].PrettyDescription,
                     Destination = payment.GetCryptoPaymentData().GetDestination(Networks.GetNetwork<BTCPayNetworkBase>(cryptoCode)),
                     Paid = pdata.GetValue().ToString(CultureInfo.InvariantCulture),
                     PaidCurrency = Math.Round(pdata.GetValue() * pmethod.Rate, currency.NumberDecimalDigits).ToString(CultureInfo.InvariantCulture),

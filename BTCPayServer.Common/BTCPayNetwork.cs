@@ -42,38 +42,18 @@ namespace BTCPayServer
         public string DefaultConfigurationFile { get; set; }
         public int DefaultPort { get; set; }
     }
-    public class BTCPayNetwork
+
+    public class BitcoinSpecificBTCPayNetwork:BTCPayNetwork
     {
         public Network NBitcoinNetwork { get; set; }
-        public string CryptoCode { get; internal set; }
-        public string BlockExplorerLink { get; internal set; }
-        public string UriScheme { get; internal set; }
-        public string DisplayName { get; set; }
-
-        [Obsolete("Should not be needed")]
-        public bool IsBTC
-        {
-            get
-            {
-                return CryptoCode == "BTC";
-            }
-        }
-
-        public string CryptoImagePath { get; set; }
-        public string LightningImagePath { get; set; }
         public NBXplorer.NBXplorerNetwork NBXplorerNetwork { get; set; }
-
+        public bool SupportRBF { get; internal set; }
+        public string LightningImagePath { get; set; }
         public BTCPayDefaultSettings DefaultSettings { get; set; }
         public KeyPath CoinType { get; internal set; }
-        public int MaxTrackedConfirmation { get; internal set; } = 6;
-        public string[] DefaultRateRules { get; internal set; } = Array.Empty<string>();
-        public bool SupportRBF { get; internal set; }
         public Dictionary<uint, DerivationType> ElectrumMapping = new Dictionary<uint, DerivationType>();
-        public override string ToString()
-        {
-            return CryptoCode;
-        }
-        
+
+
         public KeyPath GetRootKeyPath(DerivationType type)
         {
             KeyPath baseKey;
@@ -105,7 +85,35 @@ namespace BTCPayServer
         public KeyPath GetRootKeyPath()
         {
             return new KeyPath(NBitcoinNetwork.Consensus.SupportSegwit ? "49'" : "44'")
-                        .Derive(CoinType); 
+                .Derive(CoinType);
         }
+    }
+
+    public abstract class BTCPayNetwork
+    {
+        
+        public string CryptoCode { get; internal set; }
+        public string BlockExplorerLink { get; internal set; }
+        public string UriScheme { get; internal set; }
+        public string DisplayName { get; set; }
+
+        [Obsolete("Should not be needed")]
+        public bool IsBTC
+        {
+            get
+            {
+                return CryptoCode == "BTC";
+            }
+        }
+
+        public string CryptoImagePath { get; set; }
+
+        public int MaxTrackedConfirmation { get; internal set; } = 6;
+        public string[] DefaultRateRules { get; internal set; } = Array.Empty<string>();
+        public override string ToString()
+        {
+            return CryptoCode;
+        }
+       
     }
 }

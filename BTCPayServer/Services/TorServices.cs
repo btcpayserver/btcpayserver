@@ -86,7 +86,7 @@ namespace BTCPayServer.Services
             var splitted = name.Trim().Split('-');
             if (splitted.Length != 2 || splitted[1] != "P2P")
                 return false;
-            network = _networks.GetNetwork(splitted[0]);
+            network = _networks.GetNetwork<BTCPayNetwork>(splitted[0]);
             return network != null;
         }
     }

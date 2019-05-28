@@ -15,7 +15,7 @@ namespace BTCPayServer.Controllers
     {
 
         [NonAction]
-        public async Task<CreatePSBTResponse> CreatePSBT(BTCPayNetwork network, DerivationSchemeSettings derivationSettings, WalletSendModel sendModel, CancellationToken cancellationToken)
+        public async Task<CreatePSBTResponse> CreatePSBT(BitcoinSpecificBTCPayNetwork network, DerivationSchemeSettings derivationSettings, WalletSendModel sendModel, CancellationToken cancellationToken)
         {
             var nbx = ExplorerClientProvider.GetExplorerClient(network);
             CreatePSBTRequest psbtRequest = new CreatePSBTRequest();
@@ -52,7 +52,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> WalletPSBT([ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, WalletPSBTViewModel vm)
         {
-            var network = NetworkProvider.GetNetwork(walletId.CryptoCode);
+            var network = NetworkProvider.GetNetwork<BitcoinSpecificBTCPayNetwork>(walletId.CryptoCode);
             if (await vm.GetPSBT(network.NBitcoinNetwork) is PSBT psbt)
             {
                 vm.Decoded = psbt.ToString();
@@ -67,7 +67,7 @@ namespace BTCPayServer.Controllers
             WalletId walletId,
             WalletPSBTViewModel vm, string command = null)
         {
-            var network = NetworkProvider.GetNetwork(walletId.CryptoCode);
+            var network = NetworkProvider.GetNetwork<BitcoinSpecificBTCPayNetwork>(walletId.CryptoCode);
             var psbt = await vm.GetPSBT(network.NBitcoinNetwork);
             if (psbt == null)
             {
@@ -110,7 +110,7 @@ namespace BTCPayServer.Controllers
             string signingKey = null,
             string signingKeyPath = null)
         {
-            var network = NetworkProvider.GetNetwork(walletId.CryptoCode);
+            var network = NetworkProvider.GetNetwork<BitcoinSpecificBTCPayNetwork>(walletId.CryptoCode);
             var vm = new WalletPSBTReadyViewModel() { PSBT = psbt };
             vm.SigningKey = signingKey;
             vm.SigningKeyPath = signingKeyPath;
@@ -118,7 +118,7 @@ namespace BTCPayServer.Controllers
             return View(nameof(WalletPSBTReady), vm);
         }
 
-        private async Task FetchTransactionDetails(WalletId walletId, WalletPSBTReadyViewModel vm, BTCPayNetwork network)
+        private async Task FetchTransactionDetails(WalletId walletId, WalletPSBTReadyViewModel vm, BitcoinSpecificBTCPayNetwork network)
         {
             var psbtObject = PSBT.Parse(vm.PSBT, network.NBitcoinNetwork);
             IHDKey signingKey = null;
@@ -209,7 +209,7 @@ namespace BTCPayServer.Controllers
             WalletId walletId, WalletPSBTReadyViewModel vm, string command = null)
         {
             PSBT psbt = null;
-            var network = NetworkProvider.GetNetwork(walletId.CryptoCode);
+            var network = NetworkProvider.GetNetwork<BitcoinSpecificBTCPayNetwork>(walletId.CryptoCode);
             try
             {
                 psbt = PSBT.Parse(vm.PSBT, network.NBitcoinNetwork);
@@ -286,7 +286,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> WalletPSBTCombine([ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, WalletPSBTCombineViewModel vm)
         {
-            var network = NetworkProvider.GetNetwork(walletId.CryptoCode);
+            var network = NetworkProvider.GetNetwork<BitcoinSpecificBTCPayNetwork>(walletId.CryptoCode);
             var psbt = await vm.GetPSBT(network.NBitcoinNetwork);
             if (psbt == null)
             {

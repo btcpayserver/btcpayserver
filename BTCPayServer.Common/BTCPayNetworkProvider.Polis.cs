@@ -12,7 +12,7 @@ namespace BTCPayServer
         public void InitPolis()
         {
             var nbxplorerNetwork = NBXplorerNetworkProvider.GetFromCryptoCode("POLIS");
-            Add(new BTCPayNetwork()
+            Add(new BitcoinSpecificBTCPayNetwork()
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "Polis",

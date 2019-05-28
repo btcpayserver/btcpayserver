@@ -106,7 +106,8 @@ namespace BTCPayServer.PaymentRequest
                     Status = entity.GetInvoiceState().ToString(),
                     Payments = entity.GetPayments().Select(paymentEntity =>
                     {
-                        var paymentNetwork = _BtcPayNetworkProvider.GetNetwork(paymentEntity.GetCryptoCode());
+                        //TODO: abstract
+                        var paymentNetwork = _BtcPayNetworkProvider.GetNetwork<BTCPayNetwork>(paymentEntity.GetCryptoCode());
                         var paymentData = paymentEntity.GetCryptoPaymentData();
                         string link = null;
                         string txId = null;

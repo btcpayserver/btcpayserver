@@ -14,7 +14,7 @@ using Newtonsoft.Json;
 
 namespace BTCPayServer.Payments.Bitcoin
 {
-    public class BitcoinLikePaymentHandler : PaymentMethodHandlerBase<DerivationSchemeSettings>
+    public class BitcoinLikePaymentHandler : PaymentMethodHandlerBase<DerivationSchemeSettings, BitcoinSpecificBTCPayNetwork>
     {
         ExplorerClientProvider _ExplorerProvider;
         private readonly BTCPayNetworkProvider _networkProvider;
@@ -43,7 +43,7 @@ namespace BTCPayServer.Payments.Bitcoin
             var paymentMethodId = new PaymentMethodId(model.CryptoCode, PaymentTypes.BTCLike);
 
             var cryptoInfo = invoiceResponse.CryptoInfo.First(o => o.GetpaymentMethodId() == paymentMethodId);
-            var network = _networkProvider.GetNetwork(model.CryptoCode);
+            var network = _networkProvider.GetNetwork<BitcoinSpecificBTCPayNetwork>(model.CryptoCode);
             model.IsLightning = false;
             model.PaymentMethodName = GetPaymentMethodName(network);
             model.CryptoImage = GetCryptoImage(network);
@@ -53,7 +53,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
         public override string GetCryptoImage(PaymentMethodId paymentMethodId)
         {
-            var network = _networkProvider.GetNetwork(paymentMethodId.CryptoCode);
+            var network = _networkProvider.GetNetwork<BitcoinSpecificBTCPayNetwork>(paymentMethodId.CryptoCode);
             return GetCryptoImage(network);
         }
 
@@ -64,7 +64,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
         public override string GetPaymentMethodName(PaymentMethodId paymentMethodId)
         {
-            var network = _networkProvider.GetNetwork(paymentMethodId.CryptoCode);
+            var network = _networkProvider.GetNetwork<BitcoinSpecificBTCPayNetwork>(paymentMethodId.CryptoCode);
             return GetPaymentMethodName(network);
         }
 
@@ -146,7 +146,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
         public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(
             DerivationSchemeSettings supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store,
-            BTCPayNetwork network, object preparePaymentObject)
+            BitcoinSpecificBTCPayNetwork network, object preparePaymentObject)
         {
             if (!_ExplorerProvider.IsAvailable(network))
                 throw new PaymentMethodUnavailableException($"Full node not available");

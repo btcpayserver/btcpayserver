@@ -66,7 +66,7 @@ namespace BTCPayServer.Controllers
             var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
             var hw = new LedgerHardwareWalletService(webSocket);
             object result = null;
-            var network = _NetworkProvider.GetNetwork(cryptoCode);
+            var network = _NetworkProvider.GetNetwork<BitcoinSpecificBTCPayNetwork>(cryptoCode);
 
             using (var normalOperationTimeout = new CancellationTokenSource())
             {

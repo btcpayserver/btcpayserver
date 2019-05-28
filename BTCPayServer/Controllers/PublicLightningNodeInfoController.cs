@@ -41,7 +41,7 @@ namespace BTCPayServer.Controllers
             try
             {
                 var paymentMethodDetails = GetExistingLightningSupportedPaymentMethod(cryptoCode, store);
-                var network = _BtcPayNetworkProvider.GetNetwork(cryptoCode);
+                var network = _BtcPayNetworkProvider.GetNetwork<BitcoinSpecificBTCPayNetwork>(cryptoCode);
                 var nodeInfo =
                     await _LightningLikePaymentHandler.GetNodeInfo(this.Request.IsOnion(), paymentMethodDetails,
                         network);
@@ -70,7 +70,7 @@ namespace BTCPayServer.Controllers
         }
 
 
-        private string GetImage(PaymentMethodId paymentMethodId, BTCPayNetwork network)
+        private string GetImage(PaymentMethodId paymentMethodId, BitcoinSpecificBTCPayNetwork network)
         {
             var res = paymentMethodId.PaymentType == PaymentTypes.BTCLike
                 ? Url.Content(network.CryptoImagePath)

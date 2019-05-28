@@ -12,7 +12,7 @@ namespace BTCPayServer
 {
     public class DerivationSchemeParser
     {
-        public BTCPayNetwork BtcPayNetwork { get; }
+        public BitcoinSpecificBTCPayNetwork BtcPayNetwork { get; }
 
         public Network Network => BtcPayNetwork.NBitcoinNetwork;
 
@@ -20,7 +20,7 @@ namespace BTCPayServer
 
         Dictionary<uint, string[]> ElectrumMapping = new Dictionary<uint, string[]>();
         
-        public DerivationSchemeParser(BTCPayNetwork expectedNetwork)
+        public DerivationSchemeParser(BitcoinSpecificBTCPayNetwork expectedNetwork)
         {
             if (expectedNetwork == null)
                 throw new ArgumentNullException(nameof(expectedNetwork));

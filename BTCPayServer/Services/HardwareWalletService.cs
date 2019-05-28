@@ -25,13 +25,13 @@ namespace BTCPayServer.Services
         public abstract string Device { get; }
         public abstract Task<LedgerTestResult> Test(CancellationToken cancellation);
 
-        public abstract Task<BitcoinExtPubKey> GetExtPubKey(BTCPayNetwork network, KeyPath keyPath, CancellationToken cancellation);
-        public virtual async Task<PubKey> GetPubKey(BTCPayNetwork network, KeyPath keyPath, CancellationToken cancellation)
+        public abstract Task<BitcoinExtPubKey> GetExtPubKey(BitcoinSpecificBTCPayNetwork network, KeyPath keyPath, CancellationToken cancellation);
+        public virtual async Task<PubKey> GetPubKey(BitcoinSpecificBTCPayNetwork network, KeyPath keyPath, CancellationToken cancellation)
         {
             return (await GetExtPubKey(network, keyPath, cancellation)).GetPublicKey();
         }
 
-        public async Task<KeyPath> FindKeyPathFromDerivation(BTCPayNetwork network, DerivationStrategyBase derivationScheme, CancellationToken cancellation)
+        public async Task<KeyPath> FindKeyPathFromDerivation(BitcoinSpecificBTCPayNetwork network, DerivationStrategyBase derivationScheme, CancellationToken cancellation)
         {
             var pubKeys = derivationScheme.GetExtPubKeys().Select(k => k.GetPublicKey()).ToArray();
             var derivation = derivationScheme.Derive(new KeyPath(0));

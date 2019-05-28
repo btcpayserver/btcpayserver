@@ -53,7 +53,7 @@ namespace BTCPayServer.Rating
                 for (int i = 3; i < 5; i++)
                 {
                     var potentialCryptoName = currencyPair.Substring(0, i);
-                    var network = _NetworkProvider.GetNetwork(potentialCryptoName);
+                    var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(potentialCryptoName);
                     if (network != null)
                     {
                         value = new CurrencyPair(network.CryptoCode, currencyPair.Substring(i));

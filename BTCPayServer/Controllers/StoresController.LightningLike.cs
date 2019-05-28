@@ -152,7 +152,7 @@ namespace BTCPayServer.Controllers
                     ModelState.AddModelError(nameof(vm.ConnectionString), "Missing url parameter");
                     return View(vm);
                 case "test":
-                    var handler = (LightningLikePaymentHandler)_ServiceProvider.GetRequiredService<IPaymentMethodHandler<Payments.Lightning.LightningSupportedPaymentMethod>>();
+                    var handler = _ServiceProvider.GetRequiredService<LightningLikePaymentHandler>();
                     try
                     {
                         var info = await handler.GetNodeInfo(this.Request.IsOnion(), paymentMethod, network);

@@ -54,15 +54,15 @@ namespace BTCPayServer
             InitViacoin();
 
             // Assume that electrum mappings are same as BTC if not specified
-            foreach (var network in _Networks)
+            foreach (var network in _Networks.Values.OfType<BitcoinSpecificBTCPayNetwork>())
             {
-                if(network.Value.ElectrumMapping.Count == 0)
+                if(network.ElectrumMapping.Count == 0)
                 {
-                    network.Value.ElectrumMapping = GetNetwork("BTC").ElectrumMapping;
-                    if (!network.Value.NBitcoinNetwork.Consensus.SupportSegwit)
+                    network.ElectrumMapping = GetNetwork<BitcoinSpecificBTCPayNetwork>("BTC").ElectrumMapping;
+                    if (!network.NBitcoinNetwork.Consensus.SupportSegwit)
                     {
-                        network.Value.ElectrumMapping =
-                            network.Value.ElectrumMapping
+                        network.ElectrumMapping =
+                            network.ElectrumMapping
                             .Where(kv => kv.Value == DerivationType.Legacy)
                             .ToDictionary(k => k.Key, k => k.Value);
                     }
@@ -86,7 +86,7 @@ namespace BTCPayServer
         }
 
         [Obsolete("To use only for legacy stuff")]
-        public BTCPayNetwork BTC => GetNetwork("BTC");
+        public BitcoinSpecificBTCPayNetwork BTC => GetNetwork<BitcoinSpecificBTCPayNetwork>("BTC");
 
         public void Add(BTCPayNetwork network)
         {
@@ -103,14 +103,14 @@ namespace BTCPayServer
             return _Networks.ContainsKey(cryptoCode.ToUpperInvariant());
         }
 
-        public BTCPayNetwork GetNetwork(string cryptoCode)
+        public T GetNetwork<T>(string cryptoCode) where T: BTCPayNetwork
         {
             if(!_Networks.TryGetValue(cryptoCode.ToUpperInvariant(), out BTCPayNetwork network))
             {
                 if (cryptoCode == "XBT")
-                    return GetNetwork("BTC");
+                    return GetNetwork<T>("BTC");
             }
-            return network;
+            return network as T;
         }
     }
 }

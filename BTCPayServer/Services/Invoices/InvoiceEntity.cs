@@ -217,7 +217,7 @@ namespace BTCPayServer.Services.Invoices
                 foreach (var strat in strategies.Properties())
                 {
                     var paymentMethodId = PaymentMethodId.Parse(strat.Name);
-                    var network = Networks.GetNetwork(paymentMethodId.CryptoCode);
+                    var network = Networks.GetNetwork<BitcoinSpecificBTCPayNetwork>(paymentMethodId.CryptoCode);
                     if (network != null)
                     {
                         if (network == Networks.BTC && paymentMethodId.PaymentType == PaymentTypes.BTCLike)
@@ -512,7 +512,7 @@ namespace BTCPayServer.Services.Invoices
                     r.CryptoCode = paymentMethodId.CryptoCode;
                     r.PaymentType = paymentMethodId.PaymentType.ToString();
                     r.ParentEntity = this;
-                    r.Network = Networks?.GetNetwork(r.CryptoCode);
+                    r.Network = Networks?.GetNetwork<BTCPayNetwork>(r.CryptoCode);
                     if (r.Network != null || Networks == null)
                         paymentMethods.Add(r);
                 }

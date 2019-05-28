@@ -12,7 +12,7 @@ namespace BTCPayServer
 {
     public class DerivationSchemeSettings : ISupportedPaymentMethod
     {
-        public static DerivationSchemeSettings Parse(string derivationStrategy, BTCPayNetwork network)
+        public static DerivationSchemeSettings Parse(string derivationStrategy, BitcoinSpecificBTCPayNetwork network)
         {
             if (network == null)
                 throw new ArgumentNullException(nameof(network));
@@ -22,7 +22,7 @@ namespace BTCPayServer
             return new DerivationSchemeSettings(result, network) { AccountOriginal = derivationStrategy.Trim() };
         }
 
-        public static bool TryParseFromJson(string config, BTCPayNetwork network, out DerivationSchemeSettings strategy)
+        public static bool TryParseFromJson(string config, BitcoinSpecificBTCPayNetwork network, out DerivationSchemeSettings strategy)
         {
             if (network == null)
                 throw new ArgumentNullException(nameof(network));
@@ -38,7 +38,7 @@ namespace BTCPayServer
             return strategy != null;
         }
 
-        public static bool TryParseFromColdcard(string coldcardExport, BTCPayNetwork network, out DerivationSchemeSettings settings)
+        public static bool TryParseFromColdcard(string coldcardExport, BitcoinSpecificBTCPayNetwork network, out DerivationSchemeSettings settings)
         {
             settings = null;
             if (coldcardExport == null)
@@ -117,7 +117,7 @@ namespace BTCPayServer
 
         }
 
-        public DerivationSchemeSettings(DerivationStrategyBase derivationStrategy, BTCPayNetwork network)
+        public DerivationSchemeSettings(DerivationStrategyBase derivationStrategy, BitcoinSpecificBTCPayNetwork network)
         {
             if (network == null)
                 throw new ArgumentNullException(nameof(network));
@@ -146,7 +146,7 @@ namespace BTCPayServer
         }
 
         [JsonIgnore]
-        public BTCPayNetwork Network { get; set; }
+        public BitcoinSpecificBTCPayNetwork Network { get; set; }
         public string Source { get; set; }
 
         [Obsolete("Use GetAccountKeySettings().AccountKeyPath instead")]

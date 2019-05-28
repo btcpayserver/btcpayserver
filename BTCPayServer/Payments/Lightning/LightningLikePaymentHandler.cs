@@ -20,7 +20,7 @@ using Newtonsoft.Json;
 
 namespace BTCPayServer.Payments.Lightning
 {
-    public class LightningLikePaymentHandler : PaymentMethodHandlerBase<LightningSupportedPaymentMethod>
+    public class LightningLikePaymentHandler : PaymentMethodHandlerBase<LightningSupportedPaymentMethod, BitcoinSpecificBTCPayNetwork>
     {
         public static int LIGHTNING_TIMEOUT = 5000;
 
@@ -43,7 +43,7 @@ namespace BTCPayServer.Payments.Lightning
 
         public override string PrettyDescription => "Off-Chain";
         public override PaymentTypes PaymentType => PaymentTypes.LightningLike;
-        public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(LightningSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store, BTCPayNetwork network, object preparePaymentObject)
+        public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(LightningSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store, BitcoinSpecificBTCPayNetwork network, object preparePaymentObject)
         {
             var storeBlob = store.GetStoreBlob();
             var test = GetNodeInfo(paymentMethod.PreferOnion, supportedPaymentMethod, network);
@@ -84,7 +84,7 @@ namespace BTCPayServer.Payments.Lightning
             };
         }
 
-        public async Task<NodeInfo> GetNodeInfo(bool preferOnion, LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network)
+        public async Task<NodeInfo> GetNodeInfo(bool preferOnion, LightningSupportedPaymentMethod supportedPaymentMethod, BitcoinSpecificBTCPayNetwork network)
         {
             if (!_Dashboard.IsFullySynched(network.CryptoCode, out var summary))
                 throw new PaymentMethodUnavailableException($"Full node not available");
@@ -187,7 +187,7 @@ namespace BTCPayServer.Payments.Lightning
             var paymentMethodId = new PaymentMethodId(model.CryptoCode, PaymentTypes.LightningLike);
             
             var cryptoInfo = invoiceResponse.CryptoInfo.First(o => o.GetpaymentMethodId() == paymentMethodId);
-            var network = _networkProvider.GetNetwork(model.CryptoCode);
+            var network = _networkProvider.GetNetwork<BitcoinSpecificBTCPayNetwork>(model.CryptoCode);
             model.IsLightning = true;
             model.PaymentMethodName = GetPaymentMethodName(network);
             model.CryptoImage = GetCryptoImage(network);
@@ -197,17 +197,17 @@ namespace BTCPayServer.Payments.Lightning
 
         public override string GetCryptoImage(PaymentMethodId paymentMethodId)
         {
-            var network = _networkProvider.GetNetwork(paymentMethodId.CryptoCode);
+            var network = _networkProvider.GetNetwork<BitcoinSpecificBTCPayNetwork>(paymentMethodId.CryptoCode);
             return GetCryptoImage(network);
         }
         
         private string GetCryptoImage(BTCPayNetwork network)
         {
-            return network.LightningImagePath;
+            return ((BitcoinSpecificBTCPayNetwork)network).LightningImagePath;
         }
         public override string GetPaymentMethodName(PaymentMethodId paymentMethodId)
         {
-            var network = _networkProvider.GetNetwork(paymentMethodId.CryptoCode);
+            var network = _networkProvider.GetNetwork<BitcoinSpecificBTCPayNetwork>(paymentMethodId.CryptoCode);
             return GetPaymentMethodName(network);
         }
         

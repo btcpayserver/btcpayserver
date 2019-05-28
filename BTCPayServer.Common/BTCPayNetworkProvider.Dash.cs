@@ -8,7 +8,7 @@ namespace BTCPayServer
         {
             //not needed: NBitcoin.Altcoins.Dash.Instance.EnsureRegistered();
             var nbxplorerNetwork = NBXplorerNetworkProvider.GetFromCryptoCode("DASH");
-            Add(new BTCPayNetwork()
+            Add(new BitcoinSpecificBTCPayNetwork()
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "Dash",

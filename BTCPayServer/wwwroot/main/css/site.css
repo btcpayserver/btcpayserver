@@ -20,6 +20,71 @@
     display: none;
 }
 
+#content {
+    background: #fff;
+    border: 1px solid #DFE3E8;
+    padding: 16px;
+    border-radius: 4px;
+}
+
+#users {
+    background: #fff;
+    border: 1px solid #DFE3E8;
+    border-radius: 4px;
+    margin-top: 16px;
+}
+
+.table {
+    margin-bottom: 0px;
+}
+
+.table thead > tr {
+    height: 56px;
+}
+
+.table thead th {
+    border-bottom: none;
+    border-top: none;
+    vertical-align: middle;
+    padding: 4px 56px 4px 24px;
+}
+
+.table tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+.table tr {
+    height: 64px;
+}
+
+.table td {
+    display: table-cell;
+    padding: 4px 56px 4px 24px;
+    text-align: left;
+    border-bottom: 1px solid #DFE3E8;
+    color: #12161B;
+    font-size: 0.8125rem;
+    font-weight: 400;
+    vertical-align: middle;
+}
+
+a.nav-link {
+    color: #66788A;
+}
+
+.nav-pills .nav-link.active {
+    color: var(--gray-dark);
+    font-weight: 500;
+}
+
+.nav-pills .nav-link.active,
+.nav-pills .show > .nav-link {
+    color: #66788A;
+    background-color: #d9f7ef;
+    border-left: 5px solid var(--primary);
+    font-weight: 500;
+}
+
 .display-when-ledger-connected {
     display: none;
 }

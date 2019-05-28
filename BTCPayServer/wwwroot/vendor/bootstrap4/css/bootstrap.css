@@ -4,7 +4,7 @@
  * Copyright 2011-2018 Twitter, Inc.
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
  */
-:root {
+ :root {
   --blue: #007bff;
   --indigo: #6610f2;
   --purple: #6f42c1;
@@ -4135,8 +4135,19 @@ input[type="button"].btn-block {
 
 .nav-pills .nav-link.active,
 .nav-pills .show > .nav-link {
-  color: #fff;
-  background-color: #329f80;
+  color: #66788A;
+  background-color: #d9f7ef;
+  border-left: 5px solid #329f80;
+  font-weight: 500;
+}
+
+a.nav-link {
+  color: #66788A;
+}
+
+.nav-pills .nav-link.active {
+  color: #12161B;
+  font-weight: 500;
 }
 
 .nav-fill .nav-item {

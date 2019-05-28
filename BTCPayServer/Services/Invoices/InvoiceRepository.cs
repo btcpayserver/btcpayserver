@@ -223,14 +223,14 @@ namespace BTCPayServer.Services.Invoices
             // For legacy reason, BitcoinLikeOnChain is putting the hashes of addresses in database
             if (paymentMethod.GetId().PaymentType == Payments.PaymentTypes.BTCLike)
             {
-                var network = (BitcoinSpecificBTCPayNetwork)paymentMethod.Network;
+                var network = (BTCPayNetwork)paymentMethod.Network;
                 return ((Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod)paymentMethod.GetPaymentMethodDetails()).GetDepositAddress(network.NBitcoinNetwork).ScriptPubKey.Hash.ToString();
             }
             ///////////////
             return paymentMethod.GetPaymentMethodDetails().GetPaymentDestination();
         }
 
-        public async Task<bool> NewAddress(string invoiceId, Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod paymentMethod, BTCPayNetwork network)
+        public async Task<bool> NewAddress(string invoiceId, Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod paymentMethod, BTCPayNetworkBase network)
         {
             using (var context = _ContextFactory.CreateContext())
             {
@@ -258,7 +258,7 @@ namespace BTCPayServer.Services.Invoices
                 }
 #pragma warning restore CS0618
                 invoiceEntity.SetPaymentMethod(currencyData);
-                invoice.Blob = ToBytes(invoiceEntity, (network as BitcoinSpecificBTCPayNetwork)?.NBitcoinNetwork);
+                invoice.Blob = ToBytes(invoiceEntity, (network as BTCPayNetwork)?.NBitcoinNetwork);
 
                 context.AddressInvoices.Add(new AddressInvoiceData()
                 {
@@ -618,7 +618,7 @@ namespace BTCPayServer.Services.Invoices
         /// <param name="cryptoCode"></param>
         /// <param name="accounted"></param>
         /// <returns>The PaymentEntity or null if already added</returns>
-        public async Task<PaymentEntity> AddPayment(string invoiceId, DateTimeOffset date, CryptoPaymentData paymentData, BTCPayNetwork network, bool accounted = false)
+        public async Task<PaymentEntity> AddPayment(string invoiceId, DateTimeOffset date, CryptoPaymentData paymentData, BTCPayNetworkBase network, bool accounted = false)
         {
             using (var context = _ContextFactory.CreateContext())
             {
@@ -649,7 +649,7 @@ namespace BTCPayServer.Services.Invoices
                     bitcoinPaymentMethod.NextNetworkFee = bitcoinPaymentMethod.FeeRate.GetFee(100); // assume price for 100 bytes
                     paymentMethod.SetPaymentMethodDetails(bitcoinPaymentMethod);
                     invoiceEntity.SetPaymentMethod(paymentMethod);
-                    invoice.Blob = ToBytes(invoiceEntity, (network as BitcoinSpecificBTCPayNetwork)?.NBitcoinNetwork);
+                    invoice.Blob = ToBytes(invoiceEntity, (network as BTCPayNetwork)?.NBitcoinNetwork);
                 }
                 PaymentData data = new PaymentData
                 {

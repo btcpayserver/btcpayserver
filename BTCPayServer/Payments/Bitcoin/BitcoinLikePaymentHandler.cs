@@ -14,7 +14,7 @@ using Newtonsoft.Json;
 
 namespace BTCPayServer.Payments.Bitcoin
 {
-    public class BitcoinLikePaymentHandler : PaymentMethodHandlerBase<DerivationSchemeSettings, BitcoinSpecificBTCPayNetwork>
+    public class BitcoinLikePaymentHandler : PaymentMethodHandlerBase<DerivationSchemeSettings, BTCPayNetwork>
     {
         ExplorerClientProvider _ExplorerProvider;
         private readonly BTCPayNetworkProvider _networkProvider;
@@ -43,7 +43,7 @@ namespace BTCPayServer.Payments.Bitcoin
             var paymentMethodId = new PaymentMethodId(model.CryptoCode, PaymentTypes.BTCLike);
 
             var cryptoInfo = invoiceResponse.CryptoInfo.First(o => o.GetpaymentMethodId() == paymentMethodId);
-            var network = _networkProvider.GetNetwork<BitcoinSpecificBTCPayNetwork>(model.CryptoCode);
+            var network = _networkProvider.GetNetwork<BTCPayNetwork>(model.CryptoCode);
             model.IsLightning = false;
             model.PaymentMethodName = GetPaymentMethodName(network);
             model.CryptoImage = GetCryptoImage(network);
@@ -53,18 +53,18 @@ namespace BTCPayServer.Payments.Bitcoin
 
         public override string GetCryptoImage(PaymentMethodId paymentMethodId)
         {
-            var network = _networkProvider.GetNetwork<BitcoinSpecificBTCPayNetwork>(paymentMethodId.CryptoCode);
+            var network = _networkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
             return GetCryptoImage(network);
         }
 
-        private string GetCryptoImage(BTCPayNetwork network)
+        private string GetCryptoImage(BTCPayNetworkBase network)
         {
             return network.CryptoImagePath;
         }
 
         public override string GetPaymentMethodName(PaymentMethodId paymentMethodId)
         {
-            var network = _networkProvider.GetNetwork<BitcoinSpecificBTCPayNetwork>(paymentMethodId.CryptoCode);
+            var network = _networkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
             return GetPaymentMethodName(network);
         }
 
@@ -124,14 +124,14 @@ namespace BTCPayServer.Payments.Bitcoin
             return paymentData;
         }
 
-        private string GetPaymentMethodName(BTCPayNetwork network)
+        private string GetPaymentMethodName(BTCPayNetworkBase network)
         {
             return network.DisplayName;
         }
 
 
         public override object PreparePayment(DerivationSchemeSettings supportedPaymentMethod, StoreData store,
-            BTCPayNetwork network)
+            BTCPayNetworkBase network)
         {
             return new Prepare()
             {
@@ -146,7 +146,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
         public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(
             DerivationSchemeSettings supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store,
-            BitcoinSpecificBTCPayNetwork network, object preparePaymentObject)
+            BTCPayNetwork network, object preparePaymentObject)
         {
             if (!_ExplorerProvider.IsAvailable(network))
                 throw new PaymentMethodUnavailableException($"Full node not available");

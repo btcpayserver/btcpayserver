@@ -24,13 +24,13 @@ namespace BTCPayServer.HostedServices
     {
         public class NBXplorerSummary
         {
-            public BTCPayNetwork Network { get; set; }
+            public BTCPayNetworkBase Network { get; set; }
             public NBXplorerState State { get; set; }
             public StatusResult Status { get; set; }
             public string Error { get; set; }
         }
         ConcurrentDictionary<string, NBXplorerSummary> _Summaries = new ConcurrentDictionary<string, NBXplorerSummary>();
-        public void Publish(BTCPayNetwork network, NBXplorerState state, StatusResult status, string error)
+        public void Publish(BTCPayNetworkBase network, NBXplorerState state, StatusResult status, string error)
         {
             var summary = new NBXplorerSummary() { Network = network, State = state, Status = status, Error = error };
             _Summaries.AddOrUpdate(network.CryptoCode, summary, (k, v) => summary);
@@ -82,7 +82,7 @@ namespace BTCPayServer.HostedServices
     public class NBXplorerWaiter : IHostedService
     {
 
-        public NBXplorerWaiter(NBXplorerDashboard dashboard, BitcoinSpecificBTCPayNetwork network, ExplorerClient client, EventAggregator aggregator)
+        public NBXplorerWaiter(NBXplorerDashboard dashboard, BTCPayNetwork network, ExplorerClient client, EventAggregator aggregator)
         {
             _Network = network;
             _Client = client;
@@ -91,7 +91,7 @@ namespace BTCPayServer.HostedServices
         }
 
         NBXplorerDashboard _Dashboard;
-        BitcoinSpecificBTCPayNetwork _Network;
+        BTCPayNetwork _Network;
         EventAggregator _Aggregator;
         ExplorerClient _Client;
 

@@ -12,7 +12,7 @@ namespace BTCPayServer
         public void InitMonacoin()
         {
             var nbxplorerNetwork = NBXplorerNetworkProvider.GetFromCryptoCode("MONA");
-            Add(new BitcoinSpecificBTCPayNetwork()
+            Add(new BTCPayNetwork()
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "Monacoin",

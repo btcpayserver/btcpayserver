@@ -12,7 +12,7 @@ namespace BTCPayServer
         public void InitBitcoinplus()
         {
             var nbxplorerNetwork = NBXplorerNetworkProvider.GetFromCryptoCode("XBC");
-            Add(new BitcoinSpecificBTCPayNetwork()
+            Add(new BTCPayNetwork()
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "Bitcoinplus",

@@ -43,7 +43,7 @@ namespace BTCPayServer
         public int DefaultPort { get; set; }
     }
 
-    public class BitcoinSpecificBTCPayNetwork:BTCPayNetwork
+    public class BTCPayNetwork:BTCPayNetworkBase
     {
         public Network NBitcoinNetwork { get; set; }
         public NBXplorer.NBXplorerNetwork NBXplorerNetwork { get; set; }
@@ -89,7 +89,7 @@ namespace BTCPayServer
         }
     }
 
-    public abstract class BTCPayNetwork
+    public abstract class BTCPayNetworkBase
     {
         
         public string CryptoCode { get; internal set; }

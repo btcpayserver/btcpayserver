@@ -12,7 +12,7 @@ namespace BTCPayServer
         public void InitLitecoin()
         {
             var nbxplorerNetwork = NBXplorerNetworkProvider.GetFromCryptoCode("LTC");
-            Add(new BitcoinSpecificBTCPayNetwork()
+            Add(new BTCPayNetwork()
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "Litecoin",

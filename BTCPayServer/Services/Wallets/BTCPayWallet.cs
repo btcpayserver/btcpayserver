@@ -37,7 +37,7 @@ namespace BTCPayServer.Services.Wallets
     {
         private ExplorerClient _Client;
         private IMemoryCache _MemoryCache;
-        public BTCPayWallet(ExplorerClient client, IMemoryCache memoryCache, BitcoinSpecificBTCPayNetwork network)
+        public BTCPayWallet(ExplorerClient client, IMemoryCache memoryCache, BTCPayNetwork network)
         {
             if (client == null)
                 throw new ArgumentNullException(nameof(client));
@@ -49,8 +49,8 @@ namespace BTCPayServer.Services.Wallets
         }
 
 
-        private readonly BitcoinSpecificBTCPayNetwork _Network;
-        public BitcoinSpecificBTCPayNetwork Network
+        private readonly BTCPayNetwork _Network;
+        public BTCPayNetwork Network
         {
             get
             {

@@ -8,14 +8,14 @@ namespace BTCPayServer.Events
 {
     public class NBXplorerStateChangedEvent
     {
-        public NBXplorerStateChangedEvent(BTCPayNetwork network, NBXplorerState old, NBXplorerState newState)
+        public NBXplorerStateChangedEvent(BTCPayNetworkBase network, NBXplorerState old, NBXplorerState newState)
         {
             Network = network;
             NewState = newState;
             OldState = old;
         }
 
-        public BTCPayNetwork Network { get; set; }
+        public BTCPayNetworkBase Network { get; set; }
         public NBXplorerState NewState { get; set; }
         public NBXplorerState OldState { get; set; }
 

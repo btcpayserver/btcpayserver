@@ -12,7 +12,7 @@ namespace BTCPayServer
         public void InitUfo()
         {
             var nbxplorerNetwork = NBXplorerNetworkProvider.GetFromCryptoCode("UFO");
-            Add(new BitcoinSpecificBTCPayNetwork()
+            Add(new BTCPayNetwork()
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "Ufo",

@@ -41,6 +41,6 @@ namespace BTCPayServer.Models.StoreViewModels
         public string Source { get; set; }
         public string DerivationSchemeFormat { get; set; }
         public string AccountKey { get; set; }
-        public BitcoinSpecificBTCPayNetwork Network { get; set; }
+        public BTCPayNetwork Network { get; set; }
     }
 }

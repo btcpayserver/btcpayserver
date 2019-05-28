@@ -139,7 +139,7 @@ namespace BTCPayServer.Services.Invoices
         public async Task<InvoiceEntity> CreateInvoiceAsync(string storeId, InvoiceEntity invoice)
         {
             List<string> textSearch = new List<string>();
-            invoice = NBitcoin.JsonConverters.Serializer.ToObject<InvoiceEntity>(ToString(invoice, null), null);
+            invoice = ToObject(ToBytes(invoice));
             invoice.PaymentMethodHandlerDictionary = _paymentMethodHandlerDictionary;
             invoice.Networks = _Networks;
             invoice.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16));
@@ -704,7 +704,7 @@ namespace BTCPayServer.Services.Invoices
             return network.ToObject<T>(ZipUtils.Unzip(value));
         }
 
-        private byte[] ToBytes<T>(T obj, BTCPayNetworkBase network)
+        private byte[] ToBytes<T>(T obj, BTCPayNetworkBase network = null)
         {
             return ZipUtils.Zip(ToString(obj, network));
         }

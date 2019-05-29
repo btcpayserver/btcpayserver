@@ -46,7 +46,7 @@ using BTCPayServer.Services.Apps;
 using OpenIddict.EntityFrameworkCore.Models;
 using BTCPayServer.Services.U2F;
 using BundlerMinifier.TagHelpers;
-
+using System.Collections.Generic;
 namespace BTCPayServer.Hosting
 {
     public static class BTCPayServerServices
@@ -71,10 +71,12 @@ namespace BTCPayServer.Hosting
             {
                 var opts = o.GetRequiredService<BTCPayServerOptions>();
                 var dbContext = o.GetRequiredService<ApplicationDbContextFactory>();
+                var paymentMethodHandlerDictionary = o.GetService<PaymentMethodHandlerDictionary>();
                 var dbpath = Path.Combine(opts.DataDir, "InvoiceDB");
                 if (!Directory.Exists(dbpath))
                     Directory.CreateDirectory(dbpath);
-                return new InvoiceRepository(dbContext, dbpath, o.GetRequiredService<BTCPayNetworkProvider>());
+                return new InvoiceRepository(dbContext, dbpath, o.GetRequiredService<BTCPayNetworkProvider>(),
+                    paymentMethodHandlerDictionary);
             });
             services.AddSingleton<BTCPayServerEnvironment>();
             services.TryAddSingleton<TokenRepository>();
@@ -179,13 +181,15 @@ namespace BTCPayServer.Hosting
             
             services.AddSingleton<BitcoinLikePaymentHandler>();
             services.AddSingleton<IPaymentMethodHandler>(provider => provider.GetService<BitcoinLikePaymentHandler>());
-            services.AddSingleton<IPaymentMethodHandler<DerivationSchemeSettings>>(provider => provider.GetService<BitcoinLikePaymentHandler>());
+            services.AddSingleton<IPaymentMethodHandler<DerivationSchemeSettings, BTCPayNetwork>>(provider => provider.GetService<BitcoinLikePaymentHandler>());
             services.AddSingleton<IHostedService, NBXplorerListener>();
 
             services.AddSingleton<LightningLikePaymentHandler>();
             services.AddSingleton<IPaymentMethodHandler>(provider => provider.GetService<LightningLikePaymentHandler>());
-            services.AddSingleton<IPaymentMethodHandler<LightningSupportedPaymentMethod>>(provider => provider.GetService<LightningLikePaymentHandler>());
+            services.AddSingleton<IPaymentMethodHandler<LightningSupportedPaymentMethod, BTCPayNetwork>>(provider => provider.GetService<LightningLikePaymentHandler>());
             services.AddSingleton<IHostedService, LightningListener>();
+
+            services.AddSingleton<PaymentMethodHandlerDictionary>();
 
             services.AddSingleton<ChangellyClientProvider>();
 

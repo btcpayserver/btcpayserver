@@ -37,7 +37,8 @@ namespace BTCPayServer.Payments.Bitcoin
         public NBXplorerListener(ExplorerClientProvider explorerClients,
                                 BTCPayWalletProvider wallets,
                                 InvoiceRepository invoiceRepository,
-                                EventAggregator aggregator, Microsoft.Extensions.Hosting.IApplicationLifetime lifetime)
+                                EventAggregator aggregator, 
+                                Microsoft.Extensions.Hosting.IApplicationLifetime lifetime)
         {
             PollInterval = TimeSpan.FromMinutes(1.0);
             _Wallets = wallets;

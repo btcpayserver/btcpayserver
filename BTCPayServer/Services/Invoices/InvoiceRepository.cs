@@ -45,13 +45,12 @@ namespace BTCPayServer.Services.Invoices
             BTCPayNetworkProvider networks, PaymentMethodHandlerDictionary paymentMethodHandlerDictionary)
         {
             int retryCount = 0;
-            retry:
+retry:
             try
             {
                 _Engine = new DBriizeEngine(dbreezePath);
             }
             catch when (retryCount++ < 5) { goto retry; }
-
             _IndexerThread = new CustomThreadPool(1, "Invoice Indexer");
             _ContextFactory = contextFactory;
             _Networks = networks;
@@ -136,11 +135,25 @@ namespace BTCPayServer.Services.Invoices
             }
         }
 
+        public async Task ExtendInvoiceMonitor(string invoiceId)
+        {
+            using (var ctx = _ContextFactory.CreateContext())
+            {
+                var invoiceData = await ctx.Invoices.FindAsync(invoiceId);
+
+                var invoice = ToObject(invoiceData.Blob);
+                invoice.MonitoringExpiration = invoice.MonitoringExpiration.AddHours(1);
+                invoiceData.Blob = ToBytes(invoice, null);
+
+                await ctx.SaveChangesAsync();
+            }
+        }
+
         public async Task<InvoiceEntity> CreateInvoiceAsync(string storeId, InvoiceEntity invoice)
         {
             List<string> textSearch = new List<string>();
-            invoice = NBitcoin.JsonConverters.Serializer.ToObject<InvoiceEntity>(ToString(invoice, null), null);
-            invoice.PaymentMethodHandlerDictionary = _paymentMethodHandlerDictionary;
+            invoice = ToObject(ToBytes(invoice));
+           invoice.PaymentMethodHandlerDictionary = _paymentMethodHandlerDictionary;
             invoice.Networks = _Networks;
             invoice.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16));
 #pragma warning disable CS0618
@@ -278,6 +291,18 @@ namespace BTCPayServer.Services.Invoices
             }
         }
 
+        public async Task AddPendingInvoiceIfNotPresent(string invoiceId)
+        {
+            using (var context = _ContextFactory.CreateContext())
+            {
+                if (!context.PendingInvoices.Any(a => a.Id == invoiceId))
+                {
+                    context.PendingInvoices.Add(new PendingInvoiceData() { Id = invoiceId });
+                    await context.SaveChangesAsync();
+                }
+            }
+        }
+
         public async Task AddInvoiceEvent(string invoiceId, object evt)
         {
             using (var context = _ContextFactory.CreateContext())
@@ -297,7 +322,7 @@ namespace BTCPayServer.Services.Invoices
             }
         }
 
-        private void MarkUnassigned(string invoiceId, InvoiceEntity entity, ApplicationDbContext context, PaymentMethodId paymentMethodId)
+        private static void MarkUnassigned(string invoiceId, InvoiceEntity entity, ApplicationDbContext context, PaymentMethodId paymentMethodId)
         {
             foreach (var address in entity.GetPaymentMethods())
             {

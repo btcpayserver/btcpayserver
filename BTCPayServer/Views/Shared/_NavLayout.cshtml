@@ -1,14 +1,14 @@
 ﻿@{
-    Layout = "/Views/Shared/_Layout.cshtml";
-    ViewBag.ShowMenu = ViewBag.ShowMenu ?? true;
+Layout = "/Views/Shared/_Layout.cshtml";
+ViewBag.ShowMenu = ViewBag.ShowMenu ?? true;
 }
 
 <section>
     <div class="container">
         <div class="row">
-            <div class="col-lg-12 text-center">
+            <div class="col-lg-12">
                 <h2 class="section-heading">@ViewData["MainTitle"]</h2>
-                <hr class="primary">
+                <hr class="primary ml-0">
             </div>
         </div>
 
@@ -17,7 +17,7 @@
                 <div class="col-md-3">
                     @if (ViewBag.ShowMenu)
                     {
-                        @await Html.PartialAsync("_Nav")
+                    @await Html.PartialAsync("_Nav")
                     }
                 </div>
                 <div class="col-md-9">
@@ -28,10 +28,9 @@
     </div>
 </section>
 @section HeadScripts {
-    @RenderSection("HeadScripts", required: false)
+@RenderSection("HeadScripts", required: false)
 }
 
 @section Scripts {
-    @RenderSection("Scripts", required: false)
+@RenderSection("Scripts", required: false)
 }
-

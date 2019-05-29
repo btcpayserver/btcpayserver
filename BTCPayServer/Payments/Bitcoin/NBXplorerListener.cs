@@ -239,6 +239,10 @@ namespace BTCPayServer.Payments.Bitcoin
                     }
                 }
 
+                // if needed add invoice back to pending to track number of confirmations
+                if (paymentData.ConfirmationCount < wallet.Network.MaxTrackedConfirmation)
+                    await _InvoiceRepository.AddPendingInvoiceIfNotPresent(invoice.Id);
+
                 if (updated)
                     updatedPaymentEntities.Add(payment);
             }

@@ -3,27 +3,43 @@
     ViewData.SetActivePageAndTitle(ServerNavPages.Users);
 }
 
-
-<h4>@ViewData["Title"]</h4>
 <partial name="_StatusMessage" for="StatusMessage" />
 
-<a asp-controller="Account" asp-action="Register" asp-route-returnUrl="@Context.Request.GetCurrentPath()" asp-route-logon="false" class="btn btn-primary" role="button"><span class="fa fa-plus"></span> Create a new user</a>
-<table class="table table-sm table-responsive-md">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var user in Model.Users)
-        {
+<div class="row">
+    <div class="col">
+        <h4>@ViewData["Title"]</h4>
+    </div>
+    <div class="col text-right">
+        <a 
+            asp-controller="Account" 
+            asp-action="Register" 
+            asp-route-returnUrl="@Context.Request.GetCurrentPath()" 
+            asp-route-logon="false" 
+            class="btn btn-primary" 
+            role="button">
+            <span class="fa fa-plus"></span> Add User
+        </a>
+    </div>
+</div>
+
+<div id="users">
+    <table class="table table-sm table-responsive-md">
+        <thead>
             <tr>
-                <td>@user.Name</td>
-                <td>@user.Email</td>
-                <td><a asp-action="User" asp-route-userId="@user.Id">Modify</a> <span> - </span> <a asp-action="DeleteUser" asp-route-userId="@user.Id">Remove</a></td>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Actions</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var user in Model.Users)
+            {
+                <tr>
+                    <td>@user.Name</td>
+                    <td>@user.Email</td>
+                    <td><a asp-action="User" asp-route-userId="@user.Id">Edit</a> <span> - </span> <a asp-action="DeleteUser" asp-route-userId="@user.Id">Remove</a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

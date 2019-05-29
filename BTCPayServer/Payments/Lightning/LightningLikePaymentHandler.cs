@@ -43,13 +43,16 @@ namespace BTCPayServer.Payments.Lightning
 
         public override string PrettyDescription => "Off-Chain";
         public override PaymentTypes PaymentType => PaymentTypes.LightningLike;
-        public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(LightningSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store, BTCPayNetwork network, object preparePaymentObject)
+        public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(
+            LightningSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store,
+            BTCPayNetworkBase network, object preparePaymentObject)
         {
+            //direct casting to (BTCPayNetwork) is fixed in other pull requests with better generic interfacing for handlers
             var storeBlob = store.GetStoreBlob();
-            var test = GetNodeInfo(paymentMethod.PreferOnion, supportedPaymentMethod, network);
+            var test = GetNodeInfo(paymentMethod.PreferOnion, supportedPaymentMethod, (BTCPayNetwork)network);
             var invoice = paymentMethod.ParentEntity;
             var due = Extensions.RoundUp(invoice.ProductInformation.Price / paymentMethod.Rate, 8);
-            var client = _lightningClientFactory.Create(supportedPaymentMethod.GetLightningUrl(), network);
+            var client = _lightningClientFactory.Create(supportedPaymentMethod.GetLightningUrl(), (BTCPayNetwork)network);
             var expiry = invoice.ExpirationTime - DateTimeOffset.UtcNow;
             if (expiry < TimeSpan.Zero)
                 expiry = TimeSpan.FromSeconds(1);

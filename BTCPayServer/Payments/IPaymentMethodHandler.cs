@@ -24,6 +24,7 @@ namespace BTCPayServer.Payments
         /// <param name="paymentMethod"></param>
         /// <param name="store"></param>
         /// <param name="network"></param>
+        /// <param name="preparePaymentObject"></param>
         /// <returns></returns>
         Task<IPaymentMethodDetails> CreatePaymentMethodDetails(ISupportedPaymentMethod supportedPaymentMethod,
             PaymentMethod paymentMethod, StoreData store, BTCPayNetworkBase network, object preparePaymentObject);

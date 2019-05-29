@@ -109,7 +109,6 @@ namespace BTCPayServer.Controllers
                 cryptoPayment.Overpaid = _CurrencyNameTable.DisplayFormatCurrency(accounting.OverpaidHelper.ToDecimal(MoneyUnit.BTC), paymentMethodId.CryptoCode);
 //TODO: abstract
                 var onchainMethod = data.GetPaymentMethodDetails() as Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod;
-                
                 if (onchainMethod != null)
                 {
                     cryptoPayment.Address = onchainMethod.DepositAddress;
@@ -233,6 +232,7 @@ namespace BTCPayServer.Controllers
             BTCPayNetworkBase network = _NetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
             if (network == null && isDefaultPaymentId)
             {
+                //TODO: need to look into a better way for this as it does not scale
                 network = _NetworkProvider.GetAll().OfType<BTCPayNetwork>().FirstOrDefault();
                 paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
             }
@@ -349,7 +349,6 @@ namespace BTCPayServer.Controllers
             model.TimeLeft = expiration.PrettyPrint();
             return model;
         }
-
 
         private string OrderAmountFromInvoice(string cryptoCode, ProductInformation productInformation)
         {

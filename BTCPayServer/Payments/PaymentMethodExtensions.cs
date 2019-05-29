@@ -10,11 +10,11 @@ namespace BTCPayServer.Payments
 {
     public class PaymentMethodExtensions
     {
-        public static ISupportedPaymentMethod Deserialize(PaymentMethodId paymentMethodId, JToken value, BTCPayNetwork network)
+        public static ISupportedPaymentMethod Deserialize(PaymentMethodId paymentMethodId, JToken value, BTCPayNetworkBase network)
         {
             if (paymentMethodId.PaymentType == PaymentTypes.BTCLike)
             {
-                var bitcoinSpecificBtcPayNetwork = (BitcoinSpecificBTCPayNetwork)network;
+                var bitcoinSpecificBtcPayNetwork = (BTCPayNetwork)network;
                 if (value is JObject jobj)
                 {
                     var scheme = bitcoinSpecificBtcPayNetwork.NBXplorerNetwork.Serializer.ToObject<DerivationSchemeSettings>(jobj);

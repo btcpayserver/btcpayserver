@@ -10,7 +10,7 @@ using NBitcoin;
 
 namespace BTCPayServer.Payments.Bitcoin
 {
-    public class BitcoinLikePaymentHandler : PaymentMethodHandlerBase<DerivationSchemeSettings, BitcoinSpecificBTCPayNetwork>
+    public class BitcoinLikePaymentHandler : PaymentMethodHandlerBase<DerivationSchemeSettings, BTCPayNetwork>
     {
         ExplorerClientProvider _ExplorerProvider;
         private IFeeProviderFactory _FeeRateProviderFactory;

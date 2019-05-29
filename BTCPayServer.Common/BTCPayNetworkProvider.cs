@@ -10,7 +10,7 @@ namespace BTCPayServer
 {
     public partial class BTCPayNetworkProvider
     {
-        Dictionary<string, BTCPayNetwork> _Networks = new Dictionary<string, BTCPayNetwork>();
+        Dictionary<string, BTCPayNetworkBase> _Networks = new Dictionary<string, BTCPayNetworkBase>();
 
 
         private readonly NBXplorerNetworkProvider _NBXplorerNetworkProvider;
@@ -26,7 +26,7 @@ namespace BTCPayServer
         {
             NetworkType = filtered.NetworkType;
             _NBXplorerNetworkProvider = new NBXplorerNetworkProvider(filtered.NetworkType);
-            _Networks = new Dictionary<string, BTCPayNetwork>();
+            _Networks = new Dictionary<string, BTCPayNetworkBase>();
             cryptoCodes = cryptoCodes.Select(c => c.ToUpperInvariant()).ToArray();
             foreach (var network in filtered._Networks)
             {
@@ -54,11 +54,11 @@ namespace BTCPayServer
             InitViacoin();
 
             // Assume that electrum mappings are same as BTC if not specified
-            foreach (var network in _Networks.Values.OfType<BitcoinSpecificBTCPayNetwork>())
+            foreach (var network in _Networks.Values.OfType<BTCPayNetwork>())
             {
                 if(network.ElectrumMapping.Count == 0)
                 {
-                    network.ElectrumMapping = GetNetwork<BitcoinSpecificBTCPayNetwork>("BTC").ElectrumMapping;
+                    network.ElectrumMapping = GetNetwork<BTCPayNetwork>("BTC").ElectrumMapping;
                     if (!network.NBitcoinNetwork.Consensus.SupportSegwit)
                     {
                         network.ElectrumMapping =
@@ -86,14 +86,14 @@ namespace BTCPayServer
         }
 
         [Obsolete("To use only for legacy stuff")]
-        public BitcoinSpecificBTCPayNetwork BTC => GetNetwork<BitcoinSpecificBTCPayNetwork>("BTC");
+        public BTCPayNetwork BTC => GetNetwork<BTCPayNetwork>("BTC");
 
-        public void Add(BTCPayNetwork network)
+        public void Add(BTCPayNetworkBase network)
         {
             _Networks.Add(network.CryptoCode.ToUpperInvariant(), network);
         }
 
-        public IEnumerable<BTCPayNetwork> GetAll()
+        public IEnumerable<BTCPayNetworkBase> GetAll()
         {
             return _Networks.Values.ToArray();
         }
@@ -103,9 +103,9 @@ namespace BTCPayServer
             return _Networks.ContainsKey(cryptoCode.ToUpperInvariant());
         }
 
-        public T GetNetwork<T>(string cryptoCode) where T: BTCPayNetwork
+        public T GetNetwork<T>(string cryptoCode) where T: BTCPayNetworkBase
         {
-            if(!_Networks.TryGetValue(cryptoCode.ToUpperInvariant(), out BTCPayNetwork network))
+            if(!_Networks.TryGetValue(cryptoCode.ToUpperInvariant(), out BTCPayNetworkBase network))
             {
                 if (cryptoCode == "XBT")
                     return GetNetwork<T>("BTC");

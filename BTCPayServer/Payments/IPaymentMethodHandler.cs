@@ -21,7 +21,7 @@ namespace BTCPayServer.Payments
         /// <param name="network"></param>
         /// <returns></returns>
         Task<IPaymentMethodDetails> CreatePaymentMethodDetails(ISupportedPaymentMethod supportedPaymentMethod,
-            PaymentMethod paymentMethod, StoreData store, BTCPayNetwork network, object preparePaymentObject);
+            PaymentMethod paymentMethod, StoreData store, BTCPayNetworkBase network, object preparePaymentObject);
 
         /// <summary>
         /// This method called before the rate have been fetched
@@ -39,7 +39,7 @@ namespace BTCPayServer.Payments
 
     public interface IPaymentMethodHandler<TSupportedPaymentMethod, TBTCPayNetwork> : IPaymentMethodHandler
         where TSupportedPaymentMethod : ISupportedPaymentMethod
-        where TBTCPayNetwork : BTCPayNetwork
+        where TBTCPayNetwork : BTCPayNetworkBase
     {
         Task<IPaymentMethodDetails> CreatePaymentMethodDetails(TSupportedPaymentMethod supportedPaymentMethod,
             PaymentMethod paymentMethod, StoreData store, TBTCPayNetwork network, object preparePaymentObject);
@@ -49,7 +49,7 @@ namespace BTCPayServer.Payments
         PaymentMethodHandlerBase<TSupportedPaymentMethod, TBTCPayNetwork> : IPaymentMethodHandler<
             TSupportedPaymentMethod, TBTCPayNetwork>
         where TSupportedPaymentMethod : ISupportedPaymentMethod
-        where TBTCPayNetwork : BTCPayNetwork
+        where TBTCPayNetwork : BTCPayNetworkBase
     {
         public abstract string PrettyDescription { get; }
         public abstract PaymentTypes PaymentType { get; }
@@ -60,7 +60,7 @@ namespace BTCPayServer.Payments
         }
 
         public Task<IPaymentMethodDetails> CreatePaymentMethodDetails(ISupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod,
-            StoreData store, BTCPayNetwork network, object preparePaymentObject)
+            StoreData store, BTCPayNetworkBase network, object preparePaymentObject)
         {
             if (supportedPaymentMethod is TSupportedPaymentMethod method && network is TBTCPayNetwork correctNetwork)
             {
@@ -71,7 +71,7 @@ namespace BTCPayServer.Payments
         }
 
         object IPaymentMethodHandler.PreparePayment(ISupportedPaymentMethod supportedPaymentMethod, StoreData store,
-            BTCPayNetwork network)
+            BTCPayNetworkBase network)
         {
             if (supportedPaymentMethod is TSupportedPaymentMethod method)
             {

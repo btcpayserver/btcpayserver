@@ -118,7 +118,7 @@ namespace BTCPayServer.Controllers
             foreach (var payment in invoice.GetPayments())
             {
                 //TODO: abstract
-                var paymentNetwork = _NetworkProvider.GetNetwork<BitcoinSpecificBTCPayNetwork>(payment.GetCryptoCode());
+                var paymentNetwork = _NetworkProvider.GetNetwork<BTCPayNetwork>(payment.GetCryptoCode());
                 if (paymentNetwork == null)
                 {
                     continue;
@@ -242,10 +242,10 @@ namespace BTCPayServer.Controllers
                 paymentMethodId = store.GetDefaultPaymentId(_NetworkProvider);
                 isDefaultPaymentId = true;
             }
-            BTCPayNetwork network = _NetworkProvider.GetNetwork<BitcoinSpecificBTCPayNetwork>(paymentMethodId.CryptoCode);
+            BTCPayNetworkBase network = _NetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
             if (network == null && isDefaultPaymentId)
             {
-                network = _NetworkProvider.GetAll().OfType<BitcoinSpecificBTCPayNetwork>().FirstOrDefault();
+                network = _NetworkProvider.GetAll().OfType<BTCPayNetwork>().FirstOrDefault();
                 paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
             }
             if (invoice == null || network == null)

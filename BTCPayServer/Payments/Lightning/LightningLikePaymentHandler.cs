@@ -14,7 +14,7 @@ using NBitcoin;
 
 namespace BTCPayServer.Payments.Lightning
 {
-    public class LightningLikePaymentHandler : PaymentMethodHandlerBase<LightningSupportedPaymentMethod, BitcoinSpecificBTCPayNetwork>
+    public class LightningLikePaymentHandler : PaymentMethodHandlerBase<LightningSupportedPaymentMethod, BTCPayNetwork>
     {
         public static int LIGHTNING_TIMEOUT = 5000;
 
@@ -34,7 +34,7 @@ namespace BTCPayServer.Payments.Lightning
 
         public override string PrettyDescription => "Off-Chain";
         public override PaymentTypes PaymentType => PaymentTypes.LightningLike;
-        public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(LightningSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store, BitcoinSpecificBTCPayNetwork network, object preparePaymentObject)
+        public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(LightningSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store, BTCPayNetwork network, object preparePaymentObject)
         {
             var storeBlob = store.GetStoreBlob();
             var test = GetNodeInfo(paymentMethod.PreferOnion, supportedPaymentMethod, network);
@@ -75,7 +75,7 @@ namespace BTCPayServer.Payments.Lightning
             };
         }
 
-        public async Task<NodeInfo> GetNodeInfo(bool preferOnion, LightningSupportedPaymentMethod supportedPaymentMethod, BitcoinSpecificBTCPayNetwork network)
+        public async Task<NodeInfo> GetNodeInfo(bool preferOnion, LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network)
         {
             if (!_Dashboard.IsFullySynched(network.CryptoCode, out var summary))
                 throw new PaymentMethodUnavailableException($"Full node not available");

@@ -15,6 +15,7 @@ namespace BTCPayServer.Models.WalletViewModels
             get;
             set;
         }
+        public string CryptoImage { get; set; }
         public string DefaultAddress { get; set; }
         public string DefaultAmount { get; set; }
 

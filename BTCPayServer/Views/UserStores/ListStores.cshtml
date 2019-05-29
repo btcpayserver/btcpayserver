@@ -22,7 +22,7 @@
 
         <div class="row">
             <a asp-action="CreateStore" class="btn btn-primary" role="button" id="CreateStore"><span class="fa fa-plus"></span> Create a new store</a>
-            <table class="table table-sm table-responsive-md">
+            @*<table class="table table-sm table-responsive-md">
                 <thead>
                     <tr>
                         <th>Name</th>
@@ -52,7 +52,51 @@
                         </tr>
                     }
                 </tbody>
-            </table>
+            </table>*@
+        </div>
+        <br />
+        <div class="row justify-content-center">
+            @foreach (var store in Model.Stores)
+            {
+
+                @if (store.IsOwner)
+                {
+                   
+
+                    <div class="justify-content-sm-center">
+                        <div class="col">
+                            <div class="card my-2" style="max-width: 18rem; box-shadow: 0px 2px 8px">
+                                <div class="card-header bg-white mb-3" style="text-align:center">
+                                    @store.Name
+                                </div>
+                                <div class="card-body text-dark" style="text-align:center">
+                                   
+                                    @if (!string.IsNullOrEmpty(store.WebSite))
+                                    {
+                                        <a href="@store.WebSite">@store.WebSite</a>
+                                    }
+                                    else
+                                    {
+                                        <a asp-action="UpdateStore" asp-controller="Stores" asp-route-storeId="@store.Id">Set Website</a>
+                                    }
+
+                                        <div  class="card-footer bg-white border-1">
+                                            <a asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchTerm="storeid:@store.Id">Invoices</a><span> - </span>
+                                            <a asp-action="UpdateStore" asp-controller="Stores" asp-route-storeId="@store.Id">Settings</a><span> - </span>
+                                            <a asp-action="DeleteStore" asp-route-storeId="@store.Id">Remove</a>
+                                        </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    @store.WebSite
+                }
+
+            }
+
         </div>
 
     </div>

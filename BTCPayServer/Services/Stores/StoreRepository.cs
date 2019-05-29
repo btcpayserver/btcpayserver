@@ -238,7 +238,8 @@ namespace BTCPayServer.Services.Stores
 
         private StoreData PrepareEntity(StoreData storeData)
         {
-            storeData.PaymentMethodHandlerDictionary = _paymentMethodHandlerDictionary;
+            if(storeData != null)
+                storeData.PaymentMethodHandlerDictionary = _paymentMethodHandlerDictionary;
             return storeData;
         }
     }

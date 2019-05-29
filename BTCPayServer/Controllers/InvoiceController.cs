@@ -168,7 +168,7 @@ namespace BTCPayServer.Controllers
             var supportedPaymentMethods = store.GetSupportedPaymentMethods(_NetworkProvider)
                                                .Where(s => !excludeFilter.Match(s.PaymentId))
                                                .Select(c =>
-                                                (Handler: _paymentMethodHandlerDictionary[c.PaymentId],
+                                                (Handler: (IPaymentMethodHandler)_ServiceProvider.GetService(typeof(IPaymentMethodHandler<>).MakeGenericType(c.GetType())),
                                                 SupportedPaymentMethod: c,
                                                 Network: _NetworkProvider.GetNetwork<BTCPayNetworkBase>(c.PaymentId.CryptoCode)))
                                                 .Where(c => c.Network != null)

@@ -138,7 +138,6 @@ retry:
         {
             List<string> textSearch = new List<string>();
             invoice = ToObject(ToBytes(invoice));
-            invoice.PaymentMethodHandlerDictionary = _paymentMethodHandlerDictionary;
             invoice.Networks = _Networks;
             invoice.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16));
 #pragma warning disable CS0618

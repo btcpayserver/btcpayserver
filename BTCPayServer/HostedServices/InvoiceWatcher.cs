@@ -324,7 +324,7 @@ namespace BTCPayServer.HostedServices
                 .GetPayments()
                 .Select<PaymentEntity, Task<PaymentEntity>>(async payment =>
                 {
-                    var paymentNetwork = _NetworkProvider.GetNetwork(payment.GetCryptoCode());
+                    var paymentNetwork = _NetworkProvider.GetNetwork<BTCPayNetwork>(payment.GetCryptoCode());
                     var paymentData = payment.GetCryptoPaymentData();
                     if (paymentData is Payments.Bitcoin.BitcoinLikePaymentData onChainPaymentData)
                     {

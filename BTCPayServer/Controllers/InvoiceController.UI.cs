@@ -358,16 +358,17 @@ namespace BTCPayServer.Controllers
             return model;
         }
 
-        private string GetDisplayName(PaymentMethodId paymentMethodId, BTCPayNetwork network)
+        private string GetDisplayName(PaymentMethodId paymentMethodId, BTCPayNetworkBase network)
         {
             return paymentMethodId.PaymentType == PaymentTypes.BTCLike ?
                 network.DisplayName : network.DisplayName + " (Lightning)";
         }
 
-        private string GetImage(PaymentMethodId paymentMethodId, BTCPayNetwork network)
+        private string GetImage(PaymentMethodId paymentMethodId, BTCPayNetworkBase network)
         {
+            //the direct casting ((BTCPayNetwork)network) ) for ln image is only temp..this method is offloaded to payment handlers in other pull requests
             return paymentMethodId.PaymentType == PaymentTypes.BTCLike ?
-                this.Request.GetRelativePathOrAbsolute(network.CryptoImagePath) : this.Request.GetRelativePathOrAbsolute(network.LightningImagePath);
+                this.Request.GetRelativePathOrAbsolute(network.CryptoImagePath) : this.Request.GetRelativePathOrAbsolute(((BTCPayNetwork)network).LightningImagePath);
         }
 
         private string OrderAmountFromInvoice(string cryptoCode, ProductInformation productInformation)

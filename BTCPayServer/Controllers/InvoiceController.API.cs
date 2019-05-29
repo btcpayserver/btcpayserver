@@ -1,17 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Filters;
 using BTCPayServer.Models;
-using BTCPayServer.Payments;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
-using NBitpayClient;
 
 namespace BTCPayServer.Controllers
 {
@@ -21,18 +17,12 @@ namespace BTCPayServer.Controllers
     {
         private InvoiceController _InvoiceController;
         private InvoiceRepository _InvoiceRepository;
-        private BTCPayNetworkProvider _NetworkProvider;
-        private readonly IEnumerable<IPaymentMethodHandler> _paymentMethodHandlers;
 
         public InvoiceControllerAPI(InvoiceController invoiceController,
-                                    InvoiceRepository invoceRepository,
-                                    BTCPayNetworkProvider networkProvider,
-                                    IEnumerable<IPaymentMethodHandler> paymentMethodHandlers)
+                                    InvoiceRepository invoceRepository)
         {
-            this._InvoiceController = invoiceController;
-            this._InvoiceRepository = invoceRepository;
-            this._NetworkProvider = networkProvider;
-            _paymentMethodHandlers = paymentMethodHandlers;
+            _InvoiceController = invoiceController;
+            _InvoiceRepository = invoceRepository;
         }
 
         [HttpPost]

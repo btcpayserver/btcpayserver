@@ -109,6 +109,7 @@ namespace BTCPayServer.Controllers
                 walletVm.Id = new WalletId(wallet.Store.Id, wallet.Network.CryptoCode);
                 walletVm.StoreName = wallet.Store.StoreName;
                 walletVm.IsOwner = wallet.Store.HasClaim(Policies.CanModifyStoreSettings.Key);
+                walletVm.CryptoImage = wallet.Network.CryptoImagePath;
             }
 
             return View(wallets);

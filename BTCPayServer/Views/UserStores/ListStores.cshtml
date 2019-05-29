@@ -65,26 +65,26 @@
 
                     <div class="justify-content-sm-center">
                         <div class="col">
-                            <div class="card border-light mb-1" style="max-width: 18rem; box-shadow: 0px 2px 8px">
-                                <div class="card-header bg-white mb-3">
-                                    <div class="row">
-                                        <div class="col"><img alt="" src="~/img/logo.png" style="height:15px; width:30px" /></div>
-                                        <div class="col"><h6></h6></div>
-                                    </div>
+                            <div class="card my-2" style="max-width: 18rem; box-shadow: 0px 2px 8px">
+                                <div class="card-header bg-white mb-3" style="text-align:center">
+                                    @store.Name
                                 </div>
-
-
                                 <div class="card-body text-dark" style="text-align:center">
-                                    <h6>@store.Name</h6>
+                                   
                                     @if (!string.IsNullOrEmpty(store.WebSite))
                                     {
                                         <a href="@store.WebSite">@store.WebSite</a>
                                     }
-                                    <hr />
-                                    <a asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchTerm="storeid:@store.Id">Invoices</a><span> - </span>
-                                    <a asp-action="UpdateStore" asp-controller="Stores" asp-route-storeId="@store.Id">Settings</a><span> - </span>
-                                    <a asp-action="DeleteStore" asp-route-storeId="@store.Id">Remove</a>
-                                    <br />
+                                    else
+                                    {
+                                        <a asp-action="UpdateStore" asp-controller="Stores" asp-route-storeId="@store.Id">Set Website</a>
+                                    }
+
+                                        <div  class="card-footer bg-white border-1">
+                                            <a asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchTerm="storeid:@store.Id">Invoices</a><span> - </span>
+                                            <a asp-action="UpdateStore" asp-controller="Stores" asp-route-storeId="@store.Id">Settings</a><span> - </span>
+                                            <a asp-action="DeleteStore" asp-route-storeId="@store.Id">Remove</a>
+                                        </div>
                                 </div>
                             </div>
                         </div>

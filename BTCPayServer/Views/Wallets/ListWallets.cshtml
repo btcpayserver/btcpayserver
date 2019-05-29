@@ -28,22 +28,22 @@
 
                     <div class="justify-content-sm-center">
                         <div class="col">
-                            <div class="card border-light mb-1" style="max-width: 18rem; box-shadow: 0px 2px 8px">
-                                <div class="card-header bg-white mb-3">
+                            <div class="card my-2" style="max-width: 18rem; box-shadow: 0px 2px 8px">
+                                <div class="card-header bg-light mb-3">
                                     <div class="row">
-                                        <div class="col"><img alt="" src="@wallet.CryptoImage" style="height:30px; width:30px" /></div>
+                                        <div class="col"><img class="float-left" alt="" src="@wallet.CryptoImage" style="height:30px; width:30px" /></div>
                                         <div class="col"></div>
                                     </div>
                                 </div>
 
                                 <div class="card-body text-dark" style="text-align:center">
                                     <h6>@wallet.StoreName</h6>
-                                    <h6>@wallet.CryptoCode</h6>
                                     <p class="card-text">@wallet.Balance</p>
-                                    <hr />
-                                    <a class="" asp-action="UpdateStore" asp-controller="Stores" asp-route-storeId="@wallet.StoreId">Update Store</a><span> - </span>
-                                    <a class="" asp-action="WalletTransactions" asp-route-walletId="@wallet.Id">Manage Wallet</a>
-                                    <br />
+
+                                    <div class="card-footer bg-white border-1">                                        
+                                        <a class="" asp-action="WalletTransactions" asp-route-walletId="@wallet.Id">Manage Wallet</a>
+                                    </div>
+
                                 </div>
                             </div>
                         </div>
@@ -57,8 +57,5 @@
             }
 
         </div>
-
-
-
 
 </section>

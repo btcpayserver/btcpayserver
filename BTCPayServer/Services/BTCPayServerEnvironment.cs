@@ -68,6 +68,8 @@ namespace BTCPayServer.Services
             }
         }
 
+        public HttpContext Context => httpContext.HttpContext;    
+
         public override string ToString()
         {
             StringBuilder txt = new StringBuilder();

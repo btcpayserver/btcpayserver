@@ -12,6 +12,7 @@ namespace BTCPayServer.Payments
     {
         public static ISupportedPaymentMethod Deserialize(PaymentMethodId paymentMethodId, JToken value, BTCPayNetworkBase network)
         {
+            //Todo: Abstract
             if (paymentMethodId.PaymentType == PaymentTypes.BTCLike)
             {
                 var bitcoinSpecificBtcPayNetwork = (BTCPayNetwork)network;
@@ -37,6 +38,7 @@ namespace BTCPayServer.Payments
 
         public static IPaymentMethodDetails DeserializePaymentMethodDetails(PaymentMethodId paymentMethodId, JObject jobj)
         {
+            //Todo: Abstract
             if(paymentMethodId.PaymentType == PaymentTypes.BTCLike)
             {
                 return JsonConvert.DeserializeObject<Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod>(jobj.ToString());

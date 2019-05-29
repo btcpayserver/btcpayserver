@@ -1,7 +1,5 @@
 ﻿using NBXplorer;
 using Microsoft.Extensions.Logging;
-using NBXplorer.DerivationStrategy;
-using NBXplorer.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,12 +9,8 @@ using BTCPayServer.Logging;
 using System.Threading;
 using Microsoft.Extensions.Hosting;
 using System.Collections.Concurrent;
-using BTCPayServer.Services.Wallets;
-using BTCPayServer.Controllers;
 using BTCPayServer.Events;
-using Microsoft.AspNetCore.Hosting;
 using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services;
 
 namespace BTCPayServer.HostedServices
 {

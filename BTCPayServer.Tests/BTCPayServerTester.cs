@@ -275,6 +275,8 @@ namespace BTCPayServer.Tests
             return _Host.Services.GetRequiredService<T>();
         }
 
+        public IServiceProvider ServiceProvider => _Host.Services; 
+
         public T GetController<T>(string userId = null, string storeId = null, Claim[] additionalClaims = null) where T : Controller
         {
             var context = new DefaultHttpContext();

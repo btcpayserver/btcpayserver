@@ -7,6 +7,6 @@ namespace BTCPayServer.Services
 {
     public interface IFeeProviderFactory
     {
-        IFeeProvider CreateFeeProvider(BTCPayNetwork network);
+        IFeeProvider CreateFeeProvider(BTCPayNetworkBase network);
     }
 }

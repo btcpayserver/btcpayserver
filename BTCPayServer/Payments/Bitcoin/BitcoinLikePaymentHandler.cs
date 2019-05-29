@@ -33,7 +33,7 @@ namespace BTCPayServer.Payments.Bitcoin
             public Task<BitcoinAddress> ReserveAddress;
         }
 
-        public override object PreparePayment(DerivationSchemeSettings supportedPaymentMethod, StoreData store, BTCPayNetwork network)
+        public override object PreparePayment(DerivationSchemeSettings supportedPaymentMethod, StoreData store, BTCPayNetworkBase network)
         {
             return new Prepare()
             {
@@ -45,7 +45,9 @@ namespace BTCPayServer.Payments.Bitcoin
         public override string PrettyDescription => "On-Chain";
         public override PaymentTypes PaymentType => PaymentTypes.BTCLike;
 
-        public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(DerivationSchemeSettings supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store, BTCPayNetwork network, object preparePaymentObject)
+        public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(
+            DerivationSchemeSettings supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store,
+            BTCPayNetworkBase network, object preparePaymentObject)
         {
             if (!_ExplorerProvider.IsAvailable(network))
                 throw new PaymentMethodUnavailableException($"Full node not available");

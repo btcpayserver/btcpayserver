@@ -372,7 +372,7 @@ namespace BTCPayServer.Controllers
 
         private string GetDisplayName(PaymentMethodId paymentMethodId)
         {
-            var display = _NetworkProvider.GetNetwork(paymentMethodId.CryptoCode)?.DisplayName ?? paymentMethodId.CryptoCode;
+            var display = _NetworkProvider.GetNetwork<BTCPayNetworkBase>(paymentMethodId.CryptoCode)?.DisplayName ?? paymentMethodId.CryptoCode;
             return paymentMethodId.PaymentType == PaymentTypes.BTCLike ?
                 display : $"{display} (Lightning)";
         }

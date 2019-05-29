@@ -84,7 +84,7 @@ namespace BTCPayServer.Data
                 foreach (var strat in strategies.Properties())
                 {
                     var paymentMethodId = PaymentMethodId.Parse(strat.Name);
-                    var network = networks.GetNetwork(paymentMethodId.CryptoCode);
+                    var network = networks.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
                     if (network != null)
                     {
                         if (network == networks.BTC && paymentMethodId.PaymentType == PaymentTypes.BTCLike && btcReturned)
@@ -282,7 +282,7 @@ namespace BTCPayServer.Data
 
         public double Multiplier { get; set; }
 
-        public decimal Apply(BTCPayNetwork network, decimal rate)
+        public decimal Apply(BTCPayNetworkBase network, decimal rate)
         {
             return rate * (decimal)Multiplier;
         }

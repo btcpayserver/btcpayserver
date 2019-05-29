@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using BTCPayServer.Payments.Changelly;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Payments
@@ -25,8 +20,6 @@ namespace BTCPayServer.Payments
                 var str = JsonConvert.SerializeObject(factory);
                 return JObject.Parse(str);
             }
-            throw new NotSupportedException();
         }
-
     }
 }

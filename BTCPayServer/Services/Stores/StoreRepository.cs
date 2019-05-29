@@ -29,8 +29,7 @@ namespace BTCPayServer.Services.Stores
             using (var ctx = _ContextFactory.CreateContext())
             {
                 var result =  await ctx.FindAsync<StoreData>(storeId).ConfigureAwait(false);
-                result.PaymentMethodHandlerDictionary = _paymentMethodHandlerDictionary;
-                return result;
+                return PrepareEntity(result);
             }
         }
 
@@ -53,8 +52,7 @@ namespace BTCPayServer.Services.Stores
 #pragma warning disable CS0612 // Type or member is obsolete
                         us.Store.Role = us.Role;
 #pragma warning restore CS0612 // Type or member is obsolete
-                        us.Store.PaymentMethodHandlerDictionary = _paymentMethodHandlerDictionary;
-                        return us.Store;
+                        return PrepareEntity(us.Store);
                     }).FirstOrDefault();
             }
         }
@@ -96,8 +94,7 @@ namespace BTCPayServer.Services.Stores
 #pragma warning disable CS0612 // Type or member is obsolete
                         u.StoreData.Role = u.Role;
 #pragma warning restore CS0612 // Type or member is obsolete
-                        u.StoreData.PaymentMethodHandlerDictionary = _paymentMethodHandlerDictionary;
-                        return u.StoreData;
+                        return PrepareEntity(u.StoreData);
                     }).ToArray();
             }
         }
@@ -178,8 +175,7 @@ namespace BTCPayServer.Services.Stores
                 {
                     Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(32)),
                     StoreName = name,
-                    SpeedPolicy = Invoices.SpeedPolicy.MediumSpeed,
-                    PaymentMethodHandlerDictionary = _paymentMethodHandlerDictionary
+                    SpeedPolicy = SpeedPolicy.MediumSpeed
                 };
                 var userStore = new UserStore
                 {
@@ -190,7 +186,7 @@ namespace BTCPayServer.Services.Stores
                 ctx.Add(store);
                 ctx.Add(userStore);
                 await ctx.SaveChangesAsync().ConfigureAwait(false);
-                return store;
+                return PrepareEntity(store);
             }
         }
 
@@ -238,6 +234,12 @@ namespace BTCPayServer.Services.Stores
             {
                 return ctx.Database.SupportDropForeignKey();
             }
+        }
+
+        private StoreData PrepareEntity(StoreData storeData)
+        {
+            storeData.PaymentMethodHandlerDictionary = _paymentMethodHandlerDictionary;
+            return storeData;
         }
     }
 }

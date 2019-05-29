@@ -46,7 +46,7 @@ namespace BTCPayServer.Payments.Lightning
         public override PaymentTypes PaymentType => PaymentTypes.LightningLike;
         public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(
             LightningSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store,
-            BTCPayNetworkBase network, object preparePaymentObject)
+            BTCPayNetwork network, object preparePaymentObject)
         {
             //direct casting to (BTCPayNetwork) is fixed in other pull requests with better generic interfacing for handlers
             var storeBlob = store.GetStoreBlob();

@@ -10,20 +10,21 @@ namespace BTCPayServer.Payments
 {
     public class PaymentMethodExtensions
     {
-        public static ISupportedPaymentMethod Deserialize(PaymentMethodId paymentMethodId, JToken value, BTCPayNetwork network)
+        public static ISupportedPaymentMethod Deserialize(PaymentMethodId paymentMethodId, JToken value, BTCPayNetworkBase network)
         {
             if (paymentMethodId.PaymentType == PaymentTypes.BTCLike)
             {
+                var bitcoinSpecificBtcPayNetwork = (BTCPayNetwork)network;
                 if (value is JObject jobj)
                 {
-                    var scheme = network.NBXplorerNetwork.Serializer.ToObject<DerivationSchemeSettings>(jobj);
-                    scheme.Network = network;
+                    var scheme = bitcoinSpecificBtcPayNetwork.NBXplorerNetwork.Serializer.ToObject<DerivationSchemeSettings>(jobj);
+                    scheme.Network = bitcoinSpecificBtcPayNetwork;
                     return scheme;
                 }
                 // Legacy
                 else
                 {
-                    return BTCPayServer.DerivationSchemeSettings.Parse(((JValue)value).Value<string>(), network);
+                    return BTCPayServer.DerivationSchemeSettings.Parse(((JValue)value).Value<string>(), bitcoinSpecificBtcPayNetwork);
                 }
             }
             //////////

@@ -105,7 +105,7 @@ namespace BTCPayServer.Payments.Lightning
                                               .FirstOrDefault(c => c.CryptoCode == paymentMethod.GetId().CryptoCode);
                     if (lightningSupportedMethod == null)
                         continue;
-                    var network = _NetworkProvider.GetNetwork(paymentMethod.GetId().CryptoCode);
+                    var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethod.GetId().CryptoCode);
 
                     listenedInvoices.Add(new ListenedInvoice()
                     {

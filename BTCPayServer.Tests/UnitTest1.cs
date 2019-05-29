@@ -1499,8 +1499,8 @@ namespace BTCPayServer.Tests
             var  testnetNetworkProvider = new BTCPayNetworkProvider(NetworkType.Testnet);
             var regtestNetworkProvider = new BTCPayNetworkProvider(NetworkType.Regtest);
             var mainnetNetworkProvider = new BTCPayNetworkProvider(NetworkType.Mainnet);
-            var testnetParser = new DerivationSchemeParser(testnetNetworkProvider.GetNetwork("BTC"));
-            var mainnetParser = new DerivationSchemeParser(mainnetNetworkProvider.GetNetwork("BTC"));
+            var testnetParser = new DerivationSchemeParser(testnetNetworkProvider.GetNetwork<BTCPayNetwork>("BTC"));
+            var mainnetParser = new DerivationSchemeParser(mainnetNetworkProvider.GetNetwork<BTCPayNetwork>("BTC"));
             NBXplorer.DerivationStrategy.DerivationStrategyBase result;
             //  Passing electrum stuff
             // Passing a native segwit from mainnet to a testnet parser, means the testnet parser will try to convert it into segwit
@@ -1543,16 +1543,16 @@ namespace BTCPayServer.Tests
             result = testnetParser.Parse(tpub);
             Assert.Equal($"{tpub}-[p2sh]", result.ToString());
 
-            var regtestParser = new DerivationSchemeParser(regtestNetworkProvider.GetNetwork("BTC"));
+            var regtestParser = new DerivationSchemeParser(regtestNetworkProvider.GetNetwork<BTCPayNetwork>("BTC"));
             var parsed = regtestParser.Parse("xpub6DG1rMYXiQtCc6CfdLFD9CtxqhzzRh7j6Sq6EdE9abgYy3cfDRrniLLv2AdwqHL1exiLnnKR5XXcaoiiexf3Y9R6J6rxkJtqJHzNzMW9QMZ-[p2sh]");
             Assert.Equal("tpubDDdeNbNDRgqestPX5XEJM8ELAq6eR5cne5RPbBHHvWSSiLHNHehsrn1kGCijMnHFSsFFQMqHcdMfGzDL3pWHRasPMhcGRqZ4tFankQ3i4ok-[p2sh]", parsed.ToString());
 
             // Let's make sure we can't generate segwit with dogecoin
-            regtestParser = new DerivationSchemeParser(regtestNetworkProvider.GetNetwork("DOGE"));
+            regtestParser = new DerivationSchemeParser(regtestNetworkProvider.GetNetwork<BTCPayNetwork>("DOGE"));
             parsed = regtestParser.Parse("xpub6DG1rMYXiQtCc6CfdLFD9CtxqhzzRh7j6Sq6EdE9abgYy3cfDRrniLLv2AdwqHL1exiLnnKR5XXcaoiiexf3Y9R6J6rxkJtqJHzNzMW9QMZ-[p2sh]");
             Assert.Equal("tpubDDdeNbNDRgqestPX5XEJM8ELAq6eR5cne5RPbBHHvWSSiLHNHehsrn1kGCijMnHFSsFFQMqHcdMfGzDL3pWHRasPMhcGRqZ4tFankQ3i4ok-[legacy]", parsed.ToString());
 
-            regtestParser = new DerivationSchemeParser(regtestNetworkProvider.GetNetwork("DOGE"));
+            regtestParser = new DerivationSchemeParser(regtestNetworkProvider.GetNetwork<BTCPayNetwork>("DOGE"));
             parsed = regtestParser.Parse("tpubDDdeNbNDRgqestPX5XEJM8ELAq6eR5cne5RPbBHHvWSSiLHNHehsrn1kGCijMnHFSsFFQMqHcdMfGzDL3pWHRasPMhcGRqZ4tFankQ3i4ok-[p2sh]");
             Assert.Equal("tpubDDdeNbNDRgqestPX5XEJM8ELAq6eR5cne5RPbBHHvWSSiLHNHehsrn1kGCijMnHFSsFFQMqHcdMfGzDL3pWHRasPMhcGRqZ4tFankQ3i4ok-[legacy]", parsed.ToString());
         }
@@ -1569,7 +1569,7 @@ namespace BTCPayServer.Tests
                 user.RegisterDerivationScheme("BTC");
                 user.RegisterDerivationScheme("LTC");
                 user.RegisterLightningNode("BTC", LightningConnectionType.CLightning);
-                var btcNetwork = tester.PayTester.Networks.GetNetwork("BTC");
+                var btcNetwork = tester.PayTester.Networks.GetNetwork<BTCPayNetwork>("BTC");
                 var invoice = user.BitPay.CreateInvoice(new Invoice()
                 {
                     Price = 1.5m,
@@ -2709,7 +2709,7 @@ donation:
         [Trait("Fast", "Fast")]
         public void ParseDerivationSchemeSettings()
         {
-            var mainnet = new BTCPayNetworkProvider(NetworkType.Mainnet).GetNetwork("BTC");
+            var mainnet = new BTCPayNetworkProvider(NetworkType.Mainnet).GetNetwork<BTCPayNetwork>("BTC");
             var root = new Mnemonic("usage fever hen zero slide mammal silent heavy donate budget pulse say brain thank sausage brand craft about save attract muffin advance illegal cabbage").DeriveExtKey();
             Assert.True(DerivationSchemeSettings.TryParseFromColdcard("{\"keystore\": {\"ckcc_xpub\": \"xpub661MyMwAqRbcGVBsTGeNZN6QGVHmMHLdSA4FteGsRrEriu4pnVZMZWnruFFFXkMnyoBjyHndD3Qwcfz4MPzBUxjSevweNFQx7SAYZATtcDw\", \"xpub\": \"ypub6WWc2gWwHbdnAAyJDnR4SPL1phRh7REqrPBfZeizaQ1EmTshieRXJC3Z5YoU4wkcdKHEjQGkh6AYEzCQC1Kz3DNaWSwdc1pc8416hAjzqyD\", \"label\": \"Coldcard Import 0x60d1af8b\", \"ckcc_xfp\": 1624354699, \"type\": \"hardware\", \"hw_type\": \"coldcard\", \"derivation\": \"m/49'/0'/0'\"}, \"wallet_type\": \"standard\", \"use_encryption\": false, \"seed_version\": 17}", mainnet, out var settings));
             Assert.Equal(root.GetPublicKey().GetHDFingerPrint(), settings.AccountKeySettings[0].RootFingerprint);
@@ -2719,7 +2719,7 @@ donation:
             Assert.Equal("ypub6WWc2gWwHbdnAAyJDnR4SPL1phRh7REqrPBfZeizaQ1EmTshieRXJC3Z5YoU4wkcdKHEjQGkh6AYEzCQC1Kz3DNaWSwdc1pc8416hAjzqyD", settings.AccountOriginal);
             Assert.Equal(root.Derive(new KeyPath("m/49'/0'/0'")).Neuter().PubKey.WitHash.ScriptPubKey.Hash.ScriptPubKey, settings.AccountDerivation.Derive(new KeyPath()).ScriptPubKey);
 
-            var testnet = new BTCPayNetworkProvider(NetworkType.Testnet).GetNetwork("BTC");
+            var testnet = new BTCPayNetworkProvider(NetworkType.Testnet).GetNetwork<BTCPayNetwork>("BTC");
 
             // Should be legacy
             Assert.True(DerivationSchemeSettings.TryParseFromColdcard("{\"keystore\": {\"ckcc_xpub\": \"tpubD6NzVbkrYhZ4YHNiuTdTmHRmbcPRLfqgyneZFCL1mkzkUBjXriQShxTh9HL34FK2mhieasJVk9EzJrUfkFqRNQBjiXgx3n5BhPkxKBoFmaS\", \"xpub\": \"tpubDDWYqT3P24znfsaGX7kZcQhNc5LAjnQiKQvUCHF2jS6dsgJBRtymopEU5uGpMaR5YChjuiExZG1X2aTbqXkp82KqH5qnqwWHp6EWis9ZvKr\", \"label\": \"Coldcard Import 0x60d1af8b\", \"ckcc_xfp\": 1624354699, \"type\": \"hardware\", \"hw_type\": \"coldcard\", \"derivation\": \"m/44'/1'/0'\"}, \"wallet_type\": \"standard\", \"use_encryption\": false, \"seed_version\": 17}", testnet, out settings));

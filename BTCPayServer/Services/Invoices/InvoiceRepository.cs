@@ -137,7 +137,7 @@ retry:
         public async Task<InvoiceEntity> CreateInvoiceAsync(string storeId, InvoiceEntity invoice)
         {
             List<string> textSearch = new List<string>();
-            invoice = NBitcoin.JsonConverters.Serializer.ToObject<InvoiceEntity>(ToString(invoice, null), null);
+            invoice = ToObject(ToBytes(invoice));
             invoice.Networks = _Networks;
             invoice.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16));
 #pragma warning disable CS0618
@@ -166,7 +166,7 @@ retry:
                         throw new InvalidOperationException("CryptoCode unsupported");
                     var paymentDestination = paymentMethod.GetPaymentMethodDetails().GetPaymentDestination();
 
-                    string address = GetDestination(paymentMethod, paymentMethod.Network.NBitcoinNetwork);
+                    string address = GetDestination(paymentMethod);
                     context.AddressInvoices.Add(new AddressInvoiceData()
                     {
                         InvoiceDataId = invoice.Id,
@@ -215,18 +215,19 @@ retry:
             }
         }
 
-        private static string GetDestination(PaymentMethod paymentMethod, Network network)
+        private string GetDestination(PaymentMethod paymentMethod)
         {
             // For legacy reason, BitcoinLikeOnChain is putting the hashes of addresses in database
             if (paymentMethod.GetId().PaymentType == Payments.PaymentTypes.BTCLike)
             {
-                return ((Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod)paymentMethod.GetPaymentMethodDetails()).GetDepositAddress(network).ScriptPubKey.Hash.ToString();
+                var network = (BTCPayNetwork)paymentMethod.Network;
+                return ((Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod)paymentMethod.GetPaymentMethodDetails()).GetDepositAddress(network.NBitcoinNetwork).ScriptPubKey.Hash.ToString();
             }
             ///////////////
             return paymentMethod.GetPaymentMethodDetails().GetPaymentDestination();
         }
 
-        public async Task<bool> NewAddress(string invoiceId, Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod paymentMethod, BTCPayNetwork network)
+        public async Task<bool> NewAddress(string invoiceId, Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod paymentMethod, BTCPayNetworkBase network)
         {
             using (var context = _ContextFactory.CreateContext())
             {
@@ -254,14 +255,14 @@ retry:
                 }
 #pragma warning restore CS0618
                 invoiceEntity.SetPaymentMethod(currencyData);
-                invoice.Blob = ToBytes(invoiceEntity, network.NBitcoinNetwork);
+                invoice.Blob = ToBytes(invoiceEntity, network);
 
                 context.AddressInvoices.Add(new AddressInvoiceData()
                 {
                     InvoiceDataId = invoiceId,
                     CreatedTime = DateTimeOffset.UtcNow
                 }
-                .Set(GetDestination(currencyData, network.NBitcoinNetwork), currencyData.GetId()));
+                .Set(GetDestination(currencyData), currencyData.GetId()));
                 context.HistoricalAddressInvoices.Add(new HistoricalAddressInvoiceData()
                 {
                     InvoiceDataId = invoiceId,
@@ -592,7 +593,7 @@ retry:
             return status;
         }
 
-        public async Task AddRefundsAsync(string invoiceId, TxOut[] outputs, Network network)
+        public async Task AddRefundsAsync(string invoiceId, TxOut[] outputs, BTCPayNetwork network)
         {
             if (outputs.Length == 0)
                 return;
@@ -613,7 +614,7 @@ retry:
                 await context.SaveChangesAsync().ConfigureAwait(false);
             }
 
-            var addresses = outputs.Select(o => o.ScriptPubKey.GetDestinationAddress(network)).Where(a => a != null).ToArray();
+            var addresses = outputs.Select(o => o.ScriptPubKey.GetDestinationAddress(network.NBitcoinNetwork)).Where(a => a != null).ToArray();
             AddToTextSearch(invoiceId, addresses.Select(a => a.ToString()).ToArray());
         }
 
@@ -626,7 +627,7 @@ retry:
         /// <param name="cryptoCode"></param>
         /// <param name="accounted"></param>
         /// <returns>The PaymentEntity or null if already added</returns>
-        public async Task<PaymentEntity> AddPayment(string invoiceId, DateTimeOffset date, CryptoPaymentData paymentData, BTCPayNetwork network, bool accounted = false)
+        public async Task<PaymentEntity> AddPayment(string invoiceId, DateTimeOffset date, CryptoPaymentData paymentData, BTCPayNetworkBase network, bool accounted = false)
         {
             using (var context = _ContextFactory.CreateContext())
             {
@@ -655,7 +656,7 @@ retry:
                     bitcoinPaymentMethod.NextNetworkFee = bitcoinPaymentMethod.FeeRate.GetFee(100); // assume price for 100 bytes
                     paymentMethod.SetPaymentMethodDetails(bitcoinPaymentMethod);
                     invoiceEntity.SetPaymentMethod(paymentMethod);
-                    invoice.Blob = ToBytes(invoiceEntity, network.NBitcoinNetwork);
+                    invoice.Blob = ToBytes(invoiceEntity, network);
                 }
                 PaymentData data = new PaymentData
                 {
@@ -704,20 +705,27 @@ retry:
             entity.Networks = _Networks;
             return entity;
         }
-        private T ToObject<T>(byte[] value, Network network)
+        private T ToObject<T>(byte[] value, BTCPayNetworkBase network)
         {
-            return NBitcoin.JsonConverters.Serializer.ToObject<T>(ZipUtils.Unzip(value), network);
+            if (network == null)
+            {
+                return NBitcoin.JsonConverters.Serializer.ToObject<T>(ZipUtils.Unzip(value), null);
+            }
+            return network.ToObject<T>(ZipUtils.Unzip(value));
         }
 
-
-        private byte[] ToBytes<T>(T obj, Network network)
+        private byte[] ToBytes<T>(T obj, BTCPayNetworkBase network = null)
         {
-            return ZipUtils.Zip(NBitcoin.JsonConverters.Serializer.ToString(obj, network));
+            return ZipUtils.Zip(ToString(obj, network));
         }
 
-        private string ToString<T>(T data, Network network)
+        private string ToString<T>(T data, BTCPayNetworkBase network)
         {
-            return NBitcoin.JsonConverters.Serializer.ToString(data, network);
+            if (network == null)
+            {
+                return NBitcoin.JsonConverters.Serializer.ToString(data, null);
+            }
+            return network.ToString(data);
         }
 
         public void Dispose()

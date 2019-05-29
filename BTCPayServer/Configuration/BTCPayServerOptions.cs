@@ -81,12 +81,12 @@ namespace BTCPayServer.Configuration
             NetworkProvider = new BTCPayNetworkProvider(NetworkType).Filter(supportedChains.ToArray());
             foreach (var chain in supportedChains)
             {
-                if (NetworkProvider.GetNetwork(chain) == null)
+                if (NetworkProvider.GetNetwork<BTCPayNetworkBase>(chain) == null)
                     throw new ConfigException($"Invalid chains \"{chain}\"");
             }
 
             var validChains = new List<string>();
-            foreach (var net in NetworkProvider.GetAll())
+            foreach (var net in NetworkProvider.GetAll().OfType<BTCPayNetwork>())
             {
                 NBXplorerConnectionSetting setting = new NBXplorerConnectionSetting();
                 setting.CryptoCode = net.CryptoCode;

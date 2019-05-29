@@ -157,7 +157,7 @@ namespace BTCPayServer.Controllers
             DerivationSchemeSettings paymentMethod = GetDerivationSchemeSettings(walletId, store);
             if (paymentMethod == null)
                 return NotFound();
-            var network = this.NetworkProvider.GetNetwork(walletId?.CryptoCode);
+            var network = this.NetworkProvider.GetNetwork<BTCPayNetwork>(walletId?.CryptoCode);
             if (network == null)
                 return NotFound();
             var storeData = store.GetStoreBlob();
@@ -219,7 +219,7 @@ namespace BTCPayServer.Controllers
             var store = await Repository.FindStore(walletId.StoreId, GetUserId());
             if (store == null)
                 return NotFound();
-            var network = this.NetworkProvider.GetNetwork(walletId?.CryptoCode);
+            var network = this.NetworkProvider.GetNetwork<BTCPayNetwork>(walletId?.CryptoCode);
             if (network == null)
                 return NotFound();
             vm.SupportRBF = network.SupportRBF;
@@ -361,7 +361,7 @@ namespace BTCPayServer.Controllers
             {
                 return View(viewModel);
             }
-            var network = NetworkProvider.GetNetwork(walletId.CryptoCode);
+            var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             if (network == null)
                 throw new FormatException("Invalid value for crypto code");
 
@@ -414,7 +414,7 @@ namespace BTCPayServer.Controllers
             return await WalletPSBTReady(walletId, psbt.ToBase64(), signingKey.GetWif(network.NBitcoinNetwork).ToString(), rootedKeyPath.ToString());
         }
 
-        private string ValueToString(Money v, BTCPayNetwork network)
+        private string ValueToString(Money v, BTCPayNetworkBase network)
         {
             return v.ToString() + " " + network.CryptoCode;
         }
@@ -434,7 +434,7 @@ namespace BTCPayServer.Controllers
 
         private async Task<IActionResult> RedirectToWalletTransaction(WalletId walletId, Transaction transaction)
         {
-            var network = NetworkProvider.GetNetwork(walletId.CryptoCode);
+            var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             if (transaction != null)
             {
                 var wallet = _walletProvider.GetWallet(network);
@@ -579,7 +579,7 @@ namespace BTCPayServer.Controllers
             if (!HttpContext.WebSockets.IsWebSocketRequest)
                 return NotFound();
 
-            var network = NetworkProvider.GetNetwork(walletId.CryptoCode);
+            var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             if (network == null)
                 throw new FormatException("Invalid value for crypto code");
             var storeData = (await Repository.FindStore(walletId.StoreId, GetUserId()));

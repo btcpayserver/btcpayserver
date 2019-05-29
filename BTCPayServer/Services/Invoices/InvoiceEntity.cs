@@ -213,7 +213,7 @@ namespace BTCPayServer.Services.Invoices
                 foreach (var strat in strategies.Properties())
                 {
                     var paymentMethodId = PaymentMethodId.Parse(strat.Name);
-                    var network = Networks.GetNetwork(paymentMethodId.CryptoCode);
+                    var network = Networks.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
                     if (network != null)
                     {
                         if (network == Networks.BTC && paymentMethodId.PaymentType == PaymentTypes.BTCLike)
@@ -280,7 +280,7 @@ namespace BTCPayServer.Services.Invoices
         {
             return Payments.Where(p => p.CryptoCode == cryptoCode).ToList();
         }
-        public List<PaymentEntity> GetPayments(BTCPayNetwork network)
+        public List<PaymentEntity> GetPayments(BTCPayNetworkBase network)
         {
             return GetPayments(network.CryptoCode);
         }
@@ -521,7 +521,7 @@ namespace BTCPayServer.Services.Invoices
             GetPaymentMethods().TryGetValue(paymentMethodId, out var data);
             return data;
         }
-        public PaymentMethod GetPaymentMethod(BTCPayNetwork network, PaymentTypes paymentType, BTCPayNetworkProvider networkProvider)
+        public PaymentMethod GetPaymentMethod(BTCPayNetworkBase network, PaymentTypes paymentType, BTCPayNetworkProvider networkProvider)
         {
             return GetPaymentMethod(new PaymentMethodId(network.CryptoCode, paymentType), networkProvider);
         }
@@ -540,7 +540,7 @@ namespace BTCPayServer.Services.Invoices
                     r.CryptoCode = paymentMethodId.CryptoCode;
                     r.PaymentType = paymentMethodId.PaymentType.ToString();
                     r.ParentEntity = this;
-                    r.Network = Networks?.GetNetwork(r.CryptoCode);
+                    r.Network = Networks?.GetNetwork<BTCPayNetworkBase>(r.CryptoCode);
                     if (r.Network != null || Networks == null)
                         paymentMethods.Add(r);
                 }
@@ -732,7 +732,7 @@ namespace BTCPayServer.Services.Invoices
         [JsonIgnore]
         public InvoiceEntity ParentEntity { get; set; }
         [JsonIgnore]
-        public BTCPayNetwork Network { get; set; }
+        public BTCPayNetworkBase Network { get; set; }
         [JsonProperty(PropertyName = "cryptoCode", DefaultValueHandling = DefaultValueHandling.Ignore)]
         [Obsolete("Use GetId().CryptoCode instead")]
         public string CryptoCode { get; set; }
@@ -1026,10 +1026,10 @@ namespace BTCPayServer.Services.Invoices
         /// </summary>
         /// <returns>The amount paid</returns>
         decimal GetValue();
-        bool PaymentCompleted(PaymentEntity entity, BTCPayNetwork network);
-        bool PaymentConfirmed(PaymentEntity entity, SpeedPolicy speedPolicy, BTCPayNetwork network);
+        bool PaymentCompleted(PaymentEntity entity, BTCPayNetworkBase network);
+        bool PaymentConfirmed(PaymentEntity entity, SpeedPolicy speedPolicy, BTCPayNetworkBase network);
 
         PaymentTypes GetPaymentType();
-        string GetDestination(BTCPayNetwork network);
+        string GetDestination(BTCPayNetworkBase network);
     }
 }

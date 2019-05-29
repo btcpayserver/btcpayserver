@@ -12,7 +12,7 @@ namespace BTCPayServer
         public void InitDogecoin()
         {
             var nbxplorerNetwork = NBXplorerNetworkProvider.GetFromCryptoCode("DOGE");
-            Add(new BTCPayNetwork()
+            Add(new BitcoinSpecificBTCPayNetwork()
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "Dogecoin",

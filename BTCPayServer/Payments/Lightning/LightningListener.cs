@@ -105,7 +105,7 @@ namespace BTCPayServer.Payments.Lightning
                                               .FirstOrDefault(c => c.CryptoCode == paymentMethod.GetId().CryptoCode);
                     if (lightningSupportedMethod == null)
                         continue;
-                    var network = _NetworkProvider.GetNetwork(paymentMethod.GetId().CryptoCode);
+                    var network = _NetworkProvider.GetNetwork<BitcoinSpecificBTCPayNetwork>(paymentMethod.GetId().CryptoCode);
 
                     listenedInvoices.Add(new ListenedInvoice()
                     {
@@ -205,14 +205,14 @@ namespace BTCPayServer.Payments.Lightning
         private LightningSupportedPaymentMethod supportedPaymentMethod;
         private readonly InvoiceRepository invoiceRepository;
         private readonly EventAggregator _eventAggregator;
-        private readonly BTCPayNetwork network;
+        private readonly BitcoinSpecificBTCPayNetwork network;
         private readonly LightningClientFactoryService _lightningClientFactory;
 
         public LightningInstanceListener(InvoiceRepository invoiceRepository,
                                         EventAggregator eventAggregator,
                                         LightningSupportedPaymentMethod supportedPaymentMethod,
                                         LightningClientFactoryService lightningClientFactory,
-                                        BTCPayNetwork network)
+                                        BitcoinSpecificBTCPayNetwork network)
         {
             this.supportedPaymentMethod = supportedPaymentMethod;
             this.invoiceRepository = invoiceRepository;
@@ -358,7 +358,7 @@ namespace BTCPayServer.Payments.Lightning
         public LightningSupportedPaymentMethod SupportedPaymentMethod { get; set; }
         public PaymentMethod PaymentMethod { get; set; }
         public string Uri { get; internal set; }
-        public BTCPayNetwork Network { get; internal set; }
+        public BitcoinSpecificBTCPayNetwork Network { get; internal set; }
         public string InvoiceId { get; internal set; }
     }
 }

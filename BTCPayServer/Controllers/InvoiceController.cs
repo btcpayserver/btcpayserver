@@ -152,7 +152,7 @@ namespace BTCPayServer.Controllers
 
             foreach (var network in store.GetSupportedPaymentMethods(_NetworkProvider)
                                                 .Where(s => !excludeFilter.Match(s.PaymentId))
-                                                .Select(c => _NetworkProvider.GetNetwork(c.PaymentId.CryptoCode))
+                                                .Select(c => _NetworkProvider.GetNetwork<BTCPayNetwork>(c.PaymentId.CryptoCode))
                                                 .Where(c => c != null))
             {
                 currencyPairsToFetch.Add(new CurrencyPair(network.CryptoCode, invoice.Currency));
@@ -168,9 +168,9 @@ namespace BTCPayServer.Controllers
             var supportedPaymentMethods = store.GetSupportedPaymentMethods(_NetworkProvider)
                                                .Where(s => !excludeFilter.Match(s.PaymentId))
                                                .Select(c =>
-                                                (Handler: (IPaymentMethodHandler)_ServiceProvider.GetService(typeof(IPaymentMethodHandler<>).MakeGenericType(c.GetType())),
+                                                (Handler: (IPaymentMethodHandler)_ServiceProvider.GetService(typeof(IPaymentMethodHandler<,>).MakeGenericType(c.GetType())),
                                                 SupportedPaymentMethod: c,
-                                                Network: _NetworkProvider.GetNetwork(c.PaymentId.CryptoCode)))
+                                                Network: _NetworkProvider.GetNetwork<BTCPayNetwork>(c.PaymentId.CryptoCode)))
                                                 .Where(c => c.Network != null)
                                                 .Select(o =>
                                                     (SupportedPaymentMethod: o.SupportedPaymentMethod,

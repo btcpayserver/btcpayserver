@@ -166,7 +166,7 @@ retry:
                         throw new InvalidOperationException("CryptoCode unsupported");
                     var paymentDestination = paymentMethod.GetPaymentMethodDetails().GetPaymentDestination();
 
-                    string address = GetDestination(paymentMethod, paymentMethod.Network.NBitcoinNetwork);
+                    string address = GetDestination(paymentMethod);
                     context.AddressInvoices.Add(new AddressInvoiceData()
                     {
                         InvoiceDataId = invoice.Id,
@@ -215,12 +215,13 @@ retry:
             }
         }
 
-        private static string GetDestination(PaymentMethod paymentMethod, Network network)
+        private string GetDestination(PaymentMethod paymentMethod)
         {
             // For legacy reason, BitcoinLikeOnChain is putting the hashes of addresses in database
             if (paymentMethod.GetId().PaymentType == Payments.PaymentTypes.BTCLike)
             {
-                return ((Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod)paymentMethod.GetPaymentMethodDetails()).GetDepositAddress(network).ScriptPubKey.Hash.ToString();
+                var network = (BitcoinSpecificBTCPayNetwork)paymentMethod.Network;
+                return ((Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod)paymentMethod.GetPaymentMethodDetails()).GetDepositAddress(network.NBitcoinNetwork).ScriptPubKey.Hash.ToString();
             }
             ///////////////
             return paymentMethod.GetPaymentMethodDetails().GetPaymentDestination();
@@ -254,14 +255,14 @@ retry:
                 }
 #pragma warning restore CS0618
                 invoiceEntity.SetPaymentMethod(currencyData);
-                invoice.Blob = ToBytes(invoiceEntity, network.NBitcoinNetwork);
+                invoice.Blob = ToBytes(invoiceEntity, (network as BitcoinSpecificBTCPayNetwork)?.NBitcoinNetwork);
 
                 context.AddressInvoices.Add(new AddressInvoiceData()
                 {
                     InvoiceDataId = invoiceId,
                     CreatedTime = DateTimeOffset.UtcNow
                 }
-                .Set(GetDestination(currencyData, network.NBitcoinNetwork), currencyData.GetId()));
+                .Set(GetDestination(currencyData), currencyData.GetId()));
                 context.HistoricalAddressInvoices.Add(new HistoricalAddressInvoiceData()
                 {
                     InvoiceDataId = invoiceId,
@@ -655,7 +656,7 @@ retry:
                     bitcoinPaymentMethod.NextNetworkFee = bitcoinPaymentMethod.FeeRate.GetFee(100); // assume price for 100 bytes
                     paymentMethod.SetPaymentMethodDetails(bitcoinPaymentMethod);
                     invoiceEntity.SetPaymentMethod(paymentMethod);
-                    invoice.Blob = ToBytes(invoiceEntity, network.NBitcoinNetwork);
+                    invoice.Blob = ToBytes(invoiceEntity, (network as BitcoinSpecificBTCPayNetwork)?.NBitcoinNetwork);
                 }
                 PaymentData data = new PaymentData
                 {

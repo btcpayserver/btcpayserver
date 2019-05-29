@@ -22,7 +22,7 @@ namespace BTCPayServer.Services.Wallets
             _NetworkProvider = networkProvider;
             _Options = memoryCacheOption;
 
-            foreach(var network in networkProvider.GetAll())
+            foreach(var network in networkProvider.GetAll().OfType<BitcoinSpecificBTCPayNetwork>())
             {
                 var explorerClient = _Client.GetExplorerClient(network.CryptoCode);
                 if (explorerClient == null)

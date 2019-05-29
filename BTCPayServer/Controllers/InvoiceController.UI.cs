@@ -91,7 +91,7 @@ namespace BTCPayServer.Controllers
 
             return View(model);
         }
-
+        //TODO: abstract
         private InvoiceDetailsModel InvoicePopulatePayments(InvoiceEntity invoice)
         {
             var model = new InvoiceDetailsModel();
@@ -117,8 +117,14 @@ namespace BTCPayServer.Controllers
 
             foreach (var payment in invoice.GetPayments())
             {
-                var paymentNetwork = _NetworkProvider.GetNetwork(payment.GetCryptoCode());
+                //TODO: abstract
+                var paymentNetwork = _NetworkProvider.GetNetwork<BitcoinSpecificBTCPayNetwork>(payment.GetCryptoCode());
+                if (paymentNetwork == null)
+                {
+                    continue;
+                }
                 var paymentData = payment.GetCryptoPaymentData();
+                //TODO: abstract
                 if (paymentData is Payments.Bitcoin.BitcoinLikePaymentData onChainPaymentData)
                 {
                     var m = new InvoiceDetailsModel.Payment();
@@ -236,10 +242,10 @@ namespace BTCPayServer.Controllers
                 paymentMethodId = store.GetDefaultPaymentId(_NetworkProvider);
                 isDefaultPaymentId = true;
             }
-            var network = _NetworkProvider.GetNetwork(paymentMethodId.CryptoCode);
+            BTCPayNetwork network = _NetworkProvider.GetNetwork<BitcoinSpecificBTCPayNetwork>(paymentMethodId.CryptoCode);
             if (network == null && isDefaultPaymentId)
             {
-                network = _NetworkProvider.GetAll().FirstOrDefault();
+                network = _NetworkProvider.GetAll().OfType<BitcoinSpecificBTCPayNetwork>().FirstOrDefault();
                 paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
             }
             if (invoice == null || network == null)

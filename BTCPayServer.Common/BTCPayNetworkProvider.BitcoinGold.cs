@@ -7,7 +7,7 @@ namespace BTCPayServer
         public void InitBitcoinGold()
         {
             var nbxplorerNetwork = NBXplorerNetworkProvider.GetFromCryptoCode("BTG");
-            Add(new BTCPayNetwork()
+            Add(new BitcoinSpecificBTCPayNetwork()
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "BGold",

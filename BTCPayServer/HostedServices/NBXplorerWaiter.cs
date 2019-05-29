@@ -82,7 +82,7 @@ namespace BTCPayServer.HostedServices
     public class NBXplorerWaiter : IHostedService
     {
 
-        public NBXplorerWaiter(NBXplorerDashboard dashboard, BTCPayNetwork network, ExplorerClient client, EventAggregator aggregator)
+        public NBXplorerWaiter(NBXplorerDashboard dashboard, BitcoinSpecificBTCPayNetwork network, ExplorerClient client, EventAggregator aggregator)
         {
             _Network = network;
             _Client = client;
@@ -91,7 +91,7 @@ namespace BTCPayServer.HostedServices
         }
 
         NBXplorerDashboard _Dashboard;
-        BTCPayNetwork _Network;
+        BitcoinSpecificBTCPayNetwork _Network;
         EventAggregator _Aggregator;
         ExplorerClient _Client;
 

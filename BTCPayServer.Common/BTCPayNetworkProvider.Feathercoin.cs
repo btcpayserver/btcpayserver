@@ -12,7 +12,7 @@ namespace BTCPayServer
         public void InitFeathercoin()
         {
             var nbxplorerNetwork = NBXplorerNetworkProvider.GetFromCryptoCode("FTC");
-            Add(new BTCPayNetwork()
+            Add(new BitcoinSpecificBTCPayNetwork()
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "Feathercoin",

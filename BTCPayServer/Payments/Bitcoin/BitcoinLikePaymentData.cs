@@ -82,7 +82,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
         public BitcoinAddress GetDestination(BTCPayNetwork network)
         {
-            return Output.ScriptPubKey.GetDestinationAddress(network.NBitcoinNetwork);
+            return Output.ScriptPubKey.GetDestinationAddress(((BitcoinSpecificBTCPayNetwork)network).NBitcoinNetwork);
         }
 
         string CryptoPaymentData.GetDestination(BTCPayNetwork network)

@@ -12,7 +12,7 @@ namespace BTCPayServer
         public void InitViacoin()
         {
             var nbxplorerNetwork = NBXplorerNetworkProvider.GetFromCryptoCode("VIA");
-            Add(new BTCPayNetwork()
+            Add(new BitcoinSpecificBTCPayNetwork()
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "Viacoin",

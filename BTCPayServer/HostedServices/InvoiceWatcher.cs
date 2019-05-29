@@ -78,7 +78,7 @@ namespace BTCPayServer.HostedServices
             var paymentMethod = GetNearestClearedPayment(allPaymentMethods, out var accounting, _NetworkProvider);
             if (paymentMethod == null)
                 return;
-            var network = _NetworkProvider.GetNetwork(paymentMethod.GetId().CryptoCode);
+            var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethod.GetId().CryptoCode);
             if (invoice.Status == InvoiceStatus.New || invoice.Status == InvoiceStatus.Expired)
             {
                 if (accounting.Paid >= accounting.MinimumTotalDue)
@@ -173,7 +173,7 @@ namespace BTCPayServer.HostedServices
             decimal nearestToZero = 0.0m;
             foreach (var paymentMethod in allPaymentMethods)
             {
-                if (networkProvider != null && networkProvider.GetNetwork(paymentMethod.GetId().CryptoCode) == null)
+                if (networkProvider != null && networkProvider.GetNetwork<BTCPayNetwork>(paymentMethod.GetId().CryptoCode) == null)
                     continue;
                 var currentAccounting = paymentMethod.Calculate();
                 var distanceFromZero = Math.Abs(currentAccounting.DueUncapped.ToDecimal(MoneyUnit.BTC));

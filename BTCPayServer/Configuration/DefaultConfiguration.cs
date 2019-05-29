@@ -46,7 +46,7 @@ namespace BTCPayServer.Configuration
             app.Option("--debuglog", "A rolling log file for debug messages.", CommandOptionType.SingleValue);
             app.Option("--debugloglevel", "The severity you log (default:information)", CommandOptionType.SingleValue);
             app.Option("--disable-registration", "Disables new user registrations (default:true)", CommandOptionType.SingleValue);
-            foreach (var network in provider.GetAll())
+            foreach (var network in provider.GetAll().OfType<BitcoinSpecificBTCPayNetwork>())
             {
                 var crypto = network.CryptoCode.ToLowerInvariant();
                 app.Option($"--{crypto}explorerurl", $"URL of the NBXplorer for {network.CryptoCode} (default: {network.NBXplorerNetwork.DefaultSettings.DefaultUrl})", CommandOptionType.SingleValue);
@@ -121,7 +121,7 @@ namespace BTCPayServer.Configuration
             builder.AppendLine("#mysql=User ID=root;Password=myPassword;Host=localhost;Port=3306;Database=myDataBase;");
             builder.AppendLine();
             builder.AppendLine("### NBXplorer settings ###");
-            foreach (var n in new BTCPayNetworkProvider(networkType).GetAll())
+            foreach (var n in new BTCPayNetworkProvider(networkType).GetAll().OfType<BitcoinSpecificBTCPayNetwork>())
             {
                 builder.AppendLine($"#{n.CryptoCode}.explorer.url={n.NBXplorerNetwork.DefaultSettings.DefaultUrl}");
                 builder.AppendLine($"#{n.CryptoCode}.explorer.cookiefile={ n.NBXplorerNetwork.DefaultSettings.DefaultCookieFile}");

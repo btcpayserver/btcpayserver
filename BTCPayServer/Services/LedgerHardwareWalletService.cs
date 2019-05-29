@@ -81,20 +81,20 @@ namespace BTCPayServer.Services
             return new LedgerTestResult() { Success = true };
         }
 
-        public override async Task<BitcoinExtPubKey> GetExtPubKey(BTCPayNetwork network, KeyPath keyPath, CancellationToken cancellation)
+        public override async Task<BitcoinExtPubKey> GetExtPubKey(BitcoinSpecificBTCPayNetwork network, KeyPath keyPath, CancellationToken cancellation)
         {
             if (network == null)
                 throw new ArgumentNullException(nameof(network));
             return await GetExtPubKey(network, keyPath, false, cancellation);
         }
-        public override async Task<PubKey> GetPubKey(BTCPayNetwork network, KeyPath keyPath, CancellationToken cancellation)
+        public override async Task<PubKey> GetPubKey(BitcoinSpecificBTCPayNetwork network, KeyPath keyPath, CancellationToken cancellation)
         {
             if (network == null)
                 throw new ArgumentNullException(nameof(network));
             return (await GetExtPubKey(network, keyPath, false, cancellation)).GetPublicKey();
         }
 
-        private async Task<BitcoinExtPubKey> GetExtPubKey(BTCPayNetwork network, KeyPath account, bool onlyChaincode, CancellationToken cancellation)
+        private async Task<BitcoinExtPubKey> GetExtPubKey(BitcoinSpecificBTCPayNetwork network, KeyPath account, bool onlyChaincode, CancellationToken cancellation)
         {
             var pubKey = await Ledger.GetWalletPubKeyAsync(account, cancellation: cancellation);
             try

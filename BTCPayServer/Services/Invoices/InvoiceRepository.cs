@@ -138,6 +138,7 @@ retry:
         {
             List<string> textSearch = new List<string>();
             invoice = ToObject(ToBytes(invoice));
+            invoice.PaymentMethodHandlerDictionary = _paymentMethodHandlerDictionary;
             invoice.Networks = _Networks;
             invoice.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16));
 #pragma warning disable CS0618
@@ -707,6 +708,10 @@ retry:
         }
         private T ToObject<T>(byte[] value, BTCPayNetworkBase network)
         {
+            if (network == null)
+            {
+                return NBitcoin.JsonConverters.Serializer.ToObject<T>(ZipUtils.Unzip(value), null);
+            }
             return network.ToObject<T>(ZipUtils.Unzip(value));
         }
 
@@ -719,7 +724,7 @@ retry:
         {
             if (network == null)
             {
-                return JsonConvert.SerializeObject(data);
+                return NBitcoin.JsonConverters.Serializer.ToString(data, null);
             }
             return network.ToString(data);
         }

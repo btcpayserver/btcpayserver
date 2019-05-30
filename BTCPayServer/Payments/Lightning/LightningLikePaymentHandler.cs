@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Net.Sockets;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
@@ -17,6 +15,7 @@ using BTCPayServer.Services.Rates;
 using NBitcoin;
 using NBitpayClient;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Payments.Lightning
 {
@@ -174,6 +173,21 @@ namespace BTCPayServer.Payments.Lightning
 #pragma warning disable CS0618
             return JsonConvert.DeserializeObject<LightningLikePaymentData>(paymentEntity.CryptoPaymentData);
 #pragma warning restore CS0618
+        }
+
+        public override ISupportedPaymentMethod DeserializeSupportedPaymentMethod(PaymentMethodId paymentMethodId, JToken value)
+        { 
+            return JsonConvert.DeserializeObject<LightningSupportedPaymentMethod>(value.ToString());
+        }
+    
+        public override IPaymentMethodDetails DeserializePaymentMethodDetails(JObject jobj)
+        {
+            return JsonConvert.DeserializeObject<LightningLikePaymentMethodDetails>(jobj.ToString());
+        }
+
+        public override string GetTransactionLink(PaymentMethodId paymentMethodId, params object[] args)
+        {
+            return null;
         }
 
         public override void PrepareInvoiceDto(InvoiceResponse invoiceResponse, InvoiceEntity invoiceEntity,

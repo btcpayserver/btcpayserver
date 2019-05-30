@@ -92,7 +92,6 @@ namespace BTCPayServer.Controllers
 
             return View(model);
         }
-        //TODO: abstract
         private InvoiceDetailsModel InvoicePopulatePayments(InvoiceEntity invoice)
         {
             var model = new InvoiceDetailsModel();
@@ -107,19 +106,14 @@ namespace BTCPayServer.Controllers
                 cryptoPayment.Due = _CurrencyNameTable.DisplayFormatCurrency(accounting.Due.ToDecimal(MoneyUnit.BTC), paymentMethodId.CryptoCode);
                 cryptoPayment.Paid = _CurrencyNameTable.DisplayFormatCurrency(accounting.CryptoPaid.ToDecimal(MoneyUnit.BTC), paymentMethodId.CryptoCode);
                 cryptoPayment.Overpaid = _CurrencyNameTable.DisplayFormatCurrency(accounting.OverpaidHelper.ToDecimal(MoneyUnit.BTC), paymentMethodId.CryptoCode);
-//TODO: abstract
-                var onchainMethod = data.GetPaymentMethodDetails() as Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod;
-                if (onchainMethod != null)
-                {
-                    cryptoPayment.Address = onchainMethod.DepositAddress;
-                }
+                var paymentMethodDetails = data.GetPaymentMethodDetails();
+                cryptoPayment.Address = paymentMethodDetails.GetPaymentDestination();
                 cryptoPayment.Rate = ExchangeRate(data);
                 model.CryptoPayments.Add(cryptoPayment);
             }
 
             foreach (var payment in invoice.GetPayments())
             {
-                //TODO: abstract
                 var paymentNetwork = _NetworkProvider.GetNetwork<BTCPayNetwork>(payment.GetCryptoCode());
                 if (paymentNetwork == null)
                 {

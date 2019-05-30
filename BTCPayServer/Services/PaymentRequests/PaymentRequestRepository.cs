@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Stores;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
 using NBitcoin;
@@ -17,11 +18,14 @@ namespace BTCPayServer.Services.PaymentRequests
     {
         private readonly ApplicationDbContextFactory _ContextFactory;
         private readonly InvoiceRepository _InvoiceRepository;
+        private readonly StoreRepository _storeRepository;
 
-        public PaymentRequestRepository(ApplicationDbContextFactory contextFactory, InvoiceRepository invoiceRepository)
+        public PaymentRequestRepository(ApplicationDbContextFactory contextFactory, InvoiceRepository invoiceRepository,
+            StoreRepository storeRepository)
         {
             _ContextFactory = contextFactory;
             _InvoiceRepository = invoiceRepository;
+            _storeRepository = storeRepository;
         }
 
 
@@ -52,11 +56,17 @@ namespace BTCPayServer.Services.PaymentRequests
 
             using (var context = _ContextFactory.CreateContext())
             {
-                return await context.PaymentRequests.Include(x => x.StoreData)
+                var result = await context.PaymentRequests.Include(x => x.StoreData)
                     .Where(data =>
                         string.IsNullOrEmpty(userId) ||
                         (data.StoreData != null && data.StoreData.UserStores.Any(u => u.ApplicationUserId == userId)))
                     .SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+                if (result != null)
+                {
+                    result.StoreData = _storeRepository.PrepareEntity(result.StoreData);
+                }
+
+                return result;
             }
         }
 

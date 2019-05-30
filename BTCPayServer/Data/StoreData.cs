@@ -28,6 +28,9 @@ namespace BTCPayServer.Data
 {
     public class StoreData
     {
+        [NotMapped]
+        [JsonIgnore]
+        public PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary { get; set; }
         public string Id
         {
             get;
@@ -91,7 +94,9 @@ namespace BTCPayServer.Data
                             continue;
                         if (strat.Value.Type == JTokenType.Null)
                             continue;
-                        yield return PaymentMethodExtensions.Deserialize(paymentMethodId, strat.Value, network);
+                        yield return
+                            PaymentMethodHandlerDictionary[paymentMethodId]
+                                .DeserializeSupportedPaymentMethod(paymentMethodId, strat.Value);
                     }
                 }
             }

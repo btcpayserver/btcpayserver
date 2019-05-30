@@ -75,7 +75,7 @@ namespace BTCPayServer.Controllers
                 StoreId = new[] { this.HttpContext.GetStoreData().Id }
             };
 
-            var entities =  (await _InvoiceRepository.GetInvoices(query))
+            var entities = (await _InvoiceRepository.GetInvoices(query))
                             .Select((o) => o.EntityToDTO()).ToArray();
 
             return DataWrapper.Create(entities);

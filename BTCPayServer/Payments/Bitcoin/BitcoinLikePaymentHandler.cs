@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
@@ -11,6 +12,7 @@ using BTCPayServer.Services.Rates;
 using NBitcoin;
 using NBitpayClient;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Payments.Bitcoin
 {
@@ -130,6 +132,13 @@ namespace BTCPayServer.Payments.Bitcoin
         }
 
 
+        public override string GetTransactionLink(PaymentMethodId paymentMethodId, params object[] args)
+        {
+
+            var network = _networkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
+            return string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink, args);
+        }
+
         public override object PreparePayment(DerivationSchemeSettings supportedPaymentMethod, StoreData store,
             BTCPayNetworkBase network)
         {
@@ -197,6 +206,24 @@ namespace BTCPayServer.Payments.Bitcoin
                 invoiceResponse.PaymentUrls = invoiceCryptoInfo.PaymentUrls;
             }
 #pragma warning restore 618
+        }
+
+        public override ISupportedPaymentMethod DeserializeSupportedPaymentMethod(PaymentMethodId paymentMethodId, JToken value)
+        {
+            var network = _networkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
+            if (value is JObject jobj)
+            {
+                var scheme = network.NBXplorerNetwork.Serializer.ToObject<DerivationSchemeSettings>(jobj);
+                scheme.Network = network;
+                return scheme;
+            }
+            // Legacy
+            return DerivationSchemeSettings.Parse(((JValue)value).Value<string>(), network);
+        }
+
+        public override IPaymentMethodDetails DeserializePaymentMethodDetails(JObject jobj)
+        {
+            return JsonConvert.DeserializeObject<Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod>(jobj.ToString());
         }
     }
 }

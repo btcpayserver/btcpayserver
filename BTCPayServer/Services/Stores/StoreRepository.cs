@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Services.Invoices;
 using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Services.Stores
@@ -13,9 +14,12 @@ namespace BTCPayServer.Services.Stores
     public class StoreRepository
     {
         private ApplicationDbContextFactory _ContextFactory;
-        public StoreRepository(ApplicationDbContextFactory contextFactory)
+        private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
+
+        public StoreRepository(ApplicationDbContextFactory contextFactory, PaymentMethodHandlerDictionary paymentMethodHandlerDictionary)
         {
             _ContextFactory = contextFactory ?? throw new ArgumentNullException(nameof(contextFactory));
+            _paymentMethodHandlerDictionary = paymentMethodHandlerDictionary;
         }
 
         public async Task<StoreData> FindStore(string storeId)
@@ -24,7 +28,8 @@ namespace BTCPayServer.Services.Stores
                 return null;
             using (var ctx = _ContextFactory.CreateContext())
             {
-                return await ctx.FindAsync<StoreData>(storeId).ConfigureAwait(false);
+                var result =  await ctx.FindAsync<StoreData>(storeId).ConfigureAwait(false);
+                return PrepareEntity(result);
             }
         }
 
@@ -47,7 +52,7 @@ namespace BTCPayServer.Services.Stores
 #pragma warning disable CS0612 // Type or member is obsolete
                         us.Store.Role = us.Role;
 #pragma warning restore CS0612 // Type or member is obsolete
-                        return us.Store;
+                        return PrepareEntity(us.Store);
                     }).FirstOrDefault();
             }
         }
@@ -89,7 +94,7 @@ namespace BTCPayServer.Services.Stores
 #pragma warning disable CS0612 // Type or member is obsolete
                         u.StoreData.Role = u.Role;
 #pragma warning restore CS0612 // Type or member is obsolete
-                        return u.StoreData;
+                        return PrepareEntity(u.StoreData);
                     }).ToArray();
             }
         }
@@ -170,7 +175,7 @@ namespace BTCPayServer.Services.Stores
                 {
                     Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(32)),
                     StoreName = name,
-                    SpeedPolicy = Invoices.SpeedPolicy.MediumSpeed
+                    SpeedPolicy = SpeedPolicy.MediumSpeed
                 };
                 var userStore = new UserStore
                 {
@@ -181,7 +186,7 @@ namespace BTCPayServer.Services.Stores
                 ctx.Add(store);
                 ctx.Add(userStore);
                 await ctx.SaveChangesAsync().ConfigureAwait(false);
-                return store;
+                return PrepareEntity(store);
             }
         }
 
@@ -229,6 +234,13 @@ namespace BTCPayServer.Services.Stores
             {
                 return ctx.Database.SupportDropForeignKey();
             }
+        }
+
+        public StoreData PrepareEntity(StoreData storeData)
+        {
+            if(storeData != null)
+                storeData.PaymentMethodHandlerDictionary = _paymentMethodHandlerDictionary;
+            return storeData;
         }
     }
 }

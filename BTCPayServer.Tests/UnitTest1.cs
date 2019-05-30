@@ -2252,14 +2252,14 @@ donation:
                 var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, cashCow.Network);
                 var firstPayment = invoice.CryptoInfo[0].TotalDue - Money.Coins(0.001m);
                 cashCow.SendToAddress(invoiceAddress, firstPayment);
-
+                var handler = tester.PayTester.GetService<BitcoinLikePaymentHandler>();
                 TestUtils.Eventually(() =>
                 {
                     var exportResultPaid = user.GetController<InvoiceController>().Export("csv").GetAwaiter().GetResult();
                     var paidresult = Assert.IsType<ContentResult>(exportResultPaid);
                     Assert.Equal("application/csv", paidresult.ContentType);
                     Assert.Contains($",\"orderId\",\"{invoice.Id}\",", paidresult.Content);
-                    Assert.Contains($",\"OnChain\",\"BTC\",\"0.0991\",\"0.0001\",\"5000.0\"", paidresult.Content);
+                    Assert.Contains($",\"{handler.PrettyDescription}\",\"BTC\",\"0.0991\",\"0.0001\",\"5000.0\"", paidresult.Content);
                     Assert.Contains($",\"USD\",\"5.00", paidresult.Content); // Seems hacky but some plateform does not render this decimal the same
                     Assert.Contains($"0\",\"500.0\",\"\",\"Some ``, description\",\"new (paidPartial)\"", paidresult.Content);
                 });

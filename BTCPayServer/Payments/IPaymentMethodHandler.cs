@@ -8,6 +8,7 @@ using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using NBitcoin;
 using NBitpayClient;
+using Newtonsoft.Json.Linq;
 using InvoiceResponse = BTCPayServer.Models.InvoiceResponse;
 
 namespace BTCPayServer.Payments
@@ -17,6 +18,7 @@ namespace BTCPayServer.Payments
     /// </summary>
     public interface IPaymentMethodHandler
     {
+        string PrettyDescription { get; }
         /// <summary>
         /// Create needed to track payments of this invoice
         /// </summary>
@@ -56,6 +58,10 @@ namespace BTCPayServer.Payments
         IEnumerable<PaymentMethodId> GetSupportedPaymentMethods();
 
         CryptoPaymentData GetCryptoPaymentData(PaymentEntity paymentEntity);
+
+        ISupportedPaymentMethod DeserializeSupportedPaymentMethod(PaymentMethodId paymentMethodId, JToken value);
+        IPaymentMethodDetails DeserializePaymentMethodDetails(JObject jobj);
+        string GetTransactionLink(PaymentMethodId paymentMethodId, params object[] args);
     }
 
     public interface IPaymentMethodHandler<TSupportedPaymentMethod, TBTCPayNetwork> : IPaymentMethodHandler
@@ -66,8 +72,7 @@ namespace BTCPayServer.Payments
             PaymentMethod paymentMethod, StoreData store, TBTCPayNetwork network, object preparePaymentObject);
     }
 
-    public abstract class
-        PaymentMethodHandlerBase<TSupportedPaymentMethod, TBTCPayNetwork> : IPaymentMethodHandler<
+    public abstract class PaymentMethodHandlerBase<TSupportedPaymentMethod, TBTCPayNetwork> : IPaymentMethodHandler<
             TSupportedPaymentMethod, TBTCPayNetwork>
         where TSupportedPaymentMethod : ISupportedPaymentMethod
         where TBTCPayNetwork : BTCPayNetworkBase
@@ -91,6 +96,10 @@ namespace BTCPayServer.Payments
 
         public abstract IEnumerable<PaymentMethodId> GetSupportedPaymentMethods();
         public abstract CryptoPaymentData GetCryptoPaymentData(PaymentEntity paymentEntity);
+
+        public abstract ISupportedPaymentMethod DeserializeSupportedPaymentMethod(PaymentMethodId paymentMethodId, JToken value);
+        public abstract IPaymentMethodDetails DeserializePaymentMethodDetails(JObject jobj);
+        public abstract string GetTransactionLink(PaymentMethodId paymentMethodId, params object[] args);
 
 
         public virtual object PreparePayment(TSupportedPaymentMethod supportedPaymentMethod, StoreData store,

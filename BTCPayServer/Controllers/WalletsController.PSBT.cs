@@ -195,6 +195,19 @@ namespace BTCPayServer.Controllers
                 vm.Positive = balanceChange >= Money.Zero;
             }
 
+            foreach (var input in psbtObject.Inputs)
+            {
+                var inputVm = new WalletPSBTReadyViewModel.InputViewModel();
+                vm.Inputs.Add(inputVm);
+                var mine = input.HDKeysFor(derivationSchemeSettings.AccountDerivation, signingKey, signingKeyPath).Any();
+                var balanceChange2 = input.GetTxOut()?.Value ?? Money.Zero;
+                if (mine)
+                    balanceChange2 = -balanceChange2;
+                inputVm.BalanceChange = ValueToString(balanceChange2, network);
+                inputVm.Positive = balanceChange2 >= Money.Zero;
+                inputVm.Index = (int)input.Index;
+            }
+
             foreach (var output in psbtObject.Outputs)
             {
                 var dest = new WalletPSBTReadyViewModel.DestinationViewModel();
@@ -222,7 +235,12 @@ namespace BTCPayServer.Controllers
                 vm.FeeRate = feeRate.ToString();
             }
 
-            if (!psbtObject.IsAllFinalized() && !psbtObject.TryFinalize(out var errors))
+            var sanityErrors = psbtObject.CheckSanity();
+            if (sanityErrors.Count != 0)
+            {
+                vm.SetErrors(sanityErrors);
+            }
+            else if (!psbtObject.IsAllFinalized() && !psbtObject.TryFinalize(out var errors))
             {
                 vm.SetErrors(errors);
             }

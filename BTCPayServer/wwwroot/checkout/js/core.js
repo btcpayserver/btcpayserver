@@ -107,6 +107,11 @@ function onDataCallback(jsonData) {
         jsonData.orderAmount = numberFormatted(jsonData.orderAmount * SATOSHIME);
     }
 
+    // expand line items to show details on amount due for multi-transaction payment
+    if (checkoutCtrl.srvModel.txCount === 1 && jsonData.txCount > 1) {
+        onlyExpandLineItems();
+    }
+
     // updating ui
     checkoutCtrl.srvModel = jsonData;
 }
@@ -140,10 +145,31 @@ function lndToggleNode() {
     checkoutCtrl.scanDisplayQr = checkoutCtrl.srvModel.peerInfo;
 }
 
+var lineItemsExpanded = false;
+function toggleLineItems() {
+    $("line-items").toggleClass("expanded");
+    lineItemsExpanded ? $("line-items").slideUp() : $("line-items").slideDown();
+    lineItemsExpanded = !lineItemsExpanded;
+
+    $(".buyerTotalLine").toggleClass("expanded");
+    $(".single-item-order__right__btc-price__chevron").toggleClass("expanded");
+}
+
+function onlyExpandLineItems() {
+    if (!lineItemsExpanded) {
+        toggleLineItems();
+    }
+}
+
+
 // private methods
 $(document).ready(function () {
     // initialize
     onDataCallback(srvModel);
+    // initial expand of line items to show error message if multiple payments needed
+    if (srvModel.status === "new" && srvModel.txCount > 1) {
+        onlyExpandLineItems();
+    }
 
     // check if the Document expired
     if (srvModel.expirationSeconds > 0) {
@@ -166,6 +192,11 @@ $(document).ready(function () {
     jQuery("invoice").fadeIn(300);
 
     // eof initialize
+    
+    // Expand Line-Items
+    $(".buyerTotalLine").click(function () {
+        toggleLineItems();
+    });
 
     // FUNCTIONS
     function hideEmailForm() {
@@ -295,17 +326,6 @@ $(document).ready(function () {
         language();
         $(".selector span").text($(".selected").text());
         // function to load contents in different language should go there
-    });
-
-    // Expand Line-Items
-    var lineItemsExpanded = false;
-    $(".buyerTotalLine").click(function () {
-        $("line-items").toggleClass("expanded");
-        lineItemsExpanded ? $("line-items").slideUp() : $("line-items").slideDown();
-        lineItemsExpanded = !lineItemsExpanded;
-
-        $(".buyerTotalLine").toggleClass("expanded");
-        $(".single-item-order__right__btc-price__chevron").toggleClass("expanded");
     });
 
     // Timer Countdown && Progress bar

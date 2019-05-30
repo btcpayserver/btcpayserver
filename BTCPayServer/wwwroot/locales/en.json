@@ -1,3 +1,4 @@
+
 {
   "NOTICE_WARN": "THIS CODE HAS BEEN AUTOMATICALLY GENERATED FROM TRANSIFEX, IF YOU WISH TO HELP TRANSLATION COME ON THE SLACK http://slack.btcpayserver.org TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/",
   "code": "en",
@@ -46,5 +47,6 @@
   "txCount_plural": "{{count}} transactions",
   "Pay with CoinSwitch": "Pay with CoinSwitch",
   "Pay with Changelly": "Pay with Changelly",
-  "Close": "Close"
+  "Close": "Close",
+  "NotPaid_ExtraTransaction": "The invoice hasn't been paid in full. Please send another transaction to cover amount Due."
 }

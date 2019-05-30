@@ -109,6 +109,9 @@
         <span class="fa fa-angle-double-up"></span>
     </div>
     <line-items>
+        <div class="extraPayment" v-if="srvModel.status === 'new' && srvModel.txCount > 1">
+            {{$t("NotPaid_ExtraTransaction")}}
+        </div>
         <div class="line-items">
             <div class="line-items__item">
                 <div class="line-items__item__label">{{$t("Order Amount")}}</div>

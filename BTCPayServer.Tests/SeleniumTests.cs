@@ -267,7 +267,7 @@ namespace BTCPayServer.Tests
                 s.Server.ExplorerNode.Generate(1);
 
                 s.Driver.FindElement(By.Id("Wallets")).Click();
-                s.Driver.FindElement(By.LinkText("Manage")).Click();
+                s.Driver.FindElement(By.LinkText("Manage Wallet")).Click();
 
                 s.ClickOnAllSideMenus();
 

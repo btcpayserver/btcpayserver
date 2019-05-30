@@ -207,7 +207,7 @@ namespace BTCPayServer.Payments.Lightning
             var network = _networkProvider.GetNetwork<BTCPayNetwork>(model.CryptoCode);
             model.IsLightning = true;
             model.PaymentMethodName = GetPaymentMethodName(network);
-            model.CryptoImage = GetCryptoImage(network);
+            model.CryptoImage = "/"+ GetCryptoImage(network);
             model.InvoiceBitcoinUrl = cryptoInfo.PaymentUrls.BOLT11;
             model.InvoiceBitcoinUrlQR = cryptoInfo.PaymentUrls.BOLT11.ToUpperInvariant();
         }

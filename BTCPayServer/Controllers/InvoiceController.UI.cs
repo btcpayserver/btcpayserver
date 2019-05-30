@@ -210,7 +210,7 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
-//TODO: abstract
+        //TODO: abstract
         private async Task<PaymentModel> GetInvoiceModel(string invoiceId, PaymentMethodId paymentMethodId)
         {
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
@@ -324,7 +324,7 @@ namespace BTCPayServer.Controllers
                                                   PaymentMethodName = availableCryptoHandler.GetPaymentMethodName(availableCryptoPaymentMethodId),
                                                   IsLightning =
                                                       kv.GetId().PaymentType == PaymentTypes.LightningLike,
-                                                  CryptoImage = Request.GetRelativePathOrAbsolute(availableCryptoHandler.GetCryptoImage(availableCryptoPaymentMethodId)),
+                                                  CryptoImage = "/" + availableCryptoHandler.GetCryptoImage(availableCryptoPaymentMethodId),
                                                   Link = Url.Action(nameof(Checkout),
                                                       new
                                                       {

@@ -875,14 +875,16 @@ namespace BTCPayServer.Controllers
                     .ToList();
                 vm.LogFileOffset = offset;
 
-                if (string.IsNullOrEmpty(file))
+                if (string.IsNullOrEmpty(file) || !file.EndsWith(fileExtension, StringComparison.Ordinal))
                     return View("Logs", vm);
                 vm.Log = "";
-                var path = Path.Combine(di.FullName, file);
+                var fi = vm.LogFiles.FirstOrDefault(o => o.Name == file);
+                if (fi == null)
+                    return NotFound();
                 try
                 {
                     using (var fileStream = new FileStream(
-                        path,
+                        fi.FullName,
                         FileMode.Open,
                         FileAccess.Read,
                         FileShare.ReadWrite))

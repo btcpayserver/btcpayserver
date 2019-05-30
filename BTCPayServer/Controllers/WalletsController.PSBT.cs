@@ -91,15 +91,11 @@ namespace BTCPayServer.Controllers
                     psbt = await UpdatePSBT(derivationSchemeSettings, psbt, network);
                     if (psbt == null)
                     {
-                        StatusMessage = "Error: You need to update NBXplorer";
+                        ModelState.AddModelError(nameof(vm.PSBT), "You need to update your version of NBXplorer");
                         return View(vm);
                     }
-                    ModelState.Remove(nameof(vm.PSBT));
-                    ModelState.Remove(nameof(vm.UploadedPSBTFile));
-                    vm.PSBT = psbt.ToBase64();
-                    vm.Decoded = psbt.ToString();
                     StatusMessage = "PSBT updated!";
-                    return View(vm);
+                    return RedirectToAction(nameof(WalletPSBT), new { walletId = walletId, psbt = psbt.ToBase64(), FileName = vm.FileName });
                 case "seed":
                     return SignWithSeed(walletId, psbt.ToBase64());
                 case "broadcast":

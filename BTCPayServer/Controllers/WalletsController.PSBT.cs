@@ -86,6 +86,20 @@ namespace BTCPayServer.Controllers
                     return View(vm);
                 case "ledger":
                     return ViewWalletSendLedger(psbt);
+                case "update":
+                    var derivationSchemeSettings = await GetDerivationSchemeSettings(walletId);
+                    psbt = await UpdatePSBT(derivationSchemeSettings, psbt, network);
+                    if (psbt == null)
+                    {
+                        StatusMessage = "Error: You need to update NBXplorer";
+                        return View(vm);
+                    }
+                    ModelState.Remove(nameof(vm.PSBT));
+                    ModelState.Remove(nameof(vm.UploadedPSBTFile));
+                    vm.PSBT = psbt.ToBase64();
+                    vm.Decoded = psbt.ToString();
+                    StatusMessage = "PSBT updated!";
+                    return View(vm);
                 case "seed":
                     return SignWithSeed(walletId, psbt.ToBase64());
                 case "broadcast":
@@ -100,6 +114,19 @@ namespace BTCPayServer.Controllers
                 default:
                     return View(vm);
             }
+        }
+
+        private async Task<PSBT> UpdatePSBT(DerivationSchemeSettings derivationSchemeSettings, PSBT psbt, BTCPayNetwork network)
+        {
+            var result = await ExplorerClientProvider.GetExplorerClient(network).UpdatePSBTAsync(new UpdatePSBTRequest()
+            {
+                PSBT = psbt,
+                DerivationScheme = derivationSchemeSettings.AccountDerivation,
+            });
+            if (result == null)
+                return null;
+            derivationSchemeSettings.RebaseKeyPaths(result.PSBT);
+            return result.PSBT;
         }
 
         [HttpGet]
@@ -122,12 +149,12 @@ namespace BTCPayServer.Controllers
             return View(nameof(WalletPSBTReady), vm);
         }
 
-        private Task FetchTransactionDetails(DerivationSchemeSettings derivationSchemeSettings, WalletPSBTReadyViewModel vm, BTCPayNetwork network)
+        private async Task FetchTransactionDetails(DerivationSchemeSettings derivationSchemeSettings, WalletPSBTReadyViewModel vm, BTCPayNetwork network)
         {
             var psbtObject = PSBT.Parse(vm.PSBT, network.NBitcoinNetwork);
+            psbtObject = await UpdatePSBT(derivationSchemeSettings, psbtObject, network) ?? psbtObject;
             IHDKey signingKey = null;
             RootedKeyPath signingKeyPath = null;
-
             try
             {
                 signingKey = new BitcoinExtPubKey(vm.SigningKey, network.NBitcoinNetwork);
@@ -203,7 +230,6 @@ namespace BTCPayServer.Controllers
             {
                 vm.SetErrors(errors);
             }
-            return Task.CompletedTask;
         }
 
         [HttpPost]

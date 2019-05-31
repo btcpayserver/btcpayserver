@@ -298,7 +298,7 @@ namespace BTCPayServer.Tests
                     // Broadcast
                     Assert.Contains(bob.ToString(), s.Driver.PageSource);
                     Assert.Contains("1.00000000", s.Driver.PageSource);
-                    s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).Click();
+                    s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).ForceClick();
                     Assert.Equal(walletTransactionLink, s.Driver.Url);
                 }
 

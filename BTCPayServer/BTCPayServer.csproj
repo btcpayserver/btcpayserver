@@ -122,6 +122,7 @@
 	<ItemGroup>
 	  <Folder Include="Authentication\OpenId\Models\" />
 	  <Folder Include="Build\" />
+	  <Folder Include="Monero\UI" />
 	  <Folder Include="U2F\Services" />
 	  <Folder Include="wwwroot\vendor\clipboard.js\" />
 	  <Folder Include="wwwroot\vendor\highlightjs\" />
@@ -130,6 +131,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <ProjectReference Include="..\BTCPayServer.Monero\BTCPayServer.Monero.csproj" />
 	  <ProjectReference Include="..\BTCPayServer.Data\BTCPayServer.Data.csproj" />
 	  <ProjectReference Include="..\BTCPayServer.Rating\BTCPayServer.Rating.csproj" />
 	  <ProjectReference Include="..\BTCPayServer.Common\BTCPayServer.Common.csproj" />

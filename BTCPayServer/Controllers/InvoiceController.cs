@@ -141,6 +141,7 @@ namespace BTCPayServer.Controllers
                                                 .Where(c => c != null))
             {
                 currencyPairsToFetch.Add(new CurrencyPair(network.CryptoCode, invoice.Currency));
+                //TODO: abstract
                 if (storeBlob.LightningMaxValue != null)
                     currencyPairsToFetch.Add(new CurrencyPair(network.CryptoCode, storeBlob.LightningMaxValue.Currency));
                 if (storeBlob.OnChainMinValue != null)

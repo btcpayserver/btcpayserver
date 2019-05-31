@@ -9448,10 +9448,10 @@ strong {
     margin-bottom: 5px;
 }
 
-.payment__scan svg {
-    width: 256px;
-    height: 256px;
-}
+    .payment__scan svg {
+        width: 256px;
+        height: 256px;
+    }
 
 .payment__scan__checkmark-wrapper {
     display: flex;
@@ -11202,6 +11202,16 @@ language-selector {
         opacity: 1;
     }
 
+
+.extraPayment {
+    background: #E5465A;
+    color: #fff;
+    font-weight: 500;
+    letter-spacing: .5px;
+    font-size: 12px;
+    padding: 2px 1rem;
+}
+
 line-items {
     background: #FBFBFB;
     border-top: 1px solid rgba(238, 238, 238, 0.5);
@@ -11470,56 +11480,63 @@ low-fee-timeline {
     height: 32px;
     margin-bottom: 10px;
 }
+
 .changelly-component .general__spinner bp-spinner {
     width: 50px;
     height: 50px;
-    
 }
 
-.changelly-component .general__spinner bp-spinner svg {
-    margin: 0;
-}
+    .changelly-component .general__spinner bp-spinner svg {
+        margin: 0;
+    }
 
 .changelly-component .retry-button {
     border-radius: 5px;
     border: 1px solid #a9a9a9;
     background: #fff;
     color: #000;
-    min-width:100px;  
+    min-width: 100px;
     padding-left: 0.8rem;
     padding-right: 0.8rem;
     min-height: 30px;
     word-break: break-all;
 }
 
-.changelly-component .retry-button :hover{
-    border-color: #7f7f7f;
-}
+    .changelly-component .retry-button :hover {
+        border-color: #7f7f7f;
+    }
 
 .changelly-component .prettydropdown li img {
-    width:20px; 
+    width: 20px;
     margin-right: 5px;
 }
 
 
-#prettydropdown-DefaultLang{
-    min-width:200px;
-}
-#prettydropdown-DefaultLang ul{
-    width:100%;
-}
-#prettydropdown-DefaultLang ul li{
-    width:100% !important;
+#prettydropdown-DefaultLang {
+    min-width: 200px;
 }
 
-[v-cloak] > * { display:none }
-[v-cloak]::before { content: "" }
+    #prettydropdown-DefaultLang ul {
+        width: 100%;
+    }
+
+        #prettydropdown-DefaultLang ul li {
+            width: 100% !important;
+        }
+
+[v-cloak] > * {
+    display: none
+}
+
+[v-cloak]::before {
+    content: ""
+}
 
 
 .btn-link {
     color: #329F80;
 }
 
-.btn-link:hover {
-    color: #24725B;
-}
+    .btn-link:hover {
+        color: #24725B;
+    }

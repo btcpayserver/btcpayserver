@@ -210,7 +210,7 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
-//TODO: abstract
+        //TODO: abstract
         private async Task<PaymentModel> GetInvoiceModel(string invoiceId, PaymentMethodId paymentMethodId)
         {
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
@@ -269,6 +269,7 @@ namespace BTCPayServer.Controllers
                    (1m + (changelly.AmountMarkupPercentage / 100m)))
                 : (decimal?)null;
 
+            var paymentMethodHandler = invoice.PaymentMethodHandlerDictionary[paymentMethodId];
             var model = new PaymentModel()
             {
                 CryptoCode = network.CryptoCode,
@@ -279,6 +280,7 @@ namespace BTCPayServer.Controllers
                 HtmlTitle = storeBlob.HtmlTitle ?? "BTCPay Invoice",
                 CustomCSSLink = storeBlob.CustomCSS?.AbsoluteUri,
                 CustomLogoLink = storeBlob.CustomLogo?.AbsoluteUri,
+                CryptoImage = Request.GetRelativePathOrAbsolute(paymentMethodHandler.GetCryptoImage(paymentMethodId)),
                 LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi,
                 BtcAddress = paymentMethodDetails.GetPaymentDestination(),
                 BtcDue = accounting.Due.ToString(),
@@ -337,7 +339,7 @@ namespace BTCPayServer.Controllers
                                           .ToList()
             };
 
-            invoice.PaymentMethodHandlerDictionary[paymentMethod.GetId()].PreparePaymentModel(model, dto);
+            paymentMethodHandler.PreparePaymentModel(model, dto);
             model.PaymentMethodId = paymentMethodId.ToString();
             var expiration = TimeSpan.FromSeconds(model.ExpirationSeconds);
             model.TimeLeft = expiration.PrettyPrint();

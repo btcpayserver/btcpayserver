@@ -37,7 +37,7 @@
             @if(Model.RateLimits != null)
             {
                 <h5>Current Bitcoin Average Quotas:</h5>
-                <table class="table table-sm">
+                <table class="table table-sm removetopborder">
                     <tr>
                         <th>Quota period</th>
                         <td>@Model.RateLimits.TotalPeriod.TimeString()</td>

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
@@ -80,7 +81,7 @@ namespace BTCPayServer.Tests
 
                 await walletController.WalletPSBT(walletId, vmPSBT, "ledger").AssertViewModelAsync<WalletSendLedgerModel>();
                 var vmPSBT2 = await walletController.WalletPSBT(walletId, vmPSBT, "broadcast").AssertViewModelAsync<WalletPSBTReadyViewModel>();
-                Assert.NotEmpty(vmPSBT2.Errors);
+                Assert.NotEmpty(vmPSBT2.Inputs.Where(i => i.Error != null));
                 Assert.Equal(vmPSBT.PSBT, vmPSBT2.PSBT);
 
                 var signedPSBT = unsignedPSBT.Clone();

@@ -48,7 +48,6 @@ namespace BTCPayServer.Payments.Bitcoin
             var network = _networkProvider.GetNetwork<BTCPayNetwork>(model.CryptoCode);
             model.IsLightning = false;
             model.PaymentMethodName = GetPaymentMethodName(network);
-            model.CryptoImage = "/" + GetCryptoImage(network);
             model.InvoiceBitcoinUrl = cryptoInfo.PaymentUrls.BIP21;
             model.InvoiceBitcoinUrlQR = cryptoInfo.PaymentUrls.BIP21;
         }

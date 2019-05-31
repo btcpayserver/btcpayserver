@@ -16,7 +16,7 @@ namespace BTCPayServer
             {
                 CryptoCode = nbxplorerNetwork.CryptoCode,
                 DisplayName = "Bitcoin",
-                BlockExplorerLink = NetworkType == NetworkType.Mainnet ? "https://www.smartbit.com.au/tx/{0}" : "https://testnet.smartbit.com.au/tx/{0}",
+                BlockExplorerLink = NetworkType == NetworkType.Mainnet ? "https://blockstream.info/tx/{0}" : "https://blockstream.info/testnet/tx/{0}",
                 NBitcoinNetwork = nbxplorerNetwork.NBitcoinNetwork,
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "bitcoin",

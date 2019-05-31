@@ -94,21 +94,23 @@
         </tr>
     </script>
 
-    <script id="template-cart-extra" type="text/template">
-        <tr>
-            <td colspan="5" class="border-0 pb-0">
-                <div class="input-group">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text"><i class="fa fa-shopping-cart fa-fw"></i></span>
+<script id="template-cart-extra" type="text/template">
+       @if(Model.ShowCustomAmount){
+            <tr>
+                <td colspan="5" class="border-0 pb-0">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text"><i class="fa fa-shopping-cart fa-fw"></i></span>
+                        </div>
+                        <input class="js-cart-custom-amount form-control" type="number" min="0" step="@Model.Step" name="amount" value="{customAmount}" placeholder="Pay what you want">
+                        <div class="input-group-append">
+                            <a class="js-cart-custom-amount-remove btn btn-danger" href="#"><i class="fa fa-times"></i></a>
+                        </div>
                     </div>
-                    <input class="js-cart-custom-amount form-control" type="number" min="0" step="@Model.Step" name="amount" value="{customAmount}" placeholder="Pay what you want">
-                    <div class="input-group-append">
-                        <a class="js-cart-custom-amount-remove btn btn-danger" href="#"><i class="fa fa-times"></i></a>
-                    </div>
-                </div>
-            </td>
-        </tr>
-        @if (Model.ShowDiscount)
+                </td>
+            </tr>
+        }
+        @if (@Model.ShowDiscount)
         {
             <tr>
                 <td colspan="5" class="border-top-0">

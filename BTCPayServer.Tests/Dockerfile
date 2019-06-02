@@ -5,7 +5,10 @@ ENV LC_ALL en_US.UTF-8
 ENV LANG en_US.UTF-8
 
 WORKDIR /source
+COPY Common.csproj Common.csproj
 COPY BTCPayServer/BTCPayServer.csproj BTCPayServer/BTCPayServer.csproj
+COPY BTCPayServer.Common/BTCPayServer.Common.csproj BTCPayServer.Common/BTCPayServer.Common.csproj
+COPY BTCPayServer.Rating/BTCPayServer.Rating.csproj BTCPayServer.Rating/BTCPayServer.Rating.csproj
 COPY BTCPayServer.Tests/BTCPayServer.Tests.csproj BTCPayServer.Tests/BTCPayServer.Tests.csproj
 RUN dotnet restore BTCPayServer.Tests/BTCPayServer.Tests.csproj
 

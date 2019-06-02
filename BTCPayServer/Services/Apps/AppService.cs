@@ -16,6 +16,7 @@ using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
+using BTCPayServer.Services.Stores;
 using Ganss.XSS;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http.Extensions;
@@ -34,6 +35,7 @@ namespace BTCPayServer.Services.Apps
         ApplicationDbContextFactory _ContextFactory;
         private readonly InvoiceRepository _InvoiceRepository;
         CurrencyNameTable _Currencies;
+        private readonly StoreRepository _storeRepository;
         private readonly HtmlSanitizer _HtmlSanitizer;
         private readonly BTCPayNetworkProvider _Networks;
         public CurrencyNameTable Currencies => _Currencies;
@@ -41,11 +43,13 @@ namespace BTCPayServer.Services.Apps
                           InvoiceRepository invoiceRepository,
                           BTCPayNetworkProvider networks,
                           CurrencyNameTable currencies,
+                          StoreRepository storeRepository,
                           HtmlSanitizer htmlSanitizer)
         {
             _ContextFactory = contextFactory;
             _InvoiceRepository = invoiceRepository;
             _Currencies = currencies;
+            _storeRepository = storeRepository;
             _HtmlSanitizer = htmlSanitizer;
             _Networks = networks;
         }
@@ -247,12 +251,9 @@ namespace BTCPayServer.Services.Apps
             }
         }
 
-        public async Task<StoreData> GetStore(AppData app)
+        public Task<StoreData> GetStore(AppData app)
         {
-            using (var ctx = _ContextFactory.CreateContext())
-            {
-                return await ctx.Stores.FirstOrDefaultAsync(s => s.Id == app.StoreDataId);
-            }
+            return _storeRepository.FindStore(app.StoreDataId);
         }
 
 

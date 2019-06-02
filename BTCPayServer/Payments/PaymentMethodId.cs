@@ -16,7 +16,7 @@ namespace BTCPayServer.Payments
             if (cryptoCode == null)
                 throw new ArgumentNullException(nameof(cryptoCode));
             PaymentType = paymentType;
-            CryptoCode = cryptoCode;
+            CryptoCode = cryptoCode.ToUpperInvariant();
         }
 
         [Obsolete("Should only be used for legacy stuff")]
@@ -62,34 +62,8 @@ namespace BTCPayServer.Payments
 
         public override string ToString()
         {
-            return ToString(false);
-        }
-
-        public string ToString(bool pretty)
-        {
-            if (pretty)
-            {
-                return $"{CryptoCode} ({PrettyMethod(PaymentType)})";
-            }
-            else
-            {
-                if (PaymentType == PaymentTypes.BTCLike)
-                    return CryptoCode;
-                return CryptoCode + "_" + PaymentType.ToString();
-            }
-        }
-
-        private static string PrettyMethod(PaymentTypes paymentType)
-        {
-            switch (paymentType)
-            {
-                case PaymentTypes.BTCLike:
-                    return "On-Chain";
-                case PaymentTypes.LightningLike:
-                    return "Off-Chain";
-                default:
-                    return paymentType.ToString();
-            }
+            //BTCLike case is special because it is in legacy mode.
+            return PaymentType == PaymentTypes.BTCLike ? CryptoCode : $"{CryptoCode}_{PaymentType}";
         }
 
         public static bool TryParse(string str, out PaymentMethodId paymentMethodId)
@@ -101,7 +75,8 @@ namespace BTCPayServer.Payments
             PaymentTypes type = PaymentTypes.BTCLike;
             if (parts.Length == 2)
             {
-                switch (parts[1].ToLowerInvariant())
+                var typePart = parts[1].ToLowerInvariant();
+                switch (typePart)
                 {
                     case "btclike":
                     case "onchain":
@@ -112,7 +87,12 @@ namespace BTCPayServer.Payments
                         type = PaymentTypes.LightningLike;
                         break;
                     default:
-                        return false;
+                        if (!Enum.TryParse(typePart, true, out type ))
+                        {
+                            return false;
+                        }
+
+                        break;
                 }
             }
             paymentMethodId = new PaymentMethodId(parts[0], type);

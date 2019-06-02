@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Models.PaymentRequestViewModels;
+using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
@@ -104,22 +106,11 @@ namespace BTCPayServer.PaymentRequest
                     Status = entity.GetInvoiceState().ToString(),
                     Payments = entity.GetPayments().Select(paymentEntity =>
                     {
-                        var paymentNetwork = _BtcPayNetworkProvider.GetNetwork(paymentEntity.GetCryptoCode());
                         var paymentData = paymentEntity.GetCryptoPaymentData();
-                        string link = null;
-                        string txId = null;
-                        switch (paymentData)
-                        {
-                            case Payments.Bitcoin.BitcoinLikePaymentData onChainPaymentData:
-                                txId = onChainPaymentData.Outpoint.Hash.ToString();
-                                link = string.Format(CultureInfo.InvariantCulture, paymentNetwork.BlockExplorerLink,
-                                    txId);
-                                break;
-                            case LightningLikePaymentData lightningLikePaymentData:
-                                txId = lightningLikePaymentData.BOLT11;
-                                break;
-                        }
+                        var paymentMethodId = paymentEntity.GetPaymentMethodId();
 
+                        string txId = paymentData.GetPaymentId();
+                        string link = paymentEntity.PaymentMethodHandlerDictionary[paymentMethodId].GetTransactionLink(paymentMethodId, txId);
                         return new ViewPaymentRequestViewModel.PaymentRequestInvoicePayment()
                         {
                             Amount = paymentData.GetValue(),

@@ -287,8 +287,7 @@ namespace BTCPayServer.Tests
                     // Send to bob
                     s.Driver.FindElement(By.Id("WalletSend")).Click();
                     var bob = new Key().PubKey.Hash.GetAddress(Network.RegTest);
-                    s.Driver.FindElement(By.Id("Destination")).SendKeys(bob.ToString());
-                    s.Driver.FindElement(By.Id("Amount")).SendKeys("1");
+                    SetTransactionOutput(0, bob, 1);
                     s.Driver.ScrollTo(By.Id("SendMenu"));
                     s.Driver.FindElement(By.Id("SendMenu")).ForceClick();
                     s.Driver.FindElement(By.CssSelector("button[value=seed]")).Click();
@@ -299,8 +298,21 @@ namespace BTCPayServer.Tests
                     // Broadcast
                     Assert.Contains(bob.ToString(), s.Driver.PageSource);
                     Assert.Contains("1.00000000", s.Driver.PageSource);
-                    s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).Click();
+                    s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).ForceClick();
                     Assert.Equal(walletTransactionLink, s.Driver.Url);
+                }
+
+                void SetTransactionOutput(int index, BitcoinAddress dest, decimal amount, bool subtract = false)
+                {
+                    s.Driver.FindElement(By.Id($"Outputs_{index}__DestinationAddress")).SendKeys(dest.ToString());
+                    var amountElement = s.Driver.FindElement(By.Id($"Outputs_{index}__Amount"));
+                    amountElement.Clear();
+                    amountElement.SendKeys(amount.ToString());
+                    var checkboxElement = s.Driver.FindElement(By.Id($"Outputs_{index}__SubtractFeesFromOutput"));
+                    if (checkboxElement.Selected != subtract)
+                    {
+                        checkboxElement.Click();
+                    }
                 }
                 SignWith(mnemonic);
                 var accountKey = root.Derive(new KeyPath("m/49'/0'/0'")).GetWif(Network.RegTest).ToString();

@@ -39,6 +39,7 @@ namespace BTCPayServer.Controllers
             DerivationSchemeViewModel vm = new DerivationSchemeViewModel();
             vm.CryptoCode = cryptoCode;
             vm.RootKeyPath = network.GetRootKeyPath();
+            vm.Network = network;
             SetExistingValues(store, vm);
             return View(vm);
         }
@@ -65,7 +66,7 @@ namespace BTCPayServer.Controllers
             var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
             var hw = new LedgerHardwareWalletService(webSocket);
             object result = null;
-            var network = _NetworkProvider.GetNetwork(cryptoCode);
+            var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
 
             using (var normalOperationTimeout = new CancellationTokenSource())
             {
@@ -119,6 +120,8 @@ namespace BTCPayServer.Controllers
             return new EmptyResult();
         }
 
+        
+        
         private void SetExistingValues(StoreData store, DerivationSchemeViewModel vm)
         {
             var derivation = GetExistingDerivationStrategy(vm.CryptoCode, store);
@@ -157,6 +160,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
+            vm.Network = network;
             vm.RootKeyPath = network.GetRootKeyPath();
             DerivationSchemeSettings strategy = null;
             
@@ -337,6 +341,7 @@ namespace BTCPayServer.Controllers
                 }
             }
             vm.Confirmation = true;
+            ModelState.Remove(nameof(vm.Config)); // Remove the cached value
             return View(vm);
         }
     }

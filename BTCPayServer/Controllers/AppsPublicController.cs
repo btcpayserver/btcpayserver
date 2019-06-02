@@ -91,6 +91,77 @@ namespace BTCPayServer.Controllers
             });
         }
 
+        [HttpPost]
+        [Route("/apps/{appId}/pos")]
+        [XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
+        [IgnoreAntiforgeryToken]
+        [EnableCors(CorsPolicies.All)]
+        public async Task<IActionResult> ViewPointOfSale(string appId,
+                                                        [ModelBinder(typeof(InvariantDecimalModelBinder))] decimal amount,
+                                                        string email,
+                                                        string orderId,
+                                                        string notificationUrl,
+                                                        string redirectUrl,
+                                                        string choiceKey,
+                                                        string posData = null, CancellationToken cancellationToken = default)
+        {
+            var app = await _AppService.GetApp(appId, AppType.PointOfSale);
+            if (string.IsNullOrEmpty(choiceKey) && amount <= 0)
+            {
+                return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
+            }
+            if (app == null)
+                return NotFound();
+            var settings = app.GetSettings<PointOfSaleSettings>();
+            if (string.IsNullOrEmpty(choiceKey) && !settings.ShowCustomAmount && !settings.EnableShoppingCart)
+            {
+                return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
+            }
+            string title = null;
+            var price = 0.0m;
+            ViewPointOfSaleViewModel.Item choice = null;
+            if (!string.IsNullOrEmpty(choiceKey))
+            {
+                var choices = _AppService.Parse(settings.Template, settings.Currency);
+                choice = choices.FirstOrDefault(c => c.Id == choiceKey);
+                if (choice == null)
+                    return NotFound();
+                title = choice.Title;
+                price = choice.Price.Value;
+                if (amount > price)
+                    price = amount;
+            }
+            else
+            {
+                if (!settings.ShowCustomAmount && !settings.EnableShoppingCart)
+                    return NotFound();
+                price = amount;
+                title = settings.Title;
+            }
+            var store = await _AppService.GetStore(app);
+            store.AdditionalClaims.Add(new Claim(Policies.CanCreateInvoice.Key, store.Id));
+            var invoice = await _InvoiceController.CreateInvoiceCore(new CreateInvoiceRequest()
+            {
+                ItemCode = choice?.Id,
+                ItemDesc = title,
+                Currency = settings.Currency,
+                Price = price,
+                BuyerEmail = email,
+                OrderId = orderId,
+                NotificationURL =
+                        string.IsNullOrEmpty(notificationUrl) ? settings.NotificationUrl : notificationUrl,
+                NotificationEmail = settings.NotificationEmail,
+                RedirectURL = redirectUrl ?? Request.GetDisplayUrl(),
+                FullNotifications = true,
+                ExtendedNotifications = true,
+                PosData = string.IsNullOrEmpty(posData) ? null : posData,
+                RedirectAutomatically = settings.RedirectAutomatically,
+            }, store, HttpContext.Request.GetAbsoluteRoot(),
+                new List<string>() { AppService.GetAppInternalTag(appId) },
+                cancellationToken);
+            return RedirectToAction(nameof(InvoiceController.Checkout), "Invoice", new { invoiceId = invoice.Data.Id });
+        }
+
 
         [HttpGet]
         [Route("/apps/{appId}/crowdfund")]
@@ -213,77 +284,6 @@ namespace BTCPayServer.Controllers
                 return BadRequest(e.Message);
             }
 
-        }
-
-        [HttpPost]
-        [Route("/apps/{appId}/pos")]
-        [XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
-        [IgnoreAntiforgeryToken]
-        [EnableCors(CorsPolicies.All)]
-        public async Task<IActionResult> ViewPointOfSale(string appId,
-                                                        [ModelBinder(typeof(InvariantDecimalModelBinder))] decimal amount,
-                                                        string email,
-                                                        string orderId,
-                                                        string notificationUrl,
-                                                        string redirectUrl,
-                                                        string choiceKey,
-                                                        string posData = null, CancellationToken cancellationToken = default)
-        {
-            var app = await _AppService.GetApp(appId, AppType.PointOfSale);
-            if (string.IsNullOrEmpty(choiceKey) && amount <= 0)
-            {
-                return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
-            }
-            if (app == null)
-                return NotFound();
-            var settings = app.GetSettings<PointOfSaleSettings>();
-            if (string.IsNullOrEmpty(choiceKey) && !settings.ShowCustomAmount && !settings.EnableShoppingCart)
-            {
-                return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
-            }
-            string title = null;
-            var price = 0.0m;
-            ViewPointOfSaleViewModel.Item choice = null;
-            if (!string.IsNullOrEmpty(choiceKey))
-            {
-                var choices = _AppService.Parse(settings.Template, settings.Currency);
-                choice = choices.FirstOrDefault(c => c.Id == choiceKey);
-                if (choice == null)
-                    return NotFound();
-                title = choice.Title;
-                price = choice.Price.Value;
-                if (amount > price)
-                    price = amount;
-            }
-            else
-            {
-                if (!settings.ShowCustomAmount && !settings.EnableShoppingCart)
-                    return NotFound();
-                price = amount;
-                title = settings.Title;
-            }
-            var store = await _AppService.GetStore(app);
-            store.AdditionalClaims.Add(new Claim(Policies.CanCreateInvoice.Key, store.Id));
-            var invoice = await _InvoiceController.CreateInvoiceCore(new CreateInvoiceRequest()
-            {
-                ItemCode = choice?.Id,
-                ItemDesc = title,
-                Currency = settings.Currency,
-                Price = price,
-                BuyerEmail = email,
-                OrderId = orderId,
-                NotificationURL =
-                        string.IsNullOrEmpty(notificationUrl) ? settings.NotificationUrl : notificationUrl,
-                NotificationEmail = settings.NotificationEmail,
-                RedirectURL = redirectUrl ?? Request.GetDisplayUrl(),
-                FullNotifications = true,
-                ExtendedNotifications = true,
-                PosData = string.IsNullOrEmpty(posData) ? null : posData,
-                RedirectAutomatically = settings.RedirectAutomatically,
-            }, store, HttpContext.Request.GetAbsoluteRoot(),
-                new List<string>() { AppService.GetAppInternalTag(appId) },
-                cancellationToken);
-            return RedirectToAction(nameof(InvoiceController.Checkout), "Invoice", new { invoiceId = invoice.Data.Id });
         }
 
 

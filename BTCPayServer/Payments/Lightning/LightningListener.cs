@@ -33,8 +33,7 @@ namespace BTCPayServer.Payments.Lightning
                               InvoiceRepository invoiceRepository,
                               IMemoryCache memoryCache,
                               BTCPayNetworkProvider networkProvider,
-                              LightningClientFactoryService lightningClientFactory,
-                              IHttpClientFactory httpClientFactory)
+                              LightningClientFactoryService lightningClientFactory)
         {
             _Aggregator = aggregator;
             _InvoiceRepository = invoiceRepository;
@@ -96,17 +95,17 @@ namespace BTCPayServer.Payments.Lightning
             {
                 var listenedInvoices = new List<ListenedInvoice>();
                 var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
-                foreach (var paymentMethod in invoice.GetPaymentMethods(_NetworkProvider)
+                foreach (var paymentMethod in invoice.GetPaymentMethods()
                                                               .Where(c => c.GetId().PaymentType == PaymentTypes.LightningLike))
                 {
                     var lightningMethod = paymentMethod.GetPaymentMethodDetails() as LightningLikePaymentMethodDetails;
                     if (lightningMethod == null)
                         continue;
-                    var lightningSupportedMethod = invoice.GetSupportedPaymentMethod<LightningSupportedPaymentMethod>(_NetworkProvider)
+                    var lightningSupportedMethod = invoice.GetSupportedPaymentMethod<LightningSupportedPaymentMethod>()
                                               .FirstOrDefault(c => c.CryptoCode == paymentMethod.GetId().CryptoCode);
                     if (lightningSupportedMethod == null)
                         continue;
-                    var network = _NetworkProvider.GetNetwork(paymentMethod.GetId().CryptoCode);
+                    var network = _NetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethod.GetId().CryptoCode);
 
                     listenedInvoices.Add(new ListenedInvoice()
                     {

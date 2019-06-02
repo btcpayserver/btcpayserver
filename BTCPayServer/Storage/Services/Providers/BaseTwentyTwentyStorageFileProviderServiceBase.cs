@@ -38,14 +38,15 @@ namespace BTCPayServer.Storage.Services.Providers
             };
         }
 
-        public virtual async Task<string> GetFileUrl(StoredFile storedFile, StorageSettings configuration)
+        public virtual async Task<string> GetFileUrl(Uri baseUri, StoredFile storedFile, StorageSettings configuration)
         {
             var providerConfiguration = GetProviderConfiguration(configuration);
             var provider = await GetStorageProvider(providerConfiguration);
             return provider.GetBlobUrl(providerConfiguration.ContainerName, storedFile.StorageFileName);
         }
 
-        public virtual async Task<string> GetTemporaryFileUrl(StoredFile storedFile, StorageSettings configuration,
+        public virtual async Task<string> GetTemporaryFileUrl(Uri baseUri, StoredFile storedFile,
+            StorageSettings configuration,
             DateTimeOffset expiry, bool isDownload, BlobUrlAccess access = BlobUrlAccess.Read)
         {
             var providerConfiguration = GetProviderConfiguration(configuration);

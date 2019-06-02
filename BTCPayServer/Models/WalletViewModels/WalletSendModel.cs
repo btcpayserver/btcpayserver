@@ -8,21 +8,26 @@ namespace BTCPayServer.Models.WalletViewModels
 {
     public class WalletSendModel
     {
-        [Required]
-        public string Destination { get; set; }
+    
+        public List<TransactionOutput> Outputs { get; set; } = new List<TransactionOutput>();
 
-        [Range(0.0, double.MaxValue)]
-        [Required]
-        public decimal? Amount { get; set; }
+        public class TransactionOutput
+        {
+            [Display(Name = "Destination Address")]
+            [Required]
+            public string DestinationAddress { get; set; }
 
+            [Display(Name = "Amount")] [Required]  [Range(0.0, double.MaxValue)]public decimal? Amount { get; set; }
+
+
+            [Display(Name = "Subtract fees from amount")]
+            public bool SubtractFeesFromOutput { get; set; }
+        }
         public decimal CurrentBalance { get; set; }
 
         public string CryptoCode { get; set; }
 
         public int RecommendedSatoshiPerByte { get; set; }
-
-        [Display(Name = "Subtract fees from amount")]
-        public bool SubstractFees { get; set; }
 
         [Range(1, int.MaxValue)]
         [Display(Name = "Fee rate (satoshi per byte)")]

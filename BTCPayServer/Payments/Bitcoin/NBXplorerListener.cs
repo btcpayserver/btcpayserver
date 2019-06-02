@@ -37,7 +37,8 @@ namespace BTCPayServer.Payments.Bitcoin
         public NBXplorerListener(ExplorerClientProvider explorerClients,
                                 BTCPayWalletProvider wallets,
                                 InvoiceRepository invoiceRepository,
-                                EventAggregator aggregator, Microsoft.Extensions.Hosting.IApplicationLifetime lifetime)
+                                EventAggregator aggregator, 
+                                Microsoft.Extensions.Hosting.IApplicationLifetime lifetime)
         {
             PollInterval = TimeSpan.FromMinutes(1.0);
             _Wallets = wallets;
@@ -238,6 +239,10 @@ namespace BTCPayServer.Payments.Bitcoin
                     }
                 }
 
+                // if needed add invoice back to pending to track number of confirmations
+                if (paymentData.ConfirmationCount < wallet.Network.MaxTrackedConfirmation)
+                    await _InvoiceRepository.AddPendingInvoiceIfNotPresent(invoice.Id);
+
                 if (updated)
                     updatedPaymentEntities.Add(payment);
             }
@@ -306,7 +311,7 @@ namespace BTCPayServer.Payments.Bitcoin
             return new TransactionConflicts(conflictsByOutpoint.Where(c => c.Value.Transactions.Count > 1).Select(c => c.Value));
         }
 
-        private async Task<int> FindPaymentViaPolling(BTCPayWallet wallet, BTCPayNetwork network)
+        private async Task<int> FindPaymentViaPolling(BTCPayWallet wallet, BTCPayNetworkBase network)
         {
             int totalPayment = 0;
             var invoices = await _InvoiceRepository.GetPendingInvoices();
@@ -343,9 +348,9 @@ namespace BTCPayServer.Payments.Bitcoin
             return totalPayment;
         }
 
-        private DerivationStrategyBase GetDerivationStrategy(InvoiceEntity invoice, BTCPayNetwork network)
+        private DerivationStrategyBase GetDerivationStrategy(InvoiceEntity invoice, BTCPayNetworkBase network)
         {
-            return invoice.GetSupportedPaymentMethod<DerivationSchemeSettings>(new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike), _ExplorerClients.NetworkProviders)
+            return invoice.GetSupportedPaymentMethod<DerivationSchemeSettings>(new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike))
                           .Select(d => d.AccountDerivation)
                           .FirstOrDefault();
         }

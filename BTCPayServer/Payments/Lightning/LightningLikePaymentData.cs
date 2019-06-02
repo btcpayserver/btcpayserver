@@ -20,7 +20,7 @@ namespace BTCPayServer.Payments.Lightning
         [JsonConverter(typeof(NBitcoin.JsonConverters.UInt256JsonConverter))]
         public uint256 PaymentHash { get; set; }
 
-        public string GetDestination(BTCPayNetwork network)
+        public string GetDestination(BTCPayNetworkBase network)
         {
             return BOLT11;
         }
@@ -49,12 +49,12 @@ namespace BTCPayServer.Payments.Lightning
             return Amount.ToDecimal(LightMoneyUnit.BTC);
         }
 
-        public bool PaymentCompleted(PaymentEntity entity, BTCPayNetwork network)
+        public bool PaymentCompleted(PaymentEntity entity, BTCPayNetworkBase network)
         {
             return true;
         }
 
-        public bool PaymentConfirmed(PaymentEntity entity, SpeedPolicy speedPolicy, BTCPayNetwork network)
+        public bool PaymentConfirmed(PaymentEntity entity, SpeedPolicy speedPolicy, BTCPayNetworkBase network)
         {
             return true;
         }

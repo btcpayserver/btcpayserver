@@ -21,7 +21,7 @@ namespace BTCPayServer.Services.Fees
 
         public FeeRate Fallback { get; set; }
         public int BlockTarget { get; set; }
-        public IFeeProvider CreateFeeProvider(BTCPayNetwork network)
+        public IFeeProvider CreateFeeProvider(BTCPayNetworkBase network)
         {
             return new NBXplorerFeeProvider(this, _ExplorerClients.GetExplorerClient(network));
         }

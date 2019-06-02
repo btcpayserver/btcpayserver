@@ -2,11 +2,11 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using BTCPayServer.Configuration;
-using BTCPayServer.Services;
 using BTCPayServer.Storage.Models;
 using BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration;
+using ExchangeSharp;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json;
 using TwentyTwenty.Storage;
 using TwentyTwenty.Storage.Local;
 
@@ -15,16 +15,11 @@ namespace BTCPayServer.Storage.Services.Providers.FileSystemStorage
     public class
         FileSystemFileProviderService : BaseTwentyTwentyStorageFileProviderServiceBase<FileSystemStorageConfiguration>
     {
-        private readonly BTCPayServerEnvironment _BtcPayServerEnvironment;
-        private readonly BTCPayServerOptions _Options;
-        private readonly IHttpContextAccessor _HttpContextAccessor;
+        private readonly BTCPayServerOptions _options;
 
-        public FileSystemFileProviderService(BTCPayServerEnvironment btcPayServerEnvironment,
-            BTCPayServerOptions options, IHttpContextAccessor httpContextAccessor)
+        public FileSystemFileProviderService(BTCPayServerOptions options)
         {
-            _BtcPayServerEnvironment = btcPayServerEnvironment;
-            _Options = options;
-            _HttpContextAccessor = httpContextAccessor;
+            _options = options;
         }
         public const string LocalStorageDirectoryName = "LocalStorage";
 
@@ -32,7 +27,12 @@ namespace BTCPayServer.Storage.Services.Providers.FileSystemStorage
         {
             return Path.Combine(options.DataDir, LocalStorageDirectoryName);
         }
-
+        
+        
+        public static string GetTempStorageDir(BTCPayServerOptions options)
+        {
+            return Path.Combine(GetStorageDir(options), "tmp");
+        }
         public override StorageProvider StorageProvider()
         {
             return Storage.Models.StorageProvider.FileSystem;
@@ -41,26 +41,38 @@ namespace BTCPayServer.Storage.Services.Providers.FileSystemStorage
         protected override Task<IStorageProvider> GetStorageProvider(FileSystemStorageConfiguration configuration)
         {
             return Task.FromResult<IStorageProvider>(
-                new LocalStorageProvider(new DirectoryInfo(GetStorageDir(_Options)).FullName));
+                new LocalStorageProvider(new DirectoryInfo(GetStorageDir(_options)).FullName));
         }
 
-        public override async Task<string> GetFileUrl(StoredFile storedFile, StorageSettings configuration)
+        public override async Task<string> GetFileUrl(Uri baseUri, StoredFile storedFile, StorageSettings configuration)
         {
-            var baseResult = await base.GetFileUrl(storedFile, configuration);
-            var url =
-                _HttpContextAccessor.HttpContext.Request.IsOnion()
-                    ? _BtcPayServerEnvironment.OnionUrl
-                    : $"{_BtcPayServerEnvironment.ExpectedProtocol}://" +
-                      $"{_BtcPayServerEnvironment.ExpectedHost}" +
-                      $"{_Options.RootPath}{LocalStorageDirectoryName}";
-            return baseResult.Replace(new DirectoryInfo(GetStorageDir(_Options)).FullName, url,
+            var baseResult = await base.GetFileUrl(baseUri, storedFile, configuration);
+            var url = new Uri(baseUri,LocalStorageDirectoryName );
+            return baseResult.Replace(new DirectoryInfo(GetStorageDir(_options)).FullName, url.AbsoluteUri,
                 StringComparison.InvariantCultureIgnoreCase);
         }
 
-        public override async Task<string> GetTemporaryFileUrl(StoredFile storedFile, StorageSettings configuration, DateTimeOffset expiry, bool isDownload,
+        public override async Task<string> GetTemporaryFileUrl(Uri baseUri, StoredFile storedFile,
+            StorageSettings configuration, DateTimeOffset expiry, bool isDownload,
             BlobUrlAccess access = BlobUrlAccess.Read)
         {
-            return $"{(await GetFileUrl(storedFile, configuration))}{(isDownload ? "?download" : string.Empty)}";
+
+            var localFileDescriptor = new TemporaryLocalFileDescriptor()
+            {
+                Expiry = expiry, 
+                FileId = storedFile.Id, 
+                IsDownload = isDownload
+            };
+            var name = Guid.NewGuid().ToString();
+            var fullPath = Path.Combine(GetTempStorageDir(_options), name);
+            if (!File.Exists(fullPath))
+            {
+                File.Create(fullPath).Dispose();
+            }
+            
+            await File.WriteAllTextAsync(Path.Combine(GetTempStorageDir(_options), name), JsonConvert.SerializeObject(localFileDescriptor));
+            
+            return  new Uri(baseUri,$"{LocalStorageDirectoryName}tmp/{name}" ).AbsoluteUri;
         }
     }
 }

@@ -28,6 +28,9 @@ namespace BTCPayServer.Data
 {
     public class StoreData
     {
+        [NotMapped]
+        [JsonIgnore]
+        public PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary { get; set; }
         public string Id
         {
             get;
@@ -84,14 +87,16 @@ namespace BTCPayServer.Data
                 foreach (var strat in strategies.Properties())
                 {
                     var paymentMethodId = PaymentMethodId.Parse(strat.Name);
-                    var network = networks.GetNetwork(paymentMethodId.CryptoCode);
+                    var network = networks.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
                     if (network != null)
                     {
                         if (network == networks.BTC && paymentMethodId.PaymentType == PaymentTypes.BTCLike && btcReturned)
                             continue;
                         if (strat.Value.Type == JTokenType.Null)
                             continue;
-                        yield return PaymentMethodExtensions.Deserialize(paymentMethodId, strat.Value, network);
+                        yield return
+                            PaymentMethodHandlerDictionary[paymentMethodId]
+                                .DeserializeSupportedPaymentMethod(paymentMethodId, strat.Value);
                     }
                 }
             }
@@ -282,7 +287,7 @@ namespace BTCPayServer.Data
 
         public double Multiplier { get; set; }
 
-        public decimal Apply(BTCPayNetwork network, decimal rate)
+        public decimal Apply(BTCPayNetworkBase network, decimal rate)
         {
             return rate * (decimal)Multiplier;
         }

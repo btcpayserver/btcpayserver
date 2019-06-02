@@ -1,7 +1,5 @@
 ﻿using NBXplorer;
 using Microsoft.Extensions.Logging;
-using NBXplorer.DerivationStrategy;
-using NBXplorer.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,12 +9,8 @@ using BTCPayServer.Logging;
 using System.Threading;
 using Microsoft.Extensions.Hosting;
 using System.Collections.Concurrent;
-using BTCPayServer.Services.Wallets;
-using BTCPayServer.Controllers;
 using BTCPayServer.Events;
-using Microsoft.AspNetCore.Hosting;
 using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services;
 
 namespace BTCPayServer.HostedServices
 {
@@ -74,11 +68,11 @@ namespace BTCPayServer.HostedServices
             }
 
             var payments = invoice.GetPayments().Where(p => p.Accounted).ToArray();
-            var allPaymentMethods = invoice.GetPaymentMethods(_NetworkProvider);
+            var allPaymentMethods = invoice.GetPaymentMethods();
             var paymentMethod = GetNearestClearedPayment(allPaymentMethods, out var accounting, _NetworkProvider);
             if (paymentMethod == null)
                 return;
-            var network = _NetworkProvider.GetNetwork(paymentMethod.GetId().CryptoCode);
+            var network = _NetworkProvider.GetNetwork<BTCPayNetworkBase>(paymentMethod.GetId().CryptoCode);
             if (invoice.Status == InvoiceStatus.New || invoice.Status == InvoiceStatus.Expired)
             {
                 if (accounting.Paid >= accounting.MinimumTotalDue)
@@ -173,7 +167,7 @@ namespace BTCPayServer.HostedServices
             decimal nearestToZero = 0.0m;
             foreach (var paymentMethod in allPaymentMethods)
             {
-                if (networkProvider != null && networkProvider.GetNetwork(paymentMethod.GetId().CryptoCode) == null)
+                if (networkProvider != null && networkProvider.GetNetwork<BTCPayNetworkBase>(paymentMethod.GetId().CryptoCode) == null)
                     continue;
                 var currentAccounting = paymentMethod.Calculate();
                 var distanceFromZero = Math.Abs(currentAccounting.DueUncapped.ToDecimal(MoneyUnit.BTC));
@@ -288,31 +282,18 @@ namespace BTCPayServer.HostedServices
                         if (invoice.Status == InvoiceStatus.Complete ||
                            ((invoice.Status == InvoiceStatus.Invalid || invoice.Status == InvoiceStatus.Expired) && invoice.MonitoringExpiration < DateTimeOffset.UtcNow))
                         {
-                            var updateConfirmationCountIfNeeded = invoice
-                                .GetPayments()
-                                .Select<PaymentEntity, Task>(async payment =>
-                                {
-                                    var paymentNetwork = _NetworkProvider.GetNetwork(payment.GetCryptoCode());
-                                    var paymentData = payment.GetCryptoPaymentData();
-                                    if (paymentData is Payments.Bitcoin.BitcoinLikePaymentData onChainPaymentData)
-                                    {
-                                        // Do update if confirmation count in the paymentData is not up to date
-                                        if ((onChainPaymentData.ConfirmationCount < paymentNetwork.MaxTrackedConfirmation && payment.Accounted)
-                                             && (onChainPaymentData.Legacy || invoice.MonitoringExpiration < DateTimeOffset.UtcNow))
-                                        {
-                                            var transactionResult = await _ExplorerClientProvider.GetExplorerClient(payment.GetCryptoCode())?.GetTransactionAsync(onChainPaymentData.Outpoint.Hash);
-                                            var confirmationCount = transactionResult?.Confirmations ?? 0;
-                                            onChainPaymentData.ConfirmationCount = confirmationCount;
-                                            payment.SetCryptoPaymentData(onChainPaymentData);
-                                            await _InvoiceRepository.UpdatePayments(new List<PaymentEntity> { payment });
-                                        }
-                                    }
-                                })
-                                .ToArray();
-                            await Task.WhenAll(updateConfirmationCountIfNeeded);
+                            var extendInvoiceMonitoring = await UpdateConfirmationCount(invoice);
 
-                            if (await _InvoiceRepository.RemovePendingInvoice(invoice.Id))
+                            // we extend monitor time if we haven't reached max confirmation count
+                            // say user used low fee and we only got 3 confirmations right before it's time to remove
+                            if (extendInvoiceMonitoring)
+                            {
+                                await _InvoiceRepository.ExtendInvoiceMonitor(invoice.Id);
+                            }
+                            else if (await _InvoiceRepository.RemovePendingInvoice(invoice.Id))
+                            {
                                 _EventAggregator.Publish(new InvoiceStopWatchedEvent(invoice.Id));
+                            }
                             break;
                         }
 
@@ -328,6 +309,46 @@ namespace BTCPayServer.HostedServices
                     }
                 }
             }
+        }
+
+        private async Task<bool> UpdateConfirmationCount(InvoiceEntity invoice)
+        {
+            bool extendInvoiceMonitoring = false;
+            var updateConfirmationCountIfNeeded = invoice
+                .GetPayments()
+                .Select<PaymentEntity, Task<PaymentEntity>>(async payment =>
+                {
+                    var paymentNetwork = _NetworkProvider.GetNetwork<BTCPayNetwork>(payment.GetCryptoCode());
+                    var paymentData = payment.GetCryptoPaymentData();
+                    if (paymentData is Payments.Bitcoin.BitcoinLikePaymentData onChainPaymentData)
+                    {
+                        // Do update if confirmation count in the paymentData is not up to date
+                        if ((onChainPaymentData.ConfirmationCount < paymentNetwork.MaxTrackedConfirmation && payment.Accounted)
+                            && (onChainPaymentData.Legacy || invoice.MonitoringExpiration < DateTimeOffset.UtcNow))
+                        {
+                            var transactionResult = await _ExplorerClientProvider.GetExplorerClient(payment.GetCryptoCode())?.GetTransactionAsync(onChainPaymentData.Outpoint.Hash);
+                            var confirmationCount = transactionResult?.Confirmations ?? 0;
+                            onChainPaymentData.ConfirmationCount = confirmationCount;
+                            payment.SetCryptoPaymentData(onChainPaymentData);
+
+                            // we want to extend invoice monitoring until we reach max confirmations on all onchain payment methods
+                            if (confirmationCount < paymentNetwork.MaxTrackedConfirmation)
+                                extendInvoiceMonitoring = true;
+                            
+                            return payment;
+                        }
+                    }
+                    return null;
+                })
+                .ToArray();
+            await Task.WhenAll(updateConfirmationCountIfNeeded);
+            var updatedPaymentData = updateConfirmationCountIfNeeded.Where(a => a.Result != null).Select(a => a.Result).ToList();
+            if (updatedPaymentData.Count > 0)
+            {
+                await _InvoiceRepository.UpdatePayments(updatedPaymentData);
+            }
+
+            return extendInvoiceMonitoring;
         }
 
         public async Task StopAsync(CancellationToken cancellationToken)

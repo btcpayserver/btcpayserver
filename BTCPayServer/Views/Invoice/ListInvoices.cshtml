@@ -77,6 +77,7 @@
                                 </button>
                                 <div class="dropdown-menu dropdown-menu-right">
                                     <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=status%3Ainvalid">Invalid Invoices</a>
+                                    <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=status%3Apaid%2Cstatus%3Aconfirmed%2Cstatus%3Acomplete">Paid Invoices</a>
                                     <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=exceptionstatus%3ApaidLate">Paid Late Invoices</a>
                                     <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=exceptionstatus%3ApaidPartial">Paid Partial Invoices</a>
                                     <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=exceptionstatus%3ApaidOver">Paid Over Invoices</a>

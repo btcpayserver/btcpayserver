@@ -33,7 +33,7 @@ namespace BTCPayServer
                 Logs.Configuration.LogInformation($"{setting.CryptoCode}: Cookie file is {(setting.CookieFile ?? "not set")}");
                 if (setting.ExplorerUri != null)
                 {
-                    _Clients.TryAdd(setting.CryptoCode, CreateExplorerClient(httpClientFactory.CreateClient($"NBXPLORER_{setting.CryptoCode}"), _NetworkProviders.GetNetwork(setting.CryptoCode), setting.ExplorerUri, setting.CookieFile));
+                    _Clients.TryAdd(setting.CryptoCode, CreateExplorerClient(httpClientFactory.CreateClient($"NBXPLORER_{setting.CryptoCode}"), _NetworkProviders.GetNetwork<BTCPayNetwork>(setting.CryptoCode), setting.ExplorerUri, setting.CookieFile));
                 }
             }
         }
@@ -58,21 +58,21 @@ namespace BTCPayServer
 
         public ExplorerClient GetExplorerClient(string cryptoCode)
         {
-            var network = _NetworkProviders.GetNetwork(cryptoCode);
+            var network = _NetworkProviders.GetNetwork<BTCPayNetwork>(cryptoCode);
             if (network == null)
                 return null;
             _Clients.TryGetValue(network.CryptoCode, out ExplorerClient client);
             return client;
         }
 
-        public ExplorerClient GetExplorerClient(BTCPayNetwork network)
+        public ExplorerClient GetExplorerClient(BTCPayNetworkBase network)
         {
             if (network == null)
                 throw new ArgumentNullException(nameof(network));
             return GetExplorerClient(network.CryptoCode);
         }
 
-        public bool IsAvailable(BTCPayNetwork network)
+        public bool IsAvailable(BTCPayNetworkBase network)
         {
             return IsAvailable(network.CryptoCode);
         }
@@ -84,7 +84,7 @@ namespace BTCPayServer
 
         public BTCPayNetwork GetNetwork(string cryptoCode)
         {
-            var network = _NetworkProviders.GetNetwork(cryptoCode);
+            var network = _NetworkProviders.GetNetwork<BTCPayNetwork>(cryptoCode);
             if (network == null)
                 return null;
             if (_Clients.ContainsKey(network.CryptoCode))
@@ -94,7 +94,7 @@ namespace BTCPayServer
 
         public IEnumerable<(BTCPayNetwork, ExplorerClient)> GetAll()
         {
-            foreach (var net in _NetworkProviders.GetAll())
+            foreach (var net in _NetworkProviders.GetAll().OfType<BTCPayNetwork>())
             {
                 if (_Clients.TryGetValue(net.CryptoCode, out ExplorerClient explorer))
                 {

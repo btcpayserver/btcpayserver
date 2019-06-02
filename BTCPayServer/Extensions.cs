@@ -206,6 +206,11 @@ namespace BTCPayServer
                         request.PathBase.ToUriComponent());
         }
 
+        public static Uri GetAbsoluteRootUri(this HttpRequest request)
+        {
+            return new Uri(request.GetAbsoluteRoot());
+        }
+
         public static string GetCurrentUrl(this HttpRequest request)
         {
             return string.Concat(
@@ -317,13 +322,6 @@ namespace BTCPayServer
             NBitcoin.Extensions.TryAdd(ctx.Items, "IsBitpayAPI", value);
         }
 
-        public static void AddRange<T>(this HashSet<T> hashSet, IEnumerable<T> items)
-        {
-            foreach (var item in items)
-            {
-                hashSet.Add(item);
-            }
-        }
         public static bool GetIsBitpayAPI(this HttpContext ctx)
         {
             return ctx.Items.TryGetValue("IsBitpayAPI", out object obj) &&

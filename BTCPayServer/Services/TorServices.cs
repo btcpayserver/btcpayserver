@@ -80,13 +80,13 @@ namespace BTCPayServer.Services
             Services = result.ToArray();
         }
 
-        private bool TryParseP2PService(string name, out BTCPayNetwork network)
+        private bool TryParseP2PService(string name, out BTCPayNetworkBase network)
         {
             network = null;
             var splitted = name.Trim().Split('-');
             if (splitted.Length != 2 || splitted[1] != "P2P")
                 return false;
-            network = _networks.GetNetwork(splitted[0]);
+            network = _networks.GetNetwork<BTCPayNetworkBase>(splitted[0]);
             return network != null;
         }
     }
@@ -94,7 +94,7 @@ namespace BTCPayServer.Services
     public class TorService
     {
         public TorServiceType ServiceType { get; set; } = TorServiceType.Other;
-        public BTCPayNetwork Network { get; set; }
+        public BTCPayNetworkBase Network { get; set; }
         public string Name { get; set; }
         public string OnionHost { get; set; }
         public int VirtualPort { get; set; }

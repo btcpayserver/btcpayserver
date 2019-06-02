@@ -7,9 +7,7 @@ using BTCPayServer.Models;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
-using NBitpayClient;
 
 namespace BTCPayServer.Controllers
 {
@@ -19,15 +17,12 @@ namespace BTCPayServer.Controllers
     {
         private InvoiceController _InvoiceController;
         private InvoiceRepository _InvoiceRepository;
-        private BTCPayNetworkProvider _NetworkProvider;
 
         public InvoiceControllerAPI(InvoiceController invoiceController,
-                                    InvoiceRepository invoceRepository,
-                                    BTCPayNetworkProvider networkProvider)
+                                    InvoiceRepository invoceRepository)
         {
-            this._InvoiceController = invoiceController;
-            this._InvoiceRepository = invoceRepository;
-            this._NetworkProvider = networkProvider;
+            _InvoiceController = invoiceController;
+            _InvoiceRepository = invoceRepository;
         }
 
         [HttpPost]
@@ -51,8 +46,7 @@ namespace BTCPayServer.Controllers
             })).FirstOrDefault();
             if (invoice == null)
                 throw new BitpayHttpException(404, "Object not found");
-            var resp = invoice.EntityToDTO(_NetworkProvider);
-            return new DataWrapper<InvoiceResponse>(resp);
+            return new DataWrapper<InvoiceResponse>(invoice.EntityToDTO());
         }
         [HttpGet]
         [Route("invoices")]
@@ -82,7 +76,7 @@ namespace BTCPayServer.Controllers
             };
 
             var entities = (await _InvoiceRepository.GetInvoices(query))
-                            .Select((o) => o.EntityToDTO(_NetworkProvider)).ToArray();
+                            .Select((o) => o.EntityToDTO()).ToArray();
 
             return DataWrapper.Create(entities);
         }

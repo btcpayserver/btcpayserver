@@ -1,4 +1,4 @@
-$ver = [regex]::Match((Get-Content BTCPayServer\BTCPayServer.csproj), '<Version>([^<]+)<').Groups[1].Value
+$ver = [regex]::Match((Get-Content Version.csproj), '<Version>([^<]+)<').Groups[1].Value
 git tag -a "v$ver" -m "$ver"
 git checkout latest
 git merge master

@@ -99,32 +99,6 @@ namespace BTCPayServer.Payments.Bitcoin
                 .Select(network => new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike));
         }
 
-        public override CryptoPaymentData GetCryptoPaymentData(PaymentEntity paymentEntity)
-        {
-#pragma warning disable CS0618
-
-            BitcoinLikePaymentData paymentData;
-            if (string.IsNullOrEmpty(paymentEntity.CryptoPaymentDataType))
-            {
-                // For invoices created when CryptoPaymentDataType was not existing, we just consider that it is a RBFed payment for safety
-                paymentData = new BitcoinLikePaymentData();
-                paymentData.Outpoint = paymentEntity.Outpoint;
-                paymentData.Output = paymentEntity.Output;
-                paymentData.RBF = true;
-                paymentData.ConfirmationCount = 0;
-                paymentData.Legacy = true;
-                return paymentData;
-            }
-
-            paymentData =
-                JsonConvert.DeserializeObject<BitcoinLikePaymentData>(paymentEntity.CryptoPaymentData);
-            // legacy
-            paymentData.Output = paymentEntity.Output;
-            paymentData.Outpoint = paymentEntity.Outpoint;
-#pragma warning restore CS0618
-            return paymentData;
-        }
-
         private string GetPaymentMethodName(BTCPayNetworkBase network)
         {
             return network.DisplayName;
@@ -149,7 +123,6 @@ namespace BTCPayServer.Payments.Bitcoin
             };
         }
 
-        public override string PrettyDescription => "On-Chain";
         public override PaymentTypes PaymentType => PaymentTypes.BTCLike;
 
         public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(
@@ -218,11 +191,6 @@ namespace BTCPayServer.Payments.Bitcoin
             }
             // Legacy
             return DerivationSchemeSettings.Parse(((JValue)value).Value<string>(), network);
-        }
-
-        public override IPaymentMethodDetails DeserializePaymentMethodDetails(JObject jobj)
-        {
-            return JsonConvert.DeserializeObject<Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod>(jobj.ToString());
         }
     }
 }

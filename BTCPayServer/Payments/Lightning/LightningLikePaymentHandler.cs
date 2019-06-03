@@ -40,7 +40,6 @@ namespace BTCPayServer.Payments.Lightning
             _socketFactory = socketFactory;
         }
 
-        public override string PrettyDescription => "Off-Chain";
         public override PaymentTypes PaymentType => PaymentTypes.LightningLike;
         public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(
             LightningSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store,
@@ -168,23 +167,12 @@ namespace BTCPayServer.Payments.Lightning
             }
             return "The amount of the invoice is too high to be paid with lightning";
         }
-        public override CryptoPaymentData GetCryptoPaymentData(PaymentEntity paymentEntity)
-        {
-#pragma warning disable CS0618
-            return JsonConvert.DeserializeObject<LightningLikePaymentData>(paymentEntity.CryptoPaymentData);
-#pragma warning restore CS0618
-        }
 
         public override ISupportedPaymentMethod DeserializeSupportedPaymentMethod(PaymentMethodId paymentMethodId, JToken value)
         { 
             return JsonConvert.DeserializeObject<LightningSupportedPaymentMethod>(value.ToString());
         }
     
-        public override IPaymentMethodDetails DeserializePaymentMethodDetails(JObject jobj)
-        {
-            return JsonConvert.DeserializeObject<LightningLikePaymentMethodDetails>(jobj.ToString());
-        }
-
         public override string GetTransactionLink(PaymentMethodId paymentMethodId, params object[] args)
         {
             return null;

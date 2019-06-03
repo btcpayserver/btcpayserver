@@ -243,7 +243,7 @@ namespace BTCPayServer.Controllers
         {
             try
             {
-                var logPrefix = $"{handler.ToPrettyString(supportedPaymentMethod.PaymentId)}:";
+                var logPrefix = $"{supportedPaymentMethod.PaymentId.ToPrettyString()}:";
                 var storeBlob = store.GetStoreBlob();
                 var preparePayment = handler.PreparePayment(supportedPaymentMethod, store, network);
                 var rate = await fetchingByCurrencyPair[new CurrencyPair(network.CryptoCode, entity.ProductInformation.Currency)];

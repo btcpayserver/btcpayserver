@@ -5,10 +5,10 @@ COPY BTCPayServer/BTCPayServer.csproj BTCPayServer/BTCPayServer.csproj
 COPY BTCPayServer.Common/BTCPayServer.Common.csproj BTCPayServer.Common/BTCPayServer.Common.csproj
 COPY BTCPayServer.Rating/BTCPayServer.Rating.csproj BTCPayServer.Rating/BTCPayServer.Rating.csproj
 RUN cd BTCPayServer && dotnet restore
-COPY Version.csproj Version.csproj
-COPY BTCPayServer/. BTCPayServer/.
-COPY BTCPayServer.Rating/. BTCPayServer.Rating/.
 COPY BTCPayServer.Common/. BTCPayServer.Common/.
+COPY BTCPayServer.Rating/. BTCPayServer.Rating/.
+COPY BTCPayServer/. BTCPayServer/.
+COPY Version.csproj Version.csproj
 RUN cd BTCPayServer && dotnet publish --output /app/ --configuration Release
 
 FROM mcr.microsoft.com/dotnet/core/aspnet:2.1.9-alpine3.7

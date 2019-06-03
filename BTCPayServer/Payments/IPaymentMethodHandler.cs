@@ -18,7 +18,6 @@ namespace BTCPayServer.Payments
     /// </summary>
     public interface IPaymentMethodHandler
     {
-        string PrettyDescription { get; }
         /// <summary>
         /// Create needed to track payments of this invoice
         /// </summary>
@@ -45,8 +44,6 @@ namespace BTCPayServer.Payments
             PaymentMethodAccounting accounting, PaymentMethod info);
 
 
-        string ToPrettyString(PaymentMethodId paymentMethodId);
-
         void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse);
         string GetCryptoImage(PaymentMethodId paymentMethodId);
         string GetPaymentMethodName(PaymentMethodId paymentMethodId);
@@ -57,10 +54,7 @@ namespace BTCPayServer.Payments
 
         IEnumerable<PaymentMethodId> GetSupportedPaymentMethods();
 
-        CryptoPaymentData GetCryptoPaymentData(PaymentEntity paymentEntity);
-
         ISupportedPaymentMethod DeserializeSupportedPaymentMethod(PaymentMethodId paymentMethodId, JToken value);
-        IPaymentMethodDetails DeserializePaymentMethodDetails(JObject jobj);
         string GetTransactionLink(PaymentMethodId paymentMethodId, params object[] args);
     }
 
@@ -77,7 +71,6 @@ namespace BTCPayServer.Payments
         where TSupportedPaymentMethod : ISupportedPaymentMethod
         where TBTCPayNetwork : BTCPayNetworkBase
     {
-        public abstract string PrettyDescription { get; }
         public abstract PaymentTypes PaymentType { get; }
 
         public abstract Task<IPaymentMethodDetails> CreatePaymentMethodDetails(
@@ -95,10 +88,8 @@ namespace BTCPayServer.Payments
             Dictionary<CurrencyPair, Task<RateResult>> rate, Money amount, PaymentMethodId paymentMethodId);
 
         public abstract IEnumerable<PaymentMethodId> GetSupportedPaymentMethods();
-        public abstract CryptoPaymentData GetCryptoPaymentData(PaymentEntity paymentEntity);
 
         public abstract ISupportedPaymentMethod DeserializeSupportedPaymentMethod(PaymentMethodId paymentMethodId, JToken value);
-        public abstract IPaymentMethodDetails DeserializePaymentMethodDetails(JObject jobj);
         public abstract string GetTransactionLink(PaymentMethodId paymentMethodId, params object[] args);
 
 
@@ -128,11 +119,6 @@ namespace BTCPayServer.Payments
             }
 
             throw new NotSupportedException("Invalid supportedPaymentMethod");
-        }
-
-        public string ToPrettyString(PaymentMethodId paymentMethodId)
-        {
-            return $"{paymentMethodId.CryptoCode} ({PrettyDescription})";
         }
     }
 }

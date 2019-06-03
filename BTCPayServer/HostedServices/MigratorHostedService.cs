@@ -93,6 +93,7 @@ namespace BTCPayServer.HostedServices
                 foreach (var store in await ctx.Stores.ToArrayAsync())
                 {
 #pragma warning disable CS0618 // Type or member is obsolete
+                    _StoreRepository.PrepareEntity(store);
                     var blob = store.GetStoreBlob();
                     if (blob.WalletKeyPathRoots == null)
                         continue;
@@ -138,6 +139,7 @@ namespace BTCPayServer.HostedServices
             {
                 foreach (var store in await ctx.Stores.ToArrayAsync())
                 {
+                    _StoreRepository.PrepareEntity(store);
                     var blob = store.GetStoreBlob();
 #pragma warning disable CS0618 // Type or member is obsolete
                     if (blob.NetworkFeeDisabled != null)
@@ -158,6 +160,7 @@ namespace BTCPayServer.HostedServices
             {
                 foreach (var store in await ctx.Stores.ToArrayAsync())
                 {
+                    _StoreRepository.PrepareEntity(store);
                     var blob = store.GetStoreBlob();
 #pragma warning disable CS0612 // Type or member is obsolete
                     decimal multiplier = 1.0m;
@@ -188,6 +191,7 @@ namespace BTCPayServer.HostedServices
             {
                 foreach (var store in await ctx.Stores.ToArrayAsync())
                 {
+                    _StoreRepository.PrepareEntity(store);
                     foreach (var method in store.GetSupportedPaymentMethods(_NetworkProvider).OfType<Payments.Lightning.LightningSupportedPaymentMethod>())
                     {
                         var lightning = method.GetLightningUrl();

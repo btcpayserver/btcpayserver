@@ -1,27 +1,38 @@
 version: 2
 jobs:
-  build:
-    machine: 
-      docker_layer_caching: true
-    steps: 
-      - checkout
-
-  test:
+  fast_tests:
     machine:
         docker_layer_caching: true
     steps:
       - checkout
       - run:
           command: |
-            cd BTCPayServer.Tests
-            docker-compose -v
-            docker-compose down --v
-            docker-compose build
-            TESTS_RUN_EXTERNAL_INTEGRATION="false"
-            if [ "$CIRCLE_PROJECT_USERNAME" == "btcpayserver" ] && [ "$CIRCLE_PROJECT_REPONAME" == "btcpayserver" ]; then
-                TESTS_RUN_EXTERNAL_INTEGRATION="true"
-            fi
-            docker-compose run -e TESTS_RUN_EXTERNAL_INTEGRATION=$TESTS_RUN_EXTERNAL_INTEGRATION tests
+            cd .circleci && ./run-tests.sh "Fast=Fast"
+  selenium_tests:
+    machine:
+        docker_layer_caching: true
+    steps:
+      - checkout
+      - run:
+          command: |
+            cd .circleci && ./run-tests.sh "Selenium=Selenium"
+  integration_tests:
+    machine:
+        docker_layer_caching: true
+    steps:
+      - checkout
+      - run:
+          command: |
+            cd .circleci && ./run-tests.sh "Integration=Integration"
+  external_tests:
+    machine:
+        docker_layer_caching: true
+    steps:
+      - checkout
+      - run:
+          command: |
+            cd .circleci && ./run-tests.sh "ExternalIntegration=ExternalIntegration"
+
 
   # publish jobs require $DOCKERHUB_REPO, $DOCKERHUB_USER, $DOCKERHUB_PASS defined
   amd64:
@@ -74,7 +85,10 @@ workflows:
   version: 2
   build_and_test:
     jobs:
-      - test
+      - fast_tests
+      - selenium_tests
+      - integration_tests
+      - external_tests
 
   publish:
     jobs:

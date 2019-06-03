@@ -46,5 +46,6 @@
   "txCount_plural": "{{count}} transaktioner",
   "Pay with CoinSwitch": "Betal med CoinSwitch",
   "Pay with Changelly": "Betal med Changelly",
-  "Close": "Luk"
+  "Close": "Luk",
+  "NotPaid_ExtraTransaction": "The invoice hasn't been paid in full. Please send another transaction to cover amount Due."
 }

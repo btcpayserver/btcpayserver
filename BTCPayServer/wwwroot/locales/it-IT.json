@@ -46,5 +46,6 @@
   "txCount_plural": "{{count}} transazioni",
   "Pay with CoinSwitch": "Paga con CoinSwitch",
   "Pay with Changelly": "Paga con Changelly",
-  "Close": "Chiudi"
+  "Close": "Chiudi",
+  "NotPaid_ExtraTransaction": "The invoice hasn't been paid in full. Please send another transaction to cover amount Due."
 }

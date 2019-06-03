@@ -1,30 +1,41 @@
 version: 2
 jobs:
-  build:
-    machine: 
-      docker_layer_caching: true
-    steps: 
-      - checkout
-
-  test:
+  fast_tests:
     machine:
         docker_layer_caching: true
     steps:
       - checkout
       - run:
           command: |
-            cd BTCPayServer.Tests
-            docker-compose -v
-            docker-compose down --v
-            docker-compose build
-            TESTS_RUN_EXTERNAL_INTEGRATION="false"
-            if [ "$CIRCLE_PROJECT_USERNAME" == "btcpayserver" ] && [ "$CIRCLE_PROJECT_REPONAME" == "btcpayserver" ]; then
-                TESTS_RUN_EXTERNAL_INTEGRATION="true"
-            fi
-            docker-compose run -e TESTS_RUN_EXTERNAL_INTEGRATION=$TESTS_RUN_EXTERNAL_INTEGRATION tests
+            cd .circleci && ./run-tests.sh "Fast=Fast"
+  selenium_tests:
+    machine:
+        docker_layer_caching: true
+    steps:
+      - checkout
+      - run:
+          command: |
+            cd .circleci && ./run-tests.sh "Selenium=Selenium"
+  integration_tests:
+    machine:
+        docker_layer_caching: true
+    steps:
+      - checkout
+      - run:
+          command: |
+            cd .circleci && ./run-tests.sh "Integration=Integration"
+  external_tests:
+    machine:
+        docker_layer_caching: true
+    steps:
+      - checkout
+      - run:
+          command: |
+            cd .circleci && ./run-tests.sh "ExternalIntegration=ExternalIntegration"
+
 
   # publish jobs require $DOCKERHUB_REPO, $DOCKERHUB_USER, $DOCKERHUB_PASS defined
-  publish_docker_linuxamd64:
+  amd64:
     machine:
       docker_layer_caching: true
     steps:
@@ -33,11 +44,11 @@ jobs:
           command: |
             LATEST_TAG=${CIRCLE_TAG:1} #trim v from tag
             #
-            sudo docker build --pull -t $DOCKERHUB_REPO:$LATEST_TAG-amd64 -f Dockerfile.linuxamd64 .
+            sudo docker build --pull -t $DOCKERHUB_REPO:$LATEST_TAG-amd64 -f amd64.Dockerfile .
             sudo docker login --username=$DOCKERHUB_USER --password=$DOCKERHUB_PASS
             sudo docker push $DOCKERHUB_REPO:$LATEST_TAG-amd64
 
-  publish_docker_linuxarm:
+  arm32v7:
     machine:
       docker_layer_caching: true
     steps:
@@ -47,11 +58,11 @@ jobs:
             sudo docker run --rm --privileged multiarch/qemu-user-static:register --reset
             LATEST_TAG=${CIRCLE_TAG:1} #trim v from tag
             #
-            sudo docker build --pull -t $DOCKERHUB_REPO:$LATEST_TAG-arm32v7 -f Dockerfile.linuxarm32v7 .
+            sudo docker build --pull -t $DOCKERHUB_REPO:$LATEST_TAG-arm32v7 -f arm32v7.Dockerfile .
             sudo docker login --username=$DOCKERHUB_USER --password=$DOCKERHUB_PASS
             sudo docker push $DOCKERHUB_REPO:$LATEST_TAG-arm32v7
 
-  publish_docker_multiarch:
+  multiarch:
     machine:
       enabled: true
       image: circleci/classic:201808-01
@@ -74,11 +85,17 @@ workflows:
   version: 2
   build_and_test:
     jobs:
-      - test
+      - fast_tests
+      - selenium_tests
+      - integration_tests
+      - external_tests:
+          filters:
+            branches:
+                only: master
 
   publish:
     jobs:
-      - publish_docker_linuxamd64:
+      - amd64:
           filters:
             # ignore any commit on any branch by default
             branches:
@@ -86,16 +103,16 @@ workflows:
             # only act on version tags
             tags:
               only: /v[1-9]+(\.[0-9]+)*/
-      - publish_docker_linuxarm:
+      - arm32v7:
           filters:
             branches:
               ignore: /.*/
             tags:
               only: /v[1-9]+(\.[0-9]+)*/
-      - publish_docker_multiarch:
+      - multiarch:
           requires:
-            - publish_docker_linuxamd64
-            - publish_docker_linuxarm
+            - amd64
+            - arm32v7
           filters:
             branches:
               ignore: /.*/

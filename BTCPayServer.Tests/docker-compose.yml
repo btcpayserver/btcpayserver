@@ -134,6 +134,7 @@ services:
         bind-addr=0.0.0.0
         announce-addr=customer_lightningd
         log-level=debug
+        funding-confirms=1
         dev-broadcast-interval=1000
         dev-bitcoind-poll=1
     ports:
@@ -177,6 +178,7 @@ services:
         bitcoin-rpcconnect=bitcoind
         bind-addr=0.0.0.0
         announce-addr=merchant_lightningd
+        funding-confirms=1
         network=regtest
         log-level=debug
         dev-broadcast-interval=1000

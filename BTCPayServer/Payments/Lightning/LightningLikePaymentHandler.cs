@@ -40,7 +40,7 @@ namespace BTCPayServer.Payments.Lightning
             _socketFactory = socketFactory;
         }
 
-        public override PaymentTypes PaymentType => PaymentTypes.LightningLike;
+        public override PaymentType PaymentType => PaymentTypes.LightningLike;
         public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(
             LightningSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store,
             BTCPayNetwork network, object preparePaymentObject)

@@ -11,10 +11,12 @@ namespace BTCPayServer.Payments
     /// </summary>
     public class PaymentMethodId
     {
-        public PaymentMethodId(string cryptoCode, PaymentTypes paymentType)
+        public PaymentMethodId(string cryptoCode, PaymentType paymentType)
         {
             if (cryptoCode == null)
                 throw new ArgumentNullException(nameof(cryptoCode));
+            if (paymentType == null)
+                throw new ArgumentNullException(nameof(paymentType));
             PaymentType = paymentType;
             CryptoCode = cryptoCode.ToUpperInvariant();
         }
@@ -29,7 +31,7 @@ namespace BTCPayServer.Payments
         }
 
         public string CryptoCode { get; private set; }
-        public PaymentTypes PaymentType { get; private set; }
+        public PaymentType PaymentType { get; private set; }
 
 
         public override bool Equals(object obj)
@@ -66,22 +68,9 @@ namespace BTCPayServer.Payments
             return PaymentType == PaymentTypes.BTCLike ? CryptoCode : $"{CryptoCode}_{PaymentType}";
         }
 
-        public string ToPrettyPaymentType()
-        {
-            switch (PaymentType)
-            {
-                case PaymentTypes.BTCLike:
-                    return "On-Chain";
-                case PaymentTypes.LightningLike:
-                    return "Off-Chain";
-                default:
-                    return PaymentType.ToString();
-            }
-        }
-
         public string ToPrettyString()
         {
-            return $"{CryptoCode} ({ToPrettyPaymentType()})";
+            return $"{CryptoCode} ({PaymentType.ToPrettyString()})";
         }
 
         public static bool TryParse(string str, out PaymentMethodId paymentMethodId)
@@ -90,28 +79,11 @@ namespace BTCPayServer.Payments
             var parts = str.Split('_', StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length == 0 || parts.Length > 2)
                 return false;
-            PaymentTypes type = PaymentTypes.BTCLike;
+            PaymentType type = PaymentTypes.BTCLike;
             if (parts.Length == 2)
             {
-                var typePart = parts[1].ToLowerInvariant();
-                switch (typePart)
-                {
-                    case "btclike":
-                    case "onchain":
-                        type = PaymentTypes.BTCLike;
-                        break;
-                    case "lightninglike":
-                    case "offchain":
-                        type = PaymentTypes.LightningLike;
-                        break;
-                    default:
-                        if (!Enum.TryParse(typePart, true, out type ))
-                        {
-                            return false;
-                        }
-
-                        break;
-                }
+                if (!PaymentTypes.TryParse(parts[1], out type))
+                    return false;
             }
             paymentMethodId = new PaymentMethodId(parts[0], type);
             return true;

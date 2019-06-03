@@ -494,7 +494,7 @@ namespace BTCPayServer.Services.Invoices
             GetPaymentMethods().TryGetValue(paymentMethodId, out var data);
             return data;
         }
-        public PaymentMethod GetPaymentMethod(BTCPayNetworkBase network, PaymentTypes paymentType, BTCPayNetworkProvider networkProvider)
+        public PaymentMethod GetPaymentMethod(BTCPayNetworkBase network, PaymentType paymentType, BTCPayNetworkProvider networkProvider)
         {
             return GetPaymentMethod(new PaymentMethodId(network.CryptoCode, paymentType), networkProvider);
         }
@@ -722,7 +722,7 @@ namespace BTCPayServer.Services.Invoices
         public PaymentMethodId GetId()
         {
 #pragma warning disable CS0618 // Type or member is obsolete
-            return new PaymentMethodId(CryptoCode, string.IsNullOrEmpty(PaymentType) ? PaymentTypes.BTCLike : Enum.Parse<PaymentTypes>(PaymentType));
+            return new PaymentMethodId(CryptoCode, string.IsNullOrEmpty(PaymentType) ? PaymentTypes.BTCLike : PaymentTypes.Parse(PaymentType));
 #pragma warning restore CS0618 // Type or member is obsolete
         }
 
@@ -985,7 +985,7 @@ namespace BTCPayServer.Services.Invoices
         public PaymentMethodId GetPaymentMethodId()
         {
 #pragma warning disable CS0618 // Type or member is obsolete
-            return new PaymentMethodId(CryptoCode ?? "BTC", string.IsNullOrEmpty(CryptoPaymentDataType) ? PaymentTypes.BTCLike : Enum.Parse<PaymentTypes>(CryptoPaymentDataType));
+            return new PaymentMethodId(CryptoCode ?? "BTC", string.IsNullOrEmpty(CryptoPaymentDataType) ? PaymentTypes.BTCLike : PaymentTypes.Parse(CryptoPaymentDataType));
 #pragma warning restore CS0618 // Type or member is obsolete
         }
 
@@ -1020,7 +1020,7 @@ namespace BTCPayServer.Services.Invoices
         bool PaymentCompleted(PaymentEntity entity, BTCPayNetworkBase network);
         bool PaymentConfirmed(PaymentEntity entity, SpeedPolicy speedPolicy, BTCPayNetworkBase network);
 
-        PaymentTypes GetPaymentType();
+        PaymentType GetPaymentType();
         string GetDestination(BTCPayNetworkBase network);
     }
 }

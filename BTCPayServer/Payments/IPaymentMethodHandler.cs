@@ -71,7 +71,7 @@ namespace BTCPayServer.Payments
         where TSupportedPaymentMethod : ISupportedPaymentMethod
         where TBTCPayNetwork : BTCPayNetworkBase
     {
-        public abstract PaymentTypes PaymentType { get; }
+        public abstract PaymentType PaymentType { get; }
 
         public abstract Task<IPaymentMethodDetails> CreatePaymentMethodDetails(
             TSupportedPaymentMethod supportedPaymentMethod,

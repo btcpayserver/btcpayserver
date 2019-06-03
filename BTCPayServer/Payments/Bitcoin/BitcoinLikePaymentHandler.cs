@@ -123,7 +123,7 @@ namespace BTCPayServer.Payments.Bitcoin
             };
         }
 
-        public override PaymentTypes PaymentType => PaymentTypes.BTCLike;
+        public override PaymentType PaymentType => PaymentTypes.BTCLike;
 
         public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(
             DerivationSchemeSettings supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store,

@@ -8,15 +8,51 @@ namespace BTCPayServer.Payments
     /// <summary>
     /// The different ways to pay an invoice
     /// </summary>
-    public enum PaymentTypes
+    public static class PaymentTypes
     {
         /// <summary>
         /// On-Chain UTXO based, bitcoin compatible
         /// </summary>
-        BTCLike,
+        public static BitcoinPaymentType BTCLike => BitcoinPaymentType.Instance;
         /// <summary>
         /// Lightning payment
         /// </summary>
-        LightningLike
+        public static LightningPaymentType LightningLike => LightningPaymentType.Instance;
+
+        public static bool TryParse(string paymentType, out PaymentType type)
+        {
+            switch (paymentType.ToLowerInvariant())
+            {
+                case "btclike":
+                case "onchain":
+                    type = PaymentTypes.BTCLike;
+                    break;
+                case "lightninglike":
+                case "offchain":
+                    type = PaymentTypes.LightningLike;
+                    break;
+                default:
+                    type = null;
+                    return false;
+            }
+            return true;
+        }
+        public static PaymentType Parse(string paymentType)
+        {
+            if (!TryParse(paymentType, out var result))
+                throw new FormatException("Invalid payment type");
+            return result;
+        }
+    }
+
+    public abstract class PaymentType
+    {
+        public abstract string ToPrettyString();
+        public override string ToString()
+        {
+            return GetId();
+        }
+
+        public abstract string GetId();
     }
 }

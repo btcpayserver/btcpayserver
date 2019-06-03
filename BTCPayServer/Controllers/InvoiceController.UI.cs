@@ -79,9 +79,7 @@ namespace BTCPayServer.Controllers
                 new InvoiceDetailsModel.AddressModel
                 {
                     Destination = h.GetAddress(),
-                    PaymentMethod =
-                        invoice.PaymentMethodHandlerDictionary[h.GetPaymentMethodId()]
-                            .ToPrettyString(h.GetPaymentMethodId()),
+                    PaymentMethod = h.GetPaymentMethodId().ToPrettyString(),
                     Current = !h.UnAssigned.HasValue
                 }).ToArray();
 
@@ -101,8 +99,7 @@ namespace BTCPayServer.Controllers
                 var accounting = data.Calculate();
                 var paymentMethodId = data.GetId();
                 var cryptoPayment = new InvoiceDetailsModel.CryptoPayment();
-                cryptoPayment.PaymentMethod = invoice.PaymentMethodHandlerDictionary[paymentMethodId]
-                    .ToPrettyString(data.GetId());
+                cryptoPayment.PaymentMethod = paymentMethodId.ToPrettyString();
                 cryptoPayment.Due = _CurrencyNameTable.DisplayFormatCurrency(accounting.Due.ToDecimal(MoneyUnit.BTC), paymentMethodId.CryptoCode);
                 cryptoPayment.Paid = _CurrencyNameTable.DisplayFormatCurrency(accounting.CryptoPaid.ToDecimal(MoneyUnit.BTC), paymentMethodId.CryptoCode);
                 cryptoPayment.Overpaid = _CurrencyNameTable.DisplayFormatCurrency(accounting.OverpaidHelper.ToDecimal(MoneyUnit.BTC), paymentMethodId.CryptoCode);
@@ -525,7 +522,7 @@ namespace BTCPayServer.Controllers
         {
             return new SelectList(_paymentMethodHandlerDictionary.Distinct().SelectMany(handler =>
                     handler.GetSupportedPaymentMethods()
-                        .Select(id => new SelectListItem(handler.ToPrettyString(id), id.ToString()))),
+                        .Select(id => new SelectListItem(id.ToPrettyString(), id.ToString()))),
                 nameof(SelectListItem.Value),
                 nameof(SelectListItem.Text));
         }

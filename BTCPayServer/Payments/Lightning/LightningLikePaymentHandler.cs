@@ -40,7 +40,6 @@ namespace BTCPayServer.Payments.Lightning
             _socketFactory = socketFactory;
         }
 
-        public override string PrettyDescription => "Off-Chain";
         public override PaymentTypes PaymentType => PaymentTypes.LightningLike;
         public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(
             LightningSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store,

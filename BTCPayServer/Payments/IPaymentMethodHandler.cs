@@ -18,7 +18,6 @@ namespace BTCPayServer.Payments
     /// </summary>
     public interface IPaymentMethodHandler
     {
-        string PrettyDescription { get; }
         /// <summary>
         /// Create needed to track payments of this invoice
         /// </summary>
@@ -44,8 +43,6 @@ namespace BTCPayServer.Payments
             InvoiceCryptoInfo invoiceCryptoInfo,
             PaymentMethodAccounting accounting, PaymentMethod info);
 
-
-        string ToPrettyString(PaymentMethodId paymentMethodId);
 
         void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse);
         string GetCryptoImage(PaymentMethodId paymentMethodId);
@@ -77,7 +74,6 @@ namespace BTCPayServer.Payments
         where TSupportedPaymentMethod : ISupportedPaymentMethod
         where TBTCPayNetwork : BTCPayNetworkBase
     {
-        public abstract string PrettyDescription { get; }
         public abstract PaymentTypes PaymentType { get; }
 
         public abstract Task<IPaymentMethodDetails> CreatePaymentMethodDetails(
@@ -128,11 +124,6 @@ namespace BTCPayServer.Payments
             }
 
             throw new NotSupportedException("Invalid supportedPaymentMethod");
-        }
-
-        public string ToPrettyString(PaymentMethodId paymentMethodId)
-        {
-            return $"{paymentMethodId.CryptoCode} ({PrettyDescription})";
         }
     }
 }

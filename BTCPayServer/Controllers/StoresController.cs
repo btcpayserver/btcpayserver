@@ -366,7 +366,7 @@ namespace BTCPayServer.Controllers
         void SetCryptoCurrencies(CheckoutExperienceViewModel vm, Data.StoreData storeData)
         {
             var choices = storeData.GetEnabledPaymentIds(_NetworkProvider)
-                                      .Select(o => new CheckoutExperienceViewModel.Format() { Name = _paymentMethodHandlerDictionary[o].ToPrettyString(o), Value = o.ToString(), PaymentId = o }).ToArray();
+                                      .Select(o => new CheckoutExperienceViewModel.Format() { Name = o.ToPrettyString(), Value = o.ToString(), PaymentId = o }).ToArray();
 
             var defaultPaymentId = storeData.GetDefaultPaymentId(_NetworkProvider);
             var chosen = choices.FirstOrDefault(c => c.PaymentId == defaultPaymentId);

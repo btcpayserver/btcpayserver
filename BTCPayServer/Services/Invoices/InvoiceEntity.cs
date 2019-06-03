@@ -912,7 +912,36 @@ namespace BTCPayServer.Services.Invoices
         public CryptoPaymentData GetCryptoPaymentData()
         {
             var paymentMethodId = GetPaymentMethodId();
-            return PaymentMethodHandlerDictionary[paymentMethodId].GetCryptoPaymentData(this);
+            if (paymentMethodId.PaymentType == PaymentTypes.LightningLike)
+#pragma warning disable CS0618 // Type or member is obsolete
+                return JsonConvert.DeserializeObject<Payments.Lightning.LightningLikePaymentData>(CryptoPaymentData);
+#pragma warning restore CS0618 // Type or member is obsolete
+            else
+            {
+#pragma warning disable CS0618
+
+                BitcoinLikePaymentData paymentData;
+                if (string.IsNullOrEmpty(CryptoPaymentDataType))
+                {
+                    // For invoices created when CryptoPaymentDataType was not existing, we just consider that it is a RBFed payment for safety
+                    paymentData = new BitcoinLikePaymentData();
+                    paymentData.Outpoint = Outpoint;
+                    paymentData.Output = Output;
+                    paymentData.RBF = true;
+                    paymentData.ConfirmationCount = 0;
+                    paymentData.Legacy = true;
+                    return paymentData;
+                }
+
+                paymentData =
+                    JsonConvert.DeserializeObject<BitcoinLikePaymentData>(CryptoPaymentData);
+                // legacy
+                paymentData.Output = Output;
+                paymentData.Outpoint = Outpoint;
+#pragma warning restore CS0618
+                return paymentData;
+            }
+
         }
 
         public PaymentEntity SetCryptoPaymentData(CryptoPaymentData cryptoPaymentData)

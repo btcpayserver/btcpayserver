@@ -167,12 +167,6 @@ namespace BTCPayServer.Payments.Lightning
             }
             return "The amount of the invoice is too high to be paid with lightning";
         }
-        public override CryptoPaymentData GetCryptoPaymentData(PaymentEntity paymentEntity)
-        {
-#pragma warning disable CS0618
-            return JsonConvert.DeserializeObject<LightningLikePaymentData>(paymentEntity.CryptoPaymentData);
-#pragma warning restore CS0618
-        }
 
         public override ISupportedPaymentMethod DeserializeSupportedPaymentMethod(PaymentMethodId paymentMethodId, JToken value)
         { 

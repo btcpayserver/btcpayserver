@@ -54,8 +54,6 @@ namespace BTCPayServer.Payments
 
         IEnumerable<PaymentMethodId> GetSupportedPaymentMethods();
 
-        CryptoPaymentData GetCryptoPaymentData(PaymentEntity paymentEntity);
-
         ISupportedPaymentMethod DeserializeSupportedPaymentMethod(PaymentMethodId paymentMethodId, JToken value);
         IPaymentMethodDetails DeserializePaymentMethodDetails(JObject jobj);
         string GetTransactionLink(PaymentMethodId paymentMethodId, params object[] args);
@@ -91,7 +89,6 @@ namespace BTCPayServer.Payments
             Dictionary<CurrencyPair, Task<RateResult>> rate, Money amount, PaymentMethodId paymentMethodId);
 
         public abstract IEnumerable<PaymentMethodId> GetSupportedPaymentMethods();
-        public abstract CryptoPaymentData GetCryptoPaymentData(PaymentEntity paymentEntity);
 
         public abstract ISupportedPaymentMethod DeserializeSupportedPaymentMethod(PaymentMethodId paymentMethodId, JToken value);
         public abstract IPaymentMethodDetails DeserializePaymentMethodDetails(JObject jobj);

@@ -52,7 +52,9 @@ namespace BTCPayServer.Configuration
                 app.Option($"--{crypto}explorerurl", $"URL of the NBXplorer for {network.CryptoCode} (default: {network.NBXplorerNetwork.DefaultSettings.DefaultUrl})", CommandOptionType.SingleValue);
                 app.Option($"--{crypto}explorercookiefile", $"Path to the cookie file (default: {network.NBXplorerNetwork.DefaultSettings.DefaultCookieFile})", CommandOptionType.SingleValue);
                 app.Option($"--{crypto}lightning", $"Easy configuration of lightning for the server administrator: Must be a UNIX socket of c-lightning (lightning-rpc) or URL to a charge server (default: empty)", CommandOptionType.SingleValue);
-                app.Option($"--{crypto}externallndgrpc", $"The LND gRPC configuration BTCPay will expose to easily connect to the internal lnd wallet from Zap wallet (default: empty)", CommandOptionType.SingleValue);
+                app.Option($"--{crypto}externallndgrpc", $"The LND gRPC configuration BTCPay will expose to easily connect to the internal lnd wallet from an external wallet (default: empty)", CommandOptionType.SingleValue);
+                app.Option($"--{crypto}externallndrest", $"The LND REST configuration BTCPay will expose to easily connect to the internal lnd wallet from an external wallet (default: empty)", CommandOptionType.SingleValue);
+                app.Option($"--{crypto}externalrtl", $"The Ride the Lightning configuration so BTCPay will expose to easily open it in server settings (default: empty)", CommandOptionType.SingleValue);
                 app.Option($"--{crypto}externalspark", $"Show spark information in Server settings / Server. The connection string to spark server (default: empty)", CommandOptionType.SingleValue);
                 app.Option($"--{crypto}externalcharge", $"Show lightning charge information in Server settings/Server. The connection string to charge server (default: empty)", CommandOptionType.SingleValue);
             }

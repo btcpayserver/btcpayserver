@@ -514,8 +514,7 @@ namespace BTCPayServer.Services.Invoices
                     r.PaymentType = paymentMethodId.PaymentType.ToString();
                     r.ParentEntity = this;
                     r.Network = Networks?.GetNetwork<BTCPayNetworkBase>(r.CryptoCode);
-                    if (r.Network != null || Networks == null)
-                        paymentMethods.Add(r);
+                    paymentMethods.Add(r);
                 }
             }
 #pragma warning restore CS0618

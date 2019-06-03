@@ -13,6 +13,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Misc", "Misc", "{29290EC7-0
 		docker-entrypoint.sh = docker-entrypoint.sh
 		Dockerfile.linuxamd64 = Dockerfile.linuxamd64
 		Dockerfile.linuxarm32v7 = Dockerfile.linuxarm32v7
+		Version.csproj = Version.csproj
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTCPayServer.Rating", "BTCPayServer.Rating\BTCPayServer.Rating.csproj", "{6DC77459-D52F-45EE-B3F3-315043D33A1B}"

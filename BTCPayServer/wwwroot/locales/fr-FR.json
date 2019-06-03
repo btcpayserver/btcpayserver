@@ -46,5 +46,6 @@
   "txCount_plural": "{{count}} transactions",
   "Pay with CoinSwitch": "Payer avec CoinSwitch",
   "Pay with Changelly": "Payer avec Changelly",
-  "Close": "Fermer"
+  "Close": "Fermer",
+  "NotPaid_ExtraTransaction": "The invoice hasn't been paid in full. Please send another transaction to cover amount Due."
 }

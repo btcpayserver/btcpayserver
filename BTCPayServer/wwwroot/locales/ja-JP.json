@@ -46,5 +46,6 @@
   "txCount_plural": "取引 {{count}} 個",
   "Pay with CoinSwitch": "CoinSwitchでのお支払い",
   "Pay with Changelly": "Changellyでのお支払い",
-  "Close": "閉じる"
+  "Close": "閉じる",
+  "NotPaid_ExtraTransaction": "The invoice hasn't been paid in full. Please send another transaction to cover amount Due."
 }

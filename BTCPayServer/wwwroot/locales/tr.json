@@ -46,5 +46,6 @@
   "txCount_plural": "{{count}} işlem",
   "Pay with CoinSwitch": "CoinSwitch ile Öde",
   "Pay with Changelly": "Changelly ile Öde",
-  "Close": "Kapat"
+  "Close": "Kapat",
+  "NotPaid_ExtraTransaction": "The invoice hasn't been paid in full. Please send another transaction to cover amount Due."
 }

@@ -46,5 +46,6 @@
   "txCount_plural": "{{count}} tranzakció",
   "Pay with CoinSwitch": "Fizess CoinSwitch-csel",
   "Pay with Changelly": "Fizess Changelly-vel",
-  "Close": "Bezár"
+  "Close": "Bezár",
+  "NotPaid_ExtraTransaction": "The invoice hasn't been paid in full. Please send another transaction to cover amount Due."
 }

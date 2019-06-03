@@ -173,11 +173,6 @@ namespace BTCPayServer.Payments.Lightning
             return JsonConvert.DeserializeObject<LightningSupportedPaymentMethod>(value.ToString());
         }
     
-        public override IPaymentMethodDetails DeserializePaymentMethodDetails(JObject jobj)
-        {
-            return JsonConvert.DeserializeObject<LightningLikePaymentMethodDetails>(jobj.ToString());
-        }
-
         public override string GetTransactionLink(PaymentMethodId paymentMethodId, params object[] args)
         {
             return null;

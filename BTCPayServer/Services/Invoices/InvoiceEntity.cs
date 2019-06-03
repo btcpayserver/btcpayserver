@@ -755,8 +755,16 @@ namespace BTCPayServer.Services.Invoices
             }
             else
             {
-                var details = ParentEntity.PaymentMethodHandlerDictionary[GetId()]
-                    .DeserializePaymentMethodDetails(PaymentMethodDetails);
+                var paymentType = GetId().PaymentType;
+                IPaymentMethodDetails details = null;
+                if (paymentType == PaymentTypes.BTCLike)
+                {
+                    details = JsonConvert.DeserializeObject<Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod>(PaymentMethodDetails.ToString());
+                }
+                else
+                {
+                    details = JsonConvert.DeserializeObject<Payments.Lightning.LightningLikePaymentMethodDetails>(PaymentMethodDetails.ToString());
+                }
                 if (details is Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod btcLike)
                 {
                     btcLike.NextNetworkFee = NextNetworkFee;

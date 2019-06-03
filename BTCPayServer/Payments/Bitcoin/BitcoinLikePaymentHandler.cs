@@ -192,10 +192,5 @@ namespace BTCPayServer.Payments.Bitcoin
             // Legacy
             return DerivationSchemeSettings.Parse(((JValue)value).Value<string>(), network);
         }
-
-        public override IPaymentMethodDetails DeserializePaymentMethodDetails(JObject jobj)
-        {
-            return JsonConvert.DeserializeObject<Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod>(jobj.ToString());
-        }
     }
 }

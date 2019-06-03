@@ -240,6 +240,7 @@ services:
         bitcoind.zmqpubrawblock=tcp://bitcoind:28332
         bitcoind.zmqpubrawtx=tcp://bitcoind:28333
         externalip=merchant_lnd:9735
+        bitcoin.defaultchanconfs=1
         no-macaroons=1
         debuglevel=debug
         noseedbackup=1
@@ -270,6 +271,7 @@ services:
         bitcoind.zmqpubrawblock=tcp://bitcoind:28332
         bitcoind.zmqpubrawtx=tcp://bitcoind:28333
         externalip=customer_lnd:10009
+        bitcoin.defaultchanconfs=1
         no-macaroons=1
         debuglevel=debug
         noseedbackup=1

@@ -28,9 +28,6 @@ namespace BTCPayServer.Data
 {
     public class StoreData
     {
-        [NotMapped]
-        [JsonIgnore]
-        public PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary { get; set; }
         public string Id
         {
             get;

@@ -38,11 +38,10 @@ namespace BTCPayServer.Services.Invoices
 
         private ApplicationDbContextFactory _ContextFactory;
         private readonly BTCPayNetworkProvider _Networks;
-        private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
         private CustomThreadPool _IndexerThread;
 
         public InvoiceRepository(ApplicationDbContextFactory contextFactory, string dbreezePath,
-            BTCPayNetworkProvider networks, PaymentMethodHandlerDictionary paymentMethodHandlerDictionary)
+            BTCPayNetworkProvider networks)
         {
             int retryCount = 0;
 retry:
@@ -53,8 +52,7 @@ retry:
             catch when (retryCount++ < 5) { goto retry; }
             _IndexerThread = new CustomThreadPool(1, "Invoice Indexer");
             _ContextFactory = contextFactory;
-            _Networks = networks;
-            _paymentMethodHandlerDictionary = paymentMethodHandlerDictionary;
+            _Networks = networks.UnfilteredNetworks;
         }
 
         public InvoiceEntity CreateNewInvoice()
@@ -715,7 +713,7 @@ retry:
         private InvoiceEntity ToObject(byte[] value)
         {
             var entity = NBitcoin.JsonConverters.Serializer.ToObject<InvoiceEntity>(ZipUtils.Unzip(value), null);
-            entity.Networks = _Networks?.UnfilteredNetworks;
+            entity.Networks = _Networks;
             return entity;
         }
         private T ToObject<T>(byte[] value, BTCPayNetworkBase network)

@@ -53,8 +53,6 @@ namespace BTCPayServer.Payments
             Money amount, PaymentMethodId paymentMethodId);
 
         IEnumerable<PaymentMethodId> GetSupportedPaymentMethods();
-
-        string GetTransactionLink(PaymentMethodId paymentMethodId, params object[] args);
     }
 
     public interface IPaymentMethodHandler<TSupportedPaymentMethod, TBTCPayNetwork> : IPaymentMethodHandler
@@ -87,9 +85,6 @@ namespace BTCPayServer.Payments
             Dictionary<CurrencyPair, Task<RateResult>> rate, Money amount, PaymentMethodId paymentMethodId);
 
         public abstract IEnumerable<PaymentMethodId> GetSupportedPaymentMethods();
-
-        public abstract string GetTransactionLink(PaymentMethodId paymentMethodId, params object[] args);
-
 
         public virtual object PreparePayment(TSupportedPaymentMethod supportedPaymentMethod, StoreData store,
             BTCPayNetworkBase network)

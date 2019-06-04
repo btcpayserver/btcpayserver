@@ -104,14 +104,6 @@ namespace BTCPayServer.Payments.Bitcoin
             return network.DisplayName;
         }
 
-
-        public override string GetTransactionLink(PaymentMethodId paymentMethodId, params object[] args)
-        {
-
-            var network = _networkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
-            return string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink, args);
-        }
-
         public override object PreparePayment(DerivationSchemeSettings supportedPaymentMethod, StoreData store,
             BTCPayNetworkBase network)
         {

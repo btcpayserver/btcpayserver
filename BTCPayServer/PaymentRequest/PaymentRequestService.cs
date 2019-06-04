@@ -110,17 +110,23 @@ namespace BTCPayServer.PaymentRequest
                         var paymentMethodId = paymentEntity.GetPaymentMethodId();
 
                         string txId = paymentData.GetPaymentId();
-                        string link = paymentEntity.PaymentMethodHandlerDictionary[paymentMethodId].GetTransactionLink(paymentMethodId, txId);
+                        string link = GetTransactionLink(paymentMethodId, txId);
                         return new ViewPaymentRequestViewModel.PaymentRequestInvoicePayment()
                         {
                             Amount = paymentData.GetValue(),
-                            PaymentMethod = paymentEntity.GetPaymentMethodId().ToString(),
+                            PaymentMethod = paymentMethodId.ToString(),
                             Link = link,
                             Id = txId
                         };
                     }).ToList()
                 }).ToList()
             };
+        }
+
+        private string GetTransactionLink(PaymentMethodId paymentMethodId, string txId)
+        {
+            var network = _BtcPayNetworkProvider.GetNetwork(paymentMethodId.CryptoCode);
+            return string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink, txId);
         }
     }
 }

@@ -39,11 +39,6 @@ namespace BTCPayServer.Payments
         /// <returns></returns>
         object PreparePayment(ISupportedPaymentMethod supportedPaymentMethod, StoreData store, BTCPayNetworkBase network);
 
-        void PrepareInvoiceDto(InvoiceResponse invoiceResponse, InvoiceEntity invoiceEntity,
-            InvoiceCryptoInfo invoiceCryptoInfo,
-            PaymentMethodAccounting accounting, PaymentMethod info);
-
-
         void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse);
         string GetCryptoImage(PaymentMethodId paymentMethodId);
         string GetPaymentMethodName(PaymentMethodId paymentMethodId);
@@ -73,9 +68,6 @@ namespace BTCPayServer.Payments
         public abstract Task<IPaymentMethodDetails> CreatePaymentMethodDetails(
             TSupportedPaymentMethod supportedPaymentMethod,
             PaymentMethod paymentMethod, StoreData store, TBTCPayNetwork network, object preparePaymentObject);
-
-        public abstract void PrepareInvoiceDto(InvoiceResponse invoiceResponse, InvoiceEntity invoiceEntity,
-            InvoiceCryptoInfo invoiceCryptoInfo, PaymentMethodAccounting accounting, PaymentMethod info);
 
         public abstract void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse);
         public abstract string GetCryptoImage(PaymentMethodId paymentMethodId);

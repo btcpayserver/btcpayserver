@@ -168,15 +168,6 @@ namespace BTCPayServer.Payments.Lightning
             return "The amount of the invoice is too high to be paid with lightning";
         }
 
-        public override void PrepareInvoiceDto(InvoiceResponse invoiceResponse, InvoiceEntity invoiceEntity,
-            InvoiceCryptoInfo invoiceCryptoInfo, PaymentMethodAccounting accounting, PaymentMethod info)
-        {
-            invoiceCryptoInfo.PaymentUrls = new InvoicePaymentUrls()
-            {
-                BOLT11 = $"lightning:{invoiceCryptoInfo.Address}"
-            };
-        }
-
         public override void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse)
         {
             var paymentMethodId = new PaymentMethodId(model.CryptoCode, PaymentTypes.LightningLike);

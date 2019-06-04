@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Services.Invoices;
 
 namespace BTCPayServer.Payments
 {
@@ -54,5 +55,6 @@ namespace BTCPayServer.Payments
         }
 
         public abstract string GetId();
+        public abstract CryptoPaymentData DeserializePaymentData(string cryptoPaymentData);
     }
 }

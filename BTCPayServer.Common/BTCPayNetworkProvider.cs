@@ -22,13 +22,14 @@ namespace BTCPayServer
             }
         }
 
-        BTCPayNetworkProvider(BTCPayNetworkProvider filtered, string[] cryptoCodes)
+        BTCPayNetworkProvider(BTCPayNetworkProvider unfiltered, string[] cryptoCodes)
         {
-            NetworkType = filtered.NetworkType;
-            _NBXplorerNetworkProvider = new NBXplorerNetworkProvider(filtered.NetworkType);
+            UnfilteredNetworks = unfiltered.UnfilteredNetworks ?? unfiltered;
+            NetworkType = unfiltered.NetworkType;
+            _NBXplorerNetworkProvider = new NBXplorerNetworkProvider(unfiltered.NetworkType);
             _Networks = new Dictionary<string, BTCPayNetworkBase>();
             cryptoCodes = cryptoCodes.Select(c => c.ToUpperInvariant()).ToArray();
-            foreach (var network in filtered._Networks)
+            foreach (var network in unfiltered._Networks)
             {
                 if(cryptoCodes.Contains(network.Key))
                 {
@@ -37,9 +38,12 @@ namespace BTCPayServer
             }
         }
 
+        public BTCPayNetworkProvider UnfilteredNetworks { get; }
+
         public NetworkType NetworkType { get; private set; }
         public BTCPayNetworkProvider(NetworkType networkType)
         {
+            UnfilteredNetworks = this;
             _NBXplorerNetworkProvider = new NBXplorerNetworkProvider(networkType);
             NetworkType = networkType;
             InitBitcoin();

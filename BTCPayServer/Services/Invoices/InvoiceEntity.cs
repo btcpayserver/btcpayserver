@@ -513,7 +513,7 @@ namespace BTCPayServer.Services.Invoices
                     r.CryptoCode = paymentMethodId.CryptoCode;
                     r.PaymentType = paymentMethodId.PaymentType.ToString();
                     r.ParentEntity = this;
-                    r.Network = Networks?.GetNetwork<BTCPayNetworkBase>(r.CryptoCode);
+                    r.Network = Networks?.UnfilteredNetworks.GetNetwork<BTCPayNetworkBase>(r.CryptoCode);
                     paymentMethods.Add(r);
                 }
             }
@@ -918,37 +918,31 @@ namespace BTCPayServer.Services.Invoices
 
         public CryptoPaymentData GetCryptoPaymentData()
         {
-            var paymentMethodId = GetPaymentMethodId();
-            if (paymentMethodId.PaymentType == PaymentTypes.LightningLike)
+            CryptoPaymentData paymentData = null;
 #pragma warning disable CS0618 // Type or member is obsolete
-                return JsonConvert.DeserializeObject<Payments.Lightning.LightningLikePaymentData>(CryptoPaymentData);
-#pragma warning restore CS0618 // Type or member is obsolete
+            if (string.IsNullOrEmpty(CryptoPaymentData))
+            {
+                // For invoices created when CryptoPaymentDataType was not existing, we just consider that it is a RBFed payment for safety
+                var bitcoin = new BitcoinLikePaymentData();
+                bitcoin.Outpoint = Outpoint;
+                bitcoin.Output = Output;
+                bitcoin.RBF = true;
+                bitcoin.ConfirmationCount = 0;
+                bitcoin.Legacy = true;
+                bitcoin.Output = Output;
+                bitcoin.Outpoint = Outpoint;
+                paymentData = bitcoin;
+            }
             else
             {
-#pragma warning disable CS0618
-
-                BitcoinLikePaymentData paymentData;
-                if (string.IsNullOrEmpty(CryptoPaymentDataType))
+                paymentData = GetPaymentMethodId().PaymentType.DeserializePaymentData(CryptoPaymentData);
+                if (paymentData is BitcoinLikePaymentData bitcoin)
                 {
-                    // For invoices created when CryptoPaymentDataType was not existing, we just consider that it is a RBFed payment for safety
-                    paymentData = new BitcoinLikePaymentData();
-                    paymentData.Outpoint = Outpoint;
-                    paymentData.Output = Output;
-                    paymentData.RBF = true;
-                    paymentData.ConfirmationCount = 0;
-                    paymentData.Legacy = true;
-                    return paymentData;
+                    bitcoin.Output = Output;
+                    bitcoin.Outpoint = Outpoint;
                 }
-
-                paymentData =
-                    JsonConvert.DeserializeObject<BitcoinLikePaymentData>(CryptoPaymentData);
-                // legacy
-                paymentData.Output = Output;
-                paymentData.Outpoint = Outpoint;
-#pragma warning restore CS0618
-                return paymentData;
             }
-
+            return paymentData;
         }
 
         public PaymentEntity SetCryptoPaymentData(CryptoPaymentData cryptoPaymentData)

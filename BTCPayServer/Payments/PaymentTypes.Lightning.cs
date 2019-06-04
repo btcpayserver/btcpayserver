@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services.Invoices;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Payments
 {
@@ -26,6 +28,11 @@ namespace BTCPayServer.Payments
         public override IPaymentMethodDetails DeserializePaymentMethodDetails(string str)
         {
             return JsonConvert.DeserializeObject<Payments.Lightning.LightningLikePaymentMethodDetails>(str);
+        }
+
+        public override ISupportedPaymentMethod DeserializeSupportedPaymentMethod(BTCPayNetworkBase network, JToken value)
+        {
+            return JsonConvert.DeserializeObject<LightningSupportedPaymentMethod>(value.ToString());
         }
     }
 }

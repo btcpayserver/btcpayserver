@@ -54,7 +54,6 @@ namespace BTCPayServer.Payments
 
         IEnumerable<PaymentMethodId> GetSupportedPaymentMethods();
 
-        ISupportedPaymentMethod DeserializeSupportedPaymentMethod(PaymentMethodId paymentMethodId, JToken value);
         string GetTransactionLink(PaymentMethodId paymentMethodId, params object[] args);
     }
 
@@ -89,7 +88,6 @@ namespace BTCPayServer.Payments
 
         public abstract IEnumerable<PaymentMethodId> GetSupportedPaymentMethods();
 
-        public abstract ISupportedPaymentMethod DeserializeSupportedPaymentMethod(PaymentMethodId paymentMethodId, JToken value);
         public abstract string GetTransactionLink(PaymentMethodId paymentMethodId, params object[] args);
 
 

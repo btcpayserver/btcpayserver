@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Services.Invoices;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Payments
 {
@@ -57,5 +58,6 @@ namespace BTCPayServer.Payments
         public abstract string GetId();
         public abstract CryptoPaymentData DeserializePaymentData(string str);
         public abstract IPaymentMethodDetails DeserializePaymentMethodDetails(string str);
+        public abstract ISupportedPaymentMethod DeserializeSupportedPaymentMethod(BTCPayNetworkBase network, JToken value);
     }
 }

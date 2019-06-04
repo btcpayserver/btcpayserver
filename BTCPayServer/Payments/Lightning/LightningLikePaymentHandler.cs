@@ -167,11 +167,6 @@ namespace BTCPayServer.Payments.Lightning
             }
             return "The amount of the invoice is too high to be paid with lightning";
         }
-
-        public override ISupportedPaymentMethod DeserializeSupportedPaymentMethod(PaymentMethodId paymentMethodId, JToken value)
-        { 
-            return JsonConvert.DeserializeObject<LightningSupportedPaymentMethod>(value.ToString());
-        }
     
         public override string GetTransactionLink(PaymentMethodId paymentMethodId, params object[] args)
         {

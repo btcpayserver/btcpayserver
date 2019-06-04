@@ -222,8 +222,7 @@ namespace BTCPayServer.Services.Invoices
                     {
                         if (network == Networks.BTC && paymentMethodId.PaymentType == PaymentTypes.BTCLike)
                             btcReturned = true;
-                        yield return PaymentMethodHandlerDictionary[paymentMethodId]
-                            .DeserializeSupportedPaymentMethod(paymentMethodId, strat.Value);
+                        yield return paymentMethodId.PaymentType.DeserializeSupportedPaymentMethod(network, strat.Value);
                     }
                 }
             }
@@ -755,8 +754,7 @@ namespace BTCPayServer.Services.Invoices
             }
             else
             {
-                var paymentType = GetId().PaymentType;
-                IPaymentMethodDetails details = paymentType.DeserializePaymentMethodDetails(PaymentMethodDetails.ToString());
+                IPaymentMethodDetails details = GetId().PaymentType.DeserializePaymentMethodDetails(PaymentMethodDetails.ToString());
                 if (details is Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod btcLike)
                 {
                     btcLike.NextNetworkFee = NextNetworkFee;

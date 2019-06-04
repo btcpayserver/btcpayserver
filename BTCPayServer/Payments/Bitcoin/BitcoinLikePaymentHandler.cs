@@ -179,18 +179,5 @@ namespace BTCPayServer.Payments.Bitcoin
             }
 #pragma warning restore 618
         }
-
-        public override ISupportedPaymentMethod DeserializeSupportedPaymentMethod(PaymentMethodId paymentMethodId, JToken value)
-        {
-            var network = _networkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
-            if (value is JObject jobj)
-            {
-                var scheme = network.NBXplorerNetwork.Serializer.ToObject<DerivationSchemeSettings>(jobj);
-                scheme.Network = network;
-                return scheme;
-            }
-            // Legacy
-            return DerivationSchemeSettings.Parse(((JValue)value).Value<string>(), network);
-        }
     }
 }

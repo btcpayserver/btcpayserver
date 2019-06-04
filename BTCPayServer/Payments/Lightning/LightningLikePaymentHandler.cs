@@ -40,7 +40,7 @@ namespace BTCPayServer.Payments.Lightning
             _socketFactory = socketFactory;
         }
 
-        public override PaymentTypes PaymentType => PaymentTypes.LightningLike;
+        public override PaymentType PaymentType => PaymentTypes.LightningLike;
         public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(
             LightningSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store,
             BTCPayNetwork network, object preparePaymentObject)
@@ -166,25 +166,6 @@ namespace BTCPayServer.Payments.Lightning
                 }
             }
             return "The amount of the invoice is too high to be paid with lightning";
-        }
-
-        public override ISupportedPaymentMethod DeserializeSupportedPaymentMethod(PaymentMethodId paymentMethodId, JToken value)
-        { 
-            return JsonConvert.DeserializeObject<LightningSupportedPaymentMethod>(value.ToString());
-        }
-    
-        public override string GetTransactionLink(PaymentMethodId paymentMethodId, params object[] args)
-        {
-            return null;
-        }
-
-        public override void PrepareInvoiceDto(InvoiceResponse invoiceResponse, InvoiceEntity invoiceEntity,
-            InvoiceCryptoInfo invoiceCryptoInfo, PaymentMethodAccounting accounting, PaymentMethod info)
-        {
-            invoiceCryptoInfo.PaymentUrls = new InvoicePaymentUrls()
-            {
-                BOLT11 = $"lightning:{invoiceCryptoInfo.Address}"
-            };
         }
 
         public override void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse)

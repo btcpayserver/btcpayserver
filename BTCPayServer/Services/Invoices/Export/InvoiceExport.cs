@@ -78,7 +78,7 @@ namespace BTCPayServer.Services.Invoices.Export
                     PaymentId = pdata.GetPaymentId(),
                     CryptoCode = cryptoCode,
                     ConversionRate = pmethod.Rate,
-                    PaymentType = payment.GetPaymentMethodId().ToPrettyPaymentType(),
+                    PaymentType = payment.GetPaymentMethodId().PaymentType.ToPrettyString(),
                     Destination = payment.GetCryptoPaymentData().GetDestination(Networks.GetNetwork<BTCPayNetworkBase>(cryptoCode)),
                     Paid = pdata.GetValue().ToString(CultureInfo.InvariantCulture),
                     PaidCurrency = Math.Round(pdata.GetValue() * pmethod.Rate, currency.NumberDecimalDigits).ToString(CultureInfo.InvariantCulture),

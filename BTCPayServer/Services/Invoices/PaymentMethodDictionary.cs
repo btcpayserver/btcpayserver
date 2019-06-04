@@ -62,7 +62,7 @@ namespace BTCPayServer.Services.Invoices
             _Inner.TryGetValue(paymentMethodId, out var value);
             return value;
         }
-        public PaymentMethod TryGet(string network, PaymentTypes paymentType)
+        public PaymentMethod TryGet(string network, PaymentType paymentType)
         {
             if (network == null)
                 throw new ArgumentNullException(nameof(network));

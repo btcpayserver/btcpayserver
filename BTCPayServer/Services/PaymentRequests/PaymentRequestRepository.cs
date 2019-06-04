@@ -61,11 +61,6 @@ namespace BTCPayServer.Services.PaymentRequests
                         string.IsNullOrEmpty(userId) ||
                         (data.StoreData != null && data.StoreData.UserStores.Any(u => u.ApplicationUserId == userId)))
                     .SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
-                if (result != null)
-                {
-                    result.StoreData = _storeRepository.PrepareEntity(result.StoreData);
-                }
-
                 return result;
             }
         }

@@ -28,9 +28,6 @@ namespace BTCPayServer.Data
 {
     public class StoreData
     {
-        [NotMapped]
-        [JsonIgnore]
-        public PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary { get; set; }
         public string Id
         {
             get;
@@ -67,17 +64,15 @@ namespace BTCPayServer.Data
         }
         public IEnumerable<ISupportedPaymentMethod> GetSupportedPaymentMethods(BTCPayNetworkProvider networks)
         {
+            networks = networks.UnfilteredNetworks;
 #pragma warning disable CS0618
             bool btcReturned = false;
 
             // Legacy stuff which should go away
             if (!string.IsNullOrEmpty(DerivationStrategy))
             {
-                if (networks.BTC != null)
-                {
-                    btcReturned = true;
-                    yield return DerivationSchemeSettings.Parse(DerivationStrategy, networks.BTC);
-                }
+                btcReturned = true;
+                yield return DerivationSchemeSettings.Parse(DerivationStrategy, networks.BTC);
             }
 
 
@@ -95,8 +90,7 @@ namespace BTCPayServer.Data
                         if (strat.Value.Type == JTokenType.Null)
                             continue;
                         yield return
-                            PaymentMethodHandlerDictionary[paymentMethodId]
-                                .DeserializeSupportedPaymentMethod(paymentMethodId, strat.Value);
+                            paymentMethodId.PaymentType.DeserializeSupportedPaymentMethod(network, strat.Value);
                     }
                 }
             }

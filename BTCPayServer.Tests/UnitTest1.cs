@@ -107,7 +107,7 @@ namespace BTCPayServer.Tests
                 new BitcoinLikePaymentHandler(null, networkProvider, null, null),
                 new LightningLikePaymentHandler(null, null, networkProvider, null),
             });
-            InvoiceEntity invoiceEntity = new InvoiceEntity() { PaymentMethodHandlerDictionary = paymentMethodHandlerDictionary};
+            InvoiceEntity invoiceEntity = new InvoiceEntity();
             invoiceEntity.Payments = new System.Collections.Generic.List<PaymentEntity>();
             invoiceEntity.ProductInformation = new ProductInformation() {Price = 100};
             PaymentMethodDictionary paymentMethods = new PaymentMethodDictionary();
@@ -131,8 +131,7 @@ namespace BTCPayServer.Tests
                     {
                         Accounted = true,
                         CryptoCode = "BTC",
-                        NetworkFee = 0.00000100m,
-                        PaymentMethodHandlerDictionary = paymentMethodHandlerDictionary
+                        NetworkFee = 0.00000100m
                     }
                     .SetCryptoPaymentData(new BitcoinLikePaymentData()
                     {
@@ -144,8 +143,7 @@ namespace BTCPayServer.Tests
                     {
                         Accounted = true,
                         CryptoCode = "BTC",
-                        NetworkFee = 0.00000100m,
-                        PaymentMethodHandlerDictionary = paymentMethodHandlerDictionary
+                        NetworkFee = 0.00000100m
                     }
                     .SetCryptoPaymentData(new BitcoinLikePaymentData()
                     {
@@ -216,7 +214,7 @@ namespace BTCPayServer.Tests
                 new BitcoinLikePaymentHandler(null, networkProvider, null, null),
                 new LightningLikePaymentHandler(null, null, networkProvider, null),
             });
-            var entity = new InvoiceEntity() {PaymentMethodHandlerDictionary = paymentMethodHandlerDictionary};
+            var entity = new InvoiceEntity();
 #pragma warning disable CS0618
             entity.Payments = new System.Collections.Generic.List<PaymentEntity>();
             entity.SetPaymentMethod(new PaymentMethod()
@@ -234,8 +232,7 @@ namespace BTCPayServer.Tests
             {
                 Output = new TxOut(Money.Coins(0.5m), new Key()),
                 Accounted = true,
-                NetworkFee = 0.1m,
-                PaymentMethodHandlerDictionary = paymentMethodHandlerDictionary
+                NetworkFee = 0.1m
             });
 
             accounting = paymentMethod.Calculate();
@@ -247,8 +244,7 @@ namespace BTCPayServer.Tests
             {
                 Output = new TxOut(Money.Coins(0.2m), new Key()),
                 Accounted = true,
-                NetworkFee = 0.1m,
-                PaymentMethodHandlerDictionary = paymentMethodHandlerDictionary
+                NetworkFee = 0.1m
             });
 
             accounting = paymentMethod.Calculate();
@@ -259,8 +255,7 @@ namespace BTCPayServer.Tests
             {
                 Output = new TxOut(Money.Coins(0.6m), new Key()),
                 Accounted = true,
-                NetworkFee = 0.1m,
-                PaymentMethodHandlerDictionary = paymentMethodHandlerDictionary
+                NetworkFee = 0.1m
             });
 
             accounting = paymentMethod.Calculate();
@@ -270,15 +265,14 @@ namespace BTCPayServer.Tests
             entity.Payments.Add(new PaymentEntity()
             {
                 Output = new TxOut(Money.Coins(0.2m), new Key()),
-                Accounted = true,
-                PaymentMethodHandlerDictionary = paymentMethodHandlerDictionary
+                Accounted = true
             });
 
             accounting = paymentMethod.Calculate();
             Assert.Equal(Money.Zero, accounting.Due);
             Assert.Equal(Money.Coins(1.3m), accounting.TotalDue);
 
-            entity = new InvoiceEntity() {PaymentMethodHandlerDictionary = paymentMethodHandlerDictionary};
+            entity = new InvoiceEntity();
             entity.ProductInformation = new ProductInformation() {Price = 5000};
             PaymentMethodDictionary paymentMethods = new PaymentMethodDictionary();
             paymentMethods.Add(
@@ -301,8 +295,7 @@ namespace BTCPayServer.Tests
                 CryptoCode = "BTC",
                 Output = new TxOut(Money.Coins(1.0m), new Key()),
                 Accounted = true,
-                NetworkFee = 0.1m,
-                PaymentMethodHandlerDictionary = paymentMethodHandlerDictionary
+                NetworkFee = 0.1m
             });
 
             paymentMethod = entity.GetPaymentMethod(new PaymentMethodId("BTC", PaymentTypes.BTCLike), null);
@@ -325,8 +318,7 @@ namespace BTCPayServer.Tests
                 CryptoCode = "LTC",
                 Output = new TxOut(Money.Coins(1.0m), new Key()),
                 Accounted = true,
-                NetworkFee = 0.01m,
-                PaymentMethodHandlerDictionary = paymentMethodHandlerDictionary
+                NetworkFee = 0.01m
             });
 
             paymentMethod = entity.GetPaymentMethod(new PaymentMethodId("BTC", PaymentTypes.BTCLike), null);
@@ -351,8 +343,7 @@ namespace BTCPayServer.Tests
                 CryptoCode = "BTC",
                 Output = new TxOut(remaining, new Key()),
                 Accounted = true,
-                NetworkFee = 0.1m,
-                PaymentMethodHandlerDictionary = paymentMethodHandlerDictionary
+                NetworkFee = 0.1m
             });
 
             paymentMethod = entity.GetPaymentMethod(new PaymentMethodId("BTC", PaymentTypes.BTCLike), null);
@@ -423,7 +414,7 @@ namespace BTCPayServer.Tests
                 new BitcoinLikePaymentHandler(null, networkProvider, null, null),
                 new LightningLikePaymentHandler(null, null, networkProvider, null),
             });
-            var entity = new InvoiceEntity() {PaymentMethodHandlerDictionary = paymentMethodHandlerDictionary};
+            var entity = new InvoiceEntity();
 #pragma warning disable CS0618
             entity.Payments = new List<PaymentEntity>();
             entity.SetPaymentMethod(new PaymentMethod()

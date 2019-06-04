@@ -39,11 +39,6 @@ namespace BTCPayServer.Payments
         /// <returns></returns>
         object PreparePayment(ISupportedPaymentMethod supportedPaymentMethod, StoreData store, BTCPayNetworkBase network);
 
-        void PrepareInvoiceDto(InvoiceResponse invoiceResponse, InvoiceEntity invoiceEntity,
-            InvoiceCryptoInfo invoiceCryptoInfo,
-            PaymentMethodAccounting accounting, PaymentMethod info);
-
-
         void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse);
         string GetCryptoImage(PaymentMethodId paymentMethodId);
         string GetPaymentMethodName(PaymentMethodId paymentMethodId);
@@ -53,9 +48,6 @@ namespace BTCPayServer.Payments
             Money amount, PaymentMethodId paymentMethodId);
 
         IEnumerable<PaymentMethodId> GetSupportedPaymentMethods();
-
-        ISupportedPaymentMethod DeserializeSupportedPaymentMethod(PaymentMethodId paymentMethodId, JToken value);
-        string GetTransactionLink(PaymentMethodId paymentMethodId, params object[] args);
     }
 
     public interface IPaymentMethodHandler<TSupportedPaymentMethod, TBTCPayNetwork> : IPaymentMethodHandler
@@ -71,14 +63,11 @@ namespace BTCPayServer.Payments
         where TSupportedPaymentMethod : ISupportedPaymentMethod
         where TBTCPayNetwork : BTCPayNetworkBase
     {
-        public abstract PaymentTypes PaymentType { get; }
+        public abstract PaymentType PaymentType { get; }
 
         public abstract Task<IPaymentMethodDetails> CreatePaymentMethodDetails(
             TSupportedPaymentMethod supportedPaymentMethod,
             PaymentMethod paymentMethod, StoreData store, TBTCPayNetwork network, object preparePaymentObject);
-
-        public abstract void PrepareInvoiceDto(InvoiceResponse invoiceResponse, InvoiceEntity invoiceEntity,
-            InvoiceCryptoInfo invoiceCryptoInfo, PaymentMethodAccounting accounting, PaymentMethod info);
 
         public abstract void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse);
         public abstract string GetCryptoImage(PaymentMethodId paymentMethodId);
@@ -88,10 +77,6 @@ namespace BTCPayServer.Payments
             Dictionary<CurrencyPair, Task<RateResult>> rate, Money amount, PaymentMethodId paymentMethodId);
 
         public abstract IEnumerable<PaymentMethodId> GetSupportedPaymentMethods();
-
-        public abstract ISupportedPaymentMethod DeserializeSupportedPaymentMethod(PaymentMethodId paymentMethodId, JToken value);
-        public abstract string GetTransactionLink(PaymentMethodId paymentMethodId, params object[] args);
-
 
         public virtual object PreparePayment(TSupportedPaymentMethod supportedPaymentMethod, StoreData store,
             BTCPayNetworkBase network)

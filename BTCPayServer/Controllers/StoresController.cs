@@ -479,7 +479,7 @@ namespace BTCPayServer.Controllers
             {
                  switch (paymentMethodId.PaymentType)
                 {
-                    case PaymentTypes.BTCLike:
+                    case BitcoinPaymentType _:
                         var strategy = derivationByCryptoCode.TryGet(paymentMethodId.CryptoCode);
                         vm.DerivationSchemes.Add(new StoreViewModel.DerivationScheme()
                         {
@@ -489,7 +489,7 @@ namespace BTCPayServer.Controllers
                             Enabled = !excludeFilters.Match(paymentMethodId)
                         });
                         break;
-                    case PaymentTypes.LightningLike:
+                    case LightningPaymentType _:
                         var lightning = lightningByCryptoCode.TryGet(paymentMethodId.CryptoCode);
                         vm.LightningNodes.Add(new StoreViewModel.LightningNode()
                         {

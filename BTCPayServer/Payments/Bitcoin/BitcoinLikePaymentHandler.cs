@@ -104,14 +104,6 @@ namespace BTCPayServer.Payments.Bitcoin
             return network.DisplayName;
         }
 
-
-        public override string GetTransactionLink(PaymentMethodId paymentMethodId, params object[] args)
-        {
-
-            var network = _networkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
-            return string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink, args);
-        }
-
         public override object PreparePayment(DerivationSchemeSettings supportedPaymentMethod, StoreData store,
             BTCPayNetworkBase network)
         {
@@ -123,7 +115,7 @@ namespace BTCPayServer.Payments.Bitcoin
             };
         }
 
-        public override PaymentTypes PaymentType => PaymentTypes.BTCLike;
+        public override PaymentType PaymentType => PaymentTypes.BTCLike;
 
         public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(
             DerivationSchemeSettings supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store,
@@ -148,49 +140,6 @@ namespace BTCPayServer.Payments.Bitcoin
             }
             onchainMethod.DepositAddress = (await prepare.ReserveAddress).ToString();
             return onchainMethod;
-        }
-
-        public override void PrepareInvoiceDto(InvoiceResponse invoiceResponse, InvoiceEntity invoiceEntity,
-            InvoiceCryptoInfo invoiceCryptoInfo,
-            PaymentMethodAccounting accounting, PaymentMethod info)
-        {
-            var scheme = info.Network.UriScheme;
-
-            var minerInfo = new MinerFeeInfo();
-            minerInfo.TotalFee = accounting.NetworkFee.Satoshi;
-            minerInfo.SatoshiPerBytes = ((BitcoinLikeOnChainPaymentMethod)info.GetPaymentMethodDetails()).FeeRate
-                .GetFee(1).Satoshi;
-            invoiceResponse.MinerFees.TryAdd(invoiceCryptoInfo.CryptoCode, minerInfo);
-            invoiceCryptoInfo.PaymentUrls = new NBitpayClient.InvoicePaymentUrls()
-            {
-                BIP21 = $"{scheme}:{invoiceCryptoInfo.Address}?amount={invoiceCryptoInfo.Due}",
-            };
-
-#pragma warning disable 618
-            if (info.CryptoCode == "BTC")
-            {
-                invoiceResponse.BTCPrice = invoiceCryptoInfo.Price;
-                invoiceResponse.Rate = invoiceCryptoInfo.Rate;
-                invoiceResponse.ExRates = invoiceCryptoInfo.ExRates;
-                invoiceResponse.BitcoinAddress = invoiceCryptoInfo.Address;
-                invoiceResponse.BTCPaid = invoiceCryptoInfo.Paid;
-                invoiceResponse.BTCDue = invoiceCryptoInfo.Due;
-                invoiceResponse.PaymentUrls = invoiceCryptoInfo.PaymentUrls;
-            }
-#pragma warning restore 618
-        }
-
-        public override ISupportedPaymentMethod DeserializeSupportedPaymentMethod(PaymentMethodId paymentMethodId, JToken value)
-        {
-            var network = _networkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
-            if (value is JObject jobj)
-            {
-                var scheme = network.NBXplorerNetwork.Serializer.ToObject<DerivationSchemeSettings>(jobj);
-                scheme.Network = network;
-                return scheme;
-            }
-            // Legacy
-            return DerivationSchemeSettings.Parse(((JValue)value).Value<string>(), network);
         }
     }
 }

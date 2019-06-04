@@ -266,7 +266,8 @@ namespace BTCPayServer.Controllers
                    (1m + (changelly.AmountMarkupPercentage / 100m)))
                 : (decimal?)null;
 
-            var paymentMethodHandler = invoice.PaymentMethodHandlerDictionary[paymentMethodId];
+            
+            var paymentMethodHandler = _paymentMethodHandlerDictionary[paymentMethodId];
             var model = new PaymentModel()
             {
                 CryptoCode = network.CryptoCode,
@@ -314,8 +315,7 @@ namespace BTCPayServer.Controllers
                                           .Select(kv =>
                                           {
                                               var availableCryptoPaymentMethodId = kv.GetId();
-                                              var availableCryptoHandler =
-                                                  invoice.PaymentMethodHandlerDictionary[availableCryptoPaymentMethodId];
+                                              var availableCryptoHandler = _paymentMethodHandlerDictionary[availableCryptoPaymentMethodId];
                                               return new PaymentModel.AvailableCrypto()
                                               {
                                                   PaymentMethodId = kv.GetId().ToString(),

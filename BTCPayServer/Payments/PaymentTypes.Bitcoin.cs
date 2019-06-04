@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Payments.Bitcoin;
@@ -45,6 +46,15 @@ namespace BTCPayServer.Payments
             }
             // Legacy
             return DerivationSchemeSettings.Parse(((JValue)value).Value<string>(), net);
+        }
+
+        public override string GetTransactionLink(BTCPayNetworkBase network, string txId)
+        {
+            if (txId == null)
+                throw new ArgumentNullException(nameof(txId));
+            if (network?.BlockExplorerLink == null)
+                return null;
+            return string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink, txId);
         }
     }
 }

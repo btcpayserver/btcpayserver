@@ -126,7 +126,9 @@ namespace BTCPayServer.PaymentRequest
         private string GetTransactionLink(PaymentMethodId paymentMethodId, string txId)
         {
             var network = _BtcPayNetworkProvider.GetNetwork(paymentMethodId.CryptoCode);
-            return string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink, txId);
+            if (network == null)
+                return null;
+            return paymentMethodId.PaymentType.GetTransactionLink(network, txId);
         }
     }
 }

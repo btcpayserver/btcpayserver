@@ -14,13 +14,14 @@
                 </div>
                 <div class="modal-body">
                     <form asp-route-returnurl="@ViewData["ReturnUrl"]" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                         <div class="form-group">
                             <div class="input-group">
                                 <div class="input-group-prepend">
                                     <label for="Email" class="input-group-text"><span class="input-group-addon fa fa-user"></span></label>
                                 </div>
 
-                                <input asp-for="Email" class="form-control" placeholder="Email" required="required" />
+                                <input asp-for="Email" class="form-control" placeholder="Email" required="required"/>
                             </div>
                             <span asp-validation-for="Email" class="text-danger"></span>
                         </div>
@@ -29,7 +30,7 @@
                                 <div class="input-group-prepend">
                                     <label for="Password" class="input-group-text"><span class="input-group-addon fa fa-lock"></span></label>
                                 </div>
-                                <input asp-for="Password" class="form-control" placeholder="Password" required="required" />
+                                <input asp-for="Password" class="form-control" placeholder="Password" required="required"/>
                             </div>
                             <span asp-validation-for="Password" class="text-danger"></span>
                         </div>

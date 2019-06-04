@@ -756,15 +756,7 @@ namespace BTCPayServer.Services.Invoices
             else
             {
                 var paymentType = GetId().PaymentType;
-                IPaymentMethodDetails details = null;
-                if (paymentType == PaymentTypes.BTCLike)
-                {
-                    details = JsonConvert.DeserializeObject<Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod>(PaymentMethodDetails.ToString());
-                }
-                else
-                {
-                    details = JsonConvert.DeserializeObject<Payments.Lightning.LightningLikePaymentMethodDetails>(PaymentMethodDetails.ToString());
-                }
+                IPaymentMethodDetails details = paymentType.DeserializePaymentMethodDetails(PaymentMethodDetails.ToString());
                 if (details is Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod btcLike)
                 {
                     btcLike.NextNetworkFee = NextNetworkFee;

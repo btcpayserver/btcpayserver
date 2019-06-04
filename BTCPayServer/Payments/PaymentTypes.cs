@@ -55,6 +55,7 @@ namespace BTCPayServer.Payments
         }
 
         public abstract string GetId();
-        public abstract CryptoPaymentData DeserializePaymentData(string cryptoPaymentData);
+        public abstract CryptoPaymentData DeserializePaymentData(string str);
+        public abstract IPaymentMethodDetails DeserializePaymentMethodDetails(string str);
     }
 }

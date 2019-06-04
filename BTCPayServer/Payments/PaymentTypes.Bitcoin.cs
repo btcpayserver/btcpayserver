@@ -19,9 +19,14 @@ namespace BTCPayServer.Payments
         public override string ToPrettyString() => "On-Chain";
         public override string GetId() => "BTCLike";
 
-        public override CryptoPaymentData DeserializePaymentData(string cryptoPaymentData)
+        public override CryptoPaymentData DeserializePaymentData(string str)
         {
-            return JsonConvert.DeserializeObject<BitcoinLikePaymentData>(cryptoPaymentData);
+            return JsonConvert.DeserializeObject<BitcoinLikePaymentData>(str);
+        }
+
+        public override IPaymentMethodDetails DeserializePaymentMethodDetails(string str)
+        {
+            return JsonConvert.DeserializeObject<Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod>(str);
         }
     }
 }

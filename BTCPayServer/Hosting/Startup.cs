@@ -143,6 +143,10 @@ namespace BTCPayServer.Hosting
                 })
                 .AddServer(options =>
                 {
+                    if (_Env.IsDevelopment())
+                    {
+                        options.DisableHttpsRequirement();
+                    }
                     // Register the ASP.NET Core MVC binder used by OpenIddict.
                     // Note: if you don't call this method, you won't be able to
                     // bind OpenIdConnectRequest or OpenIdConnectResponse parameters.
@@ -153,6 +157,9 @@ namespace BTCPayServer.Hosting
                     options.EnableAuthorizationEndpoint("/connect/authorize");
                     options.EnableAuthorizationEndpoint("/connect/logout");
 
+                    //we do not care about these granular controls for now
+                    options.DisableScopeValidation();
+                    options.IgnoreEndpointPermissions();
                     // Allow client applications various flows
                     options.AllowImplicitFlow();
                     options.AllowClientCredentialsFlow();

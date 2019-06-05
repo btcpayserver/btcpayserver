@@ -21,6 +21,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json.Linq;
+using OpenIddict.Abstractions;
 
 namespace BTCPayServer.Tests
 {
@@ -31,52 +32,31 @@ namespace BTCPayServer.Tests
             Logs.Tester = new XUnitLog(helper) {Name = "Tests"};
             Logs.LogProvider = new XUnitLogProvider(helper);
         }
-
-
+        
         [Fact]
-        public async void CanGetAccessToken()
+        [Trait("Integration", "Integration")]
+        public async Task GetRedirectedToLoginPathOnChallenge()
         {
             using (var tester = ServerTester.Create())
             {
                 tester.Start();
+                var client = tester.PayTester.HttpClient;
+                //Wallets endpoint is protected
+                var response = await client.GetAsync("wallets");
+                var urlPath = response.RequestMessage.RequestUri.ToString()
+                    .Replace(tester.PayTester.ServerUri.ToString(), "");
+                //Cookie Challenge redirects you to login page
+                Assert.StartsWith("Account/Login", urlPath, StringComparison.InvariantCultureIgnoreCase);
 
-                var user = tester.NewAccount();
-                user.GrantAccess();
+                var queryString = response.RequestMessage.RequestUri.ParseQueryString();
 
-                await GetAccessTokenByPasswordGrant(tester, user);
+                Assert.NotNull(queryString["ReturnUrl"]);
+                Assert.Equal("/wallets", queryString["ReturnUrl"]);
             }
         }
 
-        private static async Task<OpenIdConnectResponse> GetAccessTokenByPasswordGrant(ServerTester tester,
-            TestAccount user)
-        {
-            using (var httpClient = new HttpClient())
-            {
-                var httpRequest = new HttpRequestMessage(HttpMethod.Post,
-                    new Uri(tester.PayTester.ServerUri, "/connect/token"))
-                {
-                    Content = new FormUrlEncodedContent(new List<KeyValuePair<string, string>>()
-                    {
-                        new KeyValuePair<string, string>("grant_type", "password"),
-                        new KeyValuePair<string, string>("username", user.RegisterDetails.Email),
-                        new KeyValuePair<string, string>("password", user.RegisterDetails.Password)
-                    })
-                };
-
-
-                var response = await httpClient.SendAsync(httpRequest);
-
-                Assert.True(response.IsSuccessStatusCode);
-
-                string content = await response.Content.ReadAsStringAsync();
-                var result = JObject.Parse(content).ToObject<OpenIdConnectResponse>();
-                Assert.NotEmpty(result.AccessToken);
-                Assert.Null(result.Error);
-
-                return result;
-            }
-        }
         [Fact]
+        [Trait("Integration", "Integration")]
         public void CanGetOpenIdConfiguration()
         {
             using (var tester = ServerTester.Create())
@@ -92,5 +72,115 @@ namespace BTCPayServer.Tests
                 }
             }
         }
+
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public async void CanUseNonInteractiveFlows()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.Start();
+
+                var user = tester.NewAccount();
+                user.GrantAccess();
+
+                var token = await RegisterPasswordClientAndGetAccessToken(user, null, tester);
+                await TestApiAgainstAccessToken(token);
+                token = await RegisterPasswordClientAndGetAccessToken(user, "secret", tester);
+                await TestApiAgainstAccessToken(token);
+                token = await RegisterClientCredentialsFlowAndGetAccessToken(user, "secret", tester);
+                await TestApiAgainstAccessToken(token);
+            }
+        }
+
+
+        private static async Task<string> RegisterClientCredentialsFlowAndGetAccessToken(TestAccount user, string secret,
+            ServerTester tester)
+        {
+            var id = Guid.NewGuid().ToString();
+            var openIdClient = await user.RegisterOpenIdClient(new OpenIddictApplicationDescriptor()
+            {
+                ClientId = id,
+                DisplayName = id,
+                Permissions =
+                {
+                    OpenIddictConstants.Permissions.GrantTypes.ClientCredentials
+                }
+            }, secret);
+
+
+            var httpClient = tester.PayTester.HttpClient;
+
+            var httpRequest = new HttpRequestMessage(HttpMethod.Post,
+                new Uri(tester.PayTester.ServerUri, "/connect/token"))
+            {
+                Content = new FormUrlEncodedContent(new List<KeyValuePair<string, string>>()
+                {
+                    new KeyValuePair<string, string>("grant_type", OpenIddictConstants.GrantTypes.ClientCredentials),
+                    new KeyValuePair<string, string>("client_id", openIdClient.ClientId),
+                    new KeyValuePair<string, string>("client_secret", secret)
+                })
+            };
+
+
+            var response = await httpClient.SendAsync(httpRequest);
+
+            Assert.True(response.IsSuccessStatusCode);
+
+            string content = await response.Content.ReadAsStringAsync();
+            var result = JObject.Parse(content).ToObject<OpenIdConnectResponse>();
+            Assert.NotEmpty(result.AccessToken);
+            Assert.Null(result.Error);
+            return result.AccessToken;
+        }
+
+        private static async Task<string> RegisterPasswordClientAndGetAccessToken(TestAccount user, string secret,
+            ServerTester tester)
+        {
+            var id = Guid.NewGuid().ToString();
+            var openIdClient = await user.RegisterOpenIdClient(new OpenIddictApplicationDescriptor()
+            {
+                ClientId = id,
+                DisplayName = id,
+                Permissions =
+                {
+                    OpenIddictConstants.Permissions.GrantTypes.Password
+                }
+            }, secret);
+
+
+            var httpClient = tester.PayTester.HttpClient;
+
+            var httpRequest = new HttpRequestMessage(HttpMethod.Post,
+                new Uri(tester.PayTester.ServerUri, "/connect/token"))
+            {
+                Content = new FormUrlEncodedContent(new List<KeyValuePair<string, string>>()
+                {
+                    new KeyValuePair<string, string>("grant_type", OpenIddictConstants.GrantTypes.Password),
+                    new KeyValuePair<string, string>("username", user.RegisterDetails.Email),
+                    new KeyValuePair<string, string>("password", user.RegisterDetails.Password),
+                    new KeyValuePair<string, string>("client_id", openIdClient.ClientId),
+                    new KeyValuePair<string, string>("client_secret", secret)
+                })
+            };
+
+
+            var response = await httpClient.SendAsync(httpRequest);
+
+            Assert.True(response.IsSuccessStatusCode);
+
+            string content = await response.Content.ReadAsStringAsync();
+            var result = JObject.Parse(content).ToObject<OpenIdConnectResponse>();
+            Assert.NotEmpty(result.AccessToken);
+            Assert.Null(result.Error);
+            return result.AccessToken;
+        }
+
+        public async Task TestApiAgainstAccessToken(string accessToken)
+        {
+
+        }
+
+
     }
 }

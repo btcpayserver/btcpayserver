@@ -3,7 +3,6 @@
     ViewData.SetActivePageAndTitle(ManageNavPages.TwoFactorAuthentication, "Two-factor authentication");
 }
 
-<h4>@ViewData["Title"]</h4>
 @if(Model.Is2faEnabled)
 {
     if(Model.RecoveryCodesLeft == 0)

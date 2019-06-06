@@ -19,7 +19,11 @@ using Xunit.Abstractions;
 using System.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using BTCPayServer.Data;
+using BTCPayServer.Models;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OpenIddict.Abstractions;
 
@@ -32,7 +36,7 @@ namespace BTCPayServer.Tests
             Logs.Tester = new XUnitLog(helper) {Name = "Tests"};
             Logs.LogProvider = new XUnitLogProvider(helper);
         }
-        
+
         [Fact]
         [Trait("Integration", "Integration")]
         public async Task GetRedirectedToLoginPathOnChallenge()
@@ -83,30 +87,28 @@ namespace BTCPayServer.Tests
 
                 var user = tester.NewAccount();
                 user.GrantAccess();
-
                 var token = await RegisterPasswordClientAndGetAccessToken(user, null, tester);
-                await TestApiAgainstAccessToken(token);
+                await TestApiAgainstAccessToken(token, tester, user);
                 token = await RegisterPasswordClientAndGetAccessToken(user, "secret", tester);
-                await TestApiAgainstAccessToken(token);
+                await TestApiAgainstAccessToken(token, tester, user);
                 token = await RegisterClientCredentialsFlowAndGetAccessToken(user, "secret", tester);
-                await TestApiAgainstAccessToken(token);
+                await TestApiAgainstAccessToken(token, tester, user);
             }
         }
 
 
-        private static async Task<string> RegisterClientCredentialsFlowAndGetAccessToken(TestAccount user, string secret,
+        private static async Task<string> RegisterClientCredentialsFlowAndGetAccessToken(TestAccount user,
+            string secret,
             ServerTester tester)
         {
             var id = Guid.NewGuid().ToString();
-            var openIdClient = await user.RegisterOpenIdClient(new OpenIddictApplicationDescriptor()
-            {
-                ClientId = id,
-                DisplayName = id,
-                Permissions =
+            var openIdClient = await user.RegisterOpenIdClient(
+                new OpenIddictApplicationDescriptor()
                 {
-                    OpenIddictConstants.Permissions.GrantTypes.ClientCredentials
-                }
-            }, secret);
+                    ClientId = id,
+                    DisplayName = id,
+                    Permissions = {OpenIddictConstants.Permissions.GrantTypes.ClientCredentials}
+                }, secret);
 
 
             var httpClient = tester.PayTester.HttpClient;
@@ -116,7 +118,8 @@ namespace BTCPayServer.Tests
             {
                 Content = new FormUrlEncodedContent(new List<KeyValuePair<string, string>>()
                 {
-                    new KeyValuePair<string, string>("grant_type", OpenIddictConstants.GrantTypes.ClientCredentials),
+                    new KeyValuePair<string, string>("grant_type",
+                        OpenIddictConstants.GrantTypes.ClientCredentials),
                     new KeyValuePair<string, string>("client_id", openIdClient.ClientId),
                     new KeyValuePair<string, string>("client_secret", secret)
                 })
@@ -138,15 +141,13 @@ namespace BTCPayServer.Tests
             ServerTester tester)
         {
             var id = Guid.NewGuid().ToString();
-            var openIdClient = await user.RegisterOpenIdClient(new OpenIddictApplicationDescriptor()
-            {
-                ClientId = id,
-                DisplayName = id,
-                Permissions =
+            var openIdClient = await user.RegisterOpenIdClient(
+                new OpenIddictApplicationDescriptor()
                 {
-                    OpenIddictConstants.Permissions.GrantTypes.Password
-                }
-            }, secret);
+                    ClientId = id,
+                    DisplayName = id,
+                    Permissions = {OpenIddictConstants.Permissions.GrantTypes.Password}
+                }, secret);
 
 
             var httpClient = tester.PayTester.HttpClient;
@@ -176,11 +177,42 @@ namespace BTCPayServer.Tests
             return result.AccessToken;
         }
 
-        public async Task TestApiAgainstAccessToken(string accessToken)
+        public async Task TestApiAgainstAccessToken(string accessToken, ServerTester tester, TestAccount testAccount)
         {
+            var resultUser =
+                await TestApiAgainstAccessToken<string>(accessToken, "api/test/me/id",
+                    tester.PayTester.HttpClient);
+            Assert.Equal(testAccount.UserId, resultUser);
 
+            var secondUser = tester.NewAccount();
+            secondUser.GrantAccess();
+
+            var resultStores =
+                await TestApiAgainstAccessToken<StoreData[]>(accessToken, "api/test/me/stores",
+                    tester.PayTester.HttpClient);
+            Assert.Contains(resultStores,
+                data => data.Id.Equals(testAccount.StoreId, StringComparison.InvariantCultureIgnoreCase));
+            Assert.DoesNotContain(resultStores,
+                data => data.Id.Equals(secondUser.StoreId, StringComparison.InvariantCultureIgnoreCase));
+
+            Assert.True(await TestApiAgainstAccessToken<bool>(accessToken, $"api/test/me/stores/{testAccount.StoreId}",
+                tester.PayTester.HttpClient));
+
+            await Assert.ThrowsAnyAsync<HttpRequestException>(async () =>
+            {
+               await TestApiAgainstAccessToken<bool>(accessToken, $"api/test/me/stores/{secondUser.StoreId}",
+                    tester.PayTester.HttpClient);
+            });
         }
 
-
+        public async Task<T> TestApiAgainstAccessToken<T>(string accessToken, string url, HttpClient client)
+        {
+            var httpRequest = new HttpRequestMessage(HttpMethod.Get,
+                new Uri(client.BaseAddress, url));
+            httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            var result = await client.SendAsync(httpRequest);
+            result.EnsureSuccessStatusCode();
+            return JsonConvert.DeserializeObject<T>(await result.Content.ReadAsStringAsync());
+        }
     }
 }

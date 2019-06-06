@@ -1,28 +1,15 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using System.Xml;
 using AspNet.Security.OpenIdConnect.Primitives;
-using BTCPayServer.Controllers;
 using BTCPayServer.Tests.Logging;
-using ExchangeSharp;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-using Microsoft.IdentityModel.Tokens;
-using NBitcoin;
 using Xunit;
 using Xunit.Abstractions;
-using System.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using BTCPayServer.Data;
-using BTCPayServer.Models;
-using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OpenIddict.Abstractions;
@@ -195,12 +182,12 @@ namespace BTCPayServer.Tests
             Assert.DoesNotContain(resultStores,
                 data => data.Id.Equals(secondUser.StoreId, StringComparison.InvariantCultureIgnoreCase));
 
-            Assert.True(await TestApiAgainstAccessToken<bool>(accessToken, $"api/test/me/stores/{testAccount.StoreId}",
+            Assert.True(await TestApiAgainstAccessToken<bool>(accessToken, $"api/test/me/stores/{testAccount.StoreId}/can-edit",
                 tester.PayTester.HttpClient));
 
             await Assert.ThrowsAnyAsync<HttpRequestException>(async () =>
             {
-               await TestApiAgainstAccessToken<bool>(accessToken, $"api/test/me/stores/{secondUser.StoreId}",
+               await TestApiAgainstAccessToken<bool>(accessToken, $"api/test/me/stores/{secondUser.StoreId}/can-edit",
                     tester.PayTester.HttpClient);
             });
         }
@@ -212,7 +199,13 @@ namespace BTCPayServer.Tests
             httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
             var result = await client.SendAsync(httpRequest);
             result.EnsureSuccessStatusCode();
-            return JsonConvert.DeserializeObject<T>(await result.Content.ReadAsStringAsync());
+            
+            var rawJson = await result.Content.ReadAsStringAsync();
+            if (typeof(T).IsPrimitive || typeof(T).Equals(typeof(string)))
+            {
+                return (T)Convert.ChangeType(rawJson, typeof(T));
+            }
+            return JsonConvert.DeserializeObject<T>(rawJson);
         }
     }
 }

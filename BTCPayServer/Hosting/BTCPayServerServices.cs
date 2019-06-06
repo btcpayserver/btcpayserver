@@ -45,11 +45,18 @@ using BundlerMinifier.TagHelpers;
 using OpenIddict.EntityFrameworkCore.Models;
 
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
+using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
+
 namespace BTCPayServer.Hosting
 {
     public static class BTCPayServerServices
     {
-        public static IServiceCollection AddBTCPayServer(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddBTCPayServer(this IServiceCollection services, IConfiguration configuration, Microsoft.AspNetCore.Hosting.IHostingEnvironment hostingEnvironment)
         {
             services.AddDbContext<ApplicationDbContext>((provider, o) =>
             {
@@ -223,7 +230,7 @@ namespace BTCPayServer.Hosting
             // bundling
 
             services.AddAuthorization(o => Policies.AddBTCPayPolicies(o));
-            services.AddBtcPayServerAuthenticationSchemes(configuration);
+            services.AddBtcPayServerAuthenticationSchemes(configuration, hostingEnvironment);
 
             services.AddSingleton<IBundleProvider, ResourceBundleProvider>();
             services.AddTransient<BundleOptions>(provider =>
@@ -246,7 +253,7 @@ namespace BTCPayServer.Hosting
             return services;
         }
         
-        private static void AddBtcPayServerAuthenticationSchemes(this IServiceCollection services, IConfiguration configuration)
+        private static void AddBtcPayServerAuthenticationSchemes(this IServiceCollection services, IConfiguration configuration, IHostingEnvironment hostingEnvironment)
         {
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
             JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
@@ -254,9 +261,38 @@ namespace BTCPayServer.Hosting
             services.AddAuthentication()
                 .AddJwtBearer(options =>
                 {
-//                    options.RequireHttpsMetadata = false;
-//                    options.TokenValidationParameters.ValidateAudience = false;
+                    if (hostingEnvironment.IsDevelopment())
+                    {
+                        options.RequireHttpsMetadata = false;
+                    }
+                    options.TokenValidationParameters.ValidateAudience = false;
                     options.TokenValidationParameters.ValidateIssuer = false;
+                    options.TokenValidationParameters.IssuerSigningKey =
+                        OpenIddictExtensions.GetSigningKey(configuration);
+                    options.IncludeErrorDetails = true;
+                    options.Events = new JwtBearerEvents()
+                    {
+                        OnChallenge = context =>
+                        {
+                            Logs.PayServer.LogWarning("====>  OnChallenge received");
+                            return Task.CompletedTask;
+                        },
+                        OnTokenValidated = context =>
+                        {
+                            Logs.PayServer.LogWarning("====>  OnTokenValidated received");
+                            return Task.CompletedTask;
+                        },
+                        OnMessageReceived = context =>
+                        {
+                            Logs.PayServer.LogWarning("====>  OnMessageReceived received");
+                            return Task.CompletedTask;
+                        },
+                        OnAuthenticationFailed = context =>
+                        {
+                            Logs.PayServer.LogWarning("====>  OnAuthenticationFailed received");
+                            return Task.CompletedTask;
+                        }
+                    };
                 })
                 .AddCookie()
                 .AddBitpayAuthentication();

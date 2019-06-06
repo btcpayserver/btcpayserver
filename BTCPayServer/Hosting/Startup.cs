@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Builder;
 using System;
 using Microsoft.Extensions.DependencyInjection;
@@ -53,7 +53,7 @@ namespace BTCPayServer.Hosting
             
             ConfigureOpenIddict(services);
 
-            services.AddBTCPayServer(Configuration);
+            services.AddBTCPayServer(Configuration, _Env);
             services.AddProviderStorage();
             services.AddSession();
             services.AddSignalR();

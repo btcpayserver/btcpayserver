@@ -1,10 +1,13 @@
-﻿using System.Security.Claims;
+using System.Diagnostics;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace BTCPayServer.Security
@@ -33,6 +36,8 @@ namespace BTCPayServer.Security
                 return;
             var principal = context.HttpContext.User;
             var identity = ((ClaimsIdentity)principal.Identity);
+
+            Logs.PayServer.LogWarning("OnAuthorizationAsync ->" + identity);
             if (principal.IsInRole(Roles.ServerAdmin))
             {
                 identity.AddClaim(new Claim(Policies.CanModifyServerSettings.Key, "true"));

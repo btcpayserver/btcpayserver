@@ -4,12 +4,14 @@
     ViewData["Title"] = "PSBT";
     ViewData.SetActivePageAndTitle(WalletsNavPages.PSBT);
 }
-
-<div class="row">
-    <div class="col-md-10 text-center">
-        <partial name="_StatusMessage" for="@TempData["TempDataProperty-StatusMessage"]" />
+@if (TempData.ContainsKey("TempDataProperty-StatusMessage"))
+{
+    <div class="row">
+        <div class="col-md-10 text-center">
+            <partial name="_StatusMessage" for="@TempData["TempDataProperty-StatusMessage"]" />
+        </div>
     </div>
-</div>
+}
 <div class="row">
     <div class="col-md-10">
         @if (Model.Errors != null && Model.Errors.Count != 0)

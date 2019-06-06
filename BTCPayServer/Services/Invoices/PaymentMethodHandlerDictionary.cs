@@ -21,6 +21,7 @@ namespace BTCPayServer.Services.Invoices
         }
 
         public IPaymentMethodHandler this[PaymentMethodId index] => _mappedHandlers[index];
+        public bool Support(PaymentMethodId paymentMethod) => _mappedHandlers.ContainsKey(paymentMethod);
         public IEnumerator<IPaymentMethodHandler> GetEnumerator()
         {
             return _mappedHandlers.Values.GetEnumerator();

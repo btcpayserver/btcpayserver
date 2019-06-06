@@ -158,7 +158,7 @@ namespace BTCPayServer.Controllers
             var fetchingByCurrencyPair = _RateProvider.FetchRates(currencyPairsToFetch, rateRules, cancellationToken);
             var fetchingAll = WhenAllFetched(logs, fetchingByCurrencyPair);
             var supportedPaymentMethods = store.GetSupportedPaymentMethods(_NetworkProvider)
-                                               .Where(s => !excludeFilter.Match(s.PaymentId))
+                                               .Where(s => !excludeFilter.Match(s.PaymentId) && _paymentMethodHandlerDictionary.Support(s.PaymentId))
                                                .Select(c =>
                                                 (Handler: _paymentMethodHandlerDictionary[c.PaymentId],
                                                 SupportedPaymentMethod: c,

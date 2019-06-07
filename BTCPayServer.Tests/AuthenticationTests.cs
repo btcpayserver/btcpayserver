@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using AspNet.Security.OpenIdConnect.Primitives;
@@ -66,7 +67,7 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Integration", "Integration")]
-        public async void CanUseNonInteractiveFlows()
+        public async Task CanUseNonInteractiveFlows()
         {
             using (var tester = ServerTester.Create())
             {
@@ -80,6 +81,62 @@ namespace BTCPayServer.Tests
                 await TestApiAgainstAccessToken(token, tester, user);
                 token = await RegisterClientCredentialsFlowAndGetAccessToken(user, "secret", tester);
                 await TestApiAgainstAccessToken(token, tester, user);
+            }
+        }
+
+        [Trait("Selenium", "Selenium")]
+        [Fact]
+        public async Task CanUseImplicitFlow()
+        {
+
+            using (var s = SeleniumTester.Create())
+            {
+                s.Start();
+                var tester = s.Server;
+
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                var id = Guid.NewGuid().ToString();
+                var redirecturi = new Uri("http://127.0.0.1/oidc-callback");
+                var openIdClient = await user.RegisterOpenIdClient(
+                    new OpenIddictApplicationDescriptor()
+                    {
+                        ClientId = id,
+                        DisplayName = id,
+                        Permissions = {OpenIddictConstants.Permissions.GrantTypes.Implicit},
+                        RedirectUris =
+                        {
+                            redirecturi
+                        }
+                    });
+
+                //var options = new OidcClientOptions
+                //{
+                //    Authority = tester.PayTester.ServerUri.AbsoluteUri,
+                //    ClientId = id,
+                //    RedirectUri = "http://callback.com",
+                //    Scope = "openid",
+
+                    
+                //};
+
+                //var client = new OidcClient(options);
+
+                var implicitAuthorizeUrl = new Uri(tester.PayTester.ServerUri,
+                    $"connect/authorize?response_type=token&client_id={id}&redirect_uri={redirecturi.AbsoluteUri}&scope=openid&nonce={Guid.NewGuid().ToString()}");
+                s.Driver.Navigate().GoToUrl(implicitAuthorizeUrl);
+                s.Login(user.RegisterDetails.Email, user.RegisterDetails.Password);
+                var url = s.Driver.Url;
+                var results = url.Split("#").Last().Split("&").ToDictionary(s1 => s1.Split("=")[0], s1 => s1.Split("=")[1]);
+                await TestApiAgainstAccessToken(results["access_token"], tester, user);
+
+
+                //in Implicit mode, you renew your token  by hitting the same endpoint but adding prompt=none. If you are still logged in on the site, you will receive a fresh token.
+                var implicitAuthorizeUrlSilentModel = new Uri($"{implicitAuthorizeUrl.OriginalString}&prompt=none");
+                s.Driver.Navigate().GoToUrl(implicitAuthorizeUrl);
+                url = s.Driver.Url;
+                results = url.Split("#").Last().Split("&").ToDictionary(s1 => s1.Split("=")[0], s1 => s1.Split("=")[1]);
+                await TestApiAgainstAccessToken(results["access_token"], tester, user);
             }
         }
 

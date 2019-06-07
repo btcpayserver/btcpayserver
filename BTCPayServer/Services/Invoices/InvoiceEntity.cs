@@ -15,6 +15,7 @@ using NBXplorer.DerivationStrategy;
 using BTCPayServer.Payments;
 using NBitpayClient;
 using BTCPayServer.Payments.Bitcoin;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BTCPayServer.Services.Invoices
 {
@@ -432,9 +433,9 @@ namespace BTCPayServer.Services.Invoices
                         Id = data.GetPaymentId(),
                         Fee = entity.NetworkFee,
                         Value = data.GetValue(),
-                        Completed = data.PaymentCompleted(entity, info.Network),
-                        Confirmed = data.PaymentConfirmed(entity, SpeedPolicy, info.Network),
-                        Destination = data.GetDestination(info.Network),
+                        Completed = data.PaymentCompleted(entity),
+                        Confirmed = data.PaymentConfirmed(entity, SpeedPolicy),
+                        Destination = data.GetDestination(),
                         PaymentType = data.GetPaymentType().ToString(),
                         ReceivedDate = entity.ReceivedTime.DateTime
                     };
@@ -519,14 +520,14 @@ namespace BTCPayServer.Services.Invoices
             return rates.TryGet(paymentMethodId) != null;
         }
 
-        public PaymentMethod GetPaymentMethod(PaymentMethodId paymentMethodId, BTCPayNetworkProvider networkProvider)
+        public PaymentMethod GetPaymentMethod(PaymentMethodId paymentMethodId)
         {
             GetPaymentMethods().TryGetValue(paymentMethodId, out var data);
             return data;
         }
-        public PaymentMethod GetPaymentMethod(BTCPayNetworkBase network, PaymentType paymentType, BTCPayNetworkProvider networkProvider)
+        public PaymentMethod GetPaymentMethod(BTCPayNetworkBase network, PaymentType paymentType)
         {
-            return GetPaymentMethod(new PaymentMethodId(network.CryptoCode, paymentType), networkProvider);
+            return GetPaymentMethod(new PaymentMethodId(network.CryptoCode, paymentType));
         }
 
         public PaymentMethodDictionary GetPaymentMethods()
@@ -898,6 +899,9 @@ namespace BTCPayServer.Services.Invoices
 
     public class PaymentEntity
     {
+        [NotMapped]
+        [JsonIgnore]
+        public BTCPayNetwork Network { get; set; }
         public int Version { get; set; }
         public DateTimeOffset ReceivedTime
         {
@@ -943,6 +947,7 @@ namespace BTCPayServer.Services.Invoices
             {
                 // For invoices created when CryptoPaymentDataType was not existing, we just consider that it is a RBFed payment for safety
                 var bitcoin = new BitcoinLikePaymentData();
+                bitcoin.Network = Network;
                 bitcoin.Outpoint = Outpoint;
                 bitcoin.Output = Output;
                 bitcoin.RBF = true;
@@ -955,6 +960,7 @@ namespace BTCPayServer.Services.Invoices
             else
             {
                 paymentData = GetPaymentMethodId().PaymentType.DeserializePaymentData(CryptoPaymentData);
+                paymentData.Network = Network;
                 if (paymentData is BitcoinLikePaymentData bitcoin)
                 {
                     bitcoin.Output = Output;
@@ -1014,6 +1020,8 @@ namespace BTCPayServer.Services.Invoices
     /// </summary>
     public interface CryptoPaymentData
     {
+        [JsonIgnore]
+        BTCPayNetworkBase Network { get; set; }
         /// <summary>
         /// Returns an identifier which uniquely identify the payment
         /// </summary>
@@ -1030,10 +1038,10 @@ namespace BTCPayServer.Services.Invoices
         /// </summary>
         /// <returns>The amount paid</returns>
         decimal GetValue();
-        bool PaymentCompleted(PaymentEntity entity, BTCPayNetworkBase network);
-        bool PaymentConfirmed(PaymentEntity entity, SpeedPolicy speedPolicy, BTCPayNetworkBase network);
+        bool PaymentCompleted(PaymentEntity entity);
+        bool PaymentConfirmed(PaymentEntity entity, SpeedPolicy speedPolicy);
 
         PaymentType GetPaymentType();
-        string GetDestination(BTCPayNetworkBase network);
+        string GetDestination();
     }
 }

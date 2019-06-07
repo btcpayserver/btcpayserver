@@ -27,6 +27,8 @@ namespace BTCPayServer.Payments.Bitcoin
             RBF = rbf;
         }
         [JsonIgnore]
+        public BTCPayNetworkBase Network { get; set; }
+        [JsonIgnore]
         public OutPoint Outpoint { get; set; }
         [JsonIgnore]
         public TxOut Output { get; set; }
@@ -54,12 +56,12 @@ namespace BTCPayServer.Payments.Bitcoin
             return Output.Value.ToDecimal(MoneyUnit.BTC);
         }
 
-        public bool PaymentCompleted(PaymentEntity entity, BTCPayNetworkBase network)
+        public bool PaymentCompleted(PaymentEntity entity)
         {
-            return ConfirmationCount >= network.MaxTrackedConfirmation;
+            return ConfirmationCount >= Network.MaxTrackedConfirmation;
         }
 
-        public bool PaymentConfirmed(PaymentEntity entity, SpeedPolicy speedPolicy, BTCPayNetworkBase network)
+        public bool PaymentConfirmed(PaymentEntity entity, SpeedPolicy speedPolicy)
         {
             if (speedPolicy == SpeedPolicy.HighSpeed)
             {
@@ -80,14 +82,14 @@ namespace BTCPayServer.Payments.Bitcoin
             return false;
         }
 
-        public BitcoinAddress GetDestination(BTCPayNetworkBase network)
+        public BitcoinAddress GetDestination()
         {
-            return Output.ScriptPubKey.GetDestinationAddress(((BTCPayNetwork)network).NBitcoinNetwork);
+            return Output.ScriptPubKey.GetDestinationAddress(((BTCPayNetwork)Network).NBitcoinNetwork);
         }
 
-        string CryptoPaymentData.GetDestination(BTCPayNetworkBase network)
+        string CryptoPaymentData.GetDestination()
         {
-            return GetDestination(network).ToString();
+            return GetDestination().ToString();
         }
     }
 }

@@ -72,7 +72,6 @@ namespace BTCPayServer.HostedServices
             var paymentMethod = GetNearestClearedPayment(allPaymentMethods, out var accounting, _NetworkProvider);
             if (paymentMethod == null)
                 return;
-            var network = _NetworkProvider.GetNetwork<BTCPayNetworkBase>(paymentMethod.GetId().CryptoCode);
             if (invoice.Status == InvoiceStatus.New || invoice.Status == InvoiceStatus.Expired)
             {
                 if (accounting.Paid >= accounting.MinimumTotalDue)
@@ -125,7 +124,7 @@ namespace BTCPayServer.HostedServices
 
             if (invoice.Status == InvoiceStatus.Paid)
             {
-                var confirmedAccounting = paymentMethod.Calculate(p => p.GetCryptoPaymentData().PaymentConfirmed(p, invoice.SpeedPolicy, network));
+                var confirmedAccounting = paymentMethod.Calculate(p => p.GetCryptoPaymentData().PaymentConfirmed(p, invoice.SpeedPolicy));
 
                 if (// Is after the monitoring deadline
                    (invoice.MonitoringExpiration < DateTimeOffset.UtcNow)
@@ -149,7 +148,7 @@ namespace BTCPayServer.HostedServices
 
             if (invoice.Status == InvoiceStatus.Confirmed)
             {
-                var completedAccounting = paymentMethod.Calculate(p => p.GetCryptoPaymentData().PaymentCompleted(p, network));
+                var completedAccounting = paymentMethod.Calculate(p => p.GetCryptoPaymentData().PaymentCompleted(p));
                 if (completedAccounting.Paid >= accounting.MinimumTotalDue)
                 {
                     context.Events.Add(new InvoiceEvent(invoice, 1006, InvoiceEvent.Completed));

@@ -258,7 +258,11 @@ namespace BTCPayServer.Hosting
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
             JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
 
-            services.AddAuthentication()
+            services.AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme =  Policies.Dynamic;
+                    options.DefaultChallengeScheme =  Policies.Dynamic;
+                })
                 .AddJwtBearer(options =>
                 {
                     if (hostingEnvironment.IsDevelopment())
@@ -295,7 +299,25 @@ namespace BTCPayServer.Hosting
                     };
                 })
                 .AddCookie()
-                .AddBitpayAuthentication();
+                .AddBitpayAuthentication()
+                .AddPolicyScheme(Policies.Dynamic, "Bearer, Cookie or BitPay Auth", options =>
+                {
+                    options.ForwardDefaultSelector = context =>
+                    {
+                        if (context.GetIsBitpayAPI())
+                        {
+                            return Policies.BitpayAuthentication;
+                        }
+
+                        if (context.Request.Headers.TryGetValue("Authorization", out var authHeader) &&
+                            authHeader.ToString().StartsWith("Bearer ",StringComparison.InvariantCulture))
+                        {
+                            return JwtBearerDefaults.AuthenticationScheme;
+                        }
+
+                        return IdentityConstants.ApplicationScheme;
+                    };
+                });
         }
 
         public static IApplicationBuilder UsePayServer(this IApplicationBuilder app)

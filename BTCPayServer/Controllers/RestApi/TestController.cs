@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -52,7 +52,7 @@ namespace BTCPayServer.Controllers.RestApi
 
 
         [HttpGet("me/stores/{storeId}/can-edit")]
-        [Authorize(Policy = Policies.CanModifyStoreSettings.Key, AuthenticationSchemes = OpenIddictValidationDefaults.AuthenticationScheme)]
+        [Authorize(Policy = Policies.CanModifyStoreSettings.Key)]
         public bool CanEdit(string storeId)
         {
             return true;

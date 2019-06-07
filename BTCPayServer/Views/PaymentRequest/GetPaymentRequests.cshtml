@@ -1,69 +1,66 @@
 @using BTCPayServer.Services.PaymentRequests
 @model BTCPayServer.Models.PaymentRequestViewModels.ListPaymentRequestsViewModel
-
 @{
     Layout = "_Layout";
 }
-
 <section>
     <div class="container">
-
-        <div class="row">
-            <div class="col-lg-12 text-center">
-                <partial name="_StatusMessage" for="StatusMessage"/>
+        @if (!string.IsNullOrEmpty(Model.StatusMessage))
+        {
+            <div class="row">
+                <div class="col-lg-12 text-center">
+                    <partial name="_StatusMessage" for="StatusMessage" />
+                </div>
             </div>
-        </div>
-
+        }
         <div class="row">
             <div class="col-lg-12 text-center">
                 <h2 class="section-heading">Payment Requests</h2>
             </div>
         </div>
-
         <div class="row no-gutter" style="margin-bottom: 5px;">
             <div class="col-lg-6">
                 <a asp-action="EditPaymentRequest" class="btn btn-primary" role="button" id="CreatePaymentRequest"><span class="fa fa-plus"></span> Create a new payment request</a>
                 <a href="https://docs.btcpayserver.org/features/paymentrequests" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
             </div>
         </div>
-
         <div class="row">
             <table class="table table-sm table-responsive-md">
                 <thead>
-                <tr>
-                    <th>Title</th>
-                    <th>Expiry</th>
-                    <th class="text-right">Price</th>
-                    <th class="text-right">Status</th>
-                    <th class="text-right">Actions</th>
-                </tr>
+                    <tr>
+                        <th>Title</th>
+                        <th>Expiry</th>
+                        <th class="text-right">Price</th>
+                        <th class="text-right">Status</th>
+                        <th class="text-right">Actions</th>
+                    </tr>
                 </thead>
                 <tbody>
-                @foreach (var item in Model.Items)
-                {
-                    <tr>
-                        <td>@item.Title</td>
-                        <td>@(item.ExpiryDate?.ToString("g") ?? "No Expiry")</td>
-                        <td class="text-right">@item.Amount @item.Currency</td>
-                        <td class="text-right">@item.Status</td>
-                        <td class="text-right">
-                            <a asp-action="EditPaymentRequest" asp-route-id="@item.Id">Edit</a>
-                            <span> - </span>
-                            <a asp-action="ViewPaymentRequest" asp-route-id="@item.Id">View</a>
-                            <span> - </span>
-                            <a target="_blank" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@($"orderid:{PaymentRequestRepository.GetOrderIdForPaymentRequest(item.Id)}")">Invoices</a>
-                            <span> - </span>
-                            <a target="_blank" asp-action="PayPaymentRequest" asp-route-id="@item.Id">Pay</a>
-                            <span> - </span>
-                            <a target="_blank" asp-action="ClonePaymentRequest" asp-route-id="@item.Id">Clone</a>
-                            <span> - </span>
-                            <a asp-action="RemovePaymentRequestPrompt" asp-route-id="@item.Id">Remove</a>
-                        </td>
-                    </tr>
-                }
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>@item.Title</td>
+                            <td>@(item.ExpiryDate?.ToString("g") ?? "No Expiry")</td>
+                            <td class="text-right">@item.Amount @item.Currency</td>
+                            <td class="text-right">@item.Status</td>
+                            <td class="text-right">
+                                <a asp-action="EditPaymentRequest" asp-route-id="@item.Id">Edit</a>
+                                <span> - </span>
+                                <a asp-action="ViewPaymentRequest" asp-route-id="@item.Id">View</a>
+                                <span> - </span>
+                                <a target="_blank" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@($"orderid:{PaymentRequestRepository.GetOrderIdForPaymentRequest(item.Id)}")">Invoices</a>
+                                <span> - </span>
+                                <a target="_blank" asp-action="PayPaymentRequest" asp-route-id="@item.Id">Pay</a>
+                                <span> - </span>
+                                <a target="_blank" asp-action="ClonePaymentRequest" asp-route-id="@item.Id">Clone</a>
+                                <span> - </span>
+                                <a asp-action="RemovePaymentRequestPrompt" asp-route-id="@item.Id">Remove</a>
+                            </td>
+                        </tr>
+                    }
                 </tbody>
             </table>
-            
+
             <nav aria-label="...">
                 <ul class="pagination">
                     <li class="page-item  @(Model.Skip == 0 ? "disabled" : null)">
@@ -86,6 +83,5 @@
                 </ul>
             </nav>
         </div>
-
     </div>
 </section>

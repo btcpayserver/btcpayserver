@@ -2,20 +2,20 @@
 @{
     ViewData["Title"] = "Invoices";
 }
-
 @section HeadScripts {
     <script src="~/modal/btcpay.js"></script>
 }
-
-@Html.HiddenFor(a=>a.Count)
+@Html.HiddenFor(a => a.Count)
 <section>
     <div class="container">
-
-        <div class="row">
-            <div class="col-lg-12 text-center">
-                <partial name="_StatusMessage" for="StatusMessage" />
+        @if (!string.IsNullOrEmpty(Model.StatusMessage))
+        {
+            <div class="row">
+                <div class="col-lg-12 text-center">
+                    <partial name="_StatusMessage" for="StatusMessage" />
+                </div>
             </div>
-        </div>
+        }
 
         <div class="row">
             <div class="col-lg-12 text-center">
@@ -48,7 +48,6 @@
         <div class="row no-gutter" style="margin-bottom: 5px;">
             <div class="col-lg-6">
                 <a asp-action="CreateInvoice" class="btn btn-primary" role="button" id="CreateNewInvoice"><span class="fa fa-plus"></span> Create a new invoice</a>
-
                 <a class="btn btn-primary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     Export
                 </a>
@@ -60,7 +59,6 @@
                     <a asp-action="Export" asp-route-timezoneoffset="0" asp-route-format="json" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item export-link" target="_blank">JSON</a>
                 </div>
             </div>
-
             <div class="col-lg-6">
                 <div class="form-group">
                     <form asp-action="ListInvoices" method="get" style="float:right;">
@@ -274,7 +272,6 @@
                     }
                 </tbody>
             </table>
-
             <nav aria-label="..." class="w-100">
                 <ul class="pagination float-left">
                     <li class="page-item @(Model.Skip == 0 ? "disabled" : null)">
@@ -287,7 +284,6 @@
                         <a class="page-link" href="@listInvoices(1, Model.Count)">&raquo;</a>
                     </li>
                 </ul>
-
                 <ul class="pagination float-right">
                     <li class="page-item disabled">
                         <span class="page-link">Page Size:</span>
@@ -328,7 +324,6 @@
         </div>
 
     </div>
-
     <script type="text/javascript">
         $(function () {
             var timezoneOffset = new Date().getTimezoneOffset();
@@ -378,8 +373,8 @@
                 });
         }
     </script>
-
     <style type="text/css">
+
         .invoice-payments h3 {
             font-size: 15px;
             font-weight: bold;

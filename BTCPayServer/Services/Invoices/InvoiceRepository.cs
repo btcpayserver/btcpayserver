@@ -248,7 +248,7 @@ retry:
                     return false;
 
                 var invoiceEntity = ToObject(invoice.Blob);
-                var currencyData = invoiceEntity.GetPaymentMethod(network, paymentMethod.GetPaymentType(), null);
+                var currencyData = invoiceEntity.GetPaymentMethod(network, paymentMethod.GetPaymentType());
                 if (currencyData == null)
                     return false;
 
@@ -441,6 +441,7 @@ retry:
             entity.Payments = invoice.Payments.Select(p =>
             {
                 var paymentEntity = ToObject<PaymentEntity>(p.Blob, null);
+                paymentEntity.Network = _Networks.GetNetwork<BTCPayNetwork>(paymentEntity.CryptoCode);
                 paymentEntity.Accounted = p.Accounted;
                 // PaymentEntity on version 0 does not have their own fee, because it was assumed that the payment method have fixed fee.
                 // We want to hide this legacy detail in InvoiceRepository, so we fetch the fee from the PaymentMethod and assign it to the PaymentEntity.
@@ -646,7 +647,7 @@ retry:
                 if (invoice == null)
                     return null;
                 InvoiceEntity invoiceEntity = ToObject(invoice.Blob);
-                PaymentMethod paymentMethod = invoiceEntity.GetPaymentMethod(new PaymentMethodId(network.CryptoCode, paymentData.GetPaymentType()), null);
+                PaymentMethod paymentMethod = invoiceEntity.GetPaymentMethod(new PaymentMethodId(network.CryptoCode, paymentData.GetPaymentType()));
                 IPaymentMethodDetails paymentMethodDetails = paymentMethod.GetPaymentMethodDetails();
                 PaymentEntity entity = new PaymentEntity
                 {
@@ -656,7 +657,8 @@ retry:
 #pragma warning restore CS0618
                     ReceivedTime = date.UtcDateTime,
                     Accounted = accounted,
-                    NetworkFee = paymentMethodDetails.GetNextNetworkFee()
+                    NetworkFee = paymentMethodDetails.GetNextNetworkFee(),
+                    Network = network as BTCPayNetwork
                 };
                 entity.SetCryptoPaymentData(paymentData);
 

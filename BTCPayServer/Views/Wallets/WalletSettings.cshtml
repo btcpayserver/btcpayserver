@@ -4,14 +4,15 @@
     ViewData["Title"] = "Wallet settings";
     ViewData.SetActivePageAndTitle(WalletsNavPages.Settings);
 }
-
-<div class="row">
-    <div class="col-md-10 text-center">
-        <partial name="_StatusMessage" for="@TempData["TempDataProperty-StatusMessage"]" />
+@if (TempData.ContainsKey("TempDataProperty-StatusMessage"))
+{
+    <div class="row">
+        <div class="col-md-10 text-center">
+            <partial name="_StatusMessage" for="@TempData["TempDataProperty-StatusMessage"]" />
+        </div>
     </div>
-</div>
+}
 
-<h4>@ViewData["Title"]</h4>
 <div class="row">
     <div class="col-md-10">
         <p>
@@ -40,7 +41,6 @@
                     <span asp-validation-for="DerivationSchemeInput" class="text-danger"></span>
                 </div>
             }
-
             @for (int i = 0; i < Model.AccountKeys.Count; i++)
             {
                 <hr />
@@ -68,7 +68,6 @@
                     </div>
                 }
             }
-
             <div class="form-group">
                 <button name="command" type="submit" class="btn btn-primary">Save</button>
             </div>

@@ -30,11 +30,14 @@
                 <hr class="primary">
             </div>
         </div>
-        <div class="row">
-            <div class="col-lg-12 text-center">
-                <partial name="_StatusMessage" for="@TempData["TempDataProperty-StatusMessage"]" />
+        @if (TempData.ContainsKey("TempDataProperty-StatusMessage"))
+        {
+            <div class="row">
+                <div class="col-lg-12 text-center">
+                    <partial name="_StatusMessage" for="@TempData["TempDataProperty-StatusMessage"]" />
+                </div>
             </div>
-        </div>
+        }
         <div class="row">
             <div class="col-lg-12">
                 <form method="post">
@@ -44,7 +47,6 @@
                         <input asp-for="Title" class="form-control" />
                         <span asp-validation-for="Title" class="text-danger"></span>
                     </div>
-
                     <div class="form-group">
                         <label asp-for="Tagline" class="control-label"></label>
                         <input asp-for="Tagline" class="form-control" />
@@ -82,7 +84,6 @@
                     <div class="form-group">
                         <label asp-for="ResetEvery" class="control-label"></label>
                         <div class="input-group">
-
                             <input type="number" asp-for="ResetEveryAmount" placeholder="Amount" class="form-control">
                             <select class="custom-select" asp-for="ResetEvery">
                                 @foreach (var opt in Model.ResetEveryValues)
@@ -142,7 +143,6 @@
                         <span asp-validation-for="NotificationUrl" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-
                         <label asp-for="NotificationEmail" class="control-label"></label>
                         @if (Model.NotificationEmailWarning)
                         {
@@ -181,7 +181,6 @@
                         <input asp-for="SoundsEnabled" type="checkbox" class="form-check" />
                         <span asp-validation-for="SoundsEnabled" class="text-danger"></span>
                     </div>
-
                     <div class="form-group">
                         <label asp-for="Sounds"></label>
                         <textarea asp-for="Sounds" class="form-control"></textarea>
@@ -192,7 +191,6 @@
                         <input asp-for="AnimationsEnabled" type="checkbox" class="form-check" />
                         <span asp-validation-for="AnimationsEnabled" class="text-danger"></span>
                     </div>
-
                     <div class="form-group">
                         <label asp-for="AnimationColors"></label>
                         <textarea asp-for="AnimationColors" class="form-control"></textarea>
@@ -208,7 +206,6 @@
                         <input asp-for="DisqusShortname" class="form-control" />
                         <span asp-validation-for="DisqusShortname" class="text-danger"></span>
                     </div>
-
                     <input type="hidden" asp-for="NotificationEmailWarning" />
                     <div class="form-group">
                         <input type="submit" class="btn btn-primary" value="Save Settings" id="SaveSettings" />
@@ -216,19 +213,15 @@
                         <a class="btn btn-secondary" target="_blank" asp-action="ViewCrowdfund" asp-controller="AppsPublic" asp-route-appId="@Model.AppId" id="ViewApp">View App</a>
                         <a class="btn btn-secondary" target="_blank" asp-action="ListApps">Back to the app list</a>
                     </div>
-
                 </form>
             </div>
         </div>
     </div>
 </section>
-
 @section Scripts {
-
     <script src="~/vendor/moment/moment.js"></script>
     <bundle name="wwwroot/bundles/crowdfund-admin-bundle.min.js"></bundle>
     <bundle name="wwwroot/bundles/crowdfund-admin-bundle.min.css"></bundle>
-
     <script id="template-product-item" type="text/template">
         <div class="col-sm-4 col-md-3 mb-3">
             <div class="card">
@@ -241,7 +234,6 @@
             </div>
         </div>
     </script>
-
     <script id="template-product-content" type="text/template">
         <div class="mb-3">
             <input class="js-product-id" type="hidden" name="id" value="{id}">
@@ -277,4 +269,3 @@
         </div>
     </script>
 }
-

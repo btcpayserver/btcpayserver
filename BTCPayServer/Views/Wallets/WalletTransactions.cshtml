@@ -4,8 +4,8 @@
     ViewData["Title"] = "Manage wallet";
     ViewData.SetActivePageAndTitle(WalletsNavPages.Transactions);
 }
-
 <style type="text/css">
+
     .smMaxWidth {
         max-width: 200px;
     }
@@ -20,13 +20,14 @@
         opacity: 0.5;
     }
 </style>
-
-<div class="row">
-    <div class="col-md-10 text-center">
-        <partial name="_StatusMessage" for="@TempData["TempDataProperty-StatusMessage"]" />
+@if (TempData.ContainsKey("TempDataProperty-StatusMessage"))
+{
+    <div class="row">
+        <div class="col-md-10 text-center">
+            <partial name="_StatusMessage" for="@TempData["TempDataProperty-StatusMessage"]" />
+        </div>
     </div>
-</div>
-<h4>@ViewData["Title"]</h4>
+}
 <div class="row">
     <div class="col-md-12">
         If BTCPay Server shows you an invalid balance, <a asp-action="WalletRescan">rescan your wallet</a>. <br />

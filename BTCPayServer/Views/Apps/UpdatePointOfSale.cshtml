@@ -22,7 +22,6 @@
             </div>
         </div>
     </div>
-
     <div class="container">
         <div class="row">
             <div class="col-lg-12 text-center">
@@ -30,11 +29,14 @@
                 <hr class="primary">
             </div>
         </div>
-        <div class="row">
-            <div class="col-lg-12 text-center">
-                <partial name="_StatusMessage" for="@TempData["TempDataProperty-StatusMessage"]" />
+        @if (TempData.ContainsKey("TempDataProperty-StatusMessage"))
+        {
+            <div class="row">
+                <div class="col-lg-12 text-center">
+                    <partial name="_StatusMessage" for="@TempData["TempDataProperty-StatusMessage"]" />
+                </div>
             </div>
-        </div>
+        }
         <div class="row">
             <div class="col-lg-12">
                 <form method="post">
@@ -141,7 +143,6 @@
                                         </button>
                                     </h2>
                                 </div>
-
                                 <div id="accordian-dev-info-embed-payment-button" class="collapse" aria-labelledby="accordian-dev-info-embed-payment-button-header" data-parent="#accordian-dev-info">
                                     <div class="card-body">
                                         <p>You can host point of sale buttons in an external website with the following code.</p>
@@ -201,22 +202,18 @@
                                 </div>
                             </div>
                         </div>
-
                     </div>
                 </form>
                 <a asp-action="ListApps">Back to the app list</a>
-
 
             </div>
         </div>
     </div>
 </section>
-
 @section Scripts {
     <link rel="stylesheet" href="~/vendor/highlightjs/default.min.css">
     <script src="~/vendor/highlightjs/highlight.min.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
-
     <script id="template-product-item" type="text/template">
         <div class="col-sm-4 col-md-3 mb-3">
             <div class="card">
@@ -229,7 +226,6 @@
             </div>
         </div>
     </script>
-
     <script id="template-product-content" type="text/template">
         <div class="mb-3">
             <input class="js-product-id" type="hidden" name="id" value="{id}">
@@ -264,8 +260,6 @@
             </div>
         </div>
     </script>
-
     <script src="~/products/js/products.js"></script>
     <script src="~/products/js/products.jquery.js"></script>
 }
-

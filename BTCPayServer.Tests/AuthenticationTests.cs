@@ -140,7 +140,99 @@ namespace BTCPayServer.Tests
             }
         }
 
+        [Trait("Selenium", "Selenium")]
+        [Fact]
+        public async Task CanUseCodeFlow()
+        {
 
+            using (var s = SeleniumTester.Create())
+            {
+                s.Start();
+                var tester = s.Server;
+
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                var id = Guid.NewGuid().ToString();
+                var redirecturi = new Uri("http://127.0.0.1/oidc-callback");
+                var secret = "secret";
+                var openIdClient = await user.RegisterOpenIdClient(
+                    new OpenIddictApplicationDescriptor()
+                    {
+                        ClientId = id,
+                        DisplayName = id,
+                        Permissions = { OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode, OpenIddictConstants.Permissions.GrantTypes.RefreshToken },
+                        RedirectUris =
+                        {
+                            redirecturi
+                        }
+                    }, secret);
+                var authorizeUrl = new Uri(tester.PayTester.ServerUri,
+                    $"connect/authorize?response_type=code&client_id={id}&redirect_uri={redirecturi.AbsoluteUri}&scope=openid offline_access&state={Guid.NewGuid().ToString()}");
+                s.Driver.Navigate().GoToUrl(authorizeUrl);
+                s.Login(user.RegisterDetails.Email, user.RegisterDetails.Password);
+                var url = s.Driver.Url;
+                var results = url.Split("?").Last().Split("&").ToDictionary(s1 => s1.Split("=")[0], s1 => s1.Split("=")[1]);
+
+                var httpClient = tester.PayTester.HttpClient;
+
+                var httpRequest = new HttpRequestMessage(HttpMethod.Post,
+                    new Uri(tester.PayTester.ServerUri, "/connect/token"))
+                {
+                    Content = new FormUrlEncodedContent(new List<KeyValuePair<string, string>>()
+                    {
+                        new KeyValuePair<string, string>("grant_type",
+                            OpenIddictConstants.GrantTypes.AuthorizationCode),
+                        new KeyValuePair<string, string>("client_id", openIdClient.ClientId),
+                        new KeyValuePair<string, string>("client_secret", secret),
+                        new KeyValuePair<string, string>("code", results["code"]),
+                        new KeyValuePair<string, string>("redirect_uri", redirecturi.AbsoluteUri)
+                    })
+                };
+
+
+
+                var response = await httpClient.SendAsync(httpRequest);
+
+                Assert.True(response.IsSuccessStatusCode);
+
+                string content = await response.Content.ReadAsStringAsync();
+                var result = JObject.Parse(content).ToObject<OpenIdConnectResponse>();
+
+                await TestApiAgainstAccessToken(result.AccessToken, tester, user);
+
+                var refreshedAccessToken = await RefreshAnAccessToken(result.RefreshToken, httpClient, id, secret);
+
+                await TestApiAgainstAccessToken(refreshedAccessToken, tester, user);
+
+            }
+        }
+
+        private static async Task<string> RefreshAnAccessToken(string refreshToken, HttpClient client,string clientId, string clientSecret = null)
+        {
+            var httpRequest = new HttpRequestMessage(HttpMethod.Post,
+                new Uri(client.BaseAddress, "/connect/token"))
+            {
+                Content = new FormUrlEncodedContent(new List<KeyValuePair<string, string>>()
+                {
+                    new KeyValuePair<string, string>("grant_type",
+                        OpenIddictConstants.GrantTypes.RefreshToken),
+                    new KeyValuePair<string, string>("client_id", clientId),
+                    new KeyValuePair<string, string>("client_secret", clientSecret),
+                    new KeyValuePair<string, string>("refresh_token", refreshToken)
+                })
+            };
+
+            var response = await client.SendAsync(httpRequest);
+
+            Assert.True(response.IsSuccessStatusCode);
+
+            string content = await response.Content.ReadAsStringAsync();
+            var result = JObject.Parse(content).ToObject<OpenIdConnectResponse>();
+            Assert.NotEmpty(result.AccessToken);
+            Assert.Null(result.Error);
+            return result.AccessToken;
+        }
+        
         private static async Task<string> RegisterClientCredentialsFlowAndGetAccessToken(TestAccount user,
             string secret,
             ServerTester tester)

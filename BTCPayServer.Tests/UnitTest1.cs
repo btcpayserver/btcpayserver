@@ -160,7 +160,7 @@ namespace BTCPayServer.Tests
             // LTC might have over paid due to BTC paying above what it should (round 1 satoshi up)
             Assert.True(accounting.DueUncapped < Money.Zero);
 
-            var paymentMethod = InvoiceWatcher.GetNearestClearedPayment(paymentMethods, out var accounting2, null);
+            var paymentMethod = InvoiceWatcher.GetNearestClearedPayment(paymentMethods, out var accounting2);
             Assert.Equal(btc.CryptoCode, paymentMethod.CryptoCode);
 #pragma warning restore CS0618
         }

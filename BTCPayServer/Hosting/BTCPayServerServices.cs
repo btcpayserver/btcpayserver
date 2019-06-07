@@ -270,33 +270,11 @@ namespace BTCPayServer.Hosting
                         options.RequireHttpsMetadata = false;
                     }
                     options.TokenValidationParameters.ValidateAudience = false;
+                    //we do not validate the issuer directly because btcpay can be accessed through multiple urls that we cannot predetermine
                     options.TokenValidationParameters.ValidateIssuer = false;
                     options.TokenValidationParameters.IssuerSigningKey =
                         OpenIddictExtensions.GetSigningKey(configuration);
                     options.IncludeErrorDetails = true;
-                    options.Events = new JwtBearerEvents()
-                    {
-                        OnChallenge = context =>
-                        {
-                            Logs.PayServer.LogWarning("====>  OnChallenge received");
-                            return Task.CompletedTask;
-                        },
-                        OnTokenValidated = context =>
-                        {
-                            Logs.PayServer.LogWarning("====>  OnTokenValidated received");
-                            return Task.CompletedTask;
-                        },
-                        OnMessageReceived = context =>
-                        {
-                            Logs.PayServer.LogWarning("====>  OnMessageReceived received");
-                            return Task.CompletedTask;
-                        },
-                        OnAuthenticationFailed = context =>
-                        {
-                            Logs.PayServer.LogWarning("====>  OnAuthenticationFailed received");
-                            return Task.CompletedTask;
-                        }
-                    };
                 })
                 .AddCookie()
                 .AddBitpayAuthentication()

@@ -201,7 +201,7 @@ namespace BTCPayServer.Tests
             result.EnsureSuccessStatusCode();
             
             var rawJson = await result.Content.ReadAsStringAsync();
-            if (typeof(T).IsPrimitive || typeof(T).Equals(typeof(string)))
+            if (typeof(T).IsPrimitive || typeof(T) == typeof(string))
             {
                 return (T)Convert.ChangeType(rawJson, typeof(T));
             }

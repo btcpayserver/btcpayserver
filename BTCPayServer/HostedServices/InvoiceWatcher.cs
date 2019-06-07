@@ -36,18 +36,15 @@ namespace BTCPayServer.HostedServices
 
         InvoiceRepository _InvoiceRepository;
         EventAggregator _EventAggregator;
-        BTCPayNetworkProvider _NetworkProvider;
         ExplorerClientProvider _ExplorerClientProvider;
 
         public InvoiceWatcher(
-            BTCPayNetworkProvider networkProvider,
             InvoiceRepository invoiceRepository,
             EventAggregator eventAggregator,
             ExplorerClientProvider explorerClientProvider)
         {
             _InvoiceRepository = invoiceRepository ?? throw new ArgumentNullException(nameof(invoiceRepository));
             _EventAggregator = eventAggregator ?? throw new ArgumentNullException(nameof(eventAggregator));
-            _NetworkProvider = networkProvider;
             _ExplorerClientProvider = explorerClientProvider;
         }
         CompositeDisposable leases = new CompositeDisposable();
@@ -69,7 +66,7 @@ namespace BTCPayServer.HostedServices
 
             var payments = invoice.GetPayments().Where(p => p.Accounted).ToArray();
             var allPaymentMethods = invoice.GetPaymentMethods();
-            var paymentMethod = GetNearestClearedPayment(allPaymentMethods, out var accounting, _NetworkProvider);
+            var paymentMethod = GetNearestClearedPayment(allPaymentMethods, out var accounting);
             if (paymentMethod == null)
                 return;
             if (invoice.Status == InvoiceStatus.New || invoice.Status == InvoiceStatus.Expired)
@@ -159,15 +156,13 @@ namespace BTCPayServer.HostedServices
 
         }
 
-        public static PaymentMethod GetNearestClearedPayment(PaymentMethodDictionary allPaymentMethods, out PaymentMethodAccounting accounting, BTCPayNetworkProvider networkProvider)
+        public static PaymentMethod GetNearestClearedPayment(PaymentMethodDictionary allPaymentMethods, out PaymentMethodAccounting accounting)
         {
             PaymentMethod result = null;
             accounting = null;
             decimal nearestToZero = 0.0m;
             foreach (var paymentMethod in allPaymentMethods)
             {
-                if (networkProvider != null && networkProvider.GetNetwork<BTCPayNetworkBase>(paymentMethod.GetId().CryptoCode) == null)
-                    continue;
                 var currentAccounting = paymentMethod.Calculate();
                 var distanceFromZero = Math.Abs(currentAccounting.DueUncapped.ToDecimal(MoneyUnit.BTC));
                 if (result == null || distanceFromZero < nearestToZero)
@@ -317,12 +312,11 @@ namespace BTCPayServer.HostedServices
                 .GetPayments()
                 .Select<PaymentEntity, Task<PaymentEntity>>(async payment =>
                 {
-                    var paymentNetwork = _NetworkProvider.GetNetwork<BTCPayNetwork>(payment.GetCryptoCode());
                     var paymentData = payment.GetCryptoPaymentData();
                     if (paymentData is Payments.Bitcoin.BitcoinLikePaymentData onChainPaymentData)
                     {
                         // Do update if confirmation count in the paymentData is not up to date
-                        if ((onChainPaymentData.ConfirmationCount < paymentNetwork.MaxTrackedConfirmation && payment.Accounted)
+                        if ((onChainPaymentData.ConfirmationCount < payment.Network.MaxTrackedConfirmation && payment.Accounted)
                             && (onChainPaymentData.Legacy || invoice.MonitoringExpiration < DateTimeOffset.UtcNow))
                         {
                             var transactionResult = await _ExplorerClientProvider.GetExplorerClient(payment.GetCryptoCode())?.GetTransactionAsync(onChainPaymentData.Outpoint.Hash);
@@ -331,7 +325,7 @@ namespace BTCPayServer.HostedServices
                             payment.SetCryptoPaymentData(onChainPaymentData);
 
                             // we want to extend invoice monitoring until we reach max confirmations on all onchain payment methods
-                            if (confirmationCount < paymentNetwork.MaxTrackedConfirmation)
+                            if (confirmationCount < payment.Network.MaxTrackedConfirmation)
                                 extendInvoiceMonitoring = true;
                             
                             return payment;

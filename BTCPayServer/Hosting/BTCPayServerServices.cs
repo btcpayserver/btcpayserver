@@ -287,7 +287,7 @@ namespace BTCPayServer.Hosting
                             return Policies.BitpayAuthentication;
                         }
 
-                        if (context.Request.Headers.TryGetValue("Authorization", out var authHeader) &&
+                        if (context.Request.Path.Value.StartsWith("/api",StringComparison.InvariantCultureIgnoreCase) && context.Request.Headers.TryGetValue("Authorization", out var authHeader) &&
                             authHeader.ToString().StartsWith("Bearer ",StringComparison.InvariantCulture))
                         {
                             return JwtBearerDefaults.AuthenticationScheme;

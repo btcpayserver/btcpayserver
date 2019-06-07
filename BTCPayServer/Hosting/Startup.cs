@@ -175,7 +175,7 @@ namespace BTCPayServer.Hosting
                     // Enable the token endpoint (required to use the password flow).
                     options.EnableTokenEndpoint("/connect/token");
                     options.EnableAuthorizationEndpoint("/connect/authorize");
-                    options.EnableAuthorizationEndpoint("/connect/logout");
+                    options.EnableLogoutEndpoint("/connect/logout");
 
                     //we do not care about these granular controls for now
                     options.DisableScopeValidation();

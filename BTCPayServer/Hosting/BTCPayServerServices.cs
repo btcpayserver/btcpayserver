@@ -281,13 +281,17 @@ namespace BTCPayServer.Hosting
                         OnTokenValidated = async context =>
                         {
                             var routeData = context.HttpContext.GetRouteData();
+                            var identity = ((ClaimsIdentity)context.Principal.Identity);
+                            if (context.Principal.IsInRole(Roles.ServerAdmin))
+                            {
+                                identity.AddClaim(new Claim(Policies.CanModifyServerSettings.Key, "true"));
+                            }
+
                             if (context.HttpContext.GetStoreData() != null ||
                                 !routeData.Values.TryGetValue("storeId", out var storeId))
                             {
                                 return;
                             }
-
-                            var identity = ((ClaimsIdentity)context.Principal.Identity);
                             var userManager = context.HttpContext.RequestServices
                                 .GetService<UserManager<ApplicationUser>>();
                             var storeRepository = context.HttpContext.RequestServices

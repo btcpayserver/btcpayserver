@@ -712,6 +712,7 @@ namespace BTCPayServer.Tests
                 var acc = tester.NewAccount();
                 acc.GrantAccess();
                 acc.RegisterDerivationScheme("BTC", true);
+                var btcDerivationScheme = acc.DerivationScheme;
                 acc.RegisterDerivationScheme("LTC", true);
 
                 var walletController = tester.PayTester.GetController<WalletsController>(acc.UserId);
@@ -722,14 +723,9 @@ namespace BTCPayServer.Tests
                 Assert.False(rescan.IsSupportedByCurrency);
                 Assert.False(rescan.IsServerAdmin);
 
-                var acc2 = tester.NewAccount();
-                acc2.GrantAccess(true);
-                acc2.RegisterDerivationScheme("BTC", true);
-                var btcDerivationScheme = acc2.DerivationScheme;
-                acc2.RegisterDerivationScheme("LTC", true);
-
-                walletId = new WalletId(acc2.StoreId, "BTC");
-                walletController = tester.PayTester.GetController<WalletsController>(acc2.UserId);
+                walletId = new WalletId(acc.StoreId, "BTC");
+                var serverAdminClaim = new[] { new Claim(Policies.CanModifyServerSettings.Key, "true") };
+                walletController = tester.PayTester.GetController<WalletsController>(acc.UserId, additionalClaims: serverAdminClaim);
                 rescan = Assert.IsType<RescanWalletModel>(Assert.IsType<ViewResult>(walletController.WalletRescan(walletId).Result).Model);
                 Assert.True(rescan.Ok);
                 Assert.True(rescan.IsFullySync);

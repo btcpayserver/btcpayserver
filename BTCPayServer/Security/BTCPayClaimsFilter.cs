@@ -52,11 +52,12 @@ namespace BTCPayServer.Security
                     else
                     {
                         context.HttpContext.SetStoreData(store);
-                        if (store != null)
-                        {
-                            identity.AddClaims(store.GetClaims());
-                        }
+                        identity.AddClaims(store.GetClaims());
                     }
+                }
+                else
+                {
+                    context.HttpContext.Items["BTCPAY.storeid"] = storeId;
                 }
             }
         }

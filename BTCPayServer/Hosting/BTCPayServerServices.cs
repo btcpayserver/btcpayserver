@@ -46,7 +46,9 @@ using OpenIddict.EntityFrameworkCore.Models;
 
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using BTCPayServer.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -258,44 +260,55 @@ namespace BTCPayServer.Hosting
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
             JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
 
-            services.AddAuthentication(options =>
-                {
-                    options.DefaultAuthenticateScheme =  Policies.Dynamic;
-                    options.DefaultChallengeScheme =  Policies.Dynamic;
-                })
+            services.AddAuthentication()
                 .AddJwtBearer(options =>
                 {
                     if (hostingEnvironment.IsDevelopment())
                     {
                         options.RequireHttpsMetadata = false;
                     }
+
                     options.TokenValidationParameters.ValidateAudience = false;
                     //we do not validate the issuer directly because btcpay can be accessed through multiple urls that we cannot predetermine
                     options.TokenValidationParameters.ValidateIssuer = false;
                     options.TokenValidationParameters.IssuerSigningKey =
                         OpenIddictExtensions.GetSigningKey(configuration);
                     options.IncludeErrorDetails = true;
+                    options.Events = new JwtBearerEvents()
+                    {
+                        OnTokenValidated = async context =>
+                        {
+                            if (context.HttpContext.Items.TryGetValue("BTCPAY.storeid", out var storeId))
+                            {
+                                var identity = ((ClaimsIdentity)context.Principal.Identity);
+                                var userManager = context.HttpContext.RequestServices
+                                    .GetService<UserManager<ApplicationUser>>();
+                                var storeRepository = context.HttpContext.RequestServices
+                                    .GetService<StoreRepository>();
+                                var userid = userManager.GetUserId(context.Principal);
+
+                                if (!string.IsNullOrEmpty(userid))
+                                {
+                                    var store = await storeRepository.FindStore((string)storeId, userid);
+                                    if (store == null)
+                                    {
+                                        context.Fail("Could not authorize you against store access");
+                                    }
+                                    else
+                                    {
+                                        context.HttpContext.SetStoreData(store);
+                                        if (store != null)
+                                        {
+                                            identity.AddClaims(store.GetClaims());
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    };
                 })
                 .AddCookie()
-                .AddBitpayAuthentication()
-                .AddPolicyScheme(Policies.Dynamic, "Bearer, Cookie or BitPay Auth", options =>
-                {
-                    options.ForwardDefaultSelector = context =>
-                    {
-                        if (context.GetIsBitpayAPI())
-                        {
-                            return Policies.BitpayAuthentication;
-                        }
-
-                        if (context.Request.Path.Value.StartsWith("/api",StringComparison.InvariantCultureIgnoreCase) && context.Request.Headers.TryGetValue("Authorization", out var authHeader) &&
-                            authHeader.ToString().StartsWith("Bearer ",StringComparison.InvariantCulture))
-                        {
-                            return JwtBearerDefaults.AuthenticationScheme;
-                        }
-
-                        return IdentityConstants.ApplicationScheme;
-                    };
-                });
+                .AddBitpayAuthentication();
         }
 
         public static IApplicationBuilder UsePayServer(this IApplicationBuilder app)

@@ -10,7 +10,6 @@ namespace BTCPayServer.Security
     {
         
         public const string BitpayAuthentication = "Bitpay.Auth";
-        public const string Dynamic = "dynamic";
         public const string CookieAuthentication = "Identity.Application";
         public static AuthorizationOptions AddBTCPayPolicies(this AuthorizationOptions options)
         {

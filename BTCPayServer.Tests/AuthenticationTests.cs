@@ -109,19 +109,6 @@ namespace BTCPayServer.Tests
                             redirecturi
                         }
                     });
-
-                //var options = new OidcClientOptions
-                //{
-                //    Authority = tester.PayTester.ServerUri.AbsoluteUri,
-                //    ClientId = id,
-                //    RedirectUri = "http://callback.com",
-                //    Scope = "openid",
-
-                    
-                //};
-
-                //var client = new OidcClient(options);
-
                 var implicitAuthorizeUrl = new Uri(tester.PayTester.ServerUri,
                     $"connect/authorize?response_type=token&client_id={id}&redirect_uri={redirecturi.AbsoluteUri}&scope=openid&nonce={Guid.NewGuid().ToString()}");
                 s.Driver.Navigate().GoToUrl(implicitAuthorizeUrl);

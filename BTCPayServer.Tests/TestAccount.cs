@@ -33,9 +33,9 @@ namespace BTCPayServer.Tests
             BitPay = new Bitpay(new Key(), parent.PayTester.ServerUri);
         }
 
-        public void GrantAccess()
+        public void GrantAccess(bool isAdmin = false)
         {
-            GrantAccessAsync().GetAwaiter().GetResult();
+            GrantAccessAsync(isAdmin).GetAwaiter().GetResult();
         }
 
         public void Register()
@@ -48,9 +48,9 @@ namespace BTCPayServer.Tests
             get; set;
         }
 
-        public async Task GrantAccessAsync()
+        public async Task GrantAccessAsync(bool isAdmin = false)
         {
-            await RegisterAsync();
+            await RegisterAsync(isAdmin);
             await CreateStoreAsync();
             var store = this.GetController<StoresController>();
             var pairingCode = BitPay.RequestClientAuthorization("test", Facade.Merchant);
@@ -113,7 +113,7 @@ namespace BTCPayServer.Tests
 
         public DerivationStrategyBase DerivationScheme { get; set; }
 
-        private async Task RegisterAsync()
+        private async Task RegisterAsync(bool isAdmin = false)
         {
             var account = parent.PayTester.GetController<AccountController>();
             RegisterDetails = new RegisterViewModel()
@@ -121,6 +121,7 @@ namespace BTCPayServer.Tests
                 Email = Guid.NewGuid() + "@toto.com",
                 ConfirmPassword = "Kitten0@",
                 Password = "Kitten0@",
+                IsAdmin = isAdmin
             };
             await account.Register(RegisterDetails);
             UserId = account.RegisteredUserId;

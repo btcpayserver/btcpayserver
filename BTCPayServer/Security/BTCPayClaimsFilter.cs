@@ -33,11 +33,6 @@ namespace BTCPayServer.Security
                 return;
             var principal = context.HttpContext.User;
             var identity = ((ClaimsIdentity)principal.Identity);
-            if (principal.IsInRole(Roles.ServerAdmin))
-            {
-                identity.AddClaim(new Claim(Policies.CanModifyServerSettings.Key, "true"));
-            }
-
             if (context.RouteData.Values.TryGetValue("storeId", out var storeId))
             {
                 var userid = _userManager.GetUserId(principal);

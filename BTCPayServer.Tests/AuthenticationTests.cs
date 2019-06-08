@@ -308,7 +308,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(testAccount.UserId, resultUser);
 
             var secondUser = tester.NewAccount();
-            secondUser.GrantAccess(true);
+            secondUser.GrantAccess();
 
             var resultStores =
                 await TestApiAgainstAccessToken<StoreData[]>(accessToken, "api/test/me/stores",

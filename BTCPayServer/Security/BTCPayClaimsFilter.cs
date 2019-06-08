@@ -29,12 +29,9 @@ namespace BTCPayServer.Security
 
         public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
         {
-            var principal = context.HttpContext.User;
-            if (context.HttpContext.GetIsBitpayAPI())
-            {
+            if (context.HttpContext.User?.Identity?.AuthenticationType != Policies.CookieAuthentication)
                 return;
-            }
-
+            var principal = context.HttpContext.User;
             var identity = ((ClaimsIdentity)principal.Identity);
             if (principal.IsInRole(Roles.ServerAdmin))
             {

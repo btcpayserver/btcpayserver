@@ -1,17 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Stores;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using OpenIddict.Abstractions;
 using OpenIddict.Validation;
 
 namespace BTCPayServer.Controllers.RestApi
@@ -43,6 +37,12 @@ namespace BTCPayServer.Controllers.RestApi
         public async Task<ApplicationUser> GetCurrentUser()
         {
             return await _userManager.GetUserAsync(User);
+        }
+
+        [HttpGet("me/is-admin")]
+        public bool AmIAnAdmin()
+        { 
+            return  User.IsInRole(Roles.ServerAdmin);
         }
         [HttpGet("me/stores")]
         public async Task<StoreData[]> GetCurrentUserStores()

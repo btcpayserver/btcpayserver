@@ -308,7 +308,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(testAccount.UserId, resultUser);
 
             var secondUser = tester.NewAccount();
-            secondUser.GrantAccess();
+            secondUser.GrantAccess(true);
 
             var resultStores =
                 await TestApiAgainstAccessToken<StoreData[]>(accessToken, "api/test/me/stores",
@@ -319,6 +319,10 @@ namespace BTCPayServer.Tests
                 data => data.Id.Equals(secondUser.StoreId, StringComparison.InvariantCultureIgnoreCase));
 
             Assert.True(await TestApiAgainstAccessToken<bool>(accessToken, $"api/test/me/stores/{testAccount.StoreId}/can-edit",
+                tester.PayTester.HttpClient));
+          
+            
+            Assert.Equal(testAccount.RegisterDetails.IsAdmin, await TestApiAgainstAccessToken<bool>(accessToken, $"api/test/me/is-admin",
                 tester.PayTester.HttpClient));
 
             await Assert.ThrowsAnyAsync<HttpRequestException>(async () =>

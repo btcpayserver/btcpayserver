@@ -55,10 +55,6 @@ namespace BTCPayServer.Security
                         identity.AddClaims(store.GetClaims());
                     }
                 }
-                else
-                {
-                    context.HttpContext.Items["BTCPAY.storeid"] = storeId;
-                }
             }
         }
     }

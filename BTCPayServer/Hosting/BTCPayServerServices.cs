@@ -52,6 +52,7 @@ using BTCPayServer.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Routing;
 using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
 
 namespace BTCPayServer.Hosting
@@ -254,8 +255,9 @@ namespace BTCPayServer.Hosting
             services.AddSingleton(rateLimits);
             return services;
         }
-        
-        private static void AddBtcPayServerAuthenticationSchemes(this IServiceCollection services, IConfiguration configuration, IHostingEnvironment hostingEnvironment)
+
+        private static void AddBtcPayServerAuthenticationSchemes(this IServiceCollection services,
+            IConfiguration configuration, IHostingEnvironment hostingEnvironment)
         {
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
             JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
@@ -278,30 +280,31 @@ namespace BTCPayServer.Hosting
                     {
                         OnTokenValidated = async context =>
                         {
-                            if (context.HttpContext.Items.TryGetValue("BTCPAY.storeid", out var storeId))
+                            var routeData = context.HttpContext.GetRouteData();
+                            if (context.HttpContext.GetStoreData() != null ||
+                                !routeData.Values.TryGetValue("storeId", out var storeId))
                             {
-                                var identity = ((ClaimsIdentity)context.Principal.Identity);
-                                var userManager = context.HttpContext.RequestServices
-                                    .GetService<UserManager<ApplicationUser>>();
-                                var storeRepository = context.HttpContext.RequestServices
-                                    .GetService<StoreRepository>();
-                                var userid = userManager.GetUserId(context.Principal);
+                                return;
+                            }
 
-                                if (!string.IsNullOrEmpty(userid))
+                            var identity = ((ClaimsIdentity)context.Principal.Identity);
+                            var userManager = context.HttpContext.RequestServices
+                                .GetService<UserManager<ApplicationUser>>();
+                            var storeRepository = context.HttpContext.RequestServices
+                                .GetService<StoreRepository>();
+                            var userid = userManager.GetUserId(context.Principal);
+
+                            if (!string.IsNullOrEmpty(userid))
+                            {
+                                var store = await storeRepository.FindStore((string)storeId, userid);
+                                if (store == null)
                                 {
-                                    var store = await storeRepository.FindStore((string)storeId, userid);
-                                    if (store == null)
-                                    {
-                                        context.Fail("Could not authorize you against store access");
-                                    }
-                                    else
-                                    {
-                                        context.HttpContext.SetStoreData(store);
-                                        if (store != null)
-                                        {
-                                            identity.AddClaims(store.GetClaims());
-                                        }
-                                    }
+                                    context.Fail("Could not authorize you against store access");
+                                }
+                                else
+                                {
+                                    context.HttpContext.SetStoreData(store);
+                                    identity.AddClaims(store.GetClaims());
                                 }
                             }
                         }

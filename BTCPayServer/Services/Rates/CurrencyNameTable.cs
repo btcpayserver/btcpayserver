@@ -99,7 +99,7 @@ namespace BTCPayServer.Services.Rates
                         AddCurrency(_CurrencyProviders, network.CryptoCode, 8, network.CryptoCode);
                     }
                 }
-                return _CurrencyProviders.TryGet(currency);
+                return _CurrencyProviders.TryGet(currency.ToUpperInvariant());
             }
         }
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Controllers;
+using NBitcoin;
 
 namespace BTCPayServer.Configuration
 {
@@ -30,13 +31,16 @@ namespace BTCPayServer.Configuration
         /// Return a connectionString which does not depends on external resources or information like relative path or file path
         /// </summary>
         /// <returns></returns>
-        public async Task<ExternalConnectionString> Expand(Uri absoluteUrlBase, ExternalServiceTypes serviceType)
+        public async Task<ExternalConnectionString> Expand(Uri absoluteUrlBase, ExternalServiceTypes serviceType, NetworkType network)
         {
             var connectionString = this.Clone();
             // Transform relative URI into absolute URI
             var serviceUri = connectionString.Server.IsAbsoluteUri ? connectionString.Server : ToRelative(absoluteUrlBase, connectionString.Server.ToString());
-            if (!serviceUri.Scheme.Equals("https", StringComparison.OrdinalIgnoreCase) &&
-               !serviceUri.DnsSafeHost.EndsWith(".onion", StringComparison.OrdinalIgnoreCase))
+            var isSecure = network != NetworkType.Mainnet ||
+                       serviceUri.Scheme == "https" ||
+                       serviceUri.DnsSafeHost.EndsWith(".onion", StringComparison.OrdinalIgnoreCase) ||
+                       Extensions.IsLocalNetwork(serviceUri.DnsSafeHost);
+            if (!isSecure)
             {
                 throw new System.Security.SecurityException($"Insecure transport protocol to access this service, please use HTTPS or TOR");
             }

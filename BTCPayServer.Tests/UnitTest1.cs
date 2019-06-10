@@ -2657,27 +2657,28 @@ donation:
         {
             var unusedUri = new Uri("https://toto.com");
             Assert.True(ExternalConnectionString.TryParse("server=/test", out var connStr, out var error));
-            var expanded = await connStr.Expand(new Uri("https://toto.com"), ExternalServiceTypes.Charge);
+            var expanded = await connStr.Expand(new Uri("https://toto.com"), ExternalServiceTypes.Charge, NetworkType.Mainnet);
             Assert.Equal(new Uri("https://toto.com/test"), expanded.Server);
-            expanded = await connStr.Expand(new Uri("http://toto.onion"), ExternalServiceTypes.Charge);
+            expanded = await connStr.Expand(new Uri("http://toto.onion"), ExternalServiceTypes.Charge, NetworkType.Mainnet);
             Assert.Equal(new Uri("http://toto.onion/test"), expanded.Server);
-            await Assert.ThrowsAsync<SecurityException>(() => connStr.Expand(new Uri("http://toto.com"), ExternalServiceTypes.Charge));
+            await Assert.ThrowsAsync<SecurityException>(() => connStr.Expand(new Uri("http://toto.com"), ExternalServiceTypes.Charge, NetworkType.Mainnet));
+            await connStr.Expand(new Uri("http://toto.com"), ExternalServiceTypes.Charge, NetworkType.Testnet);
 
             // Make sure absolute paths are not expanded
             Assert.True(ExternalConnectionString.TryParse("server=https://tow/test", out connStr, out error));
-            expanded = await connStr.Expand(new Uri("https://toto.com"), ExternalServiceTypes.Charge);
+            expanded = await connStr.Expand(new Uri("https://toto.com"), ExternalServiceTypes.Charge, NetworkType.Mainnet);
             Assert.Equal(new Uri("https://tow/test"), expanded.Server);
 
             // Error if directory not exists
             Assert.True(ExternalConnectionString.TryParse($"server={unusedUri};macaroondirectorypath=pouet", out connStr, out error));
-            await Assert.ThrowsAsync<DirectoryNotFoundException>(() => connStr.Expand(unusedUri, ExternalServiceTypes.LNDGRPC));
-            await Assert.ThrowsAsync<DirectoryNotFoundException>(() => connStr.Expand(unusedUri, ExternalServiceTypes.LNDRest));
-            await connStr.Expand(unusedUri, ExternalServiceTypes.Charge);
+            await Assert.ThrowsAsync<DirectoryNotFoundException>(() => connStr.Expand(unusedUri, ExternalServiceTypes.LNDGRPC, NetworkType.Mainnet));
+            await Assert.ThrowsAsync<DirectoryNotFoundException>(() => connStr.Expand(unusedUri, ExternalServiceTypes.LNDRest, NetworkType.Mainnet));
+            await connStr.Expand(unusedUri, ExternalServiceTypes.Charge, NetworkType.Mainnet);
 
             var macaroonDirectory = CreateDirectory();
             Assert.True(ExternalConnectionString.TryParse($"server={unusedUri};macaroondirectorypath={macaroonDirectory}", out connStr, out error));
-            await connStr.Expand(unusedUri, ExternalServiceTypes.LNDGRPC);
-            expanded = await connStr.Expand(unusedUri, ExternalServiceTypes.LNDRest);
+            await connStr.Expand(unusedUri, ExternalServiceTypes.LNDGRPC, NetworkType.Mainnet);
+            expanded = await connStr.Expand(unusedUri, ExternalServiceTypes.LNDRest, NetworkType.Mainnet);
             Assert.NotNull(expanded.Macaroons);
             Assert.Null(expanded.MacaroonFilePath);
             Assert.Null(expanded.Macaroons.AdminMacaroon);
@@ -2687,7 +2688,7 @@ donation:
             File.WriteAllBytes($"{macaroonDirectory}/admin.macaroon", new byte[] { 0xaa });
             File.WriteAllBytes($"{macaroonDirectory}/invoice.macaroon", new byte[] { 0xab });
             File.WriteAllBytes($"{macaroonDirectory}/readonly.macaroon", new byte[] { 0xac });
-            expanded = await connStr.Expand(unusedUri, ExternalServiceTypes.LNDRest);
+            expanded = await connStr.Expand(unusedUri, ExternalServiceTypes.LNDRest, NetworkType.Mainnet);
             Assert.NotNull(expanded.Macaroons.AdminMacaroon);
             Assert.NotNull(expanded.Macaroons.InvoiceMacaroon);
             Assert.Equal("ab", expanded.Macaroons.InvoiceMacaroon.Hex);
@@ -2696,7 +2697,7 @@ donation:
 
             Assert.True(ExternalConnectionString.TryParse($"server={unusedUri};cookiefilepath={macaroonDirectory}/charge.cookie", out connStr, out error));
             File.WriteAllText($"{macaroonDirectory}/charge.cookie", "apitoken");
-            expanded = await connStr.Expand(unusedUri, ExternalServiceTypes.Charge);
+            expanded = await connStr.Expand(unusedUri, ExternalServiceTypes.Charge, NetworkType.Mainnet);
             Assert.Equal("apitoken", expanded.APIToken);
         }
 

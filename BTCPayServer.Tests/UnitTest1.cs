@@ -230,7 +230,9 @@ namespace BTCPayServer.Tests
 
             entity.Payments.Add(new PaymentEntity()
             {
-                Output = new TxOut(Money.Coins(0.5m), new Key()), Accounted = true, NetworkFee = 0.1m
+                Output = new TxOut(Money.Coins(0.5m), new Key()),
+                Accounted = true,
+                NetworkFee = 0.1m
             });
 
             accounting = paymentMethod.Calculate();

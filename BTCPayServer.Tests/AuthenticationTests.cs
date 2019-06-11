@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -49,18 +50,21 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Integration", "Integration")]
-        public void CanGetOpenIdConfiguration()
+        public async Task CanGetOpenIdConfiguration()
         {
             using (var tester = ServerTester.Create())
             {
                 tester.Start();
-                var url = new Uri(tester.PayTester.ServerUri, "/.well-known/openid-configuration");
-                using (var wc = new WebClient())
+                using (var response =
+                    await tester.PayTester.HttpClient.GetAsync("/.well-known/openid-configuration"))
                 {
-                    var json = wc.DownloadString(url);
-                    Assert.NotNull(json);
-                    var configuration = OpenIdConnectConfiguration.Create(json);
-                    Assert.NotNull(configuration);
+                    using (var streamToReadFrom = new StreamReader(await response.Content.ReadAsStreamAsync()))
+                    {
+                        var json = await streamToReadFrom.ReadToEndAsync();
+                        Assert.NotNull(json);
+                        var configuration = OpenIdConnectConfiguration.Create(json);
+                        Assert.NotNull(configuration);
+                    }
                 }
             }
         }

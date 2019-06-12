@@ -67,6 +67,7 @@ namespace BTCPayServer.Controllers
         {
             if (!store.HasClaim(Policies.CanCreateInvoice.Key))
                 throw new UnauthorizedAccessException();
+            invoice.Currency = invoice.Currency?.ToUpperInvariant() ?? "USD";
             InvoiceLogs logs = new InvoiceLogs();
             logs.Write("Creation of invoice starting");
             var entity = _InvoiceRepository.CreateNewInvoice();

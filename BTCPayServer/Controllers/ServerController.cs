@@ -604,7 +604,7 @@ namespace BTCPayServer.Controllers
                         ServiceLink = service.ConnectionString.Server.AbsoluteUri.WithoutEndingSlash()
                     });
                 }
-                var connectionString = await service.ConnectionString.Expand(this.Request.GetAbsoluteUriNoPathBase(), service.Type);
+                var connectionString = await service.ConnectionString.Expand(this.Request.GetAbsoluteUriNoPathBase(), service.Type, _Options.NetworkType);
                 switch (service.Type)
                 {
                     case ExternalServiceTypes.Charge:
@@ -720,7 +720,7 @@ namespace BTCPayServer.Controllers
             ExternalConnectionString connectionString = null;
             try
             {
-                connectionString = await service.ConnectionString.Expand(this.Request.GetAbsoluteUriNoPathBase(), service.Type);
+                connectionString = await service.ConnectionString.Expand(this.Request.GetAbsoluteUriNoPathBase(), service.Type, _Options.NetworkType);
             }
             catch (Exception ex)
             {

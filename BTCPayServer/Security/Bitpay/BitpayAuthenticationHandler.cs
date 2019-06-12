@@ -41,7 +41,8 @@ namespace BTCPayServer.Security.Bitpay
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
             List<Claim> claims = new List<Claim>();
-            var bitpayAuth = Context.Request.HttpContext.GetBitpayAuth();
+            if (!Context.Request.HttpContext.TryGetBitpayAuth(out var bitpayAuth))
+                return AuthenticateResult.NoResult();
             string storeId = null;
             bool anonymous = true;
             bool? success = null;

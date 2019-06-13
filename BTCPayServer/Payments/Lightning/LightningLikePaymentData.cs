@@ -14,13 +14,15 @@ namespace BTCPayServer.Payments.Lightning
 {
     public class LightningLikePaymentData : CryptoPaymentData
     {
+        [JsonIgnore]
+        public BTCPayNetworkBase Network { get; set; }
         [JsonConverter(typeof(LightMoneyJsonConverter))]
         public LightMoney Amount { get; set; }
         public string BOLT11 { get; set; }
         [JsonConverter(typeof(NBitcoin.JsonConverters.UInt256JsonConverter))]
         public uint256 PaymentHash { get; set; }
 
-        public string GetDestination(BTCPayNetwork network)
+        public string GetDestination()
         {
             return BOLT11;
         }
@@ -34,7 +36,7 @@ namespace BTCPayServer.Payments.Lightning
             return PaymentHash?.ToString() ?? BOLT11;
         }
 
-        public PaymentTypes GetPaymentType()
+        public PaymentType GetPaymentType()
         {
             return PaymentTypes.LightningLike;
         }
@@ -49,12 +51,12 @@ namespace BTCPayServer.Payments.Lightning
             return Amount.ToDecimal(LightMoneyUnit.BTC);
         }
 
-        public bool PaymentCompleted(PaymentEntity entity, BTCPayNetwork network)
+        public bool PaymentCompleted(PaymentEntity entity)
         {
             return true;
         }
 
-        public bool PaymentConfirmed(PaymentEntity entity, SpeedPolicy speedPolicy, BTCPayNetwork network)
+        public bool PaymentConfirmed(PaymentEntity entity, SpeedPolicy speedPolicy)
         {
             return true;
         }

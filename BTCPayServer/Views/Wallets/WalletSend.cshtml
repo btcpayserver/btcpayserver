@@ -1,22 +1,13 @@
-﻿@model WalletSendModel
+﻿@using Microsoft.AspNetCore.Mvc.ModelBinding
+@model WalletSendModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData["Title"] = "Manage wallet";
     ViewData.SetActivePageAndTitle(WalletsNavPages.Send);
 }
 
-<h4>@ViewData["Title"]</h4>
-
-<div class="row">
-    <div class="col-md-10">
-        <p>
-            Send funds to a destination address.
-        </p>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-md-6">
+<div class="row no-gutters">
+    <div class="@(Model.Outputs.Count==1? "col-lg-6 transaction-output-form": "col-lg-8")">
         <form method="post">
             <input type="hidden" asp-for="Divisibility" />
             <input type="hidden" asp-for="Fiat" />
@@ -24,58 +15,161 @@
             <input type="hidden" asp-for="CurrentBalance" />
             <input type="hidden" asp-for="RecommendedSatoshiPerByte" />
             <input type="hidden" asp-for="CryptoCode" />
-
-            <div class="form-group">
-                <label asp-for="Destination"></label>
-                <input asp-for="Destination" class="form-control" />
-                <span asp-validation-for="Destination" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Amount"></label>
-                <div class="input-group">
-                    <input asp-for="Amount" asp-format="{0}" class="form-control" onkeyup='updateFiatValue();' />
-                    <div class="input-group-prepend">
-                        <span class="input-group-text text-muted" style="display:none;" id="fiatValue"></span>
-                    </div>
+            <ul class="text-danger">
+                @foreach (var errors in ViewData.ModelState.Where(pair => pair.Key == string.Empty && pair.Value.ValidationState == ModelValidationState.Invalid))
+                {
+                    foreach (var error in
+                        errors.Value.Errors)
+                    {
+                        <li>@error.ErrorMessage</li>
+                    }
+                }
+            </ul>
+            @if (Model.Outputs.Count == 1)
+            {
+                <div class="form-group">
+                    <label asp-for="Outputs[0].DestinationAddress"></label>
+                    <input asp-for="Outputs[0].DestinationAddress" class="form-control" />
+                    <span asp-validation-for="Outputs[0].DestinationAddress" class="text-danger"></span>
                 </div>
-                <span asp-validation-for="Amount" class="text-danger"></span>
-                <p class="form-text text-muted crypto-info">
-                    Your current balance is <a id="crypto-balance-link" href="#"><span>@Model.CurrentBalance</span></a> <span>@Model.CryptoCode</span>.
-                </p>
-            </div>
-            <div class="form-group">
-                <label asp-for="FeeSatoshiPerByte"></label>
-                <input asp-for="FeeSatoshiPerByte" class="form-control" />
-                <span id="FeeRate-Error" class="text-danger"></span>
-                <p class="form-text text-muted crypto-info">
-                    The recommended value is <a id="crypto-fee-link" href="#"><span>@Model.RecommendedSatoshiPerByte</span></a> satoshi per byte.
-                </p>
-            </div>
-            <div class="form-group">
-                <label asp-for="SubstractFees"></label>
-                <input asp-for="SubstractFees" class="form-check" />
-            </div>
-            @if (Model.AdvancedMode)
-            {
-            <div class="form-group">
-                <label asp-for="NoChange"></label>
-                <a href="https://docs.btcpayserver.org/features/wallet#make-sure-no-change-utxo-is-created-expert-mode" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
-                <input asp-for="NoChange" class="form-check" />
-            </div>
-            }
-            <button name="command" type="submit" class="btn btn-primary">Confirm</button>
-            @if (Model.AdvancedMode)
-            {
-                <button name="command" type="submit" value="noob" class="btn btn-secondary">Use noob mode</button>
+                <div class="form-group">
+                    <label asp-for="Outputs[0].Amount"></label>
+                    <div class="input-group">
+                        <input asp-for="Outputs[0].Amount" type="number" step="any" asp-format="{0}" class="form-control output-amount" />
+                        <div class="input-group-prepend">
+                            <span class="input-group-text text-muted fiat-value" style="display:none;"></span>
+                        </div>
+                    </div>
+                    <span asp-validation-for="Outputs[0].Amount" class="text-danger"></span>
+                    <p class="form-text text-muted crypto-info">
+                        Your current balance is
+                        <button type="button" class="crypto-balance-link btn btn-link p-0">@Model.CurrentBalance</button> <span>@Model.CryptoCode</span>.
+                    </p>
+                </div>
             }
             else
             {
-                <button name="command" type="submit" value="expert" class="btn btn-secondary">Use expert mode</button>
+                <div class="list-group-item ">
+                    <h5 class="mb-1">Destinations</h5>
+                </div>
+                <div class="list-group mb-2">
+                    @for (var index = 0; index < Model.Outputs.Count; index++)
+                    {
+                        <div class="list-group-item transaction-output-form p-0 pl-lg-2">
+                            <div class="row">
+                                <div class="col-sm-12 col-md-12 col-lg-10  py-2 ">
+                                    <div class="form-group">
+                                        <label asp-for="Outputs[index].DestinationAddress" class="control-label"></label>
+                                        <input asp-for="Outputs[index].DestinationAddress" class="form-control" />
+                                        <span asp-validation-for="Outputs[index].DestinationAddress" class="text-danger"></span>
+                                    </div>
+                                    <div class="form-group">
+                                        <label asp-for="Outputs[index].Amount" class="control-label"></label>
+                                        <div class="input-group">
+                                            <input asp-for="Outputs[index].Amount" type="number" step="any" asp-format="{0}" class="form-control output-amount" />
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text text-muted fiat-value" style="display:none;"></span>
+                                            </div>
+                                        </div>
+                                        <p class="form-text text-muted crypto-info">
+                                            Your current balance is
+                                            <button type="button" class="crypto-balance-link btn btn-link p-0">@Model.CurrentBalance</button> <span>@Model.CryptoCode</span>.
+                                        </p>
+                                        <span asp-validation-for="Outputs[index].Amount" class="text-danger"></span>
+                                    </div>
+                                    <div class="form-group">
+                                        <label asp-for="Outputs[index].SubtractFeesFromOutput" class="control-label"></label>
+                                        <input type="checkbox" asp-for="Outputs[index].SubtractFeesFromOutput" class="form-check subtract-fees" />
+                                        <span asp-validation-for="Outputs[index].SubtractFeesFromOutput" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="col-sm-12 col-md-12 col-lg-2 pull-right">
+                                    <button type="submit" title="Remove Destination" name="command" value="@($"remove-output:{index}")"
+                                            class="d-block d-lg-none d-xl-none btn btn-danger mb-2 ml-2">
+                                        Remove Destination
+                                    </button>
+                                    <button type="submit" title="Remove Destination" name="command" value="@($"remove-output:{index}")"
+                                            class="d-none d-lg-block remove-destination-btn text-decoration-none h-100 align-middle btn text-danger btn-link fa fa-times rounded-0 pull-right"></button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
             }
+            <div class="form-group">
+                <label asp-for="FeeSatoshiPerByte"></label>
+                <input asp-for="FeeSatoshiPerByte" type="number" step="any" class="form-control" />
+                <span id="FeeRate-Error" class="text-danger"></span>
+                <p class="form-text text-muted crypto-info">
+                    The recommended value is
+                    <button type="button" id="crypto-fee-link" class="btn btn-link p-0">@Model.RecommendedSatoshiPerByte</button> satoshi per byte.
+                </p>
+            </div>
+            @if (Model.Outputs.Count == 1)
+            {
+                <div class="form-group">
+                    <label asp-for="Outputs[0].SubtractFeesFromOutput" class="control-label"></label>
+                    <input type="checkbox" asp-for="Outputs[0].SubtractFeesFromOutput" class="form-check subtract-fees" />
+                    <span asp-validation-for="Outputs[0].SubtractFeesFromOutput" class="text-danger"></span>
+                </div>
+            }
+            <div class="card">
+                <div class="card-header" id="accordian-dev-info-notification-header">
+                    <h2 class="mb-0">
+                        <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#accordian-advanced" aria-expanded="false" aria-controls="accordian-advanced">
+                            Advanced settings
+                        </button>
+                    </h2>
+                </div>
+                <div id="accordian-advanced" class="collapse" aria-labelledby="accordian-advanced-header" data-parent="#accordian-advanced">
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label asp-for="NoChange"></label>
+                            <a href="https://docs.btcpayserver.org/features/wallet#make-sure-no-change-utxo-is-created-expert-mode" target="_blank">
+                                <span class="fa fa-question-circle-o" title="More information..."></span>
+                            </a>
+                            <input asp-for="NoChange" class="form-check" />
+                        </div>
+                        @if (Model.SupportRBF)
+                        {
+                            <div class="form-group">
+                                <label asp-for="DisableRBF"></label>
+                                <a href="https://bitcoin.org/en/glossary/rbf" target="_blank">
+                                    <span class="fa fa-question-circle-o" title="More information..."></span>
+                                </a>
+                                <input asp-for="DisableRBF" class="form-check" />
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="form-group d-flex mt-2">
+                <div class="dropdown">
+                    <button class="btn btn-primary dropdown-toggle" type="button" id="SendMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Sign with...
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="SendMenu">
+                        <button name="command" type="submit" class="dropdown-item" value="ledger">... your Ledger Wallet device</button>
+                        <button name="command" type="submit" class="dropdown-item" value="seed">... an HD private key or mnemonic seed</button>
+                        <button name="command" type="submit" class="dropdown-item" value="analyze-psbt">... a wallet supporting PSBT</button>
+                    </div>
+                </div>
+                <button type="submit" name="command" value="add-output" class="ml-1 btn btn-secondary">Add another destination </button>
+            </div>
         </form>
     </div>
 </div>
+
 @section Scripts
 {
     <script src="~/js/WalletSend.js" type="text/javascript" defer="defer"></script>
+    <style>
+        .remove-destination-btn{
+            font-size: 1.5rem;
+            border-radius: 0;
+        }
+         .remove-destination-btn:hover{
+                   background-color: #CCCCCC;
+         }
+    </style>
 }

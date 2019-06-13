@@ -95,7 +95,7 @@ namespace BTCPayServer.Tests
         }
         public async Task<WalletId> RegisterDerivationSchemeAsync(string cryptoCode, bool segwit = false)
         {
-            SupportedNetwork = parent.NetworkProvider.GetNetwork(cryptoCode);
+            SupportedNetwork = parent.NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             var store = parent.PayTester.GetController<StoresController>(UserId, StoreId);
             ExtKey = new ExtKey().GetWif(SupportedNetwork.NBitcoinNetwork);
             DerivationScheme = new DerivationStrategyFactory(SupportedNetwork.NBitcoinNetwork).Parse(ExtKey.Neuter().ToString() + (segwit ? "" : "-[legacy]"));
@@ -113,14 +113,17 @@ namespace BTCPayServer.Tests
         private async Task RegisterAsync()
         {
             var account = parent.PayTester.GetController<AccountController>();
-            await account.Register(new RegisterViewModel()
+            RegisterDetails = new RegisterViewModel()
             {
                 Email = Guid.NewGuid() + "@toto.com",
                 ConfirmPassword = "Kitten0@",
                 Password = "Kitten0@",
-            });
+            };
+            await account.Register(RegisterDetails);
             UserId = account.RegisteredUserId;
         }
+
+        public RegisterViewModel RegisterDetails{ get; set; }
 
         public Bitpay BitPay
         {

@@ -4,7 +4,6 @@
     ViewData.SetActivePageAndTitle(StoreNavPages.Index, "Add lightning node (Experimental)");
 }
 
-<h4>@ViewData["Title"]</h4>
 <partial name="_StatusMessage" for="StatusMessage" />
 
 <div class="alert alert-warning alert-dismissible" role="alert">
@@ -60,6 +59,9 @@
                         </tr>
                         <tr>
                             <th class="small"><b>type=</b>charge;<b>server=</b>https://charge:8080/;<b>api-token=</b>myapitoken...</th>
+                        </tr>
+                        <tr>
+                            <th class="small"><b>type=</b>eclair;<b>server=</b>https://eclair:8080/;<b>password=</b>eclairpassword...</th>
                         </tr>
                     </tbody>
                 </table>

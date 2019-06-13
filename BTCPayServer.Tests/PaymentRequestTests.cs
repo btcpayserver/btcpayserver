@@ -153,5 +153,64 @@ namespace BTCPayServer.Tests
                 
             }
         }
+        
+        [Fact(Timeout = 60 * 2 * 1000)]
+        [Trait("Integration", "Integration")]
+        public async Task CanCancelPaymentWhenPossible()
+        {
+            using (var tester = ServerTester.Create())
+            {
+                tester.Start();
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                user.RegisterDerivationScheme("BTC");
+
+                var paymentRequestController = user.GetController<PaymentRequestController>();
+                
+                
+                Assert.IsType<NotFoundResult>(await 
+                    paymentRequestController.CancelUnpaidPendingInvoice(Guid.NewGuid().ToString(), false));
+
+
+                var request = new UpdatePaymentRequestViewModel()
+                {
+                    Title = "original juice",
+                    Currency = "BTC",
+                    Amount = 1,
+                    StoreId = user.StoreId,
+                    Description = "description"
+                };
+                var response = Assert
+                    .IsType<RedirectToActionResult>(paymentRequestController.EditPaymentRequest(null, request).Result)
+                    .RouteValues.First();
+
+                var paymentRequestId = response.Value.ToString();
+                
+                var invoiceId = Assert
+                    .IsType<OkObjectResult>(await paymentRequestController.PayPaymentRequest(paymentRequestId, false)).Value
+                    .ToString();
+
+                var actionResult = Assert
+                    .IsType<RedirectToActionResult>(await paymentRequestController.PayPaymentRequest(response.Value.ToString()));
+
+                Assert.Equal("Checkout", actionResult.ActionName);
+                Assert.Equal("Invoice", actionResult.ControllerName);
+                Assert.Contains(actionResult.RouteValues, pair => pair.Key == "Id" && pair.Value.ToString() == invoiceId);
+
+                var invoice = user.BitPay.GetInvoice(invoiceId, Facade.Merchant);
+Assert.Equal(InvoiceState.ToString(InvoiceStatus.New), invoice.Status);
+                Assert.IsType<OkObjectResult>(await 
+                    paymentRequestController.CancelUnpaidPendingInvoice(paymentRequestId, false));
+                
+                invoice = user.BitPay.GetInvoice(invoiceId, Facade.Merchant);
+                Assert.Equal(InvoiceState.ToString(InvoiceStatus.Invalid), invoice.Status);
+                
+                
+                Assert.IsType<BadRequestObjectResult>(await 
+                    paymentRequestController.CancelUnpaidPendingInvoice(paymentRequestId, false));
+                          
+                
+            }
+        }
     }
 }

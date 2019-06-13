@@ -71,11 +71,46 @@ namespace BTCPayServer.HostedServices
                     settings.ConvertCrowdfundOldSettings = true;
                     await _Settings.UpdateSetting(settings);
                 }
+                if (!settings.ConvertWalletKeyPathRoots)
+                {
+                    await ConvertConvertWalletKeyPathRoots();
+                    settings.ConvertWalletKeyPathRoots = true;
+                    await _Settings.UpdateSetting(settings);
+                }
             }
             catch (Exception ex)
             {
                 Logs.PayServer.LogError(ex, "Error on the MigratorHostedService");
                 throw;
+            }
+        }
+
+        private async Task ConvertConvertWalletKeyPathRoots()
+        {
+            bool save = false;
+            using (var ctx = _DBContextFactory.CreateContext())
+            {
+                foreach (var store in await ctx.Stores.ToArrayAsync())
+                {
+#pragma warning disable CS0618 // Type or member is obsolete
+                    var blob = store.GetStoreBlob();
+                    if (blob.WalletKeyPathRoots == null)
+                        continue;
+                    foreach (var scheme in store.GetSupportedPaymentMethods(_NetworkProvider).OfType<DerivationSchemeSettings>())
+                    {
+                        if (blob.WalletKeyPathRoots.TryGetValue(scheme.PaymentId.ToString().ToLowerInvariant(), out var root))
+                        {
+                            scheme.AccountKeyPath = new NBitcoin.KeyPath(root);
+                            store.SetSupportedPaymentMethod(scheme);
+                            save = true;
+                        }
+                    }
+                    blob.WalletKeyPathRoots = null;
+                    store.SetStoreBlob(blob);
+#pragma warning restore CS0618 // Type or member is obsolete
+                }
+                if (save)
+                    await ctx.SaveChangesAsync();
             }
         }
 
@@ -159,7 +194,7 @@ namespace BTCPayServer.HostedServices
                         if (lightning.IsLegacy)
                         {
                             method.SetLightningUrl(lightning);
-                            store.SetSupportedPaymentMethod(method.PaymentId, method);
+                            store.SetSupportedPaymentMethod(method);
                         }
                     }
                 }

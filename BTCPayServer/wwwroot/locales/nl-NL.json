@@ -46,5 +46,6 @@
   "txCount_plural": "{{count}} transacties",
   "Pay with CoinSwitch": "Betalen met CoinSwitch",
   "Pay with Changelly": "Betalen met Changelly",
-  "Close": "Sluiten"
+  "Close": "Sluiten",
+  "NotPaid_ExtraTransaction": "The invoice hasn't been paid in full. Please send another transaction to cover amount Due."
 }

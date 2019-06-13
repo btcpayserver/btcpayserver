@@ -1,0 +1,77 @@
+﻿@model WalletPSBTViewModel
+@{
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData["Title"] = "PSBT";
+    ViewData.SetActivePageAndTitle(WalletsNavPages.PSBT);
+}
+@if (TempData.ContainsKey("TempDataProperty-StatusMessage"))
+{
+    <div class="row">
+        <div class="col-md-10 text-center">
+            <partial name="_StatusMessage" for="@TempData["TempDataProperty-StatusMessage"]" />
+        </div>
+    </div>
+}
+<div class="row">
+    <div class="col-md-10">
+        @if (Model.Errors != null && Model.Errors.Count != 0)
+        {
+            <div class="alert alert-danger alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                @foreach (var error in Model.Errors)
+                {
+                    <span>@error</span><br />
+                }
+            </div>
+        }
+        @if (!string.IsNullOrEmpty(Model.Decoded))
+        {
+            <h3>Decoded PSBT</h3>
+            <div class="form-group">
+                <form method="post" asp-action="WalletPSBT">
+                    <input type="hidden" asp-for="PSBT" />
+                    <input type="hidden" asp-for="FileName" />
+                    <div class="dropdown d-inline-block" style="margin-top:16px;">
+                        <button class="btn btn-primary dropdown-toggle" type="button" id="SendMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Sign with...
+                        </button>
+                        <div class="dropdown-menu" aria-labelledby="SendMenu">
+                            <button name="command" type="submit" class="dropdown-item" value="ledger">... your Ledger Wallet device</button>
+                            <button name="command" type="submit" class="dropdown-item" value="seed">... an HD private key or mnemonic seed</button>
+                            <button name="command" type="submit" class="dropdown-item" value="save-psbt">... a wallet supporting PSBT (save as file)</button>
+                        </div>
+                    </div>
+                    <div class="dropdown d-inline-block">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" id="OtherActions" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Other actions...
+                        </button>
+                        <div class="dropdown-menu" aria-labelledby="OtherActions">
+                            <button name="command" type="submit" class="dropdown-item" value="broadcast">Review</button>
+                            <button name="command" type="submit" class="dropdown-item" value="update">Update</button>
+                            <button name="command" type="submit" class="dropdown-item" value="combine">Combine</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <pre><code class="json">@Model.Decoded</code></pre>
+        }
+        <h3>PSBT to decode</h3>
+        <form class="form-group" method="post" asp-action="WalletPSBT" enctype="multipart/form-data">
+            <div class="form-group">
+                <textarea class="form-control" rows="5" asp-for="PSBT"></textarea>
+                <span asp-validation-for="PSBT" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="UploadedPSBTFile"></label>
+                <input type="file" class="form-control-file" asp-for="UploadedPSBTFile">
+            </div>
+            <button type="submit" class="btn btn-primary">Decode</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="~/vendor/highlightjs/default.min.css">
+    <script src="~/vendor/highlightjs/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+}

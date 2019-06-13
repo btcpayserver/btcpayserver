@@ -24,7 +24,7 @@ namespace BTCPayServer.Controllers
             HttpClientFactory = httpClientFactory;
             _cachedServerSettings = cachedServerSettings;
         }
-        
+
         public async Task<IActionResult> Index()
         {
             if (_cachedServerSettings.RootAppType is Services.Apps.AppType.Crowdfund)
@@ -39,6 +39,20 @@ namespace BTCPayServer.Controllers
                     res.ViewName = "/Views/AppsPublic/ViewCrowdfund.cshtml";
                     return res; // return 
                 }
+            }
+            else if (_cachedServerSettings.RootAppType is Services.Apps.AppType.PointOfSale)
+            {
+                var serviceProvider = HttpContext.RequestServices;
+                var controller = (AppsPublicController)serviceProvider.GetService(typeof(AppsPublicController));
+                controller.Url = Url;
+                controller.ControllerContext = ControllerContext;
+                var res = await controller.ViewPointOfSale(_cachedServerSettings.RootAppId) as ViewResult;
+                if (res != null)
+                {
+                    res.ViewName = "/Views/AppsPublic/ViewPointOfSale.cshtml";
+                    return res; // return 
+                }
+
             }
 
             return View("Home");

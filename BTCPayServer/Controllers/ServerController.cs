@@ -505,7 +505,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> Services()
         {
             var result = new ServicesViewModel();
-            result.ExternalServices = _Options.ExternalServices;
+            result.ExternalServices = _Options.ExternalServices.ToList();
             foreach (var externalService in _Options.OtherExternalServices)
             {
                 result.OtherExternalServices.Add(new ServicesViewModel.OtherExternalService()
@@ -532,6 +532,10 @@ namespace BTCPayServer.Controllers
                         Link = $"http://{torService.OnionHost}"
                     });
                 }
+                else if (TryParseAsExternalService(torService, out var externalService))
+                {
+                    result.ExternalServices.Add(externalService);
+                }
                 else
                 {
                     result.TorOtherServices.Add(new ServicesViewModel.OtherExternalService()
@@ -551,6 +555,32 @@ namespace BTCPayServer.Controllers
             return View(result);
         }
 
+        private static bool TryParseAsExternalService(TorService torService, out ExternalService externalService)
+        {
+            externalService = null;
+            if (torService.ServiceType == TorServiceType.P2P)
+            {
+                externalService = new ExternalService()
+                {
+                    CryptoCode = torService.Network.CryptoCode,
+                    DisplayName = "Full node P2P",
+                    Type = ExternalServiceTypes.P2P,
+                    ConnectionString = new ExternalConnectionString(new Uri($"bitcoin-p2p://{torService.OnionHost}:{torService.VirtualPort}", UriKind.Absolute)),
+                    ServiceName = torService.Name,
+                };
+            }
+            return externalService != null;
+        }
+
+        private ExternalService GetService(string serviceName, string cryptoCode)
+        {
+            var result = _Options.ExternalServices.GetService(serviceName, cryptoCode);
+            if (result != null)
+                return result;
+            _torServices.Services.FirstOrDefault(s => TryParseAsExternalService(s, out result));
+            return result;
+        }
+
         [Route("server/services/{serviceName}/{cryptoCode}")]
         public async Task<IActionResult> Service(string serviceName, string cryptoCode, bool showQR = false, uint? nonce = null)
         {
@@ -559,13 +589,22 @@ namespace BTCPayServer.Controllers
                 StatusMessage = $"Error: {cryptoCode} is not fully synched";
                 return RedirectToAction(nameof(Services));
             }
-            var service = _Options.ExternalServices.GetService(serviceName, cryptoCode);
+            var service = GetService(serviceName, cryptoCode);
             if (service == null)
                 return NotFound();
 
             try
             {
-                var connectionString = await service.ConnectionString.Expand(this.Request.GetAbsoluteUriNoPathBase(), service.Type);
+                if (service.Type == ExternalServiceTypes.P2P)
+                {
+                    return View("P2PService", new LightningWalletServices()
+                    {
+                        ShowQR = showQR,
+                        WalletName = service.ServiceName,
+                        ServiceLink = service.ConnectionString.Server.AbsoluteUri.WithoutEndingSlash()
+                    });
+                }
+                var connectionString = await service.ConnectionString.Expand(this.Request.GetAbsoluteUriNoPathBase(), service.Type, _Options.NetworkType);
                 switch (service.Type)
                 {
                     case ExternalServiceTypes.Charge:
@@ -674,14 +713,14 @@ namespace BTCPayServer.Controllers
                 StatusMessage = $"Error: {cryptoCode} is not fully synched";
                 return RedirectToAction(nameof(Services));
             }
-            var service = _Options.ExternalServices.GetService(serviceName, cryptoCode);
+            var service = GetService(serviceName, cryptoCode);
             if (service == null)
                 return NotFound();
 
             ExternalConnectionString connectionString = null;
             try
             {
-                connectionString = await service.ConnectionString.Expand(this.Request.GetAbsoluteUriNoPathBase(), service.Type);
+                connectionString = await service.ConnectionString.Expand(this.Request.GetAbsoluteUriNoPathBase(), service.Type, _Options.NetworkType);
             }
             catch (Exception ex)
             {
@@ -836,14 +875,16 @@ namespace BTCPayServer.Controllers
                     .ToList();
                 vm.LogFileOffset = offset;
 
-                if (string.IsNullOrEmpty(file))
+                if (string.IsNullOrEmpty(file) || !file.EndsWith(fileExtension, StringComparison.Ordinal))
                     return View("Logs", vm);
                 vm.Log = "";
-                var path = Path.Combine(di.FullName, file);
+                var fi = vm.LogFiles.FirstOrDefault(o => o.Name == file);
+                if (fi == null)
+                    return NotFound();
                 try
                 {
                     using (var fileStream = new FileStream(
-                        path,
+                        fi.FullName,
                         FileMode.Open,
                         FileAccess.Read,
                         FileShare.ReadWrite))

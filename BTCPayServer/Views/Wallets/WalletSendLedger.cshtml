@@ -12,18 +12,17 @@
 </div>
 <div class="row">
     <div class="col-md-10">
-        <input type="hidden" asp-for="Destination" />
-        <input type="hidden" asp-for="Amount" />
-        <input type="hidden" asp-for="FeeSatoshiPerByte" />
-        <input type="hidden" asp-for="SubstractFees" />
-        <input type="hidden" asp-for="NoChange" />
+        <input type="hidden" asp-for="PSBT" />
+        <input type="hidden" asp-for="HintChange" />
+        <input type="hidden" asp-for="SuccessPath" />
+        <input type="hidden" asp-for="WebsocketPath" />
         <p>
             You can send money received by this store to an address with the help of your Ledger Wallet. <br />
             If you don't have a Ledger Wallet, use Electrum with your favorite hardware wallet to transfer crypto. <br />
             If your Ledger wallet is not detected:
         </p>
         <ul>
-            <li>Make sure you are running the Ledger app with version superior or equal to 1.2.4</li>
+            <li>Make sure you are running the Ledger app with version superior or equal to <b>1.3.9</b></li>
             <li>Use Google Chrome browser and open the coin app on your Ledger</li>
         </ul>
         <p id="hw-loading"><span class="fa fa-question-circle" style="color:orange"></span> <span>Detecting hardware wallet...</span></p>

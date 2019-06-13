@@ -54,3 +54,7 @@ canvas#fireworks {
     padding-top: 5px;
     z-index: 1
 }
+
+.crowdfund-stats .col-sm:last-child{
+    border-right: none !important;
+}

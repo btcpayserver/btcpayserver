@@ -11,12 +11,14 @@ namespace BTCPayServer.Payments
     /// </summary>
     public class PaymentMethodId
     {
-        public PaymentMethodId(string cryptoCode, PaymentTypes paymentType)
+        public PaymentMethodId(string cryptoCode, PaymentType paymentType)
         {
             if (cryptoCode == null)
                 throw new ArgumentNullException(nameof(cryptoCode));
+            if (paymentType == null)
+                throw new ArgumentNullException(nameof(paymentType));
             PaymentType = paymentType;
-            CryptoCode = cryptoCode;
+            CryptoCode = cryptoCode.ToUpperInvariant();
         }
 
         [Obsolete("Should only be used for legacy stuff")]
@@ -29,7 +31,7 @@ namespace BTCPayServer.Payments
         }
 
         public string CryptoCode { get; private set; }
-        public PaymentTypes PaymentType { get; private set; }
+        public PaymentType PaymentType { get; private set; }
 
 
         public override bool Equals(object obj)
@@ -62,34 +64,13 @@ namespace BTCPayServer.Payments
 
         public override string ToString()
         {
-            return ToString(false);
+            //BTCLike case is special because it is in legacy mode.
+            return PaymentType == PaymentTypes.BTCLike ? CryptoCode : $"{CryptoCode}_{PaymentType}";
         }
 
-        public string ToString(bool pretty)
+        public string ToPrettyString()
         {
-            if (pretty)
-            {
-                return $"{CryptoCode} ({PrettyMethod(PaymentType)})";
-            }
-            else
-            {
-                if (PaymentType == PaymentTypes.BTCLike)
-                    return CryptoCode;
-                return CryptoCode + "_" + PaymentType.ToString();
-            }
-        }
-
-        private static string PrettyMethod(PaymentTypes paymentType)
-        {
-            switch (paymentType)
-            {
-                case PaymentTypes.BTCLike:
-                    return "On-Chain";
-                case PaymentTypes.LightningLike:
-                    return "Off-Chain";
-                default:
-                    return paymentType.ToString();
-            }
+            return $"{CryptoCode} ({PaymentType.ToPrettyString()})";
         }
 
         public static bool TryParse(string str, out PaymentMethodId paymentMethodId)
@@ -98,22 +79,11 @@ namespace BTCPayServer.Payments
             var parts = str.Split('_', StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length == 0 || parts.Length > 2)
                 return false;
-            PaymentTypes type = PaymentTypes.BTCLike;
+            PaymentType type = PaymentTypes.BTCLike;
             if (parts.Length == 2)
             {
-                switch (parts[1].ToLowerInvariant())
-                {
-                    case "btclike":
-                    case "onchain":
-                        type = PaymentTypes.BTCLike;
-                        break;
-                    case "lightninglike":
-                    case "offchain":
-                        type = PaymentTypes.LightningLike;
-                        break;
-                    default:
-                        return false;
-                }
+                if (!PaymentTypes.TryParse(parts[1], out type))
+                    return false;
             }
             paymentMethodId = new PaymentMethodId(parts[0], type);
             return true;

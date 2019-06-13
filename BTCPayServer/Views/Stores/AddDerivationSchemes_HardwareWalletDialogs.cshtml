@@ -1,0 +1,164 @@
+@model DerivationSchemeViewModel
+
+<div class="modal fade" id="ledgerimport" tabindex="-1" role="dialog" aria-labelledby="ledgerimport" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" form method="post">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Import Ledger Wallet</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="ledger-loading">
+                    Checking if a ledger wallet is connected...
+                </div>
+                <div id="ledger-validate" style="display: none;">
+                    Retrieving, wallet information... you may need to confirm access on your screen.
+                </div>
+                <p id="no-ledger-info" style="display: none;">
+                    No ledger wallet detected. If you own one, use chrome, open the app, and refresh this page.
+                </p>
+                <div id="ledger-info" class="display-when-ledger-connected">
+                    <span>A ledger wallet is detected, which account do you want to use? No need to paste manually xpub if your ledger device was detected. Just select derivation scheme from the list bellow and xpub will automatically populate.</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+
+                <div class="dropdown display-when-ledger-connected">
+                    <button class="btn btn-primary dropdown-toggle" type="button" id="ledgerAccountsDropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Select ledger wallet account
+                    </button>
+                    <div class="dropdown-menu overflow-auto" style="max-height: 200px;" aria-labelledby="ledgerAccountsDropdownMenuButton">
+                        @for (var i = 0; i < 20; i++)
+                        {
+                            <a class="dropdown-item ledger-info-recommended" data-ledgerkeypath="@Model.RootKeyPath.Derive(i, true)" href="#">Account @i (<span>@Model.RootKeyPath.Derive(i, true)</span>)</a>
+                        }
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="coldcardimport" tabindex="-1" role="dialog" aria-labelledby="coldcardimport" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <form class="modal-content" form method="post" enctype="multipart/form-data">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Import Coldcard Wallet</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>You may import your Coldcard wallet by exporting the public details from <kbd>Advanced->MicroSD Card->Electrum Wallet</kbd> and uploading it here.</p>
+                <div class="form-group">
+                    <label asp-for="ColdcardPublicFile"></label>
+
+                    <input type="file" class="form-control-file" asp-for="ColdcardPublicFile" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </div>
+
+        </form>
+    </div>
+</div>
+<div class="modal fade" id="trezorimport" tabindex="-1" role="dialog" aria-labelledby="trezorimport" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <form class="modal-content" form method="post" id="trezor-submit">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Import Trezor Wallet</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                @await Html.PartialAsync("_StatusMessage",
+                    new StatusMessageModel()
+                    {
+                        AllowDismiss = false,
+                        Severity = StatusMessageModel.StatusSeverity.Warning,
+                        Message = "The Trezor wallet import feature is still experimental and may not work as expected. Please double-check that the details were imported correctly before using in production."
+                    }.ToString())
+                <p id="trezor-loading" style="display: none;">
+                    <span class="fa fa-question-circle" style="color: orange"></span> <span>Detecting Trezor hardware wallet...</span>
+                </p>
+                <p id="trezor-error" class="text-danger" style="display: none;">
+                    <span class="fa fa-times-circle" style="color: red;"></span> <span class="hw-label">An error happened</span>
+                </p>
+                <p id="trezor-success" style="display: none;">
+                    <span class="fa fa-check-circle" style="color: green;"></span> <span class="hw-label">Trezor wallet detected! Name: <kbd id="trezor-devicename"></kbd></span>
+                </p>
+
+                <div class="form-group display-when-trezor-connected" style="display: none">
+
+                    <label class="control-label">Wallet address type</label>
+                    <select class="form-control" id="trezor-address-type-select">
+                        <option data-hide=".trezor-account-dropdown" selected>Select an address type</option>
+                        <option data-show="#trezor-account-dropdown-legacy" data-hide=".trezor-account-dropdown"> Legacy</option>
+                        @if (Model.Network.NBitcoinNetwork.Consensus.SupportSegwit)
+                        {
+                            <option data-show="#trezor-account-dropdown-p2sh" data-hide=".trezor-account-dropdown"> P2SH-Segwit</option>
+                            <option data-show="#trezor-account-dropdown-segwit" data-hide=".trezor-account-dropdown"> Segwit( Bech32 )</option>
+                        }
+                    </select>
+                </div>
+
+                @if (Model.Network.NBitcoinNetwork.Consensus.SupportSegwit)
+                {
+                    <div class="form-group trezor-account-dropdown" style="display: none" id="trezor-account-dropdown-p2sh">
+
+                    <label class="control-label">Wallet account</label>
+                        <select class="form-control">
+                        <option>Select a wallet account</option>
+                            @for (var i = 0; i < 20; i++)
+                            {
+                                <option
+                                    data-derivation-suffix="-[p2sh]"
+                                    data-trezorkeypath="@Model.Network.GetRootKeyPath(DerivationType.SegwitP2SH).Derive(i, true)" 
+                                    >Account @i (@Model.Network.GetRootKeyPath(DerivationType.SegwitP2SH).Derive(i, true))</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group trezor-account-dropdown" style="display: none" id="trezor-account-dropdown-segwit">
+
+                    <label class="control-label">Wallet account</label>
+                        <select class="form-control">
+                        <option>Select a wallet account</option>
+                            @for (var i = 0; i < 20; i++)
+                            {
+                                <option 
+                                    data-derivation-suffix=""
+                                    data-trezorkeypath="@Model.Network.GetRootKeyPath(DerivationType.Segwit).Derive(i, true)" href="#">Account @i (@Model.Network.GetRootKeyPath(DerivationType.Segwit).Derive(i, true))</option>
+                            }
+                        </select>
+                    </div>
+                }
+                <div class="form-group trezor-account-dropdown" style="display: none" id="trezor-account-dropdown-legacy">
+
+                    <label class="control-label">Wallet account</label>
+                    <select class="form-control">
+                        <option>Select a wallet account</option>
+                        @for (var i = 0; i < 20; i++)
+                        {
+                            <option
+                                data-derivation-suffix="-[legacy]"
+                                data-trezorkeypath="@Model.Network.GetRootKeyPath(DerivationType.Legacy).Derive(i, true)">Account @i (@Model.Network.GetRootKeyPath(DerivationType.Legacy).Derive(i, true))</option>
+                        }
+                    </select>
+                </div>
+
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button class="btn btn-primary" id="trezorsubmitbutton">Submit</button>
+            </div>
+
+        </form>
+    </div>
+</div>

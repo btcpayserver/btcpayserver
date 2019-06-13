@@ -1,4 +1,5 @@
-﻿$(function () {
+﻿function initLedger(){
+
     var ledgerDetected = false;
 
     var loc = window.location, new_uri;
@@ -18,13 +19,13 @@
     }
 
     function WriteAlert(type, message) {
-        
+
     }
     function showFeedback(id) {
         $("#ledger-loading").css("display", id === "ledger-loading" ? "block" : "none");
         $("#no-ledger-info").css("display", id === "no-ledger-info" ? "block" : "none");
         $("#ledger-validate").css("display", id === "ledger-validate" ? "block" : "none");
-        $("#ledger-info").css("display", id === "ledger-info" ? "block" : "none");
+        $(".display-when-ledger-connected").css("display", id === "ledger-info" ? "block" : "none");
     }
     function Write(prefix, type, message) {
         if (type === "error") {
@@ -47,10 +48,14 @@
                     return;
 
                 showFeedback("ledger-info");
-
-                $("#DerivationScheme").val(result.extPubKey);
+                $("#DerivationScheme").val(result.derivationScheme);
+                $("#RootFingerprint").val(result.rootFingerprint);
+                $("#AccountKey").val(result.extPubKey);
+                $("#Source").val(result.source);
                 $("#DerivationSchemeFormat").val("BTCPay");
                 $("#KeyPath").val(keypath);
+                $(".modal").modal('hide');
+                $(".hw-fields").show();
             })
             .catch(function (reason) { Write('check', 'error', reason); });
         return false;
@@ -81,4 +86,16 @@
                     });
             }
         });
+}
+
+$(document).ready(function () {
+    var ledgerInit = false;
+    $(".check-for-ledger").on("click", function(){
+        if(!ledgerInit){
+
+            initLedger();
+        }
+        ledgerInit = true;
+    });
+    
 });

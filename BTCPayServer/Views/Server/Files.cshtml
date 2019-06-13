@@ -4,7 +4,6 @@
 }
 
 
-<h4>@ViewData["Title"]</h4>
 <partial name="_StatusMessage" for="@TempData["StatusMessage"]"/>
 
 
@@ -22,7 +21,7 @@
     {
         <tr>
             <td>@file.FileName</td>
-            <td>@file.Timestamp.ToString("g")</td>
+            <td >@file.Timestamp.ToBrowserDate2()</td>
             <td>@file.ApplicationUser.UserName</td>
             <td>
                 <a asp-action="Files" asp-route-fileId="@file.Id">Get Link</a>

@@ -14,6 +14,7 @@ using BTCPayServer.Storage.Services.Providers.GoogleCloudStorage;
 using BTCPayServer.Storage.Services.Providers.GoogleCloudStorage.Configuration;
 using BTCPayServer.Storage.Services.Providers.Models;
 using BTCPayServer.Storage.ViewModels;
+using BTCPayServer.Views;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
@@ -26,7 +27,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> Files(string fileId = null, string statusMessage = null)
         {
             TempData["StatusMessage"] = statusMessage;
-            var fileUrl = string.IsNullOrEmpty(fileId) ? null : await _FileService.GetFileUrl(fileId);
+            var fileUrl = string.IsNullOrEmpty(fileId) ? null : await _FileService.GetFileUrl(Request.GetAbsoluteRootUri(), fileId);
 
             return View(new ViewFilesViewModel()
             {
@@ -96,7 +97,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
-            var expiry = DateTimeOffset.Now;
+            var expiry = DateTimeOffset.UtcNow;
             switch (viewModel.TimeType)
             {
                 case CreateTemporaryFileUrlViewModel.TmpFileTimeType.Seconds:
@@ -115,14 +116,15 @@ namespace BTCPayServer.Controllers
                     throw new ArgumentOutOfRangeException();
             }
 
-            var url = await _FileService.GetTemporaryFileUrl(fileId, expiry, viewModel.IsDownload);
+            var url = await _FileService.GetTemporaryFileUrl(Request.GetAbsoluteRootUri(), fileId, expiry, viewModel.IsDownload);
 
             return RedirectToAction(nameof(Files), new
             {
                 StatusMessage = new StatusMessageModel()
                 {
+                    Severity = StatusMessageModel.StatusSeverity.Success,
                     Html =
-                        $"Generated Temporary Url for file {file.FileName} which expires at {expiry:G}. <a href='{url}' target='_blank'>{url}</a>"
+                        $"Generated Temporary Url for file {file.FileName} which expires at {expiry.ToBrowserDate()}. <a href='{url}' target='_blank'>{url}</a>"
                 }.ToString(),
                 fileId,
             });

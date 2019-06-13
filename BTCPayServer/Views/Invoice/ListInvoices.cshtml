@@ -2,19 +2,20 @@
 @{
     ViewData["Title"] = "Invoices";
 }
-
 @section HeadScripts {
     <script src="~/modal/btcpay.js"></script>
 }
-
+@Html.HiddenFor(a => a.Count)
 <section>
     <div class="container">
-
-        <div class="row">
-            <div class="col-lg-12 text-center">
-                <partial name="_StatusMessage" for="StatusMessage" />
+        @if (!string.IsNullOrEmpty(Model.StatusMessage))
+        {
+            <div class="row">
+                <div class="col-lg-12 text-center">
+                    <partial name="_StatusMessage" for="StatusMessage" />
+                </div>
             </div>
-        </div>
+        }
 
         <div class="row">
             <div class="col-lg-12 text-center">
@@ -46,8 +47,7 @@
 
         <div class="row no-gutter" style="margin-bottom: 5px;">
             <div class="col-lg-6">
-                <a asp-action="CreateInvoice" class="btn btn-primary" role="button"><span class="fa fa-plus"></span> Create a new invoice</a>
-
+                <a asp-action="CreateInvoice" class="btn btn-primary" role="button" id="CreateNewInvoice"><span class="fa fa-plus"></span> Create a new invoice</a>
                 <a class="btn btn-primary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     Export
                 </a>
@@ -59,25 +59,120 @@
                     <a asp-action="Export" asp-route-timezoneoffset="0" asp-route-format="json" asp-route-searchTerm="@Model.SearchTerm" class="dropdown-item export-link" target="_blank">JSON</a>
                 </div>
             </div>
-
             <div class="col-lg-6">
                 <div class="form-group">
                     <form asp-action="ListInvoices" method="get" style="float:right;">
+                        <input type="hidden" asp-for="Count" />
                         <div class="input-group">
                             <input asp-for="TimezoneOffset" type="hidden" />
                             <input asp-for="SearchTerm" class="form-control" style="width:300px;" />
-                            <span class="input-group-btn">
+                            <div class="input-group-append">
                                 <button type="submit" class="btn btn-primary" title="Search invoice">
                                     <span class="fa fa-search"></span> Search
                                 </button>
-                            </span>
+                                <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <span class="sr-only">Toggle Dropdown</span>
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-right">
+                                    <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=status%3Ainvalid">Invalid Invoices</a>
+                                    <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=status%3Apaid%2Cstatus%3Aconfirmed%2Cstatus%3Acomplete">Paid Invoices</a>
+                                    <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=exceptionstatus%3ApaidLate">Paid Late Invoices</a>
+                                    <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=exceptionstatus%3ApaidPartial">Paid Partial Invoices</a>
+                                    <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=exceptionstatus%3ApaidOver">Paid Over Invoices</a>
+                                    <a class="dropdown-item" href="/invoices?Count=@Model.Count&SearchTerm=unusual%3Atrue">Unusual Invoices</a>
+                                    <div role="separator" class="dropdown-divider"></div>
+                                    <a class="dropdown-item last24" href="/invoices?Count=@Model.Count&timezoneoffset=0&SearchTerm=startDate%3Alast24">Last 24 hours</a>
+                                    <a class="dropdown-item last72" href="/invoices?Count=@Model.Count&timezoneoffset=0&SearchTerm=startDate%3Alast72">Last 3 days</a>
+                                    <a class="dropdown-item last168" href="/invoices?Count=@Model.Count&timezoneoffset=0&SearchTerm=startDate%3Alast168">Last 7 days</a>
+                                    <button type="button" class="dropdown-item" data-toggle="modal" data-target="#customRangeModal" data-backdrop="static">Custom Range</button>
+                                    <div role="separator" class="dropdown-divider"></div>
+                                    <a class="dropdown-item" href="/invoices">Unfiltered</a>
+                                </div>
+                            </div>
                         </div>
-                        <input type="hidden" asp-for="Count" />
                         <span asp-validation-for="SearchTerm" class="text-danger"></span>
                     </form>
                 </div>
             </div>
         </div>
+
+        @* Custom Range Modal *@
+        <div class="modal fade" id="customRangeModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 550px;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLongTitle">Filter invoices by Custom Range</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group row">
+                            <label for="staticEmail" class="col-sm-3 col-form-label">Start Date</label>
+                            <div class="col-sm-9">
+                                <div class="input-group">
+                                    <input id="dtpStartDate" class="form-control flatdtpicker" type="datetime-local"
+                                           data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
+                                           placeholder="Start Date" />
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-primary input-group-clear" title="Clear">
+                                            <span class=" fa fa-times"></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label">End Date</label>
+                            <div class="col-sm-9">
+                                <div class="input-group">
+                                    <input id="dtpEndDate" class="form-control flatdtpicker" type="datetime-local"
+                                           data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
+                                           placeholder="End Date" />
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-primary input-group-clear" title="Clear">
+                                            <span class=" fa fa-times"></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="btnCustomRangeDate" type="button" class="btn btn-primary">Filter</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script type="text/javascript">
+            $('#btnCustomRangeDate').on('click', function (sender) {
+                var filterString = "";
+
+                var dtpStartDate = $("#dtpStartDate").val();
+                if (dtpStartDate !== null && dtpStartDate !== "") {
+                    filterString = "startDate%3A" + dtpStartDate;
+                }
+
+                var dtpEndDate = $("#dtpEndDate").val();
+                if (dtpEndDate !== null && dtpEndDate !== "") {
+                    if (filterString !== "") {
+                        filterString += ",";
+                    }
+                    filterString += "endDate%3A" + dtpEndDate;
+                }
+
+                if (filterString !== "") {
+                    var redirectUri = "/invoices?Count=" + $("#Count").val() +
+                        "&timezoneoffset=" + $("#TimezoneOffset").val() +
+                        "&SearchTerm=" + filterString;
+
+                    window.location.href = redirectUri;
+                } else {
+                    $("#dtpStartDate").next().trigger("focus");
+                }
+            })
+        </script>
+        @* Custom Range Modal *@
 
         <div class="row">
             <table class="table table-sm table-responsive-md">
@@ -89,9 +184,9 @@
                                 <span class="fa fa-clock-o" title="Switch date format"></span>
                             </a>
                         </th>
-                        <th>OrderId</th>
+                        <th style="max-width: 180px;">OrderId</th>
                         <th>InvoiceId</th>
-                        <th>Status</th>
+                        <th style="min-width: 150px;">Status</th>
                         <th style="text-align:right">Amount</th>
                         <th style="text-align:right">Actions</th>
                     </tr>
@@ -103,12 +198,12 @@
                             <td>
                                 <span class="switchTimeFormat" data-switch="@invoice.Date.ToTimeAgo()">
                                     @invoice.Date.ToBrowserDate()
-                                </span> 
+                                </span>
                             </td>
-                            <td>
+                            <td style="max-width: 180px;">
                                 @if (invoice.RedirectUrl != string.Empty)
                                 {
-                                    <a href="@invoice.RedirectUrl">@invoice.OrderId</a>
+                                    <a href="@invoice.RedirectUrl" class="wraptext200">@invoice.OrderId</a>
                                 }
                                 else
                                 {
@@ -116,13 +211,41 @@
                                 }
                             </td>
                             <td>@invoice.InvoiceId</td>
-                            <td>@invoice.Status</td>
+                            <td>
+                                @if (invoice.CanMarkStatus)
+                                {
+                                    <div id="pavpill_@invoice.InvoiceId">
+                                        <span class="dropdown-toggle dropdown-toggle-split pavpill pavpil-@invoice.Status.ToString().ToLower()"
+                                              data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            @invoice.StatusString
+                                        </span>
+                                        <div class="dropdown-menu pull-right">
+                                            @if (invoice.CanMarkInvalid)
+                                            {
+                                                <button class="dropdown-item small cursorPointer" onclick="changeInvoiceState(this, '@invoice.InvoiceId', 'invalid')">
+                                                    Mark as invalid <span class="fa fa-times"></span>
+                                                </button>
+                                            }
+                                            @if (invoice.CanMarkComplete)
+                                            {
+                                                <button class="dropdown-item small cursorPointer" onclick="changeInvoiceState(this, '@invoice.InvoiceId', 'complete')">
+                                                    Mark as complete <span class="fa fa-check-circle"></span>
+                                                </button>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="pavpill pavpil-@invoice.Status.ToString().ToLower()">@invoice.StatusString</span>
+                                }
+                            </td>
                             <td style="text-align:right">@invoice.AmountCurrency</td>
                             <td style="text-align:right">
                                 @if (invoice.ShowCheckout)
                                 {
                                     <span>
-                                        <a asp-action="Checkout" asp-route-invoiceId="@invoice.InvoiceId">Checkout</a>
+                                        <a asp-action="Checkout" class="invoice-checkout-link" asp-route-invoiceId="@invoice.InvoiceId">Checkout</a>
                                         <a href="javascript:btcpay.showInvoice('@invoice.InvoiceId')">[^]</a>
                                         @if (!invoice.CanMarkStatus)
                                         {
@@ -130,33 +253,25 @@
                                         }
                                     </span>
                                 }
-                                @if (invoice.CanMarkStatus)
-                                {
-                                    <a class="dropdown-toggle dropdown-toggle-split" href="#" style="cursor: pointer;" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        Change status <span class="sr-only">Toggle Dropdown</span>
-                                    </a>
-                                    <div class="dropdown-menu pull-right">
-                                        @if (invoice.CanMarkInvalid)
-                                        {
-                                            <form method="get" asp-action="ChangeInvoiceState" asp-route-invoiceId="@invoice.InvoiceId" asp-route-newState="invalid">
-                                                <button class="dropdown-item small">Mark as invalid <span class="fa fa-times"></span></button>
-                                            </form>
-                                        }
-                                        @if (invoice.CanMarkComplete)
-                                        {
-                                            <form method="get" asp-action="ChangeInvoiceState" asp-route-invoiceId="@invoice.InvoiceId" asp-route-newState="complete">
-                                                <button class="dropdown-item small">Mark as complete <span class="fa fa-check-circle"></span></button>
-                                            </form>
-                                        }
-                                    </div>
-                                }
-                                <a asp-action="Invoice" asp-route-invoiceId="@invoice.InvoiceId">Details</a>
+                                &nbsp;
+                                <a asp-action="Invoice" class="invoice-details-link" asp-route-invoiceId="@invoice.InvoiceId">Details</a>
+                                @*<span title="Details" class="fa fa-list"></span>*@
+                                &nbsp;
+                                <a href="javascript:void(0);" onclick="detailsToggle(this, '@invoice.InvoiceId')">
+                                    <span title="Invoice Details Toggle" class="fa fa-1x fa-angle-double-down"></span>
+                                </a>
+                            </td>
+                        </tr>
+                        <tr id="invoice_@invoice.InvoiceId" style="display:none;">
+                            <td colspan="99">
+                                <div style="margin-left: 15px; margin-bottom: 0px;">
+                                    <partial name="InvoicePaymentsPartial" model="invoice.Details" />
+                                </div>
                             </td>
                         </tr>
                     }
                 </tbody>
             </table>
-
             <nav aria-label="..." class="w-100">
                 <ul class="pagination float-left">
                     <li class="page-item @(Model.Skip == 0 ? "disabled" : null)">
@@ -169,7 +284,6 @@
                         <a class="page-link" href="@listInvoices(1, Model.Count)">&raquo;</a>
                     </li>
                 </ul>
-
                 <ul class="pagination float-right">
                     <li class="page-item disabled">
                         <span class="page-link">Page Size:</span>
@@ -210,14 +324,113 @@
         </div>
 
     </div>
-
     <script type="text/javascript">
         $(function () {
-            var timezoneOffset = new Date().getTimezoneOffset()
+            var timezoneOffset = new Date().getTimezoneOffset();
             $("#TimezoneOffset").val(timezoneOffset);
-            $(".export-link").each(function () {
+            $(".export-link, a.dropdown-item").each(function () {
                 this.href = this.href.replace("timezoneoffset=0", "timezoneoffset=" + timezoneOffset);
             });
-        })
+
+            $("a.last24").each(function () { this.href = this.href.replace("last24", getDateStringWithOffset(24)); });
+            $("a.last72").each(function () { this.href = this.href.replace("last72", getDateStringWithOffset(72)); });
+            $("a.last168").each(function () { this.href = this.href.replace("last168", getDateStringWithOffset(168)); });
+        });
+
+        function getDateStringWithOffset(hoursDiff) {
+            var datenow = new Date();
+            var newDate = new Date(datenow.getTime() - (hoursDiff * 60 * 60 * 1000));
+            var str = newDate.toLocaleDateString() + " " + newDate.toLocaleTimeString();
+            return str;
+        }
+
+        function detailsToggle(sender, invoiceId) {
+            $("#invoice_" + invoiceId).toggle(0, function () {
+                var detailsRow = $(this);
+                var btnToggle = $(sender).children().first();
+                if (detailsRow.is(':visible')) {
+                    btnToggle.removeClass('fa-angle-double-down').addClass('fa-angle-double-up');
+                } else {
+                    btnToggle.removeClass('fa-angle-double-up').addClass('fa-angle-double-down');
+                }
+            });
+            return false;
+        }
+
+        function changeInvoiceState(sender, invoiceId, newState) {
+            var pavpill = $("#pavpill_" + invoiceId);
+            var originalHtml = pavpill.html();
+            pavpill.html("<span class='fa fa-bitcoin fa-spin' style='margin-left:16px;'></span>");
+
+            $.post("invoices/" + invoiceId + "/changestate/" + newState)
+                .done(function (data) {
+                    var statusHtml = "<span class='pavpill pavpil-" + newState + "'>" + data.statusString + " <span class='fa fa-check'></span></span>";
+                    pavpill.html(statusHtml);
+                })
+                .fail(function (data) {
+                    pavpill.html(originalHtml.replace("dropdown-menu pull-right show", "dropdown-menu pull-right"));
+                    alert("Invoice state update failed");
+                });
+        }
     </script>
+    <style type="text/css">
+
+        .invoice-payments h3 {
+            font-size: 15px;
+            font-weight: bold;
+        }
+
+        .wraptext200 {
+            max-width: 200px;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            display: block;
+            white-space: nowrap;
+        }
+
+        .pavpill {
+            display: inline-block;
+            padding: 0.3em 0.5em;
+            font-size: 85%;
+            font-weight: 500;
+            line-height: 1;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border-radius: 0.25rem;
+        }
+
+            .pavpill.dropdown-toggle {
+                cursor: pointer;
+            }
+
+        .dropdown-item {
+            cursor: pointer;
+        }
+
+        .pavpil-new {
+            background: #d4edda;
+            color: #000;
+        }
+
+        .pavpil-expired {
+            background: #eee;
+            color: #000;
+        }
+
+        .pavpil-invalid {
+            background: #c94a47;
+            color: #fff;
+        }
+
+        .pavpil-confirmed, .pavpil-paid {
+            background: #f1c332;
+            color: #000;
+        }
+
+        .pavpil-complete {
+            background: #329f80;
+            color: #fff;
+        }
+    </style>
 </section>

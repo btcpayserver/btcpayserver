@@ -16,7 +16,7 @@ namespace BTCPayServer.Payments
         /// </summary>
         /// <returns></returns>
         string GetPaymentDestination();
-        PaymentTypes GetPaymentType();
+        PaymentType GetPaymentType();
         /// <summary>
         /// Returns fee that the merchant charge to the customer for the next payment
         /// </summary>

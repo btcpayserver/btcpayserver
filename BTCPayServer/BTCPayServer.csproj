@@ -1,12 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+  <Import Project="../Version.csproj" Condition="Exists('../Version.csproj')" />
+  <Import Project="../Common.csproj" />
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
-		<Version>1.0.3.94</Version>
-    <NoWarn>NU1701,CA1816,CA1308,CA1810,CA2208</NoWarn>
-  </PropertyGroup>
-  <PropertyGroup>
-    <LangVersion>7.3</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Build\dockerfiles\**" />
@@ -34,11 +30,10 @@
     <EmbeddedResource Include="Currencies.txt" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="BTCPayServer.Lightning.All" Version="1.1.0.16" />
+    <PackageReference Include="BTCPayServer.Lightning.All" Version="1.1.0.19" />
     <PackageReference Include="BuildBundlerMinifier" Version="2.9.406" />
     <PackageReference Include="BundlerMinifier.Core" Version="2.9.406" />
     <PackageReference Include="BundlerMinifier.TagHelpers" Version="2.9.406" />
-    <PackageReference Include="DigitalRuby.ExchangeSharp" Version="0.5.3" />
     <PackageReference Include="HtmlSanitizer" Version="4.0.207" />
     <PackageReference Include="LedgerWallet" Version="2.0.0.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.1.4" />
@@ -47,15 +42,16 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NBitcoin" Version="4.1.2.11" />
     <PackageReference Include="NBitpayClient" Version="1.0.0.34" />	  
     <PackageReference Include="DBriize" Version="1.0.0.4" />
-    <PackageReference Include="NBXplorer.Client" Version="2.0.0.10" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
     <PackageReference Include="NicolasDorier.CommandLine" Version="1.0.0.2" />
     <PackageReference Include="NicolasDorier.CommandLine.Configuration" Version="1.0.0.3" />
     <PackageReference Include="NicolasDorier.RateLimits" Version="1.0.0.3" />
     <PackageReference Include="NicolasDorier.StandardConfiguration" Version="1.0.0.18" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.1.2" />
+    <PackageReference Include="OpenIddict" Version="2.0.0" />
+    <PackageReference Include="OpenIddict.EntityFrameworkCore" Version="2.0.0" />
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="2.1.2" />
     <PackageReference Include="Serilog" Version="2.7.1" />
     <PackageReference Include="Serilog.AspNetCore" Version="2.1.1" />
@@ -69,11 +65,12 @@
 
 	<ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.9" />
-    <PackageReference Include="TwentyTwenty.Storage" Version="2.10.1" />
-    <PackageReference Include="TwentyTwenty.Storage.Amazon" Version="2.10.1" />
-    <PackageReference Include="TwentyTwenty.Storage.Azure" Version="2.10.1" />
-    <PackageReference Include="TwentyTwenty.Storage.Google" Version="2.10.1" />
-    <PackageReference Include="TwentyTwenty.Storage.Local" Version="2.10.1" />
+    <PackageReference Include="TwentyTwenty.Storage" Version="2.11.2" />
+    <PackageReference Include="TwentyTwenty.Storage.Amazon" Version="2.11.2" />
+    <PackageReference Include="TwentyTwenty.Storage.Azure" Version="2.11.2" />
+    <PackageReference Include="TwentyTwenty.Storage.Google" Version="2.11.2" />
+    <PackageReference Include="TwentyTwenty.Storage.Local" Version="2.11.2" />
+    <PackageReference Include="U2F.Core" Version="1.0.4" />
 		<PackageReference Include="YamlDotNet" Version="5.2.1" />
 	</ItemGroup>
 
@@ -129,9 +126,16 @@
 
 	<ItemGroup>
 	  <Folder Include="Build\" />
+	  <Folder Include="U2F\Services" />
 	  <Folder Include="wwwroot\vendor\clipboard.js\" />
 	  <Folder Include="wwwroot\vendor\highlightjs\" />
 	  <Folder Include="wwwroot\vendor\summernote" />
+	  <Folder Include="wwwroot\vendor\u2f" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\BTCPayServer.Rating\BTCPayServer.Rating.csproj" />
+	  <ProjectReference Include="..\BTCPayServer.Common\BTCPayServer.Common.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -146,6 +150,9 @@
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>
     <Content Update="Views\Server\LightningWalletServices.cshtml">
+      <Pack>$(IncludeRazorContentInPack)</Pack>
+    </Content>
+    <Content Update="Views\Server\P2PService.cshtml">
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>
     <Content Update="Views\Server\SSHService.cshtml">
@@ -173,6 +180,15 @@
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
 	  <Content Update="Views\Wallets\ListWallets.cshtml">
+	    <Pack>$(IncludeRazorContentInPack)</Pack>
+	  </Content>
+	  <Content Update="Views\Wallets\WalletPSBTCombine.cshtml">
+	    <Pack>$(IncludeRazorContentInPack)</Pack>
+	  </Content>
+	  <Content Update="Views\Wallets\WalletPSBTReady.cshtml">
+	    <Pack>$(IncludeRazorContentInPack)</Pack>
+	  </Content>
+	  <Content Update="Views\Wallets\WalletPSBT.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
 	  <Content Update="Views\Wallets\WalletRescan.cshtml">

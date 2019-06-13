@@ -3,13 +3,22 @@
  * Copyright 2013-2017 Start Bootstrap
  * Licensed under MIT (https://github.com/BlackrockDigital/startbootstrap-creative/blob/master/LICENSE)
  */
+
+ :root {
+     --off-white: #f9fafb;
+ }
+
+
 body,
 html {
     width: 100%;
+    /* background: #f9fafb; */
+    background: var(--off-white);
 }
 
 body {
     font-family: 'Helvetica Neue', Arial, sans-serif;
+    background: var(--off-white);
 }
 
 hr {

@@ -17,7 +17,7 @@ namespace BTCPayServer.Payments.Lightning
             return BOLT11;
         }
 
-        public PaymentTypes GetPaymentType()
+        public PaymentType GetPaymentType()
         {
             return PaymentTypes.LightningLike;
         }

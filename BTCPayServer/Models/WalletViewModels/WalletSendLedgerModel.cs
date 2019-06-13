@@ -7,10 +7,9 @@ namespace BTCPayServer.Models.WalletViewModels
 {
     public class WalletSendLedgerModel
     {
-        public int FeeSatoshiPerByte { get; set; }
-        public bool SubstractFees { get; set; }
-        public decimal Amount { get; set; }
-        public string Destination { get; set; }
-        public bool NoChange { get; set; }
+        public string WebsocketPath { get; set; }
+        public string PSBT { get; set; }
+        public string HintChange { get; set; }
+        public string SuccessPath { get; set; }
     }
 }

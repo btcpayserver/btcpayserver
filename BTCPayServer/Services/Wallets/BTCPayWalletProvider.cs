@@ -22,7 +22,7 @@ namespace BTCPayServer.Services.Wallets
             _NetworkProvider = networkProvider;
             _Options = memoryCacheOption;
 
-            foreach(var network in networkProvider.GetAll())
+            foreach(var network in networkProvider.GetAll().OfType<BTCPayNetwork>())
             {
                 var explorerClient = _Client.GetExplorerClient(network.CryptoCode);
                 if (explorerClient == null)
@@ -33,7 +33,7 @@ namespace BTCPayServer.Services.Wallets
 
         Dictionary<string, BTCPayWallet> _Wallets = new Dictionary<string, BTCPayWallet>();
 
-        public BTCPayWallet GetWallet(BTCPayNetwork network)
+        public BTCPayWallet GetWallet(BTCPayNetworkBase network)
         {
             if (network == null)
                 throw new ArgumentNullException(nameof(network));
@@ -47,7 +47,7 @@ namespace BTCPayServer.Services.Wallets
             return result;
         }
 
-        public bool IsAvailable(BTCPayNetwork network)
+        public bool IsAvailable(BTCPayNetworkBase network)
         {
             return _Client.IsAvailable(network);
         }

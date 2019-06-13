@@ -26,7 +26,6 @@ addLoadEvent(function (ev) {
                 srvModel: window.srvModel,
                 connectionStatus: "",
                 endDate: "",
-                endDateRelativeTime: "",
                 ended: false,
                 endDiff: "",
                 active: true,
@@ -49,11 +48,12 @@ addLoadEvent(function (ev) {
                 if (this.srvModel.expiryDate) {
                     var endDateM = moment(this.srvModel.expiryDate);
                     this.endDate = endDateM.format('MMMM Do YYYY');
-                    this.endDateRelativeTime = endDateM.fromNow();
                     this.ended = endDateM.isBefore(moment());
 
                 } else {
                     this.ended = false;
+                    this.endDate = null;
+                    this.endDiff = null;
                 }
 
                 if (!this.ended && this.srvModel.expiryDate) {
@@ -82,6 +82,15 @@ addLoadEvent(function (ev) {
                 }, 5000);
 
                 eventAggregator.$emit("pay", amount);
+            },
+            cancelPayment: function (amount) {
+                this.setLoading(true);
+                var self = this;
+                self.timeoutState = setTimeout(function () {
+                    self.setLoading(false);
+                }, 5000);
+
+                eventAggregator.$emit("cancel-invoice", amount);
             },
             formatPaymentMethod: function (str) {
 
@@ -114,6 +123,26 @@ addLoadEvent(function (ev) {
                 self.setLoading(false);
                 btcpay.showInvoice(invoiceId);
                 btcpay.showFrame();
+            });
+            eventAggregator.$on("invoice-cancelled", function(){
+                self.setLoading(false);
+                Vue.toasted.show('Payment cancelled', {
+                    iconPack: "fontawesome",
+                    icon: "check",
+                    duration: 10000
+                });
+            });
+            eventAggregator.$on("cancel-invoice-error", function (error) {
+                self.setLoading(false);
+                Vue.toasted.show("Error cancelling payment", {
+                    iconPack: "fontawesome",
+                    icon: "exclamation-triangle",
+                    fullWidth: false,
+                    theme: "bubble",
+                    type: "error",
+                    position: "top-center",
+                    duration: 10000
+                });
             });
             eventAggregator.$on("invoice-error", function (error) {
                 self.setLoading(false);

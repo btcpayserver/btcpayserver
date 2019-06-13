@@ -33,9 +33,12 @@ using System.Security.Claims;
 using System.Security.Principal;
 using System.Text;
 using System.Threading;
+using AspNet.Security.OpenIdConnect.Primitives;
 using Xunit;
 using BTCPayServer.Services;
 using System.Net.Http;
+using Microsoft.AspNetCore.Hosting.Server.Features;
+using System.Threading.Tasks;
 
 namespace BTCPayServer.Tests
 {
@@ -102,12 +105,16 @@ namespace BTCPayServer.Tests
 
             StringBuilder config = new StringBuilder();
             config.AppendLine($"{chain.ToLowerInvariant()}=1");
+            if (InContainer)
+            {
+                config.AppendLine($"bind=0.0.0.0");
+            }
             config.AppendLine($"port={Port}");
             config.AppendLine($"chains=btc,ltc");
 
             config.AppendLine($"btc.explorer.url={NBXplorerUri.AbsoluteUri}");
             config.AppendLine($"btc.explorer.cookiefile=0");
-
+            config.AppendLine("allow-admin-registration=1");
             config.AppendLine($"ltc.explorer.url={LTCNBXplorerUri.AbsoluteUri}");
             config.AppendLine($"ltc.explorer.cookiefile=0");
             config.AppendLine($"btc.lightning={IntegratedLightning.AbsoluteUri}");
@@ -142,13 +149,17 @@ namespace BTCPayServer.Tests
                     .UseStartup<Startup>()
                     .Build();
             _Host.Start();
+
+            var urls = _Host.ServerFeatures.Get<IServerAddressesFeature>().Addresses;
+            foreach (var url in urls)
+            {
+                Logs.Tester.LogInformation("Listening on " + url);
+            }
+            Logs.Tester.LogInformation("Server URI " + ServerUri);
+
             InvoiceRepository = (InvoiceRepository)_Host.Services.GetService(typeof(InvoiceRepository));
             StoreRepository = (StoreRepository)_Host.Services.GetService(typeof(StoreRepository));
-            var dashBoard = (NBXplorerDashboard)_Host.Services.GetService(typeof(NBXplorerDashboard));
-            while(!dashBoard.IsFullySynched())
-            {
-                Thread.Sleep(10);
-            }
+            Networks = (BTCPayNetworkProvider)_Host.Services.GetService(typeof(BTCPayNetworkProvider));
 
             if (MockRates)
             {
@@ -209,6 +220,35 @@ namespace BTCPayServer.Tests
                 });
                 rateProvider.Providers.Add("bittrex", bittrex);
             }
+
+            
+
+            WaitSiteIsOperational().GetAwaiter().GetResult();
+        }
+
+        private async Task WaitSiteIsOperational()
+        {
+            var synching = WaitIsFullySynched();
+            var accessingHomepage = WaitCanAccessHomepage();
+            await Task.WhenAll(synching, accessingHomepage).ConfigureAwait(false);
+        }
+
+        private async Task WaitCanAccessHomepage()
+        {
+            var resp = await HttpClient.GetAsync("/").ConfigureAwait(false);
+            while (resp.StatusCode != HttpStatusCode.OK)
+            {
+                await Task.Delay(10).ConfigureAwait(false);
+            }
+        }
+
+        private async Task WaitIsFullySynched()
+        {
+            var dashBoard = GetService<NBXplorerDashboard>();
+            while (!dashBoard.IsFullySynched())
+            {
+                await Task.Delay(10).ConfigureAwait(false);
+            }
         }
 
         private string FindBTCPayServerDirectory()
@@ -226,6 +266,7 @@ namespace BTCPayServer.Tests
         }
         public InvoiceRepository InvoiceRepository { get; private set; }
         public StoreRepository StoreRepository { get; private set; }
+        public BTCPayNetworkProvider Networks { get; private set; }
         public Uri IntegratedLightning { get; internal set; }
         public bool InContainer { get; internal set; }
 
@@ -233,6 +274,8 @@ namespace BTCPayServer.Tests
         {
             return _Host.Services.GetRequiredService<T>();
         }
+
+        public IServiceProvider ServiceProvider => _Host.Services; 
 
         public T GetController<T>(string userId = null, string storeId = null, Claim[] additionalClaims = null) where T : Controller
         {
@@ -243,7 +286,7 @@ namespace BTCPayServer.Tests
             if (userId != null)
             {
                 List<Claim> claims = new List<Claim>();
-                claims.Add(new Claim(ClaimTypes.NameIdentifier, userId));
+                claims.Add(new Claim(OpenIdConnectConstants.Claims.Subject, userId));
                 if (additionalClaims != null)
                     claims.AddRange(additionalClaims);
                 context.User = new ClaimsPrincipal(new ClaimsIdentity(claims.ToArray(), Policies.CookieAuthentication));

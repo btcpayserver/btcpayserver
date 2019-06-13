@@ -28,8 +28,8 @@ namespace BTCPayServer.Hosting
                         return JArray.Parse(content).OfType<JObject>()
                                .Select(jobj => new Bundle()
                                {
-                                   Name = jobj.Property("name")?.Value.Value<string>() ?? jobj.Property("outputFileName").Value.Value<string>(),
-                                   OutputFileUrl = Path.Combine(hosting.ContentRootPath, jobj.Property("outputFileName").Value.Value<string>())
+                                   Name = jobj.Property("name", StringComparison.OrdinalIgnoreCase)?.Value.Value<string>() ?? jobj.Property("outputFileName", StringComparison.OrdinalIgnoreCase).Value.Value<string>(),
+                                   OutputFileUrl = Path.Combine(hosting.ContentRootPath, jobj.Property("outputFileName", StringComparison.OrdinalIgnoreCase).Value.Value<string>())
                                }).ToDictionary(o => o.Name, o => o);
                     }
                 }, true);

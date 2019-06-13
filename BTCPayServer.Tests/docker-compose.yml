@@ -38,7 +38,7 @@ services:
 
   # The dev container is not actually used, it is just handy to run `docker-compose up dev` to start all services
   dev: 
-    image: btcpayserver/bitcoin:0.17.0
+    image: btcpayserver/bitcoin:0.18.0
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_EXTRA_ARGS: |
@@ -55,7 +55,7 @@ services:
       - merchant_lnd
 
   devlnd: 
-    image: btcpayserver/bitcoin:0.17.0
+    image: btcpayserver/bitcoin:0.18.0
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_EXTRA_ARGS: |
@@ -71,7 +71,7 @@ services:
 
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.0.0.34
+    image: nicolasdorier/nbxplorer:2.0.0.48
     restart: unless-stopped
     ports:
       - "32838:32838"
@@ -98,13 +98,14 @@ services:
 
   bitcoind:
     restart: unless-stopped
-    image: btcpayserver/bitcoin:0.17.0
+    image: btcpayserver/bitcoin:0.18.0
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_EXTRA_ARGS: |-
         rpcuser=ceiwHEbqWI83
         rpcpassword=DwubwWsoo3
         rpcport=43782
+        rpcbind=0.0.0.0:43782
         port=39388
         whitelist=0.0.0.0/0
         zmqpubrawblock=tcp://0.0.0.0:28332
@@ -133,6 +134,7 @@ services:
         bind-addr=0.0.0.0
         announce-addr=customer_lightningd
         log-level=debug
+        funding-confirms=1
         dev-broadcast-interval=1000
         dev-bitcoind-poll=1
     ports:
@@ -176,6 +178,7 @@ services:
         bitcoin-rpcconnect=bitcoind
         bind-addr=0.0.0.0
         announce-addr=merchant_lightningd
+        funding-confirms=1
         network=regtest
         log-level=debug
         dev-broadcast-interval=1000
@@ -239,6 +242,7 @@ services:
         bitcoind.zmqpubrawblock=tcp://bitcoind:28332
         bitcoind.zmqpubrawtx=tcp://bitcoind:28333
         externalip=merchant_lnd:9735
+        bitcoin.defaultchanconfs=1
         no-macaroons=1
         debuglevel=debug
         noseedbackup=1
@@ -269,6 +273,7 @@ services:
         bitcoind.zmqpubrawblock=tcp://bitcoind:28332
         bitcoind.zmqpubrawtx=tcp://bitcoind:28333
         externalip=customer_lnd:10009
+        bitcoin.defaultchanconfs=1
         no-macaroons=1
         debuglevel=debug
         noseedbackup=1

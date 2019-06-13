@@ -68,7 +68,12 @@
                         <span asp-validation-for="StoreId" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <input type="submit" value="Create" class="btn btn-primary" />
+                        <label asp-for="SupportedTransactionCurrencies" class="control-label"></label>
+                        <select asp-for="SupportedTransactionCurrencies" asp-items="Model.AvailablePaymentMethods" class="form-control" multiple="multiple"></select>
+                        <span asp-validation-for="SupportedTransactionCurrencies" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <input type="submit" value="Create" class="btn btn-primary" id="Create" />
                     </div>
                 </form>
                 <a asp-action="ListInvoices">Back to List</a>

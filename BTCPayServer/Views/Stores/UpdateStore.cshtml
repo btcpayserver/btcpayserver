@@ -17,7 +17,6 @@
 </style>
 
 
-<h4>@ViewData["Title"]</h4>
 <partial name="_StatusMessage" for="@TempData["TempDataProperty-StatusMessage"]" />
 
 <div class="row">
@@ -121,7 +120,7 @@
                                     {
                                         <a asp-action="WalletTransactions" asp-controller="Wallets" asp-route-walletId="@scheme.WalletId">Wallet</a><span> - </span>
                                     }
-                                    <a asp-action="AddDerivationScheme" asp-route-cryptoCode="@scheme.Crypto">Modify</a>
+                                    <a asp-action="AddDerivationScheme" asp-route-cryptoCode="@scheme.Crypto" id="ModifyBTC">Modify</a>
                                 </td>
                             </tr>
                         }
@@ -247,7 +246,7 @@
                     </div>
                 </div>
             }
-            <button name="command" type="submit" class="btn btn-primary" value="Save">Save</button>
+            <button name="command" type="submit" class="btn btn-primary" value="Save" id="Save">Save</button>
         </form>
     </div>
 </div>

@@ -1,0 +1,53 @@
+@model BTCPayServer.Services.U2F.Models.LoginWithU2FViewModel
+
+<form id="u2fForm" asp-action="LoginWithU2F" method="post" asp-route-returnUrl="@ViewData["ReturnUrl"]">
+    <input type="hidden" asp-for="Version" />
+    <input type="hidden" asp-for="Challenge" />
+    <input type="hidden" asp-for="AppId" />
+    <input type="hidden" asp-for="DeviceResponse" />
+    <input type="hidden" asp-for="Challenges" />
+    <input type="hidden" asp-for="UserId" />
+    <input type="hidden" asp-for="RememberMe" />
+</form>
+
+<section>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                <h2 class="section-heading"><span class="fa fa-spinner fa-spin"></span>U2F Authentication</h2>
+                <hr class="primary">
+                
+                <p>Insert your U2F device or a hardware wallet into your computer's USB port. If it has a button, tap on it.</p>
+            </div>
+        </div>
+        <div class="row">
+            <a id="error-response" class="text-danger" href="javascript:window.location.reload()"> </a>
+        </div>
+    </div>
+</section>
+
+<script src="~/vendor/u2f/u2f-api-1.1.js"></script>
+<script type="text/javascript">
+    var errorMap = {
+        1: 'Unknown error, try again',
+        2: "Bad request error, try again",
+        3: "This key isn't supported, please try another one",
+        4: 'The device is already registered, please login',
+        5: 'Authentication timed out. Please reload to try again.'
+    };
+    setTimeout(function() {
+        window.u2f.sign(
+            "@Model.AppId",
+            "@Model.Challenge",
+            @Html.Raw(@Model.Challenges), function (data) {
+                if (data.errorCode) {
+                    $("#error-response").text(errorMap[data.errorCode]);
+                    return;
+                }
+                $('#DeviceResponse').val(JSON.stringify(data));
+                $('#u2fForm').submit();
+
+                return "";
+            });
+    }, 1000);
+</script>

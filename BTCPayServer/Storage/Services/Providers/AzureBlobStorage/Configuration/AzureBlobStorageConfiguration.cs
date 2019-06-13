@@ -1,9 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Storage.Services.Providers.Models;
+using Microsoft.AspNetCore.Mvc;
 using TwentyTwenty.Storage.Azure;
 
 namespace BTCPayServer.Storage.Services.Providers.AzureBlobStorage.Configuration
 {
+    [ModelMetadataType(typeof(AzureBlobStorageConfigurationMetadata))]
     public class AzureBlobStorageConfiguration : AzureProviderOptions, IBaseStorageConfiguration
     {
         [Required]
@@ -12,8 +14,5 @@ namespace BTCPayServer.Storage.Services.Providers.AzureBlobStorage.Configuration
         [RegularExpression(@"[a-z0-9-]+",
             ErrorMessage = "Characters must be lowercase or digits or -")]
         public string ContainerName { get; set; }
-
-        [Required][AzureBlobStorageConnectionStringValidator] 
-        public new string ConnectionString { get; set; }
     }
 }

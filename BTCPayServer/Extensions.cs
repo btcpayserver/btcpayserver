@@ -81,7 +81,7 @@ namespace BTCPayServer
         }
         public static PaymentMethodId GetpaymentMethodId(this InvoiceCryptoInfo info)
         {
-            return new PaymentMethodId(info.CryptoCode, Enum.Parse<PaymentTypes>(info.PaymentType));
+            return new PaymentMethodId(info.CryptoCode, PaymentTypes.Parse(info.PaymentType));
         }
         public static async Task CloseSocket(this WebSocket webSocket)
         {
@@ -132,6 +132,12 @@ namespace BTCPayServer
                 return str;
             return $"/{str}";
         }
+        public static string WithoutEndingSlash(this string str)
+        {
+            if (str.EndsWith("/", StringComparison.InvariantCulture))
+                return str.Substring(0, str.Length - 1);
+            return str;
+        }
 
         public static void SetHeaderOnStarting(this HttpResponse resp, string name, string value)
         {
@@ -179,7 +185,7 @@ namespace BTCPayServer
             }
             if(IPAddress.TryParse(server, out var ip))
             {
-                return ip.IsLocal();
+                return ip.IsLocal() || ip.IsRFC1918();
             }
             return false;
         }
@@ -198,6 +204,11 @@ namespace BTCPayServer
                         "://",
                         request.Host.ToUriComponent(),
                         request.PathBase.ToUriComponent());
+        }
+
+        public static Uri GetAbsoluteRootUri(this HttpRequest request)
+        {
+            return new Uri(request.GetAbsoluteRoot());
         }
 
         public static string GetCurrentUrl(this HttpRequest request)
@@ -311,13 +322,6 @@ namespace BTCPayServer
             NBitcoin.Extensions.TryAdd(ctx.Items, "IsBitpayAPI", value);
         }
 
-        public static void AddRange<T>(this HashSet<T> hashSet, IEnumerable<T> items)
-        {
-            foreach (var item in items)
-            {
-                hashSet.Add(item);
-            }
-        }
         public static bool GetIsBitpayAPI(this HttpContext ctx)
         {
             return ctx.Items.TryGetValue("IsBitpayAPI", out object obj) &&
@@ -329,10 +333,15 @@ namespace BTCPayServer
             NBitcoin.Extensions.TryAdd(ctx.Items, "BitpayAuth", value);
         }
 
-        public static (string Signature, String Id, String Authorization) GetBitpayAuth(this HttpContext ctx)
+        public static bool TryGetBitpayAuth(this HttpContext ctx, out (string Signature, String Id, String Authorization) result)
         {
-            ctx.Items.TryGetValue("BitpayAuth", out object obj);
-            return ((string Signature, String Id, String Authorization))obj;
+            if (ctx.Items.TryGetValue("BitpayAuth", out object obj))
+            {
+                result = ((string Signature, String Id, String Authorization))obj;
+                return true;
+            }
+            result = default;
+            return false;
         }
 
         public static StoreData GetStoreData(this HttpContext ctx)

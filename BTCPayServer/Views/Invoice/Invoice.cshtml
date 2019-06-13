@@ -5,35 +5,26 @@
 @section HeaderContent{
     <META NAME="robots" CONTENT="noindex,nofollow">
 }
-
 <style type="text/css">
+
     .linethrough {
         text-decoration: line-through;
-    }
-
-    .smMaxWidth {
-        max-width: 200px;
-    }
-
-    @@media (min-width: 768px) {
-        .smMaxWidth {
-            max-width: 400px;
-        }
     }
 
     .firstCol {
         width: 140px;
     }
 </style>
-
 <section>
     <div class="container">
-
-        <div class="row">
-            <div class="col-lg-12 text-center">
-                <partial name="_StatusMessage" for="StatusMessage" />
+        @if (!string.IsNullOrEmpty(Model.StatusMessage))
+        {
+            <div class="row">
+                <div class="col-lg-12 text-center">
+                    <partial name="_StatusMessage" for="StatusMessage" />
+                </div>
             </div>
-        </div>
+        }
 
         <div class="row">
             <div class="col-lg-12 text-center">
@@ -42,256 +33,161 @@
             </div>
         </div>
 
-    <div class="row">
-        <div class="col-md-6">
-            <h3>Information</h3>
-            <table class="table table-sm table-responsive-md">
-                <tr>
-                    <th>Store</th>
-                    <td><a href="@Model.StoreLink">@Model.StoreName</a></td>
-                </tr>
-                <tr>
-                    <th>Id</th>
-                    <td>@Model.Id</td>
-                </tr>
-                <tr>
-                    <th>State</th>
-                    <td>@Model.State</td>
-                </tr>
-                <tr>
-                    <th>Created date</th>
-                    <td>@Model.CreatedDate.ToBrowserDate()</td>
-                </tr>
-                <tr>
-                    <th>Expiration date</th>
-                    <td>@Model.ExpirationDate.ToBrowserDate()</td>
-                </tr>
-                <tr>
-                    <th>Monitoring date</th>
-                    <td>@Model.MonitoringDate.ToBrowserDate()</td>
-                </tr>
-                <tr>
-                    <th>Transaction speed</th>
-                    <td>@Model.TransactionSpeed</td>
-                </tr>
-                <tr>
-                    <th>Refund email</th>
-                    <td><a href="mailto:@Model.RefundEmail">@Model.RefundEmail</a></td>
-                </tr>
-                <tr>
-                    <th>Order Id</th>
-                    <td>@Model.OrderId</td>
-                </tr>
-                <tr>
-                    <th>Total fiat due</th>
-                    <td>@Model.Fiat</td>
-                </tr>
-                <tr>
-                    <th>Notification Email</th>
-                    <td>@Model.NotificationEmail</td>
-                </tr>
-                <tr>
-                    <th>Notification Url</th>
-                    <td>@Model.NotificationUrl</td>
-                </tr>
-                <tr>
-                    <th>Redirect Url</th>
-                    <td><a href="@Model.RedirectUrl">@Model.RedirectUrl</a></td>
-                </tr>
-            </table>
-        </div>
-
-        <div class="col-md-6">
-            <h3>Buyer information</h3>
-            <table class="table table-sm table-responsive-md">
-                <tr>
-                    <th>Name</th>
-                    <td>@Model.BuyerInformation.BuyerName</td>
-                </tr>
-                <tr>
-                    <th>Email</th>
-                    <td><a href="mailto:@Model.BuyerInformation.BuyerEmail">@Model.BuyerInformation.BuyerEmail</a></td>
-                </tr>
-                <tr>
-                    <th>Phone</th>
-                    <td>@Model.BuyerInformation.BuyerPhone</td>
-                </tr>
-                <tr>
-                    <th>Address 1</th>
-                    <td>@Model.BuyerInformation.BuyerAddress1</td>
-                </tr>
-                <tr>
-                    <th>Address 2</th>
-                    <td>@Model.BuyerInformation.BuyerAddress2</td>
-                </tr>
-                <tr>
-                    <th>City</th>
-                    <td>@Model.BuyerInformation.BuyerCity</td>
-                </tr>
-                <tr>
-                    <th>State</th>
-                    <td>@Model.BuyerInformation.BuyerState</td>
-                </tr>
-                <tr>
-                    <th>Country</th>
-                    <td>@Model.BuyerInformation.BuyerCountry</td>
-                </tr>
-                <tr>
-                    <th>Zip</th>
-                    <td>@Model.BuyerInformation.BuyerZip</td>
-                </tr>
-            </table>
-            @if (Model.PosData.Count == 0)
-            {
-                <h3>Product information</h3>
-                <table class="table table-sm table-responsive-md">
-                    <tr>
-                        <th>Item code</th>
-                        <td>@Model.ProductInformation.ItemCode</td>
-                    </tr>
-                    <tr>
-                        <th>Item Description</th>
-                        <td>@Model.ProductInformation.ItemDesc</td>
-                    </tr>
-                    <tr>
-                        <th>Price</th>
-                        <td>@Model.Fiat</td>
-                    </tr>
-                    <tr>
-                        <th>Tax included</th>
-                        <td>@Model.TaxIncluded</td>
-                    </tr>
-                </table>
-            }
-        </div>
-    </div>
-
-    @if (Model.PosData.Count != 0)
-    {
         <div class="row">
             <div class="col-md-6">
-                <h3>Product information</h3>
-                <table class="table table-sm table-responsive-md">
+                <h3>Information</h3>
+                <table class="table table-sm table-responsive-md removetopborder">
                     <tr>
-                        <th>Item code</th>
-                        <td>@Model.ProductInformation.ItemCode</td>
+                        <th>Store</th>
+                        <td><a href="@Model.StoreLink">@Model.StoreName</a></td>
                     </tr>
                     <tr>
-                        <th>Item Description</th>
-                        <td>@Model.ProductInformation.ItemDesc</td>
+                        <th>Id</th>
+                        <td>@Model.Id</td>
                     </tr>
                     <tr>
-                        <th>Price</th>
+                        <th>State</th>
+                        <td>@Model.State</td>
+                    </tr>
+                    <tr>
+                        <th>Created date</th>
+                        <td>@Model.CreatedDate.ToBrowserDate()</td>
+                    </tr>
+                    <tr>
+                        <th>Expiration date</th>
+                        <td>@Model.ExpirationDate.ToBrowserDate()</td>
+                    </tr>
+                    <tr>
+                        <th>Monitoring date</th>
+                        <td>@Model.MonitoringDate.ToBrowserDate()</td>
+                    </tr>
+                    <tr>
+                        <th>Transaction speed</th>
+                        <td>@Model.TransactionSpeed</td>
+                    </tr>
+                    <tr>
+                        <th>Refund email</th>
+                        <td><a href="mailto:@Model.RefundEmail">@Model.RefundEmail</a></td>
+                    </tr>
+                    <tr>
+                        <th>Order Id</th>
+                        <td>@Model.OrderId</td>
+                    </tr>
+                    <tr>
+                        <th>Total fiat due</th>
                         <td>@Model.Fiat</td>
                     </tr>
                     <tr>
-                        <th>Tax included</th>
-                        <td>@Model.TaxIncluded</td>
+                        <th>Notification Email</th>
+                        <td>@Model.NotificationEmail</td>
+                    </tr>
+                    <tr>
+                        <th>Notification Url</th>
+                        <td>@Model.NotificationUrl</td>
+                    </tr>
+                    <tr>
+                        <th>Redirect Url</th>
+                        <td><a href="@Model.RedirectUrl">@Model.RedirectUrl</a></td>
                     </tr>
                 </table>
             </div>
             <div class="col-md-6">
-                <h3>Point of Sale Data</h3>
-                <partial name="PosData" model="@Model.PosData" />
-            </div>
-        </div>
-    }
-
-    <div class="row">
-            <div class="col-md-12">
-                <h3>Paid summary</h3>
-                <table class="table table-sm table-responsive-md">
-                    <thead class="thead-inverse">
-                        <tr>
-                            <th>Payment method</th>
-                            <th>Address</th>
-                            <th class="text-right">Rate</th>
-                            <th class="text-right">Paid</th>
-                            <th class="text-right">Due</th>
-                            @if (Model.StatusException == InvoiceExceptionStatus.PaidOver)
-                            {
-                                <th class="text-right">Overpaid</th>
-                            }
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var payment in Model.CryptoPayments)
-                        {
-                            <tr>
-                                <td>@payment.PaymentMethod</td>
-                                <td>@payment.Address</td>
-                                <td class="text-right">@payment.Rate</td>
-                                <td class="text-right">@payment.Paid</td>
-                                <td class="text-right">@payment.Due</td>
-                                @if (Model.StatusException == InvoiceExceptionStatus.PaidOver)
-                                {
-                                    <td class="text-right">@payment.Overpaid</td>
-                                }
-                            </tr>
-                        }
-                    </tbody>
+                <h3>Buyer information</h3>
+                <table class="table table-sm table-responsive-md removetopborder">
+                    <tr>
+                        <th>Name</th>
+                        <td>@Model.BuyerInformation.BuyerName</td>
+                    </tr>
+                    <tr>
+                        <th>Email</th>
+                        <td><a href="mailto:@Model.BuyerInformation.BuyerEmail">@Model.BuyerInformation.BuyerEmail</a></td>
+                    </tr>
+                    <tr>
+                        <th>Phone</th>
+                        <td>@Model.BuyerInformation.BuyerPhone</td>
+                    </tr>
+                    <tr>
+                        <th>Address 1</th>
+                        <td>@Model.BuyerInformation.BuyerAddress1</td>
+                    </tr>
+                    <tr>
+                        <th>Address 2</th>
+                        <td>@Model.BuyerInformation.BuyerAddress2</td>
+                    </tr>
+                    <tr>
+                        <th>City</th>
+                        <td>@Model.BuyerInformation.BuyerCity</td>
+                    </tr>
+                    <tr>
+                        <th>State</th>
+                        <td>@Model.BuyerInformation.BuyerState</td>
+                    </tr>
+                    <tr>
+                        <th>Country</th>
+                        <td>@Model.BuyerInformation.BuyerCountry</td>
+                    </tr>
+                    <tr>
+                        <th>Zip</th>
+                        <td>@Model.BuyerInformation.BuyerZip</td>
+                    </tr>
                 </table>
+                @if (Model.PosData.Count == 0)
+                {
+                    <h3>Product information</h3>
+                    <table class="table table-sm table-responsive-md removetopborder">
+                        <tr>
+                            <th>Item code</th>
+                            <td>@Model.ProductInformation.ItemCode</td>
+                        </tr>
+                        <tr>
+                            <th>Item Description</th>
+                            <td>@Model.ProductInformation.ItemDesc</td>
+                        </tr>
+                        <tr>
+                            <th>Price</th>
+                            <td>@Model.Fiat</td>
+                        </tr>
+                        <tr>
+                            <th>Tax included</th>
+                            <td>@Model.TaxIncluded</td>
+                        </tr>
+                    </table>
+                }
             </div>
         </div>
-        @if (Model.OnChainPayments.Count > 0)
+
+        @if (Model.PosData.Count != 0)
         {
             <div class="row">
-                <div class="col-md-12">
-                    <h3>On-Chain payments</h3>
-                    <table class="table table-sm table-responsive-lg">
-                        <thead class="thead-inverse">
-                            <tr>
-                                <th>Crypto</th>
-                                <th>Deposit address</th>
-                                <th>Transaction Id</th>
-                                <th class="text-right">Confirmations</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var payment in Model.OnChainPayments)
-                            {
-                                var replaced = payment.Replaced ? "class='linethrough'" : "";
-                                <tr @replaced>
-                                    <td>@payment.Crypto</td>
-                                    <td>@payment.DepositAddress</td>
-                                    <td class="smMaxWidth text-truncate">
-                                        <a href="@payment.TransactionLink" target="_blank">
-                                            @payment.TransactionId
-                                        </a>
-                                    </td>
-                                    <td class="text-right">@payment.Confirmations</td>
-                                </tr>
-                            }
-                        </tbody>
+                <div class="col-md-6">
+                    <h3>Product information</h3>
+                    <table class="table table-sm table-responsive-md removetopborder">
+                        <tr>
+                            <th>Item code</th>
+                            <td>@Model.ProductInformation.ItemCode</td>
+                        </tr>
+                        <tr>
+                            <th>Item Description</th>
+                            <td>@Model.ProductInformation.ItemDesc</td>
+                        </tr>
+                        <tr>
+                            <th>Price</th>
+                            <td>@Model.Fiat</td>
+                        </tr>
+                        <tr>
+                            <th>Tax included</th>
+                            <td>@Model.TaxIncluded</td>
+                        </tr>
                     </table>
+                </div>
+                <div class="col-md-6">
+                    <h3>Point of Sale Data</h3>
+                    <partial name="PosData" model="@Model.PosData" />
                 </div>
             </div>
         }
-        @if (Model.OffChainPayments.Count > 0)
-        {
-            <div class="row">
-                <div class="col-md-12">
-                    <h3>Off-Chain payments</h3>
-                    <table class="table table-sm table-responsive-md">
-                        <thead class="thead-inverse">
-                            <tr>
-                                <th class="firstCol">Crypto</th>
-                                <th>BOLT11</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var payment in Model.OffChainPayments)
-                            {
-                                <tr>
-                                    <td>@payment.Crypto</td>
-                                    <td class="smMaxWidth text-truncate">@payment.BOLT11</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        }
+
+        <partial name="InvoicePaymentsPartial" model="Model" />
 
         <div class="row">
             <div class="col-md-12">

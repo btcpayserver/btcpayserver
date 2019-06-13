@@ -42,32 +42,32 @@
 
             payment.on('Exchange:Ready', function(){
                 waitForCoinSwitch();
-            })
+            });
+
+            payment.on("Exchange:Complete", function () {
+                if(window.localStorage){
+                    window.localStorage.removeItem(toCurrencyAddress);
+                }
+                window.close();
+            });
+
+            payment.on("Exchange:Initiated", function(orderId) {
+                if(window.localStorage){
+                    window.localStorage.setItem(toCurrencyAddress,orderId);
+                }
+            });
+            payment.on("Exchange:Closed", function () {
+                window.close();
+                window.postMessage("popup-closed", "*");
+            });
 
             function waitForCoinSwitch() {
                 if (typeof payment.open !== "function") {
                     setTimeout(waitForCoinSwitch, 1000);
                     return;
                 }
-                payment.on("Exchange:Ready", function(){
-                    payment.open(config);
-                });                
-                payment.on("Exchange:Complete", function () {
-                    if(window.localStorage){
-                        window.localStorage.removeItem(toCurrencyAddress);
-                    }
-                    window.close();
-                });
-
-                payment.on("Exchange:Initiated", function(orderId) {
-                    if(window.localStorage){
-                        window.localStorage.setItem(toCurrencyAddress,orderId);
-                    }
-                });
-                payment.on("Exchange:Closed", function () {
-                    window.close();
-                    window.postMessage("popup-closed", "*");
-                })
+                payment.open(config);               
+                
             }
         });
     </script>

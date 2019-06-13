@@ -9,6 +9,8 @@ namespace BTCPayServer.Views.Wallets
     {
         Send,
         Transactions,
-        Rescan
+        Rescan,
+        PSBT,
+        Settings
     }
 }

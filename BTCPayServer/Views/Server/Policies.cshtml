@@ -4,13 +4,15 @@
 }
 
 
-<h4>@ViewData["Title"]</h4>
 <partial name="_StatusMessage" for="@TempData["StatusMessage"]" />
+@if (!this.ViewContext.ModelState.IsValid)
+{
 <div class="row">
     <div class="col-lg-6">
         <div asp-validation-summary="All" class="text-danger"></div>
     </div>
 </div>
+}
 <div class="row">
     <div class="col-lg-6">
         <form method="post">

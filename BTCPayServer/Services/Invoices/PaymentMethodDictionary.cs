@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Payments;
 
@@ -63,7 +62,7 @@ namespace BTCPayServer.Services.Invoices
             _Inner.TryGetValue(paymentMethodId, out var value);
             return value;
         }
-        public PaymentMethod TryGet(string network, PaymentTypes paymentType)
+        public PaymentMethod TryGet(string network, PaymentType paymentType)
         {
             if (network == null)
                 throw new ArgumentNullException(nameof(network));

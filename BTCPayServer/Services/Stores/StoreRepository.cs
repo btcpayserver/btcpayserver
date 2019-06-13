@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Services.Invoices;
 using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Services.Stores
@@ -13,6 +14,7 @@ namespace BTCPayServer.Services.Stores
     public class StoreRepository
     {
         private ApplicationDbContextFactory _ContextFactory;
+
         public StoreRepository(ApplicationDbContextFactory contextFactory)
         {
             _ContextFactory = contextFactory ?? throw new ArgumentNullException(nameof(contextFactory));
@@ -24,7 +26,8 @@ namespace BTCPayServer.Services.Stores
                 return null;
             using (var ctx = _ContextFactory.CreateContext())
             {
-                return await ctx.FindAsync<StoreData>(storeId).ConfigureAwait(false);
+                var result =  await ctx.FindAsync<StoreData>(storeId).ConfigureAwait(false);
+                return result;
             }
         }
 
@@ -170,7 +173,7 @@ namespace BTCPayServer.Services.Stores
                 {
                     Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(32)),
                     StoreName = name,
-                    SpeedPolicy = Invoices.SpeedPolicy.MediumSpeed
+                    SpeedPolicy = SpeedPolicy.MediumSpeed
                 };
                 var userStore = new UserStore
                 {

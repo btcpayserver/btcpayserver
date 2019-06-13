@@ -185,7 +185,7 @@ namespace BTCPayServer
             }
             if(IPAddress.TryParse(server, out var ip))
             {
-                return ip.IsLocal();
+                return ip.IsLocal() || ip.IsRFC1918();
             }
             return false;
         }

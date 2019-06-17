@@ -11,9 +11,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Misc", "Misc", "{29290EC7-0
 	ProjectSection(SolutionItems) = preProject
 		amd64.Dockerfile = amd64.Dockerfile
 		arm32v7.Dockerfile = arm32v7.Dockerfile
+		Build\Common.csproj = Build\Common.csproj
 		.circleci\config.yml = .circleci\config.yml
 		docker-entrypoint.sh = docker-entrypoint.sh
-		Version.csproj = Version.csproj
+		Build\Version.csproj = Build\Version.csproj
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTCPayServer.Rating", "BTCPayServer.Rating\BTCPayServer.Rating.csproj", "{6DC77459-D52F-45EE-B3F3-315043D33A1B}"

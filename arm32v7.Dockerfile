@@ -4,7 +4,7 @@ RUN apt-get update \
 	&& apt-get install -qq --no-install-recommends qemu qemu-user-static qemu-user binfmt-support
 
 WORKDIR /source
-COPY Common.csproj Common.csproj
+COPY Build/Common.csproj Build/Common.csproj
 COPY BTCPayServer/BTCPayServer.csproj BTCPayServer/BTCPayServer.csproj
 COPY BTCPayServer.Common/BTCPayServer.Common.csproj BTCPayServer.Common/BTCPayServer.Common.csproj
 COPY BTCPayServer.Rating/BTCPayServer.Rating.csproj BTCPayServer.Rating/BTCPayServer.Rating.csproj
@@ -12,7 +12,7 @@ RUN dotnet restore
 COPY BTCPayServer.Common/. BTCPayServer.Common/.
 COPY BTCPayServer.Rating/. BTCPayServer.Rating/.
 COPY BTCPayServer/. BTCPayServer/.
-COPY Version.csproj Version.csproj
+COPY Build/Version.csproj Build/Version.csproj
 RUN cd BTCPayServer && dotnet publish --output /app/ --configuration Release
 
 # Force the builder machine to take make an arm runtime image. This is fine as long as the builder does not run any program

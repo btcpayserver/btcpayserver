@@ -47,5 +47,5 @@
   "Pay with CoinSwitch": "Plačilo z CoinSwitch",
   "Pay with Changelly": "Plačilo z Changelly",
   "Close": "Zapri",
-  "NotPaid_ExtraTransaction": "The invoice hasn't been paid in full. Please send another transaction to cover amount Due."
+  "NotPaid_ExtraTransaction": "Račun ni bil plačan v celoti. Potrebna je nova transakcija za doplačilo."
 }

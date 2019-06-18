@@ -1,7 +1,7 @@
 {
   "NOTICE_WARN": "THIS CODE HAS BEEN AUTOMATICALLY GENERATED FROM TRANSIFEX, IF YOU WISH TO HELP TRANSLATION COME ON THE SLACK http://slack.btcpayserver.org TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/",
   "code": "da-DK",
-  "currentLanguage": "Dansk",
+  "currentLanguage": "Engelsk",
   "lang": "Sprog",
   "Awaiting Payment...": "Afventer betaling...",
   "Pay with": "Betal med",
@@ -47,5 +47,5 @@
   "Pay with CoinSwitch": "Betal med CoinSwitch",
   "Pay with Changelly": "Betal med Changelly",
   "Close": "Luk",
-  "NotPaid_ExtraTransaction": "The invoice hasn't been paid in full. Please send another transaction to cover amount Due."
+  "NotPaid_ExtraTransaction": "Fakturaen er ikke fuldt ud betalt. Venligst send endnu en transaktion for at dække for den manglende mængde."
 }

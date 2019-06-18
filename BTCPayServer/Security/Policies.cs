@@ -14,7 +14,7 @@ namespace BTCPayServer.Security
         public static AuthorizationOptions AddBTCPayPolicies(this AuthorizationOptions options)
         {
             AddClaim(options, CanModifyStoreSettings.Key);
-            options.AddPolicy(CanModifyServerSettings.Key, o => o.RequireRole(Roles.ServerAdmin));
+            AddClaim(options, CanModifyServerSettings.Key);
             AddClaim(options, CanCreateInvoice.Key);
             return options;
         }

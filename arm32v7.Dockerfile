@@ -8,7 +8,7 @@ COPY Build/Common.csproj Build/Common.csproj
 COPY BTCPayServer/BTCPayServer.csproj BTCPayServer/BTCPayServer.csproj
 COPY BTCPayServer.Common/BTCPayServer.Common.csproj BTCPayServer.Common/BTCPayServer.Common.csproj
 COPY BTCPayServer.Rating/BTCPayServer.Rating.csproj BTCPayServer.Rating/BTCPayServer.Rating.csproj
-RUN dotnet restore
+RUN cd BTCPayServer && dotnet restore
 COPY BTCPayServer.Common/. BTCPayServer.Common/.
 COPY BTCPayServer.Rating/. BTCPayServer.Rating/.
 COPY BTCPayServer/. BTCPayServer/.

@@ -2,9 +2,9 @@ namespace BTCPayServer.Payments.Monero
 {
     public class MoneroLikeOnChainPaymentMethodDetails : IPaymentMethodDetails
     {
-        public PaymentTypes GetPaymentType()
+        public PaymentType GetPaymentType()
         {
-            return PaymentTypes.MoneroLike;
+            return MoneroPaymentType.Instance;
         }
 
         public string GetPaymentDestination()

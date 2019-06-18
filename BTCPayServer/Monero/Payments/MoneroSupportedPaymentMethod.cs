@@ -5,6 +5,6 @@ namespace BTCPayServer.Payments.Monero
 
         public string CryptoCode { get; set; }
         public int AccountIndex { get; set; }
-        public PaymentMethodId PaymentId => new PaymentMethodId(CryptoCode, PaymentTypes.MoneroLike);
+        public PaymentMethodId PaymentId => new PaymentMethodId(CryptoCode, MoneroPaymentType.Instance);
     }
 }

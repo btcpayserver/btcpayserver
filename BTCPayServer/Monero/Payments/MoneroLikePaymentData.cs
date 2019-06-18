@@ -5,6 +5,8 @@ namespace BTCPayServer.Payments.Monero
 {
     public class MoneroLikePaymentData: CryptoPaymentData
     {
+        public BTCPayNetworkBase Network { get; set; }
+
         public string GetPaymentId()
         {
             throw new NotImplementedException();
@@ -20,17 +22,32 @@ namespace BTCPayServer.Payments.Monero
             throw new NotImplementedException();
         }
 
+        public bool PaymentCompleted(PaymentEntity entity)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool PaymentConfirmed(PaymentEntity entity, SpeedPolicy speedPolicy)
+        {
+            throw new NotImplementedException();
+        }
+
+        public PaymentType GetPaymentType()
+        {
+            throw new NotImplementedException();
+        }
+
+        public string GetDestination()
+        {
+            throw new NotImplementedException();
+        }
+
         public bool PaymentCompleted(PaymentEntity entity, BTCPayNetworkBase network)
         {
             throw new NotImplementedException();
         }
 
         public bool PaymentConfirmed(PaymentEntity entity, SpeedPolicy speedPolicy, BTCPayNetworkBase network)
-        {
-            throw new NotImplementedException();
-        }
-
-        public PaymentTypes GetPaymentType()
         {
             throw new NotImplementedException();
         }

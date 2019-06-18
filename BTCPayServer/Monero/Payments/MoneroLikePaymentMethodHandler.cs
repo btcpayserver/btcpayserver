@@ -9,9 +9,6 @@ using BTCPayServer.Rating;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using NBitcoin;
-using NBitpayClient;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Payments.Monero
 {
@@ -25,10 +22,7 @@ namespace BTCPayServer.Payments.Monero
             _networkProvider = networkProvider;
             _moneroRpcProvider = moneroRpcProvider;
         }
-
-
-        public override string PrettyDescription => string.Empty;
-        public override PaymentTypes PaymentType => PaymentTypes.MoneroLike;
+        public override PaymentType PaymentType => MoneroPaymentType.Instance;
 
         public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(MoneroSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod,
             StoreData store, MoneroLikeSpecificBtcPayNetwork network, object preparePaymentObject)
@@ -45,14 +39,10 @@ namespace BTCPayServer.Payments.Monero
             };
         }
 
-        public override void PrepareInvoiceDto(InvoiceResponse invoiceResponse, InvoiceEntity invoiceEntity,
-            InvoiceCryptoInfo invoiceCryptoInfo, PaymentMethodAccounting accounting, PaymentMethod info)
-        {
-        }
 
         public override void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse)
         {
-            var paymentMethodId = new PaymentMethodId(model.CryptoCode, PaymentTypes.MoneroLike);
+            var paymentMethodId = new PaymentMethodId(model.CryptoCode, PaymentType);
 
             var cryptoInfo = invoiceResponse.CryptoInfo.First(o => Extensions.GetpaymentMethodId(o) == paymentMethodId);
             var network = _networkProvider.GetNetwork<MoneroLikeSpecificBtcPayNetwork>(model.CryptoCode);
@@ -85,33 +75,8 @@ namespace BTCPayServer.Payments.Monero
         {
             return _networkProvider.GetAll()
                 .Where(network => network is MoneroLikeSpecificBtcPayNetwork)
-                .Select(network => new PaymentMethodId(network.CryptoCode, PaymentTypes.MoneroLike));
+                .Select(network => new PaymentMethodId(network.CryptoCode, PaymentType));
         }
-
-        public override CryptoPaymentData GetCryptoPaymentData(PaymentEntity paymentEntity)
-        {
-#pragma warning disable CS0618
-            return JsonConvert.DeserializeObject<MoneroLikePaymentData>(paymentEntity.CryptoPaymentData);
-#pragma warning restore CS0618
-        }
-
-        public override ISupportedPaymentMethod DeserializeSupportedPaymentMethod(PaymentMethodId paymentMethodId, JToken value)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public override IPaymentMethodDetails DeserializePaymentMethodDetails(JObject jobj)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public override string GetTransactionLink(PaymentMethodId paymentMethodId, params object[] args)
-        {
-            return string.Format(
-                _networkProvider.GetNetwork<MoneroLikeSpecificBtcPayNetwork>(paymentMethodId.CryptoCode)
-                    .BlockExplorerLink, args);
-        }
-
 
         private string GetCryptoImage(BTCPayNetwork network)
         {

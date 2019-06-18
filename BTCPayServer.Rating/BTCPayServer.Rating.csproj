@@ -1,5 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="../Build/Version.csproj" Condition="Exists('../Version.csproj')" />
+  <Import Project="../Build/Version.csproj" Condition="Exists('../Build/Version.csproj')" />
   <Import Project="../Build/Common.csproj" />
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>

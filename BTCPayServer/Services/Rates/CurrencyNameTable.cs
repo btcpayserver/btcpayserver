@@ -143,6 +143,11 @@ namespace BTCPayServer.Services.Rates
                 return value.ToString("C", provider) + $" ({currency})";
         }
 
+        public CurrencyData[] GetCurrencies()
+        {
+            return _Currencies.Values.ToArray();
+        }
+        
         Dictionary<string, CurrencyData> _Currencies;
 
         static CurrencyData[] LoadCurrency()

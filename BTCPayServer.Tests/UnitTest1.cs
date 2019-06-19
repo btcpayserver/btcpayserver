@@ -226,7 +226,7 @@ namespace BTCPayServer.Tests
             var paymentMethod = entity.GetPaymentMethods().TryGet("BTC", PaymentTypes.BTCLike);
             var accounting = paymentMethod.Calculate();
             Assert.Equal(Money.Coins(1.1m), accounting.Due);
-            Assert.Equal(Money.Coins(1.1m), accounting.TotalDue);
+            Assert.Equal(Money.Coins(1.1m)s, accounting.TotalDue);
 
             entity.Payments.Add(new PaymentEntity()
             {
@@ -242,7 +242,9 @@ namespace BTCPayServer.Tests
 
             entity.Payments.Add(new PaymentEntity()
             {
-                Output = new TxOut(Money.Coins(0.2m), new Key()), Accounted = true, NetworkFee = 0.1m
+                Output = new TxOut(Money.Coins(0.2m), new Key()), 
+                Accounted = true, 
+                NetworkFee = 0.1m
             });
 
             accounting = paymentMethod.Calculate();
@@ -251,7 +253,9 @@ namespace BTCPayServer.Tests
 
             entity.Payments.Add(new PaymentEntity()
             {
-                Output = new TxOut(Money.Coins(0.6m), new Key()), Accounted = true, NetworkFee = 0.1m
+                Output = new TxOut(Money.Coins(0.6m), new Key()), 
+                Accounted = true, 
+                NetworkFee = 0.1m
             });
 
             accounting = paymentMethod.Calculate();
@@ -259,7 +263,11 @@ namespace BTCPayServer.Tests
             Assert.Equal(Money.Coins(1.3m), accounting.TotalDue);
 
             entity.Payments.Add(
-                new PaymentEntity() {Output = new TxOut(Money.Coins(0.2m), new Key()), Accounted = true});
+                new PaymentEntity()
+                {
+                    Output = new TxOut(Money.Coins(0.2m), new Key()), 
+                    Accounted = true
+                });
 
             accounting = paymentMethod.Calculate();
             Assert.Equal(Money.Zero, accounting.Due);
@@ -269,9 +277,19 @@ namespace BTCPayServer.Tests
             entity.ProductInformation = new ProductInformation() {Price = 5000};
             PaymentMethodDictionary paymentMethods = new PaymentMethodDictionary();
             paymentMethods.Add(
-                new PaymentMethod() {CryptoCode = "BTC", Rate = 1000, NextNetworkFee = Money.Coins(0.1m)});
+                new PaymentMethod()
+                {
+                    CryptoCode = "BTC", 
+                    Rate = 1000, 
+                    NextNetworkFee = Money.Coins(0.1m)
+                });
             paymentMethods.Add(
-                new PaymentMethod() {CryptoCode = "LTC", Rate = 500, NextNetworkFee = Money.Coins(0.01m)});
+                new PaymentMethod()
+                {
+                    CryptoCode = "LTC", 
+                    Rate = 500, 
+                    NextNetworkFee = Money.Coins(0.01m)
+                });
             entity.SetPaymentMethods(paymentMethods);
             entity.Payments = new List<PaymentEntity>();
             paymentMethod = entity.GetPaymentMethod(new PaymentMethodId("BTC", PaymentTypes.BTCLike));
@@ -333,7 +351,10 @@ namespace BTCPayServer.Tests
             var remaining = Money.Coins(4.2m - 0.5m + 0.01m / 2);
             entity.Payments.Add(new PaymentEntity()
             {
-                CryptoCode = "BTC", Output = new TxOut(remaining, new Key()), Accounted = true, NetworkFee = 0.1m
+                CryptoCode = "BTC", 
+                Output = new TxOut(remaining, new Key()), 
+                Accounted = true, 
+                NetworkFee = 0.1m
             });
 
             paymentMethod = entity.GetPaymentMethod(new PaymentMethodId("BTC", PaymentTypes.BTCLike));

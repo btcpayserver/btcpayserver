@@ -20,6 +20,7 @@ namespace BTCPayServer.Payments
         /// Lightning payment
         /// </summary>
         public static LightningPaymentType LightningLike => LightningPaymentType.Instance;
+        public static ManualPaymentType Manual => ManualPaymentType.Instance;
 
         public static bool TryParse(string paymentType, out PaymentType type)
         {

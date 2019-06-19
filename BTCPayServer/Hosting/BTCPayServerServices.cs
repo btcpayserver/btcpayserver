@@ -198,6 +198,9 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IPaymentMethodHandler>(provider => provider.GetService<LightningLikePaymentHandler>());
             services.AddSingleton<IHostedService, LightningListener>();
 
+            services.AddSingleton<ManualLikePaymentHandler>();
+            services.AddSingleton<IPaymentMethodHandler>(provider => provider.GetService<ManualLikePaymentHandler>());
+            
             services.AddSingleton<PaymentMethodHandlerDictionary>();
 
             services.AddSingleton<ChangellyClientProvider>();

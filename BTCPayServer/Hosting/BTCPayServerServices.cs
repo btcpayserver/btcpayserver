@@ -53,13 +53,12 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
-using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
 
 namespace BTCPayServer.Hosting
 {
     public static class BTCPayServerServices
     {
-        public static IServiceCollection AddBTCPayServer(this IServiceCollection services, IConfiguration configuration, Microsoft.AspNetCore.Hosting.IHostingEnvironment hostingEnvironment)
+        public static IServiceCollection AddBTCPayServer(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddDbContext<ApplicationDbContext>((provider, o) =>
             {
@@ -233,7 +232,7 @@ namespace BTCPayServer.Hosting
             // bundling
 
             services.AddAuthorization(o => Policies.AddBTCPayPolicies(o));
-            services.AddBtcPayServerAuthenticationSchemes(configuration, hostingEnvironment);
+            services.AddBtcPayServerAuthenticationSchemes(configuration);
 
             services.AddSingleton<IBundleProvider, ResourceBundleProvider>();
             services.AddTransient<BundleOptions>(provider =>
@@ -257,7 +256,7 @@ namespace BTCPayServer.Hosting
         }
 
         private static void AddBtcPayServerAuthenticationSchemes(this IServiceCollection services,
-            IConfiguration configuration, IHostingEnvironment hostingEnvironment)
+            IConfiguration configuration)
         {
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
             JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
@@ -265,11 +264,8 @@ namespace BTCPayServer.Hosting
             services.AddAuthentication()
                 .AddJwtBearer(options =>
                 {
-                    if (hostingEnvironment.IsDevelopment())
-                    {
-                        options.RequireHttpsMetadata = false;
-                    }
-
+                    //Disabled so that Tor works witt JWT auth
+                    options.RequireHttpsMetadata = false;
                     options.TokenValidationParameters.ValidateAudience = false;
                     //we do not validate the issuer directly because btcpay can be accessed through multiple urls that we cannot predetermine
                     options.TokenValidationParameters.ValidateIssuer = false;

@@ -1,15 +1,7 @@
 ﻿using Microsoft.AspNetCore.Hosting;
-using System.Reflection;
-using System.Linq;
 using Microsoft.AspNetCore.Builder;
 using System;
 using Microsoft.Extensions.DependencyInjection;
-
-using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
-using Microsoft.AspNetCore.Mvc;
-using NBitpayClient;
-using BTCPayServer.Authentication;
-using Microsoft.EntityFrameworkCore;
 using BTCPayServer.Filters;
 using BTCPayServer.Models;
 using Microsoft.AspNetCore.Identity;
@@ -17,18 +9,10 @@ using Microsoft.AspNetCore.HttpOverrides;
 using BTCPayServer.Data;
 using Microsoft.Extensions.Logging;
 using BTCPayServer.Logging;
-using Microsoft.AspNetCore.Authorization;
-using System.Threading.Tasks;
-using BTCPayServer.Controllers;
-using BTCPayServer.Services.Stores;
-using BTCPayServer.Services.Mails;
 using Microsoft.Extensions.Configuration;
 using BTCPayServer.Configuration;
 using System.IO;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using System.Threading;
-using Microsoft.Extensions.Options;
-using Microsoft.AspNetCore.Mvc.Cors.Internal;
 using AspNet.Security.OpenIdConnect.Primitives;
 using BTCPayServer.Authentication.OpenId.Models;
 using BTCPayServer.Security;
@@ -38,12 +22,8 @@ using OpenIddict.EntityFrameworkCore.Models;
 using System.Net;
 using BTCPayServer.Authentication.OpenId;
 using BTCPayServer.PaymentRequest;
-using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Storage;
-using BTCPayServer.Storage.Services.Providers.FileSystemStorage;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.FileProviders;
 
 namespace BTCPayServer.Hosting
 {
@@ -73,7 +53,7 @@ namespace BTCPayServer.Hosting
             
             ConfigureOpenIddict(services);
 
-            services.AddBTCPayServer(Configuration, _Env);
+            services.AddBTCPayServer(Configuration);
             services.AddProviderStorage();
             services.AddSession();
             services.AddSignalR();
@@ -163,10 +143,9 @@ namespace BTCPayServer.Hosting
                 })
                 .AddServer(options =>
                 {
-                    if (_Env.IsDevelopment())
-                    {
-                        options.DisableHttpsRequirement();
-                    }
+                    
+                    //Disabled so that Tor works with OpenIddict too
+                    options.DisableHttpsRequirement();
                     // Register the ASP.NET Core MVC binder used by OpenIddict.
                     // Note: if you don't call this method, you won't be able to
                     // bind OpenIdConnectRequest or OpenIdConnectResponse parameters.

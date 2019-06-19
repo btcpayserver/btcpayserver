@@ -226,7 +226,7 @@ namespace BTCPayServer.Tests
             var paymentMethod = entity.GetPaymentMethods().TryGet("BTC", PaymentTypes.BTCLike);
             var accounting = paymentMethod.Calculate();
             Assert.Equal(Money.Coins(1.1m), accounting.Due);
-            Assert.Equal(Money.Coins(1.1m)s, accounting.TotalDue);
+            Assert.Equal(Money.Coins(1.1m), accounting.TotalDue);
 
             entity.Payments.Add(new PaymentEntity()
             {
@@ -242,8 +242,8 @@ namespace BTCPayServer.Tests
 
             entity.Payments.Add(new PaymentEntity()
             {
-                Output = new TxOut(Money.Coins(0.2m), new Key()), 
-                Accounted = true, 
+                Output = new TxOut(Money.Coins(0.2m), new Key()),
+                Accounted = true,
                 NetworkFee = 0.1m
             });
 
@@ -253,8 +253,8 @@ namespace BTCPayServer.Tests
 
             entity.Payments.Add(new PaymentEntity()
             {
-                Output = new TxOut(Money.Coins(0.6m), new Key()), 
-                Accounted = true, 
+                Output = new TxOut(Money.Coins(0.6m), new Key()),
+                Accounted = true,
                 NetworkFee = 0.1m
             });
 
@@ -351,9 +351,9 @@ namespace BTCPayServer.Tests
             var remaining = Money.Coins(4.2m - 0.5m + 0.01m / 2);
             entity.Payments.Add(new PaymentEntity()
             {
-                CryptoCode = "BTC", 
-                Output = new TxOut(remaining, new Key()), 
-                Accounted = true, 
+                CryptoCode = "BTC",
+                Output = new TxOut(remaining, new Key()),
+                Accounted = true,
                 NetworkFee = 0.1m
             });
 

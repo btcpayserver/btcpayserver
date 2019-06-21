@@ -33,7 +33,7 @@ namespace BTCPayServer
                 Logs.Configuration.LogInformation($"{setting.CryptoCode}: Cookie file is {(setting.CookieFile ?? "not set")}");
                 if (setting.ExplorerUri != null)
                 {
-                    _Clients.TryAdd(setting.CryptoCode, CreateExplorerClient(httpClientFactory.CreateClient($"NBXPLORER_{setting.CryptoCode}"), _NetworkProviders.GetNetwork<BTCPayNetwork>(setting.CryptoCode), setting.ExplorerUri, setting.CookieFile));
+                    _Clients.TryAdd(setting.CryptoCode, CreateExplorerClient(httpClientFactory.CreateClient(nameof(ExplorerClientProvider)), _NetworkProviders.GetNetwork<BTCPayNetwork>(setting.CryptoCode), setting.ExplorerUri, setting.CookieFile));
                 }
             }
         }

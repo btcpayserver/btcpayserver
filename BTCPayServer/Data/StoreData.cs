@@ -146,7 +146,7 @@ namespace BTCPayServer.Data
                 }
             }
 
-            if (!existing && supportedPaymentMethod == null && supportedPaymentMethod.PaymentId.IsBTCOnChain)
+            if (!existing && supportedPaymentMethod == null && paymentMethodId.IsBTCOnChain)
             {
                 DerivationStrategy = null;
             }

@@ -61,7 +61,7 @@ function inputChanges(event, buttonSize) {
         html += addinput("price", srvModel.price);
     }
     else if (srvModel.buttonType == 1) {
-        html += '\n    <div style="text-align:center;width:' + width + '">';
+        html += '\n    <div style="text-align:center;display:inline;width:' + width + '">';
         html += '<div>';
         html += addPlusMinusButton("-");
         html += addInputPrice(srvModel.price, widthInput, "");
@@ -71,7 +71,7 @@ function inputChanges(event, buttonSize) {
         html += '</div>';
     }
     else if (srvModel.buttonType == 2) {
-        html += '\n    <div style="text-align:center;width:' + width + '">';
+        html += '\n    <div style="text-align:center;display:inline;width:' + width + '">';
         html += addInputPrice(srvModel.price, width, 'onchange="document.querySelector(\'#btcpay-input-range\').value = document.querySelector(\'#btcpay-input-price\').value"');
         html += addSelectCurrency();
         html += addSlider(srvModel.price, srvModel.min, srvModel.max, srvModel.step, width);

@@ -72,7 +72,7 @@ namespace BTCPayServer.Storage.Services.Providers.FileSystemStorage
             
             await File.WriteAllTextAsync(Path.Combine(GetTempStorageDir(_options), name), JsonConvert.SerializeObject(localFileDescriptor));
             
-            return  new Uri(baseUri,$"{LocalStorageDirectoryName}tmp/{name}" ).AbsoluteUri;
+            return  new Uri(baseUri,$"{LocalStorageDirectoryName}tmp/{name}{(isDownload ? "?download" : string.Empty)}").AbsoluteUri;
         }
     }
 }

@@ -59,13 +59,15 @@ namespace BTCPayServer.Controllers
                 RedirectURL = model.BrowserRedirect,
                 FullNotifications = true
             }, store, HttpContext.Request.GetAbsoluteRoot(), cancellationToken: cancellationToken);
-            if (string.IsNullOrEmpty(model.Language))
+            if (string.IsNullOrEmpty(model.CheckoutQueryString))
             {
                 return Redirect(invoice.Data.Url);
             }
+
+            var additionalParamValues = HttpUtility.ParseQueryString(model.CheckoutQueryString);
             var uriBuilder = new UriBuilder(invoice.Data.Url);
             var paramValues = HttpUtility.ParseQueryString(uriBuilder.Query);
-            paramValues.Add("lang", model.Language);
+            paramValues.Add(additionalParamValues);
             uriBuilder.Query = paramValues.ToString();
             return Redirect(uriBuilder.Uri.AbsoluteUri);
         }

@@ -52,6 +52,8 @@ namespace BTCPayServer.HostedServices
         public AppType? RootAppType { get; set; }
         public string RootAppId { get; set; }
 
+        public List<PoliciesSettings.DomainToAppMappingItem> DomainToAppMapping { get; set; }
+
         internal void Update(PoliciesSettings data)
         {
             ShowRegister = !data.LockSubscription;
@@ -59,6 +61,7 @@ namespace BTCPayServer.HostedServices
 
             RootAppType = data.RootAppType;
             RootAppId = data.RootAppId;
+            DomainToAppMapping = data.DomainToAppMapping;
         }
     }
 

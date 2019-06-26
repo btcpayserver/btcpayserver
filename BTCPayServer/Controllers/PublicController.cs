@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 using BTCPayServer.Filters;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
@@ -58,7 +59,17 @@ namespace BTCPayServer.Controllers
                 RedirectURL = model.BrowserRedirect,
                 FullNotifications = true
             }, store, HttpContext.Request.GetAbsoluteRoot(), cancellationToken: cancellationToken);
-            return Redirect(invoice.Data.Url);
+            if (string.IsNullOrEmpty(model.CheckoutQueryString))
+            {
+                return Redirect(invoice.Data.Url);
+            }
+
+            var additionalParamValues = HttpUtility.ParseQueryString(model.CheckoutQueryString);
+            var uriBuilder = new UriBuilder(invoice.Data.Url);
+            var paramValues = HttpUtility.ParseQueryString(uriBuilder.Query);
+            paramValues.Add(additionalParamValues);
+            uriBuilder.Query = paramValues.ToString();
+            return Redirect(uriBuilder.Uri.AbsoluteUri);
         }
     }
 }

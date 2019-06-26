@@ -26,7 +26,7 @@ function esc(input) {
 }
 
 Vue.use(VeeValidate);
-const dictionary = {
+var dictionary = {
     en: {
         attributes: {
             price: 'Price', checkoutDesc: 'Checkout Description', orderId: 'Order Id',
@@ -96,6 +96,9 @@ function inputChanges(event, buttonSize) {
     }
     if (srvModel.notifyEmail) {
         html += addinput("notifyEmail", srvModel.notifyEmail);
+    }   
+    if (srvModel.checkoutQueryString) {
+        html += addinput("checkoutQueryString", srvModel.checkoutQueryString);
     }
 
     html += '\n    <input type="image" src="' + esc(srvModel.payButtonImageUrl) + '" name="submit" style="width:' + width +

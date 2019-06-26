@@ -175,7 +175,8 @@ namespace BTCPayServer.Hosting
                         OpenIdConnectConstants.Scopes.Profile,
                         OpenIddictConstants.Scopes.Roles);
                     options.AddEventHandler<PasswordGrantTypeEventHandler>();
-                    options.AddEventHandler<AuthorizationCode_RefreshTokenGrantTypeEventHandler>();
+                    options.AddEventHandler<AuthorizationCodeGrantTypeEventHandler>();
+                    options.AddEventHandler<RefreshTokenGrantTypeEventHandler>();
                     options.AddEventHandler<ClientCredentialsGrantTypeEventHandler>();
                     options.AddEventHandler<AuthorizationEventHandler>();
                     options.AddEventHandler<LogoutEventHandler>();

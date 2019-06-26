@@ -12,8 +12,8 @@ using OpenIddict.Server;
 
 namespace BTCPayServer.Authentication.OpenId
 {
-    public abstract class
-        BaseOpenIdGrantHandler<T> : IOpenIddictServerEventHandler<T> where T : class, IOpenIddictServerEvent
+    public abstract class BaseOpenIdGrantHandler<T> : IOpenIddictServerEventHandler<T>
+        where T : class, IOpenIddictServerEvent
     {
         protected readonly SignInManager<ApplicationUser> _signInManager;
         protected readonly IOptions<IdentityOptions> _identityOptions;
@@ -59,7 +59,7 @@ namespace BTCPayServer.Authentication.OpenId
             // To allow OpenIddict to serialize them, you must attach them a destination, that specifies
             // whether they should be included in access tokens, in identity tokens or in both.
 
-            
+
             switch (claim.Type)
             {
                 case OpenIddictConstants.Claims.Name:
@@ -96,7 +96,6 @@ namespace BTCPayServer.Authentication.OpenId
                         yield return OpenIddictConstants.Destinations.AccessToken;
                         yield break;
                     }
-                    
             }
         }
 

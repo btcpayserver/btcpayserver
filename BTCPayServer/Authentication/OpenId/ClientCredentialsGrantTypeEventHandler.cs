@@ -14,12 +14,14 @@ using OpenIddict.Server;
 
 namespace BTCPayServer.Authentication.OpenId
 {
-    public class ClientCredentialsGrantTypeEventHandler : BaseOpenIdGrantHandler<OpenIddictServerEvents.HandleTokenRequest>
+    public class
+        ClientCredentialsGrantTypeEventHandler : BaseOpenIdGrantHandler<OpenIddictServerEvents.HandleTokenRequest>
     {
         private readonly OpenIddictApplicationManager<BTCPayOpenIdClient> _applicationManager;
 
         private readonly UserManager<ApplicationUser> _userManager;
-        public ClientCredentialsGrantTypeEventHandler(SignInManager<ApplicationUser> signInManager, 
+
+        public ClientCredentialsGrantTypeEventHandler(SignInManager<ApplicationUser> signInManager,
             OpenIddictApplicationManager<BTCPayOpenIdClient> applicationManager,
             IOptions<IdentityOptions> identityOptions, UserManager<ApplicationUser> userManager) : base(signInManager,
             identityOptions)
@@ -37,7 +39,9 @@ namespace BTCPayServer.Authentication.OpenId
                 // Allow other handlers to process the event.
                 return OpenIddictServerEventState.Unhandled;
             }
-            var application = await _applicationManager.FindByClientIdAsync(request.ClientId, notification.Context.HttpContext.RequestAborted);
+
+            var application = await _applicationManager.FindByClientIdAsync(request.ClientId,
+                notification.Context.HttpContext.RequestAborted);
             if (application == null)
             {
                 notification.Context.Reject(
@@ -48,8 +52,8 @@ namespace BTCPayServer.Authentication.OpenId
             }
 
             var user = await _userManager.FindByIdAsync(application.ApplicationUserId);
-            
-            notification.Context.Validate(await CreateTicketAsync(request,user));
+
+            notification.Context.Validate(await CreateTicketAsync(request, user));
             // Don't allow other handlers to process the event.
             return OpenIddictServerEventState.Handled;
         }

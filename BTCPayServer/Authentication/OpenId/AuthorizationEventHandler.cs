@@ -12,12 +12,12 @@ using OpenIddict.Server;
 
 namespace BTCPayServer.Authentication.OpenId
 {
-    public class
-        AuthorizationEventHandler : BaseOpenIdGrantHandler<OpenIddictServerEvents.HandleAuthorizationRequest>
+    public class AuthorizationEventHandler : BaseOpenIdGrantHandler<OpenIddictServerEvents.HandleAuthorizationRequest>
     {
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public override async Task<OpenIddictServerEventState> HandleAsync(OpenIddictServerEvents.HandleAuthorizationRequest notification)
+        public override async Task<OpenIddictServerEventState> HandleAsync(
+            OpenIddictServerEvents.HandleAuthorizationRequest notification)
         {
             if (!notification.Context.Request.IsAuthorizationRequest())
             {
@@ -37,7 +37,7 @@ namespace BTCPayServer.Authentication.OpenId
                         [OpenIdConnectConstants.Properties.ErrorDescription] = "The user is not logged in."
                     });
 
-                    
+
                     // Ask OpenIddict to return a login_required error to the client application.
                     await notification.Context.HttpContext.ForbidAsync(properties);
                     notification.Context.HandleResponse();
@@ -54,11 +54,10 @@ namespace BTCPayServer.Authentication.OpenId
             if (user == null)
             {
                 notification.Context.Reject(
-                    error: OpenIddictConstants.Errors.ServerError,
+                    error: OpenIddictConstants.Errors.InvalidGrant,
                     description: "An internal error has occurred");
-                
+
                 return OpenIddictServerEventState.Handled;
-         
             }
 
             // Create a new authentication ticket.
@@ -66,16 +65,14 @@ namespace BTCPayServer.Authentication.OpenId
 
             // Returning a SignInResult will ask OpenIddict to issue the appropriate access/identity tokens.
             notification.Context.Validate(ticket);
-            return OpenIddictServerEventState.Handled; 
-           
-           
+            return OpenIddictServerEventState.Handled;
         }
 
         public AuthorizationEventHandler(
-            UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IOptions<IdentityOptions> identityOptions) : base(signInManager, identityOptions)
+            UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager,
+            IOptions<IdentityOptions> identityOptions) : base(signInManager, identityOptions)
         {
             _userManager = userManager;
         }
-
     }
 }

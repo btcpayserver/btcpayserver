@@ -9,22 +9,25 @@ using OpenIddict.Server;
 
 namespace BTCPayServer.Authentication.OpenId
 {
-    public class AuthorizationCode_RefreshTokenGrantTypeEventHandler : BaseOpenIdGrantHandler<OpenIddictServerEvents.HandleTokenRequest>
+    public abstract class
+        OpenIdGrantHandlerCheckCanSignIn : BaseOpenIdGrantHandler<OpenIddictServerEvents.HandleTokenRequest>
     {
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public AuthorizationCode_RefreshTokenGrantTypeEventHandler(SignInManager<ApplicationUser> signInManager,
+        protected OpenIdGrantHandlerCheckCanSignIn(SignInManager<ApplicationUser> signInManager,
             IOptions<IdentityOptions> identityOptions, UserManager<ApplicationUser> userManager) : base(signInManager,
             identityOptions)
         {
             _userManager = userManager;
         }
 
+        protected abstract bool IsValid(OpenIdConnectRequest request);
+
         public override async Task<OpenIddictServerEventState> HandleAsync(
             OpenIddictServerEvents.HandleTokenRequest notification)
         {
             var request = notification.Context.Request;
-            if (!request.IsRefreshTokenGrantType() && !request.IsAuthorizationCodeGrantType())
+            if (!IsValid(request))
             {
                 // Allow other handlers to process the event.
                 return OpenIddictServerEventState.Unhandled;

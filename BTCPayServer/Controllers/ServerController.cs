@@ -461,7 +461,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> Policies()
         {
             var data = (await _SettingsRepository.GetSettingAsync<PoliciesSettings>()) ?? new PoliciesSettings();
-            await GetAppSelectList();
+            ViewBag.AppsList = await GetAppSelectList();
             return View(data);
         }
 
@@ -469,7 +469,7 @@ namespace BTCPayServer.Controllers
         [HttpPost]
         public async Task<IActionResult> Policies(PoliciesSettings settings, string command = "")
         {
-            await GetAppSelectList();
+            ViewBag.AppsList = await GetAppSelectList();
             if (command == "add-domain")
             {
                 ModelState.Clear();
@@ -575,7 +575,7 @@ namespace BTCPayServer.Controllers
             return View(result);
         }
 
-        private async Task GetAppSelectList()
+        private async Task<List<SelectListItem>> GetAppSelectList()
         {
 // load display app dropdown
             using (var ctx = _ContextFactory.CreateContext())
@@ -587,7 +587,7 @@ namespace BTCPayServer.Controllers
                     .SelectMany(s => s.Apps)
                     .Select(a => new SelectListItem($"{a.AppType} - {a.Name}", a.Id)).ToListAsync();
                 selectList.Insert(0, new SelectListItem("(None)", null));
-                ViewBag.AppsList = selectList;
+                return selectList;
             }
         }
 

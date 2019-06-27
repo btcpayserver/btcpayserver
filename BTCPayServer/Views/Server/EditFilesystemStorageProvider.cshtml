@@ -3,20 +3,16 @@
     ViewData.SetActivePageAndTitle(ServerNavPages.Services, $"Storage - Local Filesystem");
 }
 
-<partial name="_StatusMessage" for="@TempData["StatusMessage"]" />
+<partial name="_StatusMessage" for="@TempData["StatusMessage"]"/>
 <div class="row">
     <div class="col-lg-6">
         <div asp-validation-summary="All" class="text-danger"></div>
     </div>
 </div>
-<p>Nothing to configure here. Data will be saved in the btcpay data directory.</p>
+<p>Any uploaded files are being saved on the same machine that hosts BTCPay; please pay attention to your storage space.</p>
 <div class="row">
     <div class="col-lg-6">
-        <form method="post">
-            
-            <button type="submit" class="btn btn-primary" name="command" value="Save">Choose</button>
-            <a asp-action="Storage" asp-route-forceChoice="true" >Change Storage provider</a>
-        </form>
+        <a asp-action="Storage" asp-route-forceChoice="true">Change Storage provider</a>
     </div>
 </div>
 

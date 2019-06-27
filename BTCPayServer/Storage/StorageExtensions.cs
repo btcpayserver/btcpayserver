@@ -7,6 +7,7 @@ using BTCPayServer.Storage.Services.Providers.AzureBlobStorage;
 using BTCPayServer.Storage.Services.Providers.FileSystemStorage;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
@@ -57,13 +58,7 @@ namespace BTCPayServer.Storage
                     ServeUnknownFileTypes = true,
                     RequestPath = new PathString($"/{FileSystemFileProviderService.LocalStorageDirectoryName}"),
                     FileProvider = new PhysicalFileProvider(dirInfo.FullName),
-                    OnPrepareResponse = context =>
-                    {
-                        if (context.Context.Request.Query.ContainsKey("download"))
-                        {
-                            context.Context.Response.Headers["Content-Disposition"] = "attachment";
-                        }
-                    }
+                    OnPrepareResponse = HandleStaticFileResponse()
                 });
                 builder.UseStaticFiles(new StaticFileOptions()
                 {
@@ -71,19 +66,24 @@ namespace BTCPayServer.Storage
                     RequestPath = new PathString($"/{FileSystemFileProviderService.LocalStorageDirectoryName}tmp"),
                     FileProvider = new TemporaryLocalFileProvider(tmpdirInfo, dirInfo,
                         builder.ApplicationServices.GetService<StoredFileRepository>()),
-                    OnPrepareResponse = context =>
-                    {
-                        if (context.Context.Request.Query.ContainsKey("download"))
-                        {
-                            context.Context.Response.Headers["Content-Disposition"] = "attachment";
-                        }
-                    }
+                    OnPrepareResponse = HandleStaticFileResponse()
                 });
             }
             catch (Exception e)
             {
                 Logs.Utils.LogError(e, $"Could not initialize the Local File Storage system(uploading and storing files locally)");
             }
+        }
+
+        private static Action<StaticFileResponseContext> HandleStaticFileResponse()
+        {
+            return context =>
+            {
+                if (context.Context.Request.Query.ContainsKey("download"))
+                {
+                    context.Context.Response.Headers["Content-Disposition"] = "attachment";
+                }
+            };
         }
     }
 }

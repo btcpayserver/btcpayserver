@@ -1,4 +1,4 @@
-﻿@model PayButtonViewModel
+@model PayButtonViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePageAndTitle(StoreNavPages.PayButton);
@@ -140,6 +140,24 @@
             Finally <i>Browser Redirect</i> defines where BtcPayServer will redirect customer after puchase is completed.
         </div>
     </div>
+     <h3>Advanced</h3>
+        <br />
+        <div class="row">
+            <div class="col-lg-7">
+                <div class="form-group">
+                    <label>Checkout Additional Query String</label>
+                    <input name="checkoutQueryString" type="text" class="form-control" placeholder="(optional)"
+                           v-model="srvModel.checkoutQueryString" v-on:change="inputChanges"
+                           :class="{'is-invalid': errors.has('checkoutQueryString') }">
+                    <small class="text-danger">{{ errors.first('checkoutQueryString') }}</small>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <br />
+                This parameter allows you to specify additional query string paramters that should be appended to the checkout page once the invoice is created. For example, <kbd>lang=da-DK</kbd> would load the checkout page in Danishby default.
+                
+            </div>
+        </div>
     <hr />
     <h3>Generated code</h3>
     <div class="row" v-show="!errors.any()">

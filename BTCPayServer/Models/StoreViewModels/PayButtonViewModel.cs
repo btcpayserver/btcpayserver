@@ -30,6 +30,7 @@ namespace BTCPayServer.Models.StoreViewModels
         public string NotifyEmail { get; set; }
 
         public string StoreId { get; set; }
+        public string CheckoutQueryString { get; set; }
 
         // Data that influences Pay Button UI, but not invoice creation
         public string UrlRoot { get; set; }

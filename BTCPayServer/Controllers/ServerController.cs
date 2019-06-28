@@ -17,6 +17,7 @@ using NBitcoin.DataEncoders;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -33,6 +34,7 @@ using BTCPayServer.Storage.Services.Providers;
 using BTCPayServer.Services.Apps;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using BTCPayServer.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Controllers
 {
@@ -459,41 +461,59 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> Policies()
         {
             var data = (await _SettingsRepository.GetSettingAsync<PoliciesSettings>()) ?? new PoliciesSettings();
-
-            // load display app dropdown
-            using (var ctx = _ContextFactory.CreateContext())
-            {
-                var userId = _UserManager.GetUserId(base.User);
-                var selectList = ctx.Users.Where(user => user.Id == userId)
-                                .SelectMany(s => s.UserStores)
-                                .Select(s => s.StoreData)
-                                .SelectMany(s => s.Apps)
-                                .Select(a => new SelectListItem($"{a.AppType} - {a.Name}", a.Id)).ToList();
-                selectList.Insert(0, new SelectListItem("(None)", null));
-                ViewBag.AppsList = new SelectList(selectList, "Value", "Text", data.RootAppId);
-            }
-
+            ViewBag.AppsList = await GetAppSelectList();
             return View(data);
         }
+
         [Route("server/policies")]
         [HttpPost]
-        public async Task<IActionResult> Policies(PoliciesSettings settings)
+        public async Task<IActionResult> Policies(PoliciesSettings settings, string command = "")
         {
-            if (!String.IsNullOrEmpty(settings.RootAppId))
+            ViewBag.AppsList = await GetAppSelectList();
+            if (command == "add-domain")
             {
-                using (var ctx = _ContextFactory.CreateContext())
-                {
-                    var app = ctx.Apps.SingleOrDefault(a => a.Id == settings.RootAppId);
-                    if (app != null)
-                        settings.RootAppType = Enum.Parse<AppType>(app.AppType);
-                    else
-                        settings.RootAppType = null;
-                }
+                ModelState.Clear();
+                settings.DomainToAppMapping.Add(new PoliciesSettings.DomainToAppMappingItem());
+                return View(settings);
+            }
+            if (command.StartsWith("remove-domain", StringComparison.InvariantCultureIgnoreCase))
+            {
+                ModelState.Clear();
+                var index = int.Parse(command.Substring(command.IndexOf(":",StringComparison.InvariantCultureIgnoreCase) + 1),  CultureInfo.InvariantCulture);
+                settings.DomainToAppMapping.RemoveAt(index);
+                return View(settings);
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return View(settings);
+            }
+            var appIdsToFetch = settings.DomainToAppMapping.Select(item => item.AppId).ToList();
+            if (!string.IsNullOrEmpty(settings.RootAppId))
+            {
+                appIdsToFetch.Add(settings.RootAppId);
             }
             else
             {
-                // not preserved on client side, but clearing it just in case
                 settings.RootAppType = null;
+            }
+
+            if (appIdsToFetch.Any())
+            {
+                using (var ctx = _ContextFactory.CreateContext())
+                {
+                    var apps = await ctx.Apps.Where(data => appIdsToFetch.Contains(data.Id))
+                        .ToDictionaryAsync(data => data.Id, data => Enum.Parse<AppType>(data.AppType));
+                    if (!string.IsNullOrEmpty(settings.RootAppId))
+                    {
+                        settings.RootAppType = apps[settings.RootAppId];
+                    }
+
+                    foreach (var domainToAppMappingItem in settings.DomainToAppMapping)
+                    {
+                        domainToAppMappingItem.AppType = apps[domainToAppMappingItem.AppId];
+                    }
+                }
             }
 
             await _SettingsRepository.UpdateSetting(settings);
@@ -553,6 +573,22 @@ namespace BTCPayServer.Controllers
                 Link = Url.Action("Storage")
             });
             return View(result);
+        }
+
+        private async Task<List<SelectListItem>> GetAppSelectList()
+        {
+// load display app dropdown
+            using (var ctx = _ContextFactory.CreateContext())
+            {
+                var userId = _UserManager.GetUserId(base.User);
+                var selectList = await ctx.Users.Where(user => user.Id == userId)
+                    .SelectMany(s => s.UserStores)
+                    .Select(s => s.StoreData)
+                    .SelectMany(s => s.Apps)
+                    .Select(a => new SelectListItem($"{a.AppType} - {a.Name}", a.Id)).ToListAsync();
+                selectList.Insert(0, new SelectListItem("(None)", null));
+                return selectList;
+            }
         }
 
         private static bool TryParseAsExternalService(TorService torService, out ExternalService externalService)

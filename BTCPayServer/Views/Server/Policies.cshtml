@@ -4,39 +4,95 @@
 }
 
 
-<partial name="_StatusMessage" for="@TempData["StatusMessage"]" />
+<partial name="_StatusMessage" for="@TempData["StatusMessage"]"/>
 @if (!this.ViewContext.ModelState.IsValid)
 {
-<div class="row">
-    <div class="col-lg-6">
-        <div asp-validation-summary="All" class="text-danger"></div>
-    </div>
-</div>
+    <div asp-validation-summary="All" class="text-danger"></div>
 }
-<div class="row">
-    <div class="col-lg-6">
-        <form method="post">
-            <div class="form-group">
-                <label asp-for="RequiresConfirmedEmail"></label>
-                <input asp-for="RequiresConfirmedEmail" type="checkbox" class="form-check-inline" />
-            </div>
-            <div class="form-group">
-                <label asp-for="LockSubscription"></label>
-                <input asp-for="LockSubscription" type="checkbox" class="form-check-inline" />
-            </div>
-            <div class="form-group">
-                <label asp-for="DiscourageSearchEngines"></label>
-                <input asp-for="DiscourageSearchEngines" type="checkbox" class="form-check-inline" />
-            </div>
-            <div class="form-group">
-                <label asp-for="RootAppId"></label>
-                <select asp-for="RootAppId" asp-items="ViewBag.AppsList" class="form-control"></select>
-            </div>
-            <button type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
-        </form>
+
+<form method="post">
+    <div class="form-group">
+        <label asp-for="RequiresConfirmedEmail"></label>
+        <input asp-for="RequiresConfirmedEmail" type="checkbox" class="form-check-inline"/>
+        <span asp-validation-for="RequiresConfirmedEmail" class="text-danger"></span>
     </div>
-</div>
+    <div class="form-group">
+        <label asp-for="LockSubscription"></label>
+        <input asp-for="LockSubscription" type="checkbox" class="form-check-inline"/>
+        <span asp-validation-for="LockSubscription" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="DiscourageSearchEngines"></label>
+        <input asp-for="DiscourageSearchEngines" type="checkbox" class="form-check-inline"/>
+        <span asp-validation-for="DiscourageSearchEngines" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="RootAppId"></label>
+        <select asp-for="RootAppId" asp-items="@(new SelectList(ViewBag.AppsList, nameof(SelectListItem.Value), nameof(SelectListItem.Text), Model.RootAppId))" class="form-control"></select>
+        @if (!Model.DomainToAppMapping.Any())
+             {
+                 <button type="submit" name="command" value="add-domain" class="btn btn-link"> Map specific domains to specific apps</button>
+             }
+    </div>
+
+    @if (Model.DomainToAppMapping.Any())
+    {
+        <div class="list-group mb-2">
+            <div class="list-group-item">
+                <h5 class="mb-1">
+                    Domain to app mapping
+                    <button type="submit" name="command" value="add-domain" class="ml-1 btn btn-secondary btn-sm ">Add domain mapping </button>
+                </h5>
+            </div>
+            @for (var index = 0; index < Model.DomainToAppMapping.Count; index++)
+            {
+                <div class="list-group-item p-0 pl-lg-2">
+                    <div class="row">
+                        <div class="col-sm-12 col-md-12 col-lg-10  py-2 ">
+                            <div class="form-group">
+                                <label asp-for="DomainToAppMapping[index].Domain" class="control-label"></label>
+                                <input asp-for="DomainToAppMapping[index].Domain" class="form-control"/>
+                                <span asp-validation-for="DomainToAppMapping[index].Domain" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="DomainToAppMapping[index].AppId"></label>
+                                <select asp-for="DomainToAppMapping[index].AppId"
+                                        asp-items="@(new SelectList(ViewBag.AppsList,
+                                                         nameof(SelectListItem.Value),
+                                                         nameof(SelectListItem.Text),
+                                                         Model.DomainToAppMapping[index].AppId))"
+                                        class="form-control">
+                                </select>
+
+                                <span asp-validation-for="DomainToAppMapping[index].AppId" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-sm-12 col-md-12 col-lg-2 pull-right">
+                            <button type="submit" title="Remove domain mapping" name="command" value="@($"remove-domain:{index}")"
+                                    class="d-block d-lg-none d-xl-none btn btn-danger mb-2 ml-2">
+                                Remove Destination
+                            </button>
+                            <button type="submit" title="Remove domain mapping" name="command" value="@($"remove-domain:{index}")"
+                                    class="d-none d-lg-block remove-domain-btn text-decoration-none h-100 align-middle btn text-danger btn-link fa fa-times rounded-0 pull-right">
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+
+        </div>
+    }
+    <button type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
+</form>
 
 @section Scripts {
-    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <style>
+            .remove-domain-btn{
+                font-size: 1.5rem;
+                border-radius: 0;
+            }
+             .remove-domain-btn:hover{
+                       background-color: #CCCCCC;
+             }
+    </style>
 }

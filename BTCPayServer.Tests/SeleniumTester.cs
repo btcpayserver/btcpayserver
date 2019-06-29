@@ -33,7 +33,7 @@ namespace BTCPayServer.Tests
             Server.Start();
             ChromeOptions options = new ChromeOptions();
             options.AddArguments("headless"); // Comment to view browser
-//            options.AddArguments("window-size=1200x600"); // Comment to view browser
+            options.AddArguments("window-size=1200x600"); // Comment to view browser
             options.AddArgument("shm-size=2g");
             if (Server.PayTester.InContainer)
             {

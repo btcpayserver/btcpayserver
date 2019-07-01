@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using BTCPayServer.Models;
 using BTCPayServer.Services.Stores;
@@ -52,10 +52,7 @@ namespace BTCPayServer.Security
                     else
                     {
                         context.HttpContext.SetStoreData(store);
-                        if (store != null)
-                        {
-                            identity.AddClaims(store.GetClaims());
-                        }
+                        identity.AddClaims(store.GetClaims());
                     }
                 }
             }

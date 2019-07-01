@@ -86,7 +86,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        private static void LogIn(SeleniumTester s, string email)
+        public static void LogIn(SeleniumTester s, string email)
         {
             s.Driver.FindElement(By.Id("Login")).Click();
             s.Driver.FindElement(By.Id("Email")).SendKeys(email);
@@ -166,7 +166,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        private static void CreateInvoice(SeleniumTester s, string store)
+        public static void CreateInvoice(SeleniumTester s, string store)
         {
             s.Driver.FindElement(By.Id("Invoices")).Click();
             s.Driver.FindElement(By.Id("CreateNewInvoice")).Click();

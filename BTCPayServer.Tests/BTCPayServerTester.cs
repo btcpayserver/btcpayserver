@@ -1,4 +1,4 @@
-﻿using BTCPayServer.Configuration;
+using BTCPayServer.Configuration;
 using System.Linq;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Hosting;

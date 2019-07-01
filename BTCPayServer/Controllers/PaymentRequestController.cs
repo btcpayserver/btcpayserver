@@ -161,11 +161,15 @@ namespace BTCPayServer.Controllers
             blob.AllowCustomPaymentAmounts = viewModel.AllowCustomPaymentAmounts;
 
             data.SetBlob(blob);
+            if (string.IsNullOrEmpty(id))
+            {
+                data.Created = DateTimeOffset.UtcNow;
+            }
             data = await _PaymentRequestRepository.CreateOrUpdatePaymentRequest(data);
             _EventAggregator.Publish(new PaymentRequestUpdated()
             {
                 Data = data,
-                PaymentRequestId = data.Id
+                PaymentRequestId = data.Id,
             });
 
             return RedirectToAction("EditPaymentRequest", new {id = data.Id, StatusMessage = "Saved"});

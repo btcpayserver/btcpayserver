@@ -224,6 +224,9 @@ namespace BTCPayServer.Data
                 .HasOne(o => o.StoreData)
                 .WithMany(i => i.PaymentRequests)
                 .OnDelete(DeleteBehavior.Cascade);
+            builder.Entity<PaymentRequestData>()
+                .Property(e => e.Created)
+                .HasDefaultValue(NBitcoin.Utils.UnixTimeToDateTime(0));
 
             builder.Entity<PaymentRequestData>()
                 .HasIndex(o => o.Status);

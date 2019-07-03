@@ -254,14 +254,6 @@ namespace BTCPayServer.Hosting
             services.AddSingleton(rateLimits);
             return services;
         }
-        
-        private static void AddBtcPayServerAuthenticationSchemes(this IServiceCollection services, IConfiguration configuration)
-        {
-            services.AddAuthentication()
-                .AddCookie()
-                .AddBitpayAuthentication();
-        }
-
         private static void AddBtcPayServerAuthenticationSchemes(this IServiceCollection services,
             IConfiguration configuration)
         {

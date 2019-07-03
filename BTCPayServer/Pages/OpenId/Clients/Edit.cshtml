@@ -135,57 +135,55 @@
                             </div>
                         </div>
                     </div>
-                    @if (Model.OpenIdOptions.EnforceGrantTypes)
-                    {
-                        <ul class="list-group mt-2">
-                            <li class="list-group-item">
-                                Allowed Grant Types
-                            </li>
+                    <ul class="list-group mt-2">
+                        <li class="list-group-item">
+                            Allowed Grant Types
+                        </li>
 
-                            <li class="list-group-item">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" asp-for="Client.PasswordGrantType">
-                                    <label class="form-check-label" asp-for="Client.PasswordGrantType"></label>
+                        <li class="list-group-item">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" asp-for="Client.PasswordGrantType">
+                                <label class="form-check-label" asp-for="Client.PasswordGrantType"></label>
 
-                                    <span asp-validation-for="Client.PasswordGrantType" class="text-danger"></span>
-                                    <p>Allow authentication through your email and password</p>
-                                </div>
-                            </li>
+                                <span asp-validation-for="Client.PasswordGrantType" class="text-danger"></span>
+                                <p>Allow authentication through your email and password</p>
+                            </div>
+                        </li>
 
-                            <li class="list-group-item">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" asp-for="Client.ClientCredentialsGrantType">
-                                    <label class="form-check-label" asp-for="Client.ClientCredentialsGrantType"></label>
+                        <li class="list-group-item">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" asp-for="Client.ClientCredentialsGrantType">
+                                <label class="form-check-label" asp-for="Client.ClientCredentialsGrantType"></label>
 
-                                    <span asp-validation-for="Client.ClientCredentialsGrantType" class="text-danger"></span>
-                                    <p>Allow authentication through your client id and client secret. Note: requires your app to be <b>confidential</b> </p>
-                                </div>
-                            </li>
+                                <span asp-validation-for="Client.ClientCredentialsGrantType" class="text-danger"></span>
+                                <p>Allow authentication through your client id and client secret. Note: requires your app to be <b>confidential</b> </p>
+                            </div>
+                        </li>
 
-                            <li class="list-group-item">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" asp-for="Client.ImplicitGrantType">
-                                    <label class="form-check-label" asp-for="Client.ImplicitGrantType"></label>
+                        <li class="list-group-item">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" asp-for="Client.ImplicitGrantType">
+                                <label class="form-check-label" asp-for="Client.ImplicitGrantType"></label>
 
-                                    <span asp-validation-for="Client.ImplicitGrantType" class="text-danger"></span>
-                                    <p>Allow authentication by redirecting your user to our login screen which then redirects to the specified redirect uri with an access token. Recommended for Single Page Applications</p>
-                                </div>
-                            </li>
+                                <span asp-validation-for="Client.ImplicitGrantType" class="text-danger"></span>
+                                <p>Allow authentication by redirecting your user to our login screen which then redirects to the specified redirect uri with an access token. Recommended for Single Page Applications</p>
+                            </div>
+                        </li>
 
-                            <li class="list-group-item">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" asp-for="Client.AuthorizationGrantType">
-                                    <label class="form-check-label" asp-for="Client.AuthorizationGrantType"></label>
+                        <li class="list-group-item">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" asp-for="Client.AuthorizationGrantType">
+                                <label class="form-check-label" asp-for="Client.AuthorizationGrantType"></label>
 
-                                    <span asp-validation-for="Client.AuthorizationGrantType" class="text-danger"></span>
-                                    <p>
-                                        Similar to the Implicit Flow but is meant for server-side web applications.
-                                        Allow authentication by redirecting your user to our login screen which then redirects to the specified redirect uri with an authorization code taht the backend can exchange for an access token.
-                                    </p>
-                                </div>
-                            </li>
-                        </ul>
-                    }
+                                <span asp-validation-for="Client.AuthorizationGrantType" class="text-danger"></span>
+                                <p>
+                                    Similar to the Implicit Flow but is meant for server-side web applications.
+                                    Allow authentication by redirecting your user to our login screen which then redirects to the specified redirect uri with an authorization code taht the backend can exchange for an access token.
+                                </p>
+                            </div>
+                        </li>
+                    </ul>
+
                     <div class="form-group mt-4">
                         <input type="submit" class="btn btn-primary"/>
                     </div>
@@ -199,13 +197,14 @@
 @functions
 {
 
-    public class EditClient: PageModel
+    public class EditClient : PageModel
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly BTCPayServerOptions _options;
         private readonly OpenIddictApplicationManager<BTCPayOpenIdClient> _applicationManager;
 
         private string UserId => _userManager.GetUserId(User);
+
         [BindProperty(SupportsGet = true)]
         public string Id { get; set; }
 
@@ -214,9 +213,6 @@
 
         [BindProperty]
         public SimpleBtcPayClient Client { get; set; }
-
-        public OpenIdOptions OpenIdOptions =>
-            _options.OpenIdOptions;
 
         public EditClient(
             UserManager<ApplicationUser> userManager,
@@ -335,7 +331,7 @@
                 StatusMessage = $"Client Saved. {(!string.IsNullOrEmpty(secret) ? $"Client Secret is {secret}" : "")}"
             });
         }
-        
+
         private void SetClientValues(OpenIddictApplicationDescriptor descriptor, List<Uri> redirectUris, List<Uri> logoutRedirectUris, List<string> permissions)
         {
             descriptor.RedirectUris.Clear();
@@ -399,43 +395,41 @@
         {
             var permissions = new List<string>();
     //always add refresh token grant type
-            if (_options.OpenIdOptions.EnforceGrantTypes)
+
+            permissions.Add(OpenIddictConstants.Permissions.GrantTypes.RefreshToken);
+            if (Client.AuthorizationGrantType)
             {
-                permissions.Add(OpenIddictConstants.Permissions.GrantTypes.RefreshToken);
-                if (Client.AuthorizationGrantType)
-                {
-                    permissions.Add(OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode);
-                }
+                permissions.Add(OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode);
+            }
 
-                if (Client.ImplicitGrantType)
+            if (Client.ImplicitGrantType)
+            {
+                permissions.Add(OpenIddictConstants.Permissions.GrantTypes.Implicit);
+                if (Client.ClientType != OpenIddictConstants.ClientTypes.Public)
                 {
-                    permissions.Add(OpenIddictConstants.Permissions.GrantTypes.Implicit);
-                    if (Client.ClientType != OpenIddictConstants.ClientTypes.Public)
-                    {
-                        ModelState.AddModelError($"{nameof(Client)}.{nameof(Client.ClientType)}",
-                            "Implicit cannot be used with a confidential/hybrid client.");
-                    }
-                }
-
-                if (Client.PasswordGrantType)
-                {
-                    permissions.Add(OpenIddictConstants.Permissions.GrantTypes.Password);
-                }
-
-                if (Client.ClientCredentialsGrantType)
-                {
-                    permissions.Add(OpenIddictConstants.Permissions.GrantTypes.ClientCredentials);
-                    if (Client.ClientType == OpenIddictConstants.ClientTypes.Public)
-                    {
-                        ModelState.AddModelError($"{nameof(Client)}.{nameof(Client.ClientType)}",
-                            "Client Credentials cannot be used with a public client.");
-                    }
+                    ModelState.AddModelError($"{nameof(Client)}.{nameof(Client.ClientType)}",
+                        "Implicit cannot be used with a confidential/hybrid client.");
                 }
             }
 
+            if (Client.PasswordGrantType)
+            {
+                permissions.Add(OpenIddictConstants.Permissions.GrantTypes.Password);
+            }
+
+            if (Client.ClientCredentialsGrantType)
+            {
+                permissions.Add(OpenIddictConstants.Permissions.GrantTypes.ClientCredentials);
+                if (Client.ClientType == OpenIddictConstants.ClientTypes.Public)
+                {
+                    ModelState.AddModelError($"{nameof(Client)}.{nameof(Client.ClientType)}",
+                        "Client Credentials cannot be used with a public client.");
+                }
+            }
+
+
             return permissions;
         }
-        
     }
 
     public class SimpleBtcPayClient

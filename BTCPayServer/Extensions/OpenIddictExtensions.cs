@@ -20,7 +20,6 @@ namespace BTCPayServer
             var file = Path.Combine(configuration.GetDataDir(), "rsaparams");
 
             RSACryptoServiceProvider RSA = new RSACryptoServiceProvider(2048);
-            RsaSecurityKey key = null;
 
             if (File.Exists(file))
             {

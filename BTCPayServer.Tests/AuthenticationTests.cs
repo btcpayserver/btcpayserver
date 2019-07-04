@@ -127,11 +127,11 @@ namespace BTCPayServer.Tests
                 results = url.Split("#").Last().Split("&").ToDictionary(s1 => s1.Split("=")[0], s1 => s1.Split("=")[1]);
                 await TestApiAgainstAccessToken(results["access_token"], tester, user);
 
-                await LogoutFlow(tester, id, s);
+                LogoutFlow(tester, id, s);
             }
         }
 
-        private async Task LogoutFlow(ServerTester tester, string clientId, SeleniumTester seleniumTester )
+        void LogoutFlow(ServerTester tester, string clientId, SeleniumTester seleniumTester)
         {
             var logoutUrl = new Uri(tester.PayTester.ServerUri,
                 $"connect/logout?response_type=token&client_id={clientId}");
@@ -314,7 +314,7 @@ namespace BTCPayServer.Tests
             return result.AccessToken;
         }
 
-        public async Task TestApiAgainstAccessToken(string accessToken, ServerTester tester, TestAccount testAccount)
+        async Task TestApiAgainstAccessToken(string accessToken, ServerTester tester, TestAccount testAccount)
         {
             var resultUser =
                 await TestApiAgainstAccessToken<string>(accessToken, "api/test/me/id",

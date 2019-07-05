@@ -262,11 +262,12 @@ namespace BTCPayServer.Tests
             Assert.Equal(Money.Zero, accounting.Due);
             Assert.Equal(Money.Coins(1.3m), accounting.TotalDue);
 
-            entity.Payments.Add(new PaymentEntity()
-            {
-                Output = new TxOut(Money.Coins(0.2m), new Key()),
-                Accounted = true
-            });
+            entity.Payments.Add(
+                new PaymentEntity()
+                {
+                    Output = new TxOut(Money.Coins(0.2m), new Key()), 
+                    Accounted = true
+                });
 
             accounting = paymentMethod.Calculate();
             Assert.Equal(Money.Zero, accounting.Due);
@@ -276,9 +277,19 @@ namespace BTCPayServer.Tests
             entity.ProductInformation = new ProductInformation() {Price = 5000};
             PaymentMethodDictionary paymentMethods = new PaymentMethodDictionary();
             paymentMethods.Add(
-                new PaymentMethod() {CryptoCode = "BTC", Rate = 1000, NextNetworkFee = Money.Coins(0.1m)});
+                new PaymentMethod()
+                {
+                    CryptoCode = "BTC", 
+                    Rate = 1000, 
+                    NextNetworkFee = Money.Coins(0.1m)
+                });
             paymentMethods.Add(
-                new PaymentMethod() {CryptoCode = "LTC", Rate = 500, NextNetworkFee = Money.Coins(0.01m)});
+                new PaymentMethod()
+                {
+                    CryptoCode = "LTC", 
+                    Rate = 500, 
+                    NextNetworkFee = Money.Coins(0.01m)
+                });
             entity.SetPaymentMethods(paymentMethods);
             entity.Payments = new List<PaymentEntity>();
             paymentMethod = entity.GetPaymentMethod(new PaymentMethodId("BTC", PaymentTypes.BTCLike));
@@ -370,36 +381,12 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Integration", "Integration")]
-        public async Task GetRedirectedToLoginPathOnChallenge()
-        {
-            using (var tester = ServerTester.Create())
-            {
-                tester.Start();
-                var client = tester.PayTester.HttpClient;
-                //Wallets endpoint is protected
-                var response = await client.GetAsync("wallets");
-                var urlPath = response.RequestMessage.RequestUri.ToString()
-                    .Replace(tester.PayTester.ServerUri.ToString(), "");
-                //Cookie Challenge redirects you to login page
-                Assert.StartsWith("Account/Login", urlPath, StringComparison.InvariantCultureIgnoreCase);
-
-                var queryString = response.RequestMessage.RequestUri.ParseQueryString();
-                
-                Assert.NotNull(queryString["ReturnUrl"]);
-                Assert.Equal("/wallets", queryString["ReturnUrl"]);
-            }
-        }
-
-        
-        [Fact]
-        [Trait("Integration", "Integration")]
         public async Task CanUseTestWebsiteUI()
         {
             using (var tester = ServerTester.Create())
             {
                 tester.Start();
-                var http = new HttpClient();
-                var response = await http.GetAsync(tester.PayTester.ServerUri);
+                var response = await tester.PayTester.HttpClient.GetAsync("");
                 Assert.True(response.IsSuccessStatusCode);
             }
         }

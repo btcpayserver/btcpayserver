@@ -4,38 +4,42 @@
 }
 
 
-<partial name="_StatusMessage" for="@TempData["StatusMessage"]"/>
+<partial name="_StatusMessage" for="@TempData["StatusMessage"]" />
 
-
+<h4>File Storage</h4>
+<div class="form-group">
+    <span>Change your <a asp-action="Services" asp-route-returnurl="@ViewData["ReturnUrl"]">external storage service</a> provider</span>
+    <a href="https://docs.btcpayserver.org/faq-and-common-issues/faq-serversettings#how-to-upload-files-to-btcpay" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+</div>
 <table class="table table-sm table-responsive-md">
     <thead>
-    <tr>
-        <th>Name</th>
-        <th>Timestamp</th>
-        <th>User</th>
-        <th></th>
-    </tr>
+        <tr>
+            <th>Name</th>
+            <th>Timestamp</th>
+            <th>User</th>
+            <th></th>
+        </tr>
     </thead>
     <tbody>
-    @foreach (var file in Model.Files)
-    {
-        <tr>
-            <td>@file.FileName</td>
-            <td >@file.Timestamp.ToBrowserDate2()</td>
-            <td>@file.ApplicationUser.UserName</td>
-            <td>
-                <a asp-action="Files" asp-route-fileId="@file.Id">Get Link</a>
-                - <a asp-action="CreateTemporaryFileUrl" asp-route-fileId="@file.Id">Get Temp Link</a>
-                - <a asp-action="DeleteFile" asp-route-fileId="@file.Id">Remove</a>
-            </td>
-        </tr>
-    }
-    @if (!Model.Files.Any())
-    {
-        <tr>
-            <td colspan="4" class="text-center">No files</td>
-        </tr>
-    }
+        @foreach (var file in Model.Files)
+        {
+            <tr>
+                <td>@file.FileName</td>
+                <td>@file.Timestamp.ToBrowserDate2()</td>
+                <td>@file.ApplicationUser.UserName</td>
+                <td>
+                    <a asp-action="Files" asp-route-fileId="@file.Id">Get Link</a>
+                    - <a asp-action="CreateTemporaryFileUrl" asp-route-fileId="@file.Id">Get Temp Link</a>
+                    - <a asp-action="DeleteFile" asp-route-fileId="@file.Id">Remove</a>
+                </td>
+            </tr>
+        }
+        @if (!Model.Files.Any())
+        {
+            <tr>
+                <td colspan="4" class="text-center">No files</td>
+            </tr>
+        }
     </tbody>
 </table>
 
@@ -91,21 +95,21 @@
         </form>
     </div>
 
-@section Scripts {
-    <script>
-        $(document).ready(function() {
+    @section Scripts {
+        <script>
+            $(document).ready(function () {
 
-            $('.custom-file-input').on('change',
-                function() {
-                    var label = $(this).next('label');
-                    if (document.getElementById("file").files.length > 0) {
-                        var fileName = document.getElementById("file").files[0].name;
-                        label.addClass("selected").html(fileName);
-                    } else {
-                        label.removeClass("selected").html("Choose file");
-                    }
-                });
-        });
-    </script>
-}
+                $('.custom-file-input').on('change',
+                    function () {
+                        var label = $(this).next('label');
+                        if (document.getElementById("file").files.length > 0) {
+                            var fileName = document.getElementById("file").files[0].name;
+                            label.addClass("selected").html(fileName);
+                        } else {
+                            label.removeClass("selected").html("Choose file");
+                        }
+                    });
+            });
+        </script>
+    }
 }

@@ -130,14 +130,22 @@ namespace BTCPayServer.Tests
             Assert.Contains("Status Code: 404; Not Found", Driver.PageSource);
         }
 
-        internal void GoToHome()
+        public void GoToHome()
         {
             Driver.Navigate().GoToUrl(Server.PayTester.ServerUri);
         }
 
-        internal void Logout()
+        public void Logout()
         {
             Driver.FindElement(By.Id("Logout")).Click();
+        }
+
+        public void Login(string user, string password)
+        {
+            Driver.FindElement(By.Id("Email")).SendKeys(user);
+            Driver.FindElement(By.Id("Password")).SendKeys(password);
+            Driver.FindElement(By.Id("LoginButton")).Click();
+
         }
     }
 }

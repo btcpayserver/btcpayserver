@@ -116,7 +116,9 @@ namespace BTCPayServer.Services.PaymentRequests
                 }
 
                 var total = await queryable.CountAsync(cancellationToken);
-                
+
+                queryable = queryable.OrderByDescending(u => u.Created);
+
                 if (query.Skip.HasValue)
                 {
                     queryable = queryable.Skip(query.Skip.Value);
@@ -126,7 +128,6 @@ namespace BTCPayServer.Services.PaymentRequests
                 {
                     queryable = queryable.Take(query.Count.Value);
                 }
-
                 return (total, await queryable.ToArrayAsync(cancellationToken));
             }
         }
@@ -207,6 +208,10 @@ namespace BTCPayServer.Services.PaymentRequests
     public class PaymentRequestData
     {
         public string Id { get; set; }
+        public DateTimeOffset Created
+        {
+            get; set;
+        }
         public string StoreDataId { get; set; }
 
         public StoreData StoreData { get; set; }

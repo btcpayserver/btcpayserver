@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using BTCPayServer.Authentication.OpenId.Models;
 using Xunit;
 using NBXplorer.DerivationStrategy;
 using BTCPayServer.Payments;
@@ -18,6 +19,8 @@ using BTCPayServer.Tests.Logging;
 using BTCPayServer.Lightning;
 using BTCPayServer.Lightning.CLightning;
 using BTCPayServer.Data;
+using OpenIddict.Abstractions;
+using OpenIddict.Core;
 
 namespace BTCPayServer.Tests
 {
@@ -165,6 +168,15 @@ namespace BTCPayServer.Tests
             }, "save", "BTC");
             if (storeController.ModelState.ErrorCount != 0)
                 Assert.False(true, storeController.ModelState.FirstOrDefault().Value.Errors[0].ErrorMessage);
+        }
+
+        public async Task<BTCPayOpenIdClient> RegisterOpenIdClient(OpenIddictApplicationDescriptor descriptor, string secret = null)
+        {
+          var openIddictApplicationManager = parent.PayTester.GetService<OpenIddictApplicationManager<BTCPayOpenIdClient>>();
+          var client = new BTCPayOpenIdClient {ApplicationUserId = UserId};
+          await openIddictApplicationManager.PopulateAsync(client, descriptor);
+          await openIddictApplicationManager.CreateAsync(client, secret);
+          return client;
         }
     }
 }

@@ -38,10 +38,10 @@ namespace BTCPayServer.Services
             List<KeyPath> derivations = new List<KeyPath>();
             if (network.NBitcoinNetwork.Consensus.SupportSegwit)
             {
-                if (derivation.Redeem?.IsWitness is true ||
-                    derivation.ScriptPubKey.IsWitness) // Native or p2sh segwit
+                if (derivation.Redeem?.IsScriptType(ScriptType.Witness) is true ||
+                    derivation.ScriptPubKey.IsScriptType(ScriptType.Witness)) // Native or p2sh segwit
                     derivations.Add(new KeyPath("49'"));
-                if (derivation.Redeem == null && derivation.ScriptPubKey.IsWitness) // Native segwit
+                if (derivation.Redeem == null && derivation.ScriptPubKey.IsScriptType(ScriptType.Witness)) // Native segwit
                     derivations.Add(new KeyPath("84'"));
             }
             derivations.Add(new KeyPath("44'"));

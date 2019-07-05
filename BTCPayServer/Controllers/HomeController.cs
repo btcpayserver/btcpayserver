@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using BTCPayServer.Models;
@@ -10,6 +11,7 @@ using NBitcoin;
 using Newtonsoft.Json;
 using BTCPayServer.Services;
 using BTCPayServer.HostedServices;
+using BTCPayServer.Services.Apps;
 
 namespace BTCPayServer.Controllers
 {
@@ -25,37 +27,58 @@ namespace BTCPayServer.Controllers
             _cachedServerSettings = cachedServerSettings;
         }
 
+        private async Task<ViewResult> GoToApp(string appId, AppType? appType)
+        {
+            if (appType.HasValue && !string.IsNullOrEmpty(appId))
+            {
+                switch (appType.Value)
+                {
+                    case AppType.Crowdfund:
+                    {
+                        var serviceProvider = HttpContext.RequestServices;
+                        var controller = (AppsPublicController)serviceProvider.GetService(typeof(AppsPublicController));
+                        controller.Url = Url;
+                        controller.ControllerContext = ControllerContext;
+                        var res = await controller.ViewCrowdfund(appId, null) as ViewResult;
+                        if (res != null)
+                        {
+                            res.ViewName = "/Views/AppsPublic/ViewCrowdfund.cshtml";
+                            return res; // return 
+                        }
+
+                        break;
+                    }
+
+                    case AppType.PointOfSale:
+                    {
+                        var serviceProvider = HttpContext.RequestServices;
+                        var controller = (AppsPublicController)serviceProvider.GetService(typeof(AppsPublicController));
+                        controller.Url = Url;
+                        controller.ControllerContext = ControllerContext;
+                        var res = await controller.ViewPointOfSale(appId) as ViewResult;
+                        if (res != null)
+                        {
+                            res.ViewName = "/Views/AppsPublic/ViewPointOfSale.cshtml";
+                            return res; // return 
+                        }
+
+                        break;
+                    }
+                }
+            }
+            return null;
+        }
+
         public async Task<IActionResult> Index()
         {
-            if (_cachedServerSettings.RootAppType is Services.Apps.AppType.Crowdfund)
+            var matchedDomainMapping = _cachedServerSettings.DomainToAppMapping.FirstOrDefault(item =>
+                item.Domain.Equals(Request.Host.Host, StringComparison.InvariantCultureIgnoreCase));
+            if (matchedDomainMapping != null)
             {
-                var serviceProvider = HttpContext.RequestServices;
-                var controller = (AppsPublicController)serviceProvider.GetService(typeof(AppsPublicController));
-                controller.Url = Url;
-                controller.ControllerContext = ControllerContext;
-                var res = await controller.ViewCrowdfund(_cachedServerSettings.RootAppId, null) as ViewResult;
-                if (res != null)
-                {
-                    res.ViewName = "/Views/AppsPublic/ViewCrowdfund.cshtml";
-                    return res; // return 
-                }
-            }
-            else if (_cachedServerSettings.RootAppType is Services.Apps.AppType.PointOfSale)
-            {
-                var serviceProvider = HttpContext.RequestServices;
-                var controller = (AppsPublicController)serviceProvider.GetService(typeof(AppsPublicController));
-                controller.Url = Url;
-                controller.ControllerContext = ControllerContext;
-                var res = await controller.ViewPointOfSale(_cachedServerSettings.RootAppId) as ViewResult;
-                if (res != null)
-                {
-                    res.ViewName = "/Views/AppsPublic/ViewPointOfSale.cshtml";
-                    return res; // return 
-                }
-
+                return await GoToApp(matchedDomainMapping.AppId, matchedDomainMapping.AppType) ?? View("Home"); 
             }
 
-            return View("Home");
+            return await GoToApp(_cachedServerSettings.RootAppId, _cachedServerSettings.RootAppType) ?? View("Home"); 
         }
 
         [Route("translate")]
@@ -114,20 +137,6 @@ namespace BTCPayServer.Controllers
                 return View(vm);
             }
             return View(vm);
-        }
-
-        public IActionResult About()
-        {
-            ViewData["Message"] = "Your application description page.";
-
-            return View();
-        }
-
-        public IActionResult Contact()
-        {
-            ViewData["Message"] = "Your contact page.";
-
-            return View();
         }
 
         public IActionResult Error()

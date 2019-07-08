@@ -8,16 +8,18 @@ using BTCPayServer.Data;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Logging;
+using System.Threading;
+using Npgsql;
 
-namespace BTCPayServer.HostedServices
+namespace BTCPayServer
 {
-    public class MigratorHostedService : BaseAsyncService
+    public class MigrationStartupTask : IStartupTask
     {
         private ApplicationDbContextFactory _DBContextFactory;
         private StoreRepository _StoreRepository;
         private BTCPayNetworkProvider _NetworkProvider;
         private SettingsRepository _Settings;
-        public MigratorHostedService(
+        public MigrationStartupTask(
             BTCPayNetworkProvider networkProvider,
             StoreRepository storeRepository,
             ApplicationDbContextFactory dbContextFactory,
@@ -28,18 +30,11 @@ namespace BTCPayServer.HostedServices
             _NetworkProvider = networkProvider;
             _Settings = settingsRepository;
         }
-        internal override Task[] InitializeTasks()
-        {
-            return new[]
-            {
-                Update()
-            };
-        }
-
-        private async Task Update()
+        public async Task ExecuteAsync(CancellationToken cancellationToken = default)
         {
             try
             {
+                await Migrate(cancellationToken);
                 var settings = (await _Settings.GetSettingAsync<MigrationSettings>()) ?? new MigrationSettings();
                 if (!settings.DeprecatedLightningConnectionStringCheck)
                 {
@@ -80,8 +75,31 @@ namespace BTCPayServer.HostedServices
             }
             catch (Exception ex)
             {
-                Logs.PayServer.LogError(ex, "Error on the MigratorHostedService");
+                Logs.PayServer.LogError(ex, "Error on the MigrationStartupTask");
                 throw;
+            }
+        }
+
+        private async Task Migrate(CancellationToken cancellationToken)
+        {
+            using (CancellationTokenSource timeout = new CancellationTokenSource(10_000))
+            using (CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, cancellationToken))
+            {
+            retry:
+                try
+                {
+                    await _DBContextFactory.CreateContext().Database.MigrateAsync();
+                }
+                // Starting up
+                catch when (!cts.Token.IsCancellationRequested)
+                {
+                    try
+                    {
+                        await Task.Delay(1000, cts.Token);
+                    }
+                    catch { }
+                    goto retry;
+                }
             }
         }
 

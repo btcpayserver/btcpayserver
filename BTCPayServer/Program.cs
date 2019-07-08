@@ -68,7 +68,7 @@ namespace BTCPayServer
                     })
                     .UseStartup<Startup>()
                     .Build();
-                host.StartAsync().GetAwaiter().GetResult();
+                host.StartWithTasksAsync().GetAwaiter().GetResult();
                 var urls = host.ServerFeatures.Get<IServerAddressesFeature>().Addresses;
                 foreach (var url in urls)
                 {

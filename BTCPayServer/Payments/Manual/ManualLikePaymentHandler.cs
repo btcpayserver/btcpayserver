@@ -51,7 +51,7 @@ namespace BTCPayServer.Payments.Bitcoin
             Dictionary<CurrencyPair, Task<RateResult>> rate, Money amount,
             PaymentMethodId paymentMethodId)
         {
-            return null;
+            return Task.FromResult<string>(null);
         }
 
         public IEnumerable<PaymentMethodId> GetSupportedPaymentMethods()

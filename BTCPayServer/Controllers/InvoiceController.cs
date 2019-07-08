@@ -248,11 +248,23 @@ namespace BTCPayServer.Controllers
                 var logPrefix = $"{supportedPaymentMethod.PaymentId.ToPrettyString()}:";
                 var storeBlob = store.GetStoreBlob();
                 var preparePayment = handler.PreparePayment(supportedPaymentMethod, store, network);
-                var rate = await fetchingByCurrencyPair[new CurrencyPair(network.CryptoCode, entity.ProductInformation.Currency)];
-                if (rate.BidAsk == null)
+                RateResult rate;
+                if (network == null)
                 {
-                    return null;
+                    rate = new RateResult()
+                    {
+                        BidAsk = BidAsk.One
+                    };
                 }
+                else
+                {
+                    rate = await fetchingByCurrencyPair[new CurrencyPair(network.CryptoCode, entity.ProductInformation.Currency)];
+                    if (rate.BidAsk == null)
+                    {
+                        return null;
+                    }
+                }
+               
                 PaymentMethod paymentMethod = new PaymentMethod();
                 paymentMethod.ParentEntity = entity;
                 paymentMethod.Network = network;

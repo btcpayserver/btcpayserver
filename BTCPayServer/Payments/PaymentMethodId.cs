@@ -76,15 +76,22 @@ namespace BTCPayServer.Payments
         public static bool TryParse(string str, out PaymentMethodId paymentMethodId)
         {
             paymentMethodId = null;
-            var parts = str.Split('_', StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length == 0 || parts.Length > 2)
-                return false;
+            var parts = str.Split('_', StringSplitOptions.None);
             PaymentType type = PaymentTypes.BTCLike;
-            if (parts.Length == 2)
+            switch (parts.Length)
             {
-                if (!PaymentTypes.TryParse(parts[1], out type))
+                case 0: 
+                case int l when l > 2:
                     return false;
+                case 1:
+                    break;
+                case 2:
+                    if (!PaymentTypes.TryParse(parts[1], out type))
+                        return false;
+
+                    break;
             }
+
             paymentMethodId = new PaymentMethodId(parts[0], type);
             return true;
         }

@@ -12,7 +12,8 @@ namespace BTCPayServer.Payments.Bitcoin
 {
     public class ManualPaymentSettings : ISupportedPaymentMethod
     {
-        public PaymentMethodId PaymentId { get; } = new PaymentMethodId(string.Empty, PaymentTypes.Manual);
+        public PaymentMethodId PaymentId { get; } = StaticPaymentId;
+        public static PaymentMethodId StaticPaymentId { get; } = new PaymentMethodId(string.Empty, PaymentTypes.Manual);
     }
 
     public class ManualLikePaymentHandler : IPaymentMethodHandler

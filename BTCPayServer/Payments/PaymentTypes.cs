@@ -34,6 +34,10 @@ namespace BTCPayServer.Payments
                 case "offchain":
                     type = PaymentTypes.LightningLike;
                     break;
+                case "manual":
+                    type = PaymentTypes.Manual;
+                    break;
+                
                 default:
                     type = null;
                     return false;

@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Payments.Bitcoin;
 
 namespace BTCPayServer.Models.StoreViewModels
 {
@@ -109,5 +110,15 @@ namespace BTCPayServer.Models.StoreViewModels
             get;
             set;
         }
+
+        public ManualPaymentViewModel ManualPayment { get; set; }
+        public class ManualPaymentViewModel
+        {
+            
+            public bool Enabled { get; set; }
+            
+        }
+        
+        
     }
 }

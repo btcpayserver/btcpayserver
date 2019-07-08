@@ -188,10 +188,24 @@
                             <tr>
                                 <th>Provider</th>
                                 <th class="text-center">Enabled</th>
-                                <th class="text-right">Actions</th>
+                                <th class="text-right">>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
+                        <tr>
+                            <td>Manual</td>
+                            <td class="text-center">
+                                @if(Model.ManualPayment.Enabled)
+                                {
+                                    <span class="fa fa-check"></span>
+                                }
+                                else
+                                {
+                                    <span class="fa fa-times"></span>
+                                }
+                            </td>
+                            <td class="text-right"><a asp-action="UpdateManualSettings" >Modify</a></td>
+                        </tr>
                         @foreach (var scheme in Model.ThirdPartyPaymentMethods)
                         {
                             <tr>

@@ -33,28 +33,14 @@ namespace BTCPayServer.Payments
 
         public override ISupportedPaymentMethod DeserializeSupportedPaymentMethod(BTCPayNetworkBase network, JToken value)
         {
-            if (network == null)
-                throw new ArgumentNullException(nameof(network));
             if (value == null)
                 throw new ArgumentNullException(nameof(value));
-            var net = (BTCPayNetwork)network;
-            if (value is JObject jobj)
-            {
-                var scheme = net.NBXplorerNetwork.Serializer.ToObject<DerivationSchemeSettings>(jobj);
-                scheme.Network = net;
-                return scheme;
-            }
-            // Legacy
-            return DerivationSchemeSettings.Parse(((JValue)value).Value<string>(), net);
+            return value.ToObject<ManualPaymentSettings>();
         }
 
         public override string GetTransactionLink(BTCPayNetworkBase network, string txId)
         {
-            if (txId == null)
-                throw new ArgumentNullException(nameof(txId));
-            if (network?.BlockExplorerLink == null)
-                return null;
-            return string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink, txId);
+            return "N/A";
         }
     }
 }

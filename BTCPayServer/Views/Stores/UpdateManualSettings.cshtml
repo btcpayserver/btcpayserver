@@ -1,0 +1,25 @@
+@model BTCPayServer.Controllers.UpdateManualPaymentSettings
+@{
+    Layout = "../Shared/_NavLayout.cshtml";
+    ViewData.SetActivePageAndTitle(StoreNavPages.Index, "Update manual payment settings");
+}
+
+<partial name="_StatusMessage" for="StatusMessage" />
+
+
+<div class="row">
+    <div class="col-md-10">
+        <form method="post">
+            
+            <div class="form-group">
+                <label asp-for="Enabled"></label>
+                <input asp-for="Enabled" type="checkbox" class="form-check" />
+            </div>
+            <button name="command" type="submit" value="save" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

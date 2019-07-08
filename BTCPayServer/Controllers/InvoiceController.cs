@@ -10,6 +10,7 @@ using BTCPayServer.Events;
 using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Payments;
+using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Rating;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
@@ -164,7 +165,7 @@ namespace BTCPayServer.Controllers
                                                 (Handler: _paymentMethodHandlerDictionary[c.PaymentId],
                                                 SupportedPaymentMethod: c,
                                                 Network: _NetworkProvider.GetNetwork<BTCPayNetworkBase>(c.PaymentId.CryptoCode)))
-                                                .Where(c => c.Network != null)
+                                                .Where(c => c.SupportedPaymentMethod  is ManualPaymentSettings || c.Network != null)
                                                 .Select(o =>
                                                     (SupportedPaymentMethod: o.SupportedPaymentMethod,
                                                     PaymentMethod: CreatePaymentMethodAsync(fetchingByCurrencyPair, o.Handler, o.SupportedPaymentMethod, o.Network, entity, store, logs)))

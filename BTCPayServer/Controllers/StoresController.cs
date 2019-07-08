@@ -13,6 +13,7 @@ using BTCPayServer.Models;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
+using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Rating;
@@ -501,6 +502,17 @@ namespace BTCPayServer.Controllers
                             Address = lightning?.GetLightningUrl()?.BaseUri.AbsoluteUri ?? string.Empty,
                             Enabled = !excludeFilters.Match(paymentMethodId) && lightning?.GetLightningUrl() != null
                         });
+                        break;
+                    case ManualPaymentType _:
+
+                        var manual = store
+                            .GetSupportedPaymentMethods(_NetworkProvider)
+                            .OfType<ManualPaymentMethod>().FirstOrDefault();
+                        
+                        vm.ManualPayment = new StoreViewModel.ManualPaymentViewModel()
+                        {
+                            Enabled = manual != null && !excludeFilters.Match(paymentMethodId)
+                        };
                         break;
                 }   
             }

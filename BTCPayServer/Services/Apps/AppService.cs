@@ -231,7 +231,21 @@ namespace BTCPayServer.Services.Apps
                     .ToArrayAsync();
             }
         }
+        
+        public async Task<List<AppData>> GetApps(string[] appIds, bool includeStore = false)
+        {
+            using (var ctx = _ContextFactory.CreateContext())
+            {
+                var query = ctx.Apps
+                    .Where(us => appIds.Contains(us.Id));
 
+                if (includeStore)
+                {
+                    query = query.Include(data => data.StoreData);
+                }
+                return await query.ToListAsync();
+            }
+        }
 
         public async Task<AppData> GetApp(string appId, AppType appType, bool includeStore = false)
         {

@@ -44,12 +44,11 @@ namespace BTCPayServer.Controllers
         private UserManager<ApplicationUser> _UserManager;
         SettingsRepository _SettingsRepository;
         private readonly NBXplorerDashboard _dashBoard;
-        private RateFetcher _RateProviderFactory;
         private StoreRepository _StoreRepository;
         LightningConfigurationProvider _LnConfigProvider;
         private readonly TorServices _torServices;
-        BTCPayServerOptions _Options;
-        ApplicationDbContextFactory _ContextFactory;
+        private BTCPayServerOptions _Options;
+        private readonly AppService _AppService;
         private readonly StoredFileRepository _StoredFileRepository;
         private readonly FileService _FileService;
         private readonly IEnumerable<IStorageProviderService> _StorageProviderServices;
@@ -59,14 +58,13 @@ namespace BTCPayServer.Controllers
             FileService fileService,
             IEnumerable<IStorageProviderService> storageProviderServices,
             BTCPayServerOptions options,
-            RateFetcher rateProviderFactory,
             SettingsRepository settingsRepository,
             NBXplorerDashboard dashBoard,
             IHttpClientFactory httpClientFactory,
             LightningConfigurationProvider lnConfigProvider,
             TorServices torServices,
             StoreRepository storeRepository,
-            ApplicationDbContextFactory contextFactory)
+            AppService appService)
         {
             _Options = options;
             _StoredFileRepository = storedFileRepository;
@@ -76,11 +74,10 @@ namespace BTCPayServer.Controllers
             _SettingsRepository = settingsRepository;
             _dashBoard = dashBoard;
             HttpClientFactory = httpClientFactory;
-            _RateProviderFactory = rateProviderFactory;
             _StoreRepository = storeRepository;
             _LnConfigProvider = lnConfigProvider;
             _torServices = torServices;
-            _ContextFactory = contextFactory;
+            _AppService = appService;
         }
 
         [Route("server/rates")]
@@ -503,19 +500,16 @@ namespace BTCPayServer.Controllers
 
             if (appIdsToFetch.Any())
             {
-                using (var ctx = _ContextFactory.CreateContext())
+                var apps = (await _AppService.GetApps(appIdsToFetch.ToArray()))
+                    .ToDictionary(data => data.Id, data => Enum.Parse<AppType>(data.AppType));;
+                if (!string.IsNullOrEmpty(settings.RootAppId))
                 {
-                    var apps = await ctx.Apps.Where(data => appIdsToFetch.Contains(data.Id))
-                        .ToDictionaryAsync(data => data.Id, data => Enum.Parse<AppType>(data.AppType));
-                    if (!string.IsNullOrEmpty(settings.RootAppId))
-                    {
-                        settings.RootAppType = apps[settings.RootAppId];
-                    }
+                    settings.RootAppType = apps[settings.RootAppId];
+                }
 
-                    foreach (var domainToAppMappingItem in settings.DomainToAppMapping)
-                    {
-                        domainToAppMappingItem.AppType = apps[domainToAppMappingItem.AppId];
-                    }
+                foreach (var domainToAppMappingItem in settings.DomainToAppMapping)
+                {
+                    domainToAppMappingItem.AppType = apps[domainToAppMappingItem.AppId];
                 }
             }
 

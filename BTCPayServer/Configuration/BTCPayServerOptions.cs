@@ -78,7 +78,7 @@ namespace BTCPayServer.Configuration
             var supportedChains = conf.GetOrDefault<string>("chains", "btc")
                                       .Split(',', StringSplitOptions.RemoveEmptyEntries)
                                       .Select(t => t.ToUpperInvariant());
-            NetworkProvider = new BTCPayNetworkProvider(NetworkType).Filter(supportedChains.ToArray());
+            NetworkProvider = BTCPayNetworkProviderFactory.GetProvider(NetworkType.Mainnet);
             foreach (var chain in supportedChains)
             {
                 if (NetworkProvider.GetNetwork<BTCPayNetworkBase>(chain) == null)
@@ -86,7 +86,7 @@ namespace BTCPayServer.Configuration
             }
 
             var validChains = new List<string>();
-            foreach (var net in NetworkProvider.GetAll().OfType<BTCPayNetwork>())
+            foreach (var net in NetworkProvider.Filter(supportedChains.ToArray()).OfType<BTCPayNetwork>())
             {
                 NBXplorerConnectionSetting setting = new NBXplorerConnectionSetting();
                 setting.CryptoCode = net.CryptoCode;

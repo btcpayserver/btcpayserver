@@ -18,7 +18,7 @@ namespace BTCPayServer.Configuration
     {
         protected override CommandLineApplication CreateCommandLineApplicationCore()
         {
-            var provider = new BTCPayNetworkProvider(NetworkType.Mainnet);
+            var provider = BTCPayNetworkProviderFactory.GetProvider(NetworkType.Mainnet);
             var chains = string.Join(",", provider.GetAll().Select(n => n.CryptoCode.ToLowerInvariant()).ToArray());
             CommandLineApplication app = new CommandLineApplication(true)
             {
@@ -123,7 +123,7 @@ namespace BTCPayServer.Configuration
             builder.AppendLine("#mysql=User ID=root;Password=myPassword;Host=localhost;Port=3306;Database=myDataBase;");
             builder.AppendLine();
             builder.AppendLine("### NBXplorer settings ###");
-            foreach (var n in new BTCPayNetworkProvider(networkType).GetAll().OfType<BTCPayNetwork>())
+            foreach (var n in BTCPayNetworkProviderFactory.GetProvider(networkType).GetAll().OfType<BTCPayNetwork>())
             {
                 builder.AppendLine($"#{n.CryptoCode}.explorer.url={n.NBXplorerNetwork.DefaultSettings.DefaultUrl}");
                 builder.AppendLine($"#{n.CryptoCode}.explorer.cookiefile={ n.NBXplorerNetwork.DefaultSettings.DefaultCookieFile}");

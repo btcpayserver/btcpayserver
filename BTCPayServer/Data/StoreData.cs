@@ -64,7 +64,6 @@ namespace BTCPayServer.Data
         }
         public IEnumerable<ISupportedPaymentMethod> GetSupportedPaymentMethods(BTCPayNetworkProvider networks)
         {
-            networks = networks.UnfilteredNetworks;
 #pragma warning disable CS0618
             bool btcReturned = false;
 

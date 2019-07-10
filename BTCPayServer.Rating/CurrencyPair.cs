@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using NBitcoin;
 
 namespace BTCPayServer.Rating
 {
     public class CurrencyPair
     {
-        static readonly BTCPayNetworkProvider _NetworkProvider = new BTCPayNetworkProvider(NBitcoin.NetworkType.Mainnet);
+        private static readonly BTCPayNetworkProvider _NetworkProvider =
+            BTCPayNetworkProviderFactory.GetProvider(NetworkType.Mainnet);
         public CurrencyPair(string left, string right)
         {
             if (right == null)

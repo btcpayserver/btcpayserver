@@ -8,100 +8,59 @@ using NBXplorer;
 
 namespace BTCPayServer
 {
-    public partial class BTCPayNetworkProvider
+    public interface IBTCPayNetworkProvider
     {
-        Dictionary<string, BTCPayNetworkBase> _Networks = new Dictionary<string, BTCPayNetworkBase>();
+        IEnumerable<BTCPayNetworkBase> GetNetworks(NetworkType networkType);
+    }
 
-
-        private readonly NBXplorerNetworkProvider _NBXplorerNetworkProvider;
-        public NBXplorerNetworkProvider NBXplorerNetworkProvider
+    public static class BTCPayNetworkProviderFactory
+    {
+        public static BTCPayNetworkProvider GetProvider(NetworkType type)
         {
-            get
+            return new BTCPayNetworkProvider(new IBTCPayNetworkProvider[]
             {
-                return _NBXplorerNetworkProvider;
-            }
+                new BitcoinBTCPayNetworkProvider()
+            }, type);
+        }
+    }
+
+    public class BTCPayNetworkProvider
+    {
+        private readonly IEnumerable<IBTCPayNetworkProvider> _BtcPayNetworkProviders;
+        public NetworkType NetworkType;
+        private Dictionary<string, BTCPayNetworkBase> _Networks;
+        public BTCPayNetworkProvider(IEnumerable<IBTCPayNetworkProvider> btcPayNetworkProviders)
+        {
+            _BtcPayNetworkProviders = btcPayNetworkProviders;
+           
         }
 
-        BTCPayNetworkProvider(BTCPayNetworkProvider unfiltered, string[] cryptoCodes)
+        public BTCPayNetworkProvider(IEnumerable<IBTCPayNetworkProvider> btcPayNetworkProviders, NetworkType networkType)
         {
-            UnfilteredNetworks = unfiltered.UnfilteredNetworks ?? unfiltered;
-            NetworkType = unfiltered.NetworkType;
-            _NBXplorerNetworkProvider = new NBXplorerNetworkProvider(unfiltered.NetworkType);
-            _Networks = new Dictionary<string, BTCPayNetworkBase>();
-            cryptoCodes = cryptoCodes.Select(c => c.ToUpperInvariant()).ToArray();
-            foreach (var network in unfiltered._Networks)
-            {
-                if(cryptoCodes.Contains(network.Key))
-                {
-                    _Networks.Add(network.Key, network.Value);
-                }
-            }
+            _BtcPayNetworkProviders = btcPayNetworkProviders;
+            Init(networkType);
+
         }
-
-        public BTCPayNetworkProvider UnfilteredNetworks { get; }
-
-        public NetworkType NetworkType { get; private set; }
-        public BTCPayNetworkProvider(NetworkType networkType)
+        public void Init(NetworkType networkType)
         {
-            UnfilteredNetworks = this;
-            _NBXplorerNetworkProvider = new NBXplorerNetworkProvider(networkType);
-            NetworkType = networkType;
-            InitBitcoin();
-            InitLitecoin();
-            InitBitcore();
-            InitDogecoin();
-            InitBitcoinGold();
-            InitMonacoin();
-            InitDash();
-            InitFeathercoin();
-            InitGroestlcoin();
-            InitViacoin();
-
-            // Assume that electrum mappings are same as BTC if not specified
-            foreach (var network in _Networks.Values.OfType<BTCPayNetwork>())
-            {
-                if(network.ElectrumMapping.Count == 0)
-                {
-                    network.ElectrumMapping = GetNetwork<BTCPayNetwork>("BTC").ElectrumMapping;
-                    if (!network.NBitcoinNetwork.Consensus.SupportSegwit)
-                    {
-                        network.ElectrumMapping =
-                            network.ElectrumMapping
-                            .Where(kv => kv.Value == DerivationType.Legacy)
-                            .ToDictionary(k => k.Key, k => k.Value);
-                    }
-                }
-            }
-
-            // Disabled because of https://twitter.com/Cryptopia_NZ/status/1085084168852291586
-            //InitPolis();
-            //InitBitcoinplus();
-            //InitUfo();
-        }
-
-        /// <summary>
-        /// Keep only the specified crypto
-        /// </summary>
-        /// <param name="cryptoCodes">Crypto to support</param>
-        /// <returns></returns>
-        public BTCPayNetworkProvider Filter(string[] cryptoCodes)
-        {
-            return new BTCPayNetworkProvider(this, cryptoCodes);
+            NetworkType= networkType;
+            _Networks = _BtcPayNetworkProviders.SelectMany(provider => provider.GetNetworks(networkType))
+                .ToDictionary(x => x.CryptoCode, x => x);
         }
 
         [Obsolete("To use only for legacy stuff")]
         public BTCPayNetwork BTC => GetNetwork<BTCPayNetwork>("BTC");
-
-        public void Add(BTCPayNetworkBase network)
-        {
-            _Networks.Add(network.CryptoCode.ToUpperInvariant(), network);
-        }
 
         public IEnumerable<BTCPayNetworkBase> GetAll()
         {
             return _Networks.Values.ToArray();
         }
 
+        public IEnumerable<BTCPayNetworkBase> Filter(string[] cryptoCodes)
+        {
+            return _Networks.Where(pair => cryptoCodes.Contains(pair.Key)).Select(pair => pair.Value);
+        }
+        
         public bool Support(string cryptoCode)
         {
             return _Networks.ContainsKey(cryptoCode.ToUpperInvariant());
@@ -120,6 +79,69 @@ namespace BTCPayServer
                     return GetNetwork<T>("BTC");
             }
             return network as T;
+        }
+    }
+    
+    public partial class BitcoinBTCPayNetworkProvider: IBTCPayNetworkProvider
+    {
+        Dictionary<string, BTCPayNetwork> _Networks = new Dictionary<string, BTCPayNetwork>();
+
+
+        private NBXplorerNetworkProvider _NBXplorerNetworkProvider;
+        public NBXplorerNetworkProvider NBXplorerNetworkProvider
+        {
+            get
+            {
+                return _NBXplorerNetworkProvider;
+            }
+        }
+        
+
+        public NetworkType NetworkType { get; private set; }
+      
+
+        
+        private void Add(BTCPayNetwork network)
+        {
+            _Networks.Add(network.CryptoCode.ToUpperInvariant(), network);
+        }
+
+        public IEnumerable<BTCPayNetworkBase> GetNetworks(NetworkType networkType)
+        {
+            _NBXplorerNetworkProvider = new NBXplorerNetworkProvider(networkType);
+            NetworkType = networkType;
+            InitBitcoin();
+            InitLitecoin();
+            InitBitcore();
+            InitDogecoin();
+            InitBitcoinGold();
+            InitMonacoin();
+            InitDash();
+            InitFeathercoin();
+            InitGroestlcoin();
+            InitViacoin();
+
+            // Assume that electrum mappings are same as BTC if not specified
+            foreach (var network in _Networks.Values.OfType<BTCPayNetwork>())
+            {
+                if(network.ElectrumMapping.Count == 0)
+                {
+                    network.ElectrumMapping = _Networks["BTC"].ElectrumMapping;
+                    if (!network.NBitcoinNetwork.Consensus.SupportSegwit)
+                    {
+                        network.ElectrumMapping =
+                            network.ElectrumMapping
+                                .Where(kv => kv.Value == DerivationType.Legacy)
+                                .ToDictionary(k => k.Key, k => k.Value);
+                    }
+                }
+            }
+
+            // Disabled because of https://twitter.com/Cryptopia_NZ/status/1085084168852291586
+            //InitPolis();
+            //InitBitcoinplus();
+            //InitUfo();
+            return _Networks.Values;
         }
     }
 }

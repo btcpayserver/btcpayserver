@@ -2,7 +2,7 @@
 
 namespace BTCPayServer
 {
-    public partial class BTCPayNetworkProvider
+    public partial class BitcoinBTCPayNetworkProvider
     {
         public void InitDash()
         {

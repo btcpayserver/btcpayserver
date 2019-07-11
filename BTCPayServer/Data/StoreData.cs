@@ -399,13 +399,13 @@ namespace BTCPayServer.Data
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public double PaymentTolerance { get; set; }
 
-        public BTCPayServer.Rating.RateRules GetRateRules(BTCPayNetworkProvider networkProvider)
+        public BTCPayServer.Rating.RateRules GetRateRules(IEnumerable<BTCPayNetworkBase> networks)
         {
             if (!RateScripting ||
                 string.IsNullOrEmpty(RateScript) ||
                 !BTCPayServer.Rating.RateRules.TryParse(RateScript, out var rules))
             {
-                return GetDefaultRateRules(networkProvider);
+                return GetDefaultRateRules(networks);
             }
             else
             {
@@ -414,10 +414,10 @@ namespace BTCPayServer.Data
             }
         }
 
-        public RateRules GetDefaultRateRules(BTCPayNetworkProvider networkProvider)
+        public RateRules GetDefaultRateRules(IEnumerable<BTCPayNetworkBase> networks)
         {
             StringBuilder builder = new StringBuilder();
-            foreach (var network in networkProvider.GetAll())
+            foreach (var network in networks)
             {
                 if (network.DefaultRateRules.Length != 0)
                 {

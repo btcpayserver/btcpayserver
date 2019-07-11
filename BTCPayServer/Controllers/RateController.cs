@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Authorization;
 using BTCPayServer.Authentication;
 using Microsoft.AspNetCore.Cors;
 using System.Threading;
+using BTCPayServer.Configuration;
 
 namespace BTCPayServer.Controllers
 {
@@ -25,6 +26,7 @@ namespace BTCPayServer.Controllers
         RateFetcher _RateProviderFactory;
         BTCPayNetworkProvider _NetworkProvider;
         CurrencyNameTable _CurrencyNameTable;
+        private readonly BTCPayServerOptions _BtcPayServerOptions;
         StoreRepository _StoreRepo;
 
         public TokenRepository TokenRepository { get; }
@@ -34,13 +36,15 @@ namespace BTCPayServer.Controllers
             BTCPayNetworkProvider networkProvider,
             TokenRepository tokenRepository,
             StoreRepository storeRepo,
-            CurrencyNameTable currencyNameTable)
+            CurrencyNameTable currencyNameTable, 
+            BTCPayServerOptions btcPayServerOptions)
         {
             _RateProviderFactory = rateProviderFactory ?? throw new ArgumentNullException(nameof(rateProviderFactory));
             _NetworkProvider = networkProvider;
             TokenRepository = tokenRepository;
             _StoreRepo = storeRepo;
             _CurrencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
+            _BtcPayServerOptions = btcPayServerOptions;
         }
 
         [Route("rates/{baseCurrency}")]
@@ -149,7 +153,7 @@ namespace BTCPayServer.Controllers
             }
 
 
-            var rules = store.GetStoreBlob().GetRateRules(_NetworkProvider);
+            var rules = store.GetStoreBlob().GetRateRules(_NetworkProvider.Filter(_BtcPayServerOptions.SupportedChains));
 
             HashSet<CurrencyPair> pairs = new HashSet<CurrencyPair>();
             foreach (var currency in currencyPairs.Split(','))

@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Configuration;
 using BTCPayServer.Models;
 using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Rating;
@@ -15,12 +16,15 @@ namespace BTCPayServer.Controllers
         private readonly ChangellyClientProvider _changellyClientProvider;
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly RateFetcher _RateProviderFactory;
+        private readonly BTCPayServerOptions _BtcPayServerOptions;
 
         public ChangellyController(ChangellyClientProvider changellyClientProvider,
             BTCPayNetworkProvider btcPayNetworkProvider,
-            RateFetcher rateProviderFactory)
+            RateFetcher rateProviderFactory,
+            BTCPayServerOptions btcPayServerOptions)
         {
             _RateProviderFactory = rateProviderFactory ?? throw new ArgumentNullException(nameof(rateProviderFactory));
+            _BtcPayServerOptions = btcPayServerOptions;
 
             _changellyClientProvider = changellyClientProvider;
             _btcPayNetworkProvider = btcPayNetworkProvider;
@@ -106,7 +110,7 @@ namespace BTCPayServer.Controllers
             decimal toCurrencyAmount, CancellationToken cancellationToken)
         {
             var store = HttpContext.GetStoreData();
-            var rules = store.GetStoreBlob().GetRateRules(_btcPayNetworkProvider);
+            var rules = store.GetStoreBlob().GetRateRules(_btcPayNetworkProvider.Filter(_BtcPayServerOptions.SupportedChains));
             var rate = await _RateProviderFactory.FetchRate(new CurrencyPair(toCurrency, fromCurrency), rules, cancellationToken);
             if (rate.BidAsk == null) return BadRequest();
             var flatRate = rate.BidAsk.Center;

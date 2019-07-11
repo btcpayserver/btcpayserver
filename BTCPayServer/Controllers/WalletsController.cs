@@ -7,6 +7,7 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.ModelBinders;
@@ -48,6 +49,7 @@ namespace BTCPayServer.Controllers
 
         private readonly IFeeProviderFactory _feeRateProvider;
         private readonly BTCPayWalletProvider _walletProvider;
+        private readonly BTCPayServerOptions _BtcPayServerOptions;
         public RateFetcher RateFetcher { get; }
         [TempData]
         public string StatusMessage { get; set; }
@@ -62,7 +64,8 @@ namespace BTCPayServer.Controllers
                                  RateFetcher rateProvider,
                                  ExplorerClientProvider explorerProvider,
                                  IFeeProviderFactory feeRateProvider,
-                                 BTCPayWalletProvider walletProvider)
+                                 BTCPayWalletProvider walletProvider,
+                                 BTCPayServerOptions btcPayServerOptions)
         {
             _currencyTable = currencyTable;
             Repository = repo;
@@ -74,6 +77,7 @@ namespace BTCPayServer.Controllers
             ExplorerClientProvider = explorerProvider;
             _feeRateProvider = feeRateProvider;
             _walletProvider = walletProvider;
+            _BtcPayServerOptions = btcPayServerOptions;
         }
 
         public async Task<IActionResult> ListWallets()
@@ -160,7 +164,7 @@ namespace BTCPayServer.Controllers
             if (network == null)
                 return NotFound();
             var storeData = store.GetStoreBlob();
-            var rateRules = store.GetStoreBlob().GetRateRules(NetworkProvider);
+            var rateRules = store.GetStoreBlob().GetRateRules(NetworkProvider.Filter(_BtcPayServerOptions.SupportedChains));
             rateRules.Spread = 0.0m;
             var currencyPair = new Rating.CurrencyPair(paymentMethod.PaymentId.CryptoCode, GetCurrencyCode(storeData.DefaultLang) ?? "USD");
             double.TryParse(defaultAmount, out var amount);

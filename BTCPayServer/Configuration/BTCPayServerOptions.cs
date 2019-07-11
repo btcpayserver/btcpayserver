@@ -55,6 +55,8 @@ namespace BTCPayServer.Configuration
             get;
             private set;
         }
+        
+        public string[] SupportedChains { get; set; }
 
         public static string GetDebugLog(IConfiguration configuration)
         {
@@ -75,18 +77,19 @@ namespace BTCPayServer.Configuration
             if (conf.GetOrDefault<bool>("launchsettings", false) && NetworkType != NetworkType.Regtest)
                 throw new ConfigException($"You need to run BTCPayServer with the run.sh or run.ps1 script");
 
-            var supportedChains = conf.GetOrDefault<string>("chains", "btc")
-                                      .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                                      .Select(t => t.ToUpperInvariant());
+            SupportedChains = conf.GetOrDefault<string>("chains", "btc")
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(t => t.ToUpperInvariant())
+                .ToArray();
             NetworkProvider = BTCPayNetworkProviderFactory.GetProvider(NetworkType.Mainnet);
-            foreach (var chain in supportedChains)
+            foreach (var chain in SupportedChains)
             {
                 if (NetworkProvider.GetNetwork<BTCPayNetworkBase>(chain) == null)
                     throw new ConfigException($"Invalid chains \"{chain}\"");
             }
 
             var validChains = new List<string>();
-            foreach (var net in NetworkProvider.Filter(supportedChains.ToArray()).OfType<BTCPayNetwork>())
+            foreach (var net in NetworkProvider.Filter(SupportedChains).OfType<BTCPayNetwork>())
             {
                 NBXplorerConnectionSetting setting = new NBXplorerConnectionSetting();
                 setting.CryptoCode = net.CryptoCode;
@@ -124,7 +127,7 @@ namespace BTCPayServer.Configuration
                 ExternalServices.Load(net.CryptoCode, conf);
             }
 
-            Logs.Configuration.LogInformation("Supported chains: " + String.Join(',', supportedChains.ToArray()));
+            Logs.Configuration.LogInformation("Supported chains: " + String.Join(',', SupportedChains.ToArray()));
 
             var services = conf.GetOrDefault<string>("externalservices", null);
             if (services != null)
@@ -210,6 +213,7 @@ namespace BTCPayServer.Configuration
 
             DisableRegistration = conf.GetOrDefault<bool>("disable-registration", true);
         }
+
 
         private SSHSettings ParseSSHConfiguration(IConfiguration conf)
         {

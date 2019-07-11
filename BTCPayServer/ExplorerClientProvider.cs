@@ -94,7 +94,7 @@ namespace BTCPayServer
 
         public IEnumerable<(BTCPayNetwork, ExplorerClient)> GetAll()
         {
-            foreach (var net in _NetworkProviders.GetAll().OfType<BTCPayNetwork>())
+            foreach (var net in _NetworkProviders.Filter(_Options.SupportedChains).OfType<BTCPayNetwork>())
             {
                 if (_Clients.TryGetValue(net.CryptoCode, out ExplorerClient explorer))
                 {

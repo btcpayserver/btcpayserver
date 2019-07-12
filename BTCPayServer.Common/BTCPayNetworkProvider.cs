@@ -8,11 +8,6 @@ using NBXplorer;
 
 namespace BTCPayServer
 {
-    public interface IBTCPayNetworkProvider
-    {
-        IEnumerable<BTCPayNetworkBase> GetNetworks(NetworkType networkType);
-    }
-
     public static class BTCPayNetworkProviderFactory
     {
         public static BTCPayNetworkProvider GetProvider(NetworkType type)

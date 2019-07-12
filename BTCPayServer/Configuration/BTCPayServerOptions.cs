@@ -81,7 +81,7 @@ namespace BTCPayServer.Configuration
                 .Split(',', StringSplitOptions.RemoveEmptyEntries)
                 .Select(t => t.ToUpperInvariant())
                 .ToArray();
-            NetworkProvider = BTCPayNetworkProviderFactory.GetProvider(NetworkType.Mainnet);
+            NetworkProvider = BTCPayNetworkProviderFactory.GetProvider(NetworkType);
             foreach (var chain in SupportedChains)
             {
                 if (NetworkProvider.GetNetwork<BTCPayNetworkBase>(chain) == null)

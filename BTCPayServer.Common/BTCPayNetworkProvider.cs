@@ -121,7 +121,7 @@ namespace BTCPayServer
             {
                 if(network.ElectrumMapping.Count == 0)
                 {
-                    network.ElectrumMapping = _Networks["BTC"].ElectrumMapping;
+                    network.ElectrumMapping = BitcoinBTCPayNetworkProvider.GetElectrumMapping(networkType);
                     if (!network.NBitcoinNetwork.Consensus.SupportSegwit)
                     {
                         network.ElectrumMapping =

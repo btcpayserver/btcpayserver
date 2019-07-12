@@ -164,7 +164,7 @@ namespace BTCPayServer.Controllers
             if (network == null)
                 return NotFound();
             var storeData = store.GetStoreBlob();
-            var rateRules = store.GetStoreBlob().GetRateRules(NetworkProvider.Filter(_BtcPayServerOptions.SupportedChains));
+            var rateRules = store.GetStoreBlob().GetRateRules(_BtcPayServerOptions.FilteredNetworks);
             rateRules.Spread = 0.0m;
             var currencyPair = new Rating.CurrencyPair(paymentMethod.PaymentId.CryptoCode, GetCurrencyCode(storeData.DefaultLang) ?? "USD");
             double.TryParse(defaultAmount, out var amount);

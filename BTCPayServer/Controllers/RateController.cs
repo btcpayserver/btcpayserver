@@ -153,7 +153,7 @@ namespace BTCPayServer.Controllers
             }
 
 
-            var rules = store.GetStoreBlob().GetRateRules(_NetworkProvider.Filter(_BtcPayServerOptions.SupportedChains));
+            var rules = store.GetStoreBlob().GetRateRules(_BtcPayServerOptions.FilteredNetworks);
 
             HashSet<CurrencyPair> pairs = new HashSet<CurrencyPair>();
             foreach (var currency in currencyPairs.Split(','))

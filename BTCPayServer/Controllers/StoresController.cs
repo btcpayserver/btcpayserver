@@ -195,7 +195,7 @@ namespace BTCPayServer.Controllers
         [Route("{storeId}/rates")]
         public IActionResult Rates(string storeId)
         {
-            var networks = _NetworkProvider.Filter(_BtcpayServerOptions.SupportedChains).ToArray();
+            var networks = _BtcpayServerOptions.FilteredNetworks;
             var storeBlob = StoreData.GetStoreBlob();
             var vm = new RatesViewModel();
             vm.SetExchangeRates(GetSupportedExchanges(), storeBlob.PreferredExchange ?? CoinAverageRateProvider.CoinAverageName);
@@ -234,7 +234,7 @@ namespace BTCPayServer.Controllers
             if (model.PreferredExchange != null)
                 model.PreferredExchange = model.PreferredExchange.Trim().ToLowerInvariant();
 
-            var networks = _NetworkProvider.Filter(_BtcpayServerOptions.SupportedChains);
+            var networks = _BtcpayServerOptions.FilteredNetworks;
             var blob = StoreData.GetStoreBlob();
             model.DefaultScript = blob.GetDefaultRateRules(networks).ToString();
             model.AvailableExchanges = GetSupportedExchanges();
@@ -340,7 +340,7 @@ namespace BTCPayServer.Controllers
         {
             var blob = StoreData.GetStoreBlob();
             blob.RateScripting = scripting;
-            var networks = _NetworkProvider.Filter(_BtcpayServerOptions.SupportedChains);
+            var networks = _BtcpayServerOptions.FilteredNetworks;
             blob.RateScript = blob.GetDefaultRateRules(networks).ToString();
             StoreData.SetStoreBlob(blob);
             await _Repo.UpdateStore(StoreData);

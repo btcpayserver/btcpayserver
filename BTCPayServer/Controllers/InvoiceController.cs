@@ -156,7 +156,7 @@ namespace BTCPayServer.Controllers
                     currencyPairsToFetch.Add(new CurrencyPair(network.CryptoCode, storeBlob.OnChainMinValue.Currency));
             }
 
-            var rateRules = storeBlob.GetRateRules(_NetworkProvider.Filter(_BtcPayServerOptions.SupportedChains));
+            var rateRules = storeBlob.GetRateRules(_BtcPayServerOptions.FilteredNetworks);
             var fetchingByCurrencyPair = _RateProvider.FetchRates(currencyPairsToFetch, rateRules, cancellationToken);
             var fetchingAll = WhenAllFetched(logs, fetchingByCurrencyPair);
             var supportedPaymentMethods = store.GetSupportedPaymentMethods(_NetworkProvider)

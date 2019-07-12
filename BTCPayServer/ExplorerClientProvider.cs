@@ -15,8 +15,6 @@ namespace BTCPayServer
     {
         BTCPayNetworkProvider _NetworkProviders;
         BTCPayServerOptions _Options;
-
-        public BTCPayNetworkProvider NetworkProviders => _NetworkProviders;
         NBXplorerDashboard _Dashboard;
         public ExplorerClientProvider(IHttpClientFactory httpClientFactory, BTCPayNetworkProvider networkProviders, BTCPayServerOptions options, NBXplorerDashboard dashboard)
         {
@@ -94,7 +92,7 @@ namespace BTCPayServer
 
         public IEnumerable<(BTCPayNetwork, ExplorerClient)> GetAll()
         {
-            foreach (var net in _NetworkProviders.Filter(_Options.SupportedChains).OfType<BTCPayNetwork>())
+            foreach (var net in _Options.FilteredNetworks.OfType<BTCPayNetwork>())
             {
                 if (_Clients.TryGetValue(net.CryptoCode, out ExplorerClient explorer))
                 {

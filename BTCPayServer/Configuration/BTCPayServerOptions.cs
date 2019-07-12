@@ -57,6 +57,7 @@ namespace BTCPayServer.Configuration
         }
         
         public string[] SupportedChains { get; set; }
+        public IEnumerable<BTCPayNetworkBase> FilteredNetworks { get; set; }
 
         public static string GetDebugLog(IConfiguration configuration)
         {
@@ -82,14 +83,14 @@ namespace BTCPayServer.Configuration
                 .Select(t => t.ToUpperInvariant())
                 .ToArray();
             NetworkProvider = BTCPayNetworkProviderFactory.GetProvider(NetworkType);
+            FilteredNetworks = NetworkProvider.Filter(SupportedChains);
             foreach (var chain in SupportedChains)
             {
                 if (NetworkProvider.GetNetwork<BTCPayNetworkBase>(chain) == null)
                     throw new ConfigException($"Invalid chains \"{chain}\"");
             }
 
-            var validChains = new List<string>();
-            foreach (var net in NetworkProvider.Filter(SupportedChains).OfType<BTCPayNetwork>())
+            foreach (var net in FilteredNetworks.OfType<BTCPayNetwork>())
             {
                 NBXplorerConnectionSetting setting = new NBXplorerConnectionSetting();
                 setting.CryptoCode = net.CryptoCode;
@@ -213,6 +214,7 @@ namespace BTCPayServer.Configuration
 
             DisableRegistration = conf.GetOrDefault<bool>("disable-registration", true);
         }
+
 
 
         private SSHSettings ParseSSHConfiguration(IConfiguration conf)

@@ -14,20 +14,16 @@ namespace BTCPayServer.Controllers
     public class ChangellyController : Controller
     {
         private readonly ChangellyClientProvider _changellyClientProvider;
-        private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly RateFetcher _RateProviderFactory;
         private readonly BTCPayServerOptions _BtcPayServerOptions;
 
         public ChangellyController(ChangellyClientProvider changellyClientProvider,
-            BTCPayNetworkProvider btcPayNetworkProvider,
             RateFetcher rateProviderFactory,
             BTCPayServerOptions btcPayServerOptions)
         {
             _RateProviderFactory = rateProviderFactory ?? throw new ArgumentNullException(nameof(rateProviderFactory));
             _BtcPayServerOptions = btcPayServerOptions;
-
             _changellyClientProvider = changellyClientProvider;
-            _btcPayNetworkProvider = btcPayNetworkProvider;
         }
 
         [HttpGet]
@@ -110,7 +106,7 @@ namespace BTCPayServer.Controllers
             decimal toCurrencyAmount, CancellationToken cancellationToken)
         {
             var store = HttpContext.GetStoreData();
-            var rules = store.GetStoreBlob().GetRateRules(_btcPayNetworkProvider.Filter(_BtcPayServerOptions.SupportedChains));
+            var rules = store.GetStoreBlob().GetRateRules(_BtcPayServerOptions.FilteredNetworks);
             var rate = await _RateProviderFactory.FetchRate(new CurrencyPair(toCurrency, fromCurrency), rules, cancellationToken);
             if (rate.BidAsk == null) return BadRequest();
             var flatRate = rate.BidAsk.Center;

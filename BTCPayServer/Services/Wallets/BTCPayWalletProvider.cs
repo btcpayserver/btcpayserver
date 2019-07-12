@@ -11,23 +11,20 @@ namespace BTCPayServer.Services.Wallets
     public class BTCPayWalletProvider
     {
         private ExplorerClientProvider _Client;
-        IOptions<MemoryCacheOptions> _Options;
         public BTCPayWalletProvider(ExplorerClientProvider client,
             BTCPayServerOptions btcPayServerOptions,
-                                    IOptions<MemoryCacheOptions> memoryCacheOption,
-                                    BTCPayNetworkProvider networkProvider)
+                                    IOptions<MemoryCacheOptions> memoryCacheOption)
         {
             if (client == null)
                 throw new ArgumentNullException(nameof(client));
             _Client = client;
-            _Options = memoryCacheOption;
 
-            foreach(var network in networkProvider.Filter(btcPayServerOptions.SupportedChains).OfType<BTCPayNetwork>())
+            foreach(var network in btcPayServerOptions.FilteredNetworks.OfType<BTCPayNetwork>())
             {
                 var explorerClient = _Client.GetExplorerClient(network.CryptoCode);
                 if (explorerClient == null)
                     continue;
-                _Wallets.Add(network.CryptoCode, new BTCPayWallet(explorerClient, new MemoryCache(_Options), network));
+                _Wallets.Add(network.CryptoCode, new BTCPayWallet(explorerClient, new MemoryCache(memoryCacheOption), network));
             }
         }
 

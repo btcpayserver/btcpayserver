@@ -219,7 +219,7 @@ namespace BTCPayServer.Controllers
             if (network == null && isDefaultPaymentId)
             {
                 //TODO: need to look into a better way for this as it does not scale
-                network = _NetworkProvider.Filter(_BtcPayServerOptions.SupportedChains).OfType<BTCPayNetwork>().FirstOrDefault();
+                network = _BtcPayServerOptions.FilteredNetworks.OfType<BTCPayNetwork>().FirstOrDefault();
                 paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
             }
             if (invoice == null || network == null)

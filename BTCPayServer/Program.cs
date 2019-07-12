@@ -39,7 +39,7 @@ namespace BTCPayServer
                 if (conf == null)
                     return;
                 Logs.Configure(loggerFactory);
-                new BTCPayServerOptions().LoadArgs(conf);
+                new BTCPayServerOptions(BTCPayNetworkProviderFactory.GetDefaultNetworkProviders()).LoadArgs(conf);
                 Logs.Configure(null);
                 /////
 

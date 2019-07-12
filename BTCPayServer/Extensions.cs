@@ -35,6 +35,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using NBXplorer.DerivationStrategy;
 using System.Net;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace BTCPayServer
 {
@@ -318,9 +319,11 @@ namespace BTCPayServer
 
         public static IServiceCollection ConfigureBTCPayServer(this IServiceCollection services, IConfiguration conf)
         {
-            services.Configure<BTCPayServerOptions>(o =>
+            services.TryAddSingleton<BTCPayServerOptions>(provider =>
             {
-                o.LoadArgs(conf);
+                var config = new BTCPayServerOptions(provider.GetServices<IBTCPayNetworkProvider>());
+                config.LoadArgs(conf);
+                return config;
             });
             return services;
         }

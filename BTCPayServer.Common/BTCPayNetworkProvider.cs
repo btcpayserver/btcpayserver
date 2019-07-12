@@ -12,10 +12,12 @@ namespace BTCPayServer
     {
         public static BTCPayNetworkProvider GetProvider(NetworkType type)
         {
-            return new BTCPayNetworkProvider(new IBTCPayNetworkProvider[]
-            {
-                new BitcoinBTCPayNetworkProvider()
-            }, type);
+            return new BTCPayNetworkProvider(GetDefaultNetworkProviders(), type);
+        }
+
+        public static IEnumerable<IBTCPayNetworkProvider> GetDefaultNetworkProviders()
+        {
+            return new IBTCPayNetworkProvider[] {new BitcoinBTCPayNetworkProvider()};
         }
     }
 

@@ -22,6 +22,13 @@ namespace BTCPayServer.Configuration
 
     public class BTCPayServerOptions
     {
+        private readonly IEnumerable<IBTCPayNetworkProvider> _BtcPayNetworkProviders;
+
+        public BTCPayServerOptions(IEnumerable<IBTCPayNetworkProvider> btcPayNetworkProviders)
+        {
+            _BtcPayNetworkProviders = btcPayNetworkProviders;
+        }
+
         public NetworkType NetworkType
         {
             get; set;
@@ -73,7 +80,7 @@ namespace BTCPayServer.Configuration
         {
             NetworkType = DefaultConfiguration.GetNetworkType(conf);
             DataDir = conf.GetDataDir(NetworkType);
-            Logs.Configuration.LogInformation("Network: " + NetworkType.ToString());
+            Logs.Configuration.LogInformation("Network: " + NetworkType);
 
             if (conf.GetOrDefault<bool>("launchsettings", false) && NetworkType != NetworkType.Regtest)
                 throw new ConfigException($"You need to run BTCPayServer with the run.sh or run.ps1 script");
@@ -82,7 +89,7 @@ namespace BTCPayServer.Configuration
                 .Split(',', StringSplitOptions.RemoveEmptyEntries)
                 .Select(t => t.ToUpperInvariant())
                 .ToArray();
-            NetworkProvider = BTCPayNetworkProviderFactory.GetProvider(NetworkType);
+            NetworkProvider = new BTCPayNetworkProvider(_BtcPayNetworkProviders, NetworkType);
             FilteredNetworks = NetworkProvider.Filter(SupportedChains);
             foreach (var chain in SupportedChains)
             {

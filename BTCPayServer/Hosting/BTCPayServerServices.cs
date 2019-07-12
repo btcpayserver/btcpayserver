@@ -76,8 +76,6 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<SocketFactory>();
             services.TryAddSingleton<LightningClientFactoryService>();
             services.TryAddSingleton<InvoicePaymentNotification>();
-            services.TryAddSingleton<BTCPayServerOptions>(o =>
-                o.GetRequiredService<IOptions<BTCPayServerOptions>>().Value);
             services.AddStartupTask<MigrationStartupTask>();
             services.TryAddSingleton<InvoiceRepository>(o =>
             {

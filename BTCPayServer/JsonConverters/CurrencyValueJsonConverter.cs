@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Reflection;
+using BTCPayServer.Services.Rates;
 using Newtonsoft.Json;
 using NBitcoin.JsonConverters;
 
@@ -10,6 +11,12 @@ namespace BTCPayServer.JsonConverters
 {
     public class CurrencyValueJsonConverter : JsonConverter
     {
+        private readonly CurrencyNameTable _CurrencyNameTable;
+
+        public CurrencyValueJsonConverter(CurrencyNameTable currencyNameTable)
+        {
+            _CurrencyNameTable = currencyNameTable;
+        }
         public override bool CanConvert(Type objectType)
         {
             return typeof(CurrencyValue).GetTypeInfo().IsAssignableFrom(objectType.GetTypeInfo());
@@ -20,7 +27,7 @@ namespace BTCPayServer.JsonConverters
             try
             {
                 return reader.TokenType == JsonToken.Null ? null :
-                       CurrencyValue.TryParse((string)reader.Value, out var result) ? result :
+                       CurrencyValue.TryParse((string)reader.Value, _CurrencyNameTable, out var result) ? result :
                        throw new JsonObjectException("Invalid Currency value", reader);
             }
             catch (InvalidCastException)

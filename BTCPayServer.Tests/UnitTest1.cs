@@ -484,7 +484,7 @@ namespace BTCPayServer.Tests
                 (1000.0001m, "₹ 1,000.00 (INR)", "INR")
             })
             {
-                var actual = new CurrencyNameTable().DisplayFormatCurrency(test.Item1, test.Item3);
+                var actual = new CurrencyNameTable(BTCPayNetworkProviderFactory.GetProvider(NetworkType.Mainnet)).DisplayFormatCurrency(test.Item1, test.Item3);
                 actual = actual.Replace("￥", "¥"); // Hack so JPY test pass on linux as well
                 Assert.Equal(test.Item2, actual);
             }
@@ -1522,21 +1522,22 @@ namespace BTCPayServer.Tests
         [Trait("Fast", "Fast")]
         public void CanParseCurrencyValue()
         {
-            Assert.True(CurrencyValue.TryParse("1.50USD", out var result));
+            var cnt = new CurrencyNameTable(BTCPayNetworkProviderFactory.GetProvider(NetworkType.Mainnet));
+            Assert.True(CurrencyValue.TryParse("1.50USD", cnt, out var result));
             Assert.Equal("1.50 USD", result.ToString());
-            Assert.True(CurrencyValue.TryParse("1.50 USD", out result));
+            Assert.True(CurrencyValue.TryParse("1.50 USD", cnt, out result));
             Assert.Equal("1.50 USD", result.ToString());
-            Assert.True(CurrencyValue.TryParse("1.50 usd", out result));
+            Assert.True(CurrencyValue.TryParse("1.50 usd", cnt, out result));
             Assert.Equal("1.50 USD", result.ToString());
-            Assert.True(CurrencyValue.TryParse("1 usd", out result));
+            Assert.True(CurrencyValue.TryParse("1 usd", cnt, out result));
             Assert.Equal("1 USD", result.ToString());
-            Assert.True(CurrencyValue.TryParse("1usd", out result));
+            Assert.True(CurrencyValue.TryParse("1usd", cnt, out result));
             Assert.Equal("1 USD", result.ToString());
-            Assert.True(CurrencyValue.TryParse("1.501 usd", out result));
+            Assert.True(CurrencyValue.TryParse("1.501 usd", cnt, out result));
             Assert.Equal("1.50 USD", result.ToString());
-            Assert.False(CurrencyValue.TryParse("1.501 WTFF", out result));
-            Assert.False(CurrencyValue.TryParse("1,501 usd", out result));
-            Assert.False(CurrencyValue.TryParse("1.501", out result));
+            Assert.False(CurrencyValue.TryParse("1.501 WTFF", cnt, out result));
+            Assert.False(CurrencyValue.TryParse("1,501 usd", cnt, out result));
+            Assert.False(CurrencyValue.TryParse("1.501", cnt, out result));
         }
 
         [Fact]

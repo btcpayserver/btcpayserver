@@ -58,7 +58,8 @@ namespace BTCPayServer.Controllers
             ChangellyClientProvider changellyClientProvider,
             IOptions<MvcJsonOptions> mvcJsonOptions,
             IHostingEnvironment env, IHttpClientFactory httpClientFactory,
-            PaymentMethodHandlerDictionary paymentMethodHandlerDictionary)
+            PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
+            CurrencyNameTable currencyNameTable)
         {
             _RateFactory = rateFactory;
             _Repo = repo;
@@ -72,6 +73,7 @@ namespace BTCPayServer.Controllers
             _Env = env;
             _httpClientFactory = httpClientFactory;
             _paymentMethodHandlerDictionary = paymentMethodHandlerDictionary;
+            _CurrencyNameTable = currencyNameTable;
             _NetworkProvider = networkProvider;
             _ExplorerProvider = explorerProvider;
             _FeeRateProvider = feeRateProvider;
@@ -95,6 +97,7 @@ namespace BTCPayServer.Controllers
         IHostingEnvironment _Env;
         private IHttpClientFactory _httpClientFactory;
         private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
+        private readonly CurrencyNameTable _CurrencyNameTable;
 
         [TempData]
         public string StatusMessage
@@ -384,7 +387,7 @@ namespace BTCPayServer.Controllers
             CurrencyValue lightningMaxValue = null;
             if (!string.IsNullOrWhiteSpace(model.LightningMaxValue))
             {
-                if (!CurrencyValue.TryParse(model.LightningMaxValue, out lightningMaxValue))
+                if (!CurrencyValue.TryParse(model.LightningMaxValue,_CurrencyNameTable, out lightningMaxValue))
                 {
                     ModelState.AddModelError(nameof(model.LightningMaxValue), "Invalid lightning max value");
                 }
@@ -393,7 +396,7 @@ namespace BTCPayServer.Controllers
             CurrencyValue onchainMinValue = null;
             if (!string.IsNullOrWhiteSpace(model.OnChainMinValue))
             {
-                if (!CurrencyValue.TryParse(model.OnChainMinValue, out onchainMinValue))
+                if (!CurrencyValue.TryParse(model.OnChainMinValue, _CurrencyNameTable, out onchainMinValue))
                 {
                     ModelState.AddModelError(nameof(model.OnChainMinValue), "Invalid on chain min value");
                 }

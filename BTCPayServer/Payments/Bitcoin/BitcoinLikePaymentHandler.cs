@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
@@ -21,16 +22,19 @@ namespace BTCPayServer.Payments.Bitcoin
     {
         ExplorerClientProvider _ExplorerProvider;
         private readonly BTCPayNetworkProvider _networkProvider;
+        private readonly BTCPayServerOptions _BtcPayServerOptions;
         private IFeeProviderFactory _FeeRateProviderFactory;
         private Services.Wallets.BTCPayWalletProvider _WalletProvider;
 
         public BitcoinLikePaymentHandler(ExplorerClientProvider provider,
             BTCPayNetworkProvider networkProvider,
+            BTCPayServerOptions btcPayServerOptions,
             IFeeProviderFactory feeRateProviderFactory,
             Services.Wallets.BTCPayWalletProvider walletProvider)
         {
             _ExplorerProvider = provider;
             _networkProvider = networkProvider;
+            _BtcPayServerOptions = btcPayServerOptions;
             _FeeRateProviderFactory = feeRateProviderFactory;
             _WalletProvider = walletProvider;
         }
@@ -108,7 +112,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
         public override IEnumerable<PaymentMethodId> GetSupportedPaymentMethods()
         {
-            return _networkProvider.GetAll()
+            return _BtcPayServerOptions.FilteredNetworks.OfType<BTCPayNetwork>()
                 .Select(network => new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike));
         }
 

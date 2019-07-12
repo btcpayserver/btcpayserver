@@ -115,7 +115,8 @@ namespace BTCPayServer.Hosting
                  
                 return dbContext;
             });
-
+            services.AddSingleton<IBTCPayNetworkProvider, BitcoinBTCPayNetworkProvider>();
+            services.AddSingleton<IBTCPayNetworkProvider, ShitcoinBTCPayNetworkProvider>();
             services.TryAddSingleton<BTCPayNetworkProvider>(o => 
             {
                 var opts = o.GetRequiredService<BTCPayServerOptions>();

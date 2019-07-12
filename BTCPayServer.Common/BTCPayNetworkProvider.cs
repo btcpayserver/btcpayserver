@@ -17,7 +17,7 @@ namespace BTCPayServer
 
         public static IEnumerable<IBTCPayNetworkProvider> GetDefaultNetworkProviders()
         {
-            return new IBTCPayNetworkProvider[] {new BitcoinBTCPayNetworkProvider()};
+            return new IBTCPayNetworkProvider[] {new BitcoinBTCPayNetworkProvider(), new ShitcoinBTCPayNetworkProvider()};
         }
     }
 
@@ -29,7 +29,6 @@ namespace BTCPayServer
         public BTCPayNetworkProvider(IEnumerable<IBTCPayNetworkProvider> btcPayNetworkProviders)
         {
             _BtcPayNetworkProviders = btcPayNetworkProviders;
-           
         }
 
         public BTCPayNetworkProvider(IEnumerable<IBTCPayNetworkProvider> btcPayNetworkProviders, NetworkType networkType)
@@ -79,7 +78,7 @@ namespace BTCPayServer
         }
     }
     
-    public partial class BitcoinBTCPayNetworkProvider: IBTCPayNetworkProvider
+    public partial class ShitcoinBTCPayNetworkProvider: IBTCPayNetworkProvider
     {
         Dictionary<string, BTCPayNetwork> _Networks = new Dictionary<string, BTCPayNetwork>();
 
@@ -107,7 +106,6 @@ namespace BTCPayServer
         {
             _NBXplorerNetworkProvider = new NBXplorerNetworkProvider(networkType);
             NetworkType = networkType;
-            InitBitcoin();
             InitLitecoin();
             InitBitcore();
             InitDogecoin();

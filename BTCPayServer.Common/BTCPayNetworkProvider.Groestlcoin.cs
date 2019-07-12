@@ -6,7 +6,7 @@ using NBitcoin;
 
 namespace BTCPayServer
 {
-    public partial class BitcoinBTCPayNetworkProvider
+    public partial class ShitcoinBTCPayNetworkProvider
     {
         public void InitGroestlcoin()
         {

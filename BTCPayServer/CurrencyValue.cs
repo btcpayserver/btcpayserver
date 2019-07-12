@@ -11,8 +11,8 @@ namespace BTCPayServer
     public class CurrencyValue
     {
         static Regex _Regex = new Regex("^([0-9]+(\\.[0-9]+)?)\\s*([a-zA-Z]+)$");
-        
-        public static bool TryParse(string str, CurrencyNameTable currencyNameTable, out CurrencyValue value)
+        static CurrencyNameTable _CurrencyTable = new CurrencyNameTable();
+        public static bool TryParse(string str, out CurrencyValue value)
         {
             value = null;
             var match = _Regex.Match(str);
@@ -21,7 +21,7 @@ namespace BTCPayServer
                 return false;
 
             var currency = match.Groups.Last().Value.ToUpperInvariant();
-            var currencyData = currencyNameTable.GetCurrencyData(currency, false);
+            var currencyData = _CurrencyTable.GetCurrencyData(currency, false);
             if (currencyData == null)
                 return false;
             v = Math.Round(v, currencyData.Divisibility);

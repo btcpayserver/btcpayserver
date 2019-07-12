@@ -35,11 +35,8 @@ namespace BTCPayServer.Services.Rates
     }
     public class CurrencyNameTable
     {
-        private readonly BTCPayNetworkProvider _BtcPayNetworkProvider;
-
-        public CurrencyNameTable(BTCPayNetworkProvider btcPayNetworkProvider)
+        public CurrencyNameTable()
         {
-            _BtcPayNetworkProvider = btcPayNetworkProvider;
             _Currencies = LoadCurrency().ToDictionary(k => k.Code);
         }
 
@@ -148,7 +145,7 @@ namespace BTCPayServer.Services.Rates
 
         Dictionary<string, CurrencyData> _Currencies;
 
-        CurrencyData[] LoadCurrency()
+        static CurrencyData[] LoadCurrency()
         {
             var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("BTCPayServer.Currencies.txt");
             string content = null;
@@ -178,7 +175,7 @@ namespace BTCPayServer.Services.Rates
                 }
             }
 
-            foreach (var network in _BtcPayNetworkProvider.GetAll())
+            foreach (var network in BTCPayNetworkProviderFactory.GetProvider(NetworkType.Mainnet).GetAll())
             {
                 if (!dico.TryAdd(network.CryptoCode, new CurrencyData()
                 {

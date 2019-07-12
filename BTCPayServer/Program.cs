@@ -53,6 +53,7 @@ namespace BTCPayServer
                         l.AddFilter("Microsoft", LogLevel.Error);
                         l.AddFilter("System.Net.Http.HttpClient", LogLevel.Critical);
                         l.AddFilter("Microsoft.AspNetCore.Antiforgery.Internal", LogLevel.Critical);
+                        l.AddFilter("AspNet.Security.OpenIdConnect.Server.OpenIdConnectServerHandler", LogLevel.Error);
                         l.AddProvider(new CustomConsoleLogProvider(processor));
 
                         // Use Serilog for debug log file.
@@ -68,7 +69,7 @@ namespace BTCPayServer
                     })
                     .UseStartup<Startup>()
                     .Build();
-                host.StartAsync().GetAwaiter().GetResult();
+                host.StartWithTasksAsync().GetAwaiter().GetResult();
                 var urls = host.ServerFeatures.Get<IServerAddressesFeature>().Addresses;
                 foreach (var url in urls)
                 {

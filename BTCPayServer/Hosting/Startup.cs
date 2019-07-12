@@ -95,6 +95,10 @@ namespace BTCPayServer.Hosting
             string httpsCertificateFilePath = Configuration.GetOrDefault<string>("HttpsCertificateFilePath", null);
             bool useDefaultCertificate = Configuration.GetOrDefault<bool>("HttpsUseDefaultCertificate", false);
             bool hasCertPath = !String.IsNullOrEmpty(httpsCertificateFilePath);
+            services.Configure<KestrelServerOptions>(kestrel =>
+            {
+                kestrel.Limits.MaxRequestLineSize = 8_192 * 10 * 5; // Around 500K, transactions passed in URI should not be bigger than this
+            });
             if (hasCertPath || useDefaultCertificate)
             {
                 var bindAddress = Configuration.GetOrDefault<IPAddress>("bind", IPAddress.Any);

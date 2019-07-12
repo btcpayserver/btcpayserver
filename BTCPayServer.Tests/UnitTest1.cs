@@ -102,11 +102,6 @@ namespace BTCPayServer.Tests
 #pragma warning disable CS0618
             var dummy = new Key().PubKey.GetAddress(ScriptPubKeyType.Legacy, Network.RegTest).ToString();
             var networkProvider = BTCPayNetworkProviderFactory.GetProvider(NetworkType.Regtest);
-            var paymentMethodHandlerDictionary = new PaymentMethodHandlerDictionary(new IPaymentMethodHandler[]
-            {
-                new BitcoinLikePaymentHandler(null, networkProvider, null, null),
-                new LightningLikePaymentHandler(null, null, networkProvider, null),
-            });
             InvoiceEntity invoiceEntity = new InvoiceEntity();
             invoiceEntity.Payments = new System.Collections.Generic.List<PaymentEntity>();
             invoiceEntity.ProductInformation = new ProductInformation() {Price = 100};
@@ -209,11 +204,6 @@ namespace BTCPayServer.Tests
         public void CanCalculateCryptoDue()
         {
             var networkProvider = BTCPayNetworkProviderFactory.GetProvider(NetworkType.Regtest);
-            var paymentMethodHandlerDictionary = new PaymentMethodHandlerDictionary(new IPaymentMethodHandler[]
-            {
-                new BitcoinLikePaymentHandler(null, networkProvider, null, null),
-                new LightningLikePaymentHandler(null, null, networkProvider, null),
-            });
             var entity = new InvoiceEntity();
 #pragma warning disable CS0618
             entity.Payments = new System.Collections.Generic.List<PaymentEntity>();
@@ -396,11 +386,7 @@ namespace BTCPayServer.Tests
         public void CanAcceptInvoiceWithTolerance()
         {
             var networkProvider = BTCPayNetworkProviderFactory.GetProvider(NetworkType.Regtest);
-            var paymentMethodHandlerDictionary = new PaymentMethodHandlerDictionary(new IPaymentMethodHandler[]
-            {
-                new BitcoinLikePaymentHandler(null, networkProvider, null, null),
-                new LightningLikePaymentHandler(null, null, networkProvider, null),
-            });
+
             var entity = new InvoiceEntity();
 #pragma warning disable CS0618
             entity.Payments = new List<PaymentEntity>();

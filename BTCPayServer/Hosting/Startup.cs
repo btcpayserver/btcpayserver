@@ -102,6 +102,7 @@ namespace BTCPayServer.Hosting
 
                 services.Configure<KestrelServerOptions>(kestrel =>
                 {
+                    kestrel.Limits.MaxRequestLineSize = 8_192 * 10 * 5; // Around 500K, transactions passed in URI should not be bigger than this
                     if (hasCertPath && !File.Exists(httpsCertificateFilePath))
                     {
                         // Note that by design this is a fatal error condition that will cause the process to exit.

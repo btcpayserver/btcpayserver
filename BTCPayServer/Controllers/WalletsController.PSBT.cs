@@ -141,7 +141,11 @@ namespace BTCPayServer.Controllers
             var derivationSchemeSettings = await GetDerivationSchemeSettings(walletId);
             if (derivationSchemeSettings == null)
                 return NotFound();
-            await FetchTransactionDetails(derivationSchemeSettings, vm, network);
+            try
+            {
+                await FetchTransactionDetails(derivationSchemeSettings, vm, network);
+            }
+            catch { return BadRequest(); }
             return View(nameof(WalletPSBTReady), vm);
         }
 

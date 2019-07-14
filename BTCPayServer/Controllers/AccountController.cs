@@ -74,7 +74,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> Login(string returnUrl = null)
         {
             if (User.Identity.IsAuthenticated)
-                RedirectToLocal(returnUrl);
+                return RedirectToLocal(returnUrl);
             // Clear the existing external cookie to ensure a clean login process
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
 

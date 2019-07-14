@@ -36,6 +36,7 @@ namespace BTCPayServer.Controllers
             {
                 NotificationEmailWarning = !await IsEmailConfigured(app.StoreDataId),
                 Title = settings.Title,
+                StoreId = app.StoreDataId,
                 Enabled = settings.Enabled,
                 EnforceTargetAmount = settings.EnforceTargetAmount,
                 StartDate = settings.StartDate,

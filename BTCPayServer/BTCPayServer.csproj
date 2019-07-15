@@ -12,7 +12,7 @@
     <Content Remove="Build\dockerfiles\**" />
     <Content Remove="wwwroot\bundles\jqueryvalidate\**" />
     <Content Remove="wwwroot\css\**" />
-    <Content Remove="wwwroot\vendor\jquery-nice-selectBitcoinBTCPayNetworkProvider\**" />
+    <Content Remove="wwwroot\vendor\jquery-nice-select\**" />
     <EmbeddedResource Remove="Build\dockerfiles\**" />
     <EmbeddedResource Remove="wwwroot\bundles\jqueryvalidate\**" />
     <EmbeddedResource Remove="wwwroot\css\**" />

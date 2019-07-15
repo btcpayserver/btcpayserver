@@ -147,7 +147,7 @@
                         <label asp-for="NotificationEmail" class="control-label"></label>
                         @if (Model.NotificationEmailWarning)
                         {
-                            <partial name="NotificationEmailWarning" model="@Model.StoreId"></partial>
+                            <partial name="NotificationEmailWarning" model="@Model.StoreId" />
                         }
                         <input type="email" asp-for="NotificationEmail" class="form-control" />
                         <span asp-validation-for="NotificationEmail" class="text-danger"></span>

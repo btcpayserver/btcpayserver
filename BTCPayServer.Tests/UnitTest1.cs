@@ -101,7 +101,6 @@ namespace BTCPayServer.Tests
         {
 #pragma warning disable CS0618
             var dummy = new Key().PubKey.GetAddress(ScriptPubKeyType.Legacy, Network.RegTest).ToString();
-            var networkProvider = BTCPayNetworkProviderFactory.GetProvider(NetworkType.Regtest);
             InvoiceEntity invoiceEntity = new InvoiceEntity();
             invoiceEntity.Payments = new System.Collections.Generic.List<PaymentEntity>();
             invoiceEntity.ProductInformation = new ProductInformation() {Price = 100};
@@ -203,7 +202,6 @@ namespace BTCPayServer.Tests
         [Trait("Fast", "Fast")]
         public void CanCalculateCryptoDue()
         {
-            var networkProvider = BTCPayNetworkProviderFactory.GetProvider(NetworkType.Regtest);
             var entity = new InvoiceEntity();
 #pragma warning disable CS0618
             entity.Payments = new System.Collections.Generic.List<PaymentEntity>();
@@ -385,8 +383,6 @@ namespace BTCPayServer.Tests
         [Trait("Fast", "Fast")]
         public void CanAcceptInvoiceWithTolerance()
         {
-            var networkProvider = BTCPayNetworkProviderFactory.GetProvider(NetworkType.Regtest);
-
             var entity = new InvoiceEntity();
 #pragma warning disable CS0618
             entity.Payments = new List<PaymentEntity>();

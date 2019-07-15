@@ -8,8 +8,6 @@ namespace BTCPayServer.Rating
 {
     public class CurrencyPair
     {
-        private static readonly BTCPayNetworkProvider _NetworkProvider =
-            BTCPayNetworkProviderFactory.GetProvider(NetworkType.Mainnet);
         public CurrencyPair(string left, string right)
         {
             if (right == null)
@@ -55,7 +53,7 @@ namespace BTCPayServer.Rating
                 for (int i = 3; i < 5; i++)
                 {
                     var potentialCryptoName = currencyPair.Substring(0, i);
-                    var network = _NetworkProvider.GetNetwork<BTCPayNetworkBase>(potentialCryptoName);
+                    var network = BTCPayNetworkProviderFactory.Instance.GetNetwork<BTCPayNetworkBase>(potentialCryptoName);
                     if (network != null)
                     {
                         value = new CurrencyPair(network.CryptoCode, currencyPair.Substring(i));

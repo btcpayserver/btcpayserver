@@ -244,7 +244,7 @@
 </script>
 
 <script type="text/x-template" id="perk-template"> 
-<div class="card mb-4 perk"  v-bind:class="{ 'expanded': expanded, 'unexpanded': !expanded }" v-on:click="expand" :id="perk.id">
+<div class="card perk"  v-bind:class="{ 'expanded': expanded, 'unexpanded': !expanded, 'mb-4':!inModal }" v-on:click="expand" :id="perk.id">
 <span v-if="displayPerksRanking && perk.sold" 
     class="btn btn-sm rounded-circle px-0 perk-badge" 
     v-bind:class="{ 'btn-primary': index==0, 'btn-secondary': index!=0}">#{{index+1}}</span> 

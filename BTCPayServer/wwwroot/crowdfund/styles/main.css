@@ -59,13 +59,13 @@ canvas#fireworks {
     border-right: none !important;
 }
 
-.perks-container {
+.modal-body .perks-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     grid-gap: .5rem;
 }
 
-.perks-container .card:only-of-type {
+.modal-body .perks-container .card:only-of-type {
     max-width: 320px;
     margin: auto;
 }

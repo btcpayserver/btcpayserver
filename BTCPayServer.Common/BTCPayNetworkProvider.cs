@@ -10,9 +10,11 @@ namespace BTCPayServer
 {
     public static class BTCPayNetworkProviderFactory
     {
+        public static BTCPayNetworkProvider Instance { get; set; }
+
         public static BTCPayNetworkProvider GetProvider(NetworkType type)
         {
-            return new BTCPayNetworkProvider(GetDefaultNetworkProviders(), type);
+            return Instance?.NetworkType == type ? Instance : new BTCPayNetworkProvider(GetDefaultNetworkProviders(), type);
         }
 
         public static IEnumerable<IBTCPayNetworkProvider> GetDefaultNetworkProviders()

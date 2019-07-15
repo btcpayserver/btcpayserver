@@ -101,7 +101,7 @@ namespace BTCPayServer.Services.Apps
             var pendingPayments = GetContributionsByPaymentMethodId(settings.TargetCurrency, pendingInvoices, !settings.EnforceTargetAmount);
             var currentPayments = GetContributionsByPaymentMethodId(settings.TargetCurrency, completeInvoices, !settings.EnforceTargetAmount);
 
-            var perkCount = invoices
+            var perkCount = paidInvoices
                 .Where(entity => !string.IsNullOrEmpty(entity.ProductInformation.ItemCode))
                 .GroupBy(entity => entity.ProductInformation.ItemCode)
                 .ToDictionary(entities => entities.Key, entities => entities.Count());

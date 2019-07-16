@@ -1,6 +1,6 @@
 ﻿@model PaymentModel
 
-<div class="top-header">
+<div class="top-header" xmlns:v-bind="http://www.w3.org/1999/xhtml">
     <div class="header">
         <div class="header__icon">
             @if (Model.CustomLogoLink != null)
@@ -48,7 +48,7 @@
                 <div class="paywithRowRight cursorPointer" v-on:click="openPaymentMethodDialog">
                     <span class="payment__currencies " v-show="!changingCurrencies">
                         <img v-bind:src="srvModel.cryptoImage"/>
-                        <span>{{srvModel.paymentMethodName}} ({{srvModel.cryptoCodeSrv}})</span>
+                        <span>{{srvModel.paymentMethodName}} <template v-if="srvModel.cryptoCodeSrv">({{srvModel.cryptoCodeSrv}})</template></span>
                         <span v-show="srvModel.isLightning">&#9889;</span>
                         <span class="clickable_indicator fa fa-angle-right"></span>
                     </span>
@@ -73,7 +73,7 @@
             {
                 <div class="payment__currencies_noborder">
                     <img v-bind:src="srvModel.cryptoImage"/>
-                    <span>{{srvModel.paymentMethodName}} ({{srvModel.cryptoCodeSrv}})</span>
+                    <span>{{srvModel.paymentMethodName}} <template v-if="srvModel.cryptoCodeSrv">({{srvModel.cryptoCodeSrv}})</template></span>
                     <span v-show="srvModel.isLightning">&#9889;</span>
                 </div>
             }

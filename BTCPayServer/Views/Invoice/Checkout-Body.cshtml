@@ -26,7 +26,8 @@
                 {{$t("Invoice expired")}}
             </span>
             <span v-else-if="expiringSoon">
-A            </span>
+                {{$t("Invoice expiring soon...")}}
+            </span>
             <span v-else>
                 {{$t("Awaiting Payment...")}}
             </span>

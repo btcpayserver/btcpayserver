@@ -85,14 +85,11 @@ namespace BTCPayServer.Data
                     var network = networks.GetNetwork<BTCPayNetworkBase>(paymentMethodId.CryptoCode);
                     if (network != null)
                     {
-                        if (network == networks.BTC && paymentMethodId.PaymentType == PaymentTypes.BTCLike && btcReturned)
+                        if (network == networks.BTC && paymentMethodId.PaymentType == PaymentTypes.BTCLike &&
+                            btcReturned)
                             continue;
                         if (strat.Value.Type == JTokenType.Null)
                             continue;
-                        yield return
-                            paymentMethodId.PaymentType.DeserializeSupportedPaymentMethod(network, strat.Value);
-                    }else if (paymentMethodId.PaymentType == ManualPaymentType.Instance)
-                    {
                         yield return
                             paymentMethodId.PaymentType.DeserializeSupportedPaymentMethod(network, strat.Value);
                     }

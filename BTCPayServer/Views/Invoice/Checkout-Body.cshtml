@@ -1,6 +1,6 @@
 @model PaymentModel
 
-<div class="top-header">
+<div class="top-header" xmlns:v-bind="http://www.w3.org/1999/xhtml">
     <div class="header">
         <div class="header__icon">
             @if (Model.CustomLogoLink != null)
@@ -12,7 +12,7 @@
                 <img class="header__icon__img" src="~/img/logo-white.png" height="40">
             }
         </div>
-        <div class="close-icon close-action" v-on:click="close">
+        <div class="close-icon close-action" v-on:click="close" v-bind:click="close">
             &#10006;
         </div>
     </div>
@@ -182,7 +182,7 @@
                     <button type="submit" class="action-button" style="margin-top: 15px;" v-bind:disabled="emailAddressFormSubmitting" v-bind:class="{ 'loading': emailAddressFormSubmitting }">
                         <span class="button-text">{{$t("Continue")}}</span>
                         <div class="loader-wrapper">
-                            <partial name="Checkout-Spinner" />
+                            <partial name="Checkout-Spinner"/>
                         </div>
                     </button>
                 </bp-loading-button>

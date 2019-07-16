@@ -56,7 +56,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
         public IEnumerable<PaymentMethodId> GetSupportedPaymentMethods()
         {
-            return new[] {new PaymentMethodId(string.Empty, PaymentTypes.Manual)};
+            return new[] {ManualPaymentSettings.StaticPaymentId};
         }
     }
 }

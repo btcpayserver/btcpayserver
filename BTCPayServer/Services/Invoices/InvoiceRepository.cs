@@ -174,11 +174,15 @@ retry:
 
                 foreach (var paymentMethod in invoice.GetPaymentMethods())
                 {
-//                    if (paymentMethod.Network == null )
-//                        throw new InvalidOperationException("CryptoCode unsupported");
+                    if (paymentMethod.Network == null )
+                        throw new InvalidOperationException("CryptoCode unsupported");
                     var paymentDestination = paymentMethod.GetPaymentMethodDetails().GetPaymentDestination();
 
                     string address = GetDestination(paymentMethod);
+                    if (string.IsNullOrEmpty(address))
+                    {
+                        continue;
+                    }
                     context.AddressInvoices.Add(new AddressInvoiceData()
                     {
                         InvoiceDataId = invoice.Id,

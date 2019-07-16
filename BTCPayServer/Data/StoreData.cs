@@ -298,7 +298,7 @@ namespace BTCPayServer.Data
         public StoreBlob()
         {
             InvoiceExpiration = 15;
-            MonitoringExpiration = 60;
+            MonitoringExpiration = 1440;
             PaymentTolerance = 0;
             RequiresRefundEmail = true;
         }

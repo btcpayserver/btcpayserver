@@ -208,6 +208,7 @@ namespace BTCPayServer.Controllers
             var storeBlob = store.GetStoreBlob();
             var currency = invoice.ProductInformation.Currency;
             var accounting = paymentMethod.Calculate();
+
             ChangellySettings changelly = (storeBlob.ChangellySettings != null && storeBlob.ChangellySettings.Enabled &&
                                            storeBlob.ChangellySettings.IsConfigured())
                 ? storeBlob.ChangellySettings

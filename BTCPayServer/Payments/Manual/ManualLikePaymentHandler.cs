@@ -35,7 +35,6 @@ namespace BTCPayServer.Payments.Bitcoin
         {
             model.IsLightning = false;
             model.PaymentMethodName = "Manual";
-            model.CheckoutBodyPartial = "ManualCheckout";
         }
 
         public string GetCryptoImage(PaymentMethodId paymentMethodId)

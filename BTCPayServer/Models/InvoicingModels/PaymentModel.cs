@@ -76,6 +76,5 @@ namespace BTCPayServer.Models.InvoicingModels
         public string RootPath { get; set; }
         public decimal CoinSwitchAmountMarkupPercentage { get; set; }
         public bool RedirectAutomatically { get; set; }
-        public string CheckoutBodyPartial { get; set; }
     }
 }

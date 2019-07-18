@@ -590,6 +590,7 @@ namespace BTCPayServer.Controllers
         private CoinAverageExchange[] GetSupportedExchanges()
         {
             return _RateFactory.RateProviderFactory.GetSupportedExchanges()
+                    .Where(r => !string.IsNullOrWhiteSpace(r.Value.Display))
                     .Select(c => c.Value)
                     .OrderBy(s => s.Name, StringComparer.OrdinalIgnoreCase)
                     .ToArray();

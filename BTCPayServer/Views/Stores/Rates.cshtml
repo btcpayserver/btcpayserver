@@ -58,25 +58,25 @@
                 <div id="help" class="collapse text-left">
                     <p>
                         The script language is composed of several rules composed of a currency pair and a mathematic expression.
-                        The example below will use <code>gdax</code> for both <code>LTC_USD</code> and <code>BTC_USD</code> pairs.
+                        The example below will use <code>kraken</code> for both <code>LTC_USD</code> and <code>BTC_USD</code> pairs.
                     </p>
                     <pre>
                     <code>
-                            LTC_USD = gdax(LTC_USD);
-                            BTC_USD = gdax(BTC_USD);
+                            LTC_USD = kraken(LTC_USD);
+                            BTC_USD = kraken(BTC_USD);
                         </code>
                     </pre>
-                    <p>However, explicitely setting specific pairs like this can be a bit difficult. Instead, you can define a rule <code>X_X</code> which will match any currency pair. The following example will use <code>gdax</code> for getting the rate of any currency pair.</p>
+                    <p>However, explicitely setting specific pairs like this can be a bit difficult. Instead, you can define a rule <code>X_X</code> which will match any currency pair. The following example will use <code>kraken</code> for getting the rate of any currency pair.</p>
                     <pre>
                     <code>
-                            X_X = gdax(X_X);
+                            X_X = kraken(X_X);
                         </code>
                     </pre>
-                    <p>However, <code>gdax</code> does not support the <code>BTC_CAD</code> pair. For this reason you can add a rule mapping all <code>X_CAD</code> to <code>quadrigacx</code>, a Canadian exchange.</p>
+                    <p>However, <code>kraken</code> does not support the <code>BTC_CAD</code> pair. For this reason you can add a rule mapping all <code>X_CAD</code> to <code>quadrigacx</code>, a Canadian exchange.</p>
                     <pre>
                     <code>
                             X_CAD = quadrigacx(X_CAD);
-                            X_X = gdax(X_X);
+                            X_X = kraken(X_X);
                         </code>
                     </pre>
                     <p>A given currency pair match the most specific rule. If two rules are matching and are as specific, the first rule will be chosen.</p>
@@ -88,11 +88,11 @@
                     <code>
                             DOGE_X = bittrex(DOGE_BTC) * BTC_X
                             X_CAD = quadrigacx(X_CAD);
-                            X_X = gdax(X_X);
+                            X_X = kraken(X_X);
                         </code>
                     </pre>
                     <p>
-                        With <code>DOGE_USD</code> will be expanded to <code>bittrex(DOGE_BTC) * gdax(BTC_USD)</code>. And <code>DOGE_CAD</code> will be expanded to <code>bittrex(DOGE_BTC) * quadrigacx(BTC_CAD)</code>. <br />
+                        With <code>DOGE_USD</code> will be expanded to <code>bittrex(DOGE_BTC) * kraken(BTC_USD)</code>. And <code>DOGE_CAD</code> will be expanded to <code>bittrex(DOGE_BTC) * quadrigacx(BTC_CAD)</code>. <br />
                         However, we advise you to write it that way to increase coverage so that <code>DOGE_BTC</code> is also supported:
                     </p>
                     <pre>
@@ -100,7 +100,7 @@
                             DOGE_X = DOGE_BTC * BTC_X
                             DOGE_BTC = bittrex(DOGE_BTC)
                             X_CAD = quadrigacx(X_CAD);
-                            X_X = gdax(X_X);
+                            X_X = kraken(X_X);
                         </code>
                     </pre>
                     <p>

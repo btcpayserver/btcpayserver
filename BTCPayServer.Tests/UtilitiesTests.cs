@@ -9,6 +9,7 @@ using NBitcoin.DataEncoders;
 using Newtonsoft.Json.Linq;
 using Xunit;
 using System.IO;
+using BTCPayServer.Services.Rates;
 
 namespace BTCPayServer.Tests
 {

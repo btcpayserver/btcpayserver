@@ -28,10 +28,8 @@ namespace BTCPayServer.Services.Mails
                 }
                 using (var smtp = emailSettings.CreateSmtpClient())
                 {
-                    var mail = new MailMessage(emailSettings.From, email, subject, message)
-                    {
-                        IsBodyHtml = true
-                    };
+                    var mail = emailSettings.CreateMailMessage(new MailAddress(email), subject, message);
+                    mail.IsBodyHtml = true;
                     try
                     {
                         await smtp.SendMailAsync(mail).WithCancellation(cancellationToken);

@@ -157,8 +157,7 @@ namespace BTCPayServer.PaymentRequest
                             {
                             data.GetValue(),
                             invoiceEvent.Payment.GetCryptoCode(),
-                            Enum.GetName(typeof(PaymentTypes),
-                                invoiceEvent.Payment.GetPaymentMethodId().PaymentType)
+                            invoiceEvent.Payment.GetPaymentMethodId().PaymentType.ToString()
                             });
                     }
 

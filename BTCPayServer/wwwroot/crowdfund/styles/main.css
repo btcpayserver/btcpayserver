@@ -58,3 +58,14 @@ canvas#fireworks {
 .crowdfund-stats .col-sm:last-child{
     border-right: none !important;
 }
+
+.modal-body .perks-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-gap: .5rem;
+}
+
+.modal-body .perks-container .card:only-of-type {
+    max-width: 320px;
+    margin: auto;
+}

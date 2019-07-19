@@ -1,0 +1,17 @@
+@model PaymentModel
+
+<script type="text/x-template" id="manual-method-checkout-template">
+  <div>
+    This is a modular UI replacement for manual payment
+   <code> {{srvModel}}</code>
+  </div>
+</script>
+
+<script type="text/javascript">
+
+
+Vue.component('ManualMethodCheckout', { 
+    template: "#manual-method-checkout-template" 
+});
+
+</script>

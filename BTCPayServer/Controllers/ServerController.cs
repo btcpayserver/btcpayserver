@@ -154,17 +154,20 @@ namespace BTCPayServer.Controllers
         }
 
         [Route("server/users")]
-        public IActionResult ListUsers()
+        public IActionResult ListUsers(int skip = 0, int count = 50)
         {
             var users = new UsersViewModel();
             users.StatusMessage = StatusMessage;
-            users.Users
-                = _UserManager.Users.Select(u => new UsersViewModel.UserViewModel()
+            users.Users = _UserManager.Users.Skip(skip).Take(count)
+                .Select(u => new UsersViewModel.UserViewModel
                 {
                     Name = u.UserName,
                     Email = u.Email,
                     Id = u.Id
                 }).ToList();
+            users.Skip = skip;
+            users.Count = count;
+            users.Total = _UserManager.Users.Count();
             return View(users);
         }
 
@@ -479,7 +482,7 @@ namespace BTCPayServer.Controllers
             if (command.StartsWith("remove-domain", StringComparison.InvariantCultureIgnoreCase))
             {
                 ModelState.Clear();
-                var index = int.Parse(command.Substring(command.IndexOf(":",StringComparison.InvariantCultureIgnoreCase) + 1),  CultureInfo.InvariantCulture);
+                var index = int.Parse(command.Substring(command.IndexOf(":", StringComparison.InvariantCultureIgnoreCase) + 1), CultureInfo.InvariantCulture);
                 settings.DomainToAppMapping.RemoveAt(index);
                 return View(settings);
             }
@@ -569,7 +572,7 @@ namespace BTCPayServer.Controllers
             var storageSettings = await _SettingsRepository.GetSettingAsync<StorageSettings>();
             result.ExternalStorageServices.Add(new ServicesViewModel.OtherExternalService()
             {
-                Name = storageSettings == null? "Not set": storageSettings.Provider.ToString(),
+                Name = storageSettings == null ? "Not set" : storageSettings.Provider.ToString(),
                 Link = Url.Action("Storage")
             });
             return View(result);
@@ -577,7 +580,7 @@ namespace BTCPayServer.Controllers
 
         private async Task<List<SelectListItem>> GetAppSelectList()
         {
-// load display app dropdown
+            // load display app dropdown
             using (var ctx = _ContextFactory.CreateContext())
             {
                 var userId = _UserManager.GetUserId(base.User);

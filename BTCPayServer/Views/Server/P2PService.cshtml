@@ -97,13 +97,14 @@
 
     @if (Model.ShowQR)
     {
-        <script type="text/javascript" src="~/js/qrcode.min.js"></script>
+        <script type="text/javascript" src="~/js/qrcode.js"></script>
         <script type="text/javascript">
         new QRCode(document.getElementById("qrCode"),
             {
                 text: "@Html.Raw(Model.ServiceLink)",
-                width: 150,
-                height: 150
+                width: 200,
+                height: 200,
+                useSVG: true
             });
         </script>
     }

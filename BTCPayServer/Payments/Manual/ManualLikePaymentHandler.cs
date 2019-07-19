@@ -51,6 +51,23 @@ namespace BTCPayServer.Payments.Bitcoin
             };
         }
 
+        public CheckoutUIPaymentMethodSettings GetCheckoutUISettings()
+        {
+            return  new CheckoutUIPaymentMethodSettings()
+            {
+                NoScriptPartialName = "ManualMethodCheckoutNoScript",
+                CheckoutBodyVueComponentName = "manual-method-checkout",
+                ExtensionPartial = "ManualMethodCheckout"
+            };
+        }
+
+        public class CheckoutUIPaymentMethodSettings
+        {
+            public string ExtensionPartial { get; set; }
+            public string CheckoutBodyVueComponentName { get; set; }
+            public string NoScriptPartialName { get; set; }
+        }
+        
         public string GetCryptoImage(PaymentMethodId paymentMethodId)
         {
             return "imlegacy/manual.svg";

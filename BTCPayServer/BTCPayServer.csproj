@@ -47,7 +47,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
     <PackageReference Include="NicolasDorier.CommandLine" Version="1.0.0.2" />
     <PackageReference Include="NicolasDorier.CommandLine.Configuration" Version="1.0.0.3" />
-    <PackageReference Include="NicolasDorier.RateLimits" Version="1.0.0.3" />
+    <PackageReference Include="NicolasDorier.RateLimits" Version="1.0.0.7" />
     <PackageReference Include="NicolasDorier.StandardConfiguration" Version="1.0.0.18" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.1.2" />
     <PackageReference Include="OpenIddict" Version="2.0.0" />

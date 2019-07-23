@@ -80,8 +80,8 @@ namespace BTCPayServer.Models.InvoicingModels
         public string RootPath { get; set; }
         public decimal CoinSwitchAmountMarkupPercentage { get; set; }
         public bool RedirectAutomatically { get; set; }
-        [JsonIgnore]
-        public IPaymentMethodHandler PaymentMethodHandler { get; set; }
+         public Dictionary<string, object> AdditionalSettings { get; set; } = new Dictionary<string, object>();
+
         [JsonIgnore]
         public PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary { get; set; }
     }

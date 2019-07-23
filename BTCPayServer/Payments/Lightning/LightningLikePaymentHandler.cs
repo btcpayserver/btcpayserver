@@ -164,7 +164,8 @@ namespace BTCPayServer.Payments.Lightning
             return string.Empty;
         }
 
-        public override void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse)
+        public override void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse,
+            StoreData storeData, StoreBlob storeBlob)
         {
             var paymentMethodId = new PaymentMethodId(model.CryptoCode, PaymentTypes.LightningLike);
             
@@ -174,6 +175,7 @@ namespace BTCPayServer.Payments.Lightning
             model.PaymentMethodName = GetPaymentMethodName(network);
             model.InvoiceBitcoinUrl = cryptoInfo.PaymentUrls.BOLT11;
             model.InvoiceBitcoinUrlQR = cryptoInfo.PaymentUrls.BOLT11.ToUpperInvariant();
+            model.LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi;
         }
 
         public override string GetCryptoImage(PaymentMethodId paymentMethodId)

@@ -21,7 +21,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
         public string[] GetSearchTerms()
         {
-            return new string[0];
+            return Array.Empty<string>();
         }
 
         public decimal GetValue()

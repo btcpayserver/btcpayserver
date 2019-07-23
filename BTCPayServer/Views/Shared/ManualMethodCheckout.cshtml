@@ -1,17 +1,39 @@
 @model PaymentModel
-
 <script type="text/x-template" id="manual-method-checkout-template">
-  <div>
-    This is a modular UI replacement for manual payment
-   <code> {{srvModel}}</code>
+<div style="padding-left: 40px; padding-right: 40px;">
+  <p v-if="manualSettings.displayText">
+    {{displayText}}
+  </p>
+  <textarea v-if="manualSettings.allowPaymentNote" v-model="allowPaymentNote" ></textarea>
+
+<div class="input-group mb-3" v-if="manualSettings.allowPartialPaymentInput && (manualSettings.allowCustomerToMarkPaid || isAdmin)">
+  <input type="number" class="form-control" placeholder="Partial payment amount" min="0" step="any"  />
+  <div class="input-group-append">
+    <button class="action-button" type="button">Mark paid</button>
   </div>
+</div>
+  <button class="action-button" v-else-if="manualSettings.allowCustomerToMarkPaid || isAdmin">Mark paid</button>
+             
+</div>
 </script>
 
 <script type="text/javascript">
 
 
 Vue.component('ManualMethodCheckout', { 
-    template: "#manual-method-checkout-template" 
+    props: ["srvModel"],
+    template: "#manual-method-checkout-template",
+    data: {
+        paymentNote: ""
+    },
+    computed:{
+        manualSettings: function(){
+            return this.srvModel.additionalSettings.Manual;
+        },
+        isAdmin: function(){
+            return true;
+        }
+    }
 });
 
 </script>

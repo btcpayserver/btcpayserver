@@ -238,7 +238,6 @@ namespace BTCPayServer.Controllers
                 CustomCSSLink = storeBlob.CustomCSS?.AbsoluteUri,
                 CustomLogoLink = storeBlob.CustomLogo?.AbsoluteUri,
                 CryptoImage = Request.GetRelativePathOrAbsolute(paymentMethodHandler.GetCryptoImage(paymentMethodId)),
-                LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi,
                 BtcAddress = paymentMethodDetails.GetPaymentDestination(),
                 BtcDue = accounting.Due.ToString(),
                 OrderAmount = (accounting.TotalDue - accounting.NetworkFee).ToString(),

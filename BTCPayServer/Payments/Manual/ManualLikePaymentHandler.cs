@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
@@ -14,10 +15,24 @@ namespace BTCPayServer.Payments.Bitcoin
     {
         public PaymentMethodId PaymentId { get; } = StaticPaymentId;
         public static PaymentMethodId StaticPaymentId { get; } = new PaymentMethodId(string.Empty, PaymentTypes.Manual);
+
+        public string DisplayText { get; set; } = string.Empty;
+        public bool AllowCustomerToMarkPaid { get; set; } = false;
+        public bool AllowPartialPaymentInput { get; set; } = false;
+        public bool AllowPaymentNote { get; set; } = false;
+        public bool SetPaymentAsConfirmed { get; set; } = true;
+
     }
 
     public class ManualLikePaymentHandler : IPaymentMethodHandler
     {
+        private readonly BTCPayNetworkProvider _BtcPayNetworkProvider;
+
+        public ManualLikePaymentHandler(BTCPayNetworkProvider btcPayNetworkProvider)
+        {
+            _BtcPayNetworkProvider = btcPayNetworkProvider;
+        }
+        
         public Task<IPaymentMethodDetails> CreatePaymentMethodDetails(ISupportedPaymentMethod supportedPaymentMethod,
             PaymentMethod paymentMethod,
             StoreData store, BTCPayNetworkBase network, object preparePaymentObject)
@@ -31,10 +46,12 @@ namespace BTCPayServer.Payments.Bitcoin
             return null;
         }
 
-        public void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse)
+        public void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse, StoreData storeData,  StoreBlob storeBlob)
         {
+            var settings = storeData.GetSupportedPaymentMethods(_BtcPayNetworkProvider).OfType<ManualPaymentSettings>().First();
             model.IsLightning = false;
             model.PaymentMethodName = "Manual";
+            model.AdditionalSettings.Add($"Manual", settings);
         }
 
         public CheckoutUIPaymentMethodSettings GetCheckoutUISettings()

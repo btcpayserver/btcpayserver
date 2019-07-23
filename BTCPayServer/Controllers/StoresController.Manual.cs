@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Models.StoreViewModels;
@@ -12,6 +13,7 @@ using BTCPayServer.Data;
 using System.Threading;
 using BTCPayServer.Lightning;
 using BTCPayServer.Payments.Bitcoin;
+using Org.BouncyCastle.Asn1.X509;
 
 namespace BTCPayServer.Controllers
 {
@@ -19,12 +21,32 @@ namespace BTCPayServer.Controllers
     {
         public bool Enabled { get; set; }
         public string StatusMessage { get; set; }
+        [Display(Name = "Display Text")]
+        public string DisplayText { get; set; } = string.Empty;
+        [Display(Name = "Allow Customer To Mark Paid (otherwise only store admin)")]
+        public bool AllowCustomerToMarkPaid { get; set; } = false;
+        [Display(Name = "Allow a partial payment to be registered")]
+        public bool AllowPartialPaymentInput { get; set; } = false;
+        
+        [Display(Name = "Allow a note to be specified with the payment")]
+        public bool AllowPaymentNote { get; set; } = false;
+        
+        [Display(Name = "Set payment to confirmed( instead of Paid")]
+        public bool SetPaymentAsConfirmed { get; set; } = true;
+
         public ManualPaymentSettings ToSettings()
         {
-            return new ManualPaymentSettings();
+            return new ManualPaymentSettings()
+            {
+                AllowCustomerToMarkPaid = AllowCustomerToMarkPaid,
+                DisplayText = DisplayText,
+                AllowPaymentNote = AllowPaymentNote,
+                AllowPartialPaymentInput = AllowPartialPaymentInput,
+                SetPaymentAsConfirmed = SetPaymentAsConfirmed
+            };
         }
     }
-    
+
     public partial class StoresController
     {
         [HttpGet]
@@ -40,10 +62,17 @@ namespace BTCPayServer.Controllers
         }
 
         private void SetExistingValues(StoreData store, UpdateManualPaymentSettings vm)
-                 {
-                     var existing = GetExistingManualPaymentSettings(store);
-                     vm.Enabled = existing != null && !store.GetStoreBlob().IsExcluded(ManualPaymentSettings.StaticPaymentId);
-                 }
+        {
+            var existing = GetExistingManualPaymentSettings(store);
+            vm.Enabled = existing != null && !store.GetStoreBlob().IsExcluded(ManualPaymentSettings.StaticPaymentId);
+
+            vm.AllowCustomerToMarkPaid = existing.AllowCustomerToMarkPaid;
+            vm.DisplayText = existing.DisplayText;
+            vm.AllowPaymentNote = existing.AllowPaymentNote;
+            vm.AllowPartialPaymentInput = existing.AllowPartialPaymentInput;
+            vm.SetPaymentAsConfirmed = existing.SetPaymentAsConfirmed;
+        }
+
         private ManualPaymentSettings GetExistingManualPaymentSettings(StoreData store)
         {
             return store.GetSupportedPaymentMethods(_NetworkProvider)
@@ -64,13 +93,14 @@ namespace BTCPayServer.Controllers
             {
                 return View(vm);
             }
+
             var storeBlob = store.GetStoreBlob();
             storeBlob.SetExcluded(ManualPaymentSettings.StaticPaymentId, !vm.Enabled);
             store.SetStoreBlob(storeBlob);
             store.SetSupportedPaymentMethod(ManualPaymentSettings.StaticPaymentId, vm.ToSettings());
             await _Repo.UpdateStore(store);
             StatusMessage = $"Manual payment settings modified";
-            return RedirectToAction(nameof(UpdateStore), new { storeId = storeId });
+            return RedirectToAction(nameof(UpdateStore), new {storeId = storeId});
         }
     }
 }

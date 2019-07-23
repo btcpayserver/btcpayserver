@@ -51,16 +51,6 @@ namespace BTCPayServer.Payments.Bitcoin
             };
         }
 
-        public CheckoutUIPaymentMethodSettings GetCheckoutUISettings()
-        {
-            return  new CheckoutUIPaymentMethodSettings()
-            {
-                NoScriptPartialName = "ManualMethodCheckoutNoScript",
-                CheckoutBodyVueComponentName = "manual-method-checkout",
-                ExtensionPartial = "ManualMethodCheckout"
-            };
-        }
-
         public class CheckoutUIPaymentMethodSettings
         {
             public string ExtensionPartial { get; set; }

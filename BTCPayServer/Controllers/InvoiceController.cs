@@ -248,7 +248,7 @@ namespace BTCPayServer.Controllers
                 var storeBlob = store.GetStoreBlob();
                 var preparePayment = handler.PreparePayment(supportedPaymentMethod, store, network);
                 RateResult rate;
-                if (network == null)
+                if (string.IsNullOrEmpty(network?.CryptoCode))
                 {
                     rate = new RateResult()
                     {

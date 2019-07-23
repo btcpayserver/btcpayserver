@@ -1,13 +1,13 @@
 @model PaymentModel
 <script type="text/x-template" id="manual-method-checkout-template">
-<div style="padding-left: 40px; padding-right: 40px;">
+<div  class="manual-payment-container">
   <p v-if="manualSettings.displayText">
-    {{displayText}}
+    {{manualSettings.displayText}}
   </p>
-  <textarea v-if="manualSettings.allowPaymentNote" v-model="allowPaymentNote" ></textarea>
+ <textarea v-if="manualSettings.allowPaymentNote" class="manual-payment-notes" placeholder="Notes.."  ></textarea> 
 
 <div class="input-group mb-3" v-if="manualSettings.allowPartialPaymentInput && (manualSettings.allowCustomerToMarkPaid || isAdmin)">
-  <input type="number" class="form-control" placeholder="Partial payment amount" min="0" step="any"  />
+  <input type="number" class="form-control" placeholder="Partial payment amount" min="0" step="any" v-model="partialPaymentAmount"  />
   <div class="input-group-append">
     <button class="action-button" type="button">Mark paid</button>
   </div>
@@ -24,7 +24,8 @@ Vue.component('ManualMethodCheckout', {
     props: ["srvModel"],
     template: "#manual-method-checkout-template",
     data: {
-        paymentNote: ""
+        paymentNote: "asdasd",
+        partialPaymentAmount: 0
     },
     computed:{
         manualSettings: function(){
@@ -33,7 +34,25 @@ Vue.component('ManualMethodCheckout', {
         isAdmin: function(){
             return true;
         }
+    },
+    methods: {
+        submitPayment: function(){
+            
+        }
+    },
+    created: function(){
+        this.partialPaymentAmount = this.srvModel.btcDue;
     }
 });
 
 </script>
+
+
+<style>
+    .manual-payment-container{
+    padding-left: 40px; padding-right: 40px;
+    }
+    .manual-payment-notes{
+    width:100%;
+    }
+</style>

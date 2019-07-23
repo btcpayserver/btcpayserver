@@ -4,16 +4,36 @@
     ViewData.SetActivePageAndTitle(StoreNavPages.Index, "Update manual payment settings");
 }
 
-<partial name="_StatusMessage" for="StatusMessage" />
+<partial name="_StatusMessage" for="StatusMessage"/>
 
 
 <div class="row">
     <div class="col-md-10">
         <form method="post">
-            
+
             <div class="form-group">
                 <label asp-for="Enabled"></label>
-                <input asp-for="Enabled" type="checkbox" class="form-check" />
+                <input asp-for="Enabled" type="checkbox" class="form-check"/>
+            </div>
+            <div class="form-group">
+                <label asp-for="AllowPaymentNote"></label>
+                <input asp-for="AllowPaymentNote" type="checkbox" class="form-check"/>
+            </div>
+            <div class="form-group">
+                <label asp-for="AllowPartialPaymentInput"></label>
+                <input asp-for="AllowPartialPaymentInput" type="checkbox" class="form-check"/>
+            </div>
+            <div class="form-group">
+                <label asp-for="SetPaymentAsConfirmed"></label>
+                <input asp-for="SetPaymentAsConfirmed" type="checkbox" class="form-check"/>
+            </div>
+            <div class="form-group">
+                <label asp-for="AllowCustomerToMarkPaid"></label>
+                <input asp-for="AllowCustomerToMarkPaid" type="checkbox" class="form-check"/>
+            </div>
+            <div class="form-group">
+                <label asp-for="DisplayText"></label>
+                <textarea asp-for="DisplayText"class="form-control"></textarea>
             </div>
             <button name="command" type="submit" value="save" class="btn btn-primary">Submit</button>
         </form>

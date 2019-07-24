@@ -155,6 +155,9 @@
     <Content Update="Views\Server\P2PService.cshtml">
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>
+    <Content Update="Views\Server\DynamicDnsService.cshtml">
+      <Pack>$(IncludeRazorContentInPack)</Pack>
+    </Content>
     <Content Update="Views\Server\SSHService.cshtml">
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>

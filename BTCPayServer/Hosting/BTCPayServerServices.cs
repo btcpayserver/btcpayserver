@@ -206,6 +206,7 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService, RatesHostedService>();
             services.AddSingleton<IHostedService, BackgroundJobSchedulerHostedService>();
             services.AddSingleton<IHostedService, AppHubStreamer>();
+            services.AddSingleton<IHostedService, DynamicDnsHostedService>();
             services.AddSingleton<IHostedService, TorServicesHostedService>();
             services.AddSingleton<IHostedService, PaymentRequestStreamer>();
             services.AddSingleton<IBackgroundJobClient, BackgroundJobClient>();

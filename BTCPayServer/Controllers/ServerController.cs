@@ -545,6 +545,11 @@ namespace BTCPayServer.Controllers
                     Link = this.Url.Action(nameof(SSHService))
                 });
             }
+            result.OtherExternalServices.Add(new ServicesViewModel.OtherExternalService()
+            {
+                Name = "Dynamic DNS",
+                Link = this.Url.Action(nameof(DynamicDnsService))
+            });
             foreach (var torService in _torServices.Services)
             {
                 if (torService.VirtualPort == 80)
@@ -799,6 +804,39 @@ namespace BTCPayServer.Controllers
             var configKey = GetConfigKey("lnd", serviceName, cryptoCode, nonce);
             _LnConfigProvider.KeepConfig(configKey, confs);
             return RedirectToAction(nameof(Service), new { cryptoCode = cryptoCode, serviceName = serviceName, nonce = nonce });
+        }
+
+        [Route("server/services/dynamic-dns")]
+        public async Task<IActionResult> DynamicDnsService()
+        {
+            var settings = (await _SettingsRepository.GetSettingAsync<DynamicDnsSettings>()) ?? new DynamicDnsSettings();
+            var vm = new DynamicDnsViewModel();
+            vm.Settings = settings;
+            return View(vm);
+        }
+        [Route("server/services/dynamic-dns")]
+        [HttpPost]
+        public async Task<IActionResult> DynamicDnsService(DynamicDnsViewModel viewModel, string command = null)
+        {
+            if (!viewModel.Settings.Enabled)
+            {
+                StatusMessage = $"The Dynamic DNS service has been disabled";
+                viewModel.Settings.LastUpdated = null;
+                await _SettingsRepository.UpdateSetting(viewModel.Settings);
+                return RedirectToAction();
+            }
+            string errorMessage = await viewModel.Settings.SendUpdateRequest(HttpClientFactory.CreateClient());
+            if (errorMessage == null)
+            {
+                StatusMessage = $"The Dynamic DNS has been successfully queried, your configuration is saved";
+                viewModel.Settings.LastUpdated = DateTimeOffset.UtcNow;
+                await _SettingsRepository.UpdateSetting(viewModel.Settings);
+            }
+            else
+            {
+                StatusMessage = errorMessage;
+            }
+            return RedirectToAction();
         }
 
         [Route("server/services/ssh")]

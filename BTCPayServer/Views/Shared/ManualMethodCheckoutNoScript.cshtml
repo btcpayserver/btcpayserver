@@ -1,4 +1,53 @@
+@using BTCPayServer.Payments.Bitcoin
+@using BTCPayServer.Services.Stores
 @model PaymentModel
 
+@inject SignInManager<ApplicationUser> SignInManager
+@inject StoreRepository StoreRepository
+@inject UserManager<ApplicationUser> UserManager
+@{
+    var manualSettings =
+        @Model.AdditionalSettings["Manual"] as ManualPaymentSettings;
+}
+<form method="post" action="@Url.Action("AddPayment", "ManualPaymentMethod")" class="manual-payment-container">
+    <input type="hidden" name="invoiceId" value="@Model.InvoiceId"/>
+    <input type="hidden" name="RedirectToInvoice" value="true"/>
+    @if (!string.IsNullOrEmpty(manualSettings.DisplayText))
+    {
+        <p >
+            @manualSettings.DisplayText
+        </p>
+    }
+    @if (manualSettings.AllowCustomerToMarkPaid || (User != null && SignInManager.IsSignedIn(User) && (await StoreRepository.HasAccessToStore(Model.StoreId, UserManager.GetUserId(User)))))
+    {
+        @if (manualSettings.AllowPaymentNote)
+         {
+             <textarea class="manual-payment-notes" placeholder="Notes.." name="Note" ></textarea>
+         }
 
-You are paying manually with no js
+        @if (manualSettings.AllowPartialPaymentInput)
+         {
+             <div class="input-group mb-3">
+                 <input type="number" class="form-control" placeholder="Partial payment amount" name="PartialAmount" min="0" max="@Model.BtcDue" step="any" value="@Model.BtcDue"/>
+                 <div class="input-group-append">
+                     <button class="action-button" type="submit">Mark paid</button>
+                 </div>
+             </div>
+         }
+         else
+         {
+             <button class="action-button" type="submit">Mark paid</button>
+         }
+    }
+</form>
+
+
+<style>
+    .manual-payment-container{
+        padding-left: 40px; 
+        padding-right: 40px;
+    }
+    .manual-payment-notes{
+        width:100%;
+    }
+</style>

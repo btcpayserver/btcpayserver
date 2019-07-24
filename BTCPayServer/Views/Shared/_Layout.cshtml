@@ -1,4 +1,7 @@
-﻿@inject SignInManager<ApplicationUser> SignInManager
+﻿@using BTCPayServer
+@using BTCPayServer.Models
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
 @inject RoleManager<IdentityRole> RoleManager
 @inject BTCPayServer.Services.BTCPayServerEnvironment env

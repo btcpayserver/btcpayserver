@@ -20,6 +20,13 @@ namespace BTCPayServer.Services.Stores
             _ContextFactory = contextFactory ?? throw new ArgumentNullException(nameof(contextFactory));
         }
 
+        public async Task<bool> HasAccessToStore(string storeId, string userId)
+        {
+            if (string.IsNullOrEmpty(storeId) || string.IsNullOrEmpty(userId))
+                return false;
+            return (await FindStore(storeId, userId)) != null; 
+        }
+
         public async Task<StoreData> FindStore(string storeId)
         {
             if (storeId == null)

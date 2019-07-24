@@ -16,7 +16,7 @@ namespace BTCPayServer.Payments.Bitcoin
         public BTCPayNetworkBase Network { get; set; } = null;
         public string GetPaymentId()
         {
-            return Timestamp.ToUnixTimestamp().ToString(CultureInfo.InvariantCulture);
+            return Id;
         }
 
         public string[] GetSearchTerms()
@@ -26,17 +26,17 @@ namespace BTCPayServer.Payments.Bitcoin
 
         public decimal GetValue()
         {
-            return GivenAmount - GivenBack;
+            return Amount;
         }
 
         public bool PaymentCompleted(PaymentEntity entity)
         {
-            return true;
+            return Confirmed;
         }
 
         public bool PaymentConfirmed(PaymentEntity entity, SpeedPolicy speedPolicy)
         {
-            return true;
+            return Confirmed;
         }
 
         public PaymentType GetPaymentType()
@@ -53,12 +53,12 @@ namespace BTCPayServer.Payments.Bitcoin
         {
 
         }
-
-        public DateTime Timestamp { get; set; }
-
-        public string GivenCurrencyCode { get; set; }
-        public decimal GivenAmount { get; set; }
-        public decimal GivenBack { get; set; }
+        public string Id { get; set; }
+        public decimal Amount { get; set; }
+        public string CurrencyCode { get; set; }
+        public string Notes { get; set; }
+        public bool Confirmed { get; set; }
+        
         
 
     }

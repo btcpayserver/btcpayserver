@@ -1,20 +1,25 @@
-@model PaymentModel
-<script type="text/x-template" id="manual-method-checkout-template">
-<div  class="manual-payment-container">
-  <p v-if="manualSettings.displayText">
-    {{manualSettings.displayText}}
-  </p>
- <textarea v-if="manualSettings.allowPaymentNote" class="manual-payment-notes" placeholder="Notes.."  ></textarea> 
+@using BTCPayServer.Services.Stores
+@model BTCPayServer.Models.InvoicingModels.PaymentModel
 
-<div class="input-group mb-3" v-if="manualSettings.allowPartialPaymentInput && (manualSettings.allowCustomerToMarkPaid || isAdmin)">
-  <input type="number" class="form-control" placeholder="Partial payment amount" min="0" step="any" v-model="partialPaymentAmount"  />
-  <div class="input-group-append">
-    <button class="action-button" type="button">Mark paid</button>
-  </div>
-</div>
-  <button class="action-button" v-else-if="manualSettings.allowCustomerToMarkPaid || isAdmin">Mark paid</button>
-             
-</div>
+@inject SignInManager<ApplicationUser> SignInManager
+@inject StoreRepository StoreRepository
+@inject UserManager<ApplicationUser> UserManager
+<script type="text/x-template" id="manual-method-checkout-template">
+    <div  class="manual-payment-container">
+        <p v-if="manualSettings.displayText">
+            {{manualSettings.displayText}}
+        </p>
+        <template v-if="manualSettings.allowCustomerToMarkPaid || isAdmin">
+            <textarea v-if="manualSettings.allowPaymentNote" class="manual-payment-notes" placeholder="Notes.." v-model="paymentNote" ></textarea> 
+                <div class="input-group mb-3" v-if="manualSettings.allowPartialPaymentInput ">
+                    <input type="number" class="form-control" placeholder="Partial payment amount" min="0" v-bind:max="dueAmount" v-bind:disabled="loading" step="any" v-model="partialPaymentAmount"  />
+                    <div class="input-group-append">
+                        <button class="action-button" type="button"  v-bind:disabled="loading"  v-on:click="submitPayment">Mark paid</button>
+                    </div>
+                </div>
+                <button class="action-button" v-else v-on:click="submitPayment" v-bind:disabled="loading">Mark paid</button>
+        </template>
+    </div>               
 </script>
 
 <script type="text/javascript">
@@ -23,28 +28,48 @@
 Vue.component('ManualMethodCheckout', { 
     props: ["srvModel"],
     template: "#manual-method-checkout-template",
-    data: {
-        paymentNote: "asdasd",
-        partialPaymentAmount: 0
+    data: function() {
+        return {
+            paymentNote: "asdasd",
+            partialPaymentAmount: 0,
+            dueAmount: 0,
+            loading: false
+        }
     },
     computed:{
         manualSettings: function(){
             return this.srvModel.additionalSettings.Manual;
-        },
-        isAdmin: function(){
-            return true;
         }
     },
     methods: {
         submitPayment: function(){
-            
+            this.loading = true;
+            var model = {
+                invoiceId: this.srvModel.invoiceId
+            };
+            if(this.manualSettings.allowPartialPaymentInput){
+                model.partialPaymentAmount = this.partialPaymentAmount;
+            }
+            if(this.manualSettings.allowPaymentNote){
+                model.notes = this.paymentNote;
+            }
+            var self  = this;
+            $.post('@Url.Action("AddPayment", "ManualPaymentMethod")', model, function(data, status){
+                console.log(data +" and status is " + status);
+                
+            })
+            .always(function() {
+                self.loading = false;
+              });
         }
     },
     created: function(){
         this.partialPaymentAmount = this.srvModel.btcDue;
+        this.dueAmount = this.srvModel.btcDue;
     }
 });
 
+var isAdmin = @(User != null && SignInManager.IsSignedIn(User) && (await StoreRepository.HasAccessToStore(Model.StoreId, UserManager.GetUserId(User))) ? "true" : "false");
 </script>
 
 

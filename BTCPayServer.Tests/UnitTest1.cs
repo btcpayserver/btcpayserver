@@ -2688,7 +2688,8 @@ noninventoryitem:
             var fetcher = new RateFetcher(factory);
             var pairs =
                     provider.GetAll()
-                    .Select(c => new CurrencyPair(c.CryptoCode, "USD"))
+                        .Where(c => !string.IsNullOrEmpty(c.CryptoCode))
+                        .Select(c => new CurrencyPair(c.CryptoCode, "USD"))
                     .ToHashSet();
 
             var rules = new StoreBlob().GetDefaultRateRules(provider);

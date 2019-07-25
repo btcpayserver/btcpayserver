@@ -11,22 +11,21 @@
         </p>
         <template v-if="manualSettings.allowCustomerToMarkPaid || isAdmin">
             <textarea v-if="manualSettings.allowPaymentNote" class="manual-payment-notes" placeholder="Notes.." v-model="paymentNote" ></textarea> 
-                <div class="input-group mb-3" v-if="manualSettings.allowPartialPaymentInput ">
-                    <input type="number" class="form-control" placeholder="Partial payment amount" min="0" v-bind:max="dueAmount" v-bind:disabled="loading" step="any" v-model="partialPaymentAmount"  />
-                    <div class="input-group-append">
-                        <button class="action-button" type="button"  v-bind:disabled="loading"  v-on:click="submitPayment">
-                        <div v-show="loading" class="general__spinner">
-                            <partial name="Checkout-Spinner"/>
-                        </div>
-                        Mark paid
-                        </button>
+                <template v-if="manualSettings.allowPartialPaymentInput">
+                    <input type="number" style="width:100%; margin-bottom: 20px" required placeholder="Partial payment amount" min="0" v-bind:max="dueAmount" v-bind:disabled="loading" step="any" v-model="partialPaymentAmount"  />
+                    <button class="action-button" type="button"  v-bind:disabled="loading"  v-on:click="submitPayment" >
+                    <div v-show="loading" class="general__spinner">
+                        <partial name="Checkout-Spinner"/>
                     </div>
-                </div>
+                    Mark paid
+                    </button>
+                </template>
                 <button class="action-button" v-else v-on:click="submitPayment" v-bind:disabled="loading">
-                <div v-show="loading" class="general__spinner">
-                    <partial name="Checkout-Spinner"/>
-                </div>
-                Mark paid</button>
+                    <div v-show="loading" class="general__spinner">
+                        <partial name="Checkout-Spinner"/>
+                    </div>
+                Mark paid
+                </button>
         </template>
     </div>               
 </script>
@@ -39,8 +38,8 @@ Vue.component('ManualMethodCheckout', {
     template: "#manual-method-checkout-template",
     data: function() {
         return {
-            paymentNote: "asdasd",
-            partialPaymentAmount: 0,
+            paymentNote: "",
+            partialPaymentAmount: "",
             dueAmount: 0,
             loading: false
         }
@@ -56,8 +55,8 @@ Vue.component('ManualMethodCheckout', {
             var model = {
                 invoiceId: this.srvModel.invoiceId
             };
-            if(this.manualSettings.allowPartialPaymentInput){
-                model.partialPaymentAmount = this.partialPaymentAmount;
+            if(this.manualSettings.allowPartialPaymentInput && this.partialPaymentAmount){
+                model.partialAmount = this.partialPaymentAmount;
             }
             if(this.manualSettings.allowPaymentNote){
                 model.notes = this.paymentNote;
@@ -73,7 +72,7 @@ Vue.component('ManualMethodCheckout', {
         }
     },
     created: function(){
-        this.partialPaymentAmount = this.srvModel.btcDue;
+        // this.partialPaymentAmount = this.srvModel.btcDue;
         this.dueAmount = this.srvModel.btcDue;
     }
 });

@@ -105,15 +105,5 @@ namespace BTCPayServer.Models.StoreViewModels
             get;
             set;
         }
-
-        public ManualPaymentViewModel ManualPayment { get; set; }
-        public class ManualPaymentViewModel
-        {
-            
-            public bool Enabled { get; set; }
-            
-        }
-        
-        
     }
 }

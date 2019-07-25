@@ -504,15 +504,16 @@ namespace BTCPayServer.Controllers
                         });
                         break;
                     case ManualPaymentType _:
-
+                        
                         var manual = store
                             .GetSupportedPaymentMethods(_NetworkProvider)
                             .OfType<ManualPaymentSettings>().FirstOrDefault();
-                        
-                        vm.ManualPayment = new StoreViewModel.ManualPaymentViewModel()
+                        vm.ThirdPartyPaymentMethods.Add(new StoreViewModel.AdditionalPaymentMethod()
                         {
-                            Enabled = manual != null && !excludeFilters.Match(paymentMethodId)
-                        };
+                            Enabled = manual != null && !excludeFilters.Match(paymentMethodId),
+                            Action = nameof(UpdateManualSettings),
+                            Provider = "Manual"
+                        });
                         break;
                 }   
             }

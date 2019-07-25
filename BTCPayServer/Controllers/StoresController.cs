@@ -504,7 +504,7 @@ namespace BTCPayServer.Controllers
                         });
                         break;
                     case ManualPaymentType _:
-
+                        
                         var manual = store
                             .GetSupportedPaymentMethods(_NetworkProvider)
                             .OfType<ManualPaymentSettings>().FirstOrDefault();

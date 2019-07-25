@@ -871,6 +871,10 @@ namespace BTCPayServer.Controllers
         [HttpPost]
         public async Task<IActionResult> DynamicDnsService(DynamicDnsViewModel viewModel, string hostname, string command = null)
         {
+            if (!ModelState.IsValid)
+            {
+                return View(viewModel);
+            }
             var settings = (await _SettingsRepository.GetSettingAsync<DynamicDnsSettings>()) ?? new DynamicDnsSettings();
             
             var i = settings.Services.FindIndex(d => d.Hostname.Equals(hostname, StringComparison.OrdinalIgnoreCase));

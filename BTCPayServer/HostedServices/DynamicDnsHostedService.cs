@@ -44,11 +44,13 @@ namespace BTCPayServer.HostedServices
                         var errorMessage = await settings.SendUpdateRequest(HttpClientFactory.CreateClient());
                         if (errorMessage == null)
                         {
-                            Logs.PayServer.LogWarning($"Dynamic DNS service is enabled but the request to the provider failed: {errorMessage}");
+                            Logs.PayServer.LogInformation("Dynamic DNS service successfully refresh the DNS record");
+                            settings.LastUpdated = DateTimeOffset.UtcNow;
+                            await SettingsRepository.UpdateSetting(settings);
                         }
                         else
                         {
-                            Logs.PayServer.LogInformation("Dynamic DNS service successfully refresh the DNS record");
+                            Logs.PayServer.LogWarning($"Dynamic DNS service is enabled but the request to the provider failed: {errorMessage}");
                         }
                     }
                     catch (OperationCanceledException) when (timeout.IsCancellationRequested)

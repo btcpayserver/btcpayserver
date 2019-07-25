@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
@@ -43,7 +44,6 @@ namespace BTCPayServer.Payments.Bitcoin
         public async Task<IActionResult> AddPayment(AddPaymentRequest model)
         {
             var invoice = await _InvoiceRepository.GetInvoice(model.InvoiceId, false);
-            var store = await _StoreRepository.FindStore(invoice.StoreId);
             var manualPayment = invoice.GetSupportedPaymentMethod<ManualPaymentSettings>().FirstOrDefault();
             if (manualPayment == null)
             {
@@ -53,7 +53,9 @@ namespace BTCPayServer.Payments.Bitcoin
 
             if (ModelState.IsValid)
             {
-                if (!manualPayment.AllowCustomerToMarkPaid &&  (!_SignInManager.IsSignedIn(User) || !await _StoreRepository.HasAccessToStore(invoice.StoreId, _UserManager.GetUserId(User))))
+                if (!manualPayment.AllowCustomerToMarkPaid &&
+                    (!_SignInManager.IsSignedIn(User) ||
+                     !await _StoreRepository.HasAccessToStore(invoice.StoreId, _UserManager.GetUserId(User))))
                 {
                     return Forbid();
                 }
@@ -81,7 +83,56 @@ namespace BTCPayServer.Payments.Bitcoin
                 {
                     return RedirectToAction("Checkout", "Invoice", new {InvoiceId = invoice.Id});
                 }
+
                 return Ok();
+            }
+
+            return ValidationProblem();
+        }
+
+        [HttpPost("confirm-payment")]
+        public async Task<IActionResult> ConfirmPayment(ConfirmPaymentRequest model)
+        {
+
+            var matchedPaymentIdInvoices = await _InvoiceRepository.GetInvoices(new InvoiceQuery() {TextSearch = model.PaymentId});
+            var invoice = matchedPaymentIdInvoices.FirstOrDefault();
+            if (invoice == null)
+            {
+                return NotFound();
+            }
+            var manualPayment = invoice.GetSupportedPaymentMethod<ManualPaymentSettings>().FirstOrDefault();
+            if (manualPayment == null)
+            {
+                return NotFound();
+            }
+
+            var manualPayments = invoice.GetPayments()
+                .Where(entity => entity.GetPaymentMethodId().PaymentType == ManualPaymentType.Instance);
+
+            if (ModelState.IsValid)
+            {
+                if (!_SignInManager.IsSignedIn(User) ||
+                    !await _StoreRepository.HasAccessToStore(invoice.StoreId, _UserManager.GetUserId(User)))
+                {
+                    return Forbid();
+                }
+
+                foreach (var paymentEntity in manualPayments)
+                {
+                    var manualPaymentData = paymentEntity.GetCryptoPaymentData() as ManualPaymentData;
+                    if (manualPaymentData.Id == model.PaymentId)
+                    {
+                        manualPaymentData.Confirmed = true;
+                        paymentEntity.SetCryptoPaymentData(manualPaymentData);
+                        await _InvoiceRepository.UpdatePayments(new List<PaymentEntity>() {paymentEntity});
+                        if (string.IsNullOrEmpty(model.RedirectUrl))
+                        {
+                            return Ok();
+                        }
+
+                        return Redirect(model.RedirectUrl);
+                    }
+                }
             }
 
             return ValidationProblem();
@@ -92,9 +143,14 @@ namespace BTCPayServer.Payments.Bitcoin
     {
         public string Note { get; set; }
         public decimal? PartialAmount { get; set; }
-        [Required]
-        public string InvoiceId { get; set; }
+        [Required] public string InvoiceId { get; set; }
 
         public bool RedirectToInvoice { get; set; } = false;
+    }
+
+    public class ConfirmPaymentRequest
+    {
+        public string PaymentId { get; set; }
+        public string RedirectUrl { get; set; }
     }
 }

@@ -125,6 +125,7 @@ namespace BTCPayServer.Payments.Bitcoin
                         manualPaymentData.Confirmed = true;
                         paymentEntity.SetCryptoPaymentData(manualPaymentData);
                         await _InvoiceRepository.UpdatePayments(new List<PaymentEntity>() {paymentEntity});
+                        _EventAggregator.Publish(new Events.InvoiceNeedUpdateEvent(invoice.Id));
                         if (string.IsNullOrEmpty(model.RedirectUrl))
                         {
                             return Ok();

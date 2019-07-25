@@ -31,7 +31,7 @@ namespace BTCPayServer.Controllers
         [Display(Name = "Allow a note to be specified with the payment")]
         public bool AllowPaymentNote { get; set; } = false;
         
-        [Display(Name = "Set payment to confirmed( instead of Paid")]
+        [Display(Name = "Mark payment as confirmed instantly (instead of Paid)")]
         public bool SetPaymentAsConfirmed { get; set; } = true;
 
         public ManualPaymentSettings ToSettings()

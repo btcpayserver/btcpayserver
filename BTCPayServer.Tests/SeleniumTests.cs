@@ -106,17 +106,17 @@ namespace BTCPayServer.Tests
 
                 s.Driver.Navigate().GoToUrl(s.Link("/server/services/dynamic-dns"));
                 s.Driver.AssertNoError();
-                if (s.Driver.PageSource.Contains("CanUseDynamicDns.hello.com"))
+                if (s.Driver.PageSource.Contains("pouet.hello.com"))
                 {
                     // Cleanup old test run
-                    s.Driver.Navigate().GoToUrl(s.Link("/server/services/dynamic-dns/CanUseDynamicDns.hello.com/delete"));
+                    s.Driver.Navigate().GoToUrl(s.Link("/server/services/dynamic-dns/pouet.hello.com/delete"));
                     s.Driver.FindElement(By.Id("continue")).Click();
                 }
                 s.Driver.FindElement(By.Id("AddDynamicDNS")).Click();
                 s.Driver.AssertNoError();
                 // We will just cheat for test purposes by only querying the server
                 s.Driver.FindElement(By.Id("ServiceUrl")).SendKeys(s.Link("/"));
-                s.Driver.FindElement(By.Id("Settings_Hostname")).SendKeys("CanUseDynamicDns.hello.com");
+                s.Driver.FindElement(By.Id("Settings_Hostname")).SendKeys("pouet.hello.com");
                 s.Driver.FindElement(By.Id("Settings_Login")).SendKeys("MyLog");
                 s.Driver.FindElement(By.Id("Settings_Password")).SendKeys("MyLog" + Keys.Enter);
                 s.Driver.AssertNoError();
@@ -127,7 +127,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("AddDynamicDNS")).Click();
                 s.Driver.AssertNoError();
                 s.Driver.FindElement(By.Id("ServiceUrl")).SendKeys(s.Link("/"));
-                s.Driver.FindElement(By.Id("Settings_Hostname")).SendKeys("CanUseDynamicDns.hello.com");
+                s.Driver.FindElement(By.Id("Settings_Hostname")).SendKeys("pouet.hello.com");
                 s.Driver.FindElement(By.Id("Settings_Login")).SendKeys("MyLog");
                 s.Driver.FindElement(By.Id("Settings_Password")).SendKeys("MyLog" + Keys.Enter);
                 s.Driver.AssertNoError();
@@ -135,12 +135,12 @@ namespace BTCPayServer.Tests
 
                 // Delete it
                 s.Driver.Navigate().GoToUrl(s.Link("/server/services/dynamic-dns"));
-                Assert.Contains("/server/services/dynamic-dns/CanUseDynamicDns.hello.com/delete", s.Driver.PageSource);
-                s.Driver.Navigate().GoToUrl(s.Link("/server/services/dynamic-dns/CanUseDynamicDns.hello.com/delete"));
+                Assert.Contains("/server/services/dynamic-dns/pouet.hello.com/delete", s.Driver.PageSource);
+                s.Driver.Navigate().GoToUrl(s.Link("/server/services/dynamic-dns/pouet.hello.com/delete"));
                 s.Driver.FindElement(By.Id("continue")).Click();
                 s.Driver.AssertNoError();
 
-                Assert.DoesNotContain("/server/services/dynamic-dns/CanUseDynamicDns.hello.com/delete", s.Driver.PageSource);
+                Assert.DoesNotContain("/server/services/dynamic-dns/pouet.hello.com/delete", s.Driver.PageSource);
             }
         }
 

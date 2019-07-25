@@ -45,12 +45,12 @@ namespace BTCPayServer.Services
                         errorMessage = await result.Content.ReadAsStringAsync();
                     }
                     catch { }
-                    errorMessage = $"Error: Invalid return code {result.StatusCode}, expected 200 ({errorMessage.Trim()})";
+                    errorMessage = $"Error: Invalid return code {result.StatusCode}, expected 200 ({errorMessage.Trim()}) for hostname '{Hostname}'";
                 }
             }
             catch (Exception ex)
             {
-                errorMessage = $"Error: While querying the Dynamic DNS service ({ex.Message})";
+                errorMessage = $"Error: While querying the Dynamic DNS service ({ex.Message}) for hostname '{Hostname}'";
             }
             return errorMessage;
         }

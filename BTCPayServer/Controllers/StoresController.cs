@@ -507,7 +507,7 @@ namespace BTCPayServer.Controllers
 
                         var manual = store
                             .GetSupportedPaymentMethods(_NetworkProvider)
-                            .OfType<StubBTCPayNetwork>().FirstOrDefault();
+                            .OfType<ManualPaymentSettings>().FirstOrDefault();
                         
                         vm.ManualPayment = new StoreViewModel.ManualPaymentViewModel()
                         {

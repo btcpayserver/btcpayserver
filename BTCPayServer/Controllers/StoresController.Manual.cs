@@ -65,7 +65,10 @@ namespace BTCPayServer.Controllers
         {
             var existing = GetExistingManualPaymentSettings(store);
             vm.Enabled = existing != null && !store.GetStoreBlob().IsExcluded(ManualPaymentSettings.StaticPaymentId);
-
+            if (existing == null)
+            {
+                return;
+            }
             vm.AllowCustomerToMarkPaid = existing.AllowCustomerToMarkPaid;
             vm.DisplayText = existing.DisplayText;
             vm.AllowPaymentNote = existing.AllowPaymentNote;

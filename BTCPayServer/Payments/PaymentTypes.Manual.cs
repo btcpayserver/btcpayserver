@@ -42,5 +42,8 @@ namespace BTCPayServer.Payments
         {
             return "N/A";
         }
+        
+        
+        public override string InvoiceViewPaymentPartialName { get; } = "ViewManualLikePaymentData";
     }
 }

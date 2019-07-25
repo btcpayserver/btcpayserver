@@ -77,6 +77,8 @@ namespace BTCPayServer.Services
             webRequest.Headers.Authorization = new AuthenticationHeaderValue("Basic", Encoders.Base64.EncodeData(new UTF8Encoding(false).GetBytes($"{builder.UserName}:{builder.Password}")));
             webRequest.Headers.TryAddWithoutValidation("User-Agent", $"BTCPayServer/{GetVersion()} btcpayserver@gmail.com");
             webRequest.Method = HttpMethod.Get;
+            builder.UserName = string.Empty;
+            builder.Password = string.Empty;
             webRequest.RequestUri = builder.Uri;
             return webRequest;
         }

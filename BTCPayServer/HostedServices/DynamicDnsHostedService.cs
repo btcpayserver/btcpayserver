@@ -34,7 +34,7 @@ namespace BTCPayServer.HostedServices
         {
             using (var timeout = CancellationTokenSource.CreateLinkedTokenSource(Cancellation))
             {
-                var settings = await SettingsRepository.GetSettingAsync<DynamicDnsSettings>();
+                var settings = await SettingsRepository.GetSettingAsync<DynamicDnsSettings>() ?? new DynamicDnsSettings();
                 foreach (var service in settings.Services)
                 {
                     if (service?.Enabled is true && (service.LastUpdated is null ||

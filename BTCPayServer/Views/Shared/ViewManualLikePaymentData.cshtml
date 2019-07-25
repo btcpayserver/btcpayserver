@@ -1,0 +1,56 @@
+@using BTCPayServer.Payments
+@using BTCPayServer.Payments.Bitcoin
+@model IEnumerable<BTCPayServer.Services.Invoices.PaymentEntity>
+
+@{
+    var manualPayments = Model.Where(entity => entity.GetPaymentMethodId().PaymentType == ManualPaymentType.Instance).Select(payment => payment.GetCryptoPaymentData() as ManualPaymentData);
+}
+
+@if (manualPayments.Any())
+{
+    <div class="row">
+        <div class="col-md-12 invoice-payments">
+            <h3>Manual payments</h3>
+            <table class="table table-sm table-responsive-md">
+                <thead class="thead-inverse">
+                <tr>
+                    <th class="firstCol">Currency</th>
+                    <th>Amount</th>
+                    <th>Notes</th>
+                    <th>Confirmed</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var payment in manualPayments)
+                {
+                    <tr>
+                        <td>@payment.CurrencyCode</td>
+                        <td>@payment.Amount</td>
+
+                        <td>
+                            @if (!string.IsNullOrEmpty(payment.Notes))
+                            {
+                                <textarea value="@payment.Notes" readonly="readonly"></textarea>
+                            }
+                        </td>
+                        <td>
+                            @if (payment.Confirmed)
+                            {
+                                <span>Confirmed</span>
+                            }
+                            else
+                            {
+                                <form method="post" action="@Url.Action("ConfirmPayment", "ManualPaymentMethod")">
+                                    <input type="hidden" name="PaymentId" value="@payment.Id"/>
+                                    <input type="hidden" name="RedirectUrl" value="@Context.Request.GetCurrentUrl()"/>
+                                    <button type="submit" class="btn btn-secondary btn-sm">Confirm Payment</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

@@ -9,11 +9,10 @@ using Newtonsoft.Json;
 
 namespace BTCPayServer.Payments.Bitcoin
 {
-
     public class ManualPaymentData : CryptoPaymentData
-    {  
-        [JsonIgnore]
-        public BTCPayNetworkBase Network { get; set; } = null;
+    {
+        [JsonIgnore] public BTCPayNetworkBase Network { get; set; } = null;
+
         public string GetPaymentId()
         {
             return Id;
@@ -21,7 +20,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
         public string[] GetSearchTerms()
         {
-            return Array.Empty<string>();
+            return new[] {GetPaymentId()};
         }
 
         public decimal GetValue()
@@ -51,15 +50,12 @@ namespace BTCPayServer.Payments.Bitcoin
 
         public ManualPaymentData()
         {
-
         }
+
         public string Id { get; set; }
         public decimal Amount { get; set; }
         public string CurrencyCode { get; set; }
         public string Notes { get; set; }
         public bool Confirmed { get; set; }
-        
-        
-
     }
 }

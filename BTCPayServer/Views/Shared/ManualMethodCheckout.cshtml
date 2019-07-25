@@ -14,10 +14,19 @@
                 <div class="input-group mb-3" v-if="manualSettings.allowPartialPaymentInput ">
                     <input type="number" class="form-control" placeholder="Partial payment amount" min="0" v-bind:max="dueAmount" v-bind:disabled="loading" step="any" v-model="partialPaymentAmount"  />
                     <div class="input-group-append">
-                        <button class="action-button" type="button"  v-bind:disabled="loading"  v-on:click="submitPayment">Mark paid</button>
+                        <button class="action-button" type="button"  v-bind:disabled="loading"  v-on:click="submitPayment">
+                        <div v-show="loading" class="general__spinner">
+                            <partial name="Checkout-Spinner"/>
+                        </div>
+                        Mark paid
+                        </button>
                     </div>
                 </div>
-                <button class="action-button" v-else v-on:click="submitPayment" v-bind:disabled="loading">Mark paid</button>
+                <button class="action-button" v-else v-on:click="submitPayment" v-bind:disabled="loading">
+                <div v-show="loading" class="general__spinner">
+                    <partial name="Checkout-Spinner"/>
+                </div>
+                Mark paid</button>
         </template>
     </div>               
 </script>

@@ -35,26 +35,29 @@ namespace BTCPayServer.HostedServices
             using (var timeout = CancellationTokenSource.CreateLinkedTokenSource(Cancellation))
             {
                 var settings = await SettingsRepository.GetSettingAsync<DynamicDnsSettings>();
-                if (settings?.Enabled is true && (settings.LastUpdated is null ||
-                                         (DateTimeOffset.UtcNow - settings.LastUpdated) > Period))
+                foreach (var service in settings.Services)
                 {
-                    timeout.CancelAfter(TimeSpan.FromSeconds(20.0));
-                    try
+                    if (service?.Enabled is true && (service.LastUpdated is null ||
+                                             (DateTimeOffset.UtcNow - service.LastUpdated) > Period))
                     {
-                        var errorMessage = await settings.SendUpdateRequest(HttpClientFactory.CreateClient());
-                        if (errorMessage == null)
+                        timeout.CancelAfter(TimeSpan.FromSeconds(20.0));
+                        try
                         {
-                            Logs.PayServer.LogInformation("Dynamic DNS service successfully refresh the DNS record");
-                            settings.LastUpdated = DateTimeOffset.UtcNow;
-                            await SettingsRepository.UpdateSetting(settings);
+                            var errorMessage = await service.SendUpdateRequest(HttpClientFactory.CreateClient());
+                            if (errorMessage == null)
+                            {
+                                Logs.PayServer.LogInformation("Dynamic DNS service successfully refresh the DNS record");
+                                service.LastUpdated = DateTimeOffset.UtcNow;
+                                await SettingsRepository.UpdateSetting(settings);
+                            }
+                            else
+                            {
+                                Logs.PayServer.LogWarning($"Dynamic DNS service is enabled but the request to the provider failed: {errorMessage}");
+                            }
                         }
-                        else
+                        catch (OperationCanceledException) when (timeout.IsCancellationRequested)
                         {
-                            Logs.PayServer.LogWarning($"Dynamic DNS service is enabled but the request to the provider failed: {errorMessage}");
                         }
-                    }
-                    catch (OperationCanceledException) when (timeout.IsCancellationRequested)
-                    {
                     }
                 }
             }

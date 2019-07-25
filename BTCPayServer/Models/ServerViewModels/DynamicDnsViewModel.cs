@@ -19,8 +19,8 @@ namespace BTCPayServer.Models.ServerViewModels
             public string Name { get; set; }
             public string Url { get; set; }
         }
-
-        public DynamicDnsSettings Settings { get; set; }
+        public bool Modify { get; set; }
+        public DynamicDnsService Settings { get; set; }
         public string LastUpdated
         {
             get

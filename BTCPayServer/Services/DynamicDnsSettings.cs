@@ -5,7 +5,6 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Hosting;
@@ -16,14 +15,20 @@ namespace BTCPayServer.Services
 {
     public class DynamicDnsSettings
     {
+        public List<DynamicDnsService> Services { get; set; } = new List<DynamicDnsService>();
+    }
+    public class DynamicDnsService
+    {
         [Display(Name = "Url of the Dynamic DNS service you are using")]
+        [Required]
         public string ServiceUrl { get; set; }
         public string Login { get; set; }
         [DataType(DataType.Password)]
         public string Password { get; set; }
         [Display(Name = "Your dynamic DNS hostname")]
+        [Required]
         public string Hostname { get; set; }
-        public bool Enabled { get; set; }
+        public bool Enabled { get; set; } = true;
         [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
         public DateTimeOffset? LastUpdated { get; set; }
 
@@ -54,7 +59,7 @@ namespace BTCPayServer.Services
             HttpRequestMessage webRequest = new HttpRequestMessage();
             if (!Uri.TryCreate(ServiceUrl, UriKind.Absolute, out var uri) || uri.HostNameType == UriHostNameType.Unknown)
             {
-                throw new FormatException($"Invalid {ServiceUrl}");
+                throw new FormatException($"Invalid service url");
             }
 
             var builder = new UriBuilder(uri);

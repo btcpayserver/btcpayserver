@@ -165,10 +165,11 @@ namespace BTCPayServer.Controllers
                                                 (Handler: _paymentMethodHandlerDictionary[c.PaymentId],
                                                 SupportedPaymentMethod: c,
                                                 Network: _NetworkProvider.GetNetwork<BTCPayNetworkBase>(c.PaymentId.CryptoCode)))
-                                                .Select(o =>
+                                               .Where(c => c.Network != null)
+                                               .Select(o =>
                                                     (SupportedPaymentMethod: o.SupportedPaymentMethod,
                                                     PaymentMethod: CreatePaymentMethodAsync(fetchingByCurrencyPair, o.Handler, o.SupportedPaymentMethod, o.Network, entity, store, logs)))
-                                                .ToList();
+                                               .ToList();
             List<ISupportedPaymentMethod> supported = new List<ISupportedPaymentMethod>();
             var paymentMethods = new PaymentMethodDictionary();
             foreach (var o in supportedPaymentMethods)

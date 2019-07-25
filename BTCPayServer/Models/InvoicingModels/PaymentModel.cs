@@ -81,8 +81,5 @@ namespace BTCPayServer.Models.InvoicingModels
         public decimal CoinSwitchAmountMarkupPercentage { get; set; }
         public bool RedirectAutomatically { get; set; }
          public Dictionary<string, object> AdditionalSettings { get; set; } = new Dictionary<string, object>();
-
-        [JsonIgnore]
-        public PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary { get; set; }
     }
 }

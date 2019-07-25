@@ -1,5 +1,4 @@
-﻿using BTCPayServer.Models;
-using BTCPayServer.Services.Invoices;
+﻿using BTCPayServer.Services.Invoices;
 using NBitcoin;
 using NBXplorer;
 using System;
@@ -7,15 +6,12 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.ComponentModel;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Payments;
 using BTCPayServer.JsonConverters;
-using System.ComponentModel.DataAnnotations;
-using BTCPayServer.Services;
 using System.Security.Claims;
 using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Payments.CoinSwitch;
@@ -85,8 +81,7 @@ namespace BTCPayServer.Data
                     var network = networks.GetNetwork<BTCPayNetworkBase>(paymentMethodId.CryptoCode);
                     if (network != null)
                     {
-                        if (network == networks.BTC && paymentMethodId.PaymentType == PaymentTypes.BTCLike &&
-                            btcReturned)
+                        if (network == networks.BTC && paymentMethodId.PaymentType == PaymentTypes.BTCLike && btcReturned)
                             continue;
                         if (strat.Value.Type == JTokenType.Null)
                             continue;

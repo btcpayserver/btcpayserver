@@ -22,7 +22,7 @@ namespace BTCPayServer.Models.StoreViewModels
             public bool Enabled { get; set; }
         }
         
-        public class ThirdPartyPaymentMethod
+        public class AdditionalPaymentMethod
         {
             public string Provider { get; set; }
             public bool Enabled { get; set; }
@@ -58,8 +58,8 @@ namespace BTCPayServer.Models.StoreViewModels
 
         public List<StoreViewModel.DerivationScheme> DerivationSchemes { get; set; } = new List<StoreViewModel.DerivationScheme>();
 
-        public List<ThirdPartyPaymentMethod> ThirdPartyPaymentMethods { get; set; } =
-            new List<ThirdPartyPaymentMethod>();
+        public List<AdditionalPaymentMethod> ThirdPartyPaymentMethods { get; set; } =
+            new List<AdditionalPaymentMethod>();
 
         [Display(Name = "Invoice expires if the full amount has not been paid after ... minutes")]
         [Range(1, 60 * 24 * 24)]
@@ -110,15 +110,5 @@ namespace BTCPayServer.Models.StoreViewModels
             get;
             set;
         }
-
-        public ManualPaymentViewModel ManualPayment { get; set; }
-        public class ManualPaymentViewModel
-        {
-            
-            public bool Enabled { get; set; }
-            
-        }
-        
-        
     }
 }

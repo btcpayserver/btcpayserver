@@ -44,6 +44,8 @@ namespace BTCPayServer.Controllers
             var psbt = (await nbx.CreatePSBTAsync(derivationSettings.AccountDerivation, psbtRequest, cancellationToken));
             if (psbt == null)
                 throw new NotSupportedException("You need to update your version of NBXplorer");
+            // Not supported by coldcard, remove when they do support it
+            psbt.PSBT.GlobalXPubs.Clear();
             return psbt;
         }
 

@@ -94,6 +94,55 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("LoginButton")).Click();
             s.Driver.AssertNoError();
         }
+        [Fact]
+        public void CanUseDynamicDns()
+        {
+            using (var s = SeleniumTester.Create())
+            {
+                s.Start();
+                var alice = s.RegisterNewUser(isAdmin: true);
+                s.Driver.Navigate().GoToUrl(s.Link("/server/services"));
+                Assert.Contains("Dynamic DNS", s.Driver.PageSource);
+
+                s.Driver.Navigate().GoToUrl(s.Link("/server/services/dynamic-dns"));
+                s.Driver.AssertNoError();
+                if (s.Driver.PageSource.Contains("pouet.hello.com"))
+                {
+                    // Cleanup old test run
+                    s.Driver.Navigate().GoToUrl(s.Link("/server/services/dynamic-dns/pouet.hello.com/delete"));
+                    s.Driver.FindElement(By.Id("continue")).Click();
+                }
+                s.Driver.FindElement(By.Id("AddDynamicDNS")).Click();
+                s.Driver.AssertNoError();
+                // We will just cheat for test purposes by only querying the server
+                s.Driver.FindElement(By.Id("ServiceUrl")).SendKeys(s.Link("/"));
+                s.Driver.FindElement(By.Id("Settings_Hostname")).SendKeys("pouet.hello.com");
+                s.Driver.FindElement(By.Id("Settings_Login")).SendKeys("MyLog");
+                s.Driver.FindElement(By.Id("Settings_Password")).SendKeys("MyLog" + Keys.Enter);
+                s.Driver.AssertNoError();
+                Assert.Contains("The Dynamic DNS has been successfully queried", s.Driver.PageSource);
+                Assert.EndsWith("/server/services/dynamic-dns", s.Driver.Url);
+
+                // Try to do the same thing should fail (hostname already exists)
+                s.Driver.FindElement(By.Id("AddDynamicDNS")).Click();
+                s.Driver.AssertNoError();
+                s.Driver.FindElement(By.Id("ServiceUrl")).SendKeys(s.Link("/"));
+                s.Driver.FindElement(By.Id("Settings_Hostname")).SendKeys("pouet.hello.com");
+                s.Driver.FindElement(By.Id("Settings_Login")).SendKeys("MyLog");
+                s.Driver.FindElement(By.Id("Settings_Password")).SendKeys("MyLog" + Keys.Enter);
+                s.Driver.AssertNoError();
+                Assert.Contains("This hostname already exists", s.Driver.PageSource);
+
+                // Delete it
+                s.Driver.Navigate().GoToUrl(s.Link("/server/services/dynamic-dns"));
+                Assert.Contains("/server/services/dynamic-dns/pouet.hello.com/delete", s.Driver.PageSource);
+                s.Driver.Navigate().GoToUrl(s.Link("/server/services/dynamic-dns/pouet.hello.com/delete"));
+                s.Driver.FindElement(By.Id("continue")).Click();
+                s.Driver.AssertNoError();
+
+                Assert.DoesNotContain("/server/services/dynamic-dns/pouet.hello.com/delete", s.Driver.PageSource);
+            }
+        }
 
         [Fact]
         public void CanCreateStores()

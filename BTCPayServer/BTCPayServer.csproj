@@ -47,7 +47,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
     <PackageReference Include="NicolasDorier.CommandLine" Version="1.0.0.2" />
     <PackageReference Include="NicolasDorier.CommandLine.Configuration" Version="1.0.0.3" />
-    <PackageReference Include="NicolasDorier.RateLimits" Version="1.0.0.3" />
+    <PackageReference Include="NicolasDorier.RateLimits" Version="1.0.0.7" />
     <PackageReference Include="NicolasDorier.StandardConfiguration" Version="1.0.0.18" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.1.2" />
     <PackageReference Include="OpenIddict" Version="2.0.0" />
@@ -146,6 +146,9 @@
     <Content Update="Views\Home\BitpayTranslator.cshtml">
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>
+    <Content Update="Views\Server\DynamicDnsServices.cshtml">
+      <Pack>$(IncludeRazorContentInPack)</Pack>
+    </Content>
     <Content Update="Views\Server\LightningChargeServices.cshtml">
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>
@@ -153,6 +156,9 @@
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>
     <Content Update="Views\Server\P2PService.cshtml">
+      <Pack>$(IncludeRazorContentInPack)</Pack>
+    </Content>
+    <Content Update="Views\Server\DynamicDnsService.cshtml">
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>
     <Content Update="Views\Server\SSHService.cshtml">

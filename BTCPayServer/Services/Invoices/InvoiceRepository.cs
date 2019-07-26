@@ -174,7 +174,7 @@ retry:
 
                 foreach (var paymentMethod in invoice.GetPaymentMethods())
                 {
-                    if (paymentMethod.Network == null )
+                    if (paymentMethod.Network == null)
                         throw new InvalidOperationException("CryptoCode unsupported");
                     var paymentDestination = paymentMethod.GetPaymentMethodDetails().GetPaymentDestination();
 

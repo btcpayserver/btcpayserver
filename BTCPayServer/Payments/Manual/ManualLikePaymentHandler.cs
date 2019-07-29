@@ -11,19 +11,6 @@ using NBitcoin;
 
 namespace BTCPayServer.Payments.Bitcoin
 {
-    public class ManualPaymentSettings : ISupportedPaymentMethod
-    {
-        public PaymentMethodId PaymentId { get; } = StaticPaymentId;
-        public static PaymentMethodId StaticPaymentId { get; } = new PaymentMethodId(string.Empty, PaymentTypes.Manual);
-
-        public string DisplayText { get; set; } = string.Empty;
-        public bool AllowCustomerToMarkPaid { get; set; } = false;
-        public bool AllowPartialPaymentInput { get; set; } = false;
-        public bool AllowPaymentNote { get; set; } = false;
-        public bool SetPaymentAsConfirmed { get; set; } = true;
-
-    }
-
     public class ManualLikePaymentHandler : IPaymentMethodHandler
     {
         private readonly BTCPayNetworkProvider _BtcPayNetworkProvider;
@@ -64,14 +51,6 @@ namespace BTCPayServer.Payments.Bitcoin
             };
         }
 
-
-        public class CheckoutUIPaymentMethodSettings
-        {
-            public string ExtensionPartial { get; set; }
-            public string CheckoutBodyVueComponentName { get; set; }
-            public string NoScriptPartialName { get; set; }
-        }
-        
         public string GetCryptoImage(PaymentMethodId paymentMethodId)
         {
             return "imlegacy/manual.svg";

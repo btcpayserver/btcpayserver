@@ -103,7 +103,7 @@ namespace BTCPayServer.Controllers
             store.SetSupportedPaymentMethod(ManualPaymentSettings.StaticPaymentId, vm.ToSettings());
             await _Repo.UpdateStore(store);
             StatusMessage = $"Manual payment settings modified";
-            return RedirectToAction(nameof(UpdateStore), new {storeId = storeId});
+            return RedirectToAction(nameof(UpdateStore), new {storeId,StatusMessage});
         }
     }
 }

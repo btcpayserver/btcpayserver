@@ -93,11 +93,16 @@
             </div>
         </div>
         <div class="single-item-order__right">
-            <div class="single-item-order__right__btc-price" v-if="srvModel.status === 'paid'">
-                <span>{{ srvModel.btcPaid }} {{ srvModel.cryptoCode }}</span>
-            </div>
+            <template v-if="srvModel.cryptoCode">
+                <div class="single-item-order__right__btc-price" v-if="srvModel.status === 'paid'">
+                    <span>{{ srvModel.btcPaid }} {{ srvModel.cryptoCode }}</span>
+                </div>
+                <div class="single-item-order__right__btc-price" v-else>
+                    <span>{{ srvModel.btcDue }} {{ srvModel.cryptoCode }} </span>
+                </div>
+            </template>
             <div class="single-item-order__right__btc-price" v-else>
-                <span>{{ srvModel.btcDue }} {{ srvModel.cryptoCode }}</span>
+                <span>{{srvModel.orderAmountFiat}}</span>
             </div>
             <div class="single-item-order__right__ex-rate" v-if="srvModel.orderAmountFiat && srvModel.cryptoCode">
                 1 {{ srvModel.cryptoCodeSrv }} = {{ srvModel.rate }}
@@ -105,6 +110,7 @@
         </div>
         <span class="fa fa-angle-double-down"></span>
         <span class="fa fa-angle-double-up"></span>
+
     </div>
     <line-items>
         <div class="extraPayment" v-if="srvModel.status === 'new' && srvModel.txCount > 1">
@@ -113,9 +119,10 @@
         <div class="line-items" v-bind:class="{ 'expanded': lineItemsExpanded}">
             <div class="line-items__item">
                 <div class="line-items__item__label">{{$t("Order Amount")}}</div>
-                <div class="line-items__item__value">{{srvModel.orderAmount}} {{ srvModel.cryptoCode }}</div>
+                <div class="line-items__item__value" v-if="srvModel.cryptoCode">{{srvModel.orderAmount}} {{ srvModel.cryptoCode }}</div>
+                <div class="line-items__item__value" v-else>{{srvModel.orderAmountFiat}}</div>
             </div>
-            <div class="line-items__item line-items_fiatvalue" v-if="srvModel.orderAmountFiat">
+            <div class="line-items__item line-items_fiatvalue" v-if="srvModel.orderAmountFiat && srvModel.cryptoCode">
                 <div class="line-items__item__label">&nbsp;</div>
                 <div class="line-items__item__value single-item-order__right__ex-rate">
                     {{srvModel.orderAmountFiat}}
@@ -142,7 +149,8 @@
             </div>
             <div class="line-items__item line-items__item--total">
                 <div class="line-items__item__label">{{$t("Due")}}</div>
-                <div class="line-items__item__value">{{srvModel.btcDue}} {{ srvModel.cryptoCode }}</div>
+                <div class="line-items__item__value" v-if="srvModel.cryptoCode">{{srvModel.btcDue}} {{ srvModel.cryptoCode }}</div>
+                <div class="line-items__item__value" v-else>{{ srvModel.orderAmountDueFiat }}</div>
             </div>
         </div>
     </line-items>

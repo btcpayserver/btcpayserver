@@ -1,4 +1,7 @@
 ﻿@model StoreViewModel
+@inject UserManager<ApplicationUser> UserManager
+@inject RoleManager<IdentityRole> RoleManager
+
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePageAndTitle(StoreNavPages.Index, "Profile");
@@ -100,13 +103,13 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach(var scheme in Model.DerivationSchemes)
+                        @foreach (var scheme in Model.DerivationSchemes)
                         {
                             <tr>
                                 <td>@scheme.Crypto</td>
                                 <td class="smMaxWidth text-truncate">@scheme.Value</td>
                                 <td style="text-align:center;">
-                                    @if(scheme.Enabled)
+                                    @if (scheme.Enabled)
                                     {
                                         <span class="fa fa-check"></span>
                                     }
@@ -116,7 +119,7 @@
                                     }
                                 </td>
                                 <td style="text-align:right">
-                                    @if(!string.IsNullOrWhiteSpace(scheme.Value))
+                                    @if (!string.IsNullOrWhiteSpace(scheme.Value))
                                     {
                                         <a asp-action="WalletTransactions" asp-controller="Wallets" asp-route-walletId="@scheme.WalletId">Wallet</a><span> - </span>
                                     }
@@ -127,58 +130,75 @@
                     </tbody>
                 </table>
             </div>
+            @*  *@
 
-            <div class="form-group">
+            @if (User.IsInRole(Roles.ServerAdmin)) 
+            {
                 <div class="form-group">
-                    <h5>Lightning nodes (Experimental)</h5>
-                    <p>
-                        <span>A connection to a lightning charge node is required to generate lightning network enabled invoices.<br /></span>
-                        <span>This is experimental and not advised for production.</span>
+                    <div class="form-group">
+                        <h5>Lightning nodes (Experimental)</h5>
+                        <p>
+                            <span>A connection to a lightning charge node is required to generate lightning network enabled invoices.<br /></span>
+                            <span>This is experimental and not advised for production.</span>
+                        </p>
+                    </div>
+                    <div class="form-group">
+                        <table class="table table-sm table-responsive-md">
+                            <thead>
+                                <tr>
+                                    <th>Crypto</th>
+                                    <th>Address</th>
+                                    <th style="text-align:center;">Enabled</th>
+                                    <th style="text-align:right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var scheme in Model.LightningNodes)
+                                {
+                                    <tr>
+                                        <td>@scheme.CryptoCode</td>
+                                        <td class="smMaxWidth text-truncate">@scheme.Address</td>
+                                        <td style="text-align:center;">
+                                            @if (scheme.Enabled)
+                                            {
+                                                <span class="fa fa-check"></span>
+                                            }
+                                            else
+                                            {
+                                                <span class="fa fa-times"></span>
+                                            }
+                                        </td>
+                                        <td style="text-align:right"><a asp-action="AddLightningNode" asp-route-cryptoCode="@scheme.CryptoCode">Modify</a></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="LightningDescriptionTemplate"></label>
+                    <input asp-for="LightningDescriptionTemplate" class="form-control" />
+                    <span asp-validation-for="LightningDescriptionTemplate" class="text-danger"></span>
+                    <p class="form-text text-muted">
+                        Available placeholders are: {StoreName}, {ItemDescription} and {OrderId}
                     </p>
                 </div>
+            }
+            else
+            {
                 <div class="form-group">
-                    <table class="table table-sm table-responsive-md">
-                        <thead>
-                            <tr>
-                                <th>Crypto</th>
-                                <th>Address</th>
-                                <th style="text-align:center;">Enabled</th>
-                                <th style="text-align:right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach(var scheme in Model.LightningNodes)
-                            {
-                                <tr>
-                                    <td>@scheme.CryptoCode</td>
-                                    <td class="smMaxWidth text-truncate">@scheme.Address</td>
-                                    <td style="text-align:center;">
-                                        @if(scheme.Enabled)
-                                        {
-                                            <span class="fa fa-check"></span>
-                                        }
-                                        else
-                                        {
-                                            <span class="fa fa-times"></span>
-                                        }
-                                    </td>
-                                    <td style="text-align:right"><a asp-action="AddLightningNode" asp-route-cryptoCode="@scheme.CryptoCode">Modify</a></td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+                    <h5>Lightning nodes(Experimental)</h5>
+                    <p>
+                        <span>The Lighning node on this server is only available to the site administrator.<br /></span>
+                        <a href="https://docs.btcpayserver.org/deployment/thirdpartyhosting#are-there-any-limitations-in-features-when-using-a-third-party-host">Please click here to understand why the Lightning is not available.</a>
+                    </p>
                 </div>
-            </div>
-            <div class="form-group">
-                <label asp-for="LightningDescriptionTemplate"></label>
-                <input asp-for="LightningDescriptionTemplate" class="form-control" />
-                <span asp-validation-for="LightningDescriptionTemplate" class="text-danger"></span>
-                <p class="form-text text-muted">
-                    Available placeholders are: {StoreName}, {ItemDescription} and {OrderId}
-                </p>
-            </div>
+
+            }
             
-             <div class="form-group">
+            @*  *@
+            <div class="form-group">
                 <div class="form-group">
                     <h5>Third party Payment methods</h5>
                 </div>
@@ -192,51 +212,51 @@
                             </tr>
                         </thead>
                         <tbody>
-                        @foreach(var scheme in Model.ThirdPartyPaymentMethods)
-                        {
-                            <tr>
-                                <td>@scheme.Provider</td>
-                                <td style="text-align:center;">
-                                    @if(scheme.Enabled)
-                                    {
-                                        <span class="fa fa-check"></span>
-                                    }
-                                    else
-                                    {
-                                        <span class="fa fa-times"></span>
-                                    }
-                                </td>
-                                <td style="text-align:right"><a asp-action="@scheme.Action" >Modify</a></td>
-                            </tr>
-                        }
+                            @foreach (var scheme in Model.ThirdPartyPaymentMethods)
+                            {
+                                <tr>
+                                    <td>@scheme.Provider</td>
+                                    <td style="text-align:center;">
+                                        @if (scheme.Enabled)
+                                        {
+                                            <span class="fa fa-check"></span>
+                                        }
+                                        else
+                                        {
+                                            <span class="fa fa-times"></span>
+                                        }
+                                    </td>
+                                    <td style="text-align:right"><a asp-action="@scheme.Action">Modify</a></td>
+                                </tr>
+                            }
                         </tbody>
                     </table>
                 </div>
             </div>
-        <div class="form-group">
             <div class="form-group">
-                <h5>Services</h5>
+                <div class="form-group">
+                    <h5>Services</h5>
+                </div>
+                <div class="form-group">
+                    <table class="table table-sm table-responsive-md">
+                        <thead>
+                            <tr>
+                                <th>Service</th>
+                                <th style="text-align:right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    Email
+                                </td>
+                                <td style="text-align:right"><a asp-action="Emails">Modify</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <div class="form-group">
-                <table class="table table-sm table-responsive-md">
-                    <thead>
-                    <tr>
-                        <th>Service</th>
-                        <th style="text-align:right">Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr>
-                        <td>
-                            Email
-                        </td>
-                        <td style="text-align:right"><a asp-action="Emails" >Modify</a></td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-            @if(Model.CanDelete)
+            @if (Model.CanDelete)
             {
                 <div class="form-group">
                     <h5>Other actions...</h5>

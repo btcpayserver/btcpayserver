@@ -170,5 +170,19 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.Id("Invoices")).Click();
             Driver.FindElement(By.Id($"invoice-checkout-{invoiceId}")).Click();
         }
+        
+        
+        public void SetCheckbox(IWebElement element, bool value)
+        {
+            if ((value && !element.Selected) || (!value && element.Selected))
+            {
+                element.Click();
+            }
+        }
+
+        public void SetCheckbox(SeleniumTester s, string inputName, bool value)
+        {
+            SetCheckbox(s.Driver.FindElement(By.Name(inputName)), value);
+        }
     }
 }

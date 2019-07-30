@@ -1,4 +1,6 @@
 ﻿@model UpdatePointOfSaleViewModel
+@addTagHelper *, BundlerMinifier.TagHelpers
+@using System.Globalization
 @{
     ViewData["Title"] = "Update Point of Sale";
 }
@@ -133,6 +135,9 @@
                     <input type="hidden" asp-for="NotificationEmailWarning" />
                     <div class="form-group">
                         <input type="submit" class="btn btn-primary" value="Save Settings" id="SaveSettings" />
+                        <a class="btn btn-secondary" target="_blank" asp-action="ListInvoices" asp-controller="Invoice" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
+                        <a class="btn btn-secondary" target="_blank" asp-action="ViewPointOfSale" asp-controller="AppsPublic" asp-route-appId="@Model.Id" id="ViewApp">View App</a>
+                        <a class="btn btn-secondary" target="_blank" asp-action="ListApps">Back to the app list</a>
                     </div>
                     <div class="form-group">
                         <div class="accordion" id="accordian-dev-info">
@@ -205,7 +210,6 @@
                         </div>
                     </div>
                 </form>
-                <a asp-action="ListApps">Back to the app list</a>
 
             </div>
         </div>

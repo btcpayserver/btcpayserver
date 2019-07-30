@@ -103,7 +103,11 @@ namespace BTCPayServer.Tests
                 TestUtils.Eventually(() =>
                 {
                     invoice = user.BitPay.GetInvoice(invoice.Id);
-                    Assert.True(invoice.BtcPaid.ToDecimal(MoneyUnit.BTC) == invoice.Price / 2);
+                    Assert.Equal(Invoice.EXSTATUS_PAID_PARTIAL, invoice.ExceptionStatus);
+                    Assert.Equal(1, invoice.CryptoInfo.Length);
+                    Assert.Equal(1, invoice.CryptoInfo.First().TxCount);
+                    Assert.Equal(invoice.Price / 2, decimal.Parse( invoice.CryptoInfo.First().CryptoPaid));
+                    Assert.Equal(invoice.Price / 2, invoice.CryptoInfo.First().Payments.First().Value);
                 });
 
                 addPayment = new AddPaymentRequest()

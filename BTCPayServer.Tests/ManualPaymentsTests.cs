@@ -84,7 +84,7 @@ namespace BTCPayServer.Tests
                 var invoiceController = tester.PayTester.GetController<InvoiceController>(user.UserId, user.StoreId);
                 var paymentModel = Assert.IsType<PaymentModel>(Assert.IsType<ViewResult>(await invoiceController.Checkout(
                     invoice.Id, null,
-                    paymentMethodId.ToString())));
+                    paymentMethodId.ToString())).Model);
                 //Manual displays fine too
                 Assert.Equal(paymentMethodId, PaymentMethodId.Parse(paymentModel.PaymentMethodId));
                 Assert.NotNull(paymentModel.UISettings);

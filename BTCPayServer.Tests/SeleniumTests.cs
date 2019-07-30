@@ -151,7 +151,7 @@ namespace BTCPayServer.Tests
             {
                 s.Start();
                 var alice = s.RegisterNewUser();
-                var store = s.CreateNewStore();
+                var store = s.CreateNewStore().storeName;
                 s.AddDerivationScheme();
                 s.Driver.AssertNoError();
                 Assert.Contains(store, s.Driver.PageSource);
@@ -201,7 +201,7 @@ namespace BTCPayServer.Tests
             {
                 s.Start();
                 s.RegisterNewUser();
-                var store = s.CreateNewStore();
+                var store = s.CreateNewStore().storeName;
                 s.AddDerivationScheme();
 
                 CreateInvoice(s, store);

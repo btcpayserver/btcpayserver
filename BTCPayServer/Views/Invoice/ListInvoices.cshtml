@@ -245,7 +245,7 @@
                                 @if (invoice.ShowCheckout)
                                 {
                                     <span>
-                                        <a asp-action="Checkout" class="invoice-checkout-link" asp-route-invoiceId="@invoice.InvoiceId">Checkout</a>
+                                        <a asp-action="Checkout" class="invoice-checkout-link" id="invoice-checkout-@invoice.InvoiceId" asp-route-invoiceId="@invoice.InvoiceId">Checkout</a>
                                         <a href="javascript:btcpay.showInvoice('@invoice.InvoiceId')">[^]</a>
                                         @if (!invoice.CanMarkStatus)
                                         {

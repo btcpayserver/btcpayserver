@@ -217,29 +217,16 @@ namespace BTCPayServer.Tests
 
         public void UpdateManualPaymnetSettings(SeleniumTester s, UpdateManualPaymentSettings settings)
         {
-            SetCheckbox(s, nameof(settings.Enabled), settings.Enabled);
-            SetCheckbox(s, nameof(settings.AllowPaymentNote), settings.AllowPaymentNote);
-            SetCheckbox(s, nameof(settings.AllowPartialPaymentInput), settings.AllowPartialPaymentInput);
-            SetCheckbox(s, nameof(settings.SetPaymentAsConfirmed), settings.SetPaymentAsConfirmed);
-            SetCheckbox(s, nameof(settings.AllowCustomerToMarkPaid), settings.AllowCustomerToMarkPaid);
+            s.SetCheckbox(s, nameof(settings.Enabled), settings.Enabled);
+            s.SetCheckbox(s, nameof(settings.AllowPaymentNote), settings.AllowPaymentNote);
+            s.SetCheckbox(s, nameof(settings.AllowPartialPaymentInput), settings.AllowPartialPaymentInput);
+            s.SetCheckbox(s, nameof(settings.SetPaymentAsConfirmed), settings.SetPaymentAsConfirmed);
+            s.SetCheckbox(s, nameof(settings.AllowCustomerToMarkPaid), settings.AllowCustomerToMarkPaid);
             var displayTextElement = s.Driver.FindElement(By.Name(nameof(settings.DisplayText)));
             displayTextElement.Clear();
             displayTextElement.SendKeys(settings.DisplayText);
 
             s.Driver.FindElement(By.Name("command")).Click();
-        }
-
-        public void SetCheckbox(IWebElement element, bool value)
-        {
-            if ((value && !element.Selected) || (!value && element.Selected))
-            {
-                element.Click();
-            }
-        }
-
-        public void SetCheckbox(SeleniumTester s, string inputName, bool value)
-        {
-            SetCheckbox(s.Driver.FindElement(By.Name(inputName)), value);
         }
     }
 }

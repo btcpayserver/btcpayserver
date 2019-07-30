@@ -130,14 +130,116 @@ namespace BTCPayServer.Tests
                 s.RegisterNewUser();
                 var store = s.CreateNewStore();
                 s.Driver.FindElement(By.Id("Modify-Manual")).ForceClick();
-                s.Driver.FindElement(By.Name("Enabled")).ForceClick();
-                s.Driver.FindElement(By.Name("command")).ForceClick();
+                UpdateManualPaymnetSettings(s,
+                    new UpdateManualPaymentSettings()
+                    {
+                        Enabled = true,
+                        DisplayText = "test text",
+                        AllowCustomerToMarkPaid = false,
+                        AllowPartialPaymentInput = false,
+                        AllowPaymentNote = false,
+                        SetPaymentAsConfirmed = true
+                    });
 
-                s.CreateInvoice("d");
-                s.Driver.FindElement(By.ClassName("invoice-checkout-link")).Click();
-                Assert.NotEmpty(s.Driver.FindElements(By.Id("manual-method-checkout-template")));
+
+                //let's verify that the manual checkout templates load
+                s.CreateInvoice("aaa", "pavlenex@sucks.com");
+                s.Driver.FindElement(By.Id("manual-method-checkout-template"));
+                var manualContainer = s.Driver.FindElement(By.Id("manual-payment-container"));
+                Assert.NotNull(manualContainer);
+
+                //verify display text is shown
+                var displayText = manualContainer.FindElement(By.Id("manual-display-text"));
+                Assert.True(displayText.Displayed);
+                Assert.Equal("test text", displayText.Text);
+                // verify payment note is not shown
+                Assert.Throws<NoSuchElementException>(() => manualContainer.FindElement(By.Id("manual-payment-notes")));
+                // verify partial payment option is not shown
+                Assert.Throws<NoSuchElementException>(() =>
+                    manualContainer.FindElement(By.Id("partial-payment-input")));
+
+                //let's mark as paid!
+                var addPayment = manualContainer.FindElement(By.Id("btn-add-payment"));
+                Assert.True(addPayment.Displayed);
+                addPayment.Click();
+                TestUtils.Eventually(() =>
+                {
+                    //invoice agrees that it was paid
+                    Assert.True(s.Driver.FindElement(By.Id("paid")).GetAttribute("class")
+                        .Contains("active", StringComparison.InvariantCultureIgnoreCase));
+                });
+                s.GoToHome();
+                s.GoToStore(store.storeId);
+                s.Driver.FindElement(By.Id("Modify-Manual")).ForceClick();
+                UpdateManualPaymnetSettings(s,
+                    new UpdateManualPaymentSettings()
+                    {
+                        Enabled = true,
+                        AllowCustomerToMarkPaid = false,
+                        AllowPartialPaymentInput = true,
+                        AllowPaymentNote = true,
+                        SetPaymentAsConfirmed = true
+                    });
+
+                s.CreateInvoice("bbb", "pavlenex@sucks.com");
+                s.Driver.FindElement(By.Id("manual-method-checkout-template"));
+                manualContainer = s.Driver.FindElement(By.Id("manual-payment-container"));
+                // verify payment note is  shown
+                Assert.True(manualContainer.FindElement(By.Id("manual-payment-notes")).Displayed);
+                // verify partial payment option is  shown
+                var partialInputElement = manualContainer.FindElement(By.Id("partial-payment-input"));
+                Assert.True(partialInputElement.Displayed);
+
+
+                //let's send a partial payment
+                addPayment = manualContainer.FindElement(By.Id("btn-add-payment"));
+                Assert.True(addPayment.Displayed);
+                partialInputElement.SendKeys("50");
+                addPayment.Click();
+
+                TestUtils.Eventually(() =>
+                {
+                    Assert.False(s.Driver.FindElement(By.Id("paid")).GetAttribute("class")
+                        .Contains("active", StringComparison.InvariantCultureIgnoreCase));
+                });
+                //invoice agrees that it was NOT fully paid
+                addPayment.Click();
+                TestUtils.Eventually(() =>
+                {
+                    //invoice agrees that it was paid
+                    Assert.True(s.Driver.FindElement(By.Id("paid")).GetAttribute("class")
+                        .Contains("active", StringComparison.InvariantCultureIgnoreCase));
+                });
+
                 s.Dispose();
             }
+        }
+
+        public void UpdateManualPaymnetSettings(SeleniumTester s, UpdateManualPaymentSettings settings)
+        {
+            SetCheckbox(s, nameof(settings.Enabled), settings.Enabled);
+            SetCheckbox(s, nameof(settings.AllowPaymentNote), settings.AllowPaymentNote);
+            SetCheckbox(s, nameof(settings.AllowPartialPaymentInput), settings.AllowPartialPaymentInput);
+            SetCheckbox(s, nameof(settings.SetPaymentAsConfirmed), settings.SetPaymentAsConfirmed);
+            SetCheckbox(s, nameof(settings.AllowCustomerToMarkPaid), settings.AllowCustomerToMarkPaid);
+            var displayTextElement = s.Driver.FindElement(By.Name(nameof(settings.DisplayText)));
+            displayTextElement.Clear();
+            displayTextElement.SendKeys(settings.DisplayText);
+
+            s.Driver.FindElement(By.Name("command")).Click();
+        }
+
+        public void SetCheckbox(IWebElement element, bool value)
+        {
+            if ((value && !element.Selected) || (!value && element.Selected))
+            {
+                element.Click();
+            }
+        }
+
+        public void SetCheckbox(SeleniumTester s, string inputName, bool value)
+        {
+            SetCheckbox(s.Driver.FindElement(By.Name(inputName)), value);
         }
     }
 }

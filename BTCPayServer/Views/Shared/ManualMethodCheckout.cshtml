@@ -5,22 +5,22 @@
 @inject StoreRepository StoreRepository
 @inject UserManager<ApplicationUser> UserManager
 <script type="text/x-template" id="manual-method-checkout-template">
-    <div  class="manual-payment-container">
-        <p v-if="manualSettings.displayText">
+    <div  id="manual-payment-container">
+        <p v-if="manualSettings.displayText" id="manual-display-text">
             {{manualSettings.displayText}}
         </p>
         <template v-if="manualSettings.allowCustomerToMarkPaid || isAdmin">
-            <textarea v-if="manualSettings.allowPaymentNote" class="manual-payment-notes" placeholder="Notes.." v-model="paymentNote" ></textarea> 
+            <textarea v-if="manualSettings.allowPaymentNote" id="manual-payment-notes" placeholder="Notes.." v-model="paymentNote" ></textarea> 
                 <template v-if="manualSettings.allowPartialPaymentInput">
-                    <input type="number" style="width:100%; margin-bottom: 20px" required placeholder="Partial payment amount" min="0" v-bind:max="dueAmount" v-bind:disabled="loading" step="any" v-model="partialPaymentAmount"  />
-                    <button class="action-button" type="button"  v-bind:disabled="loading"  v-on:click="submitPayment" >
+                    <input type="number" style="width:100%; margin-bottom: 20px" id="partial-payment-input" required placeholder="Partial payment amount" min="0" v-bind:max="dueAmount" v-bind:disabled="loading" step="any" v-model="partialPaymentAmount"  />
+                    <button class="action-button" type="button"  v-bind:disabled="loading"  v-on:click="submitPayment" id="btn-add-payment">
                     <div v-show="loading" class="general__spinner">
                         <partial name="Checkout-Spinner"/>
                     </div>
                     Mark paid
                     </button>
                 </template>
-                <button class="action-button" v-else v-on:click="submitPayment" v-bind:disabled="loading">
+                <button class="action-button" v-else v-on:click="submitPayment" v-bind:disabled="loading" id="btn-add-payment">
                     <div v-show="loading" class="general__spinner">
                         <partial name="Checkout-Spinner"/>
                     </div>
@@ -72,7 +72,6 @@ Vue.component('ManualMethodCheckout', {
         }
     },
     created: function(){
-        // this.partialPaymentAmount = this.srvModel.btcDue;
         this.dueAmount = this.srvModel.btcDue;
     }
 });
@@ -82,10 +81,10 @@ var isAdmin = @(User != null && SignInManager.IsSignedIn(User) && (await StoreRe
 
 
 <style>
-    .manual-payment-container{
+    #manual-payment-container{
     padding-left: 40px; padding-right: 40px;
     }
-    .manual-payment-notes{
+    #manual-payment-notes{
     width:100%;
     }
 </style>

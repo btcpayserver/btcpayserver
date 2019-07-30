@@ -82,7 +82,7 @@ namespace BTCPayServer.Tests
 
                 var paymentMethodId = ManualPaymentSettings.StaticPaymentId;
                 var invoiceController = tester.PayTester.GetController<InvoiceController>(user.UserId, user.StoreId);
-                var paymentModel = Assert.IsType<PaymentModel>(Assert.IsType<ViewResult>(invoiceController.Checkout(
+                var paymentModel = Assert.IsType<PaymentModel>(Assert.IsType<ViewResult>(await invoiceController.Checkout(
                     invoice.Id, null,
                     paymentMethodId.ToString())));
                 //Manual displays fine too

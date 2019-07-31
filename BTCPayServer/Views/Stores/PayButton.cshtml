@@ -72,7 +72,7 @@
                     <label for="btn-slider">Slider</label>
                 </div>
             </div>
-            <div class="form-row" v-if="srvModel.buttonType == 2">
+            <div class="form-row" v-if="srvModel.buttonType == 1 ||srvModel.buttonType == 2">
                 <div class="form-group col-md-4">
                     <label>Min</label>
                     <input name="min" type="text" class="form-control"
@@ -93,6 +93,22 @@
                            v-model="srvModel.step" v-on:change="inputChanges"
                            v-validate="'required|decimal|min_value:1'" :class="{'is-invalid': errors.has('step') }">
                     <small class="text-danger">{{ errors.first('step') }}</small>
+                </div>
+            </div>
+            <div class="form-row" v-if="srvModel.buttonType == 1">
+                <div class="form-group  col-md-6">
+                    <label>Use a simple input style</label>
+                    <input name="simpleInput" type="checkbox" class="form-check"
+                           v-model="srvModel.simpleInput" v-on:change="inputChanges"
+                           :class="{'is-invalid': errors.has('simpleInput') }">
+                    <small class="text-danger">{{ errors.first('simpleInput') }}</small>
+                </div>
+                <div class="form-group col-md-6">
+                   <label>Fit button inline</label>
+                   <input name="fitButtoninline" type="checkbox" class="form-check"
+                   v-model="srvModel.fitButtoninline" v-on:change="inputChanges"
+                   :class="{'is-invalid': errors.has('fitButtoninline') }">
+                   <small class="text-danger">{{ errors.first('fitButtoninline') }}</small>
                 </div>
             </div>
         </div>
@@ -154,7 +170,7 @@
             </div>
             <div class="col-lg-5">
                 <br />
-                This parameter allows you to specify additional query string paramters that should be appended to the checkout page once the invoice is created. For example, <kbd>lang=da-DK</kbd> would load the checkout page in Danishby default.
+                This parameter allows you to specify additional query string paramters that should be appended to the checkout page once the invoice is created. For example, <kbd>lang=da-DK</kbd> would load the checkout page in Danish by default.
                 
             </div>
         </div>
@@ -208,9 +224,8 @@
         });
     </script>
 }
-
 <script id="template-select-currency" type="text/template">
-    <select onchange="document.querySelector('input[type = hidden][name = currency]').value = event.target.value" style="-webkit-appearance: none; border: 0; display: block; padding: 0 3em; margin: auto auto 5px auto; font-size: 11px; background: 0 0; cursor: pointer;"><option value="USD">USD</option><option value="GBP">GBP</option><option value="EUR">EUR</option><option value="BTC">BTC</option></select>
+    <select  onmouseover="this.style.border='solid #ccc 1px'; this.style.padding='0px'"  onmouseout="this.style.border='0'; this.style.padding='1px'" onchange="document.querySelector('input[type = hidden][name = currency]').value = event.target.value" style="border: 0; display: block; padding: 1px; margin: auto auto 5px auto; font-size: 11px; background: 0 0; cursor: pointer;"><option value="USD">USD</option><option value="GBP">GBP</option><option value="EUR">EUR</option><option value="BTC">BTC</option></select>
 </script>
 
 <script id="template-button-plus-minus" type="text/template">
@@ -218,7 +233,7 @@
 </script>
 
 <script id="template-input-price" type="text/template">
-    <input type="text" id="btcpay-input-price" name="price" value="PRICEVALUE" style="border: none; background-image: none; background-color: transparent; -webkit-box-shadow: none ; -moz-box-shadow: none ; -webkit-appearance: none ; width: WIDTHINPUT; text-align: center; font-size: 25px; margin: auto; border-radius: 5px; line-height: 35px; background: #fff;" oninput="event.preventDefault();isNaN(event.target.value) || event.target.value <= 0 ? document.querySelector('#btcpay-input-price').value = PRICEVALUE : event.target.value" CUSTOM />
+    <input type="TYPEVALUE" id="btcpay-input-price" name="price"  min="MIN" max="MAX" step="STEP"  value="PRICEVALUE" style="border: none; background-image: none; background-color: transparent; -webkit-box-shadow: none ; -moz-box-shadow: none ; -webkit-appearance: none ; width: WIDTHINPUT; text-align: center; font-size: 25px; margin: auto; border-radius: 5px; line-height: 35px; background: #fff;" oninput="event.preventDefault();isNaN(event.target.value) || event.target.value <= 0 ? document.querySelector('#btcpay-input-price').value = PRICEVALUE : event.target.value" CUSTOM />
 </script>
 
 <script id="template-input-slider" type="text/template">

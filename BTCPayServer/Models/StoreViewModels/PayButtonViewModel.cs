@@ -22,6 +22,10 @@ namespace BTCPayServer.Models.StoreViewModels
         public decimal Max { get; set; }
         public decimal Step { get; set; }
 
+        // Custom Amount properties (ButtonType = 1)
+        public bool SimpleInput { get; set; }
+        public bool FitButtonInline { get; set; }
+
         [Url]
         public string ServerIpn { get; set; }
         [Url]

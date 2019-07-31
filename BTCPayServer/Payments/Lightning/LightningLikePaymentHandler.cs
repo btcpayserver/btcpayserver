@@ -149,23 +149,48 @@ namespace BTCPayServer.Payments.Lightning
         public override async Task<string> IsPaymentMethodAllowedBasedOnInvoiceAmount(StoreBlob storeBlob,
             Dictionary<CurrencyPair, Task<RateResult>> rate, Money amount, PaymentMethodId paymentMethodId)
         {
-            if (storeBlob.OnChainMinValue == null)
+
+            Func<Money, Money, bool> compare = null;
+            CurrencyValue limitValue = null;
+            string errorMessage = null;
+            
+            if (paymentMethodId.PaymentType == PaymentTypes.LightningLike)
             {
-                return null;
+                if (storeBlob.LightningMaxValue != null && 
+                    storeBlob.OnChainMinValue == null)
+                {
+                    compare = (value, limit) => value >= limit;
+                    limitValue = storeBlob.LightningMaxValue;
+                    errorMessage = "The amount of the invoice is too high to be paid with lightning";
+                }
+                else if (storeBlob.LightningMaxValue == null && 
+                         storeBlob.OnChainMinValue != null)
+                {
+                    //TODO: Case of LightningMaxValue not set and OnChainMinValue set             
+                }
+                else if (storeBlob.LightningMaxValue != null && 
+                         storeBlob.OnChainMinValue != null)
+                {
+                    //TODO: Case of LightningMaxValue set and OnChainMinValue set             
+                }                  
             }
 
-            var limitValueRate = await rate[new CurrencyPair(paymentMethodId.CryptoCode, storeBlob.OnChainMinValue.Currency)];
             
-            if (limitValueRate.BidAsk != null)
+            if (compare != null)
             {
-                var limitValueCrypto = Money.Coins(storeBlob.OnChainMinValue.Value / limitValueRate.BidAsk.Bid);
-
-                if (amount < limitValueCrypto)
+                var currentRateToCrypto = await rate[new CurrencyPair(paymentMethodId.CryptoCode, limitValue.Currency)];
+                
+                if (currentRateToCrypto.BidAsk != null)
                 {
-                    return null;
+                    var limitValueCrypto = Money.Coins(limitValue.Value / currentRateToCrypto.BidAsk.Bid);
+                    if (compare(amount, limitValueCrypto))
+                    {
+                        return errorMessage;
+                    }
                 }
             }
-            return "The amount of the invoice is too high to be paid with lightning";
+            
+            return string.Empty;
         }
 
         public override void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse)

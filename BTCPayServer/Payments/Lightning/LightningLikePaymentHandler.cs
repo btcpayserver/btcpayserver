@@ -163,16 +163,29 @@ namespace BTCPayServer.Payments.Lightning
                     limitValue = storeBlob.LightningMaxValue;
                     errorMessage = "The amount of the invoice is too high to be paid with lightning";
                 }
-                else if (storeBlob.LightningMaxValue == null && 
-                         storeBlob.OnChainMinValue != null)
-                {
-                    //TODO: Case of LightningMaxValue not set and OnChainMinValue set             
-                }
                 else if (storeBlob.LightningMaxValue != null && 
                          storeBlob.OnChainMinValue != null)
                 {
-                    //TODO: Case of LightningMaxValue set and OnChainMinValue set             
-                }                  
+                    if (storeBlob.LightningMaxValue.Currency == storeBlob.OnChainMinValue.Currency &&
+                        storeBlob.LightningMaxValue.Value >= storeBlob.OnChainMinValue.Value)
+                    {
+                        //Case where both fields are set but LightningMaxValue is greater
+                        // --> then use LightningMaxValue as limit
+                        compare = (value, limit) => value >= limit;
+                        limitValue = storeBlob.LightningMaxValue;
+                        errorMessage = "The amount of the invoice is too high to be paid with lightning";
+                    }
+                    else if (storeBlob.LightningMaxValue.Currency == storeBlob.OnChainMinValue.Currency &&
+                             storeBlob.LightningMaxValue.Value < storeBlob.OnChainMinValue.Value)
+                    {
+                        //Case where both fields are set but OnChainMinValue is greater
+                        // --> then use OnChainMinValue as limit
+                        //    (Otherwise a gap of price value with no payment method is possible) 
+                        compare = (value, limit) => value >= limit;
+                        limitValue = storeBlob.OnChainMinValue;
+                        errorMessage = "The amount of the invoice is too high to be paid with lightning";                        
+                    }
+                }                
             }
 
             

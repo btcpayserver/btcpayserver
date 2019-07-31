@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
@@ -72,25 +73,37 @@ namespace BTCPayServer.Payments.Bitcoin
         public override async Task<string> IsPaymentMethodAllowedBasedOnInvoiceAmount(StoreBlob storeBlob,
             Dictionary<CurrencyPair, Task<RateResult>> rate, Money amount, PaymentMethodId paymentMethodId)
         {
-            if (storeBlob.OnChainMinValue == null)
+            Func<Money, Money, bool> compare = null;
+            CurrencyValue limitValue = null;
+            string errorMessage = null;
+            if (paymentMethodId.PaymentType == PaymentTypes.LightningLike &&
+               storeBlob.LightningMaxValue != null)
             {
-                return null;
+                compare = (a, b) => a > b;
+                limitValue = storeBlob.LightningMaxValue;
+                errorMessage = "The amount of the invoice is too high to be paid with lightning";
+            }
+            else if (paymentMethodId.PaymentType == PaymentTypes.BTCLike &&
+               storeBlob.OnChainMinValue != null)
+            {
+                compare = (a, b) => a < b;
+                limitValue = storeBlob.OnChainMinValue;
+                errorMessage = "The amount of the invoice is too low to be paid on chain";
             }
 
-            var limitValueRate =
-                await rate[new CurrencyPair(paymentMethodId.CryptoCode, storeBlob.OnChainMinValue.Currency)];
-
-            if (limitValueRate.BidAsk != null)
+            if (compare != null)
             {
-                var limitValueCrypto = Money.Coins(storeBlob.OnChainMinValue.Value / limitValueRate.BidAsk.Bid);
-
-                if (amount > limitValueCrypto)
+                var limitValueRate = await rate[new CurrencyPair(paymentMethodId.CryptoCode, storeBlob.OnChainMinValue.Currency)];
+                if (limitValueRate.BidAsk != null)
                 {
-                    return null;
+                    var limitValueCrypto = Money.Coins(limitValue.Value / limitValueRate.BidAsk.Bid);
+                    if (compare(amount, limitValueCrypto))
+                    {
+                        return errorMessage;
+                    }
                 }
             }
-
-            return "The amount of the invoice is too low to be paid on chain";
+            return string.Empty;
         }
 
         public override IEnumerable<PaymentMethodId> GetSupportedPaymentMethods()

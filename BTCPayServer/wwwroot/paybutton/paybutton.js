@@ -44,16 +44,25 @@ function inputChanges(event, buttonSize) {
 
     var width = "209px";
     var widthInput = "3em";
+    var formwidth = null;
     if (srvModel.buttonSize === 0) {
         width = "146px";
         widthInput = "2em";
-    } else if (srvModel.buttonSize === 1) {
+        if(srvModel.fitButtoninline){
+            formwidth = "292px";
+        }
+    } else if (srvModel.buttonSize === 1 ) {
         width = "168px";
+        if(srvModel.fitButtoninline){
+            formwidth = "336px";
+        }
     } else if (srvModel.buttonSize === 2) {
         width = "209px";
+        if(srvModel.fitButtoninline){
+            formwidth = "418px";
+        }
     }
-
-    var html = '<form method="POST" action="' + esc(srvModel.urlRoot) + 'api/v1/invoices">';
+    var html = '<form method="POST" action="' + esc(srvModel.urlRoot) + 'api/v1/invoices" '+(formwidth? 'style="width:'+formwidth+'"' : '')+'>';
     html += addinput("storeId", srvModel.storeId);
 
     // Add price as hidden only if it's a fixed amount (srvModel.buttonType = 0)
@@ -61,7 +70,7 @@ function inputChanges(event, buttonSize) {
         html += addinput("price", srvModel.price);
     }
     else if (srvModel.buttonType == 1) {
-        html += '\n    <div style="text-align:center;display:inline;width:' + width + '">';
+        html += '\n    <div style="text-align:center;display:inline;'+ (srvModel.fitButtoninline? 'float:left':'width:'+ width) +';">';
         html += '<div>';
         if(!srvModel.simpleInput) {
             html += addPlusMinusButton("-");

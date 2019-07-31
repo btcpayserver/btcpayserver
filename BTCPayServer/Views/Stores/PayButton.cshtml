@@ -224,9 +224,8 @@
         });
     </script>
 }
-
 <script id="template-select-currency" type="text/template">
-    <select onchange="document.querySelector('input[type = hidden][name = currency]').value = event.target.value" style="-webkit-appearance: none; border: 0; display: block; padding: 0 3em; margin: auto auto 5px auto; font-size: 11px; background: 0 0; cursor: pointer;"><option value="USD">USD</option><option value="GBP">GBP</option><option value="EUR">EUR</option><option value="BTC">BTC</option></select>
+    <select  onmouseover="this.style.border='solid #ccc 1px'; this.style.padding='0px'"  onmouseout="this.style.border='0'; this.style.padding='1px'" onchange="document.querySelector('input[type = hidden][name = currency]').value = event.target.value" style="border: 0; display: block; padding: 1px; margin: auto auto 5px auto; font-size: 11px; background: 0 0; cursor: pointer;"><option value="USD">USD</option><option value="GBP">GBP</option><option value="EUR">EUR</option><option value="BTC">BTC</option></select>
 </script>
 
 <script id="template-button-plus-minus" type="text/template">

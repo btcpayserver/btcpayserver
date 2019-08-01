@@ -61,6 +61,9 @@ namespace BTCPayServer.Models.AppViewModels
         [Display(Name = "Redirect invoice to redirect url automatically after paid")]
         public string RedirectAutomatically { get; set; } = string.Empty;
 
+        public string AppId { get; set; }
+        public string SearchTerm { get; set; }
+
         public SelectList RedirectAutomaticallySelectList =>
             new SelectList(new List< SelectListItem>()
             {

@@ -192,7 +192,7 @@ namespace BTCPayServer.Controllers
             });
             await UpdateAppSettings(app);
             StatusMessage = "App updated";
-            return RedirectToAction(nameof(ListApps));
+            return RedirectToAction(nameof(UpdatePointOfSale), new { appId });
         }
 
         private async Task UpdateAppSettings(AppData app)

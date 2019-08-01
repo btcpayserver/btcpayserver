@@ -13,9 +13,6 @@ using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Rates;
 using NBitcoin;
-using NBitpayClient;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Payments.Lightning
 {
@@ -159,7 +156,7 @@ namespace BTCPayServer.Payments.Lightning
                 if (storeBlob.LightningMaxValue != null && 
                     storeBlob.OnChainMinValue == null)
                 {
-                    compare = (value, limit) => value >= limit;
+                    compare = (value, limit) => value > limit;
                     limitValue = storeBlob.LightningMaxValue;
                     errorMessage = "The amount of the invoice is too high to be paid with lightning";
                 }
@@ -171,7 +168,7 @@ namespace BTCPayServer.Payments.Lightning
                     {
                         //Case where both fields are set but LightningMaxValue is greater
                         // --> then use LightningMaxValue as limit
-                        compare = (value, limit) => value >= limit;
+                        compare = (value, limit) => value > limit;
                         limitValue = storeBlob.LightningMaxValue;
                         errorMessage = "The amount of the invoice is too high to be paid with lightning";
                     }
@@ -181,7 +178,7 @@ namespace BTCPayServer.Payments.Lightning
                         //Case where both fields are set but OnChainMinValue is greater
                         // --> then use OnChainMinValue as limit
                         //    (Otherwise a gap of price value with no payment method is possible) 
-                        compare = (value, limit) => value >= limit;
+                        compare = (value, limit) => value > limit;
                         limitValue = storeBlob.OnChainMinValue;
                         errorMessage = "The amount of the invoice is too high to be paid with lightning";                        
                     }

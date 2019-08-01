@@ -42,8 +42,7 @@ namespace BTCPayServer.Tests
                 Utils.DeleteDirectory(_Directory);
             if (!Directory.Exists(_Directory))
                 Directory.CreateDirectory(_Directory);
-            BTCPayNetworkProviderFactory.Instance = BTCPayNetworkProviderFactory.GetProvider(NetworkType.Regtest);
-            NetworkProvider = BTCPayNetworkProviderFactory.Instance;
+            NetworkProvider = BTCPayNetworkProviderFactory.Instance[NetworkType.Regtest];
             ExplorerNode = new RPCClient(RPCCredentialString.Parse(GetEnvironment("TESTS_BTCRPCCONNECTION", "server=http://127.0.0.1:43782;ceiwHEbqWI83:DwubwWsoo3")), NetworkProvider.GetNetwork<BTCPayNetwork>("BTC").NBitcoinNetwork);
             ExplorerNode.ScanRPCCapabilities();
             LTCExplorerNode = new RPCClient(RPCCredentialString.Parse(GetEnvironment("TESTS_LTCRPCCONNECTION", "server=http://127.0.0.1:43783;ceiwHEbqWI83:DwubwWsoo3")), NetworkProvider.GetNetwork<BTCPayNetwork>("LTC").NBitcoinNetwork);

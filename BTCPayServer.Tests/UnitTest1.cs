@@ -1525,9 +1525,9 @@ namespace BTCPayServer.Tests
         [Trait("Fast", "Fast")]
         public void CanParseDerivationScheme()
         {
-            var testnetNetworkProvider = BTCPayNetworkProviderFactory.GetProvider(NetworkType.Testnet);
-            var regtestNetworkProvider = BTCPayNetworkProviderFactory.GetProvider(NetworkType.Regtest);
-            var mainnetNetworkProvider = BTCPayNetworkProviderFactory.GetProvider(NetworkType.Mainnet);
+            var testnetNetworkProvider = BTCPayNetworkProviderFactory.Instance[NetworkType.Testnet];
+            var regtestNetworkProvider =BTCPayNetworkProviderFactory.Instance[NetworkType.Regtest];
+            var mainnetNetworkProvider = BTCPayNetworkProviderFactory.Instance[NetworkType.Mainnet];
             var testnetParser = new DerivationSchemeParser(testnetNetworkProvider.GetNetwork<BTCPayNetwork>("BTC"));
             var mainnetParser = new DerivationSchemeParser(mainnetNetworkProvider.GetNetwork<BTCPayNetwork>("BTC"));
             NBXplorer.DerivationStrategy.DerivationStrategyBase result;
@@ -2552,7 +2552,7 @@ donation:
         [Trait("Integration", "Integration")]
         public void CanGetRateCryptoCurrenciesByDefault()
         {
-            var provider = BTCPayNetworkProviderFactory.GetProvider(NetworkType.Mainnet);
+            var provider = BTCPayNetworkProviderFactory.Instance[NetworkType.Mainnet];
             var factory = CreateBTCPayRateFactory();
             var fetcher = new RateFetcher(factory);
             var pairs =
@@ -2738,7 +2738,7 @@ donation:
         [Trait("Fast", "Fast")]
         public void ParseDerivationSchemeSettings()
         {
-            var mainnet = BTCPayNetworkProviderFactory.GetProvider(NetworkType.Mainnet).GetNetwork<BTCPayNetwork>("BTC");
+            var mainnet = BTCPayNetworkProviderFactory.Instance[NetworkType.Mainnet].GetNetwork<BTCPayNetwork>("BTC");
             var root = new Mnemonic("usage fever hen zero slide mammal silent heavy donate budget pulse say brain thank sausage brand craft about save attract muffin advance illegal cabbage").DeriveExtKey();
             Assert.True(DerivationSchemeSettings.TryParseFromColdcard("{\"keystore\": {\"ckcc_xpub\": \"xpub661MyMwAqRbcGVBsTGeNZN6QGVHmMHLdSA4FteGsRrEriu4pnVZMZWnruFFFXkMnyoBjyHndD3Qwcfz4MPzBUxjSevweNFQx7SAYZATtcDw\", \"xpub\": \"ypub6WWc2gWwHbdnAAyJDnR4SPL1phRh7REqrPBfZeizaQ1EmTshieRXJC3Z5YoU4wkcdKHEjQGkh6AYEzCQC1Kz3DNaWSwdc1pc8416hAjzqyD\", \"label\": \"Coldcard Import 0x60d1af8b\", \"ckcc_xfp\": 1624354699, \"type\": \"hardware\", \"hw_type\": \"coldcard\", \"derivation\": \"m/49'/0'/0'\"}, \"wallet_type\": \"standard\", \"use_encryption\": false, \"seed_version\": 17}", mainnet, out var settings));
             Assert.Equal(root.GetPublicKey().GetHDFingerPrint(), settings.AccountKeySettings[0].RootFingerprint);
@@ -2748,7 +2748,7 @@ donation:
             Assert.Equal("ypub6WWc2gWwHbdnAAyJDnR4SPL1phRh7REqrPBfZeizaQ1EmTshieRXJC3Z5YoU4wkcdKHEjQGkh6AYEzCQC1Kz3DNaWSwdc1pc8416hAjzqyD", settings.AccountOriginal);
             Assert.Equal(root.Derive(new KeyPath("m/49'/0'/0'")).Neuter().PubKey.WitHash.ScriptPubKey.Hash.ScriptPubKey, settings.AccountDerivation.Derive(new KeyPath()).ScriptPubKey);
 
-            var testnet = BTCPayNetworkProviderFactory.GetProvider(NetworkType.Testnet).GetNetwork<BTCPayNetwork>("BTC");
+            var testnet = BTCPayNetworkProviderFactory.Instance[NetworkType.Testnet].GetNetwork<BTCPayNetwork>("BTC");
 
             // Should be legacy
             Assert.True(DerivationSchemeSettings.TryParseFromColdcard("{\"keystore\": {\"ckcc_xpub\": \"tpubD6NzVbkrYhZ4YHNiuTdTmHRmbcPRLfqgyneZFCL1mkzkUBjXriQShxTh9HL34FK2mhieasJVk9EzJrUfkFqRNQBjiXgx3n5BhPkxKBoFmaS\", \"xpub\": \"tpubDDWYqT3P24znfsaGX7kZcQhNc5LAjnQiKQvUCHF2jS6dsgJBRtymopEU5uGpMaR5YChjuiExZG1X2aTbqXkp82KqH5qnqwWHp6EWis9ZvKr\", \"label\": \"Coldcard Import 0x60d1af8b\", \"ckcc_xfp\": 1624354699, \"type\": \"hardware\", \"hw_type\": \"coldcard\", \"derivation\": \"m/44'/1'/0'\"}, \"wallet_type\": \"standard\", \"use_encryption\": false, \"seed_version\": 17}", testnet, out settings));

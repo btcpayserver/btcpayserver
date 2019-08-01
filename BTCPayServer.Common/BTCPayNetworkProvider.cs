@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,16 +11,29 @@ namespace BTCPayServer
 {
     public static class BTCPayNetworkProviderFactory
     {
-        public static BTCPayNetworkProvider Instance { get; set; }
-
-        public static BTCPayNetworkProvider GetProvider(NetworkType type)
-        {
-            return Instance?.NetworkType == type ? Instance : new BTCPayNetworkProvider(GetDefaultNetworkProviders(), type);
-        }
+        public static ImmutableDictionary<NetworkType, BTCPayNetworkProvider> Instance =
+            new Dictionary<NetworkType, BTCPayNetworkProvider>()
+            {
+                {
+                    NetworkType.Mainnet, 
+                    new BTCPayNetworkProvider(GetDefaultNetworkProviders(), NetworkType.Mainnet)
+                },
+                {
+                    NetworkType.Testnet, 
+                    new BTCPayNetworkProvider(GetDefaultNetworkProviders(), NetworkType.Testnet)
+                },
+                {
+                    NetworkType.Regtest, 
+                    new BTCPayNetworkProvider(GetDefaultNetworkProviders(), NetworkType.Regtest)
+                },
+            }.ToImmutableDictionary();
 
         public static IEnumerable<IBTCPayNetworkProvider> GetDefaultNetworkProviders()
         {
-            return new IBTCPayNetworkProvider[] {new BitcoinBTCPayNetworkProvider(), new ShitcoinBTCPayNetworkProvider()};
+            return new IBTCPayNetworkProvider[]
+            {
+                new BitcoinBTCPayNetworkProvider(), new ShitcoinBTCPayNetworkProvider()
+            };
         }
     }
 
@@ -28,20 +42,22 @@ namespace BTCPayServer
         private readonly IEnumerable<IBTCPayNetworkProvider> _BtcPayNetworkProviders;
         public NetworkType NetworkType;
         private Dictionary<string, BTCPayNetworkBase> _Networks;
+
         public BTCPayNetworkProvider(IEnumerable<IBTCPayNetworkProvider> btcPayNetworkProviders)
         {
             _BtcPayNetworkProviders = btcPayNetworkProviders;
         }
 
-        public BTCPayNetworkProvider(IEnumerable<IBTCPayNetworkProvider> btcPayNetworkProviders, NetworkType networkType)
+        public BTCPayNetworkProvider(IEnumerable<IBTCPayNetworkProvider> btcPayNetworkProviders,
+            NetworkType networkType)
         {
             _BtcPayNetworkProviders = btcPayNetworkProviders;
             Init(networkType);
-
         }
+
         public void Init(NetworkType networkType)
         {
-            NetworkType= networkType;
+            NetworkType = networkType;
             _Networks = _BtcPayNetworkProviders.SelectMany(provider => provider.GetNetworks(networkType))
                 .ToDictionary(x => x.CryptoCode, x => x);
         }
@@ -58,34 +74,38 @@ namespace BTCPayServer
         {
             return _Networks.Where(pair => cryptoCodes.Contains(pair.Key)).Select(pair => pair.Value);
         }
-        
+
         public bool Support(string cryptoCode)
         {
             return _Networks.ContainsKey(cryptoCode.ToUpperInvariant());
         }
+
         public BTCPayNetworkBase GetNetwork(string cryptoCode)
         {
             return GetNetwork<BTCPayNetworkBase>(cryptoCode);
         }
-        public T GetNetwork<T>(string cryptoCode) where T: BTCPayNetworkBase
+
+        public T GetNetwork<T>(string cryptoCode) where T : BTCPayNetworkBase
         {
             if (cryptoCode == null)
                 throw new ArgumentNullException(nameof(cryptoCode));
-            if(!_Networks.TryGetValue(cryptoCode.ToUpperInvariant(), out BTCPayNetworkBase network))
+            if (!_Networks.TryGetValue(cryptoCode.ToUpperInvariant(), out BTCPayNetworkBase network))
             {
                 if (cryptoCode == "XBT")
                     return GetNetwork<T>("BTC");
             }
+
             return network as T;
         }
     }
-    
-    public partial class ShitcoinBTCPayNetworkProvider: IBTCPayNetworkProvider
+
+    public partial class ShitcoinBTCPayNetworkProvider : IBTCPayNetworkProvider
     {
         Dictionary<string, BTCPayNetwork> _Networks = new Dictionary<string, BTCPayNetwork>();
 
 
         private NBXplorerNetworkProvider _NBXplorerNetworkProvider;
+
         public NBXplorerNetworkProvider NBXplorerNetworkProvider
         {
             get
@@ -93,12 +113,11 @@ namespace BTCPayServer
                 return _NBXplorerNetworkProvider;
             }
         }
-        
+
 
         public NetworkType NetworkType { get; private set; }
-      
 
-        
+
         private void Add(BTCPayNetwork network)
         {
             _Networks.Add(network.CryptoCode.ToUpperInvariant(), network);
@@ -121,7 +140,7 @@ namespace BTCPayServer
             // Assume that electrum mappings are same as BTC if not specified
             foreach (var network in _Networks.Values.OfType<BTCPayNetwork>())
             {
-                if(network.ElectrumMapping.Count == 0)
+                if (network.ElectrumMapping.Count == 0)
                 {
                     network.ElectrumMapping = BitcoinBTCPayNetworkProvider.GetElectrumMapping(networkType);
                     if (!network.NBitcoinNetwork.Consensus.SupportSegwit)

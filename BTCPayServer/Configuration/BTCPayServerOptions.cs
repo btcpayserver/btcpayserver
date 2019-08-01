@@ -90,7 +90,6 @@ namespace BTCPayServer.Configuration
                 .Select(t => t.ToUpperInvariant())
                 .ToArray();
             NetworkProvider = new BTCPayNetworkProvider(_BtcPayNetworkProviders, NetworkType);
-            BTCPayNetworkProviderFactory.Instance = NetworkProvider;
             FilteredNetworks = NetworkProvider.Filter(SupportedChains);
             foreach (var chain in SupportedChains)
             {

@@ -94,7 +94,7 @@ namespace BTCPayServer.Services.Rates
                         catch { }
                     }
 
-                    foreach (var network in BTCPayNetworkProviderFactory.GetProvider(NetworkType.Mainnet).GetAll())
+                    foreach (var network in BTCPayNetworkProviderFactory.Instance[NetworkType.Mainnet].GetAll())
                     {
                         AddCurrency(_CurrencyProviders, network.CryptoCode, 8, network.CryptoCode);
                     }
@@ -175,7 +175,7 @@ namespace BTCPayServer.Services.Rates
                 }
             }
 
-            foreach (var network in BTCPayNetworkProviderFactory.GetProvider(NetworkType.Mainnet).GetAll())
+            foreach (var network in BTCPayNetworkProviderFactory.Instance[NetworkType.Mainnet].GetAll())
             {
                 if (!dico.TryAdd(network.CryptoCode, new CurrencyData()
                 {

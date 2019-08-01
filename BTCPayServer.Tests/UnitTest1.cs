@@ -2560,7 +2560,7 @@ donation:
                     .Select(c => new CurrencyPair(c.CryptoCode, "USD"))
                     .ToHashSet();
 
-            var rules = new StoreBlob().GetDefaultRateRules(provider.GetAll());
+            var rules = new StoreBlob().GetDefaultRateRules(provider);
             var result = fetcher.FetchRates(pairs, rules, default);
             foreach (var value in result)
             {

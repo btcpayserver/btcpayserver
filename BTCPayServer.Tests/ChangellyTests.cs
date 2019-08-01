@@ -185,7 +185,7 @@ namespace BTCPayServer.Tests
                 var httpClientFactory = new MockHttpClientFactory();
                 var changellyController = new ChangellyController(
                     new ChangellyClientProvider(tester.PayTester.StoreRepository, httpClientFactory), fetcher,
-                    tester.PayTester.GetService<BTCPayServerOptions>());
+                    tester.PayTester.GetService<AvailableBTCPayNetworkProvider>());
                 changellyController.IsTest = true;
                 var result = Assert
                     .IsType<OkObjectResult>(await changellyController.GetCurrencyList(user.StoreId))
@@ -216,7 +216,7 @@ namespace BTCPayServer.Tests
                 var httpClientFactory = new MockHttpClientFactory();
                 var changellyController = new ChangellyController(
                     new ChangellyClientProvider(tester.PayTester.StoreRepository, httpClientFactory),
-                    fetcher, tester.PayTester.GetService<BTCPayServerOptions>());
+                    fetcher, tester.PayTester.GetService<AvailableBTCPayNetworkProvider>());
                 changellyController.IsTest = true;
                 Assert.IsType<decimal>(Assert
                     .IsType<OkObjectResult>(await changellyController.CalculateAmount(user.StoreId, "ltc", "btc", 1.0m, default))

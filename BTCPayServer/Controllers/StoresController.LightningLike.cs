@@ -50,7 +50,7 @@ namespace BTCPayServer.Controllers
 
         private LightningConnectionString GetInternalLighningNode(string cryptoCode)
         {
-            if (_BtcpayServerOptions.InternalLightningByCryptoCode.TryGetValue(cryptoCode, out var connectionString))
+            if (_BtcPayServerOptions.InternalLightningByCryptoCode.TryGetValue(cryptoCode, out var connectionString))
             {
                 return CanUseInternalLightning() ? connectionString : null;
             }

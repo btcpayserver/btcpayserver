@@ -43,7 +43,6 @@ namespace BTCPayServer.Controllers
         public string CreatedStoreId { get; set; }
         public StoresController(
             IServiceProvider serviceProvider,
-            BTCPayServerOptions btcpayServerOptions,
             BTCPayServerEnvironment btcpayEnv,
             StoreRepository repo,
             TokenRepository tokenRepo,
@@ -58,7 +57,9 @@ namespace BTCPayServer.Controllers
             ChangellyClientProvider changellyClientProvider,
             IOptions<MvcJsonOptions> mvcJsonOptions,
             IHostingEnvironment env, IHttpClientFactory httpClientFactory,
-            PaymentMethodHandlerDictionary paymentMethodHandlerDictionary)
+            PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
+            AvailableBTCPayNetworkProvider availableBtcPayNetworkProvider,
+            BTCPayServerOptions btcPayServerOptions)
         {
             _RateFactory = rateFactory;
             _Repo = repo;
@@ -72,14 +73,14 @@ namespace BTCPayServer.Controllers
             _Env = env;
             _httpClientFactory = httpClientFactory;
             _paymentMethodHandlerDictionary = paymentMethodHandlerDictionary;
+            _AvailableBtcPayNetworkProvider = availableBtcPayNetworkProvider;
+            _BtcPayServerOptions = btcPayServerOptions;
             _NetworkProvider = networkProvider;
             _ExplorerProvider = explorerProvider;
             _FeeRateProvider = feeRateProvider;
             _ServiceProvider = serviceProvider;
-            _BtcpayServerOptions = btcpayServerOptions;
             _BTCPayEnv = btcpayEnv;
         }
-        BTCPayServerOptions _BtcpayServerOptions;
         BTCPayServerEnvironment _BTCPayEnv;
         IServiceProvider _ServiceProvider;
         BTCPayNetworkProvider _NetworkProvider;
@@ -95,6 +96,8 @@ namespace BTCPayServer.Controllers
         IHostingEnvironment _Env;
         private IHttpClientFactory _httpClientFactory;
         private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
+        private readonly AvailableBTCPayNetworkProvider _AvailableBtcPayNetworkProvider;
+        private readonly BTCPayServerOptions _BtcPayServerOptions;
 
         [TempData]
         public string StatusMessage
@@ -195,14 +198,13 @@ namespace BTCPayServer.Controllers
         [Route("{storeId}/rates")]
         public IActionResult Rates(string storeId)
         {
-            var networks = _BtcpayServerOptions.FilteredNetworks;
             var storeBlob = StoreData.GetStoreBlob();
             var vm = new RatesViewModel();
             vm.SetExchangeRates(GetSupportedExchanges(), storeBlob.PreferredExchange ?? CoinAverageRateProvider.CoinAverageName);
             vm.Spread = (double)(storeBlob.Spread * 100m);
             vm.StoreId = storeId;
-            vm.Script = storeBlob.GetRateRules(networks).ToString();
-            vm.DefaultScript = storeBlob.GetDefaultRateRules(networks).ToString();
+            vm.Script = storeBlob.GetRateRules(_AvailableBtcPayNetworkProvider).ToString();
+            vm.DefaultScript = storeBlob.GetDefaultRateRules(_AvailableBtcPayNetworkProvider).ToString();
             vm.AvailableExchanges = GetSupportedExchanges();
             vm.DefaultCurrencyPairs = storeBlob.GetDefaultCurrencyPairString();
             vm.ShowScripting = storeBlob.RateScripting;
@@ -234,9 +236,8 @@ namespace BTCPayServer.Controllers
             if (model.PreferredExchange != null)
                 model.PreferredExchange = model.PreferredExchange.Trim().ToLowerInvariant();
 
-            var networks = _BtcpayServerOptions.FilteredNetworks;
             var blob = StoreData.GetStoreBlob();
-            model.DefaultScript = blob.GetDefaultRateRules(networks).ToString();
+            model.DefaultScript = blob.GetDefaultRateRules(_AvailableBtcPayNetworkProvider).ToString();
             model.AvailableExchanges = GetSupportedExchanges();
 
             blob.PreferredExchange = model.PreferredExchange;
@@ -267,7 +268,7 @@ namespace BTCPayServer.Controllers
                     model.Script = blob.RateScript;
                 }
             }
-            rules = blob.GetRateRules(networks);
+            rules = blob.GetRateRules(_AvailableBtcPayNetworkProvider);
 
             if (command == "Test")
             {
@@ -340,8 +341,7 @@ namespace BTCPayServer.Controllers
         {
             var blob = StoreData.GetStoreBlob();
             blob.RateScripting = scripting;
-            var networks = _BtcpayServerOptions.FilteredNetworks;
-            blob.RateScript = blob.GetDefaultRateRules(networks).ToString();
+            blob.RateScript = blob.GetDefaultRateRules(_AvailableBtcPayNetworkProvider).ToString();
             StoreData.SetStoreBlob(blob);
             await _Repo.UpdateStore(StoreData);
             StatusMessage = "Rate rules scripting activated";

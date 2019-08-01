@@ -49,7 +49,7 @@ namespace BTCPayServer.Controllers
 
         private readonly IFeeProviderFactory _feeRateProvider;
         private readonly BTCPayWalletProvider _walletProvider;
-        private readonly BTCPayServerOptions _BtcPayServerOptions;
+        private readonly AvailableBTCPayNetworkProvider _AvailableBtcPayNetworkProvider;
         public RateFetcher RateFetcher { get; }
         [TempData]
         public string StatusMessage { get; set; }
@@ -65,7 +65,7 @@ namespace BTCPayServer.Controllers
                                  ExplorerClientProvider explorerProvider,
                                  IFeeProviderFactory feeRateProvider,
                                  BTCPayWalletProvider walletProvider,
-                                 BTCPayServerOptions btcPayServerOptions)
+                                 AvailableBTCPayNetworkProvider availableBtcPayNetworkProvider)
         {
             _currencyTable = currencyTable;
             Repository = repo;
@@ -77,7 +77,7 @@ namespace BTCPayServer.Controllers
             ExplorerClientProvider = explorerProvider;
             _feeRateProvider = feeRateProvider;
             _walletProvider = walletProvider;
-            _BtcPayServerOptions = btcPayServerOptions;
+            _AvailableBtcPayNetworkProvider = availableBtcPayNetworkProvider;
         }
 
         public async Task<IActionResult> ListWallets()
@@ -164,7 +164,7 @@ namespace BTCPayServer.Controllers
             if (network == null)
                 return NotFound();
             var storeData = store.GetStoreBlob();
-            var rateRules = store.GetStoreBlob().GetRateRules(_BtcPayServerOptions.FilteredNetworks);
+            var rateRules = store.GetStoreBlob().GetRateRules(_AvailableBtcPayNetworkProvider);
             rateRules.Spread = 0.0m;
             var currencyPair = new Rating.CurrencyPair(paymentMethod.PaymentId.CryptoCode, GetCurrencyCode(storeData.DefaultLang) ?? "USD");
             double.TryParse(defaultAmount, out var amount);

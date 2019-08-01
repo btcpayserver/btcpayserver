@@ -38,7 +38,7 @@ namespace BTCPayServer.Controllers
         EventAggregator _EventAggregator;
         BTCPayNetworkProvider _NetworkProvider;
         private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
-        private readonly BTCPayServerOptions _BtcPayServerOptions;
+        private readonly AvailableBTCPayNetworkProvider _AvailableBtcPayNetworkProvider;
 
         public InvoiceController(
             InvoiceRepository invoiceRepository,
@@ -50,7 +50,7 @@ namespace BTCPayServer.Controllers
             ContentSecurityPolicies csp,
             BTCPayNetworkProvider networkProvider,
             PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
-            BTCPayServerOptions btcPayServerOptions)
+            AvailableBTCPayNetworkProvider availableBtcPayNetworkProvider)
         {
             _CurrencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
             _StoreRepository = storeRepository ?? throw new ArgumentNullException(nameof(storeRepository));
@@ -60,7 +60,7 @@ namespace BTCPayServer.Controllers
             _EventAggregator = eventAggregator;
             _NetworkProvider = networkProvider;
             _paymentMethodHandlerDictionary = paymentMethodHandlerDictionary;
-            _BtcPayServerOptions = btcPayServerOptions;
+            _AvailableBtcPayNetworkProvider = availableBtcPayNetworkProvider;
             _CSP = csp;
         }
 
@@ -156,7 +156,7 @@ namespace BTCPayServer.Controllers
                     currencyPairsToFetch.Add(new CurrencyPair(network.CryptoCode, storeBlob.OnChainMinValue.Currency));
             }
 
-            var rateRules = storeBlob.GetRateRules(_BtcPayServerOptions.FilteredNetworks);
+            var rateRules = storeBlob.GetRateRules(_AvailableBtcPayNetworkProvider);
             var fetchingByCurrencyPair = _RateProvider.FetchRates(currencyPairsToFetch, rateRules, cancellationToken);
             var fetchingAll = WhenAllFetched(logs, fetchingByCurrencyPair);
             var supportedPaymentMethods = store.GetSupportedPaymentMethods(_NetworkProvider)

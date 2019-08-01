@@ -25,8 +25,8 @@ namespace BTCPayServer.Controllers
     {
         RateFetcher _RateProviderFactory;
         BTCPayNetworkProvider _NetworkProvider;
+        private readonly AvailableBTCPayNetworkProvider _AvailableBtcPayNetworkProvider;
         CurrencyNameTable _CurrencyNameTable;
-        private readonly BTCPayServerOptions _BtcPayServerOptions;
         StoreRepository _StoreRepo;
 
         public TokenRepository TokenRepository { get; }
@@ -34,17 +34,17 @@ namespace BTCPayServer.Controllers
         public RateController(
             RateFetcher rateProviderFactory,
             BTCPayNetworkProvider networkProvider,
+            AvailableBTCPayNetworkProvider availableBtcPayNetworkProvider,
             TokenRepository tokenRepository,
             StoreRepository storeRepo,
-            CurrencyNameTable currencyNameTable, 
-            BTCPayServerOptions btcPayServerOptions)
+            CurrencyNameTable currencyNameTable)
         {
             _RateProviderFactory = rateProviderFactory ?? throw new ArgumentNullException(nameof(rateProviderFactory));
             _NetworkProvider = networkProvider;
+            _AvailableBtcPayNetworkProvider = availableBtcPayNetworkProvider;
             TokenRepository = tokenRepository;
             _StoreRepo = storeRepo;
             _CurrencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
-            _BtcPayServerOptions = btcPayServerOptions;
         }
 
         [Route("rates/{baseCurrency}")]
@@ -153,7 +153,7 @@ namespace BTCPayServer.Controllers
             }
 
 
-            var rules = store.GetStoreBlob().GetRateRules(_BtcPayServerOptions.FilteredNetworks);
+            var rules = store.GetStoreBlob().GetRateRules(_AvailableBtcPayNetworkProvider);
 
             HashSet<CurrencyPair> pairs = new HashSet<CurrencyPair>();
             foreach (var currency in currencyPairs.Split(','))

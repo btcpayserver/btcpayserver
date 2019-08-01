@@ -20,6 +20,20 @@ namespace BTCPayServer.Configuration
         public string CookieFile { get; internal set; }
     }
 
+    public class AvailableBTCPayNetworkProvider : BTCPayNetworkProvider
+    {
+        public AvailableBTCPayNetworkProvider(IEnumerable<IBTCPayNetworkProvider> btcPayNetworkProviders, BTCPayServerOptions options) : base(btcPayNetworkProviders)
+        {
+            _Networks = options.FilteredNetworks.ToDictionary(n=> n.CryptoCode, n=> n);
+            NetworkType = options.NetworkType;
+        }
+
+        public override void Init(NetworkType networkType)
+        {
+            throw new NotSupportedException("The AvailableBtcPayNetworkProvider cannot be init manually");
+        }
+    }
+
     public class BTCPayServerOptions
     {
         private readonly IEnumerable<IBTCPayNetworkProvider> _BtcPayNetworkProviders;

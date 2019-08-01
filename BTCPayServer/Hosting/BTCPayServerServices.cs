@@ -122,6 +122,7 @@ namespace BTCPayServer.Hosting
                 var opts = o.GetRequiredService<BTCPayServerOptions>();
                 return opts.NetworkProvider;
             });
+            services.TryAddSingleton<AvailableBTCPayNetworkProvider>();
 
             services.TryAddSingleton<AppService>();
             services.TryAddSingleton<Ganss.XSS.HtmlSanitizer>(o =>

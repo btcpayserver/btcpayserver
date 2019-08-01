@@ -41,7 +41,7 @@ namespace BTCPayServer
     {
         private readonly IEnumerable<IBTCPayNetworkProvider> _BtcPayNetworkProviders;
         public NetworkType NetworkType;
-        private Dictionary<string, BTCPayNetworkBase> _Networks;
+        protected Dictionary<string, BTCPayNetworkBase> _Networks;
 
         public BTCPayNetworkProvider(IEnumerable<IBTCPayNetworkProvider> btcPayNetworkProviders)
         {
@@ -55,7 +55,7 @@ namespace BTCPayServer
             Init(networkType);
         }
 
-        public void Init(NetworkType networkType)
+        public virtual void Init(NetworkType networkType)
         {
             NetworkType = networkType;
             _Networks = _BtcPayNetworkProviders.SelectMany(provider => provider.GetNetworks(networkType))

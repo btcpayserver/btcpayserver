@@ -486,7 +486,7 @@ namespace BTCPayServer.Controllers
                             Crypto = paymentMethodId.CryptoCode,
                             Value = strategy?.ToPrettyString() ?? string.Empty,
                             WalletId = new WalletId(store.Id, paymentMethodId.CryptoCode),
-                            Enabled = !excludeFilters.Match(paymentMethodId)
+                            Enabled = !excludeFilters.Match(paymentMethodId) && strategy != null
                         });
                         break;
                     case LightningPaymentType _:
@@ -495,7 +495,7 @@ namespace BTCPayServer.Controllers
                         {
                             CryptoCode = paymentMethodId.CryptoCode,
                             Address = lightning?.GetLightningUrl()?.BaseUri.AbsoluteUri ?? string.Empty,
-                            Enabled = !excludeFilters.Match(paymentMethodId)
+                            Enabled = !excludeFilters.Match(paymentMethodId) && lightning?.GetLightningUrl() != null
                         });
                         break;
                 }   

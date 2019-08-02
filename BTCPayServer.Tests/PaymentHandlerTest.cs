@@ -126,118 +126,7 @@ namespace BTCPayServer.Tests
 
 #pragma warning restore CS0618     
         }
-        
-        
-        [Fact]
-        public void CanPayWithLightningWhenInvoiceTotalUnderLightningMaxValueWhenOnChainMinValueIsGreater()
-        {
-            
-#pragma warning disable CS0618
-            
-            //Given
-            var store = new StoreBlob
-            {
-                OnChainMinValue = new CurrencyValue() {Value = 100.00m, Currency = "USD"},
-                LightningMaxValue = new CurrencyValue() {Value = 50.00m, Currency = "USD"}
-            };
-            var paymentMethodId = new PaymentMethodId("BTC", PaymentTypes.LightningLike);
-            
-            //When
-            var totalInvoiceAmount = new Money(80m, MoneyUnit.BTC);
-           
-            //Then
-            var errorMessage = handlerLN.IsPaymentMethodAllowedBasedOnInvoiceAmount(store, currencyPairRateResult,
-                totalInvoiceAmount, paymentMethodId);
-            
-            Assert.Equal(errorMessage.Result, string.Empty);
 
-#pragma warning restore CS0618     
-        }           
-
-        
-        [Fact]
-        public void CanPayWithLightningWhenInvoiceTotalUnderLightningMaxValueWhenOnChainMinValueIsLower()
-        {
-            
-#pragma warning disable CS0618
-            
-            //Given
-            var store = new StoreBlob
-            {
-                OnChainMinValue = new CurrencyValue() {Value = 50.00m, Currency = "USD"},
-                LightningMaxValue = new CurrencyValue() {Value = 100.00m, Currency = "USD"}
-            };
-            var paymentMethodId = new PaymentMethodId("BTC", PaymentTypes.LightningLike);
-            
-            //When
-            var totalInvoiceAmount = new Money(80m, MoneyUnit.BTC);
-           
-            //Then
-            var errorMessage = handlerLN.IsPaymentMethodAllowedBasedOnInvoiceAmount(store, currencyPairRateResult,
-                totalInvoiceAmount, paymentMethodId);
-            
-            Assert.Equal(errorMessage.Result, string.Empty);
-
-#pragma warning restore CS0618     
-        }             
-
-        
-        [Fact]
-        public void CannotPayWithLightningWhenInvoiceTotalUnderLightningMaxValueWhenOnChainMinValueIsGreater()
-        {
-            
-#pragma warning disable CS0618
-            
-            //Given
-            var store = new StoreBlob
-            {
-                OnChainMinValue = new CurrencyValue() {Value = 100.00m, Currency = "USD"},
-                LightningMaxValue = new CurrencyValue() {Value = 50.00m, Currency = "USD"}
-            };
-            var paymentMethodId = new PaymentMethodId("BTC", PaymentTypes.LightningLike);
-            
-            //When
-            var totalInvoiceAmount = new Money(105m, MoneyUnit.BTC);
-           
-            //Then
-            var errorMessage = handlerLN.IsPaymentMethodAllowedBasedOnInvoiceAmount(store, currencyPairRateResult,
-                totalInvoiceAmount, paymentMethodId);
-            
-            Assert.NotEqual(errorMessage.Result, string.Empty);
-
-#pragma warning restore CS0618     
-        }           
-
-        
-        [Fact]
-        public void CannotPayWithLightningWhenInvoiceTotalUnderLightningMaxValueWhenOnChainMinValueIsLower()
-        {
-            
-#pragma warning disable CS0618
-            
-            //Given
-            var store = new StoreBlob
-            {
-                OnChainMinValue = new CurrencyValue() {Value = 50.00m, Currency = "USD"},
-                LightningMaxValue = new CurrencyValue() {Value = 100.00m, Currency = "USD"}
-            };
-            var paymentMethodId = new PaymentMethodId("BTC", PaymentTypes.LightningLike);
-            
-            //When
-            var totalInvoiceAmount = new Money(105m, MoneyUnit.BTC);
-           
-            //Then
-            var errorMessage = handlerLN.IsPaymentMethodAllowedBasedOnInvoiceAmount(store, currencyPairRateResult,
-                totalInvoiceAmount, paymentMethodId);
-            
-            Assert.NotEqual(errorMessage.Result, string.Empty);
-
-#pragma warning restore CS0618     
-        }          
-
-        //----
-        
-        
         [Fact]
         public void CanPayWithBitcoinWhenInvoiceTotalAboveOnChainMinValue()
         {
@@ -317,88 +206,7 @@ namespace BTCPayServer.Tests
 
 #pragma warning restore CS0618     
         }
-        
-        
-        [Fact]
-        public void CanPayWithBitcoinWhenInvoiceTotalAboveOnchainMinValueWhenLightningMaxValueIsLower()
-        {
-            
-#pragma warning disable CS0618
-            
-            //Given
-            var store = new StoreBlob
-            {
-                OnChainMinValue = new CurrencyValue() {Value = 100.00m, Currency = "USD"},
-                LightningMaxValue = new CurrencyValue() {Value = 50.00m, Currency = "USD"}
-            };
-            var paymentMethodId = new PaymentMethodId("BTC", PaymentTypes.BTCLike);
-            
-            //When
-            var totalInvoiceAmount = new Money(80m, MoneyUnit.BTC);
-           
-            //Then
-            var errorMessage = handlerBTC.IsPaymentMethodAllowedBasedOnInvoiceAmount(store, currencyPairRateResult,
-                totalInvoiceAmount, paymentMethodId);
-            
-            Assert.Equal(errorMessage.Result, string.Empty);
-
-#pragma warning restore CS0618     
-        }           
-
-        
-        [Fact]
-        public void CanPayWithBitcoinWhenInvoiceTotalAboveOnChainMinValueWhenLightningMaxValueIsGreater()
-        {
-            
-#pragma warning disable CS0618
-            
-            //Given
-            var store = new StoreBlob
-            {
-                OnChainMinValue = new CurrencyValue() {Value = 50.00m, Currency = "USD"},
-                LightningMaxValue = new CurrencyValue() {Value = 100.00m, Currency = "USD"}
-            };
-            var paymentMethodId = new PaymentMethodId("BTC", PaymentTypes.BTCLike);
-            
-            //When
-            var totalInvoiceAmount = new Money(80m, MoneyUnit.BTC);
-           
-            //Then
-            var errorMessage = handlerBTC.IsPaymentMethodAllowedBasedOnInvoiceAmount(store, currencyPairRateResult,
-                totalInvoiceAmount, paymentMethodId);
-            
-            Assert.Equal(errorMessage.Result, string.Empty);
-
-#pragma warning restore CS0618     
-        }             
-
-        
-        [Fact]
-        public void CannotPayWithBitcoinWhenInvoiceTotalUnderOnChainMinValueWhenLightningMaxValueIsLower()
-        {
-            
-#pragma warning disable CS0618
-            
-            //Given
-            var store = new StoreBlob
-            {
-                OnChainMinValue = new CurrencyValue() {Value = 100.00m, Currency = "USD"},
-                LightningMaxValue = new CurrencyValue() {Value = 50.00m, Currency = "USD"}
-            };
-            var paymentMethodId = new PaymentMethodId("BTC", PaymentTypes.BTCLike);
-            
-            //When
-            var totalInvoiceAmount = new Money(45m, MoneyUnit.BTC);
-           
-            //Then
-            var errorMessage = handlerBTC.IsPaymentMethodAllowedBasedOnInvoiceAmount(store, currencyPairRateResult,
-                totalInvoiceAmount, paymentMethodId);
-            
-            Assert.NotEqual(errorMessage.Result, string.Empty);
-
-#pragma warning restore CS0618     
-        }           
-
+   
         
         [Fact]
         public void CannotPayWithBitcoinWhenInvoiceTotalUnderOnChainMinValueWhenLightningMaxValueIsGreater()
@@ -425,6 +233,7 @@ namespace BTCPayServer.Tests
 
 #pragma warning restore CS0618     
         }  
+        
         
     }
 }

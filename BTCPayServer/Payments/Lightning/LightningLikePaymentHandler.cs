@@ -27,20 +27,20 @@ namespace BTCPayServer.Payments.Lightning
         NBXplorerDashboard _Dashboard;
         private readonly LightningClientFactoryService _lightningClientFactory;
         private readonly BTCPayNetworkProvider _networkProvider;
-        private readonly BTCPayServerOptions _BtcPayServerOptions;
+        private readonly AvailableBTCPayNetworkProvider _AvailableBtcPayNetworkProvider;
         private readonly SocketFactory _socketFactory;
 
         public LightningLikePaymentHandler(
             NBXplorerDashboard dashboard,
             LightningClientFactoryService lightningClientFactory,
             BTCPayNetworkProvider networkProvider,
-            BTCPayServerOptions btcPayServerOptions,
+            AvailableBTCPayNetworkProvider availableBtcPayNetworkProvider,
             SocketFactory socketFactory)
         {
             _Dashboard = dashboard;
             _lightningClientFactory = lightningClientFactory;
             _networkProvider = networkProvider;
-            _BtcPayServerOptions = btcPayServerOptions;
+            _AvailableBtcPayNetworkProvider = availableBtcPayNetworkProvider;
             _socketFactory = socketFactory;
         }
 
@@ -145,7 +145,7 @@ namespace BTCPayServer.Payments.Lightning
 
         public override IEnumerable<PaymentMethodId> GetSupportedPaymentMethods()
         {
-            return _BtcPayServerOptions.FilteredNetworks.OfType<BTCPayNetwork>()
+            return _AvailableBtcPayNetworkProvider.GetAll().OfType<BTCPayNetwork>()
                 .Where(network => network.NBitcoinNetwork.Consensus.SupportSegwit)
                 .Select(network => new PaymentMethodId(network.CryptoCode, PaymentTypes.LightningLike));
         }

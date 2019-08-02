@@ -14,13 +14,18 @@ namespace BTCPayServer
     public class ExplorerClientProvider
     {
         BTCPayNetworkProvider _NetworkProviders;
-        BTCPayServerOptions _Options;
         NBXplorerDashboard _Dashboard;
-        public ExplorerClientProvider(IHttpClientFactory httpClientFactory, BTCPayNetworkProvider networkProviders, BTCPayServerOptions options, NBXplorerDashboard dashboard)
+        private readonly AvailableBTCPayNetworkProvider _AvailableBtcPayNetworkProvider;
+
+        public ExplorerClientProvider(IHttpClientFactory httpClientFactory, 
+            BTCPayNetworkProvider networkProviders, 
+            BTCPayServerOptions options, 
+            NBXplorerDashboard dashboard, 
+            AvailableBTCPayNetworkProvider availableBtcPayNetworkProvider)
         {
             _Dashboard = dashboard;
+            _AvailableBtcPayNetworkProvider = availableBtcPayNetworkProvider;
             _NetworkProviders = networkProviders;
-            _Options = options;
 
             foreach (var setting in options.NBXplorerConnectionSettings)
             {
@@ -56,7 +61,7 @@ namespace BTCPayServer
 
         public ExplorerClient GetExplorerClient(string cryptoCode)
         {
-            var network = _NetworkProviders.GetNetwork<BTCPayNetwork>(cryptoCode);
+            var network = _AvailableBtcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             if (network == null)
                 return null;
             _Clients.TryGetValue(network.CryptoCode, out ExplorerClient client);
@@ -92,7 +97,7 @@ namespace BTCPayServer
 
         public IEnumerable<(BTCPayNetwork, ExplorerClient)> GetAll()
         {
-            foreach (var net in _Options.FilteredNetworks.OfType<BTCPayNetwork>())
+            foreach (var net in _AvailableBtcPayNetworkProvider.GetAll().OfType<BTCPayNetwork>())
             {
                 if (_Clients.TryGetValue(net.CryptoCode, out ExplorerClient explorer))
                 {

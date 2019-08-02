@@ -11,9 +11,10 @@ namespace BTCPayServer.Services.Wallets
     public class BTCPayWalletProvider
     {
         private ExplorerClientProvider _Client;
+
         public BTCPayWalletProvider(ExplorerClientProvider client,
             BTCPayServerOptions btcPayServerOptions,
-                                    IOptions<MemoryCacheOptions> memoryCacheOption)
+            IOptions<MemoryCacheOptions> memoryCacheOption)
         {
             if (client == null)
                 throw new ArgumentNullException(nameof(client));

@@ -90,6 +90,7 @@ namespace BTCPayServer.Hosting
             });
             services.AddSingleton<BTCPayServerEnvironment>();
             services.TryAddSingleton<TokenRepository>();
+            services.TryAddSingleton<WalletRepository>();
             services.TryAddSingleton<EventAggregator>();
             services.TryAddSingleton<PaymentRequestService>();
             services.TryAddSingleton<U2FService>();

@@ -39,6 +39,7 @@ namespace BTCPayServer.Controllers
     public partial class WalletsController : Controller
     {
         public StoreRepository Repository { get; }
+        public WalletRepository WalletRepository { get; }
         public BTCPayNetworkProvider NetworkProvider { get; }
         public ExplorerClientProvider ExplorerClientProvider { get; }
 
@@ -54,6 +55,7 @@ namespace BTCPayServer.Controllers
 
         CurrencyNameTable _currencyTable;
         public WalletsController(StoreRepository repo,
+                                 WalletRepository walletRepository,
                                  CurrencyNameTable currencyTable,
                                  BTCPayNetworkProvider networkProvider,
                                  UserManager<ApplicationUser> userManager,
@@ -66,6 +68,7 @@ namespace BTCPayServer.Controllers
         {
             _currencyTable = currencyTable;
             Repository = repo;
+            WalletRepository = walletRepository;
             RateFetcher = rateProvider;
             NetworkProvider = networkProvider;
             _userManager = userManager;
@@ -74,6 +77,93 @@ namespace BTCPayServer.Controllers
             ExplorerClientProvider = explorerProvider;
             _feeRateProvider = feeRateProvider;
             _walletProvider = walletProvider;
+        }
+
+        // Borrowed from https://github.com/ManageIQ/guides/blob/master/labels.md
+        string[] LabelColorScheme = new string[] 
+        {
+            "#fbca04",
+            "#0e8a16",
+            "#ff7619",
+            "#84b6eb",
+            "#5319e7",
+            "#000000",
+            "#cc317c",
+        };
+        [HttpPost]
+        [Route("{walletId}")]
+        public async Task<IActionResult> ModifyTransaction(
+            // We need addlabel and addlabelclick. addlabel is the + button if the label does not exists,
+            // addlabelclick is if the user click on existing label. For some reason, reusing the same name attribute for both
+            // does not work
+            [ModelBinder(typeof(WalletIdModelBinder))]
+            WalletId walletId, string transactionId, string addlabel = null, string addlabelclick = null, string addcomment = null, string removelabel = null)
+        {
+            addlabel = addlabel ?? addlabelclick;
+            DerivationSchemeSettings paymentMethod = await GetDerivationSchemeSettings(walletId);
+            if (paymentMethod == null)
+                return NotFound();
+
+            var walletBlobInfoAsync = WalletRepository.GetWalletInfo(walletId);
+            var walletTransactionsInfoAsync = WalletRepository.GetWalletTransactionsInfo(walletId);
+            var wallet = _walletProvider.GetWallet(paymentMethod.Network);
+            var walletBlobInfo = await walletBlobInfoAsync;
+            var walletTransactionsInfo = await walletTransactionsInfoAsync;
+            if (addlabel != null)
+            {
+                addlabel = addlabel.Trim().ToLowerInvariant();
+                var labels = walletBlobInfo.GetLabels();
+                if (!walletTransactionsInfo.TryGetValue(transactionId, out var walletTransactionInfo))
+                {
+                    walletTransactionInfo = new WalletTransactionInfo();
+                }
+                if (!labels.Any(l => l.Value.Equals(addlabel, StringComparison.OrdinalIgnoreCase)))
+                {
+                    List<string> allColors = new List<string>();
+                    allColors.AddRange(LabelColorScheme);
+                    allColors.AddRange(labels.Select(l => l.Color));
+                    var chosenColor =
+                        allColors
+                        .GroupBy(k => k)
+                        .OrderBy(k => k.Count())
+                        .ThenBy(k => Array.IndexOf(LabelColorScheme, k.Key))
+                        .First().Key;
+                    walletBlobInfo.LabelColors.Add(addlabel, chosenColor);
+                    await WalletRepository.SetWalletInfo(walletId, walletBlobInfo);
+                }
+                if (walletTransactionInfo.Labels.Add(addlabel))
+                {
+                    await WalletRepository.SetWalletTransactionInfo(walletId, transactionId, walletTransactionInfo);
+                }
+            }
+            else if (removelabel != null)
+            {
+                removelabel = removelabel.Trim().ToLowerInvariant();
+                if (walletTransactionsInfo.TryGetValue(transactionId, out var walletTransactionInfo))
+                {
+                    if (walletTransactionInfo.Labels.Remove(removelabel))
+                    {
+                        var canDelete = !walletTransactionsInfo.SelectMany(txi => txi.Value.Labels).Any(l => l == removelabel);
+                        if (canDelete)
+                        {
+                            walletBlobInfo.LabelColors.Remove(removelabel);
+                            await WalletRepository.SetWalletInfo(walletId, walletBlobInfo);
+                        }
+                        await WalletRepository.SetWalletTransactionInfo(walletId, transactionId, walletTransactionInfo);
+                    }
+                }
+            }
+            else if (addcomment != null)
+            {
+                addcomment = addcomment.Trim();
+                if (!walletTransactionsInfo.TryGetValue(transactionId, out var walletTransactionInfo))
+                {
+                    walletTransactionInfo = new WalletTransactionInfo();
+                }
+                walletTransactionInfo.Comment = addcomment;
+                await WalletRepository.SetWalletTransactionInfo(walletId, transactionId, walletTransactionInfo);
+            }
+            return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
         }
 
         public async Task<IActionResult> ListWallets()
@@ -125,10 +215,13 @@ namespace BTCPayServer.Controllers
                 return NotFound();
 
             var wallet = _walletProvider.GetWallet(paymentMethod.Network);
+            var walletBlobAsync = WalletRepository.GetWalletInfo(walletId);
+            var walletTransactionsInfoAsync = WalletRepository.GetWalletTransactionsInfo(walletId);
             var transactions = await wallet.FetchTransactions(paymentMethod.AccountDerivation);
-
+            var walletBlob = await walletBlobAsync;
+            var walletTransactionsInfo = await walletTransactionsInfoAsync;
             var model = new ListTransactionsViewModel();
-            foreach (var tx in transactions.UnconfirmedTransactions.Transactions.Concat(transactions.ConfirmedTransactions.Transactions))
+            foreach (var tx in transactions.UnconfirmedTransactions.Transactions.Concat(transactions.ConfirmedTransactions.Transactions).ToArray())
             {
                 var vm = new ListTransactionsViewModel.TransactionViewModel();
                 model.Transactions.Add(vm);
@@ -138,11 +231,23 @@ namespace BTCPayServer.Controllers
                 vm.Positive = tx.BalanceChange >= Money.Zero;
                 vm.Balance = tx.BalanceChange.ToString();
                 vm.IsConfirmed = tx.Confirmations != 0;
+
+                if (walletTransactionsInfo.TryGetValue(tx.TransactionId.ToString(), out var transactionInfo))
+                {
+                    var labels = walletBlob.GetLabels(transactionInfo);
+                    vm.Labels.AddRange(labels);
+                    model.Labels.AddRange(labels);
+                    vm.Comment = transactionInfo.Comment;
+                }
             }
             model.Transactions = model.Transactions.OrderByDescending(t => t.Timestamp).ToList();
             return View(model);
         }
 
+        private static string GetLabelTarget(WalletId walletId, uint256 txId)
+        {
+            return $"{walletId}:{txId}";
+        }
 
         [HttpGet]
         [Route("{walletId}/send")]

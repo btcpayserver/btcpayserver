@@ -727,7 +727,7 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Integration", "Integration")]
-        public void CanRescanWallet()
+        public async Task CanRescanWallet()
         {
             using (var tester = ServerTester.Create())
             {
@@ -789,6 +789,32 @@ namespace BTCPayServer.Tests
                 transactions = Assert.IsType<ListTransactionsViewModel>(Assert.IsType<ViewResult>(walletController.WalletTransactions(walletId).Result).Model);
                 var tx = Assert.Single(transactions.Transactions);
                 Assert.Equal(tx.Id, txId.ToString());
+
+                // Hijack the test to see if we can add label and comments
+                Assert.IsType<RedirectToActionResult>(await walletController.ModifyTransaction(walletId, tx.Id, addlabel: "test"));
+                Assert.IsType<RedirectToActionResult>(await walletController.ModifyTransaction(walletId, tx.Id, addlabelclick: "test2"));
+                Assert.IsType<RedirectToActionResult>(await walletController.ModifyTransaction(walletId, tx.Id, addcomment: "hello"));
+
+                transactions = Assert.IsType<ListTransactionsViewModel>(Assert.IsType<ViewResult>(walletController.WalletTransactions(walletId).Result).Model);
+                tx = Assert.Single(transactions.Transactions);
+
+                Assert.Equal("hello", tx.Comment);
+                Assert.Contains("test", tx.Labels.Select(l => l.Value));
+                Assert.Contains("test2", tx.Labels.Select(l => l.Value));
+                Assert.Equal(2, tx.Labels.GroupBy(l => l.Color).Count());
+
+                Assert.IsType<RedirectToActionResult>(await walletController.ModifyTransaction(walletId, tx.Id, removelabel: "test2"));
+
+                transactions = Assert.IsType<ListTransactionsViewModel>(Assert.IsType<ViewResult>(walletController.WalletTransactions(walletId).Result).Model);
+                tx = Assert.Single(transactions.Transactions);
+
+                Assert.Equal("hello", tx.Comment);
+                Assert.Contains("test", tx.Labels.Select(l => l.Value));
+                Assert.DoesNotContain("test2", tx.Labels.Select(l => l.Value));
+                Assert.Single(tx.Labels.GroupBy(l => l.Color));
+
+                var walletInfo = await tester.PayTester.GetService<WalletRepository>().GetWalletInfo(walletId);
+                Assert.Single(walletInfo.LabelColors); // the test2 color should have been removed
             }
         }
 

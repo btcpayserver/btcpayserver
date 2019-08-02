@@ -100,6 +100,10 @@ namespace BTCPayServer.Controllers
             WalletId walletId, string transactionId, string addlabel = null, string addlabelclick = null, string addcomment = null, string removelabel = null)
         {
             addlabel = addlabel ?? addlabelclick;
+            if (Request?.Form?.TryGetValue(nameof(addcomment), out _) is true)
+            {
+                addcomment = string.Empty;
+            }
             DerivationSchemeSettings paymentMethod = await GetDerivationSchemeSettings(walletId);
             if (paymentMethod == null)
                 return NotFound();

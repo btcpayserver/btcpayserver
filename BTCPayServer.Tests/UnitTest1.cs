@@ -2602,7 +2602,7 @@ donation:
             var fetcher = new RateFetcher(factory);
             var pairs =
                     provider.GetAll()
-                        .Where(c => !string.IsNullOrEmpty(c.CryptoCode))
+                        .Where(c => c.CryptoCode != BTCPayNetworkProvider.ManualCryptoCode)
                         .Select(c => new CurrencyPair(c.CryptoCode, "USD"))
                     .ToHashSet();
 

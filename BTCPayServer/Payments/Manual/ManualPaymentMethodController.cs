@@ -60,7 +60,7 @@ namespace BTCPayServer.Payments.Bitcoin
                     return Forbid();
                 }
 
-                var network = _BtcPayNetworkProvider.GetNetwork<StubBTCPayNetwork>(string.Empty);
+                var network = _BtcPayNetworkProvider.GetNetwork<StubBTCPayNetwork>(BTCPayNetworkProvider.ManualCryptoCode);
                 var currentDue = invoice.GetPaymentMethod(network, ManualPaymentType.Instance).Calculate().Due;
                 var payment = await _InvoiceRepository.AddPayment(model.InvoiceId, DateTimeOffset.Now,
                     new ManualPaymentData()

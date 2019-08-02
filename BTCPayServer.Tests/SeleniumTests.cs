@@ -242,7 +242,9 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("Create")).Click();
                 s.Driver.FindElement(By.CssSelector("input#EnableShoppingCart.form-check")).Click();
                 s.Driver.FindElement(By.Id("SaveSettings")).ForceClick();
-                Assert.True(s.Driver.PageSource.Contains("App updated"), "Unable to create PoS");
+                s.Driver.FindElement(By.Id("ViewApp")).ForceClick();
+                s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
+                Assert.True(s.Driver.PageSource.Contains("Tea shop"), "Unable to create PoS");
                 s.Driver.Quit();
             }
         }

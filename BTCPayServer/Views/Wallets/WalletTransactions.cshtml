@@ -64,7 +64,7 @@
                         <td style="text-align:left">
                             @foreach (var label in transaction.Labels)
                             {
-                                <span class="badge" style="display:block;background-color:@label.Color;color:white;">@label.Value</span>
+                                <a asp-route-labelFilter="@label.Value"><span class="badge" style="display:block;background-color:@label.Color;color:white;">@label.Value</span></a>
                             }
                         </td>
                         <td class="smMaxWidth text-truncate">

@@ -227,7 +227,7 @@ namespace BTCPayServer.Controllers
         [Route("{walletId}")]
         public async Task<IActionResult> WalletTransactions(
             [ModelBinder(typeof(WalletIdModelBinder))]
-            WalletId walletId)
+            WalletId walletId, string labelFilter = null)
         {
             DerivationSchemeSettings paymentMethod = await GetDerivationSchemeSettings(walletId);
             if (paymentMethod == null)
@@ -243,7 +243,6 @@ namespace BTCPayServer.Controllers
             foreach (var tx in transactions.UnconfirmedTransactions.Transactions.Concat(transactions.ConfirmedTransactions.Transactions).ToArray())
             {
                 var vm = new ListTransactionsViewModel.TransactionViewModel();
-                model.Transactions.Add(vm);
                 vm.Id = tx.TransactionId.ToString();
                 vm.Link = string.Format(CultureInfo.InvariantCulture, paymentMethod.Network.BlockExplorerLink, vm.Id);
                 vm.Timestamp = tx.Timestamp;
@@ -258,6 +257,9 @@ namespace BTCPayServer.Controllers
                     model.Labels.AddRange(labels);
                     vm.Comment = transactionInfo.Comment;
                 }
+
+                if (labelFilter == null || vm.Labels.Any(l => l.Value.Equals(labelFilter, StringComparison.OrdinalIgnoreCase)))
+                    model.Transactions.Add(vm);
             }
             model.Transactions = model.Transactions.OrderByDescending(t => t.Timestamp).ToList();
             return View(model);

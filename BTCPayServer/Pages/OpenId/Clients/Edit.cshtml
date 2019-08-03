@@ -1,5 +1,6 @@
 @page
 @using System.ComponentModel.DataAnnotations
+@using System.Globalization
 @using BTCPayServer.Authentication.OpenId.Models
 @using BTCPayServer.Configuration
 @using BTCPayServer.Security
@@ -78,7 +79,7 @@
 
                     <ul class="list-group">
                         <li class="list-group-item">
-                            <label asp-for="Client.ClientType" class="control-label"></label>*
+                            <label asp-for="Client.ClientType" class="control-label w-100"></label>
 
                             <span asp-validation-for="Client.ClientType" class="text-danger"></span>
                         </li>
@@ -87,10 +88,10 @@
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" asp-for="Client.ClientType" value="@OpenIddictConstants.ClientTypes.Public">
                                 <label class="form-check-label">
-                                    @OpenIddictConstants.ClientTypes.Public
+                                    @CultureInfo.CurrentCulture.TextInfo.ToTitleCase(OpenIddictConstants.ClientTypes.Public)
                                 </label>
                                 <p class="pt-1 mb-0">
-                                    A client that does not need client secrets. This is for when integrating with an SPA or an environment where users would be able to access the client secret
+                                    A client that does not need client secrets. This is for when integrating with an SPA or an environment where users would be able to access the client secret( which would be a huge security hole)
                                 </p>
                             </div>
                         </li>
@@ -99,7 +100,7 @@
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" asp-for="Client.ClientType" value="@OpenIddictConstants.ClientTypes.Confidential">
                                 <label class="form-check-label">
-                                    @OpenIddictConstants.ClientTypes.Confidential
+                                    @CultureInfo.CurrentCulture.TextInfo.ToTitleCase(OpenIddictConstants.ClientTypes.Confidential)
                                 </label>
                                 <p class="pt-1 mb-0">
                                     A client that requires that you send the client secret. For when integrating with codebases where you can safely store the client secret
@@ -112,10 +113,10 @@
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" asp-for="Client.ClientType" value="@OpenIddictConstants.ClientTypes.Hybrid">
                                 <label class="form-check-label">
-                                    @OpenIddictConstants.ClientTypes.Hybrid
+                                    @CultureInfo.CurrentCulture.TextInfo.ToTitleCase(OpenIddictConstants.ClientTypes.Hybrid)
                                 </label>
                                 <p class="pt-1 mb-0">
-                                    Behaves exactly like a Confidential client but is able to retrieve an access token from the the authorization endpoints. <br/>This allows creating "hybrid" applications that have a JS frontend using the access token directly and a server-side backend retrieving another access token using the authorization code.
+                                    Behaves exactly like a Confidential client but is able to retrieve an access token from the the authorization endpoints. <br/>This allows creating "hybrid" applications that have a JS frontend using the access token directly and a server-side backend retrieving another access token using the authorization code. <a href="https://github.com/openiddict/openiddict-core/issues/475" target="_blank">More info.</a>
                                 </p>
                             </div>
                         </li>
@@ -139,7 +140,7 @@
                     </div>
                     <ul class="list-group mt-2">
                         <li class="list-group-item">
-                            Allowed Grant Types
+                            Allowed Flows (<a href="https://leastprivilege.com/2016/01/17/which-openid-connectoauth-2-o-flow-is-the-right-one/" target="_blank">Which flow should I use?</a>)
                         </li>
 
                         <li class="list-group-item">
@@ -148,7 +149,7 @@
                                 <label class="form-check-label" asp-for="Client.PasswordGrantType"></label>
 
                                 <span asp-validation-for="Client.PasswordGrantType" class="text-danger"></span>
-                                <p>Allow authentication through your email and password</p>
+                                <p>Allow authentication through your email and password. Note: requires your app to be <b>confidential</b> or <b>hybrid</b></p>
                             </div>
                         </li>
 
@@ -158,7 +159,7 @@
                                 <label class="form-check-label" asp-for="Client.ClientCredentialsGrantType"></label>
 
                                 <span asp-validation-for="Client.ClientCredentialsGrantType" class="text-danger"></span>
-                                <p>Allow authentication through your client id and client secret. Note: requires your app to be <b>confidential</b> </p>
+                                <p>Allow authentication through your client id and client secret. Note: requires your app to be <b>confidential</b> or <b>hybrid</b> </p>
                             </div>
                         </li>
 
@@ -168,7 +169,7 @@
                                 <label class="form-check-label" asp-for="Client.ImplicitGrantType"></label>
 
                                 <span asp-validation-for="Client.ImplicitGrantType" class="text-danger"></span>
-                                <p>Allow authentication by redirecting your user to our login screen which then redirects to the specified redirect uri with an access token. Recommended for Single Page Applications</p>
+                                <p>Allow authentication by redirecting your user to our login screen which then redirects to the specified redirect uri with an access token. Recommended for Single Page Applications. Note: requires your app to be <b>public</b></p>
                             </div>
                         </li>
 

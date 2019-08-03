@@ -100,10 +100,18 @@ namespace BTCPayServer.Controllers
             WalletId walletId, string transactionId, string addlabel = null, string addlabelclick = null, string addcomment = null, string removelabel = null)
         {
             addlabel = addlabel ?? addlabelclick;
-            if (Request?.Form?.TryGetValue(nameof(addcomment), out _) is true)
+            // Hack necessary when the user enter a empty comment and submit.
+            // For some reason asp.net consider addcomment null instead of empty string...
+            try
             {
-                addcomment = string.Empty;
+                if (Request?.Form?.TryGetValue(nameof(addcomment), out _) is true)
+                {
+                    addcomment = string.Empty;
+                }
             }
+            catch { }
+            /////////
+            
             DerivationSchemeSettings paymentMethod = await GetDerivationSchemeSettings(walletId);
             if (paymentMethod == null)
                 return NotFound();

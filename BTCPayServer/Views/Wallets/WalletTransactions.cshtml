@@ -55,7 +55,7 @@
             <tbody>
                 @foreach (var transaction in Model.Transactions)
                 {
-                    <tr class="@(transaction.IsConfirmed ? "" : "unconf")">
+                    <tr>
                         <td>
                             <span class="switchTimeFormat" data-switch="@transaction.Timestamp.ToTimeAgo()">
                                 @transaction.Timestamp.ToBrowserDate()
@@ -67,7 +67,7 @@
                                 <a asp-route-labelFilter="@label.Value"><span class="badge" style="display:block;background-color:@label.Color;color:white;">@label.Value</span></a>
                             }
                         </td>
-                        <td class="smMaxWidth text-truncate">
+                        <td class="smMaxWidth text-truncate @(transaction.IsConfirmed ? "" : "unconf")">
                             <a href="@transaction.Link" target="_blank">
                                 @transaction.Id
                             </a>

@@ -579,18 +579,10 @@ namespace BTCPayServer.Controllers
 
         private async Task<List<SelectListItem>> GetAppSelectList()
         {
-            // load display app dropdown
-            using (var ctx = _ContextFactory.CreateContext())
-            {
-                var userId = _UserManager.GetUserId(base.User);
-                var selectList = await ctx.Users.Where(user => user.Id == userId)
-                    .SelectMany(s => s.UserStores)
-                    .Select(s => s.StoreData)
-                    .SelectMany(s => s.Apps)
-                    .Select(a => new SelectListItem($"{a.AppType} - {a.Name}", a.Id)).ToListAsync();
-                selectList.Insert(0, new SelectListItem("(None)", null));
-                return selectList;
-            }
+            var apps = (await _AppService.GetAllApps(null, true))
+                .Select(a => new SelectListItem($"{a.AppType} - {a.AppName} - {a.StoreName}", a.Id)).ToList();
+            apps.Insert(0, new SelectListItem("(None)", null));
+            return apps;
         }
 
         private static bool TryParseAsExternalService(TorService torService, out ExternalService externalService)

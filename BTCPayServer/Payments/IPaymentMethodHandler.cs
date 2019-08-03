@@ -7,8 +7,6 @@ using BTCPayServer.Rating;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using NBitcoin;
-using NBitpayClient;
-using Newtonsoft.Json.Linq;
 using InvoiceResponse = BTCPayServer.Models.InvoiceResponse;
 
 namespace BTCPayServer.Payments

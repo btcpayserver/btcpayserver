@@ -35,6 +35,8 @@ namespace BTCPayServer.Data
                 Blob = Array.Empty<byte>();
                 return;
             }
+            if (blobInfo.Labels.Any(l => l.Contains(',', StringComparison.OrdinalIgnoreCase)))
+                throw new ArgumentException(paramName: nameof(blobInfo), message: "Labels must not contains ','");
             Labels = String.Join(',', blobInfo.Labels);
             Blob = ZipUtils.Zip(JsonConvert.SerializeObject(blobInfo));
         }

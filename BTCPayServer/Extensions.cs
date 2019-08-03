@@ -40,6 +40,12 @@ namespace BTCPayServer
 {
     public static class Extensions
     {
+        public static string Truncate(this string value, int maxLength)
+        {
+            if (string.IsNullOrEmpty(value))
+                return value;
+            return value.Length <= maxLength ? value : value.Substring(0, maxLength);
+        }
         public static IServiceCollection AddStartupTask<T>(this IServiceCollection services)
             where T : class, IStartupTask
             => services.AddTransient<IStartupTask, T>();

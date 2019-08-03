@@ -87,7 +87,7 @@
                                     <form asp-action="ModifyTransaction" method="post">
                                         <input type="hidden" name="transactionId" value="@transaction.Id" />
                                         <div class="dropdown-item input-group">
-                                            <input name="addlabel" type="text" class="form-control form-control-sm" />
+                                            <input name="addlabel" maxlength="20" type="text" class="form-control form-control-sm" />
                                             <div class="input-group-append">
                                                 <button type="submit" class="btn btn-primary btn-sm"><span class="fa fa-plus"></span></button>
                                             </div>
@@ -119,7 +119,7 @@
                                 <div class="dropdown-menu">
                                     <form asp-action="ModifyTransaction" method="post">
                                         <input type="hidden" name="transactionId" value="@transaction.Id" />
-                                        <textarea name="addcomment" class="dropdown-item" rows="2" cols="20">@transaction.Comment</textarea>
+                                        <textarea name="addcomment" class="dropdown-item" maxlength="200" rows="2" cols="20">@transaction.Comment</textarea>
                                         <div class="dropdown-item"><button type="submit" class="btn btn-primary">Save comment</button></div>
                                     </form>
                                 </div>

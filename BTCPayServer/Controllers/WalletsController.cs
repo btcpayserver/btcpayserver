@@ -90,6 +90,9 @@ namespace BTCPayServer.Controllers
             "#000000",
             "#cc317c",
         };
+
+        const int MaxLabelSize = 20;
+        const int MaxCommentSize = 200;
         [HttpPost]
         [Route("{walletId}")]
         public async Task<IActionResult> ModifyTransaction(
@@ -127,7 +130,7 @@ namespace BTCPayServer.Controllers
             var walletTransactionsInfo = await walletTransactionsInfoAsync;
             if (addlabel != null)
             {
-                addlabel = addlabel.Trim().ToLowerInvariant();
+                addlabel = addlabel.Trim().ToLowerInvariant().Truncate(MaxLabelSize);
                 var labels = walletBlobInfo.GetLabels();
                 if (!walletTransactionsInfo.TryGetValue(transactionId, out var walletTransactionInfo))
                 {
@@ -154,7 +157,7 @@ namespace BTCPayServer.Controllers
             }
             else if (removelabel != null)
             {
-                removelabel = removelabel.Trim().ToLowerInvariant();
+                removelabel = removelabel.Trim().ToLowerInvariant().Truncate(MaxLabelSize);
                 if (walletTransactionsInfo.TryGetValue(transactionId, out var walletTransactionInfo))
                 {
                     if (walletTransactionInfo.Labels.Remove(removelabel))
@@ -171,7 +174,7 @@ namespace BTCPayServer.Controllers
             }
             else if (addcomment != null)
             {
-                addcomment = addcomment.Trim();
+                addcomment = addcomment.Trim().Truncate(MaxCommentSize);
                 if (!walletTransactionsInfo.TryGetValue(transactionId, out var walletTransactionInfo))
                 {
                     walletTransactionInfo = new WalletTransactionInfo();

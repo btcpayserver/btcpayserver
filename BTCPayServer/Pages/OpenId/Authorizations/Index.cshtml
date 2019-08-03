@@ -1,6 +1,7 @@
 @page "{id}/Authorizations"
 @using System.Collections.Immutable
 @using BTCPayServer.Authentication.OpenId.Models
+@using BTCPayServer.Security
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @using OpenIddict.Core
@@ -70,7 +71,7 @@
 
 @functions{
 
-    [Authorize]
+    [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
     public class AuthorizationList : PageModel
     {
         private readonly OpenIddictAuthorizationManager<BTCPayOpenIdAuthorization> _authorizationManager;

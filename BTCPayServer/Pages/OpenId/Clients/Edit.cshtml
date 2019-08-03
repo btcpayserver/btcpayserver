@@ -2,7 +2,9 @@
 @using System.ComponentModel.DataAnnotations
 @using BTCPayServer.Authentication.OpenId.Models
 @using BTCPayServer.Configuration
+@using BTCPayServer.Security
 @using BTCPayServer.Validation
+@using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Mvc.RazorPages
 @using OpenIddict.Abstractions
 @using OpenIddict.Core
@@ -196,7 +198,7 @@
 
 @functions
 {
-
+    [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
     public class EditClient : PageModel
     {
         private readonly UserManager<ApplicationUser> _userManager;

@@ -97,7 +97,11 @@ namespace BTCPayServer.Controllers
             // addlabelclick is if the user click on existing label. For some reason, reusing the same name attribute for both
             // does not work
             [ModelBinder(typeof(WalletIdModelBinder))]
-            WalletId walletId, string transactionId, string addlabel = null, string addlabelclick = null, string addcomment = null, string removelabel = null)
+            WalletId walletId, string transactionId, 
+                                string addlabel = null, 
+                                string addlabelclick = null,
+                                string addcomment = null, 
+                                string removelabel = null)
         {
             addlabel = addlabel ?? addlabelclick;
             // Hack necessary when the user enter a empty comment and submit.

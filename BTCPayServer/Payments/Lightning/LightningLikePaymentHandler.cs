@@ -146,33 +146,19 @@ namespace BTCPayServer.Payments.Lightning
         public override async Task<string> IsPaymentMethodAllowedBasedOnInvoiceAmount(StoreBlob storeBlob,
             Dictionary<CurrencyPair, Task<RateResult>> rate, Money amount, PaymentMethodId paymentMethodId)
         {
-
-            Func<Money, Money, bool> compare = null;
-            CurrencyValue limitValue = null;
-            string errorMessage = null;
-            
             if (storeBlob.LightningMaxValue != null)
             {
-                compare = (value, limit) => value > limit;
-                limitValue = storeBlob.LightningMaxValue;
-                errorMessage = "The amount of the invoice is too high to be paid with lightning";
-            }
+                var currentRateToCrypto = await rate[new CurrencyPair(paymentMethodId.CryptoCode, storeBlob.LightningMaxValue.Currency)];
 
-            
-            if (compare != null)
-            {
-                var currentRateToCrypto = await rate[new CurrencyPair(paymentMethodId.CryptoCode, limitValue.Currency)];
-                
-                if (currentRateToCrypto.BidAsk != null)
+                if (currentRateToCrypto?.BidAsk != null)
                 {
-                    var limitValueCrypto = Money.Coins(limitValue.Value / currentRateToCrypto.BidAsk.Bid);
-                    if (compare(amount, limitValueCrypto))
+                    var limitValueCrypto = Money.Coins(storeBlob.LightningMaxValue.Value / currentRateToCrypto.BidAsk.Bid);
+                    if (amount > limitValueCrypto)
                     {
-                        return errorMessage;
+                        return "The amount of the invoice is too high to be paid with lightning";
                     }
                 }
             }
-            
             return string.Empty;
         }
 

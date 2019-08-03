@@ -111,7 +111,7 @@ namespace BTCPayServer.Controllers
             // For some reason asp.net consider addcomment null instead of empty string...
             try
             {
-                if (Request?.Form?.TryGetValue(nameof(addcomment), out _) is true)
+                if (addcomment == null && Request?.Form?.TryGetValue(nameof(addcomment), out _) is true)
                 {
                     addcomment = string.Empty;
                 }

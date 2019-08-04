@@ -114,6 +114,7 @@ namespace BTCPayServer.Tests
                     $"connect/authorize?response_type=token&client_id={id}&redirect_uri={redirecturi.AbsoluteUri}&scope=openid&nonce={Guid.NewGuid().ToString()}");
                 s.Driver.Navigate().GoToUrl(implicitAuthorizeUrl);
                 s.Login(user.RegisterDetails.Email, user.RegisterDetails.Password);
+                s.Driver.FindElement(By.Id("consent-yes")).Click();
                 var url = s.Driver.Url;
                 var results = url.Split("#").Last().Split("&")
                     .ToDictionary(s1 => s1.Split("=")[0], s1 => s1.Split("=")[1]);
@@ -171,6 +172,7 @@ namespace BTCPayServer.Tests
                     $"connect/authorize?response_type=code&client_id={id}&redirect_uri={redirecturi.AbsoluteUri}&scope=openid offline_access&state={Guid.NewGuid().ToString()}");
                 s.Driver.Navigate().GoToUrl(authorizeUrl);
                 s.Login(user.RegisterDetails.Email, user.RegisterDetails.Password);
+                s.Driver.FindElement(By.Id("consent-yes")).Click();
                 var url = s.Driver.Url;
                 var results = url.Split("?").Last().Split("&")
                     .ToDictionary(s1 => s1.Split("=")[0], s1 => s1.Split("=")[1]);

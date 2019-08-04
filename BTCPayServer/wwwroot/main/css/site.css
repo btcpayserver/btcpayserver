@@ -114,3 +114,8 @@ a.nav-link {
         max-width: 600px;
     }
 }
+
+.invoice-details a{
+    /* Prevent layout from breaking on hyperlinks with very long URLs as the visible text */
+    word-break: break-word;
+}

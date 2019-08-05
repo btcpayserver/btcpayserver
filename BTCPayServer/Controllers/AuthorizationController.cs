@@ -65,25 +65,10 @@ namespace BTCPayServer.Controllers
             }
 
             var userId = _userManager.GetUserId(User);
-            var authorizations =
-                await _authorizationManager.ListAsync(queryable =>
-                    queryable.Where(authorization =>
-                        authorization.Subject.Equals(userId, StringComparison.OrdinalIgnoreCase) &&
-                        application.Id.Equals(authorization.Application.Id, StringComparison.OrdinalIgnoreCase) &&
-                        authorization.Status.Equals(OpenIddictConstants.Statuses.Valid,
-                            StringComparison.OrdinalIgnoreCase)));
-
-            
-            if (authorizations.Length > 0)
+            if (!string.IsNullOrEmpty(
+                await OpenIdExtensions.IsUserAuthorized(_authorizationManager, request, userId, application.Id)))
             {
-                var sufficientScopes = (await Task.WhenAll(authorizations.Select(authorization =>
-                        _authorizationManager.GetScopesAsync(authorization).AsTask())))
-                    .Select(scopes => request.GetScopes().Except(scopes).Any()).Any(missingScopes => !missingScopes);
-
-                if (sufficientScopes)
-                {
-                    return await Authorize(request, "YES", false);
-                }
+                return await Authorize(request, "YES", false);
             }
 
             // Flow the request_id to allow OpenIddict to restore
@@ -129,7 +114,8 @@ namespace BTCPayServer.Controllers
 
             // Create a new authentication ticket.
             var ticket =
-                await OpenIdExtensions.CreateAuthenticationTicket(_IdentityOptions.Value, _signInManager,
+                await OpenIdExtensions.CreateAuthenticationTicket(_applicationManager, _authorizationManager,
+                    _IdentityOptions.Value, _signInManager,
                     request, user);
             if (createAuthorization)
             {

@@ -1,20 +1,30 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using AspNet.Security.OpenIdConnect.Extensions;
 using AspNet.Security.OpenIdConnect.Primitives;
+using BTCPayServer.Authentication.OpenId.Models;
 using BTCPayServer.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using OpenIddict.Abstractions;
+using OpenIddict.Core;
 using OpenIddict.Server;
 
 namespace BTCPayServer.Authentication.OpenId
 {
     public static class OpenIdExtensions
     {
-         public static async Task<AuthenticationTicket> CreateAuthenticationTicket(IdentityOptions identityOptions, SignInManager<ApplicationUser> signInManager ,OpenIdConnectRequest request, ApplicationUser user,
-            AuthenticationProperties properties= null)
+        public static async Task<AuthenticationTicket> CreateAuthenticationTicket(
+            OpenIddictApplicationManager<BTCPayOpenIdClient> applicationManager,
+            OpenIddictAuthorizationManager<BTCPayOpenIdAuthorization> authorizationManager,
+            IdentityOptions identityOptions,
+            SignInManager<ApplicationUser> signInManager,
+            OpenIdConnectRequest request,
+            ApplicationUser user,
+            AuthenticationProperties properties = null)
         {
             // Create a new ClaimsPrincipal containing the claims that
             // will be used to create an id_token, a token or a code.
@@ -28,16 +38,27 @@ namespace BTCPayServer.Authentication.OpenId
             {
                 ticket.SetScopes(request.GetScopes());
             }
+            else if (request.IsAuthorizationCodeGrantType() &&
+                     string.IsNullOrEmpty(ticket.GetInternalAuthorizationId()))
+            {
+                var app = await applicationManager.FindByClientIdAsync(request.ClientId);
+                var authorizationId = await IsUserAuthorized(authorizationManager, request, user.Id, app.Id);
+                if (!string.IsNullOrEmpty(authorizationId))
+                {
+                    ticket.SetInternalAuthorizationId(authorizationId);
+                }
+            }
 
             foreach (var claim in ticket.Principal.Claims)
             {
-                claim.SetDestinations(GetDestinations(identityOptions,claim, ticket));
+                claim.SetDestinations(GetDestinations(identityOptions, claim, ticket));
             }
 
             return ticket;
         }
 
-        private static IEnumerable<string> GetDestinations(IdentityOptions identityOptions,Claim claim, AuthenticationTicket ticket)
+        private static IEnumerable<string> GetDestinations(IdentityOptions identityOptions, Claim claim,
+            AuthenticationTicket ticket)
         {
             // Note: by default, claims are NOT automatically included in the access and identity tokens.
             // To allow OpenIddict to serialize them, you must attach them a destination, that specifies
@@ -81,6 +102,38 @@ namespace BTCPayServer.Authentication.OpenId
                         yield break;
                     }
             }
+        }
+
+        public static async Task<string> IsUserAuthorized(
+            OpenIddictAuthorizationManager<BTCPayOpenIdAuthorization> authorizationManager,
+            OpenIdConnectRequest request, string userId, string applicationId)
+        {
+            var authorizations =
+                await authorizationManager.ListAsync(queryable =>
+                    queryable.Where(authorization =>
+                        authorization.Subject.Equals(userId, StringComparison.OrdinalIgnoreCase) &&
+                        applicationId.Equals(authorization.Application.Id, StringComparison.OrdinalIgnoreCase) &&
+                        authorization.Status.Equals(OpenIddictConstants.Statuses.Valid,
+                            StringComparison.OrdinalIgnoreCase)));
+
+
+            if (authorizations.Length > 0)
+            {
+                var scopeTasks = authorizations.Select(authorization =>
+                    (authorizationManager.GetScopesAsync(authorization).AsTask(), authorization.Id));
+                await Task.WhenAll(scopeTasks.Select((tuple) => tuple.Item1));
+
+                var authorizationsWithSufficientScopes = scopeTasks
+                    .Select((tuple) => (tuple.Id, Scopes: tuple.Item1.Result))
+                    .Where((tuple) => !request.GetScopes().Except(tuple.Scopes).Any());
+
+                if (authorizationsWithSufficientScopes.Any())
+                {
+                    return authorizationsWithSufficientScopes.First().Id;
+                }
+            }
+
+            return null;
         }
     }
 }

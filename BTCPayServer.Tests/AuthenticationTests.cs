@@ -218,7 +218,7 @@ namespace BTCPayServer.Tests
                 s.Login(user.RegisterDetails.Email, user.RegisterDetails.Password);
                 
                 Assert.Throws<NoSuchElementException>(() => s.Driver.FindElement(By.Id("consent-yes")));
-                results = url.Split("#").Last().Split("&")
+                results = url.Split("?").Last().Split("&")
                     .ToDictionary(s1 => s1.Split("=")[0], s1 => s1.Split("=")[1]);
                 Assert.True(results.ContainsKey("code"));
             }

@@ -123,7 +123,7 @@ namespace BTCPayServer.Tests
 
                 //in Implicit mode, you renew your token  by hitting the same endpoint but adding prompt=none. If you are still logged in on the site, you will receive a fresh token.
                 var implicitAuthorizeUrlSilentModel = new Uri($"{implicitAuthorizeUrl.OriginalString}&prompt=none");
-                s.Driver.Navigate().GoToUrl(implicitAuthorizeUrl);
+                s.Driver.Navigate().GoToUrl(implicitAuthorizeUrlSilentModel);
                 url = s.Driver.Url;
                 results = url.Split("#").Last().Split("&").ToDictionary(s1 => s1.Split("=")[0], s1 => s1.Split("=")[1]);
                 await TestApiAgainstAccessToken(results["access_token"], tester, user);

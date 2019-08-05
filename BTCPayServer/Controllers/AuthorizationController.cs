@@ -73,10 +73,17 @@ namespace BTCPayServer.Controllers
                         authorization.Status.Equals(OpenIddictConstants.Statuses.Valid,
                             StringComparison.OrdinalIgnoreCase)));
 
-            if (authorizations.Length > 0 &&
-                !authorizations.Any(authorization => request.Scope.Except(authorization.Scopes).Any()))
+            
+            if (authorizations.Length > 0)
             {
-                return await Authorize(request, "YES", false);
+                var sufficientScopes = (await Task.WhenAll(authorizations.Select(authorization =>
+                        _authorizationManager.GetScopesAsync(authorization).AsTask())))
+                    .Select(scopes => request.GetScopes().Except(scopes).Any()).Any(missingScopes => !missingScopes);
+
+                if (sufficientScopes)
+                {
+                    return await Authorize(request, "YES", false);
+                }
             }
 
             // Flow the request_id to allow OpenIddict to restore

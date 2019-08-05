@@ -4,7 +4,11 @@
  * the license and the contributors participating to this project.
  */
 
+using System;
+using System.Collections.Immutable;
+using System.Linq;
 using System.Threading.Tasks;
+using AspNet.Security.OpenIdConnect.Extensions;
 using AspNet.Security.OpenIdConnect.Primitives;
 using BTCPayServer.Authentication.OpenId;
 using BTCPayServer.Authentication.OpenId.Models;
@@ -48,7 +52,7 @@ namespace BTCPayServer.Controllers
         {
             // Retrieve the application details from the database.
             var application = await _applicationManager.FindByClientIdAsync(request.ClientId);
-            
+
             if (application == null)
             {
                 return View("Error",
@@ -59,17 +63,22 @@ namespace BTCPayServer.Controllers
                             "Details concerning the calling client application cannot be found in the database"
                     });
             }
-            
-            if (request.HasPrompt(OpenIdConnectConstants.Prompts.None))
+
+            var userId = _userManager.GetUserId(User);
+            var authorizations =
+                await _authorizationManager.ListAsync(queryable =>
+                    queryable.Where(authorization =>
+                        authorization.Subject.Equals(userId, StringComparison.OrdinalIgnoreCase) &&
+                        application.Id.Equals(authorization.Application.Id, StringComparison.OrdinalIgnoreCase) &&
+                        authorization.Status.Equals(OpenIddictConstants.Statuses.Valid,
+                            StringComparison.OrdinalIgnoreCase)));
+
+            if (authorizations.Length > 0 &&
+                !authorizations.Any(authorization => request.Scope.Except(authorization.Scopes).Any()))
             {
-                var userId = _userManager.GetUserId(User);
-                var authorizations =
-                    await _authorizationManager.FindAsync(userId, request.ClientId, OpenIddictConstants.Statuses.Valid);
-                if (!authorizations.IsEmpty)
-                {
-                    return await Authorize(request, "yes");
-                }
+                return await Authorize(request, "YES", false);
             }
+
             // Flow the request_id to allow OpenIddict to restore
             // the original authorization request from the cache.
             return View(new AuthorizeViewModel
@@ -81,34 +90,51 @@ namespace BTCPayServer.Controllers
         }
 
         [Authorize(AuthenticationSchemes = Policies.CookieAuthentication), HttpPost("~/connect/authorize")]
-        public async Task<IActionResult> Authorize(OpenIdConnectRequest request, string consent)
+        public async Task<IActionResult> Authorize(OpenIdConnectRequest request,
+            string consent, bool createAuthorization = true)
         {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return View("Error",
+                    new ErrorViewModel
+                    {
+                        Error = OpenIddictConstants.Errors.ServerError,
+                        ErrorDescription = "An internal error has occurred"
+                    });
+            }
+
+            string type = null;
             switch (consent.ToUpperInvariant())
             {
+                case "YESTEMPORARY":
+                    type = OpenIddictConstants.AuthorizationTypes.AdHoc;
+                    break;
                 case "YES":
-                    var user = await _userManager.GetUserAsync(User);
-                    if (user == null)
-                    {
-                        return View("Error",
-                            new ErrorViewModel
-                            {
-                                Error = OpenIddictConstants.Errors.ServerError,
-                                ErrorDescription = "An internal error has occurred"
-                            });
-                    }
-
-                    // Create a new authentication ticket.
-                    var ticket = await OpenIdExtensions.CreateAuthenticationTicket(_IdentityOptions.Value, _signInManager, request , user );
-
-                    // Returning a SignInResult will ask OpenIddict to issue the appropriate access/identity tokens.
-                    return SignIn(ticket.Principal, ticket.Properties, ticket.AuthenticationScheme);
+                    type = OpenIddictConstants.AuthorizationTypes.Permanent;
+                    break;
                 case "NO":
                     // Notify OpenIddict that the authorization grant has been denied by the resource owner
                     // to redirect the user agent to the client application using the appropriate response_mode.
                     return Forbid(OpenIddictServerDefaults.AuthenticationScheme);
             }
 
-            return NoContent();
+
+            // Create a new authentication ticket.
+            var ticket =
+                await OpenIdExtensions.CreateAuthenticationTicket(_IdentityOptions.Value, _signInManager,
+                    request, user);
+            if (createAuthorization)
+            {
+                var application = await _applicationManager.FindByClientIdAsync(request.ClientId);
+                var authorization = await _authorizationManager.CreateAsync(User, user.Id, application.Id,
+                    type, ticket.GetScopes().ToImmutableArray(),
+                    ticket.Properties.Items.ToImmutableDictionary());
+                ticket.SetInternalAuthorizationId(authorization.Id);
+            }
+
+            // Returning a SignInResult will ask OpenIddict to issue the appropriate access/identity tokens.
+            return SignIn(ticket.Principal, ticket.Properties, ticket.AuthenticationScheme);
         }
     }
 }

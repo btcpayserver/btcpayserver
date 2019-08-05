@@ -119,8 +119,6 @@ namespace BTCPayServer.Tests
                 var results = url.Split("#").Last().Split("&")
                     .ToDictionary(s1 => s1.Split("=")[0], s1 => s1.Split("=")[1]);
                 await TestApiAgainstAccessToken(results["access_token"], tester, user);
-
-
                 //in Implicit mode, you renew your token  by hitting the same endpoint but adding prompt=none. If you are still logged in on the site, you will receive a fresh token.
                 var implicitAuthorizeUrlSilentModel = new Uri($"{implicitAuthorizeUrl.OriginalString}&prompt=none");
                 s.Driver.Navigate().GoToUrl(implicitAuthorizeUrlSilentModel);
@@ -129,6 +127,14 @@ namespace BTCPayServer.Tests
                 await TestApiAgainstAccessToken(results["access_token"], tester, user);
 
                 LogoutFlow(tester, id, s);
+                
+                s.Driver.Navigate().GoToUrl(implicitAuthorizeUrl);
+                s.Login(user.RegisterDetails.Email, user.RegisterDetails.Password);
+                
+                Assert.Throws<NoSuchElementException>(() => s.Driver.FindElement(By.Id("consent-yes")));
+                results = url.Split("#").Last().Split("&")
+                    .ToDictionary(s1 => s1.Split("=")[0], s1 => s1.Split("=")[1]);
+                await TestApiAgainstAccessToken(results["access_token"], tester, user);
             }
         }
 
@@ -206,6 +212,15 @@ namespace BTCPayServer.Tests
                 var refreshedAccessToken = await RefreshAnAccessToken(result.RefreshToken, httpClient, id, secret);
 
                 await TestApiAgainstAccessToken(refreshedAccessToken, tester, user);
+                
+                LogoutFlow(tester, id, s);
+                s.Driver.Navigate().GoToUrl(authorizeUrl);
+                s.Login(user.RegisterDetails.Email, user.RegisterDetails.Password);
+                
+                Assert.Throws<NoSuchElementException>(() => s.Driver.FindElement(By.Id("consent-yes")));
+                results = url.Split("#").Last().Split("&")
+                    .ToDictionary(s1 => s1.Split("=")[0], s1 => s1.Split("=")[1]);
+                Assert.True(results.ContainsKey("code"));
             }
         }
 

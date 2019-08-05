@@ -4,25 +4,22 @@
  * the license and the contributors participating to this project.
  */
 
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using AspNet.Security.OpenIdConnect.Primitives;
 using BTCPayServer.Authentication.OpenId;
 using BTCPayServer.Authentication.OpenId.Models;
 using BTCPayServer.Models;
 using BTCPayServer.Models.Authorization;
-using Microsoft.AspNetCore.Authentication;
+using BTCPayServer.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.Options;
 using OpenIddict.Abstractions;
 using OpenIddict.Core;
 using OpenIddict.Server;
 
-namespace Mvc.Server
+namespace BTCPayServer.Controllers
 {
     public class AuthorizationController : Controller
     {
@@ -46,7 +43,7 @@ namespace Mvc.Server
             _IdentityOptions = identityOptions;
         }
 
-        [Authorize, HttpGet("~/connect/authorize")]
+        [Authorize(AuthenticationSchemes = Policies.CookieAuthentication), HttpGet("~/connect/authorize")]
         public async Task<IActionResult> Authorize(OpenIdConnectRequest request)
         {
             // Retrieve the application details from the database.
@@ -83,8 +80,7 @@ namespace Mvc.Server
             });
         }
 
-        [Authorize]
-        [HttpPost("~/connect/authorize"), ValidateAntiForgeryToken]
+        [Authorize(AuthenticationSchemes = Policies.CookieAuthentication), HttpPost("~/connect/authorize")]
         public async Task<IActionResult> Authorize(OpenIdConnectRequest request, string consent)
         {
             switch (consent.ToUpperInvariant())

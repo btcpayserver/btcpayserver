@@ -12,8 +12,6 @@
         <div class="row">
             <div class="col-lg-12 text-center">
                 <form method="post">
-
-                    @Html.AntiForgeryToken()
                     <input type="hidden" name="request_id" value="@Model.RequestId"/>
     
                     <button class="btn btn-lg btn-success" id="consent-yes" name="consent" type="submit" value="Yes">Authorize app</button>

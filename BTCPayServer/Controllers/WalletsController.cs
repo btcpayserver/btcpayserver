@@ -39,6 +39,7 @@ namespace BTCPayServer.Controllers
     public partial class WalletsController : Controller
     {
         public StoreRepository Repository { get; }
+        public WalletRepository WalletRepository { get; }
         public BTCPayNetworkProvider NetworkProvider { get; }
         public ExplorerClientProvider ExplorerClientProvider { get; }
 
@@ -54,6 +55,7 @@ namespace BTCPayServer.Controllers
 
         CurrencyNameTable _currencyTable;
         public WalletsController(StoreRepository repo,
+                                 WalletRepository walletRepository,
                                  CurrencyNameTable currencyTable,
                                  BTCPayNetworkProvider networkProvider,
                                  UserManager<ApplicationUser> userManager,
@@ -66,6 +68,7 @@ namespace BTCPayServer.Controllers
         {
             _currencyTable = currencyTable;
             Repository = repo;
+            WalletRepository = walletRepository;
             RateFetcher = rateProvider;
             NetworkProvider = networkProvider;
             _userManager = userManager;
@@ -74,6 +77,112 @@ namespace BTCPayServer.Controllers
             ExplorerClientProvider = explorerProvider;
             _feeRateProvider = feeRateProvider;
             _walletProvider = walletProvider;
+        }
+
+        // Borrowed from https://github.com/ManageIQ/guides/blob/master/labels.md
+        string[] LabelColorScheme = new string[] 
+        {
+            "#fbca04",
+            "#0e8a16",
+            "#ff7619",
+            "#84b6eb",
+            "#5319e7",
+            "#000000",
+            "#cc317c",
+        };
+
+        const int MaxLabelSize = 20;
+        const int MaxCommentSize = 200;
+        [HttpPost]
+        [Route("{walletId}")]
+        public async Task<IActionResult> ModifyTransaction(
+            // We need addlabel and addlabelclick. addlabel is the + button if the label does not exists,
+            // addlabelclick is if the user click on existing label. For some reason, reusing the same name attribute for both
+            // does not work
+            [ModelBinder(typeof(WalletIdModelBinder))]
+            WalletId walletId, string transactionId, 
+                                string addlabel = null, 
+                                string addlabelclick = null,
+                                string addcomment = null, 
+                                string removelabel = null)
+        {
+            addlabel = addlabel ?? addlabelclick;
+            // Hack necessary when the user enter a empty comment and submit.
+            // For some reason asp.net consider addcomment null instead of empty string...
+            try
+            {
+                if (addcomment == null && Request?.Form?.TryGetValue(nameof(addcomment), out _) is true)
+                {
+                    addcomment = string.Empty;
+                }
+            }
+            catch { }
+            /////////
+            
+            DerivationSchemeSettings paymentMethod = await GetDerivationSchemeSettings(walletId);
+            if (paymentMethod == null)
+                return NotFound();
+
+            var walletBlobInfoAsync = WalletRepository.GetWalletInfo(walletId);
+            var walletTransactionsInfoAsync = WalletRepository.GetWalletTransactionsInfo(walletId);
+            var wallet = _walletProvider.GetWallet(paymentMethod.Network);
+            var walletBlobInfo = await walletBlobInfoAsync;
+            var walletTransactionsInfo = await walletTransactionsInfoAsync;
+            if (addlabel != null)
+            {
+                addlabel = addlabel.Trim().ToLowerInvariant().Replace(',',' ').Truncate(MaxLabelSize);
+                var labels = walletBlobInfo.GetLabels();
+                if (!walletTransactionsInfo.TryGetValue(transactionId, out var walletTransactionInfo))
+                {
+                    walletTransactionInfo = new WalletTransactionInfo();
+                }
+                if (!labels.Any(l => l.Value.Equals(addlabel, StringComparison.OrdinalIgnoreCase)))
+                {
+                    List<string> allColors = new List<string>();
+                    allColors.AddRange(LabelColorScheme);
+                    allColors.AddRange(labels.Select(l => l.Color));
+                    var chosenColor =
+                        allColors
+                        .GroupBy(k => k)
+                        .OrderBy(k => k.Count())
+                        .ThenBy(k => Array.IndexOf(LabelColorScheme, k.Key))
+                        .First().Key;
+                    walletBlobInfo.LabelColors.Add(addlabel, chosenColor);
+                    await WalletRepository.SetWalletInfo(walletId, walletBlobInfo);
+                }
+                if (walletTransactionInfo.Labels.Add(addlabel))
+                {
+                    await WalletRepository.SetWalletTransactionInfo(walletId, transactionId, walletTransactionInfo);
+                }
+            }
+            else if (removelabel != null)
+            {
+                removelabel = removelabel.Trim().ToLowerInvariant().Truncate(MaxLabelSize);
+                if (walletTransactionsInfo.TryGetValue(transactionId, out var walletTransactionInfo))
+                {
+                    if (walletTransactionInfo.Labels.Remove(removelabel))
+                    {
+                        var canDelete = !walletTransactionsInfo.SelectMany(txi => txi.Value.Labels).Any(l => l == removelabel);
+                        if (canDelete)
+                        {
+                            walletBlobInfo.LabelColors.Remove(removelabel);
+                            await WalletRepository.SetWalletInfo(walletId, walletBlobInfo);
+                        }
+                        await WalletRepository.SetWalletTransactionInfo(walletId, transactionId, walletTransactionInfo);
+                    }
+                }
+            }
+            else if (addcomment != null)
+            {
+                addcomment = addcomment.Trim().Truncate(MaxCommentSize);
+                if (!walletTransactionsInfo.TryGetValue(transactionId, out var walletTransactionInfo))
+                {
+                    walletTransactionInfo = new WalletTransactionInfo();
+                }
+                walletTransactionInfo.Comment = addcomment;
+                await WalletRepository.SetWalletTransactionInfo(walletId, transactionId, walletTransactionInfo);
+            }
+            return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
         }
 
         public async Task<IActionResult> ListWallets()
@@ -118,31 +227,48 @@ namespace BTCPayServer.Controllers
         [Route("{walletId}")]
         public async Task<IActionResult> WalletTransactions(
             [ModelBinder(typeof(WalletIdModelBinder))]
-            WalletId walletId)
+            WalletId walletId, string labelFilter = null)
         {
             DerivationSchemeSettings paymentMethod = await GetDerivationSchemeSettings(walletId);
             if (paymentMethod == null)
                 return NotFound();
 
             var wallet = _walletProvider.GetWallet(paymentMethod.Network);
+            var walletBlobAsync = WalletRepository.GetWalletInfo(walletId);
+            var walletTransactionsInfoAsync = WalletRepository.GetWalletTransactionsInfo(walletId);
             var transactions = await wallet.FetchTransactions(paymentMethod.AccountDerivation);
-
+            var walletBlob = await walletBlobAsync;
+            var walletTransactionsInfo = await walletTransactionsInfoAsync;
             var model = new ListTransactionsViewModel();
-            foreach (var tx in transactions.UnconfirmedTransactions.Transactions.Concat(transactions.ConfirmedTransactions.Transactions))
+            foreach (var tx in transactions.UnconfirmedTransactions.Transactions.Concat(transactions.ConfirmedTransactions.Transactions).ToArray())
             {
                 var vm = new ListTransactionsViewModel.TransactionViewModel();
-                model.Transactions.Add(vm);
                 vm.Id = tx.TransactionId.ToString();
                 vm.Link = string.Format(CultureInfo.InvariantCulture, paymentMethod.Network.BlockExplorerLink, vm.Id);
                 vm.Timestamp = tx.Timestamp;
                 vm.Positive = tx.BalanceChange >= Money.Zero;
                 vm.Balance = tx.BalanceChange.ToString();
                 vm.IsConfirmed = tx.Confirmations != 0;
+
+                if (walletTransactionsInfo.TryGetValue(tx.TransactionId.ToString(), out var transactionInfo))
+                {
+                    var labels = walletBlob.GetLabels(transactionInfo);
+                    vm.Labels.AddRange(labels);
+                    model.Labels.AddRange(labels);
+                    vm.Comment = transactionInfo.Comment;
+                }
+
+                if (labelFilter == null || vm.Labels.Any(l => l.Value.Equals(labelFilter, StringComparison.OrdinalIgnoreCase)))
+                    model.Transactions.Add(vm);
             }
             model.Transactions = model.Transactions.OrderByDescending(t => t.Timestamp).ToList();
             return View(model);
         }
 
+        private static string GetLabelTarget(WalletId walletId, uint256 txId)
+        {
+            return $"{walletId}:{txId}";
+        }
 
         [HttpGet]
         [Route("{walletId}/send")]

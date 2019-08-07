@@ -6,6 +6,7 @@
 }
 <style type="text/css">
 
+
     .smMaxWidth {
         max-width: 200px;
     }
@@ -45,20 +46,28 @@
                             <span class="fa fa-clock-o" title="Switch date format"></span>
                         </a>
                     </th>
+                    <th style="text-align:left">Label</th>
                     <th>Transaction Id</th>
                     <th style="text-align:right">Balance</th>
+                    <th style="text-align:right"></th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var transaction in Model.Transactions)
                 {
-                    <tr class="@(transaction.IsConfirmed ? "" : "unconf")">
+                    <tr>
                         <td>
                             <span class="switchTimeFormat" data-switch="@transaction.Timestamp.ToTimeAgo()">
                                 @transaction.Timestamp.ToBrowserDate()
                             </span>
                         </td>
-                        <td class="smMaxWidth text-truncate">
+                        <td style="text-align:left">
+                            @foreach (var label in transaction.Labels)
+                            {
+                                <a asp-route-labelFilter="@label.Value"><span class="badge" style="display:block;background-color:@label.Color;color:white;">@label.Value</span></a>
+                            }
+                        </td>
+                        <td class="smMaxWidth text-truncate @(transaction.IsConfirmed ? "" : "unconf")">
                             <a href="@transaction.Link" target="_blank">
                                 @transaction.Id
                             </a>
@@ -71,6 +80,51 @@
                         {
                             <td style="text-align:right; color:red;">@transaction.Balance</td>
                         }
+                        <td style="text-align:right;">
+                            <div class="dropdown" style="display:inline-block;">
+                                <span class="fa fa-tags" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></span>
+                                <div class="dropdown-menu">
+                                    <form asp-action="ModifyTransaction" method="post">
+                                        <input type="hidden" name="transactionId" value="@transaction.Id" />
+                                        <div class="dropdown-item input-group">
+                                            <input name="addlabel" placeholder="Label name" maxlength="20" type="text" class="form-control form-control-sm" />
+                                            <div class="input-group-append">
+                                                <button type="submit" class="btn btn-primary btn-sm"><span class="fa fa-plus"></span></button>
+                                            </div>
+                                        </div>
+                                        <div class="dropdown-divider"></div>
+                                        @foreach (var label in Model.Labels)
+                                        {
+                                            @if (transaction.Labels.Contains(label))
+                                            {
+                                                <button name="removelabel" type="submit" class="dropdown-item" value="@label.Value"><span class="badge" style="display:block;background-color:@label.Color;color:white;text-align:left;"><span class="fa fa-check"></span> @label.Value</span></button>
+                                            }
+                                            else
+                                            {
+                                                <button name="addlabelclick" type="submit" class="dropdown-item" value="@label.Value"><span class="badge" style="display:block;background-color:@label.Color;color:white;text-align:left;">@label.Value</span></button>
+                                            }
+                                        }
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="dropdown" style="display:inline-block;">
+                                @if (string.IsNullOrEmpty(transaction.Comment))
+                                {
+                                    <span class="fa fa-comment" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></span>
+                                }
+                                else
+                                {
+                                    <span class="fa fa-commenting" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></span>
+                                }
+                                <div class="dropdown-menu">
+                                    <form asp-action="ModifyTransaction" method="post">
+                                        <input type="hidden" name="transactionId" value="@transaction.Id" />
+                                        <textarea name="addcomment" class="dropdown-item" maxlength="200" rows="2" cols="20">@transaction.Comment</textarea>
+                                        <div class="dropdown-item"><button type="submit" class="btn btn-primary">Save comment</button></div>
+                                    </form>
+                                </div>
+                            </div>
+                        </td>
                     </tr>
                 }
             </tbody>

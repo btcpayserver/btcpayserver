@@ -24,7 +24,7 @@ namespace BTCPayServer.Services.Mails
         {
             get; set;
         }
-        [DataType(DataType.Password)]
+        
         public string Password
         {
             get; set;

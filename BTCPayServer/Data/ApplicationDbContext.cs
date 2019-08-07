@@ -61,6 +61,9 @@ namespace BTCPayServer.Data
             get; set;
         }
 
+        public DbSet<WalletData> Wallets { get; set; }
+        public DbSet<WalletTransactionData> WalletTransactions { get; set; }
+
         public DbSet<StoreData> Stores
         {
             get; set;
@@ -230,6 +233,18 @@ namespace BTCPayServer.Data
 
             builder.Entity<PaymentRequestData>()
                 .HasIndex(o => o.Status);
+
+            builder.Entity<WalletTransactionData>()
+                .HasKey(o => new
+                {
+                    o.WalletDataId,
+#pragma warning disable CS0618
+                    o.TransactionId
+#pragma warning restore CS0618
+                });
+            builder.Entity<WalletTransactionData>()
+                .HasOne(o => o.WalletData)
+                .WithMany(w => w.WalletTransactions).OnDelete(DeleteBehavior.Cascade);
 
             builder.UseOpenIddict<BTCPayOpenIdClient, BTCPayOpenIdAuthorization, OpenIddictScope<string>, BTCPayOpenIdToken, string>();
 

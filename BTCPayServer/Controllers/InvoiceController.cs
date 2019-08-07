@@ -269,7 +269,7 @@ namespace BTCPayServer.Controllers
                     handler
                         .IsPaymentMethodAllowedBasedOnInvoiceAmount(storeBlob, fetchingByCurrencyPair,
                             paymentMethod.Calculate().Due, supportedPaymentMethod.PaymentId);
-                if (errorMessage != null)
+                if (!string.IsNullOrEmpty(errorMessage))
                 {
                     logs.Write($"{logPrefix} {errorMessage}");
                     return null;

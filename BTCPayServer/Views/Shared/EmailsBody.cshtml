@@ -9,7 +9,7 @@
     </div>
 </div>
 
-<div class="row">
+<div class="row row-quick-fill" style="display: none">
     <div class="col-sm-6">
         <div class="dropdown quick-fill">
             <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -25,6 +25,8 @@
 </div>
 <script>
 $(document).ready(function(){
+    $('.row-quick-fill').show();
+    
     $('.dropdown.quick-fill a').click(function(e){
         e.preventDefault();
         
@@ -52,8 +54,6 @@ $(document).ready(function(){
     });
     
 });
-
-
 </script>
 
 <div class="row">

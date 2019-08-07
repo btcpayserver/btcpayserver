@@ -8,6 +8,7 @@ using BTCPayServer.Monero.RPC;
 using BTCPayServer.Monero.RPC.Models;
 using BTCPayServer.Services.Invoices;
 using Microsoft.Extensions.Hosting;
+using NBitcoin;
 using NBXplorer;
 
 namespace BTCPayServer.Payments.Monero
@@ -40,7 +41,7 @@ namespace BTCPayServer.Payments.Monero
         {
             _Cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-            leases.Add(_eventAggregator.Subscribe<MoneroEvent>(OnMoneroEvent));
+            leases.Add(_eventAggregator.Subscribe<MoneroEvent>(e => _ = OnMoneroEvent(e)));
 
             foreach (var moneroLikeConfigurationItem in _moneroLikeConfiguration.MoneroLikeConfigurationItems)
             {
@@ -49,67 +50,88 @@ namespace BTCPayServer.Payments.Monero
             return Task.CompletedTask;
         }
 
-        private void OnMoneroEvent(MoneroEvent obj)
+        private async Task OnMoneroEvent(MoneroEvent obj)
         {
-            _ = Task.Run(async () =>
+
+            var paymentMethodId = new PaymentMethodId(obj.CryptoCode, MoneroPaymentType.Instance);
+            if (!string.IsNullOrEmpty(obj.BlockHash))
             {
-                var paymentMethodId = new PaymentMethodId(obj.CryptoCode, PaymentTypes.MoneroLike);
-                if (!string.IsNullOrEmpty(obj.BlockHash))
+                _ = OnNewBlock(obj.CryptoCode);
+            }
+
+            if (!string.IsNullOrEmpty(obj.TransactionHash))
+            {
+                var transfer = await _moneroRpcProvider.WalletRpcClients[obj.CryptoCode]
+                    .GetTransferByTransactionId(
+                        new GetTransferByTransactionIdRequest() {TransactionId = obj.TransactionHash});
+
+
+                foreach (var destination in transfer.Transfer.Destinations)
                 {
-                    _ = OnNewBlock(obj.CryptoCode);
-                }
-
-                if (!string.IsNullOrEmpty(obj.TransactionHash))
-                {
-                    var transfer = await _moneroRpcProvider.WalletRpcClients[obj.CryptoCode]
-                        .GetTransferByTransactionId(
-                            new GetTransferByTransactionIdRequest() {TransactionId = obj.TransactionHash});
-
-
-                    foreach (var destination in transfer.Transfer.Destinations)
+                    var address = destination.Address + "#" + paymentMethodId.ToString();
+                    var invoice = (await _invoiceRepository.GetInvoicesFromAddresses(new[] {address})).FirstOrDefault();
+                    if (invoice == null)
                     {
-                        var address = destination.Address + "#" + paymentMethodId.ToString();
-                        var invoice =( await _invoiceRepository.GetInvoicesFromAddresses(new []{address})).FirstOrDefault();
-                        if (invoice == null)
-                        {
-                            continue;
-                        }
-
-                        var addressIndex = await _moneroRpcProvider.WalletRpcClients[obj.CryptoCode]
-                            .GetAddressIndex(new GetAddressIndexRequest() {Address = destination.Address});
-                         
-                        var paymentData = new MoneroLikePaymentData()
-                        {
-                            Address = destination.Address,
-                            SubaccountIndex = addressIndex.Index.Major,
-                            SubaddressIndex = addressIndex.Index.Minor,
-                            TransactionId = transfer.Transfer.Txid,
-                            Confirmations = transfer.Transfer.Confirmations,
-                            Amount = destination.Amount,
-                            BlockHeight = transfer.Transfer.Height,
-                            
-                        };
-                        
-                        var alreadyExist = GetAllMoneroLikePayments(invoice, obj.CryptoCode)
-                            .Select(entity => entity.GetCryptoPaymentData())
-                            .Where(c => c.GetPaymentId() == paymentData.GetPaymentId()).Any();
-                        if (!alreadyExist)
-                        {
-                            var payment = await _invoiceRepository.AddPayment(invoice.Id, DateTimeOffset.UtcNow,
-                                paymentData, _networkProvider.GetNetwork<MoneroLikeSpecificBtcPayNetwork>(obj.CryptoCode));
-                            if (payment != null)
-                                await ReceivedPayment(wallet, invoice, payment, evt.DerivationStrategy);
-                        }
-                        else
-                        {
-                            await UpdatePaymentStates(obj.CryptoCode, invoice.Id);
-                        }
+                        continue;
                     }
-                 
-                    
+
+                    var addressIndex = await _moneroRpcProvider.WalletRpcClients[obj.CryptoCode]
+                        .GetAddressIndex(new GetAddressIndexRequest() {Address = destination.Address});
+
+                    var paymentData = new MoneroLikePaymentData()
+                    {
+                        Address = destination.Address,
+                        SubaccountIndex = addressIndex.Index.Major,
+                        SubaddressIndex = addressIndex.Index.Minor,
+                        TransactionId = transfer.Transfer.Txid,
+                        ConfirmationCount = transfer.Transfer.Confirmations,
+                        Amount = destination.Amount,
+                        BlockHeight = transfer.Transfer.Height,
+
+                    };
+
+                    var alreadyExist = GetAllMoneroLikePayments(invoice, obj.CryptoCode)
+                        .Select(entity => entity.GetCryptoPaymentData())
+                        .Where(c => c.GetPaymentId() == paymentData.GetPaymentId()).Any();
+                    if (!alreadyExist)
+                    {
+                        var payment = await _invoiceRepository.AddPayment(invoice.Id, DateTimeOffset.UtcNow,
+                            paymentData, _networkProvider.GetNetwork<MoneroLikeSpecificBtcPayNetwork>(obj.CryptoCode));
+                        if (payment != null)
+                            await ReceivedPayment(invoice, payment);
+                    }
+                    else
+                    {
+                        await UpdatePaymentStates(obj.CryptoCode, invoice.Id);
+                    }
                 }
-            });
+            }
+
         }
+        
+        private async Task<InvoiceEntity> ReceivedPayment(InvoiceEntity invoice, PaymentEntity payment)
+        {
+            var paymentData = (MoneroLikePaymentData)payment.GetCryptoPaymentData();
+            invoice = (await UpdatePaymentStates(payment.GetCryptoCode(), invoice.Id));
+            if (invoice == null)
+                return null;
+            var paymentMethod = invoice.GetPaymentMethod(payment.Network, PaymentTypes.BTCLike);
+            if (paymentMethod != null &&
+                paymentMethod.GetPaymentMethodDetails() is MoneroLikeOnChainPaymentMethodDetails monero &&
+                monero.GetPaymentDestination() == paymentData.GetDestination() &&
+                paymentMethod.Calculate().Due > Money.Zero)
+            {
+                var address = await wallet.ReserveAddressAsync(strategy);
+                monero.DepositAddress = address.ToString();
+                await _invoiceRepository.NewAddress(invoice.Id, monero, payment.Network);
+                _eventAggregator.Publish(new InvoiceNewAddressEvent(invoice.Id, address.ToString(), payment.Network));
+                paymentMethod.SetPaymentMethodDetails(monero);
+                invoice.SetPaymentMethod(paymentMethod);
+            }
+            _eventAggregator.Publish(new InvoiceEvent(invoice, 1002, InvoiceEvent.ReceivedPayment){Payment = payment});
+            return invoice;
+        }
+
         private async Task OnNewBlock(string cryptoCode)
         {
             await Task.WhenAll((await _invoiceRepository.GetPendingInvoices())
@@ -122,7 +144,7 @@ namespace BTCPayServer.Payments.Monero
         IEnumerable<PaymentEntity> GetAllMoneroLikePayments(InvoiceEntity invoice, string cryptoCode)
         {
             return invoice.GetPayments()
-                .Where(p => p.GetPaymentMethodId() == new PaymentMethodId(cryptoCode, PaymentTypes.MoneroLike));
+                .Where(p => p.GetPaymentMethodId() == new PaymentMethodId(cryptoCode, MoneroPaymentType.Instance));
         }
 
         
@@ -205,7 +227,7 @@ namespace BTCPayServer.Payments.Monero
             await _InvoiceRepository.UpdatePayments(updatedPaymentEntities);
             if (updatedPaymentEntities.Count != 0)
                 _Aggregator.Publish(new Events.InvoiceNeedUpdateEvent(invoice.Id));
-            return invoice;
+            return _eventAggregator;
         }
 
 

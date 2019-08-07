@@ -1,7 +1,10 @@
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
+using BTCPayServer.Lightning;
 using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Monero.RPC.Models;
@@ -28,31 +31,60 @@ namespace BTCPayServer.Payments.Monero
             StoreData store, MoneroLikeSpecificBtcPayNetwork network, object preparePaymentObject)
         {
             var invoice = paymentMethod.ParentEntity;
-            var client = _moneroRpcProvider.WalletRpcClients [supportedPaymentMethod.CryptoCode];
-            var response  = await client.CreateAddress(new CreateAddressRequest() {Label = $"btcpay invoice #{invoice.Id}", AccountIndex = supportedPaymentMethod.AccountIndex });
+            if (!(preparePaymentObject is Prepare moneroPrepare)) throw new ArgumentException();
+            var feeRatePerKb = await moneroPrepare.GetFeeRate;
+            var address = await moneroPrepare.ReserveAddress(invoice.Id);
 
+            var feeRatePerByte = feeRatePerKb.Fee / 1024;
             return new MoneroLikeOnChainPaymentMethodDetails()
             {
+                NextNetworkFee = 
+                    new LightMoney(feeRatePerByte * 100).ToDecimal(LightMoneyUnit.BTC),
                 AccountIndex = supportedPaymentMethod.AccountIndex,
-                AddressIndex = response.AddressIndex,
-                DepositAddress = response.Address
+                AddressIndex = address.AddressIndex,
+                DepositAddress = address.Address
             };
+
         }
 
+        public override object PreparePayment(MoneroSupportedPaymentMethod supportedPaymentMethod, StoreData store,
+            BTCPayNetworkBase network)
+        {
+            
+            var walletClient = _moneroRpcProvider.WalletRpcClients [supportedPaymentMethod.CryptoCode];
+            var daemonClient = _moneroRpcProvider.DaemonRpcClients [supportedPaymentMethod.CryptoCode];
+            return new Prepare()
+            {
+                GetFeeRate = daemonClient.GetFeeEstimate(new GetFeeEstimateRequest()),
+                ReserveAddress = s =>  walletClient.CreateAddress(new CreateAddressRequest() {Label = $"btcpay invoice #{s}", AccountIndex = supportedPaymentMethod.AccountIndex })
+            };
+        }
+        
+        class Prepare
+        {
+            public Task<GetFeeEstimateResponse> GetFeeRate;
+            public Func<string, Task<CreateAddressResponse>> ReserveAddress;
+        }
 
         public override void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse)
         {
             var paymentMethodId = new PaymentMethodId(model.CryptoCode, PaymentType);
 
-            var cryptoInfo = invoiceResponse.CryptoInfo.First(o => Extensions.GetpaymentMethodId(o) == paymentMethodId);
+            var client = _moneroRpcProvider.WalletRpcClients[model.CryptoCode];
+            
+            var cryptoInfo = invoiceResponse.CryptoInfo.First(o => o.GetpaymentMethodId() == paymentMethodId);
             var network = _networkProvider.GetNetwork<MoneroLikeSpecificBtcPayNetwork>(model.CryptoCode);
             model.IsLightning = false;
             model.PaymentMethodName = GetPaymentMethodName(network);
             model.CryptoImage = GetCryptoImage(network);
-            model.InvoiceBitcoinUrl = cryptoInfo.PaymentUrls.BOLT11;
-            model.InvoiceBitcoinUrlQR = cryptoInfo.PaymentUrls.BOLT11.ToUpperInvariant();
+            model.InvoiceBitcoinUrl = client.MakeUri(new MakeUriRequest()
+                {
+                    Address = cryptoInfo.Address,
+                    Amount = long.Parse(cryptoInfo.Due, CultureInfo.InvariantCulture)
+                }).GetAwaiter()
+                .GetResult().Uri;
+            model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrl;
         }
-
         public override string GetCryptoImage(PaymentMethodId paymentMethodId)
         {
             var network = _networkProvider.GetNetwork<MoneroLikeSpecificBtcPayNetwork>(paymentMethodId.CryptoCode);
@@ -78,13 +110,13 @@ namespace BTCPayServer.Payments.Monero
                 .Select(network => new PaymentMethodId(network.CryptoCode, PaymentType));
         }
 
-        private string GetCryptoImage(BTCPayNetwork network)
+        private string GetCryptoImage(MoneroLikeSpecificBtcPayNetwork network)
         {
             return network.CryptoImagePath;
         }
 
 
-        private string GetPaymentMethodName(BTCPayNetwork network)
+        private string GetPaymentMethodName(MoneroLikeSpecificBtcPayNetwork network)
         {
             return $"{network.DisplayName}";
         }

@@ -3,67 +3,63 @@ using BTCPayServer.Services.Invoices;
 
 namespace BTCPayServer.Payments.Monero
 {
-    public class MoneroLikePaymentData: CryptoPaymentData
+    public class MoneroLikePaymentData : CryptoPaymentData
     {
-        public BTCPayNetworkBase Network { get; set; }
-
-        public string GetPaymentId()
-        {
-            throw new NotImplementedException();
-        }
-
-        public string[] GetSearchTerms()
-        {
-            throw new NotImplementedException();
-        }
-
-        public decimal GetValue()
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool PaymentCompleted(PaymentEntity entity)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool PaymentConfirmed(PaymentEntity entity, SpeedPolicy speedPolicy)
-        {
-            throw new NotImplementedException();
-        }
-
-        public PaymentType GetPaymentType()
-        {
-            throw new NotImplementedException();
-        }
-
-        public string GetDestination()
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool PaymentCompleted(PaymentEntity entity, BTCPayNetworkBase network)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool PaymentConfirmed(PaymentEntity entity, SpeedPolicy speedPolicy, BTCPayNetworkBase network)
-        {
-            throw new NotImplementedException();
-        }
-
-        public string GetDestination(BTCPayNetworkBase network)
-        {
-            return Address;
-        }
-
-        public long  Amount { get; set; }
+        public long Amount { get; set; }
         public string Address { get; set; }
         public long SubaddressIndex { get; set; }
         public long SubaccountIndex { get; set; }
         public long BlockHeight { get; set; }
-        public long Confirmations { get; set; }
+        public long ConfirmationCount { get; set; }
         public string TransactionId { get; set; }
-        
+
+        public BTCPayNetworkBase Network { get; set; }
+
+        public string GetPaymentId()
+        {
+            return TransactionId;
+        }
+
+        public string[] GetSearchTerms()
+        {
+            return new[] {TransactionId};
+        }
+
+        public decimal GetValue()
+        {
+            return Amount;
+        }
+
+        public bool PaymentCompleted(PaymentEntity entity)
+        {
+            return ConfirmationCount >= (Network as MoneroLikeSpecificBtcPayNetwork).MaxTrackedConfirmation;
+        }
+
+        public bool PaymentConfirmed(PaymentEntity entity, SpeedPolicy speedPolicy)
+        {
+            switch (speedPolicy)
+            {
+                case SpeedPolicy.HighSpeed:
+                    return ConfirmationCount >= 1;
+                case SpeedPolicy.MediumSpeed:
+                    return ConfirmationCount >= 5;
+                case SpeedPolicy.LowMediumSpeed:
+                    return ConfirmationCount >= 7;
+                case SpeedPolicy.LowSpeed:
+                    return ConfirmationCount >= 10;
+                default:
+                    return false;
+            }
+        }
+
+        public PaymentType GetPaymentType()
+        {
+            return MoneroPaymentType.Instance;
+        }
+
+        public string GetDestination()
+        {
+            return Address;
+        }
     }
 }

@@ -47,6 +47,10 @@ namespace BTCPayServer.Monero.RPC
         public Task<GetBlockHeaderByHeightResponse> GetBlockHeaderByHeight(GetBlockHeaderByHeightRequest request, CancellationToken cts = default(CancellationToken))
         {
             return SendCommandAsync<GetBlockHeaderByHeightRequest, GetBlockHeaderByHeightResponse>("get_block_header_by_height", request, cts);
+        }        
+        public Task<GetFeeEstimateResponse> GetFeeEstimate(GetFeeEstimateRequest request, CancellationToken cts = default(CancellationToken))
+        {
+            return SendCommandAsync<GetFeeEstimateRequest, GetFeeEstimateResponse>("get_fee_estimate", request, cts);
         }
         
         public Task<SyncInfoResponse> SyncInfo(CancellationToken cts = default(CancellationToken))

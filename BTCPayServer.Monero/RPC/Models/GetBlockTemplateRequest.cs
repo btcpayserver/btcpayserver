@@ -4,5 +4,7 @@ namespace BTCPayServer.Monero.RPC.Models
     {
         public string WalletAddress {get;set;}
         public uint ReserveSize {get;set;}
-    }
+    }   
+    
+    
 }

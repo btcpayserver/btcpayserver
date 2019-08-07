@@ -12,8 +12,11 @@ namespace BTCPayServer.Monero
     {
         public static IServiceCollection AddMoneroLike(this IServiceCollection serviceCollection)
         {
-            serviceCollection.AddSingleton<MoneroLikeConfiguration>(provider =>
+            serviceCollection.AddSingleton(provider =>
                 provider.ConfigureMoneroLikeConfiguration());
+            serviceCollection.AddSingleton<MoneroRPCProvider>();
+            
+            
             return serviceCollection;
         }
 

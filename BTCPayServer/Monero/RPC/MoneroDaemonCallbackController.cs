@@ -16,7 +16,8 @@ namespace BTCPayServer.Payments.Monero
         {
             _eventAggregator.Publish(new MoneroEvent()
             {
-                BlockHash = hash
+                BlockHash = hash,
+                CryptoCode = cryptoCode
             });
             return Ok();
         }

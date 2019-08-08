@@ -156,7 +156,7 @@ namespace BTCPayServer.Controllers
 
             app.TagAllInvoices = vm.UseAllStoreInvoices;
             app.SetSettings(newSettings);
-            await UpdateAppSettings(app);
+            await _AppService.UpdateAppSettings(app);
 
             _EventAggregator.Publish(new AppUpdated()
             {

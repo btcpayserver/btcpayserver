@@ -132,6 +132,18 @@ namespace BTCPayServer.Controllers
                 price = choice.Price.Value;
                 if (amount > price)
                     price = amount;
+
+                if (choice.Inventory == 0)
+                {
+                    return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
+                }
+                if (choice.Inventory != -1)
+                {
+                    choice.Inventory--;
+                    settings.Template = _AppService.SerializeTemplate(choices);
+                    app.SetSettings(settings);
+                    await _AppService.UpdateAppSettings(app);
+                }
             }
             else
             {

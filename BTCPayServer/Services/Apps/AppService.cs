@@ -25,6 +25,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NBitpayClient;
 using YamlDotNet.RepresentationModel;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 using static BTCPayServer.Controllers.AppsController;
 using static BTCPayServer.Models.AppViewModels.ViewCrowdfundViewModel;
 
@@ -268,7 +270,18 @@ namespace BTCPayServer.Services.Apps
             return _storeRepository.FindStore(app.StoreDataId);
         }
 
-
+        public string SerializeTemplate(ViewPointOfSaleViewModel.Item[] items)
+        {
+            return new Serializer().Serialize(items.ToDictionary(item => item.Id, item => new
+            {
+                price =  item.Price.Value,
+                title= item.Title,
+                description = item.Description,
+                image = item.Image,
+                custom = item.Custom,
+                inventory = item.Inventory
+            }));
+        }
         public ViewPointOfSaleViewModel.Item[] Parse(string template, string currency)
         {
             if (string.IsNullOrWhiteSpace(template))
@@ -293,7 +306,8 @@ namespace BTCPayServer.Services.Apps
                                  Value = decimal.Parse(cc.Value.Value, CultureInfo.InvariantCulture),
                                  Formatted = Currencies.FormatCurrency(cc.Value.Value, currency)
                              }).Single(),
-                    Custom = c.GetDetailString("custom") == "true"
+                    Custom = c.GetDetailString("custom") == "true",
+                    Inventory = int.Parse( c.GetDetailString("inventory")?? "-1", CultureInfo.InvariantCulture)
                 })
                 .ToArray();
         }
@@ -394,6 +408,18 @@ namespace BTCPayServer.Services.Apps
                 if (type != null && type.Value.ToString() != app.AppType)
                     return null;
                 return app;
+            }
+        }
+        
+        public async Task UpdateAppSettings(AppData app)
+        {
+            using (var ctx = _ContextFactory.CreateContext())
+            {
+                ctx.Apps.Add(app);
+                ctx.Entry<AppData>(app).State = EntityState.Modified;
+                ctx.Entry<AppData>(app).Property(a => a.Settings).IsModified = true;
+                ctx.Entry<AppData>(app).Property(a => a.TagAllInvoices).IsModified = true;
+                await ctx.SaveChangesAsync();
             }
         }
     }

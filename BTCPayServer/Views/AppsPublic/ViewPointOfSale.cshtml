@@ -6,6 +6,7 @@
     ViewData["Title"] = Model.Title;
     Layout = null;
     int[] CustomTipPercentages = Model.CustomTipPercentages;
+    var anyInventoryItems = Model.Items.Any(item => item.Inventory != -1);
 }
 
 <!DOCTYPE html>
@@ -370,29 +371,51 @@
 
                             </div>
                             <div class="card-footer bg-transparent border-0">
-                                @if (item.Custom)
+                                @if (item.Inventory == -1 || item.Inventory > 0)
                                 {
-                                    <form method="post" asp-controller="AppsPublic" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy>
-                                        <input type="hidden" name="choicekey" value="@item.Id" />
-                                        <div class="input-group">
-                                            <div class="input-group-prepend">
-                                                <span class="input-group-text">@Model.CurrencySymbol</span>
-                                            </div>
-                                            <input class="form-control" type="number" min="@item.Price.Value" step="@Model.Step" name="amount"
-                                                   value="@item.Price.Value" placeholder="Amount">
-                                            <div class="input-group-append">
-                                                <button class="btn btn-primary" type="submit">@Model.CustomButtonText</button>
-                                            </div>
-                                        </div>
-                                    </form>
+                                    <div class="w-100">
+                                        @if (item.Custom)
+                                        {
+                                            <form method="post" asp-controller="AppsPublic" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy>
+                                                <input type="hidden" name="choicekey" value="@item.Id"/>
+                                                <div class="input-group">
+                                                    <div class="input-group-prepend">
+                                                        <span class="input-group-text">@Model.CurrencySymbol</span>
+                                                    </div>
+                                                    <input class="form-control" type="number" min="@item.Price.Value" step="@Model.Step" name="amount"
+                                                           value="@item.Price.Value" placeholder="Amount">
+                                                    <div class="input-group-append">
+                                                        <button class="btn btn-primary" type="submit">@Model.CustomButtonText</button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <form method="post" asp-controller="AppsPublic" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false">
+                                                <button type="submit" name="choiceKey" class="js-add-cart btn btn-primary" value="@item.Id">
+                                                    @String.Format(Model.ButtonText, @item.Price.Formatted)
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
                                 }
-                                else
+                                @if (item.Inventory > -1)
                                 {
-                                    <form method="post" asp-controller="AppsPublic" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false">
-                                        <button type="submit" name="choiceKey" class="js-add-cart btn btn-primary" value="@item.Id">
-                                            @String.Format(Model.ButtonText, @item.Price.Formatted)
-                                        </button>
-                                    </form>
+
+                                    <div class="w-100 pt-2 text-center text-muted">
+                                        @if (item.Inventory > 0)
+                                        {
+                                            <span>@item.Inventory left</span>
+                                        }
+                                        else
+                                        {
+                                            <span>Sold out</span>
+                                        }
+                                    </div>
+                                }else if (anyInventoryItems)
+                                {
+                                    <div class="w-100 pt-2">&nbsp</div> 
                                 }
                             </div>
                         </div>
@@ -417,6 +440,10 @@
                                         </div>
                                     </div>
                                 </form>
+                                @if (anyInventoryItems)
+                                {
+                                    <div class="w-100 pt-2">&nbsp</div>
+                                }
                             </div>
                         </div>
                     }

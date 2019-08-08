@@ -1,57 +1,114 @@
 ﻿@model BTCPayServer.Models.ServerViewModels.EmailsViewModel
 
 
-<partial name="_StatusMessage" for="StatusMessage" />
+<partial name="_StatusMessage" for="StatusMessage"/>
 
 <div class="row">
     <div class="col-md-6">
         <div asp-validation-summary="All" class="text-danger"></div>
     </div>
 </div>
+
+<div class="row row-quick-fill" style="display: none">
+    <div class="col-sm-6">
+        <div class="dropdown quick-fill">
+            <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Quick fill settings for...
+            </button>
+            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                <a class="dropdown-item" href="" data-Server="smtp.gmail.com" data-Port="587" data-EnableSSL="true">Gmail.com</a>
+                <a class="dropdown-item" href="" data-Server="mail.yahoo.com" data-Port="587" data-EnableSSL="true">Yahoo.com</a>
+            </div>
+        </div>
+        <p></p>
+    </div>
+</div>
+<script>
+$(document).ready(function(){
+    $('.row-quick-fill').show();
+    
+    $('.dropdown.quick-fill a').click(function(e){
+        e.preventDefault();
+        
+        var aNode = $(this);
+        var data = aNode.data();
+        
+        for(var key in data){
+            var value = data[key];
+            var inputNodes = $('input[name*="Settings.'+key+'" i]');
+            
+            if(inputNodes.length){
+                inputNodes.each(function(i, input){
+                    input = $(input);
+                    var type = input.attr('type');
+                    if(type === 'checkbox'){
+                        input.prop('checked', value);
+                        
+                    }else{
+                        input.val(value);
+                    }
+                });
+                
+            }
+        }  
+    });
+    
+});
+</script>
+
 <div class="row">
     <div class="col-md-6">
         <form method="post" autocomplete="off">
             <div class="form-group">
                 <label asp-for="Settings.Server"></label>
-                <input asp-for="Settings.Server" class="form-control" />
+                <input asp-for="Settings.Server" class="form-control"/>
                 <span asp-validation-for="Settings.Server" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Settings.Port"></label>
-                <input asp-for="Settings.Port" class="form-control" />
+                <input asp-for="Settings.Port" class="form-control"/>
                 <span asp-validation-for="Settings.Port" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Settings.FromDisplay"></label>
-                <input asp-for="Settings.FromDisplay" class="form-control" />
+                <input asp-for="Settings.FromDisplay" class="form-control"/>
+                <small class="form-text text-muted">
+                    Some email providers (like Gmail) don't allow you to set your display name, so this setting may not have any effect.
+                </small>
                 <span asp-validation-for="Settings.FromDisplay" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Settings.From"></label>
-                <input asp-for="Settings.From" class="form-control" />
+                <input asp-for="Settings.From" class="form-control"/>
                 <span asp-validation-for="Settings.From" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Settings.Login"></label>
-                <input asp-for="Settings.Login" class="form-control" />
+                <input asp-for="Settings.Login" class="form-control"/>
+                <small class="form-text text-muted">
+                    For many email providers (like Gmail) your login is your email address. 
+                </small>
                 <span asp-validation-for="Settings.Login" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Settings.Password"></label>
-                <input asp-for="Settings.Password" value="@Model.Settings.Password" class="form-control" />
+                <input asp-for="Settings.Password" value="@Model.Settings.Password" class="form-control"/>
                 <span asp-validation-for="Settings.Password" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Settings.EnableSSL"></label>
-                <input asp-for="Settings.EnableSSL" type="checkbox" class="form-check-inline" />
+                <input asp-for="Settings.EnableSSL" type="checkbox" class="form-check-inline"/>
             </div>
             <div class="form-group">
                 <label asp-for="TestEmail"></label>
-                <input asp-for="TestEmail" class="form-control" />
+                <input asp-for="TestEmail" class="form-control"/>
+                <small class="form-text text-muted">
+                    If you want to test your settings, enter an email address here and click "Send Test Email". Your settings won't be saved, only a test email will be sent. After a successful test, you can click "Save".
+                </small>
                 <span asp-validation-for="TestEmail" class="text-danger"></span>
             </div>
             <button type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
-            <button type="submit" class="btn btn-primary" name="command" value="Test">Test</button>
+            <button type="submit" class="btn btn-primary" name="command" value="Test">Send Test Email</button>
         </form>
     </div>
 </div>

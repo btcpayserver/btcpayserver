@@ -10,6 +10,7 @@ namespace BTCPayServer.Services.Mails
 {
     public class EmailSettings
     {
+        [Display(Name = "SMTP Server")]
         public string Server
         {
             get; set;

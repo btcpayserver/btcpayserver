@@ -171,6 +171,6 @@
 </div>
 
 @section Scripts {
-    <script type="text/javascript">var defaultScript = @Html.Raw(Json.Serialize(Model.DefaultScript));</script>
+    <script type="text/javascript">var defaultScript = @Safe.Json(Model.DefaultScript);</script>
     @await Html.PartialAsync("_ValidationScriptsPartial")
 }

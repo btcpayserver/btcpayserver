@@ -128,14 +128,14 @@
 
     @RenderSection("Scripts", required: false)
 
-    <script type="text/javascript">
-        var expectedDomain = @Html.Raw(Json.Serialize(env.ExpectedHost));
-        var expectedProtocol = @Html.Raw(Json.Serialize(env.ExpectedProtocol));
+        <script type="text/javascript">
+        var expectedDomain = @Safe.Json(env.ExpectedHost);
+        var expectedProtocol = @Safe.Json(env.ExpectedProtocol);
         if (window.location.host != expectedDomain || window.location.protocol != expectedProtocol + ":") {
             document.getElementById("badUrl").style.display = "block";
             document.getElementById("browserScheme").innerText = window.location.protocol.substr(0, window.location.protocol.length -1);
         }
-    </script>
+        </script>
 </body>
 
 </html>

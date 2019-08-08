@@ -78,7 +78,7 @@
             {
                 <div class="form-group">
                     <div id="qrCode"></div>
-                    <div id="qrCodeData" data-url="@Html.Raw(Model.ServiceLink)"></div>
+                    <div id="qrCodeData" data-url="@Model.ServiceLink"></div>
                 </div>
                 <p>See QR Code information by clicking <a href="#detailsQR" data-toggle="collapse">here</a></p>
                 <div id="detailsQR" class="collapse">
@@ -101,7 +101,7 @@
         <script type="text/javascript">
         new QRCode(document.getElementById("qrCode"),
             {
-                text: "@Html.Raw(Model.ServiceLink)",
+                text: @Safe.Json(Model.ServiceLink),
                 width: 200,
                 height: 200,
                 useSVG: true

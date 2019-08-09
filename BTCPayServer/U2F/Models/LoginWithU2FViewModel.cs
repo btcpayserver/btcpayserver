@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace BTCPayServer.Services.U2F.Models
@@ -18,7 +19,7 @@ namespace BTCPayServer.Services.U2F.Models
         public string DeviceResponse { get; set; }
 
         [Display(Name = "Challenges")]
-        public string Challenges { get; set; }
+        public List<ServerChallenge> Challenges { get; set; }
 
         [Display(Name = "Challenge")]
         public string Challenge { get; set; }

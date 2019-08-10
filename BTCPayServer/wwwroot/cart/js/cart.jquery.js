@@ -52,8 +52,8 @@ $(document).ready(function(){
 
         var $btn = $(event.target),
             self = this;
-            id = $btn.closest('.card').data('id'),
-            item = srvModel.items[id],
+            index = $btn.closest('.card').data('index'),
+            item = srvModel.items[index],
             items = cart.items;
 
         // Is event catching disabled?
@@ -68,10 +68,11 @@ $(document).ready(function(){
             });
 
             cart.addItem({
-                id: id,
+                id: item.id,
                 title: item.title,
                 price: item.price,
-                image: typeof item.image != 'underfined' ? item.image : null
+                image: typeof item.image != 'undefined' ? item.image : null,
+                inventory: item.inventory
             });
             cart.listItems();
         }

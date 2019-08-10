@@ -150,7 +150,7 @@ Cart.prototype.addItem = function(item) {
 
     // Add new item because it doesn't exist yet
     if (!result.length) {
-        this.content.push({id: id, title: item.title, price: item.price, count: 0, image: item.image});
+        this.content.push({id: id, title: item.title, price: item.price, count: 0, image: item.image, inventory: item.inventory});
         this.emptyCartToggle();
     }
 
@@ -161,10 +161,15 @@ Cart.prototype.addItem = function(item) {
 Cart.prototype.incrementItem = function(id) {
     var self = this;
     this.items = 0; // Calculate total # of items from scratch just to make sure
-
+    var result = true;
     this.content.filter(function(obj){
         // Increment the item count
         if (obj.id === id){
+            if(obj.inventory !== -1 && obj.inventory <= obj.count){
+                result = false;
+                return;
+            }
+            
             obj.count++;
             delete(obj.disabled);
         }
@@ -174,6 +179,7 @@ Cart.prototype.incrementItem = function(id) {
     });
 
     this.updateAll();
+    return result;
 }
 
 // Disable cart item so it doesn't count towards total amount
@@ -425,6 +431,7 @@ Cart.prototype.listItems = function() {
                 }) : '',
                 'title': this.escape(item.title),
                 'count': this.escape(item.count),
+                'inventory': this.escape(item.inventory == -1? 99999: item.inventory),
                 'price': this.escape(item.price.formatted)
             });
             list.push($(tableTemplate));
@@ -499,14 +506,14 @@ Cart.prototype.listItems = function() {
         // Increment item
         $('.js-cart-item-plus').off().on('click', function(event){
             event.preventDefault();
-
-            var $val = $(this).parents('.input-group').find('.js-cart-item-count'),
-                val = parseInt($val.val() || $val.data('prev')) + 1;
-            
-            $val.val(val);
-            $val.data('prev', val);
-            self.resetTip();
-            self.incrementItem($(this).closest('tr').data('id'));
+            if(self.incrementItem($(this).closest('tr').data('id'))){              
+                var $val = $(this).parents('.input-group').find('.js-cart-item-count'),
+                    val = parseInt($val.val() || $val.data('prev')) + 1;
+                
+                $val.val(val);
+                $val.data('prev', val);
+                self.resetTip();
+            }
         });
 
         // Decrement item
@@ -625,15 +632,37 @@ Cart.prototype.saveLocalStorage = function() {
 
 Cart.prototype.loadLocalStorage = function() {
     this.content = $.parseJSON(localStorage.getItem(this.getStorageKey('cart'))) || [];
+    var self = this;
 
     // Get number of cart items
-    for (var key in this.content) {
-        if (this.content.hasOwnProperty(key) && typeof this.content[key] != 'undefined' && this.content[key] != null) {
-            this.items += this.content[key].count;
-
-            // Delete the disabled flag if any
-            delete(this.content[key].disabled);
+    for (var i = this.content.length-1; i >= 0; i--) {
+        if (!this.content[i]) {
+            this.content.splice(i,1);
+            continue;
         }
+
+        //check if the pos items still has the cached cart items 
+        var matchedItem = srvModel.items.find(function(item){
+            return item.id === self.content[i].id;
+        });
+        if(!matchedItem){
+            //remove if nio longer available
+            this.content.splice(i,1);
+            continue;
+        }else{
+            
+            if(matchedItem.inventory === 0){
+                this.content.splice(i,1);
+            }else if(matchedItem.inventory != -1 && matchedItem.inventory <  this.content[i].count){
+                this.content[i].count = matchedItem.inventory;
+            }
+            //update its stock
+            this.content[i].inventory = matchedItem.inventory;
+            
+        }
+        this.items += this.content[i].count;
+            // Delete the disabled flag if any
+            delete(this.content[i].disabled);
     }
 
     this.discount = localStorage.getItem(this.getStorageKey('cartDiscount'));

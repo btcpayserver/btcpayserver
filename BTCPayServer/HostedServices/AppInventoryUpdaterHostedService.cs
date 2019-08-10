@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -37,22 +38,46 @@ namespace BTCPayServer.HostedServices
                         return;
                     }
 
-                    var apps = await _AppService.GetApps(appIds);
-                    var pos = apps.Where(data => data.AppType == AppType.PointOfSale.ToString()).Select(data =>
+                    var apps = (await _AppService.GetApps(appIds)).Select(data =>
                     {
-                        var settings = data.GetSettings<AppsController.PointOfSaleSettings>();
-                        return (Data: data, Settings: settings,
-                            Items: _AppService.Parse(settings.Template, settings.Currency));
+                        switch (Enum.Parse<AppType>(data.AppType))
+                        {
+                            case AppType.PointOfSale:
+                                var possettings = data.GetSettings<AppsController.PointOfSaleSettings>();
+                                return (Data: data, Settings: (object)possettings,
+                                    Items: _AppService.Parse(possettings.Template, possettings.Currency));
+                            case AppType.Crowdfund:
+                                var cfsettings = data.GetSettings<CrowdfundSettings>();
+                                return (Data: data, Settings: (object)cfsettings,
+                                    Items: _AppService.Parse(cfsettings.PerksTemplate, cfsettings.TargetCurrency));
+                            default:
+                                throw new InvalidOperationException();
+                        }
                     }).Where(tuple => tuple.Items.Any(item =>
                         item.Inventory > 0 && item.Id == invoiceEvent.Invoice.ProductInformation.ItemCode));
-                    foreach (var valueTuple in pos)
+                    foreach (var valueTuple in apps)
                     {
-                        foreach (var item1 in valueTuple.Items.Where(item =>  item.Id == invoiceEvent.Invoice.ProductInformation.ItemCode))
+                        foreach (var item1 in valueTuple.Items.Where(item =>
+                            item.Id == invoiceEvent.Invoice.ProductInformation.ItemCode))
                         {
                             item1.Inventory++;
                         }
 
-                        valueTuple.Settings.Template = _AppService.SerializeTemplate(valueTuple.Items);
+                        switch (Enum.Parse<AppType>(valueTuple.Data.AppType))
+                        {
+                            case AppType.PointOfSale:
+
+                                (valueTuple.Settings as AppsController.PointOfSaleSettings).Template =
+                                    _AppService.SerializeTemplate(valueTuple.Items);
+                                break;
+                            case AppType.Crowdfund:
+                                (valueTuple.Settings as CrowdfundSettings).PerksTemplate =
+                                    _AppService.SerializeTemplate(valueTuple.Items);
+                                break;
+                            default:
+                                throw new InvalidOperationException();
+                        }
+
                         valueTuple.Data.SetSettings(valueTuple.Settings);
                         await _AppService.UpdateAppSettings(valueTuple.Data);
                     }

@@ -26,6 +26,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NBitpayClient;
+using Newtonsoft.Json.Linq;
 using YamlDotNet.RepresentationModel;
 using static BTCPayServer.Controllers.AppsController;
 
@@ -151,6 +152,49 @@ namespace BTCPayServer.Controllers
                     return NotFound();
                 price = amount;
                 title = settings.Title;
+                if (!string.IsNullOrEmpty(posData) && settings.EnableShoppingCart)
+                {
+                    try
+                    {
+                        var cartObject =(JArray) JObject.Parse(posData).GetValue("cart");
+                        var cartItems = cartObject.Select(token => (JObject)token)
+                            .Select(o => (Id: o.GetValue("id").ToString(), Quantity: int.Parse(o.GetValue("count").ToString())));
+                        
+                        var choices = _AppService.Parse(settings.Template, settings.Currency);
+                        var updateNeeded = false;
+                        foreach (var cartItem in cartItems)
+                        {
+                            var itemChoice = choices.FirstOrDefault(c => c.Id == cartItem.Id);
+                            if (itemChoice == null)
+                                return NotFound();
+
+                            switch (itemChoice.Inventory)
+                            {
+                                case -1:
+                                    continue;
+                                case 0:
+                                    return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
+                                case int  inventory when inventory <  cartItem.Quantity:
+                                    return RedirectToAction(nameof(ViewPointOfSale), new {appId = appId});
+                                default: 
+                                    itemChoice.Inventory-= cartItem.Quantity ;
+                                    updateNeeded = true;
+                                    break;
+                            }
+                        }
+
+                        if (updateNeeded)
+                        {
+                            settings.Template = _AppService.SerializeTemplate(choices);
+                            app.SetSettings(settings);
+                            await _AppService.UpdateAppSettings(app);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+                }
             }
             var store = await _AppService.GetStore(app);
             store.AdditionalClaims.Add(new Claim(Policies.CanCreateInvoice.Key, store.Id));
@@ -176,6 +220,8 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(InvoiceController.Checkout), "Invoice", new { invoiceId = invoice.Data.Id });
         }
 
+        
+        
 
         [HttpGet]
         [Route("/apps/{appId}/crowdfund")]
@@ -255,6 +301,18 @@ namespace BTCPayServer.Controllers
                 price = choice.Price.Value;
                 if (request.Amount > price)
                     price = request.Amount;
+                
+                if (choice.Inventory == 0)
+                {
+                    return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
+                }
+                if (choice.Inventory != -1)
+                {
+                    choice.Inventory--;
+                    settings.PerksTemplate = _AppService.SerializeTemplate(choices);
+                    app.SetSettings(settings);
+                    await _AppService.UpdateAppSettings(app);
+                }
             }
 
             if (!isAdmin && (settings.EnforceTargetAmount && info.TargetAmount.HasValue && price >

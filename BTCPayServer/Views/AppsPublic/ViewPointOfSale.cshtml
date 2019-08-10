@@ -43,10 +43,19 @@
             grid-gap: .5rem;
         }
 
-        .card-deck .card:only-of-type {
-            max-width: 320px;
-            margin: auto;
-        }
+            .card-deck .card:only-of-type {
+                max-width: 320px;
+                margin: auto;
+            }
+            
+            .js-cart-item-count::-webkit-inner-spin-button, 
+            .js-cart-item-count::-webkit-outer-spin-button { 
+                -webkit-appearance: none;
+                -moz-appearance: none;
+                appearance: none;
+                margin: 0; 
+            }
+            
     </style>
     @if (!string.IsNullOrEmpty(Model.EmbeddedCSS))
     {
@@ -56,7 +65,7 @@
 </head>
 
 <body class="h-100">
-    <script id="template-cart-item" type="text/template">
+<script id="template-cart-item" type="text/template">
         <tr data-id="{id}">
             {image}
             <td class="align-middle pr-0 pl-2"><b>{title}</b></td>
@@ -68,7 +77,7 @@
                     <div class="input-group-prepend">
                         <a class="js-cart-item-minus btn btn-link px-2" href="#"><i class="fa fa-minus-circle fa-fw text-danger"></i></a>
                     </div>
-                    <input class="js-cart-item-count form-control form-control-sm pull-left" type="text" name="count" placeholder="Qty" value="{count}" data-prev="{count}">
+                    <input class="js-cart-item-count form-control form-control-sm pull-left" type="number" step="1" name="count" placeholder="Qty" max="{inventory}"  value="{count}" data-prev="{count}">
                     <div class="input-group-append">
                         <a class="js-cart-item-plus btn btn-link px-2" href="#">
                             <i class="fa fa-plus-circle fa-fw text-success"></i>
@@ -280,7 +289,7 @@
                             var image = item.Image;
                             var description = item.Description;
 
-                            <div class="js-add-cart card my-2 card-wrapper" data-id="@index">
+                            <div class="js-add-cart card my-2 card-wrapper" data-index="@index">
                                 @if (!String.IsNullOrWhiteSpace(image))
                                 {
                                     @:<img class="card-img-top" src="@image" alt="Card image cap">
@@ -295,6 +304,23 @@
                                 <div class="card-footer pt-0 bg-transparent border-0">
 
                                     <span class="text-muted small">@String.Format(Model.ButtonText, @item.Price.Formatted)</span>
+                                     @if (item.Inventory > -1)
+                                     {
+                                    
+                                         <div class="w-100 pt-2 text-center text-muted">
+                                             @if (item.Inventory > 0)
+                                             {
+                                                 <span>@item.Inventory left</span>
+                                             }
+                                             else
+                                             {
+                                                 <span>Sold out</span>
+                                             }
+                                         </div>
+                                     }else if (anyInventoryItems)
+                                     {
+                                         <div class="w-100 pt-2">&nbsp</div>
+                                     }
                                 </div>
                             </div>
                         }

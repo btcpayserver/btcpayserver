@@ -272,7 +272,7 @@ namespace BTCPayServer.Services.Apps
 
         public string SerializeTemplate(ViewPointOfSaleViewModel.Item[] items)
         {
-            return new Serializer().Serialize(items.ToDictionary(item => item.Id, item => new
+            var result =  new Serializer().Serialize(items.ToDictionary(item => item.Id, item => new
             {
                 price =  item.Price.Value,
                 title= item.Title,
@@ -281,6 +281,28 @@ namespace BTCPayServer.Services.Apps
                 custom = item.Custom,
                 inventory = item.Inventory
             }));
+            
+            // the frontend editor is not a proper yml parser so we need to add some very specific formatting to help it( new line before each item in list)
+
+            var split = result.Split(Environment.NewLine);
+            result = string.Empty;
+            var first = true;
+            foreach (var str in split)
+            {
+                if (!str.StartsWith("  "))
+                {
+                    if (!first)
+                    {
+                        result += Environment.NewLine;
+                    }
+                    first = false;
+                }
+
+                result += str;
+                result += Environment.NewLine;
+            }
+            
+            return result;
         }
         public ViewPointOfSaleViewModel.Item[] Parse(string template, string currency)
         {

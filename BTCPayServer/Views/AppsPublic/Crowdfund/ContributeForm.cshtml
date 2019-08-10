@@ -1,4 +1,5 @@
 @using Microsoft.EntityFrameworkCore.Internal
+@using Microsoft.EntityFrameworkCore.Storage
 @model BTCPayServer.Models.AppViewModels.ContributeToCrowdfund
 
 <form method="post">
@@ -43,11 +44,29 @@
                 <p class="card-text overflow-hidden">@Safe.Raw(item.Description)</p>
 
             </div>
-            @if (Model.ViewCrowdfundViewModel.PerkCount.ContainsKey(item.Id))
+            @if (Model.ViewCrowdfundViewModel.PerkCount.ContainsKey(item.Id) || item.Inventory != -1)
             {
                 <div class="card-footer d-flex justify-content-between">
-                    <span></span>
-                    <span> @Model.ViewCrowdfundViewModel.PerkCount[item.Id] Contributors</span>
+                        @switch (item.Inventory)
+                        {
+                            case -1:
+                                <span></span>
+                                break;
+                            case 0:
+                                <span>Sold out</span>
+                                break;
+                            default:
+                                <span>@item.Inventory left</span>
+                                break;
+                        }
+                        @if (Model.ViewCrowdfundViewModel.PerkCount.ContainsKey(item.Id))
+                        {
+                            <span> @Model.ViewCrowdfundViewModel.PerkCount[item.Id] Contributors</span>
+                        }
+                        else
+                        {
+                            <span></span>
+                        }
                 </div>
             }
         </div> 

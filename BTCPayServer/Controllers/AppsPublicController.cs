@@ -304,7 +304,7 @@ namespace BTCPayServer.Controllers
                 
                 if (choice.Inventory == 0)
                 {
-                    return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
+                    return NotFound("Option was out of stock");
                 }
                 if (choice.Inventory != -1)
                 {

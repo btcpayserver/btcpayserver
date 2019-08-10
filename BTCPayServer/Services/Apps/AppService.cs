@@ -432,15 +432,12 @@ namespace BTCPayServer.Services.Apps
                 return app;
             }
         }
-        
+
         public async Task UpdateAppSettings(AppData app)
         {
             using (var ctx = _ContextFactory.CreateContext())
             {
-                ctx.Apps.Add(app);
-                ctx.Entry<AppData>(app).State = EntityState.Modified;
-                ctx.Entry<AppData>(app).Property(a => a.Settings).IsModified = true;
-                ctx.Entry<AppData>(app).Property(a => a.TagAllInvoices).IsModified = true;
+                ctx.Apps.Update(app);
                 await ctx.SaveChangesAsync();
             }
         }

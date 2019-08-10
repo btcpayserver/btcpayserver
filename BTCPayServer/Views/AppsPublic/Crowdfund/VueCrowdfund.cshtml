@@ -301,9 +301,11 @@
                 </div>
             </div>
         </div>
-        <div class="card-footer d-flex justify-content-between" v-if="perk.sold">
-           <span ></span>
-           <span x >{{perk.sold}} Contributor{{perk.sold > 1? "s": ""}}</span>
+        <div class="card-footer d-flex justify-content-between" v-if="perk.sold || perk.inventory >= 0">
+           
+            <span v-if="perk.inventory > 0" class="text-center text-muted">{{perk.inventory}} left</span>
+            <span v-if="perk.inventory === 0" class="text-center text-muted">Sold out</span>
+           <span v-if="perk.sold" >{{perk.sold}} Contributor{{perk.sold > 1? "s": ""}}</span>
         </div>
     </form>
 </div> 

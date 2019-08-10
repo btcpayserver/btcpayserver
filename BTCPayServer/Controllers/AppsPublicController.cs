@@ -152,13 +152,18 @@ namespace BTCPayServer.Controllers
                     return NotFound();
                 price = amount;
                 title = settings.Title;
-                if (!string.IsNullOrEmpty(posData) && settings.EnableShoppingCart)
+                
+                //if using cart
+                if (!string.IsNullOrEmpty(posData) && 
+                    settings.EnableShoppingCart && 
+                    TryParseJson(posData, out var posDataObj) && 
+                    posDataObj.TryGetValue("cart", out var cartObject))
                 {
                     try
                     {
-                        var cartObject =(JArray) JObject.Parse(posData).GetValue("cart");
                         var cartItems = cartObject.Select(token => (JObject)token)
-                            .Select(o => (Id: o.GetValue("id").ToString(), Quantity: int.Parse(o.GetValue("count").ToString())));
+                            .Select(o => (Id: o.GetValue("id").ToString(),
+                                Quantity: int.Parse(o.GetValue("count").ToString())));
                         
                         var choices = _AppService.Parse(settings.Template, settings.Currency);
                         var updateNeeded = false;
@@ -190,9 +195,9 @@ namespace BTCPayServer.Controllers
                             await _AppService.UpdateAppSettings(app);
                         }
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
-                        Console.WriteLine(e);
+                        // ignored
                     }
                 }
             }
@@ -220,7 +225,19 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(InvoiceController.Checkout), "Invoice", new { invoiceId = invoice.Data.Id });
         }
 
-        
+        private bool TryParseJson(string json, out JObject result)
+        {
+            result = null;
+            try
+            {
+                result = JObject.Parse(json);
+                return true;
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
+        }
         
 
         [HttpGet]

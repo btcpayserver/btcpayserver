@@ -31,7 +31,7 @@
     {
         <link rel="stylesheet" href="~/cart/css/style.css">
         <script type="text/javascript">
-            var srvModel = @Html.Raw(Json.Serialize(Model));
+            var srvModel = @Safe.Json(Model);
         </script>
         <bundle name="wwwroot/bundles/cart-bundle.min.js" />
     }

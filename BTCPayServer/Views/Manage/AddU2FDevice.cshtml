@@ -39,7 +39,7 @@
         };
 
         setTimeout(function() {
-                var request = { "challenge": "@Model.Challenge", "version": "@Model.Version", "appId": "@Model.AppId" };
+                var request = { "challenge": @Safe.Json(Model.Challenge), "version": @Safe.Json(Model.Version), "appId": @Safe.Json(Model.AppId) };
                 var registerRequests = [{version: request.version, challenge: request.challenge}];
                 u2f.register(request.appId, registerRequests, [],
                     function(data) {

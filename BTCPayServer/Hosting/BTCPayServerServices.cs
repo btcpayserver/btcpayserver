@@ -126,6 +126,7 @@ namespace BTCPayServer.Hosting
             });
 
             services.TryAddSingleton<AppService>();
+            services.TryAddTransient<Safe>();
             services.TryAddSingleton<Ganss.XSS.HtmlSanitizer>(o =>
             {
 

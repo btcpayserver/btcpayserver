@@ -41,7 +41,6 @@ namespace BTCPayServer.Controllers
         private readonly PaymentRequestService _PaymentRequestService;
         private readonly EventAggregator _EventAggregator;
         private readonly CurrencyNameTable _Currencies;
-        private readonly HtmlSanitizer _htmlSanitizer;
         private readonly InvoiceRepository _InvoiceRepository;
 
         public PaymentRequestController(
@@ -52,7 +51,6 @@ namespace BTCPayServer.Controllers
             PaymentRequestService paymentRequestService,
             EventAggregator eventAggregator,
             CurrencyNameTable currencies,
-            HtmlSanitizer htmlSanitizer,
             InvoiceRepository invoiceRepository)
         {
             _InvoiceController = invoiceController;
@@ -62,7 +60,6 @@ namespace BTCPayServer.Controllers
             _PaymentRequestService = paymentRequestService;
             _EventAggregator = eventAggregator;
             _Currencies = currencies;
-            _htmlSanitizer = htmlSanitizer;
             _InvoiceRepository = invoiceRepository;
         }
 
@@ -152,7 +149,7 @@ namespace BTCPayServer.Controllers
 
             blob.Title = viewModel.Title;
             blob.Email = viewModel.Email;
-            blob.Description = _htmlSanitizer.Sanitize(viewModel.Description);
+            blob.Description = viewModel.Description;
             blob.Amount = viewModel.Amount;
             blob.ExpiryDate = viewModel.ExpiryDate?.ToUniversalTime();
             blob.Currency = viewModel.Currency;

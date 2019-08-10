@@ -209,7 +209,7 @@
 
 @section Scripts {
     <script type="text/javascript">
-        var srvModel = @Html.Raw(Json.Serialize(Model));
+        var srvModel = @Safe.Json(Model);
 
         var payButtonCtrl = new Vue({
             el: '#payButtonCtrl',

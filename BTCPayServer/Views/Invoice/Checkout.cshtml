@@ -19,7 +19,7 @@
     <bundle name="wwwroot/bundles/checkout-bundle.min.css" />
 
     <script type="text/javascript">
-        var srvModel = @Html.Raw(Json.Serialize(Model));
+        var srvModel = @Safe.Json(Model);
     </script>
 
     <bundle name="wwwroot/bundles/checkout-bundle.min.js" />
@@ -114,8 +114,8 @@
         </div>
     </invoice>
     <script type="text/javascript">
-    var availableLanguages = @Html.Raw(Json.Serialize(langService.GetLanguages().Select((language) => language.Code)));;
-    var storeDefaultLang = "@Model.DefaultLang";
+    var availableLanguages = @Safe.Json(langService.GetLanguages().Select((language) => language.Code));;
+    var storeDefaultLang = @Safe.Json(@Model.DefaultLang);
     var fallbackLanguage = "en";
     startingLanguage = computeStartingLanguage();
       // initialization
@@ -123,7 +123,7 @@
         .use(window.i18nextXHRBackend)
         .init({
             backend: {
-                loadPath: '@(Model.RootPath)locales/{{lng}}.json'
+                loadPath: @Safe.Json($"{Model.RootPath}locales/{{{{lng}}}}.json")
             },
             lng: startingLanguage,
             fallbackLng: fallbackLanguage,

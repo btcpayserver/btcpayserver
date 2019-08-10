@@ -47,5 +47,5 @@
   "Pay with CoinSwitch": "CoinSwitchでのお支払い",
   "Pay with Changelly": "Changellyでのお支払い",
   "Close": "閉じる",
-  "NotPaid_ExtraTransaction": "The invoice hasn't been paid in full. Please send another transaction to cover amount Due."
+  "NotPaid_ExtraTransaction": "請求金額の全額が支払われていません。未払い分の別のトランザクションをお送りください。"
 }

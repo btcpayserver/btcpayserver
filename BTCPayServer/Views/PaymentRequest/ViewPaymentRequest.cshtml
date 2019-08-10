@@ -22,7 +22,7 @@
     @if (!Context.Request.Query.ContainsKey("simple"))
     {
         <script type="text/javascript">
-            var srvModel = @Html.Raw(Json.Serialize(Model));
+            var srvModel = @Safe.Json(Model);
         </script>
         <bundle name="wwwroot/bundles/payment-request-bundle-1.min.js"></bundle>
         <bundle name="wwwroot/bundles/payment-request-bundle-2.min.js"></bundle>
@@ -31,12 +31,8 @@
     }
 
     <bundle name="wwwroot/bundles/payment-request-bundle.min.css"></bundle>
-    @if (!string.IsNullOrEmpty(Model.EmbeddedCSS))
-    {
-        <style>
-            @Html.Raw(Model.EmbeddedCSS);
-        </style>
-    }
+    
+    @Safe.Raw(Model.EmbeddedCSS);
 </head>
 <body>
 

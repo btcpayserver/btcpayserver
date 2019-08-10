@@ -132,7 +132,7 @@ namespace BTCPayServer.Controllers
                 EnforceTargetAmount = vm.EnforceTargetAmount,
                 StartDate = vm.StartDate?.ToUniversalTime(),
                 TargetCurrency = vm.TargetCurrency,
-                Description = _htmlSanitizer.Sanitize( vm.Description),
+                Description = vm.Description,
                 EndDate = vm.EndDate?.ToUniversalTime(),
                 TargetAmount = vm.TargetAmount,
                 CustomCSSLink = vm.CustomCSSLink,

@@ -183,7 +183,7 @@ namespace BTCPayServer.Controllers
                 {
                     Version = u2fChallenge[0].version,
                     Challenge = u2fChallenge[0].challenge,
-                    Challenges = JsonConvert.SerializeObject(u2fChallenge),
+                    Challenges = u2fChallenge,
                     AppId = u2fChallenge[0].appId,
                     UserId = user.Id,
                     RememberMe = rememberMe

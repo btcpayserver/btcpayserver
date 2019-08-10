@@ -283,10 +283,10 @@ namespace BTCPayServer.Services.Apps
                 .Where(kv => kv.Value != null)
                 .Select(c => new ViewPointOfSaleViewModel.Item()
                 {
-                    Description = _HtmlSanitizer.Sanitize(c.GetDetailString("description")),
+                    Description = c.GetDetailString("description"),
                     Id = c.Key,
-                    Image = _HtmlSanitizer.Sanitize(c.GetDetailString("image")),
-                    Title = _HtmlSanitizer.Sanitize(c.GetDetailString("title") ?? c.Key),
+                    Image = c.GetDetailString("image"),
+                    Title = c.GetDetailString("title") ?? c.Key,
                     Price = c.GetDetail("price")
                              .Select(cc => new ViewPointOfSaleViewModel.Item.ItemPrice()
                              {

@@ -16,7 +16,7 @@
         }
         @if (!string.IsNullOrEmpty(parsedModel.Html))
         {
-            @Html.Raw(parsedModel.Html)
+            @Safe.Raw(parsedModel.Html)
         }
     </div>
 }

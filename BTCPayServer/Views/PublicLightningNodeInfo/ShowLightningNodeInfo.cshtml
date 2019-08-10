@@ -23,7 +23,7 @@
 
     <bundle name="wwwroot/bundles/lightning-node-info-bundle.min.js" />
     <script type="text/javascript">
-        var srvModel = @Html.Raw(Json.Serialize(Model));
+        var srvModel = @Safe.Json(Model);
 
 
         window.onload = function() {

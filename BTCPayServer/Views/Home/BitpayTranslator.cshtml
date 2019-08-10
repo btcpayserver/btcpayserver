@@ -10,7 +10,7 @@
                         <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                         <p>You need to pay <b>@Model.Amount</b> to <b>@Model.Address</b></p>
                         <div id="qrCode"></div>
-                        <div id="qrCodeData" data-url="@Html.Raw(Model.BitcoinUri)" style="margin-bottom:20px;"></div>
+                        <div id="qrCodeData" data-url="@Model.BitcoinUri" style="margin-bottom:20px;"></div>
                         <p>
                             <a class="btn btn-primary" href="@Model.BitcoinUri">
                                 <span>Open in wallet</span>
@@ -52,7 +52,7 @@
     <script type="text/javascript">
         new QRCode(document.getElementById("qrCode"),
             {
-                text: "@Html.Raw(Model.BitcoinUri)",
+                text: @Safe.Json(Model.BitcoinUri),
                 width: 200,
                 height: 200,
                 useSVG: true

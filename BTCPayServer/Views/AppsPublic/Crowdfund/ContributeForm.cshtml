@@ -30,17 +30,17 @@
                             @item.Price.Value
                             if (item.Custom)
                             {
-                                Html.Raw("or more");
+                                Safe.Raw("or more");
                             }
                         }
                         else if (item.Custom)
                         {
-                            Html.Raw("Any amount");
+                            Safe.Raw("Any amount");
                         }
 
                     </span>
                 </div>
-                <p class="card-text overflow-hidden">@Html.Raw(item.Description)</p>
+                <p class="card-text overflow-hidden">@Safe.Raw(item.Description)</p>
 
             </div>
             @if (Model.ViewCrowdfundViewModel.PerkCount.ContainsKey(item.Id))

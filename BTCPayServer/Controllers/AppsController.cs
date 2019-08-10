@@ -30,7 +30,6 @@ namespace BTCPayServer.Controllers
             EventAggregator eventAggregator,
             BTCPayNetworkProvider networkProvider,
             CurrencyNameTable currencies,
-            HtmlSanitizer htmlSanitizer,
             EmailSenderFactory emailSenderFactory,
             AppService AppService)
         {
@@ -39,7 +38,6 @@ namespace BTCPayServer.Controllers
             _EventAggregator = eventAggregator;
             _NetworkProvider = networkProvider;
             _currencies = currencies;
-            _htmlSanitizer = htmlSanitizer;
             _emailSenderFactory = emailSenderFactory;
             _AppService = AppService;
         }
@@ -49,7 +47,6 @@ namespace BTCPayServer.Controllers
         private readonly EventAggregator _EventAggregator;
         private BTCPayNetworkProvider _NetworkProvider;
         private readonly CurrencyNameTable _currencies;
-        private readonly HtmlSanitizer _htmlSanitizer;
         private readonly EmailSenderFactory _emailSenderFactory;
         private AppService _AppService;
 

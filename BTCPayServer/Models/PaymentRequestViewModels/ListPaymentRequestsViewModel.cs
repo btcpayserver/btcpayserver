@@ -88,6 +88,8 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             EmbeddedCSS = blob.EmbeddedCSS;
             CustomCSSLink = blob.CustomCSSLink;
             AllowCustomPaymentAmounts = blob.AllowCustomPaymentAmounts;
+            if (!string.IsNullOrEmpty(EmbeddedCSS))
+                EmbeddedCSS = $"<style>{EmbeddedCSS}</style>";
             switch (data.Status)
             {
                 case PaymentRequestData.PaymentRequestStatus.Pending:

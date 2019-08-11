@@ -55,7 +55,7 @@
 
 <div class="call-to-action bg-dark text-white">
     <div class="container text-center">
-        <h2>Video tutorials</h2>
+        <h2 translate>Video tutorials</h2>
         <div class="row">
             <div class="col-md-2 text-center">
             </div>
@@ -73,7 +73,7 @@
     <div class="container">
         <div class="row">
             <div class="col-lg-8 mx-auto text-center">
-                <h2 class="section-heading">Donate!</h2>
+                <h2 class="section-heading" translate>Donate!</h2>
                 <hr class="primary">
             </div>
         </div>
@@ -84,7 +84,7 @@
                     <input type="hidden" name="storeId" value="EErYwCthBNfJUpuU1etH1uhg3x1YVH1q1F2zez7u1AAX" />
                     <div style="text-align:center;display:inline;width:209px"><div><button style="cursor:pointer; font-size:25px; line-height: 25px; background: rgba(0,0,0,.1); height: 30px; width: 45px; border:none; border-radius: 60px; margin: auto;" onclick="event.preventDefault(); var price = parseInt(document.querySelector('#btcpay-input-price').value); if ('-' == '-' && (price - 1) < 1) { return; } document.querySelector('#btcpay-input-price').value = parseInt(document.querySelector('#btcpay-input-price').value) - 1;">-</button><input type="text" id="btcpay-input-price" name="price" value="10" style="border: none; background-image: none; background-color: transparent; -webkit-box-shadow: none ; -moz-box-shadow: none ; -webkit-appearance: none ; width: 3em; text-align: center; font-size: 25px; margin: auto; border-radius: 5px; line-height: 35px; background: #fff;" oninput="event.preventDefault();isNaN(event.target.value) || event.target.value <= 0 ? document.querySelector('#btcpay-input-price').value = 10 : event.target.value" /><button style="cursor:pointer; font-size:25px; line-height: 25px; background: rgba(0,0,0,.1); height: 30px; width: 45px; border:none; border-radius: 60px; margin: auto;" onclick="event.preventDefault(); var price = parseInt(document.querySelector('#btcpay-input-price').value); if ('+' == '-' && (price - 1) < 1) { return; } document.querySelector('#btcpay-input-price').value = parseInt(document.querySelector('#btcpay-input-price').value) + 1;">+</button></div><select onchange="document.querySelector('input[type = hidden][name = currency]').value = event.target.value" style="-webkit-appearance: none; border: 0; display: block; padding: 0 3em; margin: auto auto 5px auto; font-size: 11px; background: 0 0; cursor: pointer;"><option value="USD">USD</option><option value="GBP">GBP</option><option value="EUR">EUR</option><option value="BTC">BTC</option></select></div>
                     <input type="hidden" name="currency" value="USD" />
-                    <input type="image" src="~/img/paybutton/pay.png" name="submit" style="width:209px" alt="Pay with BtcPay, Self-Hosted Bitcoin Payment Processor">
+                    <input type="image" src="~/img/paybutton/pay.png" name="submit" style="width:209px" translate-attr="alt" alt="Pay with BtcPay, Self-Hosted Bitcoin Payment Processor">
                 </form>
             </div>
             <div class="col-lg-4 mr-auto text-center"></div>
@@ -95,9 +95,9 @@
 <div class="container">
     <div class="row">
         <div class="col-lg-8 mx-auto text-center">
-            <h2 class="section-heading">Let's Get In Touch!</h2>
+            <h2 class="section-heading" translate>Let's Get In Touch!</h2>
             <hr class="primary">
-            <p>
+            <p translate>
                 An open source project is nothing without its community<br />
                 Come and get in touch with us!
             </p>
@@ -108,20 +108,20 @@
             <a href="https://chat.btcpayserver.org/" target="_blank">
                 <img src="~/img/mattermost.png" height="100" />
             </a>
-            <p><a href="https://chat.btcpayserver.org/" target="_blank">On Mattermost</a></p>
+            <p><a href="https://chat.btcpayserver.org/" target="_blank" translate>On Mattermost</a></p>
         </div>
         <div class="col-lg-3 ml-auto text-center">
             <a href="https://slack.btcpayserver.org/" target="_blank">
                 <img src="~/img/slack.png" height="100" />
             </a>
-            <p><a href="http://slack.forkbitpay.ninja/" target="_blank">On Slack</a></p>
+            <p><a href="http://slack.forkbitpay.ninja/" target="_blank" translate>On Slack</a></p>
         </div>
         <div class="col-lg-3 mr-auto text-center">
             <a href="https://twitter.com/BtcpayServer" target="_blank">
                 <img src="~/img/twitter.png" height="100" />
             </a>
             <p>
-                <a href="https://twitter.com/BtcpayServer" target="_blank">On Twitter</a>
+                <a href="https://twitter.com/BtcpayServer" target="_blank" translate>On Twitter</a>
             </p>
         </div>
         <div class="col-lg-3 mr-auto text-center">
@@ -129,7 +129,7 @@
                 <img src="~/img/github.png" height="100" />
             </a>
             <p>
-                <a href="https://github.com/btcpayserver/btcpayserver" target="_blank">On Github</a>
+                <a href="https://github.com/btcpayserver/btcpayserver" target="_blank" translate>On Github</a>
             </p>
         </div>
     </div>

@@ -15,6 +15,8 @@ namespace BTCPayServer.Monero
             serviceCollection.AddSingleton(provider =>
                 provider.ConfigureMoneroLikeConfiguration());
             serviceCollection.AddSingleton<MoneroRPCProvider>();
+            serviceCollection.AddHostedService<MoneroLikeSummaryUpdaterHostedService>();
+            serviceCollection.AddHostedService<MoneroListener>();
             
             
             return serviceCollection;
@@ -46,6 +48,9 @@ namespace BTCPayServer.Monero
                 var walletDaemonUri =
                     configuration.GetOrDefault<Uri>(
                         $"{moneroLikeSpecificBtcPayNetwork.CryptoCode}.wallet.daemon.uri", null);
+                var walletDaemonWalletDirectory =
+                    configuration.GetOrDefault<string>(
+                        $"{moneroLikeSpecificBtcPayNetwork.CryptoCode}.wallet.daemon.walletdir", null);
                 if (daemonUri == null || walletDaemonUri == null )
                 {
                     throw new ConfigException($"{moneroLikeSpecificBtcPayNetwork.CryptoCode} is misconfigured");
@@ -54,7 +59,8 @@ namespace BTCPayServer.Monero
                 result.MoneroLikeConfigurationItems.Add(moneroLikeSpecificBtcPayNetwork.CryptoCode, new MoneroLikeConfigurationItem()
                 {
                     DaemonRpcUri = daemonUri,
-                    InternalWalletRpcUri = walletDaemonUri
+                    InternalWalletRpcUri = walletDaemonUri,
+                    WalletDirectory = walletDaemonWalletDirectory
                 });
             }
             return result;

@@ -30,6 +30,9 @@ namespace BTCPayServer.Payments.Monero
         public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(MoneroSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod,
             StoreData store, MoneroLikeSpecificBtcPayNetwork network, object preparePaymentObject)
         {
+            
+            if (!_moneroRpcProvider.IsAvailable(network.CryptoCode))
+                throw new PaymentMethodUnavailableException($"Node or wallet not available");
             var invoice = paymentMethod.ParentEntity;
             if (!(preparePaymentObject is Prepare moneroPrepare)) throw new ArgumentException();
             var feeRatePerKb = await moneroPrepare.GetFeeRate;

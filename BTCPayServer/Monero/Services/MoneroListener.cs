@@ -45,6 +45,7 @@ namespace BTCPayServer.Payments.Monero
 
             foreach (var moneroLikeConfigurationItem in _moneroLikeConfiguration.MoneroLikeConfigurationItems)
             {
+                
             }
 
             return Task.CompletedTask;

@@ -13,5 +13,6 @@ namespace BTCPayServer.Payments.Monero
     {
         public Uri DaemonRpcUri { get; set; }
         public Uri InternalWalletRpcUri { get; set; }
+        public string WalletDirectory { get; set; }
     }
 }

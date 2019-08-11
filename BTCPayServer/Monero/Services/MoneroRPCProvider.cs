@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Immutable;
+using System.IO;
 using System.Threading.Tasks;
 using BTCPayServer.Monero.RPC;
+using NBitcoin;
 
 namespace BTCPayServer.Payments.Monero
 {
@@ -10,7 +13,10 @@ namespace BTCPayServer.Payments.Monero
         private readonly MoneroLikeConfiguration _moneroLikeConfiguration;
         public ImmutableDictionary<string, MoneroDaemonRpcClient> DaemonRpcClients;
         public ImmutableDictionary<string, MoneroWalletRpcClient> WalletRpcClients;
-       
+        private ConcurrentDictionary<string, MoneroLikeSummary> _summaries = new ConcurrentDictionary<string, MoneroLikeSummary>();
+
+        public ConcurrentDictionary<string, MoneroLikeSummary> Summaries => _summaries;
+
         public MoneroRPCProvider(MoneroLikeConfiguration moneroLikeConfiguration)
         {
             _moneroLikeConfiguration = moneroLikeConfiguration;
@@ -22,39 +28,58 @@ namespace BTCPayServer.Payments.Monero
                     pair => new MoneroWalletRpcClient(pair.Value.DaemonRpcUri, null, null));
         }
 
-        public async Task<MoneroLikeSummary> GetSummary(string cryptoCode)
+        public bool IsAvailable(string cryptocode)
         {
-            if (!DaemonRpcClients.TryGetValue(cryptoCode.ToUpperInvariant(), out var daemonRpcClient))
+            return _summaries.ContainsKey(cryptocode.ToUpperInvariant()) &&
+                   _summaries[cryptocode.ToUpperInvariant()].Synced &&
+                   _summaries[cryptocode.ToUpperInvariant()].WalletAvailable;
+        }
+
+        public async Task<MoneroLikeSummary> UpdateSummary(string cryptoCode)
+        {
+            if (!DaemonRpcClients.TryGetValue(cryptoCode.ToUpperInvariant(), out var daemonRpcClient) ||
+                !WalletRpcClients.TryGetValue(cryptoCode.ToUpperInvariant(), out var walletRpcClient))
             {
                 return null;
             }
-          
-            if (!WalletRpcClients.TryGetValue(cryptoCode.ToUpperInvariant(), out var walletRpcClient))
+
+            var summary = new MoneroLikeSummary();
+            try
             {
-                return null;
+                var daemonResult = await daemonRpcClient.SyncInfo();
+                summary.TargetHeight = daemonResult.TargetHeight ?? daemonResult.Height;
+                summary.Synced = !daemonResult.TargetHeight.HasValue || daemonResult.Height < daemonResult.TargetHeight;
+                summary.CurrentHeight = daemonResult.Height;
             }
-            
-            var result = await daemonRpcClient.SyncInfo();
-            var walletResult = await walletRpcClient.GetHeight();
-            return new MoneroLikeSummary()
+            catch
             {
-                TargetHeight = result.TargetHeight?? result.Height,
-                Available = !result.TargetHeight.HasValue || result.Height < result.TargetHeight,
-                CurrentHeight = result.Height,
-                UpdatedAt = DateTime.Now,
-                WalletHeight = walletResult.Height
-            };
+                summary.DaemonAvailable = false;
+            }
+
+            try
+            {
+                var walletResult = await walletRpcClient.GetHeight();
+
+                summary.WalletHeight = walletResult.Height;
+            }
+            catch
+            {
+                summary.WalletAvailable = false;
+            }
+            _summaries.AddOrReplace(cryptoCode, summary);
+            return summary;
         }
 
 
         public class MoneroLikeSummary
         {
-            public bool Available { get; set; }
+            public bool Synced { get; set; }
             public long CurrentHeight { get; set; }
             public long WalletHeight { get; set; }
             public long TargetHeight { get; set; }
             public DateTime UpdatedAt { get; set; }
+            public bool DaemonAvailable { get; set; }
+            public bool WalletAvailable { get; set; }
         }
     }
-
 }

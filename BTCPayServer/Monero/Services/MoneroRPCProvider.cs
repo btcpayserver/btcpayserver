@@ -11,15 +11,17 @@ namespace BTCPayServer.Payments.Monero
     public class MoneroRPCProvider
     {
         private readonly MoneroLikeConfiguration _moneroLikeConfiguration;
+        private readonly EventAggregator _eventAggregator;
         public ImmutableDictionary<string, MoneroDaemonRpcClient> DaemonRpcClients;
         public ImmutableDictionary<string, MoneroWalletRpcClient> WalletRpcClients;
         private ConcurrentDictionary<string, MoneroLikeSummary> _summaries = new ConcurrentDictionary<string, MoneroLikeSummary>();
 
         public ConcurrentDictionary<string, MoneroLikeSummary> Summaries => _summaries;
 
-        public MoneroRPCProvider(MoneroLikeConfiguration moneroLikeConfiguration)
+        public MoneroRPCProvider(MoneroLikeConfiguration moneroLikeConfiguration, EventAggregator eventAggregator)
         {
             _moneroLikeConfiguration = moneroLikeConfiguration;
+            _eventAggregator = eventAggregator;
             DaemonRpcClients =
                 _moneroLikeConfiguration.MoneroLikeConfigurationItems.ToImmutableDictionary(pair => pair.Key,
                     pair => new MoneroDaemonRpcClient(pair.Value.DaemonRpcUri));
@@ -28,11 +30,16 @@ namespace BTCPayServer.Payments.Monero
                     pair => new MoneroWalletRpcClient(pair.Value.DaemonRpcUri, null, null));
         }
 
-        public bool IsAvailable(string cryptocode)
+        public bool IsAvailable(string cryptoCode)
         {
-            return _summaries.ContainsKey(cryptocode.ToUpperInvariant()) &&
-                   _summaries[cryptocode.ToUpperInvariant()].Synced &&
-                   _summaries[cryptocode.ToUpperInvariant()].WalletAvailable;
+            cryptoCode = cryptoCode.ToUpperInvariant();
+            return _summaries.ContainsKey(cryptoCode) && IsAvailable(cryptoCode);
+        }
+
+        private bool IsAvailable(MoneroLikeSummary summary)
+        {
+            return  summary.Synced &&
+                    summary.WalletAvailable;
         }
 
         public async Task<MoneroLikeSummary> UpdateSummary(string cryptoCode)
@@ -66,10 +73,27 @@ namespace BTCPayServer.Payments.Monero
             {
                 summary.WalletAvailable = false;
             }
+
+            var changed =  !_summaries.ContainsKey(cryptoCode) || IsAvailable(cryptoCode) != IsAvailable(summary);
+            
             _summaries.AddOrReplace(cryptoCode, summary);
+            if (changed)
+            {
+                _eventAggregator.Publish(new MoneroDaemonStateChange()
+                {
+                    Summary = summary,
+                    CryptoCode = cryptoCode
+                });
+            }
             return summary;
         }
 
+
+        public class MoneroDaemonStateChange
+        {
+            public string CryptoCode { get; set; }
+            public MoneroLikeSummary Summary { get; set; }
+        }
 
         public class MoneroLikeSummary
         {

@@ -17,7 +17,7 @@ namespace BTCPayServer.Payments.Monero
 
         public string GetPaymentId()
         {
-            return TransactionId;
+            return $"{TransactionId}#{SubaccountIndex}#{SubaddressIndex}";
         }
 
         public string[] GetSearchTerms()

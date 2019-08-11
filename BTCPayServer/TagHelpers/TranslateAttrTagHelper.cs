@@ -6,7 +6,7 @@ namespace BTCPayServer.TagHelpers
     
     /**
      * TagHelper that allows you to translate HTML attributes. For example if you want to translate the "title" attribute, use translate-attr="title".
-     * If you want to translate multiple attributes in 1 tag, you can enter more than 1 attribute by separating them with a comma. 
+     * If you want to translate multiple attributes in 1 tag, you can enter more than 1 attribute by separating them with a comma, like this: translate-attr="title,alt"
      */
     [HtmlTargetElement(Attributes = "translate-attr")]
     public class TranslateAttrTagHelper : TagHelper

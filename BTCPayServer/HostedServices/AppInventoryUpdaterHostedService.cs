@@ -38,6 +38,7 @@ namespace BTCPayServer.HostedServices
                         return;
                     }
 
+                    //get all apps that were tagged that have manageable inventory that has an item that matches the item code in the invoice
                     var apps = (await _AppService.GetApps(appIds)).Select(data =>
                     {
                         switch (Enum.Parse<AppType>(data.AppType))
@@ -51,9 +52,9 @@ namespace BTCPayServer.HostedServices
                                 return (Data: data, Settings: (object)cfsettings,
                                     Items: _AppService.Parse(cfsettings.PerksTemplate, cfsettings.TargetCurrency));
                             default:
-                                throw new InvalidOperationException();
+                                return (null, null, null);
                         }
-                    }).Where(tuple => tuple.Items.Any(item =>
+                    }).Where(tuple => tuple.Data != null &&  tuple.Items.Any(item =>
                         item.Inventory > 0 && item.Id == invoiceEvent.Invoice.ProductInformation.ItemCode));
                     foreach (var valueTuple in apps)
                     {

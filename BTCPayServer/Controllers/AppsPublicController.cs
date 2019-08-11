@@ -153,51 +153,44 @@ namespace BTCPayServer.Controllers
                 price = amount;
                 title = settings.Title;
                 
-                //if using cart
+                //if cart IS enabled and we detect posdata that matches the cart system's, handle inventory for the items
                 if (!string.IsNullOrEmpty(posData) && 
                     settings.EnableShoppingCart && 
                     TryParseJson(posData, out var posDataObj) && 
                     posDataObj.TryGetValue("cart", out var cartObject))
                 {
-                    try
-                    {
-                        var cartItems = cartObject.Select(token => (JObject)token)
-                            .Select(o => (Id: o.GetValue("id").ToString(),
-                                Quantity: int.Parse(o.GetValue("count").ToString())));
+                    var cartItems = cartObject.Select(token => (JObject)token)
+                        .Select(o => (Id: o.GetValue("id").ToString(),
+                            Quantity: int.Parse(o.GetValue("count").ToString())));
                         
-                        var choices = _AppService.Parse(settings.Template, settings.Currency);
-                        var updateNeeded = false;
-                        foreach (var cartItem in cartItems)
-                        {
-                            var itemChoice = choices.FirstOrDefault(c => c.Id == cartItem.Id);
-                            if (itemChoice == null)
-                                return NotFound();
+                    var choices = _AppService.Parse(settings.Template, settings.Currency);
+                    var updateNeeded = false;
+                    foreach (var cartItem in cartItems)
+                    {
+                        var itemChoice = choices.FirstOrDefault(c => c.Id == cartItem.Id);
+                        if (itemChoice == null)
+                            return NotFound();
 
-                            switch (itemChoice.Inventory)
-                            {
-                                case -1:
-                                    continue;
-                                case 0:
-                                    return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
-                                case int  inventory when inventory <  cartItem.Quantity:
-                                    return RedirectToAction(nameof(ViewPointOfSale), new {appId = appId});
-                                default: 
-                                    itemChoice.Inventory-= cartItem.Quantity ;
-                                    updateNeeded = true;
-                                    break;
-                            }
-                        }
-
-                        if (updateNeeded)
+                        switch (itemChoice.Inventory)
                         {
-                            settings.Template = _AppService.SerializeTemplate(choices);
-                            app.SetSettings(settings);
-                            await _AppService.UpdateAppSettings(app);
+                            case -1:
+                                continue;
+                            case 0:
+                                return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
+                            case int  inventory when inventory <  cartItem.Quantity:
+                                return RedirectToAction(nameof(ViewPointOfSale), new {appId = appId});
+                            default: 
+                                itemChoice.Inventory-= cartItem.Quantity ;
+                                updateNeeded = true;
+                                break;
                         }
                     }
-                    catch (Exception)
+
+                    if (updateNeeded)
                     {
-                        // ignored
+                        settings.Template = _AppService.SerializeTemplate(choices);
+                        app.SetSettings(settings);
+                        await _AppService.UpdateAppSettings(app);
                     }
                 }
             }

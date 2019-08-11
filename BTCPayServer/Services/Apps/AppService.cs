@@ -284,7 +284,7 @@ namespace BTCPayServer.Services.Apps
             
             // the frontend editor is not a proper yml parser so we need to add some very specific formatting to help it( new line before each item in list)
 
-            var split = result.Split(Environment.NewLine);
+            var split = result.Replace(Environment.NewLine, "\n").Split("\n");
             result = string.Empty;
             var first = true;
             foreach (var str in split)
@@ -293,13 +293,13 @@ namespace BTCPayServer.Services.Apps
                 {
                     if (!first)
                     {
-                        result += Environment.NewLine;
+                        result += "\n";
                     }
                     first = false;
                 }
 
                 result += str;
-                result += Environment.NewLine;
+                result += "\n";
             }
             
             return result;
@@ -329,7 +329,7 @@ namespace BTCPayServer.Services.Apps
                                  Formatted = Currencies.FormatCurrency(cc.Value.Value, currency)
                              }).Single(),
                     Custom = c.GetDetailString("custom") == "true",
-                    Inventory = int.Parse( c.GetDetailString("inventory")?? "-1", CultureInfo.InvariantCulture)
+                    Inventory = int.Parse(c.GetDetailString("inventory") ?? "-1", CultureInfo.InvariantCulture)
                 })
                 .ToArray();
         }
@@ -405,7 +405,6 @@ namespace BTCPayServer.Services.Apps
 
             public string GetDetailString(string field)
             {
-
                 return GetDetail(field).FirstOrDefault()?.Value?.Value;
             }
         }

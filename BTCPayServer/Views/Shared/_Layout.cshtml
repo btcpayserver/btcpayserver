@@ -5,6 +5,7 @@
 @inject BTCPayServer.HostedServices.NBXplorerDashboard dashboard
 @inject BTCPayServer.HostedServices.CssThemeManager themeManager
 
+@addTagHelper *, BTCPayServer
 @addTagHelper *, BundlerMinifier.TagHelpers
 
 <!DOCTYPE html>
@@ -72,26 +73,26 @@
                     {
                         if (User.IsInRole(Roles.ServerAdmin))
                         {
-                            <li class="nav-item"><a asp-area="" asp-controller="Server" asp-action="ListUsers" class="nav-link js-scroll-trigger" id="ServerSettings">Server settings</a></li>
+                            <li class="nav-item"><a asp-area="" asp-controller="Server" asp-action="ListUsers" class="nav-link js-scroll-trigger" id="ServerSettings" translate>Server settings</a></li>
                         }
-                        <li class="nav-item"><a asp-area="" asp-controller="UserStores" asp-action="ListStores" class="nav-link js-scroll-trigger" id="Stores">Stores</a></li>
-                        <li class="nav-item"><a asp-area="" asp-controller="Apps" asp-action="ListApps" class="nav-link js-scroll-trigger" id="Apps">Apps</a></li>
-                        <li class="nav-item"><a asp-area="" asp-controller="Wallets" asp-action="ListWallets" class="nav-link js-scroll-trigger" id="Wallets">Wallets</a></li>
-                        <li class="nav-item"><a asp-area="" asp-controller="Invoice" asp-action="ListInvoices" class="nav-link js-scroll-trigger" id="Invoices">Invoices</a></li>
-                        <li class="nav-item"><a asp-area="" asp-controller="PaymentRequest" asp-action="GetPaymentRequests" class="nav-link js-scroll-trigger" id="PaymentRequests">Payment Requests</a></li>
+                        <li class="nav-item"><a asp-area="" asp-controller="UserStores" asp-action="ListStores" class="nav-link js-scroll-trigger" id="Stores" translate>Stores</a></li>
+                        <li class="nav-item"><a asp-area="" asp-controller="Apps" asp-action="ListApps" class="nav-link js-scroll-trigger" id="Apps" translate>Apps</a></li>
+                        <li class="nav-item"><a asp-area="" asp-controller="Wallets" asp-action="ListWallets" class="nav-link js-scroll-trigger" id="Wallets" translate>Wallets</a></li>
+                        <li class="nav-item"><a asp-area="" asp-controller="Invoice" asp-action="ListInvoices" class="nav-link js-scroll-trigger" id="Invoices" translate>Invoices</a></li>
+                        <li class="nav-item"><a asp-area="" asp-controller="PaymentRequest" asp-action="GetPaymentRequests" class="nav-link js-scroll-trigger" id="PaymentRequests" translate>Payment Requests</a></li>
                         <li class="nav-item">
-                            <a asp-area="" asp-controller="Manage" asp-action="Index" title="My settings" class="nav-link js-scroll-trigger" id="MySettings"><i class="fa fa-user"></i></a>
+                            <a asp-area="" asp-controller="Manage" asp-action="Index" translate-attr="title" title="My settings" class="nav-link js-scroll-trigger" id="MySettings"><i class="fa fa-user"></i></a>
                         </li>
                         <li class="nav-item">
-                            <a asp-area="" asp-controller="Account" asp- asp-action="Logout" title="Logout" class="nav-link js-scroll-trigger" id="Logout"><i class="fa fa-sign-out"></i></a>
+                            <a asp-area="" asp-controller="Account" asp- asp-action="Logout" translate-attr="title" title="Logout" class="nav-link js-scroll-trigger" id="Logout"><i class="fa fa-sign-out"></i></a>
                         </li>}
                     else if (env.IsSecure)
                     {
                         if (themeManager.ShowRegister)
                         {
-                            <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Register" class="nav-link js-scroll-trigger" id="Register">Register</a></li>
+                            <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Register" class="nav-link js-scroll-trigger" id="Register" translate>Register</a></li>
                         }
-                        <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Login" class="nav-link js-scroll-trigger" id="Login">Log in</a></li>
+                        <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Login" class="nav-link js-scroll-trigger" id="Login" translate>Log in</a></li>
                     }
 
                 </ul>

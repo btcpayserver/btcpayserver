@@ -1,4 +1,5 @@
 ﻿@model LoginViewModel
+@addTagHelper *, BTCPayServer
 @inject SignInManager<ApplicationUser> SignInManager
 @inject BTCPayServer.HostedServices.CssThemeManager themeManager
 
@@ -11,7 +12,7 @@
         <div class="modal-dialog modal-login">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title">Sign In</h4>
+                    <h4 class="modal-title" translate>Sign In</h4>
                 </div>
                 <div class="modal-body">
                     <form asp-route-returnurl="@ViewData["ReturnUrl"]" method="post">
@@ -36,14 +37,14 @@
                             <span asp-validation-for="Password" class="text-danger"></span>
                         </div>
                         <div class="form-group">
-                            <button type="submit" class="btn btn-primary btn-block btn-lg" id="LoginButton">Sign in</button>
+                            <button type="submit" class="btn btn-primary btn-block btn-lg" id="LoginButton" translate>Sign in</button>
                         </div>
-                        <p class="hint-text"><a asp-action="ForgotPassword">Forgot your password?</a></p>
+                        <p class="hint-text"><a asp-action="ForgotPassword" translate>Forgot your password?</a></p>
                     </form>
                 </div>
                 @if (themeManager.ShowRegister)
                 {
-                <div class="modal-footer"><span>Don't have an account?&nbsp;<a asp-action="Register" asp-route-returnurl="@ViewData["ReturnUrl"]">Create one</a></span></div>
+                <div class="modal-footer"><span translate>Don't have an account?&nbsp;<a asp-action="Register" asp-route-returnurl="@ViewData["ReturnUrl"]">Create one</a></span></div>
                 }
             </div>
         </div>

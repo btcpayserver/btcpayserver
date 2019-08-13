@@ -1,0 +1,72 @@
+@using BTCPayServer.Views.Stores
+@model BTCPayServer.Controllers.MoneroLikeStoreController.MoneroLikePaymentMethodViewModel
+
+@{
+    Layout = "../Shared/_NavLayout.cshtml";
+
+    ViewData.SetActivePageAndTitle(StoreNavPages.ActivePage, $"{Model.CryptoCode} Settings");
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <div asp-validation-summary="All" class="text-danger"></div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-8">
+        @if (Model.Summary != null)
+        {
+            <div class="card">
+            <div class="card-body">
+                <span class="card-title">Node Summary</span>
+                <span>Node available: @Model.Summary.DaemonAvailable</span>
+                <span>Wallet available: @Model.Summary.WalletAvailable</span>
+                <span>Last updated: @Model.Summary.UpdatedAt</span>
+                <span>Synced: @Model.Summary.Synced (@Model.Summary.CurrentHeight / @Model.Summary.TargetHeight)</span>
+            </div>
+            </div>
+        }
+        <div></div>
+        <div class="form-group">
+            <form method="post">
+                <input type="hidden" asp-for="CryptoCode"/>
+                <div class="form-group">
+
+                    <label asp-for="AccountIndex" class="control-label"></label>*
+                    @if (@Model.Accounts != null)
+                    {
+                        <select asp-for="AccountIndex" asp-items="@Model.Accounts" asp- class="form-control"/>
+                        <span asp-validation-for="AccountIndex" class="text-danger"></span>
+
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control" placeholder="New account label" asp-for="NewAccountLabel">
+                            <div class="input-group-append">
+                                <button name="command" value="add-account" class="btn btn-secondary"type="submit">Add account</button>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <input type="hidden" asp-for="AccountIndex"/>
+                        <span class="text-danger">Could not connect to the wallet daemon. Is it configured correctly?</span>
+                    }
+                </div >
+                <div class="form-group">
+                    <label asp-for="Enabled"></label>
+                    <input asp-for="Enabled" type="checkbox" class="form-check"/>
+                    <span asp-validation-for="Enabled" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary" id="SaveButton">Save</button>
+
+                    <a class="btn btn-secondary" asp-action="GetStoreMoneroLikePaymentMethods" asp-controller="MoneroLikeStore">Back to list</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

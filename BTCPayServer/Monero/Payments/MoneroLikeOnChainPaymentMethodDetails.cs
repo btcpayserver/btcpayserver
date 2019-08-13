@@ -20,7 +20,7 @@ namespace BTCPayServer.Payments.Monero
         {
             DepositAddress = newPaymentDestination;
         }
-        public int AccountIndex { get; set; }
+        public long AccountIndex { get; set; }
         public long AddressIndex { get; set; }
         public string DepositAddress { get; set; }
         public decimal NextNetworkFee { get; set; }

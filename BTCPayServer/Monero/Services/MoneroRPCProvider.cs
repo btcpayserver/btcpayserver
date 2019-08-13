@@ -27,13 +27,13 @@ namespace BTCPayServer.Payments.Monero
                     pair => new MoneroDaemonRpcClient(pair.Value.DaemonRpcUri));
             WalletRpcClients =
                 _moneroLikeConfiguration.MoneroLikeConfigurationItems.ToImmutableDictionary(pair => pair.Key,
-                    pair => new MoneroWalletRpcClient(pair.Value.DaemonRpcUri, null, null));
+                    pair => new MoneroWalletRpcClient(pair.Value.DaemonRpcUri, "", ""));
         }
 
         public bool IsAvailable(string cryptoCode)
         {
             cryptoCode = cryptoCode.ToUpperInvariant();
-            return _summaries.ContainsKey(cryptoCode) && IsAvailable(cryptoCode);
+            return _summaries.ContainsKey(cryptoCode) && IsAvailable(_summaries[cryptoCode]);
         }
 
         private bool IsAvailable(MoneroLikeSummary summary)
@@ -55,8 +55,9 @@ namespace BTCPayServer.Payments.Monero
             {
                 var daemonResult = await daemonRpcClient.SyncInfo();
                 summary.TargetHeight = daemonResult.TargetHeight ?? daemonResult.Height;
-                summary.Synced = !daemonResult.TargetHeight.HasValue || daemonResult.Height < daemonResult.TargetHeight;
+                summary.Synced = !daemonResult.TargetHeight.HasValue || daemonResult.Height == daemonResult.TargetHeight;
                 summary.CurrentHeight = daemonResult.Height;
+                summary.DaemonAvailable = true;
             }
             catch
             {
@@ -68,6 +69,7 @@ namespace BTCPayServer.Payments.Monero
                 var walletResult = await walletRpcClient.GetHeight();
 
                 summary.WalletHeight = walletResult.Height;
+                summary.WalletAvailable = true;
             }
             catch
             {

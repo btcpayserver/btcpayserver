@@ -159,25 +159,28 @@ Cart.prototype.addItem = function(item) {
 }
 
 Cart.prototype.incrementItem = function(id) {
-    var self = this;
+    var oldItemsCount = this.items;
     this.items = 0; // Calculate total # of items from scratch just to make sure
     var result = true;
-    this.content.filter(function(obj){
-        // Increment the item count
+    for (var i = 0; i < this.content.length; i++) {
+        var obj = this.content[i];
         if (obj.id === id){
             if(obj.inventory !== -1 && obj.inventory <= obj.count){
                 result = false;
-                return;
+                continue;
             }
-            
+
             obj.count++;
             delete(obj.disabled);
         }
 
         // Increment the total # of items
-        self.items += obj.count;
-    });
-
+        this.items += obj.count;
+    }
+    if(!result){
+        this.items = oldItemsCount;
+    }
+    
     this.updateAll();
     return result;
 }

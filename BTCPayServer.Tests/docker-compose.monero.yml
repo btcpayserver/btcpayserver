@@ -1,0 +1,29 @@
+version: "3"    
+
+services:
+
+  monerod:
+    image: kukks/monero:latest
+    restart: unless-stopped
+    entrypoint: ["monerod", "--rpc-bind-ip=0.0.0.0", "--confirm-external-bind", "--regtest", "--rpc-bind-port=18081", "--block-notify=\"curl https://127.0.0.1:14142/monerolikedaemoncallback/block?cryptocode=xmr&hash=%s\"" ]
+    volumes:
+      - "monero_datadir:/home/monero/.bitmonero"
+    ports:
+      - "18080:18080" 
+      - "18081:18081"
+  monero_wallet:
+      image: kukks/monero:latest
+      restart: unless-stopped
+      entrypoint: [  "monero-wallet-rpc", "--rpc-bind-ip=0.0.0.0", "--confirm-external-bind", " --rpc-bind-port=18082", "--trusted-daemon", "--daemon-address=monerod:18081", "--wallet-dir=/wallet", "--wallet-file=wallet_regtest", "--tx-notify=\"curl https://127.0.0.1:14142/monerolikedaemoncallback/tx?cryptocode=xmr&hash=%s\"" ]
+      volumes:
+          - "monero_walletdir:/wallet"
+      ports:
+          - "18082:18082"
+      links:
+          - monerod
+      depends_on:
+        - monerod
+
+volumes:
+    monero_datadir:
+    monero_walletdir:

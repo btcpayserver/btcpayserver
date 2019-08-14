@@ -55,7 +55,7 @@ namespace BTCPayServer.HostedServices
                                 return (null, null, null);
                         }
                     }).Where(tuple => tuple.Data != null &&  tuple.Items.Any(item =>
-                        item.Inventory > 0 && item.Id == invoiceEvent.Invoice.ProductInformation.ItemCode));
+                        item.Inventory >= 0 && item.Id == invoiceEvent.Invoice.ProductInformation.ItemCode));
                     foreach (var valueTuple in apps)
                     {
                         foreach (var item1 in valueTuple.Items.Where(item =>
@@ -68,11 +68,11 @@ namespace BTCPayServer.HostedServices
                         {
                             case AppType.PointOfSale:
 
-                                (valueTuple.Settings as AppsController.PointOfSaleSettings).Template =
+                                ((AppsController.PointOfSaleSettings) valueTuple.Settings).Template =
                                     _AppService.SerializeTemplate(valueTuple.Items);
                                 break;
                             case AppType.Crowdfund:
-                                (valueTuple.Settings as CrowdfundSettings).PerksTemplate =
+                                ((CrowdfundSettings) valueTuple.Settings).PerksTemplate =
                                     _AppService.SerializeTemplate(valueTuple.Items);
                                 break;
                             default:

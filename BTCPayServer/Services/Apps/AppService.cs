@@ -272,15 +272,20 @@ namespace BTCPayServer.Services.Apps
 
         public string SerializeTemplate(ViewPointOfSaleViewModel.Item[] items)
         {
-            var result =  new Serializer().Serialize(items.ToDictionary(item => item.Id, item => new
-            {
-                price =  item.Price.Value,
-                title= item.Title,
-                description = item.Description,
-                image = item.Image,
-                custom = item.Custom,
-                inventory = item.Inventory
-            }));
+            var result = new SerializerBuilder()
+                .EmitDefaults()
+                .Build()
+                .Serialize(items
+                    .ToDictionary(item => item.Id,
+                        item => new
+                        {
+                            price = item.Price.Value,
+                            title = item.Title,
+                            description = item.Description,
+                            image = item.Image,
+                            custom = item.Custom,
+                            inventory = item.Inventory
+                        }));
             
             // the frontend editor is not a proper yml parser so we need to add some very specific formatting to help it( new line before each item in list)
 

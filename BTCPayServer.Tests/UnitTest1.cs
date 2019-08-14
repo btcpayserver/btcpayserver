@@ -1962,13 +1962,13 @@ noninventoryitem:
                 
                 //let's mark the inventoryitem invoice as invalid, thsi should return the item to back in stock
                 var controller = tester.PayTester.GetController<InvoiceController>(user.UserId, user.StoreId);
-                Assert.IsType<JsonResult>( await controller.ChangeInvoiceState(inventoryItemInvoice.Id, "invalid"));
-                vmpos = Assert.IsType<UpdatePointOfSaleViewModel>(Assert.IsType<ViewResult>(apps.UpdatePointOfSale(appId).Result).Model);
                 var appService = tester.PayTester.GetService<AppService>();
-                
+                var eventAggregator = tester.PayTester.GetService<EventAggregator>();
+                Assert.IsType<JsonResult>( await controller.ChangeInvoiceState(inventoryItemInvoice.Id, "invalid"));
                 //check that item is back in stock
                 TestUtils.Eventually(() =>
                 {
+                    vmpos = Assert.IsType<UpdatePointOfSaleViewModel>(Assert.IsType<ViewResult>(apps.UpdatePointOfSale(appId).Result).Model);
                     Assert.Equal(1, appService.Parse(vmpos.Template, "BTC").Single(item => item.Id == "inventoryitem").Inventory);
                 }, 10000);
                 

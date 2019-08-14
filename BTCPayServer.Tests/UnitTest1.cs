@@ -1929,6 +1929,49 @@ donation:
                     Assert.Equal(test.ExpectedDivisibility, vmview.CurrencyInfo.Divisibility);
                     Assert.Equal(test.ExpectedSymbolSpace, vmview.CurrencyInfo.SymbolSpace);
                 }
+                
+                
+                //test inventory related features
+                vmpos = Assert.IsType<UpdatePointOfSaleViewModel>(Assert.IsType<ViewResult>(apps.UpdatePointOfSale(appId).Result).Model);
+                vmpos.Title = "hello";
+                vmpos.Currency = "BTC";
+                vmpos.Template = @"
+inventoryitem:
+  price: 1.0
+  title: good apple
+  inventory: 1
+noninventoryitem:
+  price: 10.0
+  inventory: -1";
+                Assert.IsType<RedirectToActionResult>(apps.UpdatePointOfSale(appId, vmpos).Result);
+                
+                //inventoryitem has 1 item available
+                Assert.IsType<RedirectToActionResult>(publicApps.ViewPointOfSale(appId, 1, null, null, null, null, "inventoryitem").Result);
+                //we already bought all available stock so this should fail
+                Assert.IsType<NotFoundResult>(publicApps.ViewPointOfSale(appId, 1, null, null, null, null, "inventoryitem").Result);
+                
+                //inventoryitem has unlimited items available
+                Assert.IsType<RedirectToActionResult>(publicApps.ViewPointOfSale(appId, 1, null, null, null, null, "noninventoryitem").Result);
+                Assert.IsType<RedirectToActionResult>(publicApps.ViewPointOfSale(appId, 1, null, null, null, null, "noninventoryitem").Result);
+
+                //verify invoices where created
+                invoices = user.BitPay.GetInvoices();
+                Assert.Equal(2, invoices.Count(invoice => invoice.ItemCode.Equals("noninventoryitem")));
+                var inventoryItemInvoice = invoices.SingleOrDefault(invoice => invoice.ItemCode.Equals("inventoryitem"));
+                Assert.NotNull(inventoryItemInvoice);
+                
+                //let's mark the inventoryitem invoice as invalid, thsi should return the item to back in stock
+                var controller = tester.PayTester.GetController<InvoiceController>(user.UserId, user.StoreId);
+                Assert.IsType<JsonResult>( controller.ChangeInvoiceState(inventoryItemInvoice.Id, "invalid"));
+                vmpos = Assert.IsType<UpdatePointOfSaleViewModel>(Assert.IsType<ViewResult>(apps.UpdatePointOfSale(appId).Result).Model);
+                var appService = tester.PayTester.GetService<AppService>();
+                
+                //check that item is back in stock
+                TestUtils.Eventually(() =>
+                {
+                    Assert.Equal(1, appService.Parse(vmpos.Template, "BTC").Single(item => item.Id == "inventoryitem").Inventory);
+                }, 10000);
+                
             }
         }
 

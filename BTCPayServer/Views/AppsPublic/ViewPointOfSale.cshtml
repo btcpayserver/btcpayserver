@@ -6,7 +6,7 @@
     ViewData["Title"] = Model.Title;
     Layout = null;
     int[] CustomTipPercentages = Model.CustomTipPercentages;
-    var anyInventoryItems = Model.Items.Any(item => item.Inventory != -1);
+    var anyInventoryItems = Model.Items.Any(item => item.Inventory > -1);
 }
 
 <!DOCTYPE html>
@@ -397,7 +397,7 @@
 
                             </div>
                             <div class="card-footer bg-transparent border-0">
-                                @if (item.Inventory == -1 || item.Inventory > 0)
+                                @if (item.Inventory < 0 || item.Inventory > 0)
                                 {
                                     <div class="w-100">
                                         @if (item.Custom)

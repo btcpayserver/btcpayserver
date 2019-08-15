@@ -44,7 +44,7 @@
                 <p class="card-text overflow-hidden">@Safe.Raw(item.Description)</p>
 
             </div>
-            @if (Model.ViewCrowdfundViewModel.PerkCount.ContainsKey(item.Id) || item.Inventory != -1)
+            @if (Model.ViewCrowdfundViewModel.PerkCount.ContainsKey(item.Id) || item.Inventory > -1)
             {
                 <div class="card-footer d-flex justify-content-between">
                         @switch (item.Inventory)

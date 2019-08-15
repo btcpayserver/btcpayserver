@@ -138,7 +138,7 @@ namespace BTCPayServer.Controllers
                 {
                     return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
                 }
-                if (choice.Inventory != -1)
+                if (choice.Inventory > -1)
                 {
                     choice.Inventory--;
                     settings.Template = _AppService.SerializeTemplate(choices);
@@ -173,7 +173,7 @@ namespace BTCPayServer.Controllers
 
                         switch (itemChoice.Inventory)
                         {
-                            case -1:
+                            case int i when i < 0:
                                 continue;
                             case 0:
                                 return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
@@ -316,7 +316,7 @@ namespace BTCPayServer.Controllers
                 {
                     return NotFound("Option was out of stock");
                 }
-                if (choice.Inventory != -1)
+                if (choice.Inventory > -1)
                 {
                     choice.Inventory--;
                     settings.PerksTemplate = _AppService.SerializeTemplate(choices);

@@ -165,7 +165,7 @@ Cart.prototype.incrementItem = function(id) {
     for (var i = 0; i < this.content.length; i++) {
         var obj = this.content[i];
         if (obj.id === id){
-            if(obj.inventory !== -1 && obj.inventory <= obj.count){
+            if(obj.inventory > -1 && obj.inventory <= obj.count){
                 result = false;
                 continue;
             }
@@ -434,7 +434,7 @@ Cart.prototype.listItems = function() {
                 }) : '',
                 'title': this.escape(item.title),
                 'count': this.escape(item.count),
-                'inventory': this.escape(item.inventory == -1? 99999: item.inventory),
+                'inventory': this.escape(item.inventory < 0? 99999: item.inventory),
                 'price': this.escape(item.price.formatted)
             });
             list.push($(tableTemplate));
@@ -656,7 +656,7 @@ Cart.prototype.loadLocalStorage = function() {
             
             if(matchedItem.inventory === 0){
                 this.content.splice(i,1);
-            }else if(matchedItem.inventory != -1 && matchedItem.inventory <  this.content[i].count){
+            }else if(matchedItem.inventory > -1 && matchedItem.inventory <  this.content[i].count){
                 this.content[i].count = matchedItem.inventory;
             }
             //update its stock

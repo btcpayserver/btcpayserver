@@ -1,4 +1,5 @@
 ﻿@model UsersViewModel
+@addTagHelper *, BTCPayServer
 @{
     ViewData.SetActivePageAndTitle(ServerNavPages.Users);
 }
@@ -6,7 +7,8 @@
 <partial name="_StatusMessage" for="StatusMessage" />
 
 <div class="row">
-    <div class="col align-self-center">Total Users: @Model.Total</div>
+    <!-- TODO Replace translation with a parameter. But how? -->
+    <div class="col align-self-center"><span translate="total_users">Total Users</span>: @Model.Total</div>
     <div class="col text-right">
         <a asp-controller="Account"
            asp-action="Register"
@@ -14,7 +16,7 @@
            asp-route-logon="false"
            class="btn btn-primary"
            role="button">
-            <span class="fa fa-plus"></span> Add User
+            <span class="fa fa-plus"></span> <span translate="add_user">Add User</span>
         </a>
     </div>
 </div>
@@ -22,9 +24,9 @@
 <table class="table table-sm table-responsive-md">
     <thead>
         <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Actions</th>
+            <th translate="name">Name</th>
+            <th translate="email">Email</th>
+            <th translate="actions">Actions</th>
         </tr>
     </thead>
     <tbody>
@@ -33,7 +35,7 @@
             <tr>
                 <td>@user.Name</td>
                 <td>@user.Email</td>
-                <td><a asp-action="User" asp-route-userId="@user.Id">Edit</a> <span> - </span> <a asp-action="DeleteUser" asp-route-userId="@user.Id">Remove</a></td>
+                <td><a asp-action="User" asp-route-userId="@user.Id" translate="edit">Edit</a> <span> - </span> <a asp-action="DeleteUser" asp-route-userId="@user.Id" translate="remove">Remove</a></td>
             </tr>
         }
     </tbody>
@@ -42,18 +44,19 @@
 <nav aria-label="..." class="w-100">
     <ul class="pagination float-left">
         <li class="page-item @(Model.Skip == 0 ? "disabled" : null)">
-            <a class="page-link" tabindex="-1" href="@listUsers(-1, Model.Count)">&laquo;</a>
+            <a class="page-link" title="Previous page" translate-attr="title:previous_page" tabindex="-1" href="@listUsers(-1, Model.Count)">&laquo;</a>
         </li>
         <li class="page-item disabled">
+            <!-- TODO Translation with parameters. But how? -->
             <span class="page-link">@(Model.Skip + 1) to @(Model.Skip + Model.Users.Count) of @Model.Total</span>
         </li>
         <li class="page-item @(Model.Total > (Model.Skip + Model.Users.Count) ? null : "disabled")">
-            <a class="page-link" href="@listUsers(1, Model.Count)">&raquo;</a>
+            <a class="page-link" title="Next page" translate-attr="title:next_page" href="@listUsers(1, Model.Count)">&raquo;</a>
         </li>
     </ul>
     <ul class="pagination float-right">
         <li class="page-item disabled">
-            <span class="page-link">Page Size:</span>
+            <span class="page-link"><span translate="page_size">Page Size</span>:</span>
         </li>
         <li class="page-item @(Model.Count == 50 ? "active" : null)">
             <a class="page-link" href="@listUsers(0, 50)">50</a>

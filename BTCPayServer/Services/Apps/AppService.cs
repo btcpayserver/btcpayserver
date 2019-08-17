@@ -290,12 +290,12 @@ namespace BTCPayServer.Services.Apps
             
             // the frontend editor is not a proper yml parser so we need to add some very specific formatting to help it( new line before each item in list)
 
-            var split = result.Replace(Environment.NewLine, "\n").Split("\n");
+            var split = result.Replace(Environment.NewLine, "\n", StringComparison.InvariantCulture).Split("\n");
             result = string.Empty;
             var first = true;
             foreach (var str in split)
             {
-                if (!str.StartsWith("  "))
+                if (!str.StartsWith("  ", StringComparison.InvariantCulture))
                 {
                     if (!first)
                     {
@@ -455,7 +455,7 @@ namespace BTCPayServer.Services.Apps
                 result = JObject.Parse(json);
                 return true;
             }
-            catch (Exception e)
+            catch
             {
                 return false;
             }
@@ -467,9 +467,9 @@ namespace BTCPayServer.Services.Apps
             if (!TryParseJson(posData, out var posDataObj) ||
                 !posDataObj.TryGetValue("cart", out var cartObject)) return false;
             cartItems = cartObject.Select(token => (JObject)token)
-                .ToDictionary(o => o.GetValue("id").ToString(), o => int.Parse(o.GetValue("count").ToString()));
+                .ToDictionary(o => o.GetValue("id", StringComparison.InvariantCulture).ToString(),
+                    o => int.Parse(o.GetValue("count", StringComparison.InvariantCulture).ToString(), CultureInfo.InvariantCulture ));
             return true;
-
         }
     }
 }

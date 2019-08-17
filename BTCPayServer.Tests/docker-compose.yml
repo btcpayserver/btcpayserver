@@ -129,7 +129,6 @@ services:
       LIGHTNINGD_OPT: |
         bitcoin-datadir=/etc/bitcoin
         bitcoin-rpcconnect=bitcoind
-        bind-addr=0.0.0.0
         announce-addr=customer_lightningd
         log-level=debug
         funding-confirms=1
@@ -176,7 +175,6 @@ services:
       LIGHTNINGD_OPT: |
         bitcoin-datadir=/etc/bitcoin
         bitcoin-rpcconnect=bitcoind
-        bind-addr=0.0.0.0
         announce-addr=merchant_lightningd
         funding-confirms=1
         log-level=debug

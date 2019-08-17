@@ -1,11 +1,20 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Razor.TagHelpers;
+using Microsoft.Extensions.Localization;
 
 namespace BTCPayServer.TagHelpers
 {
     [HtmlTargetElement(Attributes = "translate")]
     public class TranslateTagHelper : TagHelper
     {
+
+        private readonly IStringLocalizer<TranslateTagHelper> _localizer;
+
+
+        public TranslateTagHelper(IStringLocalizer<TranslateTagHelper> localizer)
+        {
+            _localizer = localizer;
+        }
         public override int Order
         {
             get
@@ -33,16 +42,10 @@ namespace BTCPayServer.TagHelpers
                 ? output.Content.GetContent()
                 : (await output.GetChildContentAsync()).GetContent();
 
-            var newContent = translate(childContent);
+            var newContent = _localizer[childContent];
 
             output.Content.SetHtmlContent(newContent);
         }
-
-        public string translate(string english)
-        {
-            // TODO implement translation logic here
-            return english;
-            //return english + " translated";
-        }
+        
     }
 }

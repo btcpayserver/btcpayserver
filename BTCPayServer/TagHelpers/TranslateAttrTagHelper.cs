@@ -1,8 +1,12 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Razor.TagHelpers;
+using Microsoft.Extensions.Localization;
 
 namespace BTCPayServer.TagHelpers
 {
+    
+    
+    
     
     /**
      * TagHelper that allows you to translate HTML attributes. For example if you want to translate the "title" attribute, use translate-attr="title".
@@ -11,10 +15,17 @@ namespace BTCPayServer.TagHelpers
     [HtmlTargetElement(Attributes = "translate-attr")]
     public class TranslateAttrTagHelper : TagHelper
     {
+        
         // Can be passed via <xxx translate-attr="..." />. 
         // PascalCase gets translated into kebab-case.
         public string TranslateAttr { get; set; }
 
+        private readonly IStringLocalizer<TranslateAttrTagHelper> _localizer;
+        
+        public TranslateAttrTagHelper(IStringLocalizer<TranslateAttrTagHelper> localizer)
+        {
+            _localizer = localizer;
+        }
 
         public override int Order
         {
@@ -41,17 +52,12 @@ namespace BTCPayServer.TagHelpers
                     TagHelperAttribute attr = attrs[i];
                     if (attr.Name.Equals(attrToTranslate))
                     {
-                        var translatedAttr = translate(attr.Value.ToString());
+                        var translatedAttr = _localizer[attr.Value.ToString()];
                         output.Attributes.SetAttribute(attrToTranslate, translatedAttr);
                     }
                 }
             }
         }
 
-        public string translate(string english)
-        {
-            // TODO implement translation logic here
-            return english;
-        }
     }
 }

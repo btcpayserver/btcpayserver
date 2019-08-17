@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Builder;
 using System;
+using System.Globalization;
 using Microsoft.Extensions.DependencyInjection;
 using BTCPayServer.Filters;
 using BTCPayServer.Models;
@@ -24,6 +25,8 @@ using BTCPayServer.Authentication.OpenId;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Storage;
+using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Mvc.Razor;
 
 namespace BTCPayServer.Hosting
 {
@@ -52,11 +55,12 @@ namespace BTCPayServer.Hosting
                 .AddDefaultTokenProviders();      
             
             ConfigureOpenIddict(services);
-
+            
             services.AddBTCPayServer(Configuration);
             services.AddProviderStorage();
             services.AddSession();
             services.AddSignalR();
+            services.AddJsonLocalization(options => options.ResourcesPath = "Resources");
             services.AddMvc(o =>
             {
                 o.Filters.Add(new XFrameOptionsAttribute("DENY"));
@@ -71,7 +75,9 @@ namespace BTCPayServer.Hosting
                 //    StyleSrc = "'self' 'unsafe-inline'",
                 //    ScriptSrc = "'self' 'unsafe-inline'"
                 //});
-            }).AddControllersAsServices();
+            }).AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix)
+                .AddControllersAsServices();
+            
             services.TryAddScoped<ContentSecurityPolicies>();
             services.Configure<IdentityOptions>(options =>
             {
@@ -233,6 +239,21 @@ namespace BTCPayServer.Hosting
             app.UseProviderStorage(options);
             app.UseAuthentication();
             app.UseSession();
+            
+            var supportedCultures = new[]
+            {
+                // TODO auto detect available locales by checking which JSON files we have in the "Resources" dir
+                new CultureInfo("en-US"),
+                new CultureInfo("nl")
+            };
+            var localizationOptions = new RequestLocalizationOptions
+            {
+                DefaultRequestCulture = new RequestCulture("en-US"),
+                SupportedCultures = supportedCultures,
+                SupportedUICultures = supportedCultures
+            };
+            app.UseRequestLocalization(localizationOptions);
+            
             app.UseSignalR(route =>
             {
                 AppHub.Register(route);

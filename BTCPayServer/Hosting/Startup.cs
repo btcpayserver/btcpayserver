@@ -91,12 +91,12 @@ namespace BTCPayServer.Hosting
                 // TODO auto detect available locales by checking which JSON files we have in the "Resources" dir
                 var supportedCultures = new[]
                 {
-                    new CultureInfo("en-US"), new CultureInfo("nl")
+                    new CultureInfo("en"), new CultureInfo("nl")
                 };
 
                 // State what the default culture for your application is. This will be used if no specific culture
                 // can be determined for a given request.
-                options.DefaultRequestCulture = new RequestCulture(culture: "en-US");
+                options.DefaultRequestCulture = new RequestCulture(culture: "en");
 
                 // You must explicitly state which cultures your application supports.
                 // These are the cultures the app supports for formatting numbers, dates, etc.

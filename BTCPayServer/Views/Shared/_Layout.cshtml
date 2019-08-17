@@ -94,6 +94,10 @@
                         }
                         <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Login" class="nav-link js-scroll-trigger" id="Login" translate>Log in</a></li>
                     }
+                    
+                    <li class="nav-item">
+                        @await Html.PartialAsync("_SelectLanguagePartial")
+                    </li>
 
                 </ul>
             </div>

@@ -24,6 +24,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NBitpayClient;
+using Newtonsoft.Json.Linq;
 using YamlDotNet.RepresentationModel;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -444,6 +445,31 @@ namespace BTCPayServer.Services.Apps
                 ctx.Apps.Update(app);
                 await ctx.SaveChangesAsync();
             }
+        }
+        
+        private static bool TryParseJson(string json, out JObject result)
+        {
+            result = null;
+            try
+            {
+                result = JObject.Parse(json);
+                return true;
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
+        }
+
+        public static bool TryParsePosCartItems(string posData, out Dictionary<string, int> cartItems)
+        {
+            cartItems = null;
+            if (!TryParseJson(posData, out var posDataObj) ||
+                !posDataObj.TryGetValue("cart", out var cartObject)) return false;
+            cartItems = cartObject.Select(token => (JObject)token)
+                .ToDictionary(o => o.GetValue("id").ToString(), o => int.Parse(o.GetValue("count").ToString()));
+            return true;
+
         }
     }
 }

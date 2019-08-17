@@ -123,7 +123,7 @@ namespace BTCPayServer.Controllers
             if (!Uri.IsWellFormedUriString(entity.RedirectURL, UriKind.Absolute))
                 entity.RedirectURL = null;
 
-            entity.RedirectAutomatically =
+            entity.RedirectAutomaticarcally =
                 invoice.RedirectAutomatically.GetValueOrDefault(storeBlob.RedirectAutomatically);
 
             entity.Status = InvoiceStatus.New;

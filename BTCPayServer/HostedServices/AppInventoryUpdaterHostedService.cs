@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,8 +29,10 @@ namespace BTCPayServer.HostedServices
         {
             if (evt is InvoiceEvent invoiceEvent)
             {
+                Dictionary<string, int> cartItems = null;
                 if (new[] {InvoiceEvent.Expired, InvoiceEvent.MarkedInvalid}.Contains(invoiceEvent.Name) &&
-                    !string.IsNullOrEmpty(invoiceEvent.Invoice.ProductInformation.ItemCode))
+                    (!string.IsNullOrEmpty(invoiceEvent.Invoice.ProductInformation.ItemCode) ||
+                     AppService.TryParsePosCartItems(invoiceEvent.Invoice.PosData, out cartItems)))
                 {
                     var appIds = AppService.GetAppInternalTags(invoiceEvent.Invoice);
 
@@ -54,25 +57,38 @@ namespace BTCPayServer.HostedServices
                             default:
                                 return (null, null, null);
                         }
-                    }).Where(tuple => tuple.Data != null &&  tuple.Items.Any(item =>
-                        item.Inventory >= 0 && item.Id == invoiceEvent.Invoice.ProductInformation.ItemCode));
+                    }).Where(tuple => tuple.Data != null && tuple.Items.Any(item =>
+                                          item.Inventory >= 0 &&
+                                          ((!string.IsNullOrEmpty(invoiceEvent.Invoice.ProductInformation.ItemCode) &&
+                                            item.Id == invoiceEvent.Invoice.ProductInformation.ItemCode) ||
+                                           (cartItems != null && cartItems.ContainsKey(item.Id)))));
                     foreach (var valueTuple in apps)
                     {
                         foreach (var item1 in valueTuple.Items.Where(item =>
-                            item.Id == invoiceEvent.Invoice.ProductInformation.ItemCode))
+                            ((!string.IsNullOrEmpty(invoiceEvent.Invoice.ProductInformation.ItemCode) &&
+                              item.Id == invoiceEvent.Invoice.ProductInformation.ItemCode) ||
+                             (cartItems != null && cartItems.ContainsKey(item.Id)))))
                         {
-                            item1.Inventory++;
+                            if (cartItems != null && cartItems.ContainsKey(item1.Id))
+                            {
+                                item1.Inventory += cartItems[item1.Id];
+                            }
+                            else if (!string.IsNullOrEmpty(invoiceEvent.Invoice.ProductInformation.ItemCode) &&
+                                     item1.Id == invoiceEvent.Invoice.ProductInformation.ItemCode)
+                            {
+                                item1.Inventory++;
+                            }
                         }
 
                         switch (Enum.Parse<AppType>(valueTuple.Data.AppType))
                         {
                             case AppType.PointOfSale:
 
-                                ((AppsController.PointOfSaleSettings) valueTuple.Settings).Template =
+                                ((AppsController.PointOfSaleSettings)valueTuple.Settings).Template =
                                     _AppService.SerializeTemplate(valueTuple.Items);
                                 break;
                             case AppType.Crowdfund:
-                                ((CrowdfundSettings) valueTuple.Settings).PerksTemplate =
+                                ((CrowdfundSettings)valueTuple.Settings).PerksTemplate =
                                     _AppService.SerializeTemplate(valueTuple.Items);
                                 break;
                             default:

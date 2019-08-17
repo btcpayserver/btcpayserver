@@ -1,33 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Configuration;
-using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.ModelBinders;
 using BTCPayServer.Models;
 using BTCPayServer.Models.AppViewModels;
-using BTCPayServer.Payments;
-using BTCPayServer.Rating;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
-using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services.Rates;
-using Ganss.XSS;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using NBitpayClient;
-using Newtonsoft.Json.Linq;
-using YamlDotNet.RepresentationModel;
 using static BTCPayServer.Controllers.AppsController;
 
 namespace BTCPayServer.Controllers
@@ -156,18 +144,14 @@ namespace BTCPayServer.Controllers
                 //if cart IS enabled and we detect posdata that matches the cart system's, handle inventory for the items
                 if (!string.IsNullOrEmpty(posData) && 
                     settings.EnableShoppingCart && 
-                    TryParseJson(posData, out var posDataObj) && 
-                    posDataObj.TryGetValue("cart", out var cartObject))
+                    AppService.TryParsePosCartItems(posData, out var cartItems))
                 {
-                    var cartItems = cartObject.Select(token => (JObject)token)
-                        .Select(o => (Id: o.GetValue("id").ToString(),
-                            Quantity: int.Parse(o.GetValue("count").ToString())));
                         
                     var choices = _AppService.Parse(settings.Template, settings.Currency);
                     var updateNeeded = false;
                     foreach (var cartItem in cartItems)
                     {
-                        var itemChoice = choices.FirstOrDefault(c => c.Id == cartItem.Id);
+                        var itemChoice = choices.FirstOrDefault(c => c.Id == cartItem.Key);
                         if (itemChoice == null)
                             return NotFound();
 
@@ -177,10 +161,10 @@ namespace BTCPayServer.Controllers
                                 continue;
                             case 0:
                                 return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
-                            case int  inventory when inventory <  cartItem.Quantity:
+                            case int  inventory when inventory <  cartItem.Value:
                                 return RedirectToAction(nameof(ViewPointOfSale), new {appId = appId});
                             default: 
-                                itemChoice.Inventory-= cartItem.Quantity ;
+                                itemChoice.Inventory-= cartItem.Value;
                                 updateNeeded = true;
                                 break;
                         }
@@ -217,21 +201,6 @@ namespace BTCPayServer.Controllers
                 cancellationToken);
             return RedirectToAction(nameof(InvoiceController.Checkout), "Invoice", new { invoiceId = invoice.Data.Id });
         }
-
-        private bool TryParseJson(string json, out JObject result)
-        {
-            result = null;
-            try
-            {
-                result = JObject.Parse(json);
-                return true;
-            }
-            catch (Exception e)
-            {
-                return false;
-            }
-        }
-        
 
         [HttpGet]
         [Route("/apps/{appId}/crowdfund")]

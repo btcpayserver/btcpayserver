@@ -11,8 +11,6 @@ namespace BTCPayServer.Payments.Bitcoin
 {
     public class ManualPaymentData : CryptoPaymentData
     {
-        [JsonIgnore] public BTCPayNetworkBase Network { get; set; }
-
         public string GetPaymentId()
         {
             return Id;

@@ -2688,7 +2688,6 @@ noninventoryitem:
             var fetcher = new RateFetcher(factory);
             var pairs =
                     provider.GetAll()
-                        .Where(c => c.CryptoCode != BTCPayNetworkProvider.ManualCryptoCode)
                         .Select(c => new CurrencyPair(c.CryptoCode, "USD"))
                     .ToHashSet();
 

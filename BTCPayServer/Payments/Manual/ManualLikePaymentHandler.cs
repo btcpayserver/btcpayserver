@@ -21,9 +21,10 @@ namespace BTCPayServer.Payments.Bitcoin
         }
         
         public Task<IPaymentMethodDetails> CreatePaymentMethodDetails(ISupportedPaymentMethod supportedPaymentMethod,
-            PaymentMethod paymentMethod,
+            PaymentMethod paymentMethod, string invoiceCurrencyCode,
             StoreData store, BTCPayNetworkBase network, object preparePaymentObject)
         {
+            paymentMethod.SetId(new PaymentMethodId(invoiceCurrencyCode, PaymentTypes.Manual));
             return Task.FromResult((IPaymentMethodDetails)new ManualPaymentMethod());
         }
 
@@ -33,7 +34,8 @@ namespace BTCPayServer.Payments.Bitcoin
             return null;
         }
 
-        public void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse, StoreData storeData,  StoreBlob storeBlob)
+        public void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse, StoreData storeData,
+            StoreBlob storeBlob, PaymentMethodAccounting accounting)
         {
             var settings = storeData.GetSupportedPaymentMethods(_BtcPayNetworkProvider).OfType<ManualPaymentSettings>().First();
             model.IsLightning = false;

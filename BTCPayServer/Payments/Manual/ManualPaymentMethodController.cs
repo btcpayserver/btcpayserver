@@ -60,12 +60,11 @@ namespace BTCPayServer.Payments.Bitcoin
                     return Forbid();
                 }
 
-                var network = _BtcPayNetworkProvider.GetNetwork<StubBTCPayNetwork>(string.Empty);
-                var currentDue = invoice.GetPaymentMethod(network, ManualPaymentType.Instance).Calculate().Due;
+                
+                var currentDue = invoice.GetPaymentMethod(invoice.ProductInformation.Currency, ManualPaymentType.Instance).Calculate().Due;
                 var payment = await _InvoiceRepository.AddPayment(model.InvoiceId, DateTimeOffset.Now,
                     new ManualPaymentData()
                     {
-                        Network = network,
                         CurrencyCode = invoice.ProductInformation.Currency,
                         Confirmed = manualPayment.SetPaymentAsConfirmed,
                         Amount = manualPayment.AllowPartialPaymentInput && model.PartialAmount.HasValue
@@ -73,7 +72,7 @@ namespace BTCPayServer.Payments.Bitcoin
                             : currentDue.ToDecimal(MoneyUnit.BTC),
                         Id = Guid.NewGuid().ToString(),
                         Notes = manualPayment.AllowPaymentNote ? model.Note : string.Empty
-                    }, network, true);
+                    }, invoice.ProductInformation.Currency, null, true);
 
 
                 _EventAggregator.Publish(

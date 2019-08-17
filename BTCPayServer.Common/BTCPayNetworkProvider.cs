@@ -31,7 +31,7 @@ namespace BTCPayServer
             cryptoCodes = cryptoCodes.Select(c => c.ToUpperInvariant()).ToArray();
             foreach (var network in unfiltered._Networks)
             {
-                if(network.Key == ManualCryptoCode || cryptoCodes.Contains(network.Key))
+                if(cryptoCodes.Contains(network.Key))
                 {
                     _Networks.Add(network.Key, network.Value);
                 }

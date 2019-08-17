@@ -78,6 +78,10 @@ namespace BTCPayServer.Controllers
 
 
             public string CustomCSSLink { get; set; }
+            
+            public string EmbeddedCSS { get; set; }
+            
+            public string Description { get; set; }
             public string NotificationEmail { get; set; }
             public string NotificationUrl { get; set; }
             public bool? RedirectAutomatically { get; set; }
@@ -109,6 +113,8 @@ namespace BTCPayServer.Controllers
                 CustomTipText = settings.CustomTipText ?? PointOfSaleSettings.CUSTOM_TIP_TEXT_DEF,
                 CustomTipPercentages = settings.CustomTipPercentages != null ? string.Join(",", settings.CustomTipPercentages) : string.Join(",", PointOfSaleSettings.CUSTOM_TIP_PERCENTAGES_DEF),
                 CustomCSSLink = settings.CustomCSSLink,
+                EmbeddedCSS = settings.EmbeddedCSS,
+                Description = settings.Description,
                 NotificationEmail = settings.NotificationEmail,
                 NotificationUrl = settings.NotificationUrl,
                 RedirectAutomatically = settings.RedirectAutomatically.HasValue? settings.RedirectAutomatically.Value? "true": "false" : "" 
@@ -187,6 +193,8 @@ namespace BTCPayServer.Controllers
                 CustomCSSLink = vm.CustomCSSLink,
                 NotificationUrl = vm.NotificationUrl,
                 NotificationEmail = vm.NotificationEmail,
+                Description = vm.Description,
+                EmbeddedCSS = vm.EmbeddedCSS,
                 RedirectAutomatically = string.IsNullOrEmpty(vm.RedirectAutomatically)? (bool?) null: bool.Parse(vm.RedirectAutomatically)
                 
             });

@@ -1,5 +1,4 @@
 ﻿@addTagHelper *, BundlerMinifier.TagHelpers
-@using System.Globalization
 @model UpdatePointOfSaleViewModel
 @{
     ViewData["Title"] = "Update Point of Sale";
@@ -131,6 +130,16 @@
                         <label asp-for="RedirectAutomatically" class="control-label"></label>*
                         <select asp-for="RedirectAutomatically" asp-items="Model.RedirectAutomaticallySelectList" class="form-control"></select>
                         <span asp-validation-for="RedirectAutomatically" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Description" class="control-label"></label>
+                        <textarea asp-for="Description" rows="10" cols="40" class="form-control richtext"></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="EmbeddedCSS" class="control-label"></label>
+                        <textarea asp-for="EmbeddedCSS" rows="10" cols="40" class="form-control"></textarea>
+                        <span asp-validation-for="EmbeddedCSS" class="text-danger"></span>
                     </div>
                     <input type="hidden" asp-for="NotificationEmailWarning" />
                     <div class="form-group">
@@ -265,6 +274,7 @@
             </div>
         </div>
     </script>
-    <script src="~/products/js/products.js"></script>
-    <script src="~/products/js/products.jquery.js"></script>
+    
+    <bundle name="wwwroot/bundles/pos-admin-bundle.min.js"></bundle>
+    <bundle name="wwwroot/bundles/pos-admin-bundle.min.css"></bundle>
 }

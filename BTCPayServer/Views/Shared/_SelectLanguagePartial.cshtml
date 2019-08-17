@@ -19,8 +19,8 @@
 <!--
 <div title="@Localizer["Request culture provider:"] @requestCulture?.Provider?.GetType().Name">
 -->
-<form id="selectLanguage" asp-controller="Home" class="form-inline my-2 my-lg-0"
-      asp-action="SetLanguage" asp-route-returnUrl="@returnUrl"
+<form id="selectLanguage" asp-controller="Locale" class="form-inline my-2 my-lg-0"
+      asp-action="SetLocaleInCookie" asp-route-returnUrl="@returnUrl"
       method="post" class="form-horizontal" role="form">
     <select name="culture" class="form-control mr-sm-2"
             onchange="this.form.submit();"

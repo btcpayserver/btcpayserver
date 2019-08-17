@@ -16,7 +16,7 @@ namespace BTCPayServer.TagHelpers
     public class TranslateAttrTagHelper : TagHelper
     {
         
-        // Can be passed via <xxx translate-attr="..." />. 
+        // Can be passed via <xxx translate-attr="..." />
         // PascalCase gets translated into kebab-case.
         public string TranslateAttr { get; set; }
 

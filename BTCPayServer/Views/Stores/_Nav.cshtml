@@ -1,4 +1,5 @@
-﻿<div class="nav flex-column nav-pills">
+﻿@addTagHelper *, BTCPayServer
+<div class="nav flex-column nav-pills">
     <a class="nav-link @ViewData.IsActivePage(StoreNavPages.Index)" asp-action="UpdateStore" translate="general_settings">General settings</a>
     <a class="nav-link @ViewData.IsActivePage(StoreNavPages.Rates)" asp-action="Rates" translat="rates">Rates</a>
     <a class="nav-link @ViewData.IsActivePage(StoreNavPages.Checkout)" asp-action="CheckoutExperience" translate="checkout_experience">Checkout experience</a>

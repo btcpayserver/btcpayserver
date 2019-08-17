@@ -6,7 +6,7 @@
     "apps": "Apps",
     "wallets": "Wallets",
     "invoices": "Facturen",
-    "payment requests": "Betaalverzoeken",
+    "payment_requests": "Betaalverzoeken",
     "my_settings": "Mijn instellingen",
     "login": "Aanmelden",
     "logout": "Afmelden",

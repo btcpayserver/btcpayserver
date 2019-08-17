@@ -4,13 +4,13 @@
 }
 
 <div class="nav flex-column nav-pills">
-    <a class="nav-link @ViewData.IsActivePage(ManageNavPages.Index)" asp-action="Index" translate>Profile</a>
-    <a class="nav-link @ViewData.IsActivePage(ManageNavPages.ChangePassword)" asp-action="ChangePassword" id="ChangePassword" translate>Password</a>
+    <a class="nav-link @ViewData.IsActivePage(ManageNavPages.Index)" asp-action="Index" translate="profile">Profile</a>
+    <a class="nav-link @ViewData.IsActivePage(ManageNavPages.ChangePassword)" asp-action="ChangePassword" id="ChangePassword" translate="password">Password</a>
     @if (hasExternalLogins)
     {
-        <a class="nav-link @ViewData.IsActivePage(ManageNavPages.ExternalLogins)" asp-action="ExternalLogins" translate>External logins</a>
+        <a class="nav-link @ViewData.IsActivePage(ManageNavPages.ExternalLogins)" asp-action="ExternalLogins" translate="external_logins">External logins</a>
     }
-    <a class="nav-link @ViewData.IsActivePage(ManageNavPages.TwoFactorAuthentication)" asp-action="TwoFactorAuthentication" translate>Two-factor authentication</a>
-    <a class="nav-link @ViewData.IsActivePage(ManageNavPages.U2F)" asp-action="U2FAuthentication" translate>U2F Authentication</a>
+    <a class="nav-link @ViewData.IsActivePage(ManageNavPages.TwoFactorAuthentication)" asp-action="TwoFactorAuthentication" translate="two_factor_authentication">Two-factor authentication</a>
+    <a class="nav-link @ViewData.IsActivePage(ManageNavPages.U2F)" asp-action="U2FAuthentication" translate="u2f_authentication">U2F Authentication</a>
 </div>
 

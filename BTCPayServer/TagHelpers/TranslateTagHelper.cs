@@ -11,6 +11,10 @@ namespace BTCPayServer.TagHelpers
         private readonly IStringLocalizer<TranslateTagHelper> _localizer;
 
 
+        // Can be passed via <xxx translate="..." />
+        // PascalCase gets translated into kebab-case.
+        public string Translate { get; set; }
+        
         public TranslateTagHelper(IStringLocalizer<TranslateTagHelper> localizer)
         {
             _localizer = localizer;
@@ -38,11 +42,13 @@ namespace BTCPayServer.TagHelpers
 
         public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
         {
-            var childContent = output.Content.IsModified
+            var originalContent = output.Content.IsModified
                 ? output.Content.GetContent()
                 : (await output.GetChildContentAsync()).GetContent();
 
-            var newContent = _localizer[childContent];
+            var newContent = _localizer[Translate];
+            
+            
 
             output.Content.SetHtmlContent(newContent);
         }

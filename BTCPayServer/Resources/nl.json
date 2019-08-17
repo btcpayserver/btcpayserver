@@ -44,7 +44,6 @@
     "a_payment_server_for_bitcoin": "A payment server for Bitcoin",
     "official_website": "Official Website",
     "btcpayserver_about_oneliner": "BTCPay Server is a free and open source server for merchants wanting to accept Bitcoin for their business.",
-    "secure": "Secure",
     "secure_text": "The payment server does not need to know your private keys, so your money can't be stolen.",
     "visibility": "Visibility",
     "visibility_text": "Manage, generate reports, and search for your invoices easily.",
@@ -55,6 +54,18 @@
     "on_mattermost": "On Mattermost",
     "on_slack": "On Slack",
     "on_twitter": "On Twitter",
-    "on_github": "On GitHub"
-    
+    "on_github": "On GitHub",
+    "add_user": "Gebruiker toevoegen",
+    "total_users": "Aantal gebruikers",
+    "name": "Naam",
+    "email": "E-mail",
+    "actions": "Acties",
+    "edit": "Bewerken",
+    "remove": "Verwijder",
+    "page_size": "Per pagina",
+    "previous_page": "Previous page",
+    "next_page": "Next page",
+    "create_account": "Account aanmaken",
+    "repeat_password": "Wachtwoord herhalen",
+    "Is administrator?": "Is beheerder?"
 }

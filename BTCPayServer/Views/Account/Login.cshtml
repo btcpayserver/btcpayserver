@@ -12,7 +12,7 @@
         <div class="modal-dialog modal-login">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title" translate="login">Sign In</h4>
+                    <h4 class="modal-title" translate="login">Log In</h4>
                 </div>
                 <div class="modal-body">
                     <form asp-route-returnurl="@ViewData["ReturnUrl"]" method="post">
@@ -23,7 +23,7 @@
                                     <label for="Email" class="input-group-text"><span class="input-group-addon fa fa-user"></span></label>
                                 </div>
 
-                                <input asp-for="Email" class="form-control" placeholder="Email" required="required" />
+                                <input asp-for="Email" class="form-control" placeholder="Email" translate-attr="placeholder:email" required="required" />
                             </div>
                             <span asp-validation-for="Email" class="text-danger"></span>
                         </div>
@@ -32,12 +32,12 @@
                                 <div class="input-group-prepend">
                                     <label for="Password" class="input-group-text"><span class="input-group-addon fa fa-lock"></span></label>
                                 </div>
-                                <input asp-for="Password" class="form-control" placeholder="Password" required="required" />
+                                <input asp-for="Password" class="form-control" placeholder="Password" translate-attr="placeholder:password" required="required" />
                             </div>
                             <span asp-validation-for="Password" class="text-danger"></span>
                         </div>
                         <div class="form-group">
-                            <button type="submit" class="btn btn-primary btn-block btn-lg" id="LoginButton" translate="login">Sign in</button>
+                            <button type="submit" class="btn btn-primary btn-block btn-lg" id="LoginButton" translate="login">Log in</button>
                         </div>
                         <p class="hint-text"><a asp-action="ForgotPassword" translate="forgot_your_password">Forgot your password?</a></p>
                     </form>

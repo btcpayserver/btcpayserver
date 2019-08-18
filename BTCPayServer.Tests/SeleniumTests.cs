@@ -370,5 +370,36 @@ namespace BTCPayServer.Tests
                 SignWith(accountKey);
             }
         }
+        
+        [Fact]
+        public void canLocalize()
+        {
+            using (var s = SeleniumTester.Create())
+            {
+                s.Start();
+                
+                // Go to the English login page (using this page as it is unlikely to change)
+                s.Driver.Navigate().GoToUrl(s.Link("/Account/Login?culture=en"));
+                Assert.Equal(s.Driver.FindElement(By.Id("LoginButton")).Text, "Log in");
+                Assert.Equal(s.Driver.FindElement(By.Id("Password")).GetAttribute("placeholder"), "Password");
+                
+                // TODO check a 2nd translated attribute on the same HTML node
+                //Assert.Equal(s.Driver.FindElement(By.Id("Password")).GetAttribute("data-val-required"), "");
+                
+                // TODO test language switcher dropdown instead of navigating to the URL 
+
+                // Go to the Dutch login page (using this page as it is unlikely to change)
+                s.Driver.Navigate().GoToUrl(s.Link("/Account/Login?culture=nl"));
+                Assert.Equal(s.Driver.FindElement(By.Id("LoginButton")).Text, "Aanmelden");
+                Assert.Equal(s.Driver.FindElement(By.Id("Password")).GetAttribute("placeholder"), "Wachtwoord");
+                
+                // TODO check a 2nd translated attribute on the same HTML node
+                //Assert.Equal(s.Driver.FindElement(By.Id("Password")).GetAttribute("data-val-required"), "");
+                
+                s.Driver.Quit();
+            }
+        }
     }
+    
+    
 }

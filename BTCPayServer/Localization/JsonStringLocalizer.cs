@@ -25,6 +25,9 @@ namespace BTCPayServer.Localization
         {
             _resourcesPath = resourcesPath ?? throw new ArgumentNullException(nameof(resourcesPath));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            
+            // TODO delete later
+            _logger.LogWarning("Created new JsonStringLocalizer");
         }
 
         public LocalizedString this[string name]

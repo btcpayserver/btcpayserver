@@ -15,27 +15,19 @@ namespace BTCPayServer.Localization
     {
         private readonly ConcurrentDictionary<string, IEnumerable<KeyValuePair<string, string>>> _resourcesCache = new ConcurrentDictionary<string, IEnumerable<KeyValuePair<string, string>>>();
         private readonly string _resourcesPath;
-        private readonly string _resourceName;
         private readonly ILogger _logger;
 
         private string _searchedLocation;
         
         public JsonStringLocalizer(
             string resourcesPath,
-            string resourceName,
-            ILogger logger)
-        {
-            _resourcesPath = resourcesPath ?? throw new ArgumentNullException(nameof(resourcesPath));
-            _resourceName = resourceName ?? throw new ArgumentNullException(nameof(resourcesPath));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        }
-
-        internal JsonStringLocalizer(
-            string resourcesPath,
             ILogger logger)
         {
             _resourcesPath = resourcesPath ?? throw new ArgumentNullException(nameof(resourcesPath));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            
+            // TODO delete later
+            _logger.LogWarning("Created new JsonStringLocalizer");
         }
 
         public LocalizedString this[string name]
@@ -160,12 +152,6 @@ namespace BTCPayServer.Localization
             _resourcesCache.GetOrAdd(culture, _ =>
             {
                 var resourceFile = $"{culture}.json";
-//                if (_resourceName != null)
-//                {
-//                    resourceFile = String.Join(".", _resourceName, resourceFile);
-//                }
-                
-                
 
                 _searchedLocation = Path.Combine(_resourcesPath, resourceFile);
                 IEnumerable<KeyValuePair<string, string>> value = null;

@@ -11,8 +11,8 @@ namespace BTCPayServer.Localization
     public class JsonStringLocalizerFactory : IStringLocalizerFactory
     {
         private readonly string _resourcesRelativePath;
-        private readonly ResourcesType _resourcesType = ResourcesType.TypeBased;
         private readonly ILoggerFactory _loggerFactory;
+        private JsonStringLocalizer _jsonStringLocalizer;
 
         public JsonStringLocalizerFactory(
             IOptions<JsonLocalizationOptions> localizationOptions,
@@ -24,7 +24,6 @@ namespace BTCPayServer.Localization
             }
 
             _resourcesRelativePath = localizationOptions.Value.ResourcesPath ?? string.Empty;
-            _resourcesType = localizationOptions.Value.ResourcesType;
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
         }
 
@@ -39,7 +38,7 @@ namespace BTCPayServer.Localization
             var assembly = typeInfo.Assembly;
             var resourcesPath = Path.Combine(PathHelpers.GetApplicationRoot(), GetResourcePath(assembly));
 
-            return CreateJsonStringLocalizer(resourcesPath, typeInfo.Name);
+            return CreateOrGetJsonStringLocalizer(resourcesPath);
         }
 
         public IStringLocalizer Create(string baseName, string location)
@@ -57,30 +56,20 @@ namespace BTCPayServer.Localization
             var assemblyName = new AssemblyName(location);
             var assembly = Assembly.Load(assemblyName);
             var resourcesPath = Path.Combine(PathHelpers.GetApplicationRoot(), GetResourcePath(assembly));
-            string resourceName = null;
 
-            if (_resourcesType == ResourcesType.TypeBased)
-            {
-                resourceName = TrimPrefix(baseName, location + ".");
-            }
-
-            return CreateJsonStringLocalizer(resourcesPath, resourceName);
+            return CreateOrGetJsonStringLocalizer(resourcesPath);
         }
 
-        protected virtual JsonStringLocalizer CreateJsonStringLocalizer(
-            string resourcesPath,
-            string resourcename)
+        protected virtual JsonStringLocalizer CreateOrGetJsonStringLocalizer(
+            string resourcesPath)
         {
-            var logger = _loggerFactory.CreateLogger<JsonStringLocalizer>();
+            if (_jsonStringLocalizer == null)
+            {
+                var logger = _loggerFactory.CreateLogger<JsonStringLocalizer>();
+                _jsonStringLocalizer = new JsonStringLocalizer(resourcesPath, logger);
+            }
 
-            return _resourcesType == ResourcesType.TypeBased
-                ? new JsonStringLocalizer(
-                    resourcesPath,
-                    resourcename,
-                    logger)
-                : new JsonStringLocalizer(
-                    resourcesPath,
-                    logger);
+            return _jsonStringLocalizer;
         }
 
         private string GetResourcePath(Assembly assembly)
@@ -90,16 +79,6 @@ namespace BTCPayServer.Localization
             return resourceLocationAttribute == null
                 ? _resourcesRelativePath
                 : resourceLocationAttribute.ResourceLocation;
-        }
-
-        private static string TrimPrefix(string name, string prefix)
-        {
-            if (name.StartsWith(prefix, StringComparison.Ordinal))
-            {
-                return name.Substring(prefix.Length);
-            }
-
-            return name;
         }
     }
 }

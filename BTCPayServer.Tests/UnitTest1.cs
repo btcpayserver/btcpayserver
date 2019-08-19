@@ -1941,8 +1941,7 @@ inventoryitem:
   title: good apple
   inventory: 1
 noninventoryitem:
-  price: 10.0
-  inventory: -1";
+  price: 10.0";
                 Assert.IsType<RedirectToActionResult>(apps.UpdatePointOfSale(appId, vmpos).Result);
                 
                 //inventoryitem has 1 item available

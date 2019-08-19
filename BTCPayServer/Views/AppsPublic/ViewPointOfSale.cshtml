@@ -42,11 +42,16 @@
             grid-gap: .5rem;
         }
 
-            .card-deck .card:only-of-type {
-                max-width: 320px;
-                margin: auto;
-            }
+        .card-deck .card:only-of-type {
+            max-width: 320px;
+            margin: auto;
+        }
     </style>
+    @if (!string.IsNullOrEmpty(Model.EmbeddedCSS))
+    {
+        @Safe.Raw($"<style>{Model.EmbeddedCSS}</style>");   
+    }
+
 </head>
 
 <body class="h-100">
@@ -258,8 +263,13 @@
                             </div>
                         </div>
                     </div>
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        <div class="row">
+                            <div class="overflow-hidden col-12">@Safe.Raw(Model.Description)</div>
+                        </div>
+                    }
                 </div>
-
                 <div id="js-pos-list" class="text-center mx-auto px-4">
                     <div class="row card-deck my-3 mx-auto">
 
@@ -335,7 +345,12 @@
         <div class="container d-flex h-100">
             <div class="justify-content-center align-self-center text-center mx-auto px-2 py-3 w-100" style="margin: auto;">
                 <h1 class="mb-4">@Model.Title</h1>
-
+                @if (!string.IsNullOrEmpty(Model.Description))
+                {
+                    <div class="row">
+                        <div class="overflow-hidden col-12">@Safe.Raw(Model.Description)</div>
+                    </div>
+                }
                 <div class="row  card-deck my-3 mx-auto">
                     @for (int x = 0; x < Model.Items.Length; x++)
                     {

@@ -122,12 +122,25 @@ retry:
             using (var ctx = _ContextFactory.CreateContext())
             {
                 var invoiceData = await ctx.Invoices.FindAsync(invoiceId).ConfigureAwait(false);
-                if (invoiceData == null)
+                if (invoiceData == null && data.Email != null)
                     return;
-                if (invoiceData.CustomerEmail == null && data.Email != null)
+                if (invoiceData.CustomerEmail == null)
                 {
                     invoiceData.CustomerEmail = data.Email;
                 }
+                
+                var invoice = ToObject(invoiceData.Blob);
+                if (string.IsNullOrEmpty(invoice.BuyerInformation?.BuyerEmail))
+                {
+                    if (invoice.BuyerInformation == null)
+                    {
+                        invoice.BuyerInformation = new BuyerInformation();
+                    }
+
+                    invoice.BuyerInformation.BuyerEmail = data.Email;
+                    invoiceData.Blob =  ToBytes(invoice, null);
+                }
+                
                 await ctx.SaveChangesAsync().ConfigureAwait(false);
             }
         }

@@ -33,15 +33,12 @@ namespace BTCPayServer.TagHelpers
                 return -10;
             }
         }
-//        
-//        public override void Process(TagHelperContext context, TagHelperOutput output)
-//        {
-//        }
 
-        public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
+        
+        public override void Process(TagHelperContext context, TagHelperOutput output)
         {
             CultureInfo currentCulture = CultureInfo.CurrentCulture;
-            if (!currentCulture.TwoLetterISOLanguageName.Equals("en"))
+            if (!currentCulture.TwoLetterISOLanguageName.Equals("en", System.StringComparison.Ordinal))
             {
                 var attrsToTranslate = TranslateAttr.Split(',');
                 foreach (var attrAndKeyToTranslate in attrsToTranslate)
@@ -57,7 +54,7 @@ namespace BTCPayServer.TagHelpers
                         for (int i = 0; i < attrs.Count; i++)
                         {
                             TagHelperAttribute attr = attrs[i];
-                            if (attr.Name.Equals(attrToTranslate))
+                            if (attr.Name.Equals(attrToTranslate, System.StringComparison.Ordinal))
                             {
                                 var originalContent = attr.Value.ToString();
                                 var translation = _localizer[key];
@@ -68,5 +65,9 @@ namespace BTCPayServer.TagHelpers
                 }
             }
         }
+
+//        public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
+//        {
+//        }
     }
 }

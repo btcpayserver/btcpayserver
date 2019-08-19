@@ -165,7 +165,7 @@ Cart.prototype.incrementItem = function(id) {
     for (var i = 0; i < this.content.length; i++) {
         var obj = this.content[i];
         if (obj.id === id){
-            if(obj.inventory > -1 && obj.inventory <= obj.count){
+            if(obj.inventory != null && obj.inventory <= obj.count){
                 result = false;
                 continue;
             }
@@ -656,7 +656,7 @@ Cart.prototype.loadLocalStorage = function() {
             
             if(matchedItem.inventory === 0){
                 this.content.splice(i,1);
-            }else if(matchedItem.inventory > -1 && matchedItem.inventory <  this.content[i].count){
+            }else if(matchedItem.inventory != null && matchedItem.inventory <  this.content[i].count){
                 this.content[i].count = matchedItem.inventory;
             }
             //update its stock

@@ -6,7 +6,7 @@
     ViewData["Title"] = Model.Title;
     Layout = null;
     int[] CustomTipPercentages = Model.CustomTipPercentages;
-    var anyInventoryItems = Model.Items.Any(item => item.Inventory > -1);
+    var anyInventoryItems = Model.Items.Any(item => item.Inventory.HasValue);
 }
 
 <!DOCTYPE html>
@@ -304,7 +304,7 @@
                                 <div class="card-footer pt-0 bg-transparent border-0">
 
                                     <span class="text-muted small">@String.Format(Model.ButtonText, @item.Price.Formatted)</span>
-                                     @if (item.Inventory > -1)
+                                     @if (item.Inventory.HasValue)
                                      {
                                     
                                          <div class="w-100 pt-2 text-center text-muted">
@@ -397,7 +397,7 @@
 
                             </div>
                             <div class="card-footer bg-transparent border-0">
-                                @if (item.Inventory < 0 || item.Inventory > 0)
+                                @if (!item.Inventory.HasValue || item.Inventory.Value != 0)
                                 {
                                     <div class="w-100">
                                         @if (item.Custom)
@@ -426,7 +426,7 @@
                                         }
                                     </div>
                                 }
-                                @if (item.Inventory > -1)
+                                @if (item.Inventory.HasValue)
                                 {
 
                                     <div class="w-100 pt-2 text-center text-muted">

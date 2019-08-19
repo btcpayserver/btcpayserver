@@ -20,7 +20,7 @@ namespace BTCPayServer.Models.AppViewModels
             public ItemPrice Price { get; set; }
             public string Title { get; set; }
             public bool Custom { get; set; }
-            public int Inventory { get; set; } = -1;
+            public int? Inventory { get; set; } = null;
         }
 
         public class CurrencyInfoData

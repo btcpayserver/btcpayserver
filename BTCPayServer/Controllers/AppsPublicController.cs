@@ -122,16 +122,19 @@ namespace BTCPayServer.Controllers
                 if (amount > price)
                     price = amount;
 
-                if (choice.Inventory == 0)
+                if (choice.Inventory.HasValue)
                 {
-                    return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
-                }
-                if (choice.Inventory > -1)
-                {
-                    choice.Inventory--;
-                    settings.Template = _AppService.SerializeTemplate(choices);
-                    app.SetSettings(settings);
-                    await _AppService.UpdateAppSettings(app);
+                    if (choice.Inventory <= 0)
+                    {
+                        return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
+                    }
+                    else
+                    {
+                        choice.Inventory--;
+                        settings.Template = _AppService.SerializeTemplate(choices);
+                        app.SetSettings(settings);
+                        await _AppService.UpdateAppSettings(app);   
+                    }
                 }
             }
             else
@@ -155,18 +158,19 @@ namespace BTCPayServer.Controllers
                         if (itemChoice == null)
                             return NotFound();
 
-                        switch (itemChoice.Inventory)
+                        if (itemChoice.Inventory.HasValue)
                         {
-                            case int i when i < 0:
-                                continue;
-                            case 0:
-                                return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
-                            case int  inventory when inventory <  cartItem.Value:
-                                return RedirectToAction(nameof(ViewPointOfSale), new {appId = appId});
-                            default: 
-                                itemChoice.Inventory-= cartItem.Value;
-                                updateNeeded = true;
-                                break;
+                            switch (itemChoice.Inventory)
+                            {
+                                case int i when i <= 0:
+                                    return RedirectToAction(nameof(ViewPointOfSale), new {appId = appId});
+                                case int inventory when inventory < cartItem.Value:
+                                    return RedirectToAction(nameof(ViewPointOfSale), new {appId = appId});
+                                default:
+                                    itemChoice.Inventory -= cartItem.Value;
+                                    updateNeeded = true;
+                                    break;
+                            }
                         }
                     }
 
@@ -281,16 +285,20 @@ namespace BTCPayServer.Controllers
                 if (request.Amount > price)
                     price = request.Amount;
                 
-                if (choice.Inventory == 0)
+                
+                if (choice.Inventory.HasValue)
                 {
-                    return NotFound("Option was out of stock");
-                }
-                if (choice.Inventory > -1)
-                {
-                    choice.Inventory--;
-                    settings.PerksTemplate = _AppService.SerializeTemplate(choices);
-                    app.SetSettings(settings);
-                    await _AppService.UpdateAppSettings(app);
+                    if (choice.Inventory <= 0)
+                    {
+                        return NotFound("Option was out of stock");
+                    }
+                    else
+                    {
+                        choice.Inventory--;
+                        settings.PerksTemplate = _AppService.SerializeTemplate(choices);
+                        app.SetSettings(settings);
+                        await _AppService.UpdateAppSettings(app);   
+                    }
                 }
             }
 

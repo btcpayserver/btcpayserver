@@ -58,7 +58,7 @@ namespace BTCPayServer.HostedServices
                                 return (null, null, null);
                         }
                     }).Where(tuple => tuple.Data != null && tuple.Items.Any(item =>
-                                          item.Inventory >= 0 &&
+                                          item.Inventory.HasValue &&
                                           ((!string.IsNullOrEmpty(invoiceEvent.Invoice.ProductInformation.ItemCode) &&
                                             item.Id == invoiceEvent.Invoice.ProductInformation.ItemCode) ||
                                            (cartItems != null && cartItems.ContainsKey(item.Id)))));

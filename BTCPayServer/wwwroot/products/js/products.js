@@ -19,7 +19,7 @@ Products.prototype.loadFromTemplate = function() {
         var line = lines[kl],
             product = line.split("\n"),
             id, price, title, description, image = null,
-            custom, inventory=-1;
+            custom, inventory=null;
 
         for (var kp in product) {
             var productProperty = product[kp].trim();
@@ -57,7 +57,7 @@ Products.prototype.loadFromTemplate = function() {
                 'image': image || null,
                 'description': description || null,
                 'custom': Boolean(custom),
-                'inventory': isNaN(inventory)? -1: inventory
+                'inventory': isNaN(inventory)? null: inventory
             });
         }
         
@@ -91,7 +91,9 @@ Products.prototype.saveTemplate = function() {
         if (custom) {
             template += '  custom: true\n';
         }
-        template+= '  inventory: ' + inventory + '\n';   
+        if(inventory != null){
+            template+= '  inventory: ' + inventory + '\n';
+        }
         template += '\n';
     }
 

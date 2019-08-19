@@ -59,8 +59,8 @@ $(document).ready(function(){
             if (!Boolean(index)) {
                 obj.id = products.escape(obj.title.toLowerCase() + ':');
             }
-            
-            obj.inventory =isNaN(inventory )? -1: inventory;
+            if(inventory != null && !isNaN(inventory ))
+            obj.inventory = inventory;
             
             products.saveItem(obj, index);
         }

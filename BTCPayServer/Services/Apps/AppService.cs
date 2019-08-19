@@ -274,7 +274,6 @@ namespace BTCPayServer.Services.Apps
         public string SerializeTemplate(ViewPointOfSaleViewModel.Item[] items)
         {
             var result = new SerializerBuilder()
-                .EmitDefaults()
                 .Build()
                 .Serialize(items
                     .ToDictionary(item => item.Id,
@@ -335,7 +334,7 @@ namespace BTCPayServer.Services.Apps
                                  Formatted = Currencies.FormatCurrency(cc.Value.Value, currency)
                              }).Single(),
                     Custom = c.GetDetailString("custom") == "true",
-                    Inventory = int.Parse(c.GetDetailString("inventory") ?? "-1", CultureInfo.InvariantCulture)
+                    Inventory = c.GetDetailString("inventory")== null ?(int?) null:  int.Parse(c.GetDetailString("inventory"), CultureInfo.InvariantCulture)
                 })
                 .ToArray();
         }

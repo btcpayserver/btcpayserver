@@ -44,15 +44,15 @@
                 <p class="card-text overflow-hidden">@Safe.Raw(item.Description)</p>
 
             </div>
-            @if (Model.ViewCrowdfundViewModel.PerkCount.ContainsKey(item.Id) || item.Inventory > -1)
+            @if (Model.ViewCrowdfundViewModel.PerkCount.ContainsKey(item.Id) || item.Inventory.HasValue)
             {
                 <div class="card-footer d-flex justify-content-between">
                         @switch (item.Inventory)
                         {
-                            case -1:
+                            case null:
                                 <span></span>
                                 break;
-                            case 0:
+                            case int i when i <= 0:
                                 <span>Sold out</span>
                                 break;
                             default:

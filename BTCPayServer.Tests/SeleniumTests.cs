@@ -372,7 +372,7 @@ namespace BTCPayServer.Tests
         }
         
         [Fact]
-        public void canLocalize()
+        public void CanLocalize()
         {
             using (var s = SeleniumTester.Create())
             {

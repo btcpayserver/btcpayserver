@@ -1,30 +1,22 @@
 ﻿using System;
 using System.IO;
 using System.Reflection;
-using BTCPayServer.Localization.Internal;
+using Microsoft.AspNetCore.Hosting.Internal;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Localization;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace BTCPayServer.Localization
 {
     public class JsonStringLocalizerFactory : IStringLocalizerFactory
     {
-        private readonly string _resourcesRelativePath;
-        private readonly ILoggerFactory _loggerFactory;
         private JsonStringLocalizer _jsonStringLocalizer;
+        private readonly string _wwwroot;
 
-        public JsonStringLocalizerFactory(
-            IOptions<JsonLocalizationOptions> localizationOptions,
-            ILoggerFactory loggerFactory)
+        public JsonStringLocalizerFactory(IHostingEnvironment hostingEnvironment)
         {
-            if (localizationOptions == null)
-            {
-                throw new ArgumentNullException(nameof(localizationOptions));
-            }
-
-            _resourcesRelativePath = localizationOptions.Value.ResourcesPath ?? string.Empty;
-            _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+            _wwwroot = ((HostingEnvironment)hostingEnvironment).WebRootPath;
         }
 
         public IStringLocalizer Create(Type resourceSource)
@@ -36,7 +28,7 @@ namespace BTCPayServer.Localization
 
             var typeInfo = resourceSource.GetTypeInfo();
             var assembly = typeInfo.Assembly;
-            var resourcesPath = Path.Combine(PathHelpers.GetApplicationRoot(), GetResourcePath(assembly));
+            var resourcesPath = Path.Combine(_wwwroot, GetResourcePath(assembly));
 
             return CreateOrGetJsonStringLocalizer(resourcesPath);
         }
@@ -55,7 +47,7 @@ namespace BTCPayServer.Localization
 
             var assemblyName = new AssemblyName(location);
             var assembly = Assembly.Load(assemblyName);
-            var resourcesPath = Path.Combine(PathHelpers.GetApplicationRoot(), GetResourcePath(assembly));
+            var resourcesPath = Path.Combine(_wwwroot, GetResourcePath(assembly));
 
             return CreateOrGetJsonStringLocalizer(resourcesPath);
         }
@@ -65,8 +57,7 @@ namespace BTCPayServer.Localization
         {
             if (_jsonStringLocalizer == null)
             {
-                var logger = _loggerFactory.CreateLogger<JsonStringLocalizer>();
-                _jsonStringLocalizer = new JsonStringLocalizer(resourcesPath, logger);
+                _jsonStringLocalizer = new JsonStringLocalizer(resourcesPath);
             }
 
             return _jsonStringLocalizer;
@@ -77,7 +68,7 @@ namespace BTCPayServer.Localization
             var resourceLocationAttribute = assembly.GetCustomAttribute<ResourceLocationAttribute>();
 
             return resourceLocationAttribute == null
-                ? _resourcesRelativePath
+                ? "Resources"
                 : resourceLocationAttribute.ResourceLocation;
         }
     }

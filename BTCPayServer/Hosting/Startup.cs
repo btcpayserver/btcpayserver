@@ -65,7 +65,7 @@ namespace BTCPayServer.Hosting
             services.AddProviderStorage();
             services.AddSession();
             services.AddSignalR();
-            services.AddJsonLocalization(options => options.ResourcesPath = "Resources");
+            services.AddJsonLocalization();
             services.AddMvc(o =>
                 {
                     o.Filters.Add(new XFrameOptionsAttribute("DENY"));

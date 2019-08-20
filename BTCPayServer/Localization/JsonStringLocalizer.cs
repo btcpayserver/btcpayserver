@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using BTCPayServer.Localization.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
@@ -15,16 +14,13 @@ namespace BTCPayServer.Localization
     {
         private readonly ConcurrentDictionary<string, IEnumerable<KeyValuePair<string, string>>> _resourcesCache = new ConcurrentDictionary<string, IEnumerable<KeyValuePair<string, string>>>();
         private readonly string _resourcesPath;
-        private readonly ILogger _logger;
 
         private string _searchedLocation;
         
         public JsonStringLocalizer(
-            string resourcesPath,
-            ILogger logger)
+            string resourcesPath)
         {
             _resourcesPath = resourcesPath ?? throw new ArgumentNullException(nameof(resourcesPath));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public LocalizedString this[string name]
@@ -52,7 +48,7 @@ namespace BTCPayServer.Localization
                 }
 
                 var format = GetStringSafely(name);
-                var value = string.Format(format ?? name, arguments);
+                var value = string.Format(CultureInfo.InvariantCulture, format ?? name, arguments);
 
                 return new LocalizedString(name, value, resourceNotFound: format == null, searchedLocation: _searchedLocation);
             }
@@ -98,7 +94,6 @@ namespace BTCPayServer.Localization
                 var resource = resources?.SingleOrDefault(s => s.Key == name);
 
                 value = resource?.Value ?? null;
-                _logger.SearchedLocation(name, _searchedLocation, culture);
             }
 
             return value;

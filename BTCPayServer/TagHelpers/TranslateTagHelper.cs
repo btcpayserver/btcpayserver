@@ -10,17 +10,15 @@ namespace BTCPayServer.TagHelpers
     public class TranslateTagHelper : TagHelper
     {
         private readonly IStringLocalizer<TranslateTagHelper> _localizer;
-        private readonly ILogger _logger;
 
         // Can be passed via <xxx translate="..." />
         // PascalCase gets translated into kebab-case.
         public string Translate { get; set; }
 
 
-        public TranslateTagHelper(IStringLocalizer<TranslateTagHelper> localizer, ILogger<TranslateTagHelper> logger)
+        public TranslateTagHelper(IStringLocalizer<TranslateTagHelper> localizer)
         {
             _localizer = localizer;
-            _logger = logger;
         }
 
 
@@ -32,18 +30,6 @@ namespace BTCPayServer.TagHelpers
                 return -10;
             }
         }
-
-//        public override void Process(TagHelperContext context, TagHelperOutput output)
-//        {
-//            //output.TagName = "a"; // Replaces <email> with <a> tag
-//
-//            var childContent = output.GetChildContentAsync();
-//
-//            var originalContent = "" + output.Content.GetContent();
-//            var newContent = translate(originalContent);
-//            
-//            output.Content.SetContent(newContent);
-//        }
 
         public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
         {
@@ -57,7 +43,6 @@ namespace BTCPayServer.TagHelpers
                 var newContent = _localizer[Translate];
                 
                 // TODO log if cannot translate
-                _logger.LogInformation("Translating: "+Translate);
                 
                 output.Content.SetHtmlContent(newContent);
             }

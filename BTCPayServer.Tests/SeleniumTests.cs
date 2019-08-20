@@ -379,7 +379,13 @@ namespace BTCPayServer.Tests
                 s.Start();
 
                 // Go to the English login page (using this page as it is unlikely to change)
-                s.Driver.Navigate().GoToUrl(s.Link("/Account/Login?culture=en"));
+                string urlEnglish = s.Link("/Account/Login?culture=en");
+                string urlDutch = s.Link("/Account/Login?culture=nl");
+                
+                s.Driver.Navigate().GoToUrl(urlEnglish);
+                s.Driver.AssertNoError();
+                string htmlEN = s.Driver.PageSource.ToString();
+                
                 Assert.Equal("Log in", s.Driver.FindElement(By.Id("LoginButton")).Text);
                 Assert.Equal("Password", s.Driver.FindElement(By.Id("Password")).GetAttribute("placeholder"));
 
@@ -389,13 +395,16 @@ namespace BTCPayServer.Tests
                 // TODO test language switcher dropdown instead of navigating to the URL 
 
                 // Go to the Dutch login page (using this page as it is unlikely to change)
-                s.Driver.Navigate().GoToUrl(s.Link("/Account/Login?culture=nl"));
+                s.Driver.Navigate().GoToUrl(urlDutch);
+                s.Driver.AssertNoError();
+                string htmlNL = s.Driver.PageSource.ToString();
+                
                 Assert.Equal("Aanmelden", s.Driver.FindElement(By.Id("LoginButton")).Text);
                 Assert.Equal("Wachtwoord", s.Driver.FindElement(By.Id("Password")).GetAttribute("placeholder"));
 
                 // TODO check a 2nd translated attribute on the same HTML node
                 //Assert.Equal(s.Driver.FindElement(By.Id("Password")).GetAttribute("data-val-required"), "");
-
+                
                 s.Driver.Quit();
             }
         }

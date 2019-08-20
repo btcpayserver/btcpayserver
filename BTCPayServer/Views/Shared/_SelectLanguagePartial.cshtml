@@ -17,7 +17,7 @@
 
 
 <!--
-<div title="@Localizer["Request culture provider:"] @requestCulture?.Provider?.GetType().Name">
+Request culture provider: @requestCulture?.Provider?.GetType().Name
 -->
 <form id="selectLanguage" asp-controller="Locale" class="form-inline my-2 my-lg-0"
       asp-action="SetLocaleInCookie" asp-route-returnUrl="@returnUrl"
@@ -27,6 +27,3 @@
             asp-for="@requestCulture.RequestCulture.UICulture.Name" asp-items="cultureItems">
     </select>
 </form>
-<!--
-</div>
--->

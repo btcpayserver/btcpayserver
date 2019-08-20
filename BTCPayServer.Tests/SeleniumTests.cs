@@ -386,6 +386,7 @@ namespace BTCPayServer.Tests
                 s.Driver.AssertNoError();
                 string htmlEN = s.Driver.PageSource.ToString();
                 
+                Assert.Equal("en", s.Driver.FindElement(By.TagName("html")).GetAttribute("lang"));
                 Assert.Equal("Log in", s.Driver.FindElement(By.Id("LoginButton")).Text);
                 Assert.Equal("Password", s.Driver.FindElement(By.Id("Password")).GetAttribute("placeholder"));
 
@@ -399,6 +400,7 @@ namespace BTCPayServer.Tests
                 s.Driver.AssertNoError();
                 string htmlNL = s.Driver.PageSource.ToString();
                 
+                Assert.Equal("nl", s.Driver.FindElement(By.TagName("html")).GetAttribute("lang"));
                 Assert.Equal("Aanmelden", s.Driver.FindElement(By.Id("LoginButton")).Text);
                 Assert.Equal("Wachtwoord", s.Driver.FindElement(By.Id("Password")).GetAttribute("placeholder"));
 

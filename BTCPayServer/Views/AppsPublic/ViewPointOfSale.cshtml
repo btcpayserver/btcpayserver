@@ -397,7 +397,7 @@
 
                             </div>
                             <div class="card-footer bg-transparent border-0">
-                                @if (!item.Inventory.HasValue || item.Inventory.Value != 0)
+                                @if (!item.Inventory.HasValue || item.Inventory.Value > 0)
                                 {
                                     <div class="w-100">
                                         @if (item.Custom)

@@ -649,14 +649,16 @@ Cart.prototype.loadLocalStorage = function() {
             return item.id === self.content[i].id;
         });
         if(!matchedItem){
-            //remove if nio longer available
+            //remove if no longer available
             this.content.splice(i,1);
             continue;
         }else{
             
-            if(matchedItem.inventory === 0){
+            if(matchedItem.inventory != null && matchedItem.inventory <= 0){
+                //item is out of stock
                 this.content.splice(i,1);
             }else if(matchedItem.inventory != null && matchedItem.inventory <  this.content[i].count){
+                //not enough stock for original cart amount, reduce to available stock
                 this.content[i].count = matchedItem.inventory;
             }
             //update its stock

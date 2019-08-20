@@ -274,6 +274,7 @@ namespace BTCPayServer.Services.Apps
         public string SerializeTemplate(ViewPointOfSaleViewModel.Item[] items)
         {
             var result = new SerializerBuilder()
+                .EmitDefaults()
                 .Build()
                 .Serialize(items
                     .ToDictionary(item => item.Id,

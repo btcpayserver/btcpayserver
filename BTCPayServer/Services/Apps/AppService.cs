@@ -335,7 +335,7 @@ namespace BTCPayServer.Services.Apps
                                  Formatted = Currencies.FormatCurrency(cc.Value.Value, currency)
                              }).Single(),
                     Custom = c.GetDetailString("custom") == "true",
-                    Inventory = c.GetDetailString("inventory")== null ?(int?) null:  int.Parse(c.GetDetailString("inventory"), CultureInfo.InvariantCulture)
+                    Inventory = string.IsNullOrEmpty(c.GetDetailString("inventory")) ?(int?) null:  int.Parse(c.GetDetailString("inventory"), CultureInfo.InvariantCulture)
                 })
                 .ToArray();
         }

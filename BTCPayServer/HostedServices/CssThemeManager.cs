@@ -62,7 +62,10 @@ namespace BTCPayServer.HostedServices
             RootAppType = data.RootAppType;
             RootAppId = data.RootAppId;
             DomainToAppMapping = data.DomainToAppMapping;
+            AllowLightningInternalNodeForAll = data.AllowLightningInternalNodeForAll;
         }
+
+        public bool AllowLightningInternalNodeForAll { get; set; }
     }
 
     public class ContentSecurityPolicyCssThemeManager : Attribute, IActionFilter, IOrderedFilter

@@ -1,10 +1,9 @@
 ﻿using System;
 using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Events;
 using BTCPayServer.Logging;
 using BTCPayServer.Services;
 
@@ -12,8 +11,11 @@ namespace BTCPayServer.HostedServices
 {
     public class DynamicDnsHostedService : BaseAsyncService
     {
-        public DynamicDnsHostedService(IHttpClientFactory httpClientFactory, SettingsRepository settingsRepository)
+        private readonly EventAggregator _EventAggregator;
+
+        public DynamicDnsHostedService(IHttpClientFactory httpClientFactory, SettingsRepository settingsRepository, EventAggregator eventAggregator)
         {
+            _EventAggregator = eventAggregator;
             HttpClientFactory = httpClientFactory;
             SettingsRepository = settingsRepository;
         }
@@ -64,10 +66,15 @@ namespace BTCPayServer.HostedServices
             using (var delayCancel = CancellationTokenSource.CreateLinkedTokenSource(Cancellation))
             {
                 var delay = Task.Delay(Period, delayCancel.Token);
-                var changed = SettingsRepository.WaitSettingsChanged<DynamicDnsSettings>(Cancellation);
+                var changed = ListenForRatesSettingChanges(Cancellation);
                 await Task.WhenAny(delay, changed);
                 delayCancel.Cancel();
             }
+        }
+        
+        async Task ListenForRatesSettingChanges(CancellationToken cancellation)
+        {
+            await _EventAggregator.WaitNext<SettingsChanged<DynamicDnsSettings>>(cancellation);
         }
     }
 }

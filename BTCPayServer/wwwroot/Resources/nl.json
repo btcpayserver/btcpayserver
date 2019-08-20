@@ -20,8 +20,8 @@
     "logs": "Logboek",
     "files": "Bestanden",
     "forgot_your_password": "Wachtwoord vergeten?",
-    "create_one": "Maak er een",
-    "dont_have_an_account": "Heb je geen account?",
+    "create_an_account": "Maak een gebruiker",
+    "dont_have_an_account": "Heb je geen gebruiker?",
     "welcome_to_btcpay_server": "Welkom bij BTCPay Server",
     "profile": "Profiel",
     "password": "Wachtwoord",
@@ -65,8 +65,12 @@
     "page_size": "Per pagina",
     "previous_page": "Vorige page",
     "next_page": "Volgende page",
-    "create_account": "Account aanmaken",
+    "create_account": "Gebruiker aanmaken",
     "repeat_password": "Wachtwoord herhalen",
     "Is administrator?": "Is beheerder?",
-    "register": "Account maken"
+    "register": "Gebruiker maken",
+    "You must have a confirmed email to log in.": "Je moet jouw e-mailadres bevestigd hebben om te kunnen aanmelden.",
+    "Invalid login attempt.": "Ongeldige loginpoging.",
+    "Account created, please confirm your email": "Gebruiker aangemaakt, gelieve jouw e-mailadres te bevestigen.",
+    "Reset Password": "Wachtwoord resetten"
 }

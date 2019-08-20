@@ -20,6 +20,7 @@ using BTCPayServer.Security;
 using System.Globalization;
 using BTCPayServer.Services.U2F;
 using BTCPayServer.Services.U2F.Models;
+using Microsoft.Extensions.Localization;
 using Newtonsoft.Json;
 using NicolasDorier.RateLimits;
 
@@ -39,6 +40,7 @@ namespace BTCPayServer.Controllers
         private readonly BTCPayServerEnvironment _btcPayServerEnvironment;
         private readonly U2FService _u2FService;
         ILogger _logger;
+        private readonly IStringLocalizer<AccountController> _localizer;
 
         public AccountController(
             UserManager<ApplicationUser> userManager,
@@ -49,7 +51,8 @@ namespace BTCPayServer.Controllers
             SettingsRepository settingsRepository,
             Configuration.BTCPayServerOptions options,
             BTCPayServerEnvironment btcPayServerEnvironment,
-            U2FService u2FService)
+            U2FService u2FService,
+            IStringLocalizer<AccountController> localizer)
         {
             this.storeRepository = storeRepository;
             _userManager = userManager;
@@ -61,6 +64,7 @@ namespace BTCPayServer.Controllers
             _btcPayServerEnvironment = btcPayServerEnvironment;
             _u2FService = u2FService;
             _logger = Logs.PayServer;
+            _localizer = localizer;
         }
 
         [TempData]
@@ -98,13 +102,13 @@ namespace BTCPayServer.Controllers
                     if (user.RequiresEmailConfirmation && !await _userManager.IsEmailConfirmedAsync(user))
                     {
                         ModelState.AddModelError(string.Empty,
-                                      "You must have a confirmed email to log in.");
+                            _localizer["You must have a confirmed email to log in."]);
                         return View(model);
                     }
                 }
                 else
                 {
-                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                    ModelState.AddModelError(string.Empty, _localizer["Invalid login attempt."]);
                     return View(model);
                 }
 
@@ -133,7 +137,7 @@ namespace BTCPayServer.Controllers
                     else
                     {
                       var incrementAccessFailedResult = await  _userManager.AccessFailedAsync(user);
-                      ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                      ModelState.AddModelError(string.Empty, _localizer["Invalid login attempt."]);
                       return View(model);
                       
                     }
@@ -163,7 +167,7 @@ namespace BTCPayServer.Controllers
                 }
                 else
                 {
-                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                    ModelState.AddModelError(string.Empty, _localizer["Invalid login attempt."]);
                     return View(model);
                 }
             }
@@ -216,7 +220,7 @@ namespace BTCPayServer.Controllers
                     return RedirectToLocal(returnUrl);
                 }
 
-                errorMessage = "Invalid login attempt.";
+                errorMessage = _localizer["Invalid login attempt."];
             }
             catch (Exception e)
             {
@@ -419,7 +423,7 @@ namespace BTCPayServer.Controllers
                     }
                     else
                     {
-                        TempData["StatusMessage"] = "Account created, please confirm your email";
+                        TempData["StatusMessage"] = _localizer["Account created, please confirm your email."];
                         return View();
                     }
                 }
@@ -570,7 +574,8 @@ namespace BTCPayServer.Controllers
                 // visit https://go.microsoft.com/fwlink/?LinkID=532713
                 var code = await _userManager.GeneratePasswordResetTokenAsync(user);
                 var callbackUrl = Url.ResetPasswordCallbackLink(user.Id, code, Request.Scheme);
-                _EmailSenderFactory.GetEmailSender().SendEmail(model.Email, "Reset Password",
+                // TODO translate the email body
+                _EmailSenderFactory.GetEmailSender().SendEmail(model.Email, _localizer["Reset Password"],
                     $"Please reset your password by clicking here: <a href='{callbackUrl}'>link</a>");
                 
                 return RedirectToAction(nameof(ForgotPasswordConfirmation));

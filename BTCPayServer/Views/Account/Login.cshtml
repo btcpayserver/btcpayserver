@@ -22,8 +22,7 @@
                                 <div class="input-group-prepend">
                                     <label for="Email" class="input-group-text"><span class="input-group-addon fa fa-user"></span></label>
                                 </div>
-
-                                <input asp-for="Email" class="form-control" placeholder="Email" translate-attr="placeholder:email" required="required" />
+                                <input asp-for="Email" class="form-control" placeholder="Email" translate-attr="placeholder:email" required="required"/>
                             </div>
                             <span asp-validation-for="Email" class="text-danger"></span>
                         </div>
@@ -32,7 +31,7 @@
                                 <div class="input-group-prepend">
                                     <label for="Password" class="input-group-text"><span class="input-group-addon fa fa-lock"></span></label>
                                 </div>
-                                <input asp-for="Password" class="form-control" placeholder="Password" translate-attr="placeholder:password" required="required" />
+                                <input asp-for="Password" class="form-control" placeholder="Password" translate-attr="placeholder:password" required="required"/>
                             </div>
                             <span asp-validation-for="Password" class="text-danger"></span>
                         </div>
@@ -47,7 +46,7 @@
                     <div class="modal-footer">
                     <span translate="dont_have_an_account">Don't have an account?</span>
                     &nbsp;
-                    <a asp-action="Register" asp-route-returnurl="@ViewData["ReturnUrl"]" translate="create_one">Create one</a>
+                    <a asp-action="Register" asp-route-returnurl="@ViewData["ReturnUrl"]" translate="create_an_account">Create one</a>
                     </div>
                 }
             </div>

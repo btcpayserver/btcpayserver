@@ -228,26 +228,32 @@ namespace BTCPayServer.Tests
 
         private async Task WaitSiteIsOperational()
         {
-            var synching = WaitIsFullySynched();
-            var accessingHomepage = WaitCanAccessHomepage();
-            await Task.WhenAll(synching, accessingHomepage).ConfigureAwait(false);
-        }
-
-        private async Task WaitCanAccessHomepage()
-        {
-            var resp = await HttpClient.GetAsync("/").ConfigureAwait(false);
-            while (resp.StatusCode != HttpStatusCode.OK)
+            using (var cts = new CancellationTokenSource(10_000))
             {
-                await Task.Delay(10).ConfigureAwait(false);
+                var synching = WaitIsFullySynched(cts.Token);
+                var accessingHomepage = WaitCanAccessHomepage(cts.Token);
+                await Task.WhenAll(synching, accessingHomepage).ConfigureAwait(false);
             }
         }
 
-        private async Task WaitIsFullySynched()
+        private async Task WaitCanAccessHomepage(CancellationToken cancellationToken)
+        {
+            while (true)
+            {
+                var resp = await HttpClient.GetAsync("/", cancellationToken).ConfigureAwait(false);
+                if (resp.StatusCode != HttpStatusCode.OK)
+                    await Task.Delay(10, cancellationToken).ConfigureAwait(false);
+                else
+                    break;
+            }
+        }
+
+        private async Task WaitIsFullySynched(CancellationToken cancellationToken)
         {
             var dashBoard = GetService<NBXplorerDashboard>();
             while (!dashBoard.IsFullySynched())
             {
-                await Task.Delay(10).ConfigureAwait(false);
+                await Task.Delay(10, cancellationToken).ConfigureAwait(false);
             }
         }
 

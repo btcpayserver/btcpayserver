@@ -241,10 +241,9 @@ namespace BTCPayServer.Tests
             while (true)
             {
                 var resp = await HttpClient.GetAsync("/", cancellationToken).ConfigureAwait(false);
-                if (resp.StatusCode != HttpStatusCode.OK)
-                    await Task.Delay(10, cancellationToken).ConfigureAwait(false);
-                else
+                if (resp.StatusCode == HttpStatusCode.OK)
                     break;
+                await Task.Delay(10, cancellationToken).ConfigureAwait(false);
             }
         }
 

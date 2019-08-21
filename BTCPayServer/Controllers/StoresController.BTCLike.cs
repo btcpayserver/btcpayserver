@@ -330,14 +330,15 @@ namespace BTCPayServer.Controllers
         private IActionResult ShowAddresses(DerivationSchemeViewModel vm, DerivationSchemeSettings strategy)
         {
             vm.DerivationScheme = strategy.AccountDerivation.ToString();
+            var deposit = new NBXplorer.KeyPathTemplates(null).GetKeyPathTemplate(DerivationFeature.Deposit);
             if (!string.IsNullOrEmpty(vm.DerivationScheme))
             {
-                var line = strategy.AccountDerivation.GetLineFor(DerivationFeature.Deposit);
+                var line = strategy.AccountDerivation.GetLineFor(deposit);
 
                 for (int i = 0; i < 10; i++)
                 {
                     var address = line.Derive((uint)i);
-                    vm.AddressSamples.Add((DerivationStrategyBase.GetKeyPath(DerivationFeature.Deposit).Derive((uint)i).ToString(), address.ScriptPubKey.GetDestinationAddress(strategy.Network.NBitcoinNetwork).ToString()));
+                    vm.AddressSamples.Add((deposit.GetKeyPath((uint)i).ToString(), address.ScriptPubKey.GetDestinationAddress(strategy.Network.NBitcoinNetwork).ToString()));
                 }
             }
             vm.Confirmation = true;

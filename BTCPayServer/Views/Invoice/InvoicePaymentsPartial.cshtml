@@ -55,8 +55,7 @@
                 <tbody>
                     @foreach (var payment in Model.OnChainPayments)
                     {
-                        var replaced = payment.Replaced ? "class='linethrough'" : "";
-                        <tr @replaced>
+                        <tr class="@(payment.Replaced ? "linethrough" : "")" >
                             <td>@payment.Crypto</td>
                             <td>@payment.DepositAddress</td>
                             <td>

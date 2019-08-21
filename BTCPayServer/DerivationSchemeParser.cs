@@ -159,7 +159,7 @@ namespace BTCPayServer
             var firstKeyPath = new KeyPath("0/0");
             if (HintScriptPubKey == null)
                 return result;
-            if (HintScriptPubKey == result.Derive(firstKeyPath).ScriptPubKey)
+            if (HintScriptPubKey == result.GetDerivation(firstKeyPath).ScriptPubKey)
                 return result;
 
             if (result is MultisigDerivationStrategy)
@@ -170,7 +170,7 @@ namespace BTCPayServer
             foreach (var labels in ItemCombinations(hintLabels.ToList()))
             {
                 var hinted = facto.Parse(resultNoLabels + '-' + string.Join('-', labels.Select(l => $"[{l}]").ToArray()));
-                if (HintScriptPubKey == hinted.Derive(firstKeyPath).ScriptPubKey)
+                if (HintScriptPubKey == hinted.GetDerivation(firstKeyPath).ScriptPubKey)
                     return hinted;
             }
             throw new FormatException("Could not find any match");

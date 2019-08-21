@@ -32,9 +32,7 @@
     <bundle name="wwwroot/bundles/crowdfund-bundle.min.css"></bundle>
     @if (!string.IsNullOrEmpty(Model.EmbeddedCSS))
     {
-        <style>
-            @Safe.Raw(Model.EmbeddedCSS);
-        </style>
+            @Safe.Raw($"<style>{Model.EmbeddedCSS}</style>");   
     }
 
 </head>

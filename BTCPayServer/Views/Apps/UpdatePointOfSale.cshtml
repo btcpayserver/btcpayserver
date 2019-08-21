@@ -1,5 +1,4 @@
 ﻿@addTagHelper *, BundlerMinifier.TagHelpers
-@using System.Globalization
 @model UpdatePointOfSaleViewModel
 @{
     ViewData["Title"] = "Update Point of Sale";
@@ -132,6 +131,16 @@
                         <select asp-for="RedirectAutomatically" asp-items="Model.RedirectAutomaticallySelectList" class="form-control"></select>
                         <span asp-validation-for="RedirectAutomatically" class="text-danger"></span>
                     </div>
+                    <div class="form-group">
+                        <label asp-for="Description" class="control-label"></label>
+                        <textarea asp-for="Description" rows="10" cols="40" class="form-control richtext"></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="EmbeddedCSS" class="control-label"></label>
+                        <textarea asp-for="EmbeddedCSS" rows="10" cols="40" class="form-control"></textarea>
+                        <span asp-validation-for="EmbeddedCSS" class="text-danger"></span>
+                    </div>
                     <input type="hidden" asp-for="NotificationEmailWarning" />
                     <div class="form-group">
                         <input type="submit" class="btn btn-primary" value="Save Settings" id="SaveSettings" />
@@ -242,7 +251,12 @@
                 </div>
                 <div class="col-sm-3">
                     <label>Price</label>*
-                    <input type="number" class="js-product-price form-control mb-2" value="{price}" />
+                    <input
+                        class="js-product-price form-control mb-2"
+                        inputmode="numeric"
+                        pattern="\d*"
+                        type="number"
+                        value="{price}" />
                 </div>
                 <div class="col-sm-3">
                     <label>Custom price</label>
@@ -265,6 +279,7 @@
             </div>
         </div>
     </script>
-    <script src="~/products/js/products.js"></script>
-    <script src="~/products/js/products.jquery.js"></script>
+
+    <bundle name="wwwroot/bundles/pos-admin-bundle.min.js"></bundle>
+    <bundle name="wwwroot/bundles/pos-admin-bundle.min.css"></bundle>
 }

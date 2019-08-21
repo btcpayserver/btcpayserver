@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Authentication;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Models;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Models.StoreViewModels;
@@ -58,7 +59,8 @@ namespace BTCPayServer.Controllers
             ChangellyClientProvider changellyClientProvider,
             IOptions<MvcJsonOptions> mvcJsonOptions,
             IHostingEnvironment env, IHttpClientFactory httpClientFactory,
-            PaymentMethodHandlerDictionary paymentMethodHandlerDictionary)
+            PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
+            CssThemeManager cssThemeManager)
         {
             _RateFactory = rateFactory;
             _Repo = repo;
@@ -72,6 +74,7 @@ namespace BTCPayServer.Controllers
             _Env = env;
             _httpClientFactory = httpClientFactory;
             _paymentMethodHandlerDictionary = paymentMethodHandlerDictionary;
+            _CssThemeManager = cssThemeManager;
             _NetworkProvider = networkProvider;
             _ExplorerProvider = explorerProvider;
             _FeeRateProvider = feeRateProvider;
@@ -95,6 +98,7 @@ namespace BTCPayServer.Controllers
         IHostingEnvironment _Env;
         private IHttpClientFactory _httpClientFactory;
         private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
+        private readonly CssThemeManager _CssThemeManager;
 
         [TempData]
         public string StatusMessage

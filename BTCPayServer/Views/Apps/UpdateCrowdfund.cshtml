@@ -246,7 +246,13 @@
                 </div>
                 <div class="col-sm-3">
                     <label>Price</label>*
-                    <input type="number" step="any" class="js-product-price form-control mb-2" value="{price}" />
+                    <input
+                        class="js-product-price form-control mb-2"
+                        inputmode="numeric"
+                        pattern="\d*"
+                        step="any"
+                        type="number"
+                        value="{price}" />
                 </div>
                 <div class="col-sm-3">
                     <label>Custom price</label>

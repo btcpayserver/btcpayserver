@@ -1,5 +1,6 @@
 ﻿using BTCPayServer.Data;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Events;
 using Microsoft.EntityFrameworkCore;
@@ -66,7 +67,13 @@ namespace BTCPayServer.Services
         {
             return JsonConvert.SerializeObject(obj);
         }
+    }
 
-        
+    public static class SettingsExtensions
+    {
+        public static async Task<T> WaitSettingsChanged<T>(this EventAggregator aggregator, CancellationToken cancellationToken = default)
+        {
+            return (await aggregator.WaitNext<SettingsChanged<T>>(cancellationToken)).Settings;
+        }
     }
 }

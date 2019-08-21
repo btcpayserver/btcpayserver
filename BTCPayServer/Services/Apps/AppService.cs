@@ -303,6 +303,14 @@ namespace BTCPayServer.Services.Apps
                     }
                     first = false;
                 }
+                else
+                {
+                    //YAMLDotNet's serializer with EmitDefaults() will print out nullable types with no value but we dont want to pollute the template with junk
+                    if (str.TrimEnd().Split(':', StringSplitOptions.RemoveEmptyEntries).Length == 1)
+                    {
+                        continue;
+                    }
+                }
 
                 result += str;
                 result += "\n";

@@ -273,50 +273,20 @@ namespace BTCPayServer.Services.Apps
 
         public string SerializeTemplate(ViewPointOfSaleViewModel.Item[] items)
         {
-            var result = new SerializerBuilder()
-                .EmitDefaults()
-                .Build()
-                .Serialize(items
-                    .ToDictionary(item => item.Id,
-                        item => new
-                        {
-                            price = item.Price.Value,
-                            title = item.Title,
-                            description = item.Description,
-                            image = item.Image,
-                            custom = item.Custom,
-                            inventory = item.Inventory
-                        }));
-            
-            // the frontend editor is not a proper yml parser so we need to add some very specific formatting to help it( new line before each item in list)
-
-            var split = result.Replace(Environment.NewLine, "\n", StringComparison.InvariantCulture).Split("\n");
-            result = string.Empty;
-            var first = true;
-            foreach (var str in split)
-            {
-                if (!str.StartsWith("  ", StringComparison.InvariantCulture))
-                {
-                    if (!first)
-                    {
-                        result += "\n";
-                    }
-                    first = false;
-                }
-                else
-                {
-                    //YAMLDotNet's serializer with EmitDefaults() will print out nullable types with no value but we dont want to pollute the template with junk
-                    if (str.TrimEnd().Split(':', StringSplitOptions.RemoveEmptyEntries).Length == 1)
-                    {
-                        continue;
-                    }
-                }
-
-                result += str;
-                result += "\n";
-            }
-            
-            return result;
+            return string.Join("", items.Select(item => $"{item.Id}:\n" +
+                                                        $"  title: {item.Title}\n" +
+                                                        $"  price: {item.Price.Value}\n" +
+                                                        (string.IsNullOrEmpty(item.Description)
+                                                            ? string.Empty
+                                                            : $"  description: {item.Description}\n") +
+                                                        (string.IsNullOrEmpty(item.Image)
+                                                            ? string.Empty
+                                                            : $"  image: {item.Image}\n") +
+                                                        $"  custom: {item.Custom.ToString(CultureInfo.InvariantCulture).ToLowerInvariant()}\n" +
+                                                        (item.Inventory.HasValue
+                                                            ? $"  inventory: {item.Inventory}\n"
+                                                            : string.Empty) +
+                                                        "\n"));
         }
         public ViewPointOfSaleViewModel.Item[] Parse(string template, string currency)
         {

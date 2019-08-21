@@ -19,7 +19,7 @@ namespace BTCPayServer.HostedServices
         private CancellationTokenSource _Cts;
         protected Task[] _Tasks;
 
-        public virtual Task StartAsync(CancellationToken cancellationToken)
+        public Task StartAsync(CancellationToken cancellationToken)
         {
             _Cts = new CancellationTokenSource();
             _Tasks = InitializeTasks();
@@ -57,7 +57,7 @@ namespace BTCPayServer.HostedServices
             }
         }
 
-        public virtual Task StopAsync(CancellationToken cancellationToken)
+        public Task StopAsync(CancellationToken cancellationToken)
         {
             if (_Cts == null)
                 return Task.CompletedTask;

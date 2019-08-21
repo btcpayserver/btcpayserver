@@ -67,13 +67,10 @@ namespace BTCPayServer.Services
         {
             return JsonConvert.SerializeObject(obj);
         }
-    }
-
-    public static class SettingsExtensions
-    {
-        public static async Task<T> WaitSettingsChanged<T>(this EventAggregator aggregator, CancellationToken cancellationToken = default)
+        
+        public async Task<T> WaitSettingsChanged<T>(CancellationToken cancellationToken = default)
         {
-            return (await aggregator.WaitNext<SettingsChanged<T>>(cancellationToken)).Settings;
+            return (await _EventAggregator.WaitNext<SettingsChanged<T>>(cancellationToken)).Settings;
         }
     }
 }

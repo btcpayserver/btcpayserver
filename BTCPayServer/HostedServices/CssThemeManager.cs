@@ -1,9 +1,14 @@
 ﻿using System;
+using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Logging;
 using Microsoft.Extensions.Hosting;
 using NBXplorer;
+using NBXplorer.Models;
+using System.Collections.Concurrent;
 using BTCPayServer.Events;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -90,49 +95,41 @@ namespace BTCPayServer.HostedServices
         }
     }
 
-    public class CssThemeManagerHostedService : IHostedService
+    public class CssThemeManagerHostedService : BaseAsyncService
     {
-        private readonly EventAggregator _EventAggregator;
-        private readonly SettingsRepository _SettingsRepository;
-        private readonly CssThemeManager _CssThemeManager;
+        private SettingsRepository _SettingsRepository;
+        private CssThemeManager _CssThemeManager;
 
-        private CompositeDisposable leases = new CompositeDisposable();
-        public CssThemeManagerHostedService(SettingsRepository settingsRepository, CssThemeManager cssThemeManager, EventAggregator eventAggregator)
+        public CssThemeManagerHostedService(SettingsRepository settingsRepository, CssThemeManager cssThemeManager)
         {
-            _EventAggregator = eventAggregator;
             _SettingsRepository = settingsRepository;
             _CssThemeManager = cssThemeManager;
         }
 
-        private async Task ListenForPoliciesChanges()
+        internal override Task[] InitializeTasks()
         {
+            return new[]
+            {
+                CreateLoopTask(ListenForThemeChanges),
+                CreateLoopTask(ListenForPoliciesChanges),
+            };
+        }
+
+        async Task ListenForPoliciesChanges()
+        {
+            await new SynchronizationContextRemover();
             var data = (await _SettingsRepository.GetSettingAsync<PoliciesSettings>()) ?? new PoliciesSettings();
             _CssThemeManager.Update(data);
-            leases.Add(_EventAggregator.Subscribe<SettingsChanged<PoliciesSettings>>(changed =>
-            {
-                _CssThemeManager.Update(changed.Settings);
-            }));
+            await _SettingsRepository.WaitSettingsChanged<PoliciesSettings>(Cancellation);
         }
 
         async Task ListenForThemeChanges()
         {
+            await new SynchronizationContextRemover();
             var data = (await _SettingsRepository.GetSettingAsync<ThemeSettings>()) ?? new ThemeSettings();
             _CssThemeManager.Update(data);
-            leases.Add(_EventAggregator.Subscribe<SettingsChanged<ThemeSettings>>(changed =>
-            {
-                _CssThemeManager.Update(changed.Settings);
-            }));
-        }
 
-        public Task StartAsync(CancellationToken cancellationToken)
-        {
-            return Task.WhenAll(new[] {ListenForPoliciesChanges(), ListenForThemeChanges()});
-        }
-
-        public Task StopAsync(CancellationToken cancellationToken)
-        {
-            leases.Dispose();
-            return Task.CompletedTask;
+            await _SettingsRepository.WaitSettingsChanged<ThemeSettings>(Cancellation);
         }
     }
 }

@@ -1,13 +1,17 @@
 ﻿using System;
 using NBitcoin;
 using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Rates;
+using Microsoft.Extensions.Hosting;
 using BTCPayServer.Logging;
-using BTCPayServer.Events;
+using System.Runtime.CompilerServices;
+using System.IO;
+using System.Text;
 
 namespace BTCPayServer.HostedServices
 {
@@ -15,16 +19,13 @@ namespace BTCPayServer.HostedServices
     {
         private SettingsRepository _SettingsRepository;
         private CoinAverageSettings _coinAverageSettings;
-        private readonly EventAggregator _EventAggregator;
         RateProviderFactory _RateProviderFactory;
         public RatesHostedService(SettingsRepository repo,
                                   RateProviderFactory rateProviderFactory,
-                                  CoinAverageSettings coinAverageSettings,
-                                  EventAggregator eventAggregator)
+                                  CoinAverageSettings coinAverageSettings)
         {
             this._SettingsRepository = repo;
             _coinAverageSettings = coinAverageSettings;
-            _EventAggregator = eventAggregator;
             _RateProviderFactory = rateProviderFactory;
         }
 
@@ -33,7 +34,7 @@ namespace BTCPayServer.HostedServices
             return new[]
             {
                 CreateLoopTask(RefreshCoinAverageSupportedExchanges),
-                ListenForRatesSettingChanges(),
+                CreateLoopTask(RefreshCoinAverageSettings),
                 CreateLoopTask(RefreshRates)
             };
         }
@@ -76,21 +77,9 @@ namespace BTCPayServer.HostedServices
             await Task.Delay(TimeSpan.FromHours(5), Cancellation);
         }
 
-        private IDisposable eventSubscription;
-
-        async Task ListenForRatesSettingChanges()
+        async Task RefreshCoinAverageSettings()
         {
             var rates = (await _SettingsRepository.GetSettingAsync<RatesSetting>()) ?? new RatesSetting();
-            OnNewRateSettingsData(rates);
-
-            eventSubscription = _EventAggregator.Subscribe<SettingsChanged<RatesSetting>>(changed =>
-            {
-                OnNewRateSettingsData(changed.Settings);
-            });
-        }
-
-        private void OnNewRateSettingsData(RatesSetting rates)
-        {
             _RateProviderFactory.CacheSpan = TimeSpan.FromMinutes(rates.CacheInMinutes);
             if (!string.IsNullOrWhiteSpace(rates.PrivateKey) && !string.IsNullOrWhiteSpace(rates.PublicKey))
             {
@@ -100,12 +89,7 @@ namespace BTCPayServer.HostedServices
             {
                 _coinAverageSettings.KeyPair = null;
             }
-        }
-
-        public override Task StopAsync(CancellationToken cancellationToken)
-        {
-            eventSubscription?.Dispose();
-            return base.StopAsync(cancellationToken);
+            await _SettingsRepository.WaitSettingsChanged<RatesSetting>(Cancellation);
         }
     }
 }

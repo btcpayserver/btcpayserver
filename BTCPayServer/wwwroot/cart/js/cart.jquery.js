@@ -82,6 +82,22 @@ $(document).ready(function(){
         cart.destroy(true);
     });
 
+    // Disable pay button and add loading animation when pay form is submitted
+    $('#js-cart-pay-form').on('submit', function() {
+        var button = $('#js-cart-pay');
+        if (button) {
+            // Disable the pay button
+            button.attr('disabled', true);
+            
+            // Add loading animation to the pay button
+            button.prepend([
+                '<div class="spinner-grow spinner-grow-sm" role="status">',
+                '    <span class="sr-only">Loading...</span>',
+                '</div>'
+            ].join(''));
+        }
+    });
+
     $('.js-cart').on('click', function () {
         $('#sidebar, #content').toggleClass('active');
         $('.collapse.in').toggleClass('in');

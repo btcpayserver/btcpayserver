@@ -145,9 +145,9 @@
                         <div class="input-group-prepend">
                             <span class="input-group-text"><i class="fa fa-money fa-fw"></i></span>
                         </div>
-                        <input class="js-cart-tip form-control" type="number" min="0" step="@Model.Step" value="{tip}" name="tip" placeholder="Tip in @(Model.CurrencyInfo.CurrencySymbol != null ? Model.CurrencyInfo.CurrencySymbol : Model.CurrencyCode)">
+                        <input class="js-cart-tip form-control form-control-lg" type="number" min="0" step="@Model.Step" value="{tip}" name="tip" placeholder="Tip in @(Model.CurrencyInfo.CurrencySymbol != null ? Model.CurrencyInfo.CurrencySymbol : Model.CurrencyCode)">
                         <div class="input-group-append">
-                            <a class="js-cart-tip-remove btn btn-danger" href="#"><i class="fa fa-times"></i></a>
+                            <a class="js-cart-tip-remove btn btn-lg btn-danger" href="#"><i class="fa fa-times"></i></a>
                         </div>
                     </div>
                     <div class="row mb-1">
@@ -157,7 +157,7 @@
                             {
                                 var percentage = CustomTipPercentages[i];
                                 <div class="col">
-                                    <a class="js-cart-tip-btn btn btn-light btn-block border mb-2" href="#" data-tip="@percentage">@percentage%</a>
+                                    <a class="js-cart-tip-btn btn btn-lg btn-light btn-block border mb-2" href="#" data-tip="@percentage">@percentage%</a>
                                 </div>
                             }
                         }

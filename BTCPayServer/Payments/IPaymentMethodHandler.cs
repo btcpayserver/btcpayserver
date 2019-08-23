@@ -51,6 +51,7 @@ namespace BTCPayServer.Payments
 
         IEnumerable<PaymentMethodId> GetSupportedPaymentMethods();
         CheckoutUIPaymentMethodSettings GetCheckoutUISettings();
+        PaymentMethod GetPaymentMethodInInvoice(InvoiceEntity invoice, PaymentMethodId paymentMethodId);
     }
 
     public interface IPaymentMethodHandler<TSupportedPaymentMethod, TBTCPayNetwork> : IPaymentMethodHandler
@@ -91,6 +92,11 @@ namespace BTCPayServer.Payments
                 CheckoutHeaderVueComponentName = "BitcoinLightningLikeMethodCheckoutHeader",
                 NoScriptPartialName = "Bitcoin_Lightning_LikeMethodCheckoutNoScript"
             };
+        }
+
+        public PaymentMethod GetPaymentMethodInInvoice(InvoiceEntity invoice, PaymentMethodId paymentMethodId)
+        {
+            return invoice.GetPaymentMethod(paymentMethodId);
         }
 
         public PaymentMethod GetPaymentMethodInInvoice(InvoiceEntity invoice, PaymentMethodId paymentMethodId)

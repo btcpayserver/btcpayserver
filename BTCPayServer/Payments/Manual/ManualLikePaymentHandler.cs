@@ -53,14 +53,11 @@ namespace BTCPayServer.Payments.Bitcoin
             };
         }
 
-
-        public class CheckoutUIPaymentMethodSettings
+        public PaymentMethod GetPaymentMethodInInvoice(InvoiceEntity invoice, PaymentMethodId paymentMethodId)
         {
-            public string ExtensionPartial { get; set; }
-            public string CheckoutBodyVueComponentName { get; set; }
-            public string NoScriptPartialName { get; set; }
+            return invoice.GetPaymentMethods().FirstOrDefault(method => method.GetId().PaymentType == ManualPaymentType.Instance);
         }
-        
+
         public string GetCryptoImage(PaymentMethodId paymentMethodId)
         {
             return "imlegacy/manual.svg";

@@ -185,7 +185,11 @@ namespace BTCPayServer.Controllers
             }
             if (invoice == null)
                 return null;
-            if (!invoice.Support(paymentMethodId))
+            
+            var paymentMethodHandler = paymentMethodId.PaymentType.GetPaymentMethodHandler(_paymentMethodHandlerDictionary, paymentMethodId);
+            
+            var paymentMethod = paymentMethodHandler.GetPaymentMethodInInvoice(invoice, paymentMethodId);
+            if (paymentMethod == null)
             {
                 if (!isDefaultPaymentId)
                     return null;
@@ -195,17 +199,14 @@ namespace BTCPayServer.Controllers
                 if (paymentMethodTemp == null)
                     paymentMethodTemp = invoice.GetPaymentMethods().First();
                 paymentMethodId = paymentMethodTemp.GetId();
+                paymentMethod = invoice.GetPaymentMethod(paymentMethodId);
             }
 
-            var paymentMethod = invoice.GetPaymentMethod(paymentMethodId);
             var paymentMethodDetails = paymentMethod.GetPaymentMethodDetails();
             var dto = invoice.EntityToDTO();
-            var cryptoInfo = dto.CryptoInfo.First(o => o.GetpaymentMethodId() == paymentMethodId);
             var storeBlob = store.GetStoreBlob();
-            var currency = invoice.ProductInformation.Currency;
             var accounting = paymentMethod.Calculate();
             
-            var paymentMethodHandler = paymentMethodId.PaymentType.GetPaymentMethodHandler(_paymentMethodHandlerDictionary, paymentMethodId);
             var model = new PaymentModel()
             {
                 CryptoCode = paymentMethodId.CryptoCode,

@@ -1,6 +1,29 @@
 // TODO: Refactor... switch from jQuery to Vue.js
 // public methods
 function resetTabsSlider() {
+    // Scan/Copy Transitions
+    // Scan Tab
+    $("#scan-tab").off().on("click", function () {
+        resetTabsSlider();
+        activateTab("#scan");
+    });
+
+    // Copy tab
+    $("#copy-tab").off().on("click", function () {
+        resetTabsSlider();
+        activateTab("#copy");
+
+        $("#tabsSlider").addClass("slide-copy");
+    });
+
+    // Altcoins tab
+    $("#altcoins-tab").off().on("click", function () {
+        resetTabsSlider();
+        activateTab("#altcoins");
+
+        $("#tabsSlider").addClass("slide-altcoins");
+    });
+
     $("#tabsSlider").removeClass("slide-copy");
     $("#tabsSlider").removeClass("slide-altcoins");
 
@@ -27,6 +50,17 @@ function changeCurrency(currency) {
         checkoutCtrl.scanDisplayQr = "";
         srvModel.paymentMethodId = currency;
         fetchStatus();
+        setTimeout(function(){
+            resetTabsSlider();
+            if ($("#tabsSlider").hasClass("slide-copy")) {
+                activateTab("#copy");
+            } else if ($("#tabsSlider").hasClass("slide-altcoins")) {
+                activateTab("#altcoins");
+            } else {
+                activateTab("#scan");
+            }
+        },50);
+
     }
     return false;
 }
@@ -162,6 +196,14 @@ function onlyExpandLineItems() {
 }
 
 
+function activateTab(senderName) {
+    $(senderName + "-tab").addClass("active");
+
+    $(senderName).show();
+    $(senderName).addClass("active");
+}
+
+
 // private methods
 $(document).ready(function () {
     // initialize
@@ -192,7 +234,7 @@ $(document).ready(function () {
     jQuery("invoice").fadeIn(300);
 
     // eof initialize
-    
+
     // Expand Line-Items
     $(".buyerTotalLine").click(function () {
         toggleLineItems();
@@ -239,11 +281,7 @@ $(document).ready(function () {
         });
     }
 
-    // Validate Email address
-    function validateEmail(email) {
-        var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-        return re.test(email);
-    }
+
 
     /* =============== Even listeners =============== */
 
@@ -255,35 +293,8 @@ $(document).ready(function () {
     });
 
 
-    // Scan/Copy Transitions
-    // Scan Tab
-    $("#scan-tab").click(function () {
-        resetTabsSlider();
-        activateTab("#scan");
-    });
 
-    // Copy tab
-    $("#copy-tab").click(function () {
-        resetTabsSlider();
-        activateTab("#copy");
 
-        $("#tabsSlider").addClass("slide-copy");
-    });
-
-    // Altcoins tab
-    $("#altcoins-tab").click(function () {
-        resetTabsSlider();
-        activateTab("#altcoins");
-
-        $("#tabsSlider").addClass("slide-altcoins");
-    });
-
-    function activateTab(senderName) {
-        $(senderName + "-tab").addClass("active");
-
-        $(senderName).show();
-        $(senderName).addClass("active");
-    }
 
     // Payment received
     // Should connect using webhook ?
@@ -423,3 +434,9 @@ $(document).ready(function () {
     );
 
 });
+
+// Validate Email address
+function validateEmail(email) {
+    var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(email);
+}

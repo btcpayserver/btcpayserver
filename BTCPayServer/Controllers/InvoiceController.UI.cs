@@ -202,7 +202,6 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
-        //TODO: abstract
         private async Task<PaymentModel> GetInvoiceModel(string invoiceId, PaymentMethodId paymentMethodId)
         {
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
@@ -332,6 +331,7 @@ namespace BTCPayServer.Controllers
             };
 
             paymentMethodHandler.PreparePaymentModel(model, dto);
+            model.UISettings = paymentMethodHandler.GetCheckoutUISettings();
             model.PaymentMethodId = paymentMethodId.ToString();
             var expiration = TimeSpan.FromSeconds(model.ExpirationSeconds);
             model.TimeLeft = expiration.PrettyPrint();

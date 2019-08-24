@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Validation;
+using System.ComponentModel;
 
 namespace BTCPayServer.Models.InvoicingModels
 {
@@ -37,11 +38,13 @@ namespace BTCPayServer.Models.InvoicingModels
             get; set;
         }
 
+        [DisplayName("Item Description")]
         public string ItemDesc
         {
             get; set;
         }
 
+        [DisplayName("POS Data")]
         public string PosData
         {
             get; set;
@@ -54,12 +57,14 @@ namespace BTCPayServer.Models.InvoicingModels
         }
 
         [EmailAddress]
+        [DisplayName("Notification Email")]
         public string NotificationEmail
         {
             get; set;
         }
 
         [Uri]
+        [DisplayName("Notification Url")]
         public string NotificationUrl
         {
             get; set;
@@ -70,12 +75,15 @@ namespace BTCPayServer.Models.InvoicingModels
             get;
             set;
         }
-        
+
+        [DisplayName("Supported Transaction Currencies")]
         public List<string> SupportedTransactionCurrencies
         {
             get;
             set;
         }
+
+        [DisplayName("Available Payment Methods")]
         public SelectList AvailablePaymentMethods
         {
             get;

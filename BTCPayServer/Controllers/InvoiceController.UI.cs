@@ -72,7 +72,8 @@ namespace BTCPayServer.Controllers
                 StatusException = invoice.ExceptionStatus,
                 Events = invoice.Events,
                 PosData = PosDataParser.ParsePosData(invoice.PosData),
-                StatusMessage = StatusMessage
+                StatusMessage = StatusMessage,
+                
             };
 
             model.Addresses = invoice.HistoricalAddresses.Select(h =>
@@ -85,20 +86,21 @@ namespace BTCPayServer.Controllers
 
             var details = InvoicePopulatePayments(invoice);
             model.CryptoPayments = details.CryptoPayments;
-            model.OnChainPayments = details.OnChainPayments;
-            model.OffChainPayments = details.OffChainPayments;
+            model.Payments = details.Payments;
 
             return View(model);
         }
         private InvoiceDetailsModel InvoicePopulatePayments(InvoiceEntity invoice)
         {
             var model = new InvoiceDetailsModel();
-
+            model.Payments = invoice.GetPayments();
             foreach (var data in invoice.GetPaymentMethods())
             {
                 var accounting = data.Calculate();
                 var paymentMethodId = data.GetId();
                 var cryptoPayment = new InvoiceDetailsModel.CryptoPayment();
+                
+                cryptoPayment.PaymentMethodId = paymentMethodId;
                 cryptoPayment.PaymentMethod = paymentMethodId.ToPrettyString();
                 cryptoPayment.Due = _CurrencyNameTable.DisplayFormatCurrency(accounting.Due.ToDecimal(MoneyUnit.BTC), paymentMethodId.CryptoCode);
                 cryptoPayment.Paid = _CurrencyNameTable.DisplayFormatCurrency(accounting.CryptoPaid.ToDecimal(MoneyUnit.BTC), paymentMethodId.CryptoCode);
@@ -107,43 +109,6 @@ namespace BTCPayServer.Controllers
                 cryptoPayment.Address = paymentMethodDetails.GetPaymentDestination();
                 cryptoPayment.Rate = ExchangeRate(data);
                 model.CryptoPayments.Add(cryptoPayment);
-            }
-
-            foreach (var payment in invoice.GetPayments())
-            {
-                var paymentData = payment.GetCryptoPaymentData();
-                //TODO: abstract
-                if (paymentData is Payments.Bitcoin.BitcoinLikePaymentData onChainPaymentData)
-                {
-                    var m = new InvoiceDetailsModel.Payment();
-                    m.Crypto = payment.GetPaymentMethodId().CryptoCode;
-                    m.DepositAddress = onChainPaymentData.GetDestination();
-
-                    int confirmationCount = onChainPaymentData.ConfirmationCount;
-                    if (confirmationCount >= payment.Network.MaxTrackedConfirmation)
-                    {
-                        m.Confirmations = "At least " + (payment.Network.MaxTrackedConfirmation);
-                    }
-                    else
-                    {
-                        m.Confirmations = confirmationCount.ToString(CultureInfo.InvariantCulture);
-                    }
-
-                    m.TransactionId = onChainPaymentData.Outpoint.Hash.ToString();
-                    m.ReceivedTime = payment.ReceivedTime;
-                    m.TransactionLink = string.Format(CultureInfo.InvariantCulture, payment.Network.BlockExplorerLink, m.TransactionId);
-                    m.Replaced = !payment.Accounted;
-                    model.OnChainPayments.Add(m);
-                }
-                else
-                {
-                    var lightningPaymentData = (LightningLikePaymentData)paymentData;
-                    model.OffChainPayments.Add(new InvoiceDetailsModel.OffChainPayment()
-                    {
-                        Crypto = payment.Network.CryptoCode,
-                        BOLT11 = lightningPaymentData.BOLT11
-                    });
-                }
             }
             return model;
         }

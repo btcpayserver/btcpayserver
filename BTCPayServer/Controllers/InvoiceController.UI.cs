@@ -222,7 +222,6 @@ namespace BTCPayServer.Controllers
                 BtcDue = accounting.Due.ToString(),
                 OrderAmount = (accounting.TotalDue - accounting.NetworkFee).ToString(),
                 OrderAmountFiat = OrderAmountFromInvoice(paymentMethodId.CryptoCode, invoice.ProductInformation),
-                OrderAmountDueFiat = _CurrencyNameTable.DisplayFormatCurrency(accounting.Due.ToDecimal(MoneyUnit.BTC), invoice.ProductInformation.Currency),
                 CustomerEmail = invoice.RefundMail,
                 RequiresRefundEmail = storeBlob.RequiresRefundEmail,
                 ExpirationSeconds = Math.Max(0, (int)(invoice.ExpirationTime - DateTimeOffset.UtcNow).TotalSeconds),

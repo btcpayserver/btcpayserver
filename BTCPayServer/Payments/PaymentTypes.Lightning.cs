@@ -39,5 +39,6 @@ namespace BTCPayServer.Payments
         {
             return null;
         }
+        public override string InvoiceViewPaymentPartialName { get; } = "ViewLightningLikePaymentData";
     }
 }

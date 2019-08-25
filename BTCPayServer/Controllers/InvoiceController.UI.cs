@@ -200,6 +200,7 @@ namespace BTCPayServer.Controllers
                     paymentMethodTemp = invoice.GetPaymentMethods().First();
                 paymentMethodId = paymentMethodTemp.GetId();
                 paymentMethod = invoice.GetPaymentMethod(paymentMethodId);
+                paymentMethodHandler = paymentMethodId.PaymentType.GetPaymentMethodHandler(_paymentMethodHandlerDictionary, paymentMethodId);
             }
 
             var paymentMethodDetails = paymentMethod.GetPaymentMethodDetails();

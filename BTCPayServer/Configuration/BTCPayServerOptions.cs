@@ -175,12 +175,16 @@ namespace BTCPayServer.Configuration
                 try
                 {
                     sshSettings.CreateConnectionInfo();
+                    SSHSettings = sshSettings;
+                }
+                catch (NotSupportedException ex)
+                {
+                    Logs.Configuration.LogWarning($"The SSH key is not supported ({ex.Message}), try to generate the key with ssh-keygen using \"-m PEM\". Skipping SSH configuration...");
                 }
                 catch
                 {
                     throw new ConfigException($"sshkeyfilepassword is invalid");
                 }
-                SSHSettings = sshSettings;
             }
 
             var fingerPrints = conf.GetOrDefault<string>("sshtrustedfingerprints", "");

@@ -46,6 +46,7 @@ namespace BTCPayServer.Payments
             Money amount, PaymentMethodId paymentMethodId);
 
         IEnumerable<PaymentMethodId> GetSupportedPaymentMethods();
+        CheckoutUIPaymentMethodSettings GetCheckoutUISettings();
     }
 
     public interface IPaymentMethodHandler<TSupportedPaymentMethod, TBTCPayNetwork> : IPaymentMethodHandler
@@ -91,6 +92,11 @@ namespace BTCPayServer.Payments
             }
 
             throw new NotSupportedException("Invalid supportedPaymentMethod");
+        }
+        
+        public virtual CheckoutUIPaymentMethodSettings GetCheckoutUISettings()
+        {
+            return null;
         }
 
         object IPaymentMethodHandler.PreparePayment(ISupportedPaymentMethod supportedPaymentMethod, StoreData store,

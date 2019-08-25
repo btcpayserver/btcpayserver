@@ -5,8 +5,15 @@ using System.Threading.Tasks;
 
 namespace BTCPayServer.Models.InvoicingModels
 {
+    public class CheckoutUIPaymentMethodSettings
+    {
+        public string ExtensionPartial { get; set; }
+        public string CheckoutBodyVueComponentName { get; set; }
+        public string NoScriptPartialName { get; set; }
+    }
     public class PaymentModel
     {
+        public CheckoutUIPaymentMethodSettings UISettings;
         public class AvailableCrypto
         {
             public string PaymentMethodId { get; set; }

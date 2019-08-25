@@ -1,7 +1,6 @@
 ﻿@addTagHelper *, BundlerMinifier.TagHelpers
 @inject BTCPayServer.Services.LanguageService langService
-@using Newtonsoft.Json
-@using Newtonsoft.Json.Linq
+@inject PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary
 @model PaymentModel
 @{
     Layout = null;
@@ -152,7 +151,7 @@
         return availableLanguages.indexOf(languageCode) >= 0;
     }
 
-    const i18n = new VueI18next(i18next);
+    var i18n = new VueI18next(i18next);
 
     // TODO: Move all logic from core.js to Vue controller
     Vue.config.ignoredElements = [
@@ -161,7 +160,6 @@
         // Ignoring custom HTML5 elements, eg: bp-spinner
         /^bp-/
     ];
-
     var checkoutCtrl = new Vue({
         i18n: i18n,
         el: '#checkoutCtrl',
@@ -184,9 +182,18 @@
                 return this.srvModel.coinSwitchAmountMarkupPercentage
                     ? this.srvModel.btcDue * (1 + (this.srvModel.coinSwitchAmountMarkupPercentage / 100))
                     : this.srvModel.btcDue;
+            },
+            showPaymentUI: function(){
+                var disallowedStatuses = ["complete","confirmed" ,"paid", "expired", "invalid"];
+                return (!this.srvModel.requiresRefundEmail || validateEmail(srvModel.customerEmail)) && disallowedStatuses.indexOf(this.srvModel.status) < 0;
             }
         }
     });
     </script>
+
+@foreach (var paymentMethodHandler in PaymentMethodHandlerDictionary.Select(handler => handler.GetCheckoutUISettings()).Where(settings => settings != null))
+{
+    <partial name="@paymentMethodHandler.ExtensionPartial" model="@Model"/>
+}
 </body>
 </html>

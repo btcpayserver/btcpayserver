@@ -79,7 +79,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Include="wwwroot\checkout\js\core.js" />
 	  <None Include="wwwroot\vendor\bootstrap4-creativestart\creative.js" />
 	  <None Include="wwwroot\vendor\font-awesome\fonts\fontawesome-webfont.svg" />
 	  <None Include="wwwroot\vendor\font-awesome\fonts\fontawesome-webfont.woff2" />

@@ -68,7 +68,7 @@
     <invoice>
         <div class="no-bounce" id="checkoutCtrl" v-cloak>
             <div class="modal page">
-                <div class="modal-dialog open opened enter-purchaser-email" role="document">
+                <div class="modal-dialog open opened enter-purchaser-email" role="document" v-bind:class="{ 'expired': invoiceUnpayable, 'paid': invoicePaid, 'enter-purchaser-email': showEmailForm}">
                     <div class="modal-content long">
                         <div class="content">
                             <div class="invoice">
@@ -160,32 +160,196 @@
         // Ignoring custom HTML5 elements, eg: bp-spinner
         /^bp-/
     ];
+    Vue.config.devtools = true;
+    var eventBus = new Vue();
     var checkoutCtrl = new Vue({
         i18n: i18n,
         el: '#checkoutCtrl',
-        components: {
-            qrcode: VueQrcode,
-            changelly: ChangellyComponent,
-            coinswitch: CoinSwitchComponent
-        },
         data: {
             srvModel: srvModel,
-            lndModel: null,
-            scanDisplayQr: "",
-            expiringSoon: false,
-            isModal: srvModel.isModal,
-            lightningAmountInSatoshi: srvModel.lightningAmountInSatoshi,
-            selectedThirdPartyProcessor: ""
+            expirationPercentage: 0,
+            timerText: "@Model.TimeLeft",
+            emailAddressInput: "",
+            emailAddressInputDirty: false,
+            emailAddressInputInvalid: false,
+            emailAddressFormSubmitting: false,
+            lineItemsExpanded: false
         },
         computed: {
-            coinswitchAmountDue: function() {
-                return this.srvModel.coinSwitchAmountMarkupPercentage
-                    ? this.srvModel.btcDue * (1 + (this.srvModel.coinSwitchAmountMarkupPercentage / 100))
-                    : this.srvModel.btcDue;
+                    expiringSoon: function(){
+                        return this.expirationPercentage >= 75 && !this.invoiceUnpayable && !this.invoicePaid;
+                    },
+                    showPaymentUI: function(){
+                                return !this.showEmailForm && !this.invoiceUnpayable && !this.invoicePaid;
+                    },
+                    showEmailForm: function(){
+                        return this.srvModel.requiresRefundEmail && !this.validateEmail(this.srvModel.customerEmail) && !this.invoiceUnpayable && !this.invoicePaid;
+                    },
+                    invoiceUnpayable: function(){
+                        return  ["expired", "invalid"].indexOf(this.srvModel.status) < 0
+                    },
+                    invoicePaid: function(){
+                        return  ["complete", "confirmed", "paid"].indexOf(this.srvModel.status) < 0
+                    }
+        },
+        mounted: function(){
+            this.startProgressTimer();
+            this.fetchData();
+            this.onDataCallback(this.srvModel);
+                if (this.srvModel.status === "new" && this.srvModel.txCount > 1) {
+                    this.onlyExpandLineItems();
+                }
+            window.parent.postMessage("loaded", "*");
+            jQuery("invoice").fadeOut(0).fadeIn(300);
+        },
+        methods: {
+            onlyExpandLineItems: function() {
+                if (!this.lineItemsExpanded) {
+                    this.toggleLineItems();
+                }},
+            toggleLineItems: function() {
+                $("line-items").toggleClass("expanded");
+                this.lineItemsExpanded ? $("line-items").slideUp() : $("line-items").slideDown();
+                this.lineItemsExpanded = !this.lineItemsExpanded;
+            
+                $(".buyerTotalLine").toggleClass("expanded");
+                $(".single-item-order__right__btc-price__chevron").toggleClass("expanded");
             },
-            showPaymentUI: function(){
-                var disallowedStatuses = ["complete","confirmed" ,"paid", "expired", "invalid"];
-                return (!this.srvModel.requiresRefundEmail || validateEmail(srvModel.customerEmail)) && disallowedStatuses.indexOf(this.srvModel.status) < 0;
+            numberFormatted: function(x) {
+                var rounded = Math.round(x);
+                var parts = rounded.toString().split(".");
+                parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+                return parts.join(".");
+            },
+            openPaymentMethodDialog: function() {
+                var content = $("#vexPopupDialog").html();
+                vex.open({
+                    unsafeContent: content
+                });
+            },
+            closePaymentMethodDialog: function(currencyId) {
+                vex.closeAll();
+                return this.changeCurrency(currencyId);
+            },   
+            changeCurrency: function (currency) {
+                if (currency !== null && srvModel.paymentMethodId !== currency) {
+                    $(".payment__currencies").hide();
+                    $(".payment__spinner").show();
+                    srvModel.paymentMethodId = currency;
+                    fetchStatus();
+                    this.closePaymentMethodDialog(null);
+                }
+                return false;
+            }    ,     
+            close: function(){
+                $("invoice").fadeOut(300, function () {
+                            window.parent.postMessage("close", "*");
+                        });
+            },
+            // Validate Email address
+            validateEmail: function (email) {
+                var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+                return re.test(email);
+            },
+            startProgressTimer: function(){
+                this.expirationPercentage = 100 - ((this.srvModel.expirationSeconds / this.srvModel.maxTimeSeconds) * 100);
+                this.timerText = this.updateTimerText(this.srvModel.expirationSeconds);
+                if( this.expirationPercentage < 100 &&  (this.srvModel.status === "paidPartial" || this.srvModel.status === "new")){
+                    setTimeout(this.startProgressTimer, 500);
+                }
+            },
+            updateTimerText: function (timer) {
+                        if (timer >= 0) {
+                            var minutes = parseInt(timer / 60, 10);
+                            minutes = minutes < 10 ? "0" + minutes : minutes;
+            
+                            var seconds = parseInt(timer % 60, 10);
+                            seconds = seconds < 10 ? "0" + seconds : seconds;
+            
+                            return minutes + ":" + seconds;
+                        } else {
+                            return "00:00";
+                        }
+            },
+            fetchData: function(){
+                var self = this;
+                    $.ajax({
+                        url: window.location.pathname + "/status?invoiceId=" + srvModel.invoiceId + "&paymentMethodId=" + srvModel.paymentMethodId,
+                        type: "GET",
+                        cache: false
+                    }).done(function (data) {
+                        self.onDataCallback.bind(self)(data);
+                    }).fail(function (jqXHR, textStatus, errorThrown) {
+                
+                    }).complete(function(){
+                        self.fetchData.bind(self)();
+                    });
+            },
+            onDataCallback : function(jsonData){
+
+                    
+                
+                    if (checkoutCtrl.srvModel.status !== jsonData.status) {
+                        window.parent.postMessage({ "invoiceId": srvModel.invoiceId, "status": jsonData.status }, "*");
+                    }
+                
+                
+                
+                    if (jsonData.paymentMethodId === srvModel.paymentMethodId) {
+                        $(".payment__currencies").show();
+                        $(".payment__spinner").hide();
+                    }
+                    
+                
+                    // displaying satoshis for lightning payments
+                    jsonData.cryptoCodeSrv = jsonData.cryptoCode;
+                    if (jsonData.isLightning && jsonData.lightningAmountInSatoshi && jsonData.cryptoCode === "BTC") {
+                        var SATOSHIME = 100000000;
+                        jsonData.cryptoCode = "Sats";
+                        jsonData.btcDue = numberFormatted(jsonData.btcDue * SATOSHIME);
+                        jsonData.btcPaid = numberFormatted(jsonData.btcPaid * SATOSHIME);
+                        jsonData.networkFee = numberFormatted(jsonData.networkFee * SATOSHIME);
+                        jsonData.orderAmount = numberFormatted(jsonData.orderAmount * SATOSHIME);
+                    }
+                
+                    // expand line items to show details on amount due for multi-transaction payment
+                    if (this.srvModel.txCount === 1 && jsonData.txCount > 1) {
+                        this.onlyExpandLineItems();
+                    }
+                
+                    // updating ui
+                    this.srvModel = jsonData;
+                        if (this.invoicePaid && !jsonData.isModal && jsonData.redirectAutomatically && jsonData.merchantRefLink) {
+                            $(".payment__spinner").show();
+                            setTimeout(function () {
+                                window.location = jsonData.merchantRefLink;
+                            }, 2000);
+                        }
+            },
+            onEmailChange: function(){
+                this.emailAddressInputDirty = true;
+                this.emailAddressInputInvalid = false;
+            },
+            onEmailSubmit : function(){
+                var self = this;
+                if (this.validateEmail(this.emailAddressInput)) {
+                    this.emailAddressFormSubmitting = true;
+                    // Push the email to a server, once the reception is confirmed move on
+                    
+                                $.ajax({
+                                    url: window.location.pathname + "/UpdateCustomer?invoiceId=" + srvModel.invoiceId,
+                                    type: "POST",
+                                    data: JSON.stringify({ Email: srvModel.customerEmail }),
+                                    contentType: "application/json; charset=utf-8"
+                                }).done(function () {
+                                    self.srvModel.customerEmail = self.emailAddressInput;
+                                }).always(function () {
+                                        self.emailAddressFormSubmitting = false;
+                                    });
+                            } else {
+                    this.emailAddressInputInvalid = true;
+                                $("#emailAddressForm").addClass("");
+                            }
             }
         }
     });

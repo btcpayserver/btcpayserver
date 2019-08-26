@@ -310,9 +310,6 @@
                 .done(function (data) {
                     self.onDataCallback.bind(self)(data);
                 })
-                .always(function(){
-                    setTimeout(self.fetchData.bind(self)(), 500);                        
-                });
             },
             onDataCallback : function(jsonData){
                 if (this.srvModel.status !== jsonData.status) {

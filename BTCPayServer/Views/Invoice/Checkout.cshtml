@@ -68,7 +68,7 @@
     <invoice>
         <div class="no-bounce" id="checkoutCtrl" v-cloak>
             <div class="modal page">
-                <div class="modal-dialog open opened enter-purchaser-email" role="document" v-bind:class="{ 'expired': invoiceUnpayable, 'paid': invoicePaid, 'enter-purchaser-email': showEmailForm}">
+                <div class="modal-dialog open opened" role="document" v-bind:class="{ 'expired': invoiceUnpayable, 'paid': invoicePaid, 'enter-purchaser-email': showEmailForm}">
                     <div class="modal-content long">
                         <div class="content">
                             <div class="invoice">
@@ -183,18 +183,18 @@
                                 return !this.showEmailForm && !this.invoiceUnpayable && !this.invoicePaid;
                     },
                     showEmailForm: function(){
-                        return this.srvModel.requiresRefundEmail && !this.validateEmail(this.srvModel.customerEmail) && !this.invoiceUnpayable && !this.invoicePaid;
+                        return this.srvModel.requiresRefundEmail && (!this.srvModel.customerEmail || !this.validateEmail(this.srvModel.customerEmail)) && !this.invoiceUnpayable && !this.invoicePaid;
                     },
                     invoiceUnpayable: function(){
-                        return  ["expired", "invalid"].indexOf(this.srvModel.status) < 0
+                        return  ["expired", "invalid"].indexOf(this.srvModel.status) >= 0;
                     },
                     invoicePaid: function(){
-                        return  ["complete", "confirmed", "paid"].indexOf(this.srvModel.status) < 0
+                        return  ["complete", "confirmed", "paid"].indexOf(this.srvModel.status) >= 0;
                     }
         },
         mounted: function(){
             this.startProgressTimer();
-            this.fetchData();
+            // this.fetchData();
             this.onDataCallback(this.srvModel);
                 if (this.srvModel.status === "new" && this.srvModel.txCount > 1) {
                     this.onlyExpandLineItems();
@@ -208,12 +208,8 @@
                     this.toggleLineItems();
                 }},
             toggleLineItems: function() {
-                $("line-items").toggleClass("expanded");
                 this.lineItemsExpanded ? $("line-items").slideUp() : $("line-items").slideDown();
                 this.lineItemsExpanded = !this.lineItemsExpanded;
-            
-                $(".buyerTotalLine").toggleClass("expanded");
-                $(".single-item-order__right__btc-price__chevron").toggleClass("expanded");
             },
             numberFormatted: function(x) {
                 var rounded = Math.round(x);
@@ -227,7 +223,11 @@
                     unsafeContent: content
                 });
             },
-            closePaymentMethodDialog: function(currencyId) {
+            closePaymentMethodDialog: function(currencyId, event) {
+                
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                event.stopPropagation();
                 vex.closeAll();
                 return this.changeCurrency(currencyId);
             },   
@@ -248,7 +248,7 @@
             },
             // Validate Email address
             validateEmail: function (email) {
-                var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+                var re = /^(([^<>()\[\]\\.,;:\s@@"]+(\.[^<>()\[\]\\.,;:\s@@"]+)*)|(".+"))@@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
                 return re.test(email);
             },
             startProgressTimer: function(){
@@ -281,15 +281,16 @@
                         self.onDataCallback.bind(self)(data);
                     }).fail(function (jqXHR, textStatus, errorThrown) {
                 
-                    }).complete(function(){
-                        self.fetchData.bind(self)();
+                    }).always(function(){
+                        setTimeout(self.fetchData.bind(self)(), 500);
+                        
                     });
             },
             onDataCallback : function(jsonData){
 
                     
                 
-                    if (checkoutCtrl.srvModel.status !== jsonData.status) {
+                    if (this.srvModel.status !== jsonData.status) {
                         window.parent.postMessage({ "invoiceId": srvModel.invoiceId, "status": jsonData.status }, "*");
                     }
                 
@@ -331,25 +332,28 @@
                 this.emailAddressInputInvalid = false;
             },
             onEmailSubmit : function(){
+                debugger;
                 var self = this;
                 if (this.validateEmail(this.emailAddressInput)) {
                     this.emailAddressFormSubmitting = true;
                     // Push the email to a server, once the reception is confirmed move on
                     
                                 $.ajax({
-                                    url: window.location.pathname + "/UpdateCustomer?invoiceId=" + srvModel.invoiceId,
+                                    url: window.location.pathname + "/UpdateCustomer?invoiceId=" +this.srvModel.invoiceId,
                                     type: "POST",
-                                    data: JSON.stringify({ Email: srvModel.customerEmail }),
+                                    data: JSON.stringify({ Email: this.emailAddressInput }),
                                     contentType: "application/json; charset=utf-8"
                                 }).done(function () {
+                                    debugger;
                                     self.srvModel.customerEmail = self.emailAddressInput;
+                                    debugger;
+                                    var x = self.showEmailForm;
                                 }).always(function () {
                                         self.emailAddressFormSubmitting = false;
                                     });
                             } else {
                     this.emailAddressInputInvalid = true;
-                                $("#emailAddressForm").addClass("");
-                            }
+                }
             }
         }
     });

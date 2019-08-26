@@ -167,13 +167,16 @@
         el: '#checkoutCtrl',
         data: {
             srvModel: srvModel,
+            end: new Date(),
             expirationPercentage: 0,
             timerText: "@Model.TimeLeft",
             emailAddressInput: "",
             emailAddressInputDirty: false,
             emailAddressInputInvalid: false,
             emailAddressFormSubmitting: false,
-            lineItemsExpanded: false
+            lineItemsExpanded: false,
+            changingCurrencies: false,
+            loading: true
         },
         computed: {
                     expiringSoon: function(){
@@ -194,13 +197,15 @@
         },
         mounted: function(){
             this.startProgressTimer();
-            // this.fetchData();
+            this.listenIn();
             this.onDataCallback(this.srvModel);
                 if (this.srvModel.status === "new" && this.srvModel.txCount > 1) {
                     this.onlyExpandLineItems();
                 }
             window.parent.postMessage("loaded", "*");
             jQuery("invoice").fadeOut(0).fadeIn(300);
+            window.closePaymentMethodDialog = this.closePaymentMethodDialog.bind(this);
+            this.loading = false;
         },
         methods: {
             onlyExpandLineItems: function() {
@@ -223,23 +228,17 @@
                     unsafeContent: content
                 });
             },
-            closePaymentMethodDialog: function(currencyId, event) {
-                
-                event.preventDefault();
-                event.stopImmediatePropagation();
-                event.stopPropagation();
+            closePaymentMethodDialog: function(currencyId) {
                 vex.closeAll();
-                return this.changeCurrency(currencyId);
+                this.changeCurrency(currencyId);
             },   
             changeCurrency: function (currency) {
                 if (currency !== null && srvModel.paymentMethodId !== currency) {
-                    $(".payment__currencies").hide();
-                    $(".payment__spinner").show();
+                    this.changingCurrencies = true;
                     srvModel.paymentMethodId = currency;
-                    fetchStatus();
+                    this.fetchData();
                     this.closePaymentMethodDialog(null);
                 }
-                return false;
             }    ,     
             close: function(){
                 $("invoice").fadeOut(300, function () {
@@ -252,8 +251,10 @@
                 return re.test(email);
             },
             startProgressTimer: function(){
-                this.expirationPercentage = 100 - ((this.srvModel.expirationSeconds / this.srvModel.maxTimeSeconds) * 100);
-                this.timerText = this.updateTimerText(this.srvModel.expirationSeconds);
+                var timeLeftS = this.endDate? (this.endDate.getTime() - new Date().getTime())/1000 : this.srvModel.expirationSeconds;
+                
+                this.expirationPercentage = 100 - ((timeLeftS / this.srvModel.maxTimeSeconds) * 100);
+                this.timerText = this.updateTimerText(timeLeftS);
                 if( this.expirationPercentage < 100 &&  (this.srvModel.status === "paidPartial" || this.srvModel.status === "new")){
                     setTimeout(this.startProgressTimer, 500);
                 }
@@ -271,6 +272,42 @@
                             return "00:00";
                         }
             },
+            listenIn: function(){
+                 var socket = null;
+                    var supportsWebSockets = 'WebSocket' in window && window.WebSocket.CLOSING === 2;
+                    if (supportsWebSockets) {
+                        var loc = window.location, ws_uri;
+                        if (loc.protocol === "https:") {
+                            ws_uri = "wss:";
+                        } else {
+                            ws_uri = "ws:";
+                        }
+                        ws_uri += "//" + loc.host;
+                        ws_uri += loc.pathname + "/status/ws?invoiceId=" + this.srvModel.invoiceId;
+                        try {
+                            socket = new WebSocket(ws_uri);
+                            socket.onmessage = function (e) {
+                                this.fetchData();
+                            };
+                            socket.onerror = function (e) {
+                                console.error("Error while connecting to websocket for invoice notifications (callback)");
+                            };
+                        }
+                        catch (e) {
+                            console.error("Error while connecting to websocket for invoice notifications");
+                        }
+                    }
+                    
+                    function watcher(){
+                        setTimeout(function(){
+                            if (socket === null || socket.readyState !== 1) {
+                                this.fetchData();
+                            }
+                            watcher();
+                        }, 2000);
+                    }            
+                    watcher();
+            },
             fetchData: function(){
                 var self = this;
                     $.ajax({
@@ -282,23 +319,17 @@
                     }).fail(function (jqXHR, textStatus, errorThrown) {
                 
                     }).always(function(){
-                        setTimeout(self.fetchData.bind(self)(), 500);
-                        
+                        setTimeout(self.fetchData.bind(self)(), 500);                        
                     });
             },
-            onDataCallback : function(jsonData){
-
-                    
+            onDataCallback : function(jsonData){                   
                 
                     if (this.srvModel.status !== jsonData.status) {
                         window.parent.postMessage({ "invoiceId": srvModel.invoiceId, "status": jsonData.status }, "*");
                     }
-                
-                
-                
-                    if (jsonData.paymentMethodId === srvModel.paymentMethodId) {
-                        $(".payment__currencies").show();
-                        $(".payment__spinner").hide();
+               
+                    if (jsonData.paymentMethodId === this.srvModel.paymentMethodId) {
+                        this.changingCurrencies = false;
                     }
                     
                 
@@ -317,11 +348,13 @@
                     if (this.srvModel.txCount === 1 && jsonData.txCount > 1) {
                         this.onlyExpandLineItems();
                     }
-                
+                    var newEnd = new Date();
+                    newEnd.setSeconds(newEnd.getSeconds()+ jsonData.expirationSeconds);
+                    this.endDate = newEnd;
                     // updating ui
                     this.srvModel = jsonData;
                         if (this.invoicePaid && !jsonData.isModal && jsonData.redirectAutomatically && jsonData.merchantRefLink) {
-                            $(".payment__spinner").show();
+                            this.loading = true;
                             setTimeout(function () {
                                 window.location = jsonData.merchantRefLink;
                             }, 2000);

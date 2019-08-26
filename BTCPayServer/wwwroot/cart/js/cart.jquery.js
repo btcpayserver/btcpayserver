@@ -145,7 +145,10 @@ $(document).ready(function(){
             var $tip = $('.js-cart-tip'),
                 discount = cart.percentage(cart.getTotalProducts(), cart.getDiscount());
 
-            $tip.val(cart.percentage(cart.getTotalProducts() - discount, parseInt($(this).data('tip'))));
+            var purchaseAmount = cart.getTotalProducts() - discount;
+            var tipPercentage = parseInt($(this).data('tip'));
+            var tipValue = cart.percentage(purchaseAmount, tipPercentage).toFixed(srvModel.currencyInfo.divisibility);
+            $tip.val(tipValue);
             $tip.trigger('input');
         });
     });

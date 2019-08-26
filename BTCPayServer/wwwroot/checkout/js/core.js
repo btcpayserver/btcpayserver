@@ -432,6 +432,7 @@ $(document).ready(function () {
             }
         }
     );
+    resetTabsSlider();
 
 });
 

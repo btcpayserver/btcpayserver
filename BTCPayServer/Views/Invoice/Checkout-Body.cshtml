@@ -46,7 +46,7 @@
             @if (Model.AvailableCryptos.Count > 1)
             {
                 <div class="paywithRowRight cursorPointer" v-on:click="openPaymentMethodDialog">
-                    <span class="payment__currencies ">
+                    <span class="payment__currencies " v-show="!changingCurrencies">
                         <img v-bind:src="srvModel.cryptoImage"/>
                         <span>{{srvModel.paymentMethodName}} ({{srvModel.cryptoCodeSrv}})</span>
                         <span v-show="srvModel.isLightning">&#9889;</span>

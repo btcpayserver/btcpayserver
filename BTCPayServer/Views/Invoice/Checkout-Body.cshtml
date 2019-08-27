@@ -12,7 +12,7 @@
                 <img class="header__icon__img" src="~/img/logo-white.png" height="40">
             }
         </div>
-        <div class="close-icon close-action" v-on:click="close" v-bind:click="close">
+        <div class="close-icon close-action" v-on:click="close">
             &#10006;
         </div>
     </div>
@@ -45,9 +45,9 @@
         <div class="single-item-order__right">
             @if (Model.AvailableCryptos.Count > 1)
             {
-                <div class="paywithRowRight cursorPointer" v-on:click="openPaymentMethodDialog()">
+                <div class="paywithRowRight cursorPointer" v-on:click="openPaymentMethodDialog">
                     <span class="payment__currencies ">
-                        <img v-bind:src="srvModel.cryptoImage" />
+                        <img v-bind:src="srvModel.cryptoImage"/>
                         <span>{{srvModel.paymentMethodName}} ({{srvModel.cryptoCodeSrv}})</span>
                         <span v-show="srvModel.isLightning">&#9889;</span>
                         <span class="clickable_indicator fa fa-angle-right"></span>
@@ -72,7 +72,7 @@
             else
             {
                 <div class="payment__currencies_noborder">
-                    <img v-bind:src="srvModel.cryptoImage" />
+                    <img v-bind:src="srvModel.cryptoImage"/>
                     <span>{{srvModel.paymentMethodName}} ({{srvModel.cryptoCodeSrv}})</span>
                     <span v-show="srvModel.isLightning">&#9889;</span>
                 </div>
@@ -174,7 +174,7 @@
                     <button type="submit" class="action-button" style="margin-top: 15px;" v-bind:disabled="emailAddressFormSubmitting" v-bind:class="{ 'loading': emailAddressFormSubmitting }">
                         <span class="button-text">{{$t("Continue")}}</span>
                         <div class="loader-wrapper">
-                            <partial name="Checkout-Spinner" />
+                            <partial name="Checkout-Spinner"/>
                         </div>
                     </button>
                 </bp-loading-button>

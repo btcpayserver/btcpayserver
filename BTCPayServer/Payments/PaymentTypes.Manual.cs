@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Threading.Tasks;
 using BTCPayServer.Data;
-using BTCPayServer.Models;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Rating;
 using BTCPayServer.Services.Invoices;
@@ -63,7 +59,6 @@ namespace BTCPayServer.Payments
             ISupportedPaymentMethod method, string targetCurrencyCode,
             StoreBlob storeBlob)
         {
-            //we dont need to return anything as the manual method uses same currency as invoice
             return new List<CurrencyPair>()
             {
                 new CurrencyPair(targetCurrencyCode, targetCurrencyCode)

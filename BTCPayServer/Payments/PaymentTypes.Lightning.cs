@@ -49,7 +49,6 @@ namespace BTCPayServer.Payments
         public override IEnumerable<CurrencyPair> GetCurrencyPairs(ISupportedPaymentMethod supportedPaymentMethod,
             string targetCurrencyCode, StoreBlob storeBlob)
         {
-            
             var result = new List<CurrencyPair> {new CurrencyPair(supportedPaymentMethod.PaymentId.CryptoCode, targetCurrencyCode)};
 
             if (storeBlob.LightningMaxValue != null)

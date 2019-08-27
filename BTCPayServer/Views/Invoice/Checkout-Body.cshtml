@@ -45,7 +45,7 @@
         <div class="single-item-order__right">
             @if (Model.AvailableCryptos.Count > 1)
             {
-                <div class="paywithRowRight cursorPointer" onclick="openPaymentMethodDialog()">
+                <div class="paywithRowRight cursorPointer" v-on:click="openPaymentMethodDialog()">
                     <span class="payment__currencies ">
                         <img v-bind:src="srvModel.cryptoImage" />
                         <span>{{srvModel.paymentMethodName}} ({{srvModel.cryptoCodeSrv}})</span>

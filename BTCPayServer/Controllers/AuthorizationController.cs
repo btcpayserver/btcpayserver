@@ -47,7 +47,8 @@ namespace BTCPayServer.Controllers
             _IdentityOptions = identityOptions;
         }
 
-        [Authorize(AuthenticationSchemes = Policies.CookieAuthentication), HttpGet("~/connect/authorize")]
+        [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)] 
+        [HttpGet("/connect/authorize")]
         public async Task<IActionResult> Authorize(OpenIdConnectRequest request)
         {
             // Retrieve the application details from the database.
@@ -81,7 +82,8 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        [Authorize(AuthenticationSchemes = Policies.CookieAuthentication), HttpPost("~/connect/authorize")]
+        [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
+        [HttpPost("/connect/authorize")]
         public async Task<IActionResult> Authorize(OpenIdConnectRequest request,
             string consent, bool createAuthorization = true)
         {
@@ -92,7 +94,7 @@ namespace BTCPayServer.Controllers
                     new ErrorViewModel
                     {
                         Error = OpenIddictConstants.Errors.ServerError,
-                        ErrorDescription = "An internal error has occurred"
+                        ErrorDescription = "The specified user could not be found"
                     });
             }
 
@@ -106,6 +108,7 @@ namespace BTCPayServer.Controllers
                     type = OpenIddictConstants.AuthorizationTypes.Permanent;
                     break;
                 case "NO":
+                default:
                     // Notify OpenIddict that the authorization grant has been denied by the resource owner
                     // to redirect the user agent to the client application using the appropriate response_mode.
                     return Forbid(OpenIddictServerDefaults.AuthenticationScheme);

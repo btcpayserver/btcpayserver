@@ -22,15 +22,7 @@
         }
         else
         {
-            <div>
-                <p>To complete payment, please send <b>@Model.BtcDue @Model.CryptoCode</b> to <b style="word-break: break-word;">@Model.BtcAddress</b></p>
-                <p>Time remaining: @Model.TimeLeft</p>
-                <p><a href="@Model.InvoiceBitcoinUrl" style="word-break: break-word;">@Model.InvoiceBitcoinUrl</a></p>
-                @if (Model.IsLightning)
-                {
-                    <p>Peer Info: <b>@Model.PeerInfo</b></p>
-                }
-            </div>
+            <h1 class="text-danger">This payment method requires javascript.</h1>
         }
         @if (Model.AvailableCryptos.Count > 1)
         {

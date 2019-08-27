@@ -1,0 +1,304 @@
+@model BTCPayServer.Models.InvoicingModels.PaymentModel
+
+<script type="text/x-template" id="bitcoin-lightning-method-checkout-template">
+    <div>
+        <div class="bp-view payment scan" id="scan" v-bind:class="{ 'active': currentTab == 'scan'}">
+            <div class="wrapBtnGroup" v-bind:class="{ invisible: !srvModel.isLightning || !scanDisplayQr }">
+                <div class="btnGroupLnd">
+                    <button 
+                            v-on:click="toggleLightningData('bolt11')" 
+                            v-bind:class="{ active: currentLightningDisplay === 'bolt11' }"
+                            v-bind:title="$t('BOLT 11 Invoice')">
+                            {{$t("BOLT 11 Invoice")}}
+                    </button>
+                    <button 
+                        v-on:click="toggleLightningData('node')" 
+                        v-bind:class="{ active: currentLightningDisplay === 'node' }"
+                        v-bind:title="$t('Node Info')">
+                        {{$t("Node Info")}}
+                    </button>
+                </div>
+            </div>
+            <div class="payment__scan">
+                <img v-bind:src="srvModel.cryptoImage" class="qr_currency_icon" v-if="scanDisplayQr"/>
+                <qrcode v-bind:value="scanDisplayQr" :options="{ width: 256, margin: 0, color: {dark:'#000', light:'#f5f5f7'} }" tag="svg" v-if="scanDisplayQr"></qrcode>
+                <div class="payment__spinner qr_currency_icon" style="padding-right: 20px;">
+                    <partial name="Checkout-Spinner"/>
+                </div>
+            </div>
+            <div class="payment__details__instruction__open-wallet" v-if="srvModel.invoiceBitcoinUrl">
+                <a class="payment__details__instruction__open-wallet__btn action-button" v-bind:href="srvModel.invoiceBitcoinUrl">
+                    <span>{{$t("Open in wallet")}}</span>
+                </a>
+            </div>
+        </div>
+        <div class="bp-view payment manual-flow" id="copy" v-bind:class="{ 'active': currentTab == 'copy'}">
+            <div class="manual__step-two__instructions">
+                <span i18n="">{{$t("CompletePay_Body", srvModel)}}</span>
+            </div>
+            <div class="copyLabelPopup">
+                <span>{{$t("Copied")}}</span>
+            </div>
+            <nav v-if="srvModel.isLightning" class="copyBox">
+                <div class="copySectionBox bottomBorder">
+                    <label>{{$t("BOLT 11 Invoice")}}</label>
+                    <div class="inputWithIcon _copyInput">
+                        <input type="text" class="checkoutTextbox" v-bind:value="srvModel.btcAddress" readonly="readonly"/>
+                        <img v-bind:src="srvModel.cryptoImage"/>
+                    </div>
+                </div>
+                <div class="separatorGem"></div>
+                <div class="copySectionBox">
+                    <label>{{$t("Node Info")}}</label>
+                    <div class="inputWithIcon _copyInput">
+                        <input type="text" class="checkoutTextbox" v-bind:value="srvModel.peerInfo" readonly="readonly"/>
+                        <img v-bind:src="srvModel.cryptoImage"/>
+                    </div>
+                </div>
+            </nav>
+            <nav v-else class="copyBox">
+                <div class="copySectionBox bottomBorder">
+                    <label>{{$t("Amount")}}</label>
+                    <div class="copyAmountText copy-cursor _copySpan">
+                        <span>{{srvModel.btcDue}}</span> {{ srvModel.cryptoCode }}
+                    </div>
+                </div>
+                <div class="separatorGem"></div>
+                <div class="copySectionBox">
+                    <label>{{$t("Address")}}</label>
+                    <div class="inputWithIcon _copyInput">
+                        <input type="text" class="checkoutTextbox" v-bind:value="srvModel.btcAddress" readonly="readonly"/>
+                        <img v-bind:src="srvModel.cryptoImage"/>
+                    </div>
+                </div>
+            </nav>
+        </div>
+        @if (Model.ChangellyEnabled || Model.CoinSwitchEnabled)
+        {
+            <div id="altcoins" class="bp-view payment manual-flow" v-bind:class="{ 'active': currentTab == 'altcoins'}">
+                <nav v-if="srvModel.isLightning">
+                    <div class="manual__step-two__instructions">
+                        <span>
+                            {{$t("ConversionTab_Lightning")}}
+                        </span>
+                    </div>
+                </nav>
+                <nav v-else>
+                    <div class="manual__step-two__instructions">
+                        <span>
+                            {{$t("ConversionTab_BodyTop", srvModel)}}
+                            <br/><br/>
+                            {{$t("ConversionTab_BodyDesc", srvModel)}}
+                        </span>
+                    </div>
+                    <center>
+                        @if (Model.CoinSwitchEnabled && Model.ChangellyEnabled)
+                        {
+                            <template v-if="!selectedThirdPartyProcessor">
+                                <button v-on:click="selectedThirdPartyProcessor = 'coinswitch'" class="action-button">{{$t("Pay with CoinSwitch")}}</button>
+                                <button v-on:click="selectedThirdPartyProcessor = 'changelly'" class="action-button">{{$t("Pay with Changelly")}}</button>
+                            </template>
+                        }
+                        @if (Model.CoinSwitchEnabled)
+                        {
+                            <coinswitch inline-template
+                                    v-if="!srvModel.changellyEnabled || selectedThirdPartyProcessor === 'coinswitch'"
+                                    :mode="srvModel.coinSwitchMode"
+                                    :merchant-id="srvModel.coinSwitchMerchantId"
+                                    :to-currency="srvModel.paymentMethodId"
+                                    :to-currency-due="coinswitchAmountDue"
+                                    :autoload="selectedThirdPartyProcessor === 'coinswitch'"
+                                    :to-currency-address="srvModel.btcAddress">
+                                <div>
+                                    <a v-on:click="openDialog($event)" :href="url" class="action-button" v-show="url && !opened">{{$t("Pay with CoinSwitch")}}</a>
+                                    @if (Model.ChangellyEnabled)
+                                    {
+                                        <button v-show="!opened" v-on:click="$parent.selectedThirdPartyProcessor = 'changelly'" class="btn-link mt-2">{{$t("Pay with Changelly")}}</button>
+                                    }
+                                    <iframe
+                                        v-if="showInlineIFrame"
+                                        v-on:load="onLoadIframe"
+                                        style="height: 100%; position: fixed; top: 0; width: 100%; left: 0;"
+                                        sandbox="allow-scripts allow-forms allow-popups allow-same-origin"
+                                        :src="url">
+                                    </iframe>
+                                </div>
+                            </coinswitch>                                                                                
+                        }
+                        @if (Model.ChangellyEnabled)
+                        {
+                            <changelly inline-template
+                                    v-if="!srvModel.coinSwitchEnabled || selectedThirdPartyProcessor === 'changelly'"
+                                    :merchant-id="srvModel.changellyMerchantId"
+                                    :store-id="srvModel.storeId"
+                                    :to-currency="srvModel.paymentMethodId"
+                                    :to-currency-due="srvModel.changellyAmountDue"
+                                    :to-currency-address="srvModel.btcAddress">
+                                    <div class="changelly-component">
+                                        <div class="changelly-component-dropdown-holder" v-show="prettyDropdownInstance">
+                                            <select
+                                                v-model="selectedFromCurrency"
+                                                :disabled="isLoading"
+                                                v-on:change="onCurrencyChange($event)"
+                                                ref="changellyCurrenciesDropdown">
+                                                    <option value="">{{$t("ConversionTab_CurrencyList_Select_Option")}}</option>
+                                                    <option v-for="currency of currencies"
+                                                    :data-prefix="'<img src=\''+currency.image+'\'/>'"
+                                                    :value="currency.name">{{currency.fullName}}</option>
+                                            </select>
+                                        </div>
+                                        <a v-on:click="openDialog($event)" :href="url" class="action-button" v-show="url">{{$t("Pay with Changelly")}}</a>
+                                        @if (Model.CoinSwitchEnabled)
+                                        {
+                                            <button v-on:click="$parent.selectedThirdPartyProcessor = 'coinswitch'" class="btn-link mt-2">{{$t("Pay with CoinSwitch")}}</button>
+                                        }
+                                        <button class="retry-button" v-if="calculateError" v-on:click="retry('calculateAmount')">
+                                            {{$t("ConversionTab_CalculateAmount_Error")}}
+                                        </button>
+                                        <button class="retry-button" v-if="currenciesError" v-on:click="retry('loadCurrencies')">
+                                            {{$t("ConversionTab_LoadCurrencies_Error")}}
+                                        </button>
+                                        <div v-show="isLoading" class="general__spinner">
+                                            <partial name="Checkout-Spinner"/>
+                                        </div>
+                                    </div>
+                            </changelly>
+                         }
+                    </center>
+                </nav>
+            </div>
+         }   
+    </div>          
+</script>
+
+<script type="text/x-template" id="bitcoin-lightning-method-checkout-header-template">
+    <div class="payment-tabs">
+        <div class="payment-tabs__tab " id="scan-tab" v-on:click="switchTab('scan')"  v-bind:class="{ 'active': currentTab == 'scan'}" >
+            <span>{{$t("Scan")}}</span>
+        </div>
+        <div class="payment-tabs__tab" id="copy-tab" v-on:click="switchTab('copy')"  v-bind:class="{ 'active': currentTab == 'copy'}" >
+            <span>{{$t("Copy")}}</span>
+        </div>
+        @if (Model.ChangellyEnabled || Model.CoinSwitchEnabled)
+        {
+            <div class="payment-tabs__tab" id="altcoins-tab" v-on:click="switchTab('altcoins')"  v-bind:class="{ 'active': currentTab == 'altcoins'}" >
+                <span>{{$t("Conversion")}}</span>
+            </div>
+            <div id="tabsSlider" class="payment-tabs__slider three-tabs"  v-bind:class="['slide-'+currentTab]"></div>
+        }
+        else
+        {
+            <div id="tabsSlider" class="payment-tabs__slider"  v-bind:class="['slide-'+currentTab]"></div>
+        } 
+    </div>
+</script>
+
+<script type="text/javascript">
+    Vue.component('BitcoinLightningLikeMethodCheckout',
+        {
+            props: ["srvModel"],
+            template: "#bitcoin-lightning-method-checkout-template",
+            components: {
+                qrcode: VueQrcode,
+                changelly: ChangellyComponent,
+                coinswitch: CoinSwitchComponent
+            },
+            data: function() {
+                return {
+                    currentLightningDisplay: "bolt11",
+                    selectedThirdPartyProcessor: "",
+                    currentTab: "scan"
+                }
+            },
+            computed: {
+                coinswitchAmountDue: function() {
+                    return this.srvModel.coinSwitchAmountMarkupPercentage
+                        ? this.srvModel.btcDue * (1 + (this.srvModel.coinSwitchAmountMarkupPercentage / 100))
+                        : this.srvModel.btcDue;
+                },
+                scanDisplayQr: function() {
+                    if (this.srvModel.isLightning && this.currentLightningDisplay === "node") {
+                        return this.srvModel.peerInfo;
+                    }
+                    return this.srvModel.invoiceBitcoinUrlQR;
+                }
+            },
+            methods: {
+                toggleLightningData: function(display) {
+                    if (!this.srvModel.isLightning) {
+                        return;
+                    }
+                    this.currentLightningDisplay = display;
+                }
+            },
+            mounted: function() {
+                var self = this;
+                eventBus.$on("tab-switched",
+                    function(tab) {
+                        self.currentTab = tab;
+            });
+        }
+    });
+
+    Vue.component('BitcoinLightningLikeMethodCheckoutHeader', {
+        props: ["srvModel"],
+        template: "#bitcoin-lightning-method-checkout-header-template",
+        data: function() {
+            return {
+                currentTab: "scan"
+            };
+        },
+        methods: {
+            switchTab: function(tab) {
+                this.currentTab = tab;
+                eventBus.$emit("tab-switched", tab);
+            }
+        }
+    });
+
+    $(document).ready(function() {
+        // Clipboard Copy
+        var copySpan = new Clipboard('._copySpan', {
+                target: function(trigger) {
+                    return copyElement(trigger, 0, 65).firstChild;
+                }
+        });
+        var copyInput = new Clipboard('._copyInput', {
+                target: function(trigger) {
+                    return copyElement(trigger, 4, 65).firstChild;
+                }
+        });
+
+        function copyElement(trigger, popupLeftModifier, popupTopModifier) {
+            var elm = $(trigger);
+            var position = elm.offset();
+            position.top -= popupLeftModifier;
+            position.left += (elm.width() / 2) - popupTopModifier;
+            $(".copyLabelPopup").css(position).addClass("copied");
+            elm.removeClass("copy-cursor").addClass("clipboardCopied");
+            setTimeout(clearSelection, 100);
+            setTimeout(function() {
+                    elm.removeClass("clipboardCopied").addClass("copy-cursor");
+                    $(".copyLabelPopup").removeClass("copied");
+                },
+                1000);
+            return trigger;
+        }
+
+        function clearSelection() {
+            if (window.getSelection) {
+                window.getSelection().removeAllRanges();
+            } else if (document.selection) {
+                document.selection.empty();
+            }
+        }
+        // Disable enter key
+        $(document).keypress(
+            function(event) {
+                if (event.which === '13') {
+                    event.preventDefault();
+                }
+            }
+        );
+    });
+</script>

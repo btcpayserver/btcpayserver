@@ -9,6 +9,7 @@ namespace BTCPayServer.Models.InvoicingModels
     {
         public string ExtensionPartial { get; set; }
         public string CheckoutBodyVueComponentName { get; set; }
+        public string CheckoutHeaderVueComponentName { get; set; }
         public string NoScriptPartialName { get; set; }
     }
     public class PaymentModel

@@ -17,6 +17,7 @@ using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
+using ExchangeSharp;
 using Ganss.XSS;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http.Extensions;
@@ -273,20 +274,30 @@ namespace BTCPayServer.Services.Apps
 
         public string SerializeTemplate(ViewPointOfSaleViewModel.Item[] items)
         {
-            return string.Join("", items.Select(item => $"{item.Id}:\n" +
-                                                        $"  title: {item.Title}\n" +
-                                                        $"  price: {item.Price.Value}\n" +
-                                                        (string.IsNullOrEmpty(item.Description)
-                                                            ? string.Empty
-                                                            : $"  description: {item.Description}\n") +
-                                                        (string.IsNullOrEmpty(item.Image)
-                                                            ? string.Empty
-                                                            : $"  image: {item.Image}\n") +
-                                                        $"  custom: {item.Custom.ToString(CultureInfo.InvariantCulture).ToLowerInvariant()}\n" +
-                                                        (item.Inventory.HasValue
-                                                            ? $"  inventory: {item.Inventory}\n"
-                                                            : string.Empty) +
-                                                        "\n"));
+            var mappingNode = new YamlMappingNode();
+            foreach (var item in items)
+            {
+                var itemNode = new YamlMappingNode();
+                itemNode.Add("title", new YamlScalarNode(item.Title));
+                itemNode.Add("price", new YamlScalarNode(item.Price.Value.ToStringInvariant()));
+                if (!string.IsNullOrEmpty(item.Description))
+                {
+                    itemNode.Add("description", new YamlScalarNode(item.Description));
+                }
+                if (!string.IsNullOrEmpty(item.Image))
+                {
+                    itemNode.Add("image", new YamlScalarNode(item.Image));
+                }
+                itemNode.Add("custom", new YamlScalarNode(item.Custom.ToStringLowerInvariant()));
+                if (item.Inventory.HasValue)
+                {
+                    itemNode.Add("inventory", new YamlScalarNode(item.Inventory.ToString()));
+                }
+                mappingNode.Add(item.Id, itemNode);
+            }
+
+            var serializer = new SerializerBuilder().Build();
+            return serializer.Serialize(mappingNode);
         }
         public ViewPointOfSaleViewModel.Item[] Parse(string template, string currency)
         {

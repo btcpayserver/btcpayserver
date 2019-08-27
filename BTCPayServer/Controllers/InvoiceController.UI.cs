@@ -295,7 +295,7 @@ namespace BTCPayServer.Controllers
                                           .ToList()
             };
 
-            paymentMethodHandler.PreparePaymentModel(model, dto);
+            paymentMethodHandler.PreparePaymentModel(model, dto, store, storeBlob);
             model.UISettings = paymentMethodHandler.GetCheckoutUISettings();
             model.PaymentMethodId = paymentMethodId.ToString();
             var expiration = TimeSpan.FromSeconds(model.ExpirationSeconds);

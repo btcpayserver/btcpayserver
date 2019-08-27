@@ -46,9 +46,9 @@ namespace BTCPayServer.HostedServices
                         canUseSSH = true;
                     }
                 }
-                catch (Renci.SshNet.Common.SshAuthenticationException)
+                catch (Renci.SshNet.Common.SshAuthenticationException ex)
                 {
-                    Logs.Configuration.LogWarning($"SSH invalid credentials");
+                    Logs.Configuration.LogWarning($"SSH invalid credentials ({ex.Message})");
                 }
                 catch (Exception ex)
                 {

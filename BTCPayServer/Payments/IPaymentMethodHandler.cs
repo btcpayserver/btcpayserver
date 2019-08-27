@@ -98,12 +98,7 @@ namespace BTCPayServer.Payments
         {
             return invoice.GetPaymentMethod(paymentMethodId);
         }
-
-        public PaymentMethod GetPaymentMethodInInvoice(InvoiceEntity invoice, PaymentMethodId paymentMethodId)
-        {
-            return invoice.GetPaymentMethod(paymentMethodId);
-        }
-
+        
         public virtual object PreparePayment(TSupportedPaymentMethod supportedPaymentMethod, StoreData store,
             BTCPayNetworkBase network)
         {

@@ -102,7 +102,7 @@
                 </div>
             </template>
             <div class="single-item-order__right__btc-price" v-else>
-                <span>{{srvModel.orderAmountFiat}}</span>
+                <span>{{srvModel.orderAmountDueFiat}}</span>
             </div>
             <div class="single-item-order__right__ex-rate" v-if="srvModel.orderAmountFiat && srvModel.cryptoCode">
                 1 {{ srvModel.cryptoCodeSrv }} = {{ srvModel.rate }}

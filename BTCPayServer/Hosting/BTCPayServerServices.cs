@@ -188,7 +188,8 @@ namespace BTCPayServer.Hosting
             });
             services.AddSingleton<IHostedService, CssThemeManagerHostedService>();
 
-            services.AddSingleton<IHostedService, HostedServices.CheckConfigurationHostedService>();
+            services.AddSingleton<HostedServices.CheckConfigurationHostedService>();
+            services.AddSingleton<IHostedService, HostedServices.CheckConfigurationHostedService>(o => o.GetRequiredService<CheckConfigurationHostedService>());
             
             services.AddSingleton<BitcoinLikePaymentHandler>();
             services.AddSingleton<IPaymentMethodHandler>(provider => provider.GetService<BitcoinLikePaymentHandler>());

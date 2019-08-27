@@ -13,5 +13,9 @@ namespace BTCPayServer.Services
         public bool ConvertNetworkFeeProperty { get; set; }
         public bool ConvertCrowdfundOldSettings { get; set; }
         public bool ConvertWalletKeyPathRoots { get; set; }
+        public override string ToString()
+        {
+            return string.Empty;
+        }
     }
 }

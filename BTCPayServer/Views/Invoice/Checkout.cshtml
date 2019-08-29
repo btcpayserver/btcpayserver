@@ -265,6 +265,7 @@
                 }
             },
             listenIn: function(){
+                var self = this;
                 var socket = null;
                 var supportsWebSockets = 'WebSocket' in window && window.WebSocket.CLOSING === 2;
                 if (supportsWebSockets) {
@@ -279,7 +280,7 @@
                     try {
                         socket = new WebSocket(ws_uri);
                         socket.onmessage = function (e) {
-                            this.fetchData();
+                            self.fetchData();
                         };
                         socket.onerror = function (e) {
                             console.error("Error while connecting to websocket for invoice notifications (callback)");

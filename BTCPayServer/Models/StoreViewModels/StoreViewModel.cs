@@ -1,4 +1,5 @@
-﻿using BTCPayServer.Services;
+﻿using BTCPayServer.Data;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Validation;

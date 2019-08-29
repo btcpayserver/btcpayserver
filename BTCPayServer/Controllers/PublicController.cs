@@ -10,6 +10,7 @@ using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using BTCPayServer.Data;
 
 namespace BTCPayServer.Controllers
 {

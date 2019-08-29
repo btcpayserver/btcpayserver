@@ -10,7 +10,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-using BTCPayServer.Authentication.OpenId.Models;
 using Xunit;
 using NBXplorer.DerivationStrategy;
 using BTCPayServer.Payments;

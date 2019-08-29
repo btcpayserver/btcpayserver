@@ -12,7 +12,7 @@ using BTCPayServer.Payments;
 using BTCPayServer.Services.PaymentRequests;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using BTCPayServer.Services.Apps;
+using BTCPayServer.Data;
 using Microsoft.AspNetCore.Http;
 
 namespace BTCPayServer.PaymentRequest

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using BTCPayServer.Data;
 
 namespace BTCPayServer.Services.U2F.Models
 {

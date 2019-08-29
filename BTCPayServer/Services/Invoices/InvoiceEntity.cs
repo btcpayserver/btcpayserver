@@ -105,14 +105,6 @@ namespace BTCPayServer.Services.Invoices
             get; set;
         }
     }
-
-    public enum SpeedPolicy
-    {
-        HighSpeed = 0,
-        MediumSpeed = 1,
-        LowSpeed = 2,
-        LowMediumSpeed = 3
-    }
     public class InvoiceEntity
     {
         [JsonIgnore]

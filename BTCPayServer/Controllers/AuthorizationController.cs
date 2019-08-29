@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using AspNet.Security.OpenIdConnect.Extensions;
 using AspNet.Security.OpenIdConnect.Primitives;
 using BTCPayServer.Authentication.OpenId;
-using BTCPayServer.Authentication.OpenId.Models;
+using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Models.Authorization;
 using BTCPayServer.Security;

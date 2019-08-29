@@ -63,7 +63,7 @@
                 <a class="js-cart-item-remove btn btn-link" href="#"><i class="fa fa-trash text-muted"></i></a>
             </td>
             <td class="align-middle px-0" align="right">
-                <div class="input-group">
+                <div class="input-group align-items-center">
                     <div class="input-group-prepend">
                         <a class="js-cart-item-minus btn btn-link px-2" href="#"><i class="fa fa-minus-circle fa-fw text-danger"></i></a>
                     </div>
@@ -145,9 +145,9 @@
                         <div class="input-group-prepend">
                             <span class="input-group-text"><i class="fa fa-money fa-fw"></i></span>
                         </div>
-                        <input class="js-cart-tip form-control" type="number" min="0" step="@Model.Step" value="{tip}" name="tip" placeholder="Tip in @(Model.CurrencyInfo.CurrencySymbol != null ? Model.CurrencyInfo.CurrencySymbol : Model.CurrencyCode)">
+                        <input class="js-cart-tip form-control form-control-lg" type="number" min="0" step="@Model.Step" value="{tip}" name="tip" placeholder="Tip in @(Model.CurrencyInfo.CurrencySymbol != null ? Model.CurrencyInfo.CurrencySymbol : Model.CurrencyCode)">
                         <div class="input-group-append">
-                            <a class="js-cart-tip-remove btn btn-danger" href="#"><i class="fa fa-times"></i></a>
+                            <a class="js-cart-tip-remove btn btn-lg btn-danger" href="#"><i class="fa fa-times"></i></a>
                         </div>
                     </div>
                     <div class="row mb-1">
@@ -157,7 +157,7 @@
                             {
                                 var percentage = CustomTipPercentages[i];
                                 <div class="col">
-                                    <a class="js-cart-tip-btn btn btn-light btn-block border mb-2" href="#" data-tip="@percentage">@percentage%</a>
+                                    <a class="js-cart-tip-btn btn btn-lg btn-light btn-block border mb-2" href="#" data-tip="@percentage">@percentage%</a>
                                 </div>
                             }
                         }
@@ -229,7 +229,15 @@
                         </table>
                     </div>
                     <div class="modal-footer bg-light">
-                        <form method="post" asp-controller="AppsPublic" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy>
+                        <form
+                            id="js-cart-pay-form"
+                            method="post" 
+                            asp-controller="AppsPublic" 
+                            asp-action="ViewPointOfSale" 
+                            asp-route-appId="@Model.AppId" 
+                            asp-antiforgery="false" 
+                            data-buy
+                        >
                             <input id="js-cart-amount" class="form-control" type="hidden" name="amount">
                             <input id="js-cart-posdata" class="form-control" type="hidden" name="posdata">
                             <button id="js-cart-pay" class="btn btn-primary btn-lg" type="submit">
@@ -244,10 +252,10 @@
         <div class="wrapper">
             <!-- Page Content  -->
             <div id="content">
-                <div class="p-3">
+                <div class="p-2 p-sm-4">
                     <div class="row">
                         <div class="col-sm-4 col-lg-3 order-sm-last text-right mb-2">
-                            <a class="js-cart btn btn-warning text-white text-right" href="#">
+                            <a class="js-cart btn btn-lg btn-warning text-white text-right" href="#">
                                 <i class="fa fa-shopping-basket"></i>&nbsp;
                                 <span class="badge badge-light badge-pill">
                                     <span id="js-cart-items">0</span>
@@ -256,7 +264,7 @@
                         </div>
                         <div class="col-sm-8 col-lg-9 mb-2">
                             <div class="input-group mb-2">
-                                <input type="text" class="js-search form-control" placeholder="Find product">
+                                <input type="text" class="js-search form-control form-control-lg" placeholder="Find product">
                                 <a class="js-search-reset btn btn-link text-black" href="#" style="position: absolute; right: 0px; z-index: 1049; display: none;">
                                     <i class="fa fa-times-circle fa-lg"></i>
                                 </a>
@@ -271,7 +279,7 @@
                     }
                 </div>
                 <div id="js-pos-list" class="text-center mx-auto px-4">
-                    <div class="row card-deck my-3 mx-auto">
+                    <div class="row card-deck my-3">
 
                         @for (var index = 0; index < Model.Items.Length; index++)
                         {
@@ -308,7 +316,7 @@
                     <a class="js-cart btn btn-sm bg-white text-black pull-right ml-5" href="#">
                         <i class="fa fa-times fa-lg"></i>
                     </a>
-                    <a class="js-cart-destroy btn btn-sm bg-white text-danger pull-right" href="#" style="display: none;">Empty cart <i class="fa fa-trash fa-fw fa-lg"></i></a>
+                    <a class="js-cart-destroy btn bg-white text-danger pull-right" href="#" style="display: none;">Empty cart <i class="fa fa-trash fa-fw fa-lg"></i></a>
                 </div>
 
                 <table id="js-cart-list" class="table table-responsive bg-light mt-0 mb-0">

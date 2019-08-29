@@ -21,9 +21,12 @@ namespace BTCPayServer.Authentication.OpenId
 
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public ClientCredentialsGrantTypeEventHandler(SignInManager<ApplicationUser> signInManager,
+        public ClientCredentialsGrantTypeEventHandler(
             OpenIddictApplicationManager<BTCPayOpenIdClient> applicationManager,
-            IOptions<IdentityOptions> identityOptions, UserManager<ApplicationUser> userManager) : base(signInManager,
+            OpenIddictAuthorizationManager<BTCPayOpenIdAuthorization> authorizationManager,
+            SignInManager<ApplicationUser> signInManager,
+            IOptions<IdentityOptions> identityOptions,
+            UserManager<ApplicationUser> userManager) : base(applicationManager, authorizationManager, signInManager,
             identityOptions)
         {
             _applicationManager = applicationManager;

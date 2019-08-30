@@ -2,10 +2,7 @@
   <Import Project="../Build/Version.csproj" Condition="Exists('../Build/Version.csproj')" />
   <Import Project="../Build/Common.csproj" />
   <PropertyGroup>
-    <OutputType>Exe</OutputType>  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <!--BundleMinify add 5s to the build process, making the debug/feedback loop slower-->
-    <RunBundleMinify>False</RunBundleMinify>
+    <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Build\dockerfiles\**" />

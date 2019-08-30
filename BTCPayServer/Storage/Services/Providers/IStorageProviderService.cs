@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using BTCPayServer.Data;
 using BTCPayServer.Storage.Models;
 using Microsoft.AspNetCore.Http;
 using TwentyTwenty.Storage;

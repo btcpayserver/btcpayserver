@@ -6,6 +6,7 @@ using BTCPayServer.Payments.Changelly;
 using BTCPayServer.Rating;
 using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Mvc;
+using BTCPayServer.Data;
 
 namespace BTCPayServer.Controllers
 {

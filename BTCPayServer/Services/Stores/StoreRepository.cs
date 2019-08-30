@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Services.Invoices;
 using Microsoft.EntityFrameworkCore;
+using BTCPayServer.Migrations;
 
 namespace BTCPayServer.Services.Stores
 {

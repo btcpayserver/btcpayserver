@@ -1,7 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using BTCPayServer.Data;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace BTCPayServer.Migrations
 {
+    [DbContext(typeof(ApplicationDbContext))]
+    [Migration("20180719095626_CanDeleteStores")]
     public partial class CanDeleteStores : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)

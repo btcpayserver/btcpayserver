@@ -1,8 +1,12 @@
 ﻿using System;
+using BTCPayServer.Data;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace BTCPayServer.Migrations
 {
+    [DbContext(typeof(ApplicationDbContext))]
+    [Migration("20190425081749_AddU2fDevices")]
     public partial class AddU2fDevices : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)

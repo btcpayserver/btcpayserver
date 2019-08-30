@@ -1,9 +1,13 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using BTCPayServer.Data;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using System;
 using System.Collections.Generic;
 
 namespace BTCPayServer.Migrations
 {
+    [DbContext(typeof(ApplicationDbContext))]
+    [Migration("20180429083930_legacyapikey")]
     public partial class legacyapikey : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)

@@ -1,8 +1,12 @@
 ﻿using System;
+using BTCPayServer.Data;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace BTCPayServer.Migrations
 {
+    [DbContext(typeof(ApplicationDbContext))]
+    [Migration("20190701082105_sort_paymentrequests")]
     public partial class sort_paymentrequests : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)

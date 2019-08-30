@@ -1,8 +1,12 @@
 ﻿using System;
+using BTCPayServer.Data;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace BTCPayServer.Migrations
 {
+    [DbContext(typeof(ApplicationDbContext))]
+    [Migration("20190225091644_AddOpenIddict")]
     public partial class AddOpenIddict : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)

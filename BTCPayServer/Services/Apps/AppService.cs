@@ -24,6 +24,8 @@ using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using NBitcoin;
+using NBitcoin.DataEncoders;
 using NBitpayClient;
 using Newtonsoft.Json.Linq;
 using YamlDotNet.RepresentationModel;
@@ -427,11 +429,19 @@ namespace BTCPayServer.Services.Apps
             }
         }
 
-        public async Task UpdateAppSettings(AppData app)
+        public async Task UpdateOrCreateApp(AppData app)
         {
             using (var ctx = _ContextFactory.CreateContext())
             {
-                ctx.Apps.Update(app);
+                if (string.IsNullOrEmpty(app.Id))
+                {
+                    app.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(20));
+                    await ctx.Apps.AddAsync(app);
+                }
+                else
+                {
+                    ctx.Apps.Update(app);
+                }
                 await ctx.SaveChangesAsync();
             }
         }

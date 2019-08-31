@@ -96,7 +96,7 @@ namespace BTCPayServer.HostedServices
                         }
 
                         valueTuple.Data.SetSettings(valueTuple.Settings);
-                        await _AppService.UpdateAppSettings(valueTuple.Data);
+                        await _AppService.UpdateOrCreateApp(valueTuple.Data);
                     }
                 }
             }

@@ -199,7 +199,7 @@ namespace BTCPayServer.Controllers
                 RedirectAutomatically = string.IsNullOrEmpty(vm.RedirectAutomatically)? (bool?) null: bool.Parse(vm.RedirectAutomatically)
                 
             });
-            await _AppService.UpdateAppSettings(app);
+            await _AppService.UpdateOrCreateApp(app);
             StatusMessage = "App updated";
             return RedirectToAction(nameof(UpdatePointOfSale), new { appId });
         }

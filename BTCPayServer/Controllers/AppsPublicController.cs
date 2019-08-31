@@ -133,7 +133,7 @@ namespace BTCPayServer.Controllers
                         choice.Inventory--;
                         settings.Template = _AppService.SerializeTemplate(choices);
                         app.SetSettings(settings);
-                        await _AppService.UpdateAppSettings(app);   
+                        await _AppService.UpdateOrCreateApp(app);   
                     }
                 }
             }
@@ -178,7 +178,7 @@ namespace BTCPayServer.Controllers
                     {
                         settings.Template = _AppService.SerializeTemplate(choices);
                         app.SetSettings(settings);
-                        await _AppService.UpdateAppSettings(app);
+                        await _AppService.UpdateOrCreateApp(app);
                     }
                 }
             }
@@ -297,7 +297,7 @@ namespace BTCPayServer.Controllers
                         choice.Inventory--;
                         settings.PerksTemplate = _AppService.SerializeTemplate(choices);
                         app.SetSettings(settings);
-                        await _AppService.UpdateAppSettings(app);   
+                        await _AppService.UpdateOrCreateApp(app);   
                     }
                 }
             }

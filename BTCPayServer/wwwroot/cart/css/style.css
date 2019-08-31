@@ -33,6 +33,10 @@
     cursor: pointer;
 }
 
+.js-cart-tip-btn:focus {
+    background-color: #dee2e6;
+}
+
 #js-cart-confirm {
     border-radius: 0;
 }

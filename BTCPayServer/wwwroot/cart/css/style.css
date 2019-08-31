@@ -37,6 +37,15 @@
     border-radius: 0;
 }
 
+.js-search-reset {
+    position: absolute;
+    right: 0px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1049;
+    display: none;
+}
+
 /* ---------------------------------------------------
     SIDEBAR STYLE
 ----------------------------------------------------- */

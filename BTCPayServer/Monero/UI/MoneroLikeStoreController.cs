@@ -88,7 +88,7 @@ namespace BTCPayServer.Controllers
             _MoneroRpcProvider.Summaries.TryGetValue(cryptoCode, out var summary);
             _MoneroLikeConfiguration.MoneroLikeConfigurationItems.TryGetValue(cryptoCode,
                 out var configurationItem);
-            var fileAddress = Path.Combine(configurationItem.WalletDirectory, "wallet");
+            var fileAddress = Path.Combine(configurationItem.WalletDirectory, "wallet.keys");
             return new MoneroLikePaymentMethodViewModel()
             {
                 WalletFileFound = System.IO.File.Exists(fileAddress),

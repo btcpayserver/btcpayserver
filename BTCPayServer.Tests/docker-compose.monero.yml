@@ -1,29 +1,27 @@
-version: "3"    
+version: "3"
 
 services:
 
-  monerod:
-    image: kukks/monero:test
-    restart: unless-stopped
-    container_name: xmr_monerod
-    entrypoint: monerod --rpc-bind-ip=0.0.0.0 --confirm-external-bind --rpc-bind-port=18081 --non-interactive --block-notify="/scripts/notifier.sh https://127.0.0.1:14142/monerolikedaemoncallback/block %s" --regtest --offline
-    volumes:
-      - "C:/ProgramData/bitmonero/node:/home/monero/.bitmonero"
-      - "C:/Git/monero/contrib/docker_scripts:/tmpscripts:rw"
-    ports:
-      - "18080:18080" 
-      - "18081:18081"
-    network_mode: host
-  monero_wallet:
-      image: kukks/monero:test
-      restart: unless-stopped
-      container_name: xmr_wallet_rpc
-      entrypoint: monero-wallet-rpc --rpc-bind-ip=0.0.0.0 --confirm-external-bind --rpc-bind-port=18082 --non-interactive --trusted-daemon --prompt-for-password --daemon-address=127.0.0.1:18081 --wallet-file=/wallet/wallet.keys --tx-notify="/scripts/notifier.sh https://127.0.0.1:14142/monerolikedaemoncallback/tx %s"
-      volumes:
-          - "C:/ProgramData/bitmonero/wallet:/wallet"
-          - "C:/Git/monero/contrib/docker_scripts:/tmpscripts:rw"
-      ports:
-          - "18082:18082"
-      network_mode: host
-      depends_on:
-        - monerod
+    monerod:
+        image: kukks/monero:test
+        restart: unless-stopped
+        container_name: xmr_monerod
+        entrypoint: monerod --fixed-difficulty 100 --p2p-bind-ip 0.0.0.0 --rpc-bind-ip=0.0.0.0 --confirm-external-bind --rpc-bind-port=18081 --non-interactive --block-notify="/scripts/notifier.sh https://127.0.0.1:14142/monerolikedaemoncallback/block %s" --testnet --no-igd --hide-my-port
+        volumes:
+            - "C:/ProgramData/bitmonero/node:/home/monero/.bitmonero"
+        ports:
+            - "18080:18080"
+            - "18081:18081"
+        network_mode: host
+    monero_wallet:
+        image: kukks/monero:test
+        restart: unless-stopped
+        container_name: xmr_wallet_rpc
+        entrypoint: monero-wallet-rpc --testnet --rpc-bind-ip=0.0.0.0 --confirm-external-bind --rpc-bind-port=18082 --non-interactive --trusted-daemon --prompt-for-password --daemon-address=127.0.0.1:18081 --wallet-file=/wallet/wallet.keys --tx-notify="/scripts/notifier.sh https://127.0.0.1:14142/monerolikedaemoncallback/tx %s"
+        volumes:
+            - "C:/ProgramData/bitmonero/wallet:/wallet"
+        ports:
+            - "18082:18082"
+        network_mode: host
+        depends_on:
+            - monerod

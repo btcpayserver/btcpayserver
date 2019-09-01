@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using BTCPayServer.Configuration;
+using BTCPayServer.Payments;
 using BTCPayServer.Payments.Monero;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
@@ -17,7 +18,8 @@ namespace BTCPayServer.Monero
             serviceCollection.AddSingleton<MoneroRPCProvider>();
             serviceCollection.AddHostedService<MoneroLikeSummaryUpdaterHostedService>();
             serviceCollection.AddHostedService<MoneroListener>();
-            
+            serviceCollection.AddSingleton<MoneroLikePaymentMethodHandler>();
+            serviceCollection.AddSingleton<IPaymentMethodHandler>(provider => provider.GetService<MoneroLikePaymentMethodHandler>());
             
             return serviceCollection;
         }

@@ -1,0 +1,13 @@
+@model BTCPayServer.Controllers.MoneroLikeStoreController.UploadMoneroLikeWalletViewModel
+
+<form method="post" asp-action="UploadMoneroLikeWalletFile" class="card mt-4 ">
+    <h3 class="card-title p-2">Upload Wallet</h3>
+    <div class="form-group p-2">
+        <label asp-for="WalletFile"></label>
+        <input type="file" class="form-control-file" asp-for="WalletFile" required>
+        <span asp-validation-for="WalletFile" class="text-danger"></span>
+    </div>
+    <div class="card-footer text-right">
+        <button type="submit" class="btn btn-primary">Upload</button>
+    </div>
+</form>

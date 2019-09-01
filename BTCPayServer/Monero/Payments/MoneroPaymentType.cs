@@ -39,5 +39,7 @@ namespace BTCPayServer.Payments.Monero
         {
             return string.Format(network.BlockExplorerLink, txId);
         }
+
+        public override string InvoiceViewPaymentPartialName { get; }
     }
 }

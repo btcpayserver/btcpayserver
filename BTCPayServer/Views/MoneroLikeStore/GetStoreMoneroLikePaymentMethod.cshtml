@@ -1,9 +1,11 @@
+@using BTCPayServer.Controllers
 @using BTCPayServer.Views.Stores
 @model BTCPayServer.Controllers.MoneroLikeStoreController.MoneroLikePaymentMethodViewModel
 
 @{
     Layout = "../Shared/_NavLayout.cshtml";
 
+    ViewData["NavPartialName"] = "../Stores/_Nav";
     ViewData.SetActivePageAndTitle(StoreNavPages.ActivePage, $"{Model.CryptoCode} Settings");
 }
 
@@ -17,18 +19,23 @@
         @if (Model.Summary != null)
         {
             <div class="card">
-            <div class="card-body">
-                <span class="card-title">Node Summary</span>
-                <span>Node available: @Model.Summary.DaemonAvailable</span>
-                <span>Wallet available: @Model.Summary.WalletAvailable</span>
-                <span>Last updated: @Model.Summary.UpdatedAt</span>
-                <span>Synced: @Model.Summary.Synced (@Model.Summary.CurrentHeight / @Model.Summary.TargetHeight)</span>
-            </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">Node available: @Model.Summary.DaemonAvailable</li>
+                    <li class="list-group-item">Wallet available: @Model.Summary.WalletAvailable (@(Model.WalletFileFound ? "Wallet file present" : "Wallet file not found"))</li>
+                    <li class="list-group-item">Last updated: @Model.Summary.UpdatedAt</li>
+                    <li class="list-group-item">Synced: @Model.Summary.Synced (@Model.Summary.CurrentHeight / @Model.Summary.TargetHeight)</li>
+                  </ul>
             </div>
         }
         <div></div>
         <div class="form-group">
-            <form method="post">
+                
+            @if (!Model.WalletFileFound || Model.Summary.WalletHeight == default(long))
+            {
+                <partial name="UploadMoneroLikeWallet" model="@(new MoneroLikeStoreController.UploadMoneroLikeWalletViewModel())"/>
+            }
+            
+            <form method="post" asp-action="GetStoreMoneroLikePaymentMethod" class="mt-4">
                 <input type="hidden" asp-for="CryptoCode"/>
                 <div class="form-group">
 
@@ -47,7 +54,7 @@
                     }
                     else
                     {
-                        <input type="hidden" asp-for="AccountIndex"/>
+                        <input type="number" readonly="readonly" class="form-control" asp-for="AccountIndex"/>
                         <span class="text-danger">Could not connect to the wallet daemon. Is it configured correctly?</span>
                     }
                 </div >

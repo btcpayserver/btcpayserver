@@ -70,8 +70,8 @@
                 "BTCPAY_POSTGRES": "User ID=postgres;Host=127.0.0.1;Port=39372;Database=btcpayserver",
                 "BTCPAY_EXTERNALSERVICES": "totoservice:totolink;",
                 "BTCPAY_XMR_DAEMON_URI": "http://127.0.0.1:18081",
-                "BTCPAY_XMR_WALLET_DAEMON_URI": "http://127.0.0.1:18084",
-                "BTCPAY_XMR_WALLET_DAEMON_WALLETDIR": "test"
+                "BTCPAY_XMR_WALLET_DAEMON_URI": "http://127.0.0.1:18082",
+                "BTCPAY_XMR_WALLET_DAEMON_WALLETDIR": "C:/ProgramData/bitmonero/wallet"
                 
             },
             "applicationUrl": "https://localhost:14142/"

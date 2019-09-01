@@ -3,27 +3,27 @@ version: "3"
 services:
 
   monerod:
-    image: kukks/monero:latest
+    image: kukks/monero:test
     restart: unless-stopped
-    entrypoint: ["monerod", "--rpc-bind-ip=0.0.0.0", "--confirm-external-bind", "--regtest", "--rpc-bind-port=18081", "--block-notify=\"curl https://127.0.0.1:14142/monerolikedaemoncallback/block?cryptocode=xmr&hash=%s\"" ]
+    container_name: xmr_monerod
+    entrypoint: monerod --rpc-bind-ip=0.0.0.0 --confirm-external-bind --rpc-bind-port=18081 --non-interactive --block-notify="/scripts/notifier.sh https://127.0.0.1:14142/monerolikedaemoncallback/block %s" --regtest --offline
     volumes:
-      - "monero_datadir:/home/monero/.bitmonero"
+      - "C:/ProgramData/bitmonero/node:/home/monero/.bitmonero"
+      - "C:/Git/monero/contrib/docker_scripts:/tmpscripts:rw"
     ports:
       - "18080:18080" 
       - "18081:18081"
+    network_mode: host
   monero_wallet:
-      image: kukks/monero:latest
+      image: kukks/monero:test
       restart: unless-stopped
-      entrypoint: [  "monero-wallet-rpc", "--rpc-bind-ip=0.0.0.0", "--confirm-external-bind", " --rpc-bind-port=18082", "--trusted-daemon", "--daemon-address=monerod:18081", "--wallet-dir=/wallet", "--wallet-file=wallet_regtest", "--tx-notify=\"curl https://127.0.0.1:14142/monerolikedaemoncallback/tx?cryptocode=xmr&hash=%s\"" ]
+      container_name: xmr_wallet_rpc
+      entrypoint: monero-wallet-rpc --rpc-bind-ip=0.0.0.0 --confirm-external-bind --rpc-bind-port=18082 --non-interactive --trusted-daemon --prompt-for-password --daemon-address=127.0.0.1:18081 --wallet-file=/wallet/wallet.keys --tx-notify="/scripts/notifier.sh https://127.0.0.1:14142/monerolikedaemoncallback/tx %s"
       volumes:
-          - "monero_walletdir:/wallet"
+          - "C:/ProgramData/bitmonero/wallet:/wallet"
+          - "C:/Git/monero/contrib/docker_scripts:/tmpscripts:rw"
       ports:
           - "18082:18082"
-      links:
-          - monerod
+      network_mode: host
       depends_on:
         - monerod
-
-volumes:
-    monero_datadir:
-    monero_walletdir:

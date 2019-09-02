@@ -75,6 +75,49 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Fast", "Fast")]
+        public async Task CheckNoDeadLink()
+        {
+            var views = Path.Combine(LanguageService.TryGetSolutionDirectoryInfo().FullName, "BTCPayServer", "Views");
+            var viewFiles = Directory.EnumerateFiles(views, "*.cshtml", SearchOption.AllDirectories).ToArray();
+            Assert.NotEmpty(viewFiles);
+            Regex regex = new Regex("href=\"(http.*?)\"");
+            var httpClient = new HttpClient();
+            List<Task> checkLinks = new List<Task>();
+            foreach (var file in viewFiles)
+            {
+                checkLinks.Add(CheckLinks(regex, httpClient, file));
+            }
+            await Task.WhenAll(checkLinks);
+        }
+
+        private static async Task CheckLinks(Regex regex, HttpClient httpClient, string file)
+        {
+            List<Task> checkLinks = new List<Task>();
+            var text = await File.ReadAllTextAsync(file);
+            foreach (var match in regex.Matches(text).OfType<Match>())
+            {
+                checkLinks.Add(AssertLinkNotDead(httpClient, match, file));
+            }
+            await Task.WhenAll(checkLinks);
+        }
+
+        private static async Task AssertLinkNotDead(HttpClient httpClient, Match match, string file)
+        {
+            var url = match.Groups[1].Value;
+            try
+            {
+                Assert.Equal(HttpStatusCode.OK, (await httpClient.GetAsync(url)).StatusCode);
+                Logs.Tester.LogInformation($"OK: {url} ({file})");
+            }
+            catch
+            {
+                Logs.Tester.LogInformation($"FAILED: {url} ({file})");
+                throw;
+            }
+        }
+
+        [Fact]
+        [Trait("Fast", "Fast")]
         public void CanHandleUriValidation()
         {
             var attribute = new UriAttribute();

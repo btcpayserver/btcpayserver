@@ -80,7 +80,7 @@ namespace BTCPayServer.Tests
             var views = Path.Combine(LanguageService.TryGetSolutionDirectoryInfo().FullName, "BTCPayServer", "Views");
             var viewFiles = Directory.EnumerateFiles(views, "*.cshtml", SearchOption.AllDirectories).ToArray();
             Assert.NotEmpty(viewFiles);
-            Regex regex = new Regex("href=\"(http.*?)\"");
+            Regex regex = new Regex("href=\"(http.*?)[\"#]");
             var httpClient = new HttpClient();
             List<Task> checkLinks = new List<Task>();
             foreach (var file in viewFiles)

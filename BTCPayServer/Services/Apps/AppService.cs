@@ -436,11 +436,15 @@ namespace BTCPayServer.Services.Apps
                 if (string.IsNullOrEmpty(app.Id))
                 {
                     app.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(20));
+                    app.Created = DateTimeOffset.Now;
                     await ctx.Apps.AddAsync(app);
                 }
                 else
                 {
                     ctx.Apps.Update(app);
+                    ctx.Entry(app).Property(data => data.Created).IsModified = false;
+                    ctx.Entry(app).Property(data => data.Id).IsModified = false;
+                    ctx.Entry(app).Property(data => data.AppType).IsModified = false;
                 }
                 await ctx.SaveChangesAsync();
             }

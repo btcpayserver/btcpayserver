@@ -1947,6 +1947,7 @@ noninventoryitem:
                 //inventoryitem has 1 item available
                 Assert.IsType<RedirectToActionResult>(publicApps.ViewPointOfSale(appId, 1, null, null, null, null, "inventoryitem").Result);
                 //we already bought all available stock so this should fail
+                await Task.Delay(100);
                 Assert.IsType<RedirectToActionResult>(publicApps.ViewPointOfSale(appId, 1, null, null, null, null, "inventoryitem").Result);
                 
                 //inventoryitem has unlimited items available

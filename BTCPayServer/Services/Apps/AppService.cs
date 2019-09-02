@@ -17,14 +17,20 @@ using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
+using ExchangeSharp;
 using Ganss.XSS;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using NBitcoin;
+using NBitcoin.DataEncoders;
 using NBitpayClient;
+using Newtonsoft.Json.Linq;
 using YamlDotNet.RepresentationModel;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 using static BTCPayServer.Controllers.AppsController;
 using static BTCPayServer.Models.AppViewModels.ViewCrowdfundViewModel;
 
@@ -268,7 +274,33 @@ namespace BTCPayServer.Services.Apps
             return _storeRepository.FindStore(app.StoreDataId);
         }
 
+        public string SerializeTemplate(ViewPointOfSaleViewModel.Item[] items)
+        {
+            var mappingNode = new YamlMappingNode();
+            foreach (var item in items)
+            {
+                var itemNode = new YamlMappingNode();
+                itemNode.Add("title", new YamlScalarNode(item.Title));
+                itemNode.Add("price", new YamlScalarNode(item.Price.Value.ToStringInvariant()));
+                if (!string.IsNullOrEmpty(item.Description))
+                {
+                    itemNode.Add("description", new YamlScalarNode(item.Description));
+                }
+                if (!string.IsNullOrEmpty(item.Image))
+                {
+                    itemNode.Add("image", new YamlScalarNode(item.Image));
+                }
+                itemNode.Add("custom", new YamlScalarNode(item.Custom.ToStringLowerInvariant()));
+                if (item.Inventory.HasValue)
+                {
+                    itemNode.Add("inventory", new YamlScalarNode(item.Inventory.ToString()));
+                }
+                mappingNode.Add(item.Id, itemNode);
+            }
 
+            var serializer = new SerializerBuilder().Build();
+            return serializer.Serialize(mappingNode);
+        }
         public ViewPointOfSaleViewModel.Item[] Parse(string template, string currency)
         {
             if (string.IsNullOrWhiteSpace(template))
@@ -293,7 +325,8 @@ namespace BTCPayServer.Services.Apps
                                  Value = decimal.Parse(cc.Value.Value, CultureInfo.InvariantCulture),
                                  Formatted = Currencies.FormatCurrency(cc.Value.Value, currency)
                              }).Single(),
-                    Custom = c.GetDetailString("custom") == "true"
+                    Custom = c.GetDetailString("custom") == "true",
+                    Inventory = string.IsNullOrEmpty(c.GetDetailString("inventory")) ?(int?) null:  int.Parse(c.GetDetailString("inventory"), CultureInfo.InvariantCulture)
                 })
                 .ToArray();
         }
@@ -369,7 +402,6 @@ namespace BTCPayServer.Services.Apps
 
             public string GetDetailString(string field)
             {
-
                 return GetDetail(field).FirstOrDefault()?.Value?.Value;
             }
         }
@@ -395,6 +427,52 @@ namespace BTCPayServer.Services.Apps
                     return null;
                 return app;
             }
+        }
+
+        public async Task UpdateOrCreateApp(AppData app)
+        {
+            using (var ctx = _ContextFactory.CreateContext())
+            {
+                if (string.IsNullOrEmpty(app.Id))
+                {
+                    app.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(20));
+                    app.Created = DateTimeOffset.Now;
+                    await ctx.Apps.AddAsync(app);
+                }
+                else
+                {
+                    ctx.Apps.Update(app);
+                    ctx.Entry(app).Property(data => data.Created).IsModified = false;
+                    ctx.Entry(app).Property(data => data.Id).IsModified = false;
+                    ctx.Entry(app).Property(data => data.AppType).IsModified = false;
+                }
+                await ctx.SaveChangesAsync();
+            }
+        }
+        
+        private static bool TryParseJson(string json, out JObject result)
+        {
+            result = null;
+            try
+            {
+                result = JObject.Parse(json);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public static bool TryParsePosCartItems(string posData, out Dictionary<string, int> cartItems)
+        {
+            cartItems = null;
+            if (!TryParseJson(posData, out var posDataObj) ||
+                !posDataObj.TryGetValue("cart", out var cartObject)) return false;
+            cartItems = cartObject.Select(token => (JObject)token)
+                .ToDictionary(o => o.GetValue("id", StringComparison.InvariantCulture).ToString(),
+                    o => int.Parse(o.GetValue("count", StringComparison.InvariantCulture).ToString(), CultureInfo.InvariantCulture ));
+            return true;
         }
     }
 }

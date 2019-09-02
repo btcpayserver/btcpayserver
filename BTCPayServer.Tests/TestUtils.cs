@@ -44,9 +44,9 @@ namespace BTCPayServer.Tests
             formFile.ContentDisposition = $"form-data; name=\"file\"; filename=\"{fileInfo.Name}\"";
             return formFile;
         }
-        public static void Eventually(Action act)
+        public static void Eventually(Action act, int ms = 200000)
         {
-            CancellationTokenSource cts = new CancellationTokenSource(20000);
+            CancellationTokenSource cts = new CancellationTokenSource(ms);
             while (true)
             {
                 try

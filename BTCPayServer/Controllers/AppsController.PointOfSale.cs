@@ -53,6 +53,7 @@ namespace BTCPayServer.Controllers
                     "  title: Fruit Tea\n" +
                     "  description: The Tibetan Himalayas, the land is majestic and beautiful—a spiritual place where, despite the perilous environment, many journey seeking enlightenment. Pay us what you want!\n" +
                     "  image: https://cdn.pixabay.com/photo/2016/09/16/11/24/darts-1673812__480.jpg\n" +
+                    "  inventory: 5\n" +
                     "  custom: true";
                 EnableShoppingCart = false;
                 ShowCustomAmount = true;
@@ -198,22 +199,11 @@ namespace BTCPayServer.Controllers
                 RedirectAutomatically = string.IsNullOrEmpty(vm.RedirectAutomatically)? (bool?) null: bool.Parse(vm.RedirectAutomatically)
                 
             });
-            await UpdateAppSettings(app);
+            await _AppService.UpdateOrCreateApp(app);
             StatusMessage = "App updated";
             return RedirectToAction(nameof(UpdatePointOfSale), new { appId });
         }
 
-        private async Task UpdateAppSettings(AppData app)
-        {
-            using (var ctx = _ContextFactory.CreateContext())
-            {
-                ctx.Apps.Add(app);
-                ctx.Entry<AppData>(app).State = EntityState.Modified;
-                ctx.Entry<AppData>(app).Property(a => a.Settings).IsModified = true;
-                ctx.Entry<AppData>(app).Property(a => a.TagAllInvoices).IsModified = true;
-                await ctx.SaveChangesAsync();
-            }
-        }
 
         private int[] ListSplit(string list, string separator = ",")
         {

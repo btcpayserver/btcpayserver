@@ -38,7 +38,7 @@ addLoadEvent(function (ev) {
         },
         computed: {
             canExpand: function(){
-                return !this.expanded && this.active && (this.perk.price.value || this.perk.custom)
+                return !this.expanded && this.active && (this.perk.price.value || this.perk.custom) && (this.perk.inventory==null || this.perk.inventory > 0)
             }
         },
         methods: {

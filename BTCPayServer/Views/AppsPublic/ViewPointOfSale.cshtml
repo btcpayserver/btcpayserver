@@ -6,6 +6,7 @@
     ViewData["Title"] = Model.Title;
     Layout = null;
     int[] CustomTipPercentages = Model.CustomTipPercentages;
+    var anyInventoryItems = Model.Items.Any(item => item.Inventory.HasValue);
 }
 
 <!DOCTYPE html>
@@ -42,10 +43,19 @@
             grid-gap: .5rem;
         }
 
-        .card-deck .card:only-of-type {
-            max-width: 320px;
-            margin: auto;
-        }
+            .card-deck .card:only-of-type {
+                max-width: 320px;
+                margin: auto;
+            }
+            
+            .js-cart-item-count::-webkit-inner-spin-button, 
+            .js-cart-item-count::-webkit-outer-spin-button { 
+                -webkit-appearance: none;
+                -moz-appearance: none;
+                appearance: none;
+                margin: 0; 
+            }
+            
     </style>
     @if (!string.IsNullOrEmpty(Model.EmbeddedCSS))
     {
@@ -55,7 +65,7 @@
 </head>
 
 <body class="h-100">
-    <script id="template-cart-item" type="text/template">
+<script id="template-cart-item" type="text/template">
         <tr data-id="{id}">
             {image}
             <td class="align-middle pr-0 pl-2"><b>{title}</b></td>
@@ -67,7 +77,7 @@
                     <div class="input-group-prepend">
                         <a class="js-cart-item-minus btn btn-link px-2" href="#"><i class="fa fa-minus-circle fa-fw text-danger"></i></a>
                     </div>
-                    <input class="js-cart-item-count form-control form-control-sm pull-left" type="text" name="count" placeholder="Qty" value="{count}" data-prev="{count}">
+                    <input class="js-cart-item-count form-control form-control-sm pull-left" type="number" step="1" name="count" placeholder="Qty" max="{inventory}"  value="{count}" data-prev="{count}">
                     <div class="input-group-append">
                         <a class="js-cart-item-plus btn btn-link px-2" href="#">
                             <i class="fa fa-plus-circle fa-fw text-success"></i>
@@ -287,7 +297,7 @@
                             var image = item.Image;
                             var description = item.Description;
 
-                            <div class="js-add-cart card my-2 card-wrapper" data-id="@index">
+                            <div class="js-add-cart card my-2 card-wrapper" data-index="@index">
                                 @if (!String.IsNullOrWhiteSpace(image))
                                 {
                                     @:<img class="card-img-top" src="@image" alt="Card image cap">
@@ -302,6 +312,23 @@
                                 <div class="card-footer pt-0 bg-transparent border-0">
 
                                     <span class="text-muted small">@String.Format(Model.ButtonText, @item.Price.Formatted)</span>
+                                     @if (item.Inventory.HasValue)
+                                     {
+                                    
+                                         <div class="w-100 pt-2 text-center text-muted">
+                                             @if (item.Inventory > 0)
+                                             {
+                                                 <span>@item.Inventory left</span>
+                                             }
+                                             else
+                                             {
+                                                 <span>Sold out</span>
+                                             }
+                                         </div>
+                                     }else if (anyInventoryItems)
+                                     {
+                                         <div class="w-100 pt-2">&nbsp</div>
+                                     }
                                 </div>
                             </div>
                         }
@@ -378,29 +405,51 @@
 
                             </div>
                             <div class="card-footer bg-transparent border-0">
-                                @if (item.Custom)
+                                @if (!item.Inventory.HasValue || item.Inventory.Value > 0)
                                 {
-                                    <form method="post" asp-controller="AppsPublic" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy>
-                                        <input type="hidden" name="choicekey" value="@item.Id" />
-                                        <div class="input-group">
-                                            <div class="input-group-prepend">
-                                                <span class="input-group-text">@Model.CurrencySymbol</span>
-                                            </div>
-                                            <input class="form-control" type="number" min="@item.Price.Value" step="@Model.Step" name="amount"
-                                                   value="@item.Price.Value" placeholder="Amount">
-                                            <div class="input-group-append">
-                                                <button class="btn btn-primary" type="submit">@Model.CustomButtonText</button>
-                                            </div>
-                                        </div>
-                                    </form>
+                                    <div class="w-100">
+                                        @if (item.Custom)
+                                        {
+                                            <form method="post" asp-controller="AppsPublic" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" data-buy>
+                                                <input type="hidden" name="choicekey" value="@item.Id"/>
+                                                <div class="input-group">
+                                                    <div class="input-group-prepend">
+                                                        <span class="input-group-text">@Model.CurrencySymbol</span>
+                                                    </div>
+                                                    <input class="form-control" type="number" min="@item.Price.Value" step="@Model.Step" name="amount"
+                                                           value="@item.Price.Value" placeholder="Amount">
+                                                    <div class="input-group-append">
+                                                        <button class="btn btn-primary" type="submit">@Model.CustomButtonText</button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <form method="post" asp-controller="AppsPublic" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false">
+                                                <button type="submit" name="choiceKey" class="js-add-cart btn btn-primary" value="@item.Id">
+                                                    @String.Format(Model.ButtonText, @item.Price.Formatted)
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
                                 }
-                                else
+                                @if (item.Inventory.HasValue)
                                 {
-                                    <form method="post" asp-controller="AppsPublic" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false">
-                                        <button type="submit" name="choiceKey" class="js-add-cart btn btn-primary" value="@item.Id">
-                                            @String.Format(Model.ButtonText, @item.Price.Formatted)
-                                        </button>
-                                    </form>
+
+                                    <div class="w-100 pt-2 text-center text-muted">
+                                        @if (item.Inventory > 0)
+                                        {
+                                            <span>@item.Inventory left</span>
+                                        }
+                                        else
+                                        {
+                                            <span>Sold out</span>
+                                        }
+                                    </div>
+                                }else if (anyInventoryItems)
+                                {
+                                    <div class="w-100 pt-2">&nbsp</div> 
                                 }
                             </div>
                         </div>
@@ -425,6 +474,10 @@
                                         </div>
                                     </div>
                                 </form>
+                                @if (anyInventoryItems)
+                                {
+                                    <div class="w-100 pt-2">&nbsp</div>
+                                }
                             </div>
                         </div>
                     }

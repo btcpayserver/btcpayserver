@@ -22,20 +22,20 @@ namespace BTCPayServer.Controllers
 {
     public class AppsPublicController : Controller
     {
-        public AppsPublicController(AppService AppService,
+        public AppsPublicController(AppService appService,
             BTCPayServerOptions btcPayServerOptions,
             InvoiceController invoiceController,
             UserManager<ApplicationUser> userManager)
         {
-            _AppService = AppService;
+            _AppService = appService;
             _BtcPayServerOptions = btcPayServerOptions;
             _InvoiceController = invoiceController;
             _UserManager = userManager;
         }
 
-        private AppService _AppService;
+        private readonly AppService _AppService;
         private readonly BTCPayServerOptions _BtcPayServerOptions;
-        private InvoiceController _InvoiceController;
+        private readonly InvoiceController _InvoiceController;
         private readonly UserManager<ApplicationUser> _UserManager;
 
         [HttpGet]
@@ -128,13 +128,6 @@ namespace BTCPayServer.Controllers
                     {
                         return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
                     }
-                    else
-                    {
-                        choice.Inventory--;
-                        settings.Template = _AppService.SerializeTemplate(choices);
-                        app.SetSettings(settings);
-                        await _AppService.UpdateOrCreateApp(app);   
-                    }
                 }
             }
             else
@@ -144,7 +137,7 @@ namespace BTCPayServer.Controllers
                 price = amount;
                 title = settings.Title;
                 
-                //if cart IS enabled and we detect posdata that matches the cart system's, handle inventory for the items
+                //if cart IS enabled and we detect posdata that matches the cart system's, check inventory for the items
                 if (!string.IsNullOrEmpty(posData) && 
                     settings.EnableShoppingCart && 
                     AppService.TryParsePosCartItems(posData, out var cartItems))
@@ -163,22 +156,11 @@ namespace BTCPayServer.Controllers
                             switch (itemChoice.Inventory)
                             {
                                 case int i when i <= 0:
-                                    return RedirectToAction(nameof(ViewPointOfSale), new {appId = appId});
+                                    return RedirectToAction(nameof(ViewPointOfSale), new {appId});
                                 case int inventory when inventory < cartItem.Value:
-                                    return RedirectToAction(nameof(ViewPointOfSale), new {appId = appId});
-                                default:
-                                    itemChoice.Inventory -= cartItem.Value;
-                                    updateNeeded = true;
-                                    break;
+                                    return RedirectToAction(nameof(ViewPointOfSale), new {appId});
                             }
                         }
-                    }
-
-                    if (updateNeeded)
-                    {
-                        settings.Template = _AppService.SerializeTemplate(choices);
-                        app.SetSettings(settings);
-                        await _AppService.UpdateOrCreateApp(app);
                     }
                 }
             }
@@ -291,13 +273,6 @@ namespace BTCPayServer.Controllers
                     if (choice.Inventory <= 0)
                     {
                         return NotFound("Option was out of stock");
-                    }
-                    else
-                    {
-                        choice.Inventory--;
-                        settings.PerksTemplate = _AppService.SerializeTemplate(choices);
-                        app.SetSettings(settings);
-                        await _AppService.UpdateOrCreateApp(app);   
                     }
                 }
             }

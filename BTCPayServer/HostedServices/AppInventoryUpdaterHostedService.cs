@@ -18,7 +18,6 @@ namespace BTCPayServer.HostedServices
             Subscribe<InvoiceEvent>();
         }
 
-
         public AppInventoryUpdaterHostedService(EventAggregator eventAggregator, AppService appService) : base(
             eventAggregator)
         {
@@ -30,8 +29,23 @@ namespace BTCPayServer.HostedServices
             if (evt is InvoiceEvent invoiceEvent)
             {
                 Dictionary<string, int> cartItems = null;
-                if (new[] {InvoiceEvent.Expired, InvoiceEvent.MarkedInvalid}.Contains(invoiceEvent.Name) &&
-                    (!string.IsNullOrEmpty(invoiceEvent.Invoice.ProductInformation.ItemCode) ||
+                bool deduct;
+                switch (invoiceEvent.Name)
+                {
+                    case InvoiceEvent.Expired:
+
+                    case InvoiceEvent.MarkedInvalid:
+                        deduct = false;
+                        break;
+                    case InvoiceEvent.Created:
+                        deduct = true;
+                        break;
+                    default:
+                        return;
+                }
+
+                
+                if ((!string.IsNullOrEmpty(invoiceEvent.Invoice.ProductInformation.ItemCode) ||
                      AppService.TryParsePosCartItems(invoiceEvent.Invoice.PosData, out cartItems)))
                 {
                     var appIds = AppService.GetAppInternalTags(invoiceEvent.Invoice);
@@ -71,12 +85,27 @@ namespace BTCPayServer.HostedServices
                         {
                             if (cartItems != null && cartItems.ContainsKey(item1.Id))
                             {
-                                item1.Inventory += cartItems[item1.Id];
+                                if (deduct)
+                                {
+                                    item1.Inventory -= cartItems[item1.Id];
+                                }
+                                else
+                                {
+                                    item1.Inventory += cartItems[item1.Id];
+                                }
+                                
                             }
                             else if (!string.IsNullOrEmpty(invoiceEvent.Invoice.ProductInformation.ItemCode) &&
                                      item1.Id == invoiceEvent.Invoice.ProductInformation.ItemCode)
                             {
-                                item1.Inventory++;
+                                if (deduct)
+                                {
+                                    item1.Inventory--;
+                                }
+                                else
+                                {
+                                    item1.Inventory++;
+                                }
                             }
                         }
 

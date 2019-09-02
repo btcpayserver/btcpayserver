@@ -86,7 +86,7 @@ namespace BTCPayServer.Controllers
                 Uri.TryCreate(invoice.NotificationURL, UriKind.Absolute, out var notificationUri) &&
                 (notificationUri.Scheme == "http" || notificationUri.Scheme == "https"))
             {
-                entity.NotificationURL = notificationUri.AbsoluteUri;
+                entity.NotificationURLTemplate = notificationUri.AbsoluteUri;
             }
             entity.NotificationEmail = invoice.NotificationEmail;
             entity.BuyerInformation = Map<CreateInvoiceRequest, BuyerInformation>(invoice);
@@ -119,9 +119,9 @@ namespace BTCPayServer.Controllers
             entity.ProductInformation = Map<CreateInvoiceRequest, ProductInformation>(invoice);
 
 
-            entity.RedirectURL = invoice.RedirectURL ?? store.StoreWebsite;
+            entity.RedirectURLTemplate = invoice.RedirectURL ?? store.StoreWebsite;
             if (!Uri.IsWellFormedUriString(entity.RedirectURL, UriKind.Absolute))
-                entity.RedirectURL = null;
+                entity.RedirectURLTemplate = null;
 
             entity.RedirectAutomatically =
                 invoice.RedirectAutomatically.GetValueOrDefault(storeBlob.RedirectAutomatically);

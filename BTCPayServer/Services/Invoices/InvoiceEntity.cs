@@ -289,12 +289,22 @@ namespace BTCPayServer.Services.Invoices
             get;
             set;
         }
-        public string RedirectURL
+        [JsonProperty("redirectURL")]
+        public string RedirectURLTemplate
         {
             get;
             set;
         }
-        
+
+        [JsonIgnore]
+        public string RedirectURL => FillPlaceholders(RedirectURLTemplate);
+
+        private string FillPlaceholders(string v)
+        {
+            return (v ?? string.Empty).Replace("{OrderId}", OrderId ?? "", StringComparison.OrdinalIgnoreCase)
+                                     .Replace("{InvoiceId}", Id ?? "", StringComparison.OrdinalIgnoreCase);
+        }
+
         public bool RedirectAutomatically
         {
             get;
@@ -317,11 +327,16 @@ namespace BTCPayServer.Services.Invoices
             get;
             set;
         }
-        public string NotificationURL
+
+        [JsonProperty("notificationURL")]
+        public string NotificationURLTemplate
         {
             get;
             set;
         }
+
+        [JsonIgnore]
+        public string NotificationURL => FillPlaceholders(NotificationURLTemplate);
         public string ServerUrl
         {
             get;

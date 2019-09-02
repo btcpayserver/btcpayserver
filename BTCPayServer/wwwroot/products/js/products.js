@@ -9,8 +9,21 @@ function Products() {
 }
 
 Products.prototype.loadFromTemplate = function() {
-    var template = $('.js-product-template').val().trim(),
-        lines = template.split("\n\n");
+    var template = $('.js-product-template').val().trim();
+    
+    var lines = [];
+    var items = template.split("\n");
+    for (var i = 0; i < items.length; i++) {
+        if(items[i] === ""){
+            continue;
+        }
+        if(items[i].startsWith("  ")){
+            lines[lines.length-1]+=items[i] + "\n";
+        }else{
+           
+            lines.push(items[i] + "\n");
+        }
+    }
 
     this.products = [];
 

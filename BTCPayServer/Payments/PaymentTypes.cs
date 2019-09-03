@@ -64,7 +64,7 @@ namespace BTCPayServer.Payments
 
         public abstract string GetId();
         public abstract string SerializePaymentData(BTCPayNetworkBase network, CryptoPaymentData paymentData);
-        public abstract CryptoPaymentData DeserializePaymentData(string str, params object[] additionalData);
+        public abstract CryptoPaymentData DeserializePaymentData(string str, BTCPayNetworkBase network);
         public abstract IPaymentMethodDetails DeserializePaymentMethodDetails(string str);
         public abstract ISupportedPaymentMethod DeserializeSupportedPaymentMethod(BTCPayNetworkProvider networkProvider, PaymentMethodId paymentMethodId, JToken value);
 

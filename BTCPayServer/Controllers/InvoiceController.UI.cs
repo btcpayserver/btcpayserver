@@ -176,16 +176,17 @@ namespace BTCPayServer.Controllers
                 paymentMethodId = store.GetDefaultPaymentId(_NetworkProvider);
                 isDefaultPaymentId = true;
             }
-            BTCPayNetworkBase network = _NetworkProvider.GetNetwork<BTCPayNetworkBase>(paymentMethodId.CryptoCode);
-            if (network == null && isDefaultPaymentId)
+            if (!paymentMethodId.PaymentType.IsAvailable(paymentMethodId, _NetworkProvider) && isDefaultPaymentId)
             {
-                //TODO: need to look into a better way for this as it does not scale
-                network = _NetworkProvider.GetAll().OfType<BTCPayNetwork>().FirstOrDefault();
-                paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
+                paymentMethodId = new PaymentMethodId(_NetworkProvider.GetAll().OfType<BTCPayNetwork>().FirstOrDefault().CryptoCode, PaymentTypes.BTCLike);
             }
-            if (invoice == null || network == null)
+            if (invoice == null)
                 return null;
-            if (!invoice.Support(paymentMethodId))
+            
+            var paymentMethodHandler = paymentMethodId.PaymentType.GetPaymentMethodHandler(_paymentMethodHandlerDictionary, paymentMethodId);
+            
+            var paymentMethod = paymentMethodHandler.GetPaymentMethodInInvoice(invoice, paymentMethodId);
+            if (paymentMethod == null)
             {
                 if (!isDefaultPaymentId)
                     return null;
@@ -194,38 +195,19 @@ namespace BTCPayServer.Controllers
                                                .FirstOrDefault();
                 if (paymentMethodTemp == null)
                     paymentMethodTemp = invoice.GetPaymentMethods().First();
-                network = paymentMethodTemp.Network;
                 paymentMethodId = paymentMethodTemp.GetId();
+                paymentMethod = invoice.GetPaymentMethod(paymentMethodId);
+                paymentMethodHandler = paymentMethodId.PaymentType.GetPaymentMethodHandler(_paymentMethodHandlerDictionary, paymentMethodId);
             }
 
-            var paymentMethod = invoice.GetPaymentMethod(paymentMethodId);
             var paymentMethodDetails = paymentMethod.GetPaymentMethodDetails();
             var dto = invoice.EntityToDTO();
-            var cryptoInfo = dto.CryptoInfo.First(o => o.GetpaymentMethodId() == paymentMethodId);
             var storeBlob = store.GetStoreBlob();
-            var currency = invoice.ProductInformation.Currency;
             var accounting = paymentMethod.Calculate();
-
-            ChangellySettings changelly = (storeBlob.ChangellySettings != null && storeBlob.ChangellySettings.Enabled &&
-                                           storeBlob.ChangellySettings.IsConfigured())
-                ? storeBlob.ChangellySettings
-                : null;
-
-            CoinSwitchSettings coinswitch = (storeBlob.CoinSwitchSettings != null && storeBlob.CoinSwitchSettings.Enabled &&
-                                           storeBlob.CoinSwitchSettings.IsConfigured())
-                ? storeBlob.CoinSwitchSettings
-                : null;
-
-
-            var changellyAmountDue = changelly != null
-                ? (accounting.Due.ToDecimal(MoneyUnit.BTC) *
-                   (1m + (changelly.AmountMarkupPercentage / 100m)))
-                : (decimal?)null;
-
-            var paymentMethodHandler = _paymentMethodHandlerDictionary[paymentMethodId];
+            
             var model = new PaymentModel()
             {
-                CryptoCode = network.CryptoCode,
+                CryptoCode = paymentMethodId.CryptoCode,
                 RootPath = this.Request.PathBase.Value.WithTrailingSlash(),
                 OrderId = invoice.OrderId,
                 InvoiceId = invoice.Id,
@@ -237,7 +219,7 @@ namespace BTCPayServer.Controllers
                 BtcAddress = paymentMethodDetails.GetPaymentDestination(),
                 BtcDue = accounting.Due.ToString(),
                 OrderAmount = (accounting.TotalDue - accounting.NetworkFee).ToString(),
-                OrderAmountFiat = OrderAmountFromInvoice(network.CryptoCode, invoice.ProductInformation),
+                OrderAmountFiat = OrderAmountFromInvoice(paymentMethodId.CryptoCode, invoice.ProductInformation),
                 CustomerEmail = invoice.RefundMail,
                 RequiresRefundEmail = storeBlob.RequiresRefundEmail,
                 ShowRecommendedFee = storeBlob.ShowRecommendedFee,
@@ -258,20 +240,19 @@ namespace BTCPayServer.Controllers
 #pragma warning restore CS0618 // Type or member is obsolete
                 NetworkFee = paymentMethodDetails.GetNextNetworkFee(),
                 IsMultiCurrency = invoice.GetPayments().Select(p => p.GetPaymentMethodId()).Concat(new[] { paymentMethod.GetId() }).Distinct().Count() > 1,
-                ChangellyEnabled = changelly != null,
-                ChangellyMerchantId = changelly?.ChangellyMerchantId,
-                ChangellyAmountDue = changellyAmountDue,
-                CoinSwitchEnabled = coinswitch != null,
-                CoinSwitchAmountMarkupPercentage = coinswitch?.AmountMarkupPercentage ?? 0,
-                CoinSwitchMerchantId = coinswitch?.MerchantId,
-                CoinSwitchMode = coinswitch?.Mode,
                 StoreId = store.Id,
                 AvailableCryptos = invoice.GetPaymentMethods()
-                                          .Where(i => i.Network != null)
+                                          .Where(i =>
+                                          {
+                                              var pid = i.GetId();
+                                              return pid.PaymentType.IsAvailable(pid, _NetworkProvider);
+                                          })
                                           .Select(kv =>
                                           {
                                               var availableCryptoPaymentMethodId = kv.GetId();
-                                              var availableCryptoHandler = _paymentMethodHandlerDictionary[availableCryptoPaymentMethodId];
+                                              var availableCryptoHandler =
+                                                  availableCryptoPaymentMethodId.PaymentType.GetPaymentMethodHandler(
+                                                      _paymentMethodHandlerDictionary, availableCryptoPaymentMethodId);
                                               return new PaymentModel.AvailableCrypto()
                                               {
                                                   PaymentMethodId = kv.GetId().ToString(),
@@ -292,7 +273,7 @@ namespace BTCPayServer.Controllers
                                           .ToList()
             };
 
-            paymentMethodHandler.PreparePaymentModel(model, dto, storeBlob);
+            paymentMethodHandler.PreparePaymentModel(model, dto, storeBlob, accounting);
             if (model.IsLightning && storeBlob.LightningAmountInSatoshi && model.CryptoCode == "Sats")
             {
                 model.Rate = _CurrencyNameTable.DisplayFormatCurrency(paymentMethod.Rate / 100_000_000, paymentMethod.ParentEntity.ProductInformation.Currency);

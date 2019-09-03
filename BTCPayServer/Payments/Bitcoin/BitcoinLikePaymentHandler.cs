@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
+using BTCPayServer.Payments.Changelly;
+using BTCPayServer.Payments.CoinSwitch;
 using BTCPayServer.Rating;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
@@ -39,8 +41,11 @@ namespace BTCPayServer.Payments.Bitcoin
             public Task<KeyPathInformation> ReserveAddress;
         }
 
-        public override void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse,
-            StoreBlob storeBlob)
+        public override void PreparePaymentModel(
+            PaymentModel model, 
+            InvoiceResponse invoiceResponse,
+            StoreData storeData,
+            StoreBlob storeBlob, PaymentMethodAccounting accounting)
         {
             var paymentMethodId = new PaymentMethodId(model.CryptoCode, PaymentTypes.BTCLike);
 
@@ -50,6 +55,9 @@ namespace BTCPayServer.Payments.Bitcoin
             model.PaymentMethodName = GetPaymentMethodName(network);
             model.InvoiceBitcoinUrl = cryptoInfo.PaymentUrls.BIP21;
             model.InvoiceBitcoinUrlQR = cryptoInfo.PaymentUrls.BIP21;
+
+            model.PreparePaymentModelWithChangelly(storeBlob, accounting);
+            model.PreparePaymentModelWithCoinswitch(storeBlob, accounting);
         }
 
         public override string GetCryptoImage(PaymentMethodId paymentMethodId)

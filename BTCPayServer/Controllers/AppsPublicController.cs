@@ -143,7 +143,6 @@ namespace BTCPayServer.Controllers
                     settings.EnableShoppingCart && 
                     AppService.TryParsePosCartItems(posData, out var cartItems))
                 {
-                        
                     var choices = _AppService.Parse(settings.Template, settings.Currency);
                     foreach (var cartItem in cartItems)
                     {

@@ -10,6 +10,7 @@ using BTCPayServer.Events;
 using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Payments;
+using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Rating;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
@@ -20,6 +21,7 @@ using BTCPayServer.Services.Wallets;
 using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Internal;
 using NBitcoin;
 using NBitpayClient;
 using Newtonsoft.Json;
@@ -134,18 +136,9 @@ namespace BTCPayServer.Controllers
                                                  PaymentFilter.Where(p => !supportedTransactionCurrencies.Contains(p)));
             }
 
-            foreach (var network in store.GetSupportedPaymentMethods(_NetworkProvider)
-                                                .Where(s => !excludeFilter.Match(s.PaymentId))
-                                                .Select(c => _NetworkProvider.GetNetwork<BTCPayNetworkBase>(c.PaymentId.CryptoCode))
-                                                .Where(c => c != null))
-            {
-                currencyPairsToFetch.Add(new CurrencyPair(network.CryptoCode, invoice.Currency));
-                //TODO: abstract
-                if (storeBlob.LightningMaxValue != null)
-                    currencyPairsToFetch.Add(new CurrencyPair(network.CryptoCode, storeBlob.LightningMaxValue.Currency));
-                if (storeBlob.OnChainMinValue != null)
-                    currencyPairsToFetch.Add(new CurrencyPair(network.CryptoCode, storeBlob.OnChainMinValue.Currency));
-            }
+            currencyPairsToFetch.AddRange(store.GetSupportedPaymentMethods(_NetworkProvider)
+                .Where(s => !excludeFilter.Match(s.PaymentId))
+                .SelectMany(method => method.PaymentId.PaymentType.GetCurrencyPairs( method, invoice.Currency, storeBlob)));
 
             var rateRules = storeBlob.GetRateRules(_NetworkProvider);
             var fetchingByCurrencyPair = _RateProvider.FetchRates(currencyPairsToFetch, rateRules, cancellationToken);
@@ -156,11 +149,10 @@ namespace BTCPayServer.Controllers
                                                 (Handler: _paymentMethodHandlerDictionary[c.PaymentId],
                                                 SupportedPaymentMethod: c,
                                                 Network: _NetworkProvider.GetNetwork<BTCPayNetworkBase>(c.PaymentId.CryptoCode)))
-                                                .Where(c => c.Network != null)
-                                                .Select(o =>
+                                               .Select(o =>
                                                     (SupportedPaymentMethod: o.SupportedPaymentMethod,
                                                     PaymentMethod: CreatePaymentMethodAsync(fetchingByCurrencyPair, o.Handler, o.SupportedPaymentMethod, o.Network, entity, store, logs)))
-                                                .ToList();
+                                               .ToList();
             List<ISupportedPaymentMethod> supported = new List<ISupportedPaymentMethod>();
             var paymentMethods = new PaymentMethodDictionary();
             foreach (var o in supportedPaymentMethods)
@@ -239,7 +231,16 @@ namespace BTCPayServer.Controllers
                 var logPrefix = $"{supportedPaymentMethod.PaymentId.ToPrettyString()}:";
                 var storeBlob = store.GetStoreBlob();
                 var preparePayment = handler.PreparePayment(supportedPaymentMethod, store, network);
-                var rate = await fetchingByCurrencyPair[new CurrencyPair(network.CryptoCode, entity.ProductInformation.Currency)];
+                var currencyPairs = supportedPaymentMethod.PaymentId.PaymentType.GetCurrencyPairs(supportedPaymentMethod,
+                    entity.ProductInformation.Currency, storeBlob);
+                var matchingCurrencyPairs = fetchingByCurrencyPair
+                    .Where(pair => currencyPairs.Contains(pair.Key));
+                if (!matchingCurrencyPairs.Any())
+                {
+                    return null;
+                }
+
+                var rate = await matchingCurrencyPairs.First().Value;
                 if (rate.BidAsk == null)
                 {
                     return null;
@@ -253,7 +254,7 @@ namespace BTCPayServer.Controllers
 
                 using (logs.Measure($"{logPrefix} Payment method details creation"))
                 {
-                    var paymentDetails = await handler.CreatePaymentMethodDetails(supportedPaymentMethod, paymentMethod, store, network, preparePayment);
+                    var paymentDetails = await handler.CreatePaymentMethodDetails(supportedPaymentMethod, paymentMethod, entity.ProductInformation.Currency, store, network, preparePayment);
                     paymentMethod.SetPaymentMethodDetails(paymentDetails);
                 }
 

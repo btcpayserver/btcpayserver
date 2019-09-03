@@ -85,16 +85,14 @@ namespace BTCPayServer.Data
                 foreach (var strat in strategies.Properties())
                 {
                     var paymentMethodId = PaymentMethodId.Parse(strat.Name);
-                    var network = networks.GetNetwork<BTCPayNetworkBase>(paymentMethodId.CryptoCode);
-                    if (network != null)
+                    var supportedPaymentMethod = paymentMethodId.PaymentType.DeserializeSupportedPaymentMethod(networks, paymentMethodId,
+                        strat.Value);
+
+                    if (supportedPaymentMethod == null || (supportedPaymentMethod.PaymentId.IsBTCOnChain && btcReturned))
                     {
-                        if (network == networks.BTC && paymentMethodId.PaymentType == PaymentTypes.BTCLike && btcReturned)
-                            continue;
-                        if (strat.Value.Type == JTokenType.Null)
-                            continue;
-                        yield return
-                            paymentMethodId.PaymentType.DeserializeSupportedPaymentMethod(network, strat.Value);
+                        continue;
                     }
+                    yield return  supportedPaymentMethod;
                 }
             }
 #pragma warning restore CS0618

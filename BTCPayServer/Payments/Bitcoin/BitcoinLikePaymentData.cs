@@ -6,6 +6,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Services.Invoices;
 using NBitcoin;
 using Newtonsoft.Json;
+using SpeedPolicy = BTCPayServer.Data.SpeedPolicy;
 
 namespace BTCPayServer.Payments.Bitcoin
 {

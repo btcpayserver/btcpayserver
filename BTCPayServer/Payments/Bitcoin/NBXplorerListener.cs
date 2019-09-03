@@ -162,7 +162,7 @@ namespace BTCPayServer.Payments.Bitcoin
                                             var alreadyExist = GetAllBitcoinPaymentData(invoice).Where(c => c.GetPaymentId() == paymentData.GetPaymentId()).Any();
                                             if (!alreadyExist)
                                             {
-                                                var payment = await _InvoiceRepository.AddPayment(invoice.Id, DateTimeOffset.UtcNow, paymentData, network);
+                                                var payment = await _InvoiceRepository.AddPayment(invoice.Id, DateTimeOffset.UtcNow, paymentData, network.CryptoCode, network);
                                                 if(payment != null)
                                                     await ReceivedPayment(wallet, invoice, payment, evt.DerivationStrategy);
                                             }
@@ -217,7 +217,7 @@ namespace BTCPayServer.Payments.Bitcoin
                     .Select(p => p.Outpoint.Hash)
                     .ToArray());
             var conflicts = GetConflicts(transactions.Select(t => t.Value));
-            foreach (var payment in invoice.GetPayments(wallet.Network))
+            foreach (var payment in invoice.GetPayments(wallet.Network.CryptoCode))
             {
                 if (payment.GetPaymentMethodId().PaymentType != PaymentTypes.BTCLike)
                     continue;
@@ -338,6 +338,15 @@ namespace BTCPayServer.Payments.Bitcoin
                              .ToArray();
                 foreach (var coin in coins.Where(c => !alreadyAccounted.Contains(c.OutPoint)))
                 {
+                
+                
+                
+                //{
+                    var transaction = await wallet.GetTransactionAsync(coin.Coin.Outpoint.Hash);
+                    var paymentData = new BitcoinLikePaymentData(coin.Coin.TxOut, coin.Coin.Outpoint, transaction.Transaction.RBF);
+                    var payment = await _InvoiceRepository.AddPayment(invoice.Id, coin.Timestamp, paymentData, network.CryptoCode, network).ConfigureAwait(false);
+                    alreadyAccounted.Add(coin.Coin.Outpoint);//
+                
                     var transaction = await wallet.GetTransactionAsync(coin.OutPoint.Hash);
                     
                     var address = network.NBXplorerNetwork.CreateAddress(strategy, coin.KeyPath, coin.ScriptPubKey);
@@ -371,7 +380,7 @@ namespace BTCPayServer.Payments.Bitcoin
             invoice = (await UpdatePaymentStates(wallet, invoice.Id));
             if (invoice == null)
                 return null;
-            var paymentMethod = invoice.GetPaymentMethod(wallet.Network, PaymentTypes.BTCLike);
+            var paymentMethod = invoice.GetPaymentMethod(wallet.Network.CryptoCode, PaymentTypes.BTCLike);
             if (paymentMethod != null &&
                 paymentMethod.GetPaymentMethodDetails() is BitcoinLikeOnChainPaymentMethod btc &&
                 btc.GetDepositAddress(wallet.Network.NBitcoinNetwork).ScriptPubKey == paymentData.ScriptPubKey &&

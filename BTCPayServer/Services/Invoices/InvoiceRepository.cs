@@ -179,11 +179,13 @@ retry:
 
                 foreach (var paymentMethod in invoice.GetPaymentMethods())
                 {
-                    if (paymentMethod.Network == null)
-                        throw new InvalidOperationException("CryptoCode unsupported");
                     var paymentDestination = paymentMethod.GetPaymentMethodDetails().GetPaymentDestination();
 
                     string address = GetDestination(paymentMethod);
+                    if (string.IsNullOrEmpty(address))
+                    {
+                        continue;
+                    }
                     context.AddressInvoices.Add(new AddressInvoiceData()
                     {
                         InvoiceDataId = invoice.Id,
@@ -253,7 +255,7 @@ retry:
                     return false;
 
                 var invoiceEntity = ToObject(invoice.Blob);
-                var currencyData = invoiceEntity.GetPaymentMethod(network, paymentMethod.GetPaymentType());
+                var currencyData = invoiceEntity.GetPaymentMethod(network.CryptoCode, paymentMethod.GetPaymentType());
                 if (currencyData == null)
                     return false;
 
@@ -668,7 +670,7 @@ retry:
         /// <param name="cryptoCode"></param>
         /// <param name="accounted"></param>
         /// <returns>The PaymentEntity or null if already added</returns>
-        public async Task<PaymentEntity> AddPayment(string invoiceId, DateTimeOffset date, CryptoPaymentData paymentData, BTCPayNetworkBase network, bool accounted = false)
+        public async Task<PaymentEntity> AddPayment(string invoiceId, DateTimeOffset date, CryptoPaymentData paymentData, string cryptoCode, BTCPayNetworkBase network, bool accounted = false)
         {
             using (var context = _ContextFactory.CreateContext())
             {
@@ -676,13 +678,13 @@ retry:
                 if (invoice == null)
                     return null;
                 InvoiceEntity invoiceEntity = ToObject(invoice.Blob);
-                PaymentMethod paymentMethod = invoiceEntity.GetPaymentMethod(new PaymentMethodId(network.CryptoCode, paymentData.GetPaymentType()));
+                PaymentMethod paymentMethod = invoiceEntity.GetPaymentMethod(new PaymentMethodId(cryptoCode, paymentData.GetPaymentType()));
                 IPaymentMethodDetails paymentMethodDetails = paymentMethod.GetPaymentMethodDetails();
                 PaymentEntity entity = new PaymentEntity
                 {
                     Version = 1,
 #pragma warning disable CS0618
-                    CryptoCode = network.CryptoCode,
+                    CryptoCode = cryptoCode,
 #pragma warning restore CS0618
                     ReceivedTime = date.UtcDateTime,
                     Accounted = accounted,

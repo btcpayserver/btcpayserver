@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Data;
+using BTCPayServer.Models;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Rating;
 using BTCPayServer.Services.Invoices;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -19,11 +22,14 @@ namespace BTCPayServer.Payments
 
         public override string ToPrettyString() => "Off-Chain";
         public override string GetId() => "LightningLike";
-        public override CryptoPaymentData DeserializePaymentData(BTCPayNetworkBase network, string str)
-        {
-            return ((BTCPayNetwork) network).ToObject<LightningLikePaymentData>(str);
-        }
 
+
+        public override CryptoPaymentData DeserializePaymentData(string str, params object[] additionalData)
+        {
+            var result = JsonConvert.DeserializeObject<LightningLikePaymentData>(str);
+            result.Network = (BTCPayNetwork)additionalData[0];
+            return result;
+        }
         public override string SerializePaymentData(BTCPayNetworkBase network, CryptoPaymentData paymentData)
         {
             return ((BTCPayNetwork) network).ToString(paymentData);
@@ -34,7 +40,7 @@ namespace BTCPayServer.Payments
             return JsonConvert.DeserializeObject<Payments.Lightning.LightningLikePaymentMethodDetails>(str);
         }
 
-        public override ISupportedPaymentMethod DeserializeSupportedPaymentMethod(BTCPayNetworkBase network, JToken value)
+        public override ISupportedPaymentMethod DeserializeSupportedPaymentMethod(BTCPayNetworkProvider networkProvider, PaymentMethodId paymentMethodId, JToken value)
         {
             return JsonConvert.DeserializeObject<LightningSupportedPaymentMethod>(value.ToString());
         }
@@ -44,5 +50,15 @@ namespace BTCPayServer.Payments
             return null;
         }
         public override string InvoiceViewPaymentPartialName { get; } = "ViewLightningLikePaymentData";
+
+        public override IEnumerable<CurrencyPair> GetCurrencyPairs(ISupportedPaymentMethod supportedPaymentMethod,
+            string targetCurrencyCode, StoreBlob storeBlob)
+        {
+            var result = new List<CurrencyPair> {new CurrencyPair(supportedPaymentMethod.PaymentId.CryptoCode, targetCurrencyCode)};
+
+            if (storeBlob.LightningMaxValue != null)
+                result.Add(new CurrencyPair(supportedPaymentMethod.PaymentId.CryptoCode, storeBlob.LightningMaxValue.Currency));
+            return result;
+        }
     }
 }

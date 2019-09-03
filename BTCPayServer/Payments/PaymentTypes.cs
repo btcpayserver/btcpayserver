@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using BTCPayServer.Services.Altcoins.Monero.Payments;
+using BTCPayServer.Data;
+using BTCPayServer.Models;
+using BTCPayServer.Rating;
+using BTCPayServer.Shitcoins.Monero.Payments;
 using BTCPayServer.Services.Invoices;
 using Newtonsoft.Json.Linq;
 
@@ -60,12 +63,24 @@ namespace BTCPayServer.Payments
         }
 
         public abstract string GetId();
-        public abstract CryptoPaymentData DeserializePaymentData(BTCPayNetworkBase network, string str);
         public abstract string SerializePaymentData(BTCPayNetworkBase network, CryptoPaymentData paymentData);
+        public abstract CryptoPaymentData DeserializePaymentData(string str, params object[] additionalData);
         public abstract IPaymentMethodDetails DeserializePaymentMethodDetails(string str);
-        public abstract ISupportedPaymentMethod DeserializeSupportedPaymentMethod(BTCPayNetworkBase network, JToken value);
+        public abstract ISupportedPaymentMethod DeserializeSupportedPaymentMethod(BTCPayNetworkProvider networkProvider, PaymentMethodId paymentMethodId, JToken value);
 
         public abstract string GetTransactionLink(BTCPayNetworkBase network, string txId);
         public abstract string InvoiceViewPaymentPartialName { get; }
+        public abstract IEnumerable<CurrencyPair> GetCurrencyPairs(ISupportedPaymentMethod supportedPaymentMethod,
+            string targetCurrencyCode, StoreBlob blob);
+
+        public virtual bool IsAvailable(PaymentMethodId paymentMethodId, BTCPayNetworkProvider networkProvider)
+        {
+            return networkProvider.Support(paymentMethodId.CryptoCode);
+        }
+
+        public virtual IPaymentMethodHandler GetPaymentMethodHandler(PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,  PaymentMethodId paymentMethodId)
+        {
+            return paymentMethodHandlerDictionary[paymentMethodId];
+        }
     }
 }

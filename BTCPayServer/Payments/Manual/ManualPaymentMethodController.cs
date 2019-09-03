@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Filters;
-using BTCPayServer.Models;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
@@ -24,18 +24,16 @@ namespace BTCPayServer.Payments.Bitcoin
         private readonly UserManager<ApplicationUser> _UserManager;
         private readonly StoreRepository _StoreRepository;
         private readonly InvoiceRepository _InvoiceRepository;
-        private readonly BTCPayNetworkProvider _BtcPayNetworkProvider;
         private readonly EventAggregator _EventAggregator;
         private readonly SignInManager<ApplicationUser> _SignInManager;
 
         public ManualPaymentMethodController(UserManager<ApplicationUser> userManager, StoreRepository storeRepository,
-            InvoiceRepository invoiceRepository, BTCPayNetworkProvider btcPayNetworkProvider,
+            InvoiceRepository invoiceRepository,
             EventAggregator eventAggregator, SignInManager<ApplicationUser> signInManager)
         {
             _UserManager = userManager;
             _StoreRepository = storeRepository;
             _InvoiceRepository = invoiceRepository;
-            _BtcPayNetworkProvider = btcPayNetworkProvider;
             _EventAggregator = eventAggregator;
             _SignInManager = signInManager;
         }
@@ -60,8 +58,9 @@ namespace BTCPayServer.Payments.Bitcoin
                     return Forbid();
                 }
 
-                
-                var currentDue = invoice.GetPaymentMethod(invoice.ProductInformation.Currency, ManualPaymentType.Instance).Calculate().Due;
+
+                var currentDue = invoice
+                    .GetPaymentMethod(invoice.ProductInformation.Currency, ManualPaymentType.Instance).Calculate().Due;
                 var payment = await _InvoiceRepository.AddPayment(model.InvoiceId, DateTimeOffset.Now,
                     new ManualPaymentData()
                     {
@@ -92,13 +91,14 @@ namespace BTCPayServer.Payments.Bitcoin
         [HttpPost("confirm-payment")]
         public async Task<IActionResult> ConfirmPayment(ConfirmPaymentRequest model)
         {
-
-            var matchedPaymentIdInvoices = await _InvoiceRepository.GetInvoices(new InvoiceQuery() {TextSearch = model.PaymentId});
+            var matchedPaymentIdInvoices =
+                await _InvoiceRepository.GetInvoices(new InvoiceQuery() {TextSearch = model.PaymentId});
             var invoice = matchedPaymentIdInvoices.FirstOrDefault();
             if (invoice == null)
             {
                 return NotFound();
             }
+
             var manualPayment = invoice.GetSupportedPaymentMethod<ManualPaymentSettings>().FirstOrDefault();
             if (manualPayment == null)
             {

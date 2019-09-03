@@ -6,6 +6,7 @@ using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Configuration;
+using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.ModelBinders;
 using BTCPayServer.Models;

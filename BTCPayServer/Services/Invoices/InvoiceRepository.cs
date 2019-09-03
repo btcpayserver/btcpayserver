@@ -661,6 +661,12 @@ retry:
             AddToTextSearch(invoiceId, addresses.Select(a => a.ToString()).ToArray());
         }
 
+        public Task<PaymentEntity> AddPayment(string invoiceId, DateTimeOffset date,
+            CryptoPaymentData paymentData, BTCPayNetworkBase network, bool accounted = false)
+        {
+            return AddPayment(invoiceId,date,paymentData, network.CryptoCode, network, accounted);
+        }
+        
         /// <summary>
         /// Add a payment to an invoice
         /// </summary>

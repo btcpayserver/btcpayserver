@@ -39,6 +39,12 @@ namespace BTCPayServer.Payments
             return JsonConvert.DeserializeObject<Payments.Lightning.LightningLikePaymentMethodDetails>(str);
         }
 
+        public override ISupportedPaymentMethod DeserializeSupportedPaymentMethod(BTCPayNetworkBase network,
+            JToken value)
+        {
+            return JsonConvert.DeserializeObject<LightningSupportedPaymentMethod>(value.ToString());
+        }
+
         public override ISupportedPaymentMethod DeserializeSupportedPaymentMethod(BTCPayNetworkProvider networkProvider, PaymentMethodId paymentMethodId, JToken value)
         {
             return JsonConvert.DeserializeObject<LightningSupportedPaymentMethod>(value.ToString());

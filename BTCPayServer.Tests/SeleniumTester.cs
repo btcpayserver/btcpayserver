@@ -67,14 +67,15 @@ namespace BTCPayServer.Tests
             return usr;
         }
 
-        public string CreateNewStore()
+        public (string storeName, string storeId) CreateNewStore()
         {
             var usr = "Store" + RandomUtils.GetUInt64().ToString();
             Driver.FindElement(By.Id("Stores")).Click();
             Driver.FindElement(By.Id("CreateStore")).Click();
             Driver.FindElement(By.Id("Name")).SendKeys(usr);
             Driver.FindElement(By.Id("Create")).Click();
-            return usr;
+            
+            return (usr, Driver.FindElement(By.Id("Id")).GetAttribute("value"));
         }
 
         public void AddDerivationScheme(string derivationScheme = "xpub661MyMwAqRbcGABgHMUXDzPzH1tU7eZaAaJQXhDXsSxsqyQzQeU6kznNfSuAyqAK9UaWSaZaMFdNiY5BCF4zBPAzSnwfUAwUhwttuAKwfRX-[legacy]")
@@ -99,14 +100,24 @@ namespace BTCPayServer.Tests
             }
         }
 
-        public void CreateInvoice(string random)
+        public string CreateInvoice(string random, string refundEmail = "")
         {
             Driver.FindElement(By.Id("Invoices")).Click();
             Driver.FindElement(By.Id("CreateNewInvoice")).Click();
             Driver.FindElement(By.CssSelector("input#Amount.form-control")).SendKeys("100");
             Driver.FindElement(By.Name("StoreId")).SendKeys("Deriv" + random + Keys.Enter);
             Driver.FindElement(By.Id("Create")).Click();
-            return;
+            var statusElement = Driver.FindElement(By.ClassName("alert-success"));
+            var id = statusElement.Text.Split(" ")[1];
+            if (!string.IsNullOrEmpty(refundEmail))
+            {
+                GoToInvoiceCheckout(id);
+                Driver.FindElement(By.Id("emailAddressFormInput")).SendKeys(refundEmail);
+                Driver.FindElement(By.Id("emailAddressForm")).FindElement(By.CssSelector("button.action-button"))
+                    .Click();
+            }
+
+            return id;
         }
 
 
@@ -146,6 +157,32 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.Id("Password")).SendKeys(password);
             Driver.FindElement(By.Id("LoginButton")).Click();
 
+        }
+
+        public void GoToStore(string storeId)
+        {
+            Driver.FindElement(By.Id("Stores")).Click();
+            Driver.FindElement(By.Id($"update-store-{storeId}")).Click();
+        }
+        
+        public void GoToInvoiceCheckout(string invoiceId)
+        {
+            Driver.FindElement(By.Id("Invoices")).Click();
+            Driver.FindElement(By.Id($"invoice-checkout-{invoiceId}")).Click();
+        }
+        
+        
+        public void SetCheckbox(IWebElement element, bool value)
+        {
+            if ((value && !element.Selected) || (!value && element.Selected))
+            {
+                element.Click();
+            }
+        }
+
+        public void SetCheckbox(SeleniumTester s, string inputName, bool value)
+        {
+            SetCheckbox(s.Driver.FindElement(By.Name(inputName)), value);
         }
     }
 }

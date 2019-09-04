@@ -68,7 +68,7 @@ Products.prototype.loadFromTemplate = function() {
                 'title': title,
                 'price': price,
                 'image': image || null,
-                'description': description || null,
+                'description': description || '',
                 'custom': Boolean(custom),
                 'inventory': isNaN(inventory)? null: inventory
             });

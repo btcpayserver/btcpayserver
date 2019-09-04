@@ -59,7 +59,7 @@
     </style>
     @if (!string.IsNullOrEmpty(Model.EmbeddedCSS))
     {
-        @Safe.Raw($"<style>{Model.EmbeddedCSS}</style>");   
+        @Safe.Raw($"<style>{Model.EmbeddedCSS}</style>");
     }
 
 </head>
@@ -241,11 +241,11 @@
                     <div class="modal-footer bg-light">
                         <form
                             id="js-cart-pay-form"
-                            method="post" 
-                            asp-controller="AppsPublic" 
-                            asp-action="ViewPointOfSale" 
-                            asp-route-appId="@Model.AppId" 
-                            asp-antiforgery="false" 
+                            method="post"
+                            asp-controller="AppsPublic"
+                            asp-action="ViewPointOfSale"
+                            asp-route-appId="@Model.AppId"
+                            asp-antiforgery="false"
                             data-buy
                         >
                             <input id="js-cart-amount" class="form-control" type="hidden" name="amount">
@@ -264,7 +264,7 @@
             <div id="content">
                 <div class="p-2 p-sm-4">
                     <div class="row">
-                        <div class="col-sm-4 col-lg-3 order-sm-last text-right mb-2">
+                        <div class="col-sm-4 col-lg-2 order-sm-last text-right mb-2">
                             <a class="js-cart btn btn-lg btn-warning text-white text-right" href="#">
                                 <i class="fa fa-shopping-basket"></i>&nbsp;
                                 <span class="badge badge-light badge-pill">
@@ -272,10 +272,10 @@
                                 </span>
                             </a>
                         </div>
-                        <div class="col-sm-8 col-lg-9 mb-2">
-                            <div class="input-group mb-2">
+                        <div class="col-sm-8 col-lg-10 mb-2">
+                            <div class="mb-2 position-relative">
                                 <input type="text" class="js-search form-control form-control-lg" placeholder="Find product">
-                                <a class="js-search-reset btn btn-link text-black" href="#" style="position: absolute; right: 0px; z-index: 1049; display: none;">
+                                <a class="js-search-reset btn btn-lg btn-link text-black" href="#">
                                     <i class="fa fa-times-circle fa-lg"></i>
                                 </a>
                             </div>

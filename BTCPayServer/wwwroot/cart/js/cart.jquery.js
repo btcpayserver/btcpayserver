@@ -114,6 +114,8 @@ $(document).ready(function(){
             var $list = $('#js-pos-list').find(".card-title:not(:icontains('" + $.escapeSelector(str) + "'))");
             $list.parents('.card-wrapper').hide();
             $('.js-search-reset').show();
+        } else if (str.length === 0) {
+            $('.js-search-reset').hide();
         }
     });
 

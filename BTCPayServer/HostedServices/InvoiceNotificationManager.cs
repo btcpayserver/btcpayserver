@@ -87,7 +87,7 @@ namespace BTCPayServer.HostedServices
                     Name = invoiceEvent.Name
                 },
                 ExtendedNotification = extendedNotification,
-                NotificationURL = invoice.NotificationURL
+                NotificationURL = invoice.NotificationURL?.AbsoluteUri
             };
 
             // For lightning network payments, paid, confirmed and completed come all at once.

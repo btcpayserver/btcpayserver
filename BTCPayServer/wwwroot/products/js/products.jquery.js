@@ -45,7 +45,7 @@ $(document).ready(function(){
 
         // Only continue if price and title is provided
         if (obj.price && obj.title) {
-            if (description) {
+            if (description != null) {
                 obj.description = products.escape(description);
             }
             if (image) {

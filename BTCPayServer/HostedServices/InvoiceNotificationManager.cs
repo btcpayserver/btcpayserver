@@ -130,11 +130,11 @@ namespace BTCPayServer.HostedServices
                     emailBody);
 
             }
-            if (string.IsNullOrEmpty(invoice.NotificationURL) || !Uri.IsWellFormedUriString(invoice.NotificationURL, UriKind.Absolute))
-                return;
-            var invoiceStr = NBitcoin.JsonConverters.Serializer.ToString(new ScheduledJob() { TryCount = 0, Notification = notification });
-            if (!string.IsNullOrEmpty(invoice.NotificationURL))
+            if (invoice.NotificationURL != null)
+            {
+                var invoiceStr = NBitcoin.JsonConverters.Serializer.ToString(new ScheduledJob() { TryCount = 0, Notification = notification });
                 _JobClient.Schedule((cancellation) => NotifyHttp(invoiceStr, cancellation), TimeSpan.Zero);
+            }
         }
 
         public async Task NotifyHttp(string invoiceData, CancellationToken cancellationToken)

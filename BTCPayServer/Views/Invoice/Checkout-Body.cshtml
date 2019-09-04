@@ -12,17 +12,17 @@
                 <img class="header__icon__img" src="~/img/logo-white.png" height="40">
             }
         </div>
-        <div class="close-icon close-action">
+        <div class="close-icon close-action" v-on:click="close">
             &#10006;
         </div>
     </div>
-    <div class="timer-row">
-        <div class="timer-row__progress-bar" style="width: 0%;"></div>
-        <div class="timer-row__spinner">
-            <partial name="Checkout-Spinner" />
+    <div class="timer-row" v-bind:class="{ 'expiring-soon': expiringSoon }">
+        <div class="timer-row__progress-bar" v-bind:style="{ 'width': expirationPercentage+ '%' }"></div>
+        <div class="timer-row__spinner" v-if="!invoiceUnpayable && !invoicePaid">
+            <partial name="Checkout-Spinner"/>
         </div>
         <div class="timer-row__message">
-            <span v-if="srvModel.status === 'expired' || srvModel.status === 'invalid'">
+            <span v-if="invoiceUnpayable">
                 {{$t("Invoice expired")}}
             </span>
             <span v-else-if="expiringSoon">
@@ -32,7 +32,7 @@
                 {{$t("Awaiting Payment...")}}
             </span>
         </div>
-        <div class="timer-row__time-left">@Model.TimeLeft</div>
+        <div class="timer-row__time-left">{{timerText}}</div>
     </div>
 </div>
 <div class="order-details">
@@ -45,9 +45,9 @@
         <div class="single-item-order__right">
             @if (Model.AvailableCryptos.Count > 1)
             {
-                <div class="paywithRowRight cursorPointer" onclick="openPaymentMethodDialog()">
-                    <span class="payment__currencies ">
-                        <img v-bind:src="srvModel.cryptoImage" />
+                <div class="paywithRowRight cursorPointer" v-on:click="openPaymentMethodDialog">
+                    <span class="payment__currencies " v-show="!changingCurrencies">
+                        <img v-bind:src="srvModel.cryptoImage"/>
                         <span>{{srvModel.paymentMethodName}} ({{srvModel.cryptoCodeSrv}})</span>
                         <span v-show="srvModel.isLightning">&#9889;</span>
                         <span class="clickable_indicator fa fa-angle-right"></span>
@@ -58,8 +58,8 @@
                         @foreach (var crypto in Model.AvailableCryptos)
                         {
                             <li class="vexmenuitem">
-                                <a href="@crypto.Link" onclick="return closePaymentMethodDialog('@crypto.PaymentMethodId');">
-                                    <img alt="@crypto.PaymentMethodName" src="@crypto.CryptoImage" />
+                                <a href="@crypto.Link" onclick="closePaymentMethodDialog('@crypto.PaymentMethodId');return false;">
+                                    <img alt="@crypto.PaymentMethodName" src="@crypto.CryptoImage"/>
                                     @crypto.PaymentMethodName
                                     @(crypto.IsLightning ? Html.Raw("&#9889;") : null)
                                     <span>@crypto.CryptoCode</span>
@@ -72,18 +72,18 @@
             else
             {
                 <div class="payment__currencies_noborder">
-                    <img v-bind:src="srvModel.cryptoImage" />
+                    <img v-bind:src="srvModel.cryptoImage"/>
                     <span>{{srvModel.paymentMethodName}} ({{srvModel.cryptoCodeSrv}})</span>
                     <span v-show="srvModel.isLightning">&#9889;</span>
                 </div>
             }
-            <div class="payment__spinner">
-                <partial name="Checkout-Spinner" />
+            <div class="payment__spinner" v-show="changingCurrencies || loading">
+                <partial name="Checkout-Spinner"/>
             </div>
         </div>
     </div>
 
-    <div class="single-item-order buyerTotalLine">
+    <div class="single-item-order buyerTotalLine" v-on:click="toggleLineItems" v-bind:class="{ 'expanded': lineItemsExpanded}">
         <div class="single-item-order__left">
             <div class="single-item-order__left__name">
                 {{ srvModel.storeName }}
@@ -99,12 +99,10 @@
             <div class="single-item-order__right__btc-price" v-else>
                 <span>{{ srvModel.btcDue }} {{ srvModel.cryptoCode }}</span>
             </div>
-
-            <div class="single-item-order__right__ex-rate" v-if="srvModel.orderAmountFiat">
+            <div class="single-item-order__right__ex-rate" v-if="srvModel.orderAmountFiat && srvModel.cryptoCode">
                 1 {{ srvModel.cryptoCodeSrv }} = {{ srvModel.rate }}
             </div>
         </div>
-
         <span class="fa fa-angle-double-down"></span>
         <span class="fa fa-angle-double-up"></span>
     </div>
@@ -112,7 +110,7 @@
         <div class="extraPayment" v-if="srvModel.status === 'new' && srvModel.txCount > 1">
             {{$t("NotPaid_ExtraTransaction")}}
         </div>
-        <div class="line-items">
+        <div class="line-items" v-bind:class="{ 'expanded': lineItemsExpanded}">
             <div class="line-items__item">
                 <div class="line-items__item__label">{{$t("Order Amount")}}</div>
                 <div class="line-items__item__value">{{srvModel.orderAmount}} {{ srvModel.cryptoCode }}</div>
@@ -128,7 +126,7 @@
                     <span>{{$t("Network Cost")}}</span>
                 </div>
                 <div class="line-items__item__value">
-                    <span v-if="srvModel.IsMultiCurrency">
+                    <span v-if="srvModel.isMultiCurrency">
                         {{ srvModel.networkFee }} {{ srvModel.cryptoCode }}
                     </span>
                     <span v-else>
@@ -148,30 +146,16 @@
             </div>
         </div>
     </line-items>
-    <div class="payment-tabs">
-        <div class="payment-tabs__tab active" id="scan-tab">
-            <span>{{$t("Scan")}}</span>
-        </div>
-        <div class="payment-tabs__tab" id="copy-tab">
-            <span>{{$t("Copy")}}</span>
-        </div>
-        @if (Model.ChangellyEnabled || Model.CoinSwitchEnabled)
-        {
-            <div class="payment-tabs__tab" id="altcoins-tab">
-                <span>{{$t("Conversion")}}</span>
-            </div>
-            <div id="tabsSlider" class="payment-tabs__slider three-tabs"></div>
-        }
-        else
-        {
-            <div id="tabsSlider" class="payment-tabs__slider"></div>
-        }
-    </div>
+    <component
+        v-if="srvModel.uiSettings && srvModel.uiSettings.checkoutHeaderVueComponentName"
+        v-bind:srv-model="srvModel"
+        v-bind:is="srvModel.uiSettings.checkoutHeaderVueComponentName">
+    </component>
 </div>
 
 <div class="payment-box">
-    <div class="bp-view payment manual-flow enter-contact-email active" id="emailAddressView">
-        <form class="manual__step-one refund-address-form contact-email-form" id="emailAddressForm" name="emailAddressForm" novalidate="">
+    <div class="bp-view payment manual-flow enter-contact-email" id="emailAddressView" v-bind:class="{ 'active': showEmailForm}">
+        <form class="manual__step-one refund-address-form contact-email-form" id="emailAddressForm" name="emailAddressForm" novalidate="" v-on:submit.prevent="onEmailSubmit">
             <div class="manual__step-one__header">
                 <span>{{$t("Contact and Refund Email")}}</span>
             </div>
@@ -182,208 +166,30 @@
                 <span class="submission-error-label">{{$t("Please enter a valid email address")}}</span>
             </div>
             <div class="input-wrapper">
-                <input class="bp-input email-input ng-pristine ng-invalid ng-touched" id="emailAddressFormInput" v-bind:placeholder="$t('Your email')" type="email">
+                <input class="bp-input email-input "
+                       v-bind:class="{ 'ng-pristine ng-submitted ng-touched': !emailAddressInputDirty,  'ng-invalid': emailAddressInputInvalid }" id="emailAddressFormInput"
+                       v-bind:placeholder="$t('Your email')" type="email" v-model="emailAddressInput"
+                       v-on:change="onEmailChange">
                 <bp-loading-button>
-                    <button type="submit" class="action-button" style="margin-top: 15px;">
+                    <button type="submit" class="action-button" style="margin-top: 15px;" v-bind:disabled="emailAddressFormSubmitting" v-bind:class="{ 'loading': emailAddressFormSubmitting }">
                         <span class="button-text">{{$t("Continue")}}</span>
                         <div class="loader-wrapper">
-                            <partial name="Checkout-Spinner" />
+                            <partial name="Checkout-Spinner"/>
                         </div>
                     </button>
                 </bp-loading-button>
             </div>
         </form>
     </div>
-    <div class="bp-view payment scan" id="scan">
-        <div class="wrapBtnGroup" v-bind:class="{ invisible: lndModel === null || !scanDisplayQr }">
-            <div class="btnGroupLnd">
-                <button onclick="lndToggleBolt11()" v-bind:class="{ active: lndModel != null && lndModel.toggle === 0 }"
-                        v-bind:title="$t('BOLT 11 Invoice')">
-                    {{$t("BOLT 11 Invoice")}}
-                </button>
-                <button onclick="lndToggleNode()" v-bind:class="{ active: lndModel != null && lndModel.toggle === 1 }"
-                        v-bind:title="$t('Node Info')">
-                    {{$t("Node Info")}}
-                </button>
-            </div>
-        </div>
-        <div class="payment__scan">
-            <img v-bind:src="srvModel.cryptoImage" class="qr_currency_icon"
-                 v-if="scanDisplayQr" />
-            <qrcode v-bind:value="scanDisplayQr" :options="{ width: 256, margin: 0, color: {dark:'#000', light:'#f5f5f7'} }" tag="svg"
-                    v-if="scanDisplayQr">
-            </qrcode>
-
-
-            <div class="payment__spinner qr_currency_icon" style="padding-right: 20px;">
-                <partial name="Checkout-Spinner" />
-            </div>
-        </div>
-        <div class="payment__details__instruction__open-wallet" v-if="scanDisplayQr">
-            <a class="payment__details__instruction__open-wallet__btn action-button" v-bind:href="srvModel.invoiceBitcoinUrl">
-                <span>{{$t("Open in wallet")}}</span>
-            </a>
-        </div>
+    <div v-if="showPaymentUI">
+        <component
+            v-if="srvModel.uiSettings && srvModel.uiSettings.checkoutBodyVueComponentName"
+            v-bind:srv-model="srvModel"
+            v-bind:is="srvModel.uiSettings.checkoutBodyVueComponentName">
+        </component>
     </div>
 
-    <div class="bp-view payment manual-flow" id="copy">
-        <div class="manual__step-two__instructions">
-            <span i18n="">{{$t("CompletePay_Body", srvModel)}}</span>
-        </div>
-        <div class="copyLabelPopup">
-            <span>{{$t("Copied")}}</span>
-        </div>
-        <nav v-if="srvModel.isLightning" class="copyBox">
-            <div class="copySectionBox bottomBorder">
-                <label>{{$t("BOLT 11 Invoice")}}</label>
-                <div class="inputWithIcon _copyInput">
-                    <input type="text" class="checkoutTextbox" v-bind:value="srvModel.btcAddress" readonly="readonly" />
-                    <img v-bind:src="srvModel.cryptoImage" />
-                </div>
-            </div>
-            <div class="separatorGem"></div>
-            <div class="copySectionBox">
-                <label>{{$t("Node Info")}}</label>
-                <div class="inputWithIcon _copyInput">
-                    <input type="text" class="checkoutTextbox" v-bind:value="srvModel.peerInfo" readonly="readonly" />
-                    <img v-bind:src="srvModel.cryptoImage" />
-                </div>
-            </div>
-        </nav>
-        <nav v-else class="copyBox">
-            <div class="copySectionBox bottomBorder">
-                <label>{{$t("Amount")}}</label>
-                <div class="copyAmountText copy-cursor _copySpan">
-                    <span>{{srvModel.btcDue}}</span> {{ srvModel.cryptoCode }}
-                </div>
-            </div>
-            <div class="separatorGem"></div>
-            <div class="copySectionBox">
-                <label>{{$t("Address")}}</label>
-                <div class="inputWithIcon _copyInput">
-                    <input type="text" class="checkoutTextbox" v-bind:value="srvModel.btcAddress" readonly="readonly" />
-                    <img v-bind:src="srvModel.cryptoImage" />
-                </div>
-            </div>
-        </nav>
-    </div>
-    @if (Model.ChangellyEnabled || Model.CoinSwitchEnabled)
-    {
-        <div id="altcoins" class="bp-view payment manual-flow">
-            <nav v-if="srvModel.isLightning">
-                <div class="manual__step-two__instructions">
-                    <span>
-                        {{$t("ConversionTab_Lightning")}}
-                    </span>
-                </div>
-            </nav>
-            <nav v-else>
-                <div class="manual__step-two__instructions">
-                    <span>
-                        {{$t("ConversionTab_BodyTop", srvModel)}}
-                        <br /><br />
-                        {{$t("ConversionTab_BodyDesc", srvModel)}}
-                    </span>
-                </div>
-                <center>        
-                    
-                    @if (Model.CoinSwitchEnabled && Model.ChangellyEnabled)
-                    {
-                        <template v-if="!selectedThirdPartyProcessor">
-                            <button v-on:click="selectedThirdPartyProcessor = 'coinswitch'" class="action-button">
-                                {{$t("Pay with CoinSwitch")}}
-                            </button>
-                            <button v-on:click="selectedThirdPartyProcessor = 'changelly'" class="action-button">
-                                {{$t("Pay with Changelly")}}
-                            </button>
-                        </template>
-                    }
-                    
-                    @if (Model.CoinSwitchEnabled)
-                    {
-                        <coinswitch inline-template
-                                    v-if="!srvModel.changellyEnabled || selectedThirdPartyProcessor === 'coinswitch'"
-                                    :mode="srvModel.coinSwitchMode"
-                                    :merchant-id="srvModel.coinSwitchMerchantId"
-                                    :to-currency="srvModel.paymentMethodId"
-                                    :to-currency-due="coinswitchAmountDue"
-                                    :autoload="selectedThirdPartyProcessor === 'coinswitch'"
-                                    :to-currency-address="srvModel.btcAddress">
-                            <div>
-                                <a v-on:click="openDialog($event)" :href="url" class="action-button" v-show="url && !opened">
-                                    {{$t("Pay with CoinSwitch")}}
-                                </a>
-                                
-                            @if (Model.ChangellyEnabled)
-                            {
-                                <button v-show="!opened" v-on:click="$parent.selectedThirdPartyProcessor = 'changelly'" class="btn-link mt-2">
-                                    {{$t("Pay with Changelly")}}
-                                </button>
-                            }
-                            
-                                <iframe  
-                                    v-if="showInlineIFrame"
-                                    v-on:load="onLoadIframe"
-                                style="height: 100%; position: fixed; top: 0; width: 100%; left: 0;"
-                                sandbox="allow-scripts allow-forms allow-popups allow-same-origin"
-                                :src="url"></iframe>
-
-                            </div>
-
-                        </coinswitch>
-                    }
-                    
-                    @if(Model.ChangellyEnabled){
-                    
-                        <changelly inline-template
-                                   v-if="!srvModel.coinSwitchEnabled || selectedThirdPartyProcessor === 'changelly'"
-                                   :merchant-id="srvModel.changellyMerchantId"
-                                   :store-id="srvModel.storeId"
-                                   :to-currency="srvModel.paymentMethodId"
-                                   :to-currency-due="srvModel.changellyAmountDue"
-                                   :to-currency-address="srvModel.btcAddress">
-                            <div class="changelly-component">
-                                <div class="changelly-component-dropdown-holder" v-show="prettyDropdownInstance">
-                                    <select 
-                                        v-model="selectedFromCurrency"
-                                        :disabled="isLoading"
-                                        v-on:change="onCurrencyChange($event)"
-                                        ref="changellyCurrenciesDropdown">
-                                        <option value="">{{$t("ConversionTab_CurrencyList_Select_Option")}}</option>
-                                        <option v-for="currency of currencies" 
-                                                :data-prefix="'<img src=\''+currency.image+'\'/>'"
-                                                :value="currency.name">
-                                            {{currency.fullName}}
-                                        </option>
-                                    </select>
-                                </div>
-                                <a  v-on:click="openDialog($event)" :href="url" class="action-button"  v-show="url">
-                                    {{$t("Pay with Changelly")}}
-                                </a>
-                                @if (Model.CoinSwitchEnabled)
-                                {
-                                    <button v-on:click="$parent.selectedThirdPartyProcessor = 'coinswitch'" class="btn-link mt-2">
-                                        {{$t("Pay with CoinSwitch")}}
-                                    </button>
-                                }
-                                <button class="retry-button" v-if="calculateError" v-on:click="retry('calculateAmount')">
-                                    {{$t("ConversionTab_CalculateAmount_Error")}}
-                                </button>
-                                <button class="retry-button" v-if="currenciesError" v-on:click="retry('loadCurrencies')">
-                                    {{$t("ConversionTab_LoadCurrencies_Error")}}
-                                </button>
-                                <div v-show="isLoading" class="general__spinner">
-                                    <partial name="Checkout-Spinner"/>
-                                </div>
-                            </div>
-                        </changelly>
-                    }
-                </center>
-            </nav>
-        </div>
-    }
-
-    <div class="bp-view" id="paid">
+    <div class="bp-view" id="paid" v-bind:class="{ 'active': invoicePaid}">
         <div class="status-block">
             <div class="success-block">
                 <div class="status-icon">
@@ -397,10 +203,10 @@
                     </div>
                 </div>
                 <div class="success-message">{{$t("This invoice has been paid")}}</div>
-                <a class="action-button" :href="srvModel.merchantRefLink" v-show="!isModal">
+                <a class="action-button" :href="srvModel.merchantRefLink" v-show="!srvModel.isModal">
                     <span v-html="$t('Return to StoreName', srvModel)"></span>
                 </a>
-                <button class="action-button close-action" v-show="isModal">
+                <button class="action-button close-action" v-show="srvModel.isModal" v-on:click="close">
                     <span v-html="$t('Close')">{{$t("Return to StoreName", srvModel)}}</span>
                 </button>
             </div>
@@ -409,21 +215,7 @@
         </div>
     </div>
 
-    <div class="bp-view expired" id="archived">
-        <div class="expired-icon">
-            <img src="~/imlegacy/archived.svg">
-        </div>
-        <div class="archived__message">
-            <div class="archived__message__header">
-                <span>{{$t("This invoice has been archived")}}</span>
-            </div>
-            <div>
-                <span>{{$t("Archived_Body")}}</span>
-            </div>
-        </div>
-    </div>
-
-    <div class="bp-view expired" id="expired">
+    <div class="bp-view expired" id="expired" v-bind:class="{ 'active': invoiceUnpayable}">
         <div>
             <div class="expired__body" style="margin-bottom: 20px;">
                 <div class="expired__header">{{$t("What happened?")}}</div>
@@ -439,15 +231,15 @@
                 <div class="expired__text expired__text__smaller">
                     <span class="expired__text__bullet">{{$t("Invoice ID")}}</span>:
                     {{srvModel.invoiceId}}
-                    <br />
+                    <br/>
                     <span class="expired__text__bullet">{{$t("Order ID")}}</span>:
                     {{srvModel.orderId}}
                 </div>
             </div>
-            <a class="action-button" :href="srvModel.merchantRefLink" v-show="!isModal">
+            <a class="action-button" :href="srvModel.merchantRefLink" v-show="!srvModel.isModal">
                 <span>{{$t("Return to StoreName", srvModel)}}</span>
             </a>
-            <button class="action-button close-action" v-show="isModal">
+            <button class="action-button close-action" v-show="srvModel.isModal" v-on:click="close">
                 <span>{{$t("Return to StoreName", srvModel)}}</span>
             </button>
         </div>

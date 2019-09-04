@@ -16,16 +16,14 @@
     <h1>Pay with @Model.StoreName</h1>
     @if (Model.Status == "new")
     {
-        <div>
-            <p>To complete payment, please send <b>@Model.BtcDue @Model.CryptoCode</b> to <b style="word-break: break-word;">@Model.BtcAddress</b></p>
-            <p>Time remaining: @Model.TimeLeft</p>
-            <p><a href="@Model.InvoiceBitcoinUrl" style="word-break: break-word;">@Model.InvoiceBitcoinUrl</a></p>
-            @if (Model.IsLightning)
-            {
-                <p>Peer Info: <b>@Model.PeerInfo</b></p>
-            }
-        </div>
-
+        if (!string.IsNullOrEmpty(Model.UISettings?.NoScriptPartialName))
+        {
+            <partial model="@Model" name="@Model.UISettings.NoScriptPartialName"/>
+        }
+        else
+        {
+            <h1 class="text-danger">This payment method requires javascript.</h1>
+        }
         @if (Model.AvailableCryptos.Count > 1)
         {
             <div>

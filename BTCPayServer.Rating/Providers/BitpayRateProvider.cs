@@ -1,33 +1,35 @@
-﻿using NBitpayClient;
-using System.Linq;
+﻿using System.Linq;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Rating;
 using System.Threading;
+using System.Net.Http;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services.Rates
 {
     public class BitpayRateProvider : IRateProvider, IHasExchangeName
     {
         public const string BitpayName = "bitpay";
-        Bitpay _Bitpay;
-        public BitpayRateProvider(Bitpay bitpay)
+        private readonly HttpClient _httpClient;
+        public BitpayRateProvider(HttpClient httpClient)
         {
-            if (bitpay == null)
-                throw new ArgumentNullException(nameof(bitpay));
-            _Bitpay = bitpay;
+            _httpClient = httpClient ?? new HttpClient();
         }
 
         public string ExchangeName => BitpayName;
 
         public async Task<ExchangeRates> GetRatesAsync(CancellationToken cancellationToken)
         {
-            return new ExchangeRates((await _Bitpay.GetRatesAsync().ConfigureAwait(false))
-                .AllRates
-                .Select(r => new ExchangeRate() { Exchange = BitpayName, CurrencyPair = new CurrencyPair("BTC", r.Code), BidAsk = new BidAsk(r.Value) })
-                .ToList());
+            var response = await _httpClient.GetAsync("https://bitpay.com/rates", cancellationToken);
+            var jarray = (JArray)(await response.Content.ReadAsAsync<JObject>(cancellationToken))["data"];
+            return new ExchangeRates(jarray
+                .Children<JObject>()
+                .Select(jobj => new ExchangeRate(ExchangeName, new CurrencyPair("BTC", jobj["code"].Value<string>()), new BidAsk(jobj["rate"].Value<decimal>())))
+                .Where(o => o.CurrencyPair.Right != "BTC")
+                .ToArray());
         }
     }
 }

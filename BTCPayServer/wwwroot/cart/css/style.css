@@ -33,8 +33,21 @@
     cursor: pointer;
 }
 
+.js-cart-tip-btn:focus {
+    background-color: #dee2e6;
+}
+
 #js-cart-confirm {
     border-radius: 0;
+}
+
+.js-search-reset {
+    position: absolute;
+    right: 0px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1049;
+    display: none;
 }
 
 /* ---------------------------------------------------

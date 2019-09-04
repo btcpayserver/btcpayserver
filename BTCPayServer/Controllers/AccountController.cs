@@ -22,6 +22,7 @@ using BTCPayServer.Services.U2F;
 using BTCPayServer.Services.U2F.Models;
 using Newtonsoft.Json;
 using NicolasDorier.RateLimits;
+using BTCPayServer.Data;
 
 namespace BTCPayServer.Controllers
 {

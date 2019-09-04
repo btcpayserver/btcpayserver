@@ -21,6 +21,7 @@ using BTCPayServer.Logging;
 using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.AspNetCore.Authentication;
 using System.Text.Encodings.Web;
+using BTCPayServer.Data;
 
 
 namespace BTCPayServer.Security.Bitpay

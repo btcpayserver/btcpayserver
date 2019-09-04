@@ -175,12 +175,16 @@ namespace BTCPayServer.Configuration
                 try
                 {
                     sshSettings.CreateConnectionInfo();
+                    SSHSettings = sshSettings;
+                }
+                catch (NotSupportedException ex)
+                {
+                    Logs.Configuration.LogWarning($"The SSH key is not supported ({ex.Message}), try to generate the key with ssh-keygen using \"-m PEM\". Skipping SSH configuration...");
                 }
                 catch
                 {
                     throw new ConfigException($"sshkeyfilepassword is invalid");
                 }
-                SSHSettings = sshSettings;
             }
 
             var fingerPrints = conf.GetOrDefault<string>("sshtrustedfingerprints", "");
@@ -190,7 +194,7 @@ namespace BTCPayServer.Configuration
                 {
                     if (!SSHFingerprint.TryParse(fingerprint, out var f))
                         throw new ConfigException($"Invalid ssh fingerprint format {fingerprint}");
-                    TrustedFingerprints.Add(f);
+                    SSHSettings?.TrustedFingerprints.Add(f);
                 }
             }
 
@@ -245,11 +249,6 @@ namespace BTCPayServer.Configuration
             return settings;
         }
 
-        internal bool IsTrustedFingerprint(byte[] fingerPrint, byte[] hostKey)
-        {
-            return TrustedFingerprints.Any(f => f.Match(fingerPrint, hostKey));
-        }
-
         public string RootPath { get; set; }
         public Dictionary<string, LightningConnectionString> InternalLightningByCryptoCode { get; set; } = new Dictionary<string, LightningConnectionString>();
 
@@ -273,7 +272,6 @@ namespace BTCPayServer.Configuration
             set;
         }
         public bool AllowAdminRegistration { get; set; }
-        public List<SSHFingerprint> TrustedFingerprints { get; set; } = new List<SSHFingerprint>();
         public SSHSettings SSHSettings
         {
             get;

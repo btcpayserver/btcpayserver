@@ -105,14 +105,6 @@ namespace BTCPayServer.Services.Invoices
             get; set;
         }
     }
-
-    public enum SpeedPolicy
-    {
-        HighSpeed = 0,
-        MediumSpeed = 1,
-        LowSpeed = 2,
-        LowMediumSpeed = 3
-    }
     public class InvoiceEntity
     {
         [JsonIgnore]
@@ -297,12 +289,25 @@ namespace BTCPayServer.Services.Invoices
             get;
             set;
         }
-        public string RedirectURL
+        [JsonProperty("redirectURL")]
+        public string RedirectURLTemplate
         {
             get;
             set;
         }
-        
+
+        [JsonIgnore]
+        public Uri RedirectURL => FillPlaceholdersUri(RedirectURLTemplate);
+
+        private Uri FillPlaceholdersUri(string v)
+        {
+            var uriStr = (v ?? string.Empty).Replace("{OrderId}", OrderId ?? "", StringComparison.OrdinalIgnoreCase)
+                                     .Replace("{InvoiceId}", Id ?? "", StringComparison.OrdinalIgnoreCase);
+            if (Uri.TryCreate(uriStr, UriKind.Absolute, out var uri) && (uri.Scheme == "http" || uri.Scheme == "https"))
+                return uri;
+            return null;
+        }
+
         public bool RedirectAutomatically
         {
             get;
@@ -325,11 +330,16 @@ namespace BTCPayServer.Services.Invoices
             get;
             set;
         }
-        public string NotificationURL
+
+        [JsonProperty("notificationURL")]
+        public string NotificationURLTemplate
         {
             get;
             set;
         }
+
+        [JsonIgnore]
+        public Uri NotificationURL => FillPlaceholdersUri(NotificationURLTemplate);
         public string ServerUrl
         {
             get;

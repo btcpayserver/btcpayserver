@@ -36,7 +36,6 @@
     <PackageReference Include="BundlerMinifier.TagHelpers" Version="2.9.406" />
     <PackageReference Include="HtmlSanitizer" Version="4.0.217" />
     <PackageReference Include="LedgerWallet" Version="2.0.0.3" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.1.4" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.2" />
     <PackageReference Include="Microsoft.NetCore.Analyzers" Version="2.6.2">
       <PrivateAssets>all</PrivateAssets>
@@ -49,10 +48,7 @@
     <PackageReference Include="NicolasDorier.CommandLine.Configuration" Version="1.0.0.3" />
     <PackageReference Include="NicolasDorier.RateLimits" Version="1.0.0.9" />
     <PackageReference Include="NicolasDorier.StandardConfiguration" Version="1.0.0.18" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.1.2" />
     <PackageReference Include="OpenIddict" Version="2.0.0" />
-    <PackageReference Include="OpenIddict.EntityFrameworkCore" Version="2.0.0" />
-    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="2.1.2" />
     <PackageReference Include="Serilog" Version="2.7.1" />
     <PackageReference Include="Serilog.AspNetCore" Version="2.1.1" />
     <PackageReference Include="Serilog.Sinks.File" Version="4.0.0" />
@@ -79,7 +75,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Include="wwwroot\checkout\js\core.js" />
 	  <None Include="wwwroot\vendor\bootstrap4-creativestart\creative.js" />
 	  <None Include="wwwroot\vendor\font-awesome\fonts\fontawesome-webfont.svg" />
 	  <None Include="wwwroot\vendor\font-awesome\fonts\fontawesome-webfont.woff2" />
@@ -125,6 +120,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Folder Include="Authentication\OpenId\Models\" />
 	  <Folder Include="Build\" />
 	  <Folder Include="U2F\Services" />
 	  <Folder Include="wwwroot\vendor\clipboard.js\" />
@@ -134,6 +130,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <ProjectReference Include="..\BTCPayServer.Data\BTCPayServer.Data.csproj" />
 	  <ProjectReference Include="..\BTCPayServer.Rating\BTCPayServer.Rating.csproj" />
 	  <ProjectReference Include="..\BTCPayServer.Common\BTCPayServer.Common.csproj" />
 	</ItemGroup>

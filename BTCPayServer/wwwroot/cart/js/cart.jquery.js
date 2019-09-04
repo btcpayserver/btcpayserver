@@ -52,8 +52,8 @@ $(document).ready(function(){
 
         var $btn = $(event.target),
             self = this;
-            id = $btn.closest('.card').data('id'),
-            item = srvModel.items[id],
+            index = $btn.closest('.card').data('index'),
+            item = srvModel.items[index],
             items = cart.items;
 
         // Is event catching disabled?
@@ -68,10 +68,11 @@ $(document).ready(function(){
             });
 
             cart.addItem({
-                id: id,
+                id: item.id,
                 title: item.title,
                 price: item.price,
-                image: typeof item.image != 'underfined' ? item.image : null
+                image: typeof item.image != 'undefined' ? item.image : null,
+                inventory: item.inventory
             });
             cart.listItems();
         }
@@ -80,6 +81,22 @@ $(document).ready(function(){
     // Destroy the cart when the "pay button is clicked"
     $('#js-cart-pay').click(function(){
         cart.destroy(true);
+    });
+
+    // Disable pay button and add loading animation when pay form is submitted
+    $('#js-cart-pay-form').on('submit', function() {
+        var button = $('#js-cart-pay');
+        if (button) {
+            // Disable the pay button
+            button.attr('disabled', true);
+            
+            // Add loading animation to the pay button
+            button.prepend([
+                '<div class="spinner-grow spinner-grow-sm" role="status">',
+                '    <span class="sr-only">Loading...</span>',
+                '</div>'
+            ].join(''));
+        }
     });
 
     $('.js-cart').on('click', function () {
@@ -97,6 +114,8 @@ $(document).ready(function(){
             var $list = $('#js-pos-list').find(".card-title:not(:icontains('" + $.escapeSelector(str) + "'))");
             $list.parents('.card-wrapper').hide();
             $('.js-search-reset').show();
+        } else if (str.length === 0) {
+            $('.js-search-reset').hide();
         }
     });
 
@@ -129,7 +148,10 @@ $(document).ready(function(){
             var $tip = $('.js-cart-tip'),
                 discount = cart.percentage(cart.getTotalProducts(), cart.getDiscount());
 
-            $tip.val(cart.percentage(cart.getTotalProducts() - discount, parseInt($(this).data('tip'))));
+            var purchaseAmount = cart.getTotalProducts() - discount;
+            var tipPercentage = parseInt($(this).data('tip'));
+            var tipValue = cart.percentage(purchaseAmount, tipPercentage).toFixed(srvModel.currencyInfo.divisibility);
+            $tip.val(tipValue);
             $tip.trigger('input');
         });
     });

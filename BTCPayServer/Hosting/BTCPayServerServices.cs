@@ -25,7 +25,6 @@ using BTCPayServer.Services.Mails;
 using System.Threading;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Authentication;
-using BTCPayServer.Authentication.OpenId.Models;
 using BTCPayServer.Logging;
 using BTCPayServer.HostedServices;
 using BTCPayServer.PaymentRequest;
@@ -188,7 +187,8 @@ namespace BTCPayServer.Hosting
             });
             services.AddSingleton<IHostedService, CssThemeManagerHostedService>();
 
-            services.AddSingleton<IHostedService, HostedServices.CheckConfigurationHostedService>();
+            services.AddSingleton<HostedServices.CheckConfigurationHostedService>();
+            services.AddSingleton<IHostedService, HostedServices.CheckConfigurationHostedService>(o => o.GetRequiredService<CheckConfigurationHostedService>());
             
             services.AddSingleton<BitcoinLikePaymentHandler>();
             services.AddSingleton<IPaymentMethodHandler>(provider => provider.GetService<BitcoinLikePaymentHandler>());
@@ -208,6 +208,7 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService, RatesHostedService>();
             services.AddSingleton<IHostedService, BackgroundJobSchedulerHostedService>();
             services.AddSingleton<IHostedService, AppHubStreamer>();
+            services.AddSingleton<IHostedService, AppInventoryUpdaterHostedService>();
             services.AddSingleton<IHostedService, DynamicDnsHostedService>();
             services.AddSingleton<IHostedService, TorServicesHostedService>();
             services.AddSingleton<IHostedService, PaymentRequestStreamer>();

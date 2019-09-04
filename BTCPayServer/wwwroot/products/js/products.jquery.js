@@ -35,7 +35,8 @@ $(document).ready(function(){
         var index = $('.js-product-index').val(),
             description = $('.js-product-description').val(),
             image = $('.js-product-image').val(),
-            custom = $('.js-product-custom').val();
+            custom = $('.js-product-custom').val(),
+            inventory = parseInt($('.js-product-inventory').val(), 10);
             obj = {
                 id: products.escape($('.js-product-id').val()),
                 price: products.escape($('.js-product-price').val()),
@@ -44,7 +45,7 @@ $(document).ready(function(){
 
         // Only continue if price and title is provided
         if (obj.price && obj.title) {
-            if (description) {
+            if (description != null) {
                 obj.description = products.escape(description);
             }
             if (image) {
@@ -58,7 +59,9 @@ $(document).ready(function(){
             if (!Boolean(index)) {
                 obj.id = products.escape(obj.title.toLowerCase() + ':');
             }
-    
+            if(inventory != null && !isNaN(inventory ))
+            obj.inventory = inventory;
+            
             products.saveItem(obj, index);
         }
     });

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Data;
 using BTCPayServer.Models.PaymentRequestViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;

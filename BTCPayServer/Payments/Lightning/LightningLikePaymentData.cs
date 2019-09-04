@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Data;
 using BTCPayServer.JsonConverters;
 using BTCPayServer.Lightning;
 using BTCPayServer.Lightning.JsonConverters;

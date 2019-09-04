@@ -56,5 +56,6 @@ namespace BTCPayServer.Payments
                 return null;
             return string.Format(CultureInfo.InvariantCulture, network.BlockExplorerLink, txId);
         }
+        public override string InvoiceViewPaymentPartialName { get; } = "ViewBitcoinLikePaymentData";
     }
 }

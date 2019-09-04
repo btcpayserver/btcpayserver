@@ -21,6 +21,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTCPayServer.Rating", "BTCP
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTCPayServer.Common", "BTCPayServer.Common\BTCPayServer.Common.csproj", "{4BE42370-6114-4176-BFB3-37C6B6DA094D}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTCPayServer.Data", "BTCPayServer.Data\BTCPayServer.Data.csproj", "{4D7A865D-3945-4C70-9CC8-B09A274A697E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -79,6 +81,18 @@ Global
 		{4BE42370-6114-4176-BFB3-37C6B6DA094D}.Release|x64.Build.0 = Release|Any CPU
 		{4BE42370-6114-4176-BFB3-37C6B6DA094D}.Release|x86.ActiveCfg = Release|Any CPU
 		{4BE42370-6114-4176-BFB3-37C6B6DA094D}.Release|x86.Build.0 = Release|Any CPU
+		{4D7A865D-3945-4C70-9CC8-B09A274A697E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4D7A865D-3945-4C70-9CC8-B09A274A697E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4D7A865D-3945-4C70-9CC8-B09A274A697E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4D7A865D-3945-4C70-9CC8-B09A274A697E}.Debug|x64.Build.0 = Debug|Any CPU
+		{4D7A865D-3945-4C70-9CC8-B09A274A697E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4D7A865D-3945-4C70-9CC8-B09A274A697E}.Debug|x86.Build.0 = Debug|Any CPU
+		{4D7A865D-3945-4C70-9CC8-B09A274A697E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4D7A865D-3945-4C70-9CC8-B09A274A697E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4D7A865D-3945-4C70-9CC8-B09A274A697E}.Release|x64.ActiveCfg = Release|Any CPU
+		{4D7A865D-3945-4C70-9CC8-B09A274A697E}.Release|x64.Build.0 = Release|Any CPU
+		{4D7A865D-3945-4C70-9CC8-B09A274A697E}.Release|x86.ActiveCfg = Release|Any CPU
+		{4D7A865D-3945-4C70-9CC8-B09A274A697E}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

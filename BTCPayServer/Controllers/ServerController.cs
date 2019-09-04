@@ -49,6 +49,7 @@ namespace BTCPayServer.Controllers
         private readonly TorServices _torServices;
         private BTCPayServerOptions _Options;
         private readonly AppService _AppService;
+        private readonly CheckConfigurationHostedService _sshState;
         private readonly StoredFileRepository _StoredFileRepository;
         private readonly FileService _FileService;
         private readonly IEnumerable<IStorageProviderService> _StorageProviderServices;
@@ -64,7 +65,8 @@ namespace BTCPayServer.Controllers
             LightningConfigurationProvider lnConfigProvider,
             TorServices torServices,
             StoreRepository storeRepository,
-            AppService appService)
+            AppService appService,
+            CheckConfigurationHostedService sshState)
         {
             _Options = options;
             _StoredFileRepository = storedFileRepository;
@@ -78,6 +80,7 @@ namespace BTCPayServer.Controllers
             _LnConfigProvider = lnConfigProvider;
             _torServices = torServices;
             _AppService = appService;
+            _sshState = sshState;
         }
 
         [Route("server/rates")]
@@ -186,9 +189,8 @@ namespace BTCPayServer.Controllers
         public IActionResult Maintenance()
         {
             MaintenanceViewModel vm = new MaintenanceViewModel();
-            vm.UserName = "btcpayserver";
+            vm.CanUseSSH = _sshState.CanUseSSH;
             vm.DNSDomain = this.Request.Host.Host;
-            vm.SetConfiguredSSH(_Options.SSHSettings);
             if (IPAddress.TryParse(vm.DNSDomain, out var unused))
                 vm.DNSDomain = null;
             return View(vm);
@@ -198,9 +200,9 @@ namespace BTCPayServer.Controllers
         [HttpPost]
         public async Task<IActionResult> Maintenance(MaintenanceViewModel vm, string command)
         {
+            vm.CanUseSSH = _sshState.CanUseSSH;
             if (!ModelState.IsValid)
                 return View(vm);
-            vm.SetConfiguredSSH(_Options.SSHSettings);
             if (command == "changedomain")
             {
                 if (string.IsNullOrWhiteSpace(vm.DNSDomain))
@@ -254,7 +256,7 @@ namespace BTCPayServer.Controllers
                     }
                 }
 
-                var error = RunSSH(vm, $"changedomain.sh {vm.DNSDomain}");
+                var error = await RunSSH(vm, $"changedomain.sh {vm.DNSDomain}");
                 if (error != null)
                     return error;
 
@@ -264,14 +266,14 @@ namespace BTCPayServer.Controllers
             }
             else if (command == "update")
             {
-                var error = RunSSH(vm, $"btcpay-update.sh");
+                var error = await RunSSH(vm, $"btcpay-update.sh");
                 if (error != null)
                     return error;
                 StatusMessage = $"The server might restart soon if an update is available...";
             }
             else if (command == "clean")
             {
-                var error = RunSSH(vm, $"btcpay-clean.sh");
+                var error = await RunSSH(vm, $"btcpay-clean.sh");
                 if (error != null)
                     return error;
                 StatusMessage = $"The old docker images will be cleaned soon...";
@@ -301,43 +303,13 @@ namespace BTCPayServer.Controllers
             return BadRequest();
         }
 
-        private IActionResult RunSSH(MaintenanceViewModel vm, string ssh)
+        private async Task<IActionResult> RunSSH(MaintenanceViewModel vm, string command)
         {
-            ssh = $"sudo bash -c '. /etc/profile.d/btcpay-env.sh && nohup {ssh} > /dev/null 2>&1 & disown'";
-            var sshClient = _Options.SSHSettings == null ? vm.CreateSSHClient(this.Request.Host.Host)
-                                                         : new SshClient(_Options.SSHSettings.CreateConnectionInfo());
-
-            if (_Options.TrustedFingerprints.Count != 0)
-            {
-                sshClient.HostKeyReceived += (object sender, Renci.SshNet.Common.HostKeyEventArgs e) =>
-                {
-                    if (_Options.TrustedFingerprints.Count == 0)
-                    {
-                        Logs.Configuration.LogWarning($"SSH host fingerprint for {e.HostKeyName} is untrusted, start BTCPay with -sshtrustedfingerprints \"{Encoders.Hex.EncodeData(e.FingerPrint)}\"");
-                        e.CanTrust = true; // Not a typo, we want the connection to succeed with a warning
-                    }
-                    else
-                    {
-                        e.CanTrust = _Options.IsTrustedFingerprint(e.FingerPrint, e.HostKey);
-                        if (!e.CanTrust)
-                            Logs.Configuration.LogError($"SSH host fingerprint for {e.HostKeyName} is untrusted, start BTCPay with -sshtrustedfingerprints \"{Encoders.Hex.EncodeData(e.FingerPrint)}\"");
-                    }
-                };
-            }
-            else
-            {
-
-            }
+            SshClient sshClient = null;
 
             try
             {
-                sshClient.Connect();
-            }
-            catch (Renci.SshNet.Common.SshAuthenticationException)
-            {
-                ModelState.AddModelError(nameof(vm.Password), "Invalid credentials");
-                sshClient.Dispose();
-                return View(vm);
+                sshClient = await _Options.SSHSettings.ConnectAsync();
             }
             catch (Exception ex)
             {
@@ -346,28 +318,29 @@ namespace BTCPayServer.Controllers
                 {
                     message = aggrEx.InnerException.Message;
                 }
-                ModelState.AddModelError(nameof(vm.UserName), $"Connection problem ({message})");
-                sshClient.Dispose();
+                ModelState.AddModelError(string.Empty, $"Connection problem ({message})");
                 return View(vm);
             }
-
-            var sshCommand = sshClient.CreateCommand(ssh);
-            sshCommand.CommandTimeout = TimeSpan.FromMinutes(1.0);
-            sshCommand.BeginExecute(ar =>
-            {
-                try
-                {
-                    Logs.PayServer.LogInformation("Running SSH command: " + ssh);
-                    var result = sshCommand.EndExecute(ar);
-                    Logs.PayServer.LogInformation("SSH command executed: " + result);
-                }
-                catch (Exception ex)
-                {
-                    Logs.PayServer.LogWarning("Error while executing SSH command: " + ex.Message);
-                }
-                sshClient.Dispose();
-            });
+            _ = RunSSHCore(sshClient, $". /etc/profile.d/btcpay-env.sh && nohup {command} > /dev/null 2>&1 & disown");
             return null;
+        }
+
+        private static async Task RunSSHCore(SshClient sshClient, string ssh)
+        {
+            try
+            {
+                Logs.PayServer.LogInformation("Running SSH command: " + ssh);
+                var result = await sshClient.RunBash(ssh, TimeSpan.FromMinutes(1.0));
+                Logs.PayServer.LogInformation($"SSH command executed with exit status {result.ExitStatus}. Output: {result.Output}");
+            }
+            catch (Exception ex)
+            {
+                Logs.PayServer.LogWarning("Error while executing SSH command: " + ex.Message);
+            }
+            finally
+            {
+                sshClient.Dispose();
+            }
         }
 
         private static bool IsAdmin(IList<string> roles)
@@ -531,7 +504,7 @@ namespace BTCPayServer.Controllers
                     Link = this.Request.GetAbsoluteUriNoPathBase(externalService.Value).AbsoluteUri
                 });
             }
-            if (_Options.SSHSettings != null)
+            if (_sshState.CanUseSSH)
             {
                 result.OtherExternalServices.Add(new ServicesViewModel.OtherExternalService()
                 {

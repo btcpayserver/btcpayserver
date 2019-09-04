@@ -15,6 +15,11 @@ namespace BTCPayServer.SSH
         public string KeyFilePassword { get; set; }
         public string Username { get; set; }
         public string Password { get; set; }
+        public List<SSHFingerprint> TrustedFingerprints { get; set; } = new List<SSHFingerprint>();
+        internal bool IsTrustedFingerprint(byte[] fingerPrint, byte[] hostKey)
+        {
+            return TrustedFingerprints.Any(f => f.Match(fingerPrint, hostKey));
+        }
 
         public ConnectionInfo CreateConnectionInfo()
         {

@@ -1,7 +1,6 @@
 ﻿@addTagHelper *, BundlerMinifier.TagHelpers
 @inject BTCPayServer.Services.LanguageService langService
-@using Newtonsoft.Json
-@using Newtonsoft.Json.Linq
+@inject PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary
 @model PaymentModel
 @{
     Layout = null;
@@ -69,7 +68,7 @@
     <invoice>
         <div class="no-bounce" id="checkoutCtrl" v-cloak>
             <div class="modal page">
-                <div class="modal-dialog open opened enter-purchaser-email" role="document">
+                <div class="modal-dialog open opened" role="document" v-bind:class="{ 'expired': invoiceUnpayable, 'paid': invoicePaid, 'enter-purchaser-email': showEmailForm}">
                     <div class="modal-content long">
                         <div class="content">
                             <div class="invoice">
@@ -118,7 +117,6 @@
     var storeDefaultLang = @Safe.Json(@Model.DefaultLang);
     var fallbackLanguage = "en";
     startingLanguage = computeStartingLanguage();
-      // initialization
     i18next
         .use(window.i18nextXHRBackend)
         .init({
@@ -152,41 +150,232 @@
         return availableLanguages.indexOf(languageCode) >= 0;
     }
 
-    const i18n = new VueI18next(i18next);
-
-    // TODO: Move all logic from core.js to Vue controller
+    var i18n = new VueI18next(i18next);
     Vue.config.ignoredElements = [
         'line-items',
         'low-fee-timeline',
         // Ignoring custom HTML5 elements, eg: bp-spinner
         /^bp-/
     ];
-
+    var eventBus = new Vue();
     var checkoutCtrl = new Vue({
         i18n: i18n,
         el: '#checkoutCtrl',
-        components: {
-            qrcode: VueQrcode,
-            changelly: ChangellyComponent,
-            coinswitch: CoinSwitchComponent
-        },
         data: {
             srvModel: srvModel,
-            lndModel: null,
-            scanDisplayQr: "",
-            expiringSoon: false,
-            isModal: srvModel.isModal,
-            lightningAmountInSatoshi: srvModel.lightningAmountInSatoshi,
-            selectedThirdPartyProcessor: ""
+            end: new Date(),
+            expirationPercentage: 0,
+            timerText: "@Model.TimeLeft",
+            emailAddressInput: "",
+            emailAddressInputDirty: false,
+            emailAddressInputInvalid: false,
+            emailAddressFormSubmitting: false,
+            lineItemsExpanded: false,
+            changingCurrencies: false,
+            loading: true
         },
         computed: {
-            coinswitchAmountDue: function() {
-                return this.srvModel.coinSwitchAmountMarkupPercentage
-                    ? this.srvModel.btcDue * (1 + (this.srvModel.coinSwitchAmountMarkupPercentage / 100))
-                    : this.srvModel.btcDue;
+            expiringSoon: function(){
+                return this.expirationPercentage >= 75 && !this.invoiceUnpayable && !this.invoicePaid;
+            },
+            showPaymentUI: function(){
+                return !this.showEmailForm && !this.invoiceUnpayable && !this.invoicePaid;
+            },
+            showEmailForm: function(){
+                return this.srvModel.requiresRefundEmail && (!this.srvModel.customerEmail || !this.validateEmail(this.srvModel.customerEmail)) && !this.invoiceUnpayable && !this.invoicePaid;
+            },
+            invoiceUnpayable: function(){
+                return  ["expired", "invalid"].indexOf(this.srvModel.status) >= 0;
+            },
+            invoicePaid: function(){
+                return  ["complete", "confirmed", "paid"].indexOf(this.srvModel.status) >= 0;
+            }
+        },
+        mounted: function(){
+            this.startProgressTimer();
+            this.listenIn();
+            this.onDataCallback(this.srvModel);
+            if (this.srvModel.status === "new" && this.srvModel.txCount > 1) {
+                this.onlyExpandLineItems();
+            }
+            window.parent.postMessage("loaded", "*");
+            jQuery("invoice").fadeOut(0).fadeIn(300);
+            window.closePaymentMethodDialog = this.closePaymentMethodDialog.bind(this);
+            this.loading = false;
+        },
+        methods: {
+            onlyExpandLineItems: function() {
+                if (!this.lineItemsExpanded) {
+                    this.toggleLineItems();
+                }},
+            toggleLineItems: function() {
+                this.lineItemsExpanded ? $("line-items").slideUp() : $("line-items").slideDown();
+                this.lineItemsExpanded = !this.lineItemsExpanded;
+            },
+            numberFormatted: function(x) {
+                var rounded = Math.round(x);
+                var parts = rounded.toString().split(".");
+                parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+                return parts.join(".");
+            },
+            openPaymentMethodDialog: function() {
+                var content = $("#vexPopupDialog").html();
+                vex.open({
+                    unsafeContent: content
+                });
+            },
+            closePaymentMethodDialog: function(currencyId) {
+                vex.closeAll();
+                this.changeCurrency(currencyId);
+            },   
+            changeCurrency: function (currency) {
+                if (currency !== null && srvModel.paymentMethodId !== currency) {
+                    this.changingCurrencies = true;
+                    srvModel.paymentMethodId = currency;
+                    this.fetchData();
+                    this.closePaymentMethodDialog(null);
+                }
+            },     
+            close: function(){
+                $("invoice").fadeOut(300, function () {
+                    window.parent.postMessage("close", "*");
+                });
+            },
+            validateEmail: function (email) {
+                var re = /^(([^<>()\[\]\\.,;:\s@@"]+(\.[^<>()\[\]\\.,;:\s@@"]+)*)|(".+"))@@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+                return re.test(email);
+            },
+            startProgressTimer: function(){
+                var timeLeftS = this.endDate? (this.endDate.getTime() - new Date().getTime())/1000 : this.srvModel.expirationSeconds;
+                this.expirationPercentage = 100 - ((timeLeftS / this.srvModel.maxTimeSeconds) * 100);
+                this.timerText = this.updateTimerText(timeLeftS);
+                if( this.expirationPercentage < 100 &&  (this.srvModel.status === "paidPartial" || this.srvModel.status === "new")){
+                    setTimeout(this.startProgressTimer, 500);
+                }
+            },
+            updateTimerText: function (timer) {
+                if (timer >= 0) {
+                    var minutes = parseInt(timer / 60, 10);
+                    minutes = minutes < 10 ? "0" + minutes : minutes;
+                    var seconds = parseInt(timer % 60, 10);
+                    seconds = seconds < 10 ? "0" + seconds : seconds;
+                    return minutes + ":" + seconds;
+                } else {
+                    return "00:00";
+                }
+            },
+            listenIn: function(){
+                var self = this;
+                var socket = null;
+                var supportsWebSockets = 'WebSocket' in window && window.WebSocket.CLOSING === 2;
+                if (supportsWebSockets) {
+                    var loc = window.location, ws_uri;
+                    if (loc.protocol === "https:") {
+                        ws_uri = "wss:";
+                    } else {
+                        ws_uri = "ws:";
+                    }
+                    ws_uri += "//" + loc.host;
+                    ws_uri += loc.pathname + "/status/ws?invoiceId=" + this.srvModel.invoiceId;
+                    try {
+                        socket = new WebSocket(ws_uri);
+                        socket.onmessage = function (e) {
+                            self.fetchData();
+                        };
+                        socket.onerror = function (e) {
+                            console.error("Error while connecting to websocket for invoice notifications (callback)");
+                        };
+                    }
+                    catch (e) {
+                        console.error("Error while connecting to websocket for invoice notifications");
+                    }
+                }
+                    
+                function watcher(){
+                    setTimeout(function(){
+                        if (socket === null || socket.readyState !== 1) {
+                            this.fetchData();
+                        }
+                        watcher();
+                    }, 2000);
+                }            
+                watcher();
+            },
+            fetchData: function(){
+                var self = this;
+                $.ajax({
+                    url: window.location.pathname + "/status?invoiceId=" + srvModel.invoiceId + "&paymentMethodId=" + srvModel.paymentMethodId,
+                    type: "GET",
+                    cache: false
+                })
+                .done(function (data) {
+                    self.onDataCallback.bind(self)(data);
+                })
+            },
+            onDataCallback : function(jsonData){
+                if (this.srvModel.status !== jsonData.status) {
+                    window.parent.postMessage({ "invoiceId": srvModel.invoiceId, "status": jsonData.status }, "*");
+                }
+                if (jsonData.paymentMethodId === this.srvModel.paymentMethodId) {
+                    this.changingCurrencies = false;
+                }
+                // displaying satoshis for lightning payments
+                jsonData.cryptoCodeSrv = jsonData.cryptoCode;
+                if (jsonData.isLightning && jsonData.lightningAmountInSatoshi && jsonData.cryptoCode === "BTC") {
+                    var SATOSHIME = 100000000;
+                    jsonData.cryptoCode = "Sats";
+                    jsonData.btcDue = numberFormatted(jsonData.btcDue * SATOSHIME);
+                    jsonData.btcPaid = numberFormatted(jsonData.btcPaid * SATOSHIME);
+                    jsonData.networkFee = numberFormatted(jsonData.networkFee * SATOSHIME);
+                    jsonData.orderAmount = numberFormatted(jsonData.orderAmount * SATOSHIME);
+                }
+                // expand line items to show details on amount due for multi-transaction payment
+                if (this.srvModel.txCount === 1 && jsonData.txCount > 1) {
+                    this.onlyExpandLineItems();
+                }
+                var newEnd = new Date();
+                newEnd.setSeconds(newEnd.getSeconds()+ jsonData.expirationSeconds);
+                this.endDate = newEnd;
+                // updating ui
+                this.srvModel = jsonData;
+                if (this.invoicePaid && !jsonData.isModal && jsonData.redirectAutomatically && jsonData.merchantRefLink) {
+                    this.loading = true;
+                    setTimeout(function () {
+                        window.location = jsonData.merchantRefLink;
+                    }, 2000);
+                }
+            },
+            onEmailChange: function(){
+                this.emailAddressInputDirty = true;
+                this.emailAddressInputInvalid = false;
+            },
+            onEmailSubmit : function(){
+                var self = this;
+                if (this.validateEmail(this.emailAddressInput)) {
+                    this.emailAddressFormSubmitting = true;
+                    // Push the email to a server, once the reception is confirmed move on
+                    $.ajax({
+                        url: window.location.pathname + "/UpdateCustomer?invoiceId=" +this.srvModel.invoiceId,
+                        type: "POST",
+                        data: JSON.stringify({ Email: this.emailAddressInput }),
+                        contentType: "application/json; charset=utf-8"
+                    })
+                    .done(function () {
+                        self.srvModel.customerEmail = self.emailAddressInput;
+                    }).always(function () {
+                        self.emailAddressFormSubmitting = false;
+                    });
+                } else {
+                    this.emailAddressInputInvalid = true;
+                }
             }
         }
     });
     </script>
+
+@foreach (var paymentMethodHandler in PaymentMethodHandlerDictionary.Select(handler => handler.GetCheckoutUISettings()).Where(settings => settings != null))
+{
+    <partial name="@paymentMethodHandler.ExtensionPartial" model="@Model"/>
+}
 </body>
 </html>

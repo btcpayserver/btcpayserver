@@ -14,7 +14,6 @@ using BTCPayServer.Configuration;
 using System.IO;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using AspNet.Security.OpenIdConnect.Primitives;
-using BTCPayServer.Authentication.OpenId.Models;
 using BTCPayServer.Security;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using OpenIddict.Abstractions;
@@ -147,7 +146,7 @@ namespace BTCPayServer.Hosting
                 })
                 .AddServer(options =>
                 {
-                    
+                    options.EnableRequestCaching();
                     //Disabled so that Tor works with OpenIddict too
                     options.DisableHttpsRequirement();
                     // Register the ASP.NET Core MVC binder used by OpenIddict.
@@ -182,7 +181,6 @@ namespace BTCPayServer.Hosting
                     options.AddEventHandler<AuthorizationCodeGrantTypeEventHandler>();
                     options.AddEventHandler<RefreshTokenGrantTypeEventHandler>();
                     options.AddEventHandler<ClientCredentialsGrantTypeEventHandler>();
-                    options.AddEventHandler<AuthorizationEventHandler>();
                     options.AddEventHandler<LogoutEventHandler>();
 
                     options.ConfigureSigningKey(Configuration);

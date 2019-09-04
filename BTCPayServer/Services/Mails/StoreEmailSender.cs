@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Services.Stores;
+using BTCPayServer.Data;
 
 namespace BTCPayServer.Services.Mails
 {

@@ -10,30 +10,21 @@ namespace BTCPayServer
 {
     public static class OpenIddictExtensions
     {
-        private static SecurityKey _key = null;
         public static SecurityKey GetSigningKey(IConfiguration configuration)
         {
-            if (_key != null)
-            {
-                return _key;
-            }
+          
             var file = Path.Combine(configuration.GetDataDir(), "rsaparams");
-
-            RSACryptoServiceProvider RSA = new RSACryptoServiceProvider(2048);
-
+            var rsa = new RSACryptoServiceProvider(2048);
             if (File.Exists(file))
             {
-                RSA.FromXmlString2(File.ReadAllText(file));
+                rsa.FromXmlString2(File.ReadAllText(file));
             }
             else
             {
-                var contents = RSA.ToXmlString2(true);
+                var contents = rsa.ToXmlString2(true);
                 File.WriteAllText(file, contents);
             }
-
-            RSAParameters KeyParam = RSA.ExportParameters(true);
-            _key = new RsaSecurityKey(KeyParam);
-           return _key;
+            return new RsaSecurityKey(rsa.ExportParameters(true));;
         }
         public static OpenIddictServerBuilder ConfigureSigningKey(this OpenIddictServerBuilder builder,
             IConfiguration configuration)

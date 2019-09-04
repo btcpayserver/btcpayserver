@@ -506,7 +506,7 @@ namespace BTCPayServer.Controllers
             }
 
             var changellyEnabled = storeBlob.ChangellySettings != null && storeBlob.ChangellySettings.Enabled;
-            vm.ThirdPartyPaymentMethods.Add(new StoreViewModel.ThirdPartyPaymentMethod()
+            vm.ThirdPartyPaymentMethods.Add(new StoreViewModel.AdditionalPaymentMethod()
             {
                 Enabled = changellyEnabled,
                 Action = nameof(UpdateChangellySettings),
@@ -514,7 +514,7 @@ namespace BTCPayServer.Controllers
             });
 
             var coinSwitchEnabled = storeBlob.CoinSwitchSettings != null && storeBlob.CoinSwitchSettings.Enabled;
-            vm.ThirdPartyPaymentMethods.Add(new StoreViewModel.ThirdPartyPaymentMethod()
+            vm.ThirdPartyPaymentMethods.Add(new StoreViewModel.AdditionalPaymentMethod()
             {
                 Enabled = coinSwitchEnabled,
                 Action = nameof(UpdateCoinSwitchSettings),

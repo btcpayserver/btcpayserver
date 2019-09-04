@@ -75,6 +75,49 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Fast", "Fast")]
+        public async Task CheckNoDeadLink()
+        {
+            var views = Path.Combine(LanguageService.TryGetSolutionDirectoryInfo().FullName, "BTCPayServer", "Views");
+            var viewFiles = Directory.EnumerateFiles(views, "*.cshtml", SearchOption.AllDirectories).ToArray();
+            Assert.NotEmpty(viewFiles);
+            Regex regex = new Regex("href=\"(http.*?)[\"#]");
+            var httpClient = new HttpClient();
+            List<Task> checkLinks = new List<Task>();
+            foreach (var file in viewFiles)
+            {
+                checkLinks.Add(CheckLinks(regex, httpClient, file));
+            }
+            await Task.WhenAll(checkLinks);
+        }
+
+        private static async Task CheckLinks(Regex regex, HttpClient httpClient, string file)
+        {
+            List<Task> checkLinks = new List<Task>();
+            var text = await File.ReadAllTextAsync(file);
+            foreach (var match in regex.Matches(text).OfType<Match>())
+            {
+                checkLinks.Add(AssertLinkNotDead(httpClient, match, file));
+            }
+            await Task.WhenAll(checkLinks);
+        }
+
+        private static async Task AssertLinkNotDead(HttpClient httpClient, Match match, string file)
+        {
+            var url = match.Groups[1].Value;
+            try
+            {
+                Assert.Equal(HttpStatusCode.OK, (await httpClient.GetAsync(url)).StatusCode);
+                Logs.Tester.LogInformation($"OK: {url} ({file})");
+            }
+            catch
+            {
+                Logs.Tester.LogInformation($"FAILED: {url} ({file})");
+                throw;
+            }
+        }
+
+        [Fact]
+        [Trait("Fast", "Fast")]
         public void CanHandleUriValidation()
         {
             var attribute = new UriAttribute();
@@ -1818,7 +1861,7 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Integration", "Integration")]
-        public void CanUsePoSApp()
+        public async Task CanUsePoSApp()
         {
             using (var tester = ServerTester.Create())
             {
@@ -1929,6 +1972,49 @@ donation:
                     Assert.Equal(test.ExpectedDivisibility, vmview.CurrencyInfo.Divisibility);
                     Assert.Equal(test.ExpectedSymbolSpace, vmview.CurrencyInfo.SymbolSpace);
                 }
+                
+                
+                //test inventory related features
+                vmpos = Assert.IsType<UpdatePointOfSaleViewModel>(Assert.IsType<ViewResult>(apps.UpdatePointOfSale(appId).Result).Model);
+                vmpos.Title = "hello";
+                vmpos.Currency = "BTC";
+                vmpos.Template = @"
+inventoryitem:
+  price: 1.0
+  title: good apple
+  inventory: 1
+noninventoryitem:
+  price: 10.0";
+                Assert.IsType<RedirectToActionResult>(apps.UpdatePointOfSale(appId, vmpos).Result);
+                
+                //inventoryitem has 1 item available
+                Assert.IsType<RedirectToActionResult>(publicApps.ViewPointOfSale(appId, 1, null, null, null, null, "inventoryitem").Result);
+                //we already bought all available stock so this should fail
+                await Task.Delay(100);
+                Assert.IsType<RedirectToActionResult>(publicApps.ViewPointOfSale(appId, 1, null, null, null, null, "inventoryitem").Result);
+                
+                //inventoryitem has unlimited items available
+                Assert.IsType<RedirectToActionResult>(publicApps.ViewPointOfSale(appId, 1, null, null, null, null, "noninventoryitem").Result);
+                Assert.IsType<RedirectToActionResult>(publicApps.ViewPointOfSale(appId, 1, null, null, null, null, "noninventoryitem").Result);
+
+                //verify invoices where created
+                invoices = user.BitPay.GetInvoices();
+                Assert.Equal(2, invoices.Count(invoice => invoice.ItemCode.Equals("noninventoryitem")));
+                var inventoryItemInvoice = invoices.SingleOrDefault(invoice => invoice.ItemCode.Equals("inventoryitem"));
+                Assert.NotNull(inventoryItemInvoice);
+                
+                //let's mark the inventoryitem invoice as invalid, thsi should return the item to back in stock
+                var controller = tester.PayTester.GetController<InvoiceController>(user.UserId, user.StoreId);
+                var appService = tester.PayTester.GetService<AppService>();
+                var eventAggregator = tester.PayTester.GetService<EventAggregator>();
+                Assert.IsType<JsonResult>( await controller.ChangeInvoiceState(inventoryItemInvoice.Id, "invalid"));
+                //check that item is back in stock
+                TestUtils.Eventually(() =>
+                {
+                    vmpos = Assert.IsType<UpdatePointOfSaleViewModel>(Assert.IsType<ViewResult>(apps.UpdatePointOfSale(appId).Result).Model);
+                    Assert.Equal(1, appService.Parse(vmpos.Template, "BTC").Single(item => item.Id == "inventoryitem").Inventory);
+                }, 10000);
+                
             }
         }
 

@@ -67,7 +67,7 @@ namespace BTCPayServer.Controllers
                 TaxIncluded = _CurrencyNameTable.DisplayFormatCurrency(prodInfo.TaxIncluded, prodInfo.Currency),
                 NotificationEmail = invoice.NotificationEmail,
                 NotificationUrl = invoice.NotificationURL?.AbsoluteUri,
-                RedirectUrl = invoice.RedirectURL.AbsoluteUri,
+                RedirectUrl = invoice.RedirectURL?.AbsoluteUri,
                 ProductInformation = invoice.ProductInformation,
                 StatusException = invoice.ExceptionStatus,
                 Events = invoice.Events,

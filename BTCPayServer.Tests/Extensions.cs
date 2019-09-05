@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Mvc;
 using OpenQA.Selenium;
-using OpenQA.Selenium.Interactions;
 using Xunit;
 
 namespace BTCPayServer.Tests
@@ -20,17 +17,9 @@ namespace BTCPayServer.Tests
         /// Sometimes the chrome driver is fucked up and we need some magic to click on the element.
         /// </summary>
         /// <param name="element"></param>
-        public static void ForceClick(this IWebElement element, IWebDriver driver = null)
+        public static void ForceClick(this IWebElement element)
         {
-            if (driver == null)
-            {
-                element.SendKeys(Keys.Return);
-            }
-            else
-            {
-                ((IJavaScriptExecutor)driver).ExecuteScript($"document.elementFromPoint({element.Location.X},{element.Location.Y}).click();");
-
-            }
+            element.SendKeys(Keys.Return);
         }
         public static void AssertNoError(this IWebDriver driver)
         {

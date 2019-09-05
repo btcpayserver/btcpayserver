@@ -6,6 +6,8 @@ using BTCPayServer.Tests.Logging;
 using BTCPayServer.Views.Stores;
 using NBitpayClient;
 using OpenQA.Selenium;
+using OpenQA.Selenium.Interactions;
+using OpenQA.Selenium.Support.UI;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -118,9 +120,13 @@ namespace BTCPayServer.Tests
                 s.GoToInvoiceCheckout(invoiceId);
                 Assert.True(s.Driver.FindElement(By.Id("DefaultLang")).FindElements(By.TagName("option")).Count > 1);
                 var payWithTextEnglish = s.Driver.FindElement(By.Id("pay-with-text")).Text;
+                WebDriverWait wait = new WebDriverWait(s.Driver, TimeSpan.FromSeconds(5));
+                wait.Until(driver => s.Driver.FindElement(By.Id("prettydropdown-DefaultLang")).Displayed);
                 var prettyDropdown = s.Driver.FindElement(By.Id("prettydropdown-DefaultLang"));
-                prettyDropdown.ForceClick(s.Driver);
-                prettyDropdown.FindElement(By.CssSelector("[data-value=\"da-DK\"]")).ForceClick(s.Driver);
+                Actions action = new Actions(s.Driver);
+                action.MoveToElement(prettyDropdown);
+                prettyDropdown.Click();
+                prettyDropdown.FindElement(By.CssSelector("[data-value=\"da-DK\"]")).Click();
                 Assert.NotEqual(payWithTextEnglish, s.Driver.FindElement(By.Id("pay-with-text")).Text);
                 s.Driver.Navigate().GoToUrl(s.Driver.Url + "?lang=da-DK");
                 

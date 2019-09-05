@@ -22,22 +22,14 @@ namespace BTCPayServer.Tests
         /// <param name="element"></param>
         public static void ForceClick(this IWebElement element, IWebDriver driver = null)
         {
-            try
+            if (driver == null)
             {
-                element.Click();
+                element.SendKeys(Keys.Return);
             }
-            catch (Exception )
+            else
             {
-                if (driver == null)
-                {
-                    element.SendKeys(Keys.Return);
-                }
-                else
-                {
-                    ((IJavaScriptExecutor)driver).ExecuteScript($"document.elementFromPoint({element.Location.X},{element.Location.Y}).click();");
+                ((IJavaScriptExecutor)driver).ExecuteScript($"document.elementFromPoint({element.Location.X},{element.Location.Y}).click();");
 
-                }
-                
             }
         }
         public static void AssertNoError(this IWebDriver driver)

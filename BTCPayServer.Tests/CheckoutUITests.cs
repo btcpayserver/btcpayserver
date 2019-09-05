@@ -60,7 +60,7 @@ namespace BTCPayServer.Tests
                     var emailInput = s.Driver.FindElement(By.Id("emailAddressFormInput"));
                     Assert.False(emailInput.Displayed);
                 }
-                catch (NoSuchElementException _)
+                catch (NoSuchElementException)
                 {
                 }
                 
@@ -87,7 +87,7 @@ namespace BTCPayServer.Tests
                         await Task.Delay(200);
                     }
                 }
-                catch (NoSuchElementException _)
+                catch (NoSuchElementException)
                 {
                 }
                 
@@ -98,7 +98,7 @@ namespace BTCPayServer.Tests
                     var emailInput = s.Driver.FindElement(By.Id("emailAddressFormInput"));
                     Assert.False(emailInput.Displayed);
                 }
-                catch (NoSuchElementException _)
+                catch (NoSuchElementException)
                 {
                 }
             }
@@ -120,7 +120,7 @@ namespace BTCPayServer.Tests
                 var payWithTextEnglish = s.Driver.FindElement(By.Id("pay-with-text")).Text;
                 var prettyDropdown = s.Driver.FindElement(By.Id("prettydropdown-DefaultLang"));
                 prettyDropdown.ForceClick(s.Driver);
-                prettyDropdown.FindElement(By.CssSelector("[data-value=\"da-DK\"]")).ForceClick();
+                prettyDropdown.FindElement(By.CssSelector("[data-value=\"da-DK\"]")).ForceClick(s.Driver);
                 Assert.NotEqual(payWithTextEnglish, s.Driver.FindElement(By.Id("pay-with-text")).Text);
                 s.Driver.Navigate().GoToUrl(s.Driver.Url + "?lang=da-DK");
                 

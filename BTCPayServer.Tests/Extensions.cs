@@ -27,7 +27,7 @@ namespace BTCPayServer.Tests
             {
                 element.ForceClick();
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 try
                 {

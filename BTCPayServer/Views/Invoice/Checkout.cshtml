@@ -290,11 +290,11 @@
                         console.error("Error while connecting to websocket for invoice notifications");
                     }
                 }
-                    
+                var self = this;
                 function watcher(){
                     setTimeout(function(){
                         if (socket === null || socket.readyState !== 1) {
-                            this.fetchData();
+                            self.fetchData();
                         }
                         watcher();
                     }, 2000);

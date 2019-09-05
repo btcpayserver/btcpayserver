@@ -314,21 +314,13 @@
             },
             onDataCallback : function(jsonData){
                 if (this.srvModel.status !== jsonData.status) {
-                    window.parent.postMessage({ "invoiceId": srvModel.invoiceId, "status": jsonData.status }, "*");
+                    window.parent.postMessage({ "invoiceId": this.srvModel.invoiceId, "status": jsonData.status }, "*");
                 }
                 if (jsonData.paymentMethodId === this.srvModel.paymentMethodId) {
                     this.changingCurrencies = false;
                 }
                 // displaying satoshis for lightning payments
                 jsonData.cryptoCodeSrv = jsonData.cryptoCode;
-                if (jsonData.isLightning && jsonData.lightningAmountInSatoshi && jsonData.cryptoCode === "BTC") {
-                    var SATOSHIME = 100000000;
-                    jsonData.cryptoCode = "Sats";
-                    jsonData.btcDue = numberFormatted(jsonData.btcDue * SATOSHIME);
-                    jsonData.btcPaid = numberFormatted(jsonData.btcPaid * SATOSHIME);
-                    jsonData.networkFee = numberFormatted(jsonData.networkFee * SATOSHIME);
-                    jsonData.orderAmount = numberFormatted(jsonData.orderAmount * SATOSHIME);
-                }
                 // expand line items to show details on amount due for multi-transaction payment
                 if (this.srvModel.txCount === 1 && jsonData.txCount > 1) {
                     this.onlyExpandLineItems();

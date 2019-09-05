@@ -229,7 +229,7 @@ namespace BTCPayServer.Tests
             currencyEl.SendKeys(currency);
             Driver.FindElement(By.Id("BuyerEmail")).SendKeys(refundEmail);
             Driver.FindElement(By.Name("StoreId")).SendKeys(store + Keys.Enter);
-            Driver.FindElement(By.Id("Create")).Click();
+            Driver.FindElement(By.Id("Create")).ForceClick();
             Assert.True(Driver.PageSource.Contains("just created!"), "Unable to create Invoice");
             var statusElement = Driver.FindElement(By.ClassName("alert-success"));
             var id = statusElement.Text.Split(" ")[1];

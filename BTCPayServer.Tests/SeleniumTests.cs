@@ -179,7 +179,7 @@ namespace BTCPayServer.Tests
                 Assert.Contains(store, s.Driver.PageSource);
                 var storeUrl = s.Driver.Url;
                 s.ClickOnAllSideMenus();
-
+                s.GoToInvoices();
                 s.CreateInvoice(store);
                 s.Driver.FindElement(By.ClassName("invoice-details-link")).Click();
                 var invoiceUrl = s.Driver.Url;

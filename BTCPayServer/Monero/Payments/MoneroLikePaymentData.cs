@@ -1,4 +1,5 @@
 using System;
+using BTCPayServer.Data;
 using BTCPayServer.Services.Invoices;
 
 namespace BTCPayServer.Payments.Monero

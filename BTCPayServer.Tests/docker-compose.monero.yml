@@ -3,25 +3,31 @@ version: "3"
 services:
 
     monerod:
-        image: kukks/monero:test
+        image: kukks/docker-monero:test
         restart: unless-stopped
         container_name: xmr_monerod
-        entrypoint: monerod --fixed-difficulty 100 --p2p-bind-ip 0.0.0.0 --rpc-bind-ip=0.0.0.0 --confirm-external-bind --rpc-bind-port=18081 --non-interactive --block-notify="/scripts/notifier.sh https://127.0.0.1:14142/monerolikedaemoncallback/block %s" --testnet --no-igd --hide-my-port
+        entrypoint: monerod --fixed-difficulty 100 --rpc-bind-ip=0.0.0.0 --confirm-external-bind --rpc-bind-port=18081 --non-interactive --block-notify="/scripts/notifier.sh https://127.0.0.1:14142/monerolikedaemoncallback/block?cryptoCode=xmr&hash=%s" --testnet --no-igd --hide-my-port --no-sync --offline
         volumes:
-            - "C:/ProgramData/bitmonero/node:/home/monero/.bitmonero"
+            - "monero_data:/home/monero/.bitmonero"
         ports:
-            - "18080:18080"
             - "18081:18081"
-        network_mode: host
     monero_wallet:
-        image: kukks/monero:test
+        image: kukks/docker-monero:test
         restart: unless-stopped
         container_name: xmr_wallet_rpc
-        entrypoint: monero-wallet-rpc --testnet --rpc-bind-ip=0.0.0.0 --confirm-external-bind --rpc-bind-port=18082 --non-interactive --trusted-daemon --prompt-for-password --daemon-address=127.0.0.1:18081 --wallet-file=/wallet/wallet.keys --tx-notify="/scripts/notifier.sh https://127.0.0.1:14142/monerolikedaemoncallback/tx %s"
-        volumes:
-            - "C:/ProgramData/bitmonero/wallet:/wallet"
+        entrypoint: monero-wallet-rpc --testnet --rpc-bind-ip=0.0.0.0 --confirm-external-bind --rpc-bind-port=18082 --non-interactive --trusted-daemon --prompt-for-password --daemon-address=127.0.0.1:18081 --wallet-file=/wallet/wallet.keys --tx-notify="/scripts/notifier.sh https://127.0.0.1:14142/monerolikedaemoncallback/tx?cryptoCode=xmr&hash=%s"
         ports:
             - "18082:18082"
-        network_mode: host
+        volumes:
+            - "monero_wallet:/wallet"
         depends_on:
             - monerod
+    ubuntu:
+        image: ubuntu
+        restart: unless-stopped
+        container_name: ubuntu
+        entrypoint: sleep 1d
+        
+volumes:
+    monero_data:
+    monero_wallet:

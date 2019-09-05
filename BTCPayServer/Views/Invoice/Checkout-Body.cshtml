@@ -160,14 +160,14 @@
                 <span>{{$t("Contact and Refund Email")}}</span>
             </div>
             <div class="manual__step-one__instructions">
-                <span class="initial-label">
+                <span class="initial-label" v-show="!emailAddressInputInvalid">
                     <span>{{$t("Contact_Body")}}</span>
                 </span>
-                <span class="submission-error-label">{{$t("Please enter a valid email address")}}</span>
+                <span class="submission-error-label" v-show="emailAddressInputInvalid">{{$t("Please enter a valid email address")}}</span>
             </div>
             <div class="input-wrapper">
                 <input class="bp-input email-input "
-                       v-bind:class="{ 'ng-pristine ng-submitted ng-touched': !emailAddressInputDirty,  'ng-invalid': emailAddressInputInvalid }" id="emailAddressFormInput"
+                       v-bind:class="{ 'ng-pristine ng-submitted ng-touched': !emailAddressInputDirty,  'ng-invalid form-input-invalid': emailAddressInputInvalid }" id="emailAddressFormInput"
                        v-bind:placeholder="$t('Your email')" type="email" v-model="emailAddressInput"
                        v-on:change="onEmailChange">
                 <bp-loading-button>

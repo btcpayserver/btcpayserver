@@ -145,7 +145,6 @@ namespace BTCPayServer.Controllers
                 {
                         
                     var choices = _AppService.Parse(settings.Template, settings.Currency);
-                    var updateNeeded = false;
                     foreach (var cartItem in cartItems)
                     {
                         var itemChoice = choices.FirstOrDefault(c => c.Id == cartItem.Key);

@@ -66,7 +66,7 @@ namespace BTCPayServer.Controllers
                 Fiat = _CurrencyNameTable.DisplayFormatCurrency(prodInfo.Price, prodInfo.Currency),
                 TaxIncluded = _CurrencyNameTable.DisplayFormatCurrency(prodInfo.TaxIncluded, prodInfo.Currency),
                 NotificationEmail = invoice.NotificationEmail,
-                NotificationUrl = invoice.NotificationURL,
+                NotificationUrl = invoice.NotificationURL?.AbsoluteUri,
                 RedirectUrl = invoice.RedirectURL.AbsoluteUri,
                 ProductInformation = invoice.ProductInformation,
                 StatusException = invoice.ExceptionStatus,

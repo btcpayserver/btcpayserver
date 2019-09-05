@@ -180,7 +180,7 @@ namespace BTCPayServer.Tests
                 var storeUrl = s.Driver.Url;
                 s.ClickOnAllSideMenus();
 
-                CreateInvoice(s, store);
+                s.CreateInvoice(store);
                 s.Driver.FindElement(By.ClassName("invoice-details-link")).Click();
                 var invoiceUrl = s.Driver.Url;
 
@@ -216,37 +216,8 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
-        public void CanCreateInvoice()
-        {
-            using (var s = SeleniumTester.Create())
-            {
-                s.Start();
-                s.RegisterNewUser();
-                var store = s.CreateNewStore().storeName;
-                s.AddDerivationScheme();
 
-                CreateInvoice(s, store);
-
-                s.Driver.FindElement(By.ClassName("invoice-details-link")).Click();
-                s.Driver.AssertNoError();
-                s.Driver.Navigate().Back();
-                s.Driver.FindElement(By.ClassName("invoice-checkout-link")).Click();
-                Assert.NotEmpty(s.Driver.FindElements(By.Id("checkoutCtrl")));
-                s.Driver.Quit();
-            }
-        }
-
-        static void CreateInvoice(SeleniumTester s, string store)
-        {
-            s.Driver.FindElement(By.Id("Invoices")).Click();
-            s.Driver.FindElement(By.Id("CreateNewInvoice")).Click();
-            s.Driver.FindElement(By.CssSelector("input#Amount.form-control")).SendKeys("100");
-            s.Driver.FindElement(By.Name("StoreId")).SendKeys(store + Keys.Enter);
-            s.Driver.FindElement(By.Id("Create")).Click();
-            Assert.True(s.Driver.PageSource.Contains("just created!"), "Unable to create Invoice");
-        }
-
+     
         [Fact]
         public void CanCreateAppPoS()
         {
@@ -335,7 +306,7 @@ namespace BTCPayServer.Tests
                 // to sign the transaction
                 var mnemonic = "usage fever hen zero slide mammal silent heavy donate budget pulse say brain thank sausage brand craft about save attract muffin advance illegal cabbage";
                 var root = new Mnemonic(mnemonic).DeriveExtKey();
-                s.AddDerivationScheme("ypub6WWc2gWwHbdnAAyJDnR4SPL1phRh7REqrPBfZeizaQ1EmTshieRXJC3Z5YoU4wkcdKHEjQGkh6AYEzCQC1Kz3DNaWSwdc1pc8416hAjzqyD");
+                s.AddDerivationScheme("BTC", "ypub6WWc2gWwHbdnAAyJDnR4SPL1phRh7REqrPBfZeizaQ1EmTshieRXJC3Z5YoU4wkcdKHEjQGkh6AYEzCQC1Kz3DNaWSwdc1pc8416hAjzqyD");
                 var tx = s.Server.ExplorerNode.SendToAddress(BitcoinAddress.Create("bcrt1qmxg8fgnmkp354vhe78j6sr4ut64tyz2xyejel4", Network.RegTest), Money.Coins(3.0m));
                 s.Server.ExplorerNode.Generate(1);
 

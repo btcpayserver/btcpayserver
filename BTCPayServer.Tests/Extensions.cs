@@ -32,9 +32,11 @@ namespace BTCPayServer.Tests
                 {
                     element.SendKeys(Keys.Return);
                 }
-                
-                ((IJavaScriptExecutor)driver).ExecuteScript($"document.elementFromPoint({element.Location.X},{element.Location.Y}).click();");
-                
+                else
+                {
+                    ((IJavaScriptExecutor)driver).ExecuteScript($"document.elementFromPoint({element.Location.X},{element.Location.Y}).click();");
+
+                }
                 
             }
         }

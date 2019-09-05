@@ -27,21 +27,15 @@ namespace BTCPayServer.Tests
             {
                 element.Click();
             }
-            catch (Exception)
+            catch (Exception )
             {
-                try
+                if (driver == null)
                 {
                     element.SendKeys(Keys.Return);
                 }
-                catch (Exception exception)
-                {
-                    if (driver == null)
-                    {
-                        throw exception;
-                    }
 
-                    new Actions(driver).MoveToElement(element).Click().Build().Perform();
-                }
+                new Actions(driver).MoveToElement(element).Click().Build().Perform();
+                
             }
         }
         public static void AssertNoError(this IWebDriver driver)

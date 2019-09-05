@@ -119,8 +119,8 @@ namespace BTCPayServer.Tests
                 Assert.True(s.Driver.FindElement(By.Id("DefaultLang")).FindElements(By.TagName("option")).Count > 1);
                 var payWithTextEnglish = s.Driver.FindElement(By.Id("pay-with-text")).Text;
                 var prettyDropdown = s.Driver.FindElement(By.Id("prettydropdown-DefaultLang"));
-                prettyDropdown.Click();
-                prettyDropdown.FindElement(By.CssSelector("[data-value=\"da-DK\"]")).Click();
+                prettyDropdown.ForceClick();
+                prettyDropdown.FindElement(By.CssSelector("[data-value=\"da-DK\"]")).ForceClick();
                 Assert.NotEqual(payWithTextEnglish, s.Driver.FindElement(By.Id("pay-with-text")).Text);
                 s.Driver.Navigate().GoToUrl(s.Driver.Url + "?lang=da-DK");
                 

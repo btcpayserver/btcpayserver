@@ -107,7 +107,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
-        public void CanUseLanguageDropdown()
+        public async Task CanUseLanguageDropdown()
         {
             using (var s = SeleniumTester.Create())
             {
@@ -127,6 +127,7 @@ namespace BTCPayServer.Tests
                 action.MoveToElement(prettyDropdown);
                 prettyDropdown.Click();
                 prettyDropdown.FindElement(By.CssSelector("[data-value=\"da-DK\"]")).Click();
+                await Task.Delay(2000);
                 Assert.NotEqual(payWithTextEnglish, s.Driver.FindElement(By.Id("pay-with-text")).Text);
                 s.Driver.Navigate().GoToUrl(s.Driver.Url + "?lang=da-DK");
                 

@@ -267,3 +267,4 @@ Moroccan Dirham	MAD		2
 Yemeni Rial	YER		2
 Zambian Kwacha	ZMW		2
 Zimbabwe Dollar	ZWL		2
+Indonesian Rupiah RP            2

@@ -103,6 +103,12 @@ namespace BTCPayServer.Tests
             config.AppendLine($"ltc.explorer.url={LTCNBXplorerUri.AbsoluteUri}");
             config.AppendLine($"ltc.explorer.cookiefile=0");
             config.AppendLine($"btc.lightning={IntegratedLightning.AbsoluteUri}");
+            if (!string.IsNullOrEmpty(SSHPassword) && string.IsNullOrEmpty(SSHKeyFile))
+                config.AppendLine($"sshpassword={SSHPassword}");
+            if (!string.IsNullOrEmpty(SSHKeyFile))
+                config.AppendLine($"sshkeyfile={SSHKeyFile}");
+            if (!string.IsNullOrEmpty(SSHConnection))
+                config.AppendLine($"sshconnection={SSHConnection}");
 
             if (Postgres != null)
                 config.AppendLine($"postgres=" + Postgres);
@@ -265,6 +271,9 @@ namespace BTCPayServer.Tests
 
         public IServiceProvider ServiceProvider => _Host.Services;
 
+        public string SSHPassword { get; internal set; }
+        public string SSHKeyFile { get; internal set; }
+        public string SSHConnection { get; set; }
         public T GetController<T>(string userId = null, string storeId = null, Claim[] additionalClaims = null) where T : Controller
         {
             var context = new DefaultHttpContext();

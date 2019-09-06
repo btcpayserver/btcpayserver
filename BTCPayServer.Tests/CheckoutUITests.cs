@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Lightning;
 using BTCPayServer.Tests.Logging;
@@ -122,13 +123,16 @@ namespace BTCPayServer.Tests
                 var payWithTextEnglish = s.Driver.FindElement(By.Id("pay-with-text")).Text;
                 WebDriverWait wait = new WebDriverWait(s.Driver, TimeSpan.FromSeconds(5));
                 wait.Until(driver => s.Driver.FindElement(By.Id("prettydropdown-DefaultLang")).Displayed);
+                s.UploadScreenshot();
                 ((IJavaScriptExecutor )s.Driver).ExecuteScript("$('#prettydropdown-DefaultLang').click();");
 //                var prettyDropdown = s.Driver.FindElement(By.Id("prettydropdown-DefaultLang"));
 //                Actions action = new Actions(s.Driver);
 //                action.MoveToElement(prettyDropdown);
 //                prettyDropdown.Click();
+                s.UploadScreenshot();
                 var prettyDropdown = s.Driver.FindElement(By.Id("prettydropdown-DefaultLang"));
-                prettyDropdown.FindElement(By.CssSelector("[data-value=\"da-DK\"]")).Click();
+                prettyDropdown.FindElement(By.CssSelector("[data-value=\"da-DK\"]")).ForceClick();
+                s.UploadScreenshot();
                 await Task.Delay(2000);
                 Assert.NotEqual(payWithTextEnglish, s.Driver.FindElement(By.Id("pay-with-text")).Text);
                 s.Driver.Navigate().GoToUrl(s.Driver.Url + "?lang=da-DK");

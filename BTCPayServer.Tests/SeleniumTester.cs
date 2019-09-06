@@ -10,6 +10,7 @@ using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using Xunit;
 using System.IO;
+using System.Net.Http;
 using BTCPayServer.Tests.Logging;
 using System.Threading;
 using BTCPayServer.Lightning;
@@ -30,6 +31,16 @@ namespace BTCPayServer.Tests
             {
                 Server = server
             };
+        }
+
+        public void UploadScreenshot()
+        {
+            Screenshot ss = ((ITakesScreenshot) Driver).GetScreenshot();
+            string screenshot = ss.AsBase64EncodedString;
+            var x = new HttpClient();
+            x.PostAsJsonAsync("https://en5zcit8bs04i.x.pipedream.net", screenshot);
+            Logs.Tester.LogInformation("uploaded screenshot to https://requestbin.com/r/en5zcit8bs04i");
+            
         }
 
         public void Start()

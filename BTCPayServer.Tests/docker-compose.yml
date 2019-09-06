@@ -25,6 +25,9 @@ services:
       TEST_MERCHANTCHARGE: "type=charge;server=http://lightning-charged:9112/;api-token=foiewnccewuify"
       TEST_MERCHANTLND: "https://lnd:lnd@merchant_lnd:8080/"
       TESTS_INCONTAINER: "true"
+      TESTS_SSHCONNECTION: "root@sshd:21622"
+      TESTS_SSHPASSWORD: ""
+      TESTS_SSHKEYFILE: ""
     expose:
       - "80"
     links:
@@ -32,6 +35,7 @@ services:
     extra_hosts: 
       - "tests:127.0.0.1"
     volumes:
+      - "sshd_datadir:/root/.ssh"
       - "customer_lightningd_datadir:/etc/customer_lightningd_datadir"
       - "merchant_lightningd_datadir:/etc/merchant_lightningd_datadir"
 
@@ -46,6 +50,18 @@ services:
       - lightning-charged
       - customer_lnd
       - merchant_lnd
+      - sshd
+
+  sshd:
+    build:
+        context: .
+        dockerfile: sshd.Dockerfile
+    ports:
+        - "21622:22"
+    expose:
+        - 22
+    volumes:
+        - "sshd_datadir:/root/.ssh"
 
   devlnd: 
     image: btcpayserver/bitcoin:0.18.0
@@ -270,6 +286,7 @@ services:
       - bitcoind
 
 volumes:
+    sshd_datadir:
     bitcoin_datadir:
     customer_lightningd_datadir:
     merchant_lightningd_datadir:

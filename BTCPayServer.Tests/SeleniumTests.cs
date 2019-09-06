@@ -7,6 +7,7 @@ using Xunit.Abstractions;
 using OpenQA.Selenium.Interactions;
 using System.Linq;
 using NBitcoin;
+using System.Threading.Tasks;
 
 namespace BTCPayServer.Tests
 {
@@ -94,6 +95,27 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("LoginButton")).Click();
             s.Driver.AssertNoError();
         }
+        [Fact]
+        public async Task CanUseSSHService()
+        {
+            using (var s = SeleniumTester.Create())
+            {
+                s.Start();
+                var alice = s.RegisterNewUser(isAdmin: true);
+                s.Driver.Navigate().GoToUrl(s.Link("/server/services"));
+                Assert.Contains("server/services/ssh", s.Driver.PageSource);
+                using (var client = await s.Server.PayTester.GetService<BTCPayServer.Configuration.BTCPayServerOptions>().SSHSettings.ConnectAsync())
+                {
+                    var result = await client.RunBash("echo hello");
+                    Assert.Equal(string.Empty, result.Error);
+                    Assert.Equal("hello\n", result.Output);
+                    Assert.Equal(0, result.ExitStatus);
+                }
+                s.Driver.Navigate().GoToUrl(s.Link("/server/services/ssh"));
+                s.Driver.AssertNoError();
+            }
+        }
+
         [Fact]
         public void CanUseDynamicDns()
         {

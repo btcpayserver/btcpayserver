@@ -113,6 +113,7 @@ namespace BTCPayServer.Services.Rates
             Providers.Add(CoinAverageRateProvider.CoinAverageName, new CoinAverageRateProvider() { Exchange = CoinAverageRateProvider.CoinAverageName, HttpClient = _httpClientFactory?.CreateClient("EXCHANGE_COINAVERAGE"), Authenticator = _CoinAverageSettings });
             Providers.Add("kraken", new KrakenExchangeRateProvider() { HttpClient = _httpClientFactory?.CreateClient("EXCHANGE_KRAKEN") });
             Providers.Add("bylls", new ByllsRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_BYLLS")));
+            Providers.Add("ndax", new NdaxRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_NDAX")));
             Providers.Add("bitbank", new BitbankRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_BITBANK")));
             Providers.Add("bitpay", new BitpayRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_BITPAY")));
 
@@ -171,6 +172,7 @@ namespace BTCPayServer.Services.Rates
             // Add other exchanges supported here
             exchanges.Add(new CoinAverageExchange(CoinAverageRateProvider.CoinAverageName, "Coin Average", $"https://apiv2.bitcoinaverage.com/indices/global/ticker/short"));
             exchanges.Add(new CoinAverageExchange("bylls", "Bylls", "https://bylls.com/api/price?from_currency=BTC&to_currency=CAD"));
+            exchanges.Add(new CoinAverageExchange("ndax", "NDAX", "https://ndax.io/api/returnTicker"));
             exchanges.Add(new CoinAverageExchange("bitbank", "Bitbank", "https://public.bitbank.cc/prices"));
 
             return exchanges;

@@ -37,12 +37,7 @@ services:
 
   # The dev container is not actually used, it is just handy to run `docker-compose up dev` to start all services
   dev: 
-    image: btcpayserver/bitcoin:0.18.0
-    environment:
-      BITCOIN_NETWORK: regtest
-      BITCOIN_EXTRA_ARGS: |
-        deprecatedrpc=signrawtransaction
-        connect=bitcoind:39388
+    image: coscale/docker-sleep
     links:
       - nbxplorer
       - postgres

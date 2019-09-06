@@ -291,7 +291,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.CssSelector("div.note-editable.card-block")).SendKeys("1BTC = 1BTC");
                 s.Driver.FindElement(By.Id("TargetCurrency")).SendKeys("JPY");
                 s.Driver.FindElement(By.Id("TargetAmount")).SendKeys("700");
-                s.Driver.FindElement(By.Id("SaveSettings")).Submit();
+                s.Driver.FindElement(By.Id("SaveSettings")).ForceClick();
                 s.Driver.FindElement(By.Id("ViewApp")).ForceClick();
                 s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
                 Assert.True(s.Driver.PageSource.Contains("Currently Active!"), "Unable to create CF");
@@ -314,7 +314,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("Title")).SendKeys("Pay123");
                 s.Driver.FindElement(By.Id("Amount")).SendKeys("700");
                 s.Driver.FindElement(By.Id("Currency")).SendKeys("BTC");
-                s.Driver.FindElement(By.Id("SaveButton")).Submit();
+                s.Driver.FindElement(By.Id("SaveButton")).ForceClick();
                 s.Driver.FindElement(By.Name("ViewAppButton")).SendKeys(Keys.Return);
                 s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
                 Assert.True(s.Driver.PageSource.Contains("Amount due"), "Unable to create Payment Request");

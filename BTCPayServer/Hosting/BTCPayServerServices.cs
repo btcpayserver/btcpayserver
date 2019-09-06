@@ -106,12 +106,14 @@ namespace BTCPayServer.Hosting
                 else if(!String.IsNullOrEmpty(opts.MySQLConnectionString))
                 {
                     Logs.Configuration.LogInformation($"MySQL DB used ({opts.MySQLConnectionString})");
+                    Logs.Configuration.LogWarning("MySQL is not widely tested and should be considered experimental, we advise you to use postgres instead.");
                     dbContext = new ApplicationDbContextFactory(DatabaseType.MySQL, opts.MySQLConnectionString);
                 }
                 else
                 {
                     var connStr = "Data Source=" + Path.Combine(opts.DataDir, "sqllite.db");
                     Logs.Configuration.LogInformation($"SQLite DB used ({connStr})");
+                    Logs.Configuration.LogWarning("MySQL is not widely tested and should be considered experimental, we advise you to use postgres instead.");
                     dbContext = new ApplicationDbContextFactory(DatabaseType.Sqlite, connStr);
                 }
                  

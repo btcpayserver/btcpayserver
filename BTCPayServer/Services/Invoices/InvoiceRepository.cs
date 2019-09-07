@@ -475,6 +475,11 @@ retry:
             {
                 entity.Events = invoice.Events.OrderBy(c => c.Timestamp).ToList();
             }
+
+            if (!string.IsNullOrEmpty(entity.RefundMail) && string.IsNullOrEmpty(entity.BuyerInformation.BuyerEmail))
+            {
+                entity.BuyerInformation.BuyerEmail = entity.RefundMail;
+            }
             return entity;
         }
 

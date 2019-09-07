@@ -77,6 +77,8 @@ namespace BTCPayServer.Tests
                 
                 Assert.True(s.Driver.FindElement(By.Id("emailAddressFormInput")).Displayed);
                 s.Driver.FindElement(By.Id("emailAddressFormInput")).SendKeys("@g.com");
+                
+                await s.UploadScreenshot();
                 s.Driver.FindElement(By.Id("emailAddressForm")).FindElement(By.CssSelector("button.action-button"))
                     .Click();
 
@@ -94,10 +96,12 @@ namespace BTCPayServer.Tests
                 {
                 }
                 
+                await s.UploadScreenshot();
                 s.Driver.Navigate().Refresh();
                
                 try
                 {
+                    await s.UploadScreenshot();
                     var emailInput = s.Driver.FindElement(By.Id("emailAddressFormInput"));
                     Assert.False(emailInput.Displayed);
                 }

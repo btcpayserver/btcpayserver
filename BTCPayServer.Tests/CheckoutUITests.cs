@@ -125,17 +125,20 @@ namespace BTCPayServer.Tests
                 wait.Until(driver => s.Driver.FindElement(By.Id("prettydropdown-DefaultLang")).Displayed);
                 
                 ((IJavaScriptExecutor )s.Driver).ExecuteScript("window.scrollBy(0,250)");
-                s.UploadScreenshot();
-                ((IJavaScriptExecutor )s.Driver).ExecuteScript("$('#prettydropdown-DefaultLang').click();");
+
 //                var prettyDropdown = s.Driver.FindElement(By.Id("prettydropdown-DefaultLang"));
 //                Actions action = new Actions(s.Driver);
 //                action.MoveToElement(prettyDropdown);
 //                prettyDropdown.Click();
-                s.UploadScreenshot();
+                await s.UploadScreenshot();
                 var prettyDropdown = s.Driver.FindElement(By.Id("prettydropdown-DefaultLang"));
-                prettyDropdown.FindElement(By.CssSelector("[data-value=\"da-DK\"]")).ForceClick();
-                s.UploadScreenshot();
-                await Task.Delay(2000);
+                prettyDropdown.Click();
+                await s.UploadScreenshot();
+                
+                await Task.Delay(200);
+                prettyDropdown.FindElement(By.CssSelector("[data-value=\"da-DK\"]")).Click();
+                await s.UploadScreenshot();
+                await Task.Delay(1000);
                 Assert.NotEqual(payWithTextEnglish, s.Driver.FindElement(By.Id("pay-with-text")).Text);
                 s.Driver.Navigate().GoToUrl(s.Driver.Url + "?lang=da-DK");
                 

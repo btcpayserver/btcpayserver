@@ -2,6 +2,7 @@ using System;
 using BTCPayServer;
 using System.Linq;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -11,11 +12,15 @@ using OpenQA.Selenium.Chrome;
 using Xunit;
 using System.IO;
 using System.Net.Http;
+using System.Reflection;
 using BTCPayServer.Tests.Logging;
 using System.Threading;
+using System.Threading.Tasks;
 using BTCPayServer.Lightning;
 using BTCPayServer.Lightning.CLightning;
 using BTCPayServer.Views.Stores;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Tests
 {
@@ -33,16 +38,35 @@ namespace BTCPayServer.Tests
             };
         }
 
-        public void UploadScreenshot()
+        public async Task UploadScreenshot()
         {
             Screenshot ss = ((ITakesScreenshot) Driver).GetScreenshot();
-            string screenshot = ss.AsBase64EncodedString;
-            var x = new HttpClient();
-            x.PostAsJsonAsync("https://en5zcit8bs04i.x.pipedream.net", screenshot);
-            Logs.Tester.LogInformation("uploaded screenshot to https://requestbin.com/r/en5zcit8bs04i");
-            
+            var link = await UploadImageAnonymous(ss.AsBase64EncodedString, $"btcpayservertests_{DateTime.Now}");
+            Logs.Tester.LogInformation($"screenshot uploaded to {link}");
+
         }
 
+        
+        private  async Task<string> UploadImageAnonymous(string base64,  string name)
+        {
+            
+            string baseUrl = "https://api.imgur.com/3/";
+            string clientId = "4802f48be62d7b7";
+            using (HttpClient client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.Add("Authorization", "Client-ID " + clientId);
+
+                var jsonData = JsonConvert.SerializeObject(new
+                {
+                    image = base64,
+                    name
+                });
+
+                var jsonContent = new StringContent(jsonData, Encoding.UTF8, "application/json");
+                var response = await client.PostAsync(new Uri(baseUrl + "upload"), jsonContent);
+                return response.IsSuccessStatusCode ? JObject.Parse(await response.Content.ReadAsStringAsync())["data"]["link"].ToString() : string.Empty;
+            }
+        }
         public void Start()
         {
             Server.Start();
@@ -51,7 +75,7 @@ namespace BTCPayServer.Tests
             if (!isDebug)
             {
                 options.AddArguments("headless"); // Comment to view browser
-                options.AddArguments("window-size=1200x600"); // Comment to view browser
+                options.AddArguments("window-size=1200x1000"); // Comment to view browser
             }  
             options.AddArgument("shm-size=2g");
             if (Server.PayTester.InContainer)

@@ -27,7 +27,7 @@ namespace BTCPayServer.Payments.Monero
                     pair => new MoneroDaemonRpcClient(pair.Value.DaemonRpcUri));
             WalletRpcClients =
                 _moneroLikeConfiguration.MoneroLikeConfigurationItems.ToImmutableDictionary(pair => pair.Key,
-                    pair => new MoneroWalletRpcClient(pair.Value.DaemonRpcUri, "", ""));
+                    pair => new MoneroWalletRpcClient(pair.Value.InternalWalletRpcUri, "", ""));
         }
 
         public bool IsAvailable(string cryptoCode)
@@ -55,8 +55,9 @@ namespace BTCPayServer.Payments.Monero
             {
                 var daemonResult = await daemonRpcClient.SyncInfo();
                 summary.TargetHeight = daemonResult.TargetHeight ?? daemonResult.Height;
-                summary.Synced = !daemonResult.TargetHeight.HasValue || daemonResult.Height == daemonResult.TargetHeight;
+                summary.Synced = !daemonResult.TargetHeight.HasValue || daemonResult.Height >= daemonResult.TargetHeight;
                 summary.CurrentHeight = daemonResult.Height;
+                summary.UpdatedAt = DateTime.Now;
                 summary.DaemonAvailable = true;
             }
             catch

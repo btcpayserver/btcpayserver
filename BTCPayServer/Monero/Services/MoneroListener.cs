@@ -23,7 +23,6 @@ namespace BTCPayServer.Payments.Monero
         private readonly InvoiceRepository _invoiceRepository;
         private readonly EventAggregator _eventAggregator;
         private readonly MoneroRPCProvider _moneroRpcProvider;
-        private readonly MoneroLikeConfiguration _moneroLikeConfiguration;
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly ILogger<MoneroListener> _logger;
         private CompositeDisposable leases = new CompositeDisposable();
@@ -34,14 +33,12 @@ namespace BTCPayServer.Payments.Monero
         public MoneroListener(InvoiceRepository invoiceRepository,
             EventAggregator eventAggregator,
             MoneroRPCProvider moneroRpcProvider,
-            MoneroLikeConfiguration moneroLikeConfiguration,
             BTCPayNetworkProvider networkProvider,
             ILogger<MoneroListener> logger)
         {
             _invoiceRepository = invoiceRepository;
             _eventAggregator = eventAggregator;
             _moneroRpcProvider = moneroRpcProvider;
-            _moneroLikeConfiguration = moneroLikeConfiguration;
             _networkProvider = networkProvider;
             _logger = logger;
         }

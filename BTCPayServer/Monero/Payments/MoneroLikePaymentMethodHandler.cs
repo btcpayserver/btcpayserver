@@ -83,7 +83,7 @@ namespace BTCPayServer.Payments.Monero
             model.InvoiceBitcoinUrl = client.MakeUri(new MakeUriRequest()
                 {
                     Address = cryptoInfo.Address,
-                    Amount = long.Parse(cryptoInfo.Due, CultureInfo.InvariantCulture)
+                    Amount = LightMoney.Parse(cryptoInfo.Due).MilliSatoshi
                 }).GetAwaiter()
                 .GetResult().Uri;
             model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrl;

@@ -13,7 +13,7 @@ namespace BTCPayServer.Payments.Monero
             return "";
         }
 
-        public override string GetId()=> "MoneroLikeLike";
+        public override string GetId()=> "MoneroLike";
 
 
         public override CryptoPaymentData DeserializePaymentData(string str)

@@ -5,8 +5,6 @@
     ViewData.SetActivePageAndTitle(WalletsNavPages.Transactions);
 }
 <style type="text/css">
-
-
     .smMaxWidth {
         max-width: 200px;
     }
@@ -19,6 +17,10 @@
 
     .unconf {
         opacity: 0.5;
+    }
+
+    .transactionLabel:not(:last-child) {
+        margin-bottom: 4px;
     }
 </style>
 @if (TempData.ContainsKey("TempDataProperty-StatusMessage"))
@@ -64,7 +66,17 @@
                         <td style="text-align:left">
                             @foreach (var label in transaction.Labels)
                             {
-                                <a asp-route-labelFilter="@label.Value"><span class="badge" style="display:block;background-color:@label.Color;color:white;">@label.Value</span></a>
+                                <a
+                                    asp-route-labelFilter="@label.Value"
+                                    class="badge transactionLabel"
+                                    style="
+                                        background-color: @label.Color;
+                                        color: white;
+                                        display: block;
+                                    "
+                                >
+                                    @label.Value
+                                </a>
                             }
                         </td>
                         <td class="smMaxWidth text-truncate @(transaction.IsConfirmed ? "" : "unconf")">

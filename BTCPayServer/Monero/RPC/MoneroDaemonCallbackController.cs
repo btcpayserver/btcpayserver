@@ -17,7 +17,7 @@ namespace BTCPayServer.Payments.Monero
             _eventAggregator.Publish(new MoneroEvent()
             {
                 BlockHash = hash,
-                CryptoCode = cryptoCode
+                CryptoCode = cryptoCode.ToUpperInvariant()
             });
             return Ok();
         }
@@ -27,7 +27,7 @@ namespace BTCPayServer.Payments.Monero
             _eventAggregator.Publish(new MoneroEvent()
             {
                 TransactionHash = hash,
-                CryptoCode = cryptoCode
+                CryptoCode = cryptoCode.ToUpperInvariant()
             });
             return Ok();
         }

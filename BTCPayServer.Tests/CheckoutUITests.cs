@@ -77,8 +77,6 @@ namespace BTCPayServer.Tests
                 
                 Assert.True(s.Driver.FindElement(By.Id("emailAddressFormInput")).Displayed);
                 s.Driver.FindElement(By.Id("emailAddressFormInput")).SendKeys("@g.com");
-                
-                await s.UploadScreenshot();
                 s.Driver.FindElement(By.Id("emailAddressForm")).FindElement(By.CssSelector("button.action-button"))
                     .Click();
 
@@ -95,13 +93,10 @@ namespace BTCPayServer.Tests
                 catch (NoSuchElementException)
                 {
                 }
-                
-                await s.UploadScreenshot();
                 s.Driver.Navigate().Refresh();
                
                 try
                 {
-                    await s.UploadScreenshot();
                     var emailInput = s.Driver.FindElement(By.Id("emailAddressFormInput"));
                     Assert.False(emailInput.Displayed);
                 }
@@ -128,20 +123,10 @@ namespace BTCPayServer.Tests
                 WebDriverWait wait = new WebDriverWait(s.Driver, TimeSpan.FromSeconds(5));
                 wait.Until(driver => s.Driver.FindElement(By.Id("prettydropdown-DefaultLang")).Displayed);
                 
-                ((IJavaScriptExecutor )s.Driver).ExecuteScript("window.scrollBy(0,250)");
-
-//                var prettyDropdown = s.Driver.FindElement(By.Id("prettydropdown-DefaultLang"));
-//                Actions action = new Actions(s.Driver);
-//                action.MoveToElement(prettyDropdown);
-//                prettyDropdown.Click();
-                await s.UploadScreenshot();
                 var prettyDropdown = s.Driver.FindElement(By.Id("prettydropdown-DefaultLang"));
                 prettyDropdown.Click();
-                await s.UploadScreenshot();
-                
                 await Task.Delay(200);
                 prettyDropdown.FindElement(By.CssSelector("[data-value=\"da-DK\"]")).Click();
-                await s.UploadScreenshot();
                 await Task.Delay(1000);
                 Assert.NotEqual(payWithTextEnglish, s.Driver.FindElement(By.Id("pay-with-text")).Text);
                 s.Driver.Navigate().GoToUrl(s.Driver.Url + "?lang=da-DK");

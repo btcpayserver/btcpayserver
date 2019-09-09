@@ -16,6 +16,10 @@ namespace BTCPayServer.Services
     public class DynamicDnsSettings
     {
         public List<DynamicDnsService> Services { get; set; } = new List<DynamicDnsService>();
+        public override string ToString()
+        {
+            return String.Empty;
+        }
     }
     public class DynamicDnsService
     {

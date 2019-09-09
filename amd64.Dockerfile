@@ -5,9 +5,11 @@ COPY BTCPayServer/BTCPayServer.csproj BTCPayServer/BTCPayServer.csproj
 COPY BTCPayServer.Common/BTCPayServer.Common.csproj BTCPayServer.Common/BTCPayServer.Common.csproj
 COPY BTCPayServer.Rating/BTCPayServer.Rating.csproj BTCPayServer.Rating/BTCPayServer.Rating.csproj
 COPY BTCPayServer.Data/BTCPayServer.Data.csproj BTCPayServer.Data/BTCPayServer.Data.csproj
+COPY BTCPayServer.Monero/BTCPayServer.Monero.csproj BTCPayServer.Monero/BTCPayServer.Monero.csproj
 RUN cd BTCPayServer && dotnet restore
 COPY BTCPayServer.Common/. BTCPayServer.Common/.
 COPY BTCPayServer.Rating/. BTCPayServer.Rating/.
+COPY BTCPayServer.Monero/. BTCPayServer.Monero/.
 COPY BTCPayServer.Data/. BTCPayServer.Data/.
 COPY BTCPayServer/. BTCPayServer/.
 COPY Build/Version.csproj Build/Version.csproj

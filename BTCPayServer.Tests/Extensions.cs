@@ -80,6 +80,8 @@ namespace BTCPayServer.Tests
             {
                 
             }
+
+            return null;
         }
     }
 }

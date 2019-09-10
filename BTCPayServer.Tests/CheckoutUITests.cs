@@ -156,21 +156,20 @@ namespace BTCPayServer.Tests
         [Fact]
         public void CanUseLightningSatsFeature()
         {
-            //uncomment after https://github.com/btcpayserver/btcpayserver/pull/1014
-//            using (var s = SeleniumTester.Create())
-//            {
-//                s.Start();
-//                s.RegisterNewUser();
-//                var store = s.CreateNewStore();
-//                s.AddInternalLightningNode("BTC");
-//                s.GoToStore(store.storeId, StoreNavPages.Checkout);
-//                s.SetCheckbox(s, "LightningAmountInSatoshi", true);
-//                s.Driver.FindElement(By.Name("command")).Click();
-//                var invoiceId = s.CreateInvoice(store.storeName, 10, "USD", "a@g.com");
-//                s.GoToInvoiceCheckout(invoiceId);
-//                Assert.Contains("Sats", s.Driver.FindElement(By.ClassName("payment__currencies_noborder")).Text);
-//                
-//            }
+            using (var s = SeleniumTester.Create())
+            {
+                s.Start();
+                s.RegisterNewUser();
+                var store = s.CreateNewStore();
+                s.AddInternalLightningNode("BTC");
+                s.GoToStore(store.storeId, StoreNavPages.Checkout);
+                s.SetCheckbox(s, "LightningAmountInSatoshi", true);
+                s.Driver.FindElement(By.Name("command")).Click();
+                var invoiceId = s.CreateInvoice(store.storeName, 10, "USD", "a@g.com");
+                s.GoToInvoiceCheckout(invoiceId);
+                Assert.Contains("Sats", s.Driver.FindElement(By.ClassName("payment__currencies_noborder")).Text);
+                
+            }
         }
     }
 }

@@ -58,15 +58,7 @@ namespace BTCPayServer.Tests
 
                 var emailAlreadyThereInvoiceId =s.CreateInvoice(store.storeName, 100, "USD", "a@g.com");
                 s.GoToInvoiceCheckout(emailAlreadyThereInvoiceId);
-                try
-                {
-                    var emailInput = s.Driver.FindElement(By.Id("emailAddressFormInput"));
-                    Assert.False(emailInput.Displayed);
-                }
-                catch (NoSuchElementException)
-                {
-                }
-                
+                s.Driver.AssertElementNotFound(By.Id("emailAddressFormInput"));
                 s.GoToHome();
                 var invoiceId = s.CreateInvoice(store.storeName);
                 s.GoToInvoiceCheckout(invoiceId);
@@ -94,15 +86,8 @@ namespace BTCPayServer.Tests
                 {
                 }
                 s.Driver.Navigate().Refresh();
-               
-                try
-                {
-                    var emailInput = s.Driver.FindElement(By.Id("emailAddressFormInput"));
-                    Assert.False(emailInput.Displayed);
-                }
-                catch (NoSuchElementException)
-                {
-                }
+
+                s.Driver.AssertElementNotFound(By.Id("emailAddressFormInput"));
             }
         }
 

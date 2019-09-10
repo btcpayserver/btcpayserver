@@ -67,5 +67,19 @@ namespace BTCPayServer.Tests
             var vr = Assert.IsType<ViewResult>(result);
             return Assert.IsType<T>(vr.Model);
         }
+
+        public static IWebElement AssertElementNotFound(this IWebDriver driver, By by)
+        {
+            try
+            {
+                var webElement = driver.FindElement(by);
+                Assert.False(webElement.Displayed);
+                return webElement;
+            }
+            catch (NoSuchElementException)
+            {
+                
+            }
+        }
     }
 }

@@ -43,7 +43,12 @@ namespace BTCPayServer.Tests
         {
             Server.Start();
             ChromeOptions options = new ChromeOptions();
-            var isDebug = false;
+            #if DEBUG
+                var isDebug = true;
+            #else
+                var isDebug = false;
+            #endif
+        
             if (!isDebug)
             {
                 options.AddArguments("headless"); // Comment to view browser

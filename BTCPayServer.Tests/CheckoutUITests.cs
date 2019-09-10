@@ -72,6 +72,7 @@ namespace BTCPayServer.Tests
                 Assert.Contains("form-input-invalid", formInput.GetAttribute("class"));
                 s.Driver.FindElement(By.Id("emailAddressFormInput")).SendKeys("@g.com");
                 
+                await Task.Delay(500);
                 Assert.DoesNotContain("form-input-invalid", formInput.GetAttribute("class"));
                 s.Driver.FindElement(By.Id("emailAddressForm")).FindElement(By.CssSelector("button.action-button"))
                     .Click();

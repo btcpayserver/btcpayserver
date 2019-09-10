@@ -43,16 +43,24 @@ namespace BTCPayServer.Tests
         {
             Server.Start();
             ChromeOptions options = new ChromeOptions();
-
+            var isDebug = !Server.PayTester.InContainer;
+        
+            if (!isDebug)
+            {
                 options.AddArguments("headless"); // Comment to view browser
                 options.AddArguments("window-size=1200x1000"); // Comment to view browser
-              
+            }  
             options.AddArgument("shm-size=2g");
             if (Server.PayTester.InContainer)
             {
                 options.AddArgument("no-sandbox");
             }
             Driver = new ChromeDriver(Server.PayTester.InContainer ? "/usr/bin" : Directory.GetCurrentDirectory(), options);
+            if (isDebug)
+            {
+                //when running locally, depending on your resolution, the website may go into mobile responsive mode and screw with navigation of tests
+                Driver.Manage().Window.Maximize();
+            }
             Logs.Tester.LogInformation("Selenium: Using chrome driver");
             Logs.Tester.LogInformation("Selenium: Browsing to " + Server.PayTester.ServerUri);
             Logs.Tester.LogInformation($"Selenium: Resolution {Driver.Manage().Window.Size}");

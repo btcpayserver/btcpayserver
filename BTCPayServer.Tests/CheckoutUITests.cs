@@ -72,19 +72,9 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("emailAddressForm")).FindElement(By.CssSelector("button.action-button"))
                     .Click();
 
-                try
-                {
-                    var el = s.Driver.FindElement(By.Id("emailAddressForm"))
-                        .FindElement(By.CssSelector("button.action-button"));
-                    
-                    while (el.Displayed && el.Enabled)
-                    {
-                        await Task.Delay(200);
-                    }
-                }
-                catch (NoSuchElementException)
-                {
-                }
+                await Task.Delay(1000);
+                s.Driver.AssertElementNotFound(By.Id("emailAddressFormInput"));
+                
                 s.Driver.Navigate().Refresh();
 
                 s.Driver.AssertElementNotFound(By.Id("emailAddressFormInput"));

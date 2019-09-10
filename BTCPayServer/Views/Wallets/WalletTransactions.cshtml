@@ -31,6 +31,21 @@
     .transactionLabel:not(:last-child) {
         margin-bottom: 4px;
     }
+
+    .removeTransactionLabelForm {
+        display: inline;
+        position: absolute;
+        right: 4px;
+    }
+
+    .removeTransactionLabelForm button {
+        color: #212529;
+        cursor: pointer;
+        display: inline;
+        padding: 0;
+        background-color: transparent;
+        border: 0;
+    }
 </style>
 @if (TempData.ContainsKey("TempDataProperty-StatusMessage"))
 {
@@ -82,9 +97,25 @@
                                         background-color: @label.Color;
                                         color: white;
                                         display: block;
+                                        padding-right: 16px;
+                                        position: relative;
                                     "
                                 >
                                     @label.Value
+                                    <form 
+                                        asp-action="ModifyTransaction" 
+                                        method="post" 
+                                        class="removeTransactionLabelForm"
+                                    >
+                                        <input type="hidden" name="transactionId" value="@transaction.Id" />
+                                        <button
+                                            name="removelabel"
+                                            type="submit"
+                                            value="@label.Value"
+                                        >
+                                            <span class="fa fa-close"></span>
+                                        </button>
+                                    </form>
                                 </a>
                             }
                         </td>

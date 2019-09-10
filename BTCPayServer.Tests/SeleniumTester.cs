@@ -85,7 +85,7 @@ namespace BTCPayServer.Tests
             Driver = new ChromeDriver(Server.PayTester.InContainer ? "/usr/bin" : Directory.GetCurrentDirectory(), options);
             if (isDebug)
             {
-                //when running locally, depending on your resolution, the website may go into mobile responsive mode and screw with navogation of tests
+                //when running locally, depending on your resolution, the website may go into mobile responsive mode and screw with navigation of tests
                 Driver.Manage().Window.Maximize();
             }
             Logs.Tester.LogInformation("Selenium: Using chrome driver");

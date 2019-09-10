@@ -120,8 +120,6 @@ namespace BTCPayServer.Tests
                 s.GoToInvoiceCheckout(invoiceId);
                 Assert.True(s.Driver.FindElement(By.Id("DefaultLang")).FindElements(By.TagName("option")).Count > 1);
                 var payWithTextEnglish = s.Driver.FindElement(By.Id("pay-with-text")).Text;
-                WebDriverWait wait = new WebDriverWait(s.Driver, TimeSpan.FromSeconds(5));
-                wait.Until(driver => s.Driver.FindElement(By.Id("prettydropdown-DefaultLang")).Displayed);
                 
                 var prettyDropdown = s.Driver.FindElement(By.Id("prettydropdown-DefaultLang"));
                 prettyDropdown.Click();

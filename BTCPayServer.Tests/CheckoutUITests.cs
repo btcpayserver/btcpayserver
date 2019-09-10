@@ -165,9 +165,7 @@ namespace BTCPayServer.Tests
                 s.GoToStore(store.storeId, StoreNavPages.Checkout);
                 s.SetCheckbox(s, "LightningAmountInSatoshi", true);
                 var command = s.Driver.FindElement(By.Name("command"));
-                Actions actions = new Actions(s.Driver);
-                actions.MoveToElement(command);
-                actions.Perform();
+               
                 command.ForceClick();
                 var invoiceId = s.CreateInvoice(store.storeName, 10, "USD", "a@g.com");
                 s.GoToInvoiceCheckout(invoiceId);

@@ -118,6 +118,7 @@ namespace BTCPayServer.Controllers
                 Description = settings.Description,
                 NotificationEmail = settings.NotificationEmail,
                 NotificationUrl = settings.NotificationUrl,
+                SearchTerm = $"storeid:{app.StoreDataId}",
                 RedirectAutomatically = settings.RedirectAutomatically.HasValue? settings.RedirectAutomatically.Value? "true": "false" : "" 
             };
             if (HttpContext?.Request != null)

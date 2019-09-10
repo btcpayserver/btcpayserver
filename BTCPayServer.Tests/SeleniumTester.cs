@@ -38,35 +38,7 @@ namespace BTCPayServer.Tests
             };
         }
 
-        public async Task UploadScreenshot()
-        {
-            Screenshot ss = ((ITakesScreenshot) Driver).GetScreenshot();
-            var link = await UploadImageAnonymous(ss.AsBase64EncodedString, $"btcpayservertests_{DateTime.Now}");
-            Logs.Tester.LogInformation($"screenshot uploaded to {link}");
-
-        }
-
-        
-        private  async Task<string> UploadImageAnonymous(string base64,  string name)
-        {
-            
-            string baseUrl = "https://api.imgur.com/3/";
-            string clientId = "4802f48be62d7b7";
-            using (HttpClient client = new HttpClient())
-            {
-                client.DefaultRequestHeaders.Add("Authorization", "Client-ID " + clientId);
-
-                var jsonData = JsonConvert.SerializeObject(new
-                {
-                    image = base64,
-                    name
-                });
-
-                var jsonContent = new StringContent(jsonData, Encoding.UTF8, "application/json");
-                var response = await client.PostAsync(new Uri(baseUrl + "upload"), jsonContent);
-                return response.IsSuccessStatusCode ? JObject.Parse(await response.Content.ReadAsStringAsync())["data"]["link"].ToString() : string.Empty;
-            }
-        }
+      
         public void Start()
         {
             Server.Start();

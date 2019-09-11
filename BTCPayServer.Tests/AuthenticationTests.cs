@@ -19,16 +19,12 @@ using OpenQA.Selenium;
 
 namespace BTCPayServer.Tests
 {
-    [Collection("Selenium collection")]
     public class AuthenticationTests
     {
-        public SeleniumTester SeleniumTester { get; }
-
-        public AuthenticationTests(ITestOutputHelper helper, SeleniumTester seleniumTester)
+        public AuthenticationTests(ITestOutputHelper helper)
         {
-            Logs.Tester = new XUnitLog(helper) { Name = "Tests" };
+            Logs.Tester = new XUnitLog(helper) {Name = "Tests"};
             Logs.LogProvider = new XUnitLogProvider(helper);
-            SeleniumTester = seleniumTester;
         }
 
         [Fact]
@@ -97,45 +93,49 @@ namespace BTCPayServer.Tests
         [Fact]
         public async Task CanUseImplicitFlow()
         {
-            var tester =  SeleniumTester.Server;
+            using (var s = SeleniumTester.Create())
+            {
+                s.Start();
+                var tester = s.Server;
 
-            var user = tester.NewAccount();
-            user.GrantAccess();
-            var id = Guid.NewGuid().ToString();
-            var redirecturi = new Uri("http://127.0.0.1/oidc-callback");
-            var openIdClient = await user.RegisterOpenIdClient(
-                new OpenIddictApplicationDescriptor()
-                {
-                    ClientId = id,
-                    DisplayName = id,
-                    Permissions = { OpenIddictConstants.Permissions.GrantTypes.Implicit },
-                    RedirectUris = { redirecturi }
-                });
-            var implicitAuthorizeUrl = new Uri(tester.PayTester.ServerUri,
-                $"connect/authorize?response_type=token&client_id={id}&redirect_uri={redirecturi.AbsoluteUri}&scope=openid&nonce={Guid.NewGuid().ToString()}");
-             SeleniumTester.Driver.Navigate().GoToUrl(implicitAuthorizeUrl);
-             SeleniumTester.Login(user.RegisterDetails.Email, user.RegisterDetails.Password);
-             SeleniumTester.Driver.FindElement(By.Id("consent-yes")).Click();
-            var url =  SeleniumTester.Driver.Url;
-            var results = url.Split("#").Last().Split("&")
-                .ToDictionary(s1 => s1.Split("=")[0], s1 => s1.Split("=")[1]);
-            await TestApiAgainstAccessToken(results["access_token"], tester, user);
-            //in Implicit mode, you renew your token  by hitting the same endpoint but adding prompt=none. If you are still logged in on the site, you will receive a fresh token.
-            var implicitAuthorizeUrlSilentModel = new Uri($"{implicitAuthorizeUrl.OriginalString}&prompt=none");
-             SeleniumTester.Driver.Navigate().GoToUrl(implicitAuthorizeUrlSilentModel);
-            url =  SeleniumTester.Driver.Url;
-            results = url.Split("#").Last().Split("&").ToDictionary(s1 => s1.Split("=")[0], s1 => s1.Split("=")[1]);
-            await TestApiAgainstAccessToken(results["access_token"], tester, user);
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                var id = Guid.NewGuid().ToString();
+                var redirecturi = new Uri("http://127.0.0.1/oidc-callback");
+                var openIdClient = await user.RegisterOpenIdClient(
+                    new OpenIddictApplicationDescriptor()
+                    {
+                        ClientId = id,
+                        DisplayName = id,
+                        Permissions = {OpenIddictConstants.Permissions.GrantTypes.Implicit},
+                        RedirectUris = {redirecturi}
+                    });
+                var implicitAuthorizeUrl = new Uri(tester.PayTester.ServerUri,
+                    $"connect/authorize?response_type=token&client_id={id}&redirect_uri={redirecturi.AbsoluteUri}&scope=openid&nonce={Guid.NewGuid().ToString()}");
+                s.Driver.Navigate().GoToUrl(implicitAuthorizeUrl);
+                s.Login(user.RegisterDetails.Email, user.RegisterDetails.Password);
+                s.Driver.FindElement(By.Id("consent-yes")).Click();
+                var url = s.Driver.Url;
+                var results = url.Split("#").Last().Split("&")
+                    .ToDictionary(s1 => s1.Split("=")[0], s1 => s1.Split("=")[1]);
+                await TestApiAgainstAccessToken(results["access_token"], tester, user);
+                //in Implicit mode, you renew your token  by hitting the same endpoint but adding prompt=none. If you are still logged in on the site, you will receive a fresh token.
+                var implicitAuthorizeUrlSilentModel = new Uri($"{implicitAuthorizeUrl.OriginalString}&prompt=none");
+                s.Driver.Navigate().GoToUrl(implicitAuthorizeUrlSilentModel);
+                url = s.Driver.Url;
+                results = url.Split("#").Last().Split("&").ToDictionary(s1 => s1.Split("=")[0], s1 => s1.Split("=")[1]);
+                await TestApiAgainstAccessToken(results["access_token"], tester, user);
 
-            LogoutFlow(tester, id, SeleniumTester);
-
-             SeleniumTester.Driver.Navigate().GoToUrl(implicitAuthorizeUrl);
-             SeleniumTester.Login(user.RegisterDetails.Email, user.RegisterDetails.Password);
-
-            Assert.Throws<NoSuchElementException>(() =>  SeleniumTester.Driver.FindElement(By.Id("consent-yes")));
-            results = url.Split("#").Last().Split("&")
-                .ToDictionary(s1 => s1.Split("=")[0], s1 => s1.Split("=")[1]);
-            await TestApiAgainstAccessToken(results["access_token"], tester, user);
+                LogoutFlow(tester, id, s);
+                
+                s.Driver.Navigate().GoToUrl(implicitAuthorizeUrl);
+                s.Login(user.RegisterDetails.Email, user.RegisterDetails.Password);
+                
+                Assert.Throws<NoSuchElementException>(() => s.Driver.FindElement(By.Id("consent-yes")));
+                results = url.Split("#").Last().Split("&")
+                    .ToDictionary(s1 => s1.Split("=")[0], s1 => s1.Split("=")[1]);
+                await TestApiAgainstAccessToken(results["access_token"], tester, user);
+            }
         }
 
         void LogoutFlow(ServerTester tester, string clientId, SeleniumTester seleniumTester)
@@ -145,47 +145,50 @@ namespace BTCPayServer.Tests
             seleniumTester.Driver.Navigate().GoToUrl(logoutUrl);
             seleniumTester.GoToHome();
             Assert.Throws<NoSuchElementException>(() => seleniumTester.Driver.FindElement(By.Id("Logout")));
-
+            
         }
 
         [Trait("Selenium", "Selenium")]
         [Fact]
         public async Task CanUseCodeFlow()
         {
-            var tester = SeleniumTester.Server;
+            using (var s = SeleniumTester.Create())
+            {
+                s.Start();
+                var tester = s.Server;
 
-            var user = tester.NewAccount();
-            user.GrantAccess();
-            var id = Guid.NewGuid().ToString();
-            var redirecturi = new Uri("http://127.0.0.1/oidc-callback");
-            var secret = "secret";
-            var openIdClient = await user.RegisterOpenIdClient(
-                new OpenIddictApplicationDescriptor()
-                {
-                    ClientId = id,
-                    DisplayName = id,
-                    Permissions =
+                var user = tester.NewAccount();
+                user.GrantAccess();
+                var id = Guid.NewGuid().ToString();
+                var redirecturi = new Uri("http://127.0.0.1/oidc-callback");
+                var secret = "secret";
+                var openIdClient = await user.RegisterOpenIdClient(
+                    new OpenIddictApplicationDescriptor()
                     {
+                        ClientId = id,
+                        DisplayName = id,
+                        Permissions =
+                        {
                             OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode,
                             OpenIddictConstants.Permissions.GrantTypes.RefreshToken
-                    },
-                    RedirectUris = { redirecturi }
-                }, secret);
-            var authorizeUrl = new Uri(tester.PayTester.ServerUri,
-                $"connect/authorize?response_type=code&client_id={id}&redirect_uri={redirecturi.AbsoluteUri}&scope=openid offline_access&state={Guid.NewGuid().ToString()}");
-            SeleniumTester.Driver.Navigate().GoToUrl(authorizeUrl);
-            SeleniumTester.Login(user.RegisterDetails.Email, user.RegisterDetails.Password);
-            SeleniumTester.Driver.FindElement(By.Id("consent-yes")).Click();
-            var url = SeleniumTester.Driver.Url;
-            var results = url.Split("?").Last().Split("&")
-                .ToDictionary(s1 => s1.Split("=")[0], s1 => s1.Split("=")[1]);
+                        },
+                        RedirectUris = {redirecturi}
+                    }, secret);
+                var authorizeUrl = new Uri(tester.PayTester.ServerUri,
+                    $"connect/authorize?response_type=code&client_id={id}&redirect_uri={redirecturi.AbsoluteUri}&scope=openid offline_access&state={Guid.NewGuid().ToString()}");
+                s.Driver.Navigate().GoToUrl(authorizeUrl);
+                s.Login(user.RegisterDetails.Email, user.RegisterDetails.Password);
+                s.Driver.FindElement(By.Id("consent-yes")).Click();
+                var url = s.Driver.Url;
+                var results = url.Split("?").Last().Split("&")
+                    .ToDictionary(s1 => s1.Split("=")[0], s1 => s1.Split("=")[1]);
 
-            var httpClient = tester.PayTester.HttpClient;
+                var httpClient = tester.PayTester.HttpClient;
 
-            var httpRequest = new HttpRequestMessage(HttpMethod.Post,
-                new Uri(tester.PayTester.ServerUri, "/connect/token"))
-            {
-                Content = new FormUrlEncodedContent(new List<KeyValuePair<string, string>>()
+                var httpRequest = new HttpRequestMessage(HttpMethod.Post,
+                    new Uri(tester.PayTester.ServerUri, "/connect/token"))
+                {
+                    Content = new FormUrlEncodedContent(new List<KeyValuePair<string, string>>()
                     {
                         new KeyValuePair<string, string>("grant_type",
                             OpenIddictConstants.GrantTypes.AuthorizationCode),
@@ -194,30 +197,31 @@ namespace BTCPayServer.Tests
                         new KeyValuePair<string, string>("code", results["code"]),
                         new KeyValuePair<string, string>("redirect_uri", redirecturi.AbsoluteUri)
                     })
-            };
+                };
 
 
-            var response = await httpClient.SendAsync(httpRequest);
+                var response = await httpClient.SendAsync(httpRequest);
 
-            Assert.True(response.IsSuccessStatusCode);
+                Assert.True(response.IsSuccessStatusCode);
 
-            string content = await response.Content.ReadAsStringAsync();
-            var result = JObject.Parse(content).ToObject<OpenIdConnectResponse>();
+                string content = await response.Content.ReadAsStringAsync();
+                var result = JObject.Parse(content).ToObject<OpenIdConnectResponse>();
 
-            await TestApiAgainstAccessToken(result.AccessToken, tester, user);
+                await TestApiAgainstAccessToken(result.AccessToken, tester, user);
 
-            var refreshedAccessToken = await RefreshAnAccessToken(result.RefreshToken, httpClient, id, secret);
+                var refreshedAccessToken = await RefreshAnAccessToken(result.RefreshToken, httpClient, id, secret);
 
-            await TestApiAgainstAccessToken(refreshedAccessToken, tester, user);
-
-            LogoutFlow(tester, id, SeleniumTester);
-            SeleniumTester.Driver.Navigate().GoToUrl(authorizeUrl);
-            SeleniumTester.Login(user.RegisterDetails.Email, user.RegisterDetails.Password);
-
-            Assert.Throws<NoSuchElementException>(() => SeleniumTester.Driver.FindElement(By.Id("consent-yes")));
-            results = url.Split("?").Last().Split("&")
-                .ToDictionary(s1 => s1.Split("=")[0], s1 => s1.Split("=")[1]);
-            Assert.True(results.ContainsKey("code"));
+                await TestApiAgainstAccessToken(refreshedAccessToken, tester, user);
+                
+                LogoutFlow(tester, id, s);
+                s.Driver.Navigate().GoToUrl(authorizeUrl);
+                s.Login(user.RegisterDetails.Email, user.RegisterDetails.Password);
+                
+                Assert.Throws<NoSuchElementException>(() => s.Driver.FindElement(By.Id("consent-yes")));
+                results = url.Split("?").Last().Split("&")
+                    .ToDictionary(s1 => s1.Split("=")[0], s1 => s1.Split("=")[1]);
+                Assert.True(results.ContainsKey("code"));
+            }
         }
 
         private static async Task<string> RefreshAnAccessToken(string refreshToken, HttpClient client, string clientId,
@@ -257,7 +261,7 @@ namespace BTCPayServer.Tests
                 {
                     ClientId = id,
                     DisplayName = id,
-                    Permissions = { OpenIddictConstants.Permissions.GrantTypes.ClientCredentials }
+                    Permissions = {OpenIddictConstants.Permissions.GrantTypes.ClientCredentials}
                 }, secret);
 
 
@@ -296,7 +300,7 @@ namespace BTCPayServer.Tests
                 {
                     ClientId = id,
                     DisplayName = id,
-                    Permissions = { OpenIddictConstants.Permissions.GrantTypes.Password }
+                    Permissions = {OpenIddictConstants.Permissions.GrantTypes.Password}
                 }, secret);
 
 

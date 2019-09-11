@@ -99,7 +99,9 @@ namespace BTCPayServer.Tests
 
         public string RegisterNewUser(bool isAdmin = false)
         {
-            EnsureLogout();
+            GoToHome();
+            if (Driver.PageSource.Contains("id=\"Logout\""))
+                Logout();
             var usr = RandomUtils.GetUInt256().ToString().Substring(20) + "@a.com";
             Driver.FindElement(By.Id("Register")).Click();
             Driver.FindElement(By.Id("Email")).SendKeys(usr);
@@ -110,13 +112,6 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.Id("RegisterButton")).Click();
             Driver.AssertNoError();
             return usr;
-        }
-
-        private void EnsureLogout()
-        {
-            GoToHome();
-            if (Driver.PageSource.Contains("id=\"Logout\""))
-                Logout();
         }
 
         public (string storeName, string storeId) CreateNewStore()
@@ -210,10 +205,10 @@ namespace BTCPayServer.Tests
 
         public void Login(string user, string password)
         {
-            EnsureLogout();
             Driver.FindElement(By.Id("Email")).SendKeys(user);
             Driver.FindElement(By.Id("Password")).SendKeys(password);
             Driver.FindElement(By.Id("LoginButton")).Click();
+
         }
 
         public void GoToStore(string storeId, StoreNavPages storeNavPage = StoreNavPages.Index)

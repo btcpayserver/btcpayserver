@@ -82,6 +82,11 @@ namespace BTCPayServer.Payments.Monero
 
         private async Task OnMoneroEvent(MoneroEvent obj)
         {
+            if (!_moneroRpcProvider.IsAvailable(obj.CryptoCode))
+            {
+                return;
+            }
+
             if (!string.IsNullOrEmpty(obj.BlockHash))
             {
                 _logger.LogInformation($"{obj.CryptoCode}: New Block");

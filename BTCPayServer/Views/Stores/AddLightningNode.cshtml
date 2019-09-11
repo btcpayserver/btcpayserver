@@ -77,7 +77,7 @@
                 @if (Model.InternalLightningNode != null)
                 {
                     <p class="form-text text-muted">
-                        You can use the internal lightning node by <a href="#" onclick="$('#lightningurl').val('@Model.InternalLightningNode'); return false;">clicking here</a>
+                        You can use the internal lightning node by <a href="#" id="internal-ln-node-setter" onclick="$('#lightningurl').val('@Model.InternalLightningNode'); return false;">clicking here</a>
                     </p>
                 }
             </div>
@@ -85,7 +85,7 @@
                 <label asp-for="Enabled"></label>
                 <input asp-for="Enabled" type="checkbox" class="form-check" />
             </div>
-            <button name="command" type="submit" value="save" class="btn btn-primary">Submit</button>
+            <button id="save" name="command" type="submit" value="save" class="btn btn-primary">Submit</button>
             <button name="command" type="submit" value="test" class="btn btn-secondary">Test connection</button>
             <a 
                 class="btn btn-secondary"

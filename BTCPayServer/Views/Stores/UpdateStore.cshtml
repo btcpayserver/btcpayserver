@@ -120,7 +120,7 @@
                                     {
                                         <a asp-action="WalletTransactions" asp-controller="Wallets" asp-route-walletId="@scheme.WalletId">Wallet</a><span> - </span>
                                     }
-                                    <a asp-action="AddDerivationScheme" asp-route-cryptoCode="@scheme.Crypto" id="ModifyBTC">Modify</a>
+                                    <a asp-action="AddDerivationScheme" asp-route-cryptoCode="@scheme.Crypto" id="@($"Modify{scheme.Crypto}")">Modify</a>
                                 </td>
                             </tr>
                         }
@@ -162,7 +162,7 @@
                                             <span class="fa fa-times"></span>
                                         }
                                     </td>
-                                    <td style="text-align:right"><a asp-action="AddLightningNode" asp-route-cryptoCode="@scheme.CryptoCode">Modify</a></td>
+                                    <td style="text-align:right"><a asp-action="AddLightningNode" asp-route-cryptoCode="@scheme.CryptoCode" id="@($"Modify-Lightning{scheme.CryptoCode}")">Modify</a></td>
                                 </tr>
                             }
                         </tbody>

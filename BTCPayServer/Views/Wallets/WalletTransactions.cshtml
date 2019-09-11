@@ -5,8 +5,6 @@
     ViewData.SetActivePageAndTitle(WalletsNavPages.Transactions);
 }
 <style type="text/css">
-
-
     .smMaxWidth {
         max-width: 200px;
     }
@@ -19,6 +17,34 @@
 
     .unconf {
         opacity: 0.5;
+    }
+
+    .switchTimeFormat {
+        display: block;
+        max-width: 150px;
+        width: 150px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .transactionLabel:not(:last-child) {
+        margin-bottom: 4px;
+    }
+
+    .removeTransactionLabelForm {
+        display: inline;
+        position: absolute;
+        right: 4px;
+    }
+
+    .removeTransactionLabelForm button {
+        color: #212529;
+        cursor: pointer;
+        display: inline;
+        padding: 0;
+        background-color: transparent;
+        border: 0;
     }
 </style>
 @if (TempData.ContainsKey("TempDataProperty-StatusMessage"))
@@ -64,7 +90,33 @@
                         <td style="text-align:left">
                             @foreach (var label in transaction.Labels)
                             {
-                                <a asp-route-labelFilter="@label.Value"><span class="badge" style="display:block;background-color:@label.Color;color:white;">@label.Value</span></a>
+                                <a
+                                    asp-route-labelFilter="@label.Value"
+                                    class="badge transactionLabel"
+                                    style="
+                                        background-color: @label.Color;
+                                        color: white;
+                                        display: block;
+                                        padding-right: 16px;
+                                        position: relative;
+                                    "
+                                >
+                                    @label.Value
+                                    <form 
+                                        asp-action="ModifyTransaction" 
+                                        method="post" 
+                                        class="removeTransactionLabelForm"
+                                    >
+                                        <input type="hidden" name="transactionId" value="@transaction.Id" />
+                                        <button
+                                            name="removelabel"
+                                            type="submit"
+                                            value="@label.Value"
+                                        >
+                                            <span class="fa fa-close"></span>
+                                        </button>
+                                    </form>
+                                </a>
                             }
                         </td>
                         <td class="smMaxWidth text-truncate @(transaction.IsConfirmed ? "" : "unconf")">

@@ -531,7 +531,7 @@ namespace BTCPayServer.Controllers
             var balanceChange = psbt.GetBalance(settings.AccountDerivation, signingKey, rootedKeyPath);
             if (balanceChange == Money.Zero)
             {
-                ModelState.AddModelError(nameof(viewModel.SeedOrKey), "This seed does not seem to be able to sign this transaction. Either this is the wrong key, or Wallet Settings have not the correct account path in the wallet settings.");
+                ModelState.AddModelError(nameof(viewModel.SeedOrKey), "This seed is unable to sign this transaction. Either the seed is incorrect, or the account path has not been properly configured in the Wallet Settings.");
                 return View(viewModel);
             }
             psbt.SignAll(settings.AccountDerivation, signingKey, rootedKeyPath);

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Mvc;
@@ -14,7 +12,6 @@ namespace BTCPayServer.Tests
         public static void ScrollTo(this IWebDriver driver, By by)
         {
             var element = driver.FindElement(by);
-            ((IJavaScriptExecutor)driver).ExecuteScript($"window.scrollBy({element.Location.X},{element.Location.Y});");
         }
         /// <summary>
         /// Sometimes the chrome driver is fucked up and we need some magic to click on the element.
@@ -69,6 +66,22 @@ namespace BTCPayServer.Tests
             Assert.NotNull(result);
             var vr = Assert.IsType<ViewResult>(result);
             return Assert.IsType<T>(vr.Model);
+        }
+
+        public static IWebElement AssertElementNotFound(this IWebDriver driver, By by)
+        {
+            try
+            {
+                var webElement = driver.FindElement(by);
+                Assert.False(webElement.Displayed);
+                return webElement;
+            }
+            catch (NoSuchElementException)
+            {
+                
+            }
+
+            return null;
         }
     }
 }

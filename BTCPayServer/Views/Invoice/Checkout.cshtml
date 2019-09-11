@@ -84,6 +84,7 @@
 
                         <select asp-for="DefaultLang"
                                 class="cmblang reverse invisible"
+                                onkeypress="if(event.keyCode==13){ $(this).click();}"
                                 onchange="changeLanguage($(this).val())"
                                 asp-items="@langService.GetLanguages().Select((language) => new SelectListItem(language.DisplayName,language.Code, false))"></select>
 

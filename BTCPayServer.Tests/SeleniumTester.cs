@@ -27,20 +27,42 @@ namespace BTCPayServer.Tests
 {
     public class SeleniumTester : IDisposable
     {
-        public IWebDriver Driver { get; set; }
-        public ServerTester Server { get; set; }
+        private IWebDriver _Driver;
+        public IWebDriver Driver
+        {
+            get
+            {
+                if (_Driver == null)
+                {
+                    Start();
+                }
+                return _Driver;
+            }
+        }
+        private ServerTester _Server;
+        public ServerTester Server
+        {
+            get
+            {
+                if (_Server == null)
+                {
+                    _Server = ServerTester.Create("Default Scope");
+                    Start();
+                }
+                return _Server;
+            }
+        }
 
         public static SeleniumTester Create([CallerMemberNameAttribute] string scope = null)
         {
-            var server = ServerTester.Create(scope);
             return new SeleniumTester()
             {
-                Server = server
+                _Server = ServerTester.Create(scope)
             };
         }
 
       
-        public void Start()
+        void Start()
         {
             Server.Start();
             ChromeOptions options = new ChromeOptions();
@@ -56,7 +78,7 @@ namespace BTCPayServer.Tests
             {
                 options.AddArgument("no-sandbox");
             }
-            Driver = new ChromeDriver(Server.PayTester.InContainer ? "/usr/bin" : Directory.GetCurrentDirectory(), options);
+            _Driver = new ChromeDriver(Server.PayTester.InContainer ? "/usr/bin" : Directory.GetCurrentDirectory(), options);
             if (isDebug)
             {
                 //when running locally, depending on your resolution, the website may go into mobile responsive mode and screw with navigation of tests
@@ -77,7 +99,10 @@ namespace BTCPayServer.Tests
 
         public string RegisterNewUser(bool isAdmin = false)
         {
-            var usr = RandomUtils.GetUInt256().ToString() + "@a.com";
+            GoToHome();
+            if (Driver.PageSource.Contains("id=\"Logout\""))
+                Logout();
+            var usr = RandomUtils.GetUInt256().ToString().Substring(20) + "@a.com";
             Driver.FindElement(By.Id("Register")).Click();
             Driver.FindElement(By.Id("Email")).SendKeys(usr);
             Driver.FindElement(By.Id("Password")).SendKeys("123456");

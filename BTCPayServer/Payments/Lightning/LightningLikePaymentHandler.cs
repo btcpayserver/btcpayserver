@@ -162,7 +162,8 @@ namespace BTCPayServer.Payments.Lightning
             return string.Empty;
         }
 
-        public override void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse)
+        public override void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse,
+            StoreBlob storeBlob)
         {
             var paymentMethodId = new PaymentMethodId(model.CryptoCode, PaymentTypes.LightningLike);
             
@@ -172,8 +173,16 @@ namespace BTCPayServer.Payments.Lightning
             model.PaymentMethodName = GetPaymentMethodName(network);
             model.InvoiceBitcoinUrl = cryptoInfo.PaymentUrls.BOLT11;
             model.InvoiceBitcoinUrlQR = cryptoInfo.PaymentUrls.BOLT11.ToUpperInvariant();
+            model.LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi;
+            if (storeBlob.LightningAmountInSatoshi && model.CryptoCode == "BTC" )
+            {
+                model.CryptoCode = "Sats";
+                model.BtcDue = Money.Parse(model.BtcDue).ToUnit(MoneyUnit.Satoshi).ToString();
+                model.BtcPaid =  Money.Parse(model.BtcPaid).ToUnit(MoneyUnit.Satoshi).ToString();
+                model.NetworkFee = new Money(model.NetworkFee, MoneyUnit.BTC).ToUnit(MoneyUnit.Satoshi);
+                model.OrderAmount = Money.Parse(model.OrderAmount).ToUnit(MoneyUnit.Satoshi).ToString();
+            }
         }
-
         public override string GetCryptoImage(PaymentMethodId paymentMethodId)
         {
             var network = _networkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);

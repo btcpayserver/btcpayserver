@@ -213,12 +213,6 @@
                 this.lineItemsExpanded ? $("line-items").slideUp() : $("line-items").slideDown();
                 this.lineItemsExpanded = !this.lineItemsExpanded;
             },
-            numberFormatted: function(x) {
-                var rounded = Math.round(x);
-                var parts = rounded.toString().split(".");
-                parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-                return parts.join(".");
-            },
             openPaymentMethodDialog: function() {
                 var content = $("#vexPopupDialog").html();
                 vex.open({

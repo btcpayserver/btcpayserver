@@ -13,8 +13,8 @@ namespace BTCPayServer.Models.InvoicingModels
         public int Total { get; set; }
         public string SearchTerm { get; set; }
         public int? TimezoneOffset { get; set; }
-
         public List<InvoiceModel> Invoices { get; set; } = new List<InvoiceModel>();
+        public string[] StoreIds { get; set; }
     }
 
     public class InvoiceModel

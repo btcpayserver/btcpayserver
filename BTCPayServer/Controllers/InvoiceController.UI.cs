@@ -398,11 +398,15 @@ namespace BTCPayServer.Controllers
         [BitpayAPIConstraint(false)]
         public async Task<IActionResult> ListInvoices(string searchTerm = null, int skip = 0, int count = 50, int timezoneOffset = 0)
         {
+            var fs = new SearchString(searchTerm);
+            var storeIds = fs.GetFilterArray("storeid") != null ? fs.GetFilterArray("storeid") : new List<string>().ToArray();
+
             var model = new InvoicesModel
             {
                 SearchTerm = searchTerm,
                 Skip = skip,
                 Count = count,
+                StoreIds = storeIds,
                 TimezoneOffset = timezoneOffset
             };
             InvoiceQuery invoiceQuery = GetInvoiceQuery(searchTerm, timezoneOffset);

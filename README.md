@@ -32,7 +32,7 @@ Thanks to the [apps](https://github.com/btcpayserver/btcpayserver-doc/blob/maste
 * [How to build](#how-to-build)
 * [How to run](#how-to-run)
 * [How to debug](#how-to-debug)
-* [Dependencies](#dependencies)
+* [Dependencies](#other-dependencies)
 
 ## Features
 

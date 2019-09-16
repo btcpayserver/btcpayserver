@@ -21,6 +21,7 @@ using BTCPayServer.Lightning.CLightning;
 using BTCPayServer.Views.Stores;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using OpenQA.Selenium.Interactions;
 
 namespace BTCPayServer.Tests
 {
@@ -214,6 +215,13 @@ namespace BTCPayServer.Tests
         public void SetCheckbox(SeleniumTester s, string inputName, bool value)
         {
             SetCheckbox(s.Driver.FindElement(By.Name(inputName)), value);
+        }
+
+        public void ScrollToElement(IWebElement element)
+        {
+            Actions actions = new Actions(Driver);
+            actions.MoveToElement(element);
+            actions.Perform();
         }
 
         public void GoToInvoices()

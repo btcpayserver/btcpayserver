@@ -21,6 +21,11 @@ namespace BTCPayServer
                 UriScheme = "bitcoin",
                 CryptoImagePath = "imlegacy/bitcoin.svg",
                 LightningImagePath = "imlegacy/bitcoin-lightning.svg",
+                DefaultRateRules = new[]
+                {
+                    "SATS_X = SATS_BTC * BTC_X",
+                    "BTC_SATS = sats(BTC_SATS);",
+                },
                 DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(NetworkType),
                 CoinType = NetworkType == NetworkType.Mainnet ? new KeyPath("0'") : new KeyPath("1'"),
                 SupportRBF = true,

@@ -898,17 +898,11 @@ namespace BTCPayServer.Controllers
         }
 
         [Route("server/services/ssh")]
-        public IActionResult SSHService(bool downloadKeyFile = false)
+        public async Task<IActionResult> SSHService()
         {
             var settings = _Options.SSHSettings;
             if (settings == null)
                 return NotFound();
-            if (downloadKeyFile)
-            {
-                if (!System.IO.File.Exists(settings.KeyFile))
-                    return NotFound();
-                return File(System.IO.File.ReadAllBytes(settings.KeyFile), "application/octet-stream", "id_rsa");
-            }
 
             var server = Extensions.IsLocalNetwork(settings.Server) ? this.Request.Host.Host : settings.Server;
             SSHServiceViewModel vm = new SSHServiceViewModel();
@@ -917,7 +911,44 @@ namespace BTCPayServer.Controllers
             vm.Password = settings.Password;
             vm.KeyFilePassword = settings.KeyFilePassword;
             vm.HasKeyFile = !string.IsNullOrEmpty(settings.KeyFile);
+            vm.CanConnect = _sshState.CanUseSSH;
+            if (vm.CanConnect)
+            {
+                try
+                {
+                    using (var sshClient = await _Options.SSHSettings.ConnectAsync())
+                    {
+                        var result = await sshClient.RunBash("cat ~/.ssh/authorized_keys", TimeSpan.FromSeconds(10));
+                        vm.SSHKeyFileContent = result.Output;
+                    }
+                }
+                catch
+                {
+
+                }
+            }
             return View(vm);
+        }
+
+        [HttpPost]
+        [Route("server/services/ssh")]
+        public async Task<IActionResult> SSHService(SSHServiceViewModel viewModel)
+        {
+            string newContent = viewModel?.SSHKeyFileContent ?? string.Empty;
+            newContent = newContent.Replace("\r\n", "\n", StringComparison.OrdinalIgnoreCase);
+            try
+            {
+                using (var sshClient = await _Options.SSHSettings.ConnectAsync())
+                {
+                    await sshClient.RunBash($"mkdir -p ~/.ssh && echo '{newContent.EscapeSingleQuotes()}' > ~/.ssh/authorized_keys", TimeSpan.FromSeconds(10));
+                }
+                StatusMessage = "authorized_keys has been updated";
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Error: {ex.Message}";
+            }
+            return RedirectToAction(nameof(SSHService));
         }
 
         [Route("server/theme")]

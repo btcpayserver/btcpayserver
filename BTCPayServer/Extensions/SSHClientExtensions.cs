@@ -49,13 +49,18 @@ namespace BTCPayServer
             return tcs.Task;
         }
 
+        public static string EscapeSingleQuotes(this string command)
+        {
+            return command.Replace("'", "'\"'\"'", StringComparison.OrdinalIgnoreCase);
+        }
+
         public static Task<SSHCommandResult> RunBash(this SshClient sshClient, string command, TimeSpan? timeout = null)
         {
             if (sshClient == null)
                 throw new ArgumentNullException(nameof(sshClient));
             if (command == null)
                 throw new ArgumentNullException(nameof(command));
-            command = $"sudo bash -c '{command}'";
+            command = $"bash -c '{command.EscapeSingleQuotes()}'";
             var sshCommand = sshClient.CreateCommand(command);
             if (timeout is TimeSpan v)
                 sshCommand.CommandTimeout = v;

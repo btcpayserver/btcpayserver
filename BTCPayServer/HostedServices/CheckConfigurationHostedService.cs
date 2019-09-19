@@ -17,6 +17,8 @@ namespace BTCPayServer.HostedServices
     public class CheckConfigurationHostedService : IHostedService
     {
         private readonly BTCPayServerOptions _options;
+        Task _testingConnection;
+        CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         public CheckConfigurationHostedService(BTCPayServerOptions options)
         {
@@ -27,12 +29,14 @@ namespace BTCPayServer.HostedServices
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            _ = TestConnection();
+            _testingConnection = TestConnection();
             return Task.CompletedTask;
         }
 
         async Task TestConnection()
         {
+            TimeSpan nextWait = TimeSpan.FromSeconds(10);
+            retry:
             var canUseSSH = false;
             if (_options.SSHSettings != null)
             {
@@ -60,12 +64,26 @@ namespace BTCPayServer.HostedServices
                     Logs.Configuration.LogWarning($"SSH connection issue of type {ex.GetType().Name}: {message}");
                 }
             }
+            if (!canUseSSH)
+            {
+                Logs.Configuration.LogWarning($"Retrying SSH connection in {(int)nextWait.TotalSeconds} seconds");
+                await Task.Delay(nextWait, _cancellationTokenSource.Token);
+                nextWait = TimeSpan.FromSeconds(nextWait.TotalSeconds * 2);
+                if (nextWait > TimeSpan.FromMinutes(10.0))
+                    nextWait = TimeSpan.FromMinutes(10.0);
+                goto retry;
+            }
             CanUseSSH = canUseSSH;
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        public async Task StopAsync(CancellationToken cancellationToken)
         {
-            return Task.CompletedTask;
+            _cancellationTokenSource.Cancel();
+            try
+            {
+                await _testingConnection;
+            }
+            catch { }
         }
     }
 }

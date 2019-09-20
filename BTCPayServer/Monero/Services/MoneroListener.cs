@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -132,7 +133,7 @@ namespace BTCPayServer.Payments.Monero
             var moneroWalletRpcClient = _moneroRpcProvider.WalletRpcClients[cryptoCode];
             var network = _networkProvider.GetNetwork(cryptoCode);
 
-            var updatedPaymentEntities = new List<(PaymentEntity Payment, InvoiceEntity invoice)>();
+            var updatedPaymentEntities = new BlockingCollection<(PaymentEntity Payment, InvoiceEntity invoice)>();
 
             //get all the required data in one list (invoice, its existing payments and the current payment method details)
             var expandedInvoices = invoices.Select(entity => (Invoice: entity,
@@ -207,7 +208,7 @@ namespace BTCPayServer.Payments.Monero
 
                     return HandlePaymnetData(cryptoCode, transfer.Address, transfer.Amount, transfer.SubaddrIndex.Major,
                         transfer.SubaddrIndex.Minor, transfer.Txid, transfer.Confirmations, transfer.Height, invoice,
-                        updatedPaymentEntities);
+                        updatedPaymentEntities.ToList());
                 }));
             }
 
@@ -258,15 +259,13 @@ namespace BTCPayServer.Payments.Monero
                     continue;
                 }
 
-                //get address index of this address
-                var addressIndex = await _moneroRpcProvider.WalletRpcClients[cryptoCode]
-                    .GetAddressIndex(new GetAddressIndexRequest() {Address = destination.Key});
+                var index = destination.First().SubaddrIndex;
 
                 await HandlePaymnetData(cryptoCode,
                     destination.Key,
                     destination.Sum(destination1 => destination1.Amount),
-                    addressIndex.Index.Major,
-                    addressIndex.Index.Minor,
+                    index.Major,
+                    index.Minor,
                     transfer.Transfer.Txid,
                     transfer.Transfer.Confirmations,
                     transfer.Transfer.Height
@@ -276,6 +275,13 @@ namespace BTCPayServer.Payments.Monero
             if (paymentsToUpdate.Any())
             {
                 await _invoiceRepository.UpdatePayments(paymentsToUpdate.Select(tuple => tuple.Payment).ToList());
+                foreach (var valueTuples in paymentsToUpdate.GroupBy(entity => entity.invoice))
+                {
+                    if (valueTuples.Any())
+                    {
+                        _eventAggregator.Publish(new Events.InvoiceNeedUpdateEvent(valueTuples.Key.Id));
+                    }
+                }
             }
         }
 
@@ -314,6 +320,7 @@ namespace BTCPayServer.Payments.Monero
             {
                 //else update it with the new data
                 alreadyExistingPaymentThatMatches.PaymentData = paymentData;
+                alreadyExistingPaymentThatMatches.Payment.SetCryptoPaymentData(paymentData);
                 paymentsToUpdate.Add((alreadyExistingPaymentThatMatches.Payment, invoice));
             }
         }

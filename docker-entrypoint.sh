@@ -5,7 +5,12 @@ echo "$(/sbin/ip route|awk '/default/ { print $3 }')  host.docker.internal" >> /
 if ! [ -f "$BTCPAY_SSHKEYFILE" ]; then
     echo "Creating BTCPay Server SSH key File..."
     ssh-keygen -t rsa -f "$BTCPAY_SSHKEYFILE" -q -P "" -m PEM -C btcpayserver > /dev/null
-    [ -f "$BTCPAY_SSHAUTHORIZEDKEYS" ] && sed -i '/btcpayserver$/d' "$BTCPAY_SSHAUTHORIZEDKEYS"
+    if [ -f "$BTCPAY_SSHAUTHORIZEDKEYS" ]; then
+        # Because the file is mounted, set -i does not work
+        sed '/btcpayserver$/d' "$BTCPAY_SSHAUTHORIZEDKEYS" > "$BTCPAY_SSHAUTHORIZEDKEYS.new"
+        cat "$BTCPAY_SSHAUTHORIZEDKEYS.new" > "$BTCPAY_SSHAUTHORIZEDKEYS"
+        rm -rf "$BTCPAY_SSHAUTHORIZEDKEYS.new"
+    fi
 fi
 
 if [ -f "$BTCPAY_SSHAUTHORIZEDKEYS" ] && ! grep -q "btcpayserver$" "$BTCPAY_SSHAUTHORIZEDKEYS"; then

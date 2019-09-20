@@ -45,7 +45,7 @@
     </div>
 </div>
 
-@if (Model.CanConnect)
+@if (Model.SSHKeyFileContent != null)
 {
     <h4>Authorized keys</h4>
     <div class="row">

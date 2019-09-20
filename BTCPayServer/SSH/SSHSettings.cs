@@ -13,6 +13,7 @@ namespace BTCPayServer.SSH
         public int Port { get; set; } = 22;
         public string KeyFile { get; set; }
         public string KeyFilePassword { get; set; }
+        public string AuthorizedKeysFile { get; set; }
         public string Username { get; set; }
         public string Password { get; set; }
         public List<SSHFingerprint> TrustedFingerprints { get; set; } = new List<SSHFingerprint>();

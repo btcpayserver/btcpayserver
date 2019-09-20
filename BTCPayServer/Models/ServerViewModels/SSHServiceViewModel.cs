@@ -11,7 +11,6 @@ namespace BTCPayServer.Models.ServerViewModels
         public string Password { get; set; }
         public string KeyFilePassword { get; set; }
         public bool HasKeyFile { get; set; }
-        public bool CanConnect { get; set; }
         public string SSHKeyFileContent { get; set; }
     }
 }

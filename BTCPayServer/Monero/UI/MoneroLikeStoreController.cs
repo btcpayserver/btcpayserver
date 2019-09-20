@@ -90,6 +90,10 @@ namespace BTCPayServer.Controllers
             _MoneroLikeConfiguration.MoneroLikeConfigurationItems.TryGetValue(cryptoCode,
                 out var configurationItem);
             var fileAddress = Path.Combine(configurationItem.WalletDirectory, "wallet");
+            var accounts = accountsResponse?.SubaddressAccounts?.Select(account =>
+                new SelectListItem(
+                    $"{account.AccountIndex} - {(string.IsNullOrEmpty(account.Label) ? "No label" : account.Label)}",
+                    account.AccountIndex.ToString(CultureInfo.InvariantCulture)));
             return new MoneroLikePaymentMethodViewModel()
             {
                 WalletFileFound = System.IO.File.Exists(fileAddress),
@@ -99,10 +103,8 @@ namespace BTCPayServer.Controllers
                 Summary = summary,
                 CryptoCode = cryptoCode,
                 AccountIndex = settings?.AccountIndex ?? accountsResponse?.SubaddressAccounts?.FirstOrDefault()?.AccountIndex?? (long)0,
-                Accounts =new SelectList(accountsResponse?.SubaddressAccounts.Select(account =>
-                    new SelectListItem(
-                        $"{account.AccountIndex} - {(string.IsNullOrEmpty(account.Label)? "No label": account.Label)}",
-                        account.AccountIndex.ToString(CultureInfo.InvariantCulture))), nameof(SelectListItem.Value), nameof(SelectListItem.Text))
+                Accounts = accounts == null? null : new SelectList(accounts, nameof(SelectListItem.Value),
+                    nameof(SelectListItem.Text))
             };
         }
 

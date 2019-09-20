@@ -123,6 +123,12 @@ namespace BTCPayServer.Tests
                 Assert.Contains("tes't", text);
                 Assert.Contains("test2", text);
                 Assert.True(s.Driver.PageSource.Contains("authorized_keys has been updated", StringComparison.OrdinalIgnoreCase));
+
+                s.Driver.FindElement(By.Id("SSHKeyFileContent")).Clear();
+                s.Driver.FindElement(By.Id("submit")).ForceClick();
+
+                text = s.Driver.FindElement(By.Id("SSHKeyFileContent")).Text;
+                Assert.DoesNotContain("test2", text);
             }
         }
 

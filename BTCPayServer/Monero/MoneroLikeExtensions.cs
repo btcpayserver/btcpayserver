@@ -3,7 +3,6 @@ using System.Linq;
 using BTCPayServer.Configuration;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Monero;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -22,11 +21,6 @@ namespace BTCPayServer.Monero
             serviceCollection.AddSingleton<IPaymentMethodHandler>(provider => provider.GetService<MoneroLikePaymentMethodHandler>());
             
             return serviceCollection;
-        }
-
-        public static IApplicationBuilder UseMoneroLike(this IApplicationBuilder applicationBuilder)
-        {
-            return applicationBuilder;
         }
         
         private  static MoneroLikeConfiguration ConfigureMoneroLikeConfiguration(this IServiceProvider serviceProvider)
@@ -68,6 +62,4 @@ namespace BTCPayServer.Monero
             return result;
         }
     }
-    
-    
 }

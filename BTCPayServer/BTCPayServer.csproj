@@ -122,7 +122,6 @@
 	<ItemGroup>
 	  <Folder Include="Authentication\OpenId\Models\" />
 	  <Folder Include="Build\" />
-	  <Folder Include="Monero\Network" />
 	  <Folder Include="U2F\Services" />
 	  <Folder Include="wwwroot\vendor\clipboard.js\" />
 	  <Folder Include="wwwroot\vendor\highlightjs\" />

@@ -5,15 +5,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
-using BTCPayServer.Lightning;
-using BTCPayServer.Models.InvoicingModels;
-using BTCPayServer.Monero.RPC;
 using BTCPayServer.Monero.RPC.Models;
 using BTCPayServer.Services.Invoices;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using NBitpayClient;
 using NBXplorer;
 
 namespace BTCPayServer.Payments.Monero

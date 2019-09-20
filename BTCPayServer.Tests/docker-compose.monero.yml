@@ -22,11 +22,6 @@ services:
             - "monero_wallet:/wallet"
         depends_on:
             - monerod
-    ubuntu:
-        image: ubuntu
-        restart: unless-stopped
-        container_name: ubuntu
-        entrypoint: sleep 1d
         
 volumes:
     monero_data:

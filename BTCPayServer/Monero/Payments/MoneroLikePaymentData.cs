@@ -1,7 +1,4 @@
-using System;
-using System.Globalization;
 using BTCPayServer.Data;
-using BTCPayServer.Lightning;
 using BTCPayServer.Monero;
 using BTCPayServer.Services.Invoices;
 
@@ -44,13 +41,13 @@ namespace BTCPayServer.Payments.Monero
             switch (speedPolicy)
             {
                 case SpeedPolicy.HighSpeed:
-                    return ConfirmationCount >= 1;
+                    return ConfirmationCount >= 0;
                 case SpeedPolicy.MediumSpeed:
-                    return ConfirmationCount >= 5;
+                    return ConfirmationCount >= 1;
                 case SpeedPolicy.LowMediumSpeed:
-                    return ConfirmationCount >= 7;
+                    return ConfirmationCount >= 2;
                 case SpeedPolicy.LowSpeed:
-                    return ConfirmationCount >= 10;
+                    return ConfirmationCount >= 6;
                 default:
                     return false;
             }

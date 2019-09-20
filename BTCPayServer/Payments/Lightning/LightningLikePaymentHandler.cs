@@ -13,6 +13,7 @@ using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Rates;
 using NBitcoin;
+using System.Globalization;
 
 namespace BTCPayServer.Payments.Lightning
 {
@@ -177,10 +178,10 @@ namespace BTCPayServer.Payments.Lightning
             if (storeBlob.LightningAmountInSatoshi && model.CryptoCode == "BTC" )
             {
                 model.CryptoCode = "Sats";
-                model.BtcDue = Money.Parse(model.BtcDue).ToUnit(MoneyUnit.Satoshi).ToString();
-                model.BtcPaid =  Money.Parse(model.BtcPaid).ToUnit(MoneyUnit.Satoshi).ToString();
+                model.BtcDue = Money.Parse(model.BtcDue).ToUnit(MoneyUnit.Satoshi).ToString(CultureInfo.InvariantCulture);
+                model.BtcPaid =  Money.Parse(model.BtcPaid).ToUnit(MoneyUnit.Satoshi).ToString(CultureInfo.InvariantCulture);
                 model.NetworkFee = new Money(model.NetworkFee, MoneyUnit.BTC).ToUnit(MoneyUnit.Satoshi);
-                model.OrderAmount = Money.Parse(model.OrderAmount).ToUnit(MoneyUnit.Satoshi).ToString();
+                model.OrderAmount = Money.Parse(model.OrderAmount).ToUnit(MoneyUnit.Satoshi).ToString(CultureInfo.InvariantCulture);
             }
         }
         public override string GetCryptoImage(PaymentMethodId paymentMethodId)

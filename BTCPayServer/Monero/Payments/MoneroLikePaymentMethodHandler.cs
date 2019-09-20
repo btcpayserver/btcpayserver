@@ -7,6 +7,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Lightning;
 using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
+using BTCPayServer.Monero;
 using BTCPayServer.Monero.RPC.Models;
 using BTCPayServer.Rating;
 using BTCPayServer.Services.Invoices;
@@ -41,8 +42,7 @@ namespace BTCPayServer.Payments.Monero
             var feeRatePerByte = feeRatePerKb.Fee / 1024;
             return new MoneroLikeOnChainPaymentMethodDetails()
             {
-                NextNetworkFee = 
-                    new LightMoney(feeRatePerByte * 100).ToDecimal(LightMoneyUnit.BTC),
+                NextNetworkFee = MoneroMoney.Convert(feeRatePerByte * 100),
                 AccountIndex = supportedPaymentMethod.AccountIndex,
                 AddressIndex = address.AddressIndex,
                 DepositAddress = address.Address

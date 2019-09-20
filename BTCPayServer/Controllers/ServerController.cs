@@ -946,7 +946,7 @@ namespace BTCPayServer.Controllers
 
         private bool CanAccessAuthorizedKeyFile()
         {
-            return _Options.SSHSettings.AuthorizedKeysFile != null && System.IO.File.Exists(_Options.SSHSettings.AuthorizedKeysFile);
+            return _Options.SSHSettings?.AuthorizedKeysFile != null && System.IO.File.Exists(_Options.SSHSettings.AuthorizedKeysFile);
         }
 
         [HttpPost]
@@ -956,8 +956,8 @@ namespace BTCPayServer.Controllers
             string newContent = viewModel?.SSHKeyFileContent ?? string.Empty;
             newContent = newContent.Replace("\r\n", "\n", StringComparison.OrdinalIgnoreCase);
 
+            bool updated = false;
             Exception exception = null;
-
             // Let's try to just write the file
             if (CanAccessAuthorizedKeyFile())
             {
@@ -965,6 +965,7 @@ namespace BTCPayServer.Controllers
                 {
                     await System.IO.File.WriteAllTextAsync(_Options.SSHSettings.AuthorizedKeysFile, newContent);
                     StatusMessage = "authorized_keys has been updated";
+                    updated = true;
                 }
                 catch (Exception ex)
                 {
@@ -973,7 +974,7 @@ namespace BTCPayServer.Controllers
             }
 
             // If that fail, fallback to ssh
-            if (exception != null && _sshState.CanUseSSH)
+            if (!updated && _sshState.CanUseSSH)
             {
                 try
                 {
@@ -981,6 +982,7 @@ namespace BTCPayServer.Controllers
                     {
                         await sshClient.RunBash($"mkdir -p ~/.ssh && echo '{newContent.EscapeSingleQuotes()}' > ~/.ssh/authorized_keys", TimeSpan.FromSeconds(10));
                     }
+                    updated = true;
                     exception = null;
                 }
                 catch (Exception ex)

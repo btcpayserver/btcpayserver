@@ -248,7 +248,7 @@ namespace BTCPayServer.Payments.Monero
 
 
             //group all destinations of the tx together and loop through the sets
-            foreach (var destination in transfer.Transfer.Destinations.GroupBy(destination => destination.Address))
+            foreach (var destination in transfer.Transfers.GroupBy(destination => destination.Address))
             {
                 //find the invoice corresponding to this address, else skip
                 var address = destination.Key + "#" + paymentMethodId;

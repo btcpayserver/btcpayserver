@@ -164,6 +164,7 @@ namespace BTCPayServer.Monero.RPC.Models
     public partial class GetTransferByTransactionIdResponse
     {
         [J("transfer")] public TransferItem Transfer { get; set; }
+        [J("transfers")] public IEnumerable<TransferItem> Transfers { get; set; }
 
         public partial class TransferItem
         {

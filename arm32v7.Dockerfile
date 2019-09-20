@@ -20,7 +20,7 @@ RUN cd BTCPayServer && dotnet publish --output /app/ --configuration Release
 # Force the builder machine to take make an arm runtime image. This is fine as long as the builder does not run any program
 FROM mcr.microsoft.com/dotnet/core/aspnet:2.1.9-stretch-slim-arm32v7
 COPY --from=builder /usr/bin/qemu-arm-static /usr/bin/qemu-arm-static
-RUN apt-get update && apt-get install -y --no-install-recommends iproute2 \
+RUN apt-get update && apt-get install -y --no-install-recommends iproute2 openssh-client \
     && rm -rf /var/lib/apt/lists/* 
 
 ENV LC_ALL en_US.UTF-8

@@ -5,6 +5,7 @@ echo "$(/sbin/ip route|awk '/default/ { print $3 }')  host.docker.internal" >> /
 if ! [ -f "$BTCPAY_SSHKEYFILE" ]; then
     echo "Creating BTCPay Server SSH key File..."
     ssh-keygen -t rsa -f "$BTCPAY_SSHKEYFILE" -q -P "" -m PEM -C btcpayserver > /dev/null
+    [ -f "$BTCPAY_SSHAUTHORIZEDKEYS" ] && sed -i '/btcpayserver$/d' "$BTCPAY_SSHAUTHORIZEDKEYS"
 fi
 
 if [ -f "$BTCPAY_SSHAUTHORIZEDKEYS" ] && ! grep -q "btcpayserver$" "$BTCPAY_SSHAUTHORIZEDKEYS"; then

@@ -1,5 +1,6 @@
 using System;
 using BTCPayServer.Data;
+using BTCPayServer.Lightning;
 using BTCPayServer.Services.Invoices;
 
 namespace BTCPayServer.Payments.Monero
@@ -28,7 +29,7 @@ namespace BTCPayServer.Payments.Monero
 
         public decimal GetValue()
         {
-            return Amount;
+            return new LightMoney(Amount).ToDecimal(LightMoneyUnit.BTC);
         }
 
         public bool PaymentCompleted(PaymentEntity entity)

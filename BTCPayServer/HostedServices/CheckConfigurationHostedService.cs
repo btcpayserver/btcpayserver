@@ -63,15 +63,15 @@ namespace BTCPayServer.HostedServices
                     }
                     Logs.Configuration.LogWarning($"SSH connection issue of type {ex.GetType().Name}: {message}");
                 }
-            }
-            if (!canUseSSH)
-            {
-                Logs.Configuration.LogWarning($"Retrying SSH connection in {(int)nextWait.TotalSeconds} seconds");
-                await Task.Delay(nextWait, _cancellationTokenSource.Token);
-                nextWait = TimeSpan.FromSeconds(nextWait.TotalSeconds * 2);
-                if (nextWait > TimeSpan.FromMinutes(10.0))
-                    nextWait = TimeSpan.FromMinutes(10.0);
-                goto retry;
+                if (!canUseSSH)
+                {
+                    Logs.Configuration.LogWarning($"Retrying SSH connection in {(int)nextWait.TotalSeconds} seconds");
+                    await Task.Delay(nextWait, _cancellationTokenSource.Token);
+                    nextWait = TimeSpan.FromSeconds(nextWait.TotalSeconds * 2);
+                    if (nextWait > TimeSpan.FromMinutes(10.0))
+                        nextWait = TimeSpan.FromMinutes(10.0);
+                    goto retry;
+                }
             }
             CanUseSSH = canUseSSH;
         }

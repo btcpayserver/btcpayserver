@@ -2,7 +2,7 @@
 
 echo "$(/sbin/ip route|awk '/default/ { print $3 }')  host.docker.internal" >> /etc/hosts
 
-if ! [ -f "$BTCPAY_SSHKEYFILE" ]; then
+if [[ "$BTCPAY_SSHKEYFILE" ]] && ! [ -f "$BTCPAY_SSHKEYFILE" ]; then
     echo "Creating BTCPay Server SSH key File..."
     ssh-keygen -t rsa -f "$BTCPAY_SSHKEYFILE" -q -P "" -m PEM -C btcpayserver > /dev/null
     if [ -f "$BTCPAY_SSHAUTHORIZEDKEYS" ]; then
@@ -13,7 +13,7 @@ if ! [ -f "$BTCPAY_SSHKEYFILE" ]; then
     fi
 fi
 
-if [ -f "$BTCPAY_SSHAUTHORIZEDKEYS" ] && ! grep -q "btcpayserver$" "$BTCPAY_SSHAUTHORIZEDKEYS"; then
+if [[ "$BTCPAY_SSHKEYFILE" ]] && [ -f "$BTCPAY_SSHAUTHORIZEDKEYS" ] && ! grep -q "btcpayserver$" "$BTCPAY_SSHAUTHORIZEDKEYS"; then
     echo "Adding BTCPay Server SSH key to authorized keys"
     cat "$BTCPAY_SSHKEYFILE.pub" >> "$BTCPAY_SSHAUTHORIZEDKEYS"
 fi

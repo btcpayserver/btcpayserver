@@ -20,7 +20,7 @@ namespace BTCPayServer.Configuration
         public string CookieFile { get; internal set; }
     }
 
-    public partial class BTCPayServerOptions
+    public class BTCPayServerOptions
     {
         public NetworkType NetworkType
         {

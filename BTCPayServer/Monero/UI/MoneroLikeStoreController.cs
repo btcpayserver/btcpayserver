@@ -19,10 +19,6 @@ using MoneroRPC.NET.Models;
 
 namespace BTCPayServer.Controllers
 {
-    
-    
-    
-    
     [Route("stores/{storeId}/monerolike")]
     [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
     [Authorize(Policy = Policies.CanModifyStoreSettings.Key, AuthenticationSchemes = Policies.CookieAuthentication)]

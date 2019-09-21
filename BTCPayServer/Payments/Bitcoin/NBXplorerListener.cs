@@ -149,7 +149,8 @@ namespace BTCPayServer.Payments.Bitcoin
                                     foreach (var txCoin in evt.TransactionData.Transaction.Outputs.AsCoins()
                                                                                 .Where(o => o.ScriptPubKey == output.ScriptPubKey))
                                     {
-                                        var invoice = await _InvoiceRepository.GetInvoiceFromScriptPubKey(output.ScriptPubKey, network.CryptoCode);
+                                        var key = output.ScriptPubKey.Hash + "#" + network.CryptoCode;
+                                        var invoice = (await _InvoiceRepository.GetInvoicesFromAddresses(new [] {key})).FirstOrDefault();
                                         if (invoice != null)
                                         {
                                             var paymentData = new BitcoinLikePaymentData(txCoin, evt.TransactionData.Transaction.RBF);

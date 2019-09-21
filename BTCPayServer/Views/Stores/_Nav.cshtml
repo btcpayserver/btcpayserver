@@ -5,5 +5,9 @@
     <a id="@(nameof(StoreNavPages.Tokens))"class="nav-link @ViewData.IsActivePage(StoreNavPages.Tokens)" asp-action="ListTokens">Access Tokens</a>
     <a id="@(nameof(StoreNavPages.Users))"class="nav-link @ViewData.IsActivePage(StoreNavPages.Users)" asp-action="StoreUsers">Users</a>
     <a id="@(nameof(StoreNavPages.PayButton))"class="nav-link @ViewData.IsActivePage(StoreNavPages.PayButton)" asp-action="PayButton">Pay Button</a>
+    @inject IEnumerable<BTCPayServer.Contracts.IStoreNavExtension> Extensions;
+    @foreach (var extension in Extensions)
+    {
+        <partial name="@extension.Partial"/>
+    }
 </div>
-

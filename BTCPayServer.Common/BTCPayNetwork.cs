@@ -135,7 +135,7 @@ namespace BTCPayServer
 
         public virtual string ToString<T>(T obj)
         {
-            return JsonConvert.SerializeObject(obj);
+            return NBitcoin.JsonConverters.Serializer.ToString(obj, null);
         }
     }
 }

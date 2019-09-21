@@ -6,10 +6,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
-using BTCPayServer.Monero.RPC.Models;
 using BTCPayServer.Services.Invoices;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using MoneroRPC.NET.Models;
 using NBitcoin;
 using NBXplorer;
 

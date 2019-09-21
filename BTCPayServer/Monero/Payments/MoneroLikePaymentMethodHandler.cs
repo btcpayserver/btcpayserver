@@ -6,11 +6,11 @@ using BTCPayServer.Data;
 using BTCPayServer.Lightning;
 using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
-using BTCPayServer.Monero;
-using BTCPayServer.Monero.RPC.Models;
 using BTCPayServer.Rating;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
+using MoneroRPC.NET;
+using MoneroRPC.NET.Models;
 using NBitcoin;
 
 namespace BTCPayServer.Payments.Monero

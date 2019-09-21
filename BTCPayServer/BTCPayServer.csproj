@@ -41,6 +41,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="MoneroRPC.NET" Version="1.0.1" />
     <PackageReference Include="NBitpayClient" Version="1.0.0.34" />	  
     <PackageReference Include="DBriize" Version="1.0.0.4" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
@@ -130,7 +131,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\BTCPayServer.Monero\BTCPayServer.Monero.csproj" />
 	  <ProjectReference Include="..\BTCPayServer.Data\BTCPayServer.Data.csproj" />
 	  <ProjectReference Include="..\BTCPayServer.Rating\BTCPayServer.Rating.csproj" />
 	  <ProjectReference Include="..\BTCPayServer.Common\BTCPayServer.Common.csproj" />

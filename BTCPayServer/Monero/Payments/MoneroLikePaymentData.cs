@@ -1,6 +1,6 @@
 using BTCPayServer.Data;
-using BTCPayServer.Monero;
 using BTCPayServer.Services.Invoices;
+using MoneroRPC.NET;
 
 namespace BTCPayServer.Payments.Monero
 {

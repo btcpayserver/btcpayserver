@@ -2,7 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
-using BTCPayServer.Monero.RPC;
+using MoneroRPC.NET;
 using NBitcoin;
 
 namespace BTCPayServer.Payments.Monero

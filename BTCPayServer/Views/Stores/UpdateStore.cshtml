@@ -4,19 +4,6 @@
     ViewData.SetActivePageAndTitle(StoreNavPages.Index, "Profile");
 }
 
-<style type="text/css">
-    .smMaxWidth {
-        max-width: 150px;
-    }
-
-    @@media (min-width: 768px) {
-        .smMaxWidth {
-            max-width: 300px;
-        }
-    }
-</style>
-
-
 <partial name="_StatusMessage" for="@TempData["TempDataProperty-StatusMessage"]" />
 
 <div class="row">

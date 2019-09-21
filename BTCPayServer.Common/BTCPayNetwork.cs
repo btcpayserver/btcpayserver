@@ -53,9 +53,6 @@ namespace BTCPayServer
         public BTCPayDefaultSettings DefaultSettings { get; set; }
         public KeyPath CoinType { get; internal set; }
         
-        public string UriScheme { get; internal set; }
-
-        public int MaxTrackedConfirmation { get; internal set; } = 6;
         public Dictionary<uint, DerivationType> ElectrumMapping = new Dictionary<uint, DerivationType>();
 
         public int MaxTrackedConfirmation { get; internal set; } = 6;

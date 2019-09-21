@@ -1,0 +1,11 @@
+@using BTCPayServer.Controllers
+@inject SignInManager<ApplicationUser> SignInManager;
+@inject BTCPayServer.Payments.Monero.MoneroLikeConfiguration MoneroLikeConfiguration;
+@{
+    var controller = ViewContext.RouteData.Values["Controller"].ToString();
+    var isMonero = controller.Equals(nameof(MoneroLikeStoreController), StringComparison.InvariantCultureIgnoreCase);
+}
+@if (SignInManager.IsSignedIn(User) && User.IsInRole(Roles.ServerAdmin) && MoneroLikeConfiguration.MoneroLikeConfigurationItems.Any())
+{
+    <a class="nav-link @(isMonero ? "active" : string.Empty)" asp-action="GetStoreMoneroLikePaymentMethods" asp-controller="MoneroLikeStore">Monero</a>
+}

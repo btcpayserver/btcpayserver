@@ -441,7 +441,7 @@ retry:
             entity.Payments = invoice.Payments.Select(p =>
             {
                 var paymentEntity = ToObject<PaymentEntity>(p.Blob, null);
-                paymentEntity.Network = _Networks.GetNetwork<BTCPayNetwork>(paymentEntity.CryptoCode);
+                paymentEntity.Network = _Networks.GetNetwork<BTCPayNetworkBase>(paymentEntity.CryptoCode);
                 paymentEntity.Accounted = p.Accounted;
                 // PaymentEntity on version 0 does not have their own fee, because it was assumed that the payment method have fixed fee.
                 // We want to hide this legacy detail in InvoiceRepository, so we fetch the fee from the PaymentMethod and assign it to the PaymentEntity.
@@ -663,7 +663,7 @@ retry:
                     ReceivedTime = date.UtcDateTime,
                     Accounted = accounted,
                     NetworkFee = paymentMethodDetails.GetNextNetworkFee(),
-                    Network = network as BTCPayNetwork
+                    Network = network
                 };
                 entity.SetCryptoPaymentData(paymentData);
 

@@ -315,8 +315,9 @@ namespace BTCPayServer.HostedServices
                     var paymentData = payment.GetCryptoPaymentData();
                     if (paymentData is Payments.Bitcoin.BitcoinLikePaymentData onChainPaymentData)
                     {
+                        var network = payment.Network as BTCPayNetwork;
                         // Do update if confirmation count in the paymentData is not up to date
-                        if ((onChainPaymentData.ConfirmationCount < payment.Network.MaxTrackedConfirmation && payment.Accounted)
+                        if ((onChainPaymentData.ConfirmationCount < network.MaxTrackedConfirmation && payment.Accounted)
                             && (onChainPaymentData.Legacy || invoice.MonitoringExpiration < DateTimeOffset.UtcNow))
                         {
                             var transactionResult = await _ExplorerClientProvider.GetExplorerClient(payment.GetCryptoCode())?.GetTransactionAsync(onChainPaymentData.Outpoint.Hash);
@@ -325,7 +326,7 @@ namespace BTCPayServer.HostedServices
                             payment.SetCryptoPaymentData(onChainPaymentData);
 
                             // we want to extend invoice monitoring until we reach max confirmations on all onchain payment methods
-                            if (confirmationCount < payment.Network.MaxTrackedConfirmation)
+                            if (confirmationCount < network.MaxTrackedConfirmation)
                                 extendInvoiceMonitoring = true;
                             
                             return payment;

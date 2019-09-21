@@ -108,7 +108,7 @@ namespace BTCPayServer.Data
                 foreach (var strat in strategies.Properties())
                 {
                     var paymentMethodId = PaymentMethodId.Parse(strat.Name);
-                    var network = networks.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
+                    var network = networks.GetNetwork<BTCPayNetworkBase>(paymentMethodId.CryptoCode);
                     if (network != null)
                     {
                         if (network == networks.BTC && paymentMethodId.PaymentType == PaymentTypes.BTCLike && btcReturned)

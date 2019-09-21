@@ -59,7 +59,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
         public bool PaymentCompleted(PaymentEntity entity)
         {
-            return ConfirmationCount >= Network.MaxTrackedConfirmation;
+            return ConfirmationCount >= ((BTCPayNetwork)Network).MaxTrackedConfirmation;
         }
 
         public bool PaymentConfirmed(PaymentEntity entity, SpeedPolicy speedPolicy)

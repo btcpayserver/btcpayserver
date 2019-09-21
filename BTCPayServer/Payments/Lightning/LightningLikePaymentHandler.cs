@@ -67,7 +67,7 @@ namespace BTCPayServer.Payments.Lightning
                 }
                 catch (OperationCanceledException) when (cts.IsCancellationRequested)
                 {
-                    throw new PaymentMethodUnavailableException($"The lightning node did not reply in a timely maner");
+                    throw new PaymentMethodUnavailableException($"The lightning node did not reply in a timely manner");
                 }
                 catch (Exception ex)
                 {
@@ -139,7 +139,10 @@ namespace BTCPayServer.Payments.Lightning
 
         public override IEnumerable<PaymentMethodId> GetSupportedPaymentMethods()
         {
-            return _networkProvider.GetAll()
+            return _networkProvider
+                .GetAll()
+                .OfType<BTCPayNetwork>()
+                .Where(network => network.NBitcoinNetwork.Consensus.SupportSegwit)
                 .Select(network => new PaymentMethodId(network.CryptoCode, PaymentTypes.LightningLike));
         }
         

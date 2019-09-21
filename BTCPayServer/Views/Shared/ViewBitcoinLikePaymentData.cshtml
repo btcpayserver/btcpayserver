@@ -12,9 +12,10 @@
         m.DepositAddress = onChainPaymentData.GetDestination();
 
         int confirmationCount = onChainPaymentData.ConfirmationCount;
-        if (confirmationCount >= payment.Network.MaxTrackedConfirmation)
+        var network = payment.Network as BTCPayNetwork;
+        if (confirmationCount >= network.MaxTrackedConfirmation)
         {
-            m.Confirmations = "At least " + (payment.Network.MaxTrackedConfirmation);
+            m.Confirmations = "At least " + (network.MaxTrackedConfirmation);
         }
         else
         {

@@ -118,12 +118,11 @@ namespace BTCPayServer.Payments.Monero
                 monero.AddressIndex = address.AddressIndex;
                 await _invoiceRepository.NewAddress(invoice.Id, monero, payment.Network);
                 _eventAggregator.Publish(
-                    new InvoiceNewAddressEvent(invoice.Id, address.ToString(), payment.Network));
+                    new InvoiceNewAddressEvent(invoice.Id, address.Address, payment.Network));
                 paymentMethod.SetPaymentMethodDetails(monero);
                 invoice.SetPaymentMethod(paymentMethod);
             }
 
-            _eventAggregator.Publish(new Events.InvoiceNeedUpdateEvent(invoice.Id));
             _eventAggregator.Publish(
                 new InvoiceEvent(invoice, 1002, InvoiceEvent.ReceivedPayment) {Payment = payment});
         }

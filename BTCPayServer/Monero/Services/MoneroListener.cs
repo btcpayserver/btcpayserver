@@ -47,7 +47,7 @@ namespace BTCPayServer.Payments.Monero
         {
             _Cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-            leases.Add(_eventAggregator.Subscribe<MoneroEvent>(e => _ = OnMoneroEvent(e)));
+            leases.Add(_eventAggregator.Subscribe<MoneroEvent>(OnMoneroEvent));
             leases.Add(_eventAggregator.Subscribe<MoneroRPCProvider.MoneroDaemonStateChange>(e =>
             {
                 if (_moneroRpcProvider.IsAvailable(e.CryptoCode))
@@ -77,7 +77,7 @@ namespace BTCPayServer.Payments.Monero
             }
         }
 
-        private async Task OnMoneroEvent(MoneroEvent obj)
+        private void OnMoneroEvent(MoneroEvent obj)
         {
             if (!_moneroRpcProvider.IsAvailable(obj.CryptoCode))
             {

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -177,23 +178,45 @@ namespace BTCPayServer.Controllers
                     var fileAddress = Path.Combine(configurationItem.WalletDirectory, "wallet");
                     using (var fileStream = new FileStream(fileAddress, FileMode.Create)) {
                         await viewModel.WalletFile.CopyToAsync(fileStream);
+                        try
+                        {
+                            Exec($"chmod 666 {fileAddress}");
+                        }
+                        catch
+                        {
+                        }
                     }
             
                     fileAddress = Path.Combine(configurationItem.WalletDirectory, "wallet.keys");
                     using (var fileStream = new FileStream(fileAddress, FileMode.Create)) {
                         await viewModel.WalletKeysFile.CopyToAsync(fileStream);
+                        try
+                        {
+                            Exec($"chmod 666 {fileAddress}");
+                        }
+                        catch
+                        {
+                        }
+
                     }
                     
                     fileAddress = Path.Combine(configurationItem.WalletDirectory, "password");
                     using (var fileStream = new StreamWriter(fileAddress, false))
                     {
                         await fileStream.WriteAsync(viewModel.WalletPassword);
+                        try
+                        {
+                            Exec($"chmod 666 {fileAddress}");
+                        }
+                        catch
+                        {
+                        }
                     }
                     
                     return RedirectToAction(nameof(GetStoreMoneroLikePaymentMethod), new
                     {
                         cryptoCode,
-                        StatusMessage ="Wallet file, uploaded. If it was valid, the wallet will become available soon"
+                        StatusMessage ="Wallet files uploaded. If it was valid, the wallet will become available soon"
                     
                     });
                 }
@@ -226,6 +249,28 @@ namespace BTCPayServer.Controllers
             await _StoreRepository.UpdateStore(storeData);
             return RedirectToAction("GetStoreMoneroLikePaymentMethods",
                 new {StatusMessage = $"{cryptoCode} settings updated successfully", storeId = StoreData.Id});
+        }
+        
+        private void Exec(string cmd)
+        {
+            
+            var escapedArgs = cmd.Replace("\"", "\\\"");
+
+            var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    WindowStyle = ProcessWindowStyle.Hidden,
+                    FileName = "/bin/sh",
+                    Arguments = $"-c \"{escapedArgs}\""
+                }
+            };
+
+            process.Start();
+            process.WaitForExit();
         }
 
         public class MoneroLikePaymentMethodListViewModel

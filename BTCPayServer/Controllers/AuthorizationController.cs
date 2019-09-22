@@ -78,7 +78,7 @@ namespace BTCPayServer.Controllers
             {
                 ApplicationName = await _applicationManager.GetDisplayNameAsync(application),
                 RequestId = request.RequestId,
-                Scope = request.Scope
+                Scope = request.GetScopes()
             });
         }
 

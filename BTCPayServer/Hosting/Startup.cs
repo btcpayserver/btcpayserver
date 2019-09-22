@@ -19,10 +19,13 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using OpenIddict.Abstractions;
 using OpenIddict.EntityFrameworkCore.Models;
 using System.Net;
+using BTCPayServer.Authentication;
 using BTCPayServer.Authentication.OpenId;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Storage;
+using Microsoft.Extensions.Options;
+using OpenIddict.Core;
 
 namespace BTCPayServer.Hosting
 {
@@ -160,7 +163,7 @@ namespace BTCPayServer.Hosting
                     options.EnableLogoutEndpoint("/connect/logout");
 
                     //we do not care about these granular controls for now
-                    options.DisableScopeValidation();
+                    options.IgnoreScopePermissions();
                     options.IgnoreEndpointPermissions();
                     // Allow client applications various flows
                     options.AllowImplicitFlow();
@@ -176,7 +179,14 @@ namespace BTCPayServer.Hosting
                         OpenIdConnectConstants.Scopes.OfflineAccess,
                         OpenIdConnectConstants.Scopes.Email,
                         OpenIdConnectConstants.Scopes.Profile,
-                        OpenIddictConstants.Scopes.Roles);
+                        OpenIddictConstants.Scopes.Roles,
+                        RestAPIPolicies.BTCPayScopes.ViewStores,
+                        RestAPIPolicies.BTCPayScopes.CreateInvoices,
+                        RestAPIPolicies.BTCPayScopes.StoreManagement,
+                        RestAPIPolicies.BTCPayScopes.ViewApps,
+                        RestAPIPolicies.BTCPayScopes.AppManagement
+                        );
+                    
                     options.AddEventHandler<PasswordGrantTypeEventHandler>();
                     options.AddEventHandler<AuthorizationCodeGrantTypeEventHandler>();
                     options.AddEventHandler<RefreshTokenGrantTypeEventHandler>();

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading;
@@ -13,40 +11,32 @@ using BTCPayServer.Filters;
 using BTCPayServer.ModelBinders;
 using BTCPayServer.Models;
 using BTCPayServer.Models.AppViewModels;
-using BTCPayServer.Payments;
-using BTCPayServer.Rating;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Apps;
-using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services.Rates;
-using Ganss.XSS;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using NBitpayClient;
-using YamlDotNet.RepresentationModel;
 using static BTCPayServer.Controllers.AppsController;
 
 namespace BTCPayServer.Controllers
 {
     public class AppsPublicController : Controller
     {
-        public AppsPublicController(AppService AppService,
+        public AppsPublicController(AppService appService,
             BTCPayServerOptions btcPayServerOptions,
             InvoiceController invoiceController,
             UserManager<ApplicationUser> userManager)
         {
-            _AppService = AppService;
+            _AppService = appService;
             _BtcPayServerOptions = btcPayServerOptions;
             _InvoiceController = invoiceController;
             _UserManager = userManager;
         }
 
-        private AppService _AppService;
+        private readonly AppService _AppService;
         private readonly BTCPayServerOptions _BtcPayServerOptions;
-        private InvoiceController _InvoiceController;
+        private readonly InvoiceController _InvoiceController;
         private readonly UserManager<ApplicationUser> _UserManager;
 
         [HttpGet]
@@ -87,7 +77,9 @@ namespace BTCPayServer.Controllers
                 CustomTipText = settings.CustomTipText,
                 CustomTipPercentages = settings.CustomTipPercentages,
                 CustomCSSLink = settings.CustomCSSLink,
-                AppId = appId
+                AppId = appId,
+                Description = settings.Description,
+                EmbeddedCSS = settings.EmbeddedCSS
             });
         }
 
@@ -130,6 +122,14 @@ namespace BTCPayServer.Controllers
                 price = choice.Price.Value;
                 if (amount > price)
                     price = amount;
+
+                if (choice.Inventory.HasValue)
+                {
+                    if (choice.Inventory <= 0)
+                    {
+                        return RedirectToAction(nameof(ViewPointOfSale), new { appId = appId });
+                    }
+                }
             }
             else
             {
@@ -137,6 +137,32 @@ namespace BTCPayServer.Controllers
                     return NotFound();
                 price = amount;
                 title = settings.Title;
+                
+                //if cart IS enabled and we detect posdata that matches the cart system's, check inventory for the items
+                if (!string.IsNullOrEmpty(posData) && 
+                    settings.EnableShoppingCart && 
+                    AppService.TryParsePosCartItems(posData, out var cartItems))
+                {
+                        
+                    var choices = _AppService.Parse(settings.Template, settings.Currency);
+                    foreach (var cartItem in cartItems)
+                    {
+                        var itemChoice = choices.FirstOrDefault(c => c.Id == cartItem.Key);
+                        if (itemChoice == null)
+                            return NotFound();
+
+                        if (itemChoice.Inventory.HasValue)
+                        {
+                            switch (itemChoice.Inventory)
+                            {
+                                case int i when i <= 0:
+                                    return RedirectToAction(nameof(ViewPointOfSale), new {appId});
+                                case int inventory when inventory < cartItem.Value:
+                                    return RedirectToAction(nameof(ViewPointOfSale), new {appId});
+                            }
+                        }
+                    }
+                }
             }
             var store = await _AppService.GetStore(app);
             store.AdditionalClaims.Add(new Claim(Policies.CanCreateInvoice.Key, store.Id));
@@ -161,7 +187,6 @@ namespace BTCPayServer.Controllers
                 cancellationToken);
             return RedirectToAction(nameof(InvoiceController.Checkout), "Invoice", new { invoiceId = invoice.Data.Id });
         }
-
 
         [HttpGet]
         [Route("/apps/{appId}/crowdfund")]
@@ -241,6 +266,15 @@ namespace BTCPayServer.Controllers
                 price = choice.Price.Value;
                 if (request.Amount > price)
                     price = request.Amount;
+                
+                
+                if (choice.Inventory.HasValue)
+                {
+                    if (choice.Inventory <= 0)
+                    {
+                        return NotFound("Option was out of stock");
+                    }
+                }
             }
 
             if (!isAdmin && (settings.EnforceTargetAmount && info.TargetAmount.HasValue && price >

@@ -40,6 +40,12 @@ namespace BTCPayServer
 {
     public static class Extensions
     {
+        public static string Truncate(this string value, int maxLength)
+        {
+            if (string.IsNullOrEmpty(value))
+                return value;
+            return value.Length <= maxLength ? value : value.Substring(0, maxLength);
+        }
         public static IServiceCollection AddStartupTask<T>(this IServiceCollection services)
             where T : class, IStartupTask
             => services.AddTransient<IStartupTask, T>();
@@ -115,20 +121,6 @@ namespace BTCPayServer
             catch { }
             finally { try { webSocket.Dispose(); } catch { } }
         }
-        public static bool SupportDropColumn(this Microsoft.EntityFrameworkCore.Migrations.Migration migration, string activeProvider)
-        {
-            return activeProvider != "Microsoft.EntityFrameworkCore.Sqlite";
-        }
-
-        public static bool SupportDropForeignKey(this Microsoft.EntityFrameworkCore.Migrations.Migration migration, string activeProvider)
-        {
-            return activeProvider != "Microsoft.EntityFrameworkCore.Sqlite";
-        }
-        public static bool SupportDropForeignKey(this DatabaseFacade facade)
-        {
-            return facade.ProviderName != "Microsoft.EntityFrameworkCore.Sqlite";
-        }
-
         public static async Task<Dictionary<uint256, TransactionResult>> GetTransactions(this BTCPayWallet client, uint256[] hashes, CancellationToken cts = default(CancellationToken))
         {
             hashes = hashes.Distinct().ToArray();

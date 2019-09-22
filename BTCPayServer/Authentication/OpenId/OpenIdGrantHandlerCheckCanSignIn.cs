@@ -1,10 +1,12 @@
 using System.Threading.Tasks;
 using AspNet.Security.OpenIdConnect.Primitives;
+using BTCPayServer.Data;
 using BTCPayServer.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using OpenIddict.Abstractions;
+using OpenIddict.Core;
 using OpenIddict.Server;
 
 namespace BTCPayServer.Authentication.OpenId
@@ -14,8 +16,12 @@ namespace BTCPayServer.Authentication.OpenId
     {
         private readonly UserManager<ApplicationUser> _userManager;
 
-        protected OpenIdGrantHandlerCheckCanSignIn(SignInManager<ApplicationUser> signInManager,
-            IOptions<IdentityOptions> identityOptions, UserManager<ApplicationUser> userManager) : base(signInManager,
+        protected OpenIdGrantHandlerCheckCanSignIn(
+            OpenIddictApplicationManager<BTCPayOpenIdClient> applicationManager,
+            OpenIddictAuthorizationManager<BTCPayOpenIdAuthorization> authorizationManager,
+            SignInManager<ApplicationUser> signInManager,
+            IOptions<IdentityOptions> identityOptions, UserManager<ApplicationUser> userManager) : base(
+            applicationManager, authorizationManager, signInManager,
             identityOptions)
         {
             _userManager = userManager;
@@ -35,7 +41,6 @@ namespace BTCPayServer.Authentication.OpenId
 
             var scheme = notification.Context.Scheme.Name;
             var authenticateResult = (await notification.Context.HttpContext.AuthenticateAsync(scheme));
-
 
             var user = await _userManager.GetUserAsync(authenticateResult.Principal);
             if (user == null)

@@ -27,6 +27,11 @@
         <span asp-validation-for="DiscourageSearchEngines" class="text-danger"></span>
     </div>
     <div class="form-group">
+        <label asp-for="AllowLightningInternalNodeForAll"></label>
+        <input asp-for="AllowLightningInternalNodeForAll" type="checkbox" class="form-check-inline"/>
+        <span asp-validation-for="AllowLightningInternalNodeForAll" class="text-danger"></span>
+    </div>
+    <div class="form-group">
         <label asp-for="RootAppId"></label>
         <select asp-for="RootAppId" asp-items="@(new SelectList(ViewBag.AppsList, nameof(SelectListItem.Value), nameof(SelectListItem.Text), Model.RootAppId))" class="form-control"></select>
         @if (!Model.DomainToAppMapping.Any())

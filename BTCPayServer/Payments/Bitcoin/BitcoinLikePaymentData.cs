@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Data;
 using BTCPayServer.Services.Invoices;
 using NBitcoin;
 using Newtonsoft.Json;
@@ -58,7 +59,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
         public bool PaymentCompleted(PaymentEntity entity)
         {
-            return ConfirmationCount >= Network.MaxTrackedConfirmation;
+            return ConfirmationCount >= ((BTCPayNetwork)Network).MaxTrackedConfirmation;
         }
 
         public bool PaymentConfirmed(PaymentEntity entity, SpeedPolicy speedPolicy)

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Data;
 using BTCPayServer.Services;
 using BTCPayServer.Storage.Models;
 using BTCPayServer.Storage.Services.Providers;

@@ -9895,12 +9895,7 @@ strong {
     letter-spacing: .7px;
 }
 
-.submission-error-label {
-    display: none;
-}
-
-.refund-address-form.ng-invalid.ng-submitted input,
-.email-receipt-form.ng-invalid.ng-submitted input {
+.form-input-invalid {
     border: 1px solid #E15061;
 }
 

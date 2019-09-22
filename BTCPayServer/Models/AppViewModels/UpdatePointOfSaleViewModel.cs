@@ -7,6 +7,7 @@ namespace BTCPayServer.Models.AppViewModels
 {
     public class UpdatePointOfSaleViewModel
     {
+        public string StoreId { get; set; }
         [Required]
         [MaxLength(30)]
         public string Title { get; set; }
@@ -60,6 +61,9 @@ namespace BTCPayServer.Models.AppViewModels
         [Display(Name = "Redirect invoice to redirect url automatically after paid")]
         public string RedirectAutomatically { get; set; } = string.Empty;
 
+        public string AppId { get; set; }
+        public string SearchTerm { get; set; }
+
         public SelectList RedirectAutomaticallySelectList =>
             new SelectList(new List< SelectListItem>()
             {
@@ -81,5 +85,7 @@ namespace BTCPayServer.Models.AppViewModels
             }, nameof(SelectListItem.Value), nameof(SelectListItem.Text), RedirectAutomatically);
 
         public bool NotificationEmailWarning { get; set; }
+        public string EmbeddedCSS { get; set; }
+        public string Description { get; set; }
     }
 }

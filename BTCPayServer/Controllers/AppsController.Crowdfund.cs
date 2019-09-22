@@ -36,6 +36,7 @@ namespace BTCPayServer.Controllers
             {
                 NotificationEmailWarning = !await IsEmailConfigured(app.StoreDataId),
                 Title = settings.Title,
+                StoreId = app.StoreDataId,
                 Enabled = settings.Enabled,
                 EnforceTargetAmount = settings.EnforceTargetAmount,
                 StartDate = settings.StartDate,
@@ -131,7 +132,7 @@ namespace BTCPayServer.Controllers
                 EnforceTargetAmount = vm.EnforceTargetAmount,
                 StartDate = vm.StartDate?.ToUniversalTime(),
                 TargetCurrency = vm.TargetCurrency,
-                Description = _htmlSanitizer.Sanitize( vm.Description),
+                Description = vm.Description,
                 EndDate = vm.EndDate?.ToUniversalTime(),
                 TargetAmount = vm.TargetAmount,
                 CustomCSSLink = vm.CustomCSSLink,
@@ -155,7 +156,7 @@ namespace BTCPayServer.Controllers
 
             app.TagAllInvoices = vm.UseAllStoreInvoices;
             app.SetSettings(newSettings);
-            await UpdateAppSettings(app);
+            await _AppService.UpdateOrCreateApp(app);
 
             _EventAggregator.Publish(new AppUpdated()
             {

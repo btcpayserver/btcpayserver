@@ -13,9 +13,7 @@ using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Rates;
 using NBitcoin;
-using NBitpayClient;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Globalization;
 
 namespace BTCPayServer.Payments.Lightning
 {
@@ -69,7 +67,7 @@ namespace BTCPayServer.Payments.Lightning
                 }
                 catch (OperationCanceledException) when (cts.IsCancellationRequested)
                 {
-                    throw new PaymentMethodUnavailableException($"The lightning node did not reply in a timely maner");
+                    throw new PaymentMethodUnavailableException($"The lightning node did not reply in a timely manner");
                 }
                 catch (Exception ex)
                 {
@@ -141,7 +139,10 @@ namespace BTCPayServer.Payments.Lightning
 
         public override IEnumerable<PaymentMethodId> GetSupportedPaymentMethods()
         {
-            return _networkProvider.GetAll()
+            return _networkProvider
+                .GetAll()
+                .OfType<BTCPayNetwork>()
+                .Where(network => network.NBitcoinNetwork.Consensus.SupportSegwit)
                 .Select(network => new PaymentMethodId(network.CryptoCode, PaymentTypes.LightningLike));
         }
         
@@ -149,26 +150,24 @@ namespace BTCPayServer.Payments.Lightning
         public override async Task<string> IsPaymentMethodAllowedBasedOnInvoiceAmount(StoreBlob storeBlob,
             Dictionary<CurrencyPair, Task<RateResult>> rate, Money amount, PaymentMethodId paymentMethodId)
         {
-            if (storeBlob.OnChainMinValue == null)
+            if (storeBlob.LightningMaxValue != null)
             {
-                return null;
-            }
+                var currentRateToCrypto = await rate[new CurrencyPair(paymentMethodId.CryptoCode, storeBlob.LightningMaxValue.Currency)];
 
-            var limitValueRate = await rate[new CurrencyPair(paymentMethodId.CryptoCode, storeBlob.OnChainMinValue.Currency)];
-            
-            if (limitValueRate.BidAsk != null)
-            {
-                var limitValueCrypto = Money.Coins(storeBlob.OnChainMinValue.Value / limitValueRate.BidAsk.Bid);
-
-                if (amount < limitValueCrypto)
+                if (currentRateToCrypto?.BidAsk != null)
                 {
-                    return null;
+                    var limitValueCrypto = Money.Coins(storeBlob.LightningMaxValue.Value / currentRateToCrypto.BidAsk.Bid);
+                    if (amount > limitValueCrypto)
+                    {
+                        return "The amount of the invoice is too high to be paid with lightning";
+                    }
                 }
             }
-            return "The amount of the invoice is too high to be paid with lightning";
+            return string.Empty;
         }
 
-        public override void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse)
+        public override void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse,
+            StoreBlob storeBlob)
         {
             var paymentMethodId = new PaymentMethodId(model.CryptoCode, PaymentTypes.LightningLike);
             
@@ -178,8 +177,16 @@ namespace BTCPayServer.Payments.Lightning
             model.PaymentMethodName = GetPaymentMethodName(network);
             model.InvoiceBitcoinUrl = cryptoInfo.PaymentUrls.BOLT11;
             model.InvoiceBitcoinUrlQR = cryptoInfo.PaymentUrls.BOLT11.ToUpperInvariant();
+            model.LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi;
+            if (storeBlob.LightningAmountInSatoshi && model.CryptoCode == "BTC" )
+            {
+                model.CryptoCode = "Sats";
+                model.BtcDue = Money.Parse(model.BtcDue).ToUnit(MoneyUnit.Satoshi).ToString(CultureInfo.InvariantCulture);
+                model.BtcPaid =  Money.Parse(model.BtcPaid).ToUnit(MoneyUnit.Satoshi).ToString(CultureInfo.InvariantCulture);
+                model.NetworkFee = new Money(model.NetworkFee, MoneyUnit.BTC).ToUnit(MoneyUnit.Satoshi);
+                model.OrderAmount = Money.Parse(model.OrderAmount).ToUnit(MoneyUnit.Satoshi).ToString(CultureInfo.InvariantCulture);
+            }
         }
-
         public override string GetCryptoImage(PaymentMethodId paymentMethodId)
         {
             var network = _networkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);

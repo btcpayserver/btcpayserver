@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Authentication;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Models;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Models.StoreViewModels;
@@ -58,7 +59,8 @@ namespace BTCPayServer.Controllers
             ChangellyClientProvider changellyClientProvider,
             IOptions<MvcJsonOptions> mvcJsonOptions,
             IHostingEnvironment env, IHttpClientFactory httpClientFactory,
-            PaymentMethodHandlerDictionary paymentMethodHandlerDictionary)
+            PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
+            CssThemeManager cssThemeManager)
         {
             _RateFactory = rateFactory;
             _Repo = repo;
@@ -72,6 +74,7 @@ namespace BTCPayServer.Controllers
             _Env = env;
             _httpClientFactory = httpClientFactory;
             _paymentMethodHandlerDictionary = paymentMethodHandlerDictionary;
+            _CssThemeManager = cssThemeManager;
             _NetworkProvider = networkProvider;
             _ExplorerProvider = explorerProvider;
             _FeeRateProvider = feeRateProvider;
@@ -95,6 +98,7 @@ namespace BTCPayServer.Controllers
         IHostingEnvironment _Env;
         private IHttpClientFactory _httpClientFactory;
         private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
+        private readonly CssThemeManager _CssThemeManager;
 
         [TempData]
         public string StatusMessage
@@ -486,7 +490,7 @@ namespace BTCPayServer.Controllers
                             Crypto = paymentMethodId.CryptoCode,
                             Value = strategy?.ToPrettyString() ?? string.Empty,
                             WalletId = new WalletId(store.Id, paymentMethodId.CryptoCode),
-                            Enabled = !excludeFilters.Match(paymentMethodId)
+                            Enabled = !excludeFilters.Match(paymentMethodId) && strategy != null
                         });
                         break;
                     case LightningPaymentType _:
@@ -495,14 +499,14 @@ namespace BTCPayServer.Controllers
                         {
                             CryptoCode = paymentMethodId.CryptoCode,
                             Address = lightning?.GetLightningUrl()?.BaseUri.AbsoluteUri ?? string.Empty,
-                            Enabled = !excludeFilters.Match(paymentMethodId)
+                            Enabled = !excludeFilters.Match(paymentMethodId) && lightning?.GetLightningUrl() != null
                         });
                         break;
                 }   
             }
 
             var changellyEnabled = storeBlob.ChangellySettings != null && storeBlob.ChangellySettings.Enabled;
-            vm.ThirdPartyPaymentMethods.Add(new StoreViewModel.ThirdPartyPaymentMethod()
+            vm.ThirdPartyPaymentMethods.Add(new StoreViewModel.AdditionalPaymentMethod()
             {
                 Enabled = changellyEnabled,
                 Action = nameof(UpdateChangellySettings),
@@ -510,7 +514,7 @@ namespace BTCPayServer.Controllers
             });
 
             var coinSwitchEnabled = storeBlob.CoinSwitchSettings != null && storeBlob.CoinSwitchSettings.Enabled;
-            vm.ThirdPartyPaymentMethods.Add(new StoreViewModel.ThirdPartyPaymentMethod()
+            vm.ThirdPartyPaymentMethods.Add(new StoreViewModel.AdditionalPaymentMethod()
             {
                 Enabled = coinSwitchEnabled,
                 Action = nameof(UpdateCoinSwitchSettings),
@@ -590,6 +594,7 @@ namespace BTCPayServer.Controllers
         private CoinAverageExchange[] GetSupportedExchanges()
         {
             return _RateFactory.RateProviderFactory.GetSupportedExchanges()
+                    .Where(r => !string.IsNullOrWhiteSpace(r.Value.Display))
                     .Select(c => c.Value)
                     .OrderBy(s => s.Name, StringComparer.OrdinalIgnoreCase)
                     .ToArray();
@@ -886,7 +891,7 @@ namespace BTCPayServer.Controllers
                 Currency = DEFAULT_CURRENCY,
                 ButtonSize = 2,
                 UrlRoot = appUrl,
-                PayButtonImageUrl = appUrl + "img/paybutton/pay.png",
+                PayButtonImageUrl = appUrl + "img/paybutton/pay.svg",
                 StoreId = store.Id,
                 ButtonType = 0,
                 Min = 1,

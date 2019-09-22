@@ -12,8 +12,8 @@ namespace BTCPayServer
     {
         public static SecurityKey GetSigningKey(IConfiguration configuration)
         {
+          
             var file = Path.Combine(configuration.GetDataDir(), "rsaparams");
-            
             var rsa = new RSACryptoServiceProvider(2048);
             if (File.Exists(file))
             {
@@ -24,9 +24,7 @@ namespace BTCPayServer
                 var contents = rsa.ToXmlString2(true);
                 File.WriteAllText(file, contents);
             }
-
-            var keyParam = rsa.ExportParameters(true);
-            return new RsaSecurityKey(keyParam);
+            return new RsaSecurityKey(rsa.ExportParameters(true));;
         }
         public static OpenIddictServerBuilder ConfigureSigningKey(this OpenIddictServerBuilder builder,
             IConfiguration configuration)

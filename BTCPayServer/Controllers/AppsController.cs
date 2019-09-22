@@ -30,7 +30,6 @@ namespace BTCPayServer.Controllers
             EventAggregator eventAggregator,
             BTCPayNetworkProvider networkProvider,
             CurrencyNameTable currencies,
-            HtmlSanitizer htmlSanitizer,
             EmailSenderFactory emailSenderFactory,
             AppService AppService)
         {
@@ -39,7 +38,6 @@ namespace BTCPayServer.Controllers
             _EventAggregator = eventAggregator;
             _NetworkProvider = networkProvider;
             _currencies = currencies;
-            _htmlSanitizer = htmlSanitizer;
             _emailSenderFactory = emailSenderFactory;
             _AppService = AppService;
         }
@@ -49,7 +47,6 @@ namespace BTCPayServer.Controllers
         private readonly EventAggregator _EventAggregator;
         private BTCPayNetworkProvider _NetworkProvider;
         private readonly CurrencyNameTable _currencies;
-        private readonly HtmlSanitizer _htmlSanitizer;
         private readonly EmailSenderFactory _emailSenderFactory;
         private AppService _AppService;
 
@@ -130,29 +127,25 @@ namespace BTCPayServer.Controllers
                 StatusMessage = "Error: You are not owner of this store";
                 return RedirectToAction(nameof(ListApps));
             }
-            var id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(20));
-            using (var ctx = _ContextFactory.CreateContext())
+            var appData = new AppData
             {
-                var appData = new AppData() { Id = id };
-                appData.StoreDataId = selectedStore;
-                appData.Name = vm.Name;
-                appData.AppType = appType.ToString();
-                ctx.Apps.Add(appData);
-                await ctx.SaveChangesAsync();
-            }
+                StoreDataId = selectedStore, 
+                Name = vm.Name, 
+                AppType = appType.ToString()
+            };
+            await _AppService.UpdateOrCreateApp(appData);
             StatusMessage = "App successfully created";
-            CreatedAppId = id;
+            CreatedAppId = appData.Id;
 
             switch (appType)
             {
                 case AppType.PointOfSale:
-                    return RedirectToAction(nameof(UpdatePointOfSale), new { appId = id });
+                    return RedirectToAction(nameof(UpdatePointOfSale), new { appId = appData.Id });
                 case AppType.Crowdfund:
-                    return RedirectToAction(nameof(UpdateCrowdfund), new { appId = id });
+                    return RedirectToAction(nameof(UpdateCrowdfund), new { appId = appData.Id });
                 default:
                     return RedirectToAction(nameof(ListApps));
             }
-                
         }
 
         [HttpGet]

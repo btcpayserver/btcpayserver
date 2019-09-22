@@ -1,13 +1,18 @@
 ﻿@{
-Layout = "/Views/Shared/_Layout.cshtml";
-ViewBag.ShowMenu = ViewBag.ShowMenu ?? true;
+    Layout = "/Views/Shared/_Layout.cshtml";
+    ViewBag.ShowMenu = ViewBag.ShowMenu ?? true;
+    if (!ViewData.ContainsKey("NavPartialName"))
+    {
+        ViewData["NavPartialName"] = "_Nav";
+    }
+    var title = $"{(ViewData.ContainsKey("MainTitle")?  $"{ViewData["MainTitle"]}:" : String.Empty)} {ViewData["Title"]}";
 }
 
 <section>
     <div class="container">
         <div class="row">
             <div class="col-lg-12">
-                <h4 class="section-heading">@ViewData["MainTitle"]: @ViewData["Title"]</h4>
+                <h4 class="section-heading">@title</h4>
                 <hr class="primary ml-0">
             </div>
         </div>
@@ -17,7 +22,7 @@ ViewBag.ShowMenu = ViewBag.ShowMenu ?? true;
                 <div class="col-md-3">
                     @if (ViewBag.ShowMenu)
                     {
-                    @await Html.PartialAsync("_Nav")
+                        @await Html.PartialAsync(ViewData["NavPartialName"].ToString())
                     }
                 </div>
                 <div class="col-md-9">
@@ -28,9 +33,9 @@ ViewBag.ShowMenu = ViewBag.ShowMenu ?? true;
     </div>
 </section>
 @section HeadScripts {
-@RenderSection("HeadScripts", required: false)
+    @RenderSection("HeadScripts", required: false)
 }
 
 @section Scripts {
-@RenderSection("Scripts", required: false)
+    @RenderSection("Scripts", required: false)
 }

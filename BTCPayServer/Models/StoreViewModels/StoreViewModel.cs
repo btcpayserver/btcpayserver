@@ -1,13 +1,7 @@
-﻿using BTCPayServer.Services;
-using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services.Rates;
-using BTCPayServer.Validation;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using System;
+﻿using BTCPayServer.Validation;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
+using BTCPayServer.Data;
 
 namespace BTCPayServer.Models.StoreViewModels
 {
@@ -21,7 +15,7 @@ namespace BTCPayServer.Models.StoreViewModels
             public bool Enabled { get; set; }
         }
         
-        public class ThirdPartyPaymentMethod
+        public class AdditionalPaymentMethod
         {
             public string Provider { get; set; }
             public bool Enabled { get; set; }
@@ -57,8 +51,8 @@ namespace BTCPayServer.Models.StoreViewModels
 
         public List<StoreViewModel.DerivationScheme> DerivationSchemes { get; set; } = new List<StoreViewModel.DerivationScheme>();
 
-        public List<ThirdPartyPaymentMethod> ThirdPartyPaymentMethods { get; set; } =
-            new List<ThirdPartyPaymentMethod>();
+        public List<AdditionalPaymentMethod> ThirdPartyPaymentMethods { get; set; } =
+            new List<AdditionalPaymentMethod>();
 
         [Display(Name = "Invoice expires if the full amount has not been paid after ... minutes")]
         [Range(1, 60 * 24 * 24)]

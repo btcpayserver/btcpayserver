@@ -117,6 +117,24 @@
         ]
     },
     {
+        "outputFileName": "wwwroot/bundles/pos-admin-bundle.min.js",
+        "inputFiles": [
+            "wwwroot/vendor/highlightjs/highlight.min.js",
+            "wwwroot/vendor/summernote/summernote-bs4.js",
+            "wwwroot/pos-admin/main.js",
+            "wwwroot/products/js/products.js",
+            "wwwroot/products/js/products.jquery.js"
+        ]
+    },
+    {
+        "outputFileName": "wwwroot/bundles/pos-admin-bundle.min.css",
+        "inputFiles": [
+            "wwwroot/vendor/highlightjs/default.min.css",
+            "wwwroot/vendor/summernote/summernote-bs4.css"
+        ]
+    },
+    
+    {
         "outputFileName": "wwwroot/bundles/crowdfund-bundle.min.css",
         "inputFiles": [
             "wwwroot/vendor/font-awesome/css/font-awesome.min.css",

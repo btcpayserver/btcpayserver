@@ -25,7 +25,6 @@ using BTCPayServer.Services.Mails;
 using System.Threading;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Authentication;
-using BTCPayServer.Authentication.OpenId.Models;
 using BTCPayServer.Logging;
 using BTCPayServer.HostedServices;
 using BTCPayServer.PaymentRequest;
@@ -90,6 +89,7 @@ namespace BTCPayServer.Hosting
             });
             services.AddSingleton<BTCPayServerEnvironment>();
             services.TryAddSingleton<TokenRepository>();
+            services.TryAddSingleton<WalletRepository>();
             services.TryAddSingleton<EventAggregator>();
             services.TryAddSingleton<PaymentRequestService>();
             services.TryAddSingleton<U2FService>();
@@ -106,12 +106,14 @@ namespace BTCPayServer.Hosting
                 else if(!String.IsNullOrEmpty(opts.MySQLConnectionString))
                 {
                     Logs.Configuration.LogInformation($"MySQL DB used ({opts.MySQLConnectionString})");
+                    Logs.Configuration.LogWarning("MySQL is not widely tested and should be considered experimental, we advise you to use postgres instead.");
                     dbContext = new ApplicationDbContextFactory(DatabaseType.MySQL, opts.MySQLConnectionString);
                 }
                 else
                 {
                     var connStr = "Data Source=" + Path.Combine(opts.DataDir, "sqllite.db");
                     Logs.Configuration.LogInformation($"SQLite DB used ({connStr})");
+                    Logs.Configuration.LogWarning("MySQL is not widely tested and should be considered experimental, we advise you to use postgres instead.");
                     dbContext = new ApplicationDbContextFactory(DatabaseType.Sqlite, connStr);
                 }
                  
@@ -125,6 +127,7 @@ namespace BTCPayServer.Hosting
             });
 
             services.TryAddSingleton<AppService>();
+            services.TryAddTransient<Safe>();
             services.TryAddSingleton<Ganss.XSS.HtmlSanitizer>(o =>
             {
 
@@ -186,7 +189,8 @@ namespace BTCPayServer.Hosting
             });
             services.AddSingleton<IHostedService, CssThemeManagerHostedService>();
 
-            services.AddSingleton<IHostedService, HostedServices.CheckConfigurationHostedService>();
+            services.AddSingleton<HostedServices.CheckConfigurationHostedService>();
+            services.AddSingleton<IHostedService, HostedServices.CheckConfigurationHostedService>(o => o.GetRequiredService<CheckConfigurationHostedService>());
             
             services.AddSingleton<BitcoinLikePaymentHandler>();
             services.AddSingleton<IPaymentMethodHandler>(provider => provider.GetService<BitcoinLikePaymentHandler>());
@@ -206,6 +210,8 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService, RatesHostedService>();
             services.AddSingleton<IHostedService, BackgroundJobSchedulerHostedService>();
             services.AddSingleton<IHostedService, AppHubStreamer>();
+            services.AddSingleton<IHostedService, AppInventoryUpdaterHostedService>();
+            services.AddSingleton<IHostedService, DynamicDnsHostedService>();
             services.AddSingleton<IHostedService, TorServicesHostedService>();
             services.AddSingleton<IHostedService, PaymentRequestStreamer>();
             services.AddSingleton<IBackgroundJobClient, BackgroundJobClient>();

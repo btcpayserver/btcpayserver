@@ -5,6 +5,7 @@ using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Mvc;
 using Xunit;
 using Xunit.Abstractions;
+using BTCPayServer.Data;
 
 namespace BTCPayServer.Tests
 {

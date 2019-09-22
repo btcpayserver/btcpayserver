@@ -37,9 +37,9 @@
     };
     setTimeout(function() {
         window.u2f.sign(
-            "@Model.AppId",
-            "@Model.Challenge",
-            @Html.Raw(@Model.Challenges), function (data) {
+            @Safe.Json(Model.AppId),
+            @Safe.Json(Model.Challenge),
+            @Safe.Json(Model.Challenges), function (data) {
                 if (data.errorCode) {
                     $("#error-response").text(errorMap[data.errorCode]);
                     return;

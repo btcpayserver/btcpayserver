@@ -22,6 +22,7 @@ using BTCPayServer.Services.U2F;
 using BTCPayServer.Services.U2F.Models;
 using Newtonsoft.Json;
 using NicolasDorier.RateLimits;
+using BTCPayServer.Data;
 
 namespace BTCPayServer.Controllers
 {
@@ -73,6 +74,8 @@ namespace BTCPayServer.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Login(string returnUrl = null)
         {
+            if (User.Identity.IsAuthenticated && string.IsNullOrEmpty(returnUrl))
+                return RedirectToLocal();
             // Clear the existing external cookie to ensure a clean login process
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
 
@@ -181,7 +184,7 @@ namespace BTCPayServer.Controllers
                 {
                     Version = u2fChallenge[0].version,
                     Challenge = u2fChallenge[0].challenge,
-                    Challenges = JsonConvert.SerializeObject(u2fChallenge),
+                    Challenges = u2fChallenge,
                     AppId = u2fChallenge[0].appId,
                     UserId = user.Id,
                     RememberMe = rememberMe
@@ -645,9 +648,9 @@ namespace BTCPayServer.Controllers
             }
         }
 
-        private IActionResult RedirectToLocal(string returnUrl)
+        private IActionResult RedirectToLocal(string returnUrl = null)
         {
-            if (Url.IsLocalUrl(returnUrl))
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
             {
                 return Redirect(returnUrl);
             }

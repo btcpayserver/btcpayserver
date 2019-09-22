@@ -1,21 +1,28 @@
 using System;
 using System.Threading.Tasks;
+using BTCPayServer.Data;
 using BTCPayServer.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
+using OpenIddict.Core;
 using OpenIddict.Server;
 
 namespace BTCPayServer.Authentication.OpenId
 {
-
-    public class LogoutEventHandler: BaseOpenIdGrantHandler<OpenIddictServerEvents.HandleLogoutRequest>
+    public class LogoutEventHandler : BaseOpenIdGrantHandler<OpenIddictServerEvents.HandleLogoutRequest>
     {
-        public LogoutEventHandler(SignInManager<ApplicationUser> signInManager, IOptions<IdentityOptions> identityOptions) : base(signInManager, identityOptions)
+        public LogoutEventHandler(
+            OpenIddictApplicationManager<BTCPayOpenIdClient> applicationManager,
+            OpenIddictAuthorizationManager<BTCPayOpenIdAuthorization> authorizationManager,
+            SignInManager<ApplicationUser> signInManager, IOptions<IdentityOptions> identityOptions) : base(
+            applicationManager, authorizationManager,
+            signInManager, identityOptions)
         {
         }
 
-        public override async Task<OpenIddictServerEventState> HandleAsync(OpenIddictServerEvents.HandleLogoutRequest notification)
+        public override async Task<OpenIddictServerEventState> HandleAsync(
+            OpenIddictServerEvents.HandleLogoutRequest notification)
         {
             // Ask ASP.NET Core Identity to delete the local and external cookies created
             // when the user agent is redirected from the external identity provider

@@ -7,6 +7,7 @@ using Xunit.Abstractions;
 using OpenQA.Selenium.Interactions;
 using System.Linq;
 using NBitcoin;
+using System.Threading.Tasks;
 
 namespace BTCPayServer.Tests
 {
@@ -94,6 +95,92 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("LoginButton")).Click();
             s.Driver.AssertNoError();
         }
+        [Fact]
+        public async Task CanUseSSHService()
+        {
+            using (var s = SeleniumTester.Create())
+            {
+                s.Start();
+                var alice = s.RegisterNewUser(isAdmin: true);
+                s.Driver.Navigate().GoToUrl(s.Link("/server/services"));
+                Assert.Contains("server/services/ssh", s.Driver.PageSource);
+                using (var client = await s.Server.PayTester.GetService<BTCPayServer.Configuration.BTCPayServerOptions>().SSHSettings.ConnectAsync())
+                {
+                    var result = await client.RunBash("echo hello");
+                    Assert.Equal(string.Empty, result.Error);
+                    Assert.Equal("hello\n", result.Output);
+                    Assert.Equal(0, result.ExitStatus);
+                }
+                s.Driver.Navigate().GoToUrl(s.Link("/server/services/ssh"));
+                s.Driver.AssertNoError();
+                s.Driver.FindElement(By.Id("SSHKeyFileContent")).Clear();
+                s.Driver.FindElement(By.Id("SSHKeyFileContent")).SendKeys("tes't\r\ntest2");
+                s.Driver.FindElement(By.Id("submit")).ForceClick();
+                s.Driver.AssertNoError();
+
+                var text = s.Driver.FindElement(By.Id("SSHKeyFileContent")).Text;
+                // Browser replace \n to \r\n, so it is hard to compare exactly what we want
+                Assert.Contains("tes't", text);
+                Assert.Contains("test2", text);
+                Assert.True(s.Driver.PageSource.Contains("authorized_keys has been updated", StringComparison.OrdinalIgnoreCase));
+
+                s.Driver.FindElement(By.Id("SSHKeyFileContent")).Clear();
+                s.Driver.FindElement(By.Id("submit")).ForceClick();
+
+                text = s.Driver.FindElement(By.Id("SSHKeyFileContent")).Text;
+                Assert.DoesNotContain("test2", text);
+            }
+        }
+
+        [Fact]
+        public void CanUseDynamicDns()
+        {
+            using (var s = SeleniumTester.Create())
+            {
+                s.Start();
+                var alice = s.RegisterNewUser(isAdmin: true);
+                s.Driver.Navigate().GoToUrl(s.Link("/server/services"));
+                Assert.Contains("Dynamic DNS", s.Driver.PageSource);
+
+                s.Driver.Navigate().GoToUrl(s.Link("/server/services/dynamic-dns"));
+                s.Driver.AssertNoError();
+                if (s.Driver.PageSource.Contains("pouet.hello.com"))
+                {
+                    // Cleanup old test run
+                    s.Driver.Navigate().GoToUrl(s.Link("/server/services/dynamic-dns/pouet.hello.com/delete"));
+                    s.Driver.FindElement(By.Id("continue")).Click();
+                }
+                s.Driver.FindElement(By.Id("AddDynamicDNS")).Click();
+                s.Driver.AssertNoError();
+                // We will just cheat for test purposes by only querying the server
+                s.Driver.FindElement(By.Id("ServiceUrl")).SendKeys(s.Link("/"));
+                s.Driver.FindElement(By.Id("Settings_Hostname")).SendKeys("pouet.hello.com");
+                s.Driver.FindElement(By.Id("Settings_Login")).SendKeys("MyLog");
+                s.Driver.FindElement(By.Id("Settings_Password")).SendKeys("MyLog" + Keys.Enter);
+                s.Driver.AssertNoError();
+                Assert.Contains("The Dynamic DNS has been successfully queried", s.Driver.PageSource);
+                Assert.EndsWith("/server/services/dynamic-dns", s.Driver.Url);
+
+                // Try to do the same thing should fail (hostname already exists)
+                s.Driver.FindElement(By.Id("AddDynamicDNS")).Click();
+                s.Driver.AssertNoError();
+                s.Driver.FindElement(By.Id("ServiceUrl")).SendKeys(s.Link("/"));
+                s.Driver.FindElement(By.Id("Settings_Hostname")).SendKeys("pouet.hello.com");
+                s.Driver.FindElement(By.Id("Settings_Login")).SendKeys("MyLog");
+                s.Driver.FindElement(By.Id("Settings_Password")).SendKeys("MyLog" + Keys.Enter);
+                s.Driver.AssertNoError();
+                Assert.Contains("This hostname already exists", s.Driver.PageSource);
+
+                // Delete it
+                s.Driver.Navigate().GoToUrl(s.Link("/server/services/dynamic-dns"));
+                Assert.Contains("/server/services/dynamic-dns/pouet.hello.com/delete", s.Driver.PageSource);
+                s.Driver.Navigate().GoToUrl(s.Link("/server/services/dynamic-dns/pouet.hello.com/delete"));
+                s.Driver.FindElement(By.Id("continue")).Click();
+                s.Driver.AssertNoError();
+
+                Assert.DoesNotContain("/server/services/dynamic-dns/pouet.hello.com/delete", s.Driver.PageSource);
+            }
+        }
 
         [Fact]
         public void CanCreateStores()
@@ -102,14 +189,14 @@ namespace BTCPayServer.Tests
             {
                 s.Start();
                 var alice = s.RegisterNewUser();
-                var store = s.CreateNewStore();
+                var store = s.CreateNewStore().storeName;
                 s.AddDerivationScheme();
                 s.Driver.AssertNoError();
                 Assert.Contains(store, s.Driver.PageSource);
                 var storeUrl = s.Driver.Url;
                 s.ClickOnAllSideMenus();
-
-                CreateInvoice(s, store);
+                s.GoToInvoices();
+                s.CreateInvoice(store);
                 s.Driver.FindElement(By.ClassName("invoice-details-link")).Click();
                 var invoiceUrl = s.Driver.Url;
 
@@ -145,37 +232,8 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
-        public void CanCreateInvoice()
-        {
-            using (var s = SeleniumTester.Create())
-            {
-                s.Start();
-                s.RegisterNewUser();
-                var store = s.CreateNewStore();
-                s.AddDerivationScheme();
 
-                CreateInvoice(s, store);
-
-                s.Driver.FindElement(By.ClassName("invoice-details-link")).Click();
-                s.Driver.AssertNoError();
-                s.Driver.Navigate().Back();
-                s.Driver.FindElement(By.ClassName("invoice-checkout-link")).Click();
-                Assert.NotEmpty(s.Driver.FindElements(By.Id("checkoutCtrl")));
-                s.Driver.Quit();
-            }
-        }
-
-        static void CreateInvoice(SeleniumTester s, string store)
-        {
-            s.Driver.FindElement(By.Id("Invoices")).Click();
-            s.Driver.FindElement(By.Id("CreateNewInvoice")).Click();
-            s.Driver.FindElement(By.CssSelector("input#Amount.form-control")).SendKeys("100");
-            s.Driver.FindElement(By.Name("StoreId")).SendKeys(store + Keys.Enter);
-            s.Driver.FindElement(By.Id("Create")).Click();
-            Assert.True(s.Driver.PageSource.Contains("just created!"), "Unable to create Invoice");
-        }
-
+     
         [Fact]
         public void CanCreateAppPoS()
         {
@@ -187,13 +245,15 @@ namespace BTCPayServer.Tests
 
                 s.Driver.FindElement(By.Id("Apps")).Click();
                 s.Driver.FindElement(By.Id("CreateNewApp")).Click();
-                s.Driver.FindElement(By.Name("Name")).SendKeys("PoS" + store);
-                s.Driver.FindElement(By.CssSelector("select#SelectedAppType.form-control")).SendKeys("PointOfSale" + Keys.Enter);
-                s.Driver.FindElement(By.CssSelector("select#SelectedStore.form-control")).SendKeys(store + Keys.Enter);
+                s.Driver.FindElement(By.Name("Name")).SendKeys("PoS" + Guid.NewGuid());
+                s.Driver.FindElement(By.Id("SelectedAppType")).SendKeys("PointOfSale" + Keys.Enter);
+                s.Driver.FindElement(By.Id("SelectedStore")).SendKeys(store + Keys.Enter);
                 s.Driver.FindElement(By.Id("Create")).Click();
-                s.Driver.FindElement(By.CssSelector("input#EnableShoppingCart.form-check")).Click();
+                s.Driver.FindElement(By.Id("EnableShoppingCart")).Click();
                 s.Driver.FindElement(By.Id("SaveSettings")).ForceClick();
-                Assert.True(s.Driver.PageSource.Contains("App updated"), "Unable to create PoS");
+                s.Driver.FindElement(By.Id("ViewApp")).ForceClick();
+                s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
+                Assert.True(s.Driver.PageSource.Contains("Tea shop"), "Unable to create PoS");
                 s.Driver.Quit();
             }
         }
@@ -210,15 +270,15 @@ namespace BTCPayServer.Tests
 
                 s.Driver.FindElement(By.Id("Apps")).Click();
                 s.Driver.FindElement(By.Id("CreateNewApp")).Click();
-                s.Driver.FindElement(By.Name("Name")).SendKeys("CF" + store);
-                s.Driver.FindElement(By.CssSelector("select#SelectedAppType.form-control")).SendKeys("Crowdfund" + Keys.Enter);
-                s.Driver.FindElement(By.CssSelector("select#SelectedStore.form-control")).SendKeys(store + Keys.Enter);
+                s.Driver.FindElement(By.Name("Name")).SendKeys("CF" + Guid.NewGuid());
+                s.Driver.FindElement(By.Id("SelectedAppType")).SendKeys("Crowdfund" + Keys.Enter);
+                s.Driver.FindElement(By.Id("SelectedStore")).SendKeys(store + Keys.Enter);
                 s.Driver.FindElement(By.Id("Create")).Click();
                 s.Driver.FindElement(By.Id("Title")).SendKeys("Kukkstarter");
                 s.Driver.FindElement(By.CssSelector("div.note-editable.card-block")).SendKeys("1BTC = 1BTC");
                 s.Driver.FindElement(By.Id("TargetCurrency")).SendKeys("JPY");
                 s.Driver.FindElement(By.Id("TargetAmount")).SendKeys("700");
-                s.Driver.FindElement(By.Id("SaveSettings")).Submit();
+                s.Driver.FindElement(By.Id("SaveSettings")).ForceClick();
                 s.Driver.FindElement(By.Id("ViewApp")).ForceClick();
                 s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
                 Assert.True(s.Driver.PageSource.Contains("Currently Active!"), "Unable to create CF");
@@ -241,7 +301,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("Title")).SendKeys("Pay123");
                 s.Driver.FindElement(By.Id("Amount")).SendKeys("700");
                 s.Driver.FindElement(By.Id("Currency")).SendKeys("BTC");
-                s.Driver.FindElement(By.Id("SaveButton")).Submit();
+                s.Driver.FindElement(By.Id("SaveButton")).ForceClick();
                 s.Driver.FindElement(By.Name("ViewAppButton")).SendKeys(Keys.Return);
                 s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
                 Assert.True(s.Driver.PageSource.Contains("Amount due"), "Unable to create Payment Request");
@@ -262,7 +322,7 @@ namespace BTCPayServer.Tests
                 // to sign the transaction
                 var mnemonic = "usage fever hen zero slide mammal silent heavy donate budget pulse say brain thank sausage brand craft about save attract muffin advance illegal cabbage";
                 var root = new Mnemonic(mnemonic).DeriveExtKey();
-                s.AddDerivationScheme("ypub6WWc2gWwHbdnAAyJDnR4SPL1phRh7REqrPBfZeizaQ1EmTshieRXJC3Z5YoU4wkcdKHEjQGkh6AYEzCQC1Kz3DNaWSwdc1pc8416hAjzqyD");
+                s.AddDerivationScheme("BTC", "ypub6WWc2gWwHbdnAAyJDnR4SPL1phRh7REqrPBfZeizaQ1EmTshieRXJC3Z5YoU4wkcdKHEjQGkh6AYEzCQC1Kz3DNaWSwdc1pc8416hAjzqyD");
                 var tx = s.Server.ExplorerNode.SendToAddress(BitcoinAddress.Create("bcrt1qmxg8fgnmkp354vhe78j6sr4ut64tyz2xyejel4", Network.RegTest), Money.Coins(3.0m));
                 s.Server.ExplorerNode.Generate(1);
 

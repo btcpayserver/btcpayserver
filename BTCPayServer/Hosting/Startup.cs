@@ -14,7 +14,6 @@ using BTCPayServer.Configuration;
 using System.IO;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using AspNet.Security.OpenIdConnect.Primitives;
-using BTCPayServer.Authentication.OpenId.Models;
 using BTCPayServer.Security;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using OpenIddict.Abstractions;
@@ -95,6 +94,10 @@ namespace BTCPayServer.Hosting
             string httpsCertificateFilePath = Configuration.GetOrDefault<string>("HttpsCertificateFilePath", null);
             bool useDefaultCertificate = Configuration.GetOrDefault<bool>("HttpsUseDefaultCertificate", false);
             bool hasCertPath = !String.IsNullOrEmpty(httpsCertificateFilePath);
+            services.Configure<KestrelServerOptions>(kestrel =>
+            {
+                kestrel.Limits.MaxRequestLineSize = 8_192 * 10 * 5; // Around 500K, transactions passed in URI should not be bigger than this
+            });
             if (hasCertPath || useDefaultCertificate)
             {
                 var bindAddress = Configuration.GetOrDefault<IPAddress>("bind", IPAddress.Any);
@@ -143,7 +146,7 @@ namespace BTCPayServer.Hosting
                 })
                 .AddServer(options =>
                 {
-                    
+                    options.EnableRequestCaching();
                     //Disabled so that Tor works with OpenIddict too
                     options.DisableHttpsRequirement();
                     // Register the ASP.NET Core MVC binder used by OpenIddict.
@@ -178,7 +181,6 @@ namespace BTCPayServer.Hosting
                     options.AddEventHandler<AuthorizationCodeGrantTypeEventHandler>();
                     options.AddEventHandler<RefreshTokenGrantTypeEventHandler>();
                     options.AddEventHandler<ClientCredentialsGrantTypeEventHandler>();
-                    options.AddEventHandler<AuthorizationEventHandler>();
                     options.AddEventHandler<LogoutEventHandler>();
 
                     options.ConfigureSigningKey(Configuration);

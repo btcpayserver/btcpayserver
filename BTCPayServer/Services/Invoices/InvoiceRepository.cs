@@ -1,6 +1,7 @@
 using DBriize;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using NBitpayClient;
@@ -80,30 +81,31 @@ retry:
             }
         }
 
-        public async Task<InvoiceEntity> GetInvoiceFromScriptPubKey(Script scriptPubKey, string cryptoCode)
+        public async Task<IEnumerable<InvoiceEntity>> GetInvoicesFromAddresses(string[] addresses)
         {
             using (var db = _ContextFactory.CreateContext())
             {
-                var key = scriptPubKey.Hash.ToString() + "#" + cryptoCode;
-                var result = (await db.AddressInvoices
+                return  (await db.AddressInvoices
 #pragma warning disable CS0618
-                                    .Where(a => a.Address == key)
+                    .Where(a => addresses.Contains(a.Address))
 #pragma warning restore CS0618
-                                    .Select(a => a.InvoiceData)
-                                    .Include(a => a.Payments)
-                                    .Include(a => a.RefundAddresses)
-                                    .ToListAsync()).FirstOrDefault();
-                if (result == null)
-                    return null;
-                return ToEntity(result);
+                    .Select(a => a.InvoiceData)
+                    .Include(a => a.Payments)
+                    .Include(a => a.RefundAddresses)
+                    .ToListAsync()).Select(ToEntity);
             }
         }
 
-        public async Task<string[]> GetPendingInvoices()
+        public async Task<string[]> GetPendingInvoices(Func<IQueryable<PendingInvoiceData>, IQueryable<PendingInvoiceData>> filter = null )
         {
             using (var ctx = _ContextFactory.CreateContext())
             {
-                return await ctx.PendingInvoices.Select(p => p.Id).ToArrayAsync();
+                var queryable =  ctx.PendingInvoices.AsQueryable();
+                if (filter != null)
+                {
+                    queryable = filter.Invoke(queryable);
+                }
+                return await queryable.Select(p => p.Id).ToArrayAsync();
             }
         }
 
@@ -239,7 +241,7 @@ retry:
             return paymentMethod.GetPaymentMethodDetails().GetPaymentDestination();
         }
 
-        public async Task<bool> NewAddress(string invoiceId, Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod paymentMethod, BTCPayNetworkBase network)
+        public async Task<bool> NewAddress(string invoiceId, IPaymentMethodDetails paymentMethod, BTCPayNetworkBase network)
         {
             using (var context = _ContextFactory.CreateContext())
             {
@@ -252,7 +254,7 @@ retry:
                 if (currencyData == null)
                     return false;
 
-                var existingPaymentMethod = (Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod)currencyData.GetPaymentMethodDetails();
+                var existingPaymentMethod = currencyData.GetPaymentMethodDetails();
                 if (existingPaymentMethod.GetPaymentDestination() != null)
                 {
                     MarkUnassigned(invoiceId, invoiceEntity, context, currencyData.GetId());
@@ -441,7 +443,7 @@ retry:
             entity.Payments = invoice.Payments.Select(p =>
             {
                 var paymentEntity = ToObject<PaymentEntity>(p.Blob, null);
-                paymentEntity.Network = _Networks.GetNetwork<BTCPayNetwork>(paymentEntity.CryptoCode);
+                paymentEntity.Network = _Networks.GetNetwork<BTCPayNetworkBase>(paymentEntity.CryptoCode);
                 paymentEntity.Accounted = p.Accounted;
                 // PaymentEntity on version 0 does not have their own fee, because it was assumed that the payment method have fixed fee.
                 // We want to hide this legacy detail in InvoiceRepository, so we fetch the fee from the PaymentMethod and assign it to the PaymentEntity.
@@ -475,6 +477,11 @@ retry:
             {
                 entity.Events = invoice.Events.OrderBy(c => c.Timestamp).ToList();
             }
+
+            if (!string.IsNullOrEmpty(entity.RefundMail) && string.IsNullOrEmpty(entity.BuyerInformation.BuyerEmail))
+            {
+                entity.BuyerInformation.BuyerEmail = entity.RefundMail;
+            }
             return entity;
         }
 
@@ -482,11 +489,12 @@ retry:
         {
             IQueryable<Data.InvoiceData> query = context.Invoices;
 
-            if (!string.IsNullOrEmpty(queryObject.InvoiceId))
+            if (queryObject.InvoiceId != null && queryObject.InvoiceId.Length > 0)
             {
-                query = query.Where(i => i.Id == queryObject.InvoiceId);
+                var statusSet = queryObject.InvoiceId.ToHashSet();
+                query = query.Where(i => statusSet.Contains(i.Id));
             }
-
+            
             if (queryObject.StoreId != null && queryObject.StoreId.Length > 0)
             {
                 var stores = queryObject.StoreId.ToHashSet();
@@ -658,10 +666,10 @@ retry:
                     ReceivedTime = date.UtcDateTime,
                     Accounted = accounted,
                     NetworkFee = paymentMethodDetails.GetNextNetworkFee(),
-                    Network = network as BTCPayNetwork
+                    Network = network
                 };
                 entity.SetCryptoPaymentData(paymentData);
-
+                //TODO: abstract
                 if (paymentMethodDetails is Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod bitcoinPaymentMethod &&
                     bitcoinPaymentMethod.NetworkFeeMode == NetworkFeeMode.MultiplePaymentsOnly &&
                     bitcoinPaymentMethod.NextNetworkFee == Money.Zero)
@@ -806,7 +814,7 @@ retry:
             get; set;
         }
 
-        public string InvoiceId
+        public string[] InvoiceId
         {
             get;
             set;

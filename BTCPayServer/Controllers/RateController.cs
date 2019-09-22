@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Authorization;
 using BTCPayServer.Authentication;
 using Microsoft.AspNetCore.Cors;
 using System.Threading;
+using BTCPayServer.Data;
 
 namespace BTCPayServer.Controllers
 {

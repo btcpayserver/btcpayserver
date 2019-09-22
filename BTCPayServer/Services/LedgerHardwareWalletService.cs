@@ -126,11 +126,11 @@ namespace BTCPayServer.Services
                 .Inputs
                 .HDKeysFor(accountKey, accountKeyPath)
                 .Where(hd => !hd.Coin.PartialSigs.ContainsKey(hd.PubKey)) // Don't want to sign something twice
-                .GroupBy(hd => hd.Coin)
+                .GroupBy(hd => hd.Coin.PrevOut, hd => hd)
                 .Select(i => new SignatureRequest()
                 {
-                    InputCoin = i.Key.GetSignableCoin(),
-                    InputTransaction = i.Key.NonWitnessUtxo,
+                    InputCoin = i.First().Coin.GetSignableCoin(),
+                    InputTransaction = i.First().Coin.NonWitnessUtxo,
                     KeyPath = i.First().RootedKeyPath.KeyPath,
                     PubKey = i.First().PubKey
                 }).ToArray();

@@ -53,6 +53,7 @@ namespace BTCPayServer.Controllers
                     "  title: Fruit Tea\n" +
                     "  description: The Tibetan Himalayas, the land is majestic and beautiful—a spiritual place where, despite the perilous environment, many journey seeking enlightenment. Pay us what you want!\n" +
                     "  image: https://cdn.pixabay.com/photo/2016/09/16/11/24/darts-1673812__480.jpg\n" +
+                    "  inventory: 5\n" +
                     "  custom: true";
                 EnableShoppingCart = false;
                 ShowCustomAmount = true;
@@ -78,6 +79,10 @@ namespace BTCPayServer.Controllers
 
 
             public string CustomCSSLink { get; set; }
+            
+            public string EmbeddedCSS { get; set; }
+            
+            public string Description { get; set; }
             public string NotificationEmail { get; set; }
             public string NotificationUrl { get; set; }
             public bool? RedirectAutomatically { get; set; }
@@ -96,6 +101,7 @@ namespace BTCPayServer.Controllers
             {
                 NotificationEmailWarning = !await IsEmailConfigured(app.StoreDataId),
                 Id = appId,
+                StoreId = app.StoreDataId,
                 Title = settings.Title,
                 EnableShoppingCart = settings.EnableShoppingCart,
                 ShowCustomAmount = settings.ShowCustomAmount,
@@ -108,8 +114,11 @@ namespace BTCPayServer.Controllers
                 CustomTipText = settings.CustomTipText ?? PointOfSaleSettings.CUSTOM_TIP_TEXT_DEF,
                 CustomTipPercentages = settings.CustomTipPercentages != null ? string.Join(",", settings.CustomTipPercentages) : string.Join(",", PointOfSaleSettings.CUSTOM_TIP_PERCENTAGES_DEF),
                 CustomCSSLink = settings.CustomCSSLink,
+                EmbeddedCSS = settings.EmbeddedCSS,
+                Description = settings.Description,
                 NotificationEmail = settings.NotificationEmail,
                 NotificationUrl = settings.NotificationUrl,
+                SearchTerm = $"storeid:{app.StoreDataId}",
                 RedirectAutomatically = settings.RedirectAutomatically.HasValue? settings.RedirectAutomatically.Value? "true": "false" : "" 
             };
             if (HttpContext?.Request != null)
@@ -186,25 +195,16 @@ namespace BTCPayServer.Controllers
                 CustomCSSLink = vm.CustomCSSLink,
                 NotificationUrl = vm.NotificationUrl,
                 NotificationEmail = vm.NotificationEmail,
+                Description = vm.Description,
+                EmbeddedCSS = vm.EmbeddedCSS,
                 RedirectAutomatically = string.IsNullOrEmpty(vm.RedirectAutomatically)? (bool?) null: bool.Parse(vm.RedirectAutomatically)
                 
             });
-            await UpdateAppSettings(app);
+            await _AppService.UpdateOrCreateApp(app);
             StatusMessage = "App updated";
-            return RedirectToAction(nameof(ListApps));
+            return RedirectToAction(nameof(UpdatePointOfSale), new { appId });
         }
 
-        private async Task UpdateAppSettings(AppData app)
-        {
-            using (var ctx = _ContextFactory.CreateContext())
-            {
-                ctx.Apps.Add(app);
-                ctx.Entry<AppData>(app).State = EntityState.Modified;
-                ctx.Entry<AppData>(app).Property(a => a.Settings).IsModified = true;
-                ctx.Entry<AppData>(app).Property(a => a.TagAllInvoices).IsModified = true;
-                await ctx.SaveChangesAsync();
-            }
-        }
 
         private int[] ListSplit(string list, string separator = ",")
         {

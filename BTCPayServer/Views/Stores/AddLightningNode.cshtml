@@ -67,8 +67,8 @@
                 </table>
                 <p>Note that the <code>certthumbprint</code> to connect to your LND node can be obtained through this command line:</p>
                 <p><pre><code>openssl x509 -noout -fingerprint -sha256 -inform pem -in /root/.lnd/tls.cert</code></pre></p>
-                <p>You can omit <code>certthumprint</code> if you the certificate is trusted by your machine</p>
-                <p>You can set <code>allowinsecure</code> to <code>true</code> if your LND REST server is using HTTP or HTTPS with an untrusted certificate which you don't know the <code>certthumprint</code></p>
+                <p>You can omit <code>certthumbprint</code> if you the certificate is trusted by your machine</p>
+                <p>You can set <code>allowinsecure</code> to <code>true</code> if your LND REST server is using HTTP or HTTPS with an untrusted certificate which you don't know the <code>certthumbprint</code></p>
             </div>
             <div class="form-group">
                 <label asp-for="ConnectionString"></label>
@@ -77,7 +77,7 @@
                 @if (Model.InternalLightningNode != null)
                 {
                     <p class="form-text text-muted">
-                        You can use the internal lightning node by <a href="#" onclick="$('#lightningurl').val('@Model.InternalLightningNode'); return false;">clicking here</a>
+                        You can use the internal lightning node by <a href="#" id="internal-ln-node-setter" onclick="$('#lightningurl').val('@Model.InternalLightningNode'); return false;">clicking here</a>
                     </p>
                 }
             </div>
@@ -85,7 +85,7 @@
                 <label asp-for="Enabled"></label>
                 <input asp-for="Enabled" type="checkbox" class="form-check" />
             </div>
-            <button name="command" type="submit" value="save" class="btn btn-primary">Submit</button>
+            <button id="save" name="command" type="submit" value="save" class="btn btn-primary">Submit</button>
             <button name="command" type="submit" value="test" class="btn btn-secondary">Test connection</button>
             <a 
                 class="btn btn-secondary"

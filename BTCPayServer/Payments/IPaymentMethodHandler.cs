@@ -7,8 +7,6 @@ using BTCPayServer.Rating;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using NBitcoin;
-using NBitpayClient;
-using Newtonsoft.Json.Linq;
 using InvoiceResponse = BTCPayServer.Models.InvoiceResponse;
 
 namespace BTCPayServer.Payments
@@ -39,7 +37,7 @@ namespace BTCPayServer.Payments
         /// <returns></returns>
         object PreparePayment(ISupportedPaymentMethod supportedPaymentMethod, StoreData store, BTCPayNetworkBase network);
 
-        void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse);
+        void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse, StoreBlob storeBlob);
         string GetCryptoImage(PaymentMethodId paymentMethodId);
         string GetPaymentMethodName(PaymentMethodId paymentMethodId);
 
@@ -48,6 +46,7 @@ namespace BTCPayServer.Payments
             Money amount, PaymentMethodId paymentMethodId);
 
         IEnumerable<PaymentMethodId> GetSupportedPaymentMethods();
+        CheckoutUIPaymentMethodSettings GetCheckoutUISettings();
     }
 
     public interface IPaymentMethodHandler<TSupportedPaymentMethod, TBTCPayNetwork> : IPaymentMethodHandler
@@ -69,7 +68,8 @@ namespace BTCPayServer.Payments
             TSupportedPaymentMethod supportedPaymentMethod,
             PaymentMethod paymentMethod, StoreData store, TBTCPayNetwork network, object preparePaymentObject);
 
-        public abstract void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse);
+        public abstract void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse,
+            StoreBlob storeBlob);
         public abstract string GetCryptoImage(PaymentMethodId paymentMethodId);
         public abstract string GetPaymentMethodName(PaymentMethodId paymentMethodId);
 
@@ -77,6 +77,21 @@ namespace BTCPayServer.Payments
             Dictionary<CurrencyPair, Task<RateResult>> rate, Money amount, PaymentMethodId paymentMethodId);
 
         public abstract IEnumerable<PaymentMethodId> GetSupportedPaymentMethods();
+        public virtual CheckoutUIPaymentMethodSettings GetCheckoutUISettings()
+        {
+            return new CheckoutUIPaymentMethodSettings()
+            {
+                ExtensionPartial = "Bitcoin_Lightning_LikeMethodCheckout",
+                CheckoutBodyVueComponentName = "BitcoinLightningLikeMethodCheckout",
+                CheckoutHeaderVueComponentName = "BitcoinLightningLikeMethodCheckoutHeader",
+                NoScriptPartialName = "Bitcoin_Lightning_LikeMethodCheckoutNoScript"
+            };
+        }
+
+        public PaymentMethod GetPaymentMethodInInvoice(InvoiceEntity invoice, PaymentMethodId paymentMethodId)
+        {
+            return invoice.GetPaymentMethod(paymentMethodId);
+        }
 
         public virtual object PreparePayment(TSupportedPaymentMethod supportedPaymentMethod, StoreData store,
             BTCPayNetworkBase network)

@@ -128,8 +128,7 @@
                 <b-tooltip target="crowdfund-body-raised-amount" v-if="paymentStats && paymentStats.length > 0">
                     <ul class="p-0 text-uppercase">
                         <li v-for="stat of paymentStats" class="list-unstyled">
-                            
-                            {{stat.label}} <span v-if="stat.lightning" class="fa fa-bolt"></span> {{stat.value}}
+                            {{stat.label}} <span v-if="stat.lightning" class="fa fa-bolt"></span> {{stat.value.toFixed(srvModel.currencyData.divisibility)}}
                         </li>
                     </ul>
                 </b-tooltip>      
@@ -244,7 +243,7 @@
 </script>
 
 <script type="text/x-template" id="perk-template"> 
-<div class="card mb-4 perk"  v-bind:class="{ 'expanded': expanded, 'unexpanded': !expanded }" v-on:click="expand" :id="perk.id">
+<div class="card perk"  v-bind:class="{ 'expanded': expanded, 'unexpanded': !expanded, 'mb-4':!inModal }" v-on:click="expand" :id="perk.id">
 <span v-if="displayPerksRanking && perk.sold" 
     class="btn btn-sm rounded-circle px-0 perk-badge" 
     v-bind:class="{ 'btn-primary': index==0, 'btn-secondary': index!=0}">#{{index+1}}</span> 
@@ -301,9 +300,11 @@
                 </div>
             </div>
         </div>
-        <div class="card-footer d-flex justify-content-between" v-if="perk.sold">
-           <span ></span>
-           <span x >{{perk.sold}} Contributor{{perk.sold > 1? "s": ""}}</span>
+        <div class="card-footer d-flex justify-content-between" v-if="perk.sold || perk.inventory != null">
+           
+            <span v-if="perk.inventory != null && perk.inventory > 0" class="text-center text-muted">{{perk.inventory}} left</span>
+            <span v-if="perk.inventory != null && perk.inventory <= 0" class="text-center text-muted">Sold out</span>
+           <span v-if="perk.sold" >{{perk.sold}} Contributor{{perk.sold > 1? "s": ""}}</span>
         </div>
     </form>
 </div> 

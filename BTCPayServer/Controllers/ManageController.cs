@@ -19,6 +19,7 @@ using BTCPayServer.Services.Mails;
 using System.Globalization;
 using BTCPayServer.Security;
 using BTCPayServer.Services.U2F;
+using BTCPayServer.Data;
 
 namespace BTCPayServer.Controllers
 {

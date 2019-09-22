@@ -1,0 +1,30 @@
+﻿@model BTCPayServer.Models.Authorization.AuthorizeViewModel
+<form method="post">
+    <input type="hidden" name="request_id" value="@Model.RequestId"/>
+    <section>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12 text-center">
+                    <h2 class="section-heading">Authorization Request</h2>
+                    <hr class="primary">
+                    <p>@Model.ApplicationName is requesting access to your account.</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-12 text-center">
+                    <div class="btn-group">
+                        <button class="btn btn-lg btn-success" name="consent" id="consent-yes" type="submit" value="Yes">Authorize app</button>
+                        <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <span class="sr-only">Toggle Dropdown</span>
+                        </button>
+                        <div class="dropdown-menu">
+                            <button class="dropdown-item" name="consent" id="consent-yes-temporary" type="submit" value="YesTemporary">Authorize app until session ends</button>
+                        </div>
+                    </div>
+                    <button class="btn btn-lg btn-secondary" id="consent-no" name="consent" type="submit" value="No">Cancel</button>
+
+                </div>
+            </div>
+        </div>
+    </section>
+</form>

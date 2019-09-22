@@ -9,6 +9,7 @@ namespace BTCPayServer.Models.AppViewModels
 {
     public class UpdateCrowdfundViewModel
     {
+        public string StoreId { get; set; }
         [Required] [MaxLength(30)] public string Title { get; set; }
 
         [MaxLength(50)] public string Tagline { get; set; }

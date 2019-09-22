@@ -3,6 +3,8 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BTCPayServer.Data;
+using BTCPayServer.Models;
 using BTCPayServer.Models.ManageViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -11,6 +13,7 @@ namespace BTCPayServer.Controllers
 {
     public partial class ManageController
     {
+        private const string RecoveryCodesKey = nameof(RecoveryCodesKey);
         private const string AuthenicatorUriFormat = "otpauth://totp/{0}:{1}?secret={2}&issuer={0}&digits=6";
 
         [HttpGet]
@@ -80,18 +83,8 @@ namespace BTCPayServer.Controllers
                 throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
 
-            var unformattedKey = await _userManager.GetAuthenticatorKeyAsync(user);
-            if (string.IsNullOrEmpty(unformattedKey))
-            {
-                await _userManager.ResetAuthenticatorKeyAsync(user);
-                unformattedKey = await _userManager.GetAuthenticatorKeyAsync(user);
-            }
-
-            var model = new EnableAuthenticatorViewModel
-            {
-                SharedKey = FormatKey(unformattedKey),
-                AuthenticatorUri = GenerateQrCodeUri(user.Email, unformattedKey)
-            };
+            var model = new EnableAuthenticatorViewModel();
+            await LoadSharedKeyAndQrCodeUriAsync(user, model);
 
             return View(model);
         }
@@ -100,32 +93,36 @@ namespace BTCPayServer.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EnableAuthenticator(EnableAuthenticatorViewModel model)
         {
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
                 throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
 
+            if (!ModelState.IsValid)
+            {
+                await LoadSharedKeyAndQrCodeUriAsync(user, model);
+                return View(model);
+            }
+
             // Strip spaces and hypens
-            var verificationCode = model.Code.Replace(" ", string.Empty, StringComparison.InvariantCulture)
-                .Replace("-", string.Empty, StringComparison.InvariantCulture);
+            var verificationCode = model.Code.Replace(" ", string.Empty, StringComparison.OrdinalIgnoreCase).Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase);
 
             var is2faTokenValid = await _userManager.VerifyTwoFactorTokenAsync(
                 user, _userManager.Options.Tokens.AuthenticatorTokenProvider, verificationCode);
 
             if (!is2faTokenValid)
             {
-                ModelState.AddModelError(nameof(model.Code), "Verification code is invalid.");
+                ModelState.AddModelError("Code", "Verification code is invalid.");
+                await LoadSharedKeyAndQrCodeUriAsync(user, model);
                 return View(model);
             }
 
             await _userManager.SetTwoFactorEnabledAsync(user, true);
             _logger.LogInformation("User with ID {UserId} has enabled 2FA with an authenticator app.", user.Id);
+            var recoveryCodes = await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10);
+            TempData[RecoveryCodesKey] = recoveryCodes.ToArray();
+
             return RedirectToAction(nameof(GenerateRecoveryCodes));
         }
 
@@ -153,7 +150,20 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GenerateRecoveryCodes()
+        public IActionResult GenerateRecoveryCodes()
+        {
+            var recoveryCodes = (string[])TempData[RecoveryCodesKey];
+            if (recoveryCodes == null)
+            {
+                return RedirectToAction(nameof(TwoFactorAuthentication));
+            }
+            
+            var model = new GenerateRecoveryCodesViewModel {RecoveryCodes = recoveryCodes};
+            return View(model);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GenerateRecoveryCodesWarning()
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
@@ -163,16 +173,10 @@ namespace BTCPayServer.Controllers
 
             if (!user.TwoFactorEnabled)
             {
-                throw new ApplicationException(
-                    $"Cannot generate recovery codes for user with ID '{user.Id}' as they do not have 2FA enabled.");
+                throw new ApplicationException($"Cannot generate recovery codes for user with ID '{user.Id}' because they do not have 2FA enabled.");
             }
 
-            var recoveryCodes = await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10);
-            var model = new GenerateRecoveryCodesViewModel {RecoveryCodes = recoveryCodes.ToArray()};
-
-            _logger.LogInformation("User with ID {UserId} has generated new 2FA recovery codes.", user.Id);
-
-            return View(model);
+            return View(nameof(GenerateRecoveryCodesWarning));
         }
 
         private string GenerateQrCodeUri(string email, string unformattedKey)
@@ -200,6 +204,20 @@ namespace BTCPayServer.Controllers
             }
 
             return result.ToString().ToLowerInvariant();
+        }
+
+
+        private async Task LoadSharedKeyAndQrCodeUriAsync(ApplicationUser user, EnableAuthenticatorViewModel model)
+        {
+            var unformattedKey = await _userManager.GetAuthenticatorKeyAsync(user);
+            if (string.IsNullOrEmpty(unformattedKey))
+            {
+                await _userManager.ResetAuthenticatorKeyAsync(user);
+                unformattedKey = await _userManager.GetAuthenticatorKeyAsync(user);
+            }
+
+            model.SharedKey = FormatKey(unformattedKey);
+            model.AuthenticatorUri = GenerateQrCodeUri(user.Email, unformattedKey);
         }
     }
 }

@@ -4,19 +4,6 @@
     ViewData.SetActivePageAndTitle(StoreNavPages.Index, "Profile");
 }
 
-<style type="text/css">
-    .smMaxWidth {
-        max-width: 150px;
-    }
-
-    @@media (min-width: 768px) {
-        .smMaxWidth {
-            max-width: 300px;
-        }
-    }
-</style>
-
-
 <partial name="_StatusMessage" for="@TempData["TempDataProperty-StatusMessage"]" />
 
 <div class="row">
@@ -120,7 +107,7 @@
                                     {
                                         <a asp-action="WalletTransactions" asp-controller="Wallets" asp-route-walletId="@scheme.WalletId">Wallet</a><span> - </span>
                                     }
-                                    <a asp-action="AddDerivationScheme" asp-route-cryptoCode="@scheme.Crypto" id="ModifyBTC">Modify</a>
+                                    <a asp-action="AddDerivationScheme" asp-route-cryptoCode="@scheme.Crypto" id="@($"Modify{scheme.Crypto}")">Modify</a>
                                 </td>
                             </tr>
                         }
@@ -162,7 +149,7 @@
                                             <span class="fa fa-times"></span>
                                         }
                                     </td>
-                                    <td style="text-align:right"><a asp-action="AddLightningNode" asp-route-cryptoCode="@scheme.CryptoCode">Modify</a></td>
+                                    <td style="text-align:right"><a asp-action="AddLightningNode" asp-route-cryptoCode="@scheme.CryptoCode" id="@($"Modify-Lightning{scheme.CryptoCode}")">Modify</a></td>
                                 </tr>
                             }
                         </tbody>
@@ -180,24 +167,24 @@
             
              <div class="form-group">
                 <div class="form-group">
-                    <h5>Third party Payment methods</h5>
+                    <h5>Additional Payment methods</h5>
                 </div>
                 <div class="form-group">
                     <table class="table table-sm table-responsive-md">
                         <thead>
                             <tr>
                                 <th>Provider</th>
-                                <th style="text-align:center;">Enabled</th>
-                                <th style="text-align:right">Actions</th>
+                                <th class="text-center">Enabled</th>
+                                <th class="text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                        @foreach(var scheme in Model.ThirdPartyPaymentMethods)
+                        @foreach (var scheme in Model.ThirdPartyPaymentMethods)
                         {
                             <tr>
                                 <td>@scheme.Provider</td>
-                                <td style="text-align:center;">
-                                    @if(scheme.Enabled)
+                                <td  class="text-center">
+                                    @if (scheme.Enabled)
                                     {
                                         <span class="fa fa-check"></span>
                                     }
@@ -206,7 +193,7 @@
                                         <span class="fa fa-times"></span>
                                     }
                                 </td>
-                                <td style="text-align:right"><a asp-action="@scheme.Action" >Modify</a></td>
+                                <td class="text-right"><a asp-action="@scheme.Action" id='Modify-@scheme.Provider'>Modify</a></td>
                             </tr>
                         }
                         </tbody>

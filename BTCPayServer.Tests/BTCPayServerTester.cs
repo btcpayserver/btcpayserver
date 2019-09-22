@@ -118,6 +118,12 @@ namespace BTCPayServer.Tests
             config.AppendLine($"ltc.explorer.url={LTCNBXplorerUri.AbsoluteUri}");
             config.AppendLine($"ltc.explorer.cookiefile=0");
             config.AppendLine($"btc.lightning={IntegratedLightning.AbsoluteUri}");
+            if (!string.IsNullOrEmpty(SSHPassword) && string.IsNullOrEmpty(SSHKeyFile))
+                config.AppendLine($"sshpassword={SSHPassword}");
+            if (!string.IsNullOrEmpty(SSHKeyFile))
+                config.AppendLine($"sshkeyfile={SSHKeyFile}");
+            if (!string.IsNullOrEmpty(SSHConnection))
+                config.AppendLine($"sshconnection={SSHConnection}");
 
             if (TestDatabase == TestDatabases.MySQL && !String.IsNullOrEmpty(MySQL))
                 config.AppendLine($"mysql=" + MySQL);
@@ -228,26 +234,31 @@ namespace BTCPayServer.Tests
 
         private async Task WaitSiteIsOperational()
         {
-            var synching = WaitIsFullySynched();
-            var accessingHomepage = WaitCanAccessHomepage();
-            await Task.WhenAll(synching, accessingHomepage).ConfigureAwait(false);
-        }
-
-        private async Task WaitCanAccessHomepage()
-        {
-            var resp = await HttpClient.GetAsync("/").ConfigureAwait(false);
-            while (resp.StatusCode != HttpStatusCode.OK)
+            using (var cts = new CancellationTokenSource(10_000))
             {
-                await Task.Delay(10).ConfigureAwait(false);
+                var synching = WaitIsFullySynched(cts.Token);
+                var accessingHomepage = WaitCanAccessHomepage(cts.Token);
+                await Task.WhenAll(synching, accessingHomepage).ConfigureAwait(false);
             }
         }
 
-        private async Task WaitIsFullySynched()
+        private async Task WaitCanAccessHomepage(CancellationToken cancellationToken)
+        {
+            while (true)
+            {
+                var resp = await HttpClient.GetAsync("/", cancellationToken).ConfigureAwait(false);
+                if (resp.StatusCode == HttpStatusCode.OK)
+                    break;
+                await Task.Delay(10, cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+        private async Task WaitIsFullySynched(CancellationToken cancellationToken)
         {
             var dashBoard = GetService<NBXplorerDashboard>();
             while (!dashBoard.IsFullySynched())
             {
-                await Task.Delay(10).ConfigureAwait(false);
+                await Task.Delay(10, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -275,8 +286,11 @@ namespace BTCPayServer.Tests
             return _Host.Services.GetRequiredService<T>();
         }
 
-        public IServiceProvider ServiceProvider => _Host.Services; 
+        public IServiceProvider ServiceProvider => _Host.Services;
 
+        public string SSHPassword { get; internal set; }
+        public string SSHKeyFile { get; internal set; }
+        public string SSHConnection { get; set; }
         public T GetController<T>(string userId = null, string storeId = null, Claim[] additionalClaims = null) where T : Controller
         {
             var context = new DefaultHttpContext();

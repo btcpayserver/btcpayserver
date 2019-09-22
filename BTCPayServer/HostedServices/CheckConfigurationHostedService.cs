@@ -17,60 +17,73 @@ namespace BTCPayServer.HostedServices
     public class CheckConfigurationHostedService : IHostedService
     {
         private readonly BTCPayServerOptions _options;
+        Task _testingConnection;
+        CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         public CheckConfigurationHostedService(BTCPayServerOptions options)
         {
             _options = options;
         }
 
+        public bool CanUseSSH { get; private set; }
+
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            new Thread(() =>
-            {
-                if (_options.SSHSettings != null)
-                {
-                    Logs.Configuration.LogInformation($"SSH settings detected, testing connection to {_options.SSHSettings.Username}@{_options.SSHSettings.Server} on port {_options.SSHSettings.Port} ...");
-                    var connection = new Renci.SshNet.SshClient(_options.SSHSettings.CreateConnectionInfo());
-                    connection.HostKeyReceived += (object sender, Renci.SshNet.Common.HostKeyEventArgs e) =>
-                    {
-                        e.CanTrust = true;
-                        if (!_options.IsTrustedFingerprint(e.FingerPrint, e.HostKey))
-                        {
-                            Logs.Configuration.LogWarning($"SSH host fingerprint for {e.HostKeyName} is untrusted, start BTCPay with -sshtrustedfingerprints \"{Encoders.Hex.EncodeData(e.FingerPrint)}\"");
-                        }
-                    };
-                    try
-                    {
-                        connection.Connect();
-                        connection.Disconnect();
-                        Logs.Configuration.LogInformation($"SSH connection succeeded");
-                    }
-                    catch (Renci.SshNet.Common.SshAuthenticationException)
-                    {
-                        Logs.Configuration.LogWarning($"SSH invalid credentials");
-                    }
-                    catch (Exception ex)
-                    {
-                        var message = ex.Message;
-                        if (ex is AggregateException aggrEx && aggrEx.InnerException?.Message != null)
-                        {
-                            message = aggrEx.InnerException.Message;
-                        }
-                        Logs.Configuration.LogWarning($"SSH connection issue: {message}");
-                    }
-                    finally
-                    {
-                        connection.Dispose();
-                    }
-                }
-            })
-            { IsBackground = true }.Start();
+            _testingConnection = TestConnection();
             return Task.CompletedTask;
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        async Task TestConnection()
         {
-            return Task.CompletedTask;
+            TimeSpan nextWait = TimeSpan.FromSeconds(10);
+            retry:
+            var canUseSSH = false;
+            if (_options.SSHSettings != null)
+            {
+                Logs.Configuration.LogInformation($"SSH settings detected, testing connection to {_options.SSHSettings.Username}@{_options.SSHSettings.Server} on port {_options.SSHSettings.Port} ...");
+                try
+                {
+                    using (var connection = await _options.SSHSettings.ConnectAsync())
+                    {
+                        await connection.DisconnectAsync();
+                        Logs.Configuration.LogInformation($"SSH connection succeeded");
+                        canUseSSH = true;
+                    }
+                }
+                catch (Renci.SshNet.Common.SshAuthenticationException ex)
+                {
+                    Logs.Configuration.LogWarning($"SSH invalid credentials ({ex.Message})");
+                }
+                catch (Exception ex)
+                {
+                    var message = ex.Message;
+                    if (ex is AggregateException aggrEx && aggrEx.InnerException?.Message != null)
+                    {
+                        message = aggrEx.InnerException.Message;
+                    }
+                    Logs.Configuration.LogWarning($"SSH connection issue of type {ex.GetType().Name}: {message}");
+                }
+                if (!canUseSSH)
+                {
+                    Logs.Configuration.LogWarning($"Retrying SSH connection in {(int)nextWait.TotalSeconds} seconds");
+                    await Task.Delay(nextWait, _cancellationTokenSource.Token);
+                    nextWait = TimeSpan.FromSeconds(nextWait.TotalSeconds * 2);
+                    if (nextWait > TimeSpan.FromMinutes(10.0))
+                        nextWait = TimeSpan.FromMinutes(10.0);
+                    goto retry;
+                }
+            }
+            CanUseSSH = canUseSSH;
+        }
+
+        public async Task StopAsync(CancellationToken cancellationToken)
+        {
+            _cancellationTokenSource.Cancel();
+            try
+            {
+                await _testingConnection;
+            }
+            catch { }
         }
     }
 }

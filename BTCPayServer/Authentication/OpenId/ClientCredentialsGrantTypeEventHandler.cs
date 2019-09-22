@@ -2,7 +2,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using AspNet.Security.OpenIdConnect.Extensions;
 using AspNet.Security.OpenIdConnect.Primitives;
-using BTCPayServer.Authentication.OpenId.Models;
+using BTCPayServer.Data;
 using BTCPayServer.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
@@ -21,9 +21,12 @@ namespace BTCPayServer.Authentication.OpenId
 
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public ClientCredentialsGrantTypeEventHandler(SignInManager<ApplicationUser> signInManager,
+        public ClientCredentialsGrantTypeEventHandler(
             OpenIddictApplicationManager<BTCPayOpenIdClient> applicationManager,
-            IOptions<IdentityOptions> identityOptions, UserManager<ApplicationUser> userManager) : base(signInManager,
+            OpenIddictAuthorizationManager<BTCPayOpenIdAuthorization> authorizationManager,
+            SignInManager<ApplicationUser> signInManager,
+            IOptions<IdentityOptions> identityOptions,
+            UserManager<ApplicationUser> userManager) : base(applicationManager, authorizationManager, signInManager,
             identityOptions)
         {
             _applicationManager = applicationManager;

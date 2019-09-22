@@ -41,7 +41,9 @@
                 "ASPNETCORE_ENVIRONMENT": "Development",
                 "BTCPAY_CHAINS": "btc,ltc",
                 "BTCPAY_POSTGRES": "User ID=postgres;Host=127.0.0.1;Port=39372;Database=btcpayserver",
-                "BTCPAY_EXTERNALSERVICES": "totoservice:totolink;"
+                "BTCPAY_EXTERNALSERVICES": "totoservice:totolink;",
+                "BTCPAY_SSHCONNECTION": "root@127.0.0.1:21622",
+                "BTCPAY_SSHPASSWORD": "opD3i2282D"
             },
             "applicationUrl": "https://localhost:14142/"
         }

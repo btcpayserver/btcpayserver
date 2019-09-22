@@ -12,7 +12,7 @@ using BTCPayServer.Payments;
 using BTCPayServer.Services.PaymentRequests;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using BTCPayServer.Services.Apps;
+using BTCPayServer.Data;
 using Microsoft.AspNetCore.Http;
 
 namespace BTCPayServer.PaymentRequest
@@ -157,8 +157,7 @@ namespace BTCPayServer.PaymentRequest
                             {
                             data.GetValue(),
                             invoiceEvent.Payment.GetCryptoCode(),
-                            Enum.GetName(typeof(PaymentTypes),
-                                invoiceEvent.Payment.GetPaymentMethodId().PaymentType)
+                            invoiceEvent.Payment.GetPaymentMethodId().PaymentType.ToString()
                             });
                     }
 

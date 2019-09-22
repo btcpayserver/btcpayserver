@@ -43,6 +43,14 @@ namespace BTCPayServer
                 return false;
             return ToString().Equals(item.ToString(), StringComparison.InvariantCulture);
         }
+
+        public static WalletId Parse(string id)
+        {
+            if (TryParse(id, out var v))
+                return v;
+            throw new FormatException("Invalid WalletId");
+        }
+
         public static bool operator ==(WalletId a, WalletId b)
         {
             if (System.Object.ReferenceEquals(a, b))

@@ -81,13 +81,7 @@ namespace BTCPayServer.Controllers
             entity.ServerUrl = serverUrl;
             entity.FullNotifications = invoice.FullNotifications || invoice.ExtendedNotifications;
             entity.ExtendedNotifications = invoice.ExtendedNotifications;
-            
-            if (invoice.NotificationURL != null &&
-                Uri.TryCreate(invoice.NotificationURL, UriKind.Absolute, out var notificationUri) &&
-                (notificationUri.Scheme == "http" || notificationUri.Scheme == "https"))
-            {
-                entity.NotificationURL = notificationUri.AbsoluteUri;
-            }
+            entity.NotificationURLTemplate = invoice.NotificationURL;
             entity.NotificationEmail = invoice.NotificationEmail;
             entity.BuyerInformation = Map<CreateInvoiceRequest, BuyerInformation>(invoice);
             entity.PaymentTolerance = storeBlob.PaymentTolerance;
@@ -119,9 +113,7 @@ namespace BTCPayServer.Controllers
             entity.ProductInformation = Map<CreateInvoiceRequest, ProductInformation>(invoice);
 
 
-            entity.RedirectURL = invoice.RedirectURL ?? store.StoreWebsite;
-            if (!Uri.IsWellFormedUriString(entity.RedirectURL, UriKind.Absolute))
-                entity.RedirectURL = null;
+            entity.RedirectURLTemplate = invoice.RedirectURL ?? store.StoreWebsite;
 
             entity.RedirectAutomatically =
                 invoice.RedirectAutomatically.GetValueOrDefault(storeBlob.RedirectAutomatically);
@@ -257,7 +249,7 @@ namespace BTCPayServer.Controllers
                 paymentMethod.Network = network;
                 paymentMethod.SetId(supportedPaymentMethod.PaymentId);
                 paymentMethod.Rate = rate.BidAsk.Bid;
-                paymentMethod.PreferOnion = this.Request.IsOnion();
+                paymentMethod.PreferOnion = Uri.TryCreate(entity.ServerUrl, UriKind.Absolute, out var u) && u.DnsSafeHost.EndsWith(".onion", StringComparison.OrdinalIgnoreCase);
 
                 using (logs.Measure($"{logPrefix} Payment method details creation"))
                 {
@@ -269,7 +261,7 @@ namespace BTCPayServer.Controllers
                     handler
                         .IsPaymentMethodAllowedBasedOnInvoiceAmount(storeBlob, fetchingByCurrencyPair,
                             paymentMethod.Calculate().Due, supportedPaymentMethod.PaymentId);
-                if (errorMessage != null)
+                if (!string.IsNullOrEmpty(errorMessage))
                 {
                     logs.Write($"{logPrefix} {errorMessage}");
                     return null;

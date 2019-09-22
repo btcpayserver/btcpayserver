@@ -34,7 +34,7 @@ namespace BTCPayServer.Tests
             builder.AppendLine("DOGE_X = DOGE_BTC * BTC_X * 1.1");
             builder.AppendLine("DOGE_BTC = Bittrex(DOGE_BTC)");
             builder.AppendLine("// Some other cool comments");
-            builder.AppendLine("BTC_usd = GDax(BTC_USD)");
+            builder.AppendLine("BTC_usd = kraken(BTC_USD)");
             builder.AppendLine("BTC_X = Coinbase(BTC_X);");
             builder.AppendLine("X_X = CoinAverage(X_X) * 1.02");
 
@@ -45,14 +45,14 @@ namespace BTCPayServer.Tests
                 "DOGE_X = DOGE_BTC * BTC_X * 1.1;\n" +
                 "DOGE_BTC = bittrex(DOGE_BTC);\n" +
                 "// Some other cool comments\n" +
-                "BTC_USD = gdax(BTC_USD);\n" +
+                "BTC_USD = kraken(BTC_USD);\n" +
                 "BTC_X = coinbase(BTC_X);\n" +
                 "X_X = coinaverage(X_X) * 1.02;",
                 rules.ToString());
             var tests = new[]
             {
-                (Pair: "DOGE_USD", Expected: "bittrex(DOGE_BTC) * gdax(BTC_USD) * 1.1"),
-                (Pair: "BTC_USD", Expected: "gdax(BTC_USD)"),
+                (Pair: "DOGE_USD", Expected: "bittrex(DOGE_BTC) * kraken(BTC_USD) * 1.1"),
+                (Pair: "BTC_USD", Expected: "kraken(BTC_USD)"),
                 (Pair: "BTC_CAD", Expected: "coinbase(BTC_CAD)"),
                 (Pair: "DOGE_CAD", Expected: "bittrex(DOGE_BTC) * coinbase(BTC_CAD) * 1.1"),
                 (Pair: "LTC_CAD", Expected: "coinaverage(LTC_CAD) * 1.02"),
@@ -62,14 +62,14 @@ namespace BTCPayServer.Tests
                 Assert.Equal(test.Expected, rules.GetRuleFor(CurrencyPair.Parse(test.Pair)).ToString());
             }
             rules.Spread = 0.2m;
-            Assert.Equal("(bittrex(DOGE_BTC) * gdax(BTC_USD) * 1.1) * (0.8, 1.2)", rules.GetRuleFor(CurrencyPair.Parse("DOGE_USD")).ToString());
+            Assert.Equal("(bittrex(DOGE_BTC) * kraken(BTC_USD) * 1.1) * (0.8, 1.2)", rules.GetRuleFor(CurrencyPair.Parse("DOGE_USD")).ToString());
             ////////////////
 
             // Check errors conditions
             builder = new StringBuilder();
             builder.AppendLine("DOGE_X = LTC_CAD * BTC_X * 1.1");
             builder.AppendLine("DOGE_BTC = Bittrex(DOGE_BTC)");
-            builder.AppendLine("BTC_usd = GDax(BTC_USD)");
+            builder.AppendLine("BTC_usd = kraken(BTC_USD)");
             builder.AppendLine("LTC_CHF = LTC_CHF * 1.01");
             builder.AppendLine("BTC_X = Coinbase(BTC_X)");
             Assert.True(RateRules.TryParse(builder.ToString(), out rules));
@@ -77,7 +77,7 @@ namespace BTCPayServer.Tests
             tests = new[]
             {
                 (Pair: "LTC_CAD", Expected: "ERR_NO_RULE_MATCH(LTC_CAD)"),
-                (Pair: "DOGE_USD", Expected: "ERR_NO_RULE_MATCH(LTC_CAD) * gdax(BTC_USD) * 1.1"),
+                (Pair: "DOGE_USD", Expected: "ERR_NO_RULE_MATCH(LTC_CAD) * kraken(BTC_USD) * 1.1"),
                 (Pair: "LTC_CHF", Expected: "ERR_TOO_MUCH_NESTED_CALLS(LTC_CHF) * 1.01"),
             };
             foreach (var test in tests)
@@ -90,15 +90,15 @@ namespace BTCPayServer.Tests
             builder = new StringBuilder();
             builder.AppendLine("DOGE_X = DOGE_BTC * BTC_X * 1.1");
             builder.AppendLine("DOGE_BTC = Bittrex(DOGE_BTC)");
-            builder.AppendLine("BTC_usd = GDax(BTC_USD)");
+            builder.AppendLine("BTC_usd = kraken(BTC_USD)");
             builder.AppendLine("BTC_X = Coinbase(BTC_X)");
             builder.AppendLine("X_X = CoinAverage(X_X) * 1.02");
             Assert.True(RateRules.TryParse(builder.ToString(), out rules));
 
             var tests2 = new[]
             {
-                (Pair: "DOGE_USD", Expected: "bittrex(DOGE_BTC) * gdax(BTC_USD) * 1.1", ExpectedExchangeRates: "bittrex(DOGE_BTC),gdax(BTC_USD)"),
-                (Pair: "BTC_USD", Expected: "gdax(BTC_USD)", ExpectedExchangeRates: "gdax(BTC_USD)"),
+                (Pair: "DOGE_USD", Expected: "bittrex(DOGE_BTC) * kraken(BTC_USD) * 1.1", ExpectedExchangeRates: "bittrex(DOGE_BTC),kraken(BTC_USD)"),
+                (Pair: "BTC_USD", Expected: "kraken(BTC_USD)", ExpectedExchangeRates: "kraken(BTC_USD)"),
                 (Pair: "BTC_CAD", Expected: "coinbase(BTC_CAD)", ExpectedExchangeRates: "coinbase(BTC_CAD)"),
                 (Pair: "DOGE_CAD", Expected: "bittrex(DOGE_BTC) * coinbase(BTC_CAD) * 1.1", ExpectedExchangeRates: "bittrex(DOGE_BTC),coinbase(BTC_CAD)"),
                 (Pair: "LTC_CAD", Expected: "coinaverage(LTC_CAD) * 1.02", ExpectedExchangeRates: "coinaverage(LTC_CAD)"),

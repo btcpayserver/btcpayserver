@@ -9,8 +9,21 @@ function Products() {
 }
 
 Products.prototype.loadFromTemplate = function() {
-    var template = $('.js-product-template').val().trim(),
-        lines = template.split("\n\n");
+    var template = $('.js-product-template').val().trim();
+    
+    var lines = [];
+    var items = template.split("\n");
+    for (var i = 0; i < items.length; i++) {
+        if(items[i] === ""){
+            continue;
+        }
+        if(items[i].startsWith("  ")){
+            lines[lines.length-1]+=items[i] + "\n";
+        }else{
+           
+            lines.push(items[i] + "\n");
+        }
+    }
 
     this.products = [];
 
@@ -19,7 +32,7 @@ Products.prototype.loadFromTemplate = function() {
         var line = lines[kl],
             product = line.split("\n"),
             id, price, title, description, image = null,
-            custom;
+            custom, inventory=null;
 
         for (var kp in product) {
             var productProperty = product[kp].trim();
@@ -43,6 +56,9 @@ Products.prototype.loadFromTemplate = function() {
             if (productProperty.indexOf('custom:') !== -1) {
                 custom = productProperty.replace('custom:', '').trim();
             }
+            if (productProperty.indexOf('inventory:') !== -1) {
+                inventory = parseInt(productProperty.replace('inventory:', '').trim(),10);
+            }
         }
 
         if (price != null || title != null) {
@@ -52,13 +68,14 @@ Products.prototype.loadFromTemplate = function() {
                 'title': title,
                 'price': price,
                 'image': image || null,
-                'description': description || null,
-                'custom': Boolean(custom)
+                'description': description || '',
+                'custom': Boolean(custom),
+                'inventory': isNaN(inventory)? null: inventory
             });
         }
         
     }
-}
+};
 
 Products.prototype.saveTemplate = function() {
     var template = '';
@@ -69,9 +86,10 @@ Products.prototype.saveTemplate = function() {
             id = product.id,
             title = product.title,
             price = product.price? product.price : 0,
-            image = product.image
+            image = product.image,
             description = product.description,
-            custom = product.custom;
+            custom = product.custom,
+            inventory = product.inventory;
 
         template += id + '\n' +
         '  price: ' + parseFloat(price).noExponents() + '\n' +
@@ -86,11 +104,14 @@ Products.prototype.saveTemplate = function() {
         if (custom) {
             template += '  custom: true\n';
         }
+        if(inventory != null){
+            template+= '  inventory: ' + inventory + '\n';
+        }
         template += '\n';
     }
 
     $('.js-product-template').val(template);
-}
+};
 
 Products.prototype.showAll = function() {
     var list = [];
@@ -106,7 +127,7 @@ Products.prototype.showAll = function() {
     }
 
     $('.js-products').html(list);
-}
+};
 
 // Load the template
 Products.prototype.template = function($template, obj) {
@@ -118,7 +139,7 @@ Products.prototype.template = function($template, obj) {
     }
 
     return template;
-}
+};
 
 Products.prototype.saveItem = function(obj, index) {
     // Edit product
@@ -143,7 +164,7 @@ Products.prototype.removeItem = function(index) {
     }
 
     this.saveTemplate();
-}
+};
 
 Products.prototype.itemContent = function(index) {
     var product = null,
@@ -162,11 +183,12 @@ Products.prototype.itemContent = function(index) {
         'title': product != null ? this.escape(product.title) : '',
         'description': product != null ? this.escape(product.description) : '',
         'image': product != null ? this.escape(product.image) : '',
+        'inventory': product != null ? parseInt(this.escape(product.inventory),10) : '',
         'custom': '<option value="true"' + (custom ? ' selected' : '') + '>Yes</option><option value="false"' + (!custom ? ' selected' : '') + '>No</option>'
     });
 
     $('#product-modal').find('.modal-body').html(template);
-}
+};
 
 Products.prototype.modalEmpty = function() {
     var $modal = $('#product-modal');

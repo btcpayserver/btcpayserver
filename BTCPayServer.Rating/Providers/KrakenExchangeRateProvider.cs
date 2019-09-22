@@ -84,6 +84,7 @@ namespace BTCPayServer.Services.Rates
             { "ZEUR", "EUR" },
             { "ZJPY", "JPY" },
             { "ZCAD", "CAD" },
+            { "ZGBP", "GBP" }
         };
 
         public async Task<ExchangeRates> GetRatesAsync(CancellationToken cancellationToken)

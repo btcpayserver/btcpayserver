@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Globalization;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
@@ -10,9 +10,6 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using NBitcoin;
-using NBitpayClient;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Payments.Bitcoin
 {
@@ -40,7 +37,8 @@ namespace BTCPayServer.Payments.Bitcoin
             public Task<BitcoinAddress> ReserveAddress;
         }
 
-        public override void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse)
+        public override void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse,
+            StoreBlob storeBlob)
         {
             var paymentMethodId = new PaymentMethodId(model.CryptoCode, PaymentTypes.BTCLike);
 
@@ -72,30 +70,26 @@ namespace BTCPayServer.Payments.Bitcoin
         public override async Task<string> IsPaymentMethodAllowedBasedOnInvoiceAmount(StoreBlob storeBlob,
             Dictionary<CurrencyPair, Task<RateResult>> rate, Money amount, PaymentMethodId paymentMethodId)
         {
-            if (storeBlob.OnChainMinValue == null)
+            if (storeBlob.OnChainMinValue != null)
             {
-                return null;
-            }
-
-            var limitValueRate =
-                await rate[new CurrencyPair(paymentMethodId.CryptoCode, storeBlob.OnChainMinValue.Currency)];
-
-            if (limitValueRate.BidAsk != null)
-            {
-                var limitValueCrypto = Money.Coins(storeBlob.OnChainMinValue.Value / limitValueRate.BidAsk.Bid);
-
-                if (amount > limitValueCrypto)
+                var currentRateToCrypto = await rate[new CurrencyPair(paymentMethodId.CryptoCode, storeBlob.OnChainMinValue.Currency)];
+                if (currentRateToCrypto?.BidAsk != null)
                 {
-                    return null;
+                    var limitValueCrypto = Money.Coins(storeBlob.OnChainMinValue.Value / currentRateToCrypto.BidAsk.Bid);
+                    if (amount < limitValueCrypto)
+                    {
+                        return "The amount of the invoice is too low to be paid on chain";
+                    }
                 }
             }
-
-            return "The amount of the invoice is too low to be paid on chain";
+            return string.Empty;
         }
 
         public override IEnumerable<PaymentMethodId> GetSupportedPaymentMethods()
         {
-            return _networkProvider.GetAll()
+            return _networkProvider
+                .GetAll()
+                .OfType<BTCPayNetwork>()
                 .Select(network => new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike));
         }
 

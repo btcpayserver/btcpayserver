@@ -1,0 +1,55 @@
+﻿@model BTCPayServer.Models.ServerViewModels.DynamicDnsViewModel[]
+@{
+    ViewData.SetActivePageAndTitle(ServerNavPages.Services);
+}
+
+
+<h4>Dynamic DNS Settings</h4>
+<partial name="_StatusMessage" for="@TempData["TempDataProperty-StatusMessage"]" />
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="form-group">
+            <p>
+                <span>
+                    Dynamic DNS service allows you to have a stable DNS name pointing to your server, even if your IP address change regulary. <br />
+                    This is recommended if you are hosting BTCPayServer at home and wish to have a clearnet HTTPS address to access your server.
+                </span>
+            </p>
+            <p>Note that you need to properly configure your NAT and BTCPayServer install to get HTTPS certificate. Check the documentation for <a href="https://docs.btcpayserver.org/features/dynamicdns" target="_blank">more information</a>.</p>
+        </div>
+        <form method="post" asp-action="DynamicDnsService">
+            <button id="AddDynamicDNS" class="btn btn-primary" type="submit"><span class="fa fa-plus"></span> Add Dynamic DNS</button>
+        </form>
+        <table class="table table-sm table-responsive-md">
+            <thead>
+                <tr>
+                    <th>Hostname</th>
+                    <th>Last updated</th>
+                    <th style="text-align:center;">Enabled</th>
+                    <th style="text-align:right">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var service in Model)
+                {
+                    <tr>
+                        <td>@service.Settings.Hostname</td>
+                        <td>@service.LastUpdated</td>
+                        <td style="text-align:center;">
+                                @if(service.Settings.Enabled)
+                                {
+                                    <span class="fa fa-check"></span>
+                                }
+                                else
+                                {
+                                    <span class="fa fa-times"></span>
+                                }
+                        </td>
+                        <td  style="text-align:right"><a asp-action="DynamicDnsService" asp-route-hostname="@service.Settings.Hostname">Edit</a> <span> - </span> <a asp-action="DeleteDynamicDnsService" asp-route-hostname="@service.Settings.Hostname">Remove</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

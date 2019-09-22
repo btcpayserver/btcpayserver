@@ -1,14 +1,20 @@
 using AspNet.Security.OpenIdConnect.Primitives;
+using BTCPayServer.Data;
 using BTCPayServer.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
+using OpenIddict.Core;
 
 namespace BTCPayServer.Authentication.OpenId
 {
     public class AuthorizationCodeGrantTypeEventHandler : OpenIdGrantHandlerCheckCanSignIn
     {
-        public AuthorizationCodeGrantTypeEventHandler(SignInManager<ApplicationUser> signInManager,
-            IOptions<IdentityOptions> identityOptions, UserManager<ApplicationUser> userManager) : base(signInManager,
+        public AuthorizationCodeGrantTypeEventHandler(
+            OpenIddictApplicationManager<BTCPayOpenIdClient> applicationManager,
+            OpenIddictAuthorizationManager<BTCPayOpenIdAuthorization> authorizationManager,
+            SignInManager<ApplicationUser> signInManager,
+            IOptions<IdentityOptions> identityOptions,
+            UserManager<ApplicationUser> userManager) : base(applicationManager, authorizationManager, signInManager,
             identityOptions, userManager)
         {
         }

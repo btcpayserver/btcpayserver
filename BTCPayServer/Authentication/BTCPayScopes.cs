@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -44,49 +45,54 @@ namespace BTCPayServer.Authentication
         public static AuthorizationOptions AddBTCPayRESTApiPolicies(this AuthorizationOptions options)
         {
             AddScopePolicy(options, CanViewStores,
-                new[] {new[] {BTCPayScopes.StoreManagement}, new[] {BTCPayScopes.ViewStores}});
-            AddScopePolicy(options, CanManageStores,
-                new[] {new[] {BTCPayScopes.StoreManagement}});
+                context => context.HasScopes(BTCPayScopes.StoreManagement) ||
+                           context.HasScopes(BTCPayScopes.ViewStores));
             AddScopePolicy(options, CanViewInvoices,
-                new[] {new[] {BTCPayScopes.ViewInvoices}, new[] {BTCPayScopes.InvoiceManagement}});
+                context => context.HasScopes(BTCPayScopes.ViewInvoices) ||
+                           context.HasScopes(BTCPayScopes.InvoiceManagement));
             AddScopePolicy(options, CanCreateInvoices,
-                new[] {new[] {BTCPayScopes.CreateInvoices}, new[] {BTCPayScopes.InvoiceManagement}});
-            AddScopePolicy(options, CanManageInvoices,
-                new[] {new[] {BTCPayScopes.InvoiceManagement}});
-            AddScopePolicy(options, CanManageApps,
-                new[] {new[] {BTCPayScopes.AppManagement}});
+                context => context.HasScopes(BTCPayScopes.CreateInvoices) ||
+                           context.HasScopes(BTCPayScopes.InvoiceManagement));
             AddScopePolicy(options, CanViewApps,
-                new[] {new[] {BTCPayScopes.AppManagement}, new[] {BTCPayScopes.ViewApps}});
+                context => context.HasScopes(BTCPayScopes.AppManagement) || context.HasScopes(BTCPayScopes.ViewApps));
+            AddScopePolicy(options, CanManageInvoices,
+                context => context.HasScopes(BTCPayScopes.InvoiceManagement));
+            AddScopePolicy(options, CanManageApps,
+                context => context.HasScopes(BTCPayScopes.AppManagement));
             AddScopePolicy(options, CanManageWallet,
-                new[] {new[] {BTCPayScopes.WalletManagement}});
+                context => context.HasScopes(BTCPayScopes.WalletManagement));
             AddScopePolicy(options, CanViewProfile,
-                new[] {new[] {OpenIddictConstants.Scopes.Profile}});
+                context => context.HasScopes(OpenIddictConstants.Scopes.Profile));
             return options;
         }
 
         private static void AddScopePolicy(AuthorizationOptions options, string name,
-            IEnumerable<IEnumerable<string>> scopeGroups)
+            Func<AuthorizationHandlerContext, bool> scopeGroups)
         {
             options.AddPolicy(name,
-                builder => builder.AddRequirements(new MultipleScopeGroupsRequirement(scopeGroups)));
+                builder => builder.AddRequirements(new LambdaRequirement(scopeGroups)));
+        }
+
+        public static bool HasScopes(this AuthorizationHandlerContext context, params string[] scopes)
+        {
+            return scopes.All(s => context.User.HasClaim(OpenIddictConstants.Claims.Scope, s));
         }
     }
 
-    public class MultipleScopeGroupsRequirement :
-        AuthorizationHandler<MultipleScopeGroupsRequirement>, IAuthorizationRequirement
+    public class LambdaRequirement :
+        AuthorizationHandler<LambdaRequirement>, IAuthorizationRequirement
     {
-        private readonly IEnumerable<IEnumerable<string>> _ScopeGroups;
+        private readonly Func<AuthorizationHandlerContext, bool> _Func;
 
-        public MultipleScopeGroupsRequirement(IEnumerable<IEnumerable<string>> scopeGroups)
+        public LambdaRequirement(Func<AuthorizationHandlerContext, bool> func)
         {
-            _ScopeGroups = scopeGroups;
+            _Func = func;
         }
 
         protected override Task HandleRequirementAsync(
-            AuthorizationHandlerContext context, MultipleScopeGroupsRequirement requirement)
+            AuthorizationHandlerContext context, LambdaRequirement requirement)
         {
-            if (_ScopeGroups.Any(scopeGroup =>
-                scopeGroup.All(s => context.User.HasClaim(OpenIddictConstants.Claims.Scope, s))))
+            if (_Func.Invoke(context))
             {
                 context.Succeed(requirement);
             }

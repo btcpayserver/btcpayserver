@@ -2702,12 +2702,6 @@ noninventoryitem:
                     Assert.Contains(exchangeRates.ByExchange[result.ExpectedName],
                         e => e.CurrencyPair == new CurrencyPair("BTC", "JPY") && e.BidAsk.Bid > 100m); // 1BTC will always be more than 100JPY
                 }
-                else if (result.ExpectedName == "sats")
-                {
-                    Assert.Contains(exchangeRates.ByExchange[result.ExpectedName],
-                        e => e.CurrencyPair == new CurrencyPair("SATS", "BTC") &&
-                             e.BidAsk.Bid == 0.00000001m);
-                }
                 else
                 {
                     // This check if the currency pair is using right currency pair

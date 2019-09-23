@@ -54,7 +54,7 @@ namespace BTCPayServer.Payments.Monero
             {
                 var daemonResult = await daemonRpcClient.SyncInfo();
                 summary.TargetHeight = daemonResult.TargetHeight ?? daemonResult.Height;
-                summary.Synced = !daemonResult.TargetHeight.HasValue || daemonResult.Height >= daemonResult.TargetHeight;
+                summary.Synced = !daemonResult.TargetHeight.HasValue || (daemonResult.Height >= daemonResult.TargetHeight && daemonResult.TargetHeight > 0) ;
                 summary.CurrentHeight = daemonResult.Height;
                 summary.UpdatedAt = DateTime.Now;
                 summary.DaemonAvailable = true;

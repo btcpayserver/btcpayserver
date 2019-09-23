@@ -41,6 +41,7 @@ namespace BTCPayServer.Controllers.RestApi
         }
 
         [HttpGet("me/is-admin")]
+        [IncludeInOpenApiDocs]
         public bool AmIAnAdmin()
         {
             return User.IsInRole(Roles.ServerAdmin);
@@ -56,6 +57,7 @@ namespace BTCPayServer.Controllers.RestApi
         [HttpGet("me/stores/{storeId}/can-edit")]
         [Authorize(Policy = Policies.CanModifyStoreSettings.Key,
             AuthenticationSchemes = OpenIddictValidationDefaults.AuthenticationScheme)]
+        [IncludeInOpenApiDocs]
         public bool CanEdit(string storeId)
         {
             return true;

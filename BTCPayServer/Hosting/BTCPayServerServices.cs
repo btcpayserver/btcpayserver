@@ -46,6 +46,7 @@ using OpenIddict.EntityFrameworkCore.Models;
 
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using BTCPayServer.Models;
@@ -53,6 +54,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
+using Swashbuckle.AspNetCore.Swagger;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace BTCPayServer.Hosting
 {
@@ -256,6 +259,32 @@ namespace BTCPayServer.Hosting
             {
                 options.AddPolicy(CorsPolicies.All, p => p.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
             });
+            services.AddSwaggerGen(c =>  
+            {  
+                c.DocInclusionPredicate((s, description) =>
+                {
+                    if (description.TryGetMethodInfo(out var methodInfo))
+                    {
+                        
+                        return methodInfo.CustomAttributes.Any(data =>
+                                   data.AttributeType == typeof(IncludeInOpenApiDocs)) ||
+                               methodInfo.DeclaringType.CustomAttributes.Any(data =>
+                                   data.AttributeType == typeof(IncludeInOpenApiDocs));
+                    }
+
+                    return false;
+                });
+                c.SwaggerDoc("v1", new Info() { Title = "BtcPayServer API V1"});  
+                c.DescribeAllEnumsAsStrings();
+                c.AddSecurityDefinition("JWT Access Token", new ApiKeyScheme()
+                {
+                    Name = "Authorization",
+                    Type = "apiKey",
+                    In = "header",
+                    Description = "You need to authenticate via a configured BTCPay API Client and generate an access token. Copy this into the value field: Bearer {token}"
+                });
+                
+            }); 
 
             var rateLimits = new RateLimitService();
             rateLimits.SetZone($"zone={ZoneLimits.Login} rate=5r/min burst=3 nodelay");
@@ -325,6 +354,16 @@ namespace BTCPayServer.Hosting
         public static IApplicationBuilder UsePayServer(this IApplicationBuilder app)
         {
             app.UseMiddleware<BTCPayMiddleware>();
+
+            app.UseSwagger(options =>
+            {
+                options.RouteTemplate = "/openapi/{documentName}/swagger.json";
+            }); 
+            app.UseSwaggerUI(c =>
+            {
+                c.RoutePrefix = "openapi";
+                c.SwaggerEndpoint("/openapi/v1/swagger.json", "BtcPayServer API V1");
+            });
             return app; 
         }
     }

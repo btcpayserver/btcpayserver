@@ -5,7 +5,7 @@
 
 
 <h4>SSH settings</h4>
-<partial name="_StatusMessage" for="@TempData["StatusMessage"]" />
+<partial name="_StatusMessage" for="@TempData["TempDataProperty-StatusMessage"]" />
 <div class="row">
     <div class="col-md-6">
         <div asp-validation-summary="All" class="text-danger"></div>
@@ -27,24 +27,43 @@
                 <label asp-for="CommandLine"></label>
                 <input asp-for="CommandLine" readonly class="form-control" />
             </div>
-            @if(!string.IsNullOrEmpty(Model.Password))
+            @if (!string.IsNullOrEmpty(Model.Password))
             {
                 <div class="form-group">
                     <label asp-for="Password"></label>
                     <input asp-for="Password" readonly class="form-control" />
                 </div>
             }
-            @if(!string.IsNullOrEmpty(Model.KeyFilePassword))
+            @if (!string.IsNullOrEmpty(Model.KeyFilePassword))
             {
                 <div class="form-group">
                     <label asp-for="KeyFilePassword"></label>
                     <input asp-for="KeyFilePassword" readonly class="form-control" />
                 </div>
             }
-            @if(Model.HasKeyFile)
-            {
-                <a class="btn btn-primary form-control" asp-action="SSHService" asp-route-downloadKeyFile="true">Download Key File</a>
-            }
         </div>
     </div>
 </div>
+
+@if (Model.SSHKeyFileContent != null)
+{
+    <h4>Authorized keys</h4>
+    <div class="row">
+
+        <div class="col-md-8">
+            <div class="form-group">
+                <p>
+                    <span>You can enter here SSH public keys authorized to connect to your server.<br /></span>
+                </p>
+            </div>
+
+            <form method="post">
+                <div class="form-group">
+                    <textarea asp-for="SSHKeyFileContent" rows="20" cols="80" class="form-control"></textarea>
+                    <span asp-validation-for="SSHKeyFileContent" class="text-danger"></span>
+                </div>
+                <button id="submit" type="submit" class="btn btn-primary" value="Save">Save</button>
+            </form>
+        </div>
+    </div>
+}

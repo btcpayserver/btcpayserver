@@ -119,3 +119,13 @@ a.nav-link {
     /* Prevent layout from breaking on hyperlinks with very long URLs as the visible text */
     word-break: break-word;
 }
+
+.smMaxWidth {
+    max-width: 150px;
+}
+
+@media (min-width: 768px) {
+    .smMaxWidth {
+        max-width: 300px;
+    }
+}

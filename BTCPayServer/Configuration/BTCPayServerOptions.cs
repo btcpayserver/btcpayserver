@@ -245,6 +245,7 @@ namespace BTCPayServer.Configuration
             }
             settings.Password = conf.GetOrDefault<string>("sshpassword", "");
             settings.KeyFile = conf.GetOrDefault<string>("sshkeyfile", "");
+            settings.AuthorizedKeysFile = conf.GetOrDefault<string>("sshauthorizedkeys", "");
             settings.KeyFilePassword = conf.GetOrDefault<string>("sshkeyfilepassword", "");
             return settings;
         }

@@ -41,7 +41,7 @@ namespace BTCPayServer.Controllers
         {
             var invoice = (await _InvoiceRepository.GetInvoices(new InvoiceQuery()
             {
-                InvoiceId = id,
+                InvoiceId = new[] {id},
                 StoreId = new[] { HttpContext.GetStoreData().Id }
             })).FirstOrDefault();
             if (invoice == null)

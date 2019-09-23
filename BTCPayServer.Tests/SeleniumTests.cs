@@ -113,6 +113,22 @@ namespace BTCPayServer.Tests
                 }
                 s.Driver.Navigate().GoToUrl(s.Link("/server/services/ssh"));
                 s.Driver.AssertNoError();
+                s.Driver.FindElement(By.Id("SSHKeyFileContent")).Clear();
+                s.Driver.FindElement(By.Id("SSHKeyFileContent")).SendKeys("tes't\r\ntest2");
+                s.Driver.FindElement(By.Id("submit")).ForceClick();
+                s.Driver.AssertNoError();
+
+                var text = s.Driver.FindElement(By.Id("SSHKeyFileContent")).Text;
+                // Browser replace \n to \r\n, so it is hard to compare exactly what we want
+                Assert.Contains("tes't", text);
+                Assert.Contains("test2", text);
+                Assert.True(s.Driver.PageSource.Contains("authorized_keys has been updated", StringComparison.OrdinalIgnoreCase));
+
+                s.Driver.FindElement(By.Id("SSHKeyFileContent")).Clear();
+                s.Driver.FindElement(By.Id("submit")).ForceClick();
+
+                text = s.Driver.FindElement(By.Id("SSHKeyFileContent")).Text;
+                Assert.DoesNotContain("test2", text);
             }
         }
 

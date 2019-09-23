@@ -54,7 +54,8 @@ namespace BTCPayServer
         public KeyPath CoinType { get; internal set; }
         public Dictionary<uint, DerivationType> ElectrumMapping = new Dictionary<uint, DerivationType>();
 
-
+        public int MaxTrackedConfirmation { get; internal set; } = 6;
+        public string UriScheme { get; internal set; }
         public KeyPath GetRootKeyPath(DerivationType type)
         {
             KeyPath baseKey;
@@ -105,7 +106,6 @@ namespace BTCPayServer
         
         public string CryptoCode { get; internal set; }
         public string BlockExplorerLink { get; internal set; }
-        public string UriScheme { get; internal set; }
         public string DisplayName { get; set; }
 
         [Obsolete("Should not be needed")]
@@ -118,8 +118,6 @@ namespace BTCPayServer
         }
 
         public string CryptoImagePath { get; set; }
-
-        public int MaxTrackedConfirmation { get; internal set; } = 6;
         public string[] DefaultRateRules { get; internal set; } = Array.Empty<string>();
         public override string ToString()
         {

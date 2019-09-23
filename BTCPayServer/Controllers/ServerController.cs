@@ -474,7 +474,8 @@ namespace BTCPayServer.Controllers
             if (appIdsToFetch.Any())
             {
                 var apps = (await _AppService.GetApps(appIdsToFetch.ToArray()))
-                    .ToDictionary(data => data.Id, data => Enum.Parse<AppType>(data.AppType));;
+                    .ToDictionary(data => data.Id, data => Enum.Parse<AppType>(data.AppType));
+                ;
                 if (!string.IsNullOrEmpty(settings.RootAppId))
                 {
                     settings.RootAppType = apps[settings.RootAppId];
@@ -504,7 +505,7 @@ namespace BTCPayServer.Controllers
                     Link = this.Request.GetAbsoluteUriNoPathBase(externalService.Value).AbsoluteUri
                 });
             }
-            if (_sshState.CanUseSSH)
+            if (CanShowSSHService())
             {
                 result.OtherExternalServices.Add(new ServicesViewModel.OtherExternalService()
                 {
@@ -835,7 +836,7 @@ namespace BTCPayServer.Controllers
                 return View(viewModel);
             }
             var settings = (await _SettingsRepository.GetSettingAsync<DynamicDnsSettings>()) ?? new DynamicDnsSettings();
-            
+
             var i = settings.Services.FindIndex(d => d.Hostname.Equals(hostname, StringComparison.OrdinalIgnoreCase));
             if (i == -1)
                 return NotFound();
@@ -898,18 +899,12 @@ namespace BTCPayServer.Controllers
         }
 
         [Route("server/services/ssh")]
-        public IActionResult SSHService(bool downloadKeyFile = false)
+        public async Task<IActionResult> SSHService()
         {
-            var settings = _Options.SSHSettings;
-            if (settings == null)
+            if (!CanShowSSHService())
                 return NotFound();
-            if (downloadKeyFile)
-            {
-                if (!System.IO.File.Exists(settings.KeyFile))
-                    return NotFound();
-                return File(System.IO.File.ReadAllBytes(settings.KeyFile), "application/octet-stream", "id_rsa");
-            }
 
+            var settings = _Options.SSHSettings;
             var server = Extensions.IsLocalNetwork(settings.Server) ? this.Request.Host.Host : settings.Server;
             SSHServiceViewModel vm = new SSHServiceViewModel();
             string port = settings.Port == 22 ? "" : $" -p {settings.Port}";
@@ -917,7 +912,94 @@ namespace BTCPayServer.Controllers
             vm.Password = settings.Password;
             vm.KeyFilePassword = settings.KeyFilePassword;
             vm.HasKeyFile = !string.IsNullOrEmpty(settings.KeyFile);
+
+            //  Let's try to just read the authorized key file
+            if (CanAccessAuthorizedKeyFile())
+            {
+                try
+                {
+                    vm.SSHKeyFileContent = await System.IO.File.ReadAllTextAsync(settings.AuthorizedKeysFile);
+                }
+                catch { }
+            }
+
+            // If that fail, just fallback to ssh
+            if (vm.SSHKeyFileContent == null && _sshState.CanUseSSH)
+            {
+                try
+                {
+                    using (var sshClient = await _Options.SSHSettings.ConnectAsync())
+                    {
+                        var result = await sshClient.RunBash("cat ~/.ssh/authorized_keys", TimeSpan.FromSeconds(10));
+                        vm.SSHKeyFileContent = result.Output;
+                    }
+                }
+                catch { }
+            }
             return View(vm);
+        }
+
+        bool CanShowSSHService()
+        {
+            return _Options.SSHSettings != null && (_sshState.CanUseSSH || CanAccessAuthorizedKeyFile());
+        }
+
+        private bool CanAccessAuthorizedKeyFile()
+        {
+            return _Options.SSHSettings?.AuthorizedKeysFile != null && System.IO.File.Exists(_Options.SSHSettings.AuthorizedKeysFile);
+        }
+
+        [HttpPost]
+        [Route("server/services/ssh")]
+        public async Task<IActionResult> SSHService(SSHServiceViewModel viewModel)
+        {
+            string newContent = viewModel?.SSHKeyFileContent ?? string.Empty;
+            newContent = newContent.Replace("\r\n", "\n", StringComparison.OrdinalIgnoreCase);
+
+            bool updated = false;
+            Exception exception = null;
+            // Let's try to just write the file
+            if (CanAccessAuthorizedKeyFile())
+            {
+                try
+                {
+                    await System.IO.File.WriteAllTextAsync(_Options.SSHSettings.AuthorizedKeysFile, newContent);
+                    StatusMessage = "authorized_keys has been updated";
+                    updated = true;
+                }
+                catch (Exception ex)
+                {
+                    exception = ex;
+                }
+            }
+
+            // If that fail, fallback to ssh
+            if (!updated && _sshState.CanUseSSH)
+            {
+                try
+                {
+                    using (var sshClient = await _Options.SSHSettings.ConnectAsync())
+                    {
+                        await sshClient.RunBash($"mkdir -p ~/.ssh && echo '{newContent.EscapeSingleQuotes()}' > ~/.ssh/authorized_keys", TimeSpan.FromSeconds(10));
+                    }
+                    updated = true;
+                    exception = null;
+                }
+                catch (Exception ex)
+                {
+                    exception = ex;
+                }
+            }
+
+            if (exception is null)
+            {
+                StatusMessage = "authorized_keys has been updated";
+            }
+            else
+            {
+                StatusMessage = $"Error: {exception.Message}";
+            }
+            return RedirectToAction(nameof(SSHService));
         }
 
         [Route("server/theme")]

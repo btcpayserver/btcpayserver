@@ -66,38 +66,49 @@ namespace BTCPayServer.Controllers.RestApi
 
         [Authorize(Policy = RestAPIPolicies.CanViewStores,
             AuthenticationSchemes = OpenIddictValidationDefaults.AuthenticationScheme)]
+        [HttpGet(nameof(ScopeCanViewStores))]
         public bool ScopeCanViewStores() { return true; }
 
         [Authorize(Policy = RestAPIPolicies.CanManageStores,
             AuthenticationSchemes = OpenIddictValidationDefaults.AuthenticationScheme)]
+        [HttpGet(nameof(ScopeCanManageStores))]
         public bool ScopeCanManageStores() { return true; }
 
         [Authorize(Policy = RestAPIPolicies.CanViewInvoices,
             AuthenticationSchemes = OpenIddictValidationDefaults.AuthenticationScheme)]
+        [HttpGet(nameof(ScopeCanViewInvoices))]
         public bool ScopeCanViewInvoices() { return true; }
 
         [Authorize(Policy = RestAPIPolicies.CanCreateInvoices,
             AuthenticationSchemes = OpenIddictValidationDefaults.AuthenticationScheme)]
+        [HttpGet(nameof(ScopeCanCreateInvoices))]
         public bool ScopeCanCreateInvoices() { return true; }
 
         [Authorize(Policy = RestAPIPolicies.CanManageInvoices,
             AuthenticationSchemes = OpenIddictValidationDefaults.AuthenticationScheme)]
+        [HttpGet(nameof(ScopeCanManageInvoices))]
         public bool ScopeCanManageInvoices() { return true; }
 
         [Authorize(Policy = RestAPIPolicies.CanManageApps,
             AuthenticationSchemes = OpenIddictValidationDefaults.AuthenticationScheme)]
+        [HttpGet(nameof(ScopeCanManageApps))]
         public bool ScopeCanManageApps() { return true; }
 
         [Authorize(Policy = RestAPIPolicies.CanViewApps,
             AuthenticationSchemes = OpenIddictValidationDefaults.AuthenticationScheme)]
+        
+        [HttpGet(nameof(ScopeCanViewApps))]
         public bool ScopeCanViewApps() { return true; }
 
         [Authorize(Policy = RestAPIPolicies.CanManageWallet,
             AuthenticationSchemes = OpenIddictValidationDefaults.AuthenticationScheme)]
+        [HttpGet(nameof(ScopeCanManageWallet))]
         public bool ScopeCanManageWallet() { return true; }
 
         [Authorize(Policy = RestAPIPolicies.CanViewProfile,
             AuthenticationSchemes = OpenIddictValidationDefaults.AuthenticationScheme)]
+        
+        [HttpGet(nameof(ScopeCanViewProfile))]
         public bool ScopeCanViewProfile() { return true; }
 
         #endregion

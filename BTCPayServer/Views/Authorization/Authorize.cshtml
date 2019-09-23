@@ -5,23 +5,23 @@
 
     var scopeMappings = new Dictionary<string, (string Title, string Description)>()
     {
-        {RestAPIPolicies.BTCPayScopes.AppManagement, ("manage your apps", "The app will be able to create, modify and delete all your apps.")},
-        {RestAPIPolicies.BTCPayScopes.ViewApps, ("view your apps", "The app will be able to list and view all your apps.")},
-        {RestAPIPolicies.BTCPayScopes.CreateInvoices, ("create invoices", "The app will be able to create new invoices.")},
-        {RestAPIPolicies.BTCPayScopes.InvoiceManagement, ("manage invoices", "The app will be able to create new invoices and mark existing invoices as complete or invalid.")},
-        {RestAPIPolicies.BTCPayScopes.StoreManagement, ("manage your stores", "The app will be able to create, modify and delete all your stores.")},
-        {RestAPIPolicies.BTCPayScopes.ViewStores, ("view your stores", "The app will be able to list and view all your stores.")},
-        {RestAPIPolicies.BTCPayScopes.WalletManagement, ("manage your wallet", "The app will be able to manage your wallet associate to stores. This includes configuring it, transaction creation and transaction signing")},
-        {RestAPIPolicies.BTCPayScopes.ViewInvoices, ("view your invoices", "The app will be able to list and view all your apps.")},
-        {OpenIddictConstants.Scopes.Email, ("view your email", "The app will have access to your email")},
-        {OpenIddictConstants.Scopes.Profile, ("view your account", "The app will have access to your account")},
-        {OpenIddictConstants.Scopes.Roles, ("view your roles", "The app will know if you are a server admin")},
+        {RestAPIPolicies.BTCPayScopes.AppManagement, ("Manage your apps", "The app will be able to create, modify and delete all your apps.")},
+        {RestAPIPolicies.BTCPayScopes.ViewApps, ("View your apps", "The app will be able to list and view all your apps.")},
+        {RestAPIPolicies.BTCPayScopes.CreateInvoices, ("Create invoices", "The app will be able to create new invoices.")},
+        {RestAPIPolicies.BTCPayScopes.InvoiceManagement, ("Manage invoices", "The app will be able to create new invoices and mark existing invoices as complete or invalid.")},
+        {RestAPIPolicies.BTCPayScopes.StoreManagement, ("Manage your stores", "The app will be able to create, modify and delete all your stores.")},
+        {RestAPIPolicies.BTCPayScopes.ViewStores, ("View your stores", "The app will be able to list and view all your stores.")},
+        {RestAPIPolicies.BTCPayScopes.WalletManagement, ("Manage your wallet", "The app will be able to manage your wallet associate to stores. This includes configuring it, transaction creation and signing.")},
+        {RestAPIPolicies.BTCPayScopes.ViewInvoices, ("View your invoices", "The app will be able to list and view all your apps.")},
+        {OpenIddictConstants.Scopes.Email, ("View your email", "The app will have access to your email.")},
+        {OpenIddictConstants.Scopes.Profile, ("View your account", "The app will have access to your account details.")},
+        {OpenIddictConstants.Scopes.Roles, ("View your roles", "The app will know if you are a server admin.")},
        };
 }
 <form method="post">
     <input type="hidden" name="request_id" value="@Model.RequestId"/>
     <section>
-        <div class="container">
+        <div class="card container">
             <div class="row">
                 <div class="col-lg-12 text-center">
                     <h2 class="section-heading">Authorization Request</h2>
@@ -46,10 +46,10 @@
 
                 </div>
             </div>
-            <div class="row">
+            <div class="row mb-2">
                 <div class="col-lg-12 text-center">
                     <div class="btn-group">
-                        <button class="btn btn-lg btn-success" name="consent" id="consent-yes" type="submit" value="Yes">Authorize app</button>
+                        <button class="btn btn-lg btn-primary" name="consent" id="consent-yes" type="submit" value="Yes">Authorize app</button>
                         <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <span class="sr-only">Toggle Dropdown</span>
                         </button>

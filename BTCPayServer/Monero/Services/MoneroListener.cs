@@ -86,13 +86,11 @@ namespace BTCPayServer.Payments.Monero
 
             if (!string.IsNullOrEmpty(obj.BlockHash))
             {
-                _logger.LogInformation($"{obj.CryptoCode}: New Block");
                 OnNewBlock(obj.CryptoCode);
             }
 
             if (!string.IsNullOrEmpty(obj.TransactionHash))
             {
-                _logger.LogInformation($"{obj.CryptoCode}: Tx Updated");
                 _ = OnTransactionUpdated(obj.CryptoCode, obj.TransactionHash);
             }
         }
@@ -336,7 +334,10 @@ namespace BTCPayServer.Payments.Monero
             var invoiceIds =
                 await GetPendingInvoicesWithPaymentMethodOption(new PaymentMethodId(cryptoCode,
                     MoneroPaymentType.Instance));
-
+            if (!invoiceIds.Any())
+            {
+                return;
+            }
             var invoices = await _invoiceRepository.GetInvoices(new InvoiceQuery() {InvoiceId = invoiceIds});
             _logger.LogInformation($"Updating pending payments for {cryptoCode} in {string.Join(',', invoiceIds)}");
             await UpdatePaymentStates(cryptoCode, invoices);

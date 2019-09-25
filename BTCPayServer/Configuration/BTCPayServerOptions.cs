@@ -42,6 +42,11 @@ namespace BTCPayServer.Configuration
             get;
             private set;
         }
+        public string StorageDropFolder
+        {
+            get;
+            private set;
+        }
         public EndPoint SocksEndpoint { get; set; }
         
         public List<NBXplorerConnectionSetting> NBXplorerConnectionSettings
@@ -70,6 +75,7 @@ namespace BTCPayServer.Configuration
         {
             NetworkType = DefaultConfiguration.GetNetworkType(conf);
             DataDir = conf.GetDataDir(NetworkType);
+            StorageDropFolder = conf.GetOrDefault<string>("storage.dropfolder", null);
             Logs.Configuration.LogInformation("Network: " + NetworkType.ToString());
 
             if (conf.GetOrDefault<bool>("launchsettings", false) && NetworkType != NetworkType.Regtest)

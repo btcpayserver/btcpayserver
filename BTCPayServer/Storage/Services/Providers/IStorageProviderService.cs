@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Storage.Models;
@@ -15,5 +16,6 @@ namespace BTCPayServer.Storage.Services.Providers
         Task<string> GetTemporaryFileUrl(Uri baseUri, StoredFile storedFile, StorageSettings configuration,
             DateTimeOffset expiry, bool isDownload, BlobUrlAccess access = BlobUrlAccess.Read);
         StorageProvider StorageProvider();
+        Task<StoredFile> AddFile(FileInfo formFile, StorageSettings configuration);
     }
 }

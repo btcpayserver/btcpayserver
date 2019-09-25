@@ -1,9 +1,11 @@
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Storage.Models;
 using BTCPayServer.Storage.Services.Providers.Models;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.StaticFiles;
 using TwentyTwenty.Storage;
 
 namespace BTCPayServer.Storage.Services.Providers
@@ -13,6 +15,32 @@ namespace BTCPayServer.Storage.Services.Providers
         where TStorageConfiguration : IBaseStorageConfiguration
     {
         public abstract StorageProvider StorageProvider();
+        public async Task<StoredFile> AddFile(FileInfo file, StorageSettings configuration)
+        {
+            //respect https://www.microsoftpressstore.com/articles/article.aspx?p=2224058&seqNum=8 in naming
+            var storageFileName = $"{Guid.NewGuid()}-{file.Name.ToLowerInvariant()}";
+            var providerConfiguration = GetProviderConfiguration(configuration);
+            var provider = await GetStorageProvider(providerConfiguration);
+            using (var fileStream = file.OpenRead())
+            {
+                var x = new FileExtensionContentTypeProvider();
+                x.TryGetContentType(file.Name, out var contentType);
+                await provider.SaveBlobStreamAsync(providerConfiguration.ContainerName, storageFileName, fileStream,
+                    new BlobProperties()
+                    {
+                        ContentType = contentType,
+                        ContentDisposition = "attachment",
+                        Security = BlobSecurity.Public,
+                    });
+            }
+
+            return new StoredFile()
+            {
+                Timestamp = DateTime.Now,
+                FileName = file.Name,
+                StorageFileName = storageFileName
+            };
+        }
 
         public async Task<StoredFile> AddFile(IFormFile file, StorageSettings configuration)
         {

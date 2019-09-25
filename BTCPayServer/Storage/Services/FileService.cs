@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
@@ -25,6 +26,17 @@ namespace BTCPayServer.Storage.Services
         }
 
         public async Task<StoredFile> AddFile(IFormFile file, string userId)
+        {
+            var settings = await _SettingsRepository.GetSettingAsync<StorageSettings>();
+            var provider = GetProvider(settings);
+
+            var storedFile = await provider.AddFile(file, settings);
+            storedFile.ApplicationUserId = userId;
+            await _FileRepository.AddFile(storedFile);
+            return storedFile;
+        }
+        
+        public async Task<StoredFile> AddFile(FileInfo file, string userId)
         {
             var settings = await _SettingsRepository.GetSettingAsync<StorageSettings>();
             var provider = GetProvider(settings);

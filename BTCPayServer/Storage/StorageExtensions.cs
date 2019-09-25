@@ -21,6 +21,7 @@ namespace BTCPayServer.Storage
         {
             serviceCollection.AddSingleton<StoredFileRepository>();
             serviceCollection.AddSingleton<FileService>();
+            serviceCollection.AddHostedService<DropFolderHostedService>();
 //            serviceCollection.AddSingleton<IStorageProviderService, AmazonS3FileProviderService>();
             serviceCollection.AddSingleton<IStorageProviderService, AzureBlobStorageFileProviderService>();
             serviceCollection.AddSingleton<IStorageProviderService, FileSystemFileProviderService>();

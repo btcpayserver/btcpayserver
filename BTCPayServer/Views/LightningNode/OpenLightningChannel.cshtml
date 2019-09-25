@@ -1,0 +1,61 @@
+@model BTCPayServer.Controllers.RequestLightningChannelViewModel
+@{
+    ViewData["Title"] = $"Open lightning channel {(string.IsNullOrEmpty(Model.ServiceName) ? string.Empty : $"to {Model.ServiceName}")}";
+}
+
+<section>
+    <div class="container">
+        @if (!string.IsNullOrEmpty(Model.StatusMessage))
+        {
+            <div class="row">
+                <div class="col-lg-12 text-center">
+                    <partial name="_StatusMessage" for="@Model.StatusMessage"/>
+                </div>
+            </div>
+        }
+
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                <h2 class="section-heading">@ViewData["Title"]</h2>
+                <hr class="primary">
+                @if (!string.IsNullOrEmpty(Model.Description))
+                {
+                    <p>@Safe.Raw(Model.Description)</p>
+                }
+
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4"></div>
+            <div class="col-md-4">
+                <form asp-action="OpenLightningChannel" method="post">
+                    <div class="form-group">
+                        <label asp-for="StoreId"></label>
+                        <select asp-for="StoreId" asp-items="@Model.Stores" class="form-control"></select>
+                        <span asp-validation-for="StoreId" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="TargetNodeInfo"></label>
+                        <input type="text" asp-for="TargetNodeInfo" placeholder="nodeid@ip:port" class="form-control"/>
+                        <span asp-validation-for="TargetNodeInfo" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Satoshis"></label>
+                        <input type="number" asp-for="Satoshis" class="form-control"/>
+                        <span asp-validation-for="Satoshis" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="FeeRate"></label>
+                        <input type="number" asp-for="FeeRate" step="1" min="1" class="form-control"/>
+                        <span asp-validation-for="FeeRate" class="text-danger"></span>
+                    </div>
+                    <input type="hidden" asp-for="Callback"/>
+                    <input type="hidden" asp-for="Description"/>
+                    <input type="hidden" asp-for="ServiceName"/>
+                    <button type="submit" class="btn btn-primary" title="Approve this pairing demand">Open channel</button>
+                </form>
+            </div>
+            <div class="col-md-4"></div>
+        </div>
+    </div>
+</section>

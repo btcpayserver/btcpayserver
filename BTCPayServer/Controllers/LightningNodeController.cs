@@ -1,16 +1,18 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Lightning;
-using BTCPayServer.Models.StoreViewModels;
+using BTCPayServer.Models;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Security;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
+using DBriize.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -26,36 +28,34 @@ namespace BTCPayServer.Controllers
         private readonly LightningClientFactoryService _LightningClientFactory;
         private readonly UserManager<ApplicationUser> _UserManager;
         private readonly LightningLikePaymentHandler _LightningLikePaymentHandler;
+        private readonly IFeeProviderFactory _FeeRateProvider;
         private readonly StoreRepository _StoreRepository;
 
-        public LightningNodeController(BTCPayNetworkProvider btcPayNetworkProvider, 
+        public LightningNodeController(BTCPayNetworkProvider btcPayNetworkProvider,
             LightningClientFactoryService lightningClientFactory,
             UserManager<ApplicationUser> userManager,
-            LightningLikePaymentHandler lightningLikePaymentHandler, 
+            LightningLikePaymentHandler lightningLikePaymentHandler,
+            IFeeProviderFactory feeRateProvider,
             StoreRepository storeRepository)
         {
             _BtcPayNetworkProvider = btcPayNetworkProvider;
             _LightningClientFactory = lightningClientFactory;
             _UserManager = userManager;
             _LightningLikePaymentHandler = lightningLikePaymentHandler;
+            _FeeRateProvider = feeRateProvider;
             _StoreRepository = storeRepository;
         }
 
-        [HttpGet("{cryptoCode}/channel-request")]
+        [HttpGet("{cryptoCode}/open-channel")]
         [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
-        public async Task<IActionResult> RequestLightningChannel(string storeId, string cryptoCode, string nodeInfo, long sats, string callback, string description, string serviceName )
-        {
-            if (_BtcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode) == null)
+        public async Task<IActionResult> OpenLightningChannel(string storeId, string cryptoCode, string nodeInfo,
+            long sats, string callback, string description, string serviceName){
+        
+            var network = _BtcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
+            if (network == null)
             {
                 return BadRequest("invalid crypto code");
             }
-            if (!NodeInfo.TryParse(nodeInfo, out _))
-            {
-                return BadRequest("invalid node specified");
-            }
-
-            var stores = await _StoreRepository.GetStoresByUserId(_UserManager.GetUserId(User));
-
             return View(new RequestLightningChannelViewModel()
             {
                 Description = description,
@@ -64,98 +64,94 @@ namespace BTCPayServer.Controllers
                 ServiceName = serviceName,
                 TargetNodeInfo = nodeInfo,
                 Callback = callback,
-                Stores = new SelectList(
-                    stores.Select(data =>
-                        new SelectListItem(data.StoreName, data.Id, data.Id == storeId)), nameof(SelectListItem.Value),
-                    nameof(SelectListItem.Text), storeId)
+                FeeRate = (await _FeeRateProvider.CreateFeeProvider(network).GetFeeRateAsync()).SatoshiPerByte,
+                Stores = await GetStoresList(storeId)
             });
-
         }
 
-        [HttpPost("{cryptoCode}/channel-request")]
+        [HttpPost("{cryptoCode}/open-channel")]
         [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
-
-        public async Task<IActionResult> RequestLightningChannel(string cryptoCode, RequestLightningChannelViewModel viewModel)
+        public async Task<IActionResult> OpenLightningChannel(string cryptoCode,
+            RequestLightningChannelViewModel viewModel)
         {
-
-            if (!ModelState.IsValid)
-            {
-                
-                var stores = await _StoreRepository.GetStoresByUserId(_UserManager.GetUserId(User));
-                viewModel.Stores = new SelectList(
-                    stores.Select(data =>
-                        new SelectListItem(data.StoreName, data.Id, data.Id == viewModel.StoreId)),
-                    nameof(SelectListItem.Value),
-                    nameof(SelectListItem.Text), viewModel.StoreId);
-                return View(viewModel);
-            }
-            
-            if (_BtcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode) == null)
-            {
-                return BadRequest("invalid crypto code");
-            }
             if (!NodeInfo.TryParse(viewModel.TargetNodeInfo, out var targetNodeInfo))
             {
-                return BadRequest("invalid node specified");
+                ModelState.AddModelError(nameof(viewModel.TargetNodeInfo), "The node info is not in a valid format.");
+            }
+            if (_BtcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode) == null)
+            {
+                ModelState.AddModelError(string.Empty, "invalid crypto code specified");
             }
 
-            if (!(await _StoreRepository.GetStoreUsers(viewModel.StoreId)).Any(user =>
-                user.Id == _UserManager.GetUserId(User) && user.Role == StoreRoles.Owner))
+            if (!string.IsNullOrEmpty(viewModel.StoreId) && !(await _StoreRepository.GetStoreUsers(viewModel.StoreId)).Any(user =>
+                    user.Id == _UserManager.GetUserId(User) && user.Role == StoreRoles.Owner))
             {
-                return BadRequest("invalid permissions!");
+                ModelState.AddModelError(nameof(viewModel.StoreId), "You are not an owner of the specified store");
             }
             
+            if (!ModelState.IsValid)
+            {
+                viewModel.Stores = await GetStoresList(viewModel.StoreId);
+                return View(viewModel);
+            }
+
             var store = await _StoreRepository.FindStore(viewModel.StoreId);
             if (store == null)
                 return NotFound();
 
-            
             try
             {
                 var paymentMethodDetails = GetExistingLightningSupportedPaymentMethod(cryptoCode, store);
-//                if (store.GetStoreBlob().IsExcluded(paymentMethodDetails.PaymentId))
-//                {
-//                    return BadRequest("ln node unavailable");
-//                }
                 var network = _BtcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
                 var ourNodeInfo =
-                    await _LightningLikePaymentHandler.GetNodeInfo(Request.IsOnion() && targetNodeInfo.IsTor, paymentMethodDetails,
+                    await _LightningLikePaymentHandler.GetNodeInfo(Request.IsOnion() && targetNodeInfo.IsTor,
+                        paymentMethodDetails,
                         network);
-                
+
                 var lightningClient = _LightningClientFactory.Create(paymentMethodDetails.GetLightningUrl(), network);
 
                 await lightningClient.ConnectTo(targetNodeInfo);
                 var result = await lightningClient.OpenChannel(new OpenChannelRequest()
                 {
-                    NodeInfo = targetNodeInfo, FeeRate = FeeRate.Zero, ChannelAmount = new Money(viewModel.Satoshis)
+                    NodeInfo = targetNodeInfo, FeeRate = new FeeRate(viewModel.FeeRate), ChannelAmount = new Money(viewModel.Satoshis)
                 });
 
-                return Redirect()
+                if (string.IsNullOrEmpty(viewModel.Callback))
+                {
+                    viewModel.StatusMessage = new StatusMessageModel()
+                    {
+                        Severity = result.Result == OpenChannelResult.Ok
+                            ? StatusMessageModel.StatusSeverity.Success
+                            : StatusMessageModel.StatusSeverity.Error,
+                        Message = $"Opening channel resulted with {result.Result.ToString()}"
+                    }.ToString();
+                    viewModel.Stores = await GetStoresList(viewModel.StoreId);
+                    return View(viewModel);
+                }
+
+                return Redirect(viewModel.Callback.ReplaceMultiple(new Dictionary<string, string>()
+                {
+                    {"{NodeId}", ourNodeInfo.ToString()}, {"{Result}", result.ToString()}
+                }));
             }
             catch (Exception)
             {
-                return BadRequest("ln node unavailable");
+                ModelState.AddModelError(string.Empty, "The store's ln node was not available.");
+                viewModel.Stores = await GetStoresList(viewModel.StoreId);
+                return View(viewModel);
             }
         }
-        
-        
 
-        public class RequestLightningChannelViewModel
+        private async Task<SelectList> GetStoresList(string selectedStoreId)
         {
-            [Required]
-            public string TargetNodeInfo { get; set; }
-            [Required]
-            public long Satoshis { get; set; }
-            public string Description { get; set; }
-            public string ServiceName { get; set; }
-            public string Callback { get; set; }
-            [Required]
-            public string StoreId { get; set; }
-            public SelectList Stores { get; set; }
+            var stores = await _StoreRepository.GetStoresByUserId(_UserManager.GetUserId(User));
+            return new SelectList(
+                stores.Select(data =>
+                    new SelectListItem(data.StoreName, data.Id, data.Id == selectedStoreId)),
+                nameof(SelectListItem.Value),
+                nameof(SelectListItem.Text), selectedStoreId);
         }
-        
-        
-        
+
         [HttpGet("~/embed/{storeId}/{cryptoCode}/ln")]
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.AllowAll)]
         [AllowAnonymous]
@@ -186,8 +182,9 @@ namespace BTCPayServer.Controllers
                 return View(new ShowLightningNodeInfoViewModel() {Available = false, CryptoCode = cryptoCode});
             }
         }
-        
-        private LightningSupportedPaymentMethod GetExistingLightningSupportedPaymentMethod(string cryptoCode, StoreData store)
+
+        private LightningSupportedPaymentMethod GetExistingLightningSupportedPaymentMethod(string cryptoCode,
+            StoreData store)
         {
             var id = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
             var existing = store.GetSupportedPaymentMethods(_BtcPayNetworkProvider)
@@ -212,5 +209,26 @@ namespace BTCPayServer.Controllers
         public bool Available { get; set; }
         public string CryptoCode { get; set; }
         public string CryptoImage { get; set; }
+    }
+    
+    public class RequestLightningChannelViewModel
+    {
+            
+        [Display(Name = "Lightning node to open channel to")]
+        [Required] public string TargetNodeInfo { get; set; }
+            
+        [Display(Name = "Outbound sats for channel")]
+        [Required] public long Satoshis { get; set; }
+        public string Description { get; set; }
+        public string ServiceName { get; set; }
+        public string Callback { get; set; }
+            
+        [Display(Name = "Store")]
+        [Required] public string StoreId { get; set; }
+        public SelectList Stores { get; set; }
+        [Display(Name = "Sats per byte fee for channel opening transaction")]
+        public decimal FeeRate { get; set; }
+
+        public string StatusMessage { get; set; }
     }
 }

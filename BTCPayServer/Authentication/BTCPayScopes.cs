@@ -47,6 +47,8 @@ namespace BTCPayServer.Authentication
             AddScopePolicy(options, CanViewStores,
                 context => context.HasScopes(BTCPayScopes.StoreManagement) ||
                            context.HasScopes(BTCPayScopes.ViewStores));
+            AddScopePolicy(options, CanManageStores,
+                context => context.HasScopes(BTCPayScopes.StoreManagement));
             AddScopePolicy(options, CanViewInvoices,
                 context => context.HasScopes(BTCPayScopes.ViewInvoices) ||
                            context.HasScopes(BTCPayScopes.InvoiceManagement));

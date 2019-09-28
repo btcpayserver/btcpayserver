@@ -9,10 +9,7 @@ namespace BTCPayServer.Monero.Payments
     public class MoneroPaymentType: PaymentType
     {
         public static MoneroPaymentType Instance { get; } = new MoneroPaymentType();
-        public override string ToPrettyString()
-        {
-            return "";
-        }
+        public override string ToPrettyString() => "On-Chain";
 
         public override string GetId()=> "MoneroLike";
 

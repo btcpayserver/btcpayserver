@@ -49,6 +49,10 @@ namespace BTCPayServer.Monero.Services
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
+            if (!_MoneroLikeConfiguration.MoneroLikeConfigurationItems.Any())
+            {
+                return Task.CompletedTask;
+            }
             _Cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
             leases.Add(_eventAggregator.Subscribe<MoneroEvent>(OnMoneroEvent));
@@ -64,21 +68,8 @@ namespace BTCPayServer.Monero.Services
                     _logger.LogInformation($"{e.CryptoCode} just became unavailable");
                 }
             }));
-            //TODO: This is temporary, we do not need this when we have the notifiers working.
-//            _ = Loop(cancellationToken);
 
             return Task.CompletedTask;
-        }
-
-        private async Task Loop(CancellationToken cancellationToken)
-        {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                await Task.WhenAll(
-                    _MoneroLikeConfiguration.MoneroLikeConfigurationItems.Select(pair =>
-                        UpdateAnyPendingMoneroLikePayment(pair.Key)));
-                await Task.Delay(TimeSpan.FromSeconds(20), cancellationToken);
-            }
         }
 
         private void OnMoneroEvent(MoneroEvent obj)

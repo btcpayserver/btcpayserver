@@ -1,6 +1,8 @@
 @using BTCPayServer.Controllers
+@using BTCPayServer.Monero.Configuration
+@using BTCPayServer.Monero.UI
 @inject SignInManager<ApplicationUser> SignInManager;
-@inject BTCPayServer.Payments.Monero.MoneroLikeConfiguration MoneroLikeConfiguration;
+@inject MoneroLikeConfiguration MoneroLikeConfiguration;
 @{
     var controller = ViewContext.RouteData.Values["Controller"].ToString();
     var isMonero = controller.Equals(nameof(MoneroLikeStoreController), StringComparison.InvariantCultureIgnoreCase);

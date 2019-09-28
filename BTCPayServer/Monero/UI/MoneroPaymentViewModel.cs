@@ -1,6 +1,6 @@
 using System;
 
-namespace BTCPayServer.Controllers
+namespace BTCPayServer.Monero.UI
 {
     public class MoneroPaymentViewModel
     {

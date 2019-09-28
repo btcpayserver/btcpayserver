@@ -2,10 +2,11 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Logging;
+using BTCPayServer.Monero.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace BTCPayServer.Payments.Monero
+namespace BTCPayServer.Monero.Services
 {
     public class MoneroLikeSummaryUpdaterHostedService: IHostedService
     {

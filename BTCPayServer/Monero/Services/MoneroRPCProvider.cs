@@ -2,18 +2,22 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
-using MoneroRPC.NET;
+using BTCPayServer.Monero.Configuration;
+using BTCPayServer.Monero.RPC;
+using BTCPayServer.Monero.RPC.Models;
 using NBitcoin;
 
-namespace BTCPayServer.Payments.Monero
+namespace BTCPayServer.Monero.Services
 {
     public class MoneroRPCProvider
     {
         private readonly MoneroLikeConfiguration _moneroLikeConfiguration;
         private readonly EventAggregator _eventAggregator;
-        public ImmutableDictionary<string, MoneroDaemonRpcClient> DaemonRpcClients;
-        public ImmutableDictionary<string, MoneroWalletRpcClient> WalletRpcClients;
-        private ConcurrentDictionary<string, MoneroLikeSummary> _summaries = new ConcurrentDictionary<string, MoneroLikeSummary>();
+        public ImmutableDictionary<string, JsonRpcClient> DaemonRpcClients;
+        public ImmutableDictionary<string, JsonRpcClient> WalletRpcClients;
+
+        private ConcurrentDictionary<string, MoneroLikeSummary> _summaries =
+            new ConcurrentDictionary<string, MoneroLikeSummary>();
 
         public ConcurrentDictionary<string, MoneroLikeSummary> Summaries => _summaries;
 
@@ -23,10 +27,10 @@ namespace BTCPayServer.Payments.Monero
             _eventAggregator = eventAggregator;
             DaemonRpcClients =
                 _moneroLikeConfiguration.MoneroLikeConfigurationItems.ToImmutableDictionary(pair => pair.Key,
-                    pair => new MoneroDaemonRpcClient(pair.Value.DaemonRpcUri));
+                    pair => new JsonRpcClient(pair.Value.DaemonRpcUri, "", ""));
             WalletRpcClients =
                 _moneroLikeConfiguration.MoneroLikeConfigurationItems.ToImmutableDictionary(pair => pair.Key,
-                    pair => new MoneroWalletRpcClient(pair.Value.InternalWalletRpcUri, "", ""));
+                    pair => new JsonRpcClient(pair.Value.InternalWalletRpcUri, "", ""));
         }
 
         public bool IsAvailable(string cryptoCode)
@@ -37,8 +41,8 @@ namespace BTCPayServer.Payments.Monero
 
         private bool IsAvailable(MoneroLikeSummary summary)
         {
-            return  summary.Synced &&
-                    summary.WalletAvailable;
+            return summary.Synced &&
+                   summary.WalletAvailable;
         }
 
         public async Task<MoneroLikeSummary> UpdateSummary(string cryptoCode)
@@ -52,9 +56,12 @@ namespace BTCPayServer.Payments.Monero
             var summary = new MoneroLikeSummary();
             try
             {
-                var daemonResult = await daemonRpcClient.SyncInfo();
+                var daemonResult =
+                    await daemonRpcClient.SendCommandAsync<JsonRpcClient.NoRequestModel, SyncInfoResponse>("sync_info",
+                        JsonRpcClient.NoRequestModel.Instance);
                 summary.TargetHeight = daemonResult.TargetHeight ?? daemonResult.Height;
-                summary.Synced = !daemonResult.TargetHeight.HasValue || (daemonResult.Height >= daemonResult.TargetHeight && daemonResult.TargetHeight > 0) ;
+                summary.Synced = !daemonResult.TargetHeight.HasValue ||
+                                 (daemonResult.Height >= daemonResult.TargetHeight && daemonResult.TargetHeight > 0);
                 summary.CurrentHeight = daemonResult.Height;
                 summary.UpdatedAt = DateTime.Now;
                 summary.DaemonAvailable = true;
@@ -66,7 +73,9 @@ namespace BTCPayServer.Payments.Monero
 
             try
             {
-                var walletResult = await walletRpcClient.GetHeight();
+                var walletResult =
+                    await walletRpcClient.SendCommandAsync<JsonRpcClient.NoRequestModel, GetHeightResponse>(
+                        "get_height", JsonRpcClient.NoRequestModel.Instance);
 
                 summary.WalletHeight = walletResult.Height;
                 summary.WalletAvailable = true;
@@ -76,17 +85,14 @@ namespace BTCPayServer.Payments.Monero
                 summary.WalletAvailable = false;
             }
 
-            var changed =  !_summaries.ContainsKey(cryptoCode) || IsAvailable(cryptoCode) != IsAvailable(summary);
-            
+            var changed = !_summaries.ContainsKey(cryptoCode) || IsAvailable(cryptoCode) != IsAvailable(summary);
+
             _summaries.AddOrReplace(cryptoCode, summary);
             if (changed)
             {
-                _eventAggregator.Publish(new MoneroDaemonStateChange()
-                {
-                    Summary = summary,
-                    CryptoCode = cryptoCode
-                });
+                _eventAggregator.Publish(new MoneroDaemonStateChange() {Summary = summary, CryptoCode = cryptoCode});
             }
+
             return summary;
         }
 

@@ -1,8 +1,9 @@
 using BTCPayServer.Data;
+using BTCPayServer.Monero.Utils;
+using BTCPayServer.Payments;
 using BTCPayServer.Services.Invoices;
-using MoneroRPC.NET;
 
-namespace BTCPayServer.Payments.Monero
+namespace BTCPayServer.Monero.Payments
 {
     public class MoneroLikePaymentData : CryptoPaymentData
     {

@@ -2,8 +2,10 @@ using System;
 using System.Linq;
 using BTCPayServer.Configuration;
 using BTCPayServer.Contracts;
+using BTCPayServer.Monero.Configuration;
+using BTCPayServer.Monero.Payments;
+using BTCPayServer.Monero.Services;
 using BTCPayServer.Payments;
-using BTCPayServer.Payments.Monero;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 

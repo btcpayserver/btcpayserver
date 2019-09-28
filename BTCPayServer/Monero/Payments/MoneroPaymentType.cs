@@ -1,9 +1,10 @@
 using System.Globalization;
+using BTCPayServer.Payments;
 using BTCPayServer.Services.Invoices;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace BTCPayServer.Payments.Monero
+namespace BTCPayServer.Monero.Payments
 {
     public class MoneroPaymentType: PaymentType
     {

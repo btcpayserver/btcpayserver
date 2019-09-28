@@ -8,17 +8,19 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
+using BTCPayServer.Monero.Configuration;
+using BTCPayServer.Monero.Payments;
+using BTCPayServer.Monero.RPC.Models;
+using BTCPayServer.Monero.Services;
 using BTCPayServer.Payments;
-using BTCPayServer.Payments.Monero;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using MoneroRPC.NET.Models;
 
-namespace BTCPayServer.Controllers
+namespace BTCPayServer.Monero.UI
 {
     [Route("stores/{storeId}/monerolike")]
     [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
@@ -72,7 +74,7 @@ namespace BTCPayServer.Controllers
                 if (_MoneroRpcProvider.Summaries.TryGetValue(cryptoCode, out var summary) && summary.WalletAvailable)
                 {
                     
-                    return _MoneroRpcProvider.WalletRpcClients[cryptoCode].GetAccounts(new GetAccountsRequest());
+                    return _MoneroRpcProvider.WalletRpcClients[cryptoCode].SendCommandAsync<GetAccountsRequest, GetAccountsResponse>("get_accounts",new GetAccountsRequest());
                 }
             }catch{}
             return Task.FromResult<GetAccountsResponse>(null);
@@ -135,13 +137,13 @@ namespace BTCPayServer.Controllers
             {
                 try
                 {
-                    var newAccount = await _MoneroRpcProvider.WalletRpcClients[cryptoCode].CreateAccount(new CreateAccountRequest()
+                    var newAccount = await _MoneroRpcProvider.WalletRpcClients[cryptoCode].SendCommandAsync<CreateAccountRequest, CreateAccountResponse>("create_account",new CreateAccountRequest()
                     {
                         Label = viewModel.NewAccountLabel
                     });
                     viewModel.AccountIndex = newAccount.AccountIndex;
                 }
-                catch (Exception e)
+                catch (Exception )
                 {
                     ModelState.AddModelError(nameof(viewModel.AccountIndex), "Could not create new account.");
                 }
@@ -254,7 +256,7 @@ namespace BTCPayServer.Controllers
         private void Exec(string cmd)
         {
             
-            var escapedArgs = cmd.Replace("\"", "\\\"");
+            var escapedArgs = cmd.Replace("\"", "\\\"", StringComparison.InvariantCulture);
 
             var process = new Process
             {

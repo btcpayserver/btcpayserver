@@ -1,4 +1,6 @@
-namespace BTCPayServer.Payments.Monero
+using BTCPayServer.Payments;
+
+namespace BTCPayServer.Monero.Payments
 {
     public class MoneroSupportedPaymentMethod : ISupportedPaymentMethod
     {

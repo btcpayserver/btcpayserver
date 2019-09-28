@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace BTCPayServer.Payments.Monero
+namespace BTCPayServer.Monero.RPC
 {
     [Route("[controller]")]
     public class MoneroLikeDaemonCallbackController : Controller

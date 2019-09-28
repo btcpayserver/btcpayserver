@@ -6,14 +6,18 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
+using BTCPayServer.Monero.Configuration;
+using BTCPayServer.Monero.Payments;
+using BTCPayServer.Monero.RPC;
+using BTCPayServer.Monero.RPC.Models;
+using BTCPayServer.Payments;
 using BTCPayServer.Services.Invoices;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using MoneroRPC.NET.Models;
 using NBitcoin;
 using NBXplorer;
 
-namespace BTCPayServer.Payments.Monero
+namespace BTCPayServer.Monero.Services
 {
     public class MoneroListener : IHostedService
     {
@@ -108,10 +112,12 @@ namespace BTCPayServer.Payments.Monero
             {
                 var walletClient = _moneroRpcProvider.WalletRpcClients[payment.GetCryptoCode()];
 
-                var address = await walletClient.CreateAddress(new CreateAddressRequest()
-                {
-                    Label = $"btcpay invoice #{invoice.Id}", AccountIndex = monero.AccountIndex
-                });
+                var address = await walletClient.SendCommandAsync<CreateAddressRequest, CreateAddressResponse>(
+                    "create_address",
+                    new CreateAddressRequest()
+                    {
+                        Label = $"btcpay invoice #{invoice.Id}", AccountIndex = monero.AccountIndex
+                    });
                 monero.DepositAddress = address.Address;
                 monero.AddressIndex = address.AddressIndex;
                 await _invoiceRepository.NewAddress(invoice.Id, monero, payment.Network);
@@ -166,10 +172,12 @@ namespace BTCPayServer.Payments.Monero
             }
 
             var tasks = accountToAddressQuery.ToDictionary(datas => datas.Key,
-                datas => moneroWalletRpcClient.GetTransfers(new GetTransfersRequest()
-                {
-                    AccountIndex = datas.Key, In = true, SubaddrIndices = datas.Value.Distinct().ToList()
-                }));
+                datas => moneroWalletRpcClient.SendCommandAsync<GetTransfersRequest, GetTransfersResponse>(
+                    "get_transfers",
+                    new GetTransfersRequest()
+                    {
+                        AccountIndex = datas.Key, In = true, SubaddrIndices = datas.Value.Distinct().ToList()
+                    }));
 
             await Task.WhenAll(tasks.Values);
 
@@ -246,7 +254,8 @@ namespace BTCPayServer.Payments.Monero
         {
             var paymentMethodId = new PaymentMethodId(cryptoCode, MoneroPaymentType.Instance);
             var transfer = await _moneroRpcProvider.WalletRpcClients[cryptoCode]
-                .GetTransferByTransactionId(
+                .SendCommandAsync<GetTransferByTransactionIdRequest, GetTransferByTransactionIdResponse>(
+                    "get_transfer_by_txid",
                     new GetTransferByTransactionIdRequest() {TransactionId = transactionHash});
 
             var paymentsToUpdate = new BlockingCollection<(PaymentEntity Payment, InvoiceEntity invoice)>();
@@ -338,6 +347,7 @@ namespace BTCPayServer.Payments.Monero
             {
                 return;
             }
+
             var invoices = await _invoiceRepository.GetInvoices(new InvoiceQuery() {InvoiceId = invoiceIds});
             _logger.LogInformation($"Updating pending payments for {cryptoCode} in {string.Join(',', invoiceIds)}");
             await UpdatePaymentStates(cryptoCode, invoices);

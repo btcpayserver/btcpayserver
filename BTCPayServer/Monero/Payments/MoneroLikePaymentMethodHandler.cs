@@ -6,14 +6,16 @@ using BTCPayServer.Data;
 using BTCPayServer.Lightning;
 using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
+using BTCPayServer.Monero.RPC.Models;
+using BTCPayServer.Monero.Services;
+using BTCPayServer.Monero.Utils;
+using BTCPayServer.Payments;
 using BTCPayServer.Rating;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
-using MoneroRPC.NET;
-using MoneroRPC.NET.Models;
 using NBitcoin;
 
-namespace BTCPayServer.Payments.Monero
+namespace BTCPayServer.Monero.Payments
 {
     public class MoneroLikePaymentMethodHandler : PaymentMethodHandlerBase<MoneroSupportedPaymentMethod, MoneroLikeSpecificBtcPayNetwork>
     {
@@ -57,8 +59,8 @@ namespace BTCPayServer.Payments.Monero
             var daemonClient = _moneroRpcProvider.DaemonRpcClients [supportedPaymentMethod.CryptoCode];
             return new Prepare()
             {
-                GetFeeRate = daemonClient.GetFeeEstimate(new GetFeeEstimateRequest()),
-                ReserveAddress = s =>  walletClient.CreateAddress(new CreateAddressRequest() {Label = $"btcpay invoice #{s}", AccountIndex = supportedPaymentMethod.AccountIndex })
+                GetFeeRate = daemonClient.SendCommandAsync<GetFeeEstimateRequest, GetFeeEstimateResponse>("get_fee_estimate", new GetFeeEstimateRequest()),
+                ReserveAddress = s =>  walletClient. SendCommandAsync<CreateAddressRequest, CreateAddressResponse>("create_address", new CreateAddressRequest() {Label = $"btcpay invoice #{s}", AccountIndex = supportedPaymentMethod.AccountIndex })
             };
         }
         
@@ -79,7 +81,7 @@ namespace BTCPayServer.Payments.Monero
             model.IsLightning = false;
             model.PaymentMethodName = GetPaymentMethodName(network);
             model.CryptoImage = GetCryptoImage(network);
-            model.InvoiceBitcoinUrl = client.MakeUri(new MakeUriRequest()
+            model.InvoiceBitcoinUrl = client.SendCommandAsync<MakeUriRequest, MakeUriResponse>("make_uri", new MakeUriRequest()
                 {
                     Address = cryptoInfo.Address,
                     Amount = LightMoney.Parse(cryptoInfo.Due).MilliSatoshi

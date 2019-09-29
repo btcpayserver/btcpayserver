@@ -13,6 +13,13 @@ namespace BTCPayServer.Monero
 {
     public static class MoneroLikeExtensions
     {
+        public static bool AnyMoneroLikeCoinsConfigured(this IConfiguration configuration)
+        {
+            return configuration.GetOrDefault<string>("chains", "")
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(t => t.ToUpperInvariant())
+                .Any(s => s == "XMR");
+        }
         public static IServiceCollection AddMoneroLike(this IServiceCollection serviceCollection)
         {
             serviceCollection.AddSingleton(provider =>

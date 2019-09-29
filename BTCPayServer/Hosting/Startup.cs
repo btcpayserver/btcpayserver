@@ -46,7 +46,10 @@ namespace BTCPayServer.Hosting
         {
             Logs.Configure(LoggerFactory);
             services.ConfigureBTCPayServer(Configuration);
-            services.AddMoneroLike();
+            if (Configuration.AnyMoneroLikeCoinsConfigured())
+            {
+                services.AddMoneroLike();
+            }
             services.AddMemoryCache();
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
+using System.Net.Http;
 using System.Threading.Tasks;
 using BTCPayServer.Monero.Configuration;
 using BTCPayServer.Monero.RPC;
@@ -21,16 +22,16 @@ namespace BTCPayServer.Monero.Services
 
         public ConcurrentDictionary<string, MoneroLikeSummary> Summaries => _summaries;
 
-        public MoneroRPCProvider(MoneroLikeConfiguration moneroLikeConfiguration, EventAggregator eventAggregator)
+        public MoneroRPCProvider(MoneroLikeConfiguration moneroLikeConfiguration, EventAggregator eventAggregator, IHttpClientFactory httpClientFactory)
         {
             _moneroLikeConfiguration = moneroLikeConfiguration;
             _eventAggregator = eventAggregator;
             DaemonRpcClients =
                 _moneroLikeConfiguration.MoneroLikeConfigurationItems.ToImmutableDictionary(pair => pair.Key,
-                    pair => new JsonRpcClient(pair.Value.DaemonRpcUri, "", ""));
+                    pair => new JsonRpcClient(pair.Value.DaemonRpcUri, "", "", httpClientFactory.CreateClient()));
             WalletRpcClients =
                 _moneroLikeConfiguration.MoneroLikeConfigurationItems.ToImmutableDictionary(pair => pair.Key,
-                    pair => new JsonRpcClient(pair.Value.InternalWalletRpcUri, "", ""));
+                    pair => new JsonRpcClient(pair.Value.InternalWalletRpcUri, "", "", httpClientFactory.CreateClient()));
         }
 
         public bool IsAvailable(string cryptoCode)

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace BTCPayServer.Models.Authorization
@@ -9,6 +10,6 @@ namespace BTCPayServer.Models.Authorization
 
         [BindNever] public string RequestId { get; set; }
 
-        [Display(Name = "Scope")] public string Scope { get; set; }
+        [Display(Name = "Scope")] public IEnumerable<string> Scope { get; set; }
     }
 }

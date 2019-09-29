@@ -237,7 +237,7 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<EmailSenderFactory>();
             // bundling
 
-            services.AddAuthorization(o => Policies.AddBTCPayPolicies(o));
+            services.AddAuthorization(o => o.AddBTCPayPolicies().AddBTCPayRESTApiPolicies());
             services.AddBtcPayServerAuthenticationSchemes(configuration);
 
             services.AddSingleton<IBundleProvider, ResourceBundleProvider>();

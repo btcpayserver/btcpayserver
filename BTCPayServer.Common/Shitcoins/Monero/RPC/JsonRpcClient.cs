@@ -72,7 +72,7 @@ namespace BTCPayServer.Shitcoins.Monero.RPC
             return response.Result;
         }
 
-        internal class NoRequestModel
+        public class NoRequestModel
         {
             public static NoRequestModel Instance = new NoRequestModel();
         }

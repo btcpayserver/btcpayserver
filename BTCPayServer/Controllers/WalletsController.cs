@@ -295,6 +295,26 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
+        [Route("{walletId}/receive")]
+        public async Task<IActionResult> WalletReceive([ModelBinder(typeof(WalletIdModelBinder))]
+            WalletId walletId)
+        {
+            if (walletId?.StoreId == null)
+                return NotFound();
+            var store = await Repository.FindStore(walletId.StoreId, GetUserId());
+            DerivationSchemeSettings paymentMethod = GetDerivationSchemeSettings(walletId, store);
+            if (paymentMethod == null)
+                return NotFound();
+            var network = this.NetworkProvider.GetNetwork<BTCPayNetwork>(walletId?.CryptoCode);
+            if (network == null)
+                return NotFound();
+
+            var wallet = _walletProvider.GetWallet(network);
+            var address = await wallet.ReserveAddressAsync(paymentMethod.AccountDerivation);
+            return View(new WalletReceiveViewModel(){CryptoCode = walletId.CryptoCode, Address = address.ToString()});
+        }
+
+    [HttpGet]
         [Route("{walletId}/send")]
         public async Task<IActionResult> WalletSend(
             [ModelBinder(typeof(WalletIdModelBinder))]
@@ -957,6 +977,12 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
         }
+    }
+
+    public class WalletReceiveViewModel
+    {
+        public string CryptoCode { get; set; }
+        public string Address { get; set; }
     }
 
 

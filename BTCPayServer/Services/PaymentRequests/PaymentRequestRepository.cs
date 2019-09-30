@@ -73,7 +73,7 @@ namespace BTCPayServer.Services.PaymentRequests
                 return await context.PaymentRequests.Include(x => x.StoreData)
                     .AnyAsync(data =>
                         data.Id == paymentRequestId &&
-                        (data.StoreData != null && data.StoreData.UserStores.Any(u => u.ApplicationUserId == userId)));
+                        (data.StoreData != null &&  data.StoreData.UserStores.Any(u => u.ApplicationUserId == userId)));
             }
         }
         

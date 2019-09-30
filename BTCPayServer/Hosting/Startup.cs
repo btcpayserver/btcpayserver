@@ -21,7 +21,7 @@ using OpenIddict.EntityFrameworkCore.Models;
 using System.Net;
 using BTCPayServer.Authentication;
 using BTCPayServer.Authentication.OpenId;
-using BTCPayServer.Shitcoins.Monero;
+using BTCPayServer.Altcoins.Monero;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Storage;

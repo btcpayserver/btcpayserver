@@ -1,5 +1,8 @@
+using System.Collections.Generic;
 using System.Globalization;
+using BTCPayServer.Data;
 using BTCPayServer.Payments;
+using BTCPayServer.Rating;
 using BTCPayServer.Services.Invoices;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -13,9 +16,9 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
 
         public override string GetId()=> "MoneroLike";
 
-
-        public override CryptoPaymentData DeserializePaymentData(BTCPayNetworkBase network, string str)
+        public override CryptoPaymentData DeserializePaymentData(string str, BTCPayNetworkBase network)
         {
+#pragma warning disable CS0618
             return JsonConvert.DeserializeObject<MoneroLikePaymentData>(str);
         }
 
@@ -29,6 +32,12 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
             return JsonConvert.DeserializeObject<MoneroLikeOnChainPaymentMethodDetails>(str);
         }
 
+        public override ISupportedPaymentMethod DeserializeSupportedPaymentMethod(BTCPayNetworkProvider networkProvider,
+            PaymentMethodId paymentMethodId, JToken value)
+        {
+            return JsonConvert.DeserializeObject<MoneroSupportedPaymentMethod>(value.ToString());
+        }
+
         public override ISupportedPaymentMethod DeserializeSupportedPaymentMethod(BTCPayNetworkBase network, JToken value)
         {
             return JsonConvert.DeserializeObject<MoneroSupportedPaymentMethod>(value.ToString());
@@ -40,5 +49,9 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
         }
 
         public override string InvoiceViewPaymentPartialName { get; }= "Monero/ViewMoneroLikePaymentData";
+        public override IEnumerable<CurrencyPair> GetCurrencyPairs(ISupportedPaymentMethod supportedPaymentMethod, string targetCurrencyCode, StoreBlob blob)
+        {
+            return new[] {new CurrencyPair(supportedPaymentMethod.PaymentId.CryptoCode, targetCurrencyCode)};
+        }
     }
 }

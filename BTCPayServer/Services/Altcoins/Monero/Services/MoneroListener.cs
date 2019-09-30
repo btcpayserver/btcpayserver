@@ -95,7 +95,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
             _logger.LogInformation(
                 $"Invoice {invoice.Id} received payment {payment.GetCryptoPaymentData().GetValue()} {payment.GetCryptoCode()} {payment.GetCryptoPaymentData().GetPaymentId()}");
             var paymentData = (MoneroLikePaymentData)payment.GetCryptoPaymentData();
-            var paymentMethod = invoice.GetPaymentMethod(payment.Network, MoneroPaymentType.Instance);
+            var paymentMethod = invoice.GetPaymentMethod(payment.Network.CryptoCode, MoneroPaymentType.Instance);
             if (paymentMethod != null &&
                 paymentMethod.GetPaymentMethodDetails() is MoneroLikeOnChainPaymentMethodDetails monero &&
                 monero.GetPaymentDestination() == paymentData.GetDestination() &&
@@ -136,7 +136,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
             //get all the required data in one list (invoice, its existing payments and the current payment method details)
             var expandedInvoices = invoices.Select(entity => (Invoice: entity,
                     ExistingPayments: GetAllMoneroLikePayments(entity, cryptoCode),
-                    PaymentMethodDetails: entity.GetPaymentMethod(network, MoneroPaymentType.Instance)
+                    PaymentMethodDetails: entity.GetPaymentMethod(network.CryptoCode, MoneroPaymentType.Instance)
                         .GetPaymentMethodDetails() as MoneroLikeOnChainPaymentMethodDetails))
                 .Select(tuple => (
                     tuple.Invoice,

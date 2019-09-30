@@ -52,6 +52,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
 
         }
 
+
         public override object PreparePayment(MoneroSupportedPaymentMethod supportedPaymentMethod, StoreData store,
             BTCPayNetworkBase network)
         {
@@ -71,7 +72,8 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
             public Func<string, Task<CreateAddressResponse>> ReserveAddress;
         }
 
-        public override void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse, StoreBlob storeBlob)
+        public override void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse, StoreData storeData, StoreBlob storeBlob,
+            PaymentMethodAccounting accounting)
         {
             var paymentMethodId = new PaymentMethodId(model.CryptoCode, PaymentType);
 

@@ -70,7 +70,7 @@ namespace BTCPayServer.Payments
 
         public string ToPrettyString()
         {
-            return string.IsNullOrEmpty(PaymentType.ToPrettyString()) ? CryptoCode : $"{CryptoCode} ({PaymentType.ToPrettyString()})";
+            return $"{CryptoCode} ({PaymentType.ToPrettyString()})";
         }
 
         public static bool TryParse(string str, out PaymentMethodId paymentMethodId)

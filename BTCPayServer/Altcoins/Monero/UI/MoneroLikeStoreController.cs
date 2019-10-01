@@ -19,10 +19,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using BTCPayServer.Filters;
 
 namespace BTCPayServer.Altcoins.Monero.UI
 {
     [Route("stores/{storeId}/monerolike")]
+    [OnlyIfSupportAttribute("XMR")]
     [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
     [Authorize(Policy = Policies.CanModifyStoreSettings.Key, AuthenticationSchemes = Policies.CookieAuthentication)]
     [Authorize(Policy = Policies.CanModifyServerSettings.Key, AuthenticationSchemes = Policies.CookieAuthentication)]

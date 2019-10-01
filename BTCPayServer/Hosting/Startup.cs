@@ -21,7 +21,6 @@ using OpenIddict.EntityFrameworkCore.Models;
 using System.Net;
 using BTCPayServer.Authentication;
 using BTCPayServer.Authentication.OpenId;
-using BTCPayServer.Altcoins.Monero;
 using BTCPayServer.PaymentRequest;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Storage;
@@ -49,10 +48,6 @@ namespace BTCPayServer.Hosting
         {
             Logs.Configure(LoggerFactory);
             services.ConfigureBTCPayServer(Configuration);
-            if (Configuration.AnyMoneroLikeCoinsConfigured())
-            {
-                services.AddMoneroLike();
-            }
             services.AddMemoryCache();
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()

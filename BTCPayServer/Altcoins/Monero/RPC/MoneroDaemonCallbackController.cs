@@ -1,8 +1,10 @@
+using BTCPayServer.Filters;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Altcoins.Monero.RPC
 {
     [Route("[controller]")]
+    [OnlyIfSupportAttribute("XMR")]
     public class MoneroLikeDaemonCallbackController : Controller
     {
         private readonly EventAggregator _eventAggregator;

@@ -1,4 +1,5 @@
 ﻿using BTCPayServer.Configuration;
+using BTCPayServer.Altcoins.Monero;
 using Microsoft.Extensions.Logging;
 using System;
 using System.IdentityModel.Tokens.Jwt;
@@ -70,6 +71,7 @@ namespace BTCPayServer.Hosting
             {
                 httpClient.Timeout = Timeout.InfiniteTimeSpan;
             });
+            services.AddMoneroLike();
             services.TryAddSingleton<SettingsRepository>();
             services.TryAddSingleton<TorServices>();
             services.TryAddSingleton<SocketFactory>();

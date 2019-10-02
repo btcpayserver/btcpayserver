@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using BTCPayServer.Models;
-using BTCPayServer.Services.U2F.Models;
+using BTCPayServer.U2F.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Controllers

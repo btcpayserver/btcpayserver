@@ -1,4 +1,4 @@
-using BTCPayServer.Services.U2F.Models;
+using BTCPayServer.U2F.Models;
 
 namespace BTCPayServer.Models.AccountViewModels
 {

@@ -1,4 +1,4 @@
-namespace BTCPayServer.Services.U2F.Models
+namespace BTCPayServer.U2F.Models
 {
     public class AddU2FDeviceViewModel
     {

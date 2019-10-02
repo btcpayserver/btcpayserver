@@ -6,22 +6,18 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Build\dockerfiles\**" />
-    <Compile Remove="U2F\Services\**" />
     <Compile Remove="wwwroot\bundles\jqueryvalidate\**" />
     <Compile Remove="wwwroot\css\**" />
     <Compile Remove="wwwroot\vendor\jquery-nice-select\**" />
     <Content Remove="Build\dockerfiles\**" />
-    <Content Remove="U2F\Services\**" />
     <Content Remove="wwwroot\bundles\jqueryvalidate\**" />
     <Content Remove="wwwroot\css\**" />
     <Content Remove="wwwroot\vendor\jquery-nice-select\**" />
     <EmbeddedResource Remove="Build\dockerfiles\**" />
-    <EmbeddedResource Remove="U2F\Services\**" />
     <EmbeddedResource Remove="wwwroot\bundles\jqueryvalidate\**" />
     <EmbeddedResource Remove="wwwroot\css\**" />
     <EmbeddedResource Remove="wwwroot\vendor\jquery-nice-select\**" />
     <None Remove="Build\dockerfiles\**" />
-    <None Remove="U2F\Services\**" />
     <None Remove="wwwroot\bundles\jqueryvalidate\**" />
     <None Remove="wwwroot\css\**" />
     <None Remove="wwwroot\vendor\jquery-nice-select\**" />

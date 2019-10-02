@@ -10,6 +10,7 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using NBitcoin;
+using NBXplorer.Models;
 
 namespace BTCPayServer.Payments.Bitcoin
 {
@@ -141,7 +142,7 @@ namespace BTCPayServer.Payments.Bitcoin
                     onchainMethod.NextNetworkFee = Money.Zero;                    
                     break;
             }
-            onchainMethod.DepositAddress = (await prepare.ReserveAddress).ToString();
+            onchainMethod.DepositAddress = (await prepare.ReserveAddress).Item1.ToString();
             return onchainMethod;
         }
     }

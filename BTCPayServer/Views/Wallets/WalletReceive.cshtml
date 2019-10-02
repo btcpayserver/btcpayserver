@@ -8,33 +8,48 @@
 
 <div class="row no-gutters">
     <div class="col-lg-6  mx-auto my-auto ">
-        <div class="card text-center">
-            <h2 class="card-title">Next available @Model.CryptoCode address</h2>
-            <noscript>
-                <div class="card-body m-sm-0 p-sm-0">
-                    <div class="input-group">
-                        <input type="text" class="form-control " readonly="readonly" asp-for="Address" id="address"/>
+        <form method="post" asp-action="WalletReceive" class="card text-center">
+            @if (string.IsNullOrEmpty(Model.Address))
+            {
+                
+                <h2 class="card-title">Receive @Model.CryptoCode</h2>
+                <button class="btn btn-lg btn-primary m-2" type="submit" name="command" value="generate-new-address">Generate @Model.CryptoCode address</button>
+            }
+            else
+            {
+                <h2 class="card-title">Next available @Model.CryptoCode address</h2>
+                <noscript>
+                    <div class="card-body m-sm-0 p-sm-0">
+                        <div class="input-group">
+                            <input type="text" class="form-control " readonly="readonly" asp-for="Address" id="address"/>
+                            <div class="input-group-append">
+                                <span class="input-group-text fa fa-copy"> </span>
+                            </div>
+                        </div>
+                        
+                <button type="submit" name="command" value="unreserve-current-address" class="btn btn-link">Unreserve this address</button>
+                        
+                    </div>
+                </noscript>
+                <div class="only-for-js card-body m-sm-0 p-sm-0" id="app">
+                    <div class="qr-container mb-2">
+                        <img v-bind:src="srvModel.cryptoImage" class="qr-icon" />
+                        <qrcode v-bind:value="srvModel.address" :options="{ width: 256, margin: 0, color: {dark:'#000', light:'#fff'} }" tag="svg">
+                        </qrcode>
+                    </div>
+                    <div class="input-group copy" data-clipboard-target="#vue-address">
+                        <input type="text" class=" form-control " readonly="readonly" :value="srvModel.address" id="vue-address"/>
                         <div class="input-group-append">
                             <span class="input-group-text fa fa-copy"> </span>
                         </div>
                     </div>
-                </div>
-            </noscript>
-            <div class="only-for-js" id="app">
-                <div class="qr-container mb-2">
+                    
+                <button type="submit" name="command" value="unreserve-current-address" class="btn btn-link">Unreserve this address</button>
 
-                    <qrcode v-bind:value="srvModel.address" :options="{ width: 256, margin: 0, color: {dark:'#000', light:'#fff'} }" tag="svg">
-                    </qrcode>
                 </div>
-                <div class="input-group copy" data-clipboard-target="#vue-address">
-                    <input type="text" class=" form-control " readonly="readonly" :value="srvModel.address" id="vue-address"/>
-                    <div class="input-group-append">
-                        <span class="input-group-text fa fa-copy"> </span>
-                    </div>
-                </div>
-
-            </div>
-        </div>
+            }
+            
+        </form>
     </div>
 </div>
 
@@ -45,6 +60,9 @@
     <script type="text/javascript">
         var srvModel = @Safe.Json(Model);
         window.onload = function() {
+            if($("#app").length <1){
+                return;
+            }
             Vue.use(Toasted);
             var app = new Vue({
                 el: '#app',
@@ -75,7 +93,7 @@
     </script>
 
     <style> 
-        qr-icon {
+        .qr-icon {
                 height: 64px;
                 width: 64px;
                 position: absolute;

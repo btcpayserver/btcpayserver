@@ -72,6 +72,7 @@
 
   <ItemGroup Condition="'$(TargetFramework)' != 'netcoreapp2.1'">
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.0.0"></PackageReference>
   </ItemGroup>
 
 	<ItemGroup>

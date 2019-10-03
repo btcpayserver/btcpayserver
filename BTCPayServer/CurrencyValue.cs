@@ -20,7 +20,7 @@ namespace BTCPayServer
                 !decimal.TryParse(match.Groups[1].Value, out var v))
                 return false;
 
-            var currency = match.Groups.Last().Value.ToUpperInvariant();
+            var currency = match.Groups[match.Groups.Count - 1].Value.ToUpperInvariant();
             var currencyData = _CurrencyTable.GetCurrencyData(currency, false);
             if (currencyData == null)
                 return false;

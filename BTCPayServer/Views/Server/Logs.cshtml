@@ -16,12 +16,12 @@
         <li>
             @if (Model.LogFileOffset > 0)
             {
-                <a asp-action="LogsView" asp-route-offset="@(Model.LogFileOffset - 5)"><<</a>
+            <a asp-action="LogsView" asp-route-offset="@(Model.LogFileOffset - 5)">&lt;&lt;</a>
             }
             Showing @Model.LogFileOffset - (@(Model.LogFileOffset+Model.LogFiles.Count)) of @Model.LogFileCount
             @if ((Model.LogFileOffset+ Model.LogFiles.Count) < Model.LogFileCount)
             {
-                <a asp-action="LogsView" asp-route-offset="@(Model.LogFileOffset + Model.LogFiles.Count)">>></a>
+                <a asp-action="LogsView" asp-route-offset="@(Model.LogFileOffset + Model.LogFiles.Count)">&gt;&gt;</a>
             }
         </li>
     </ul>

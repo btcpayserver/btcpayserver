@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 #if NETCOREAPP21
 using IWebHostEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
+#else
+using Microsoft.Extensions.Hosting;
 #endif
 using Microsoft.AspNetCore.Builder;
 using System;

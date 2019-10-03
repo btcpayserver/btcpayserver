@@ -393,7 +393,7 @@ namespace BTCPayServer.Controllers
                         !transactionOutput.SubtractFeesFromOutput)
                         vm.AddModelError(model => model.Outputs[i].SubtractFeesFromOutput,
                             "You are sending your entire balance to the same destination, you should subtract the fees",
-                            ModelState);
+                            this);
                 }
             }
 
@@ -402,7 +402,7 @@ namespace BTCPayServer.Controllers
                 foreach (var subtractFeesOutput in subtractFeesOutputsCount)
                 {
                     vm.AddModelError(model => model.Outputs[subtractFeesOutput].SubtractFeesFromOutput,
-                        "You can only subtract fees from one output", ModelState);
+                        "You can only subtract fees from one output", this);
                 }
             }else if (vm.CurrentBalance == transactionAmountSum && !substractFees)
             {
@@ -415,7 +415,7 @@ namespace BTCPayServer.Controllers
                 for (var i = 0; i < vm.Outputs.Count; i++)
                 {
                     vm.AddModelError(model => model.Outputs[i].Amount,
-                        "You are sending more than what you own", ModelState);
+                        "You are sending more than what you own", this);
                 }
             }
 

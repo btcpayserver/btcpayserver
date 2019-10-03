@@ -12,7 +12,6 @@ using BTCPayServer.Storage.ViewModels;
 using BTCPayServer.Tests.Logging;
 using DBriize.Utils;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.Resources;

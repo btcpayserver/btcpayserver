@@ -60,6 +60,12 @@ namespace BTCPayServer.Hosting
     {
         public static IServiceCollection AddBTCPayServer(this IServiceCollection services, IConfiguration configuration)
         {
+#if NETCOREAPP21
+            services.AddSingleton<IConfigureOptions<MvcJsonOptions>, MVCConfigureOptions>();
+            services.AddSingleton<MvcNewtonsoftJsonOptions>();
+#else
+			services.AddSingleton<MvcNewtonsoftJsonOptions>(o =>  o.GetRequiredService<IOptions<MvcNewtonsoftJsonOptions>>().Value);
+#endif
             services.AddDbContext<ApplicationDbContext>((provider, o) =>
             {
                 var factory = provider.GetRequiredService<ApplicationDbContextFactory>();
@@ -329,5 +335,13 @@ namespace BTCPayServer.Hosting
         }
     }
 
-
+#if NETCOREAPP21
+    class MVCConfigureOptions : IConfigureOptions<MvcJsonOptions>
+    {
+        public void Configure(MvcJsonOptions options)
+        {
+            new Serializer(null).ConfigureSerializer(options.SerializerSettings);
+        }
+    }
+#endif
 }

@@ -31,6 +31,10 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitcoin.DataEncoders;
+using Newtonsoft.Json;
+#if NETCOREAPP21
+using IWebHostEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
+#endif
 
 namespace BTCPayServer.Controllers
 {
@@ -57,8 +61,7 @@ namespace BTCPayServer.Controllers
             IFeeProviderFactory feeRateProvider,
             LanguageService langService,
             ChangellyClientProvider changellyClientProvider,
-            IOptions<MvcJsonOptions> mvcJsonOptions,
-            IHostingEnvironment env, IHttpClientFactory httpClientFactory,
+            IWebHostEnvironment env, IHttpClientFactory httpClientFactory,
             PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
             CssThemeManager cssThemeManager)
         {
@@ -68,7 +71,6 @@ namespace BTCPayServer.Controllers
             _UserManager = userManager;
             _LangService = langService;
             _changellyClientProvider = changellyClientProvider;
-            MvcJsonOptions = mvcJsonOptions;
             _TokenController = tokenController;
             _WalletProvider = walletProvider;
             _Env = env;
@@ -95,7 +97,7 @@ namespace BTCPayServer.Controllers
         UserManager<ApplicationUser> _UserManager;
         private LanguageService _LangService;
         private readonly ChangellyClientProvider _changellyClientProvider;
-        IHostingEnvironment _Env;
+        IWebHostEnvironment _Env;
         private IHttpClientFactory _httpClientFactory;
         private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
         private readonly CssThemeManager _CssThemeManager;
@@ -731,7 +733,6 @@ namespace BTCPayServer.Controllers
         }
 
         public string GeneratedPairingCode { get; set; }
-        public IOptions<MvcJsonOptions> MvcJsonOptions { get; }
 
         [HttpGet]
         [Route("/api-tokens")]

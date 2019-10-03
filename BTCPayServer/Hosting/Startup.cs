@@ -1,4 +1,7 @@
 ﻿using Microsoft.AspNetCore.Hosting;
+#if NETCOREAPP21
+using IWebHostEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
+#endif
 using Microsoft.AspNetCore.Builder;
 using System;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,13 +34,13 @@ namespace BTCPayServer.Hosting
 {
     public class Startup
     {
-        public Startup(IConfiguration conf, IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public Startup(IConfiguration conf, IWebHostEnvironment env, ILoggerFactory loggerFactory)
         {
             Configuration = conf;
             _Env = env;
             LoggerFactory = loggerFactory;
         }
-        IHostingEnvironment _Env;
+        IWebHostEnvironment _Env;
         public IConfiguration Configuration
         {
             get; set;
@@ -199,7 +202,7 @@ namespace BTCPayServer.Hosting
 
         public void Configure(
             IApplicationBuilder app,
-            IHostingEnvironment env,
+            IWebHostEnvironment env,
             IServiceProvider prov,
             BTCPayServerOptions options,
             ILoggerFactory loggerFactory)
@@ -218,7 +221,7 @@ namespace BTCPayServer.Hosting
             }
         }
 
-        private static void ConfigureCore(IApplicationBuilder app, IHostingEnvironment env, IServiceProvider prov, ILoggerFactory loggerFactory, BTCPayServerOptions options)
+        private static void ConfigureCore(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider prov, ILoggerFactory loggerFactory, BTCPayServerOptions options)
         {
             if (env.IsDevelopment())
             {

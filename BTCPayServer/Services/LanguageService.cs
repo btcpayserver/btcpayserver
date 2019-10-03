@@ -6,6 +6,11 @@ using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
+#if NETCOREAPP21
+using IWebHostEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
+#else
+using Microsoft.AspNetCore.Hosting;
+#endif
 
 namespace BTCPayServer.Services
 {
@@ -27,7 +32,7 @@ namespace BTCPayServer.Services
     {
         private readonly Language[] _languages;
 
-        public LanguageService(IHostingEnvironment environment)
+        public LanguageService(IWebHostEnvironment environment)
         {
             var path = (environment as HostingEnvironment)?.WebRootPath;
             if (string.IsNullOrEmpty(path))

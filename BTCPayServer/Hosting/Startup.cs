@@ -229,9 +229,6 @@ namespace BTCPayServer.Hosting
             {
                 app.UseDeveloperExceptionPage();
             }
-            
-            app.UseCors();
-
             var forwardingOptions = new ForwardedHeadersOptions()
             {
                 ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
@@ -240,25 +237,39 @@ namespace BTCPayServer.Hosting
             forwardingOptions.KnownProxies.Clear();
             forwardingOptions.ForwardedHeaders = ForwardedHeaders.All;
             app.UseForwardedHeaders(forwardingOptions);
+#if !NETCOREAPP21
+			app.UseRouting();
+#endif
             app.UseCors();
             app.UsePayServer();
             app.UseStaticFiles();
             app.UseProviderStorage(options);
             app.UseAuthentication();
             app.UseSession();
+#if NETCOREAPP21
             app.UseSignalR(route =>
             {
                 AppHub.Register(route);
                 PaymentRequestHub.Register(route);
             });
+#endif
             app.UseWebSockets();
             app.UseStatusCodePages();
+#if NETCOREAPP21
             app.UseMvc(routes =>
             {
                 routes.MapRoute(
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
+#else
+            app.UseEndpoints(endpoints =>
+            {
+                AppHub.Register(endpoints);
+                PaymentRequestHub.Register(endpoints);
+                endpoints.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
+            });
+#endif
         }
     }
 }

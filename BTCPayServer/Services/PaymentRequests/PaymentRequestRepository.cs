@@ -7,7 +7,6 @@ using BTCPayServer.Data;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 
 namespace BTCPayServer.Services.PaymentRequests
 {
@@ -133,7 +132,7 @@ namespace BTCPayServer.Services.PaymentRequests
         {
             using (var context = _ContextFactory.CreateContext())
             {
-                var canDelete = !EnumerableExtensions.Any((await GetInvoicesForPaymentRequest(id)));
+                var canDelete = !(await GetInvoicesForPaymentRequest(id)).Any();
                 if (!canDelete) return false;
                 var pr = await FindPaymentRequest(id, userId);
                 if (pr == null)

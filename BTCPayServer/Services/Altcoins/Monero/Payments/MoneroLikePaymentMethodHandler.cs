@@ -6,16 +6,16 @@ using BTCPayServer.Data;
 using BTCPayServer.Lightning;
 using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
-using BTCPayServer.Altcoins.Monero.RPC.Models;
-using BTCPayServer.Altcoins.Monero.Services;
-using BTCPayServer.Altcoins.Monero.Utils;
+using BTCPayServer.Services.Altcoins.Monero.RPC.Models;
+using BTCPayServer.Services.Altcoins.Monero.Services;
+using BTCPayServer.Services.Altcoins.Monero.Utils;
 using BTCPayServer.Payments;
 using BTCPayServer.Rating;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using NBitcoin;
 
-namespace BTCPayServer.Altcoins.Monero.Payments
+namespace BTCPayServer.Services.Altcoins.Monero.Payments
 {
     public class MoneroLikePaymentMethodHandler : PaymentMethodHandlerBase<MoneroSupportedPaymentMethod, MoneroLikeSpecificBtcPayNetwork>
     {

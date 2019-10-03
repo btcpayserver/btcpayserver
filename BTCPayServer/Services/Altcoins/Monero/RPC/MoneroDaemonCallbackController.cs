@@ -1,7 +1,7 @@
 using BTCPayServer.Filters;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BTCPayServer.Altcoins.Monero.RPC
+namespace BTCPayServer.Services.Altcoins.Monero.RPC
 {
     [Route("[controller]")]
     [OnlyIfSupportAttribute("XMR")]

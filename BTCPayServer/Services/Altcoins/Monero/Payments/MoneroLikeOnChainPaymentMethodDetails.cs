@@ -1,6 +1,6 @@
 using BTCPayServer.Payments;
 
-namespace BTCPayServer.Altcoins.Monero.Payments
+namespace BTCPayServer.Services.Altcoins.Monero.Payments
 {
     public class MoneroLikeOnChainPaymentMethodDetails : IPaymentMethodDetails
     {

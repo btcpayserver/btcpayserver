@@ -1,6 +1,6 @@
 using BTCPayServer.Contracts;
 
-namespace BTCPayServer.Altcoins.Monero
+namespace BTCPayServer.Services.Altcoins.Monero
 {
     public class MoneroStoreNavExtension: IStoreNavExtension
     {

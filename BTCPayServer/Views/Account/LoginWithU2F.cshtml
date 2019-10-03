@@ -1,4 +1,4 @@
-@model BTCPayServer.Services.U2F.Models.LoginWithU2FViewModel
+@model BTCPayServer.U2F.Models.LoginWithU2FViewModel
 
 <form id="u2fForm" asp-action="LoginWithU2F" method="post" asp-route-returnUrl="@ViewData["ReturnUrl"]">
     <input type="hidden" asp-for="Version" />

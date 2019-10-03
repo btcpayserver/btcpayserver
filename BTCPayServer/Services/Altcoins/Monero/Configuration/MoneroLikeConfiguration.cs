@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace BTCPayServer.Altcoins.Monero.Configuration
+namespace BTCPayServer.Services.Altcoins.Monero.Configuration
 {
     public class MoneroLikeConfiguration
     {

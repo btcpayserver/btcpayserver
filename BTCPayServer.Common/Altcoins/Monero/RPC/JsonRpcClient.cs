@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
-namespace BTCPayServer.Altcoins.Monero.RPC
+namespace BTCPayServer.Services.Altcoins.Monero.RPC
 {
     public class JsonRpcClient
     {

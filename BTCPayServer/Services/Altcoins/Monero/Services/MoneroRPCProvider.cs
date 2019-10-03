@@ -3,12 +3,12 @@ using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Net.Http;
 using System.Threading.Tasks;
-using BTCPayServer.Altcoins.Monero.Configuration;
-using BTCPayServer.Altcoins.Monero.RPC;
-using BTCPayServer.Altcoins.Monero.RPC.Models;
+using BTCPayServer.Services.Altcoins.Monero.Configuration;
+using BTCPayServer.Services.Altcoins.Monero.RPC;
+using BTCPayServer.Services.Altcoins.Monero.RPC.Models;
 using NBitcoin;
 
-namespace BTCPayServer.Altcoins.Monero.Services
+namespace BTCPayServer.Services.Altcoins.Monero.Services
 {
     public class MoneroRPCProvider
     {

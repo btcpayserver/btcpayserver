@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace BTCPayServer.Altcoins.Monero.RPC.Models
+namespace BTCPayServer.Services.Altcoins.Monero.RPC.Models
 {
     public partial class CreateAddressResponse
     {

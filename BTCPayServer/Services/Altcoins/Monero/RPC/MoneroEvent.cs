@@ -1,4 +1,4 @@
-namespace BTCPayServer.Altcoins.Monero.RPC
+namespace BTCPayServer.Services.Altcoins.Monero.RPC
 {
     public class MoneroEvent
     {

@@ -57,11 +57,11 @@ using System.Security;
 using System.Runtime.CompilerServices;
 using System.Net;
 using BTCPayServer.Models.AccountViewModels;
-using BTCPayServer.Services.U2F.Models;
 using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using NBXplorer.DerivationStrategy;
+using BTCPayServer.U2F.Models;
 
 namespace BTCPayServer.Tests
 {

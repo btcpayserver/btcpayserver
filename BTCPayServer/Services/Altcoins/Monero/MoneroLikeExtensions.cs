@@ -2,14 +2,14 @@ using System;
 using System.Linq;
 using BTCPayServer.Configuration;
 using BTCPayServer.Contracts;
-using BTCPayServer.Altcoins.Monero.Configuration;
-using BTCPayServer.Altcoins.Monero.Payments;
-using BTCPayServer.Altcoins.Monero.Services;
+using BTCPayServer.Services.Altcoins.Monero.Configuration;
+using BTCPayServer.Services.Altcoins.Monero.Payments;
+using BTCPayServer.Services.Altcoins.Monero.Services;
 using BTCPayServer.Payments;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace BTCPayServer.Altcoins.Monero
+namespace BTCPayServer.Services.Altcoins.Monero
 {
     public static class MoneroLikeExtensions
     {

@@ -1,5 +1,5 @@
 ﻿using BTCPayServer.Configuration;
-using BTCPayServer.Altcoins.Monero;
+using BTCPayServer.Services.Altcoins.Monero;
 using Microsoft.Extensions.Logging;
 using System;
 using System.IdentityModel.Tokens.Jwt;
@@ -40,7 +40,7 @@ using NBXplorer.DerivationStrategy;
 using NicolasDorier.RateLimits;
 using Npgsql;
 using BTCPayServer.Services.Apps;
-using BTCPayServer.Services.U2F;
+using BTCPayServer.U2F;
 using BundlerMinifier.TagHelpers;
 using OpenIddict.EntityFrameworkCore.Models;
 

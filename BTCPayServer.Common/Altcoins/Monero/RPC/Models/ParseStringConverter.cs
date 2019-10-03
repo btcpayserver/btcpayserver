@@ -2,7 +2,7 @@ using System;
 using System.Globalization;
 using Newtonsoft.Json;
 
-namespace BTCPayServer.Altcoins.Monero.RPC.Models
+namespace BTCPayServer.Services.Altcoins.Monero.RPC.Models
 {
     internal class ParseStringConverter : JsonConverter
     {

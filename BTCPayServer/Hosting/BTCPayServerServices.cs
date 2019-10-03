@@ -340,7 +340,7 @@ namespace BTCPayServer.Hosting
     {
         public void Configure(MvcJsonOptions options)
         {
-            new Serializer(null).ConfigureSerializer(options.SerializerSettings);
+            new NBXplorer.Serializer(null).ConfigureSerializer(options.SerializerSettings);
         }
     }
 #endif

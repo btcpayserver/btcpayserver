@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using BTCPayServer.Data;
-using BTCPayServer.Models;
 using BTCPayServer.Rating;
-using BTCPayServer.Shitcoins.Monero.Payments;
+using BTCPayServer.Services.Altcoins.Monero.Payments;
 using BTCPayServer.Services.Invoices;
 using Newtonsoft.Json.Linq;
 

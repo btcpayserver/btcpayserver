@@ -21,8 +21,6 @@ using BTCPayServer.HostedServices;
 
 #if NETCOREAPP21
 using IHostApplicationLifetime = Microsoft.AspNetCore.Hosting.IApplicationLifetime;
-#else
-using Microsoft.AspNetCore.Hosting;
 #endif
 
 namespace BTCPayServer.Payments.Bitcoin

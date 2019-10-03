@@ -1,5 +1,5 @@
 ﻿using BTCPayServer.Configuration;
-using BTCPayServer.Altcoins.Monero;
+using BTCPayServer.Services.Altcoins.Monero;
 using Microsoft.Extensions.Logging;
 using System;
 using System.IdentityModel.Tokens.Jwt;

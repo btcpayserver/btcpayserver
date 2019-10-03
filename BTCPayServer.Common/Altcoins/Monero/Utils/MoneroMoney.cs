@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace BTCPayServer.Altcoins.Monero.Utils
+namespace BTCPayServer.Services.Altcoins.Monero.Utils
 {
     public class MoneroMoney
     {

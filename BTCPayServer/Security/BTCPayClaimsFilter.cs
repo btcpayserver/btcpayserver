@@ -10,7 +10,6 @@ using Microsoft.Extensions.Options;
 
 namespace BTCPayServer.Security
 {
-
     public class BTCPayClaimsFilter : IAsyncAuthorizationFilter, IConfigureOptions<MvcOptions>
     {
         UserManager<ApplicationUser> _userManager;

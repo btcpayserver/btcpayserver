@@ -8,10 +8,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
-using BTCPayServer.Altcoins.Monero.Configuration;
-using BTCPayServer.Altcoins.Monero.Payments;
-using BTCPayServer.Altcoins.Monero.RPC.Models;
-using BTCPayServer.Altcoins.Monero.Services;
+using BTCPayServer.Services.Altcoins.Monero.Configuration;
+using BTCPayServer.Services.Altcoins.Monero.Payments;
+using BTCPayServer.Services.Altcoins.Monero.RPC.Models;
+using BTCPayServer.Services.Altcoins.Monero.Services;
 using BTCPayServer.Payments;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Stores;
@@ -21,7 +21,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using BTCPayServer.Filters;
 
-namespace BTCPayServer.Altcoins.Monero.UI
+namespace BTCPayServer.Services.Altcoins.Monero.UI
 {
     [Route("stores/{storeId}/monerolike")]
     [OnlyIfSupportAttribute("XMR")]

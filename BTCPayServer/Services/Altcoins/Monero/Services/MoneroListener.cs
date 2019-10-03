@@ -6,10 +6,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
-using BTCPayServer.Altcoins.Monero.Configuration;
-using BTCPayServer.Altcoins.Monero.Payments;
-using BTCPayServer.Altcoins.Monero.RPC;
-using BTCPayServer.Altcoins.Monero.RPC.Models;
+using BTCPayServer.Services.Altcoins.Monero.Configuration;
+using BTCPayServer.Services.Altcoins.Monero.Payments;
+using BTCPayServer.Services.Altcoins.Monero.RPC;
+using BTCPayServer.Services.Altcoins.Monero.RPC.Models;
 using BTCPayServer.Payments;
 using BTCPayServer.Services.Invoices;
 using Microsoft.Extensions.Hosting;
@@ -17,7 +17,7 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBXplorer;
 
-namespace BTCPayServer.Altcoins.Monero.Services
+namespace BTCPayServer.Services.Altcoins.Monero.Services
 {
     public class MoneroListener : IHostedService
     {
@@ -231,7 +231,7 @@ namespace BTCPayServer.Altcoins.Monero.Services
         public Task StopAsync(CancellationToken cancellationToken)
         {
             leases.Dispose();
-            _Cts.Cancel();
+            _Cts?.Cancel();
             return Task.CompletedTask;
         }
 

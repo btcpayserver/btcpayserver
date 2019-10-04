@@ -7,6 +7,7 @@
   <ItemGroup>
     <Compile Remove="Build\**" />
     <Compile Remove="Authentication\OpenId\**" Condition="'$(TargetFramework)' != 'netcoreapp2.1'" />
+    <Compile Remove="Storage\Services\Providers\GoogleCloudStorage\**" Condition="'$(TargetFramework)' != 'netcoreapp2.1'" />
     <Compile Remove="Authentication\OpenId3\**" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
     <Compile Remove="wwwroot\bundles\jqueryvalidate\**" />
     <Compile Remove="wwwroot\css\**" />

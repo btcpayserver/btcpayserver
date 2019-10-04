@@ -8,9 +8,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Migrations;
-#if NETCOREAPP21
 using Microsoft.EntityFrameworkCore;
-#endif
 
 namespace BTCPayServer.Services.Stores
 {
@@ -41,7 +39,7 @@ namespace BTCPayServer.Services.Stores
             using (var ctx = _ContextFactory.CreateContext())
             {
                 return (await ctx
-                    .UserStore.AsAsyncEnumerable()
+                    .UserStore
                     .Where(us => us.ApplicationUserId == userId && us.StoreDataId == storeId)
                     .Select(us => new
                     {
@@ -71,7 +69,7 @@ namespace BTCPayServer.Services.Stores
             using (var ctx = _ContextFactory.CreateContext())
             {
                 return await ctx
-                    .UserStore.AsAsyncEnumerable()
+                    .UserStore
                     .Where(u => u.StoreDataId == storeId)
                     .Select(u => new StoreUser()
                     {
@@ -86,7 +84,7 @@ namespace BTCPayServer.Services.Stores
         {
             using (var ctx = _ContextFactory.CreateContext())
             {
-                return (await ctx.UserStore.AsAsyncEnumerable()
+                return (await ctx.UserStore
                     .Where(u => u.ApplicationUserId == userId)
                     .Select(u => new { u.StoreData, u.Role })
                     .ToArrayAsync())
@@ -124,7 +122,7 @@ namespace BTCPayServer.Services.Stores
             {
                 if (!ctx.Database.SupportDropForeignKey())
                     return;
-                foreach (var store in await ctx.Stores.AsAsyncEnumerable().Where(s => s.UserStores.Where(u => u.Role == StoreRoles.Owner).Count() == 0).ToArrayAsync())
+                foreach (var store in await ctx.Stores.Where(s => s.UserStores.Where(u => u.Role == StoreRoles.Owner).Count() == 0).ToArrayAsync())
                 {
                     ctx.Stores.Remove(store);
                 }
@@ -151,7 +149,7 @@ namespace BTCPayServer.Services.Stores
             {
                 if (ctx.Database.SupportDropForeignKey())
                 {
-                    if (await ctx.UserStore.AsAsyncEnumerable().Where(u => u.StoreDataId == storeId && u.Role == StoreRoles.Owner).CountAsync() == 0)
+                    if (await ctx.UserStore.Where(u => u.StoreDataId == storeId && u.Role == StoreRoles.Owner).CountAsync() == 0)
                     {
                         var store = await ctx.Stores.FindAsync(storeId);
                         if (store != null)
@@ -195,7 +193,7 @@ namespace BTCPayServer.Services.Stores
         {
             using (var ctx = _ContextFactory.CreateContext())
             {
-                var storeUser = await ctx.UserStore.AsAsyncEnumerable().FirstOrDefaultAsync(o => o.StoreDataId == storeId && o.ApplicationUserId == userId);
+                var storeUser = await ctx.UserStore.AsQueryable().FirstOrDefaultAsync(o => o.StoreDataId == storeId && o.ApplicationUserId == userId);
                 if (storeUser == null)
                     return;
                 ctx.UserStore.Remove(storeUser);

@@ -374,7 +374,7 @@ namespace BTCPayServer.Payments.Bitcoin
                 paymentMethod.Calculate().Due > Money.Zero)
             {
                 var address = await wallet.ReserveAddressAsync(strategy);
-                btc.DepositAddress = address.ToString();
+                btc.DepositAddress = address.Item1.ToString();
                 await _InvoiceRepository.NewAddress(invoice.Id, btc, wallet.Network);
                 _Aggregator.Publish(new InvoiceNewAddressEvent(invoice.Id, address.ToString(), wallet.Network));
                 paymentMethod.SetPaymentMethodDetails(btc);

@@ -8,8 +8,6 @@ using System;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using AspNet.Security.OpenIdConnect.Extensions;
-using AspNet.Security.OpenIdConnect.Primitives;
 using BTCPayServer.Authentication.OpenId;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
@@ -22,6 +20,15 @@ using Microsoft.Extensions.Options;
 using OpenIddict.Abstractions;
 using OpenIddict.Core;
 using OpenIddict.Server;
+#if NETCOREAPP21
+using OpenIddictRequest = AspNet.Security.OpenIdConnect.Primitives.OpenIdConnectRequest;
+using OpenIdConnectDefaults = OpenIddict.Server.OpenIddictServerDefaults;
+using AspNet.Security.OpenIdConnect.Extensions;
+using AspNet.Security.OpenIdConnect.Primitives;
+#else
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+#endif
 
 namespace BTCPayServer.Controllers
 {
@@ -49,7 +56,7 @@ namespace BTCPayServer.Controllers
 
         [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)] 
         [HttpGet("/connect/authorize")]
-        public async Task<IActionResult> Authorize(OpenIdConnectRequest openIdConnectRequest)
+        public async Task<IActionResult> Authorize(OpenIddictRequest openIdConnectRequest)
         {
             // Retrieve the application details from the database.
             var application = await _applicationManager.FindByClientIdAsync(openIdConnectRequest.ClientId);
@@ -84,7 +91,7 @@ namespace BTCPayServer.Controllers
 
         [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
         [HttpPost("/connect/authorize")]
-        public async Task<IActionResult> Authorize(OpenIdConnectRequest openIdConnectRequest,
+        public async Task<IActionResult> Authorize(OpenIddictRequest openIdConnectRequest,
             string consent, bool createAuthorization = true)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -111,7 +118,7 @@ namespace BTCPayServer.Controllers
                 default:
                     // Notify OpenIddict that the authorization grant has been denied by the resource owner
                     // to redirect the user agent to the client application using the appropriate response_mode.
-                    return Forbid(OpenIddictServerDefaults.AuthenticationScheme);
+                    return Forbid(OpenIdConnectDefaults.AuthenticationScheme);
             }
 
 

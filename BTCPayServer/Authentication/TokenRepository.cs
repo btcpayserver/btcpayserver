@@ -7,8 +7,10 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+#if NETCOREAPP21
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
+#endif
 using System.Linq;
 
 namespace BTCPayServer.Authentication
@@ -37,8 +39,8 @@ namespace BTCPayServer.Authentication
                 return Array.Empty<BitTokenEntity>();
             using (var ctx = _Factory.CreateContext())
             {
-                return (await ctx.PairedSINData
-                    .Where(p => p.SIN == sin)
+                return (await ctx.PairedSINData.AsAsyncEnumerable()
+                    .AsAsyncEnumerable().Where(p => p.SIN == sin)
                     .ToListAsync())
                     .Select(p => CreateTokenEntity(p))
                     .ToArray();
@@ -49,7 +51,7 @@ namespace BTCPayServer.Authentication
         {
             using (var ctx = _Factory.CreateContext())
             {
-                return await ctx.ApiKeys.Where(o => o.Id == apiKey).Select(o => o.StoreId).FirstOrDefaultAsync();
+                return await ctx.ApiKeys.AsAsyncEnumerable().AsAsyncEnumerable().Where(o => o.Id == apiKey).Select(o => o.StoreId).FirstOrDefaultAsync();
             }
         }
 
@@ -67,7 +69,7 @@ namespace BTCPayServer.Authentication
 
             using (var ctx = _Factory.CreateContext())
             {
-                var existing = await ctx.ApiKeys.Where(o => o.StoreId == storeId).FirstOrDefaultAsync();
+                var existing = await ctx.ApiKeys.AsAsyncEnumerable().Where(o => o.StoreId == storeId).FirstOrDefaultAsync();
                 if (existing != null)
                 {
                     ctx.ApiKeys.Remove(existing);
@@ -81,7 +83,7 @@ namespace BTCPayServer.Authentication
         {
             using (var ctx = _Factory.CreateContext())
             {
-                return await ctx.ApiKeys.Where(o => o.StoreId == storeId).Select(c => c.Id).ToArrayAsync();
+                return await ctx.ApiKeys.AsAsyncEnumerable().AsAsyncEnumerable().Where(o => o.StoreId == storeId).Select(c => c.Id).ToArrayAsync();
             }
         }
 
@@ -169,7 +171,7 @@ namespace BTCPayServer.Authentication
                 ctx.PairingCodes.Remove(pairingCode);
 
                 // Can have concurrency issues... but no harm can be done
-                var alreadyUsed = await ctx.PairedSINData.Where(p => p.SIN == pairingCode.SIN && p.StoreDataId != pairingCode.StoreDataId).AnyAsync();
+                var alreadyUsed = await ctx.PairedSINData.AsAsyncEnumerable().Where(p => p.SIN == pairingCode.SIN && p.StoreDataId != pairingCode.StoreDataId).AnyAsync();
                 if (alreadyUsed)
                     return PairingResult.ReusedKey;
                 await ctx.PairedSINData.AddAsync(new PairedSINData()
@@ -190,7 +192,7 @@ namespace BTCPayServer.Authentication
         {
             using (var ctx = _Factory.CreateContext())
             {
-                return (await ctx.PairedSINData.Where(p => p.StoreDataId == storeId).ToListAsync())
+                return (await ctx.PairedSINData.AsAsyncEnumerable().Where(p => p.StoreDataId == storeId).ToListAsync())
                         .Select(c => CreateTokenEntity(c))
                         .ToArray();
             }

@@ -7,10 +7,15 @@ using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.U2F.Models;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using U2F.Core.Models;
 using U2F.Core.Utils;
+#if NETCOREAPP21
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
+#else
+using Microsoft.Extensions;
+#endif
 
 namespace BTCPayServer.U2F
 {
@@ -34,7 +39,7 @@ namespace BTCPayServer.U2F
         {
             using (var context = _contextFactory.CreateContext())
             {
-                return await context.U2FDevices
+                return await context.U2FDevices.AsAsyncEnumerable()
                     .Where(device => device.ApplicationUserId.Equals(userId, StringComparison.InvariantCulture))
                     .ToListAsync();
             }
@@ -59,7 +64,7 @@ namespace BTCPayServer.U2F
         {
             using (var context = _contextFactory.CreateContext())
             {
-                return await context.U2FDevices.AnyAsync(fDevice => fDevice.ApplicationUserId.Equals(userId, StringComparison.InvariantCulture));
+                return await context.U2FDevices.AsAsyncEnumerable().AnyAsync(fDevice => fDevice.ApplicationUserId.Equals(userId, StringComparison.InvariantCulture));
             }
         }
         
@@ -144,7 +149,7 @@ namespace BTCPayServer.U2F
 
             using (var context = _contextFactory.CreateContext())
             {
-                var device = await context.U2FDevices.SingleOrDefaultAsync(fDevice =>
+                var device = await context.U2FDevices.AsAsyncEnumerable().SingleOrDefaultAsync(fDevice =>
                     fDevice.ApplicationUserId.Equals(userId, StringComparison.InvariantCulture) &&
                     fDevice.KeyHandle.SequenceEqual(authenticateResponse.KeyHandle.Base64StringToByteArray()));
 
@@ -178,7 +183,7 @@ namespace BTCPayServer.U2F
         {
             using (var context = _contextFactory.CreateContext())
             {
-                var devices = await context.U2FDevices.Where(fDevice =>
+                var devices = await context.U2FDevices.AsAsyncEnumerable().Where(fDevice =>
                     fDevice.ApplicationUserId.Equals(userId, StringComparison.InvariantCulture)).ToListAsync();
 
                 if (devices.Count == 0)

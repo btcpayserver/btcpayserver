@@ -32,7 +32,11 @@ using System.Security.Claims;
 using System.Security.Principal;
 using System.Text;
 using System.Threading;
+#if NETCOREAPP21
 using AspNet.Security.OpenIdConnect.Primitives;
+#else
+using OpenIdConnectConstants = OpenIddict.Abstractions.OpenIddictConstants;
+#endif
 using Xunit;
 using BTCPayServer.Services;
 using System.Net.Http;

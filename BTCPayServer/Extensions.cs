@@ -40,6 +40,12 @@ namespace BTCPayServer
 {
     public static class Extensions
     {
+#if NETCOREAPP21
+        public static T AsAsyncEnumerable<T>(this T obj)
+        {
+            return obj;
+        }
+#endif
         public static string Truncate(this string value, int maxLength)
         {
             if (string.IsNullOrEmpty(value))

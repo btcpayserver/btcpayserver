@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 #if NETCOREAPP21
 using IWebHostEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
+using AspNet.Security.OpenIdConnect.Primitives;
 #else
 using Microsoft.Extensions.Hosting;
+using OpenIdConnectConstants = OpenIddict.Abstractions.OpenIddictConstants;
 #endif
 using Microsoft.AspNetCore.Builder;
 using System;
@@ -18,7 +20,6 @@ using Microsoft.Extensions.Configuration;
 using BTCPayServer.Configuration;
 using System.IO;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using AspNet.Security.OpenIdConnect.Primitives;
 using BTCPayServer.Security;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using OpenIddict.Abstractions;
@@ -154,6 +155,7 @@ namespace BTCPayServer.Hosting
                 })
                 .AddServer(options =>
                 {
+#if NETCOREAPP21
                     options.EnableRequestCaching();
                     //Disabled so that Tor works with OpenIddict too
                     options.DisableHttpsRequirement();
@@ -161,11 +163,26 @@ namespace BTCPayServer.Hosting
                     // Note: if you don't call this method, you won't be able to
                     // bind OpenIdConnectRequest or OpenIdConnectResponse parameters.
                     options.UseMvc();
+#else
+                    options.UseAspNetCore()
+                        .EnableStatusCodePagesIntegration()
+                        .EnableAuthorizationEndpointPassthrough()
+                        .EnableLogoutEndpointPassthrough()
+                        .EnableTokenEndpointPassthrough()
+                        .EnableRequestCaching()
+                        .DisableTransportSecurityRequirement();
+#endif
 
                     // Enable the token endpoint (required to use the password flow).
+#if NETCOREAPP21
                     options.EnableTokenEndpoint("/connect/token");
                     options.EnableAuthorizationEndpoint("/connect/authorize");
                     options.EnableLogoutEndpoint("/connect/logout");
+#else
+                    options.SetTokenEndpointUris("/connect/token");
+                    options.SetAuthorizationEndpointUris("/connect/authorize");
+                    options.SetLogoutEndpointUris("/connect/logout");
+#endif
 
                     //we do not care about these granular controls for now
                     options.IgnoreScopePermissions();
@@ -191,7 +208,7 @@ namespace BTCPayServer.Hosting
                         RestAPIPolicies.BTCPayScopes.ViewApps,
                         RestAPIPolicies.BTCPayScopes.AppManagement
                         );
-                    
+
                     options.AddEventHandler<PasswordGrantTypeEventHandler>();
                     options.AddEventHandler<AuthorizationCodeGrantTypeEventHandler>();
                     options.AddEventHandler<RefreshTokenGrantTypeEventHandler>();

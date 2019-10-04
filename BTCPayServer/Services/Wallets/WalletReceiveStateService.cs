@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,10 +33,12 @@ namespace BTCPayServer.Services.Wallets
             _walletReceiveState.AddOrReplace(walletId, information);
         }
 
-        public IEnumerable<KeyValuePair<WalletId, KeyPathInformation>> GetByDerivation(
+        public IEnumerable<KeyValuePair<WalletId, KeyPathInformation>> GetByDerivation(string cryptoCode,
             DerivationStrategyBase derivationStrategyBase)
         {
-            return _walletReceiveState.Where(pair => pair.Value.DerivationStrategy == derivationStrategyBase);
+            return _walletReceiveState.Where(pair =>
+                pair.Key.CryptoCode.Equals(cryptoCode, StringComparison.InvariantCulture) &&
+                pair.Value.DerivationStrategy == derivationStrategyBase);
         }
     }
 }

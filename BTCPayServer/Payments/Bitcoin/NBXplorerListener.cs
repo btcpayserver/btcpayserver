@@ -145,7 +145,11 @@ namespace BTCPayServer.Payments.Bitcoin
                                 break;
                             case NBXplorer.Models.NewTransactionEvent evt:
                                 wallet.InvalidateCache(evt.DerivationStrategy);
-                                _Aggregator.Publish(evt);
+                                _Aggregator.Publish(new NewOnChainTransactionEvent()
+                                {
+                                    CryptoCode = wallet.Network.CryptoCode,
+                                    NewTransactionEvent = evt
+                                });
                                 foreach (var output in network.GetValidOutputs(evt)) 
                                 {
                                         var key = output.Item1.ScriptPubKey.Hash + "#" + network.CryptoCode.ToUpperInvariant();

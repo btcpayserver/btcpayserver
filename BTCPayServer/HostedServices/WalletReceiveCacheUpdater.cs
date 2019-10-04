@@ -5,7 +5,6 @@ using BTCPayServer.Events;
 using BTCPayServer.Services.Wallets;
 using Microsoft.Extensions.Hosting;
 using NBXplorer;
-using NBXplorer.Models;
 
 namespace BTCPayServer.HostedServices
 {
@@ -28,10 +27,11 @@ namespace BTCPayServer.HostedServices
             _Leases.Add(_EventAggregator.Subscribe<WalletChangedEvent>(evt =>
                 _WalletReceiveStateService.Remove(evt.WalletId)));
 
-            _Leases.Add(_EventAggregator.Subscribe<NewTransactionEvent>(evt =>
+            _Leases.Add(_EventAggregator.Subscribe<NewOnChainTransactionEvent>(evt =>
             {
-                var matching = _WalletReceiveStateService.GetByDerivation(evt.DerivationStrategy).Where(pair =>
-                    evt.Outputs.Any(output => output.ScriptPubKey == pair.Value.ScriptPubKey));
+                var matching = _WalletReceiveStateService
+                    .GetByDerivation(evt.CryptoCode, evt.NewTransactionEvent.DerivationStrategy).Where(pair =>
+                        evt.NewTransactionEvent.Outputs.Any(output => output.ScriptPubKey == pair.Value.ScriptPubKey));
 
                 foreach (var keyValuePair in matching)
                 {

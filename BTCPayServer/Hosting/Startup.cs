@@ -270,6 +270,9 @@ namespace BTCPayServer.Hosting
             app.UseStaticFiles();
             app.UseProviderStorage(options);
             app.UseAuthentication();
+#if !NETCOREAPP21
+            app.UseAuthorization();
+#endif
             app.UseSession();
 #if NETCOREAPP21
             app.UseSignalR(route =>
@@ -292,6 +295,7 @@ namespace BTCPayServer.Hosting
             {
                 AppHub.Register(endpoints);
                 PaymentRequestHub.Register(endpoints);
+                endpoints.MapControllers();
                 endpoints.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
             });
 #endif

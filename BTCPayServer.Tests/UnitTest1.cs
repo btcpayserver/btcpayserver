@@ -76,7 +76,7 @@ namespace BTCPayServer.Tests
         [Trait("Fast", "Fast")]
         public async Task CheckNoDeadLink()
         {
-            var views = Path.Combine(LanguageService.TryGetSolutionDirectoryInfo().FullName, "BTCPayServer", "Views");
+            var views = Path.Combine(TestUtils.TryGetSolutionDirectoryInfo().FullName, "BTCPayServer", "Views");
             var viewFiles = Directory.EnumerateFiles(views, "*.cshtml", SearchOption.AllDirectories).ToArray();
             Assert.NotEmpty(viewFiles);
             Regex regex = new Regex("href=\"(http.*?)[\"#]");

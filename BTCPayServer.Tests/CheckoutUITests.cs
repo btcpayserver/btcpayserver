@@ -17,6 +17,7 @@ namespace BTCPayServer.Tests
     [Trait("Selenium", "Selenium")]
     public class CheckoutUITests
     {
+        public const int TestTimeout = 60_000;
         public CheckoutUITests(ITestOutputHelper helper)
         {
             Logs.Tester = new XUnitLog(helper) {Name = "Tests"};
@@ -24,7 +25,7 @@ namespace BTCPayServer.Tests
         }
        
         
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         public void CanCreateInvoice()
         {
             using (var s = SeleniumTester.Create())
@@ -84,7 +85,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         public async Task CanUseLanguageDropdown()
         {
             using (var s = SeleniumTester.Create())
@@ -113,7 +114,7 @@ namespace BTCPayServer.Tests
             }
         }
         
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         public void CanUsePaymentMethodDropdown()
         {
             using (var s = SeleniumTester.Create())
@@ -156,7 +157,7 @@ namespace BTCPayServer.Tests
             }
         }
         
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         public void CanUseLightningSatsFeature()
         {
             using (var s = SeleniumTester.Create())

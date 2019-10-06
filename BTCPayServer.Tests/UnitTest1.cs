@@ -65,6 +65,7 @@ namespace BTCPayServer.Tests
 {
     public class UnitTest1
     {
+        public const int TestTimeout = 60_000;
         public UnitTest1(ITestOutputHelper helper)
         {
             Logs.Tester = new XUnitLog(helper) { Name = "Tests" };
@@ -2090,7 +2091,7 @@ noninventoryitem:
             Assert.True(client.WaitAllRunning(default).Wait(100));
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Fast", "Fast")]
         public void PosDataParser_ParsesCorrectly()
         {
@@ -2113,7 +2114,7 @@ noninventoryitem:
             });
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task PosDataParser_ParsesCorrectly_Slower()
         {
@@ -2159,7 +2160,7 @@ noninventoryitem:
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public void CanExportInvoicesJson()
         {
@@ -2234,7 +2235,7 @@ noninventoryitem:
                 });
             }
         }
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public void CanChangeNetworkFeeMode()
         {
@@ -2315,7 +2316,7 @@ noninventoryitem:
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public void CanExportInvoicesCsv()
         {
@@ -2355,7 +2356,7 @@ noninventoryitem:
 
 
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public void CanCreateAndDeleteApps()
         {
@@ -2392,7 +2393,7 @@ noninventoryitem:
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public void CanCreateStrangeInvoice()
         {
@@ -2453,7 +2454,7 @@ noninventoryitem:
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public void InvoiceFlowThroughDifferentStatesCorrectly()
         {
@@ -2620,22 +2621,7 @@ noninventoryitem:
             }
         }
 
-        //[Fact]
-        //[Trait("Integration", "Integration")]
-        // 29 january, the exchange is down
-        //public void CheckQuadrigacxRateProvider()
-        //{
-        //    var quadri = new QuadrigacxRateProvider();
-        //    var rates = quadri.GetRatesAsync().GetAwaiter().GetResult();
-        //    Assert.NotEmpty(rates);
-        //    Assert.NotEqual(0.0m, rates.First().BidAsk.Bid);
-        //    Assert.NotEqual(0.0m, rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("BTC_CAD")).Bid);
-        //    Assert.NotEqual(0.0m, rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("BTC_USD")).Bid);
-        //    Assert.NotEqual(0.0m, rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("LTC_CAD")).Bid);
-        //    Assert.Null(rates.GetRate(QuadrigacxRateProvider.QuadrigacxName, CurrencyPair.Parse("LTC_USD")));
-        //}
-
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public void CanQueryDirectProviders()
         {
@@ -2677,7 +2663,7 @@ noninventoryitem:
             factory.Providers["kraken"].GetRatesAsync(default).GetAwaiter().GetResult();
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public void CanGetRateCryptoCurrenciesByDefault()
         {
@@ -2732,7 +2718,7 @@ noninventoryitem:
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CheckLogsRoute()
         {
@@ -2805,7 +2791,7 @@ noninventoryitem:
             return name;
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Fast", "Fast")]
         public void CheckRatesProvider()
         {
@@ -2892,7 +2878,7 @@ noninventoryitem:
             Assert.True(settings.AccountDerivation is DirectDerivationStrategy s3 && s3.Segwit);
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Fast", "Fast")]
         public void CheckParseStatusMessageModel()
         {
@@ -2928,7 +2914,7 @@ noninventoryitem:
 
         }
         
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
        public  async Task CanCreateInvoiceWithSpecificPaymentMethods()
         {
@@ -2963,7 +2949,7 @@ noninventoryitem:
         
 
         
-         [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanLoginWithNoSecondaryAuthSystemsOrRequestItWhenAdded()
         {

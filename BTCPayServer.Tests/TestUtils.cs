@@ -9,11 +9,22 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Internal;
 #endif
 using Xunit.Sdk;
+using System.Linq;
 
 namespace BTCPayServer.Tests
 {
     public static class TestUtils
     {
+        public static DirectoryInfo TryGetSolutionDirectoryInfo(string currentPath = null)
+        {
+            var directory = new DirectoryInfo(
+                currentPath ?? Directory.GetCurrentDirectory());
+            while (directory != null && !directory.GetFiles("*.sln").Any())
+            {
+                directory = directory.Parent;
+            }
+            return directory;
+        }
         public static FormFile GetFormFile(string filename, string content)
         {
             File.WriteAllText(filename, content);

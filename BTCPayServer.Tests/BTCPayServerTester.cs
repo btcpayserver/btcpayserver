@@ -143,6 +143,7 @@ namespace BTCPayServer.Tests
             _Host = new WebHostBuilder()
                     .UseConfiguration(conf)
                     .UseContentRoot(FindBTCPayServerDirectory())
+                    .UseWebRoot(Path.Combine(FindBTCPayServerDirectory(), "wwwroot"))
                     .ConfigureServices(s =>
                     {
                         s.AddLogging(l =>
@@ -267,7 +268,7 @@ namespace BTCPayServer.Tests
 
         private string FindBTCPayServerDirectory()
         {
-            var solutionDirectory = LanguageService.TryGetSolutionDirectoryInfo(Directory.GetCurrentDirectory());
+            var solutionDirectory = TestUtils.TryGetSolutionDirectoryInfo(Directory.GetCurrentDirectory());
             return Path.Combine(solutionDirectory.FullName, "BTCPayServer");
         }
 

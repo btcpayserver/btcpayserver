@@ -79,7 +79,11 @@ namespace BTCPayServer.Hosting
                 //    StyleSrc = "'self' 'unsafe-inline'",
                 //    ScriptSrc = "'self' 'unsafe-inline'"
                 //});
-            }).AddNewtonsoftJson().AddControllersAsServices();
+            })
+#if !NETCOREAPP21
+            .AddNewtonsoftJson()
+#endif
+            .AddControllersAsServices();
             services.TryAddScoped<ContentSecurityPolicies>();
             services.Configure<IdentityOptions>(options =>
             {

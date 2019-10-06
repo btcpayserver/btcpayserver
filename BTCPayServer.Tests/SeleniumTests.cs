@@ -14,13 +14,14 @@ namespace BTCPayServer.Tests
     [Trait("Selenium", "Selenium")]
     public class ChromeTests
     {
+        public const int TestTimeout = 60_000;
         public ChromeTests(ITestOutputHelper helper)
         {
             Logs.Tester = new XUnitLog(helper) { Name = "Tests" };
             Logs.LogProvider = new XUnitLogProvider(helper);
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         public void CanNavigateServerSettings()
         {
             using (var s = SeleniumTester.Create())
@@ -34,7 +35,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         public void NewUserLogin()
         {
             using (var s = SeleniumTester.Create())
@@ -95,7 +96,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("LoginButton")).Click();
             s.Driver.AssertNoError();
         }
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         public async Task CanUseSSHService()
         {
             using (var s = SeleniumTester.Create())
@@ -132,7 +133,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         public void CanUseDynamicDns()
         {
             using (var s = SeleniumTester.Create())
@@ -182,7 +183,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         public void CanCreateStores()
         {
             using (var s = SeleniumTester.Create())
@@ -234,7 +235,7 @@ namespace BTCPayServer.Tests
 
 
      
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         public void CanCreateAppPoS()
         {
             using (var s = SeleniumTester.Create())
@@ -258,7 +259,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         public void CanCreateAppCF()
         {
             using (var s = SeleniumTester.Create())
@@ -286,7 +287,7 @@ namespace BTCPayServer.Tests
             } 
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         public void CanCreatePayRequest()
         {
             using (var s = SeleniumTester.Create())
@@ -309,7 +310,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         public void CanManageWallet()
         {
             using (var s = SeleniumTester.Create())

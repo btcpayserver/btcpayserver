@@ -26,6 +26,7 @@ using Newtonsoft.Json;
 
 namespace BTCPayServer.Controllers
 {
+    [Filters.BitpayAPIConstraint(false)]
     public partial class InvoiceController : Controller
     {
         InvoiceRepository _InvoiceRepository;

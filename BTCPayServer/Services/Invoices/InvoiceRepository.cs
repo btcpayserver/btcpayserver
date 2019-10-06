@@ -86,12 +86,12 @@ retry:
             using (var db = _ContextFactory.CreateContext())
             {
                 return  (await db.AddressInvoices
+                    .Include(a => a.InvoiceData.Payments)
+                    .Include(a => a.InvoiceData.RefundAddresses)
 #pragma warning disable CS0618
                     .Where(a => addresses.Contains(a.Address))
 #pragma warning restore CS0618
                     .Select(a => a.InvoiceData)
-                    .Include(a => a.Payments)
-                    .Include(a => a.RefundAddresses)
                     .ToListAsync()).Select(ToEntity);
             }
         }
@@ -491,13 +491,13 @@ retry:
 
             if (queryObject.InvoiceId != null && queryObject.InvoiceId.Length > 0)
             {
-                var statusSet = queryObject.InvoiceId.ToHashSet();
+                var statusSet = queryObject.InvoiceId.ToHashSet().ToArray();
                 query = query.Where(i => statusSet.Contains(i.Id));
             }
             
             if (queryObject.StoreId != null && queryObject.StoreId.Length > 0)
             {
-                var stores = queryObject.StoreId.ToHashSet();
+                var stores = queryObject.StoreId.ToHashSet().ToArray();
                 query = query.Where(i => stores.Contains(i.StoreDataId));
             }
 
@@ -508,8 +508,8 @@ retry:
 
             if (!string.IsNullOrEmpty(queryObject.TextSearch))
             {
-                var ids = new HashSet<string>(SearchInvoice(queryObject.TextSearch));
-                if (ids.Count == 0)
+                var ids = new HashSet<string>(SearchInvoice(queryObject.TextSearch)).ToArray();
+                if (ids.Length == 0)
                 {
                     // Hacky way to return an empty query object. The nice way is much too elaborate:
                     // https://stackoverflow.com/questions/33305495/how-to-return-empty-iqueryable-in-an-async-repository-method
@@ -526,18 +526,18 @@ retry:
 
             if (queryObject.OrderId != null && queryObject.OrderId.Length > 0)
             {
-                var statusSet = queryObject.OrderId.ToHashSet();
+                var statusSet = queryObject.OrderId.ToHashSet().ToArray();
                 query = query.Where(i => statusSet.Contains(i.OrderId));
             }
             if (queryObject.ItemCode != null && queryObject.ItemCode.Length > 0)
             {
-                var statusSet = queryObject.ItemCode.ToHashSet();
+                var statusSet = queryObject.ItemCode.ToHashSet().ToArray();
                 query = query.Where(i => statusSet.Contains(i.ItemCode));
             }
 
             if (queryObject.Status != null && queryObject.Status.Length > 0)
             {
-                var statusSet = queryObject.Status.ToHashSet();
+                var statusSet = queryObject.Status.ToHashSet().ToArray();
                 query = query.Where(i => statusSet.Contains(i.Status));
             }
 

@@ -103,7 +103,7 @@ namespace BTCPayServer.Security.Bitpay
             {
                 using (StreamReader reader = new StreamReader(httpContext.Request.Body, Encoding.UTF8, true, 1024, true))
                 {
-                    body = reader.ReadToEnd();
+                    body = await reader.ReadToEndAsync();
                 }
                 httpContext.Request.Body.Position = 0;
             }

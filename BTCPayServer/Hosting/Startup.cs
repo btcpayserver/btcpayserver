@@ -79,7 +79,7 @@ namespace BTCPayServer.Hosting
                 //    StyleSrc = "'self' 'unsafe-inline'",
                 //    ScriptSrc = "'self' 'unsafe-inline'"
                 //});
-            }).AddControllersAsServices();
+            }).AddNewtonsoftJson().AddControllersAsServices();
             services.TryAddScoped<ContentSecurityPolicies>();
             services.Configure<IdentityOptions>(options =>
             {
@@ -255,10 +255,14 @@ namespace BTCPayServer.Hosting
             forwardingOptions.ForwardedHeaders = ForwardedHeaders.All;
             app.UseForwardedHeaders(forwardingOptions);
 #if !NETCOREAPP21
-			app.UseRouting();
+            app.UsePayServer();
+            app.UseRouting();
 #endif
             app.UseCors();
+#if NETCOREAPP21
             app.UsePayServer();
+#endif
+
             app.UseStaticFiles();
             app.UseProviderStorage(options);
             app.UseAuthentication();

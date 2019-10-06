@@ -635,7 +635,7 @@ namespace BTCPayServer.Tests
             });
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public void CanUseServerInitiatedPairingCode()
         {
@@ -660,7 +660,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanSendIPN()
         {
@@ -728,7 +728,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public void CantPairTwiceWithSamePubkey()
         {
@@ -750,7 +750,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public void CanSolveTheDogesRatesOnKraken()
         {
@@ -767,7 +767,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanRescanWallet()
         {
@@ -860,7 +860,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public void CanListInvoices()
         {
@@ -968,7 +968,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(expected, result.Invoices.Any(i => i.InvoiceId == invoiceId));
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public void CanRBFPayment()
         {
@@ -1038,7 +1038,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Fast", "Fast")]
         public void CanParseFilter()
         {
@@ -1066,7 +1066,7 @@ namespace BTCPayServer.Tests
             Assert.Equal("hekki", search.TextSearch);
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Fast", "Fast")]
         public void CanParseFingerprint()
         {
@@ -1083,7 +1083,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(f1.ToString(), f2.ToString());
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async void CheckCORSSetOnBitpayAPI()
         {
@@ -1121,7 +1121,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public void TestAccessBitpayAPI()
         {
@@ -1198,7 +1198,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public void CanUseExchangeSpecificRate()
         {
@@ -1241,7 +1241,7 @@ namespace BTCPayServer.Tests
             return invoice2.CryptoInfo[0].Rate;
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanUseAnyoneCanCreateInvoice()
         {
@@ -1284,7 +1284,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public void CanTweakRate()
         {
@@ -1329,7 +1329,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public void CanHaveLTCOnlyStore()
         {
@@ -1394,7 +1394,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public void CanModifyRates()
         {
@@ -1456,7 +1456,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public void CanPayWithTwoCurrencies()
         {

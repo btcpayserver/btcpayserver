@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Lightning;
 using BTCPayServer.Tests.Logging;
@@ -139,18 +140,18 @@ namespace BTCPayServer.Tests
                 Assert.Contains("BTC", currencyDropdownButton.Text);
                 currencyDropdownButton.Click();
                 
-                var elements = s.Driver.FindElement(By.ClassName("vex-content"))
-                    .FindElements(By.ClassName("vexmenuitem"));
+                var elements = s.Driver.FindElement(By.ClassName("vex-content")).FindElements(By.ClassName("vexmenuitem"));
                 Assert.Equal(3, elements.Count);
                 elements.Single(element => element.Text.Contains("LTC")).Click();
+                Thread.Sleep(1000);
                 currencyDropdownButton =  s.Driver.FindElement(By.ClassName("payment__currencies"));
                 Assert.Contains("LTC", currencyDropdownButton.Text);
-                
-                elements = s.Driver.FindElement(By.ClassName("vex-content"))
-                    .FindElements(By.ClassName("vexmenuitem"));
-                
+                currencyDropdownButton.Click();
+
+                elements = s.Driver.FindElement(By.ClassName("vex-content")).FindElements(By.ClassName("vexmenuitem"));
                 elements.Single(element => element.Text.Contains("Lightning")).Click();
-                
+                currencyDropdownButton = s.Driver.FindElement(By.ClassName("payment__currencies"));
+
                 Assert.Contains("Lightning", currencyDropdownButton.Text);
                 
                 s.Driver.Quit();

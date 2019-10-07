@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Xunit;
 using Xunit.Abstractions;
 using BTCPayServer.Data;
+using System.Threading.Tasks;
 
 namespace BTCPayServer.Tests
 {
@@ -19,11 +20,11 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Integration", "Integration")]
-        public async void CanSetCoinSwitchPaymentMethod()
+        public async Task CanSetCoinSwitchPaymentMethod()
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 var controller = tester.PayTester.GetController<StoresController>(user.UserId, user.StoreId);
@@ -53,11 +54,11 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Integration", "Integration")]
-        public async void CanToggleCoinSwitchPaymentMethod()
+        public async Task CanToggleCoinSwitchPaymentMethod()
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 var controller = tester.PayTester.GetController<StoresController>(user.UserId, user.StoreId);

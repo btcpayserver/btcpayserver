@@ -42,7 +42,7 @@ namespace BTCPayServer.Tests
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var client = tester.PayTester.HttpClient;
                 //Wallets endpoint is protected
                 var response = await client.GetAsync("wallets");
@@ -64,7 +64,7 @@ namespace BTCPayServer.Tests
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 using (var response =
                     await tester.PayTester.HttpClient.GetAsync("/.well-known/openid-configuration"))
                 {
@@ -85,7 +85,7 @@ namespace BTCPayServer.Tests
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
 
                 var user = tester.NewAccount();
                 user.GrantAccess();
@@ -104,7 +104,7 @@ namespace BTCPayServer.Tests
         {
             using (var s = SeleniumTester.Create())
             {
-                s.Start();
+                await s.StartAsync();
                 var tester = s.Server;
 
                 var user = tester.NewAccount();
@@ -200,7 +200,7 @@ namespace BTCPayServer.Tests
         {
             using (var s = SeleniumTester.Create())
             {
-                s.Start();
+                await s.StartAsync();
                 var tester = s.Server;
 
                 var user = tester.NewAccount();

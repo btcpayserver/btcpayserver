@@ -96,7 +96,7 @@ namespace BTCPayServer.Tests
 
         public bool MockRates { get; set; } = true;
 
-        public void Start()
+        public async Task StartAsync()
         {
             if (!Directory.Exists(_Directory))
                 Directory.CreateDirectory(_Directory);
@@ -158,7 +158,7 @@ namespace BTCPayServer.Tests
                     .UseKestrel()
                     .UseStartup<Startup>()
                     .Build();
-            _Host.StartWithTasksAsync().GetAwaiter().GetResult();
+            await _Host.StartWithTasksAsync();
 
             var urls = _Host.ServerFeatures.Get<IServerAddressesFeature>().Addresses;
             foreach (var url in urls)
@@ -233,7 +233,7 @@ namespace BTCPayServer.Tests
 
             
 
-            WaitSiteIsOperational().GetAwaiter().GetResult();
+            await WaitSiteIsOperational();
         }
 
         private async Task WaitSiteIsOperational()

@@ -427,7 +427,7 @@ namespace BTCPayServer.Tests
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var response = await tester.PayTester.HttpClient.GetAsync("");
                 Assert.True(response.IsSuccessStatusCode);
             }
@@ -472,11 +472,11 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Integration", "Integration")]
-        public void CanAcceptInvoiceWithTolerance2()
+        public async Task CanAcceptInvoiceWithTolerance2()
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
@@ -538,7 +538,7 @@ namespace BTCPayServer.Tests
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 await tester.EnsureChannelsSetup();
                 var user = tester.NewAccount();
                 user.GrantAccess();
@@ -598,7 +598,7 @@ namespace BTCPayServer.Tests
 
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 await tester.EnsureChannelsSetup();
                 var user = tester.NewAccount();
                 user.GrantAccess();
@@ -637,11 +637,11 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
-        public void CanUseServerInitiatedPairingCode()
+        public async Task CanUseServerInitiatedPairingCode()
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var acc = tester.NewAccount();
                 acc.Register();
                 acc.CreateStore();
@@ -668,7 +668,7 @@ namespace BTCPayServer.Tests
             {
                 using (var tester = ServerTester.Create())
                 {
-                    tester.Start();
+                    await tester.StartAsync();
                     var acc = tester.NewAccount();
                     acc.GrantAccess();
                     acc.RegisterDerivationScheme("BTC");
@@ -730,11 +730,11 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
-        public void CantPairTwiceWithSamePubkey()
+        public async Task CantPairTwiceWithSamePubkey()
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var acc = tester.NewAccount();
                 acc.Register();
                 acc.CreateStore();
@@ -773,7 +773,7 @@ namespace BTCPayServer.Tests
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var acc = tester.NewAccount();
                 acc.GrantAccess();
                 acc.RegisterDerivationScheme("BTC", true);
@@ -862,11 +862,11 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
-        public void CanListInvoices()
+        public async Task CanListInvoices()
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var acc = tester.NewAccount();
                 acc.GrantAccess();
                 acc.RegisterDerivationScheme("BTC");
@@ -910,11 +910,11 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Integration", "Integration")]
-        public void CanGetRates()
+        public async Task CanGetRates()
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var acc = tester.NewAccount();
                 acc.GrantAccess();
                 acc.RegisterDerivationScheme("BTC");
@@ -970,11 +970,11 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
-        public void CanRBFPayment()
+        public async Task CanRBFPayment()
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
@@ -1089,7 +1089,7 @@ namespace BTCPayServer.Tests
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 foreach (var req in new[]
                 {
                     "invoices/",
@@ -1123,11 +1123,11 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
-        public void TestAccessBitpayAPI()
+        public async Task TestAccessBitpayAPI()
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var user = tester.NewAccount();
                 Assert.False(user.BitPay.TestAccess(Facade.Merchant));
                 user.GrantAccess();
@@ -1200,12 +1200,12 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
-        public void CanUseExchangeSpecificRate()
+        public async Task CanUseExchangeSpecificRate()
         {
             using (var tester = ServerTester.Create())
             {
                 tester.PayTester.MockRates = false;
-                tester.Start();
+                await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
@@ -1247,7 +1247,7 @@ namespace BTCPayServer.Tests
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
@@ -1286,11 +1286,11 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
-        public void CanTweakRate()
+        public async Task CanTweakRate()
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
@@ -1331,11 +1331,11 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
-        public void CanHaveLTCOnlyStore()
+        public async Task CanHaveLTCOnlyStore()
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("LTC");
@@ -1396,11 +1396,11 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
-        public void CanModifyRates()
+        public async Task CanModifyRates()
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
@@ -1458,11 +1458,11 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
-        public void CanPayWithTwoCurrencies()
+        public async Task CanPayWithTwoCurrencies()
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
@@ -1675,11 +1675,11 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Integration", "Integration")]
-        public void CanAddDerivationSchemes()
+        public async Task CanAddDerivationSchemes()
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
@@ -1819,7 +1819,7 @@ namespace BTCPayServer.Tests
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 await tester.EnsureChannelsSetup();
                 var user = tester.NewAccount();
                 user.GrantAccess();
@@ -1864,7 +1864,7 @@ namespace BTCPayServer.Tests
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
@@ -2120,7 +2120,7 @@ noninventoryitem:
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
@@ -2162,7 +2162,7 @@ noninventoryitem:
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
-        public void CanExportInvoicesJson()
+        public async Task CanExportInvoicesJson()
         {
             decimal GetFieldValue(string input, string fieldName)
             {
@@ -2172,7 +2172,7 @@ noninventoryitem:
             }
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
@@ -2237,11 +2237,11 @@ noninventoryitem:
         }
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
-        public void CanChangeNetworkFeeMode()
+        public async Task CanChangeNetworkFeeMode()
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
@@ -2318,11 +2318,11 @@ noninventoryitem:
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
-        public void CanExportInvoicesCsv()
+        public async Task CanExportInvoicesCsv()
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
@@ -2358,11 +2358,11 @@ noninventoryitem:
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
-        public void CanCreateAndDeleteApps()
+        public async Task CanCreateAndDeleteApps()
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 var user2 = tester.NewAccount();
@@ -2395,11 +2395,11 @@ noninventoryitem:
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
-        public void CanCreateStrangeInvoice()
+        public async Task CanCreateStrangeInvoice()
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
@@ -2456,11 +2456,11 @@ noninventoryitem:
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
-        public void InvoiceFlowThroughDifferentStatesCorrectly()
+        public async Task InvoiceFlowThroughDifferentStatesCorrectly()
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
@@ -2724,7 +2724,7 @@ noninventoryitem:
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
@@ -2920,7 +2920,7 @@ noninventoryitem:
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 await tester.EnsureChannelsSetup();
                 var user = tester.NewAccount();
                 user.GrantAccess();
@@ -2955,7 +2955,7 @@ noninventoryitem:
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
 

@@ -22,11 +22,11 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
-        public void CanNavigateServerSettings()
+        public async Task CanNavigateServerSettings()
         {
             using (var s = SeleniumTester.Create())
             {
-                s.Start();
+                await s.StartAsync();
                 s.RegisterNewUser(true);
                 s.Driver.FindElement(By.Id("ServerSettings")).Click();
                 s.Driver.AssertNoError();
@@ -36,11 +36,11 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
-        public void NewUserLogin()
+        public async Task NewUserLogin()
         {
             using (var s = SeleniumTester.Create())
             {
-                s.Start();
+                await s.StartAsync();
                 //Register & Log Out
                 var email = s.RegisterNewUser();
                 s.Driver.FindElement(By.Id("Logout")).Click();
@@ -101,7 +101,7 @@ namespace BTCPayServer.Tests
         {
             using (var s = SeleniumTester.Create())
             {
-                s.Start();
+                await s.StartAsync();
                 var alice = s.RegisterNewUser(isAdmin: true);
                 s.Driver.Navigate().GoToUrl(s.Link("/server/services"));
                 Assert.Contains("server/services/ssh", s.Driver.PageSource);
@@ -134,11 +134,11 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
-        public void CanUseDynamicDns()
+        public async Task CanUseDynamicDns()
         {
             using (var s = SeleniumTester.Create())
             {
-                s.Start();
+                await s.StartAsync();
                 var alice = s.RegisterNewUser(isAdmin: true);
                 s.Driver.Navigate().GoToUrl(s.Link("/server/services"));
                 Assert.Contains("Dynamic DNS", s.Driver.PageSource);
@@ -184,11 +184,11 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
-        public void CanCreateStores()
+        public async Task CanCreateStores()
         {
             using (var s = SeleniumTester.Create())
             {
-                s.Start();
+                await s.StartAsync();
                 var alice = s.RegisterNewUser();
                 var store = s.CreateNewStore().storeName;
                 s.AddDerivationScheme();
@@ -236,11 +236,11 @@ namespace BTCPayServer.Tests
 
      
         [Fact(Timeout = TestTimeout)]
-        public void CanCreateAppPoS()
+        public async Task CanCreateAppPoS()
         {
             using (var s = SeleniumTester.Create())
             {
-                s.Start();
+                await s.StartAsync();
                 s.RegisterNewUser();
                 var store = s.CreateNewStore();
 
@@ -260,11 +260,11 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
-        public void CanCreateAppCF()
+        public async Task CanCreateAppCF()
         {
             using (var s = SeleniumTester.Create())
             {
-                s.Start();
+                await s.StartAsync();
                 s.RegisterNewUser();
                 var store = s.CreateNewStore();
                 s.AddDerivationScheme();
@@ -288,11 +288,11 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
-        public void CanCreatePayRequest()
+        public async Task CanCreatePayRequest()
         {
             using (var s = SeleniumTester.Create())
             {
-                s.Start();
+                await s.StartAsync();
                 s.RegisterNewUser();
                 s.CreateNewStore();
                 s.AddDerivationScheme();
@@ -311,11 +311,11 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
-        public void CanManageWallet()
+        public async Task CanManageWallet()
         {
             using (var s = SeleniumTester.Create())
             {
-                s.Start();
+                await s.StartAsync();
                 s.RegisterNewUser();
                 s.CreateNewStore();
 

@@ -27,11 +27,11 @@ namespace BTCPayServer.Tests
        
         
         [Fact(Timeout = TestTimeout)]
-        public void CanCreateInvoice()
+        public async Task CanCreateInvoice()
         {
             using (var s = SeleniumTester.Create())
             {
-                s.Start();
+                await s.StartAsync();
                 s.RegisterNewUser();
                 var store = s.CreateNewStore().storeName;
                 s.AddDerivationScheme();
@@ -53,7 +53,7 @@ namespace BTCPayServer.Tests
 
             using (var s = SeleniumTester.Create())
             {
-                s.Start();
+                await s.StartAsync();
                 s.RegisterNewUser();
                 var store = s.CreateNewStore();
                 s.AddDerivationScheme("BTC");
@@ -91,7 +91,7 @@ namespace BTCPayServer.Tests
         {
             using (var s = SeleniumTester.Create())
             {
-                s.Start();
+                await s.StartAsync();
                 s.RegisterNewUser();
                 var store = s.CreateNewStore();
                 s.AddDerivationScheme("BTC");
@@ -116,11 +116,11 @@ namespace BTCPayServer.Tests
         }
         
         [Fact(Timeout = TestTimeout)]
-        public void CanUsePaymentMethodDropdown()
+        public async Task CanUsePaymentMethodDropdown()
         {
             using (var s = SeleniumTester.Create())
             {
-                s.Start();
+                await s.StartAsync();
                 s.RegisterNewUser();
                 var store = s.CreateNewStore();
                 s.AddDerivationScheme("BTC");
@@ -159,11 +159,11 @@ namespace BTCPayServer.Tests
         }
         
         [Fact(Timeout = TestTimeout)]
-        public void CanUseLightningSatsFeature()
+        public async Task CanUseLightningSatsFeature()
         {
             using (var s = SeleniumTester.Create())
             {
-                s.Start();
+                await s.StartAsync();
                 s.RegisterNewUser();
                 var store = s.CreateNewStore();
                 s.AddInternalLightningNode("BTC");

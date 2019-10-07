@@ -82,9 +82,9 @@ namespace BTCPayServer.Tests
             get; set;
         }
 
-        public void Start()
+        public Task StartAsync()
         {
-            PayTester.Start();
+            return PayTester.StartAsync();
         }
 
         /// <summary>

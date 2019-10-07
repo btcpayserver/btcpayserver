@@ -211,6 +211,8 @@
 	  <Content Update="Views\Wallets\WalletTransactions.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
+    <Content Remove="Views\Server\EditGoogleCloudStorageStorageProvider.cshtml" Condition="'$(TargetFramework)' != 'netcoreapp2.1'">
+    </Content>
 	  <Content Update="Views\Wallets\_Nav.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>

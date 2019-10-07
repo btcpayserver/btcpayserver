@@ -198,7 +198,9 @@ namespace BTCPayServer.Hosting
                     options.AllowPasswordFlow();
                     options.AllowAuthorizationCodeFlow();
                     options.UseRollingTokens();
+#if NETCOREAPP21
                     options.UseJsonWebTokens();
+#endif
 
                     options.RegisterScopes(
                         OpenIdConnectConstants.Scopes.OpenId,
@@ -212,13 +214,19 @@ namespace BTCPayServer.Hosting
                         RestAPIPolicies.BTCPayScopes.ViewApps,
                         RestAPIPolicies.BTCPayScopes.AppManagement
                         );
-
+#if NETCOREAPP21
                     options.AddEventHandler<PasswordGrantTypeEventHandler>();
                     options.AddEventHandler<AuthorizationCodeGrantTypeEventHandler>();
                     options.AddEventHandler<RefreshTokenGrantTypeEventHandler>();
                     options.AddEventHandler<ClientCredentialsGrantTypeEventHandler>();
                     options.AddEventHandler<LogoutEventHandler>();
-
+#else
+                    options.AddEventHandler(PasswordGrantTypeEventHandler.Descriptor);
+                    options.AddEventHandler(AuthorizationCodeGrantTypeEventHandler.Descriptor);
+                    options.AddEventHandler(RefreshTokenGrantTypeEventHandler.Descriptor);
+                    options.AddEventHandler(ClientCredentialsGrantTypeEventHandler.Descriptor);
+                    options.AddEventHandler(LogoutEventHandler.Descriptor);
+#endif
                     options.ConfigureSigningKey(Configuration);
                 });
         }

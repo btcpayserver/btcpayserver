@@ -133,7 +133,7 @@ namespace BTCPayServer.Tests
             else if (!String.IsNullOrEmpty(Postgres))
                 config.AppendLine($"postgres=" + Postgres);
             var confPath = Path.Combine(chainDirectory, "settings.config");
-            File.WriteAllText(confPath, config.ToString());
+            await File.WriteAllTextAsync(confPath, config.ToString());
 
             ServerUri = new Uri("http://" + HostName + ":" + Port + "/");
             HttpClient = new HttpClient();

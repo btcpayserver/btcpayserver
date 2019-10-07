@@ -16,7 +16,6 @@ services:
       TESTS_LTCNBXPLORERURL: http://nbxplorer:32838/
       TESTS_DB: "Postgres"
       TESTS_POSTGRES: User ID=postgres;Host=postgres;Port=5432;Database=btcpayserver
-      TESTS_PORT: 80
       TESTS_HOSTNAME: tests
       TESTS_RUN_EXTERNAL_INTEGRATION: ${TESTS_RUN_EXTERNAL_INTEGRATION:-false}
       TESTS_AzureBlobStorageConnectionString: ${TESTS_AzureBlobStorageConnectionString:-none}

@@ -258,14 +258,11 @@ namespace BTCPayServer.Hosting
             forwardingOptions.KnownProxies.Clear();
             forwardingOptions.ForwardedHeaders = ForwardedHeaders.All;
             app.UseForwardedHeaders(forwardingOptions);
-#if !NETCOREAPP21
             app.UsePayServer();
+#if !NETCOREAPP21
             app.UseRouting();
 #endif
             app.UseCors();
-#if NETCOREAPP21
-            app.UsePayServer();
-#endif
 
             app.UseStaticFiles();
             app.UseProviderStorage(options);

@@ -59,7 +59,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            _Cts.Cancel();
+            _Cts?.Cancel();
             return Task.CompletedTask;
         }
     }

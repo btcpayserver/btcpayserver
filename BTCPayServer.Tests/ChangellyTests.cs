@@ -21,13 +21,14 @@ namespace BTCPayServer.Tests
 {
     public class ChangellyTests
     {
+        public const int TestTimeout = 60_000;
         public ChangellyTests(ITestOutputHelper helper)
         {
             Logs.Tester = new XUnitLog(helper) {Name = "Tests"};
             Logs.LogProvider = new XUnitLogProvider(helper);
         }
 
-        [Fact(Timeout = 60000)]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async void CanSetChangellyPaymentMethod()
         {
@@ -68,7 +69,7 @@ namespace BTCPayServer.Tests
         }
 
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanToggleChangellyPaymentMethod()
         {
@@ -106,7 +107,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async void CannotUseChangellyApiWithoutChangellyPaymentMethodSet()
         {
@@ -161,7 +162,7 @@ namespace BTCPayServer.Tests
             };
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async void CanGetCurrencyListFromChangelly()
         {
@@ -194,7 +195,7 @@ namespace BTCPayServer.Tests
         }
 
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async void CanCalculateToAmountForChangelly()
         {
@@ -223,8 +224,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
-        [Trait("Integration", "Integration")]
+        [Trait("Fast", "Fast")]
         public void CanComputeBaseAmount()
         {
             Assert.Equal(1, ChangellyCalculationHelper.ComputeBaseAmount(1, 1));
@@ -234,7 +234,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
-        [Trait("Integration", "Integration")]
+        [Trait("Fast", "Fast")]
         public void CanComputeCorrectAmount()
         {
             Assert.Equal(1, ChangellyCalculationHelper.ComputeCorrectAmount(0.5m, 1, 2));

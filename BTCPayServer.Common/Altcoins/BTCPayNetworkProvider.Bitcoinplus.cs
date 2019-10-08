@@ -20,7 +20,7 @@ namespace BTCPayServer
                 NBitcoinNetwork = nbxplorerNetwork.NBitcoinNetwork,
                 NBXplorerNetwork = nbxplorerNetwork,
                 UriScheme = "bitcoinplus",
-                DefaultRateRules = new[] 
+                DefaultRateRules = new[]
                 {
                                 "XBC_X = XBC_BTC * BTC_X",
                                 "XBC_BTC = cryptopia(XBC_BTC)"

@@ -21,6 +21,11 @@ namespace BTCPayServer.Payments.Bitcoin
         {
             return NextNetworkFee.ToDecimal(MoneyUnit.BTC);
         }
+
+        public decimal GetFeeRate() {
+            return FeeRate.SatoshiPerByte;
+        }
+
         public void SetPaymentDestination(string newPaymentDestination)
         {
             DepositAddress = newPaymentDestination;

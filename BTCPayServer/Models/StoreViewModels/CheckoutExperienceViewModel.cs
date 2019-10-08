@@ -39,6 +39,9 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Requires a refund email")]
         public bool RequiresRefundEmail { get; set; }
 
+        [Display(Name = "Show recommended fee")]
+        public bool ShowRecommendedFee { get; set; }
+
         [Display(Name = "Do not propose on chain payment if the value of the invoice is below...")]
         [MaxLength(20)]
         public string OnChainMinValue { get; set; }

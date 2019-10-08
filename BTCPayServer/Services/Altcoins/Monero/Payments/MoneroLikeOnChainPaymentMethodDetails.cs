@@ -18,6 +18,11 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
         {
             return NextNetworkFee;
         }
+
+        public decimal GetFeeRate() {
+            return 0.0m;
+        }
+        
         public void SetPaymentDestination(string newPaymentDestination)
         {
             DepositAddress = newPaymentDestination;

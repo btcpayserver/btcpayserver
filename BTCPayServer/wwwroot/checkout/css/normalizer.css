@@ -9015,6 +9015,10 @@ strong {
     min-height: 393px;
 }
 
+.payment-box--with-recommended-fee {
+    min-height: 430px;
+}
+
 .paypro {
     padding: 10px;
 }
@@ -9247,6 +9251,20 @@ strong {
             padding-top: 27px;
             padding-bottom: 40px;
         }
+
+.recommended-fee {
+    box-sizing: border-box;
+    color: #818EA9;
+    font-size: 14px;
+    font-weight: 300;
+    position: absolute;
+    top: calc(100% - 40px);
+    left: 50%;
+    padding: 0 16px;
+    text-align: center;
+    transform: translateX(-50%);
+    width: 100%;
+}
 
 .success-message {
     color: rgba(111, 111, 111, 0.9);

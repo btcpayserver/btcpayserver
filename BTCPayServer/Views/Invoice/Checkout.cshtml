@@ -185,6 +185,9 @@
             showEmailForm: function(){
                 return this.srvModel.requiresRefundEmail && (!this.srvModel.customerEmail || !this.validateEmail(this.srvModel.customerEmail)) && !this.invoiceUnpayable && !this.invoicePaid;
             },
+            showRecommendedFee: function(){
+                return  this.srvModel.showRecommendedFee && this.srvModel.feeRate != 0;
+            },
             invoiceUnpayable: function(){
                 return  ["expired", "invalid"].indexOf(this.srvModel.status) >= 0;
             },

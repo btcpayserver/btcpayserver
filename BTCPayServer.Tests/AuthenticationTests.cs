@@ -4,16 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-#if NETCOREAPP21
-using OpenIddictRequest = AspNet.Security.OpenIdConnect.Primitives.OpenIdConnectRequest;
-using OpenIddictResponse = AspNet.Security.OpenIdConnect.Primitives.OpenIdConnectResponse;
-using OpenIdConnectDefaults = OpenIddict.Server.OpenIddictServerDefaults;
-using AspNet.Security.OpenIdConnect.Primitives;
-#else
 using System.Security.Claims;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-#endif
 using BTCPayServer.Tests.Logging;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Xunit;
 using Xunit.Abstractions;
@@ -31,7 +24,7 @@ namespace BTCPayServer.Tests
 {
     public class AuthenticationTests
     {
-        public const int TestTimeout = 60_000;
+        public const int TestTimeout = TestUtils.TestTimeout;
         public AuthenticationTests(ITestOutputHelper helper)
         {
             Logs.Tester = new XUnitLog(helper) {Name = "Tests"};
@@ -112,6 +105,7 @@ namespace BTCPayServer.Tests
 
                 var user = tester.NewAccount();
                 user.GrantAccess();
+                await user.MakeAdmin();
                 var id = Guid.NewGuid().ToString();
                 var redirecturi = new Uri("http://127.0.0.1/oidc-callback");
                 var openIdClient = await user.RegisterOpenIdClient(
@@ -124,7 +118,7 @@ namespace BTCPayServer.Tests
                         
                     });
                 var implicitAuthorizeUrl = new Uri(tester.PayTester.ServerUri,
-                    $"connect/authorize?response_type=token&client_id={id}&redirect_uri={redirecturi.AbsoluteUri}&scope=openid&nonce={Guid.NewGuid().ToString()}");
+                    $"connect/authorize?response_type=token&client_id={id}&redirect_uri={redirecturi.AbsoluteUri}&scope=openid server_management store_management&nonce={Guid.NewGuid().ToString()}");
                 s.Driver.Navigate().GoToUrl(implicitAuthorizeUrl);
                 s.Login(user.RegisterDetails.Email, user.RegisterDetails.Password);
                 s.Driver.FindElement(By.Id("consent-yes")).Click();
@@ -225,7 +219,7 @@ namespace BTCPayServer.Tests
                         RedirectUris = {redirecturi}
                     }, secret);
                 var authorizeUrl = new Uri(tester.PayTester.ServerUri,
-                    $"connect/authorize?response_type=code&client_id={id}&redirect_uri={redirecturi.AbsoluteUri}&scope=openid offline_access&state={Guid.NewGuid().ToString()}");
+                    $"connect/authorize?response_type=code&client_id={id}&redirect_uri={redirecturi.AbsoluteUri}&scope=openid offline_access server_management store_management&state={Guid.NewGuid().ToString()}");
                 s.Driver.Navigate().GoToUrl(authorizeUrl);
                 s.Login(user.RegisterDetails.Email, user.RegisterDetails.Password);
                 s.Driver.FindElement(By.Id("consent-yes")).Click();
@@ -325,7 +319,8 @@ namespace BTCPayServer.Tests
                     new KeyValuePair<string, string>("grant_type",
                         OpenIddictConstants.GrantTypes.ClientCredentials),
                     new KeyValuePair<string, string>("client_id", openIdClient.ClientId),
-                    new KeyValuePair<string, string>("client_secret", secret)
+                    new KeyValuePair<string, string>("client_secret", secret),
+                    new KeyValuePair<string, string>("scope", "server_management store_management")
                 })
             };
 
@@ -365,7 +360,8 @@ namespace BTCPayServer.Tests
                     new KeyValuePair<string, string>("username", user.RegisterDetails.Email),
                     new KeyValuePair<string, string>("password", user.RegisterDetails.Password),
                     new KeyValuePair<string, string>("client_id", openIdClient.ClientId),
-                    new KeyValuePair<string, string>("client_secret", secret)
+                    new KeyValuePair<string, string>("client_secret", secret),
+                    new KeyValuePair<string, string>("scope", "server_management store_management")
                 })
             };
 

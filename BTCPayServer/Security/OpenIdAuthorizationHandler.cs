@@ -66,6 +66,11 @@ namespace BTCPayServer.Security
                     success = context.HasScopes(OpenIddictConstants.Scopes.Profile);
                     break;
                 case Policies.CanModifyStoreSettings.Key:
+                    if (!context.HasScopes(BTCPayScopes.StoreManagement))
+                        break;
+                    // TODO: It should be possible to grant permission to a specific store
+                    // we can do this by adding saving a claim with the specific store id
+                    // to the access_token
                     string storeId = _HttpContext.GetImplicitStoreId();
                     if (storeId == null)
                         break;
@@ -79,7 +84,15 @@ namespace BTCPayServer.Security
                     _HttpContext.SetStoreData(store);
                     break;
                 case Policies.CanModifyServerSettings.Key:
-                    success = context.User.HasClaim("role", Roles.ServerAdmin);
+                    if (!context.HasScopes(BTCPayScopes.ServerManagement))
+                        break;
+                    // For this authorization, we stil check in database because it is super sensitive.
+                    var user = await _userManager.GetUserAsync(context.User);
+                    if (user == null)
+                        break;
+                    if (!await _userManager.IsInRoleAsync(user, Roles.ServerAdmin))
+                        break;
+                    success = true;
                     break;
             }
 

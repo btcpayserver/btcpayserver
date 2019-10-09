@@ -2993,6 +2993,7 @@ noninventoryitem:
                {
                    var newDevice = new U2FDevice()
                    {
+                       Id = Guid.NewGuid().ToString(),
                        Name = "fake",
                        Counter = 0,
                        KeyHandle = UTF8Encoding.UTF8.GetBytes("fake"),

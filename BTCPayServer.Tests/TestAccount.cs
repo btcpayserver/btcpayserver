@@ -182,7 +182,7 @@ namespace BTCPayServer.Tests
         public async Task<BTCPayOpenIdClient> RegisterOpenIdClient(OpenIddictApplicationDescriptor descriptor, string secret = null)
         {
           var openIddictApplicationManager = parent.PayTester.GetService<OpenIddictApplicationManager<BTCPayOpenIdClient>>();
-          var client = new BTCPayOpenIdClient {ApplicationUserId = UserId};
+          var client = new BTCPayOpenIdClient { Id = Guid.NewGuid().ToString(), ApplicationUserId = UserId};
           await openIddictApplicationManager.PopulateAsync(client, descriptor);
           await openIddictApplicationManager.CreateAsync(client, secret);
           return client;

@@ -31,6 +31,7 @@ namespace BTCPayServer.Services.PaymentRequests
             {
                 if (string.IsNullOrEmpty(entity.Id))
                 {
+                    entity.Id = Guid.NewGuid().ToString();
                     await context.PaymentRequests.AddAsync(entity);
                 }
                 else

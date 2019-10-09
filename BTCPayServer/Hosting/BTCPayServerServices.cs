@@ -332,5 +332,10 @@ namespace BTCPayServer.Hosting
             app.UseMiddleware<BTCPayMiddleware>();
             return app; 
         }
+        public static IApplicationBuilder UseHeadersOverride(this IApplicationBuilder app)
+        {
+            app.UseMiddleware<HeadersOverrideMiddleware>();
+            return app;
+        }
     }
 }

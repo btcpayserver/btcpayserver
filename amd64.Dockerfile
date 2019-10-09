@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/core/sdk:2.1.607 AS builder
+FROM mcr.microsoft.com/dotnet/core/sdk:3.1.100 AS builder
 WORKDIR /source
 COPY nuget.config nuget.config
 COPY Build/Common.csproj Build/Common.csproj
@@ -14,16 +14,16 @@ COPY BTCPayServer/. BTCPayServer/.
 COPY Build/Version.csproj Build/Version.csproj
 RUN cd BTCPayServer && dotnet publish --output /app/ --configuration Release
 
-FROM mcr.microsoft.com/dotnet/core/aspnet:2.1.14-alpine3.9
+FROM mcr.microsoft.com/dotnet/core/aspnet:3.1.0-buster-slim
 
-ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT false
-RUN apk add --no-cache icu-libs openssh-keygen
+RUN apt-get update && apt-get install -y --no-install-recommends iproute2 openssh-client \
+    && rm -rf /var/lib/apt/lists/* 
 
 ENV LC_ALL en_US.UTF-8
 ENV LANG en_US.UTF-8
 
+WORKDIR /datadir
 WORKDIR /app
-RUN mkdir /datadir
 ENV BTCPAY_DATADIR=/datadir
 VOLUME /datadir
 

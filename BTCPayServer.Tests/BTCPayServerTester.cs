@@ -238,7 +238,7 @@ namespace BTCPayServer.Tests
 
         private async Task WaitSiteIsOperational()
         {
-            using (var cts = new CancellationTokenSource(10_000))
+            using (var cts = new CancellationTokenSource(20_000))
             {
                 var synching = WaitIsFullySynched(cts.Token);
                 var accessingHomepage = WaitCanAccessHomepage(cts.Token);

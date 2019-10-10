@@ -53,6 +53,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.Authentication;
 
 namespace BTCPayServer.Hosting
 {
@@ -175,6 +176,7 @@ namespace BTCPayServer.Hosting
                 return htmlSanitizer;
             });
 
+            services.AddTransient<IClaimsTransformation, ClaimTransformer>();
             services.TryAddSingleton<LightningConfigurationProvider>();
             services.TryAddSingleton<LanguageService>();
             services.TryAddSingleton<NBXplorerDashboard>();
@@ -285,43 +287,6 @@ namespace BTCPayServer.Hosting
                     options.TokenValidationParameters.IssuerSigningKey =
                         OpenIddictExtensions.GetSigningKey(configuration);
                     options.IncludeErrorDetails = true;
-                    options.Events = new JwtBearerEvents()
-                    {
-                        OnTokenValidated = async context =>
-                        {
-                            var routeData = context.HttpContext.GetRouteData();
-                            var identity = ((ClaimsIdentity)context.Principal.Identity);
-                            if (context.Principal.IsInRole(Roles.ServerAdmin))
-                            {
-                                identity.AddClaim(new Claim(Policies.CanModifyServerSettings.Key, "true"));
-                            }
-
-                            if (context.HttpContext.GetStoreData() != null ||
-                                !routeData.Values.TryGetValue("storeId", out var storeId))
-                            {
-                                return;
-                            }
-                            var userManager = context.HttpContext.RequestServices
-                                .GetService<UserManager<ApplicationUser>>();
-                            var storeRepository = context.HttpContext.RequestServices
-                                .GetService<StoreRepository>();
-                            var userid = userManager.GetUserId(context.Principal);
-
-                            if (!string.IsNullOrEmpty(userid))
-                            {
-                                var store = await storeRepository.FindStore((string)storeId, userid);
-                                if (store == null)
-                                {
-                                    context.Fail("Could not authorize you against store access");
-                                }
-                                else
-                                {
-                                    context.HttpContext.SetStoreData(store);
-                                    identity.AddClaims(store.GetClaims());
-                                }
-                            }
-                        }
-                    };
                 })
                 .AddCookie()
                 .AddBitpayAuthentication();

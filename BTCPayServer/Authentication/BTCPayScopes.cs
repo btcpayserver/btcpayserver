@@ -33,6 +33,7 @@ namespace BTCPayServer.Authentication
         }
 
         public const string CanViewStores = nameof(CanViewStores);
+        public const string CanEditStore = nameof(CanEditStore);
         public const string CanManageStores = nameof(CanManageStores);
         public const string CanViewInvoices = nameof(CanViewInvoices);
         public const string CanCreateInvoices = nameof(CanCreateInvoices);
@@ -47,6 +48,7 @@ namespace BTCPayServer.Authentication
             AddScopePolicy(options, CanViewStores,
                 context => context.HasScopes(BTCPayScopes.StoreManagement) ||
                            context.HasScopes(BTCPayScopes.ViewStores));
+            options.AddPolicy(CanEditStore, p => p.RequireClaim(CanEditStore));
             AddScopePolicy(options, CanManageStores,
                 context => context.HasScopes(BTCPayScopes.StoreManagement));
             AddScopePolicy(options, CanViewInvoices,

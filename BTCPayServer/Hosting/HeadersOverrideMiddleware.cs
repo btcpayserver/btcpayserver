@@ -23,7 +23,10 @@ namespace BTCPayServer.Hosting
         {
             if (!string.IsNullOrEmpty(overrideXForwardedProto))
             {
-                httpContext.Request.Headers["X-Forwarded-Proto"] = overrideXForwardedProto;
+                if (!httpContext.Request.Host.Host.EndsWith(".onion", StringComparison.OrdinalIgnoreCase))
+                {
+                    httpContext.Request.Headers["X-Forwarded-Proto"] = overrideXForwardedProto;
+                }
             }
             await _Next(httpContext);
         }

@@ -51,126 +51,6 @@
     </div>
     <br />
     <br />
-    <h6 class="text-center">
-        BTCPayJungle.com maintains operating costs through user donations,
-        <br /> Yow! Support BTCPay Jungle hosting by donating Bitcoin, BTCPay Jungle is an open-source project, not a company.
-    </h6>
-    <div class="d-flex justify-content-center align-items-center container ">
-
-        <div class="row ">
-
-            <form method="POST" action="https://btcpayjungle.com/api/v1/invoices">
-                <input type="hidden" name="storeId" value="EDEE4hbCKwc7sp7uXGuhEx4phrGKxjk6mnUd7sCVbgN9" />
-                <div style="text-align:center;width:146px">
-                    <input type="text" id="btcpay-input-price" name="price" value="10" style="border: none; background-image: none; background-color: transparent; -webkit-box-shadow: none ; -moz-box-shadow: none ; -webkit-appearance: none ; width: 146px; text-align: center; font-size: 25px; margin: auto; border-radius: 5px; line-height: 35px; background: #fff;" oninput="event.preventDefault();isNaN(event.target.value) || event.target.value <= 0 ? document.querySelector('#btcpay-input-price').value = 10 : event.target.value" onchange="document.querySelector('#btcpay-input-range').value = document.querySelector('#btcpay-input-price').value" /><select onchange="document.querySelector('input[type = hidden][name = currency]').value = event.target.value" style="-webkit-appearance: none; border: 0; display: block; padding: 0 3em; margin: auto auto 5px auto; font-size: 11px; background: 0 0; cursor: pointer;"><option value="USD">USD</option><option value="GBP">GBP</option><option value="EUR">EUR</option><option value="BTC">BTC</option></select><input class="btcpay-input-range" id="btcpay-input-range" value="10" type="range" min="1" max="500" step="1" style="width:146px ;margin-bottom:15px;" oninput="document.querySelector('#btcpay-input-price').value = document.querySelector('#btcpay-input-range').value" />
-                    <style type="text/css">
-                        input[type=range].btcpay-input-range {
-                            -webkit-appearance: none;
-                            width: 100%;
-                            margin: 9.45px 0
-                        }
-
-                            input[type=range].btcpay-input-range:focus {
-                                outline: 0
-                            }
-
-                            input[type=range].btcpay-input-range::-webkit-slider-runnable-track {
-                                width: 100%;
-                                height: 3.1px;
-                                cursor: pointer;
-                                box-shadow: 0 0 1.7px #020,0 0 0 #003c00;
-                                background: #f3f3f3;
-                                border-radius: 1px;
-                                border: 0 solid rgba(24,213,1,0)
-                            }
-
-                            input[type=range].btcpay-input-range::-webkit-slider-thumb {
-                                box-shadow: 0 0 3.7px rgba(0,170,0,0),0 0 0 rgba(0,195,0,0);
-                                border: 2.5px solid #cedc21;
-                                height: 22px;
-                                width: 23px;
-                                border-radius: 12px;
-                                background: #0f3723;
-                                cursor: pointer;
-                                -webkit-appearance: none;
-                                margin-top: -9.45px
-                            }
-
-                            input[type=range].btcpay-input-range:focus::-webkit-slider-runnable-track {
-                                background: #fff
-                            }
-
-                            input[type=range].btcpay-input-range::-moz-range-track {
-                                width: 100%;
-                                height: 3.1px;
-                                cursor: pointer;
-                                box-shadow: 0 0 1.7px #020,0 0 0 #003c00;
-                                background: #f3f3f3;
-                                border-radius: 1px;
-                                border: 0 solid rgba(24,213,1,0)
-                            }
-
-                            input[type=range].btcpay-input-range::-moz-range-thumb {
-                                box-shadow: 0 0 3.7px rgba(0,170,0,0),0 0 0 rgba(0,195,0,0);
-                                border: 2.5px solid #cedc21;
-                                height: 22px;
-                                width: 23px;
-                                border-radius: 12px;
-                                background: #0f3723;
-                                cursor: pointer
-                            }
-
-                            input[type=range].btcpay-input-range::-ms-track {
-                                width: 100%;
-                                height: 3.1px;
-                                cursor: pointer;
-                                background: 0 0;
-                                border-color: transparent;
-                                color: transparent
-                            }
-
-                            input[type=range].btcpay-input-range::-ms-fill-lower {
-                                background: #e6e6e6;
-                                border: 0 solid rgba(24,213,1,0);
-                                border-radius: 2px;
-                                box-shadow: 0 0 1.7px #020,0 0 0 #003c00
-                            }
-
-                            input[type=range].btcpay-input-range::-ms-fill-upper {
-                                background: #f3f3f3;
-                                border: 0 solid rgba(24,213,1,0);
-                                border-radius: 2px;
-                                box-shadow: 0 0 1.7px #020,0 0 0 #003c00
-                            }
-
-                            input[type=range].btcpay-input-range::-ms-thumb {
-                                box-shadow: 0 0 3.7px rgba(0,170,0,0),0 0 0 rgba(0,195,0,0);
-                                border: 2.5px solid #cedc21;
-                                height: 22px;
-                                width: 23px;
-                                border-radius: 12px;
-                                background: #0f3723;
-                                cursor: pointer;
-                                height: 3.1px
-                            }
-
-                            input[type=range].btcpay-input-range:focus::-ms-fill-lower {
-                                background: #f3f3f3
-                            }
-
-                            input[type=range].btcpay-input-range:focus::-ms-fill-upper {
-                                background: #fff
-                            }
-                    </style>
-                </div>
-                <input type="hidden" name="currency" value="USD" />
-                <input type="hidden" name="checkoutDesc" value="Donation BTCPayJungle Server" />
-                <input type="image" src="https://btcpayjungle.com/img/paybutton/donate.png" name="submit" style="width:146px" alt="Pay with BtcPay, Self-Hosted Bitcoin Payment Processor">
-            </form>
-        </div>
-
-    </div>
-    <br />
     <br />
     <br />
     <div class="container">
@@ -178,7 +58,7 @@
         <br />
         <div class="row featurette">
             <div class="col-md-7">
-                <h2 class="featurette-heading">BTCPay Jungle Hosted. <span class="text-muted">what we build.</span></h2>
+                <h2 class="featurette-heading">BTCPay Jungle Hosted. <span class="text-muted">what BTCPay build.</span></h2>
                 <p class="lead">
                     BTCPayJungle Bitcoin Payment Processor
                     <br />

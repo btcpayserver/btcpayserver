@@ -60,7 +60,7 @@ Thanks to the [apps](https://github.com/btcpayserver/btcpayserver-doc/blob/maste
 
 Firstly, decide if you want to host an instance yourself or use a [third-party host](https://docs.btcpayserver.org/deployment/thirdpartyhosting). If you've chosen to self-host, we documented plenty [ways to deploy BTCPay Server](https://docs.btcpayserver.org/deployment/deployment). 
 
-After successful deployment, make sure to check our [getting started](https://docs.btcpayserver.org/btcpay-basics/gettingstarted) and [walkthrough](https://docs.btcpayserver.org/btcpay-basics/walkthrough) guides. In case you would like to use Lightning Network, see [Lightning guide](https://docs.btcpayserver.org/features/lightningnetwork).
+After successful deployment, make sure to check our [getting started](https://docs.btcpayserver.org/getting-started/registeraccount) and [walkthrough](https://docs.btcpayserver.org/btcpay-basics/walkthrough) guides. In case you would like to use Lightning Network, see [Lightning guide](https://docs.btcpayserver.org/features/lightningnetwork).
 
 ## Documentation
 

@@ -12,7 +12,6 @@ using BTCPayServer.Storage.ViewModels;
 using BTCPayServer.Tests.Logging;
 using DBriize.Utils;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.Resources;
@@ -31,11 +30,11 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Integration", "Integration")]
-        public async void CanConfigureStorage()
+        public async Task CanConfigureStorage()
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 var controller = tester.PayTester.GetController<ServerController>(user.UserId, user.StoreId);
@@ -118,7 +117,7 @@ namespace BTCPayServer.Tests
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 var controller = tester.PayTester.GetController<ServerController>(user.UserId, user.StoreId);
@@ -146,7 +145,7 @@ namespace BTCPayServer.Tests
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 var controller = tester.PayTester.GetController<ServerController>(user.UserId, user.StoreId);

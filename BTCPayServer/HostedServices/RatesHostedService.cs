@@ -31,7 +31,7 @@ namespace BTCPayServer.HostedServices
 
         internal override Task[] InitializeTasks()
         {
-            return new[]
+            return new Task[]
             {
                 CreateLoopTask(RefreshCoinAverageSupportedExchanges),
                 CreateLoopTask(RefreshCoinAverageSettings),

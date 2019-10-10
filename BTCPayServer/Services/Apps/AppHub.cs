@@ -5,7 +5,10 @@ using BTCPayServer.Models.AppViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.DependencyInjection;
+#if !NETCOREAPP21
+using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.Builder;
+#endif
 
 namespace BTCPayServer.Services.Apps
 {
@@ -67,9 +70,14 @@ namespace BTCPayServer.Services.Apps
         {
             return request.GetRelativePathOrAbsolute("/apps/hub");
         }
+#if NETCOREAPP21
         public static void Register(HubRouteBuilder route)
+#else
+        public static void Register(IEndpointRouteBuilder route)
+#endif
         {
             route.MapHub<AppHub>("/apps/hub");
         }
+
     }
 }

@@ -37,9 +37,8 @@ namespace BTCPayServer.Authentication
                 return Array.Empty<BitTokenEntity>();
             using (var ctx = _Factory.CreateContext())
             {
-                return (await ctx.PairedSINData
-                    .Where(p => p.SIN == sin)
-                    .ToListAsync())
+                return (await ctx.PairedSINData.Where(p => p.SIN == sin)
+                    .ToArrayAsync())
                     .Select(p => CreateTokenEntity(p))
                     .ToArray();
             }

@@ -37,11 +37,11 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Integration", "Integration")]
-        public void CanCreateAndDeleteCrowdfundApp()
+        public async Task CanCreateAndDeleteCrowdfundApp()
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 var user2 = tester.NewAccount();
@@ -81,7 +81,7 @@ namespace BTCPayServer.Tests
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
@@ -169,11 +169,11 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Integration", "Integration")]
-        public void CanComputeCrowdfundModel()
+        public async Task CanComputeCrowdfundModel()
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");

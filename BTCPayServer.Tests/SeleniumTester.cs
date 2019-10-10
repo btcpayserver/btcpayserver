@@ -40,9 +40,9 @@ namespace BTCPayServer.Tests
         }
 
       
-        public void Start()
+        public async Task StartAsync()
         {
-            Server.Start();
+            await Server.StartAsync();
             ChromeOptions options = new ChromeOptions();
             var isDebug = !Server.PayTester.InContainer;
         

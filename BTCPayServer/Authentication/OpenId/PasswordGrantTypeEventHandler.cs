@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 using AspNet.Security.OpenIdConnect.Primitives;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
-using BTCPayServer.Services.U2F;
+using BTCPayServer.U2F;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using OpenIddict.Abstractions;

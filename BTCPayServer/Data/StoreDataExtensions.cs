@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using BTCPayServer.Authentication;
 using BTCPayServer.Payments;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Rates;

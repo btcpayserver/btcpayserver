@@ -108,7 +108,7 @@ namespace BTCPayServer
             bool save = false;
             using (var ctx = _DBContextFactory.CreateContext())
             {
-                foreach (var store in await ctx.Stores.ToArrayAsync())
+                foreach (var store in await ctx.Stores.AsQueryable().ToArrayAsync())
                 {
 #pragma warning disable CS0618 // Type or member is obsolete
                     var blob = store.GetStoreBlob();
@@ -136,7 +136,7 @@ namespace BTCPayServer
         {
             using (var ctx = _DBContextFactory.CreateContext())
             {
-                foreach (var app in ctx.Apps.Where(a => a.AppType == "Crowdfund"))
+                foreach (var app in await ctx.Apps.Where(a => a.AppType == "Crowdfund").ToArrayAsync())
                 {
                     var settings = app.GetSettings<Services.Apps.CrowdfundSettings>();
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -154,7 +154,7 @@ namespace BTCPayServer
         {
             using (var ctx = _DBContextFactory.CreateContext())
             {
-                foreach (var store in await ctx.Stores.ToArrayAsync())
+                foreach (var store in await ctx.Stores.AsQueryable().ToArrayAsync())
                 {
                     var blob = store.GetStoreBlob();
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -174,7 +174,7 @@ namespace BTCPayServer
         {
             using (var ctx = _DBContextFactory.CreateContext())
             {
-                foreach (var store in await ctx.Stores.ToArrayAsync())
+                foreach (var store in await ctx.Stores.AsQueryable().ToArrayAsync())
                 {
                     var blob = store.GetStoreBlob();
 #pragma warning disable CS0612 // Type or member is obsolete
@@ -204,7 +204,7 @@ namespace BTCPayServer
         {
             using (var ctx = _DBContextFactory.CreateContext())
             {
-                foreach (var store in await ctx.Stores.ToArrayAsync())
+                foreach (var store in await ctx.Stores.AsQueryable().ToArrayAsync())
                 {
                     foreach (var method in store.GetSupportedPaymentMethods(_NetworkProvider).OfType<Payments.Lightning.LightningSupportedPaymentMethod>())
                     {

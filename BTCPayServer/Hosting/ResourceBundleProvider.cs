@@ -6,7 +6,12 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using BundlerMinifier.TagHelpers;
+#if NETCOREAPP21
+using IWebHostEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
+#else
+using Newtonsoft.Json.Serialization;
 using Microsoft.AspNetCore.Hosting;
+#endif
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Hosting
@@ -15,7 +20,7 @@ namespace BTCPayServer.Hosting
     {
         BundleProvider _InnerProvider;
         Lazy<Dictionary<string, Bundle>> _BundlesByName;
-        public ResourceBundleProvider(IHostingEnvironment hosting, BundleOptions options)
+        public ResourceBundleProvider(IWebHostEnvironment hosting, BundleOptions options)
         {
             if (options.UseBundles)
             {

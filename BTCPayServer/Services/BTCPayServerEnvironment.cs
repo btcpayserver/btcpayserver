@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Hosting;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -8,6 +7,12 @@ using System.Text;
 using NBXplorer;
 using NBitcoin;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Hosting;
+#if NETCOREAPP21
+using IWebHostEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
+#else
+using Microsoft.Extensions.Hosting;
+#endif
 
 namespace BTCPayServer.Services
 {
@@ -15,7 +20,7 @@ namespace BTCPayServer.Services
     {
         IHttpContextAccessor httpContext;
         TorServices torServices;
-        public BTCPayServerEnvironment(IHostingEnvironment env, BTCPayNetworkProvider provider, IHttpContextAccessor httpContext, TorServices torServices)
+        public BTCPayServerEnvironment(IWebHostEnvironment env, BTCPayNetworkProvider provider, IHttpContextAccessor httpContext, TorServices torServices)
         {
             this.httpContext = httpContext;
             Version = typeof(BTCPayServerEnvironment).GetTypeInfo().Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>().Version;
@@ -28,7 +33,7 @@ namespace BTCPayServer.Services
             NetworkType = provider.NetworkType;
             this.torServices = torServices;
         }
-        public IHostingEnvironment Environment
+        public IWebHostEnvironment Environment
         {
             get; set;
         }

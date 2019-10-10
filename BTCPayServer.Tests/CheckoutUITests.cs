@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Lightning;
 using BTCPayServer.Tests.Logging;
@@ -17,6 +18,7 @@ namespace BTCPayServer.Tests
     [Trait("Selenium", "Selenium")]
     public class CheckoutUITests
     {
+        public const int TestTimeout = 60_000;
         public CheckoutUITests(ITestOutputHelper helper)
         {
             Logs.Tester = new XUnitLog(helper) {Name = "Tests"};
@@ -24,12 +26,12 @@ namespace BTCPayServer.Tests
         }
        
         
-        [Fact]
-        public void CanCreateInvoice()
+        [Fact(Timeout = TestTimeout)]
+        public async Task CanCreateInvoice()
         {
             using (var s = SeleniumTester.Create())
             {
-                s.Start();
+                await s.StartAsync();
                 s.RegisterNewUser();
                 var store = s.CreateNewStore().storeName;
                 s.AddDerivationScheme();
@@ -51,7 +53,7 @@ namespace BTCPayServer.Tests
 
             using (var s = SeleniumTester.Create())
             {
-                s.Start();
+                await s.StartAsync();
                 s.RegisterNewUser();
                 var store = s.CreateNewStore();
                 s.AddDerivationScheme("BTC");
@@ -84,12 +86,12 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         public async Task CanUseLanguageDropdown()
         {
             using (var s = SeleniumTester.Create())
             {
-                s.Start();
+                await s.StartAsync();
                 s.RegisterNewUser();
                 var store = s.CreateNewStore();
                 s.AddDerivationScheme("BTC");
@@ -113,12 +115,12 @@ namespace BTCPayServer.Tests
             }
         }
         
-        [Fact]
-        public void CanUsePaymentMethodDropdown()
+        [Fact(Timeout = TestTimeout)]
+        public async Task CanUsePaymentMethodDropdown()
         {
             using (var s = SeleniumTester.Create())
             {
-                s.Start();
+                await s.StartAsync();
                 s.RegisterNewUser();
                 var store = s.CreateNewStore();
                 s.AddDerivationScheme("BTC");
@@ -138,30 +140,30 @@ namespace BTCPayServer.Tests
                 Assert.Contains("BTC", currencyDropdownButton.Text);
                 currencyDropdownButton.Click();
                 
-                var elements = s.Driver.FindElement(By.ClassName("vex-content"))
-                    .FindElements(By.ClassName("vexmenuitem"));
+                var elements = s.Driver.FindElement(By.ClassName("vex-content")).FindElements(By.ClassName("vexmenuitem"));
                 Assert.Equal(3, elements.Count);
                 elements.Single(element => element.Text.Contains("LTC")).Click();
+                Thread.Sleep(1000);
                 currencyDropdownButton =  s.Driver.FindElement(By.ClassName("payment__currencies"));
                 Assert.Contains("LTC", currencyDropdownButton.Text);
-                
-                elements = s.Driver.FindElement(By.ClassName("vex-content"))
-                    .FindElements(By.ClassName("vexmenuitem"));
-                
+                currencyDropdownButton.Click();
+
+                elements = s.Driver.FindElement(By.ClassName("vex-content")).FindElements(By.ClassName("vexmenuitem"));
                 elements.Single(element => element.Text.Contains("Lightning")).Click();
-                
+                currencyDropdownButton = s.Driver.FindElement(By.ClassName("payment__currencies"));
+
                 Assert.Contains("Lightning", currencyDropdownButton.Text);
                 
                 s.Driver.Quit();
             }
         }
         
-        [Fact]
-        public void CanUseLightningSatsFeature()
+        [Fact(Timeout = TestTimeout)]
+        public async Task CanUseLightningSatsFeature()
         {
             using (var s = SeleniumTester.Create())
             {
-                s.Start();
+                await s.StartAsync();
                 s.RegisterNewUser();
                 var store = s.CreateNewStore();
                 s.AddInternalLightningNode("BTC");

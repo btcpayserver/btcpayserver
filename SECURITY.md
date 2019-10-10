@@ -1,21 +1,7 @@
-# Security Policy
+Security issues and bugs should be reported privately, via email. To report security a security issue, please send an email to **security@btcpayserver.org** (not for support).
 
-## Supported Versions
+You will receive a reply indicating the next steps in handling your report. If for some reason you do not receive a reply within 24 hours, please follow up via email to ensure the original message was received.
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+After the initial reply to your report, you will be informed of the progress towards a fix and full announcement. You may be asked to provide additional information or guidance.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
-
-## Reporting a Vulnerability
-
-Use this section to tell people how to report a vulnerability.
-
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+We appreciate your efforts to responsibly disclose your findings, and will make every effort to acknowledge your contributions.

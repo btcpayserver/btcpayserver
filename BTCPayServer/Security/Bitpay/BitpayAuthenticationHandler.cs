@@ -18,7 +18,7 @@ using NBitpayClient;
 using NBitpayClient.Extensions;
 using Newtonsoft.Json.Linq;
 using BTCPayServer.Logging;
-using Microsoft.AspNetCore.Http.Internal;
+
 using Microsoft.AspNetCore.Authentication;
 using System.Text.Encodings.Web;
 using BTCPayServer.Data;
@@ -95,7 +95,7 @@ namespace BTCPayServer.Security.Bitpay
 
         private async Task<(string StoreId, bool SuccessAuth)> CheckBitId(HttpContext httpContext, string sig, string id, List<Claim> claims)
         {
-            httpContext.Request.EnableRewind();
+            httpContext.Request.EnableBuffering();
 
             string storeId = null;
             string body = string.Empty;
@@ -103,7 +103,7 @@ namespace BTCPayServer.Security.Bitpay
             {
                 using (StreamReader reader = new StreamReader(httpContext.Request.Body, Encoding.UTF8, true, 1024, true))
                 {
-                    body = reader.ReadToEnd();
+                    body = await reader.ReadToEndAsync();
                 }
                 httpContext.Request.Body.Position = 0;
             }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Services.Altcoins.Monero.Payments;
 using BTCPayServer.Services.Invoices;
 using Newtonsoft.Json.Linq;
 
@@ -32,6 +33,9 @@ namespace BTCPayServer.Payments
                 case "lightninglike":
                 case "offchain":
                     type = PaymentTypes.LightningLike;
+                    break;
+                case "monerolike":
+                    type = MoneroPaymentType.Instance;
                     break;
                 default:
                     type = null;

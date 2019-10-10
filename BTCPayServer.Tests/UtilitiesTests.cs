@@ -31,7 +31,7 @@ namespace BTCPayServer.Tests
             var json = await client.GetTransifexAsync("https://api.transifex.com/organizations/btcpayserver/projects/btcpayserver/resources/enjson/");
             var langs = new[] { "en" }.Concat(((JObject)json["stats"]).Properties().Select(n => n.Name)).ToArray();
 
-            var langsDir = Path.Combine(Services.LanguageService.TryGetSolutionDirectoryInfo().FullName, "BTCPayServer", "wwwroot", "locales");
+            var langsDir = Path.Combine(TestUtils.TryGetSolutionDirectoryInfo().FullName, "BTCPayServer", "wwwroot", "locales");
 
             JObject sourceLang = null;
             Task.WaitAll(langs.Select(async l =>

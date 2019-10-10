@@ -26,6 +26,7 @@ using Newtonsoft.Json;
 
 namespace BTCPayServer.Controllers
 {
+    [Filters.BitpayAPIConstraint(false)]
     public partial class InvoiceController : Controller
     {
         InvoiceRepository _InvoiceRepository;
@@ -141,6 +142,7 @@ namespace BTCPayServer.Controllers
                                                 .Where(c => c != null))
             {
                 currencyPairsToFetch.Add(new CurrencyPair(network.CryptoCode, invoice.Currency));
+                //TODO: abstract
                 if (storeBlob.LightningMaxValue != null)
                     currencyPairsToFetch.Add(new CurrencyPair(network.CryptoCode, storeBlob.LightningMaxValue.Currency));
                 if (storeBlob.OnChainMinValue != null)
@@ -175,7 +177,7 @@ namespace BTCPayServer.Controllers
             if (supported.Count == 0)
             {
                 StringBuilder errors = new StringBuilder();
-                errors.AppendLine("Warning: No wallet has been linked to your BTCPay Store. See the following link for more information on how to connect your store and wallet. (https://docs.btcpayserver.org/btcpay-basics/gettingstarted#connecting-btcpay-store-to-your-wallet)");
+                errors.AppendLine("Warning: No wallet has been linked to your BTCPay Store. See the following link for more information on how to connect your store and wallet. (https://docs.btcpayserver.org/getting-started/connectwallet)");
                 foreach (var error in logs.ToList())
                 {
                     errors.AppendLine(error.ToString());

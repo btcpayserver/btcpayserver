@@ -1,4 +1,5 @@
 ﻿using BTCPayServer.Configuration;
+using BTCPayServer.Services.Altcoins.Monero;
 using Microsoft.Extensions.Logging;
 using System;
 using System.IdentityModel.Tokens.Jwt;
@@ -39,7 +40,7 @@ using NBXplorer.DerivationStrategy;
 using NicolasDorier.RateLimits;
 using Npgsql;
 using BTCPayServer.Services.Apps;
-using BTCPayServer.Services.U2F;
+using BTCPayServer.U2F;
 using BundlerMinifier.TagHelpers;
 using OpenIddict.EntityFrameworkCore.Models;
 
@@ -52,6 +53,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.Authentication;
 
 namespace BTCPayServer.Hosting
 {
@@ -59,6 +61,11 @@ namespace BTCPayServer.Hosting
     {
         public static IServiceCollection AddBTCPayServer(this IServiceCollection services, IConfiguration configuration)
         {
+#if NETCOREAPP21
+            services.AddSingleton<MvcNewtonsoftJsonOptions>();
+#else
+			services.AddSingleton<MvcNewtonsoftJsonOptions>(o =>  o.GetRequiredService<IOptions<MvcNewtonsoftJsonOptions>>().Value);
+#endif
             services.AddDbContext<ApplicationDbContext>((provider, o) =>
             {
                 var factory = provider.GetRequiredService<ApplicationDbContextFactory>();
@@ -70,6 +77,7 @@ namespace BTCPayServer.Hosting
             {
                 httpClient.Timeout = Timeout.InfiniteTimeSpan;
             });
+            services.AddMoneroLike();
             services.TryAddSingleton<SettingsRepository>();
             services.TryAddSingleton<TorServices>();
             services.TryAddSingleton<SocketFactory>();
@@ -168,6 +176,7 @@ namespace BTCPayServer.Hosting
                 return htmlSanitizer;
             });
 
+            services.AddTransient<IClaimsTransformation, ClaimTransformer>();
             services.TryAddSingleton<LightningConfigurationProvider>();
             services.TryAddSingleton<LanguageService>();
             services.TryAddSingleton<NBXplorerDashboard>();
@@ -237,7 +246,7 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<EmailSenderFactory>();
             // bundling
 
-            services.AddAuthorization(o => Policies.AddBTCPayPolicies(o));
+            services.AddAuthorization(o => o.AddBTCPayPolicies().AddBTCPayRESTApiPolicies());
             services.AddBtcPayServerAuthenticationSchemes(configuration);
 
             services.AddSingleton<IBundleProvider, ResourceBundleProvider>();
@@ -278,43 +287,6 @@ namespace BTCPayServer.Hosting
                     options.TokenValidationParameters.IssuerSigningKey =
                         OpenIddictExtensions.GetSigningKey(configuration);
                     options.IncludeErrorDetails = true;
-                    options.Events = new JwtBearerEvents()
-                    {
-                        OnTokenValidated = async context =>
-                        {
-                            var routeData = context.HttpContext.GetRouteData();
-                            var identity = ((ClaimsIdentity)context.Principal.Identity);
-                            if (context.Principal.IsInRole(Roles.ServerAdmin))
-                            {
-                                identity.AddClaim(new Claim(Policies.CanModifyServerSettings.Key, "true"));
-                            }
-
-                            if (context.HttpContext.GetStoreData() != null ||
-                                !routeData.Values.TryGetValue("storeId", out var storeId))
-                            {
-                                return;
-                            }
-                            var userManager = context.HttpContext.RequestServices
-                                .GetService<UserManager<ApplicationUser>>();
-                            var storeRepository = context.HttpContext.RequestServices
-                                .GetService<StoreRepository>();
-                            var userid = userManager.GetUserId(context.Principal);
-
-                            if (!string.IsNullOrEmpty(userid))
-                            {
-                                var store = await storeRepository.FindStore((string)storeId, userid);
-                                if (store == null)
-                                {
-                                    context.Fail("Could not authorize you against store access");
-                                }
-                                else
-                                {
-                                    context.HttpContext.SetStoreData(store);
-                                    identity.AddClaims(store.GetClaims());
-                                }
-                            }
-                        }
-                    };
                 })
                 .AddCookie()
                 .AddBitpayAuthentication();
@@ -325,7 +297,10 @@ namespace BTCPayServer.Hosting
             app.UseMiddleware<BTCPayMiddleware>();
             return app; 
         }
+        public static IApplicationBuilder UseHeadersOverride(this IApplicationBuilder app)
+        {
+            app.UseMiddleware<HeadersOverrideMiddleware>();
+            return app;
+        }
     }
-
-
 }

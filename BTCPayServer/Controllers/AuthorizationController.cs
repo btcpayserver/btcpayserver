@@ -8,8 +8,6 @@ using System;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using AspNet.Security.OpenIdConnect.Extensions;
-using AspNet.Security.OpenIdConnect.Primitives;
 using BTCPayServer.Authentication.OpenId;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
@@ -22,6 +20,15 @@ using Microsoft.Extensions.Options;
 using OpenIddict.Abstractions;
 using OpenIddict.Core;
 using OpenIddict.Server;
+#if NETCOREAPP21
+using OpenIddictRequest = AspNet.Security.OpenIdConnect.Primitives.OpenIdConnectRequest;
+using OpenIdConnectDefaults = OpenIddict.Server.OpenIddictServerDefaults;
+using AspNet.Security.OpenIdConnect.Extensions;
+using AspNet.Security.OpenIdConnect.Primitives;
+#else
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+#endif
 
 namespace BTCPayServer.Controllers
 {
@@ -49,10 +56,10 @@ namespace BTCPayServer.Controllers
 
         [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)] 
         [HttpGet("/connect/authorize")]
-        public async Task<IActionResult> Authorize(OpenIdConnectRequest request)
+        public async Task<IActionResult> Authorize(OpenIddictRequest openIdConnectRequest)
         {
             // Retrieve the application details from the database.
-            var application = await _applicationManager.FindByClientIdAsync(request.ClientId);
+            var application = await _applicationManager.FindByClientIdAsync(openIdConnectRequest.ClientId);
 
             if (application == null)
             {
@@ -67,9 +74,9 @@ namespace BTCPayServer.Controllers
 
             var userId = _userManager.GetUserId(User);
             if (!string.IsNullOrEmpty(
-                await OpenIdExtensions.IsUserAuthorized(_authorizationManager, request, userId, application.Id)))
+                await OpenIdExtensions.IsUserAuthorized(_authorizationManager, openIdConnectRequest, userId, application.Id)))
             {
-                return await Authorize(request, "YES", false);
+                return await Authorize(openIdConnectRequest, "YES", false);
             }
 
             // Flow the request_id to allow OpenIddict to restore
@@ -77,14 +84,14 @@ namespace BTCPayServer.Controllers
             return View(new AuthorizeViewModel
             {
                 ApplicationName = await _applicationManager.GetDisplayNameAsync(application),
-                RequestId = request.RequestId,
-                Scope = request.Scope
+                RequestId = openIdConnectRequest.RequestId,
+                Scope = openIdConnectRequest.GetScopes()
             });
         }
 
         [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
         [HttpPost("/connect/authorize")]
-        public async Task<IActionResult> Authorize(OpenIdConnectRequest request,
+        public async Task<IActionResult> Authorize(OpenIddictRequest openIdConnectRequest,
             string consent, bool createAuthorization = true)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -111,7 +118,7 @@ namespace BTCPayServer.Controllers
                 default:
                     // Notify OpenIddict that the authorization grant has been denied by the resource owner
                     // to redirect the user agent to the client application using the appropriate response_mode.
-                    return Forbid(OpenIddictServerDefaults.AuthenticationScheme);
+                    return Forbid(OpenIdConnectDefaults.AuthenticationScheme);
             }
 
 
@@ -119,10 +126,10 @@ namespace BTCPayServer.Controllers
             var ticket =
                 await OpenIdExtensions.CreateAuthenticationTicket(_applicationManager, _authorizationManager,
                     _IdentityOptions.Value, _signInManager,
-                    request, user);
+                    openIdConnectRequest, user);
             if (createAuthorization)
             {
-                var application = await _applicationManager.FindByClientIdAsync(request.ClientId);
+                var application = await _applicationManager.FindByClientIdAsync(openIdConnectRequest.ClientId);
                 var authorization = await _authorizationManager.CreateAsync(User, user.Id, application.Id,
                     type, ticket.GetScopes().ToImmutableArray(),
                     ticket.Properties.Items.ToImmutableDictionary());

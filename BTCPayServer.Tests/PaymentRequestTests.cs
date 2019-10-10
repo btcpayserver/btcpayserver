@@ -37,11 +37,11 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Integration", "Integration")]
-        public void CanCreateViewUpdateAndDeletePaymentRequest()
+        public async Task CanCreateViewUpdateAndDeletePaymentRequest()
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
@@ -98,7 +98,7 @@ namespace BTCPayServer.Tests
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");
@@ -160,7 +160,7 @@ namespace BTCPayServer.Tests
         {
             using (var tester = ServerTester.Create())
             {
-                tester.Start();
+                await tester.StartAsync();
                 var user = tester.NewAccount();
                 user.GrantAccess();
                 user.RegisterDerivationScheme("BTC");

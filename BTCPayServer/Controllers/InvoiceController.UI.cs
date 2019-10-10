@@ -179,7 +179,7 @@ namespace BTCPayServer.Controllers
                 paymentMethodId = store.GetDefaultPaymentId(_NetworkProvider);
                 isDefaultPaymentId = true;
             }
-            BTCPayNetworkBase network = _NetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
+            BTCPayNetworkBase network = _NetworkProvider.GetNetwork<BTCPayNetworkBase>(paymentMethodId.CryptoCode);
             if (network == null && isDefaultPaymentId)
             {
                 //TODO: need to look into a better way for this as it does not scale

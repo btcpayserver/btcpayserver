@@ -14,18 +14,19 @@ namespace BTCPayServer.Tests
     [Trait("Selenium", "Selenium")]
     public class ChromeTests
     {
+        public const int TestTimeout = 60_000;
         public ChromeTests(ITestOutputHelper helper)
         {
             Logs.Tester = new XUnitLog(helper) { Name = "Tests" };
             Logs.LogProvider = new XUnitLogProvider(helper);
         }
 
-        [Fact]
-        public void CanNavigateServerSettings()
+        [Fact(Timeout = TestTimeout)]
+        public async Task CanNavigateServerSettings()
         {
             using (var s = SeleniumTester.Create())
             {
-                s.Start();
+                await s.StartAsync();
                 s.RegisterNewUser(true);
                 s.Driver.FindElement(By.Id("ServerSettings")).Click();
                 s.Driver.AssertNoError();
@@ -34,12 +35,12 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
-        public void NewUserLogin()
+        [Fact(Timeout = TestTimeout)]
+        public async Task NewUserLogin()
         {
             using (var s = SeleniumTester.Create())
             {
-                s.Start();
+                await s.StartAsync();
                 //Register & Log Out
                 var email = s.RegisterNewUser();
                 s.Driver.FindElement(By.Id("Logout")).Click();
@@ -95,12 +96,12 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("LoginButton")).Click();
             s.Driver.AssertNoError();
         }
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         public async Task CanUseSSHService()
         {
             using (var s = SeleniumTester.Create())
             {
-                s.Start();
+                await s.StartAsync();
                 var alice = s.RegisterNewUser(isAdmin: true);
                 s.Driver.Navigate().GoToUrl(s.Link("/server/services"));
                 Assert.Contains("server/services/ssh", s.Driver.PageSource);
@@ -132,12 +133,12 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
-        public void CanUseDynamicDns()
+        [Fact(Timeout = TestTimeout)]
+        public async Task CanUseDynamicDns()
         {
             using (var s = SeleniumTester.Create())
             {
-                s.Start();
+                await s.StartAsync();
                 var alice = s.RegisterNewUser(isAdmin: true);
                 s.Driver.Navigate().GoToUrl(s.Link("/server/services"));
                 Assert.Contains("Dynamic DNS", s.Driver.PageSource);
@@ -182,12 +183,12 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
-        public void CanCreateStores()
+        [Fact(Timeout = TestTimeout)]
+        public async Task CanCreateStores()
         {
             using (var s = SeleniumTester.Create())
             {
-                s.Start();
+                await s.StartAsync();
                 var alice = s.RegisterNewUser();
                 var store = s.CreateNewStore().storeName;
                 s.AddDerivationScheme();
@@ -234,12 +235,12 @@ namespace BTCPayServer.Tests
 
 
      
-        [Fact]
-        public void CanCreateAppPoS()
+        [Fact(Timeout = TestTimeout)]
+        public async Task CanCreateAppPoS()
         {
             using (var s = SeleniumTester.Create())
             {
-                s.Start();
+                await s.StartAsync();
                 s.RegisterNewUser();
                 var store = s.CreateNewStore();
 
@@ -258,12 +259,12 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
-        public void CanCreateAppCF()
+        [Fact(Timeout = TestTimeout)]
+        public async Task CanCreateAppCF()
         {
             using (var s = SeleniumTester.Create())
             {
-                s.Start();
+                await s.StartAsync();
                 s.RegisterNewUser();
                 var store = s.CreateNewStore();
                 s.AddDerivationScheme();
@@ -286,12 +287,12 @@ namespace BTCPayServer.Tests
             } 
         }
 
-        [Fact]
-        public void CanCreatePayRequest()
+        [Fact(Timeout = TestTimeout)]
+        public async Task CanCreatePayRequest()
         {
             using (var s = SeleniumTester.Create())
             {
-                s.Start();
+                await s.StartAsync();
                 s.RegisterNewUser();
                 s.CreateNewStore();
                 s.AddDerivationScheme();
@@ -309,12 +310,12 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
-        public void CanManageWallet()
+        [Fact(Timeout = TestTimeout)]
+        public async Task CanManageWallet()
         {
             using (var s = SeleniumTester.Create())
             {
-                s.Start();
+                await s.StartAsync();
                 s.RegisterNewUser();
                 s.CreateNewStore();
 

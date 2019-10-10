@@ -44,7 +44,7 @@ namespace BTCPayServer.Controllers
         public ExplorerClientProvider ExplorerClientProvider { get; }
 
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IOptions<MvcJsonOptions> _mvcJsonOptions;
+        private readonly JsonSerializerSettings _serializerSettings;
         private readonly NBXplorerDashboard _dashboard;
 
         private readonly IFeeProviderFactory _feeRateProvider;
@@ -59,7 +59,7 @@ namespace BTCPayServer.Controllers
                                  CurrencyNameTable currencyTable,
                                  BTCPayNetworkProvider networkProvider,
                                  UserManager<ApplicationUser> userManager,
-                                 IOptions<MvcJsonOptions> mvcJsonOptions,
+                                 MvcNewtonsoftJsonOptions mvcJsonOptions,
                                  NBXplorerDashboard dashboard,
                                  RateFetcher rateProvider,
                                  ExplorerClientProvider explorerProvider,
@@ -72,7 +72,7 @@ namespace BTCPayServer.Controllers
             RateFetcher = rateProvider;
             NetworkProvider = networkProvider;
             _userManager = userManager;
-            _mvcJsonOptions = mvcJsonOptions;
+            _serializerSettings = mvcJsonOptions.SerializerSettings;
             _dashboard = dashboard;
             ExplorerClientProvider = explorerProvider;
             _feeRateProvider = feeRateProvider;
@@ -393,7 +393,7 @@ namespace BTCPayServer.Controllers
                         !transactionOutput.SubtractFeesFromOutput)
                         vm.AddModelError(model => model.Outputs[i].SubtractFeesFromOutput,
                             "You are sending your entire balance to the same destination, you should subtract the fees",
-                            ModelState);
+                            this);
                 }
             }
 
@@ -402,7 +402,7 @@ namespace BTCPayServer.Controllers
                 foreach (var subtractFeesOutput in subtractFeesOutputsCount)
                 {
                     vm.AddModelError(model => model.Outputs[subtractFeesOutput].SubtractFeesFromOutput,
-                        "You can only subtract fees from one output", ModelState);
+                        "You can only subtract fees from one output", this);
                 }
             }else if (vm.CurrentBalance == transactionAmountSum && !substractFees)
             {
@@ -415,7 +415,7 @@ namespace BTCPayServer.Controllers
                 for (var i = 0; i < vm.Outputs.Count; i++)
                 {
                     vm.AddModelError(model => model.Outputs[i].Amount,
-                        "You are sending more than what you own", ModelState);
+                        "You are sending more than what you own", this);
                 }
             }
 
@@ -795,7 +795,7 @@ namespace BTCPayServer.Controllers
                     if (result != null)
                     {
                         UTF8Encoding UTF8NOBOM = new UTF8Encoding(false);
-                        var bytes = UTF8NOBOM.GetBytes(JsonConvert.SerializeObject(result, _mvcJsonOptions.Value.SerializerSettings));
+                        var bytes = UTF8NOBOM.GetBytes(JsonConvert.SerializeObject(result, _serializerSettings));
                         await webSocket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, new CancellationTokenSource(2000).Token);
                     }
                 }

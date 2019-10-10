@@ -5,19 +5,22 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="Build\dockerfiles\**" />
+    <Compile Remove="Build\**" />
+    <Compile Remove="Authentication\OpenId\**" Condition="'$(TargetFramework)' != 'netcoreapp2.1'" />
+    <Compile Remove="Storage\Services\Providers\GoogleCloudStorage\**" Condition="'$(TargetFramework)' != 'netcoreapp2.1'" />
+    <Compile Remove="Authentication\OpenId3\**" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
     <Compile Remove="wwwroot\bundles\jqueryvalidate\**" />
     <Compile Remove="wwwroot\css\**" />
     <Compile Remove="wwwroot\vendor\jquery-nice-select\**" />
-    <Content Remove="Build\dockerfiles\**" />
+    <Content Remove="Build\**" />
     <Content Remove="wwwroot\bundles\jqueryvalidate\**" />
     <Content Remove="wwwroot\css\**" />
     <Content Remove="wwwroot\vendor\jquery-nice-select\**" />
-    <EmbeddedResource Remove="Build\dockerfiles\**" />
+    <EmbeddedResource Remove="Build\**" />
     <EmbeddedResource Remove="wwwroot\bundles\jqueryvalidate\**" />
     <EmbeddedResource Remove="wwwroot\css\**" />
     <EmbeddedResource Remove="wwwroot\vendor\jquery-nice-select\**" />
-    <None Remove="Build\dockerfiles\**" />
+    <None Remove="Build\**" />
     <None Remove="wwwroot\bundles\jqueryvalidate\**" />
     <None Remove="wwwroot\css\**" />
     <None Remove="wwwroot\vendor\jquery-nice-select\**" />
@@ -48,7 +51,7 @@
     <PackageReference Include="NicolasDorier.CommandLine.Configuration" Version="1.0.0.3" />
     <PackageReference Include="NicolasDorier.RateLimits" Version="1.0.0.9" />
     <PackageReference Include="NicolasDorier.StandardConfiguration" Version="1.0.0.18" />
-    <PackageReference Include="OpenIddict" Version="2.0.0" />
+    <PackageReference Include="OpenIddict" Version="2.0.0" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
     <PackageReference Include="Serilog" Version="2.7.1" />
     <PackageReference Include="Serilog.AspNetCore" Version="2.1.1" />
     <PackageReference Include="Serilog.Sinks.File" Version="4.0.0" />
@@ -60,15 +63,23 @@
   </ItemGroup>
 
 	<ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.9" />
+    <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.9" Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
     <PackageReference Include="TwentyTwenty.Storage" Version="2.11.2" />
     <PackageReference Include="TwentyTwenty.Storage.Amazon" Version="2.11.2" />
     <PackageReference Include="TwentyTwenty.Storage.Azure" Version="2.11.2" />
-    <PackageReference Include="TwentyTwenty.Storage.Google" Version="2.11.2" />
+    <PackageReference Include="TwentyTwenty.Storage.Google" Version="2.11.2"  Condition="'$(TargetFramework)' == 'netcoreapp2.1'" />
     <PackageReference Include="TwentyTwenty.Storage.Local" Version="2.11.2" />
     <PackageReference Include="U2F.Core" Version="1.0.4" />
 		<PackageReference Include="YamlDotNet" Version="5.2.1" />
 	</ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' != 'netcoreapp2.1'">
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.0.0"></PackageReference>
+    <PackageReference Include="OpenIddict" Version="3.0.0-alpha1.19503.62" />
+    <PackageReference Include="OpenIddict.Server.AspNetCore" Version="3.0.0-alpha1.19503.62"></PackageReference>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="3.0.0" />
+  </ItemGroup>
 
 	<ItemGroup>
 		<DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.0" />
@@ -120,9 +131,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Authentication\OpenId\Models\" />
-	  <Folder Include="Build\" />
-	  <Folder Include="U2F\Services" />
 	  <Folder Include="wwwroot\vendor\clipboard.js\" />
 	  <Folder Include="wwwroot\vendor\highlightjs\" />
 	  <Folder Include="wwwroot\vendor\summernote" />
@@ -203,6 +211,8 @@
 	  <Content Update="Views\Wallets\WalletTransactions.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>
+    <Content Remove="Views\Server\EditGoogleCloudStorageStorageProvider.cshtml" Condition="'$(TargetFramework)' != 'netcoreapp2.1'">
+    </Content>
 	  <Content Update="Views\Wallets\_Nav.cshtml">
 	    <Pack>$(IncludeRazorContentInPack)</Pack>
 	  </Content>

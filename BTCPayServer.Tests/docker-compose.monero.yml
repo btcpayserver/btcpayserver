@@ -1,0 +1,28 @@
+version: "3"
+
+services:
+
+    monerod:
+        image: kukks/docker-monero:test
+        restart: unless-stopped
+        container_name: xmr_monerod
+        entrypoint: monerod --fixed-difficulty 100 --rpc-bind-ip=0.0.0.0 --confirm-external-bind --rpc-bind-port=18081 --non-interactive --block-notify="/scripts/notifier.sh https://127.0.0.1:14142/monerolikedaemoncallback/block?cryptoCode=xmr&hash=%s" --testnet --no-igd --hide-my-port --no-sync --offline
+        volumes:
+            - "monero_data:/home/monero/.bitmonero"
+        ports:
+            - "18081:18081"
+    monero_wallet:
+        image: kukks/docker-monero:test
+        restart: unless-stopped
+        container_name: xmr_wallet_rpc
+        entrypoint: monero-wallet-rpc --testnet --rpc-bind-ip=0.0.0.0 --disable-rpc-login --confirm-external-bind --rpc-bind-port=18082 --non-interactive --trusted-daemon  --daemon-address=127.0.0.1:18081 --wallet-file=/wallet/wallet.keys --tx-notify="/scripts/notifier.sh https://127.0.0.1:14142/monerolikedaemoncallback/tx?cryptoCode=xmr&hash=%s"
+        ports:
+            - "18082:18082"
+        volumes:
+            - "monero_wallet:/wallet"
+        depends_on:
+            - monerod
+        
+volumes:
+    monero_data:
+    monero_wallet:

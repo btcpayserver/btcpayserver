@@ -1,0 +1,67 @@
+@using System.Globalization
+@using BTCPayServer.Controllers
+@using BTCPayServer.Services.Altcoins.Monero.Payments
+@using BTCPayServer.Services.Altcoins.Monero.UI
+@model IEnumerable<BTCPayServer.Services.Invoices.PaymentEntity>
+
+@{
+    var onchainPayments = Model.Where(entity => entity.GetPaymentMethodId().PaymentType == MoneroPaymentType.Instance).Select(payment =>
+    {
+        var m = new MoneroPaymentViewModel();
+        var onChainPaymentData = payment.GetCryptoPaymentData() as MoneroLikePaymentData;
+        m.Crypto = payment.GetPaymentMethodId().CryptoCode;
+        m.DepositAddress = onChainPaymentData.GetDestination();
+
+        var confirmationCount = onChainPaymentData.ConfirmationCount;
+        var network = payment.Network as MoneroLikeSpecificBtcPayNetwork;
+        if (confirmationCount >= network.MaxTrackedConfirmation)
+        {
+            m.Confirmations = "At least " + (network.MaxTrackedConfirmation);
+        }
+        else
+        {
+            m.Confirmations = confirmationCount.ToString(CultureInfo.InvariantCulture);
+        }
+
+        m.TransactionId = onChainPaymentData.TransactionId;
+        m.ReceivedTime = payment.ReceivedTime;
+        m.TransactionLink = string.Format(CultureInfo.InvariantCulture, payment.Network.BlockExplorerLink, m.TransactionId);
+        return m;
+    });
+}
+
+@if (onchainPayments.Any())
+{
+    <div class="row">
+        <div class="col-md-12 invoice-payments">
+            <h3>Monero payments</h3>
+            <table class="table table-sm table-responsive-lg">
+                <thead class="thead-inverse">
+                <tr>
+                    <th>Crypto</th>
+                    <th>Deposit address</th>
+                    <th>Transaction Id</th>
+                    <th class="text-right">Confirmations</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var payment in onchainPayments)
+                {
+                    <tr >
+                        <td>@payment.Crypto</td>
+                        <td>@payment.DepositAddress</td>
+                        <td>
+                            <div class="wraptextAuto">
+                                <a href="@payment.TransactionLink" target="_blank">
+                                    @payment.TransactionId
+                                </a>
+                            </div>
+                        </td>
+                        <td class="text-right">@payment.Confirmations</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

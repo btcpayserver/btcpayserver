@@ -23,7 +23,7 @@
   "Address": "Adress",
   "Copied": "Kopierat",
   "ConversionTab_BodyTop": "Du kan betala {{btcDue}} {{cryptoCode}} med andra altcoins utöver de som handlaren stödjer.",
-  "ConversionTab_BodyDesc": "Denna tjänst tillhandahålls av tredje part. Vänligen kom ihåg att vi saknar kontroll över hur tjänstleverantörer behandlar din betalning. Fakturan markeras som betald först när betalningen har mottagits på {{cryptoCode}} Blockchain.",
+  "ConversionTab_BodyDesc": "Denna tjänst tillhandahålls av 3e part. Vänligen kom ihåg att vi saknar kontroll över hur tjänstleverantörer behandlar din betalning. Fakturan markeras som betald först när betalningen har mottagits på {{cryptoCode}} Blockchain.",
   "ConversionTab_CalculateAmount_Error": "Försök igen",
   "ConversionTab_LoadCurrencies_Error": "Försök igen",
   "ConversionTab_Lightning": "Inga tillgängliga tjänstleverantörer för konvertering av betalningar på Lightning Network.",
@@ -47,5 +47,5 @@
   "Pay with CoinSwitch": "Betala med CoinSwitch",
   "Pay with Changelly": "Betala med Changelly",
   "Close": "Stäng",
-  "NotPaid_ExtraTransaction": "The invoice hasn't been paid in full. Please send another transaction to cover amount Due."
+  "NotPaid_ExtraTransaction": "Fakturabetalningen är ofullständig. Vänligen betala kvarstående belopp."
 }

@@ -31,13 +31,14 @@ namespace BTCPayServer.Tests
 {
     public class AuthenticationTests
     {
+        public const int TestTimeout = 60_000;
         public AuthenticationTests(ITestOutputHelper helper)
         {
             Logs.Tester = new XUnitLog(helper) {Name = "Tests"};
             Logs.LogProvider = new XUnitLogProvider(helper);
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task GetRedirectedToLoginPathOnChallenge()
         {
@@ -59,7 +60,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanGetOpenIdConfiguration()
         {
@@ -80,7 +81,7 @@ namespace BTCPayServer.Tests
             }
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanUseNonInteractiveFlows()
         {
@@ -100,8 +101,8 @@ namespace BTCPayServer.Tests
             }
         }
 
+        [Fact(Timeout = TestTimeout)]
         [Trait("Selenium", "Selenium")]
-        [Fact]
         public async Task CanUseImplicitFlow()
         {
             using (var s = SeleniumTester.Create())
@@ -196,8 +197,8 @@ namespace BTCPayServer.Tests
             
         }
 
+        [Fact(Timeout = TestTimeout)]
         [Trait("Selenium", "Selenium")]
-        [Fact]
         public async Task CanUseCodeFlow()
         {
             using (var s = SeleniumTester.Create())

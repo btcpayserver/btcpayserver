@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Mvc;
@@ -68,20 +70,26 @@ namespace BTCPayServer.Tests
             return Assert.IsType<T>(vr.Model);
         }
 
-        public static IWebElement AssertElementNotFound(this IWebDriver driver, By by)
+        public static void AssertElementNotFound(this IWebDriver driver, By by)
         {
-            try
-            {
-                var webElement = driver.FindElement(by);
-                Assert.False(webElement.Displayed);
-                return webElement;
-            }
-            catch (NoSuchElementException)
-            {
-                
-            }
+            DateTimeOffset now = DateTimeOffset.Now;
+            var wait = SeleniumTester.ImplicitWait;
 
-            return null;
+            while (DateTimeOffset.UtcNow - now < wait)
+            {
+                try
+                {
+                    var webElement = driver.FindElement(by);
+                    if (!webElement.Displayed)
+                        return;
+                }
+                catch (NoSuchElementException)
+                {
+                    return;
+                }
+                Thread.Sleep(50);
+            }
+            Assert.False(true, "Elements was found");
         }
     }
 }

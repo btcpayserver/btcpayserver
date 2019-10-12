@@ -39,7 +39,7 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Pair to")]
         [Required]
-        public string SelectedStore
+        public string StoreId
         {
             get; set;
         }

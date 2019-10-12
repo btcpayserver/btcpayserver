@@ -26,7 +26,7 @@ using BTCPayServer.Data;
 
 namespace BTCPayServer.Controllers
 {
-    [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
+    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [Route("[controller]/[action]")]
     public class AccountController : Controller
     {

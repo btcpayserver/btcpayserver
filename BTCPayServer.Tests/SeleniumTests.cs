@@ -8,6 +8,7 @@ using OpenQA.Selenium.Interactions;
 using System.Linq;
 using NBitcoin;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 namespace BTCPayServer.Tests
 {
@@ -233,8 +234,56 @@ namespace BTCPayServer.Tests
             }
         }
 
+        [Fact(Timeout = TestTimeout)]
+        public async Task CanUsePairing()
+        {
+            using (var s = SeleniumTester.Create())
+            {
+                await s.StartAsync();
+                s.Driver.Navigate().GoToUrl(s.Link("/api-access-request"));
+                Assert.Contains("ReturnUrl", s.Driver.Url);
 
-     
+                var alice = s.RegisterNewUser();
+                var store = s.CreateNewStore().storeName;
+                s.AddDerivationScheme();
+
+                s.Driver.FindElement(By.Id("Tokens")).Click();
+                s.Driver.FindElement(By.Id("CreateNewToken")).Click();
+                s.Driver.FindElement(By.Id("RequestPairing")).Click();
+
+                var regex = Regex.Match(new Uri(s.Driver.Url, UriKind.Absolute).Query, "pairingCode=([^&]*)");
+                Assert.True(regex.Success, $"{s.Driver.Url} does not match expected regex");
+                var pairingCode = regex.Groups[1].Value;
+
+                s.Driver.FindElement(By.Id("ApprovePairing")).Click();
+                Assert.Contains(pairingCode, s.Driver.PageSource);
+
+                var client = new NBitpayClient.Bitpay(new Key(), s.Server.PayTester.ServerUri);
+                await client.AuthorizeClient(new NBitpayClient.PairingCode(pairingCode));
+                await client.CreateInvoiceAsync(new NBitpayClient.Invoice()
+                {
+                    Price = 0.000000012m,
+                    Currency = "USD",
+                    FullNotifications = true
+                }, NBitpayClient.Facade.Merchant);
+
+                client = new NBitpayClient.Bitpay(new Key(), s.Server.PayTester.ServerUri);
+
+                var code = await client.RequestClientAuthorizationAsync("hehe", NBitpayClient.Facade.Merchant);
+                s.Driver.Navigate().GoToUrl(code.CreateLink(s.Server.PayTester.ServerUri));
+                s.Driver.FindElement(By.Id("ApprovePairing")).Click();
+
+                await client.CreateInvoiceAsync(new NBitpayClient.Invoice()
+                {
+                    Price = 0.000000012m,
+                    Currency = "USD",
+                    FullNotifications = true
+                }, NBitpayClient.Facade.Merchant);
+            }
+        }
+
+
+
         [Fact(Timeout = TestTimeout)]
         public async Task CanCreateAppPoS()
         {
@@ -316,7 +365,7 @@ namespace BTCPayServer.Tests
             using (var s = SeleniumTester.Create())
             {
                 await s.StartAsync();
-                s.RegisterNewUser();
+                s.RegisterNewUser(true);
                 s.CreateNewStore();
 
                 // In this test, we try to spend from a manual seed. We import the xpub 49'/0'/0', then try to use the seed 
@@ -331,6 +380,10 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.LinkText("Manage")).Click();
 
                 s.ClickOnAllSideMenus();
+
+                // Make sure we can rescan, because we are admin!
+                s.Driver.FindElement(By.Id("WalletRescan")).ForceClick();
+                Assert.Contains("The batch size make sure", s.Driver.PageSource);
 
                 // We setup the fingerprint and the account key path
                 s.Driver.FindElement(By.Id("WalletSettings")).ForceClick();

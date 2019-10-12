@@ -2,26 +2,35 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Authentication;
 using Microsoft.AspNetCore.Authorization;
 
 namespace BTCPayServer.Security
 {
     public static class Policies
     {
-        
-        public const string BitpayAuthentication = "Bitpay.Auth";
-        public const string CookieAuthentication = "Identity.Application";
         public static AuthorizationOptions AddBTCPayPolicies(this AuthorizationOptions options)
         {
-            AddClaim(options, CanModifyStoreSettings.Key);
-            AddClaim(options, CanModifyServerSettings.Key);
-            AddClaim(options, CanCreateInvoice.Key);
+            options.AddPolicy(CanModifyStoreSettings.Key);
+            options.AddPolicy(CanCreateInvoice.Key);
+            options.AddPolicy(CanGetRates.Key);
+            options.AddPolicy(CanModifyServerSettings.Key);
+
+            options.AddPolicy(RestAPIPolicies.CanCreateInvoices);
+            options.AddPolicy(RestAPIPolicies.CanManageApps);
+            options.AddPolicy(RestAPIPolicies.CanManageInvoices);
+            options.AddPolicy(RestAPIPolicies.CanManageStores);
+            options.AddPolicy(RestAPIPolicies.CanManageWallet);
+            options.AddPolicy(RestAPIPolicies.CanViewApps);
+            options.AddPolicy(RestAPIPolicies.CanViewInvoices);
+            options.AddPolicy(RestAPIPolicies.CanViewProfile);
+            options.AddPolicy(RestAPIPolicies.CanViewStores);
             return options;
         }
 
-        private static void AddClaim(AuthorizationOptions options, string key)
+        public static void AddPolicy(this AuthorizationOptions options, string policy)
         {
-            options.AddPolicy(key, o => o.RequireClaim(key));
+            options.AddPolicy(policy, o => o.AddRequirements(new PolicyRequirement(policy)));
         }
 
         public class CanModifyServerSettings
@@ -36,6 +45,10 @@ namespace BTCPayServer.Security
         {
             public const string Key = "btcpay.store.cancreateinvoice";
         }
-        
+
+        public class CanGetRates
+        {
+            public const string Key = "btcpay.store.cangetrates";
+        }
     }
 }

@@ -54,7 +54,7 @@ namespace BTCPayServer.Controllers
             _IdentityOptions = identityOptions;
         }
 
-        [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)] 
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)] 
         [HttpGet("/connect/authorize")]
         public async Task<IActionResult> Authorize(OpenIddictRequest openIdConnectRequest)
         {
@@ -89,7 +89,7 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpPost("/connect/authorize")]
         public async Task<IActionResult> Authorize(OpenIddictRequest openIdConnectRequest,
             string consent, bool createAuthorization = true)

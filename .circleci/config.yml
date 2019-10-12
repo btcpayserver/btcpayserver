@@ -2,7 +2,7 @@ version: 2
 jobs:
   fast_tests:
     machine:
-        docker_layer_caching: true
+        enabled: true
     steps:
       - checkout
       - run:
@@ -10,7 +10,7 @@ jobs:
             cd .circleci && ./run-tests.sh "Fast=Fast"
   selenium_tests:
     machine:
-        docker_layer_caching: true
+        enabled: true
     steps:
       - checkout
       - run:
@@ -18,7 +18,7 @@ jobs:
             cd .circleci && ./run-tests.sh "Selenium=Selenium"
   integration_tests:
     machine:
-        docker_layer_caching: true
+        enabled: true
     steps:
       - checkout
       - run:
@@ -26,7 +26,7 @@ jobs:
             cd .circleci && ./run-tests.sh "Integration=Integration"
   external_tests:
     machine:
-        docker_layer_caching: true
+        enabled: true
     steps:
       - checkout
       - run:
@@ -37,7 +37,7 @@ jobs:
   # publish jobs require $DOCKERHUB_REPO, $DOCKERHUB_USER, $DOCKERHUB_PASS defined
   amd64:
     machine:
-      docker_layer_caching: true
+        enabled: true
     steps:
       - checkout  
       - run:
@@ -50,7 +50,7 @@ jobs:
 
   arm32v7:
     machine:
-      docker_layer_caching: true
+        enabled: true
     steps:
       - checkout  
       - run:

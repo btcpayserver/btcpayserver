@@ -38,9 +38,11 @@
                 </select>
             </div>
             <div class="form-group">
-                <label asp-for="AnyoneCanCreateInvoice"></label>
-                <a href="https://docs.btcpayserver.org/faq-and-common-issues/faq-stores#allow-anyone-to-create-invoice" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
-                <input asp-for="AnyoneCanCreateInvoice" type="checkbox" class="form-check" />
+                <div class="form-check">
+                    <input asp-for="AnyoneCanCreateInvoice" type="checkbox" class="form-check-input" />
+                    <label asp-for="AnyoneCanCreateInvoice" class="form-check-label"></label>
+                    <a href="https://docs.btcpayserver.org/faq-and-common-issues/faq-stores#allow-anyone-to-create-invoice" target="_blank"><span class="fa fa-question-circle-o" title="More information..."></span></a>
+                </div>
             </div>
             <div class="form-group">
                 <label asp-for="InvoiceExpiration"></label>

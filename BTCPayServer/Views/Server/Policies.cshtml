@@ -12,24 +12,26 @@
 
 <form method="post">
     <div class="form-group">
-        <label asp-for="RequiresConfirmedEmail"></label>
-        <input asp-for="RequiresConfirmedEmail" type="checkbox" class="form-check-inline"/>
-        <span asp-validation-for="RequiresConfirmedEmail" class="text-danger"></span>
-    </div>
-    <div class="form-group">
-        <label asp-for="LockSubscription"></label>
-        <input asp-for="LockSubscription" type="checkbox" class="form-check-inline"/>
-        <span asp-validation-for="LockSubscription" class="text-danger"></span>
-    </div>
-    <div class="form-group">
-        <label asp-for="DiscourageSearchEngines"></label>
-        <input asp-for="DiscourageSearchEngines" type="checkbox" class="form-check-inline"/>
-        <span asp-validation-for="DiscourageSearchEngines" class="text-danger"></span>
-    </div>
-    <div class="form-group">
-        <label asp-for="AllowLightningInternalNodeForAll"></label>
-        <input asp-for="AllowLightningInternalNodeForAll" type="checkbox" class="form-check-inline"/>
-        <span asp-validation-for="AllowLightningInternalNodeForAll" class="text-danger"></span>
+        <div class="form-check">
+            <input asp-for="RequiresConfirmedEmail" type="checkbox" class="form-check-input"/>
+            <label asp-for="RequiresConfirmedEmail" class="form-check-label"></label>
+            <span asp-validation-for="RequiresConfirmedEmail" class="text-danger"></span>
+        </div>
+        <div class="form-check">
+            <input asp-for="LockSubscription" type="checkbox" class="form-check-input"/>
+            <label asp-for="LockSubscription" class="form-check-label"></label>
+            <span asp-validation-for="LockSubscription" class="text-danger"></span>
+        </div>
+        <div class="form-check">
+            <input asp-for="DiscourageSearchEngines" type="checkbox" class="form-check-input"/>
+            <label asp-for="DiscourageSearchEngines" class="form-check-label"></label>
+            <span asp-validation-for="DiscourageSearchEngines" class="text-danger"></span>
+        </div>
+        <div class="form-check">
+            <input asp-for="AllowLightningInternalNodeForAll" type="checkbox" class="form-check-input"/>
+            <label asp-for="AllowLightningInternalNodeForAll" class="form-check-label"></label>
+            <span asp-validation-for="AllowLightningInternalNodeForAll" class="text-danger"></span>
+        </div>
     </div>
     <div class="form-group">
         <label asp-for="RootAppId"></label>

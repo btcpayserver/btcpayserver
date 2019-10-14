@@ -96,8 +96,10 @@ $(document).ready(function(){
                 <span asp-validation-for="Settings.Password" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="Settings.EnableSSL"></label>
-                <input asp-for="Settings.EnableSSL" type="checkbox" class="form-check-inline"/>
+                <div class="form-check">
+                    <input asp-for="Settings.EnableSSL" type="checkbox" class="form-check-input"/>
+                    <label asp-for="Settings.EnableSSL" class="form-check-label"></label>
+                </div>
             </div>
             <div class="form-group">
                 <label asp-for="TestEmail"></label>

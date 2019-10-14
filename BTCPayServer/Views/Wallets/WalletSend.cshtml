@@ -78,9 +78,11 @@
                                         <span asp-validation-for="Outputs[index].Amount" class="text-danger"></span>
                                     </div>
                                     <div class="form-group">
-                                        <label asp-for="Outputs[index].SubtractFeesFromOutput" class="control-label"></label>
-                                        <input type="checkbox" asp-for="Outputs[index].SubtractFeesFromOutput" class="form-check subtract-fees" />
-                                        <span asp-validation-for="Outputs[index].SubtractFeesFromOutput" class="text-danger"></span>
+                                        <div class="form-check">
+                                            <input type="checkbox" asp-for="Outputs[index].SubtractFeesFromOutput" class="form-check-input subtract-fees" />
+                                            <label asp-for="Outputs[index].SubtractFeesFromOutput" class="form-check-label"></label>
+                                            <span asp-validation-for="Outputs[index].SubtractFeesFromOutput" class="text-danger"></span>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="col-sm-12 col-md-12 col-lg-2 pull-right">
@@ -108,9 +110,11 @@
             @if (Model.Outputs.Count == 1)
             {
                 <div class="form-group">
-                    <label asp-for="Outputs[0].SubtractFeesFromOutput" class="control-label"></label>
-                    <input type="checkbox" asp-for="Outputs[0].SubtractFeesFromOutput" class="form-check subtract-fees" />
-                    <span asp-validation-for="Outputs[0].SubtractFeesFromOutput" class="text-danger"></span>
+                    <div class="form-check">
+                        <input type="checkbox" asp-for="Outputs[0].SubtractFeesFromOutput" class="form-check-input subtract-fees" />
+                        <label asp-for="Outputs[0].SubtractFeesFromOutput" class="form-check-label"></label>
+                        <span asp-validation-for="Outputs[0].SubtractFeesFromOutput" class="text-danger"></span>
+                    </div>
                 </div>
             }
             <div class="card">
@@ -123,21 +127,21 @@
                 </div>
                 <div id="accordian-advanced" class="collapse" aria-labelledby="accordian-advanced-header" data-parent="#accordian-advanced">
                     <div class="card-body">
-                        <div class="form-group">
-                            <label asp-for="NoChange"></label>
+                        <div class="form-check">
+                            <input asp-for="NoChange" class="form-check-input" />
+                            <label asp-for="NoChange" class="form-check-label"></label>
                             <a href="https://docs.btcpayserver.org/features/wallet#make-sure-no-change-utxo-is-created-expert-mode" target="_blank">
                                 <span class="fa fa-question-circle-o" title="More information..."></span>
                             </a>
-                            <input asp-for="NoChange" class="form-check" />
                         </div>
                         @if (Model.SupportRBF)
                         {
-                            <div class="form-group">
-                                <label asp-for="DisableRBF"></label>
+                            <div class="form-check">
+                                <input asp-for="DisableRBF" class="form-check-input" />
+                                <label asp-for="DisableRBF" class="form-check-label"></label>
                                 <a href="https://bitcoin.org/en/glossary/rbf" target="_blank">
                                     <span class="fa fa-question-circle-o" title="More information..."></span>
                                 </a>
-                                <input asp-for="DisableRBF" class="form-check" />
                             </div>
                         }
                     </div>

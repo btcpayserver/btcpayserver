@@ -25,6 +25,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OpenIddict.Abstractions;
 using OpenQA.Selenium;
+using Microsoft.AspNetCore.Identity;
 
 namespace BTCPayServer.Tests
 {
@@ -89,6 +90,7 @@ namespace BTCPayServer.Tests
 
                 var user = tester.NewAccount();
                 user.GrantAccess();
+                await user.MakeAdmin();
                 var token = await RegisterPasswordClientAndGetAccessToken(user, null, tester);
                 await TestApiAgainstAccessToken(token, tester, user);
                 token = await RegisterPasswordClientAndGetAccessToken(user, "secret", tester);
@@ -205,6 +207,7 @@ namespace BTCPayServer.Tests
 
                 var user = tester.NewAccount();
                 user.GrantAccess();
+                await user.MakeAdmin();
                 var id = Guid.NewGuid().ToString();
                 var redirecturi = new Uri("http://127.0.0.1/oidc-callback");
                 var secret = "secret";
@@ -399,7 +402,7 @@ namespace BTCPayServer.Tests
                 $"api/test/me/stores/{testAccount.StoreId}/can-edit",
                 tester.PayTester.HttpClient));
 
-            Assert.Equal(testAccount.RegisterDetails.IsAdmin, await TestApiAgainstAccessToken<bool>(accessToken,
+            Assert.True(await TestApiAgainstAccessToken<bool>(accessToken,
                 $"api/test/me/is-admin",
                 tester.PayTester.HttpClient));
 

@@ -73,7 +73,6 @@ namespace BTCPayServer.Data
         }
 
         [NotMapped]
-        [Obsolete]
         public string Role
         {
             get; set;
@@ -88,9 +87,6 @@ namespace BTCPayServer.Data
         public string DefaultCrypto { get; set; }
         public List<PairedSINData> PairedSINs { get; set; }
         public IEnumerable<APIKeyData> APIKeys { get; set; }
-
-        [NotMapped]
-        public List<Claim> AdditionalClaims { get; set; } = new List<Claim>();
     }
 
     public enum NetworkFeeMode

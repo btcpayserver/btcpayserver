@@ -42,6 +42,7 @@ using BTCPayServer.Services;
 using System.Net.Http;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using System.Threading.Tasks;
+using AuthenticationSchemes = BTCPayServer.Security.AuthenticationSchemes;
 
 namespace BTCPayServer.Tests
 {
@@ -295,7 +296,7 @@ namespace BTCPayServer.Tests
         public string SSHPassword { get; internal set; }
         public string SSHKeyFile { get; internal set; }
         public string SSHConnection { get; set; }
-        public T GetController<T>(string userId = null, string storeId = null, Claim[] additionalClaims = null) where T : Controller
+        public T GetController<T>(string userId = null, string storeId = null, bool isAdmin = false) where T : Controller
         {
             var context = new DefaultHttpContext();
             context.Request.Host = new HostString("127.0.0.1", Port);
@@ -305,9 +306,9 @@ namespace BTCPayServer.Tests
             {
                 List<Claim> claims = new List<Claim>();
                 claims.Add(new Claim(OpenIdConnectConstants.Claims.Subject, userId));
-                if (additionalClaims != null)
-                    claims.AddRange(additionalClaims);
-                context.User = new ClaimsPrincipal(new ClaimsIdentity(claims.ToArray(), Policies.CookieAuthentication));
+                if (isAdmin)
+                    claims.Add(new Claim(ClaimTypes.Role, Roles.ServerAdmin));
+                context.User = new ClaimsPrincipal(new ClaimsIdentity(claims.ToArray(), AuthenticationSchemes.Cookie));
             }
             if (storeId != null)
             {

@@ -17,7 +17,7 @@ using NBXplorer.DerivationStrategy;
 namespace BTCPayServer.Controllers
 {
     [Route("stores")]
-    [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
+    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [AutoValidateAntiforgeryToken]
     public partial class UserStoresController : Controller
     {
@@ -91,7 +91,7 @@ namespace BTCPayServer.Controllers
                     Id = store.Id,
                     Name = store.StoreName,
                     WebSite = store.StoreWebsite,
-                    IsOwner = store.HasClaim(Policies.CanModifyStoreSettings.Key)
+                    IsOwner = store.Role == StoreRoles.Owner
                 });
             }
             return View(result);

@@ -54,6 +54,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
+using BTCPayServer.Security.Bitpay;
 
 namespace BTCPayServer.Hosting
 {
@@ -176,7 +178,6 @@ namespace BTCPayServer.Hosting
                 return htmlSanitizer;
             });
 
-            services.AddTransient<IClaimsTransformation, ClaimTransformer>();
             services.TryAddSingleton<LightningConfigurationProvider>();
             services.TryAddSingleton<LanguageService>();
             services.TryAddSingleton<NBXplorerDashboard>();
@@ -224,7 +225,9 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IHostedService, TorServicesHostedService>();
             services.AddSingleton<IHostedService, PaymentRequestStreamer>();
             services.AddSingleton<IBackgroundJobClient, BackgroundJobClient>();
-            services.AddTransient<IConfigureOptions<MvcOptions>, BTCPayClaimsFilter>();
+            services.AddScoped<IAuthorizationHandler, CookieAuthorizationHandler>();
+            services.AddScoped<IAuthorizationHandler, OpenIdAuthorizationHandler>();
+            services.AddScoped<IAuthorizationHandler, BitpayAuthorizationHandler>();
 
             services.TryAddSingleton<ExplorerClientProvider>();
             services.TryAddSingleton<Bitpay>(o =>
@@ -246,8 +249,8 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<EmailSenderFactory>();
             // bundling
 
-            services.AddAuthorization(o => o.AddBTCPayPolicies().AddBTCPayRESTApiPolicies());
             services.AddBtcPayServerAuthenticationSchemes(configuration);
+            services.AddAuthorization(o => o.AddBTCPayPolicies());
 
             services.AddSingleton<IBundleProvider, ResourceBundleProvider>();
             services.AddTransient<BundleOptions>(provider =>

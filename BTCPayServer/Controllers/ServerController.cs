@@ -38,7 +38,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BTCPayServer.Controllers
 {
-    [Authorize(Policy = BTCPayServer.Security.Policies.CanModifyServerSettings.Key)]
+    [Authorize(Policy = BTCPayServer.Security.Policies.CanModifyServerSettings.Key,
+               AuthenticationSchemes = BTCPayServer.Security.AuthenticationSchemes.Cookie)]
     public partial class ServerController : Controller
     {
         private UserManager<ApplicationUser> _UserManager;

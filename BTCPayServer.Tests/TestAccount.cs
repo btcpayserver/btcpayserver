@@ -20,6 +20,7 @@ using BTCPayServer.Lightning.CLightning;
 using BTCPayServer.Data;
 using OpenIddict.Abstractions;
 using OpenIddict.Core;
+using Microsoft.AspNetCore.Identity;
 
 namespace BTCPayServer.Tests
 {
@@ -35,6 +36,13 @@ namespace BTCPayServer.Tests
         public void GrantAccess()
         {
             GrantAccessAsync().GetAwaiter().GetResult();
+        }
+
+        public async Task MakeAdmin()
+        {
+            var userManager = parent.PayTester.GetService<UserManager<ApplicationUser>>();
+            var u = await userManager.FindByIdAsync(UserId);
+            await userManager.AddToRoleAsync(u, Roles.ServerAdmin);
         }
 
         public void Register()
@@ -78,7 +86,8 @@ namespace BTCPayServer.Tests
 
         public T GetController<T>(bool setImplicitStore = true) where T : Controller
         {
-            return parent.PayTester.GetController<T>(UserId, setImplicitStore ? StoreId : null);
+            var controller = parent.PayTester.GetController<T>(UserId, setImplicitStore ? StoreId : null, IsAdmin);
+            return controller;
         }
 
         public async Task CreateStoreAsync()
@@ -140,6 +149,7 @@ namespace BTCPayServer.Tests
         {
             get; set;
         }
+        public bool IsAdmin { get; internal set; }
 
         public void RegisterLightningNode(string cryptoCode, LightningConnectionType connectionType)
         {

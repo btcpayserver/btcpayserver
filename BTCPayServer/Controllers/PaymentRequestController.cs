@@ -31,7 +31,7 @@ using NBitpayClient;
 namespace BTCPayServer.Controllers
 {
     [Route("payment-requests")]
-    [Authorize(AuthenticationSchemes = Policies.CookieAuthentication)]
+    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public class PaymentRequestController : Controller
     {
         private readonly InvoiceController _InvoiceController;
@@ -289,7 +289,6 @@ namespace BTCPayServer.Controllers
             var pr = await _PaymentRequestRepository.FindPaymentRequest(id, null);
             var blob = pr.GetBlob();
             var store = pr.StoreData;
-            store.AdditionalClaims.Add(new Claim(Policies.CanCreateInvoice.Key, store.Id));
             try
             {
                 var redirectUrl = Request.GetDisplayUrl().TrimEnd("/pay", StringComparison.InvariantCulture)

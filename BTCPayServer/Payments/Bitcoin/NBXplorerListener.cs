@@ -147,6 +147,8 @@ namespace BTCPayServer.Payments.Bitcoin
                                 _Aggregator.Publish(new Events.NewBlockEvent() { CryptoCode = evt.CryptoCode });
                                 break;
                             case NBXplorer.Models.NewTransactionEvent evt:
+                                
+                                //TODO: move this logic to the Network. For elements, 
                                 wallet.InvalidateCache(evt.DerivationStrategy);
                                 foreach (var output in evt.Outputs)
                                 {

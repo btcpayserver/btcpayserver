@@ -19,6 +19,7 @@ using BTCPayServer.Security;
 using BTCPayServer.Security.Bitpay;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Lightning;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
@@ -63,7 +64,8 @@ namespace BTCPayServer.Controllers
             ChangellyClientProvider changellyClientProvider,
             IWebHostEnvironment env, IHttpClientFactory httpClientFactory,
             PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
-            CssThemeManager cssThemeManager)
+            CssThemeManager cssThemeManager,
+            LndMigrationHelper lndMigrationHelper)
         {
             _RateFactory = rateFactory;
             _Repo = repo;
@@ -77,6 +79,7 @@ namespace BTCPayServer.Controllers
             _httpClientFactory = httpClientFactory;
             _paymentMethodHandlerDictionary = paymentMethodHandlerDictionary;
             _CssThemeManager = cssThemeManager;
+            _lndMigrationHelper = lndMigrationHelper;
             _NetworkProvider = networkProvider;
             _ExplorerProvider = explorerProvider;
             _FeeRateProvider = feeRateProvider;
@@ -101,6 +104,7 @@ namespace BTCPayServer.Controllers
         private IHttpClientFactory _httpClientFactory;
         private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
         private readonly CssThemeManager _CssThemeManager;
+        private readonly LndMigrationHelper _lndMigrationHelper;
 
         [TempData]
         public string StatusMessage

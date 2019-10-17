@@ -69,6 +69,16 @@
                 <p><pre><code>openssl x509 -noout -fingerprint -sha256 -inform pem -in /root/.lnd/tls.cert</code></pre></p>
                 <p>You can omit <code>certthumbprint</code> if you the certificate is trusted by your machine</p>
                 <p>You can set <code>allowinsecure</code> to <code>true</code> if your LND REST server is using HTTP or HTTPS with an untrusted certificate which you don't know the <code>certthumbprint</code></p>
+
+                @if (Model.IsSeedlessLnd)
+                {
+                <div class="alert alert-danger alert-dismissible" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <p>You have old version of LND deployment that was auto-initialized using `noseedbackup=1`.</p>
+                    <p>Please migrate to new version of LND deployment that is auto-initialized through script which creates seed backup file as part of the startup process.</p>
+                    <p><a href="https://github.com/btcpayserver/lnd/pull/4" target="_blank">Click here for more information</a></p>
+                </div>
+                }
             </div>
             <div class="form-group">
                 <label asp-for="ConnectionString"></label>
@@ -87,11 +97,10 @@
             </div>
             <button id="save" name="command" type="submit" value="save" class="btn btn-primary">Submit</button>
             <button name="command" type="submit" value="test" class="btn btn-secondary">Test connection</button>
-            <a 
-                class="btn btn-secondary"
-                asp-controller="PublicLightningNodeInfo" 
-               asp-action="ShowLightningNodeInfo" 
-               asp-route-cryptoCode="@Model.CryptoCode" 
+            <a class="btn btn-secondary"
+               asp-controller="PublicLightningNodeInfo"
+               asp-action="ShowLightningNodeInfo"
+               asp-route-cryptoCode="@Model.CryptoCode"
                asp-route-storeId="@Model.StoreId"
                target="_blank">
                 Open Public Node Info Page

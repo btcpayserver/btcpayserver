@@ -10,22 +10,17 @@ namespace BTCPayServer.Models.StoreViewModels
     public class LightningNodeViewModel
     {
         [Display(Name = "Connection string")]
-        public string ConnectionString
-        {
-            get;
-            set;
-        }
+        public string ConnectionString { get; set; }
 
-        public string CryptoCode
-        {
-            get;
-            set;
-        }
+        public string CryptoCode { get; set; }
         public string StatusMessage { get; set; }
         public string InternalLightningNode { get; internal set; }
         public bool SkipPortTest { get; set; }
         public bool Enabled { get; set; } = true;
 
         public string StoreId { get; set; }
+        
+        // obsolete and remove down the road when Seedless LND is no longer issue
+        public bool IsSeedlessLnd { get; set; }
     }
 }

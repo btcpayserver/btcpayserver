@@ -19,7 +19,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet]
         [Route("{storeId}/lightning/{cryptoCode}")]
-        public IActionResult AddLightningNode(string storeId, string cryptoCode)
+        public async Task<IActionResult> AddLightningNode(string storeId, string cryptoCode)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
@@ -31,6 +31,16 @@ namespace BTCPayServer.Controllers
                 StoreId = storeId
             };
             SetExistingValues(store, vm);
+
+            // lazy check of if LND needs migration... if needed we can move this on server start / lightning node connectionString change
+            if (!String.IsNullOrEmpty(vm.ConnectionString) &&
+                (vm.ConnectionString.Contains("lnd-rest", StringComparison.OrdinalIgnoreCase) ||
+                vm.ConnectionString.Contains("lnd-grpc", StringComparison.OrdinalIgnoreCase)))
+            {
+                await _lndMigrationHelper.PerformDetection();
+                vm.IsSeedlessLnd = _lndMigrationHelper.IsSeedlessLnd;
+            }
+
             return View(vm);
         }
 
@@ -62,6 +72,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> AddLightningNode(string storeId, LightningNodeViewModel vm, string command, string cryptoCode)
         {
             vm.CryptoCode = cryptoCode;
+            vm.IsSeedlessLnd = _lndMigrationHelper.IsSeedlessLnd;
             var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
@@ -85,7 +96,7 @@ namespace BTCPayServer.Controllers
                     return View(vm);
                 }
 
-                if(connectionString.ConnectionType == LightningConnectionType.LndGRPC)
+                if (connectionString.ConnectionType == LightningConnectionType.LndGRPC)
                 {
                     ModelState.AddModelError(nameof(vm.ConnectionString), $"BTCPay does not support gRPC connections");
                     return View(vm);
@@ -106,19 +117,19 @@ namespace BTCPayServer.Controllers
                     }
                 }
 
-                if(connectionString.MacaroonFilePath != null)
+                if (connectionString.MacaroonFilePath != null)
                 {
-                    if(!CanUseInternalLightning())
+                    if (!CanUseInternalLightning())
                     {
                         ModelState.AddModelError(nameof(vm.ConnectionString), "You are not authorized to use macaroonfilepath");
                         return View(vm);
                     }
-                    if(!System.IO.File.Exists(connectionString.MacaroonFilePath))
+                    if (!System.IO.File.Exists(connectionString.MacaroonFilePath))
                     {
                         ModelState.AddModelError(nameof(vm.ConnectionString), "The macaroonfilepath file does not exist");
                         return View(vm);
                     }
-                    if(!System.IO.Path.IsPathRooted(connectionString.MacaroonFilePath))
+                    if (!System.IO.Path.IsPathRooted(connectionString.MacaroonFilePath))
                     {
                         ModelState.AddModelError(nameof(vm.ConnectionString), "The macaroonfilepath should be fully rooted");
                         return View(vm);

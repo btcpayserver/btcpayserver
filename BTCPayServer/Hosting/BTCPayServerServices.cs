@@ -55,6 +55,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using BTCPayServer.Security.Bitpay;
+using BTCPayServer.Services.Lightning;
 
 namespace BTCPayServer.Hosting
 {
@@ -83,6 +84,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<TorServices>();
             services.TryAddSingleton<SocketFactory>();
             services.TryAddSingleton<LightningClientFactoryService>();
+            services.AddSingleton<LndMigrationHelper>();
             services.TryAddSingleton<InvoicePaymentNotification>();
             services.TryAddSingleton<BTCPayServerOptions>(o =>
                 o.GetRequiredService<IOptions<BTCPayServerOptions>>().Value);

@@ -13,7 +13,7 @@ using OpenIddict.Core;
 using OpenIddict.Server;
 using static BTCPayServer.Authentication.RestAPIPolicies;
 
-namespace BTCPayServer.Authentication.OpenId
+namespace BTCPayServer.Security.OpenId
 {
     public static class OpenIdExtensions
     {

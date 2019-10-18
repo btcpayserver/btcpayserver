@@ -8,7 +8,7 @@ using System;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using BTCPayServer.Authentication.OpenId;
+using BTCPayServer.Security.OpenId;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Models.Authorization;

@@ -9,7 +9,7 @@ using OpenIddict.Core;
 using OpenIddict.Server;
 using System.Security.Claims;
 
-namespace BTCPayServer.Authentication.OpenId
+namespace BTCPayServer.Security.OpenId
 {
     public abstract class BaseOpenIdGrantHandler<T> : 
         IOpenIddictServerHandler<T>

@@ -11,7 +11,7 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using OpenIddict.Server.AspNetCore;
 
-namespace BTCPayServer.Authentication.OpenId
+namespace BTCPayServer.Security.OpenId
 {
     public class OpenIdGrantHandlerCheckCanSignIn :
         BaseOpenIdGrantHandler<OpenIddictServerEvents.HandleTokenRequestContext>

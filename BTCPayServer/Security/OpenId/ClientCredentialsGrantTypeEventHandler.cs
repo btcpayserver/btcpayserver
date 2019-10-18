@@ -10,7 +10,7 @@ using OpenIddict.Core;
 using OpenIddict.EntityFrameworkCore.Models;
 using OpenIddict.Server;
 
-namespace BTCPayServer.Authentication.OpenId
+namespace BTCPayServer.Security.OpenId
 {
     public class ClientCredentialsGrantTypeEventHandler :
         BaseOpenIdGrantHandler<OpenIddictServerEvents.HandleTokenRequestContext>

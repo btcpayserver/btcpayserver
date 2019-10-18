@@ -12,7 +12,7 @@ using OpenIddict.Server;
 using Microsoft.AspNetCore;
 using OpenIddict.Server.AspNetCore;
 
-namespace BTCPayServer.Authentication.OpenId
+namespace BTCPayServer.Security.OpenId
 {
     public class LogoutEventHandler : IOpenIddictServerHandler<OpenIddictServerEvents.HandleLogoutRequestContext>
     {
